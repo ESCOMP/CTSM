@@ -48,6 +48,9 @@ module  PhotosynthesisMod
                                           ! Gentine/Daniel Kennedy plant hydraulic stress method
   public :: plc                           ! Return value of vulnerability curve at x
 
+  ! PRIVATE FUNCTIONS MADE PUBLIC Juse for unit-testing:
+  public  :: d1plc          ! compute 1st deriv of conductance attenuation for each segment
+
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: hybrid         ! hybrid solver for ci
   private :: ci_func        ! ci function
@@ -64,19 +67,26 @@ module  PhotosynthesisMod
   private :: getqflx        ! calculate sunlit and shaded transpiration
   private :: spacF          ! flux divergence across each vegetation segment
   private :: spacA          ! the inverse Jacobian matrix relating delta(vegwp) to f, d(vegwp)=A*f
-  private :: d1plc          ! compute 1st deriv of conductance attenuation for each segment
 
   ! !PRIVATE DATA:
   integer, parameter, private :: leafresp_mtd_ryan1991  = 1  ! Ryan 1991 method for lmr25top
   integer, parameter, private :: leafresp_mtd_atkin2015 = 2  ! Atkin 2015 method for lmr25top
-  integer, parameter, private :: sun=1     ! index for sunlit
-  integer, parameter, private :: sha=2     ! index for shaded
-  integer, parameter, private :: xyl=3     ! index for xylem
-  integer, parameter, private :: root=4    ! index for root
-  integer, parameter, private :: veg=0     ! index for vegetation
-  integer, parameter, private :: soil=1    ! index for soil
+  integer, parameter, private :: vegetation_weibull=0        ! PLC method type
+  ! These are public for unit-tests
+  integer, parameter, public   :: sun=1                 ! index for sunlit
+  integer, parameter, public   :: sha=2                 ! index for shaded
+  integer, parameter, public  :: xyl=3                  ! index for xylem
+  integer, parameter, public  :: root=4                 ! index for root
+  integer, parameter, public  :: veg=vegetation_weibull ! index for vegetation
+  integer, parameter, public  :: soil=1                 ! index for soil
   integer, parameter, private :: stomatalcond_mtd_bb1987     = 1   ! Ball-Berry 1987 method for photosynthesis
   integer, parameter, private :: stomatalcond_mtd_medlyn2011 = 2   ! Medlyn 2011 method for photosynthesis
+
+  real(r8), parameter, private :: bbbopt_c3 = 10000._r8            ! Ball-Berry Photosynthesis intercept to use for C3 vegetation
+  real(r8), parameter, private :: bbbopt_c4 = 40000._r8            ! Ball-Berry Photosynthesis intercept to use for C4 vegetation
+  real(r8), parameter, private :: medlyn_rh_can_max = 50._r8       ! Maximum to put on RH in the canopy used for Medlyn Photosynthesis
+  real(r8), parameter, private :: medlyn_rh_can_fact = 0.001_r8    ! Multiplicitive factor to use for Canopy RH used for Medlyn photosynthesis
+  real(r8), parameter, private :: max_cs = 1.e-06_r8               ! Max CO2 partial pressure at leaf surface (Pa) for PHS
   ! !PUBLIC VARIABLES:
 
   type :: photo_params_type
@@ -102,6 +112,10 @@ module  PhotosynthesisMod
      real(r8) :: lmrse      ! Entropy term for lmr (J/mol/K)
      real(r8) :: tpu25ratio ! Ratio of tpu25top to vcmax25top (unitless)
      real(r8) :: kp25ratio  ! Ratio of kp25top to vcmax25top (unitless)
+     real(r8) :: vcmaxse_sf ! Scale factor for vcmaxse (unitless)
+     real(r8) :: jmaxse_sf  ! Scale factor for jmaxse (unitless)
+     real(r8) :: tpuse_sf   ! Scale factor for tpuse (unitless)
+     real(r8) :: jmax25top_sf ! Scale factor for jmax25top (unitless)
      real(r8), allocatable, public  :: krmax              (:)
      real(r8), allocatable, private :: kmax               (:,:)
      real(r8), allocatable, private :: psi50              (:,:)
@@ -109,7 +123,8 @@ module  PhotosynthesisMod
      real(r8), allocatable, private :: lmr_intercept_atkin(:)
      real(r8), allocatable, private :: theta_cj           (:) ! Empirical curvature parameter for ac, aj photosynthesis co-limitation (unitless)
   contains
-     procedure, private :: allocParams
+     procedure, private :: allocParams    ! Allocate the parameters
+     procedure, private :: cleanParams    ! Deallocate parameters from member
   end type photo_params_type
   !
   type(photo_params_type), public, protected :: params_inst  ! params_inst is populated in readParamsMod 
@@ -127,8 +142,8 @@ module  PhotosynthesisMod
      real(r8), pointer, private :: vcmax_z_phs_patch (:,:,:) ! patch maximum rate of carboxylation (umol co2/m**2/s)
      real(r8), pointer, private :: kp_z_phs_patch    (:,:,:) ! patch initial slope of CO2 response curve (C4 plants)
      real(r8), pointer, private :: tpu_z_phs_patch   (:,:,:) ! patch triose phosphate utilization rate (umol CO2/m**2/s)
-     real(r8), pointer, private :: gs_mol_sun_patch  (:,:) ! patch sunlit leaf stomatal conductance (umol H2O/m**2/s)
-     real(r8), pointer, private :: gs_mol_sha_patch  (:,:) ! patch shaded leaf stomatal conductance (umol H2O/m**2/s)
+     real(r8), pointer, public  :: gs_mol_sun_patch  (:,:) ! patch sunlit leaf stomatal conductance (umol H2O/m**2/s)
+     real(r8), pointer, public  :: gs_mol_sha_patch  (:,:) ! patch shaded leaf stomatal conductance (umol H2O/m**2/s)
      real(r8), pointer, private :: gs_mol_sun_ln_patch (:,:) ! patch sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
      real(r8), pointer, private :: gs_mol_sha_ln_patch (:,:) ! patch shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
      real(r8), pointer, private :: ac_patch          (:,:) ! patch Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
@@ -221,6 +236,10 @@ module  PhotosynthesisMod
      procedure, public  :: ReadParams
      procedure, public  :: TimeStepInit
      procedure, public  :: NewPatchInit
+     procedure, public  :: Clean
+
+     ! Procedures for unit-testing
+     procedure, public  :: SetParamsForTesting
 
      ! Private procedures
      procedure, private :: InitAllocate
@@ -354,6 +373,104 @@ contains
     endif
 
   end subroutine InitAllocate
+
+  !------------------------------------------------------------------------
+  subroutine Clean(this)
+    !
+    ! !ARGUMENTS:
+    class(photosyns_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+    !------------------------------------------------------------------------
+
+    call params_inst%cleanParams()
+    deallocate(this%c3flag_patch      )
+    deallocate(this%ac_phs_patch      )
+    deallocate(this%aj_phs_patch      )
+    deallocate(this%ap_phs_patch      )
+    deallocate(this%ag_phs_patch      )
+    deallocate(this%an_sun_patch      )
+    deallocate(this%an_sha_patch      )
+    deallocate(this%vcmax_z_phs_patch )
+    deallocate(this%tpu_z_phs_patch   )
+    deallocate(this%kp_z_phs_patch    )
+    deallocate(this%gs_mol_sun_patch  )
+    deallocate(this%gs_mol_sha_patch  )
+    deallocate(this%gs_mol_sun_ln_patch )
+    deallocate(this%gs_mol_sha_ln_patch )
+    deallocate(this%ac_patch          )
+    deallocate(this%aj_patch          )
+    deallocate(this%ap_patch          )
+    deallocate(this%ag_patch          )
+    deallocate(this%an_patch          )
+    deallocate(this%vcmax_z_patch     )
+    deallocate(this%tpu_z_patch       )
+    deallocate(this%kp_z_patch        )
+    deallocate(this%gs_mol_patch      )
+    deallocate(this%cp_patch          )
+    deallocate(this%kc_patch          )
+    deallocate(this%ko_patch          )
+    deallocate(this%qe_patch          )
+    deallocate(this%bbb_patch         )
+    deallocate(this%mbb_patch         )
+    deallocate(this%gb_mol_patch      )
+    deallocate(this%rh_leaf_patch     )
+    deallocate(this%vpd_can_patch     )
+    deallocate(this%psnsun_patch      )
+    deallocate(this%psnsha_patch      )
+    deallocate(this%c13_psnsun_patch  )
+    deallocate(this%c13_psnsha_patch  )
+    deallocate(this%c14_psnsun_patch  )
+    deallocate(this%c14_psnsha_patch  )
+
+    deallocate(this%psnsun_z_patch    )
+    deallocate(this%psnsha_z_patch    )
+    deallocate(this%psnsun_wc_patch   )
+    deallocate(this%psnsha_wc_patch   )
+    deallocate(this%psnsun_wj_patch   )
+    deallocate(this%psnsha_wj_patch   )
+    deallocate(this%psnsun_wp_patch   )
+    deallocate(this%psnsha_wp_patch   )
+    deallocate(this%fpsn_patch        )
+    deallocate(this%fpsn_wc_patch     )
+    deallocate(this%fpsn_wj_patch     )
+    deallocate(this%fpsn_wp_patch     )
+    
+    deallocate(this%lnca_patch        )
+
+    deallocate(this%lmrsun_z_patch    )
+    deallocate(this%lmrsha_z_patch    )
+    deallocate(this%lmrsun_patch      )
+    deallocate(this%lmrsha_patch      )
+
+    deallocate(this%alphapsnsun_patch )
+    deallocate(this%alphapsnsha_patch )
+    deallocate(this%rc13_canair_patch )
+    deallocate(this%rc13_psnsun_patch )
+    deallocate(this%rc13_psnsha_patch )
+
+    deallocate(this%cisun_z_patch     )
+    deallocate(this%cisha_z_patch     )
+
+    deallocate(this%rssun_z_patch     )
+    deallocate(this%rssha_z_patch     )
+    deallocate(this%rssun_patch       )
+    deallocate(this%rssha_patch       )
+    deallocate(this%luvcmax25top_patch)
+    deallocate(this%lujmax25top_patch )
+    deallocate(this%lutpu25top_patch  )
+!!
+    if(use_luna)then
+      deallocate(this%vcmx25_z_patch  )
+      deallocate(this%jmx25_z_patch   )
+      deallocate(this%vcmx25_z_last_valid_patch   )
+      deallocate(this%jmx25_z_last_valid_patch    )
+      deallocate(this%pnlc_z_patch    )
+      deallocate(this%fpsn24_patch    )
+      deallocate(this%enzs_z_patch    )
+    endif
+
+  end subroutine Clean
 
   !-----------------------------------------------------------------------
   subroutine InitHistory(this, bounds)
@@ -654,6 +771,29 @@ contains
 
   end subroutine allocParams
 
+
+  !-----------------------------------------------------------------------
+  subroutine cleanParams ( this )
+    !
+    implicit none
+
+    ! !ARGUMENTS:
+    class(photo_params_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'cleanParams'
+    !-----------------------------------------------------------------------
+
+    ! deallocate parameters
+
+    deallocate( this%krmax       )
+    deallocate( this%theta_cj    )
+    deallocate( this%kmax        )
+    deallocate( this%psi50       )
+    deallocate( this%ck          )
+
+  end subroutine cleanParams
+
   !-----------------------------------------------------------------------
   subroutine readParams ( this, ncid )
     !
@@ -751,9 +891,38 @@ contains
     call readNcdioScalar(ncid, 'tpu25ratio', subname, params_inst%tpu25ratio)
     ! Ratio of kp25top to vcmax25top (unitless)
     call readNcdioScalar(ncid, 'kp25ratio', subname, params_inst%kp25ratio)
+    ! Scale factor for vcmaxse (unitless)
+    call readNcdioScalar(ncid, 'vcmaxse_sf', subname, params_inst%vcmaxse_sf)
+    ! Scale factor for jmaxse (unitless)
+    call readNcdioScalar(ncid, 'jmaxse_sf', subname, params_inst%jmaxse_sf)
+    ! Scale factor for tpuse (unitless)
+    call readNcdioScalar(ncid, 'tpuse_sf', subname, params_inst%tpuse_sf)
+    ! Scale factor for jmax25top (unitless)
+    call readNcdioScalar(ncid, 'jmax25top_sf', subname, params_inst%jmax25top_sf)
 
   end subroutine readParams
 
+  !-----------------------------------------------------------------------
+  subroutine setParamsForTesting ( this )
+    !
+    ! !USES:
+    implicit none
+
+    ! !ARGUMENTS:
+    class(photosyns_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'setParamsForTesting'
+    !-----------------------------------------------------------------------
+
+    call params_inst%allocParams()
+    params_inst%ck = 3.95_r8
+    params_inst%psi50(1,:) = -150000._r8
+    params_inst%psi50(2,:) = -530000._r8
+    params_inst%psi50(3:12,:) = -400000._r8
+    params_inst%psi50(13:,:) = -340000._r8
+
+  end subroutine setParamsForTesting
 
   !------------------------------------------------------------------------
   subroutine ReadNML(this, NLFilename)
@@ -1239,6 +1408,8 @@ contains
          gs_mol     => photosyns_inst%gs_mol_patch           , & ! Output: [real(r8) (:,:) ]  leaf stomatal conductance (umol H2O/m**2/s)
          gs_mol_sun_ln => photosyns_inst%gs_mol_sun_ln_patch , & ! Output: [real(r8) (:,:) ]  sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
          gs_mol_sha_ln => photosyns_inst%gs_mol_sha_ln_patch , & ! Output: [real(r8) (:,:) ]  shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
+         gs_mol_sun => photosyns_inst%gs_mol_sun_patch       , & ! Output: [real(r8) (:,:) ]  patch sunlit leaf stomatal conductance (umol H2O/m**2/s)
+         gs_mol_sha => photosyns_inst%gs_mol_sha_patch       , & ! Output: [real(r8) (:,:) ]  patch shaded leaf stomatal conductance (umol H2O/m**2/s)
          vcmax_z    => photosyns_inst%vcmax_z_patch          , & ! Output: [real(r8) (:,:) ]  maximum rate of carboxylation (umol co2/m**2/s)
          cp         => photosyns_inst%cp_patch               , & ! Output: [real(r8) (:)   ]  CO2 compensation point (Pa)
          kc         => photosyns_inst%kc_patch               , & ! Output: [real(r8) (:)   ]  Michaelis-Menten constant for CO2 (Pa)
@@ -1253,6 +1424,7 @@ contains
          lnc        => photosyns_inst%lnca_patch             , & ! Output: [real(r8) (:)   ]  top leaf layer leaf N concentration (gN leaf/m^2)
          light_inhibit=> photosyns_inst%light_inhibit        , & ! Input:  [logical        ]  flag if light should inhibit respiration
          leafresp_method=> photosyns_inst%leafresp_method    , & ! Input:  [integer        ]  method type to use for leaf-maint.-respiration at 25C canopy top
+         medlynintercept  => pftcon%medlynintercept          , & ! Input:  [real(r8) (:)   ]  Intercept for Medlyn stomatal conductance model method
          stomatalcond_mtd=> photosyns_inst%stomatalcond_mtd  , & ! Input:  [integer        ]  method type to use for stomatal conductance.GC.fnlprmsn15_r22845
          leaf_mr_vcm => canopystate_inst%leaf_mr_vcm           & ! Input:  [real(r8)       ]  scalar constant of leaf respiration with Vcmax
          )
@@ -1331,16 +1503,18 @@ contains
 
          if (c3flag(p)) then
             qe(p) = 0._r8
-            bbbopt(p) = 10000._r8
+            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = bbbopt_c3
          else
             qe(p) = 0.05_r8
-            bbbopt(p) = 40000._r8
+            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = bbbopt_c4
          end if
 
          ! Soil water stress applied to Ball-Berry parameters
 
-         bbb(p) = max (bbbopt(p)*btran(p), 1._r8)
-         mbb(p) = mbbopt(patch%itype(p))
+         if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) then
+            bbb(p) = max (bbbopt(p)*btran(p), 1._r8)
+            mbb(p) = mbbopt(patch%itype(p))
+         end if
 
          ! kc, ko, cp, from: Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
          !
@@ -1459,7 +1633,8 @@ contains
          ! Parameters derived from vcmax25top. Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593
          ! used jmax25 = 1.97 vcmax25, from Wullschleger (1993) Journal of Experimental Botany 44:907-920.
 
-         jmax25top = (2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top
+         jmax25top = ((2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top) * &
+                          params_inst%jmax25top_sf
          tpu25top  = params_inst%tpu25ratio * vcmax25top
          kp25top   = params_inst%kp25ratio * vcmax25top
 
@@ -1590,9 +1765,9 @@ contains
 
                ! Adjust for temperature
 
-               vcmaxse = 668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
-               jmaxse  = 659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
-               tpuse = vcmaxse
+               vcmaxse = (668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)) * params_inst%vcmaxse_sf
+               jmaxse  = (659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)) * params_inst%jmaxse_sf
+               tpuse   = (668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)) * params_inst%tpuse_sf
                vcmaxc = fth25 (params_inst%vcmaxhd, vcmaxse)
                jmaxc  = fth25 (params_inst%jmaxhd, jmaxse)
                tpuc   = fth25 (params_inst%tpuhd, tpuse)
@@ -1659,7 +1834,11 @@ contains
                psn_wc_z(p,iv) = 0._r8
                psn_wj_z(p,iv) = 0._r8
                psn_wp_z(p,iv) = 0._r8
-               rs_z(p,iv) = min(rsmax0, 1._r8/bbb(p) * cf)
+               if (      stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
+                  rs_z(p,iv) = min(rsmax0, 1._r8/bbb(p) * cf)
+               else if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
+                  rs_z(p,iv) = min(rsmax0, 1._r8/medlynintercept(patch%itype(p)) * cf)
+               end if
                ci_z(p,iv) = 0._r8
                rh_leaf(p) = 0._r8
 
@@ -1671,7 +1850,7 @@ contains
                   rh_can = ceair / esat_tv(p)
                else if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
                   ! Put some constraints on RH in the canopy when Medlyn stomatal conductance is being used
-                  rh_can = max((esat_tv(p) - ceair), 50._r8) * 0.001_r8
+                  rh_can = max((esat_tv(p) - ceair), medlyn_rh_can_max) * medlyn_rh_can_fact
                   vpd_can(p) = rh_can
                end if
 
@@ -1710,7 +1889,23 @@ contains
 
                ! End of ci iteration.  Check for an < 0, in which case gs_mol = bbb
 
-               if (an(p,iv) < 0._r8) gs_mol(p,iv) = bbb(p)
+               if (an(p,iv) < 0._r8) then
+                  if (stomatalcond_mtd == stomatalcond_mtd_bb1987) then
+                     gs_mol(p,iv) = bbb(p)
+                  else if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
+                     gs_mol(p,iv) = medlynintercept(patch%itype(p))
+                  end if
+               end if
+
+               !
+               ! This sets the  variables GSSUN and GSSHA
+               !
+               ! Write stomatal conductance to the appropriate phase
+               if (phase=='sun') then
+                  gs_mol_sun(p,iv) = gs_mol(p,iv)
+               else if (phase=='sha') then
+                  gs_mol_sha(p,iv) = gs_mol(p,iv)
+               end if
 
                ! Use time period 1 hour before and 1 hour after local noon inclusive (11AM-1PM)
                if ( is_near_local_noon( grc%londeg(g), deltasec=3600 ) )then
@@ -1730,7 +1925,7 @@ contains
                ! Final estimates for cs and ci (needed for early exit of ci iteration when an < 0)
 
                cs = cair(p) - 1.4_r8/gb_mol(p) * an(p,iv) * forc_pbot(c)
-               cs = max(cs,1.e-06_r8)
+               cs = max(cs,max_cs)
                ci_z(p,iv) = cair(p) - an(p,iv) * forc_pbot(c) * (1.4_r8*gs_mol(p,iv)+1.6_r8*gb_mol(p)) / (gb_mol(p)*gs_mol(p,iv))
 
                ! Trap for values of ci_z less than 1.e-06.  This is needed for
@@ -1769,16 +1964,16 @@ contains
                end if
 
                ! Compare with Ball-Berry model: gs_mol = m * an * hs/cs p + b
-
-               hs = (gb_mol(p)*ceair + gs_mol(p,iv)*esat_tv(p)) / ((gb_mol(p)+gs_mol(p,iv))*esat_tv(p))
-               rh_leaf(p) = hs
-               gs_mol_err = mbb(p)*max(an(p,iv), 0._r8)*hs/cs*forc_pbot(c) + bbb(p)
-
-               if (abs(gs_mol(p,iv)-gs_mol_err) > 1.e-01_r8) then
-                  write (iulog,*) 'Ball-Berry error check - stomatal conductance error:'
-                  write (iulog,*) gs_mol(p,iv), gs_mol_err
-               end if
-
+               if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
+                  hs = (gb_mol(p)*ceair + gs_mol(p,iv)*esat_tv(p)) / ((gb_mol(p)+gs_mol(p,iv))*esat_tv(p))
+                  rh_leaf(p) = hs
+                  gs_mol_err = mbb(p)*max(an(p,iv), 0._r8)*hs/cs*forc_pbot(c) + bbb(p)
+                  
+                  if (abs(gs_mol(p,iv)-gs_mol_err) > 1.e-01_r8) then
+                     write (iulog,*) 'Ball-Berry error check - stomatal conductance error:'
+                     write (iulog,*) gs_mol(p,iv), gs_mol_err
+                  end if
+               endif
             end if    ! night or day if branch
          end do       ! canopy layer loop
       end do          ! patch loop
@@ -2380,7 +2575,7 @@ contains
     !local variables
     real(r8) :: ai                  ! intermediate co-limited photosynthesis (umol CO2/m**2/s)
     real(r8) :: cs                  ! CO2 partial pressure at leaf surface (Pa)
-
+    real(r8) :: term                 ! intermediate in Medlyn stomatal model
     real(r8) :: aquad, bquad, cquad  ! terms for quadratic equations
     real(r8) :: r1, r2               ! roots of quadratic equation
     !------------------------------------------------------------------------------
@@ -2389,6 +2584,9 @@ contains
          forc_pbot  => atm2lnd_inst%forc_pbot_downscaled_col   , & ! Output: [real(r8) (:)   ]  atmospheric pressure (Pa)
          c3flag     => photosyns_inst%c3flag_patch             , & ! Output: [logical  (:)   ]  true if C3 and false if C4
          ivt        => patch%itype                             , & ! Input:  [integer  (:)   ]  patch vegetation type
+         medlynslope      => pftcon%medlynslope                , & ! Input:  [real(r8) (:)   ]  Slope for Medlyn stomatal conductance model method
+         medlynintercept  => pftcon%medlynintercept            , & ! Input:  [real(r8) (:)   ]  Intercept for Medlyn stomatal conductance model method
+         stomatalcond_mtd => photosyns_inst%stomatalcond_mtd   , & ! Input:  [integer        ]  method type to use for stomatal conductance
          ac         => photosyns_inst%ac_patch                 , & ! Output: [real(r8) (:,:) ]  Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
          aj         => photosyns_inst%aj_patch                 , & ! Output: [real(r8) (:,:) ]  RuBP-limited gross photosynthesis (umol CO2/m**2/s)
          ap         => photosyns_inst%ap_patch                 , & ! Output: [real(r8) (:,:) ]  product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
@@ -2450,15 +2648,30 @@ contains
          return
       endif
       ! Quadratic gs_mol calculation with an known. Valid for an >= 0.
-      ! With an <= 0, then gs_mol = bbb
-
+      ! With an <= 0, then gs_mol = bbb or medlyn intercept
       cs = cair - 1.4_r8/gb_mol * an(p,iv) * forc_pbot(c)
-      cs = max(cs,1.e-06_r8)
-      aquad = cs
-      bquad = cs*(gb_mol - bbb(p)) - mbb(p)*an(p,iv)*forc_pbot(c)
-      cquad = -gb_mol*(cs*bbb(p) + mbb(p)*an(p,iv)*forc_pbot(c)*rh_can)
-      call quadratic (aquad, bquad, cquad, r1, r2)
-      gs_mol = max(r1,r2)
+      cs = max(cs,max_cs)
+      if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
+          term = 1.6_r8 * an(p,iv) / (cs / forc_pbot(c) * 1.e06_r8)
+          aquad = 1.0_r8
+          bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
+               (gb_mol*1.e-06_r8 * rh_can))
+          cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
+               (2.0*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
+               (1.0 - medlynslope(patch%itype(p))* medlynslope(patch%itype(p)) / rh_can)) * term
+
+          call quadratic (aquad, bquad, cquad, r1, r2)
+          gs_mol = max(r1,r2) * 1.e06_r8
+       else if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
+          aquad = cs
+          bquad = cs*(gb_mol - bbb(p)) - mbb(p)*an(p,iv)*forc_pbot(c)
+          cquad = -gb_mol*(cs*bbb(p) + mbb(p)*an(p,iv)*forc_pbot(c)*rh_can)
+          call quadratic (aquad, bquad, cquad, r1, r2)
+          gs_mol = max(r1,r2)
+       end if
+
+
+
 
       ! Derive new estimate for ci
 
@@ -2854,7 +3067,7 @@ contains
             soil_conductance = min(hksat(c,j),hk_l(c,j))/(1.e3_r8*r_soil)
             
 ! use vegetation plc function to adjust root conductance
-               fs(j)=  plc(smp(c,j),p,c,root,veg)
+               fs(j)=  plc(smp(c,j),p,root,veg)
             
 ! krmax is root conductance per area per length
             root_conductance = (fs(j)*rai(j)*params_inst%krmax(ivt(p)))/(croot_average_length + z(c,j))
@@ -2897,10 +3110,10 @@ contains
 
          if (c3flag(p)) then
             qe(p) = 0._r8
-            bbbopt(p) = 10000._r8
+            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = bbbopt_c3
          else
             qe(p) = 0.05_r8
-            bbbopt(p) = 40000._r8
+            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = bbbopt_c4
          end if
  
          if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
@@ -3020,7 +3233,8 @@ contains
          ! Parameters derived from vcmax25top. Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593
          ! used jmax25 = 1.97 vcmax25, from Wullschleger (1993) Journal of Experimental Botany 44:907-920.
 
-         jmax25top = (2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top
+         jmax25top = ((2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top) * &
+                          params_inst%jmax25top_sf
          tpu25top  = params_inst%tpu25ratio * vcmax25top
          kp25top   = params_inst%kp25ratio * vcmax25top
          luvcmax25top(p) = vcmax25top
@@ -3177,12 +3391,14 @@ contains
 
                ! Adjust for temperature
                ! Acclimation is done for Kattge
-               vcmaxse = 668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
-               jmaxse  = 659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
+               vcmaxse = (668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)) * params_inst%vcmaxse_sf
+               jmaxse  = (659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)) * params_inst%jmaxse_sf
                ! These values are used for Leuning
                !vcmaxse = 486.0_r8
                !jmaxse  = 495.0_r8
-               tpuse = vcmaxse
+
+               ! NOTE: tpuse acts the same as vcmaxse (same constants)
+               tpuse   = (668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)) * params_inst%tpuse_sf
                vcmaxc = fth25 (params_inst%vcmaxhd, vcmaxse)
                jmaxc  = fth25 (params_inst%jmaxhd, jmaxse)
                tpuc   = fth25 (params_inst%tpuhd, tpuse)
@@ -3308,7 +3524,7 @@ contains
                   rh_can = ceair / esat_tv(p)
                else if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
                   ! Put some constraints on RH in the canopy when Medlyn stomatal conductance is being used
-                  rh_can = max((esat_tv(p) - ceair), 50._r8) * 0.001_r8
+                  rh_can = max((esat_tv(p) - ceair), medlyn_rh_can_max) * medlyn_rh_can_fact
                   vpd_can(p) = rh_can
                end if
 
@@ -3375,7 +3591,7 @@ contains
                ! Final estimates for cs and ci (needed for early exit of ci iteration when an < 0)
 
                cs_sun = cair(p) - 1.4_r8/gb_mol(p) * an_sun(p,iv) * forc_pbot(c)
-               cs_sun = max(cs_sun,1.e-06_r8)
+               cs_sun = max(cs_sun,max_cs)
                ci_z_sun(p,iv) = cair(p) - an_sun(p,iv) * forc_pbot(c) * &
                                 (1.4_r8*gs_mol_sun(p,iv)+1.6_r8*gb_mol(p)) / &
                                 (gb_mol(p)*gs_mol_sun(p,iv))
@@ -3385,7 +3601,7 @@ contains
                ci_z_sun(p,iv) = max( ci_z_sun(p,iv), 1.e-06_r8 )
 
                cs_sha = cair(p) - 1.4_r8/gb_mol(p) * an_sha(p,iv) * forc_pbot(c)
-               cs_sha = max(cs_sha,1.e-06_r8)
+               cs_sha = max(cs_sha,max_cs)
                ci_z_sha(p,iv) = cair(p) - an_sha(p,iv) * forc_pbot(c) * &
                                 (1.4_r8*gs_mol_sha(p,iv)+1.6_r8*gb_mol(p)) / &
                                 (gb_mol(p)*gs_mol_sha(p,iv))
@@ -4153,14 +4369,18 @@ contains
     ! Sunlit
     if (an_sun(p,iv) >= 0._r8) then
        cs_sun = cair - 1.4_r8/gb_mol * an_sun(p,iv) * forc_pbot(c)
-       cs_sun = max(cs_sun,10.e-06_r8)
+       cs_sun = max(cs_sun,max_cs)
     end if
 
     if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
+       ! Note for Medlyn we are NOT modifying the intercept by water stress as we do for
+       ! Ball-Berry below.
+       ! Whether the intercept should be modified by water stress is an open
+       ! science quesiton.
        if (an_sun(p,iv) >= 0._r8) then
           term = 1.6_r8 * an_sun(p,iv) / (cs_sun / forc_pbot(c) * 1.e06_r8)
           aquad = 1.0_r8
-          bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
+          bquad = -(2.0_r8 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
                (gb_mol*1.e-06_r8 * rh_can))
           cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
                (2.0_r8*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
@@ -4173,20 +4393,24 @@ contains
        ! Shaded
        if (an_sha(p,iv) >= 0._r8) then
           cs_sha = cair - 1.4_r8/gb_mol * an_sha(p,iv) * forc_pbot(c)
-          cs_sha = max(cs_sha,10.e-06_r8)
+          cs_sha = max(cs_sha,max_cs)
 
           term = 1.6_r8 * an_sha(p,iv) / (cs_sha / forc_pbot(c) * 1.e06_r8)
           aquad = 1.0_r8
-          bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
+          bquad = -(2.0_r8 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
                (gb_mol*1.e-06_r8 * rh_can))
           cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
-               (2.0*medlynintercept(patch%itype(p))*1.e-06_r8 + term * (1.0 - medlynslope(patch%itype(p))* &
+               (2.0_r8*medlynintercept(patch%itype(p))*1.e-06_r8 + term * (1.0 - medlynslope(patch%itype(p))* &
                medlynslope(patch%itype(p)) / rh_can)) * term
 
           call quadratic (aquad, bquad, cquad, r1, r2)
           gs_mol_sha = max(r1,r2)* 1.e06_r8
        end if
     else if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
+       ! Note for Ball-Berry we modify the intercept (bbb) by water stress (see
+       ! the multipling factor of bsun and bsha to bbb below).
+       ! Whether the intercept should be modified by water stress is an open
+       ! science quesiton.
        if (an_sun(p,iv) >= 0._r8) then
           aquad = cs_sun
           bquad = cs_sun*(gb_mol - max(bsun*bbb(p),1._r8)) - mbb(p)*an_sun(p,iv)*forc_pbot(c)
@@ -4198,7 +4422,7 @@ contains
        ! Shaded
        if (an_sha(p,iv) >= 0._r8) then
           cs_sha = cair - 1.4_r8/gb_mol * an_sha(p,iv) * forc_pbot(c)
-          cs_sha = max(cs_sha,10.e-06_r8)
+          cs_sha = max(cs_sha,max_cs)
 
           aquad = cs_sha
           bquad = cs_sha*(gb_mol - max(bsha*bbb(p),1._r8)) - mbb(p)*an_sha(p,iv)*forc_pbot(c)
@@ -4396,12 +4620,12 @@ contains
        ! solve algebraically
        call getvegwp(p, c, x, gb_mol, gs0sun, gs0sha, qsatl, qaf, soilflux, &
                atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst)
-       bsun = plc(x(sun),p,c,sun,veg)
-       bsha = plc(x(sha),p,c,sha,veg)
+       bsun = plc(x(sun),p,sun,veg)
+       bsha = plc(x(sha),p,sha,veg)
     else     
     ! compute attenuated flux
-    qsun=qflx_sun*plc(x(sun),p,c,sun,veg)
-    qsha=qflx_sha*plc(x(sha),p,c,sha,veg)
+    qsun=qflx_sun*plc(x(sun),p,sun,veg)
+    qsha=qflx_sha*plc(x(sha),p,sha,veg)
     
     ! retrieve stressed stomatal conductance
     havegs=.FALSE.
@@ -4414,12 +4638,12 @@ contains
     if (qflx_sun>0._r8) then
        bsun = gs0sun/gs_mol_sun
     else
-       bsun = plc(x(sun),p,c,sun,veg)
+       bsun = plc(x(sun),p,sun,veg)
     endif
     if (qflx_sha>0._r8) then
        bsha = gs0sha/gs_mol_sha
     else
-       bsha = plc(x(sha),p,c,sha,veg)
+       bsha = plc(x(sha),p,sha,veg)
     endif
     endif
     if ( bsun < 0.01_r8 ) bsun = 0._r8
@@ -4528,16 +4752,16 @@ contains
     grav1 = htop(p)*1000._r8
     
     !compute conductance attentuation for each segment
-    fsto1=  plc(x(sun),p,c,sun,veg)
-    fsto2=  plc(x(sha),p,c,sha,veg)
-    fx=     plc(x(xyl),p,c,xyl,veg)
-    fr=     plc(x(root),p,c,root,veg)
+    fsto1=  plc(x(sun),p,sun,veg)
+    fsto2=  plc(x(sha),p,sha,veg)
+    fx=     plc(x(xyl),p,xyl,veg)
+    fr=     plc(x(root),p,root,veg)
     
     !compute 1st deriv of conductance attenuation for each segment
-    dfsto1=  d1plc(x(sun),p,c,sun,veg)
-    dfsto2=  d1plc(x(sha),p,c,sha,veg)
-    dfx=     d1plc(x(xyl),p,c,xyl,veg)
-    dfr=     d1plc(x(root),p,c,root,veg)
+    dfsto1=  d1plc(x(sun),p,sun,veg)
+    dfsto2=  d1plc(x(sha),p,sha,veg)
+    dfx=     d1plc(x(xyl),p,xyl,veg)
+    dfr=     d1plc(x(root),p,root,veg)
     
     !A - f=A*d(vegwp)
     A(1,1)= - laisun(p) * params_inst%kmax(ivt(p),sun) * fx&
@@ -4689,10 +4913,10 @@ contains
     grav1 = htop(p) * 1000._r8
     grav2(1:nlevsoi) = z(c,1:nlevsoi) * 1000._r8
     
-    fsto1=  plc(x(sun),p,c,sun,veg)
-    fsto2=  plc(x(sha),p,c,sha,veg)
-    fx=     plc(x(xyl),p,c,xyl,veg)
-    fr=     plc(x(root),p,c,root,veg)
+    fsto1=  plc(x(sun),p,sun,veg)
+    fsto2=  plc(x(sha),p,sha,veg)
+    fx=     plc(x(xyl),p,xyl,veg)
+    fr=     plc(x(root),p,root,veg)
     
     !compute flux divergence across each plant segment
     f(sun)= qflx_sun * fsto1 - laisun(p) * params_inst%kmax(ivt(p),sun) * fx * (x(xyl)-x(sun))
@@ -4787,7 +5011,7 @@ contains
     endif
     
     !calculate xylem water potential
-    fr = plc(x(root),p,c,root,veg)
+    fr = plc(x(root),p,root,veg)
     if ( (tsai(p) > 0._r8) .and. (fr > 0._r8) ) then
        x(xyl) = x(root) - grav1 - (qflx_sun+qflx_sha)/(fr*params_inst%kmax(ivt(p),root)/htop(p)*tsai(p))!removed htop conversion
     else
@@ -4795,7 +5019,7 @@ contains
     endif
     
     !calculate sun/sha leaf water potential
-    fx = plc(x(xyl),p,c,xyl,veg)
+    fx = plc(x(xyl),p,xyl,veg)
     if ( (laisha(p) > 0._r8) .and. (fx > 0._r8) ) then
        x(sha) = x(xyl) - (qflx_sha/(fx*params_inst%kmax(ivt(p),xyl)*laisha(p)))
     else
@@ -4905,20 +5129,17 @@ contains
   end subroutine getqflx
 
   !--------------------------------------------------------------------------------
-  function plc(x,p,c,level,plc_method)
+  function plc(x,p,level,plc_method)
     ! !DESCRIPTION
     ! Return value of vulnerability curve at x
     !
     ! !ARGUMENTS
     real(r8) , intent(in)  :: x             ! water potential input
     integer  , intent(in)  :: p             ! index for pft
-    integer  , intent(in)  :: c             ! index for column
     integer  , intent(in)  :: level         ! veg segment lvl (1:nvegwcs) 
     integer  , intent(in)  :: plc_method    !
     real(r8)               :: plc           ! attenuated conductance [0:1] 0=no flow
     !
-    ! !PARAMETERS
-    integer , parameter :: vegetation_weibull=0  ! case number
     !------------------------------------------------------------------------------
     associate(                                                    &
          ivt  => patch%itype                             & ! Input: [integer  (:)   ]  patch vegetation type
@@ -4930,7 +5151,8 @@ contains
        plc=2._r8**(-(x/params_inst%psi50(ivt(p),level))**params_inst%ck(ivt(p),level))
        if ( plc < 0.005_r8) plc = 0._r8
     case default
-       print *,'must choose plc method'
+       plc = nan
+       call endrun( 'ERROR:: Photosynthesis::PLC must choose plc method' )
     end select
 
     end associate
@@ -4939,20 +5161,17 @@ contains
   !--------------------------------------------------------------------------------
   
   !--------------------------------------------------------------------------------
-  function d1plc(x,p,c,level,plc_method)
+  function d1plc(x,p,level,plc_method)
     ! !DESCRIPTION
     ! Return 1st derivative of vulnerability curve at x
     !
     ! !ARGUMENTS
     real(r8) , intent(in) :: x                ! water potential input
     integer  , intent(in) :: p                ! index for pft
-    integer  , intent(in) :: c                ! index for column
     integer  , intent(in) :: level            ! veg segment lvl (1:nvegwcs)
     integer  , intent(in) :: plc_method       ! 0 for vegetation, 1 for soil
     real(r8)              :: d1plc            ! first deriv of plc curve at x
     !
-    ! !PARAMETERS
-    integer , parameter :: vegetation_weibull=0  ! case number
     !------------------------------------------------------------------------------
     associate(                                                    &
          ivt           => patch%itype                             & ! Input: [integer  (:)   ]  patch vegetation type
@@ -4965,7 +5184,8 @@ contains
               **params_inst%ck(ivt(p),level))) &
               * ((x/params_inst%psi50(ivt(p),level))**params_inst%ck(ivt(p),level)) / x
     case default
-       print *,'must choose plc method'
+       d1plc = nan
+       call endrun( 'ERROR:: Photosynthesis::D1PLC must choose plc method' )
     end select
 
     end associate

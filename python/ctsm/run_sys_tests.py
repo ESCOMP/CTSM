@@ -142,7 +142,8 @@ def run_sys_tests(machine, cime_path,
         _make_testroot(testroot, testid_base, dry_run)
     else:
         if not os.path.exists(testroot):
-           raise RuntimeError("testroot directory does NOT exist as expected when a rerun option is used: directory expected = "+testroot )
+            raise RuntimeError("testroot directory does NOT exist as expected when a rerun" +
+                               " option is used: directory expected = "+testroot )
     print("Testroot: {}\n".format(testroot))
     retry_final = get_possibly_overridden_mach_value(machine,
                                                      varname='create_test_retry',

@@ -81,7 +81,7 @@ subroutine output_diagnostics_area(data_i, data_o, gridmap, name, percent, ndiag
      write(6,*) 'ns_i         = ', ns_i
      write(6,*) 'size(data_o) = ', size(data_o)
      write(6,*) 'ns_o         = ', ns_o
-     stop
+     call abort()
   end if
   if (size(frac_dst) /= ns_o) then
      write(6,*) subname//' ERROR: incorrect size of frac_dst'
@@ -195,7 +195,7 @@ subroutine output_diagnostics_continuous(data_i, data_o, gridmap, name, units, n
      write(6,*) 'ns_i         = ', ns_i
      write(6,*) 'size(data_o) = ', size(data_o)
      write(6,*) 'ns_o         = ', ns_o
-     stop
+     call abort()
   end if
   if (size(frac_dst) /= ns_o) then
      write(6,*) subname//' ERROR: incorrect size of frac_dst'
@@ -300,7 +300,7 @@ subroutine output_diagnostics_continuous_outonly(data_o, gridmap, name, units, n
      write(6,*) subname//' ERROR: array size inconsistencies for ', trim(name)
      write(6,*) 'size(data_o) = ', size(data_o)
      write(6,*) 'ns_o         = ', ns_o
-     stop
+     call abort()
   end if
 
   ! Sums on output grid
@@ -380,7 +380,7 @@ subroutine output_diagnostics_index(data_i, data_o, gridmap, name, &
      write(6,*) 'ns_i         = ', ns_i
      write(6,*) 'size(data_o) = ', size(data_o)
      write(6,*) 'ns_o         = ', ns_o
-     stop
+     call abort()
   end if
   if (size(frac_dst) /= ns_o) then
      write(6,*) subname//' ERROR: incorrect size of frac_dst'

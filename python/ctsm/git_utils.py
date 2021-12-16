@@ -10,16 +10,7 @@ def get_git_short_hash():
     """
     Returns Git short SHA for the currect directory.
     """
-    try:
-
-        # os.abspath(__file__)
-        sha = (
-            subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
-            .strip()
-            .decode()
-        )
-    except subprocess.CalledProcessError:
-        sha = "NOT-A-GIT-REPOSITORY"
+    short_sha = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip().decode()
     return sha
 
 
@@ -27,12 +18,7 @@ def get_git_long_hash():
     """
     Returns Git long SHA for the currect directory.
     """
-    try:
-
-        # os.abspath(__file__)
-        sha = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip().decode()
-    except subprocess.CalledProcessError:
-        sha = "NOT-A-GIT-REPOSITORY"
+    sha = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip().decode()
     return sha
 
 def get_git_describe():
