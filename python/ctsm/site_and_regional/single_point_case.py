@@ -147,7 +147,7 @@ class SinglePointCase(BaseCase):
         f_out.attrs["Created_from"] = fdomain_in
 
         wfile = os.path.join(self.output_dir, fdomain_out)
-        f_out.to_netcdf(path=fdomain_out, mode="w")
+        f_out.to_netcdf(path=fdomain_out, mode="w", format="NETCDF3_64BIT")
         logging.info("Successfully created file (fdomain_out) %s", wfile)
         f_in.close()
         f_out.close()
@@ -194,7 +194,7 @@ class SinglePointCase(BaseCase):
 
         wfile = os.path.join(self.output_dir, fluse_out)
         # mode 'w' overwrites file
-        f_out.to_netcdf(path=wfile, mode="w")
+        f_out.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
         logging.info("Successfully created file (fluse_out), %s", wfile)
         f_in.close()
         f_out.close()
@@ -237,7 +237,8 @@ class SinglePointCase(BaseCase):
         # modify surface data properties
         if self.overwrite_single_pft:
             f_out["PCT_NAT_PFT"][:, :, :] = 0
-            f_out["PCT_NAT_PFT"][:, :, self.dominant_pft] = 100
+            if (self.dominant_pft<16) :
+                f_out['PCT_NAT_PFT'][:,:,self.dominant_pft] = 100
         if self.zero_nonveg_landunits:
             f_out["PCT_NATVEG"][:, :] = 100
             f_out["PCT_CROP"][:, :] = 0
@@ -267,12 +268,18 @@ class SinglePointCase(BaseCase):
             "lsmlon",
         )
 
+        # update lsmlat and lsmlon to match site specific instead of the nearest point
+        f3['lsmlon']= np.atleast_1d(self.plon)
+        f3['lsmlat']= np.atleast_1d(self.plat)
+        f3['LATIXY'][:,:]= self.plat
+        f3['LONGXY'][:,:]= self.plon
+
         # update attributes
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = fsurf_in
         del f_out.attrs["History_Log"]
         # mode 'w' overwrites file
-        wfile = os.path.join(self.output_dir, fsurf_out)
+        wfile = os.path.join(self.output_dir, fsurf_out, format = "NETCDF3_64BIT")
         f_out.to_netcdf(path=wfile, mode="w")
         logging.info("Successfully created file (fsurf_out) %s", wfile)
         f_in.close()

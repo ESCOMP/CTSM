@@ -49,6 +49,31 @@ def fill_template_file(path_to_template, path_to_final, substitutions):
     with open(path_to_final, "w") as final_file:
         final_file.write(final_file_contents)
 
+def str2bool(var):
+    """
+    Function for converting different forms of
+    command line boolean strings to boolean value.
+
+    Args:
+        var (str): String bool input
+
+    Raises:
+        if the argument is not an acceptable boolean string
+        (such as yes or no ; true or false ; y or n ; t or f ; 0 or 1).
+        ValueError: The string should be one of the mentioned values.
+
+    Returns:
+        bool: Boolean value corresponding to the input.
+    """
+    if isinstance(var, bool):
+        return var
+    if var.lower() in ("yes", "true", "t", "y", "1"):
+        return True
+    elif var.lower() in ("no", "false", "f", "n", "0"):
+        return False
+    else:
+        raise ValueError("Boolean value expected. [true or false] or [y or n]")
+
 def get_git_sha():
     """
     Returns Git short SHA for the currect directory.

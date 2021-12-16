@@ -64,7 +64,7 @@ from ctsm.site_and_regional.base_case import DatmFiles
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.utils import _convert_to_bool as str2bool
+from ctsm.utils import str2bool
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -332,6 +332,36 @@ def get_parser():
             type=str,
             default="",
         )
+
+    pt_parser.add_argument('--datm_from_tower',
+                help='Flag for creating DATM forcing data at single point for a tower data. [default: %(default)s]', 
+                action="store",
+                dest="datm_tower",
+                type = str2bool,
+                nargs = '?',
+                const = True,
+                required = False,
+                default = False)
+    pt_parser.add_argument('--create_user_mods',
+                help='Flag for creating user mods directory . [default: %(default)s]', 
+                action="store",
+                dest="datm_tower",
+                type = str2bool,
+                nargs = '?',
+                const = True,
+                required = False,
+                default = False)
+    pt_parser.add_argument('--user_mods_dir',
+                help='Flag for creating user mods directory . [default: %(default)s]', 
+                action="store",
+                dest="user_mod_dir",
+                type = str,
+                nargs = '?',
+                const = True,
+                required = False,
+                default = False)
+
+
 
     # -- print help for both subparsers
     parser.epilog = textwrap.dedent(
