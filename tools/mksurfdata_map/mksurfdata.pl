@@ -286,8 +286,8 @@ sub write_transient_timeseries_file {
         printf $fh_landuse_timeseries $dynpft_format, $hrvtypyr, $yr;
         my $urbanyr = "/glade/scratch/keerzhang/archive/BNU_NoAdjust/05deg_".$yr."_new_NoAdjust.nc";
         chomp( $urbanyr);
-        printf $fh_landuse_timeseries $dynpft_format, $urbanyr, $yr; # Keer: I don't quiet understand the 'pft_override' option so I made no change to the "landuse_timeseries_override_$desc.txt"
-        if ( $yr % 100 == 0 ) {
+        printf $fh_landuse_timeseries $dynpft_format, $urbanyr, $yr; # I hard coded this part just to generate a txt file with urban raw data file locations
+        if ( $yr % 100 == 0 ) {                                      # And note that I made no change to the "landuse_timeseries_override_$desc.txt" because I am not sure how to deal with the the 'pft_override' option
           print "year: $yr\n";
         }
       }
