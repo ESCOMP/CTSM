@@ -333,28 +333,6 @@ def get_parser():
         required=False,
         default=False,
     )
-    pt_parser.add_argument(
-        "--create_user_mods",
-        help="Flag for creating user mods directory . [default: %(default)s]",
-        action="store",
-        dest="datm_tower",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        required=False,
-        default=False,
-    )
-    pt_parser.add_argument(
-        "--user_mods_dir",
-        help="Flag for creating user mods directory . [default: %(default)s]",
-        action="store",
-        dest="user_mod_dir",
-        type=str,
-        nargs="?",
-        const=True,
-        required=False,
-        default=False,
-    )
 
     # -- print help for both subparsers
     parser.epilog = textwrap.dedent(
@@ -731,6 +709,7 @@ def main():
         # --  Create CTSM transient landuse data file
         if create_landuse:
             region.create_landuse_at_reg()
+
         if create_domain or create_surfdata or create_landuse or create_datm:
             logger.info("Successfully ran script for a regional case.")
         else:
