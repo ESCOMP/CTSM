@@ -55,6 +55,11 @@ models SROF and SGLC)
 
 By default, it only extracts surface dataset and for extracting other
 files, the appropriate flags should be used.
+
+To run this script the following packages are required:
+        - numpy
+        - xarray
+
 -------------------------------------------------------------------
 To run the script for a single point:
     ./subset_data.py point
