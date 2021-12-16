@@ -237,8 +237,8 @@ class SinglePointCase(BaseCase):
         # modify surface data properties
         if self.overwrite_single_pft:
             f_out["PCT_NAT_PFT"][:, :, :] = 0
-            if (self.dominant_pft<16) :
-                f_out['PCT_NAT_PFT'][:,:,self.dominant_pft] = 100
+            if self.dominant_pft < 16:
+                f_out['PCT_NAT_PFT'][:, :, self.dominant_pft] = 100
         if self.zero_nonveg_landunits:
             f_out["PCT_NATVEG"][:, :] = 100
             f_out["PCT_CROP"][:, :] = 0
@@ -252,7 +252,6 @@ class SinglePointCase(BaseCase):
             f_out["FMAX"][:, :] = 0.0
 
         # specify dimension order
-        # f_out = f_out.transpose(u'time', u'cft', u'natpft', u'lsmlat', u'lsmlon')
         f_out = f_out.transpose(
             u"time",
             u"cft",
@@ -269,18 +268,18 @@ class SinglePointCase(BaseCase):
         )
 
         # update lsmlat and lsmlon to match site specific instead of the nearest point
-        f3['lsmlon']= np.atleast_1d(self.plon)
-        f3['lsmlat']= np.atleast_1d(self.plat)
-        f3['LATIXY'][:,:]= self.plat
-        f3['LONGXY'][:,:]= self.plon
+        f_out['lsmlon'] = np.atleast_1d(self.plon)
+        f_out['lsmlat'] = np.atleast_1d(self.plat)
+        f_out['LATIXY'][:, :] = self.plat
+        f_out['LONGXY'][:, :] = self.plon
 
         # update attributes
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = fsurf_in
         del f_out.attrs["History_Log"]
         # mode 'w' overwrites file
-        wfile = os.path.join(self.output_dir, fsurf_out, format = "NETCDF3_64BIT")
-        f_out.to_netcdf(path=wfile, mode="w")
+        wfile = os.path.join(self.output_dir, fsurf_out)
+        f_out.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
         logging.info("Successfully created file (fsurf_out) %s", wfile)
         f_in.close()
         f_out.close()
