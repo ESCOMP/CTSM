@@ -11,6 +11,7 @@ import numpy as np
 
 # -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
+from ctsm.utils import add_tag_to_filename
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ class RegionalCase(BaseCase):
             output_dir,
     ):
         """
-        Initializes SinglePointCase with the given arguments.
+        Initializes RegionalCase with the given arguments.
         """
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm,
                          create_user_mods)
@@ -90,8 +91,9 @@ class RegionalCase(BaseCase):
 
     def create_tag(self):
         """
-        Create a tag for a region which is the site name
-        or the "lon1-lon2-lat1-lat2" format if the site name does not exist.
+        Create a tag for a region which is either the region name
+        or
+        the lat1-lat2_lon1-lon2 if the region name does not exist.
         """
         if self.reg_name:
             self.tag = self.reg_name
@@ -106,15 +108,16 @@ class RegionalCase(BaseCase):
 
         # specify files
         fdomain_in = os.path.join(indir, file)
-        fdomain_out = self.add_tag_to_filename(fdomain_in, self.tag)
-        logging.info("fdomain_in:  %s", fdomain_in)
-        logging.info("fdomain_out: %s", os.path.join(self.output_dir, fdomain_out))
-        logging.info("Creating domain file at region: %s", self.tag)
+        fdomain_out = add_tag_to_filename(fdomain_in, self.tag)
+        logger.info("fdomain_in:  %s", fdomain_in)
+        logger.info("fdomain_out: %s", os.path.join(self.output_dir, fdomain_out))
+        logger.info("Creating domain file at region: %s", self.tag)
 
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fdomain_in, "xc", "yc", "ni", "nj")
         lat = f_in["lat"]
         lon = f_in["lon"]
+
         # subset longitude and latitude arrays
         xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
         yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
@@ -126,8 +129,8 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         wfile = os.path.join(self.output_dir, fdomain_out)
-        f_out.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (fdomain_out) %s", wfile)
+        f_out.to_netcdf(path=wfile, mode="w", format='NETCDF3_64BIT')
+        logger.info("Successfully created file (fdomain_out) %s", wfile)
         f_in.close()
         f_out.close()
 
@@ -136,18 +139,19 @@ class RegionalCase(BaseCase):
         Create surface data file for this RegionalCase class.
         """
 
-        logging.info("Creating surface dataset file at region: %s", self.tag)
+        logger.info("Creating surface dataset file at region: %s", self.tag)
 
         # specify files
         fsurf_in = os.path.join(indir, file)
-        fsurf_out = self.add_tag_to_filename(fsurf_in, self.tag)
-        logging.info("fsurf_in:  %s", fsurf_in)
-        logging.info("fsurf_out: %s", os.path.join(self.output_dir, fsurf_out))
+        fsurf_out = add_tag_to_filename(fsurf_in, self.tag)
+        logger.info("fsurf_in:  %s", fsurf_in)
+        logger.info("fsurf_out: %s", os.path.join(self.output_dir, fsurf_out))
 
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         lat = f_in["lat"]
         lon = f_in["lon"]
+
         # subset longitude and latitude arrays
         xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
         yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
@@ -159,8 +163,8 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         wfile = os.path.join(self.output_dir, fsurf_out)
-        f_out.to_netcdf(path=wfile, mode="w")
-        logging.info("created file (fsurf_out) %s", wfile)
+        f_out.to_netcdf(path=wfile, mode="w", format='NETCDF3_64BIT')
+        logger.info("created file (fsurf_out) %s", wfile)
         f_in.close()
         f_out.close()
 
@@ -175,13 +179,13 @@ class RegionalCase(BaseCase):
          Create land use data file for this RegionalCase class.
          """
 
-        logging.info("Creating landuse file at region: %s", self.tag)
+        logger.info("Creating landuse file at region: %s", self.tag)
 
         # specify files
         fluse_in = os.path.join(indir, file)
-        fluse_out = self.add_tag_to_filename(fluse_in, self.tag)
-        logging.info("fluse_in:  %s", fluse_in)
-        logging.info("fluse_out: %s", os.path.join(self.output_dir, fluse_out))
+        fluse_out = add_tag_to_filename(fluse_in, self.tag)
+        logger.info("fluse_in:  %s", fluse_in)
+        logger.info("fluse_out: %s", os.path.join(self.output_dir, fluse_out))
 
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(
@@ -189,6 +193,7 @@ class RegionalCase(BaseCase):
         )
         lat = f_in["lat"]
         lon = f_in["lon"]
+
         # subset longitude and latitude arrays
         xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
         yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
@@ -200,8 +205,8 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         wfile = os.path.join(self.output_dir, fluse_out)
-        f_out.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (fluse_out) %s", wfile)
+        f_out.to_netcdf(path=wfile, mode="w", format='NETCDF3_64BIT')
+        logger.info("Successfully created file (fluse_out) %s", wfile)
         f_in.close()
         f_out.close()
 

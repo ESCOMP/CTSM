@@ -10,7 +10,7 @@ def get_git_short_hash():
     """
     Returns Git short SHA for the currect directory.
     """
-    short_sha = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip().decode()
+    sha = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip().decode()
     return sha
 
 

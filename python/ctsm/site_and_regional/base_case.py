@@ -111,7 +111,7 @@ class BaseCase:
             f_out (xarray Dataset): Xarray Dataset with 1-d coords
 
         """
-        logging.debug("Open file: %s", filename)
+        logger.debug("Open file: %s", filename)
         f_in = xr.open_dataset(filename)
 
         # create 1d coordinate variables to enable sel() method
@@ -125,40 +125,6 @@ class BaseCase:
         f_out.reset_coords([lon_varname, lat_varname])
         f_in.close()
         return f_out
-
-    @staticmethod
-    def add_tag_to_filename(filename, tag):
-        """
-        Add a tag and replace timetag of a filename
-        Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
-        Add the tag to just before that ending part
-        and change the ending part to the current time tag.
-
-        Parameters
-        ----------
-            filename (str) : file name
-            tag (str) : string of a tag to be added to the end of filename
-
-        Raises
-        ------
-            Error: When it cannot find . and _ in the filename.
-
-        Returns
-        ------
-            fname_out (str): filename with the tag and date string added
-
-        """
-        basename = os.path.basename(filename)
-        cend = -10
-        if basename[cend] == "c":
-            cend = cend - 1
-        if (basename[cend] != ".") and (basename[cend] != "_"):
-            logging.error("Trouble figuring out where to add tag to filename: %s", filename)
-            os.abort()
-        today = date.today()
-        today_string = today.strftime("%y%m%d")
-        fname_out = "{}_{}_c{}.nc".format(basename[:cend], tag, today_string)
-        return fname_out
 
     @staticmethod
     def update_metadata(nc_file):
@@ -207,7 +173,7 @@ class BaseCase:
 
         for attr in del_attrs:
             if attr in attr_list:
-                logging.debug("This attr should be deleted : %s", attr)
+                logger.debug("This attr should be deleted : %s", attr)
                 del nc_file.attrs[attr]
 
     @staticmethod
