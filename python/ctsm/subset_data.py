@@ -92,7 +92,7 @@ from ctsm.site_and_regional.base_case import BaseCase
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 
-from ctsm.utils import str2bool
+from ctsm.utils import str2bool, add_tag_to_filename
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -275,7 +275,7 @@ def get_parser():
             nargs="?",
             const=True,
             required=False,
-            default=True,
+            default=False,
         )
         subparser.add_argument(
             "--create-landuse",
@@ -425,7 +425,7 @@ def plon_type(x):
         x (str): longitude
 
     Raises:
-        Error: when latitude is <-180 and >360.
+        Error: when longitude is <-180 and >360.
 
     Returns:
         x(float): converted longitude between 0 and 360
@@ -437,7 +437,7 @@ def plon_type(x):
         print("after modulo lon is :", x)
     if (x < 0) or (x > 360):
         raise argparse.ArgumentTypeError(
-            "ERROR: Latitude of single point should be between 0 and 360 or -180 and 180."
+            "ERROR: Longitude of single point should be between 0 and 360 or -180 and 180."
         )
     return x
 
@@ -547,7 +547,7 @@ def main():
             dir_inputdata, "share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc"
         )
         fdomain_out = os.path.join(
-            dir_output, single_point.add_tag_to_filename(fdomain_in, single_point.tag)
+            dir_output, add_tag_to_filename(fdomain_in, single_point.tag)
         )
 
         single_point.fdomain_in = fdomain_in
@@ -569,7 +569,7 @@ def main():
             )
 
         fsurf_out = os.path.join(
-            dir_output, single_point.add_tag_to_filename(fsurf_in, single_point.tag)
+            dir_output, add_tag_to_filename(fsurf_in, single_point.tag)
         )
 
         single_point.fsurf_in = fsurf_in
@@ -589,9 +589,8 @@ def main():
                 dir_inputdata,
                 "lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_78pfts_CMIP6_simyr1850-2015_c190214.nc",
             )
-        # fluse_out   = dir_output + single_point.add_tag_to_filename( fluse_in, single_point.tag ) # remove resolution from filename for singlept cases
         fluse_out = os.path.join(
-            dir_output, single_point.add_tag_to_filename(fluse_in, single_point.tag)
+            dir_output, add_tag_to_filename(fluse_in, single_point.tag)
         )
         single_point.fluse_in = fluse_in
         single_point.fluse_out = fluse_out
@@ -606,7 +605,7 @@ def main():
         )
         fdatmdomain_out = os.path.join(
             dir_output_datm,
-            single_point.add_tag_to_filename(fdatmdomain_in, single_point.tag),
+            add_tag_to_filename(fdatmdomain_in, single_point.tag),
         )
         single_point.fdatmdomain_in = fdatmdomain_in
         single_point.fdatmdomain_out = fdatmdomain_out
@@ -709,7 +708,7 @@ def main():
             dir_inputdata, "share/domains/domain.lnd.fv1.9x2.5_gx1v7.170518.nc"
         )
         fdomain_out = os.path.join(
-            dir_output, region.add_tag_to_filename(fdomain_in, region.tag)
+            dir_output, add_tag_to_filename(fdomain_in, region.tag)
         )
 
         region.fdomain_in = fdomain_in
@@ -724,7 +723,7 @@ def main():
             "lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_c170824.nc",
         )
         fsurf_out = os.path.join(
-            dir_output, region.add_tag_to_filename(fsurf_in, region.tag)
+            dir_output, add_tag_to_filename(fsurf_in, region.tag)
         )
 
         region.fsurf_in = fsurf_in
@@ -739,7 +738,7 @@ def main():
             "lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc",
         )
         fluse_out = os.path.join(
-            dir_output, region.add_tag_to_filename(fluse_in, region.tag)
+            dir_output, add_tag_to_filename(fluse_in, region.tag)
         )
         region.fluse_in = fluse_in
         region.fluse_out = fluse_out

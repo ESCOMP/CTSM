@@ -260,10 +260,10 @@ class SinglePointCase(BaseCase):
         )
 
         # update lsmlat and lsmlon to match site specific instead of the nearest point
-        f3['lsmlon']= np.atleast_1d(self.plon)
-        f3['lsmlat']= np.atleast_1d(self.plat)
-        f3['LATIXY'][:,:]= self.plat
-        f3['LONGXY'][:,:]= self.plon
+        f_out['lsmlon']= np.atleast_1d(self.plon)
+        f_out['lsmlat']= np.atleast_1d(self.plat)
+        f_out['LATIXY'][:,:]= self.plat
+        f_out['LONGXY'][:,:]= self.plon
 
         # update attributes
         self.update_metadata(f_out)

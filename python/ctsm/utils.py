@@ -92,22 +92,36 @@ def add_tag_to_filename(filename, tag):
     Add a tag and replace timetag of a filename
     Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
     Add the tag to just before that ending part
-    and change the ending part to the current time tag
-    """
+    and change the ending part to the current time tag.
 
+    Parameters
+    ----------
+        filename (str) : file name
+        tag (str) : string of a tag to be added to the end of filename
+
+    Raises
+    ------
+        Error: When it cannot find . and _ in the filename.
+
+    Returns
+    ------
+        fname_out (str): filename with the tag and date string added
+
+    """
     basename = os.path.basename(filename)
     cend = -10
-
     if basename[cend] == "c":
         cend = cend - 1
-    if ( (basename[cend] != ".") and (basename[cend] != "_") ):
-        errmsg = 'Trouble figuring out where to add tag to filename: ' + filename
-        abort(errmsg)
-
+    if (basename[cend] != ".") and (basename[cend] != "_"):
+        logging.error(
+            "Trouble figuring out where to add tag to filename:" + filename
+        )
+        os.abort()
     today = date.today()
     today_string = today.strftime("%y%m%d")
+    fname_out = basename[:cend] + "_" + tag + "_c" + today_string + ".nc"
+    return fname_out
 
-    return basename[:cend] + "_" + tag + "_c" + today_string + '.nc'
 
 def update_metadata(file, title, summary, contact, data_script, description):
     """
