@@ -77,6 +77,9 @@ class SinglePointCase(BaseCase):
         Extract all DATM data at a single point.
     """
 
+    # pylint: disable=too-many-instance-attributes
+    # the ones we have are useful
+
     def __init__(
             self,
             plat,
