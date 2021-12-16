@@ -74,7 +74,6 @@ To remove NPL from your environment on Cheyenne/Casper:
 
 # TODO [NS]:
 # -[] Automatic downloading of missing files if they are missing
-# default 78 pft vs 16 pft
 
 # -- Import libraries
 
@@ -377,7 +376,7 @@ def plat_type(x):
         x(str): latitude
 
     Raises:
-        Error when x (latitude) is not between -90 and 90.
+        Error: ArgumentTypeError  when x (latitude) is not between -90 and 90.
 
     Returns:
         x (float): latitude in float
@@ -401,16 +400,14 @@ def plon_type(x):
         x (str): longitude
 
     Raises:
-        Error: when longitude is <-180 and >360.
+        Error: ArgumentTypeError when longitude is <-180 and >360.
 
     Returns:
         x(float): converted longitude between 0 and 360
     """
     x = float(x)
     if (-180 < x) and (x < 0):
-        print("lon is :", x)
         x = x % 360
-        print("after modulo lon is :", x)
     if (x < 0) or (x > 360):
         raise argparse.ArgumentTypeError(
             "ERROR: Longitude of single point should be between 0 and 360 or -180 and 180."
