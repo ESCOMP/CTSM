@@ -133,7 +133,7 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--variable-snow-fraction",
-        help="Creating datasets using variable snow fraction. If unset, snow is set to  uniform "
+        help="Create surface data with variable snow fraction. If unset, snow is set to uniform "
              "fraction.",
         action="store_false",
         dest="uni_snow",
@@ -142,7 +142,7 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--allow-multiple-pft",
-        help="Creating dataset using multiple pft. If unset, it assumes the whole grid is 100% "
+        help="Create surface data with multiple PFTs. If unset, it assumes the whole grid is 100% "
              "single PFT set by --dom-pft.",
         action="store_false",
         dest="overwrite_single_pft",
@@ -151,7 +151,7 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--zero-nonveg",
-        help="Creating dataset by setting all non-vegetation landunits to zero.",
+        help="Set all non-vegetation landunits in the surface data to zero.",
         action="store_true",
         dest="zero_nonveg",
         required=False,
@@ -159,7 +159,7 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--allow-saturation-excess",
-        help="Creating dataset allowing saturatated conditions. If unset saturation_excess is set "
+        help="Create surface data allowing saturated conditions. If unset saturation excess is set "
              "to zero.",
         action="store_true",
         dest="saturation_excess",
@@ -168,7 +168,7 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--dompft",
-        help="Dominant PFT type if we set the grid to 100% one PFT [default: %(default)s].",
+        help="Dominant PFT if we set the grid to 100% one PFT [default: %(default)s].",
         action="store",
         dest="dom_pft",
         type=int,
@@ -392,6 +392,7 @@ def setup_user_mods(user_mods_dir, cesmroot):
     with open(nl_datm_base, "r") as base_file, open(nl_datm, 'w') as user_file:
         for line in base_file:
             user_file.write(line)
+
 
 def setup_files(args, defaults, cesmroot):
     """
