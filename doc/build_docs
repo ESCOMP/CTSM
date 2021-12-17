@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 if [ -f doc-builder/build_docs ]; then
-    echo "Running: doc-builder/build_docs --fetch-images $@"
-    doc-builder/build_docs --fetch-images "$@"
+    echo "Running: make fetch-images"
+    make fetch-images
+    echo "Running: ./doc-builder/build_docs $@"
+    ./doc-builder/build_docs "$@"
 else
     echo "Obtain doc-builder by running ./manage_externals/checkout_externals -o from the top-level"
 fi
