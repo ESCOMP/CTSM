@@ -79,7 +79,7 @@ from ctsm.ctsm_logging import (
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", 'python'))
 sys.path.insert(1, _CTSM_PYTHON)
 
-DEFAULTS_FILE = "default_data.cfg"
+DEFAULTS_FILE = "data_afoster.cfg"
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +142,7 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--allow-multiple-pft",
-        help="Create surface data with multiple PFTs. If unset, it assumes the whole grid is 100% "
+        help="Create surface data with multiple PFTs. If unset, it assumes the whole grid is 100%% "
              "single PFT set by --dom-pft.",
         action="store_false",
         dest="overwrite_single_pft",
@@ -168,7 +168,7 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--dompft",
-        help="Dominant PFT if we set the grid to 100% one PFT [default: %(default)s].",
+        help="Dominant PFT if we set the grid to 100%% one PFT [default: %(default)s].",
         action="store",
         dest="dom_pft",
         type=int,
@@ -230,7 +230,7 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--create-mesh",
-        help="Flag for subsetting mesh file.",
+        help="Subset a mesh file for a region.",
         action="store_true",
         dest="create_mesh",
         required=False,
@@ -320,6 +320,14 @@ def get_parser():
             dest="out_dir",
             type=str,
             default=os.path.join(os.getcwd(), "subset_data_" + parser_name),
+        )
+        subparser.add_argument(
+            "--user-mods-dir",
+            help="User mods directory.",
+            action="store",
+            dest="user_mods_dir",
+            type=str,
+            default="",
         )
 
     # -- print help for both subparsers
@@ -586,7 +594,13 @@ def main():
 
     # print help and exit when no option is chosen
     if args.run_type != "point" and args.run_type != "region":
-        get_parser().print_help()
+        print("Must supply a positional argument: 'point' or 'region'.")
+        print("See ./subset_data --help for more help.")
+        sys.exit()
+    if not any([args.create_surfdata, args.create_domain, args.create_landuse, args.create_datm]):
+        print("Must supply one of:")
+        print(" --create-surface \n --create-landuse \n --create-datm \n --create-domain")
+        print("See ./subset_data --help for more help.")
         sys.exit()
 
     # create files and folders necessary and return dictionary of file/folder locations
@@ -594,5 +608,5 @@ def main():
 
     if args.run_type == "point":
         subset_point(args, file_dict)
-    elif args.run_type == "reg":
+    elif args.run_type == "region":
         subset_region(args, file_dict)
