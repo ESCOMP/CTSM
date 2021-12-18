@@ -79,7 +79,7 @@ from ctsm.ctsm_logging import (
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", 'python'))
 sys.path.insert(1, _CTSM_PYTHON)
 
-DEFAULTS_FILE = "data_afoster.cfg"
+DEFAULTS_FILE = "default_data.cfg"
 
 logger = logging.getLogger(__name__)
 
@@ -581,7 +581,7 @@ def main():
     # parse defaults file
     cesmroot = path_to_ctsm_root()
     defaults = configparser.ConfigParser()
-    defaults.read(os.path.join(cesmroot, 'tools/site_and_regional', DEFAULTS_FILE))
+    defaults.read(os.path.join(cesmroot, "tools/site_and_regional", DEFAULTS_FILE))
 
     # --------------------------------- #
 
