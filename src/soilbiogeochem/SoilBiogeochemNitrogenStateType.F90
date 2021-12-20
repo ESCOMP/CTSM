@@ -612,92 +612,49 @@ contains
        end if
     end if
     if(use_soil_matrixcn)then
-    do k = 1, ndecomp_pools
-       varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'n'
-       if (use_vertsoilc) then
-             ptr2d => this%matrix_cap_decomp_npools_vr_col(:,:,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap_vr", xtype=ncd_double, &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., scale_by_thickness=.false., &
-               long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d)			   
-             ptr2d => this%decomp0_npools_vr_col(:,:,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0_vr", xtype=ncd_double, &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., scale_by_thickness=.false., &
-               long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d)			   
-       else
-             ptr1d => this%matrix_cap_decomp_npools_vr_col(:,1,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap", xtype=ncd_double, &
-               dim1name='column', &
-               long_name='', units='', fill_value=spval,&
-               interpinic_flag='interp', readvar=readvar, data=ptr1d)			   
-             ptr1d => this%decomp0_npools_vr_col(:,1,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0", xtype=ncd_double,  &
-               dim1name='column', &
-               long_name='',  units='', fill_value=spval, &
-               interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-       end if
-          if(use_vertsoilc)then
-             ptr2d => this%in_nacc_2d(:,:,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_input_nacc_vr", xtype=ncd_double,  &
-                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                long_name='',  units='', scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=ptr2d)
-             ptr2d => this%vert_up_tran_nacc(:,:,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_up_tran_nacc_vr", xtype=ncd_double,  &
-                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                long_name='',  units='', scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=ptr2d)
-             ptr2d => this%vert_down_tran_nacc(:,:,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_down_tran_nacc_vr", xtype=ncd_double,  &
-                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                long_name='',  units='', scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=ptr2d)
-             ptr2d => this%exit_nacc(:,:,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_exit_nacc_vr", xtype=ncd_double,  &
-                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                long_name='',  units='', scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=ptr2d)
-          else
-             ptr1d => this%in_nacc_2d(:,1,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_input_nacc", xtype=ncd_double,  &
-                dim1name='column', &
-                long_name='',  units='', fill_value=spval,&
-                interpinic_flag='interp', readvar=readvar, data=ptr1d)
-             ptr1d => this%vert_up_tran_nacc(:,1,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_up_tran_nacc", xtype=ncd_double,  &
-                dim1name='column', &
-                long_name='',  units='', fill_value=spval,&
-                interpinic_flag='interp', readvar=readvar, data=ptr1d)
-             ptr1d => this%vert_down_tran_nacc(:,1,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_down_tran_nacc", xtype=ncd_double,  &
-                dim1name='column', &
-                long_name='',  units='', fill_value=spval,&
-                interpinic_flag='interp', readvar=readvar, data=ptr1d)
-             ptr1d => this%exit_nacc(:,1,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_exit_nacc", xtype=ncd_double,  &
-                dim1name='column', &
-                long_name='',  units='', fill_value=spval,&
-                interpinic_flag='interp', readvar=readvar, data=ptr1d)
-          end if
-    end do
+       do k = 1, ndecomp_pools
+          varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'n'
+          ptr2d => this%matrix_cap_decomp_npools_vr_col(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap_vr", xtype=ncd_double, &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., scale_by_thickness=.false., &
+            long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d)  
+          ptr2d => this%decomp0_npools_vr_col(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0_vr", xtype=ncd_double, &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., scale_by_thickness=.false., &
+            long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d)   
+          ptr2d => this%in_nacc_2d(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_input_nacc_vr", xtype=ncd_double,  &
+             dim1name='column', dim2name='levgrnd', switchdim=.true., &
+             long_name='',  units='', scale_by_thickness=.false., &
+             interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          ptr2d => this%vert_up_tran_nacc(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_up_tran_nacc_vr", xtype=ncd_double,  &
+             dim1name='column', dim2name='levgrnd', switchdim=.true., &
+             long_name='',  units='', scale_by_thickness=.false., &
+             interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          ptr2d => this%vert_down_tran_nacc(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_down_tran_nacc_vr", xtype=ncd_double,  &
+             dim1name='column', dim2name='levgrnd', switchdim=.true., &
+             long_name='',  units='', scale_by_thickness=.false., &
+             interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          ptr2d => this%exit_nacc(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_exit_nacc_vr", xtype=ncd_double,  &
+             dim1name='column', dim2name='levgrnd', switchdim=.true., &
+             long_name='',  units='', scale_by_thickness=.false., &
+             interpinic_flag='interp', readvar=readvar, data=ptr2d)
+       end do
     end if
 
     if(use_soil_matrixcn)then
        do i = 1, ndecomp_cascade_transitions
           varname=trim(decomp_cascade_con%cascade_step_name(i))//'n'
-          if(use_vertsoilc)then
-             ptr2d => this%hori_tran_nacc(:,:,i)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_nacc_vr", xtype=ncd_double,  &
-                 dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                 long_name='',  units='', scale_by_thickness=.false., &
-                 interpinic_flag='interp', readvar=readvar, data=ptr2d)
-          else
-             ptr1d => this%hori_tran_nacc(:,1,i)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_nacc", xtype=ncd_double,  &
-                 dim1name='column', long_name='',  units='', &
-                 interpinic_flag='interp', readvar=readvar, data=ptr1d)
-          end if
+          ptr2d => this%hori_tran_nacc(:,:,i)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_nacc_vr", xtype=ncd_double,  &
+              dim1name='column', dim2name='levgrnd', switchdim=.true., &
+              long_name='',  units='', scale_by_thickness=.false., &
+              interpinic_flag='interp', readvar=readvar, data=ptr2d)
        end do
     end if
 

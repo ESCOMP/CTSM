@@ -11,7 +11,7 @@ module SoilBiogeochemCarbonFluxType
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con 
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
-  use clm_varctl                         , only : use_fates, use_soil_matrixcn, use_vertsoilc
+  use clm_varctl                         , only : use_fates, use_soil_matrixcn
   use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
   
   ! 
@@ -179,7 +179,7 @@ contains
         call this%Xdiagsoil%InitDM              (ndecomp_pools*nlevdecomp,begc,endc)
         call this%matrix_Cinput%InitV(ndecomp_pools*nlevdecomp,begc,endc)
      end if
-     if(use_soil_matrixcn .and. use_vertsoilc)then
+     if(use_soil_matrixcn)then
         allocate(this%tri_ma_vr(begc:endc,1:decomp_cascade_con%Ntri_setup))
      else
         allocate(this%tri_ma_vr(1,1)); this%tri_ma_vr(:,:) = nan
@@ -752,19 +752,13 @@ contains
           end do
        end do
        call this%matrix_Cinput%SetValueV_scaler(num_column,filter_column(1:num_column),value_column)
-       ! IMPORTANT NOTE: Although it looks like the following if appears to be
-       ! backwards (it should be 'if use_versoilc'), fixing it causes Carbon 
-       ! balance checks to fail. EBK 10/21/2019
-       ! Both use_vertsoilc and .not. use_vertsoilc should reset tri_ma_vr to 0. 
-       ! Because single soil layer still add V matrix but as a zero matrix. CL 10/23/2019
-        if(use_vertsoilc)then
-          do k = 1,decomp_cascade_con%Ntri_setup
-             do fi = 1,num_column
-                i = filter_column(fi)
-                this%tri_ma_vr(i,k) = value_column
-             end do
+       !
+       do k = 1,decomp_cascade_con%Ntri_setup
+          do fi = 1,num_column
+             i = filter_column(fi)
+             this%tri_ma_vr(i,k) = value_column
           end do
-        end if
+       end do
     end if
     do j = 1, nlevdecomp_full
        do fi = 1,num_column

@@ -37,7 +37,7 @@ module CNSoilMatrixMod
   use clm_varctl                         , only : isspinup, use_soil_matrixcn, is_outmatrix, nyr_forcing, nyr_SASU, iloop_avg
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
-  use clm_varctl                         , only : use_c13, use_c14, use_vertsoilc, iulog
+  use clm_varctl                         , only : use_c13, use_c14, iulog
   use perf_mod                           , only : t_startf, t_stopf
   use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
   use MatrixMod                          , only : inverse
@@ -401,9 +401,7 @@ contains
 
       ! Set vertical transfer matrix V from tri_ma_vr
       call t_startf('CN Soil matrix-matrix mult1-lev3-SetValueAV,AKfire')
-      if ( use_vertsoilc )then
-         call AVsoil%SetValueSM(begc,endc,num_soilc,filter_soilc,tri_ma_vr(begc:endc,1:Ntri_setup),tri_i,tri_j,Ntri_setup)
-      end if
+      call AVsoil%SetValueSM(begc,endc,num_soilc,filter_soilc,tri_ma_vr(begc:endc,1:Ntri_setup),tri_i,tri_j,Ntri_setup)
 
       ! Set fire decomposition matrix Kfire from matrix_decomp_fire_k
       do j=1,ndecomp_pools_vr
@@ -433,39 +431,23 @@ contains
       ! and AKallsoiln represents all soil N transfer rate (gN/(gN*m3*step))
 
       call t_startf('CN Soil matrix-matrix mult1-lev3-SPMP_AB')
-      if ( use_vertsoilc )then
-         if(num_actfirec .eq. 0)then
-            call AKallsoilc%SPMP_AB(num_soilc,filter_soilc,AKsoilc,AVsoil,list_ready1_nofire,list_A=list_AK_AKV, list_B=list_V_AKV,&
-                 NE_AB=NE_AKallsoilc,RI_AB=RI_AKallsoilc,CI_AB=CI_AKallsoilc)
-            call AKallsoiln%SPMP_AB(num_soilc,filter_soilc,AKsoiln,AVsoil,list_ready2_nofire,list_A=list_AK_AKV, list_B=list_V_AKV,&
-                 NE_AB=NE_AKallsoiln,RI_AB=RI_AKallsoiln,CI_AB=CI_AKallsoiln)
-         else
-            call AKallsoilc%SPMP_ABC(num_soilc,filter_soilc,AKsoilc,AVsoil,AKfiresoil,list_ready1_fire,list_A=list_AK_AKVfire,&
-                 list_B=list_V_AKVfire,list_C=list_fire_AKVfire,NE_ABC=NE_AKallsoilc,RI_ABC=RI_AKallsoilc,CI_ABC=CI_AKallsoilc,&
-                 use_actunit_list_C=.True.,num_actunit_C=num_actfirec,filter_actunit_C=filter_actfirec)
-            call AKallsoiln%SPMP_ABC(num_soilc,filter_soilc,AKsoiln,AVsoil,AKfiresoil,list_ready2_fire,list_A=list_AK_AKVfire,&
-                 list_B=list_V_AKVfire,list_C=list_fire_AKVfire,NE_ABC=NE_AKallsoiln,RI_ABC=RI_AKallsoiln,CI_ABC=CI_AKallsoiln,&
-                 use_actunit_list_C=.True.,num_actunit_C=num_actfirec,filter_actunit_C=filter_actfirec)
-         end if
-         if(use_c14)then
-            call cf14_soil%AKallsoilc%SPMP_ABC(num_soilc,filter_soilc,AKsoilc,AVsoil,cf14_soil%AKfiresoil,list_ready3_fire,&
-                 list_A=list_AK_AKVfire,list_B=list_V_AKVfire,list_C=list_fire_AKVfire,NE_ABC=cf14_soil%NE_AKallsoilc,&
-                 RI_ABC=cf14_soil%RI_AKallsoilc,CI_ABC=cf14_soil%CI_AKallsoilc)
-         end if
+      if(num_actfirec .eq. 0)then
+         call AKallsoilc%SPMP_AB(num_soilc,filter_soilc,AKsoilc,AVsoil,list_ready1_nofire,list_A=list_AK_AKV, list_B=list_V_AKV,&
+              NE_AB=NE_AKallsoilc,RI_AB=RI_AKallsoilc,CI_AB=CI_AKallsoilc)
+         call AKallsoiln%SPMP_AB(num_soilc,filter_soilc,AKsoiln,AVsoil,list_ready2_nofire,list_A=list_AK_AKV, list_B=list_V_AKV,&
+              NE_AB=NE_AKallsoiln,RI_AB=RI_AKallsoiln,CI_AB=CI_AKallsoiln)
       else
-         if(num_actfirec .eq. 0)then
-            call AKallsoilc%SetValueCopySM( num_soilc,filter_soilc,AKsoilc )
-            call AKallsoiln%SetValueCopySM( num_soilc,filter_soilc,AKsoiln )
-         else
-            call AKallsoilc%SPMP_AB(num_soilc,filter_soilc,AKsoilc,AKfiresoil,list_ready1_fire,list_A=list_AK_AKVfire, &
-                 list_B=list_fire_AKVfire, NE_AB=NE_AKallsoilc,RI_AB=RI_AKallsoilc,CI_AB=CI_AKallsoilc)
-            call AKallsoiln%SPMP_AB(num_soilc,filter_soilc,AKsoiln,AKfiresoil,list_ready2_fire,list_A=list_AK_AKVfire, &
-                 list_B=list_fire_AKVfire, NE_AB=NE_AKallsoiln,RI_AB=RI_AKallsoiln,CI_AB=CI_AKallsoiln)
-         end if
-         if(use_c14)then
-            call cf14_soil%AKallsoilc%SPMP_AB(num_soilc,filter_soilc,AKsoilc,cf14_soil%AKfiresoil,list_ready3_fire,list_A=list_AK_AKVfire, &
-                 list_B=list_fire_AKVfire, NE_AB=cf14_soil%NE_AKallsoilc,RI_AB=cf14_soil%RI_AKallsoilc,CI_AB=cf14_soil%CI_AKallsoilc)
-         end if
+         call AKallsoilc%SPMP_ABC(num_soilc,filter_soilc,AKsoilc,AVsoil,AKfiresoil,list_ready1_fire,list_A=list_AK_AKVfire,&
+              list_B=list_V_AKVfire,list_C=list_fire_AKVfire,NE_ABC=NE_AKallsoilc,RI_ABC=RI_AKallsoilc,CI_ABC=CI_AKallsoilc,&
+              use_actunit_list_C=.True.,num_actunit_C=num_actfirec,filter_actunit_C=filter_actfirec)
+         call AKallsoiln%SPMP_ABC(num_soilc,filter_soilc,AKsoiln,AVsoil,AKfiresoil,list_ready2_fire,list_A=list_AK_AKVfire,&
+              list_B=list_V_AKVfire,list_C=list_fire_AKVfire,NE_ABC=NE_AKallsoiln,RI_ABC=RI_AKallsoiln,CI_ABC=CI_AKallsoiln,&
+              use_actunit_list_C=.True.,num_actunit_C=num_actfirec,filter_actunit_C=filter_actfirec)
+      end if
+      if(use_c14)then
+         call cf14_soil%AKallsoilc%SPMP_ABC(num_soilc,filter_soilc,AKsoilc,AVsoil,cf14_soil%AKfiresoil,list_ready3_fire,&
+              list_A=list_AK_AKVfire,list_B=list_V_AKVfire,list_C=list_fire_AKVfire,NE_ABC=cf14_soil%NE_AKallsoilc,&
+              RI_ABC=cf14_soil%RI_AKallsoilc,CI_ABC=cf14_soil%CI_AKallsoilc)
       end if
 
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SPMP_AB')
