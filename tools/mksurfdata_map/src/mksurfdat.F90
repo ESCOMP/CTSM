@@ -1364,7 +1364,6 @@ subroutine normalizencheck_landuse(ldomain)
 ! Precondition: pctlak + pctwet + pcturb + pctgla + pctcrop <= 100 (within roundoff)
 !
 ! !USES:
-    use mkpftUtilsMod     , only : adjust_total_veg_area
     use mkpftUtilsMod     , only : adjust_total_natveg_area
     implicit none
 ! !ARGUMENTS:
