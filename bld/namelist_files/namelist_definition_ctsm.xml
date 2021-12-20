@@ -2110,10 +2110,9 @@ NOTE: THIS CORRESPONDS DIRECTLY TO THE env_run.xml VARIABLE OF THE SAME NAME.
 </entry>
 
 <entry id="bgc_mode" type="char*5" category="default_settings"
-       group="default_settings" valid_values="sp,cn,bgc,fates" >
+       group="default_settings" valid_values="sp,bgc,fates" >
 Command line arguement for biogeochemistry mode for CLM4.5
    sp  = Satellitte Phenology
-   cn  = Carbon Nitrogen model
    bgc = CLM4.5 BGC model with: 
         CENTURY model pools 
         Nitrification/De-nitrification
