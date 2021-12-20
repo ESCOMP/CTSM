@@ -696,13 +696,13 @@ EOF
       #
       # Check if all urban single point dataset
       #
-      my @all_urb = ( "1x1_camdenNJ","1x1_vancouverCAN", "1x1_mexicocityMEX", "1x1_urbanc_alpha" );
+      my @all_urb = ( "1x1_vancouverCAN", "1x1_mexicocityMEX", "1x1_urbanc_alpha" );
       my $all_urb = ".false.";
       my $urb_pt  = 0;
       foreach my $urb_res ( @all_urb ) {
          if ( $res eq $urb_res ) {
             $all_urb = ".true.";
-            if ( $res ne "1x1_camdenNJ" ) { $urb_pt  = 1; }
+            $urb_pt  = 1;
          }
       }
       #

@@ -9,7 +9,8 @@ module clm_instMod
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
-  use clm_varctl      , only : use_century_decomp, use_crop, snow_cover_fraction_method, paramfile
+  use clm_varctl      , only : use_crop, snow_cover_fraction_method, paramfile
+  use SoilBiogeochemDecompCascadeConType , only : century_decomp, decomp_method
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
   use landunit_varcon , only : istice, istsoil
   use perf_mod        , only : t_startf, t_stopf
@@ -190,7 +191,6 @@ contains
     use controlMod                         , only : nlfilename, fsurdat
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
-    use SoilBiogeochemDecompCascadeCNMod   , only : init_decompcascade_cn
     use SoilBiogeochemDecompCascadeContype , only : init_decomp_cascade_constants
     use SoilBiogeochemCompetitionMod       , only : SoilBiogeochemCompetitionInit
     
@@ -378,18 +378,16 @@ contains
        call soilbiogeochem_state_inst%Init(bounds)
 
        ! Initialize decompcascade constants
-       ! Note that init_decompcascade_bgc and init_decompcascade_cn need 
+       ! Note that init_decompcascade_bgc need 
        ! soilbiogeochem_state_inst to be initialized
 
-       call init_decomp_cascade_constants( use_century_decomp )
-       if ( use_soil_matrixcn .and. use_fates )then
-          call endrun( "ERROR: Currently use_soil_matrixcn can NOT be used with FATES" )
-       end if
-       if (use_century_decomp) then
+       call init_decomp_cascade_constants( )
+       if (decomp_method == century_decomp ) then
+          if ( use_fates )then
+             call endrun( "ERROR: Currently century soil decomposition can NOT be used with FATES" )
+          end if
           call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, &
                                       soilstate_inst )
-       else 
-          call init_decompcascade_cn(bounds, soilbiogeochem_state_inst)
        end if
 
        ! Initalize soilbiogeochem carbon types

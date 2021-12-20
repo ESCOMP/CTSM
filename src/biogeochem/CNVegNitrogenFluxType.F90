@@ -14,7 +14,7 @@ module CNVegNitrogenFluxType
                                                   ideadcroot,ideadcroot_st,ideadcroot_xf,&
                                                   igrain,igrain_st,igrain_xf,iretransn,ioutn
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop, use_matrixcn
+  use clm_varctl                         , only : use_nitrif_denitrif, use_crop, use_matrixcn
   use CNSharedParamsMod                  , only : use_fun
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun

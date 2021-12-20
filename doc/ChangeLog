@@ -1,4 +1,164 @@
 ===============================================================
+Tag name:  ctsm5.1.dev054
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Sep  2 01:18:31 MDT 2021
+One-line Summary: New parameters on paramsfile, many bit-for-bit changes, new history fields for IWUELN,VPD_2M, allow Medlyn Photosynthesis for non-PHS cases, fixes to HumanStressIndex
+
+Purpose and description of changes
+----------------------------------
+
+Brings more hardcoded parameters to the paramsfile. Some bit-for-bit cleanup. A fix for HumanStressIndex. Adding IWUELN 
+and VPD_2M diagnostic to history output. Add in ability to run Medlyn photosynthesis for non-PHS cases (not turned on yet though).
+Most of the addition of parameters is from Keith Oleson.
+
+Daniel Kennedy added two new diagnostic fields available for history outuput.
+IWUELN: the intrinsic water use efficiency at local noon (umolCO2/molH2O)
+VPD_2M: vapor pressure deficit at 2m reference height (pascals)
+
+The Medlyn stomatal conductance functionality was deployed for CLM5. It had not been implemented for use_hydrstress=.false 
+(i.e.  SMS).  Previously if we opted for: use_hydrstress=.false and stomatalcond_method = 'Medlyn2011', 
+the model would actually use the Ball-Berry stomatal conductance model. Daniel Kennedy adds the changes to allow this for
+non-PHS.
+
+Human Stress index changes are from Jonathan Buzan and Keith Oleson.
+
+Some clean-up work on arctic vegetation changes. Also removal of the option to run non-CENTRY based soil
+decomposition model. CN options are removed along with use_century_decomp and use_vertsoilc. use_nitrif_dentrif and
+use_lch4 are still retained, but recommended to be always on, and will be removed later.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+
+  Fixes #1472 - hist_master_list_file dies if master_list_file.rst already exists
+  Fixes #1469 - Remove unused 0.1x0.1 grid
+  Fixes #1468 - Remove vestiges of ch4 0.9x1.25 grid in mksurfdata_map/mkmapdata
+  Fixes #1427 - Division of critical day length by 2 is incorrect
+  Fixes #1403 - Invalid test running single-point forcing data before or after it's valid data series
+  Fixes #1401 - 1-Degree methane finundated stream data is labeled as if it's 2-degree
+  Fixes #1399 - Some cleanup for arctic luna changes
+  Fixes #1296 - Make a checklist of issues to check for when running a simulation.
+  Fixes #1245 - intrinsic water use efficiency diagnosti
+  Fixes #1250 - Error in HumanIndexMod (QSat_2 subroutine)
+  Fixes #1284 - change where stem_biomass is set
+  Fixes #1382 - write out friction velocity to history files by default
+  Fixes #1379 - Invalid xml for namelist_definition file: missing end tag
+  Fixes #1185 - Remove wrtdia
+  Fixes #1168 - Remove duplication between phys versions in CLM_BLDNML_OPTS settings (and fix some others) in config_component.xml
+  Fixes #886 -- Warning if FUN is on, but FlexibleCN is not
+  Fixes #808 -- Remove camdenNJ test from prebeta test list, replace it with working tests
+
+Partial work on #1356 (but use_lch4, use_nitrif_dentrif remain)
+
+Known bugs found since the previous tag (include issue #):
+  #1462 -- GSSUN and GSSHA are not set on history files
+  #1460 -- Initialize t_soisno to 272K instead of 274K to avoid deep soil carbon in permafrost regions
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  Vertical soil carbon is now hardcoded to on. This means that if you had run a simulation
+  with it turned off -- you won't be able to use it's restart files in this versions and after.
+  Likewise with CENTURY-BGC.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Removed namelist options: wrtdia, use_vertsoilc, use_century_decomp, min_wind_snowcompact
+  Added namelist options:   min_critical_dayl_method, soil_decomp_method
+    New options for min_critical_dayl_method, DependsOnVeg and DependsOnLatAndVeg
+
+  Remove 1x1_camdenNJ and 1x1_asphaltjungleNJ grid options
+  Remove some uneeded grids and files, correct 360x720cru grid for mksurfdata_map
+  Remove vestiges of ch4 files in mksurfdata_map
+  Remove the "cn" option to "-bgc" in CLM_BLDNML_OPTS and remove Cn compsets and tests
+  
+  New history variables: VPD2M, IWUELN (FV made default active)
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+  New parameter files
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   After we turn on methane and nitrfication-dentrification for all configurations we
+   can remove the use_lch4 and use_nitrif_denitrif options
+
+Changes to tests or testing:
+    Removed CN and 1x1_camdenNJ tests as well as NoVSNoNI
+    Shortened 1x1_cancouverCAN test as it ran beyond the end of data
+    Changed name of "rootlit" test to "anoxia" as that was the only thing it does, it now
+      also runs with vertical soil Carbon profile
+
+
+Testing summary: regular, tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - OK
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit (except diagnostic fields when HumanStress is turned on)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: When human-stress turned on
+    - what platforms/compilers: All
+    - nature of change: Small (only to diagnostic fields)
+         Also now can't run with use_vertsoilc off
+	 anoxia tests are different from rootlit tests as use_vertsoilc is now hardcoded on
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #1164 -- Some more hardcoded parameters to the params file
+  #1250 -- Error in HumanIndexMod (QSat_2 subroutine)
+  #1267 -- Adding IWUELN and VPD_2M diagnostic
+  #1321 -- Medlyn-SMS
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev053
 Originator(s):  sacks (Bill Sacks)
 Date:  Fri Aug 13 10:17:42 MDT 2021

@@ -1,2 +1,2 @@
-paramfile = '/glade/p/cesm/cseg/inputdata/lnd/clm2/paramdata/ctsm51_params.c210624.nc'
+paramfile = '/glade/p/cesm/cseg/inputdata/lnd/clm2/paramdata/ctsm51_params.c210827.nc'
 hist_fincl1 = 'CWDC_HR','C13_CWDC_HR','C14_CWDC_HR','CWD_HR_L2','CWD_HR_L2_vr','CWD_HR_L3','CWD_HR_L3_vr'
