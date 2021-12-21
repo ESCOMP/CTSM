@@ -750,13 +750,7 @@ program mksurfdat
        ! types proportionally.
 
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
-       if (suma > 250._r4) then
-          write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-               'pcturb, pctgla, and pctcrop is greater than 250%'
-          write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctcrop= ', &
-               n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctcft(n)%get_pct_l2g()
-          call abort()
-       else if (suma > 100._r4) then
+       if (suma > 100._r4) then
           pctlak(n) = pctlak(n) * 100._r8/suma
           pctwet(n) = pctwet(n) * 100._r8/suma
           pcturb(n) = pcturb(n) * 100._r8/suma
@@ -1196,13 +1190,7 @@ program mksurfdat
 
           do n = 1,ns_o
              suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
-             if (suma > 250._r4) then
-                write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-                     'pcturb, pctgla, and pctcrop is greater than 250%'
-                write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctcrop= ', &
-                     n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctcft(n)%get_pct_l2g()
-                call abort()
-             else if (suma > 100._r4) then
+             if (suma > 100._r4) then
                 pctlak(n) = pctlak(n) * 100._r8/suma
                 pctwet(n) = pctwet(n) * 100._r8/suma
                 pcturb(n) = pcturb(n) * 100._r8/suma
