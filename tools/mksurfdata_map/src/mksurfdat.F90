@@ -138,7 +138,6 @@ program mksurfdat
     real(r8), allocatable  :: lakedepth(:)       ! lake depth (m)
     real(r8), allocatable  :: pctlak_orig(:)     ! percent lake of gridcell before dynamic land use adjustments            
     real(r8), allocatable  :: pctwet_orig(:)     ! percent wetland of gridcell before dynamic land use adjustments 
-    real(r8), allocatable  :: pcturb_orig(:)     ! percent urban of gridcell before dynamic land use adjustments 
     real(r8), allocatable  :: pctgla_orig(:)     ! percent glacier of gridcell before dynamic land use adjustments
 
     real(r8) :: std_elev = -999.99_r8            ! Standard deviation of elevation (m) to use for entire grid
@@ -469,7 +468,6 @@ program mksurfdat
                glacier_region(ns_o)               , &  
                pctlak_orig(ns_o)                  , &
                pctwet_orig(ns_o)                  , &
-               pcturb_orig(ns_o)                  , &
                pctgla_orig(ns_o)                  )       
     landfrac_pft(:)       = spval 
     pctlnd_pft(:)         = spval
@@ -658,7 +656,6 @@ program mksurfdat
     ! Save special land unit areas of surface dataset 
     pctlak_orig(:) = pctlak(:)
     pctwet_orig(:) = pctwet(:)
-    pcturb_orig(:) = pcturb(:)
     pctgla_orig(:) = pctgla(:)
      
     ! Make elevation [elev] from [ftopo, ffrac] dataset
