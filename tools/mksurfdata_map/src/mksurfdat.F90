@@ -1364,7 +1364,6 @@ subroutine normalizencheck_landuse(ldomain)
 ! Precondition: pctlak + pctwet + pcturb + pctgla + pctcrop <= 100 (within roundoff)
 !
 ! !USES:
-    use mkpftUtilsMod     , only : adjust_total_natveg_area
     implicit none
 ! !ARGUMENTS:
     type(domain_type)   :: ldomain
@@ -1438,7 +1437,7 @@ subroutine normalizencheck_landuse(ldomain)
        ! correct for rounding error:
        new_total_natveg_pct = max(new_total_natveg_pct, 0._r8)
 
-       call adjust_total_natveg_area(new_total_natveg_pct, pctnatpft=pctnatpft(n))
+       call pctnatpft(n)%set_pct_l2g(new_total_natveg_pct)       
 
        ! Confirm that we have done the rescaling correctly: now the sum of all landunits
        ! should be 100%

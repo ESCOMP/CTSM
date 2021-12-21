@@ -24,7 +24,6 @@ module mkpftUtilsMod
   ! !PUBLIC MEMBER FUNCTIONS:
   !
   public :: convert_from_p2g         ! Convert a p2g array into pct_pft_type objects
-  public :: adjust_total_natveg_area ! Adjust the total natural vegetated area to a new specified total
 
   !
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -212,40 +211,6 @@ contains
     default_cft(c3cropindex) = 100._r8
 
   end function get_default_cft
-
-  !-----------------------------------------------------------------------
-  subroutine adjust_total_natveg_area(new_total_pct, pctnatpft)
-    !
-    ! !DESCRIPTION:
-    ! Adjust the total natural vegetated area on the grid cell to a new
-    ! specified total.
-    !
-    ! If the old areas are 0%, then all the new area goes into pctnatpft.
-    !
-    ! !USES:
-    use mkpctPftTypeMod, only : pct_pft_type
-    !
-    ! !ARGUMENTS:
-    real(r8), intent(in) :: new_total_pct ! new total % of natural veg landunit
-    class(pct_pft_type), intent(inout) :: pctnatpft ! natural veg cover information
-    !
-    ! !LOCAL VARIABLES:
-    real(r8) :: natpft_l2g ! grid cell % cover of natural veg
-    real(r8) :: old_total  ! old total % cover of natural veg
-    
-    character(len=*), parameter :: subname = 'adjust_total_natveg_area'
-    !-----------------------------------------------------------------------
-    
-    natpft_l2g = pctnatpft%get_pct_l2g()
-    old_total = natpft_l2g
-    if (old_total > 0._r8) then
-       call pctnatpft%set_pct_l2g(natpft_l2g * new_total_pct / old_total)
-    else
-       call pctnatpft%set_pct_l2g(new_total_pct)
-    end if
-
-  end subroutine adjust_total_natveg_area
-
 
 end module mkpftUtilsMod
 
