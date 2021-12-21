@@ -1432,7 +1432,6 @@ subroutine normalizencheck_landuse(ldomain)
 
        ! Natural vegetated cover is 100% minus the sum of all other landunits
        
-       suma = pctlak(n)+pctwet(n)+pctgla(n)+pcturb(n)+pctcft(n)%get_pct_l2g()
        new_total_natveg_pct = 100._r8 - suma
        ! correct for rounding error:
        new_total_natveg_pct = max(new_total_natveg_pct, 0._r8)
