@@ -70,7 +70,7 @@ contains
 
       testname = 'basic test, all unique'
       src_array = (/1, 2, 3, 4, 5, 6, 7, 8, 9/)
-      mask_src = (/1, 1, 1, 1, 1, 1, 1, 1, 1/)  ! same for all the tests
+      mask_src(:) = 1  ! same for all the tests
       minval = 1
       maxval = 9
       nodata = -1
