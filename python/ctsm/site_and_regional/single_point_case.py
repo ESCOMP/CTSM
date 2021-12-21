@@ -148,7 +148,7 @@ class SinglePointCase(BaseCase):
         f_out.attrs["Created_from"] = fdomain_in
 
         wfile = os.path.join(self.output_dir, fdomain_out)
-        f_out.to_netcdf(path=fdomain_out, mode="w", format="NETCDF3_64BIT")
+        f_out.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
         logger.info("Successfully created file (fdomain_out) %s", wfile)
         f_in.close()
         f_out.close()
