@@ -22,7 +22,7 @@ program mksurfdat
                                     soil_color, mksoilcol, mkorganic, &
                                     soil_fmax, mkfmax
     use mkvocefMod         , only : mkvocef
-    use mklanwatMod        , only : mklakwat, mkwetlnd, mklakparams
+    use mklanwatMod        , only : mklakwat, mkwetlnd, mklakparams, update_max_array_lake
     use mkglacierregionMod , only : mkglacierregion
     use mkglcmecMod        , only : nglcec, mkglcmec, mkglcmecInit, mkglacier
     use mkharvestMod       , only : mkharvest, mkharvest_init, mkharvest_fieldname
@@ -81,6 +81,7 @@ program mksurfdat
     character(len=256) :: fname             ! generic filename
     character(len=256) :: fhrvname          ! generic harvest filename
     character(len=256) :: furbname          ! generic transient urban land cover filename
+    character(len=256) :: flakname          ! generic lake filename
     character(len=256) :: string            ! string read in
     integer  :: t1                          ! timer
     real(r8),parameter :: p5  = 0.5_r8      ! constant
@@ -107,6 +108,7 @@ program mksurfdat
     real(r8), allocatable  :: elevclass(:)       ! glacier_mec elevation classes
     integer,  allocatable  :: glacier_region(:)  ! glacier region ID
     real(r8), allocatable  :: pctlak(:)          ! percent of grid cell that is lake
+    real(r8), allocatable  :: pctlak_max(:)      ! maximum percent of grid cell that is lake  
     real(r8), allocatable  :: pctwet(:)          ! percent of grid cell that is wetland  
     real(r8), allocatable  :: pcturb(:)          ! percent of grid cell that is urbanized (total across all urban classes)
     real(r8), allocatable  :: pcturb_max(:,:)    ! maximum percent cover of each urban class, as % of grid cell
@@ -135,8 +137,7 @@ program mksurfdat
     real(r8), allocatable  :: vic_ws(:)          ! VIC Ws parameter (unitless)
     real(r8), allocatable  :: vic_dsmax(:)       ! VIC Dsmax parameter (mm/day)
     real(r8), allocatable  :: vic_ds(:)          ! VIC Ds parameter (unitless)
-    real(r8), allocatable  :: lakedepth(:)       ! lake depth (m)
-    real(r8), allocatable  :: pctlak_orig(:)     ! percent lake of gridcell before dynamic land use adjustments            
+    real(r8), allocatable  :: lakedepth(:)       ! lake depth (m)            
     real(r8), allocatable  :: pctwet_orig(:)     ! percent wetland of gridcell before dynamic land use adjustments 
     real(r8), allocatable  :: pctgla_orig(:)     ! percent glacier of gridcell before dynamic land use adjustments
 
@@ -282,7 +283,7 @@ program mksurfdat
     ! ======================================
     ! Optionally specify setting for:
     ! ======================================
-    !    mksrf_fdynuse ----- ASCII text file that lists each year of pft and urban files to use
+    !    mksrf_fdynuse ----- ASCII text file that lists each year of pft, urban, and lake files to use
     !    mksrf_gridtype ---- Type of grid (default is 'global')
     !    outnc_double ------ If output should be in double precision
     !    outnc_large_files - If output should be in NetCDF large file format
@@ -444,7 +445,8 @@ program mksurfdat
                pctcft(ns_o)                       , &
                pctcft_max(ns_o)                   , &
                pctgla(ns_o)                       , & 
-               pctlak(ns_o)                       , & 
+               pctlak(ns_o)                       , &
+               pctlak_max(ns_o)                   , & 
                pctwet(ns_o)                       , & 
                pcturb(ns_o)                       , &
                pcturb_max(ns_o,numurbl)           , &
@@ -466,7 +468,6 @@ program mksurfdat
                vic_ds(ns_o)                       , &
                lakedepth(ns_o)                    , &
                glacier_region(ns_o)               , &  
-               pctlak_orig(ns_o)                  , &
                pctwet_orig(ns_o)                  , &
                pctgla_orig(ns_o)                  )       
     landfrac_pft(:)       = spval 
@@ -654,7 +655,6 @@ program mksurfdat
          region_o=urban_region)
 
     ! Save special land unit areas of surface dataset 
-    pctlak_orig(:) = pctlak(:)
     pctwet_orig(:) = pctwet(:)
     pctgla_orig(:) = pctgla(:)
      
@@ -1085,6 +1085,7 @@ program mksurfdat
        pctnatpft_max = pctnatpft
        pctcft_max = pctcft
        pcturb_max = urbn_classes_g
+       pctlak_max = pctlak
 
        ntim = 0
        do 
@@ -1120,7 +1121,14 @@ program mksurfdat
              write(6,*) subname, ' error: year for urban not equal to year for PFT files'
              call abort()
           end if
-      write(6,*)'input urban dynamic dataset for year ', year2, ' is : ', trim(furbname)    
+      write(6,*)'input urban dynamic dataset for year ', year2, ' is : ', trim(furbname) 
+          read(nfdyn, '(A195,1x,I4)', iostat=ier) flakname, year2
+          if ( year2 /= year ) then
+             write(6,*) subname, ' error: year for lake not equal to year for PFT files'
+             call abort()
+          end if
+      write(6,*)'input lake dynamic dataset for year ', year2, ' is : ', trim(flakname)    
+           
           ntim = ntim + 1
 
           ! Create pctpft data at model resolution
@@ -1149,7 +1157,10 @@ program mksurfdat
              end if
           end do
 
-
+          ! Create pctlak data at model resolution (use original mapping file from lake data)
+          call mklakwat (ldomain, mapfname=map_flakwat, datfname=flakname, &
+               ndiag=ndiag, zero_out=all_urban.or.all_veg, lake_o=pctlak)
+               
           call mkurban (ldomain, mapfname=map_furban, datfname=furbname, &
                ndiag=ndiag, zero_out=all_veg, urbn_o=pcturb, urbn_classes_o=urbn_classes, &
                region_o=urban_region)
@@ -1162,7 +1173,6 @@ program mksurfdat
 
           ! For landunits NOT read each year: reset to their pre-adjustment values in preparation for redoing landunit area normalization
           pctwet(:) = pctwet_orig(:)
-          pctlak(:) = pctlak_orig(:)
           pctgla(:) = pctgla_orig(:)
                                         
           call change_landuse(ldomain, dynpft=.true.)
@@ -1173,6 +1183,7 @@ program mksurfdat
           call update_max_array(pctnatpft_max,pctnatpft)
           call update_max_array(pctcft_max,pctcft)
           call update_max_array_urban(pcturb_max,urbn_classes_g)
+          call update_max_array_lake(pctlak_max,pctlak)
 
           ! Output time-varying data for current year
           
@@ -1184,6 +1195,10 @@ program mksurfdat
           
           call check_ret(nf_inq_varid(ncid, 'PCT_URBAN', varid), subname)
           call ncd_put_time_slice(ncid, varid, ntim, urbn_classes_g)
+          
+          call check_ret(nf_inq_varid(ncid, 'PCT_LAKE', varid), subname)
+          call ncd_put_time_slice(ncid, varid, ntim, pctlak)
+                    
           if (num_cft > 0) then
              call check_ret(nf_inq_varid(ncid, 'PCT_CFT', varid), subname)
              call ncd_put_time_slice(ncid, varid, ntim, get_pct_p2l_array(pctcft))
@@ -1225,6 +1240,9 @@ program mksurfdat
 
        call check_ret(nf_inq_varid(ncid, 'PCT_URBAN_MAX', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, pcturb_max), subname)
+       
+       call check_ret(nf_inq_varid(ncid, 'PCT_LAKE_MAX', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctlak_max), subname)       
        
        if (num_cft > 0) then
           call check_ret(nf_inq_varid(ncid, 'PCT_CFT_MAX', varid), subname)
