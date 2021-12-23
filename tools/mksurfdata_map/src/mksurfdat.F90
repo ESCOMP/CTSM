@@ -1519,46 +1519,6 @@ subroutine normalizencheck_landuse(ldomain)
        
     end do
 
-    ! Check that when pctnatveg+pctcrop identically zero, sum of special landunits is identically 100%
-    ! KO - Not sure if this needs to be changed or is necessary
-
-    if ( .not. outnc_double )then
-       do n = 1,ns_o
-          sum8  =         real(pctlak(n),r4)
-          sum8  = sum8  + real(pctwet(n),r4)
-          sum8  = sum8  + real(pcturb(n),r4)
-          sum8  = sum8  + real(pctgla(n),r4)
-          sum4a =         real(pctnatpft(n)%get_pct_l2g(),r4)
-          sum4a = sum4a + real(pctcft(n)%get_pct_l2g(),r4)
-          if ( sum4a==0.0_r4 .and. sum8 < 100._r4-2._r4*epsilon(sum4a) )then
-             write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-                  'pcturb, pctgla is < 100% when pctnatveg+pctcrop==0 sum = ', sum8
-             write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop= ', &
-                  n,pctlak(n),pctwet(n),pcturb(n),pctgla(n), &
-                  pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g()
-             call abort()
-          end if
-       end do
-    else
-       do n = 1,ns_o
-          sum8  =         pctlak(n)
-          sum8  = sum8  + pctwet(n)
-          sum8  = sum8  + pcturb(n)
-          sum8  = sum8  + pctgla(n)
-          sum8a =         pctnatpft(n)%get_pct_l2g()
-          sum8a = sum8a + pctcft(n)%get_pct_l2g()
-          if ( sum8a==0._r8 .and. sum8 < (100._r8-4._r8*epsilon(sum8)) )then
-             write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-                  'pcturb, pctgla is < 100% when pctnatveg+pctcrop==0 sum = ', sum8
-             write (6,*) 'Total error, error/epsilon = ',100._r8-sum8, ((100._r8-sum8)/epsilon(sum8))
-             write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop,epsilon= ', &
-                  n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
-                  pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(), epsilon(sum8)
-             call abort()
-          end if
-       end do
-    end if
-
     ! Make sure that there is no vegetation outside the pft mask
     do n = 1,ns_o
        if (pftdata_mask(n) == 0 .and. (pctnatpft(n)%get_pct_l2g() > 0 .or. pctcft(n)%get_pct_l2g() > 0)) then
