@@ -1366,7 +1366,6 @@ subroutine normalizencheck_landuse(ldomain)
     integer  :: nsmall                      ! number of small PFT values for a single check
     integer  :: nsmall_tot                  ! total number of small PFT values in all grid cells
     real(r8) :: suma                        ! sum for error check
-    real(r8) :: suma2                       ! another sum for error check
     real(r8) :: new_total_natveg_pct        ! new % veg (% of grid cell, natural veg)
     real(r8) :: sum8, sum8a                 ! sum for error check
     real(r4) :: sum4a                       ! sum for error check
@@ -1467,30 +1466,29 @@ subroutine normalizencheck_landuse(ldomain)
        end if
        
        ! Roundoff error fix
-       ! KO - Not sure if this needs to be changed or is necessary
-       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-       suma2 = pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
+       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
        if ( (suma < 100._r8 .and. suma > (100._r8 - 1.e-6_r8)) .or. &
-            (suma2 > 0.0_r8 .and. suma2 <  1.e-6_r8) ) then
-          write (6,*) 'Special land units near 100%, but not quite for n,suma =',n,suma
-          write (6,*) 'Adjusting special land units to 100%'
-          if (pctlak(n) >= 25._r8) then
-             pctlak(n) = 100._r8 - (pctwet(n) + pcturb(n) + pctgla(n))
-          else if (pctwet(n) >= 25._r8) then
-             pctwet(n) = 100._r8 - (pctlak(n) + pcturb(n) + pctgla(n))
-          else if (pcturb(n) >= 25._r8) then
-             pcturb(n) = 100._r8 - (pctlak(n) + pctwet(n) + pctgla(n))
-          else if (pctgla(n) >= 25._r8) then
-             pctgla(n) = 100._r8 - (pctlak(n) + pctwet(n) + pcturb(n))
+            (pctnatpft(n)%get_pct_l2g() > 0.0_r8 .and. pctnatpft(n)%get_pct_l2g() <  1.e-6_r8) ) then
+          write (6,*) 'Special plus crop land units near 100%, but not quite for n,suma =',n,suma
+          write (6,*) 'Adjusting special plus crop land units to 100%'
+          if (pctlak(n) >= 1.0_r8) then
+             pctlak(n) = 100._r8 - (pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g())
+          else if (pctwet(n) >= 1.0_r8) then
+             pctwet(n) = 100._r8 - (pctlak(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g())
+          else if (pcturb(n) >= 1.0_r8) then
+             pcturb(n) = 100._r8 - (pctlak(n) + pctwet(n) + pctgla(n) + pctcft(n)%get_pct_l2g())
+          else if (pctgla(n) >= 1.0_r8) then
+             pctgla(n) = 100._r8 - (pctlak(n) + pctwet(n) + pcturb(n) + pctcft(n)%get_pct_l2g())
+          else if (pctcft(n)%get_pct_l2g() >= 1.0_r8) then
+             call pctcft(n)%set_pct_l2g(100._r8 - (pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)))
           else
-             write (6,*) subname, 'Error: sum of special land units nearly 100% but none is >= 25% at ', &
+             write (6,*) subname, 'Error: sum of special plus crop land units nearly 100% but none is >= 1.0% at ', &
                   'n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n),suma = ', &
                   n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                   pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(),suma
              call abort()
           end if
           call pctnatpft(n)%set_pct_l2g(0._r8)
-          call pctcft(n)%set_pct_l2g(0._r8)
        end if
        if ( any(pctnatpft(n)%get_pct_p2g() > 0.0_r8 .and. pctnatpft(n)%get_pct_p2g() < toosmallPFT ) .or. &
             any(pctcft(n)%get_pct_p2g()    > 0.0_r8 .and. pctcft(n)%get_pct_p2g()    < toosmallPFT )) then
