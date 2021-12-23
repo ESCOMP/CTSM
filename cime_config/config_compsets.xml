@@ -97,6 +97,16 @@
   </compset>
 
   <compset>
+    <alias>I2000Clm50SpMizGsNldas</alias>
+    <lname>2000_DATM%NLDAS2_CLM50%SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I2000Clm50NwpSpMizGsNldas</alias>
+    <lname>2000_DATM%NLDAS2_CLM50%NWP-SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
     <alias>I2010Clm50Sp</alias>
     <lname>2010_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
