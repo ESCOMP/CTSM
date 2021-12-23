@@ -1465,7 +1465,11 @@ subroutine normalizencheck_landuse(ldomain)
           call pctcft(n)%set_pct_l2g(pctcft(n)%get_pct_l2g() * 100._r8/suma)
        end if
        
-       ! Roundoff error fix
+       ! This roundoff error fix is needed to handle the situation where new_total_natveg_pct
+       ! ends up near 0 but not exactly 0 due to roundoff issues. In this situation, we set the
+       ! natveg landunit area to exactly 0 and put the remainder into some other landunit. Since
+       ! the remainder is very small, it doesn't really matter which other landunit we add it to,
+       ! so we just pick some landunit that already has at least 1% cover.
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
        if ( (suma < 100._r8 .and. suma > (100._r8 - 1.e-6_r8)) .or. &
             (pctnatpft(n)%get_pct_l2g() > 0.0_r8 .and. pctnatpft(n)%get_pct_l2g() <  1.e-6_r8) ) then
