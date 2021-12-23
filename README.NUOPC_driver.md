@@ -16,7 +16,8 @@ Single point cases can now set their location using PTS_LAT and PTS_LON.
 ## What's removed?
 
 Domain files are no longer used. And mapping for regriding is created on the fly
-rather than using fixed mapping files.
+rather than using fixed mapping files in almost all cases. Runoff mapping files
+still need to be generated offline.
 
 ## What files change?
 
