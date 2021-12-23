@@ -549,17 +549,17 @@ subroutine mkurbanpar(datfname, ncido, region_o, urbn_classes_gcell_o, urban_ski
    if (nlevurb_i /= nlevurb) then
       write(6,*)'MKURBANPAR: parameter nlevurb= ',nlevurb, &
            'does not equal input dataset nlevurb= ',nlevurb_i
-      stop
+      call abort()
    endif
    if (numsolar_i /= numsolar) then
       write(6,*)'MKURBANPAR: parameter numsolar= ',numsolar, &
            'does not equal input dataset numsolar= ',numsolar_i
-      stop
+      call abort()
    endif
    if (numrad_i /= numrad) then
       write(6,*)'MKURBANPAR: parameter numrad= ',numrad, &
            'does not equal input dataset numrad= ',numrad_i
-      stop
+      call abort()
    endif
 
    ! Create an array that will hold the density indices

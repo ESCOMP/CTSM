@@ -6,13 +6,12 @@ import argparse
 import logging
 
 from configparser import ConfigParser
-from configparser import NoSectionError, NoOptionError
 
 from CIME.buildnml import create_namelist_infile # pylint: disable=import-error
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.utils import abort
+from ctsm.utils import abort, get_config_value
 
 logger = logging.getLogger(__name__)
 
@@ -45,14 +44,6 @@ _ENV_LILAC_TEMPLATE = """
   </group>
 </file>
 """
-
-# This string is used in the out-of-the-box ctsm.cfg file to denote a value that needs to
-# be filled in
-_PLACEHOLDER = 'FILL_THIS_IN'
-
-# This string is used in the out-of-the-box ctsm.cfg file to denote a value that can be
-# filled in, but doesn't absolutely need to be
-_UNSET = 'UNSET'
 
 # ========================================================================
 # Fake case class that can be used to satisfy the interface of CIME functions that need a
@@ -102,34 +93,6 @@ Script to create runtime inputs when running CTSM via LILAC
     return arguments
 
 ###############################################################################
-def get_config_value(config, section, item, file_path, allowed_values=None):
-    """Get a given item from a given section of the config object
-
-    Give a helpful error message if we can't find the given section or item
-
-    Note that the file_path argument is only used for the sake of the error message
-
-    If allowed_values is present, it should be a list of strings giving allowed values
-    """
-    try:
-        val = config.get(section, item)
-    except NoSectionError:
-        abort("ERROR: Config file {} must contain section '{}'".format(file_path, section))
-    except NoOptionError:
-        abort("ERROR: Config file {} must contain item '{}' in section '{}'".format(
-            file_path, item, section))
-
-    if val == _PLACEHOLDER:
-        abort("Error: {} needs to be specified in config file {}".format(item, file_path))
-
-    if allowed_values is not None:
-        if val not in allowed_values:
-            abort("Error: {} is not an allowed value for {} in config file {}\n"
-                  "Allowed values: {}".format(val, item, file_path, allowed_values))
-
-    return val
-
-###############################################################################
 def determine_bldnml_opts(bgc_mode, crop, vichydro):
 ###############################################################################
     """Return a string giving bldnml options, given some other inputs"""
@@ -168,8 +131,10 @@ def buildnml(cime_path, rundir):
     config.read(ctsm_cfg_path)
 
     lnd_domain_file = get_config_value(config, 'buildnml_input', 'lnd_domain_file', ctsm_cfg_path)
-    fsurdat = get_config_value(config, 'buildnml_input', 'fsurdat', ctsm_cfg_path)
-    finidat = get_config_value(config, 'buildnml_input', 'finidat', ctsm_cfg_path)
+    fsurdat = get_config_value(config, 'buildnml_input', 'fsurdat',
+                               ctsm_cfg_path, can_be_unset=True)
+    finidat = get_config_value(config, 'buildnml_input', 'finidat',
+                               ctsm_cfg_path, can_be_unset=True)
 
     ctsm_phys = get_config_value(config, 'buildnml_input', 'ctsm_phys', ctsm_cfg_path,
                                  allowed_values=['clm4_5', 'clm5_0', 'clm5_1'])
@@ -223,11 +188,11 @@ def buildnml(cime_path, rundir):
 
     # determine if fsurdat and/or finidat should appear in the -namelist option
     extra_namelist_opts = ''
-    if fsurdat != _UNSET:
-        # NOTE(wjs, 2020-06-30) With the current logic, fsurdat should never be _UNSET,
-        # but it's possible that this will change in the future.
+    if fsurdat is not None:
+        # NOTE(wjs, 2020-06-30) With the current logic, fsurdat should never be UNSET
+        # (ie None here) but it's possible that this will change in the future.
         extra_namelist_opts = extra_namelist_opts + " fsurdat = '{}' ".format(fsurdat)
-    if finidat != _UNSET:
+    if finidat is not None:
         extra_namelist_opts = extra_namelist_opts + " finidat = '{}' ".format(finidat)
 
     # call build-namelist
@@ -251,6 +216,7 @@ def buildnml(cime_path, rundir):
                '-clm_start_type', 'default',
                '-configuration', configuration,
                '-structure', structure,
+               '-lilac',
                '-lnd_frac', lnd_domain_file,
                '-glc_nec', str(10),
                '-co2_ppmv', co2_ppmv,

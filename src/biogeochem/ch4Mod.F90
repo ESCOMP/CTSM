@@ -112,6 +112,7 @@ module ch4Mod
      real(r8) :: q10lakebase          ! (K) base temperature for lake CH4 production (= 298._r8)
      real(r8) :: atmch4               ! Atmospheric CH4 mixing ratio to prescribe if not provided by the atmospheric model (= 1.7e-6_r8) (mol/mol)
      real(r8) :: rob                  ! ratio of root length to vertical depth ("root obliquity") (= 3._r8)
+     real(r8) :: om_frac_sf           ! Scale factor for organic matter fraction (unitless)
   end type params_type
   type(params_type), private ::  params_inst
 
@@ -1565,6 +1566,11 @@ contains
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%capthick=tempr
+
+     tString='om_frac_sf'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+     params_inst%om_frac_sf=tempr
    
   end subroutine readParams
 
@@ -1678,6 +1684,8 @@ contains
     use ch4varcon     , only : replenishlakec, allowlakeprod, ch4offline
     use clm_varcon    , only : secspday
     use ch4varcon     , only : finundation_mtd, finundation_mtd_h2osfc
+    use clm_time_manager, only : is_beg_curr_year
+    use dynSubgridControlMod, only : get_do_transient_lakes
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)    :: bounds   
@@ -2312,7 +2320,16 @@ contains
            ch4_inst%totcolch4_grc(begg:endg), &
            c2l_scale_type= 'unity', l2g_scale_type='unity' )
 
+      !
       ! Gricell level balance
+      !
+
+      ! Skip the check if it's the beginning of a new year and dynamic lakes are on
+      ! See (https://github.com/ESCOMP/CTSM/issues/1356#issuecomment-905963583)
+      ! 
+      if ( is_beg_curr_year() .and. get_do_transient_lakes() )then
+         ch4_first_time_grc(begg:endg) = .true.
+      end if
 
       do g = begg, endg
          if (.not. ch4_first_time_grc(g)) then
@@ -3845,7 +3862,7 @@ contains
                   ! expression in Wania (for peat) & Moldrup (for mineral soil)
                   eps =  watsat(c,j)-h2osoi_vol_min(c,j) ! Air-filled fraction of total soil volume
                   if (organic_max > 0._r8) then
-                     om_frac = min(cellorg(c,j)/organic_max, 1._r8)
+                     om_frac = min(params_inst%om_frac_sf*cellorg(c,j)/organic_max, 1._r8)
                      ! Use first power, not square as in iniTimeConst
                   else
                      om_frac = 1._r8
@@ -4354,7 +4371,9 @@ contains
     ! its original values
     !
     ! !USES:
-    use ch4varcon  , only : allowlakeprod
+    use ch4varcon       , only : allowlakeprod
+    use clm_varcon      , only : dzsoi_decomp
+    use landunit_varcon , only : isturb_tbd, isturb_hd, isturb_md
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds   
@@ -4367,7 +4386,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
-    integer :: j
+    integer :: j, l
 
     character(len=*), parameter       :: subname = 'ch4_totcolch4'
     !-----------------------------------------------------------------------
@@ -4394,9 +4413,18 @@ contains
     do j = 1, nlevsoi
        do fc = 1, num_nolakec
           c = filter_nolakec(fc)
-          totcolch4(c) = totcolch4(c) + &
-               (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
-               dz(c,j)*catomw
+          l = col%landunit(c)
+          ! See doc/design/dynamic_urban.rst for an explanation of why we use dzsoi_decomp instead of dz for 
+          ! urban landunits.
+          if (lun%itype(l) .eq. isturb_tbd .or. lun%itype(l) .eq. isturb_hd .or. lun%itype(l) .eq. isturb_md) then
+             totcolch4(c) = totcolch4(c) + &
+                  (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
+                  dzsoi_decomp(j)*catomw
+          else
+             totcolch4(c) = totcolch4(c) + &
+                  (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
+                  dz(c,j)*catomw
+          end if
           ! mol CH4 --> g C
        end do
 

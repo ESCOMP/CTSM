@@ -16,7 +16,7 @@ module SatellitePhenologyMod
   use clm_varctl   , only : iulog, use_lai_streams
   use perf_mod     , only : t_startf, t_stopf
   use spmdMod      , only : masterproc, mpicom, iam
-  use laiStreamMod , only : lai_init, lai_advance, lai_interp 
+  use laiStreamMod , only : lai_init, lai_advance, lai_interp
   use ncdio_pio
   !
   ! !PUBLIC TYPES:
@@ -88,7 +88,7 @@ contains
   end subroutine SatellitePhenologyInit
 
   !================================================================
-  subroutine SatellitePhenology(bounds, num_nolakep, filter_nolakep, &
+  subroutine SatellitePhenology(bounds, num_filter, filter, &
        waterdiagnosticbulk_inst, canopystate_inst)
     !
     ! !DESCRIPTION:
@@ -100,18 +100,20 @@ contains
     use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
     use CanopyStateType         , only : canopystate_type
     use PatchType               , only : patch
+    use clm_varctl              , only : use_fates_sp
+
     !
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds
-    integer                        , intent(in)    :: num_nolakep                               ! number of column non-lake points in patch filter
-    integer                        , intent(in)    :: filter_nolakep(bounds%endp-bounds%begp+1) ! patch filter for non-lake points
+    integer                        , intent(in)    :: num_filter                        ! number of column non-lake points in patch filter
+    integer                        , intent(in)    :: filter(bounds%endp-bounds%begp+1) ! patch filter for non-lake points
     type(waterdiagnosticbulk_type) , intent(in)    :: waterdiagnosticbulk_inst
     type(canopystate_type)         , intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: fp,p,c ! indices
-    real(r8) :: ol     ! thickness of canopy layer covered by snow (m)
-    real(r8) :: fb     ! fraction of canopy layer covered by snow
+    integer  :: fp,p,c                            ! indices
+    real(r8) :: ol                                ! thickness of canopy layer covered by snow (m)
+    real(r8) :: fb                                ! fraction of canopy layer covered by snow
     !-----------------------------------------------------------------------
 
     associate(                                                           &
@@ -130,8 +132,8 @@ contains
          call lai_interp(bounds, canopystate_inst)
       endif
 
-      do fp = 1, num_nolakep
-         p = filter_nolakep(fp)
+      do fp = 1, num_filter
+         p = filter(fp)
          c = patch%column(p)
 
          ! need to update elai and esai only every albedo time step so do not
@@ -176,19 +178,23 @@ contains
          endif
 
          ! area weight by snow covered fraction
-         elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
-         esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
-         if (elai(p) < 0.05_r8) elai(p) = 0._r8
-         if (esai(p) < 0.05_r8) esai(p) = 0._r8
+         if(.not.use_fates_sp)then
 
-         ! Fraction of vegetation free of snow
+         ! Do not set these in FATES_SP mode as they turn on the 'vegsol' filter and also
+         ! are duplicated by the FATE variables (in the FATES IFP indexing space)
+           elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
+           esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
+           if (elai(p) < 0.05_r8) elai(p) = 0._r8
+           if (esai(p) < 0.05_r8) esai(p) = 0._r8
 
-         if ((elai(p) + esai(p)) >= 0.05_r8) then
-            frac_veg_nosno_alb(p) = 1
-         else
-            frac_veg_nosno_alb(p) = 0
-         end if
+           ! Fraction of vegetation free of snow
 
+           if ((elai(p) + esai(p)) >= 0.05_r8) then
+              frac_veg_nosno_alb(p) = 1
+           else
+              frac_veg_nosno_alb(p) = 0
+           end if
+         endif !fates_sp
       end do ! end of patch loop
 
     end associate

@@ -178,6 +178,33 @@ def get_parser():
                     required = False,
                     type = int,
                     default = 2014)
+        pt_parser.add_argument('--datm_from_tower',
+                    help='Flag for creating DATM forcing data at single point for a tower data. [default: %(default)s]', 
+                    action="store",
+                    dest="datm_tower",
+                    type = str2bool,
+                    nargs = '?',
+                    const = True,
+                    required = False,
+                    default = False)
+        pt_parser.add_argument('--create_user_mods',
+                    help='Flag for creating user mods directory . [default: %(default)s]', 
+                    action="store",
+                    dest="datm_tower",
+                    type = str2bool,
+                    nargs = '?',
+                    const = True,
+                    required = False,
+                    default = False)
+        pt_parser.add_argument('--user_mods_dir',
+                    help='Flag for creating user mods directory . [default: %(default)s]', 
+                    action="store",
+                    dest="user_mod_dir",
+                    type = str,
+                    nargs = '?',
+                    const = True,
+                    required = False,
+                    default = False)
         pt_parser.add_argument('--crop', 
                     help='Create datasets using the extensive list of prognostic crop types. [default: %(default)s]', 
                     action="store_true", 
@@ -369,9 +396,9 @@ def plon_type(x):
     """
     x = float(x)
     if (-180 < x) and (x < 0):
-        print ("lon is :", lon)
+        print ("lon is :", x)
         x= x%360
-        print ("after modulo lon is :", lon)
+        print ("after modulo lon is :", x)
     if (x < 0) or (x > 360):
         raise argparse.ArgumentTypeError("ERROR: Latitude of single point should be between 0 and 360 or -180 and 180.")
     return x
@@ -380,11 +407,7 @@ def get_git_sha():
     """
     Returns Git short SHA for the currect directory.
     """
-    try:
-        sha = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip().decode() 
-    except subprocess.CalledProcessError:
-        sha = "NOT-A-GIT-REPOSITORY"
-    return sha
+    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip().decode() 
 
 class BaseCase : 
     """
@@ -552,8 +575,11 @@ class SinglePointCase (BaseCase):
         items = basename.split('_')
         today = date.today()
         today_string = today.strftime("%y%m%d")
+        print (items[-1])
+        #new_string = items[0]+"_"+items[2]+"_"+items[3]+"_"+ items[4] \
+        #            +"_"+items[5]+"_"+items[6]+"_"+tag+"_c"+today_string+".nc"
         new_string = items[0]+"_"+items[2]+"_"+items[3]+"_"+ items[4] \
-                    +"_"+items[5]+"_"+items[6]+"_"+tag+"_c"+today_string+".nc"
+                     +"_"+items[5]+"_"+tag+"_c"+today_string+".nc"
         return new_string
 
     def create_domain_at_point (self):
@@ -622,7 +648,9 @@ class SinglePointCase (BaseCase):
         # modify surface data properties
         if self.overwrite_single_pft:
             f3['PCT_NAT_PFT'][:,:,:] = 0
-            f3['PCT_NAT_PFT'][:,:,self.dominant_pft] = 100
+            if (self.dominant_pft <16):
+                f3['PCT_NAT_PFT'][:,:,self.dominant_pft] = 100
+            #else:@@@
         if self.zero_nonveg_landunits:
             f3['PCT_NATVEG'][:,:]  = 100
             f3['PCT_CROP'][:,:]    = 0
@@ -638,6 +666,14 @@ class SinglePointCase (BaseCase):
         # specify dimension order 
         #f3 = f3.transpose(u'time', u'cft', u'natpft', u'lsmlat', u'lsmlon')
         f3 = f3.transpose(u'time', u'cft', u'lsmpft', u'natpft', u'nglcec', u'nglcecp1', u'nlevsoi', u'nlevurb', u'numrad', u'numurbl', 'lsmlat', 'lsmlon')
+
+        #update lsmlat and lsmlon to match site specific instead of the nearest point
+        #f3['lon']= self.plon
+        #f3['lat']= self.plat
+        f3['lsmlon']= np.atleast_1d(self.plon)
+        f3['lsmlat']= np.atleast_1d(self.plat)
+        f3['LATIXY'][:,:]= self.plat
+        f3['LONGXY'][:,:]= self.plon
         
         #update attributes
         self.update_metadata(f3)
@@ -789,7 +825,7 @@ class RegionalCase (BaseCase):
         f3.attrs['Created_from'] = self.fsurf_in
 
         # mode 'w' overwrites file
-        f3.to_netcdf(path=self.fsurf_out, mode='w')
+        f3.to_netcdf(path=self.fsurf_out, mode='w', format='NETCDF3_64BIT')
         print('created file (fsurf_out)'+self.fsurf_out)
         #f1.close();
         f2.close(); f3.close()

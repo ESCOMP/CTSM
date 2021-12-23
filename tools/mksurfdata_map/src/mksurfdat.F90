@@ -36,11 +36,11 @@ program mksurfdat
     use mkvarctl
     use nanMod             , only : nan, bigint
     use mkncdio            , only : check_ret, ncd_put_time_slice
-    use mkdomainMod        , only : domain_type, domain_read_map, domain_read, &
-                                    domain_write
+    use mkdomainMod        , only : domain_type, domain_read_map, domain_read
+    use mkdomainMod        , only : domain_write, is_domain_0to360_longs
     use mkgdpMod           , only : mkgdp
     use mkpeatMod          , only : mkpeat
-    use mksoildepthMod          , only : mksoildepth
+    use mksoildepthMod     , only : mksoildepth
     use mkagfirepkmonthMod , only : mkagfirepkmon
     use mktopostatsMod     , only : mktopostats
     use mkVICparamsMod     , only : mkVICparams
@@ -179,7 +179,6 @@ program mksurfdat
          mksrf_fabm,               &
          mksrf_ftopostats,         &
          mksrf_fvic,               &
-         mksrf_fch4,               &
          nglcec,                   &
          numpft,                   &
          soil_color,               &
@@ -211,7 +210,6 @@ program mksurfdat
          map_fabm,                 &
          map_ftopostats,           &
          map_fvic,                 &
-         map_fch4,                 &
          gitdescribe,              &
          outnc_large_files,        &
          outnc_double,             &
@@ -255,7 +253,6 @@ program mksurfdat
     !    mksrf_fabm ----- Agricultural fire peak month dataset
     !    mksrf_ftopostats Topography statistics dataset
     !    mksrf_fvic ----- VIC parameters dataset
-    !    mksrf_fch4 ----- inversion-derived CH4 parameters dataset
     ! ======================================
     ! Must specify mapping file for the different datafiles above
     ! ======================================
@@ -279,7 +276,6 @@ program mksurfdat
     !    map_fabm -------- Mapping for mksrf_fabm
     !    map_ftopostats -- Mapping for mksrf_ftopostats
     !    map_fvic -------- Mapping for mksrf_fvic
-    !    map_fch4 -------- Mapping for mksrf_fch4
     ! ======================================
     ! Optionally specify setting for:
     ! ======================================
@@ -432,6 +428,11 @@ program mksurfdat
        write(6,*)'output file will be 1d'
     end if
 
+    ! Make sure ldomain is on a 0 to 360 grid as that's a requirement for CESM
+    if ( .not. is_domain_0to360_longs( ldomain ) )then
+       write(6,*)' Output domain must be on a 0 to 360 longitude grid rather than a -180 to 180 grid as it is required for CESM'
+       call abort()
+    end if
     ! ----------------------------------------------------------------------
     ! Allocate and initialize dynamic memory
     ! ----------------------------------------------------------------------
@@ -502,7 +503,7 @@ program mksurfdat
     
     if (fsurlog == ' ') then
        write(6,*)' must specify fsurlog in namelist'
-       stop
+       call abort()
     else
        ndiag = getavu(); call opnfil (fsurlog, ndiag, 'f')
     end if
@@ -542,7 +543,6 @@ program mksurfdat
     write(ndiag,*) 'abm from:                    ',trim(mksrf_fabm)
     write(ndiag,*) 'topography statistics from:  ',trim(mksrf_ftopostats)
     write(ndiag,*) 'VIC parameters from:         ',trim(mksrf_fvic)
-    write(ndiag,*) 'CH4 parameters from:         ',trim(mksrf_fch4)
     write(ndiag,*)' mapping for pft              ',trim(map_fpft)
     write(ndiag,*)' mapping for lake water       ',trim(map_flakwat)
     write(ndiag,*)' mapping for wetland          ',trim(map_fwetlnd)
@@ -563,7 +563,6 @@ program mksurfdat
     write(ndiag,*)' mapping for ag fire pk month ',trim(map_fabm)
     write(ndiag,*)' mapping for topography stats ',trim(map_ftopostats)
     write(ndiag,*)' mapping for VIC parameters   ',trim(map_fvic)
-    write(ndiag,*)' mapping for CH4 parameters   ',trim(map_fch4)
 
     if (mksrf_fdynuse /= ' ') then
        write(6,*)'mksrf_fdynuse = ',trim(mksrf_fdynuse)
@@ -1046,7 +1045,7 @@ program mksurfdat
 
        if (fdyndat == ' ') then
           write(6,*)' must specify fdyndat in namelist if mksrf_fdynuse is not blank'
-          stop
+          call abort()
        end if
 
        ! Define dimensions and global attributes

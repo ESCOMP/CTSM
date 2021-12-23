@@ -1,0 +1,2 @@
+ anoxia          = .true.
+ hist_wrtch4diag = .true.
