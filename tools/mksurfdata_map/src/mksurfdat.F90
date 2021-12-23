@@ -1500,14 +1500,8 @@ subroutine normalizencheck_landuse(ldomain)
           call abort()
        end if
        
-       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-       if (suma < 100._r8-epsilon(suma) .and. suma > (100._r8 - 4._r8*epsilon(suma))) then
-          write (6,*) subname, 'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop= ', &
-               n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
-               pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
-          call abort()
-       end if
-       suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
+       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
+       suma = suma + pctnatpft(n)%get_pct_l2g()
        if ( abs(suma-100._r8) > 1.e-10_r8) then
           write (6,*) subname, ' error: sum of pctlak, pctwet,', &
                'pcturb, pctgla, pctnatveg and pctcrop is NOT equal to 100'
