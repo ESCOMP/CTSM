@@ -38,13 +38,14 @@ To remove NPL(ncar_pylib) from your environment on Cheyenne/Casper:
 
 # -[x] Add default values in the help page.
 # -[x] Add info for help page note for end_year -- by default is start_year
-# -[ ] Possibly remove year --years and range options
+# -[x] Possibly remove year --years and range options
 #      Currently comment them out.
 
-# -[ ] maybe a verbose option and removing debug
+# -[x] maybe a verbose option and removing debug
 # -[x] --debug mode is not working...
 
 # -[ ] add error check for hi-res and years if they are 1850 and 2005.
+# -[ ] hirespft data only for 2005? add error-check
 
 # -[x] different path for each range of years for transient cases. 
 #      default should be picked based on the year. 1850 - 2015 -->
@@ -52,28 +53,27 @@ To remove NPL(ncar_pylib) from your environment on Cheyenne/Casper:
 #      850-1850 --> 
 #       pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012
 
-# -[ ] hirespft data only for 2005?
-
-#QUESTIONS:
-# -[ ] Do we need --crop to accept y/n or just --crop is enough?
-# -[ ] Add information about if this is optional.
-# Everything is optional because they have defaults...
 
 #  Import libraries
 from __future__ import print_function
 
 import os
-import re
 import sys
 import logging
 import argparse
 import subprocess
-import tqdm
-
-from datetime import datetime
 
 # -- import local classes for this script
 from ctsm.toolchain.ctsm_case import CtsmCase
+
+# -- import ctsm logging flags
+from ctsm.ctsm_logging import (
+    setup_logging_pre_config,
+    add_logging_args,
+    process_logging_args,
+)
+
+logger = logging.getLogger(__name__)
 
 ## valid options for resolution and SSP scenarios:
 valid_opts = {
@@ -84,7 +84,6 @@ valid_opts = {
         '3x3min','5x5min','10x10min','0.33x0.33','0.125x0.125','ne4np4,ne16np4','ne30np4.pg2','ne30np4.pg3','ne30np4','ne60np4','ne120np4']
         ,'ssp_rcp': ["hist","SSP1-2.6","SSP3-7.0","SSP5-3.4","SSP2-4.5","SSP1-1.9","SSP4-3.4","SSP4-6.0","SSP5-8.5"]
         }
-
 
 def get_parser():
         """
@@ -153,28 +152,16 @@ def get_parser():
                     action="store",
                     dest="input_path",
                     default="/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/")
-        parser.add_argument('-d','--debug', 
-                    help='Debug mode will print more information. ', 
-                    action="store_true", 
-                    dest="debug", 
-                    default=False)
-        parser.add_argument('-v','--verbose', 
-                    help='Verbose mode will print more information. ', 
-                    action="store_true", 
-                    dest="verbose", 
-                    default=False)
         parser.add_argument('--vic', 
                     help='''
-                    Add the fields required for the VIC model.
-                    [default: %(default)s]
+                    Flag for adding the fields required for the VIC model.
                     ''', 
                     action="store_true", 
                     dest="vic_flag", 
                     default=False)
         parser.add_argument('--glc', 
                     help='''
-                    Add the optional 3D glacier fields for verification of the glacier model.
-                    [default: %(default)s]
+                    Flag for adding the optional 3D glacier fields for verification of the glacier model.
                     ''', 
                     action="store_true", 
                     dest="glc_flag", 
@@ -189,16 +176,11 @@ def get_parser():
                     action="store_true", 
                     dest="hres_flag", 
                     default=False)
-        parser.add_argument('--crop', 
+        parser.add_argument('--nocrop', 
                     help='''
                     Create datasets with the extensive list of prognostic crop types.
-                    [default: %(default)s]
                     ''', 
-                    action="store",
-                    type = str2bool,  
-                    nargs = '?',
-                    const = True,
-                    required = False,
+                    action="store_false",
                     dest="crop_flag", 
                     default=True)
         parser.add_argument('-f','--fast', 
@@ -219,46 +201,9 @@ def get_parser():
         return parser
 
 
-def str2bool(v):
-    """
-    Function for converting different forms of
-    command line boolean strings to boolean value.
+# -- types for this parser
 
-    Args:
-        v (str): String bool input
-
-    Raises:
-        if the argument is not an acceptable boolean string
-        (such as yes or no ; true or false ; y or n ; t or f ; 0 or 1).
-        argparse.ArgumentTypeError: The string should be one of the mentioned values.
-
-    Returns:
-        bool: Boolean value corresponding to the input.
-    """
-    if isinstance(v, bool):
-       return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected. [true or false] or [y or n]')
-
-def tag_describe ():
-    """
-    Function for giving the recent tag of the git repo
-
-    Args:
-
-    Raises:
-
-    Returns:
-        label.decode (str) : ouput of running 'git describe' in shell
-    """
-    label = subprocess.check_output(["git", "describe"]).strip()
-    return label.decode()
-
-def glc_nec_type(x):
+def glc_nec_type(glc):
     """
     Function for defining acceptable glc_nec input.
 
@@ -272,10 +217,10 @@ def glc_nec_type(x):
     Returns:
         x (int) : Acceptable glc_nec value.
     """
-    x = int(x)
-    if (x <= 0) or (x >= 100):
+    glc = int(glc)
+    if (glc <= 0) or (glc >= 100):
         raise argparse.ArgumentTypeError("ERROR: glc_nec must be between 1 and 99.")
-    return x
+    return glc.__str__()
 
 def start_year_type(x):
     """
@@ -298,15 +243,16 @@ def start_year_type(x):
     return x
 
 def main ():
+    # -- add logging flags from ctsm_logging
+    setup_logging_pre_config()
+    parser = get_parser()
+    add_logging_args(parser)
 
-    args         = get_parser().parse_args()
-
-    if args.debug or args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
-
+    args = parser.parse_args()
+    process_logging_args(args)
 
     res          = args.res
-    glc_nec      = args.glc_nec.__str__()
+    glc_nec      = args.glc_nec
     input_path   = args.input_path
     ssp_rcp      = args.ssp_rcp
     crop_flag    = args.crop_flag
@@ -325,17 +271,15 @@ def main ():
     if not os.path.exists(input_path):
         sys.exit('ERROR: \n'+
                  '\t raw_dir does not exist on this machine. \n'+
-                 '\t Please point to the correct raw_dir using --raw_dir'+
-                 'or --rawdata_dir flags.')
+                 '\t Please point to the correct raw_dir using --raw-dir'+
+                 'or --rawdata-dir flags.')
 
     ctsm_case = CtsmCase(res, glc_nec, ssp_rcp, crop_flag, input_path,
                          vic_flag, glc_flag, start_year, end_year)
 
-    #ctsm_case.build_namelist_filename()
-
-    logging.debug('--------------------------')
-    logging.debug(' ctsm case : %s', ctsm_case)
-    logging.debug('--------------------------')
+    logger.info('--------------------------')
+    logger.info(' ctsm case : %s', ctsm_case)
+    logger.info('--------------------------')
 
     ctsm_case.create_namelist_file()
 
