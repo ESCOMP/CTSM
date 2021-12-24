@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # 2020-11-08                Negin Sobhani
 
 """

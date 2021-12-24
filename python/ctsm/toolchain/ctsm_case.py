@@ -1,3 +1,4 @@
+# 2020-11-08                Negin Sobhani
 """
 This module includes the definition for CtsmCase class for the purpose of gen_mksurf_namelist.
 """
@@ -190,8 +191,8 @@ class CtsmCase:
 
             # -- Check if the land-use input file exist:
             if not os.path.isfile(lu_input_fname):
-                print("lu_input_fname:", lu_input_fname)
-                print("WARNING: land-use input file does not exist for year:", yr, ".")
+                logger.debug("lu_input_fname:", lu_input_fname)
+                logger.warning("land-use input file does not exist for year:", yr, ".")
 
             # TODO: make the space/tab exactly the same as pl code:
             lu_line = lu_input_fname + "\t\t\t" + str(yr) + "\n"
@@ -203,8 +204,8 @@ class CtsmCase:
             logger.debug("year : %s", yr)
             logger.debug(lu_line)
 
-        print("Successfully created land use file : ", self.lu_fname, ".")
-        print("-------------------------------------------------------")
+        logger.debug("Successfully created land use file : ", self.lu_fname, ".")
+        logger.debug("-------------------------------------------------------")
 
     def build_namelist_filename(self):
         """
