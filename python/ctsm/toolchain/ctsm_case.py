@@ -217,7 +217,7 @@ class CtsmCase:
 
             # -- Check if the land-use input file exist:
             if not os.path.isfile(lu_input_fname):
-                logger.debug("lu_input_fname:", lu_input_fname)
+                logger.debug("lu_input_fname: %s", lu_input_fname)
                 logger.warning("land-use input file does not exist for year:", year, ".")
 
             # TODO: make the space/tab exactly the same as pl code:
@@ -396,7 +396,7 @@ class CtsmCase:
         ssp_rcp as SSP1RCP26
         """
 
-        if self.ssp_rcp is not "hist":
+        if self.ssp_rcp != "hist":
             temp = re.sub("[^0-9]", "", self.ssp_rcp)
             self.ssp_val = temp[0]
             self.rcp_val = temp[1:]
