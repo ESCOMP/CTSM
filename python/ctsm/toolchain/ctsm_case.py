@@ -182,22 +182,22 @@ class CtsmCase:
         self.build_landuse_filename()
         lu_file = open(self.lu_fname, "w")
 
-        for yr in range(self.start_year, self.end_year + 1):
+        for year in range(self.start_year, self.end_year + 1):
 
             # -- choose different files for years of 850-1850:
-            if 849 < yr < 1850:
+            if 849 < year < 1850:
                 lu_input_fname = os.path.join(
                     self.input_path,
                     "pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012",
-                    "mksrf_landuse_histclm50_LUH2_" + str(yr) + ".c171012.nc",
+                    "mksrf_landuse_histclm50_LUH2_" + str(year) + ".c171012.nc",
                 )
-            elif 1849 < yr < 2016:
+            elif 1849 < year < 2016:
                 lu_input_fname = os.path.join(
                     self.input_path,
                     "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412",
-                    "mksrf_landuse_histclm50_LUH2_" + str(yr) + ".c170412.nc",
+                    "mksrf_landuse_histclm50_LUH2_" + str(year) + ".c170412.nc",
                 )
-            elif 2015 < yr < 2106:
+            elif 2015 < year < 2106:
                 self.decode_ssp_rcp()
                 lu_input_fname = os.path.join(
                     self.input_path,
@@ -209,25 +209,25 @@ class CtsmCase:
                     + "RCP"
                     + self.rcp_val
                     + "_clm5_"
-                    + str(yr)
+                    + str(year)
                     + ".c181217.nc",
                 )
             else:
-                logger.warning("year:", yr, " not valid.")
+                logger.warning("year:", year, " not valid.")
 
             # -- Check if the land-use input file exist:
             if not os.path.isfile(lu_input_fname):
                 logger.debug("lu_input_fname:", lu_input_fname)
-                logger.warning("land-use input file does not exist for year:", yr, ".")
+                logger.warning("land-use input file does not exist for year:", year, ".")
 
             # TODO: make the space/tab exactly the same as pl code:
-            lu_line = lu_input_fname + "\t\t\t" + str(yr) + "\n"
+            lu_line = lu_input_fname + "\t\t\t" + str(year) + "\n"
 
             # -- Each line is written twice in the original pl code:
             lu_file.write(lu_line)
             lu_file.write(lu_line)
 
-            logger.debug("year : %s", yr)
+            logger.debug("year : %s", year)
             logger.debug(lu_line)
 
         print ("Successfully created land use file : ", self.lu_fname, ".")
