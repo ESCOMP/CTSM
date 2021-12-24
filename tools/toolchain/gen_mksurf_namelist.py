@@ -262,8 +262,7 @@ def str2bool(v):
 
 def tag_describe ():
     """
-    Function for giving the recent tag of the git
-    command line boolean strings to boolean value.
+    Function for giving the recent tag of the git repo
 
     Args:
 
@@ -361,7 +360,7 @@ class CtsmCase:
     build_namelist_filename
         Build the name of the namelist/control file
         for a ctsm case.
-    build_namelist_file:
+    create_namelist_file:
         Build the namelist/control file for a ctsm
         case.
     """
@@ -392,7 +391,7 @@ class CtsmCase:
                     for item in self.__dict__))
 
     def check_endyear (self):
-        if (int(self.end_year) < int(self.start_year)):
+        if (self.end_year < self.start_year):
             sys.exit('ERROR: end_year should be bigger than the start_year : '
                      + self.start_year.__str__() + '.')
 
@@ -405,7 +404,7 @@ class CtsmCase:
 
     def check_num_pft (self):
         """
-        #-- determine the num_pft
+         determine the num_pft
         """
         if self.crop_flag:
             self.num_pft      = "78"
@@ -413,22 +412,6 @@ class CtsmCase:
             self.num_pft      = "16"
         logging.debug(' crop_flag = '+ self.crop_flag.__str__()+ ' => num_pft ='+ self.num_pft)
 
-
-    def build_namelist_filename  (self):
-        """
-        Build namelist file name.
-        """
-        time_stamp = datetime.today().strftime('%y%m%d')
-        namelist_fname = "surfdata_"+ \
-            self.res+"_"+ \
-            self.ssp_rcp+"_"+ \
-            self.num_pft+ \
-            "pfts_CMIP6_"+ \
-            self.start_year.__str__()+'-' + \
-            self.end_year.__str__()+ \
-            "_c"+time_stamp+".namelist"
-
-        self.namelist_fname  = namelist_fname
 
     def build_landuse_filename(self):
         if (self.run_type == 'transient'):
@@ -484,33 +467,25 @@ class CtsmCase:
         print ("Successfully created land use file : ", self.lu_fname,".")
         print ("-------------------------------------------------------")
 
-
-
-    def decode_ssp_rcp(self):
+    def build_namelist_filename  (self):
         """
-        Decode ssp_rcp strings because
-        the raw filenames and folder names 
-        are not consistent.
-
-        For example:
-        folder names have ssp_rcp as SSP1-2.6
-
-        but the files in these folders have 
-        ssp_rcp as SSP1RCP26
+        Build namelist file name.
         """
+        time_stamp = datetime.today().strftime('%y%m%d')
+        namelist_fname = "surfdata_"+ \
+            self.res+"_"+ \
+            self.ssp_rcp+"_"+ \
+            self.num_pft+ \
+            "pfts_CMIP6_"+ \
+            self.start_year.__str__()+'-' + \
+            self.end_year.__str__()+ \
+            "_c"+time_stamp+".namelist"
 
-        if self.ssp_rcp is not "hist":
-            temp = re.sub("[^0-9]", "",self.ssp_rcp)
-            self.ssp_val = temp[0]
-            self.rcp_val = temp[1:]
-        else:
-            sys.exit('ERROR: \n'+
-                 '\t Please choose a ssp_rcp scenario for years beyond 2015 using --ssp_rcp flag.')
+        self.namelist_fname  = namelist_fname
 
-
-    def build_namelist_file (self):
+    def create_namelist_file (self):
         """
-        Build the namelist/control file for a ctsm class.  
+        Build the namelist/control file for a ctsm case.  
         """
 
         self.build_landuse_filename()
@@ -578,6 +553,30 @@ class CtsmCase:
         print ("--------------------------------------------------------")
         namelist_file.write (nl_template)
         namelist_file.close ()
+
+
+    def decode_ssp_rcp(self):
+        """
+        Decode ssp_rcp strings because
+        the raw filenames and folder names 
+        are not consistent.
+
+        For example:
+        folder names have ssp_rcp as SSP1-2.6
+
+        but the files in these folders have 
+        ssp_rcp as SSP1RCP26
+        """
+
+        if self.ssp_rcp is not "hist":
+            temp = re.sub("[^0-9]", "",self.ssp_rcp)
+            self.ssp_val = temp[0]
+            self.rcp_val = temp[1:]
+        else:
+            sys.exit('ERROR: \n'+
+                 '\t Please choose a ssp_rcp scenario for years beyond 2015 using --ssp_rcp flag.')
+
+
 
 def which_mesh(res):
    '''
@@ -647,13 +646,13 @@ def main ():
     ctsm_case = CtsmCase(res, glc_nec, ssp_rcp, crop_flag, input_path,
                          vic_flag, glc_flag, start_year, end_year)
 
-    ctsm_case.build_namelist_filename()
+    #ctsm_case.build_namelist_filename()
 
     logging.debug('--------------------------')
     logging.debug(' ctsm case : %s', ctsm_case)
     logging.debug('--------------------------')
 
-    ctsm_case.build_namelist_file()
+    ctsm_case.create_namelist_file()
 
 if __name__ == "__main__":
     main()
