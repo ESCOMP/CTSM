@@ -160,9 +160,9 @@ def get_parser():
     parser.add_argument(
         "--glc-nec",
         help="""
-                    Number of glacier elevation classes to use. 
-                    [default: %(default)s] 
-                    """,
+            Number of glacier elevation classes to use.
+            [default: %(default)s]
+            """,
         action="store",
         dest="glc_nec",
         type=glc_nec_type,
@@ -171,9 +171,9 @@ def get_parser():
     parser.add_argument(
         "--rundir",
         help="""
-                    Directory to run in. 
-                    [default: %(default)s] 
-                    """,
+            Directory to run in.
+            [default: %(default)s]
+            """,
         action="store",
         dest="run_dir",
         required=False,
@@ -182,10 +182,10 @@ def get_parser():
     parser.add_argument(
         "--ssp-rcp",
         help="""
-                    Shared Socioeconomic Pathway and Representative
-                    Concentration Pathway Scenario name(s).
-                    [default: %(default)s]
-                    """,
+            Shared Socioeconomic Pathway and Representative
+            Concentration Pathway Scenario name(s).
+            [default: %(default)s]
+            """,
         action="store",
         dest="ssp_rcp",
         required=False,
@@ -203,9 +203,9 @@ def get_parser():
         "--raw-dir",
         "--rawdata-dir",
         help="""
-                    /path/of/root/of/input/data', 
-                    [default: %(default)s]
-                    """,
+            /path/of/root/of/input/data',
+            [default: %(default)s]
+            """,
         action="store",
         dest="input_path",
         default="/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/",
@@ -213,8 +213,8 @@ def get_parser():
     parser.add_argument(
         "--vic",
         help="""
-                    Flag for adding the fields required for the VIC model.
-                    """,
+            Flag for adding the fields required for the VIC model.
+            """,
         action="store_true",
         dest="vic_flag",
         default=False,
@@ -222,8 +222,8 @@ def get_parser():
     parser.add_argument(
         "--glc",
         help="""
-                    Flag for adding the optional 3D glacier fields for verification of the glacier model.
-                    """,
+            Flag for adding the optional 3D glacier fields for verification of the glacier model.
+            """,
         action="store_true",
         dest="glc_flag",
         default=False,
@@ -231,11 +231,11 @@ def get_parser():
     parser.add_argument(
         "--hirespft",
         help="""
-                    If you want to use the high-resolution pft dataset rather
-                    than the default lower resolution dataset.
-                    (Low resolution is at quarter-degree, high resolution at 3-minute)
-                    [Note: hires only available for 1850 and 2005.]
-                    """,
+            If you want to use the high-resolution pft dataset rather
+            than the default lower resolution dataset.
+            (Low resolution is at quarter-degree, high resolution at 3-minute)
+            [Note: hires only available for 1850 and 2005.]
+            """,
         action="store_true",
         dest="hres_flag",
         default=False,
@@ -243,8 +243,8 @@ def get_parser():
     parser.add_argument(
         "--nocrop",
         help="""
-                    Create datasets with the extensive list of prognostic crop types.
-                    """,
+            Create datasets with the extensive list of prognostic crop types.
+            """,
         action="store_false",
         dest="crop_flag",
         default=True,
@@ -261,9 +261,9 @@ def get_parser():
         "-r",
         "--res",
         help="""
-                    Resolution is the supported resolution(s) to use for files.
-                    [default: %(default)s]
-                    """,
+            Resolution is the supported resolution(s) to use for files.
+            [default: %(default)s]
+            """,
         action="store",
         dest="res",
         choices=valid_opts["res"],
