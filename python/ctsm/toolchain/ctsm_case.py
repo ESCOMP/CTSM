@@ -69,6 +69,8 @@ class CtsmCase:
         Build the namelist/control file for a ctsm
         case.
     """
+    # pylint: disable=too-many-instance-attributes
+
 
     def __init__(
         self,
@@ -81,6 +83,7 @@ class CtsmCase:
         glc_flag,
         start_year,
         end_year,
+        hres_flag
     ):
         self.res = res
         self.glc_nec = glc_nec
@@ -91,6 +94,12 @@ class CtsmCase:
         self.glc_flag = glc_flag
         self.start_year = start_year
         self.end_year = end_year
+        self.hres_flag = hres_flag
+        self.lu_fname = None
+        self.namelist_fname =None
+        self.ssp_val=None
+        self.rcp_val=None
+
 
         # -- check if end year value is a valid value
         self.check_endyear()
@@ -111,6 +120,12 @@ class CtsmCase:
         )
 
     def check_endyear(self):
+        """
+        check if end_year is valid.
+
+        Raises:
+            Error is end_year is smaller than start_year
+        """
         if self.end_year < self.start_year:
             sys.exit(
                 "ERROR: end_year should be bigger than the start_year : "
@@ -119,11 +134,15 @@ class CtsmCase:
             )
 
     def check_run_type(self):
+        """
+        Determine if a ctsm case is transient or
+        time-slice.
+        """
         if self.end_year > self.start_year:
             self.run_type = "transient"
         else:
             self.run_type = "timeslice"
-        logger.debug(" run_type  = " + self.run_type)
+        logger.debug(" run_type  = %s", self.run_type)
 
     def check_num_pft(self):
         """
@@ -134,10 +153,14 @@ class CtsmCase:
         else:
             self.num_pft = "16"
         logger.debug(
-            " crop_flag = " + self.crop_flag.__str__() + " => num_pft =" + self.num_pft
+            " crop_flag = " + self.crop_flag.__str__() + " => num_pft = " + self.num_pft
         )
 
     def build_landuse_filename(self):
+        """
+        Build the land-use filename for a transient
+        case.
+        """
         if self.run_type == "transient":
             lu_fname = (
                 "landuse_timeseries_hist_"
@@ -153,6 +176,9 @@ class CtsmCase:
         self.lu_fname = lu_fname
 
     def create_landuse_file(self):
+        """
+        Create land-use txt file for a transient case.
+        """
         self.build_landuse_filename()
         lu_file = open(self.lu_fname, "w")
 
@@ -204,8 +230,8 @@ class CtsmCase:
             logger.debug("year : %s", yr)
             logger.debug(lu_line)
 
-        logger.debug("Successfully created land use file : ", self.lu_fname, ".")
-        logger.debug("-------------------------------------------------------")
+        print ("Successfully created land use file : ", self.lu_fname, ".")
+        print("-------------------------------------------------------")
 
     def build_namelist_filename(self):
         """
@@ -252,6 +278,8 @@ class CtsmCase:
             use_transient = ".true."
         else:
             use_transient = ".false"
+
+        # pylint: disable=line-too-long
 
         nl_template = (
             "&clmexp\n"
@@ -348,6 +376,7 @@ class CtsmCase:
             "outnc_3dglc      = \n"
             "/\n"
         )
+        # pylint: enable=line-too-long
 
         print("Successfully created namelist file : ", self.namelist_fname, ".")
         print("--------------------------------------------------------")

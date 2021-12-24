@@ -6,12 +6,12 @@
 |------------------------------------------------------------------|
 This Python script is part of the simplified toolchain for creating
 the surface dataset for ctsm cases.
-This script should be used as the first step of the new toolchain. 
-It will automatically create namelist (control  file) that is 
+This script should be used as the first step of the new toolchain.
+It will automatically create namelist (control  file) that is
 needed for creating surface dataset and requisite intermediate files for
-running CTSM cases. 
+running CTSM cases.
 For transient cases, it will also create a txt file that includes the
-landuse files for every year. 
+landuse files for every year.
 
 -------------------------------------------------------------------
 Instructions for running on Cheyenne/Casper:
@@ -26,7 +26,7 @@ To see the available options:
 
 To run the script:
     ./gen_mksurf_namelist.py
- 
+
 To remove NPL(ncar_pylib) from your environment on Cheyenne/Casper:
     deactivate
 -------------------------------------------------------------------
@@ -47,7 +47,8 @@ To remove NPL(ncar_pylib) from your environment on Cheyenne/Casper:
 
 # -[x] different path for each range of years for transient cases.
 #      default should be picked based on the year. 1850 - 2015 -->
-#       /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/
+#       /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/
+#       pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/
 #      850-1850 -->
 #       pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012
 
@@ -59,7 +60,6 @@ import os
 import sys
 import logging
 import argparse
-import subprocess
 
 # -- import local classes for this script
 from ctsm.toolchain.ctsm_case import CtsmCase
@@ -294,29 +294,32 @@ def glc_nec_type(glc):
     return glc.__str__()
 
 
-def start_year_type(x):
+def start_year_type(year):
     """
     Function for defining acceptable start_year input.
 
     Args:
-        x (str) : start_year string from command line args.
+        year (str) : start_year string from command line args.
 
     Raises:
         Error if value of start_year is not in the range
         of 850-2105.
 
     Returns:
-        x (int) : Acceptable start_year value.
+        year (int) : Acceptable start_year value.
     """
-    x = int(x)
-    if (x < 850) or (x > 2105):
+    year = int(year)
+    if (year < 850) or (year > 2105):
         raise argparse.ArgumentTypeError(
             "ERROR: Simulation start year should be between 850 and 2105."
         )
-    return x
+    return year
 
 
 def main():
+    """
+    Main function for gen_mksurf_namelist.
+    """
     # -- add logging flags from ctsm_logging
     setup_logging_pre_config()
     parser = get_parser()
@@ -360,6 +363,7 @@ def main():
         glc_flag,
         start_year,
         end_year,
+        hres_flag
     )
 
     logger.info("--------------------------")
