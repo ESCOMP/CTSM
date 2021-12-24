@@ -9,8 +9,8 @@
 This Python script is part of the simplified toolchain for creating
 the surface dataset for ctsm cases.
 This script should be used as the first step of the new toolchain. 
-It will automatically creating namelist (control  file) that is 
-needed for creating surface dataset and other relevant files for
+It will automatically create namelist (control  file) that is 
+needed for creating surface dataset and requisite intermediate files for
 running CTSM cases. 
 For transient cases, it will also create a txt file that includes the
 landuse files for every year. 
@@ -29,7 +29,7 @@ To see the available options:
 To run the script:
     ./gen_mksurf_namelist.py
  
-To remove NPL from your environment on Cheyenne/Casper:
+To remove NPL(ncar_pylib) from your environment on Cheyenne/Casper:
     deactivate
 -------------------------------------------------------------------
 """
@@ -262,7 +262,7 @@ def str2bool(v):
 
 def tag_describe ():
     """
-    Function for converting different forms of
+    Function for giving the recent tag of the git
     command line boolean strings to boolean value.
 
     Args:
@@ -302,8 +302,8 @@ def start_year_type(x):
         x (str) : start_year string from command line args.
 
     Raises:
-        Error if value of glc_start_year is not in the range 
-        of 850-2015. 
+        Error if value of start_year is not in the range 
+        of 850-2105. 
 
     Returns:
         x (int) : Acceptable start_year value.
@@ -316,7 +316,7 @@ def start_year_type(x):
 
 class CtsmCase:
     """
-    A class for encapsulate different ctsm cases.
+    A class to encapsulate different ctsm cases.
 
     ...
 
@@ -350,18 +350,18 @@ class CtsmCase:
     check_run_type:
         Determine if a ctsm case is transient or
         time-slice. 
-    def check_run_type:
+    check_num_pft:
         Determine num_pft based on crop_flag for a
         ctsm case.
-    landuse_filename:
+    build_landuse_filename:
         Build the land-use filename for a transient 
         case.
-    create_landuse:
-        Create land-use txt file a transient case. 
-    name_nl
+    create_landuse_file:
+        Create land-use txt file for a transient case. 
+    build_namelist_filename
         Build the name of the namelist/control file
         for a ctsm case.
-    build_nl:
+    build_namelist_file:
         Build the namelist/control file for a ctsm
         case.
     """
@@ -404,7 +404,9 @@ class CtsmCase:
         logging.debug(' run_type  = '+ self.run_type)
 
     def check_num_pft (self):
+        """
         #-- determine the num_pft
+        """
         if self.crop_flag:
             self.num_pft      = "78"
         else:
@@ -412,7 +414,7 @@ class CtsmCase:
         logging.debug(' crop_flag = '+ self.crop_flag.__str__()+ ' => num_pft ='+ self.num_pft)
 
 
-    def name_nl  (self):
+    def build_namelist_filename  (self):
         """
         Build namelist file name.
         """
@@ -428,16 +430,16 @@ class CtsmCase:
 
         self.namelist_fname  = namelist_fname
 
-    def landuse_filename(self):
+    def build_landuse_filename(self):
         if (self.run_type == 'transient'):
             lu_fname = "landuse_timeseries_hist_"+self.num_pft.__str__()+ \
-                       "pfts_simyr"+str(self.start_year)+"-"+str(self.end_year)+".txt"
+                       "pfts_simyr"+self.start_year.__str__()+"-"+self.end_year.__str__()+".txt"
         else:
             lu_fname = ""
         self.lu_fname = lu_fname
 
-    def create_landuse(self):
-        self.landuse_filename()
+    def create_landuse_file(self):
+        self.build_landuse_filename()
         lu_file = open (self.lu_fname,'w')
 
         for yr in tqdm.tqdm(range(self.start_year, self.end_year+1)):
@@ -506,16 +508,16 @@ class CtsmCase:
                  '\t Please choose a ssp_rcp scenario for years beyond 2015 using --ssp_rcp flag.')
 
 
-    def build_nl (self):
+    def build_namelist_file (self):
         """
         Build the namelist/control file for a ctsm class.  
         """
 
-        self.landuse_filename()
+        self.build_landuse_filename()
         if (self.run_type == "transient"):
-            self.create_landuse()
+            self.create_landuse_file()
 
-        self.name_nl()
+        self.build_namelist_filename()
         namelist_file = open (self.namelist_fname,'w')
 
         label = tag_describe()
@@ -645,13 +647,13 @@ def main ():
     ctsm_case = CtsmCase(res, glc_nec, ssp_rcp, crop_flag, input_path,
                          vic_flag, glc_flag, start_year, end_year)
 
-    ctsm_case.name_nl()
+    ctsm_case.build_namelist_filename()
 
     logging.debug('--------------------------')
     logging.debug(' ctsm case : %s', ctsm_case)
     logging.debug('--------------------------')
 
-    ctsm_case.build_nl()
+    ctsm_case.build_namelist_file()
 
 if __name__ == "__main__":
     main()
