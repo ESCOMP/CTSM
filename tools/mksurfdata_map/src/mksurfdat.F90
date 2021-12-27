@@ -1367,8 +1367,6 @@ subroutine normalizencheck_landuse(ldomain)
     integer  :: nsmall_tot                  ! total number of small PFT values in all grid cells
     real(r8) :: suma                        ! sum for error check
     real(r8) :: new_total_natveg_pct        ! new % veg (% of grid cell, natural veg)
-    real(r8) :: sum8, sum8a                 ! sum for error check
-    real(r4) :: sum4a                       ! sum for error check
     real(r8), parameter :: tol_loose = 1.e-4_r8               ! tolerance for some 'loose' error checks
     real(r8), parameter :: toosmallPFT = 1.e-10_r8            ! tolerance for PFT's to ignore
     character(len=32) :: subname = 'normalizencheck_landuse'  ! subroutine name
