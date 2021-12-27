@@ -329,14 +329,6 @@ def get_parser():
             type=str,
             default="",
         )
-    pt_parser.add_argument(
-        "--datm-from-tower",
-        help="Create DATM forcing data at single point for a tower data.",
-        action="store_true",
-        dest="datm_tower",
-        required=False,
-        default=False,
-    )
 
     # -- print help for both subparsers
     parser.epilog = textwrap.dedent(
