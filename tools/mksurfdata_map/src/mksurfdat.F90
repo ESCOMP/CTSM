@@ -1120,13 +1120,14 @@ program mksurfdat
              write(6,*) subname, ' error: year for urban not equal to year for PFT files'
              call abort()
           end if
-      write(6,*)'input urban dynamic dataset for year ', year2, ' is : ', trim(furbname) 
+          write(6,*)'input urban dynamic dataset for year ', year2, ' is : ', trim(furbname)
+          ! Read input lake data
           read(nfdyn, '(A195,1x,I4)', iostat=ier) flakname, year2
           if ( year2 /= year ) then
              write(6,*) subname, ' error: year for lake not equal to year for PFT files'
              call abort()
           end if
-      write(6,*)'input lake dynamic dataset for year ', year2, ' is : ', trim(flakname)    
+          write(6,*)'input lake dynamic dataset for year ', year2, ' is : ', trim(flakname)
            
           ntim = ntim + 1
 
@@ -1170,7 +1171,8 @@ program mksurfdat
                end where
           end if
 
-          ! For landunits NOT read each year: reset to their pre-adjustment values in preparation for redoing landunit area normalization
+          ! For landunits NOT read each year: reset to their pre-adjustment values in 
+          ! preparation for redoing landunit area normalization
           pctwet(:) = pctwet_orig(:)
           pctgla(:) = pctgla_orig(:)
                                         
@@ -1344,8 +1346,6 @@ subroutine normalizencheck_landuse(ldomain)
 ! 
 !
 ! !USES:
-    use mkpftConstantsMod , only : baregroundindex
-    use mkpftUtilsMod     , only : adjust_total_veg_area
     implicit none
 ! !ARGUMENTS:
     type(domain_type)   :: ldomain
@@ -1360,13 +1360,7 @@ subroutine normalizencheck_landuse(ldomain)
     integer  :: nsmall                      ! number of small PFT values for a single check
     integer  :: nsmall_tot                  ! total number of small PFT values in all grid cells
     real(r8) :: suma                        ! sum for error check
-    real(r8) :: suma2                       ! another sum for error check
-    real(r8) :: new_total_veg_pct           ! new % veg (% of grid cell, total of natural veg & crop)
-    real(r8) :: bare_pct_p2g                ! % of bare soil, as % of grid cell
-    real(r8) :: bare_urb_diff               ! difference between bare soil and urban %
-    real(r8) :: pcturb_excess               ! excess urban % not accounted for by bare soil
-    real(r8) :: sum8, sum8a                 ! sum for error check
-    real(r4) :: sum4a                       ! sum for error check
+    real(r8) :: new_total_natveg_pct        ! new % veg (% of grid cell, natural veg)
     real(r8), parameter :: tol_loose = 1.e-4_r8               ! tolerance for some 'loose' error checks
     real(r8), parameter :: toosmallPFT = 1.e-10_r8            ! tolerance for PFT's to ignore
     character(len=32) :: subname = 'normalizencheck_landuse'  ! subroutine name
@@ -1409,21 +1403,17 @@ subroutine normalizencheck_landuse(ldomain)
           pftdata_mask(n) = 1
        end if
  
-       ! Make sure sum of land cover types does not exceed 100. If it does,
-       ! subtract excess from most dominant land cover.
+       ! Make sure sum of all land cover types except natural vegetation
+       ! does not exceed 100. If it does, subtract excess from these land cover
+       ! types proportionally.
 
-       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-       if (suma > 250._r4) then
-          write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-               'pcturb and pctgla is greater than 250%'
-          write (6,*)'n,pctlak,pctwet,pcturb,pctgla= ', &
-               n,pctlak(n),pctwet(n),pcturb(n),pctgla(n)
-          call abort()
-       else if (suma > 100._r4) then
+       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
+       if (suma > 100._r4) then
           pctlak(n) = pctlak(n) * 100._r8/suma
           pctwet(n) = pctwet(n) * 100._r8/suma
           pcturb(n) = pcturb(n) * 100._r8/suma
           pctgla(n) = pctgla(n) * 100._r8/suma
+          call pctcft(n)%set_pct_l2g(pctcft(n)%get_pct_l2g() * 100._r8/suma)
        end if
 
        ! Check preconditions
@@ -1447,81 +1437,33 @@ subroutine normalizencheck_landuse(ldomain)
           write(6,*) 'n, pctgla = ', n, pctgla(n)
           call abort()
        end if
+       if ( pctcft(n)%get_pct_l2g() < 0.0_r8 )then
+          write(6,*) subname, ' ERROR: pctcrop is negative!'
+          write(6,*) 'n, pctcrop = ', n, pctcft(n)%get_pct_l2g()
+          call abort()
+       end if
 
-       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
+       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
        if (suma > (100._r8 + tol_loose)) then
-          write(6,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla must be'
-          write(6,*) '<= 100% before normalizing vegetated area'
-          write(6,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
-               n, pctlak(n), pctwet(n), pcturb(n), pctgla(n)
+          write(6,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla + pctcrop must be'
+          write(6,*) '<= 100% before normalizing natural vegetation area'
+          write(6,*) 'n, pctlak, pctwet, pcturb, pctgla, pctcrop = ', &
+               n, pctlak(n), pctwet(n), pcturb(n), pctgla(n), pctcft(n)%get_pct_l2g()
           call abort()
        end if
-       ! ------------------------------------------------------------------------
-       ! Normalize vegetated area so that vegetated + special area is 100%
-       ! ------------------------------------------------------------------------
-       ! First normalize vegetated (natural veg + crop) cover so that the total of
-       ! (vegetated + (special excluding urban)) is 100%. We'll deal with urban later.
-       !
-       ! Note that, in practice, the total area of natural veg + crop is typically 100%
-       ! going into this routine. However, the following code does NOT rely on this, and
-       ! will work properly regardless of the initial area of natural veg + crop (even if
-       ! that initial area is 0%).
-       
-       suma = pctlak(n)+pctwet(n)+pctgla(n)
-       new_total_veg_pct = 100._r8 - suma
+
+       ! Natural vegetated cover is 100% minus the sum of all other landunits
+
+       new_total_natveg_pct = 100._r8 - suma
        ! correct for rounding error:
-       new_total_veg_pct = max(new_total_veg_pct, 0._r8)
+       new_total_natveg_pct = max(new_total_natveg_pct, 0._r8)
 
-       call adjust_total_veg_area(new_total_veg_pct, pctnatpft=pctnatpft(n), pctcft=pctcft(n))
-
-       ! Make sure we did the above rescaling correctly
-
-       suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
-       if (abs(suma - 100._r8) > tol_loose) then
-          write(6,*) subname, ' ERROR in rescaling veg based on (special excluding urban'
-          write(6,*) 'suma = ', suma
-          call abort()
-       end if
-
-       ! Now decrease the vegetated area to account for urban area. Urban needs to be
-       ! handled specially because we replace bare soil preferentially with urban, rather
-       ! than rescaling all PFTs equally.
-
-       if (pcturb(n) > 0._r8) then
-          
-          ! Replace bare soil preferentially with urban
-          bare_pct_p2g = pctnatpft(n)%get_one_pct_p2g(baregroundindex)
-          bare_urb_diff = bare_pct_p2g - pcturb(n)
-          bare_pct_p2g = max(0._r8, bare_urb_diff)
-          call pctnatpft(n)%set_one_pct_p2g(baregroundindex, bare_pct_p2g)
-          pcturb_excess = abs(min(0._r8,bare_urb_diff))
-          
-          ! For any urban not accounted for by bare soil, replace other PFTs
-          ! proportionally
-          if (pcturb_excess > 0._r8) then
-             ! Note that, in this case, we will have already reduced bare ground to 0%
-
-             new_total_veg_pct = pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g() - pcturb_excess
-             if (new_total_veg_pct < 0._r8) then
-                if (abs(new_total_veg_pct) < tol_loose) then
-                   ! only slightly less than 0; correct it
-                   new_total_veg_pct = 0._r8
-                else
-                   write(6,*) subname, ' ERROR: trying to replace veg with urban,'
-                   write(6,*) 'but pcturb_excess exceeds current vegetation percent'
-                   call abort()
-                end if
-             end if
-
-             call adjust_total_veg_area(new_total_veg_pct, pctnatpft=pctnatpft(n), pctcft=pctcft(n))
-          end if
-
-       end if ! pcturb(n) > 0
-
+       call pctnatpft(n)%set_pct_l2g(new_total_natveg_pct)
+       
        ! Confirm that we have done the rescaling correctly: now the sum of all landunits
-       ! should be 100%
-       suma = pctlak(n)+pctwet(n)+pctgla(n)+pcturb(n)
-       suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
+       ! should be 100% within tol_loose
+       suma = pctlak(n)+pctwet(n)+pctgla(n)+pcturb(n)+pctcft(n)%get_pct_l2g()
+       suma = suma + pctnatpft(n)%get_pct_l2g()
        if (abs(suma - 100._r8) > tol_loose) then
           write(6,*) subname, ' ERROR: landunits do not sum to 100%'
           write(6,*) 'n, suma, pctlak, pctwet, pctgla, pcturb, pctnatveg, pctcrop = '
@@ -1558,30 +1500,34 @@ subroutine normalizencheck_landuse(ldomain)
           call pctcft(n)%set_pct_l2g(pctcft(n)%get_pct_l2g() * 100._r8/suma)
        end if
        
-       ! Roundoff error fix
-       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-       suma2 = pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
+       ! This roundoff error fix is needed to handle the situation where new_total_natveg_pct
+       ! ends up near 0 but not exactly 0 due to roundoff issues. In this situation, we set the
+       ! natveg landunit area to exactly 0 and put the remainder into some other landunit. Since
+       ! the remainder is very small, it doesn't really matter which other landunit we add it to,
+       ! so we just pick some landunit that already has at least 1% cover.
+       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
        if ( (suma < 100._r8 .and. suma > (100._r8 - 1.e-6_r8)) .or. &
-            (suma2 > 0.0_r8 .and. suma2 <  1.e-6_r8) ) then
-          write (6,*) 'Special land units near 100%, but not quite for n,suma =',n,suma
-          write (6,*) 'Adjusting special land units to 100%'
-          if (pctlak(n) >= 25._r8) then
-             pctlak(n) = 100._r8 - (pctwet(n) + pcturb(n) + pctgla(n))
-          else if (pctwet(n) >= 25._r8) then
-             pctwet(n) = 100._r8 - (pctlak(n) + pcturb(n) + pctgla(n))
-          else if (pcturb(n) >= 25._r8) then
-             pcturb(n) = 100._r8 - (pctlak(n) + pctwet(n) + pctgla(n))
-          else if (pctgla(n) >= 25._r8) then
-             pctgla(n) = 100._r8 - (pctlak(n) + pctwet(n) + pcturb(n))
+            (pctnatpft(n)%get_pct_l2g() > 0.0_r8 .and. pctnatpft(n)%get_pct_l2g() <  1.e-6_r8) ) then
+          write (6,*) 'Special plus crop land units near 100%, but not quite for n,suma =',n,suma
+          write (6,*) 'Adjusting special plus crop land units to 100%'
+          if (pctlak(n) >= 1.0_r8) then
+             pctlak(n) = 100._r8 - (pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g())
+          else if (pctwet(n) >= 1.0_r8) then
+             pctwet(n) = 100._r8 - (pctlak(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g())
+          else if (pcturb(n) >= 1.0_r8) then
+             pcturb(n) = 100._r8 - (pctlak(n) + pctwet(n) + pctgla(n) + pctcft(n)%get_pct_l2g())
+          else if (pctgla(n) >= 1.0_r8) then
+             pctgla(n) = 100._r8 - (pctlak(n) + pctwet(n) + pcturb(n) + pctcft(n)%get_pct_l2g())
+          else if (pctcft(n)%get_pct_l2g() >= 1.0_r8) then
+             call pctcft(n)%set_pct_l2g(100._r8 - (pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)))
           else
-             write (6,*) subname, 'Error: sum of special land units nearly 100% but none is >= 25% at ', &
+             write (6,*) subname, 'Error: sum of special plus crop land units nearly 100% but none is >= 1.0% at ', &
                   'n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n),suma = ', &
                   n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                   pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(),suma
              call abort()
           end if
           call pctnatpft(n)%set_pct_l2g(0._r8)
-          call pctcft(n)%set_pct_l2g(0._r8)
        end if
        if ( any(pctnatpft(n)%get_pct_p2g() > 0.0_r8 .and. pctnatpft(n)%get_pct_p2g() < toosmallPFT ) .or. &
             any(pctcft(n)%get_pct_p2g()    > 0.0_r8 .and. pctcft(n)%get_pct_p2g()    < toosmallPFT )) then
@@ -1593,14 +1539,8 @@ subroutine normalizencheck_landuse(ldomain)
           call abort()
        end if
        
-       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-       if (suma < 100._r8-epsilon(suma) .and. suma > (100._r8 - 4._r8*epsilon(suma))) then
-          write (6,*) subname, 'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop= ', &
-               n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
-               pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
-          call abort()
-       end if
-       suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
+       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
+       suma = suma + pctnatpft(n)%get_pct_l2g()
        if ( abs(suma-100._r8) > 1.e-10_r8) then
           write (6,*) subname, ' error: sum of pctlak, pctwet,', &
                'pcturb, pctgla, pctnatveg and pctcrop is NOT equal to 100'
@@ -1611,45 +1551,6 @@ subroutine normalizencheck_landuse(ldomain)
        end if
        
     end do
-
-    ! Check that when pctnatveg+pctcrop identically zero, sum of special landunits is identically 100%
-
-    if ( .not. outnc_double )then
-       do n = 1,ns_o
-          sum8  =         real(pctlak(n),r4)
-          sum8  = sum8  + real(pctwet(n),r4)
-          sum8  = sum8  + real(pcturb(n),r4)
-          sum8  = sum8  + real(pctgla(n),r4)
-          sum4a =         real(pctnatpft(n)%get_pct_l2g(),r4)
-          sum4a = sum4a + real(pctcft(n)%get_pct_l2g(),r4)
-          if ( sum4a==0.0_r4 .and. sum8 < 100._r4-2._r4*epsilon(sum4a) )then
-             write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-                  'pcturb, pctgla is < 100% when pctnatveg+pctcrop==0 sum = ', sum8
-             write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop= ', &
-                  n,pctlak(n),pctwet(n),pcturb(n),pctgla(n), &
-                  pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g()
-             call abort()
-          end if
-       end do
-    else
-       do n = 1,ns_o
-          sum8  =         pctlak(n)
-          sum8  = sum8  + pctwet(n)
-          sum8  = sum8  + pcturb(n)
-          sum8  = sum8  + pctgla(n)
-          sum8a =         pctnatpft(n)%get_pct_l2g()
-          sum8a = sum8a + pctcft(n)%get_pct_l2g()
-          if ( sum8a==0._r8 .and. sum8 < (100._r8-4._r8*epsilon(sum8)) )then
-             write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-                  'pcturb, pctgla is < 100% when pctnatveg+pctcrop==0 sum = ', sum8
-             write (6,*) 'Total error, error/epsilon = ',100._r8-sum8, ((100._r8-sum8)/epsilon(sum8))
-             write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop,epsilon= ', &
-                  n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
-                  pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(), epsilon(sum8)
-             call abort()
-          end if
-       end do
-    end if
 
     ! Make sure that there is no vegetation outside the pft mask
     do n = 1,ns_o
