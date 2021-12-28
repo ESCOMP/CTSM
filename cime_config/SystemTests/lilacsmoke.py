@@ -130,8 +130,10 @@ class LILACSMOKE(SystemTestsCommon):
     def _create_runtime_inputs(self):
         caseroot = self._case.get_value('CASEROOT')
         runtime_inputs = self._runtime_inputs_dir()
-        lnd_domain_file = os.path.join(self._case.get_value('LND_DOMAIN_PATH'),
-                                       self._case.get_value('LND_DOMAIN_FILE'))
+
+        # NOTE: *** this test is currently tied to this single 4x5 grid resolution ***
+        lnd_domain_file = os.path.join(self._case.get_value('DIN_LOC_ROOT'),"share","domains",
+                                       'domain.lnd.fv4x5_gx3v7.091218.nc')
 
         # Cheat a bit here: Get the fsurdat file from the already-generated lnd_in file in
         # the host test case - i.e., from the standard cime-based preview_namelists. But
