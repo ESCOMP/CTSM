@@ -186,7 +186,6 @@ contains
     !
     ! !USES: 
     use clm_varpar                         , only : nlevsno
-    use clm_varctl                         , only : use_soil_matrixcn
     use abortutils                         , only : endrun
     use controlMod                         , only : nlfilename, fsurdat
     use domainMod                          , only : ldomain
