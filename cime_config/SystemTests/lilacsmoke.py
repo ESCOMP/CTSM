@@ -131,9 +131,12 @@ class LILACSMOKE(SystemTestsCommon):
         caseroot = self._case.get_value('CASEROOT')
         runtime_inputs = self._runtime_inputs_dir()
 
-        # NOTE: *** this test is currently tied to this single 4x5 grid resolution ***
+        # NOTE: *** this test is currently tied to this single 10x15 grid resolution ***
+        lnd_grid = self._case.get_value('LND_GRID') 
+        expect(lnd_grid == '10x15',
+               "this test is currently tied to this single 10x15 grid resolution")
         lnd_domain_file = os.path.join(self._case.get_value('DIN_LOC_ROOT'),"share","domains",
-                                       'domain.lnd.fv4x5_gx3v7.091218.nc')
+                                       "domain.lnd.fv10x15_gx3v7.180321.nc")
 
         # Cheat a bit here: Get the fsurdat file from the already-generated lnd_in file in
         # the host test case - i.e., from the standard cime-based preview_namelists. But
@@ -153,8 +156,10 @@ class LILACSMOKE(SystemTestsCommon):
         # The user_nl_ctsm in the case directory is set up based on the standard testmods
         # mechanism. We use that one in place of the standard user_nl_ctsm, since the one
         # in the case directory may contain test-specific modifications.
-        shutil.copyfile(src=os.path.join(caseroot, 'user_nl_ctsm'),
-                        dst=os.path.join(runtime_inputs, 'user_nl_ctsm'))
+        print ("DEBUG: caseroot is {}".format(caseroot))
+        print ("DEBUG: runtime_inputs is {}".format(runtime_inputs))
+        shutil.copyfile(src=os.path.join(caseroot, 'user_nl_clm'),
+                        dst=os.path.join(runtime_inputs, 'user_nl_clm'))
 
         script_to_run = os.path.join(runtime_inputs, 'make_runtime_inputs')
         self._run_build_cmd('{} --rundir {}'.format(script_to_run, runtime_inputs),
