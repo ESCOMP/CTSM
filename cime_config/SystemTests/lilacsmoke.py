@@ -156,10 +156,8 @@ class LILACSMOKE(SystemTestsCommon):
         # The user_nl_ctsm in the case directory is set up based on the standard testmods
         # mechanism. We use that one in place of the standard user_nl_ctsm, since the one
         # in the case directory may contain test-specific modifications.
-        print ("DEBUG: caseroot is {}".format(caseroot))
-        print ("DEBUG: runtime_inputs is {}".format(runtime_inputs))
-        shutil.copyfile(src=os.path.join(caseroot, 'user_nl_clm'),
-                        dst=os.path.join(runtime_inputs, 'user_nl_clm'))
+        shutil.copyfile(src=os.path.join(caseroot, 'user_nl_ctsm'),
+                        dst=os.path.join(runtime_inputs, 'user_nl_ctsm'))
 
         script_to_run = os.path.join(runtime_inputs, 'make_runtime_inputs')
         self._run_build_cmd('{} --rundir {}'.format(script_to_run, runtime_inputs),
