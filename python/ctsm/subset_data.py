@@ -345,6 +345,7 @@ def plat_type(plat):
     Function to define lat type for the parser
     and
     raise error if latitude is not between -90 and 90.
+
     Args:
         plat(str): latitude
     Raises:
@@ -363,6 +364,7 @@ def plon_type(plon):
     Function to define lon type for the parser and
     convert negative longitudes and
     raise error if lon is not between -180 and 360.
+
     Args:
         plon (str): longitude
     Raises:
@@ -372,9 +374,9 @@ def plon_type(plon):
     """
     plon = float(plon)
     if -180 <= plon < 0:
-        logger.info("lon is: %f", plon)
+        logger.debug("lon is: %f", plon)
         plon = plon % 360
-        logger.info("after modulo lon is: %f", plon)
+        logger.debug("after modulo lon is: %f", plon)
     if plon < 0 or plon > 360:
         raise argparse.ArgumentTypeError("ERROR: Longitude of single point should be between 0 and "
                                          "360 or -180 and 180.")
