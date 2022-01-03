@@ -65,17 +65,18 @@ def str2bool(var):
         ValueError: The string should be one of the mentioned values.
 
     Returns:
-        bool: Boolean value corresponding to the input.
+        var_out (bool): Boolean value corresponding to the input.
     """
     if isinstance(var, bool):
-        return var
+        var_out = var
     if var.lower() in ("yes", "true", "t", "y", "1"):
-        return True
+        var_out =  True
     elif var.lower() in ("no", "false", "f", "n", "0"):
-        return False
+        var_out = False
     else:
         raise ValueError("Boolean value expected. [true or false] or [y or n]")
 
+    return var_out
 
 def get_git_sha():
     """
@@ -173,7 +174,8 @@ def update_metadata(file, title, summary, contact, data_script, description):
         "source_code",
         "SVN_url",
         "hostname",
-        "history" "History_Log",
+        "history",
+        "History_Log",
         "Logname",
         "Host",
         "Version",
