@@ -9,20 +9,11 @@ For full instructions on how to run the code and different options,
 please check python/ctsm/subset_data.py file.
 This script extracts domain files, surface dataset, and DATM files
 at either a single point or a region using the global dataset.
-<<<<<<< HEAD
-To see all available options for single-point subsetting:
-    ./subset_data point --help
-To see all available options for region subsetting:
-    ./subset_data region --help
-||||||| a6f23ca69
-
-
 
 To see all available options for single-point subsetting:
     ./subset_data point --help
 To see all available options for region subsetting:
     ./subset_data region --help
-=======
 
 To run this script the following packages are required:
     - numpy
@@ -30,7 +21,6 @@ To run this script the following packages are required:
 ----------------------------------------------------------------
 To see all available options for single-point/regional subsetting:
     ./subset_data --help
->>>>>>> python_dev_meeting
 """
 
 import os
