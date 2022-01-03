@@ -82,7 +82,8 @@ contains
     !-----------------------------------------------------------------------
     dtime = get_step_size_real()
     ! Skip a minimum of two time steps, but otherwise skip the number of time-steps in the skip_size rounded to the nearest integer
-    skip_steps = max(2, nint( (skip_size / dtime) ) )
+    ! Add an additional step as now required to be after the hourly radiation time-step see github issue #1563
+    skip_steps = max(2, nint( (skip_size / dtime) ) ) + 1
 
     if ( masterproc ) write(iulog,*) ' Skip balance checking for the first ', skip_steps, ' time steps'
 

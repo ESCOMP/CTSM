@@ -4371,7 +4371,9 @@ contains
     ! its original values
     !
     ! !USES:
-    use ch4varcon  , only : allowlakeprod
+    use ch4varcon       , only : allowlakeprod
+    use clm_varcon      , only : dzsoi_decomp
+    use landunit_varcon , only : isturb_tbd, isturb_hd, isturb_md
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds   
@@ -4384,7 +4386,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
-    integer :: j
+    integer :: j, l
 
     character(len=*), parameter       :: subname = 'ch4_totcolch4'
     !-----------------------------------------------------------------------
@@ -4411,9 +4413,18 @@ contains
     do j = 1, nlevsoi
        do fc = 1, num_nolakec
           c = filter_nolakec(fc)
-          totcolch4(c) = totcolch4(c) + &
-               (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
-               dz(c,j)*catomw
+          l = col%landunit(c)
+          ! See doc/design/dynamic_urban.rst for an explanation of why we use dzsoi_decomp instead of dz for 
+          ! urban landunits.
+          if (lun%itype(l) .eq. isturb_tbd .or. lun%itype(l) .eq. isturb_hd .or. lun%itype(l) .eq. isturb_md) then
+             totcolch4(c) = totcolch4(c) + &
+                  (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
+                  dzsoi_decomp(j)*catomw
+          else
+             totcolch4(c) = totcolch4(c) + &
+                  (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
+                  dz(c,j)*catomw
+          end if
           ! mol CH4 --> g C
        end do
 
