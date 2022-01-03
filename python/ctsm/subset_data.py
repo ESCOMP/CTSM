@@ -3,57 +3,32 @@
 |------------------------------------------------------------------|
 |---------------------  Instructions  -----------------------------|
 |------------------------------------------------------------------|
-
 Instructions for running on Cheyenne/Casper:
-
 load the following into your local environment
     module load python
     ncar_pylib
-
 -------------------------------------------------------------------
 To see the available options for single point or regional cases:
-    ./subset_data.py --help 
+    ./subset_data.py --help
 -------------------------------------------------------------------
-
 This script extracts domain files, surface dataset, and DATM files
-at either a single point or a region using the global dataset.
+at either a single point or a region using a global dataset. Currently this
+script subsets default surface, landuse, and DATM files, which can be seen in
+the defaults.cfg file.
 
-After creating a case using a global compset, run preview_namelist.  
-From the resulting lnd_in file in the run directory, find the name 
-of the domain file, and the surface data file.
+To run a single-point or regional case using this data with the NUOPC driver,
+you must update the variable(s) `fsurdat` and/or `landuse` in the user_nl_clm namelist
+file to be the full path to the subset files. This script will automatically create this
+file using the flag --create-user-mods.
+To use subset climate data, the namelist file user_nl_datm_streams must also
+be updated - this script will automatically create this file with
+--create-user-mods. This flag will also create necessary single-point xml
+commands in the file shell_commands.
 
-From the datm streams files (e.g. datm.streams.txt.CLMGSWP3v1.Precip)
-find the name of the datm forcing data domain file and forcing files.  
-Use these file names as the sources for the single point/regional
-files to  be created (see below).
+To use the created user mods with a case use --user-mods-dir PATH/TO/USER/MODS
+in the ./create.newcase call.
 
-After running this script, point to the new CLM domain and surface 
-dataset using the user_nl_clm file in the case directory.  In addition, 
-copy the datm.streams files to the case directory, with the prefix 
-'user_', e.g. user_datm.streams.txt.CLMGSWP3v1.Precip.  Change the 
-information in the user_datm.streams* files to point to the single 
-point datm data (domain and forcing files) created using this script.  
-
-The domain file is not set via user_nl_clm, but requires changing 
-LND_DOMAIN and ATM_DOMAIN (and their paths) in env_run.xml.  
-
-Using single point forcing data requires specifying the nearest 
-neighbor mapping algorithm for the datm streams (usually they are 
-the first three in the list) in user_nl_datm: mapalgo = 'nn','nn','nn', 
-..., where the '...' can still be 'bilinear', etc, depending on the 
-other streams that are being used, e.g. aerosols, anomaly forcing, 
-bias correction.
-
-The file env_mach_pes.xml should be modified to specify a single 
-processor.  The mpi-serial libraries should also be used, and can be 
-set in env_build.xml by changing "MPILIB" to "mpi-serial" prior to 
-setting up the case.  
-
-The case for the single point simulation should have river routing 
-and land ice models turned off (i.e. the compset should use stub 
-models SROF and SGLC)
-
-By default, it only extracts surface dataset and for extracting other
+By default, this script only extracts surface dataset. For extracting other
 files, the appropriate flags should be used.
 
 To run this script the following packages are required:
@@ -63,7 +38,7 @@ To run this script the following packages are required:
 -------------------------------------------------------------------
 To run the script for a single point:
     ./subset_data.py point
- 
+
 To run the script for a region:
     ./subset_data.py region
 
@@ -79,24 +54,20 @@ To remove NPL from your environment on Cheyenne/Casper:
 
 # -- standard libraries
 import os
+import sys
 import logging
 import argparse
 import textwrap
+import configparser
 
-from datetime import date
 from getpass import getuser
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-
-# -- 3rd party libraries
-import numpy as np
-import xarray as xr
+from argparse import ArgumentParser
 
 # -- import local classes for this script
-from ctsm.site_and_regional.base_case import BaseCase
+from ctsm.site_and_regional.base_case import DatmFiles
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
-
-from ctsm.utils import str2bool, add_tag_to_filename
+from ctsm.path_utils import path_to_ctsm_root
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -104,6 +75,11 @@ from ctsm.ctsm_logging import (
     add_logging_args,
     process_logging_args,
 )
+
+_CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", 'python'))
+sys.path.insert(1, _CTSM_PYTHON)
+
+DEFAULTS_FILE = "default_data.cfg"
 
 logger = logging.getLogger(__name__)
 
@@ -122,12 +98,12 @@ def get_parser():
 
     parser.print_usage = parser.print_help
     subparsers = parser.add_subparsers(
-        help="Two possible ways to run this sript, either:", dest="run_type"
+        help="Two possible ways to run this script, either:", dest="run_type"
     )
     pt_parser = subparsers.add_parser("point", help="Run script for a single point.")
     rg_parser = subparsers.add_parser("region", help="Run script for a region.")
 
-    # -- signle point parser options
+    # -- single point parser options
     pt_parser.add_argument(
         "--lat",
         help="Single point latitude. [default: %(default)s]",
@@ -157,7 +133,8 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--variable-snow-fraction",
-        help="Creating datasets using variable snow fraction.If unset, snow is set to  uniform fraction.",
+        help="Create surface data with variable snow fraction. If unset, snow is set to uniform "
+             "fraction.",
         action="store_false",
         dest="uni_snow",
         required=False,
@@ -165,7 +142,8 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--allow-multiple-pft",
-        help="Creating dataset using multiple pft. If unset, it assumes the whole grid is 100% single PFT set by --dom-pft.",
+        help="Create surface data with multiple PFTs. If unset, it assumes the whole grid is 100%% "
+             "single PFT set by --dom-pft.",
         action="store_false",
         dest="overwrite_single_pft",
         required=False,
@@ -173,7 +151,7 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--zero-nonveg",
-        help="Creating dataset by setting all non-vegetation landunits to zero.",
+        help="Set all non-vegetation landunits in the surface data to zero.",
         action="store_true",
         dest="zero_nonveg",
         required=False,
@@ -181,9 +159,26 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--allow-saturation-excess",
-        help="Creating dataset allowing saturatated conditions. If unset saturation_excess is set to zero.",
+        help="Create surface data allowing saturated conditions. If unset saturation excess is set "
+             "to zero.",
         action="store_true",
         dest="saturation_excess",
+        required=False,
+        default=False,
+    )
+    pt_parser.add_argument(
+        "--dompft",
+        help="Dominant PFT if we set the grid to 100%% one PFT [default: %(default)s].",
+        action="store",
+        dest="dom_pft",
+        type=int,
+        default=7,
+    )
+    pt_parser.add_argument(
+        "--datm-from-tower",
+        help="Create DATM forcing data at single point for a tower data.",
+        action="store_true",
+        dest="datm_tower",
         required=False,
         default=False,
     )
@@ -235,7 +230,7 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--create-mesh",
-        help="Flag for subsetting mesh file.",
+        help="Subset a mesh file for a region.",
         action="store_true",
         dest="create_mesh",
         required=False,
@@ -277,8 +272,17 @@ def get_parser():
             default=False,
         )
         subparser.add_argument(
+            "--create-user-mods",
+            help="Create user mods directories and files for running CTSM with the subset data.",
+            action="store_true",
+            dest="create_user_mods",
+            required=False,
+            default=True,
+        )
+        subparser.add_argument(
             "--datm-syr",
-            help="Start year for creating DATM forcing at single point/region. [default: %(default)s]",
+            help="Start year for creating DATM forcing at single point/region. [default: %("
+                 "default)s]",
             action="store",
             dest="datm_syr",
             required=False,
@@ -287,7 +291,8 @@ def get_parser():
         )
         subparser.add_argument(
             "--datm-eyr",
-            help="End year for creating DATM forcing at single point/region. [default: %(default)s]",
+            help="End year for creating DATM forcing at single point/region. "
+                 "[default: %(default)s]",
             action="store",
             dest="datm_eyr",
             required=False,
@@ -301,14 +306,6 @@ def get_parser():
             dest="crop_flag",
             required=False,
             default=False,
-        )
-        subparser.add_argument(
-            "--dompft",
-            help="Dominant PFT type . [default: %(default)s] ",
-            action="store",
-            dest="dom_pft",
-            type=int,
-            default=7,
         )
 
         if subparser == pt_parser:
@@ -324,15 +321,14 @@ def get_parser():
             type=str,
             default=os.path.join(os.getcwd(), "subset_data_" + parser_name),
         )
-
-    pt_parser.add_argument(
-        "--datm-from-tower",
-        help="Create DATM forcing data at single point for a tower data.",
-        action="store_true",
-        dest="datm_tower",
-        required=False,
-        default=False,
-    )
+        subparser.add_argument(
+            "--user-mods-dir",
+            help="User mods directory.",
+            action="store",
+            dest="user_mods_dir",
+            type=str,
+            default="",
+        )
 
     # -- print help for both subparsers
     parser.epilog = textwrap.dedent(
@@ -344,379 +340,273 @@ def get_parser():
     return parser
 
 
-def plat_type(x):
+def plat_type(plat):
     """
     Function to define lat type for the parser
     and
     raise error if latitude is not between -90 and 90.
-
     Args:
-        x(str): latitude
-
+        plat(str): latitude
     Raises:
-        Error: ArgumentTypeError  when x (latitude) is not between -90 and 90.
-
+        Error (ArgumentTypeError): when plat (latitude) is not between -90 and 90.
     Returns:
-        x (float): latitude in float
-
+        plat (float): latitude in float
     """
-    x = float(x)
-    if (x < -90) or (x > 90):
-        raise argparse.ArgumentTypeError(
-            "ERROR: Latitude should be between -90 and 90."
-        )
-    return x
+    plat = float(plat)
+    if (plat < -90) or (plat > 90):
+        raise argparse.ArgumentTypeError("ERROR: Latitude should be between -90 and 90.")
+    return plat
 
 
-def plon_type(x):
+def plon_type(plon):
     """
     Function to define lon type for the parser and
     convert negative longitudes and
     raise error if lon is not between -180 and 360.
-
     Args:
-        x (str): longitude
-
+        plon (str): longitude
     Raises:
-        Error: ArgumentTypeError when longitude is <-180 and >360.
-
+        Error (ArgumentTypeError): when longitude is <-180 and >360.
     Returns:
-        x(float): converted longitude between 0 and 360
+        plon(float): converted longitude between 0 and 360
     """
-    x = float(x)
-    if (-180 < x) and (x < 0):
-        x = x % 360
-    if (x < 0) or (x > 360):
-        raise argparse.ArgumentTypeError(
-            "ERROR: Longitude of single point should be between 0 and 360 or -180 and 180."
-        )
-    return x
+    plon = float(plon)
+    if -180 <= plon < 0:
+        logger.info("lon is: %f", plon)
+        plon = plon % 360
+        logger.info("after modulo lon is: %f", plon)
+    if plon < 0 or plon > 360:
+        raise argparse.ArgumentTypeError("ERROR: Longitude of single point should be between 0 and "
+                                         "360 or -180 and 180.")
+    return plon
+
+
+def setup_user_mods(user_mods_dir, cesmroot):
+    """
+    Sets up the user mods files and directories
+    """
+    if not os.path.isdir(user_mods_dir):
+        os.mkdir(user_mods_dir)
+
+    nl_clm_base = os.path.join(cesmroot, "cime_config/user_nl_clm")
+    nl_clm = os.path.join(user_mods_dir, "user_nl_clm")
+    with open(nl_clm_base, "r") as basefile, open(nl_clm, "w") as user_file:
+        for line in basefile:
+            user_file.write(line)
+
+    nl_datm_base = os.path.join(cesmroot, "components/cdeps/datm/cime_config"
+                                          "/user_nl_datm_streams")
+    nl_datm = os.path.join(user_mods_dir, "user_nl_datm_streams")
+    with open(nl_datm_base, "r") as base_file, open(nl_datm, 'w') as user_file:
+        for line in base_file:
+            user_file.write(line)
+
+
+def setup_files(args, defaults, cesmroot):
+    """
+    Sets up the files and folders needed for this program
+    """
+
+    if args.user_mods_dir == "":
+        args.user_mods_dir = os.path.join(args.out_dir, "user_mods")
+    if not os.path.isdir(args.out_dir):
+        os.mkdir(args.out_dir)
+
+    if args.create_user_mods:
+        setup_user_mods(args.user_mods_dir, cesmroot)
+
+    # DATM data
+    datm_type = 'datm_gswp3'
+    dir_output_datm = "datmdata"
+    dir_input_datm = defaults.get(datm_type, "dir")
+    if args.create_datm:
+        if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
+            os.mkdir(os.path.join(args.out_dir, dir_output_datm))
+        logger.info("dir_input_datm : %s", dir_input_datm)
+        logger.info("dir_output_datm: %s", os.path.join(args.out_dir, dir_output_datm))
+
+    # if the crop flag is on - we need to use a different land use and surface data file
+    if args.crop_flag:
+        num_pft = "78"
+        fsurf_in = defaults.get("surfdat", "surfdat_78pft")
+        fluse_in = defaults.get("landuse", "landuse_78pft")
+    else:
+        num_pft = "16"
+        fsurf_in = defaults.get("surfdat", "surfdat_16pft")
+        fluse_in = defaults.get("landuse", "landuse_16pft")
+    logger.debug("crop_flag = %s => num_pft = %s", args.crop_flag.__str__(), num_pft)
+
+    file_dict = {'main_dir': defaults.get("main", "clmforcingindir"),
+                 'fdomain_in': defaults.get("domain", "file"),
+                 'fsurf_dir': os.path.join(defaults.get("main", "clmforcingindir"),
+                                           os.path.join(defaults.get("surfdat", "dir"))),
+                 'fluse_dir': os.path.join(defaults.get("main", "clmforcingindir"),
+                                           os.path.join(defaults.get("landuse", "dir"))),
+                 'fsurf_in': fsurf_in,
+                 'fluse_in': fluse_in,
+                 'datm_tuple': DatmFiles(dir_input_datm,
+                                         dir_output_datm,
+                                         defaults.get(datm_type, "domain"),
+                                         defaults.get(datm_type, 'solardir'),
+                                         defaults.get(datm_type, 'precdir'),
+                                         defaults.get(datm_type, 'tpqwdir'),
+                                         defaults.get(datm_type, 'solartag'),
+                                         defaults.get(datm_type, 'prectag'),
+                                         defaults.get(datm_type, 'tpqwtag'),
+                                         defaults.get(datm_type, 'solarname'),
+                                         defaults.get(datm_type, 'precname'),
+                                         defaults.get(datm_type, 'tpqwname'))
+                 }
+
+    return file_dict
+
+
+def subset_point(args, file_dict: dict):
+    """
+    Subsets surface, domain, land use, and/or DATM files at a single point
+    """
+
+    logger.info("----------------------------------------------------------------------------")
+    logger.info("This script extracts a single point from the global CTSM datasets.")
+
+    # --  Create SinglePoint Object
+    single_point = SinglePointCase(
+        args.plat,
+        args.plon,
+        args.site_name,
+        args.create_domain,
+        args.create_surfdata,
+        args.create_landuse,
+        args.create_datm,
+        args.create_user_mods,
+        args.overwrite_single_pft,
+        args.dom_pft,
+        args.zero_nonveg,
+        args.uni_snow,
+        args.saturation_excess,
+        args.out_dir,
+    )
+
+    single_point.create_tag()
+    logger.debug(single_point)
+
+    # --  Create CTSM domain file
+    if single_point.create_domain:
+        single_point.create_domain_at_point(file_dict["main_dir"], file_dict["fdomain_in"])
+
+    # --  Create CTSM surface data file
+    if single_point.create_surfdata:
+        single_point.create_surfdata_at_point(file_dict["fsurf_dir"], file_dict["fsurf_in"],
+                                              args.user_mods_dir)
+
+    # --  Create CTSM transient landuse data file
+    if single_point.create_landuse:
+        single_point.create_landuse_at_point(file_dict["fluse_dir"], file_dict["fluse_in"],
+                                             args.user_mods_dir)
+
+    # --  Create single point atmospheric forcing data
+    if single_point.create_datm:
+        # subset DATM domain file
+        single_point.create_datmdomain_at_point(file_dict["datm_tuple"])
+
+        # subset the DATM data
+        nl_datm = os.path.join(args.user_mods_dir, "user_nl_datm_streams")
+        single_point.create_datm_at_point(file_dict['datm_tuple'], args.datm_syr, args.datm_eyr,
+                                          nl_datm)
+
+    # -- Write shell commands
+    if single_point.create_user_mods:
+        single_point.write_shell_commands(os.path.join(args.user_mods_dir, "shell_commands"))
+
+    logger.info("Successfully ran script for single point.")
+
+
+def subset_region(args, file_dict: dict):
+    """
+    Subsets surface, domain, land use, and/or DATM files for a region
+    """
+
+    logger.info("----------------------------------------------------------------------------")
+    logger.info("This script extracts a region from the global CTSM datasets.")
+
+    # --  Create Region Object
+    region = RegionalCase(
+        args.lat1,
+        args.lat2,
+        args.lon1,
+        args.lon2,
+        args.reg_name,
+        args.create_domain,
+        args.create_surfdata,
+        args.create_landuse,
+        args.create_datm,
+        args.create_user_mods,
+        args.out_dir,
+    )
+
+    region.create_tag()
+    logger.debug(region)
+
+    # --  Create CTSM domain file
+    if region.create_domain:
+        region.create_domain_at_reg(file_dict["main_dir"], file_dict["fdomain_in"])
+
+    # --  Create CTSM surface data file
+    if region.create_surfdata:
+        region.create_surfdata_at_reg(file_dict["fsurf_dir"], file_dict["fsurf_in"],
+                                      args.user_mods_dir)
+
+    # --  Create CTSM transient landuse data file
+    if region.create_landuse:
+        region.create_landuse_at_reg(file_dict["fluse_dir"], file_dict["fluse_in"],
+                                     args.user_mods_dir)
+
+    logger.info("Successfully ran script for a regional case.")
+    sys.exit()
 
 
 def main():
-    # -- add logging flags from ctsm_logging
+    """
+    Calls functions that subset surface, landuse, domain, and/or DATM files for a region or a
+    single point.
+    """
+
+    # add logging flags from ctsm_logging
     setup_logging_pre_config()
     parser = get_parser()
     add_logging_args(parser)
-
     args = parser.parse_args()
-
     process_logging_args(args)
+
+    # parse defaults file
+    cesmroot = path_to_ctsm_root()
+    defaults = configparser.ConfigParser()
+    defaults.read(os.path.join(cesmroot, "tools/site_and_regional", DEFAULTS_FILE))
+
+    # --------------------------------- #
 
     myname = getuser()
     pwd = os.getcwd()
+    logger.info("User = %s", myname)
+    logger.info("Current directory = %s", pwd)
 
-    logger.info("User = " + myname)
-    logger.info("Current directory = " + pwd)
+    # --------------------------------- #
+
+    # print help and exit when no option is chosen
+    if args.run_type != "point" and args.run_type != "region":
+        print("Must supply a positional argument: 'point' or 'region'.")
+        print("See ./subset_data --help for more help.")
+        sys.exit()
+    if not any([args.create_surfdata, args.create_domain, args.create_landuse, args.create_datm]):
+        print("Must supply one of:")
+        print(" --create-surface \n --create-landuse \n --create-datm \n --create-domain")
+        print("See ./subset_data --help for more help.")
+        sys.exit()
+
+    # create files and folders necessary and return dictionary of file/folder locations
+    file_dict = setup_files(args, defaults, cesmroot)
 
     if args.run_type == "point":
-        logger.info(
-            "----------------------------------------------------------------------------"
-        )
-        logger.info(
-            "This script extracts a single point from the global CTSM inputdata datasets."
-        )
-
-        # --  Specify point to extract
-        plon = args.plon
-        plat = args.plat
-
-        # --  Create single point  CLM domain file
-        create_domain = args.create_domain
-
-        # --  Create CLM surface data file
-        create_surfdata = args.create_surfdata
-
-        # --  Create CLM surface data file
-        create_landuse = args.create_landuse
-
-        # --  Create single point DATM atmospheric forcing data
-        create_datm = args.create_datm
-        datm_syr = args.datm_syr
-        datm_eyr = args.datm_eyr
-
-        crop_flag = args.crop_flag
-
-        site_name = args.site_name
-
-        # --  Modify landunit structure
-        overwrite_single_pft = args.overwrite_single_pft
-        dominant_pft = args.dom_pft
-        zero_nonveg_landunits = args.zero_nonveg
-        uniform_snowpack = args.uni_snow
-        saturation_excess = args.saturation_excess
-
-        # --  Create SinglePoint Object
-        single_point = SinglePointCase(
-            plat,
-            plon,
-            site_name,
-            create_domain,
-            create_surfdata,
-            create_landuse,
-            create_datm,
-            overwrite_single_pft,
-            dominant_pft,
-            zero_nonveg_landunits,
-            uniform_snowpack,
-            saturation_excess,
-        )
-
-        single_point.create_tag()
-
-        logger.debug(single_point)
-
-        if crop_flag:
-            num_pft = "78"
-        else:
-            num_pft = "16"
-
-        logger.debug("crop_flag = " + crop_flag.__str__() + " => num_pft =" + num_pft)
-
-        # --  Set input and output filenames
-        # --  Specify input and output directories
-        dir_output = args.out_dir
-        # -- create output dir if it does not exist
-        if not os.path.isdir(dir_output):
-            os.mkdir(dir_output)
-
-        dir_inputdata = "/glade/p/cesmdata/cseg/inputdata/"
-        dir_clm_forcedata = "/glade/p/cgd/tss/CTSM_datm_forcing_data/"
-        dir_input_datm = os.path.join(
-            dir_clm_forcedata, "atm_forcing.datm7.GSWP3.0.5d.v1.c170516/"
-        )
-
-        dir_output_datm = os.path.join(dir_output, "datmdata/")
-        if not os.path.isdir(dir_output_datm):
-            os.mkdir(dir_output_datm)
-
-        logger.info("dir_input_datm  : " + dir_input_datm)
-        logger.info("dir_output_datm : " + dir_output_datm)
-
-        # --  Specify land domain file  ---------------------------------
-        fdomain_in = os.path.join(
-            dir_inputdata, "share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc"
-        )
-        fdomain_out = os.path.join(
-            dir_output, add_tag_to_filename(fdomain_in, single_point.tag)
-        )
-
-        single_point.fdomain_in = fdomain_in
-        single_point.fdomain_out = fdomain_out
-
-        logger.info("fdomain_in  : " + fdomain_in)
-        logger.info("fdomain_out : " + fdomain_out)
-
-        # --  Specify surface data file  --------------------------------
-        if crop_flag:
-            fsurf_in = os.path.join(
-                dir_inputdata,
-                "lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c190214.nc",
-            )
-        else:
-            fsurf_in = os.path.join(
-                dir_inputdata,
-                "lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
-            )
-
-        fsurf_out = os.path.join(
-            dir_output, add_tag_to_filename(fsurf_in, single_point.tag)
-        )
-
-        single_point.fsurf_in = fsurf_in
-        single_point.fsurf_out = fsurf_out
-
-        logger.info("fsurf_in   : " + fsurf_in)
-        logger.info("fsurf_out  : " + fsurf_out)
-
-        # --  Specify landuse file  -------------------------------------
-        if crop_flag:
-            fluse_in = os.path.join(
-                dir_inputdata,
-                "lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c190214.nc",
-            )
-        else:
-            fluse_in = os.path.join(
-                dir_inputdata,
-                "lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_78pfts_CMIP6_simyr1850-2015_c190214.nc",
-            )
-        fluse_out = os.path.join(
-            dir_output, add_tag_to_filename(fluse_in, single_point.tag)
-        )
-        single_point.fluse_in = fluse_in
-        single_point.fluse_out = fluse_out
-
-        logger.info("fluse_in   : " + fluse_in)
-        logger.info("fluse_out  : " + fluse_out)
-
-        # --  Specify datm domain file  ---------------------------------
-        fdatmdomain_in = os.path.join(
-            dir_clm_forcedata,
-            "atm_forcing.datm7.GSWP3.0.5d.v1.c170516/domain.lnd.360x720_gswp3.0v1.c170606.nc",
-        )
-        fdatmdomain_out = os.path.join(
-            dir_output_datm,
-            add_tag_to_filename(fdatmdomain_in, single_point.tag),
-        )
-        single_point.fdatmdomain_in = fdatmdomain_in
-        single_point.fdatmdomain_out = fdatmdomain_out
-
-        logger.info("fdatmdomain_in   : " + fdatmdomain_in)
-        logger.info("fdatmdomain out  : " + fdatmdomain_out)
-
-        # --  Create CTSM domain file
-        if create_domain:
-            single_point.create_domain_at_point()
-
-        # --  Create CTSM surface data file
-        if create_surfdata:
-            single_point.create_surfdata_at_point()
-
-        # --  Create CTSM transient landuse data file
-        if create_landuse:
-            single_point.create_landuse_at_point()
-
-        # --  Create single point atmospheric forcing data
-        if create_datm:
-            single_point.create_datmdomain_at_point()
-            single_point.datm_syr = datm_syr
-            single_point.datm_eyr = datm_eyr
-            single_point.dir_input_datm = dir_input_datm
-            single_point.dir_output_datm = dir_output_datm
-            single_point.create_datm_at_point()
-
-        if create_domain or create_surfdata or create_landuse or create_datm:
-            logger.info("Successfully ran script for single point.")
-        else:
-            logger.warning(
-                "Please choose at least one of the following flags to create the files: \n --create-domain \n --create-surface \n --create-landuse \n --create-datm"
-            )
-
+        subset_point(args, file_dict)
     elif args.run_type == "region":
-        logger.info(
-            "----------------------------------------------------------------------------"
-        )
-        logger.info(
-            "This script extracts a single point from the global CTSM inputdata datasets."
-        )
-
-        # --  Specify region to extract
-        lat1 = args.lat1
-        lat2 = args.lat2
-
-        lon1 = args.lon1
-        lon2 = args.lon2
-
-        # --  Create regional CLM domain file
-        create_domain = args.create_domain
-
-        # --  Create CLM surface data file
-        create_surfdata = args.create_surfdata
-
-        # --  Create CLM surface data file
-        create_landuse = args.create_landuse
-
-        # --  Create DATM atmospheric forcing data
-        create_datm = args.create_datm
-
-        # --  Create mesh file
-        create_mesh = args.create_mesh
-
-        crop_flag = args.crop_flag
-
-        reg_name = args.reg_name
-
-        region = RegionalCase(
-            lat1,
-            lat2,
-            lon1,
-            lon2,
-            reg_name,
-            create_domain,
-            create_surfdata,
-            create_landuse,
-            create_datm,
-        )
-
-        region.create_tag()
-
-        logger.debug(region)
-
-        if crop_flag:
-            num_pft = "78"
-        else:
-            num_pft = "16"
-
-        logger.debug("crop_flag = " + crop_flag.__str__() + " => num_pft =" + num_pft)
-
-        # --  Set input and output filenames
-        # --  Specify input and output directories
-        dir_output = args.out_dir
-        # -- create output dir if it does not exist
-        if not os.path.isdir(dir_output):
-            os.mkdir(dir_output)
-
-        dir_inputdata = "/glade/p/cesmdata/cseg/inputdata/"
-        dir_clm_forcedata = "/glade/p/cgd/tss/CTSM_datm_forcing_data/"
-
-        # --  Specify land domain file  ---------------------------------
-        fdomain_in = os.path.join(
-            dir_inputdata, "share/domains/domain.lnd.fv1.9x2.5_gx1v7.170518.nc"
-        )
-        fdomain_out = os.path.join(
-            dir_output, add_tag_to_filename(fdomain_in, region.tag)
-        )
-
-        region.fdomain_in = fdomain_in
-        region.fdomain_out = fdomain_out
-
-        logger.info("fdomain_in  : " + fdomain_in)
-        logger.info("fdomain_out : " + fdomain_out)
-
-        # --  Specify surface data file  --------------------------------
-        fsurf_in = os.path.join(
-            dir_inputdata,
-            "lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_c170824.nc",
-        )
-        fsurf_out = os.path.join(dir_output, add_tag_to_filename(fsurf_in, region.tag))
-
-        region.fsurf_in = fsurf_in
-        region.fsurf_out = fsurf_out
-
-        logger.info("fsurf_in  : " + fdomain_in)
-        logger.info("fsurf_out : " + fdomain_out)
-
-        # --  Specify landuse file  -------------------------------------
-        fluse_in = os.path.join(
-            dir_inputdata,
-            "lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc",
-        )
-        fluse_out = os.path.join(dir_output, add_tag_to_filename(fluse_in, region.tag))
-        region.fluse_in = fluse_in
-        region.fluse_out = fluse_out
-
-        logger.info("fluse_in  : " + fdomain_in)
-        logger.info("fluse_out : " + fdomain_out)
-
-        # --  Create CTSM domain file
-        if create_domain:
-            region.create_domain_at_reg()
-
-        # --  Create CTSM surface data file
-        if create_surfdata:
-            region.create_surfdata_at_reg()
-
-        # --  Create CTSM transient landuse data file
-        if create_landuse:
-            region.create_landuse_at_reg()
-
-        if create_domain or create_surfdata or create_landuse or create_datm:
-            logger.info("Successfully ran script for a regional case.")
-        else:
-            logger.warning(
-                "Please choose at least one of the following flags to create the files: \n --create-domain \n --create-surface \n --create-landuse \n --create-mesh"
-            )
-
-    else:
-        # print help when no option is chosen
-        get_parser().print_help()
+        subset_region(args, file_dict)

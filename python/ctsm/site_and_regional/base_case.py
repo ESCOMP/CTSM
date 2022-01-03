@@ -8,6 +8,7 @@ RegionalCase are defined in this Class.
 # -- standard libraries
 import os
 import logging
+from collections import namedtuple
 
 from datetime import date
 from getpass import getuser
@@ -19,15 +20,20 @@ import xarray as xr
 # -- import local classes for this script
 from ctsm.git_utils import get_git_short_hash
 
+USRDAT_DIR = "CLM_USRDAT_DIR"
 logger = logging.getLogger(__name__)
 
+# named tuple for datm input/output files and folder names
+DatmFiles = namedtuple(
+    "DatmFiles",
+    "indir outdir fdomain_in dir_solar dir_prec dir_tpqw tag_solar tag_prec tag_tpqw name_solar "
+    "name_prec name_tpqw "
+)
 
 class BaseCase:
     """
     Parent class to SinglePointCase and RegionalCase
-
     ...
-
     Attributes
     ----------
     create_domain : bool
@@ -38,22 +44,22 @@ class BaseCase:
         flag for creating landuse file
     create_datm : bool
         flag for creating DATM files
-
+    create_user_mods
+        flag for creating a user_mods directory
     Methods
     -------
     create_1d_coord(filename, lon_varname , lat_varname,x_dim , y_dim )
         create 1d coordinate variables to enable sel() method
-
     add_tag_to_filename(filename, tag)
        add a tag and timetag to a filename ending with
        [._]cYYMMDD.nc or [._]YYMMDD.nc
-
     update_metadata(nc)
         Class method for adding some new attributes (such as date, username) and
         remove the old attributes from the netcdf file.
     """
 
-    def __init__(self, create_domain, create_surfdata, create_landuse, create_datm):
+    def __init__(self, create_domain, create_surfdata, create_landuse, create_datm,
+                 create_user_mods):
         """
         Initializes BaseCase with the given arguments.
 
@@ -67,26 +73,21 @@ class BaseCase:
             Flag for creating landuse file a region/single point
         create_datmdata : bool
             Flag for creating datm files a region/single point
+        create_user_mods : bool
+            Flag for creating user mods directories and files for running CTSM
         """
         self.create_domain = create_domain
         self.create_surfdata = create_surfdata
         self.create_landuse = create_landuse
         self.create_datm = create_datm
+        self.create_user_mods = create_user_mods
 
     def __str__(self):
         """
         Converts ingredients of the BaseCase to string for printing.
         """
-        return (
-            str(self.__class__)
-            + "\n"
-            + "\n".join(
-                (
-                    str(item) + " = " + str(self.__dict__[item])
-                    for item in sorted(self.__dict__)
-                )
-            )
-        )
+        return "{}\n{}".format(str(self.__class__), "\n".join(
+            ("{} = {}".format(str(key), str(self.__dict__[key])) for key in sorted(self.__dict__))))
 
     @staticmethod
     def create_1d_coord(filename, lon_varname, lat_varname, x_dim, y_dim):
@@ -110,7 +111,7 @@ class BaseCase:
             f_out (xarray Dataset): Xarray Dataset with 1-d coords
 
         """
-        logger.debug("Open file: " + filename)
+        logger.debug("Open file: %s", filename)
         f_in = xr.open_dataset(filename)
 
         # create 1d coordinate variables to enable sel() method
@@ -125,7 +126,8 @@ class BaseCase:
         f_in.close()
         return f_out
 
-    def update_metadata(self, nc):
+    @staticmethod
+    def update_metadata(nc_file):
         """
         Class method for adding some new attributes (such as date, username) and
         remove the old attributes from the netcdf file.
@@ -151,27 +153,31 @@ class BaseCase:
         # get git hash
         sha = get_git_short_hash()
 
-        nc.attrs["Created_on"] = today_string
-        nc.attrs["Created_by"] = getuser()
-        nc.attrs["Created_with"] = os.path.abspath(__file__) + " -- " + sha
+        nc_file.attrs["Created_on"] = today_string
+        nc_file.attrs["Created_by"] = getuser()
+        nc_file.attrs["Created_with"] = os.path.abspath(__file__) + " -- " + sha
 
         # delete unrelated attributes if they exist
         del_attrs = [
             "source_code",
             "SVN_url",
             "hostname",
-            "history" "History_Log",
+            "history History_Log",
             "Logname",
             "Host",
             "Version",
             "Compiler_Optimized",
         ]
-        attr_list = nc.attrs
+        attr_list = nc_file.attrs
 
         for attr in del_attrs:
             if attr in attr_list:
-                logger.debug("This attr should be deleted : " + attr)
-                del nc.attrs[attr]
+                logger.debug("This attr should be deleted : %s", attr)
+                del nc_file.attrs[attr]
 
-        # for attr, value in attr_list.items():
-        #    print (attr + " = "+str(value))
+    @staticmethod
+    def write_to_file(text, file):
+        """
+        Writes text to a file, surrounding text with \n characters
+        """
+        file.write("\n{}\n".format(text))
