@@ -1,5 +1,4 @@
-"""
-Implementation of the CIME LILACSMOKE (LILAC smoke) test.
+"""Implementation of the CIME LILACSMOKE (LILAC smoke) test.
 
 This is a CTSM-specific test. It tests the building and running of CTSM via LILAC. Compset
 is ignored, but grid is important. Also, it's important that this test use the nuopc
@@ -15,6 +14,10 @@ Important directories under CASEROOT are:
 Note that namelists for this test are generated in the build phase; they are NOT
 regenerated when the test is submitted / run. This means that, if you have made any
 changes that will impact namelists, you will need to rebuild this test.
+
+Note that this test is tied to a specific resolution (10x15) and has a hard-coded domain
+file for this resolution: see the setting of lnd_domain_file below.
+
 """
 
 import glob
