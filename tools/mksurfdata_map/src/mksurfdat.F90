@@ -425,7 +425,7 @@ program mksurfdat
     ! Make sure ldomain is on a 0 to 360 grid as that's a requirement for CESM
     if ( .not. is_domain_0to360_longs( ldomain ) )then
        write(6,*)' Output domain must be on a 0 to 360 longitude grid rather than a -180 to 180 grid as it is required for CESM'
-       stop
+       call abort()
     end if
     ! ----------------------------------------------------------------------
     ! Allocate and initialize dynamic memory
@@ -493,7 +493,7 @@ program mksurfdat
     
     if (fsurlog == ' ') then
        write(6,*)' must specify fsurlog in namelist'
-       stop
+       call abort()
     else
        ndiag = getavu(); call opnfil (fsurlog, ndiag, 'f')
     end if
@@ -1091,7 +1091,7 @@ program mksurfdat
 
        if (fdyndat == ' ') then
           write(6,*)' must specify fdyndat in namelist if mksrf_fdynuse is not blank'
-          stop
+          call abort()
        end if
 
        ! Define dimensions and global attributes

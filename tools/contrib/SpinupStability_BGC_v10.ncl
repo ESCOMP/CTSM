@@ -1,12 +1,13 @@
 ; NCL script
-; SpinupStability_v8.ncl
-; Script to examine stability of spinup simulation.
+; SpinupStability_BGC_v10.ncl
+; Script to examine stability of BGC spinup simulation.
 ; This version operates on either monthly mean or multi-annual mean multi-variable history files 
-; Keith Oleson, Jan 2019
+; NOTE: THIS SCRIPT IS ONLY INTENDED FOR USE WITH 2-D LAT/LON GRIDS
+; Keith Oleson, Mar 2020
 
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
+load "~oleson/lnd_diag/run/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 
 begin
@@ -30,6 +31,7 @@ begin
 ;  AND set the region (supported options: Global, Arctic, SPT).
 ;  AND set the subper (subsampling period in years, number of years that atm forcing repeats).
 ; The script assumes that your history files are in /glade/scratch/$username/archive/$caseid/lnd/hist
+; You need a run consisting of at least three cycles of atmospheric data
 ;=======================================================================;
 
 ; GLOBAL EXAMPLE
@@ -38,6 +40,7 @@ begin
   annual_hist = True
   region = "Global"              ; Global, Arctic, or SPT (single point)
   subper = 20                    ; Subsampling period in years
+  paleo = False                  ; Use paleo map
 
 ; SPT (single point) EXAMPLE
 ; caseid = "clm50_release-clm5.0.15_SPT_GSWP3V1_1850spin"
@@ -45,6 +48,7 @@ begin
 ; annual_hist = True
 ; region = "SPT"                 ; Global, Arctic, or SPT (single point)
 ; subper = 20                    ; Subsampling period in years
+; paleo = False                  ; Use paleo map
 
   do_plot = True
 ; do_plot = False
@@ -67,7 +71,7 @@ begin
     glob_thresh_tws = 0.001        ; global threshold for TWS equilibrium (delta m / yr)
     glob_thresh_h2osno = 1.0       ; global threshold for H2OSNO equilibrium (delta mm / yr)
     glob_thresh_area = 3.0         ; global threshold percent area with TOTECOSYSC disequilibrium gt 1 g C/m2/yr (not used)
-    totecosysc_thresh = 1.         ; disequilibrium threshold for individual gridcells (gC/m2/yr) (not used)
+    totecosysc_thresh = 1.0        ; disequilibrium threshold for individual gridcells (gC/m2/yr) (not used)
   else
     glob_thresh_totecosysc = 0.02  ; global threshold for TOTECOSYSC equilibrium (delta PgC / yr)
     glob_thresh_totsomc = 0.02     ; global threshold for TOTSOMC equilibrium (delta PgC / yr)
@@ -77,13 +81,13 @@ begin
     glob_thresh_tws = 0.001        ; global threshold for TWS equilibrium (delta m / yr)
     glob_thresh_h2osno = 1.0       ; global threshold for H2OSNO equilibrium (delta mm / yr)
     glob_thresh_area = 3.0         ; global threshold percent area with TOTECOSYSC disequilibrium gt 1 g C/m2/yr
-    totecosysc_thresh = 1.         ; disequilibrium threshold for individual gridcells (gC/m2/yr)
+    totecosysc_thresh = 1.0        ; disequilibrium threshold for individual gridcells (gC/m2/yr)
   end if
 
   if (annual_hist) then
-    fls                       = systemfunc("ls " + data_dir + caseid+".clm?.h0.*-*-*-*"+".nc")
+    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0.*-*-*-*"+".nc")
   else
-    fls                       = systemfunc("ls " + data_dir + caseid+".clm?.h0.*-*"+".nc")
+    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0.*-*"+".nc")
   end if
   flsdims                   = dimsizes(fls)
 
@@ -170,10 +174,26 @@ begin
     tlai                    = month_to_annual(data[:]->TLAI,1)
     gpp                     = month_to_annual(data[:]->GPP,1)
     if (isfilevar(data[0],"TWS")) then
-      tws                     = month_to_annual(data[:]->TWS,1)
+      tws              = month_to_annual(data[:]->TWS,1)
     else
-      tws                   = gpp
-      tws                   = tws@_FillValue
+      tmp1             = data[:]->H2OCAN
+      printVarSummary(tmp1)
+      tmp2             = data[:]->H2OSNO
+      tmp3             = data[:]->WA
+      tmp4             = data[:]->SOILLIQ
+      tmp4s            = dim_sum_n(tmp4,1)
+      tmp5             = data[:]->SOILICE
+      tmp5s            = dim_sum_n(tmp5,1)
+      tot              = tmp1+tmp2+tmp3+tmp4s+tmp5s
+      copy_VarCoords(tmp1,tot)
+      tws              = month_to_annual(tot,1)
+      delete(tmp1)
+      delete(tmp2)
+      delete(tmp3)
+      delete(tmp4)
+      delete(tmp4s)
+      delete(tmp5)
+      delete(tmp5s)
     end if
     if (isfilevar(data[0],"H2OSNO")) then
       h2osno                  = month_to_annual(data[:]->H2OSNO,1)
@@ -244,7 +264,7 @@ begin
   if (region .ne. "SPT") then
   landarea_noequil = new((/nyrs-1,nlat,nlon/),"float")
   do i = 0,nyrs-2
-    landarea_noequil(i,:,:) = where((totecosysc(i+1,:,:) - totecosysc(i,:,:))/subper .gt. totecosysc_thresh, landarea, 0.)
+    landarea_noequil(i,:,:) = where(abs(totecosysc(i+1,:,:) - totecosysc(i,:,:))/subper .gt. totecosysc_thresh, landarea, 0.)
   end do
   perc_landarea_noequil = 100.*(dim_sum_n(landarea_noequil,(/1,2/))/sum(landarea))
   indx = where(abs(perc_landarea_noequil) .lt. glob_thresh_area,1,0)
@@ -422,8 +442,6 @@ begin
   delete(indx)
 
 ; TWS
-  if (isfilevar(data[0],"TWS")) then
-
   if (region .eq. "SPT") then
     tws_glob           = (dim_sum_n(tws*landareaL/areasum,(/1/)))/1.e3    ; weighted tws (meters)
   else
@@ -456,19 +474,6 @@ begin
   end if
   tws_glob_equil@_FillValue = -999
   delete(indx)
-
-  else
-    tws_glob_equil = new(1,typeof(yearplt),-999)
-    tws_glob_equil = -999
-    if (region .eq. "SPT") then
-      tws_glob       = new(dimsizes(dim_sum_n(tws,(/1/))),typeof(tws),-999)
-    else
-      tws_glob       = new(dimsizes(dim_sum_n(tws,(/1,2/))),typeof(tws),-999)
-    end if
-    tws_glob       = -999
-    tws_glob_del   = new(nyrs-1,"float",-999.)
-    tws_glob_del   = -999.
-  end if
 
 ; H2OSNO
   if (isfilevar(data[0],"H2OSNO")) then
@@ -658,6 +663,17 @@ begin
   if (region .ne. "SPT") then
   delete(plot)
   resc                       = True             ; turn on plotting options
+  if (paleo) then
+    flandmask = 0
+    oro = new((/nlat,nlon/),integer)
+    oro = 1
+    oro@_FillValue = 0
+    oro = where(landfrac .gt. 0.0, 1,0)
+    fname = "./basename"
+    paleo_outline(oro,lat,lon,flandmask,fname)
+    resc@mpDataBaseVersion = "Ncarg4_1"
+    resc@mpDataSetName = fname
+  end if
   resc@gsnSpreadColors       = True             ; spans all colors in colormap
   resc@cnFillMode            = "RasterFill"     ; raster mode
   resc@cnFillOn              = True             ; turn on color fill

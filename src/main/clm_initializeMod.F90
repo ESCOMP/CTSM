@@ -27,6 +27,7 @@ module clm_initializeMod
   use reweightMod           , only : reweight_wrapup
   use filterMod             , only : allocFilters, filter, filter_inactive_and_active
   use CLMFatesInterfaceMod  , only : CLMFatesGlobals
+  use CLMFatesInterfaceMod  , only : CLMFatesTimesteps
   use dynSubgridControlMod  , only : dynSubgridControl_init, get_reset_dynbal_baselines
   use SelfTestDriver        , only : self_test_driver
   use SoilMoistureStreamMod , only : PrescribedSoilMoistureInit
@@ -234,7 +235,7 @@ contains
     ! to allocate space)
     ! This also sets up various global constants in FATES
     ! ------------------------------------------------------------------------
-
+    
     call CLMFatesGlobals()
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
@@ -311,6 +312,9 @@ contains
        call timemgr_restart()
     end if
 
+    ! Pass model timestep info to FATES
+    call CLMFatesTimesteps()
+    
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
     call t_startf('init_orbd')
     calday = get_curr_calday()

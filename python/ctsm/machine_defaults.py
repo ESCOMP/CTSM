@@ -52,7 +52,7 @@ MACHINE_DEFAULTS = {
                 # to add more flexibility in the future, making the node / proc counts
                 # individually selectable
                 required_args=
-                '-l select=1:ncpus=36:mpiprocs=1 -r n -l inception=login -k oed')
+                '-l select=1:ncpus=36:mpiprocs=1 -V -r n -l inception=login -k oed')
             }),
     'hobart': MachineDefaults(
         job_launcher_type=JOB_LAUNCHER_QSUB,

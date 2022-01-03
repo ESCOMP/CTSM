@@ -30,7 +30,9 @@ The CESM Bulletin Board
 
 There is a rich and diverse set of people that use the CESM, and often it is useful to be in contact with others to get help in solving problems or trying something new. To facilitate this we have an online Bulletin Board for questions on the CESM. There are also different sections in the Bulletin Board for the different component models or for different topics.
 
-`CESM Online Bulletin Board <http://bb.cgd.ucar.edu/>`_
+`CTSM Forum <https://bb.cgd.ucar.edu/cesm/forums/ctsm-clm-mosart-rtm.134/>`_
+
+`All CESM Forums (including forums for infrastructure/porting questions, etc.) <http://bb.cgd.ucar.edu/cesm/>`_
 
 -----------------
 The CLM web pages

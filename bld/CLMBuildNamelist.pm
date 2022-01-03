@@ -253,7 +253,7 @@ sub process_commandline {
                co2_type              => undef,
                co2_ppmv              => undef,
                clm_demand            => "null",
-               driver                => "mct",
+               driver                => "nuopc",
                help                  => 0,
                glc_nec               => "default",
                glc_use_antarctica    => 0,
@@ -1528,10 +1528,10 @@ sub process_namelist_inline_logic {
   setup_logic_soilstate($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_surface_dataset($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_dynamic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl);
   if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) ne "branch" ) {
     setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   }
-  setup_logic_dynamic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -2319,6 +2319,7 @@ sub setup_logic_initial_conditions {
     my $fsurdat          = $nl->get_value('fsurdat');
     $fsurdat             =~ s!(.*)/!!;
     $settings{'fsurdat'} = $fsurdat;
+    $settings{'do_transient_pfts'} = $nl->get_value('do_transient_pfts');
     #
     # If not transient use sim_year, otherwise use date
     #
@@ -2454,6 +2455,7 @@ sub setup_logic_dynamic_subgrid {
    setup_logic_do_transient_pfts($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_transient_crops($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_transient_lakes($opts, $nl_flags, $definition, $defaults, $nl);
+   setup_logic_do_transient_urban($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_harvest($opts, $nl_flags, $definition, $defaults, $nl);
 
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_dynbal_baselines');
@@ -2671,6 +2673,69 @@ sub setup_logic_do_transient_lakes {
    }
 
    # if do_transient_lakes is .true. and any of these (n_dom_* or toosmall_*)
+   # are > 0 or collapse_urban = .true., then give fatal error
+   if (&value_is_true($nl->get_value($var))) {
+      if (&value_is_true($nl->get_value('collapse_urban'))) {
+         $log->fatal_error("$var cannot be combined with collapse_urban");
+      }
+      if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
+         $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
+   }
+}
+
+sub setup_logic_do_transient_urban {
+   #
+   # Set do_transient_urban default value, and perform error checking on do_transient_urban
+   #
+   # Assumes the following are already set in the namelist (although it's okay
+   # for them to be unset if that will be their final state):
+   # - flanduse_timeseries
+   #
+   # NOTE(kwo, 2021-08-11) I based this function on setup_logic_do_transient_lakes. 
+   # As in NOTE(wjs, 2020-08-23) I'm not sure if all of the checks here are truly important 
+   # for transient urban (in particular, my guess is that collapse_urban could probably be done with transient
+   # urban - as well as transient pfts and transient crops for that matter), but some of
+   # the checks probably are needed, and it seems best to keep transient urban consistent
+   # with other transient areas in this respect.
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   my $var = 'do_transient_urban';
+
+   # cannot_be_true will be set to a non-empty string in any case where
+   # do_transient_urban should not be true; if it turns out that
+   # do_transient_urban IS true in any of these cases, a fatal error will be
+   # generated
+   my $cannot_be_true = "";
+
+   my $n_dom_pfts = $nl->get_value( 'n_dom_pfts' );
+   my $n_dom_landunits = $nl->get_value( 'n_dom_landunits' );
+   my $toosmall_soil = $nl->get_value( 'toosmall_soil' );
+   my $toosmall_crop = $nl->get_value( 'toosmall_crop' );
+   my $toosmall_glacier = $nl->get_value( 'toosmall_glacier' );
+   my $toosmall_lake = $nl->get_value( 'toosmall_lake' );
+   my $toosmall_wetland = $nl->get_value( 'toosmall_wetland' );
+   my $toosmall_urban = $nl->get_value( 'toosmall_urban' );
+
+   if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
+      $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
+   }
+
+   if (!$cannot_be_true) {
+      # Note that, if the variable cannot be true, we don't call add_default
+      # - so that we don't clutter up the namelist with variables that don't
+      # matter for this case
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+   }
+
+   # Make sure the value is false when it needs to be false - i.e., that the
+   # user hasn't tried to set a true value at an inappropriate time.
+
+   if (&value_is_true($nl->get_value($var)) && $cannot_be_true) {
+      $log->fatal_error($cannot_be_true);
+   }
+
+   # if do_transient_urban is .true. and any of these (n_dom_* or toosmall_*)
    # are > 0 or collapse_urban = .true., then give fatal error
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
@@ -4080,6 +4145,13 @@ sub setup_logic_misc {
    #
    my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+   if ( $opts->{'driver'} ne "nuopc" ) {
+      my $var = "force_send_to_atm";
+      my $val = $nl->get_value($var);
+      if ( defined($val) ) {
+         $log->fatal_error( "$var can only be set for the nuopc driver" );
+      }
+   }
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_run_ncdiopio_tests');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_master_list_file');
 }
@@ -4120,6 +4192,9 @@ sub write_output_files {
   # Eventually only list namelists that are actually used when CN on
   if ( &value_is_true($nl_flags->{'use_lch4'}) ) {
      push @groups, "ch4par_in";
+  }
+  if ( $opts->{'driver'} eq "nuopc" ) {
+     push @groups, "ctsm_nuopc_cap";
   }
   push @groups, "clm_humanindex_inparm";
   push @groups, "cnmresp_inparm";
@@ -4352,11 +4427,12 @@ sub check_input_files {
                 my $pathname = $nl->get_variable_value($group, $var);
                 # Need to strip the quotes
                 $pathname =~ s/['"]//g;
-
+                next if ($pathname =~ /UNSET$/);
                 if ($input_pathname_type eq 'abs') {
                     if ($inputdata_rootdir) {
-                        #MV $pathname =~ s:$inputdata_rootdir::;
-                        print OUTFILE "$var = $pathname\n";
+                        if ( $pathname !~ /^\s*$/ ) {   # If pathname isn't blank or null
+                           print OUTFILE "$var = $pathname\n";
+                        }
                     }
                     else {
                         if (-e $pathname) {  # use -e rather than -f since the absolute pathname
@@ -4377,7 +4453,9 @@ sub check_input_files {
                     if ($inputdata_rootdir) {
                         $pathname = "$rootdir/$pathname";
                         #MV $pathname =~ s:$inputdata_rootdir::;
-                        print OUTFILE "$var = $pathname\n";
+                        if ( $pathname !~ /^\s*$/ ) {   # If pathname isn't blank or null
+                           print OUTFILE "$var = $pathname\n";
+                        }
                     }
                     else {
                         if (-f "$rootdir/$pathname") {
