@@ -105,7 +105,7 @@ contains
     call check_ret(nf_inq_varid(ncid, 'GLACIER_REGION', varid), subname)
     call check_ret(nf_get_var_int(ncid, varid, glacier_region_i), subname)
     if (min_bad(glacier_region_i, 0, 'GLACIER_REGION')) then
-       stop
+       call abort()
     end if
 
     call get_max_indices( &

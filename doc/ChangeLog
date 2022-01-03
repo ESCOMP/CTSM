@@ -1,4 +1,470 @@
 ===============================================================
+Tag name: ctsm5.1.dev069
+Originator(s): fang-bowen (Bowen Fang) / oleson (Keith Oleson,UCAR/TSS,303-497-1332)
+               / Face2sea (Lei Zhao) / keerzhang1 (Keer Zhang) / sacks (Bill Sacks)
+Date: Wed Dec 15 13:01:19 MST 2021
+One-line Summary: Implement dynamic (transient) urban capability
+
+Purpose and description of changes
+----------------------------------
+
+This implements the capability to run transient simulations with changes
+in urban density types. However, see Caveats for users section below.
+If transient urban is activated (do_transient_urban=.true.) and an
+appropriate landuse dataset is provided, the model will read in 
+yearly PCT_URBAN for three density types from the landuse dataset and
+adjust other landunits accordingly.
+Water and energy are conserved for these transitions. Urban landunits
+do not account for carbon and nitrogen, however, see the dynamic urban
+design document (doc/design/dynamic_urban.rst) for a discussion of this.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #1445 (partially, work on mksurfdata and reducing
+computational cost is in progress)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+Note that this capability is off by default because landuse datasets
+with transient urban on them are still being developed.
+Note also that if this capability is activated (e.g., for testing) then
+run_zero_weight_urban must be set to .true.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+Added do_transient_urban namelist variable
+
+Changes to the datasets (e.g., parameter, surface or initial files): 
+None.
+New datasets that include transient urban data will be provided in a future tag.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+Added ERS_Lm25.1x1_smallvilleIA.IHistClm50BgcCropQianRs.cheyenne_gnu.clm-smallville_dynurban_monthly to aux_clm
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1546
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev068
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310), sacks (Bill Sacks)
+Date: Mon Dec 13 15:42:07 MST 2021
+One-line Summary: Adding fsurdat_modifier tool
+
+Purpose and description of changes
+----------------------------------
+
+ I copied the next four paragraphs from /tools/modify_fsurdat/fsurdat_modifier:
+ fsurdat_modifier is a tool that modifies fsurdat files. It reads a surface
+ dataset (fsurdat file) and outputs a modified copy of the same file.
+
+ Current applications are limited to the simplest CTSM(SP) mode, so bgc, fire,
+ urban, vic, lake, transient, and crop-related variables in the fsurdat file
+ remain unchanged.
+
+ It differs from modify_singlept_site_neon.py in that the latter specifically
+ modifies soil properties of single-point surface datasets. Some functions
+ could/should become shared for use by fsurdat_modifier.
+
+ It also differs from the subset_data tool in that the latter subsets fsurdat
+ files to regional or single-point domains. Though subset_data includes some
+ "modify" functionality when subsetting to single-point, we intend for similar
+ functionality to be more extensive and more object oriented in
+ fsurdat_modifier. Again, some functions could/should become shared among
+ these tools.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+ Added python/ctsm/test/test_sys_fsurdat_modifier.py
+ Added python/ctsm/test/test_unit_fsurdat_modifier.py
+ Added new unit tests to python/ctsm/test/test_unit_utils.py
+ Added FSURDATMODIFYCTSM test to cime_config/config_tests.xml
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne ---- PASS
+    Bill's Mac -- PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1448
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev067
+Originator(s): jedwards4b/negin513/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Dec 13 00:50:01 MST 2021
+One-line Summary: NEON UI update, externals updates, small miscellanouse fixes
+
+Purpose and description of changes
+----------------------------------
+
+Redo options list to remove positional arguments that were difficult to input correctly.
+Transient runs now use run_type startup and get finidat from s3 server unless --run-from-postad option is used (or finidat is not
+available). Use mpi instead of mpi-serial, this mod was recommended for container use. Add a new script neon_finidat_upload which
+allows authorized users to upload finidat files to the s3 server.
+
+This includes the following changes to the script for updating the surface dataset at neon sites using available neon data (i.e.
+modify_singlept_site_neon.py) to address ctsm/issues #1353, #1429, and neon/issue #44:
+
+Update Organic calculation to use the following equation based on discussions in
+https://github.com/ESCOMP/CTSM/pull/1375/files#r669590971 :
+ORGANIC = estimatedOC * bulkDensity / 0.58
+
+Because estimatedOC is rounded to the nearest integer in neon data, it is sometimes bigger than carbonTot. Therefore, in cases where
+estimatedOC > carbonTot, we use carbonTot instead of estimatedOC in the above equation.
+
+Previously, we had missing data on neon files for some neon soil layers (see Modified NEON surface datasets have errors  #1429
+(comment)). Therefore, it caused some missing values in the updated dataset. Here, we interpolate to fill in the missing data using
+different interpolation techniques. Finally, we chose to use linear interpolation to fill in missing data.
+
+This includes the scripts for modification of the surface dataset for neon sites to address #1429.
+Specifically, the following has been addressed in this PR:
+
+Update the calculation of ORGANIC to use the new field (CaCO3) from NEON data.
+For this calculation if CaCO3 data is available, we first calculate inorganic carbon by:
+inorganic carbon = (caco3 /100.0869)*12.0107
+Next, we calculate organic carbon by subtracting inorganic carbon from the total carbon:
+[organic carbon = carbon_tot - inorganic carbon]
+If the CaCO3 is not available then the code uses carbonTot and estimatedOC by NEON.
+
+Discussed here (Modified NEON surface datasets have errors  #1429 (comment))
+For the Ag sites (KONA and STER), it changes the PCT_NATVEG, PCT_CROP, and PCT_NAT_PFT to avoid the error that we previously had in
+spin-up: surfrd_veg_all ERROR: sum of wt_nat_patch not 1.00000000000000 at nl= 1 sum is: 0.000000000000000E+000
+
+Discussed here (Modified NEON surface datasets have errors  #1429 (comment))
+There was a typo previously in the NEON data for ABBY sites caused by mix of sample measurements. Please note that this was updated
+by hand once data was downloaded from NEON site.
+
+With recent versions of CIME, the LILAC build with a user-defined machine was broken for a couple of reasons. This fixes it.
+
+Fix mksurfdata_map for 1x1_brazil. Get tools testing working again. Increase skip_steps by 1, which is needed for a change in CAM
+where balance checks need to occur after the radiation update now rather than before. glob changed for bsd_glob in perl MkDepends
+for mksurfdata_map.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+  Fixes #1563 increase skip_steps for balance checks by one to permit new CAM physics re-ordering
+  Fixes #1550 In perl code replace glob with bsd_glob
+  Fixes #1574 Trouble with 1x1_brazil for mksurfdata_map because of negative longitude in SCRIP grid file
+  Fixes #1429 Modified NEON surface datasets have errors
+  Fixes #1353 Modify NEON surface data
+  Fixes #1492 Need to update LILAC build process to use cmake macros instead of config_compilers.xml
+
+Known bugs found since the previous tag (include issue #):
+  #1575 -- Build problem for mksurfdata tools testers
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values): New 1x1_brazil SCRIP grid file and maps
+   Some NEON namelist settings changed. Last year is now 2020
+
+Changes to the datasets (e.g., parameter, surface or initial files): New NEON surface datasets
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   pyproject.toml file added to configure for black python formatter in python directory
+
+Changes to tests or testing:
+   Got tools testing working again.
+
+
+Testing summary:   regular tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (47 compare tests fail because of changes to NEON sites)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK (1x1_brazil mksurfdata changes, run_neon and modify_subset fail as expected)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - OK (new black checks do NOT pass as expected)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit (other than NEON tests because of updated namelists and surface dataset)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only NEON sites
+    - what platforms/compilers: all
+    - nature of change: new surface datasets and settings
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+    Update most externals to version in cesm2_3_alpha07c
+    cmeps to cmeps0.13.43 (version with channel depths)
+    cpl7  to cpl7.0.7
+    share to share1.0.10
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   PR #1467 -- Improve UI for NEON script
+   PR #1474 -- Script for modifying neon surface dataset -- updated  (negin513)
+   PR #1539 -- Neon modify surfurface dataset (negin513)
+   PR #1571 -- Fix LILAC build with user-defined machine with latest CIME (billsacks)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev066
+Originator(s): rgknox (Ryan Knox,,,)
+Date: Sat Dec  4 01:58:42 MST 2021
+One-line Summary: API change with FATES to enable running means inside fates, includes passing in of model timestep
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes synchronizes CTSM with API 20 of FATES.  API 20 of FATES requires a modification to timing boundary conditions so that FATES can maintain its own internal running means.  FATES also no-longer asks CTSM for the 24hour vegetation temperature, since this is a patch(pft) level variable, and FATES has more suitable averaging mechanisms.  These changes are synchronized with FATES Pull Request: https://github.com/NGEET/fates/pull/724, which subsequently created tag: https://github.com/NGEET/fates/releases/tag/sci.1.52.0_api.20.0.0
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+[x] clm_fates
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Developers should be aware that FATES does require information on the model timestep, which was not necessarily available in initialize1. Efforts were made to circumvent needing the model timetep at this phase of initialization, so impact on non-fates code was minimal.
+
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ----  PASS (fates had expectedly different results compared to base) 
+    izumi -------  PASS (fates had expectedly different results compared to base)
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- PASS (fates had expectedly different results compared to base) 
+    izumi -------
+
+
+   Additional tests:
+	Multi-decadal simulations were also run to evaluate fates side sensitivity to slightly different averaging scheme. The differences were not so subtle, attributed mostly to fixing an initialization bug (the previous 24hour temperature had initialized at 0K) and a 1-hour phase change in the 24-hour start-stop cycle.
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:  all FATES active simulations have different results.
+
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev065
+Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Thu Dec  2 00:13:37 MST 2021
+One-line Summary: Refactor static fire data input by moving variables into fire_base_type from cnveg_state_type
+
+Purpose and description of changes
+----------------------------------
+
+This tag refactors the static fire data input methodology to enable a future anthropogenic fire suppression 
+methodology to FATES as described NGEET/fates#673. This future method requires that FATES have access to 
+GDP data that was previously defined in CNVegStateType.F90 as part of cnveg_state_type.  As such, the GDP
+variable has been moved into fire_base_type in FireDataBaseType.F90 to provide the data to the extended 
+fates_fire_base_type for eventual use in FATES.  Similarly, the surface dataset read subroutine has been
+moved along with the peat and ag-fire variables, which utilize the same read subroutine and where also
+originally part of the cnveg_state_type.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+    Fixes #1104 -- Move static fire data into Fire class
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    The ncd_io calls for the gdp, peat, and ag-fire data has been moved from the 
+    cnveg_state_type InitCold procedure into a new subroutine called surfdataread
+    which is a new fire_base_type procedure.
+    
+    The function GetGDP has been introduced to get the pointer to the GDP data.  This has
+    been implemented in clmfates_interfaceMod.F90, but the assignment of this pointer
+    to a FATES-side bc_in variable has been commented out pending a future update to 
+    define the necessary FATES GDP variable.
+    
+    A new namelist option has been added to the fates_spitfire_mode series.  This option
+    is intended as a simple placeholder for a future FATES fire supression mode.  The 
+    option is currently being included as a check in clmfates_interfaceMod.F90 to allow
+    for the exercise of the GetGDP function.
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- N/A
+    izumi ------- N/A
+
+  any other testing (give details below):
+    A simple fates branch was created to test the potential handoff of the GDP data to FATES, which successfully
+    output the global gdp data.  The branch is located here: https://github.com/glemieux/fates/tree/fire-gdp-simpletest
+    Note that this branch was not used in the standard regression tests above.
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    #1536 -- Refactor static fire data to enable future use of GDP data in SPITFIRE
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev064
 Originator(s):  afoster (Adrianna Foster)
 Date: Mon Nov 29 09:50:50 MST 2021

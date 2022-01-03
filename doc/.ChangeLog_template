@@ -83,8 +83,10 @@ here is guidance on different available levels of system testing:
                 known behavior is added ... eg. a minor bug fix. This
 		might be to just run the "short" test list, or to run
 		a single test. Whatever makes sense for the particular case.)
-    c) regular (regular tests on normal machines if CTSM source is modified)
-    d) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
+    c) python only (for use where the only changes are in the python directory:
+                    run the python testing listed below)
+    d) regular (regular tests on normal machines if CTSM source is modified)
+    e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
                 and normally all of the ancillary tests (build-namelist, python, ptclm, etc.)
 		would be run as well)
 
@@ -108,6 +110,13 @@ infrastructure should be run when appropriate, as described below.
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
     (any machine) -
+
+    [If python code has changed and you aren't running aux_clm (e.g., because the only changes are in python
+     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
+     tests impacted by python changes. If you are already running the full aux_clm then this is unnecessary
+     and you can remove the following line.]
+
+    clm_pymods test suite on cheyenne - 
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
