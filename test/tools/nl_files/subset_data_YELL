@@ -1,1 +1,2 @@
-point --lon 249.45804 --lat 44.95597 --site YELL --crop --dompft 1 --outdir EXEDIR/
+--verbose point --lon 250.45804 --lat 44.95597 --site YELL --dompft 1 --crop --create-domain --create-datm --datm-syr 2000
+--datm-eyr 2000 --outdir EXEDIR/YELL_user-mod_and_data --user-mods-dir EXEDIR/YELL_user-mod_and_data

@@ -1,1 +1,1 @@
-ad --case-root EXEDIR
+--run-type ad

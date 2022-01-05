@@ -63,7 +63,7 @@ else
   tcbtools="$rundir"
 fi
 
-scopts=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile | sed -e "s|CSMDATA|$CSMDATA|g" | sed -e "s|EXEDIR|$tcbtools|" | sed -e "s|CFGDIR|$cfgdir|g"`
+scopts=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile | sed -e "s|CSMDATA|$CSMDATA|g" | sed -e "s|EXEDIR|$tcbtools|g" | sed -e "s|CFGDIR|$cfgdir|g"`
 scopts=`echo $scopts | sed -e "s|CTSM_ROOT|$CTSM_ROOT|g" | sed -e "s|CIME_ROOT|$CIME_ROOT|g"`
 
 echo "TSMscript_tools.sh: running ${cfgdir}/$2 with $scopts; output in ${rundir}/test.log" 
