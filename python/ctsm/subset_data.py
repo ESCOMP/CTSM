@@ -329,6 +329,7 @@ def get_parser():
             type=str,
             default="",
         )
+        add_logging_args(subparser)
 
     # -- print help for both subparsers
     parser.epilog = textwrap.dedent(
@@ -576,7 +577,6 @@ def main():
     # add logging flags from ctsm_logging
     setup_logging_pre_config()
     parser = get_parser()
-    add_logging_args(parser)
     args = parser.parse_args()
     process_logging_args(args)
 
