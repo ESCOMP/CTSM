@@ -270,7 +270,6 @@ def get_parser():
             action="store_true",
             dest="create_user_mods",
             required=False,
-            default=True,
         )
         subparser.add_argument(
             "--datm-syr",
@@ -298,7 +297,6 @@ def get_parser():
             action="store_true",
             dest="crop_flag",
             required=False,
-            default=False,
         )
 
         if subparser == pt_parser:
