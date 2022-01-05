@@ -275,7 +275,9 @@ class SinglePointCase(BaseCase):
         # update attributes
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = fsurf_in
-        del f_out.attrs["History_Log"]
+        if ( hasattr(f_out.attrs, "History_Log" ) ):
+            del f_out.attrs["History_Log"]
+
         # mode 'w' overwrites file
         wfile = os.path.join(self.output_dir, fsurf_out)
         f_out.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
