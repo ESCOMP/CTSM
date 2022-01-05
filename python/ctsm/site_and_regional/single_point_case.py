@@ -93,9 +93,9 @@ class SinglePointCase(BaseCase):
             create_user_mods,
             overwrite_single_pft,
             dominant_pft,
-            zero_nonveg_landunits,
+            include_nonveg,
             uniform_snowpack,
-            saturation_excess,
+            cap_saturation,
             output_dir,
     ):
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm,
@@ -105,9 +105,9 @@ class SinglePointCase(BaseCase):
         self.site_name = site_name
         self.overwrite_single_pft = overwrite_single_pft
         self.dominant_pft = dominant_pft
-        self.zero_nonveg_landunits = zero_nonveg_landunits
+        self.include_nonveg = include_nonveg
         self.uniform_snowpack = uniform_snowpack
-        self.saturation_excess = saturation_excess
+        self.cap_saturation = cap_saturation
         self.output_dir = output_dir
         self.tag = None
 
@@ -238,7 +238,7 @@ class SinglePointCase(BaseCase):
             f_out["PCT_NAT_PFT"][:, :, :] = 0
             if self.dominant_pft < 16:
                 f_out['PCT_NAT_PFT'][:, :, self.dominant_pft] = 100
-        if self.zero_nonveg_landunits:
+        if not self.include_nonveg:
             f_out["PCT_NATVEG"][:, :] = 100
             f_out["PCT_CROP"][:, :] = 0
             f_out["PCT_LAKE"][:, :] = 0.0
@@ -247,7 +247,7 @@ class SinglePointCase(BaseCase):
             f_out["PCT_GLACIER"][:, :] = 0.0
         if self.uniform_snowpack:
             f_out["STD_ELEV"][:, :] = 20.0
-        if not self.saturation_excess:
+        if self.cap_saturation:
             f_out["FMAX"][:, :] = 0.0
 
         # specify dimension order
