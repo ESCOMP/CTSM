@@ -174,18 +174,14 @@ contains
 
             else
                ! Compute as if elai+esai = LAImax - LAIoff in CanopyFluxes
-               displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(7.5_r8 * (pftcon%z0v_LAImax(patch%itype(p)) - pftcon%z0v_LAIoff(patch%itype(p))))**0.5_r8)) &
-                           / (7.5_r8*(pftcon%z0v_LAImax(patch%itype(p)) - pftcon%z0v_LAIoff(patch%itype(p))))**0.5_r8)
+               displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(7.5_r8 * (pftcon%z0v_LAImax(patch%itype(p))))**0.5_r8)) &
+                           / (7.5_r8*(pftcon%z0v_LAImax(patch%itype(p)) ))**0.5_r8)
 
-               U_ustar = 4._r8 * (pftcon%z0v_Cs(patch%itype(p)) + pftcon%z0v_Cr(patch%itype(p)) *  (pftcon%z0v_LAImax(patch%itype(p)) - pftcon%z0v_LAIoff(patch%itype(p))) & 
-                         / 2._r8)**(-0.5_r8) /  (pftcon%z0v_LAImax(patch%itype(p)) - pftcon%z0v_LAIoff(patch%itype(p))) / pftcon%z0v_c(patch%itype(p))
+               U_ustar = 4._r8 * (pftcon%z0v_Cs(patch%itype(p)) + pftcon%z0v_Cr(patch%itype(p)) *  (pftcon%z0v_LAImax(patch%itype(p))) & 
+                         / 2._r8)**(-0.5_r8) /  (pftcon%z0v_LAImax(patch%itype(p))) / pftcon%z0v_c(patch%itype(p))
 
-               if( htop(p) > -1._r8) then ! Avoid devididing by 0
-                  z0m(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-0.4_r8 * U_ustar + &
+               z0m(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-0.4_r8 * U_ustar + &
                            log(pftcon%z0v_cw(patch%itype(p))) - 1._r8 + pftcon%z0v_cw(patch%itype(p))**(-1._r8))
-               else
-                  z0m(p) = htop(p) * exp(-0.4_r8 * U_ustar + log(pftcon%z0v_cw(patch%itype(p))) - 1._r8 + pftcon%z0v_cw(patch%itype(p))**(-1._r8))
-               end if
 
             end if
 

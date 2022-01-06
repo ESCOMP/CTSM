@@ -344,7 +344,7 @@ contains
                !z0mg(p) = z0frzlake
 
                z0hg(p) = 70._r8 * 1.5e-5_r8 / ust_lake(c) ! For initial guess assume tstar = 0
-
+               
                ! --> Use this for CLM-VEG and CLM-Z0M 
                !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
  

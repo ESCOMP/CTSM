@@ -882,7 +882,7 @@ bioms:   do f = 1, fn
             z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
 
          case ('MeierXXXX')
-            lt = max(0.00001_r8,elai(p)+esai(p)-z0v_LAIoff(patch%itype(p)))
+            lt = max(0.00001_r8,elai(p)+esai(p))
             displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(7.5_r8 * lt)**0.5_r8)) / (7.5_r8*lt)**0.5_r8)
 
             lt = min(lt,z0v_LAImax(patch%itype(p)))
@@ -898,8 +898,10 @@ bioms:   do f = 1, fn
             end do
 
             U_ustar = 4._r8 * U_ustar / lt / z0v_c(patch%itype(p))
+
             z0mv(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-vkc * U_ustar + &
                       log(z0v_cw(patch%itype(p))) - 1._r8 + z0v_cw(patch%itype(p))**(-1._r8))
+
 
             ! --> Use this for CLM-Ya08
             !lt = min(elai(p)+esai(p), tlsai_crit)
@@ -1050,7 +1052,7 @@ bioms:   do f = 1, fn
             ! changed by K.Sakaguchi from here
             ! transfer coefficient over bare soil is changed to a local variable
             ! just for readability of the code (from line 680)
-            ! not sure if this needs to be changed with MeierXXXX too.
+            ! RM: Does this need to be updated if Ya08 is used too?
             csoilb = vkc / (params_inst%a_coef * (z0mg(c) * uaf(p) / 1.5e-5_r8)**params_inst%a_exp)
             
 
@@ -1561,6 +1563,7 @@ bioms:   do f = 1, fn
          ! function that goes to zero as LAI (ELAI + ESAI) go to zero.
 
          t_skin_patch(p)  =  emv(p)*t_veg(p)  +  (1._r8 - emv(p))*sqrt(sqrt(lw_grnd))
+         !t_skin_patch(p) = (ulrad(p) / 5.670367e-8_r8)**0.25_r8
 
          ! Derivative of soil energy flux with respect to soil temperature
 
@@ -1672,6 +1675,7 @@ bioms:   do f = 1, fn
             fn = fn + 1
             filterp(fn) = p
          end if
+
       end do
 
       do f = 1, fn

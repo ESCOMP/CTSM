@@ -460,7 +460,6 @@ contains
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
        this%z0mg_2D_col(c) = max(1.e-4_r8,z0mg2d(g))
-       write(iulog,*) z0mg2d(g)
     end do
     deallocate(z0mg2d)
 

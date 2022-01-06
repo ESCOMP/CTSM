@@ -71,7 +71,7 @@ contains
        atm2lnd_inst, soilstate_inst, &
        frictionvel_inst, ch4_inst, energyflux_inst, temperature_inst, &
        waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
-       wateratm2lndbulk_inst, photosyns_inst, humanindex_inst)
+       wateratm2lndbulk_inst, photosyns_inst, humanindex_inst, canopystate_inst)
     !
     ! !DESCRIPTION:
     ! Compute sensible and latent fluxes and their derivatives with respect
@@ -89,6 +89,8 @@ contains
                                       Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                       swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                       SwampCoolEff, KtoC, VaporPres
+    use CanopyStateType      , only : canopystate_type
+                              
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -107,13 +109,14 @@ contains
     type(wateratm2lndbulk_type)  , intent(inout) :: wateratm2lndbulk_inst
     type(photosyns_type)   , intent(inout) :: photosyns_inst
     type(humanindex_type)  , intent(inout) :: humanindex_inst
+    type(canopystate_type) , intent(inout) :: canopystate_inst
+    
     !
     ! !LOCAL VARIABLES:
     integer, parameter  :: niters = 3            ! maximum number of iterations for surface temperature
     integer  :: p,c,g,f,j,l                      ! indices
     integer  :: iter                             ! iteration index
     real(r8) :: zldis(bounds%begp:bounds%endp)   ! reference height "minus" zero displacement height [m]
-    real(r8) :: displa(bounds%begp:bounds%endp)  ! displacement height [m]
     real(r8) :: zeta                             ! dimensionless height used in Monin-Obukhov theory
     real(r8) :: wc                               ! convective velocity [m/s]
     real(r8) :: dth(bounds%begp:bounds%endp)     ! diff of virtual temp. between ref. height and surface
@@ -240,6 +243,9 @@ contains
          z0mg_patch             => frictionvel_inst%z0mg_patch                  , & ! Output: [real(r8) (:)   ]  patch roughness length, momentum [m]
          z0hg_patch             => frictionvel_inst%z0hg_patch                  , & ! Output: [real(r8) (:)   ]  patch roughness length, sensible heat [m]
          z0qg_patch             => frictionvel_inst%z0qg_patch                  , & ! Output: [real(r8) (:)   ]  patch roughness length, latent heat [m]
+         z0mv                   => frictionvel_inst%z0mv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, momentum [m]                        
+         z0hv                   => frictionvel_inst%z0hv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, sensible heat [m]                   
+         z0qv                   => frictionvel_inst%z0qv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, latent heat [m]          
          kbm1                   => frictionvel_inst%kbm1_patch                  , & ! Output: [real(r8) (:)   ]  natural logarithm of z0mg_p/z0hg_p [-]
          ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)
          num_iter               => frictionvel_inst%num_iter_patch              , & ! Output: [real(r8) (:)   ]  number of iterations
@@ -254,6 +260,8 @@ contains
 
          rssun                  => photosyns_inst%rssun_patch                   , & ! Output: [real(r8) (:)   ]  leaf sunlit stomatal resistance (s/m) (output from Photosynthesis)
          rssha                  => photosyns_inst%rssha_patch                   , & ! Output: [real(r8) (:)   ]  leaf shaded stomatal resistance (s/m) (output from Photosynthesis)
+
+         displa                 => canopystate_inst%displa_patch                , & ! Output: [real(r8) (:)   ]  displacement height (m)                                               
 
          begp                   => bounds%begp                                  , &
          endp                   => bounds%endp                                    &
@@ -291,6 +299,10 @@ contains
          ulrad(p)  = 0._r8
          dhsdt_canopy(p) = 0._r8
          eflx_sh_stem(p) = 0._r8
+         z0mv(p)   = 0._r8
+         z0hv(p)   = 0._r8
+         z0qv(p)   = 0._r8
+         
 
          ur(p)    = max(params_inst%wind_min,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
          dth(p)   = thm(p)-t_grnd(c)
