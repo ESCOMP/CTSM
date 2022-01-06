@@ -1244,7 +1244,7 @@ contains
     if ( .not. check_timemgr_initialized(sub) ) return
 
     cday          = get_curr_calday(offset=offset)
-    days_per_year = get_days_per_year()
+    days_per_year = get_days_per_year(offset=offset)
 
     get_curr_yearfrac = (cday - 1._r8)/days_per_year
 
