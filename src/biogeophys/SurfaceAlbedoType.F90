@@ -327,6 +327,11 @@ contains
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
 
+    call restartvar(ncid=ncid, flag=flag, varname='coszen_grc', xtype=ncd_double,  & 
+         dim1name='gridcell', &
+         long_name='cosine of solar zenith angle', units='unitless', &
+         interpinic_flag='interp', readvar=readvar, data=this%coszen_grc)
+
     call restartvar(ncid=ncid, flag=flag, varname='coszen', xtype=ncd_double,  & 
          dim1name='column', &
          long_name='cosine of solar zenith angle', units='unitless', &
