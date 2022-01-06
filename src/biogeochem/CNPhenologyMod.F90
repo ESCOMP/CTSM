@@ -2033,7 +2033,7 @@ contains
                hui(p) = max(hui(p),huigrain(p))
             endif
 
-            if (do_plant_prescribed) then
+            if (do_plant_prescribed .and. (sowing_count(p) == 0 .or. crop_inst%sdates_thisyr(p,sowing_count(p)) < jday)) then
                 ! Today is the planting day, but the crop still hasn't been harvested.
                 do_harvest = .true.
                 force_harvest = .true.
