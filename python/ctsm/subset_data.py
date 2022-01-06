@@ -132,39 +132,32 @@ def get_parser():
         default="",
     )
     pt_parser.add_argument(
-        "--variable-snow-fraction",
-        help="Create surface data with variable snow fraction. If unset, snow is set to uniform "
-             "fraction.",
-        action="store_false",
+        "--uniform-snowpack",
+        help="Modify surface data to have a uniform snow fraction.",
+        action="store_true",
         dest="uni_snow",
         required=False,
-        default=True,
     )
     pt_parser.add_argument(
-        "--allow-multiple-pft",
-        help="Create surface data with multiple PFTs. If unset, it assumes the whole grid is 100%% "
-             "single PFT set by --dom-pft.",
-        action="store_false",
+        "--overwrite-to-single-pft",
+        help="Modify surface dataset to be 100%% one single PFT set by --dom-pft.",
+        action="store_true",
         dest="overwrite_single_pft",
         required=False,
-        default=True,
     )
     pt_parser.add_argument(
-        "--zero-nonveg",
-        help="Set all non-vegetation landunits in the surface data to zero.",
+        "--include-nonveg",
+        help="Do not zero non-vegetation land units in the surface data.",
         action="store_true",
-        dest="zero_nonveg",
+        dest="include_nonveg",
         required=False,
-        default=False,
     )
     pt_parser.add_argument(
-        "--allow-saturation-excess",
-        help="Create surface data allowing saturated conditions. If unset saturation excess is set "
-             "to zero.",
+        "--cap-saturation",
+        help="Modify surface data to not allow saturation excess.",
         action="store_true",
-        dest="saturation_excess",
+        dest="cap_saturation",
         required=False,
-        default=False,
     )
     pt_parser.add_argument(
         "--dompft",
@@ -277,7 +270,6 @@ def get_parser():
             action="store_true",
             dest="create_user_mods",
             required=False,
-            default=True,
         )
         subparser.add_argument(
             "--datm-syr",
@@ -305,7 +297,6 @@ def get_parser():
             action="store_true",
             dest="crop_flag",
             required=False,
-            default=False,
         )
 
         if subparser == pt_parser:
@@ -484,9 +475,9 @@ def subset_point(args, file_dict: dict):
         args.create_user_mods,
         args.overwrite_single_pft,
         args.dom_pft,
-        args.zero_nonveg,
+        args.include_nonveg,
         args.uni_snow,
-        args.saturation_excess,
+        args.cap_saturation,
         args.out_dir,
     )
 
