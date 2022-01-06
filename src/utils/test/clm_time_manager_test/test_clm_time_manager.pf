@@ -50,6 +50,30 @@ contains
   end subroutine getStepSize_returnsCorrectValue
 
   @Test
+  subroutine getCalday_jan1_returns1(this)
+    class(TestTimeManager), intent(inout) :: this
+    real(r8) :: calday
+
+    call unittest_timemgr_setup(dtime=dtime)
+
+    calday = get_calday(101, 0)
+
+    @assertEqual(1._r8, calday)
+  end subroutine getCalday_jan1_returns1
+
+  @Test
+  subroutine getCalday_leapYearDec31_returnsCorrectValue(this)
+    class(TestTimeManager), intent(inout) :: this
+    real(r8) :: calday
+
+    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+
+    calday = get_calday(41231, 43200)
+
+    @assertEqual(366.5_r8, calday)
+  end subroutine getCalday_leapYearDec31_returnsCorrectValue
+
+  @Test
   subroutine getCurrYearfrac_atYearBoundary_returns0(this)
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: yearfrac

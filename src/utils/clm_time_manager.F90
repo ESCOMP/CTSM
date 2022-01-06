@@ -1140,6 +1140,10 @@ contains
     ! Return calendar day corresponding to specified time instant.
     ! Calendar day 1.0 = 0Z on Jan 1.
 
+    ! If the current run is using a Gregorian calendar, then the year is important, in
+    ! that it determines whether or not we're in a leap year for the sake of determining
+    ! the calendar day.
+
     ! Arguments
     integer, intent(in) :: &
          ymd,   &! date in yearmmdd format
@@ -1157,19 +1161,8 @@ contains
     date = TimeSetymd( ymd, tod, "get_calday" )
     call ESMF_TimeGet( date, dayOfYear_r8=get_calday, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeGet')
-    !----------------------------------------------------------------------------------------!
-!!!!!!!!!!!!!! WARNING HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!
-!!!! The following hack fakes day 366 by reusing day 365. This is just because the  !!!!!!
-!!!! current shr_orb_decl calculation can't handle days > 366.                      !!!!!!
-!!!!       Dani Bundy-Coleman and Erik Kluzek Aug/2008                              !!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if ( (get_calday > 366.0) .and. (get_calday <= 367.0) .and. &
-         (trim(calendar) == GREGORIAN_C) )then
-       get_calday = get_calday - 1.0_r8
-    end if
-!!!!!!!!!!!!!! END HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!!!!!
-    !----------------------------------------------------------------------------------------!
-    if ( (get_calday < 1.0) .or. (get_calday > 366.0) )then
+
+    if ( (get_calday < 1.0) .or. (get_calday > 367.0) )then
        write(iulog,*) sub, ' = ', get_calday
        call shr_sys_abort( sub//': error calday out of range' )
     end if
