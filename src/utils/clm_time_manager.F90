@@ -1152,7 +1152,7 @@ contains
 
   !=========================================================================================
 
-  function get_calday(ymd, tod)
+  function get_calday(ymd, tod, reuse_day_365_for_day_366)
 
     ! Return calendar day corresponding to specified time instant.
     ! Calendar day 1.0 = 0Z on Jan 1.
@@ -1166,19 +1166,46 @@ contains
          ymd,   &! date in yearmmdd format
          tod     ! time of day (seconds past 0Z)
 
+    ! If present and true, then day 366 (i.e., the last day of the year on leap years when
+    ! using a Gregorian calendar) reuses day 365. Note that this leads to non-monotonic
+    ! values throughout the year. This is needed in situations where the calday is used
+    ! in code that assumes a 365 day year and won't work right for day 366, such as
+    ! shr_orb_decl.
+    logical, optional, intent(in) :: reuse_day_365_for_day_366
+
     ! Return value
     real(r8) :: get_calday
 
     ! Local variables
     character(len=*), parameter :: sub = 'clm::get_calday'
     integer :: rc                 ! return code
+    logical :: l_reuse_day_365_for_day_366  ! local version of reuse_day_365_for_day_366
     type(ESMF_Time) :: date
     !-----------------------------------------------------------------------------------------
+
+    if (present(reuse_day_365_for_day_366)) then
+       l_reuse_day_365_for_day_366 = reuse_day_365_for_day_366
+    else
+       l_reuse_day_365_for_day_366 = .false.
+    end if
 
     date = TimeSetymd( ymd, tod, "get_calday" )
     call ESMF_TimeGet( date, dayOfYear_r8=get_calday, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeGet')
-
+    !----------------------------------------------------------------------------------------!
+!!!!!!!!!!!!!! WARNING HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!
+!!!! The following hack fakes day 366 by reusing day 365. This is just because the  !!!!!!
+!!!! current shr_orb_decl calculation can't handle days > 366.                      !!!!!!
+!!!!       Dani Bundy-Coleman and Erik Kluzek Aug/2008                              !!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if (l_reuse_day_365_for_day_366) then
+       if ( (get_calday > 366.0) .and. (get_calday <= 367.0) .and. &
+            (trim(calendar) == GREGORIAN_C) )then
+          get_calday = get_calday - 1.0_r8
+       end if
+    end if
+!!!!!!!!!!!!!! END HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!!!!!
+    !----------------------------------------------------------------------------------------!
     if ( (get_calday < 1.0) .or. (get_calday > 367.0) )then
        write(iulog,*) sub, ' = ', get_calday
        call shr_sys_abort( sub//': error calday out of range' )

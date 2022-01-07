@@ -74,6 +74,18 @@ contains
   end subroutine getCalday_leapYearDec31_returnsCorrectValue
 
   @Test
+  subroutine getCalday_leapYearDec31Reuse365_returnsCorrectValue(this)
+    class(TestTimeManager), intent(inout) :: this
+    real(r8) :: calday
+
+    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+
+    calday = get_calday(41231, 43200, reuse_day_365_for_day_366=.true.)
+
+    @assertEqual(365.5_r8, calday)
+  end subroutine getCalday_leapYearDec31Reuse365_returnsCorrectValue
+
+  @Test
   subroutine getCurrCalday_jan1_returns1(this)
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: calday
@@ -100,6 +112,20 @@ contains
 
     @assertEqual(366.5_r8, calday)
   end subroutine getCurrCalday_leapYearDec31_returnsCorrectValue
+
+  @Test
+  subroutine getCurrCalday_leapYearDec31Reuse365_returnsCorrectValue(this)
+    class(TestTimeManager), intent(inout) :: this
+    real(r8) :: calday
+
+    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+
+    call set_date(yr=2000, mon=12, day=31, tod=43200)
+
+    calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
+
+    @assertEqual(365.5_r8, calday)
+  end subroutine getCurrCalday_leapYearDec31Reuse365_returnsCorrectValue
 
   @Test
   subroutine getCurrYearfrac_atYearBoundary_returns0(this)
