@@ -1066,27 +1066,42 @@ contains
 
   !=========================================================================================
 
-  function get_curr_calday(offset)
+  function get_curr_calday(offset, reuse_day_365_for_day_366)
 
     ! Return calendar day at end of current timestep with optional offset.
     ! Calendar day 1.0 = 0Z on Jan 1.
 
     ! Arguments
     integer, optional, intent(in) :: offset  ! Offset from current time in seconds.
-    ! Positive for future times, negative 
+    ! Positive for future times, negative
     ! for previous times.
+
+    ! If present and true, then day 366 (i.e., the last day of the year on leap years when
+    ! using a Gregorian calendar) reuses day 365. Note that this leads to non-monotonic
+    ! values throughout the year. This is needed in situations where the calday is used
+    ! in code that assumes a 365 day year and won't work right for day 366, such as
+    ! shr_orb_decl.
+    logical, optional, intent(in) :: reuse_day_365_for_day_366
+
     ! Return value
     real(r8) :: get_curr_calday
 
     ! Local variables
     character(len=*), parameter :: sub = 'clm::get_curr_calday'
     integer :: rc
+    logical :: l_reuse_day_365_for_day_366  ! local version of reuse_day_365_for_day_366
     type(ESMF_Time) :: date
     type(ESMF_TimeInterval) :: off, diurnal
     integer :: year, month, day, tod
     !-----------------------------------------------------------------------------------------
 
     if ( .not. check_timemgr_initialized(sub) ) return
+
+    if (present(reuse_day_365_for_day_366)) then
+       l_reuse_day_365_for_day_366 = reuse_day_365_for_day_366
+    else
+       l_reuse_day_365_for_day_366 = .false.
+    end if
 
     call ESMF_ClockGet( tm_clock, currTime=date, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -1119,13 +1134,15 @@ contains
     !!!! current shr_orb_decl calculation can't handle days > 366.                      !!!!!!
     !!!!       Dani Bundy-Coleman and Erik Kluzek Aug/2008                              !!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if ( (get_curr_calday > 366.0) .and. (get_curr_calday <= 367.0) .and. &
-         (trim(calendar) == GREGORIAN_C) )then
-       get_curr_calday = get_curr_calday - 1.0_r8
+    if (l_reuse_day_365_for_day_366) then
+       if ( (get_curr_calday > 366.0) .and. (get_curr_calday <= 367.0) .and. &
+            (trim(calendar) == GREGORIAN_C) )then
+          get_curr_calday = get_curr_calday - 1.0_r8
+       end if
     end if
     !!!!!!!!!!!!!! END HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!!!!!
     !----------------------------------------------------------------------------------------!
-    if ( (get_curr_calday < 1.0) .or. (get_curr_calday > 366.0) )then
+    if ( (get_curr_calday < 1.0) .or. (get_curr_calday > 367.0) )then
        write(iulog,*) sub, ' = ', get_curr_calday
        if ( present(offset) ) write(iulog,*) 'offset = ', offset
        call shr_sys_abort( sub//': error get_curr_calday out of bounds' )

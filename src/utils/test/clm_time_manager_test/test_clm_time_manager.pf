@@ -74,6 +74,34 @@ contains
   end subroutine getCalday_leapYearDec31_returnsCorrectValue
 
   @Test
+  subroutine getCurrCalday_jan1_returns1(this)
+    class(TestTimeManager), intent(inout) :: this
+    real(r8) :: calday
+
+    call unittest_timemgr_setup(dtime=dtime)
+
+    call set_date(yr=2000, mon=1, day=1, tod=0)
+
+    calday = get_curr_calday()
+
+    @assertEqual(1._r8, calday)
+  end subroutine getCurrCalday_jan1_returns1
+
+  @Test
+  subroutine getCurrCalday_leapYearDec31_returnsCorrectValue(this)
+    class(TestTimeManager), intent(inout) :: this
+    real(r8) :: calday
+
+    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+
+    call set_date(yr=2000, mon=12, day=31, tod=43200)
+
+    calday = get_curr_calday()
+
+    @assertEqual(366.5_r8, calday)
+  end subroutine getCurrCalday_leapYearDec31_returnsCorrectValue
+
+  @Test
   subroutine getCurrYearfrac_atYearBoundary_returns0(this)
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: yearfrac
@@ -102,6 +130,22 @@ contains
     yearfrac_expected = 59.5_r8 / 365._r8
     @assertEqual(yearfrac_expected, yearfrac)
   end subroutine getCurrYearfrac_inMiddleOfYear_returnsCorrectValue
+
+  @Test
+  subroutine getCurrYearfrac_leapYearDec31_returnsCorrectValue(this)
+    class(TestTimeManager), intent(inout) :: this
+    real(r8) :: yearfrac
+    real(r8) :: yearfrac_expected
+
+    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+
+    call set_date(yr=2000, mon=12, day=31, tod=43200)
+
+    yearfrac = get_curr_yearfrac()
+
+    yearfrac_expected = 365.5_r8 / 366._r8
+    @assertEqual(yearfrac_expected, yearfrac)
+  end subroutine getCurrYearfrac_leapYearDec31_returnsCorrectValue
 
   @Test
   subroutine getPrevYearfrac_atYearBoundary_returnsLargeValue(this)
