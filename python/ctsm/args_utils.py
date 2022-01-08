@@ -3,7 +3,9 @@ General-purpose utilities for handling command-line
 arguments and flags in ctsm python codes.
 """
 
-from argparse import ArgumentParser
+import logging
+import argparse
+
 from ctsm.config_utils import lon_range_0_to_360
 
 
