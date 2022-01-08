@@ -87,7 +87,7 @@ class RegionalCase(BaseCase):
         self.lon2 = lon2
         self.reg_name = reg_name
         self.output_dir = output_dir
-        self.tag = None
+        self.create_tag()
 
     def create_tag(self):
         """

@@ -109,7 +109,7 @@ class SinglePointCase(BaseCase):
         self.uniform_snowpack = uniform_snowpack
         self.cap_saturation = cap_saturation
         self.output_dir = output_dir
-        self.tag = None
+        self.create_tag()
 
     def create_tag(self):
         """

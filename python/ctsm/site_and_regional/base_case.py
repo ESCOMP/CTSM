@@ -18,7 +18,7 @@ import numpy as np
 import xarray as xr
 
 # -- import local classes for this script
-from ctsm.git_utils import get_git_short_hash
+from ctsm.git_utils import get_ctsm_git_short_hash
 
 USRDAT_DIR = "CLM_USRDAT_DIR"
 logger = logging.getLogger(__name__)
@@ -151,11 +151,11 @@ class BaseCase:
         today_string = today.strftime("%Y-%m-%d")
 
         # get git hash
-        sha = get_git_short_hash()
+        sha = get_ctsm_git_short_hash()
 
         nc_file.attrs["Created_on"] = today_string
         nc_file.attrs["Created_by"] = getuser()
-        nc_file.attrs["Created_with"] = os.path.abspath(__file__) + " -- " + sha
+        nc_file.attrs["Created_with"] = './subset_data' + " -- " + sha
 
         # delete unrelated attributes if they exist
         del_attrs = [

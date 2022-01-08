@@ -438,7 +438,6 @@ def subset_point(args, file_dict: dict):
         args.out_dir,
     )
 
-    single_point.create_tag()
     logger.debug(single_point)
 
     # --  Create CTSM domain file
@@ -495,7 +494,6 @@ def subset_region(args, file_dict: dict):
         args.out_dir,
     )
 
-    region.create_tag()
     logger.debug(region)
 
     # --  Create CTSM domain file
