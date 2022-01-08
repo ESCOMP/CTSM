@@ -11,7 +11,8 @@ import logging
 import numpy as np
 import xarray as xr
 
-from ctsm.utils import abort, get_ctsm_git_sha, update_metadata, lon_range_0_to_360
+from ctsm.git_utils import get_ctsm_git_short_hash
+from ctsm.utils import abort, update_metadata, lon_range_0_to_360
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +109,7 @@ class ModifyFsurdat:
         title = 'Modified fsurdat file'
         summary = 'Modified fsurdat file'
         contact = 'N/A'
-        data_script = os.path.abspath(__file__) + " -- " + get_ctsm_git_sha()
+        data_script = os.path.abspath(__file__) + " -- " + get_ctsm_git_short_hash()
         description = 'Modified this file: ' + fsurdat_in
         update_metadata(self.file, title=title, summary=summary,
                         contact=contact, data_script=data_script,
