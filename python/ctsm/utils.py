@@ -78,30 +78,6 @@ def str2bool(var):
 
     return var_out
 
-def get_git_sha():
-    """
-    Returns Git short SHA for the currect directory.
-    """
-    return (
-        subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
-        .strip()
-        .decode()
-    )
-
-
-def get_ctsm_git_sha():
-    """
-    Returns Git short SHA for the ctsm directory.
-    """
-    return (
-        subprocess.check_output(
-            ["git", "-C", path_to_ctsm_root(), "rev-parse", "--short", "HEAD"]
-        )
-        .strip()
-        .decode()
-    )
-
-
 def add_tag_to_filename(filename, tag):
     """
     Add a tag and replace timetag of a filename
