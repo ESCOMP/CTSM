@@ -227,11 +227,6 @@ class SinglePointCase(BaseCase):
         # expand dimensions
         f_out = f_out.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
 
-        # update the plon and plat to match the surface data
-        # we do this so that if we create user_mods the PTS_LON and PTS_LAT in CIME match
-        # the surface data coordinates - which is required
-        self.plat = f_out.coords["lsmlat"].values[0]
-        self.plon = f_out.coords["lsmlon"].values[0]
 
         # modify surface data properties
         if self.overwrite_single_pft:
@@ -267,6 +262,8 @@ class SinglePointCase(BaseCase):
         )
 
         # update lsmlat and lsmlon to match site specific instead of the nearest point
+        # we do this so that if we create user_mods the PTS_LON and PTS_LAT in CIME match
+        # the surface data coordinates - which is required
         f_out['lsmlon'] = np.atleast_1d(self.plon)
         f_out['lsmlat'] = np.atleast_1d(self.plat)
         f_out['LATIXY'][:, :] = self.plat
