@@ -3,11 +3,12 @@ General-purpose utilities for handling command-line
 arguments and flags in ctsm python codes.
 """
 
+from argparse import ArgumentParser
 from ctsm.config_utils import lon_range_0_to_360
 
-# Types
 
 # Types for command-lines error handling:
+
 
 def plat_type(plat):
     """
@@ -18,9 +19,9 @@ def plat_type(plat):
     Args:
         plat(str): latitude
     Raises:
-        Error when plat (latitude) is not between -90 and 90.
+        Error (ArgumentTypeError): when plat (latitude) is not between -90 and 90.
     Returns:
-        plat (float): latitude in float
+        plat_out (float): latitude in float
     """
     plat_out = float(plat)
     if (plat_out < -90) or (plat_out > 90):
@@ -29,10 +30,11 @@ def plat_type(plat):
         )
     return plat_out
 
+
 def plon_type(plon):
     """
     Function to define lon type for the parser and
-    convert negative longitudes and
+    convert negative longitudes to 0-360 and
     raise error if lon is not between -180 and 360.
 
     Args:
@@ -40,18 +42,12 @@ def plon_type(plon):
     Raises:
         Error (ArgumentTypeError): when longitude is <-180 and >360.
     Returns:
-        plon(float): converted longitude between 0 and 360
+        plon_out (float): converted longitude between 0 and 360
     """
-    plon_out = float(plon)
-    if -180 <= plon < 0:
-        logger.debug("lon is: %f", plon)
-        plon = plon % 360
-        logger.debug("after modulo lon is: %f", plon)
+    plon = float(plon)
     if plon < 0 or plon > 360:
-        raise argparse.ArgumentTypeError("ERROR: Longitude of single point should be between 0 and "
-                                         "360 or -180 and 180.")
-    return plon
-
-
-
-
+        raise argparse.ArgumentTypeError(
+            "ERROR: Longitude should be between 0 and 360 or -180 and 180."
+        )
+    plon_out = lon_range_0_to_360(plon)
+    return plon_out
