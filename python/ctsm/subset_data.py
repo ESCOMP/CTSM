@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 |------------------------------------------------------------------|
 |---------------------  Instructions  -----------------------------|
@@ -77,9 +76,6 @@ from ctsm.ctsm_logging import (
     process_logging_args,
 )
 
-_CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", 'python'))
-sys.path.insert(1, _CTSM_PYTHON)
-
 DEFAULTS_FILE = "default_data.cfg"
 
 logger = logging.getLogger(__name__)
@@ -141,7 +137,7 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--overwrite-to-single-pft",
-        help="Modify surface dataset to be 100%% one single PFT set by --dom-pft.",
+        help="Modify surface dataset to be 100%% one single PFT set by --dompft.",
         action="store_true",
         dest="overwrite_single_pft",
         required=False,
@@ -239,7 +235,6 @@ def get_parser():
             action="store_true",
             dest="create_domain",
             required=False,
-            default=False,
         )
         subparser.add_argument(
             "--create-surface",
@@ -247,7 +242,6 @@ def get_parser():
             action="store_true",
             dest="create_surfdata",
             required=False,
-            default=False,
         )
         subparser.add_argument(
             "--create-landuse",
@@ -255,7 +249,6 @@ def get_parser():
             action="store_true",
             dest="create_landuse",
             required=False,
-            default=False,
         )
         subparser.add_argument(
             "--create-datm",
@@ -263,7 +256,6 @@ def get_parser():
             action="store_true",
             dest="create_datm",
             required=False,
-            default=False,
         )
         subparser.add_argument(
             "--create-user-mods",
