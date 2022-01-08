@@ -129,14 +129,29 @@ def _handle_config_value(
 
     return var
 
-
-def _convert_to_bool(val):
-    """Convert the given value to boolean
-
-    Conversion is as in config files 'getboolean'
+def _convert_to_bool(var):
     """
-    if val.lower() in ["1", "yes", "true", "on", "f"]:
-        return True
-    if val.lower() in ["0", "no", "false", "off", "f"]:
-        return False
-    raise ValueError("{} cannot be converted to boolean".format(val))
+    Function for converting different forms of
+    boolean strings to boolean value.
+
+    Args:
+        var (str): String bool input
+
+    Raises:
+        if the argument is not an acceptable boolean string
+        (such as yes or no ; true or false ; y or n ; t or f ; 0 or 1).
+        ValueError: The string should be one of the mentioned values.
+
+    Returns:
+        var_out (bool): Boolean value corresponding to the input.
+    """
+    if var.lower() in ("yes", "true", "t", "y", "1"):
+        var_out =  True
+    elif var.lower() in ("no", "false", "f", "n", "0"):
+        var_out = False
+    else:
+        raise ValueError("Boolean value expected. [true or false] or [y or n]")
+
+    return var_out
+
+
