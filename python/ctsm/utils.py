@@ -50,34 +50,6 @@ def fill_template_file(path_to_template, path_to_final, substitutions):
     with open(path_to_final, "w") as final_file:
         final_file.write(final_file_contents)
 
-
-def str2bool(var):
-    """
-    Function for converting different forms of
-    command line boolean strings to boolean value.
-
-    Args:
-        var (str): String bool input
-
-    Raises:
-        if the argument is not an acceptable boolean string
-        (such as yes or no ; true or false ; y or n ; t or f ; 0 or 1).
-        ValueError: The string should be one of the mentioned values.
-
-    Returns:
-        var_out (bool): Boolean value corresponding to the input.
-    """
-    if isinstance(var, bool):
-        var_out = var
-    if var.lower() in ("yes", "true", "t", "y", "1"):
-        var_out =  True
-    elif var.lower() in ("no", "false", "f", "n", "0"):
-        var_out = False
-    else:
-        raise ValueError("Boolean value expected. [true or false] or [y or n]")
-
-    return var_out
-
 def add_tag_to_filename(filename, tag):
     """
     Add a tag and replace timetag of a filename
@@ -104,8 +76,8 @@ def add_tag_to_filename(filename, tag):
     if basename[cend] == "c":
         cend = cend - 1
     if (basename[cend] != ".") and (basename[cend] != "_"):
-        logger.error("Trouble figuring out where to add tag to filename:" + filename)
-        os.abort()
+        logger.error("Trouble figuring out where to add tag to filename:" , filename)
+        abort()
     today = date.today()
     today_string = today.strftime("%y%m%d")
     fname_out = basename[:cend] + "_" + tag + "_c" + today_string + ".nc"
