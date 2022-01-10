@@ -42,13 +42,11 @@ class SinglePointCase(BaseCase):
         flag for creating DATM files
     create_user_mods : bool
         flag for creating user mods directories and files
-    overwrite_single_pft : bool
-        flag to overwrite the whole grid 100% single PFT.
     dom_pft : int
-        dominant pft type for this single point
+        dominant pft type for this single point (None if not specified)
     zero_nonveg_landunits : bool
         flag for setting all non-vegetation landunits to zero
-    overwrite_single_pft : bool
+    uni_snow : bool
         flag for creating datasets using uniform snowpack
     saturation_excess : bool
         flag for making dataset using saturation excess
@@ -91,7 +89,6 @@ class SinglePointCase(BaseCase):
             create_landuse,
             create_datm,
             create_user_mods,
-            overwrite_single_pft,
             dom_pft,
             include_nonveg,
             uni_snow,
@@ -103,7 +100,6 @@ class SinglePointCase(BaseCase):
         self.plat = plat
         self.plon = plon
         self.site_name = site_name
-        self.overwrite_single_pft = overwrite_single_pft
         self.dom_pft = dom_pft
         self.include_nonveg = include_nonveg
         self.uni_snow = uni_snow
@@ -229,7 +225,7 @@ class SinglePointCase(BaseCase):
 
 
         # modify surface data properties
-        if self.overwrite_single_pft:
+        if self.dom_pft is not None:
             f_out["PCT_NAT_PFT"][:, :, :] = 0
             if self.dom_pft < 16:
                 f_out['PCT_NAT_PFT'][:, :, self.dom_pft] = 100
