@@ -611,6 +611,32 @@ def parse_neon_listing(listing_file, valid_neon_sites):
 def download_file(url, fname):
     """
     Function to download a file.
+    Args:
+        url (str):
+            url of the file for downloading
+        fname (str) :
+            file name to save the downloaded file.
+    """
+    try:
+        response = requests.get(url)
+
+        with open(fname, "wb") as f:
+            f.write(response.content)
+
+        # -- Check if download status_code
+        if response.status_code == 200:
+            print("Download finished successfully for", fname, ".")
+        elif response.status_code == 404:
+            print("File " + fname + "was not available on the neon server:" + url)
+    except Exception as err:
+        print ('The server could not fulfill the request.')
+        print ('Something went wrong in downloading', fname)
+        print ('Error code:', err.code)
+
+
+def download_file(url, fname):
+    """
+    Function to download a file.
  
     Args:
         url (str): 
