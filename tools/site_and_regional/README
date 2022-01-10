@@ -10,7 +10,7 @@ ncar_pylib
 
 Brief description of scripts:
 
-subset_data.py
+subset_data
 	create regional domain, surface data, and rtm directional files by 
 	extracting data from global datasets 
 
@@ -27,20 +27,8 @@ mknoocnmap.pl
         Script to create unity mapping dataset for single-point
         or regional studies over land-only (no ocean).
 
-getregional_datasets.pl 
-        Extract out regional datasets from global ones and put files in a location that
-        can be used by build-namelist.
-
 NCL Scripts available:
 
 mkunitymap.ncl
         NCL script to create a unity map -- ran by above script (mknoocnmap.pl)
-
-getregional_datasets.ncl 
-        NCL script to extract out regional datasets.
-
-Input datafiles:
-
-sample_infile* --- Sample datafiles with list of files for getregional_datasets.pl to operate on
-sample_outfile* -- Sample datafiles with list of files for getregional_datasets.pl to create
 

@@ -43,9 +43,6 @@ if [ $? -ne 0 ]; then
 fi
 cd ${rundir}
 
-# Copy any sample files so can use them
-cp $cfgdir/sample_* $rundir
-
 optfile=${3%^*}
 cfgfile=${3#*^}
 

@@ -48,12 +48,3 @@ smi59 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
 bli59 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
 smi79 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_i1x1_brazil
 bli79 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_i1x1_brazil
-
-smiS4 TSMscript_tools.sh site_and_regional getregional_datasets.pl getregional
-bliS4 TBLscript_tools.sh site_and_regional getregional_datasets.pl getregional
-smiS8 TSMscript_tools.sh site_and_regional getregional_datasets.pl getregional_ndep
-bliS8 TBLscript_tools.sh site_and_regional getregional_datasets.pl getregional_ndep
-smiS9 TSMscript_tools.sh site_and_regional getregional_datasets.pl getregional_T62
-bliS9 TBLscript_tools.sh site_and_regional getregional_datasets.pl getregional_T62
-smiS0 TSMscript_tools.sh site_and_regional getregional_datasets.pl getregional_05popd
-bliS0 TBLscript_tools.sh site_and_regional getregional_datasets.pl getregional_05popd
