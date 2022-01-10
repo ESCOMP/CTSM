@@ -25,6 +25,5 @@ This documents our conventions for command-line arguments, primarily as they per
 4. For logical flags, use a flag without an argument -- ``--feature`` for the case where something is off by default and you want to turn it on, or ``--no-feature`` for the case where something is on by default and you want to turn it off -- instead of something like ``--feature true`` / ``--feature false``. Prefer phrasing these as positives whenever possible (e.g., ``--allow-multiple-pfts`` instead of ``--no-single-pft``). To the extent possible, try to clearly document what the behavior is if you add the flag, and what the behavior is if you don't add the flag.
 
    * Rationale:
-
       * This use of ``--feature`` / ``--no-feature`` is more common behavior for Unix tools.
       * For something that is either on or off by default, you can see what the default operation is and what you can change just by looking at the available flag names, without needing to read through all of the documentation of default values.
