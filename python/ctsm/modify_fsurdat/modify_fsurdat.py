@@ -12,7 +12,8 @@ import numpy as np
 import xarray as xr
 
 from ctsm.git_utils import get_ctsm_git_short_hash
-from ctsm.utils import abort, update_metadata, lon_range_0_to_360
+from ctsm.utils import abort, update_metadata
+from ctsm.config_utils import lon_range_0_to_360
 
 logger = logging.getLogger(__name__)
 
