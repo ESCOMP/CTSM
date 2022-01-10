@@ -253,7 +253,7 @@ def find_surffile(surf_dir, site_name):
     # sf_name = "surfdata_hist_16pfts_Irrig_CMIP6_simyr2000_"+site_name+"*.nc"
     sf_name = "surfdata_hist_78pfts_CMIP6_simyr2000_" + site_name + "*.nc"
     # surf_file = glob.glob(os.path.join(surf_dir,sf_name))
-    surf_file = glob.glob(surf_dir + "/" + sf_name)
+    surf_file = sorted(glob.glob(surf_dir + "/" + sf_name))
 
     if len(surf_file) > 1:
         print("The following files found :", *surf_file, sep="\n- ")
