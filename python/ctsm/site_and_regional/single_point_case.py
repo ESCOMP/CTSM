@@ -44,7 +44,7 @@ class SinglePointCase(BaseCase):
         flag for creating user mods directories and files
     overwrite_single_pft : bool
         flag to overwrite the whole grid 100% single PFT.
-    dominant_pft : int
+    dom_pft : int
         dominant pft type for this single point
     zero_nonveg_landunits : bool
         flag for setting all non-vegetation landunits to zero
@@ -92,11 +92,11 @@ class SinglePointCase(BaseCase):
             create_datm,
             create_user_mods,
             overwrite_single_pft,
-            dominant_pft,
+            dom_pft,
             include_nonveg,
-            uniform_snowpack,
+            uni_snow,
             cap_saturation,
-            output_dir,
+            out_dir,
     ):
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm,
                          create_user_mods)
@@ -104,11 +104,11 @@ class SinglePointCase(BaseCase):
         self.plon = plon
         self.site_name = site_name
         self.overwrite_single_pft = overwrite_single_pft
-        self.dominant_pft = dominant_pft
+        self.dom_pft = dom_pft
         self.include_nonveg = include_nonveg
-        self.uniform_snowpack = uniform_snowpack
+        self.uni_snow = uni_snow
         self.cap_saturation = cap_saturation
-        self.output_dir = output_dir
+        self.out_dir = out_dir
         self.create_tag()
 
     def create_tag(self):
@@ -132,7 +132,7 @@ class SinglePointCase(BaseCase):
         fdomain_in = os.path.join(indir, file)
         fdomain_out = add_tag_to_filename(fdomain_in, self.tag)
         logger.info("fdomain_in:  %s", fdomain_in)
-        logger.info("fdomain_out: %s", os.path.join(self.output_dir, fdomain_out))
+        logger.info("fdomain_out: %s", os.path.join(self.out_dir, fdomain_out))
 
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fdomain_in, "xc", "yc", "ni", "nj")
@@ -147,7 +147,7 @@ class SinglePointCase(BaseCase):
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = fdomain_in
 
-        wfile = os.path.join(self.output_dir, fdomain_out)
+        wfile = os.path.join(self.out_dir, fdomain_out)
         f_out.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
         logger.info("Successfully created file (fdomain_out) %s", wfile)
         f_in.close()
@@ -164,7 +164,7 @@ class SinglePointCase(BaseCase):
         fluse_in = os.path.join(indir, file)
         fluse_out = add_tag_to_filename(fluse_in, self.tag)
         logger.info("fluse_in:  %s", fluse_in)
-        logger.info("fluse_out: %s", os.path.join(self.output_dir, fluse_out))
+        logger.info("fluse_out: %s", os.path.join(self.out_dir, fluse_out))
 
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(
@@ -191,7 +191,7 @@ class SinglePointCase(BaseCase):
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = fluse_in
 
-        wfile = os.path.join(self.output_dir, fluse_out)
+        wfile = os.path.join(self.out_dir, fluse_out)
         # mode 'w' overwrites file
         f_out.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
         logger.info("Successfully created file (fluse_out), %s", wfile)
@@ -216,7 +216,7 @@ class SinglePointCase(BaseCase):
         fsurf_in = os.path.join(indir, file)
         fsurf_out = add_tag_to_filename(fsurf_in, self.tag)
         logger.info("fsurf_in:  %s", fsurf_in)
-        logger.info("fsurf_out: %s", os.path.join(self.output_dir, fsurf_out))
+        logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
 
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
@@ -231,8 +231,8 @@ class SinglePointCase(BaseCase):
         # modify surface data properties
         if self.overwrite_single_pft:
             f_out["PCT_NAT_PFT"][:, :, :] = 0
-            if self.dominant_pft < 16:
-                f_out['PCT_NAT_PFT'][:, :, self.dominant_pft] = 100
+            if self.dom_pft < 16:
+                f_out['PCT_NAT_PFT'][:, :, self.dom_pft] = 100
         if not self.include_nonveg:
             f_out["PCT_NATVEG"][:, :] = 100
             f_out["PCT_CROP"][:, :] = 0
@@ -240,7 +240,7 @@ class SinglePointCase(BaseCase):
             f_out["PCT_WETLAND"][:, :] = 0.0
             f_out["PCT_URBAN"][:, :, ] = 0.0
             f_out["PCT_GLACIER"][:, :] = 0.0
-        if self.uniform_snowpack:
+        if self.uni_snow:
             f_out["STD_ELEV"][:, :] = 20.0
         if self.cap_saturation:
             f_out["FMAX"][:, :] = 0.0
@@ -273,7 +273,7 @@ class SinglePointCase(BaseCase):
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = fsurf_in
         # mode 'w' overwrites file
-        wfile = os.path.join(self.output_dir, fsurf_out)
+        wfile = os.path.join(self.out_dir, fsurf_out)
         f_out.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
         logger.info("Successfully created file (fsurf_out) %s", wfile)
         f_in.close()
@@ -298,7 +298,7 @@ class SinglePointCase(BaseCase):
         datm_file = add_tag_to_filename(fdatmdomain_in, self.tag)
         fdatmdomain_out = os.path.join(datm_tuple.outdir, datm_file)
         logger.info("fdatmdomain_in:  %s", fdatmdomain_in)
-        logger.info("fdatmdomain out: %s", os.path.join(self.output_dir, fdatmdomain_out))
+        logger.info("fdatmdomain out: %s", os.path.join(self.out_dir, fdatmdomain_out))
 
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fdatmdomain_in, "xc", "yc", "ni", "nj")
@@ -314,7 +314,7 @@ class SinglePointCase(BaseCase):
         f_out.attrs["Created_from"] = fdatmdomain_in
 
         # mode 'w' overwrites file
-        wfile = os.path.join(self.output_dir, fdatmdomain_out)
+        wfile = os.path.join(self.out_dir, fdatmdomain_out)
         f_out.to_netcdf(path=wfile, mode="w", format = 'NETCDF3_64BIT')
         logger.info("Successfully created file (fdatmdomain_out) : %s", wfile)
         f_in.close()
@@ -353,7 +353,7 @@ class SinglePointCase(BaseCase):
         # write_to_file surrounds text with newlines
         with open(file, 'w') as nl_file:
             self.write_to_file("# Change below line if you move the subset data directory", nl_file)
-            self.write_to_file("./xmlchange {}={}".format(USRDAT_DIR, self.output_dir), nl_file)
+            self.write_to_file("./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file)
             self.write_to_file("./xmlchange PTS_LON={}".format(str(self.plon)), nl_file)
             self.write_to_file("./xmlchange PTS_LAT={}".format(str(self.plat)), nl_file)
             self.write_to_file("./xmlchange MPILIB=mpi-serial", nl_file)
@@ -403,7 +403,7 @@ class SinglePointCase(BaseCase):
                                      "{}{}.nc".format(datm_tuple.tag_tpqw, dtag))
                 ftpqw2 = "{}{}.{}.nc".format(datm_tuple.tag_tpqw, self.tag, dtag)
 
-                outdir = os.path.join(self.output_dir, datm_tuple.outdir)
+                outdir = os.path.join(self.out_dir, datm_tuple.outdir)
                 infile += [fsolar, fprecip, ftpqw]
                 outfile += [os.path.join(outdir, fsolar2),
                             os.path.join(outdir, fprecip2),

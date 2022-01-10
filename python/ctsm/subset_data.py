@@ -68,6 +68,7 @@ from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.args_utils import plon_type, plat_type
 from ctsm.path_utils import path_to_ctsm_root
+from ctsm.utils import abort
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -414,20 +415,20 @@ def subset_point(args, file_dict: dict):
 
     # --  Create SinglePoint Object
     single_point = SinglePointCase(
-        args.plat,
-        args.plon,
-        args.site_name,
-        args.create_domain,
-        args.create_surfdata,
-        args.create_landuse,
-        args.create_datm,
-        args.create_user_mods,
-        args.overwrite_single_pft,
-        args.dom_pft,
-        args.include_nonveg,
-        args.uni_snow,
-        args.cap_saturation,
-        args.out_dir,
+        plat = args.plat,
+        plon = args.plon,
+        site_name = args.site_name,
+        create_domain = args.create_domain,
+        create_surfdata = args.create_surfdata,
+        create_landuse = args.create_landuse,
+        create_datm = args.create_datm,
+        create_user_mods = args.create_user_mods,
+        overwrite_single_pft = args.overwrite_single_pft,
+        dom_pft = args.dom_pft,
+        include_nonveg = args.include_nonveg,
+        uni_snow = args.uni_snow,
+        cap_saturation = args.cap_saturation,
+        out_dir = args.out_dir,
     )
 
     logger.debug(single_point)
@@ -473,17 +474,17 @@ def subset_region(args, file_dict: dict):
 
     # --  Create Region Object
     region = RegionalCase(
-        args.lat1,
-        args.lat2,
-        args.lon1,
-        args.lon2,
-        args.reg_name,
-        args.create_domain,
-        args.create_surfdata,
-        args.create_landuse,
-        args.create_datm,
-        args.create_user_mods,
-        args.out_dir,
+        lat1 = args.lat1,
+        lat2 = args.lat2,
+        lon1 = args.lon1,
+        lon2 = args.lon2,
+        reg_name = args.reg_name,
+        create_domain = args.create_domain,
+        create_surfdata = args.create_surfdata,
+        create_landuse = args.create_landuse,
+        create_datm = args.create_datm,
+        create_user_mods = args.create_user_mods,
+        out_dir = args.out_dir,
     )
 
     logger.debug(region)
@@ -503,7 +504,6 @@ def subset_region(args, file_dict: dict):
                                      args.user_mods_dir)
 
     logger.info("Successfully ran script for a regional case.")
-    sys.exit()
 
 
 def main():
@@ -534,14 +534,18 @@ def main():
 
     # print help and exit when no option is chosen
     if args.run_type != "point" and args.run_type != "region":
-        print("Must supply a positional argument: 'point' or 'region'.")
-        print("See ./subset_data --help for more help.")
-        sys.exit()
+        err_msg = (
+                "Must supply a positional argument: 'point' or 'region'. \n"
+                "See ./subset_data --help for more help."
+                )
+        abort(err_msg)
     if not any([args.create_surfdata, args.create_domain, args.create_landuse, args.create_datm]):
-        print("Must supply one of:")
-        print(" --create-surface \n --create-landuse \n --create-datm \n --create-domain")
-        print("See ./subset_data --help for more help.")
-        sys.exit()
+        err_msg = (
+                "Must supply one of: \n",
+                " --create-surface \n --create-landuse \n --create-datm \n --create-domain \n "
+                "See ./subset_data --help for more help."
+                )
+        abort(err_msg)
 
     # create files and folders necessary and return dictionary of file/folder locations
     file_dict = setup_files(args, defaults, cesmroot)

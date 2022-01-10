@@ -50,9 +50,6 @@ class BaseCase:
     -------
     create_1d_coord(filename, lon_varname , lat_varname,x_dim , y_dim )
         create 1d coordinate variables to enable sel() method
-    add_tag_to_filename(filename, tag)
-       add a tag and timetag to a filename ending with
-       [._]cYYMMDD.nc or [._]YYMMDD.nc
     update_metadata(nc)
         Class method for adding some new attributes (such as date, username) and
         remove the old attributes from the netcdf file.
