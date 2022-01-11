@@ -27,3 +27,4 @@ This documents our conventions for command-line arguments, primarily as they per
    * Rationale:
       * This use of ``--feature`` / ``--no-feature`` is more common behavior for Unix tools.
       * For something that is either on or off by default, you can see what the default operation is and what you can change just by looking at the available flag names, without needing to read through all of the documentation of default values.
+      * Whenever possible avoid the use of --no-feature arguments as they often are confusing. Try to express the same thing using positive wording.
