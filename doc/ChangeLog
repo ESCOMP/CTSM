@@ -1,4 +1,83 @@
 ===============================================================
+Tag name: ctsm5.1.dev070
+Originator(s): sacks (Bill Sacks), mvertens (Mariana Vertenstein), slevis (Samuel Levis)
+Date: Mon Jan 10 16:52:50 MST 2022
+One-line Summary: Update externals, remove need for LND_DOMAIN_FILE and LND_DOMAIN_PATH, etc.
+
+Purpose and description of changes
+----------------------------------
+
+(1) Update cime and cdeps externals
+
+(2) Remove the need for LND_DOMAIN_FILE and LND_DOMAIN_PATH XML
+    variables in NUOPC / LILAC cases
+
+(3) Update doc builder to fix issue with git lfs pull command
+
+(4) Fix mksurfdata unit tests
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1575 (Build problem for mksurfdata tools testers)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Running unit tests currently requires setting CIME_NO_CMAKE_MACRO=ON in your environment
+- LILACSMOKE test now has a hard-coded resolution and domain file
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- pass
+    izumi ------- pass
+
+    Note:
+    SMS_Ld5.f10_f10_mg37.ISSP370Clm50BgcCrop.cheyenne_gnu.clm-ciso_dec2050Start
+    failed with baseline diffs when first run, but passed upon rerun:
+    system glitch?
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/1581
+- https://github.com/ESCOMP/CTSM/pull/1591
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev069
 Originator(s): fang-bowen (Bowen Fang) / oleson (Keith Oleson,UCAR/TSS,303-497-1332)
                / Face2sea (Lei Zhao) / keerzhang1 (Keer Zhang) / sacks (Bill Sacks)
