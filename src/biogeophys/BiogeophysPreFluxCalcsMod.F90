@@ -185,9 +185,6 @@ contains
 
             end if
 
-            ! --> Use this for CLM-Ya08
-            !z0m(p)    = pftcon%z0mr(patch%itype(p)) * htop(p)
-            !displa(p) = pftcon%displar(patch%itype(p)) * htop(p)
 
          end select
           

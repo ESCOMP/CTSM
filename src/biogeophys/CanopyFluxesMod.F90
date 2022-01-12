@@ -903,12 +903,6 @@ bioms:   do f = 1, fn
                       log(z0v_cw(patch%itype(p))) - 1._r8 + z0v_cw(patch%itype(p))**(-1._r8))
 
 
-            ! --> Use this for CLM-Ya08
-            !lt = min(elai(p)+esai(p), tlsai_crit)
-            !egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
-            !displa(p) = egvf * displa(p)
-            !z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
-
           case default
             write(iulog,*) 'ERROR: unknown z0para_method: ', z0param_method
             call endrun(msg = 'unknown z0param_method', additional_msg = errMsg(sourcefile, __LINE__))
@@ -1052,7 +1046,10 @@ bioms:   do f = 1, fn
             ! changed by K.Sakaguchi from here
             ! transfer coefficient over bare soil is changed to a local variable
             ! just for readability of the code (from line 680)
-            ! RM: Does this need to be updated if Ya08 is used too?
+            ! RM: Does this need to be updated if Ya08 is used too? Proposed formulation (definitely double-check!)
+            ! , interpreting the statement below as csoilb = vkc / ln(z0mg/z0hg):
+            ! csoilb = vkc / log( z0mg(c) / ( 70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) *
+            ! (abs(tstar))**(0.25_r8)) ) ) 
             csoilb = vkc / (params_inst%a_coef * (z0mg(c) * uaf(p) / 1.5e-5_r8)**params_inst%a_exp)
             
 

@@ -651,24 +651,18 @@ contains
              else
                 z0mg(c) = this%zsno
 
-                ! --> Use this for CLM-VEG and CLM-Ya08 
-                !z0mg(c) = 0.0024_r8
+
              end if                    
           else if (lun%itype(l) == istice_mec) then
              z0mg(c) = this%zglc
 
-             ! --> Use this for CLM-VEG and CLM-Ya08
-             !z0mg(c) = 0.01_r8
              
           else
              if(use_z0mg_2d) then
                 z0mg(c) = z0mg_2D(c)
              else
                 z0mg(c) = this%zlnd
-
-                ! --> Use this for CLM-VEG and CLM-Ya08
-                !z0mg(c) = 0.01_r8
-                
+               
              end if                   
           end if
        end select

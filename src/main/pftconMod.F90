@@ -673,10 +673,6 @@ contains
 
        this%z0mr = 0._r8
 
-       ! --> Use this for CLM-Ya08
-       !call ncd_io('z0mr', this%z0mr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-       !if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))       
-
     case default
        write(iulog,*) subname//' ERROR: unknown z0param_method: ', &
             z0param_method
