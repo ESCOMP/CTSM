@@ -1049,7 +1049,7 @@ bioms:   do f = 1, fn
             ! RM: Does this need to be updated if Ya08 is used too? Proposed formulation (definitely double-check!)
             ! , interpreting the statement below as csoilb = vkc / ln(z0mg/z0hg):
             ! csoilb = vkc / log( z0mg(c) / ( 70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) *
-            ! (abs(tstar))**(0.25_r8)) ) ) 
+            ! (abs(temp1(p)*dth(p)))**(0.25_r8)) ) ) 
             csoilb = vkc / (params_inst%a_coef * (z0mg(c) * uaf(p) / 1.5e-5_r8)**params_inst%a_exp)
             
 
