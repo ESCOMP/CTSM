@@ -9,17 +9,19 @@
 This documents various conventions for the user interface of python scripts. The focus here is on user-visible aspects, as opposed to implementation details.
 
 ====================================================
- Separation of front-end script from implementation
+ Separation of front-end scripts from implementation
 ====================================================
 
 Most python code resides in the ``python/ctsm`` directory, and modules there have a ``.py`` extension. However, scripts that are run from the command-line have small wrapper files that reside in appropriate places throughout the repository (e.g., in the ``tools`` directory). These wrapper files should *not* have a ``.py`` extension, and should contain as little python code as possible (since these files aren't checked by pylint and cannot easily be unit tested): typically they contain just enough code to setup the python path, load a python module and then call the main function from that module. See examples throughout CTSM for details.
 
 Rationale: Modules meant to be imported (i.e., everything under ``python/ctsm``) should have a ``.py`` extension. However, it is valuable to keep the extension off of the scripts that users run for a few reasons:
+
 1. A user shouldn't need to know what language a script is in when all they want to do is to run the script
 2. We want to avoid the need for retraining users, updating documentation, etc. if we change the implementation language
 3. Standard Unix utilities rarely if ever require specifying the language extension when running them; the same is true for the core scripts in CIME (``create_newcase``, ``xmlchange``, etc.); we would like to stay consistent with these other scripts and utilities
 
 Counter-arguments: Arguments for keeping a ``.py`` extension even on the files meant to be run by users are the following:
+
 1. It's obvious from looking at a directory listing what language a file is in
 2. This extension may be needed on Windows systems
 3. The file extension is needed to support linting, unit testing, etc.
