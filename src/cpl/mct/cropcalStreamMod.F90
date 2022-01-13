@@ -33,6 +33,7 @@ module cropcalStreamMod
   integer, allocatable    :: g_to_ig(:)         ! Array matching gridcell index to data index
   ! SSR TODO: Make this work with mxgrowseas > 1
   type(shr_strdata_type)  :: sdat_sdate        ! sowing date input data stream
+  type(shr_strdata_type)  :: sdat_cultivar_gdds ! cultivar growing-degree days stream
 
   character(len=*), parameter :: sourcefile = &
        __FILE__
@@ -71,11 +72,13 @@ contains
     integer            :: nml_error                  ! namelist i/o error flag
     type(mct_ggrid)    :: dom_clm                    ! domain information
     character(len=CL)  :: stream_fldFileName_sdate     ! sowing date stream filename to read
+    character(len=CL)  :: stream_fldFileName_cultivar_gdds ! cultivar GDD target filename to read
     character(len=CL)  :: cropcal_mapalgo  = 'nn'      ! Mapping alogrithm
     character(len=CL)  :: cropcal_tintalgo = 'nearest' ! Time interpolation alogrithm
     
     ! SSR TODO: Make this work with mxgrowseas > 1
     character(len=CXX) :: fldList_sdate1                  ! field string for 1st sowing dates
+    character(len=CXX) :: fldList_cultivar_gdds1          ! field string for 1st cultivar GDD targets
     
     character(*), parameter :: subName = "('cropcaldyn_init')"
     !-----------------------------------------------------------------------
@@ -86,13 +89,15 @@ contains
          stream_year_first_cropcal,    &
          stream_year_last_cropcal,     &
          model_year_align_cropcal,     &
-         stream_fldFileName_sdate
+         stream_fldFileName_sdate,     &
+         stream_fldFileName_cultivar_gdds
 
     ! Default values for namelist
     stream_year_first_cropcal     = 1      ! first year in stream to use
     stream_year_last_cropcal      = 1      ! last  year in stream to use
     model_year_align_cropcal      = 1      ! align stream_year_first_cropcal with this model year
     stream_fldFileName_sdate      = shr_stream_file_null
+    stream_fldFileName_cultivar_gdds = shr_stream_file_null
 
     ! Read cropcal_streams namelist
     if (masterproc) then
@@ -112,6 +117,7 @@ contains
     call shr_mpi_bcast(stream_year_last_cropcal , mpicom)
     call shr_mpi_bcast(model_year_align_cropcal , mpicom)
     call shr_mpi_bcast(stream_fldFileName_sdate , mpicom)
+    call shr_mpi_bcast(stream_fldFileName_cultivar_gdds , mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -120,6 +126,7 @@ contains
        write(iulog,*) '  stream_year_last_cropcal   = ',stream_year_last_cropcal
        write(iulog,*) '  model_year_align_cropcal   = ',model_year_align_cropcal
        write(iulog,*) '  stream_fldFileName_sdate = ',trim(stream_fldFileName_sdate)
+       write(iulog,*) '  stream_fldFileName_cultivar_gdds = ',trim(stream_fldFileName_cultivar_gdds)
     endif
 
     call clm_domain_mct (bounds, dom_clm)
@@ -127,6 +134,7 @@ contains
     ! create the field list for these cropcal fields...use in shr_strdata_create
     ! SSR TODO: Make this work with mxgrowseas > 1
     fldList_sdate1 = shr_string_listCreateField( cft_ub, "sdate1", cft_lb )
+    fldList_cultivar_gdds1 = shr_string_listCreateField( cft_ub, "gdd1", cft_lb )
 
     ! SSR TODO:
     ! - Delete "area" and "mask"?
@@ -158,9 +166,37 @@ contains
          tintalgo=cropcal_tintalgo,                    &
          calendar=get_calendar(),                      &
          taxmode='cycle'                               )
+    call shr_strdata_create(sdat_cultivar_gdds,        &
+         name="cropcaldyn",                            &
+         pio_subsystem=pio_subsystem,                  &
+         pio_iotype=shr_pio_getiotype(inst_name),      &
+         mpicom=mpicom, compid=comp_id,                &
+         gsmap=gsmap_global, ggrid=dom_clm,            &
+         nxg=ldomain%ni, nyg=ldomain%nj,               &
+         yearFirst=stream_year_first_cropcal,          &
+         yearLast=stream_year_last_cropcal,            &
+         yearAlign=model_year_align_cropcal,           &
+         offset=0,                                     &
+         domFilePath='',                               &
+         domFileName=trim(stream_fldFileName_cultivar_gdds), &
+         domTvarName='time',                           &
+         domXvarName='lon' ,                           &
+         domYvarName='lat' ,                           &
+         domAreaName='area',                           &
+         domMaskName='mask',                           &
+         filePath='',                                  &
+         filename=(/stream_fldFileName_cultivar_gdds/), &
+         fldListFile=fldList_cultivar_gdds1,           &
+         fldListModel=fldList_cultivar_gdds1,          &
+         fillalgo='none',                              &
+         mapalgo=cropcal_mapalgo,                      &
+         tintalgo=cropcal_tintalgo,                    &
+         calendar=get_calendar(),                      &
+         taxmode='cycle'                               )
 
     if (masterproc) then
        call shr_strdata_print(sdat_sdate,'sdate1 data')
+       call shr_strdata_print(sdat_cultivar_gdds,'sdat_cultivar_gdds1 data')
     endif
 
   end subroutine cropcal_init
@@ -191,6 +227,7 @@ contains
 
     ! SSR TODO: Make this work with mxgrowseas > 1
     call shr_strdata_advance(sdat_sdate, mcdate, sec, mpicom, 'cropcaldyn')
+    call shr_strdata_advance(sdat_cultivar_gdds, mcdate, sec, mpicom, 'cropcaldyn')
 
     if ( .not. allocated(g_to_ig) )then
        allocate (g_to_ig(bounds%begg:bounds%endg) )
@@ -235,6 +272,8 @@ contains
     ! SSR TODO: Make this work with mxgrowseas > 1
     SHR_ASSERT_FL( (lbound(sdat_sdate%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(sdat_sdate%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(sdat_cultivar_gdds%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(sdat_cultivar_gdds%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
 
     ! SSR troubleshooting
 !    call get_curr_date( yr, mon, day, tod )
@@ -253,6 +292,14 @@ contains
        if (ivt /= noveg) then
           ig = g_to_ig(patch%gridcell(p))
           crop_inst%rx_sdates_thisyr(p,1) = sdat_sdate%avs(1)%rAttr(ip,ig)
+       endif
+
+       ! SSR TODO: Add check that variable exists in netCDF
+       stream_var_name = 'cultivar_gdds1_'//trim(adjustl(stream_var_name))
+       ip = mct_aVect_indexRA(sdat_cultivar_gdds%avs(1),trim(stream_var_name))
+       if (ivt /= noveg) then
+          ig = g_to_ig(patch%gridcell(p))
+          crop_inst%rx_cultivar_gdds_thisyr(p,1) = sdat_cultivar_gdds%avs(1)%rAttr(ip,ig)
        endif
 
        ! SSR TODO: Make this work with mxgrowseas > 1
