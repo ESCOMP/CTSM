@@ -2271,8 +2271,8 @@ contains
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
       sowing_count(p) = sowing_count(p) + 1
-         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, sowing_count(p))
-      if (sowing_count(p) <= mxgrowseas) then
+      if (sowing_count(p) < mxgrowseas) then
+         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, sowing_count(p)+1)
       else
          next_rx_sdate(p) = -1
       endif
