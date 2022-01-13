@@ -334,7 +334,7 @@ do
    # Determine extra information about the source grid file
    SRC_EXTRA_ARGS[nfile]=""
    SRC_LRGFIL[nfile]=`$QUERY -var scripgriddata_lrgfile_needed $QUERYARGS`
-   SRC_TYPE[nfile]=`$QUERY -var unstructdata_type $QUERYARGS`
+   SRC_TYPE[nfile]=`$QUERY -var scripgriddata_type $QUERYARGS`
    if [ "${SRC_TYPE[nfile]}" = "UGRID" ]; then
        # For UGRID, we need extra information: the meshname variable
        src_meshname=`$QUERY -var scripgriddata_meshname $QUERYARGS`

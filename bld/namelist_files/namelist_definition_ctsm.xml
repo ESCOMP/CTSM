@@ -1222,14 +1222,9 @@ either the source or destination ('none', '64bit_offset' or 'netcdf4').
 </entry>
 
 <entry id="scripgriddata_type" type="char*256" category="mkmapdata"
-       group="clmexp" valid_values="SCRIP,UGRID" >
-Flag to pass to the ESMF mapping utility, telling it what kind of grid
-file this is (SCRIP or UGRID). LIKELY REDUNDANT. TRY REMOVING?
-</entry>
-<entry id="unstructdata_type" type="char*256" category="mkmapdata"
-       group="clmexp" valid_values="UNSTRUCT" >
-Flag to pass to the ESMF mapping utility, telling it what kind of grid
-file this is (UNSTRUCT). LIKELY REDUNDANT. TRY REMOVING?
+       group="clmexp" valid_values="UGRID" >
+Flag used in mkmapdata.sh; otherwise specifying this for the ESMF mapping
+utility is redundant because -src_type and -dst_type are ignored
 </entry>
 
 <entry id="scripgriddata_meshname" type="char*256" category="mkmapdata"
