@@ -340,10 +340,6 @@ If TRUE use the undercanopy stability term used with CLM4.5 (Sakaguchi&amp;Zeng,
        group="canopyfluxes_inparm" valid_values="" >
 If TRUE, include biomass heat storage in canopy energy balance.
 
-<entry id="use_z0v_forest" type="logical" category="clm_physics"
-       group="canopyfluxes_inparm" valid_values="" >
-If TRUE, use new parameterization of vegetation surface roughness for forests.
-
 <entry id="itmax_canopy_fluxes" type="integer" category="clm_physics"
        group="canopyfluxes_inparm">
 Max number of iterations used in subr. CanopyFluxes. For many years, 40 was the hardwired default value.
