@@ -2237,6 +2237,7 @@ contains
     ! !USES:
     use clm_varctl       , only : use_c13, use_c14
     use clm_varcon       , only : c13ratio, c14ratio
+    use clm_varpar       , only : mxgrowseas
     !
     ! !ARGUMENTS:
     integer                , intent(in)    :: p         ! PATCH index running over
@@ -2270,8 +2271,8 @@ contains
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
       sowing_count(p) = sowing_count(p) + 1
-      if (sowing_count(p) <= crop_inst%n_growingseasons_thisyear_thispatch(p)) then
          next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, sowing_count(p))
+      if (sowing_count(p) <= mxgrowseas) then
       else
          next_rx_sdate(p) = -1
       endif

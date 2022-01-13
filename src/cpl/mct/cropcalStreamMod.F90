@@ -302,9 +302,6 @@ contains
           crop_inst%rx_cultivar_gdds_thisyr(p,1) = sdat_cultivar_gdds%avs(1)%rAttr(ip,ig)
        endif
 
-       ! SSR TODO: Make this work with mxgrowseas > 1
-       crop_inst%n_growingseasons_thisyear_thispatch(p) = crop_inst%rx_sdates_thisyr(p,1) >= 0
-
        ! Only for first sowing date of the year
        crop_inst%next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
 !       ! SSR troubleshooting
