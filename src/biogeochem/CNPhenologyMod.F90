@@ -1852,8 +1852,6 @@ contains
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
                                  c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
 
-                  gddmaturity(p) = hybgdd(ivt(p))
-
                else
                   gddmaturity(p) = 0._r8
                end if
@@ -1885,29 +1883,6 @@ contains
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
                                  c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
 
-                  ! go a specified amount of time before/after
-                  ! climatological date
-                  if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
-                       ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
-                     gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
-                  end if
-                  
-                  if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
-                      ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
-                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
-                      ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
-                      ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
-                     gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
-                     if (do_plant_normal) then
-                        gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
-                     end if
-                  end if
-                  if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
-                      ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
-                      ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
-                     gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
-                  end if
-
                else
                   gddmaturity(p) = 0._r8
                end if
@@ -1915,7 +1890,8 @@ contains
 
             ! crop phenology (gdd thresholds) controlled by gdd needed for
             ! maturity (physiological) which is based on the average gdd
-            ! accumulation and hybrids in United States from April 1 - Sept 30
+            ! accumulation and hybrids in United States from April 1 - Sept 30,
+            ! unless using cultivar GDD target inputs
 
             ! calculate threshold from phase 1 to phase 2:
             ! threshold for attaining leaf emergence (based on fraction of
@@ -2241,6 +2217,13 @@ contains
     use clm_varctl       , only : use_c13, use_c14
     use clm_varcon       , only : c13ratio, c14ratio
     use clm_varpar       , only : mxgrowseas
+    use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
+    use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
+    use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
+    use pftconMod        , only : nirrig_trp_corn, nirrig_sugarcane, nirrig_trp_soybean
+    use pftconMod        , only : nirrig_cotton, nirrig_rice
+    use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
+
     !
     ! !ARGUMENTS:
     integer                , intent(in)    :: p         ! PATCH index running over
@@ -2257,29 +2240,35 @@ contains
     !
     ! LOCAL VARAIBLES:
     integer s              ! growing season index
+    real(r8) gdd_target    ! cultivar GDD target this growing season
+    logical do_plant_prescribed ! are we planting because it was prescribed?
     !------------------------------------------------------------------------
 
     associate(                                                                     & 
+         ivt               =>    patch%itype                                     , & ! Input:  [integer  (:) ]  patch vegetation type
          croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
          next_rx_sdate     =>    crop_inst%next_rx_sdate                         , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
          sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
-         idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting                                   
+         gddmaturity       =>    cnveg_state_inst%gddmaturity_patch            , & ! Output: [real(r8) (:) ]  gdd needed to harvest
+         idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting
          leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch       , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer
          crop_seedc_to_leaf =>   cnveg_carbonflux_inst%crop_seedc_to_leaf_patch  , & ! Output: [real(r8) (:) ]  (gC/m2/s) seed source to leaf
          crop_seedn_to_leaf =>   cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to leaf
          )
 
+      do_plant_prescribed = next_rx_sdate(p) == jday
+
       ! impose limit on growing season length needed
       ! for crop maturity - for cold weather constraints
       croplive(p)  = .true.
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
-      if (sowing_count(p) < mxgrowseas) then
-         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, sowing_count(p)+1)
       s = sowing_count(p) + 1
       sowing_count(p) = s
+      if (s < mxgrowseas) then
+         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, s+1)
       else
          next_rx_sdate(p) = -1
       endif
@@ -2307,6 +2296,38 @@ contains
          else
             c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
          endif
+      endif
+
+      ! set GDD target
+      if (do_plant_prescribed .and. .not. generate_crop_gdds) then
+         gdd_target = crop_inst%rx_cultivar_gdds_thisyr(p,s)
+         if (gdd_target <= 0.0) then
+            write(iulog,*) 'If using prescribed sowing dates and not generate_crop_gdds, you must provide cultivar GDD targets > 0.0.'
+            call endrun(msg=errMsg(sourcefile, __LINE__))
+         endif
+         gddmaturity(p) = gdd_target
+      else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
+         gddmaturity(p) = hybgdd(ivt(p))
+      else
+         if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
+               ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
+            gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
+         end if
+         if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
+               ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
+               ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
+               ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
+               ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
+            gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
+            if (do_plant_normal) then
+               gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
+            end if
+         end if
+         if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
+               ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
+               ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
+            gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
+         end if
       endif
 
     end associate
