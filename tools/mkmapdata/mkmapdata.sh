@@ -319,7 +319,7 @@ do
 
    QUERYARGS="-res $grid -options lmask=$lmask,glc_nec=10 "
 
-   QUERYFIL="$QUERY -var scripgriddata $QUERYARGS -onlyfiles"
+   QUERYFIL="$QUERY -var unstructdata $QUERYARGS -onlyfiles"
    if [ "$verbose" = "YES" ]; then
       echo $QUERYFIL
    fi
@@ -334,7 +334,7 @@ do
    # Determine extra information about the source grid file
    SRC_EXTRA_ARGS[nfile]=""
    SRC_LRGFIL[nfile]=`$QUERY -var scripgriddata_lrgfile_needed $QUERYARGS`
-   SRC_TYPE[nfile]=`$QUERY -var scripgriddata_type $QUERYARGS`
+   SRC_TYPE[nfile]=`$QUERY -var unstructdata_type $QUERYARGS`
    if [ "${SRC_TYPE[nfile]}" = "UGRID" ]; then
        # For UGRID, we need extra information: the meshname variable
        src_meshname=`$QUERY -var scripgriddata_meshname $QUERYARGS`

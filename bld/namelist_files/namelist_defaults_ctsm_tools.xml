@@ -112,27 +112,30 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <scripgriddata hgrid="tx0.1v2"    lmask="tx0.1v2"   >/glade/proj3/cseg/mapping/grids/tx0.1v2_090127.nc</scripgriddata>
 
 <!-- UNSTRUCT grid data files -->
-<!--scripgriddata frm_hgrid="0.5x0.5"   lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c200129.nc</scripgriddata>
-<scripgriddata_type frm_hgrid="0.5x0.5" lmask="nomask">UNSTRUCT</scripgriddata_type>
-<scripgriddata frm_hgrid="0.25x0.25" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</scripgriddata>
-<scripgriddata_type frm_hgrid="0.25x0.25" lmask="nomask">UNSTRUCT</scripgriddata_type>
-<scripgriddata frm_hgrid="0.125x0.125" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.125x0.125_nomask_c200129.nc</scripgriddata>
-<scripgriddata_type frm_hgrid="0.125x0.125" lmask="nomask">UNSTRUCT</scripgriddata_type>
-<scripgriddata frm_hgrid="10x10min" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_c200129.nc</scripgriddata>
-<scripgriddata_type frm_hgrid="10x10min" lmask="nomask">UNSTRUCT</scripgriddata_type>
-<scripgriddata frm_hgrid="5x5min"    lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c200129.nc</scripgriddata>
-<scripgriddata_type frm_hgrid="5x5min" lmask="nomask">UNSTRUCT</scripgriddata_type>
-<scripgriddata frm_hgrid="3x3min"    lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c200129.nc</scripgriddata>
-<scripgriddata_type frm_hgrid="3x3min" lmask="nomask">UNSTRUCT</scripgriddata_type>
-<scripgriddata frm_hgrid="0.9x1.25"  lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.9x1.25_nomask_c200129.nc</scripgriddata>
-<scripgriddata_type frm_hgrid="0.9x1.25" lmask="nomask">UNSTRUCT</scripgriddata_type-->
+<unstructdata frm_hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask"
+   >lnd/clm2/mappingdata/grids/UGRID_1km-merge-10min_HYDRO1K-merge-nomask_c130402.nc</unstructdata>
+<unstructdata_type frm_hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask">UGRID</unstructdata_type>
+<unstructdata frm_hgrid="0.5x0.5"   lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c200129.nc</unstructdata>
+<unstructdata_type frm_hgrid="0.5x0.5" lmask="nomask">UNSTRUCT</unstructdata_type>
+<unstructdata frm_hgrid="0.25x0.25" lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</unstructdata>
+<unstructdata_type frm_hgrid="0.25x0.25" lmask="nomask">UNSTRUCT</unstructdata_type>
+<unstructdata frm_hgrid="0.125x0.125" lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.125x0.125_nomask_c200129.nc</unstructdata>
+<unstructdata_type frm_hgrid="0.125x0.125" lmask="nomask">UNSTRUCT</unstructdata_type>
+<unstructdata frm_hgrid="10x10min" lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_c200129.nc</unstructdata>
+<unstructdata_type frm_hgrid="10x10min" lmask="nomask">UNSTRUCT</unstructdata_type>
+<unstructdata frm_hgrid="5x5min"    lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c200129.nc</unstructdata>
+<unstructdata_type frm_hgrid="5x5min" lmask="nomask">UNSTRUCT</unstructdata_type>
+<unstructdata frm_hgrid="3x3min"    lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c200129.nc</unstructdata>
+<unstructdata_type frm_hgrid="3x3min" lmask="nomask">UNSTRUCT</unstructdata_type>
+<unstructdata frm_hgrid="0.9x1.25"  lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.9x1.25_nomask_c200129.nc</unstructdata>
+<unstructdata_type frm_hgrid="0.9x1.25" lmask="nomask">UNSTRUCT</unstructdata_type>
 
 <!-- land masks for different types of mksurfdata_map input files -->
 <lmask type="lak"              >nomask</lmask>

@@ -1209,6 +1209,10 @@ Toggle to turn on on diagnostic Snow Radiative Effect
        input_pathname="abs" group="clmexp" valid_values="" >
 SCRIP format grid data file
 </entry>
+<entry id="unstructdata" type="char*256" category="mkmapdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+UNSTRUCT format grid data file
+</entry>
 
 <entry id="scripgriddata_lrgfile_needed" type="char*256" category="mkmapdata"
        group="clmexp" valid_values="none,64bit_offset,netcdf4" >
@@ -1220,7 +1224,12 @@ either the source or destination ('none', '64bit_offset' or 'netcdf4').
 <entry id="scripgriddata_type" type="char*256" category="mkmapdata"
        group="clmexp" valid_values="SCRIP,UGRID" >
 Flag to pass to the ESMF mapping utility, telling it what kind of grid
-file this is (SCRIP or UGRID).
+file this is (SCRIP or UGRID). LIKELY REDUNDANT. TRY REMOVING?
+</entry>
+<entry id="unstructdata_type" type="char*256" category="mkmapdata"
+       group="clmexp" valid_values="UNSTRUCT" >
+Flag to pass to the ESMF mapping utility, telling it what kind of grid
+file this is (UNSTRUCT). LIKELY REDUNDANT. TRY REMOVING?
 </entry>
 
 <entry id="scripgriddata_meshname" type="char*256" category="mkmapdata"
