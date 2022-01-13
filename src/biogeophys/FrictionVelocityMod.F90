@@ -11,6 +11,7 @@ module FrictionVelocityMod
   use shr_log_mod             , only : errMsg => shr_log_errMsg
   use shr_const_mod           , only : SHR_CONST_PI
   use decompMod               , only : bounds_type
+  use abortutils              , only : endrun
   use clm_varcon              , only : spval
   use clm_varctl              , only : use_cn, use_luna, z0param_method, use_z0mg_2d, use_z0m_snowmelt
   use LandunitType            , only : lun
@@ -422,7 +423,6 @@ contains
     ! !USES:
     use shr_log_mod, only : errMsg => shr_log_errMsg
     use fileutils  , only : getfil
-    use abortutils , only : endrun
     use ncdio_pio  , only : file_desc_t, ncd_defvar, ncd_io, ncd_pio_openfile, ncd_pio_closefile
     use spmdMod    , only : masterproc
     use clm_varcon , only : grlnd    
@@ -513,7 +513,6 @@ contains
     use shr_mpi_mod    , only : shr_mpi_bcast
     use clm_varctl     , only : iulog
     use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use abortutils     , only : endrun
     !
     ! !ARGUMENTS:
     class(frictionvel_type), intent(inout) :: this
@@ -571,6 +570,8 @@ contains
     ! !DESCRIPTION:
     ! Set roughness lengths and forcing heights for non-lake points
     !
+    ! !USES:
+    use clm_varcon  , only : rpi
     ! !ARGUMENTS:
     class(frictionvel_type)        , intent(inout) :: this
     type(bounds_type)              , intent(in)    :: bounds    
@@ -647,7 +648,11 @@ contains
           l = col%landunit(c)
           if (frac_sno(c) > 0._r8) then ! Do snow first because ice could be snow-covered
              if(use_z0m_snowmelt) then
-                z0mg(c) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8 
+                if ( snomelt_accum(c) < 1.e-12_r8 )then
+                    z0mg(c) = exp(1.4_r8 * -rpi/2.0_r8 -0.31_r8) / 1000._r8 
+                else
+                    z0mg(c) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8 
+                end if
              else
                 z0mg(c) = this%zsno
 

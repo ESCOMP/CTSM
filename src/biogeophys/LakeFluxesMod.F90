@@ -92,7 +92,7 @@ contains
     ! !USES:
     use clm_varpar          , only : nlevlak
     use clm_varcon          , only : hvap, hsub, hfus, cpair, cpliq, tkwat, tkice, tkair
-    use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval
+    use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval, rpi
     use clm_varctl          , only : use_lch4, z0param_method, use_z0m_snowmelt
     use LakeCon             , only : betavis, z0frzlake, tdmax, emg_lake
     use LakeCon             , only : lake_use_old_fcrit_minz0
@@ -352,8 +352,11 @@ contains
             select case (z0param_method)
             case ('MeierXXXX') 
                if(use_z0m_snowmelt) then
-                  z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8 
-
+                  if ( snomelt_accum(c) < 1.e-12_r8 )then
+                     z0mg(c) = exp(1.4_r8 * -rpi/2.0_r8 -0.31_r8) / 1000._r8 
+                  else
+                     z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8 
+                  end if
                   
                else
                   z0mg(p) = params_inst%zsno
@@ -598,7 +601,11 @@ contains
                   z0qg(p) = z0hg(p)
             else ! Snow layers
                if(use_z0m_snowmelt) then
-                  z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8      
+                  if ( snomelt_accum(c) < 1.e-12_r8 )then
+                      z0mg(c) = exp(1.4_r8 * -rpi/2.0_r8 -0.31_r8) / 1000._r8 
+                  else
+                      z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8      
+                  end if
                end if
 
                select case (z0param_method)
