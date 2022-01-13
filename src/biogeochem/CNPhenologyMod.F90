@@ -1797,9 +1797,10 @@ contains
          end if
 
          do_plant_prescribed = next_rx_sdate(p) == jday
+         s = sowing_count(p)
 
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
-         if ( (.not. croplive(p)) .and. sowing_count(p) == 0 ) then
+         if ( (.not. croplive(p)) .and. s == 0 ) then
 
             ! gdd needed for * chosen crop and a likely hybrid (for that region) *
             ! to reach full physiological maturity
@@ -1956,6 +1957,8 @@ contains
 
          end if ! crop not live nor planted
 
+         s = sowing_count(p)
+
          ! ----------------------------------
          ! from AgroIBIS subroutine phenocrop
          ! ----------------------------------
@@ -2033,7 +2036,7 @@ contains
                hui(p) = max(hui(p),huigrain(p))
             endif
 
-            if (do_plant_prescribed .and. (sowing_count(p) == 0 .or. crop_inst%sdates_thisyr(p,sowing_count(p)) < jday)) then
+            if (do_plant_prescribed .and. (s == 0 .or. crop_inst%sdates_thisyr(p,s) < jday)) then
                 ! Today is the planting day, but the crop still hasn't been harvested.
                 do_harvest = .true.
                 force_harvest = .true.
@@ -2251,6 +2254,9 @@ contains
     type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: c13_cnveg_carbonstate_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
+    !
+    ! LOCAL VARAIBLES:
+    integer s              ! growing season index
     !------------------------------------------------------------------------
 
     associate(                                                                     & 
@@ -2270,13 +2276,14 @@ contains
       croplive(p)  = .true.
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
-      sowing_count(p) = sowing_count(p) + 1
       if (sowing_count(p) < mxgrowseas) then
          next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, sowing_count(p)+1)
+      s = sowing_count(p) + 1
+      sowing_count(p) = s
       else
          next_rx_sdate(p) = -1
       endif
-      crop_inst%sdates_thisyr(p,sowing_count(p)) = jday
+      crop_inst%sdates_thisyr(p,s) = jday
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
