@@ -644,7 +644,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         write (6,*) subname//'error: nat pft = ', &
              (pct_nat_pft_o(no,m), m = 0, num_natpft), &
              ' do not sum to 100. at no = ',no,' but to ', wst_sum
-        stop
+        call abort()
      end if
 
      ! Correct sum so that if it differs slightly from 100, it is corrected to equal
@@ -661,7 +661,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         write (6,*) subname//'error: crop cft = ', &
              (pct_cft_o(no,m), m = 1, num_cft), &
              ' do not sum to 100. at no = ',no,' but to ', wst_sum
-        stop
+        call abort()
      end if
 
      ! Correct sum so that if it differs slightly from 100, it is corrected to equal

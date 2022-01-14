@@ -1,1 +1,1 @@
--r 10x15
+-r 10x15 --fast --batch

@@ -3,7 +3,16 @@
 
 list(APPEND clm_sources
   CNSharedParamsMod.F90
+  CNPhenologyMod.F90
   CNSpeciesMod.F90
+  CNDVType.F90
+  CropType.F90
+  CNVegStateType.F90
+  CNVegCarbonStateType.F90
+  CNVegCarbonFluxType.F90
+  CNVegNitrogenStateType.F90
+  CNVegNitrogenFluxType.F90
+  CNCIsoAtmTimeSeriesReadMod.F90
   CNVegComputeSeedMod.F90
   SpeciesBaseType.F90
   SpeciesIsotopeType.F90

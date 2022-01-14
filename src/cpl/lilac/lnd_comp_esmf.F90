@@ -24,7 +24,7 @@ module lnd_comp_esmf
 
   ! ctsm code
   use spmdMod           , only : masterproc, spmd_init, mpicom
-  use decompMod         , only : bounds_type, ldecomp, get_proc_bounds
+  use decompMod         , only : bounds_type, get_proc_bounds
   use domainMod         , only : ldomain
   use controlMod        , only : control_setNL
   use clm_varorb        , only : eccen, obliqr, lambm0, mvelpp
@@ -342,7 +342,7 @@ contains
     call ESMF_LogWrite(subname//"ctsm initialize1 done...", ESMF_LOGMSG_INFO)
 
     !----------------------
-    ! Initialize decomposition (ldecomp) and domain (ldomain) types and generate land mesh
+    ! Initialize decomposition and domain (ldomain) types and generate land mesh
     !----------------------
     ! TODO: generalize this so that a mask mesh is read in like for nuopc/cmeps
     ! For now set the meshfile_mask equal to the model_meshfile

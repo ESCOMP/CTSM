@@ -9,10 +9,10 @@ module SurfaceAlbedoMod
   ! !PUBLIC TYPES:
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use decompMod         , only : bounds_type
+  use decompMod         , only : bounds_type, subgrid_level_patch
   use abortutils        , only : endrun
   use landunit_varcon   , only : istsoil, istcrop, istdlak
-  use clm_varcon        , only : grlnd, namep
+  use clm_varcon        , only : grlnd
   use clm_varpar        , only : numrad, nlevcan, nlevsno, nlevcan
   use clm_varctl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE
   use pftconMod         , only : pftcon
@@ -349,6 +349,7 @@ contains
           esai          =>    canopystate_inst%esai_patch         , & ! Input:  [real(r8)  (:)   ]  one-sided stem area index with burying by snow
 
           frac_sno      =>    waterdiagnosticbulk_inst%frac_sno_col        , & ! Input:  [real(r8)  (:)   ]  fraction of ground covered by snow (0 to 1)
+          fcansno      =>    waterdiagnosticbulk_inst%fcansno_patch       , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is snow-covered (0 to 1) 
           h2osoi_liq    =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Input:  [real(r8)  (:,:) ]  liquid water content (col,lyr) [kg/m2]
           h2osoi_ice    =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Input:  [real(r8)  (:,:) ]  ice lens content (col,lyr) [kg/m2]    
           snw_rds       =>    waterdiagnosticbulk_inst%snw_rds_col         , & ! Input:  [real(r8)  (:,:) ]  snow grain radius (col,lyr) [microns] 
@@ -908,7 +909,7 @@ contains
        if (abs(laisum-elai(p)) > 1.e-06_r8 .or. abs(saisum-esai(p)) > 1.e-06_r8) then
           write (iulog,*) 'multi-layer canopy error 01 in SurfaceAlbedo: ',&
                nrad(p),elai(p),laisum,esai(p),saisum
-          call endrun(decomp_index=p, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
        end if
 
        ! Repeat to find canopy layers buried by snow
@@ -948,7 +949,7 @@ contains
           if (abs(laisum-tlai(p)) > 1.e-06_r8 .or. abs(saisum-tsai(p)) > 1.e-06_r8) then
              write (iulog,*) 'multi-layer canopy error 02 in SurfaceAlbedo: ',nrad(p),ncan(p)
              write (iulog,*) tlai(p),elai(p),blai(p),laisum,tsai(p),esai(p),bsai(p),saisum
-             call endrun(decomp_index=p, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
           end if
        end if
 
@@ -997,7 +998,8 @@ contains
           
        call clm_fates%wrap_canopy_radiation(bounds, nc, &
             num_vegsol, filter_vegsol, &
-            coszen_patch(bounds%begp:bounds%endp), surfalb_inst)
+            coszen_patch(bounds%begp:bounds%endp), &
+            fcansno(bounds%begp:bounds%endp), surfalb_inst)
 
     else
 

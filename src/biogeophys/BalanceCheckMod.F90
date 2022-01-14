@@ -8,13 +8,12 @@ module BalanceCheckMod
 #include "shr_assert.h"
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
-  use decompMod          , only : bounds_type
+  use decompMod          , only : bounds_type, get_global_index
+  use decompMod          , only : subgrid_level_gridcell, subgrid_level_column, subgrid_level_patch
   use abortutils         , only : endrun
   use clm_varctl         , only : iulog
   use clm_varctl         , only : use_fates_planthydro
-  use clm_varcon         , only : namep, namec, nameg
   use clm_varpar         , only : nlevsoi
-  use GetGlobalValuesMod , only : GetGlobalIndex
   use atm2lndType        , only : atm2lnd_type
   use EnergyFluxType     , only : energyflux_type
   use SolarAbsorbedType  , only : solarabs_type
@@ -83,7 +82,8 @@ contains
     !-----------------------------------------------------------------------
     dtime = get_step_size_real()
     ! Skip a minimum of two time steps, but otherwise skip the number of time-steps in the skip_size rounded to the nearest integer
-    skip_steps = max(2, nint( (skip_size / dtime) ) )
+    ! Add an additional step as now required to be after the hourly radiation time-step see github issue #1563
+    skip_steps = max(2, nint( (skip_size / dtime) ) ) + 1
 
     if ( masterproc ) write(iulog,*) ' Skip balance checking for the first ', skip_steps, ' time steps'
 
@@ -477,6 +477,7 @@ contains
      integer  :: nstep                                  ! time step number
      integer  :: DAnstep                                ! time step number since last Data Assimilation (DA)
      integer  :: indexp,indexc,indexl,indexg            ! index of first found in search loop
+     integer  :: global_index                           ! index in global index space
      real(r8) :: errh2o_grc(bounds%begg:bounds%endg)    ! grid cell level water conservation error [mm H2O]
      real(r8) :: forc_rain_col(bounds%begc:bounds%endc) ! column level rain rate [mm/s]
      real(r8) :: forc_snow_col(bounds%begc:bounds%endc) ! column level snow rate [mm/s]
@@ -647,10 +648,11 @@ contains
        if (errh2o_max_val > h2o_warning_thresh) then
 
            indexc = maxloc( abs(errh2o_col(bounds%begc:bounds%endc)), 1 ) + bounds%begc - 1
+           global_index = get_global_index(subgrid_index=indexc, subgrid_level=subgrid_level_column)
            write(iulog,*)'WARNING:  column-level water balance error ',&
              ' nstep= ',nstep, &
              ' local indexc= ',indexc,&
-           ! ' global indexc= ',GetGlobalIndex(decomp_index=indexc, clmlevel=namec), &
+             ' global indexc= ',global_index, &
              ' errh2o= ',errh2o_col(indexc)
          if ((errh2o_max_val > error_thresh) .and. (DAnstep > skip_steps)) then
               
@@ -684,7 +686,7 @@ contains
               end if
               
               write(iulog,*)'CTSM is stopping'
-              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+              call endrun(subgrid_index=indexc, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
          end if
        
        end if
@@ -760,7 +762,7 @@ contains
              write(iulog,*)'qflx_glcice_dyn_water_flux = ',qflx_glcice_dyn_water_flux_grc(indexg)*dtime
 
              write(iulog,*)'CTSM is stopping'
-             call endrun(decomp_index=indexg, clmlevel=nameg, msg=errmsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=indexg, subgrid_level=subgrid_level_gridcell, msg=errmsg(sourcefile, __LINE__))
           end if
 
        end if
@@ -828,10 +830,11 @@ contains
        
        if (errh2osno_max_val > h2o_warning_thresh) then
             indexc = maxloc( abs(errh2osno(bounds%begc:bounds%endc)), 1) + bounds%begc -1
+            global_index = get_global_index(subgrid_index=indexc, subgrid_level=subgrid_level_column)
             write(iulog,*)'WARNING:  snow balance error '
             write(iulog,*)'nstep= ',nstep, &
                  ' local indexc= ',indexc, &
-                 ! ' global indexc= ',GetGlobalIndex(decomp_index=indexc, clmlevel=namec), &
+                 ' global indexc= ',global_index, &
                  ' col%itype= ',col%itype(indexc), &
                  ' lun%itype= ',lun%itype(col%landunit(indexc)), &
                  ' errh2osno= ',errh2osno(indexc)
@@ -861,7 +864,7 @@ contains
                  write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq_col(indexc)*dtime
                  write(iulog,*)'qflx_sl_top_soil   = ',qflx_sl_top_soil(indexc)*dtime
                  write(iulog,*)'CTSM is stopping'
-                 call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                 call endrun(subgrid_index=indexc, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
             end if
 
        end if
@@ -942,7 +945,7 @@ contains
                write(iulog,*)'forc_tot      = ',forc_solad(indexg,1)+forc_solad(indexg,2) &
                   +forc_solai(indexg,1)+forc_solai(indexg,2)
                write(iulog,*)'CTSM is stopping'
-               call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+               call endrun(subgrid_index=indexp, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
            end if
 
        end if
@@ -959,7 +962,7 @@ contains
             write(iulog,*)'errlon       = ',errlon(indexp)
             if (errlon_max_val > error_thresh ) then
                  write(iulog,*)'CTSM is stopping because errlon > ', error_thresh, ' W/m2'
-                 call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+                 call endrun(subgrid_index=indexp, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
             end if
        end if
 
@@ -996,7 +999,7 @@ contains
               write(iulog,*)'ftii ftdd ftid = ' ,ftii(indexp,:), ftdd(indexp,:),ftid(indexp,:)
               write(iulog,*)'elai esai = '      ,elai(indexp),   esai(indexp)
               write(iulog,*)'CTSM is stopping'
-              call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+              call endrun(subgrid_index=indexp, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
            end if
 
        end if
@@ -1013,7 +1016,7 @@ contains
 
            if ((errsoi_col_max_val > 1.e-4_r8) .and. (DAnstep > skip_steps)) then
               write(iulog,*)'CTSM is stopping'
-              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+              call endrun(subgrid_index=indexc, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
            end if
        end if 
        
