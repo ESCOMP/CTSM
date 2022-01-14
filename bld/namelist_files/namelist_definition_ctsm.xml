@@ -1205,33 +1205,33 @@ Toggle to turn on on diagnostic Snow Radiative Effect
 <!--                                                   -->
 <!-- mkmapdata  namelist                               -->
 <!--                                                   -->
-<entry id="scripgriddata" type="char*256" category="mkmapdata"
+<entry id="dstmeshdata" type="char*256" category="mkmapdata"
        input_pathname="abs" group="clmexp" valid_values="" >
-SCRIP format grid data file
+DST (destination, i.e. associated with fsurdat) grid data file
 </entry>
-<entry id="unstructdata" type="char*256" category="mkmapdata"
+<entry id="srcmeshdata" type="char*256" category="mkmapdata"
        input_pathname="abs" group="clmexp" valid_values="" >
-UNSTRUCT format grid data file
+SRC (source, i.e. associated with raw datasets) grid data file
 </entry>
 
-<entry id="scripgriddata_lrgfile_needed" type="char*256" category="mkmapdata"
+<entry id="meshdata_lrgfile_needed" type="char*256" category="mkmapdata"
        group="clmexp" valid_values="none,64bit_offset,netcdf4" >
 Flag to pass to the ESMF mapping utility, telling it what kind of large
 file support is needed for an output file generated with this grid as
 either the source or destination ('none', '64bit_offset' or 'netcdf4'). 
 </entry>
 
-<entry id="scripgriddata_type" type="char*256" category="mkmapdata"
+<entry id="meshdata_type" type="char*256" category="mkmapdata"
        group="clmexp" valid_values="UGRID" >
 Flag used in mkmapdata.sh; otherwise specifying this for the ESMF mapping
 utility is redundant because -src_type and -dst_type are ignored
 </entry>
 
-<entry id="scripgriddata_meshname" type="char*256" category="mkmapdata"
+<entry id="meshdata_meshname" type="char*256" category="mkmapdata"
        group="clmexp" valid_values="" >
 For UGRID files, flag to pass to the ESMF mapping utility, telling it the
 name of the dummy variable that has all of the topology information stored
-in its attributes. (Only used if scripgriddata_src_type = UGRID.)
+in its attributes. (Only used if meshdata_type = UGRID.)
 </entry>
 
 <!--                                                   -->

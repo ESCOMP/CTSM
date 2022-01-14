@@ -238,7 +238,7 @@ else
     QUERYARGS="-res $res -options lmask=nomask"
 
     # Find the output grid file for this resolution using the XML database
-    QUERYFIL="$QUERY -var scripgriddata $QUERYARGS -onlyfiles"
+    QUERYFIL="$QUERY -var dstmeshdata $QUERYARGS -onlyfiles"
     if [ "$verbose" = "YES" ]; then
 	echo $QUERYFIL
     fi
@@ -246,11 +246,11 @@ else
     echo "Using default scrip grid file: $GRIDFILE" 
 
     # Determine extra information about the destination grid file
-    DST_LRGFIL=`$QUERY -var scripgriddata_lrgfile_needed $QUERYARGS`
-    DST_TYPE=`$QUERY -var scripgriddata_type $QUERYARGS`
+    DST_LRGFIL=`$QUERY -var meshdata_lrgfile_needed $QUERYARGS`
+    DST_TYPE=`$QUERY -var meshdata_type $QUERYARGS`
     if [ "$DST_TYPE" = "UGRID" ]; then
         # For UGRID, we need extra information: the meshname variable
-	dst_meshname=`$QUERY -var scripgriddata_meshname $QUERYARGS`
+	dst_meshname=`$QUERY -var meshdata_meshname $QUERYARGS`
 	DST_EXTRA_ARGS="$DST_EXTRA_ARGS --dst_meshname $dst_meshname"
     fi
 fi
@@ -319,7 +319,7 @@ do
 
    QUERYARGS="-res $grid -options lmask=$lmask,glc_nec=10 "
 
-   QUERYFIL="$QUERY -var unstructdata $QUERYARGS -onlyfiles"
+   QUERYFIL="$QUERY -var srcmeshdata $QUERYARGS -onlyfiles"
    if [ "$verbose" = "YES" ]; then
       echo $QUERYFIL
    fi
@@ -333,11 +333,11 @@ do
 
    # Determine extra information about the source grid file
    SRC_EXTRA_ARGS[nfile]=""
-   SRC_LRGFIL[nfile]=`$QUERY -var scripgriddata_lrgfile_needed $QUERYARGS`
-   SRC_TYPE[nfile]=`$QUERY -var scripgriddata_type $QUERYARGS`
+   SRC_LRGFIL[nfile]=`$QUERY -var meshdata_lrgfile_needed $QUERYARGS`
+   SRC_TYPE[nfile]=`$QUERY -var meshdata_type $QUERYARGS`
    if [ "${SRC_TYPE[nfile]}" = "UGRID" ]; then
        # For UGRID, we need extra information: the meshname variable
-       src_meshname=`$QUERY -var scripgriddata_meshname $QUERYARGS`
+       src_meshname=`$QUERY -var meshdata_meshname $QUERYARGS`
        SRC_EXTRA_ARGS[nfile]="${SRC_EXTRA_ARGS[nfile]} --src_meshname $src_meshname"
    fi
 
