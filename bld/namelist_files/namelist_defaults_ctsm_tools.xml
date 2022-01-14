@@ -22,44 +22,44 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Finite-Volume grids -->
 <scripgriddata hgrid="0.23x0.31" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.23x0.31_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="0.47x0.63" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.47x0.63_nomask_c170914.nc</scripgriddata>
-<scripgriddata hgrid="0.9x1.25"  lmask="nomask" >lnd/clm2/mappingdata/grids/0.9x1.25_c110307.nc</scripgriddata>
-<scripgriddata hgrid="1.9x2.5"   lmask="nomask" >lnd/clm2/mappingdata/grids/1.9x2.5_c110308.nc</scripgriddata>
+<scripgriddata hgrid="0.9x1.25"  lmask="nomask" >share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc</scripgriddata>
+<scripgriddata hgrid="1.9x2.5"   lmask="nomask" >share/meshes/fv1.9x2.5_141008_ESMFmesh.nc</scripgriddata>
 <scripgriddata hgrid="2.5x3.33"  lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_2.5x3.33_nomask_c110308.nc</scripgriddata>
-<scripgriddata hgrid="4x5"       lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_4x5_nomask_c110308.nc</scripgriddata>
-<scripgriddata hgrid="10x15"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_10x15_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="4x5"       lmask="nomask" >share/meshes/fv4x5_050615_polemod_ESMFmesh.nc</scripgriddata>
+<scripgriddata hgrid="10x15"     lmask="nomask" >share/meshes/10x15_nomask_c110308_ESMFmesh.nc</scripgriddata>
 
 <!-- Spectral Eulerian grids -->
 <scripgriddata hgrid="512x1024"  lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_512x1024_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="128x256"   lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_128x256_nomask_c110308.nc</scripgriddata>
-<scripgriddata hgrid="94x192"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_94x192_nomask_c110308.nc</scripgriddata>
-<scripgriddata hgrid="64x128"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_64x128_nomask_c110308.nc</scripgriddata>
-<scripgriddata hgrid="48x96"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_48x96_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="94x192"    lmask="nomask" >share/meshes/T62_040121_ESMFmesh.nc</scripgriddata>
+<scripgriddata hgrid="64x128"    lmask="nomask" >share/meshes/T42_ESMFmesh_c20200629.nc</scripgriddata>
+<scripgriddata hgrid="48x96"     lmask="nomask" >share/meshes/T31_040122_ESMFmesh.nc</scripgriddata>
 <scripgriddata hgrid="32x64"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_32x64_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="8x16"      lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_8x16_nomask_c110308.nc</scripgriddata>
 
 <!-- FV3 grids -->
-<scripgriddata hgrid="C384" lmask="nomask" >atm/cam/coords/C384_SCRIP_desc.181018.nc</scripgriddata>
-<scripgriddata hgrid="C192" lmask="nomask" >atm/cam/coords/C192_SCRIP_desc.181018.nc</scripgriddata>
-<scripgriddata hgrid="C96"  lmask="nomask" >atm/cam/coords/C96_SCRIP_desc.181018.nc</scripgriddata>
-<scripgriddata hgrid="C48"  lmask="nomask" >atm/cam/coords/C48_SCRIP_desc.181018.nc</scripgriddata>
-<scripgriddata hgrid="C24"  lmask="nomask" >atm/cam/coords/C24_SCRIP_desc.181018.nc</scripgriddata>
+<scripgriddata hgrid="C384" lmask="nomask" >share/meshes/C384_181018_ESMFmesh.nc</scripgriddata>
+<scripgriddata hgrid="C192" lmask="nomask" >share/meshes/C192_181018_ESMFmesh.nc</scripgriddata>
+<scripgriddata hgrid="C96"  lmask="nomask" >share/meshes/C96_181018_ESMFmesh.nc</scripgriddata>
+<scripgriddata hgrid="C48"  lmask="nomask" >share/meshes/C48_181018_ESMFmesh.nc</scripgriddata>
+<scripgriddata hgrid="C24"  lmask="nomask" >share/meshes/C24_181018_ESMFmesh.nc</scripgriddata>
 
 <!-- HOMME grids -->
-<scripgriddata hgrid="ne240np4"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne240np4_nomask_c091227.nc</scripgriddata>
-<scripgriddata hgrid="ne120np4"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne120np4_nomask_c101123.nc</scripgriddata>
-<scripgriddata hgrid="ne60np4"      lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne60np4_nomask_c100408.nc</scripgriddata>
-<scripgriddata hgrid="ne30np4"      lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne30np4_nomask_c101123.nc</scripgriddata>
-<scripgriddata hgrid="ne16np4"      lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne16np4_nomask_c110512.nc</scripgriddata>
+<scripgriddata hgrid="ne240np4"     lmask="nomask" >share/meshes/ne240np4_ESMFmesh_cdf5_c20211018.nc</scripgriddata>
+<scripgriddata hgrid="ne120np4"     lmask="nomask" >share/meshes/ne120np4_ESMFmesh_cdf5_c20211018.nc</scripgriddata>
+<scripgriddata hgrid="ne60np4"      lmask="nomask" >share/meshes/ne60np4_ESMFmesh_cdf5_c20211018.nc</scripgriddata>
+<scripgriddata hgrid="ne30np4"      lmask="nomask" >share/meshes/ne30np4_ESMFmesh_cdf5_c20211018.nc</scripgriddata>
+<scripgriddata hgrid="ne16np4"      lmask="nomask" >share/meshes/ne16np4_scrip_171002_ESMFmesh.nc</scripgriddata>
 <!-- HOMME SE dycore Physics grids -->
-<scripgriddata hgrid="ne30np4.pg2"  lmask="nomask" >atm/cam/coords/ne30pg2_scrip_c170608.nc</scripgriddata>
-<scripgriddata hgrid="ne30np4.pg3"  lmask="nomask" >atm/cam/coords/ne30pg3_scrip_170604.nc</scripgriddata>
-<scripgriddata hgrid="ne120np4.pg2" lmask="nomask" >atm/cam/coords/ne120pg2_scrip_c170629.nc</scripgriddata>
-<scripgriddata hgrid="ne120np4.pg3" lmask="nomask" >atm/cam/coords/ne120pg3_scrip_c170628.nc</scripgriddata>
+<scripgriddata hgrid="ne30np4.pg2"  lmask="nomask" >share/meshes/ne30pg2_ESMFmesh_cdf5_c20211018.nc</scripgriddata>
+<scripgriddata hgrid="ne30np4.pg3"  lmask="nomask" >share/meshes/ne30pg3_ESMFmesh_cdf5_c20211018.nc</scripgriddata>
+<scripgriddata hgrid="ne120np4.pg2" lmask="nomask" >share/meshes/ne120pg2_ESMFmesh_cdf5_c20211018.nc</scripgriddata>
+<scripgriddata hgrid="ne120np4.pg3" lmask="nomask" >share/meshes/ne120pg3_ESMFmesh_cdf5_c20211018.nc</scripgriddata>
 
 <!-- Refined mesh grids -->
-<scripgriddata hgrid="ne0np4CONUS.ne30x8"      lmask="nomask" >atm/cam/coords/ne0CONUSne30x8_scrip_c200107.nc</scripgriddata>
-<scripgriddata hgrid="ne0np4ARCTICGRIS.ne30x8" lmask="nomask" >atm/cam/coords/ne0ARCTICGRISne30x8_scrip_c191209.nc</scripgriddata>
-<scripgriddata hgrid="ne0np4ARCTIC.ne30x4"     lmask="nomask" >atm/cam/coords/ne0ARCTICne30x4_scrip_c191212.nc</scripgriddata>
+<scripgriddata hgrid="ne0np4CONUS.ne30x8"      lmask="nomask" >share/meshes/ne0CONUSne30x8_ESMFmesh_c20200727.nc</scripgriddata>
+<scripgriddata hgrid="ne0np4ARCTICGRIS.ne30x8" lmask="nomask" >share/meshes/ne0ARCTICGRISne30x8_ESMFmesh_c20200730.nc</scripgriddata>
+<scripgriddata hgrid="ne0np4ARCTIC.ne30x4"     lmask="nomask" >share/meshes/ne0ARCTICne30x4_ESMFmesh_c20200727.nc</scripgriddata>
 
 <!-- Regular lat/lon grids -->
 <scripgriddata hgrid="0.125x0.125" lmask="nomask"    
@@ -68,7 +68,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.33x0.33_navy_c111207.nc</scripgriddata>
 <!-- The 360x720cru grid is on 0-360 longitude grid and is important for running the model -->
 <scripgriddata hgrid="360x720cru" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_nomask_c120830.nc</scripgriddata>
+   >share/meshes/360x720_120830_ESMFmesh_c20210507.nc</scripgriddata>
 <!-- The half degree grid is on -180-180 longitude and is important for mksurfdata_map grids -->
 <scripgriddata hgrid="0.5x0.5"   lmask="nomask"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_nomask_c110308.nc</scripgriddata>
@@ -93,7 +93,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <scripgriddata_meshname hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask">landmesh</scripgriddata_meshname>
 
 <!-- Single-point / Regional grids -->
-<scripgriddata hgrid="0.125nldas2"         lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.125nldas2_nomask_c190328.nc</scripgriddata>
+<scripgriddata hgrid="0.125nldas2"         lmask="nomask" >share/meshes/0.125nldas2_ESMFmesh_cd5_241220.nc</scripgriddata>
 <scripgriddata hgrid="1x1_brazil"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_brazil_nomask_c20211211.nc</scripgriddata>
 <scripgriddata hgrid="1x1_mexicocityMEX"   lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_mexicocityMEX_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_numaIA"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_numaIA_nomask_c110308.nc</scripgriddata>
@@ -104,11 +104,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Ocean grids -->
 <scripgriddata hgrid="0.33x0.33"  lmask="0.33x0.33" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.33x0.33_navy_c111207.nc</scripgriddata>
-<scripgriddata hgrid="5x5_amazon" lmask="navy"      >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5_amazon_navy_c111207.nc</scripgriddata>
-<scripgriddata hgrid="gx1v6"      lmask="gx1v6"     >/glade/proj3/cseg/mapping/grids/gx1v6_090205.nc</scripgriddata>
-<scripgriddata hgrid="gx3v7"      lmask="gx3v7"     >/glade/proj3/cseg/mapping/grids/gx3v7_090903.nc</scripgriddata>
-<scripgriddata hgrid="tx1v1"      lmask="tx1v1"     >/glade/proj3/cseg/mapping/grids/tx1v1_090122.nc</scripgriddata>
-<scripgriddata hgrid="tx0.1v2"    lmask="tx0.1v2"   >/glade/proj3/cseg/mapping/grids/tx0.1v2_090127.nc</scripgriddata>
+<scripgriddata hgrid="5x5_amazon" lmask="navy"      >share/meshes/5x5pt-amazon_navy_ESMFmesh_cd5_c20210107.nc</scripgriddata>
+<scripgriddata hgrid="gx1v6"      lmask="gx1v6"     >share/meshes/gx1v6_090205_ESMFmesh.nc</scripgriddata>
+<scripgriddata hgrid="gx3v7"      lmask="gx3v7"     >share/meshes/gx3v7_120309_ESMFmesh.nc</scripgriddata>
+<scripgriddata hgrid="tx1v1"      lmask="tx1v1"     >share/meshes/tx1v1_ESMFMesh_cd5_c20210105.nc</scripgriddata>
+<scripgriddata hgrid="tx0.1v2"    lmask="tx0.1v2"   >share/meshes/tx0.1v2_ESMFmesh_cd5_c20210105.nc</scripgriddata>
 
 <!-- UNSTRUCT grid data files -->
 <unstructdata frm_hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask"
