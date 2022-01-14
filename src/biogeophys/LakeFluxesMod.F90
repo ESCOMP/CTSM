@@ -352,7 +352,7 @@ contains
             select case (z0param_method)
             case ('MeierXXXX') 
                if(use_z0m_snowmelt) then
-                  if ( snomelt_accum(c) < 1.e-12_r8 )then
+                  if ( snomelt_accum(c) < 1.e-5_r8 )then
                      z0mg(c) = exp(1.4_r8 * -rpi/2.0_r8 -0.31_r8) / 1000._r8 
                   else
                      z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8 
@@ -601,7 +601,7 @@ contains
                   z0qg(p) = z0hg(p)
             else ! Snow layers
                if(use_z0m_snowmelt) then
-                  if ( snomelt_accum(c) < 1.e-12_r8 )then
+                  if ( snomelt_accum(c) < 1.e-5_r8 )then
                       z0mg(c) = exp(1.4_r8 * -rpi/2.0_r8 -0.31_r8) / 1000._r8 
                   else
                       z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8      

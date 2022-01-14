@@ -124,6 +124,10 @@ contains
     ! !DESCRIPTION:
     ! Set z0m and displa
     !
+    ! !USES:
+    use clm_time_manager, only : is_first_step
+    use clm_varcon      , only : namep
+    use abortutils      , only : endrun
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds    
     integer                        , intent(in)    :: num_nolakep       ! number of column non-lake points in patch filter
@@ -168,6 +172,13 @@ contains
 
          case ('MeierXXXX') 
             
+            ! Don't set on first step of a simulation, since htop isn't set yet
+            if ( is_first_step() ) then
+               z0m(p)    = 0._r8
+               displa(p) = 0._r8 
+               cycle
+            end if
+
             if (patch%itype(p) == noveg) then
                z0m(p)    = 0._r8
                displa(p) = 0._r8 
@@ -181,7 +192,7 @@ contains
                          / 2._r8)**(-0.5_r8) /  (pftcon%z0v_LAImax(patch%itype(p))) / pftcon%z0v_c(patch%itype(p))
 
                if ( htop(p) <= 1.e-10_r8 )then
-                   z0m(p) = 0.0_r8
+                   call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(sourcefile, __LINE__))
                else
                    z0m(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-0.4_r8 * U_ustar + &
                                log(pftcon%z0v_cw(patch%itype(p))) - 1._r8 + pftcon%z0v_cw(patch%itype(p))**(-1._r8))
