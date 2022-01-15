@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev071 glemieux 01/14/2022 Small changes to enable new fates dimension and update fates tag
     ctsm5.1.dev070 multiple 01/10/2022 Update externals, remove need for LND_DOMAIN_FILE and LND_DOMAIN_PATH, etc.
     ctsm5.1.dev069 multiple 12/15/2021 Implement dynamic (transient) urban capability
     ctsm5.1.dev068 multiple 12/13/2021 Adding fsurdat_modifier tool
