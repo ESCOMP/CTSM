@@ -115,7 +115,7 @@ class CtsmCase:
             str(self.__class__)
             + "\n"
             + "\n".join(
-                (str(item) + " = " + str(self.__dict__[item]) for item in self.__dict__)
+                (str(key) + " = " + str(value) for key, value in self.__dict__.items())
             )
         )
 
@@ -152,9 +152,8 @@ class CtsmCase:
             self.num_pft = "78"
         else:
             self.num_pft = "16"
-        logger.debug(
-            " crop_flag = " + self.crop_flag.__str__() + " => num_pft = " + self.num_pft
-        )
+        logger.debug(" crop_flag = %s => num_pft = %i",
+                     self.crop_flag.__str__(), self.num_pft)
 
     def build_landuse_filename(self):
         """
@@ -180,55 +179,55 @@ class CtsmCase:
         Create land-use txt file for a transient case.
         """
         self.build_landuse_filename()
-        lu_file = open(self.lu_fname, "w")
+        with open(self.lu_fname, "w", encoding='utf-8') as lu_file:
 
-        for year in range(self.start_year, self.end_year + 1):
+            for year in range(self.start_year, self.end_year + 1):
 
-            # -- choose different files for years of 850-1850:
-            if 849 < year < 1850:
-                lu_input_fname = os.path.join(
-                    self.input_path,
-                    "pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012",
-                    "mksrf_landuse_histclm50_LUH2_" + str(year) + ".c171012.nc",
-                )
-            elif 1849 < year < 2016:
-                lu_input_fname = os.path.join(
-                    self.input_path,
-                    "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412",
-                    "mksrf_landuse_histclm50_LUH2_" + str(year) + ".c170412.nc",
-                )
-            elif 2015 < year < 2106:
-                self.decode_ssp_rcp()
-                lu_input_fname = os.path.join(
-                    self.input_path,
-                    "pftcftdynharv.0.25x0.25."
-                    + self.ssp_rcp
-                    + ".simyr2016-2100.c181217",
-                    "mksrf_landuse_SSP"
-                    + self.ssp_val
-                    + "RCP"
-                    + self.rcp_val
-                    + "_clm5_"
-                    + str(year)
-                    + ".c181217.nc",
-                )
-            else:
-                logger.warning("year:", year, " not valid.")
+                # -- choose different files for years of 850-1850:
+                if 849 < year < 1850:
+                    lu_input_fname = os.path.join(
+                        self.input_path,
+                        "pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012",
+                        "mksrf_landuse_histclm50_LUH2_" + str(year) + ".c171012.nc",
+                    )
+                elif 1849 < year < 2016:
+                    lu_input_fname = os.path.join(
+                        self.input_path,
+                        "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412",
+                        "mksrf_landuse_histclm50_LUH2_" + str(year) + ".c170412.nc",
+                    )
+                elif 2015 < year < 2106:
+                    self.decode_ssp_rcp()
+                    lu_input_fname = os.path.join(
+                        self.input_path,
+                        "pftcftdynharv.0.25x0.25."
+                        + self.ssp_rcp
+                        + ".simyr2016-2100.c181217",
+                        "mksrf_landuse_SSP"
+                        + self.ssp_val
+                        + "RCP"
+                        + self.rcp_val
+                        + "_clm5_"
+                        + str(year)
+                        + ".c181217.nc",
+                    )
+                else:
+                    logger.warning("year: %i not valid.", year)
 
-            # -- Check if the land-use input file exist:
-            if not os.path.isfile(lu_input_fname):
-                logger.debug("lu_input_fname: %s", lu_input_fname)
-                logger.warning("land-use input file does not exist for year:", year, ".")
+                # -- Check if the land-use input file exist:
+                if not os.path.isfile(lu_input_fname):
+                    logger.debug("lu_input_fname: %s", lu_input_fname)
+                    logger.warning("land-use input file does not exist for year: %i.", year)
 
-            # TODO: make the space/tab exactly the same as pl code:
-            lu_line = lu_input_fname + "\t\t\t" + str(year) + "\n"
+                # TODO: make the space/tab exactly the same as pl code:
+                lu_line = lu_input_fname + "\t\t\t" + str(year) + "\n"
 
-            # -- Each line is written twice in the original pl code:
-            lu_file.write(lu_line)
-            lu_file.write(lu_line)
+                # -- Each line is written twice in the original pl code:
+                lu_file.write(lu_line)
+                lu_file.write(lu_line)
 
-            logger.debug("year : %s", year)
-            logger.debug(lu_line)
+                logger.debug("year : %s", year)
+                logger.debug(lu_line)
 
         print ("Successfully created land use file : ", self.lu_fname, ".")
         print("-------------------------------------------------------")
@@ -266,122 +265,122 @@ class CtsmCase:
             self.create_landuse_file()
 
         self.build_namelist_filename()
-        namelist_file = open(self.namelist_fname, "w")
+        with open(self.namelist_fname, "w", encoding='utf-8') as namelist_file:
 
-        label = tag_describe()
+            label = tag_describe()
 
-        dst_mesh = which_mesh(self.res)
+            dst_mesh = which_mesh(self.res)
 
-        logger.debug("dst mesh is : %s", dst_mesh)
+            logger.debug("dst mesh is : %s", dst_mesh)
 
-        if self.run_type == "transient":
-            use_transient = ".true."
-        else:
-            use_transient = ".false"
+            if self.run_type == "transient":
+                use_transient = ".true."
+            else:
+                use_transient = ".false"
 
-        # pylint: disable=line-too-long
+            # pylint: disable=line-too-long
 
-        nl_template = (
-            "&clmexp\n"
-            "nglcec           = " + self.glc_nec + "\n"
-            "mksrf_fsoitex    = "
-            + self.input_path
-            + "mksrf_soitex.10level.c201018.nc"
-            + "\n"
-            "mksrf_forganic   = "
-            + self.input_path
-            + "mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc"
-            + "\n"
-            "mksrf_flakwat    = "
-            + self.input_path
-            + "mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc"
-            + "\n"
-            "mksrf_fwetlnd    = " + self.input_path + "mksrf_lanwat.050425.nc" + "\n"
-            "mksrf_fmax       = "
-            + self.input_path
-            + "mksrf_fmax_3x3min_USGS_c120911.nc"
-            + "\n"
-            "mksrf_fglacier   = "
-            + self.input_path
-            + "mksrf_glacier_3x3min_simyr2000.c120926.nc"
-            + "\n"
-            "mksrf_fvocef     = "
-            + self.input_path
-            + "mksrf_vocef_0.5x0.5_simyr2000.c110531.nc"
-            + "\n"
-            "mksrf_furbtopo   = "
-            + self.input_path
-            + "mksrf_topo.10min.c080912.nc"
-            + "\n"
-            "mksrf_fgdp       = "
-            + self.input_path
-            + "mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc"
-            + "\n"
-            "mksrf_fpeat      = "
-            + self.input_path
-            + "mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc"
-            + "\n"
-            "mksrf_fsoildepth = "
-            + self.input_path
-            + "mksf_soilthk_5x5min_ORNL-Soil_simyr1900-2015_c170630.nc"
-            + "\n"
-            "mksrf_fabm       = "
-            + self.input_path
-            + "mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc"
-            + "\n"
-            "outnc_double     = .true. \n"
-            "all_urban        = .false.\n"
-            "no_inlandwet     = .true. \n"
-            "mksrf_furban     = "
-            + self.input_path
-            + "mksrf_urban_0.05x0.05_simyr2000.c170724.nc"
-            + "\n"
-            "gitdescribe      = " + label + "\n"
-            "mksrf_ftopostats = "
-            + self.input_path
-            + "mksrf_topostats_1km-merge-10min_HYDRO1K-merge-nomask_simyr2000.c130402.nc"
-            + "\n"
-            "mksrf_fvegtyp    = "
-            + self.input_path
-            + "pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_1850.c170629.nc"
-            + "\n"
-            "mksrf_fsoicol    = "
-            + self.input_path
-            + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005.c170623.nc"
-            + "\n"
-            "mksrf_flai       = "
-            + self.input_path
-            + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.c170413.nc"
-            + "\n"
-            "fdyndat          = ''\n"
-            "numpft           = " + self.num_pft + "\n"
-            "dst_mesh_file    = " + self.input_path + dst_mesh + "\n"
-            "\n&transient\n"
-            "use_transient    = " + use_transient + "\n"
-            "start_year       = " + self.start_year.__str__() + "\n"
-            "end_year         = " + self.end_year.__str__() + "\n"
-            "mksrf_dyn_lu     = "
-            + self.input_path
-            + "pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629"
-            + "\n"
-            "mksrf_fdynuse    = " + self.lu_fname + "\n"
-            "\n&vic\n"
-            "use_vic          = " + self.vic_flag.__str__() + "\n"
-            "mksrf_fvic       = "
-            + self.input_path
-            + "mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc\n"
-            "outnc_vic        = \n"
-            "\n&glc\n"
-            "use_glc          = " + self.glc_flag.__str__() + "\n"
-            "outnc_3dglc      = \n"
-            "/\n"
-        )
-        # pylint: enable=line-too-long
+            nl_template = (
+                "&clmexp\n"
+                "nglcec           = " + self.glc_nec + "\n"
+                "mksrf_fsoitex    = "
+                + self.input_path
+                + "mksrf_soitex.10level.c201018.nc"
+                + "\n"
+                "mksrf_forganic   = "
+                + self.input_path
+                + "mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc"
+                + "\n"
+                "mksrf_flakwat    = "
+                + self.input_path
+                + "mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc"
+                + "\n"
+                "mksrf_fwetlnd    = " + self.input_path + "mksrf_lanwat.050425.nc" + "\n"
+                "mksrf_fmax       = "
+                + self.input_path
+                + "mksrf_fmax_3x3min_USGS_c120911.nc"
+                + "\n"
+                "mksrf_fglacier   = "
+                + self.input_path
+                + "mksrf_glacier_3x3min_simyr2000.c120926.nc"
+                + "\n"
+                "mksrf_fvocef     = "
+                + self.input_path
+                + "mksrf_vocef_0.5x0.5_simyr2000.c110531.nc"
+                + "\n"
+                "mksrf_furbtopo   = "
+                + self.input_path
+                + "mksrf_topo.10min.c080912.nc"
+                + "\n"
+                "mksrf_fgdp       = "
+                + self.input_path
+                + "mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc"
+                + "\n"
+                "mksrf_fpeat      = "
+                + self.input_path
+                + "mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc"
+                + "\n"
+                "mksrf_fsoildepth = "
+                + self.input_path
+                + "mksf_soilthk_5x5min_ORNL-Soil_simyr1900-2015_c170630.nc"
+                + "\n"
+                "mksrf_fabm       = "
+                + self.input_path
+                + "mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc"
+                + "\n"
+                "outnc_double     = .true. \n"
+                "all_urban        = .false.\n"
+                "no_inlandwet     = .true. \n"
+                "mksrf_furban     = "
+                + self.input_path
+                + "mksrf_urban_0.05x0.05_simyr2000.c170724.nc"
+                + "\n"
+                "gitdescribe      = " + label + "\n"
+                "mksrf_ftopostats = "
+                + self.input_path
+                + "mksrf_topostats_1km-merge-10min_HYDRO1K-merge-nomask_simyr2000.c130402.nc"
+                + "\n"
+                "mksrf_fvegtyp    = "
+                + self.input_path
+                + "pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_1850.c170629.nc"
+                + "\n"
+                "mksrf_fsoicol    = "
+                + self.input_path
+                + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005.c170623.nc"
+                + "\n"
+                "mksrf_flai       = "
+                + self.input_path
+                + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.c170413.nc"
+                + "\n"
+                "fdyndat          = ''\n"
+                "numpft           = " + self.num_pft + "\n"
+                "dst_mesh_file    = " + self.input_path + dst_mesh + "\n"
+                "\n&transient\n"
+                "use_transient    = " + use_transient + "\n"
+                "start_year       = " + self.start_year.__str__() + "\n"
+                "end_year         = " + self.end_year.__str__() + "\n"
+                "mksrf_dyn_lu     = "
+                + self.input_path
+                + "pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629"
+                + "\n"
+                "mksrf_fdynuse    = " + self.lu_fname + "\n"
+                "\n&vic\n"
+                "use_vic          = " + self.vic_flag.__str__() + "\n"
+                "mksrf_fvic       = "
+                + self.input_path
+                + "mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc\n"
+                "outnc_vic        = \n"
+                "\n&glc\n"
+                "use_glc          = " + self.glc_flag.__str__() + "\n"
+                "outnc_3dglc      = \n"
+                "/\n"
+            )
+            # pylint: enable=line-too-long
+
+            namelist_file.write(nl_template)
 
         print("Successfully created namelist file : ", self.namelist_fname, ".")
         print("--------------------------------------------------------")
-        namelist_file.write(nl_template)
-        namelist_file.close()
 
     def decode_ssp_rcp(self):
         """
