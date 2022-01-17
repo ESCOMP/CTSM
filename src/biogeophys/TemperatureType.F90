@@ -1212,7 +1212,7 @@ contains
 
       this%t_mean_5yr_patch(bounds%begp:bounds%endp) = spval
       call init_accum_field (name='T_HARD5', units='K', &    
-           desc='5 year average of yearly min 2-m temperature for hardening', accum_type='runmean', accum_period=-5, &
+           desc='5 year average of yearly min 2-m temperature for hardening', accum_type='runmean', accum_period=-20, &
            subgrid_type='pft', numlev=1, init_value=0.0_r8)
     end if
 

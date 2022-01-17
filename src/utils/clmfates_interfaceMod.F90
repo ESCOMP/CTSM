@@ -851,6 +851,12 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in(s)%t_ref2m_24_si = &
                temperature_inst%t_ref2m_24_patch(col%patchi(c))  ! ! Marius
 
+         this%fates(nc)%bc_in(s)%t_mean_5yr_si = &
+               temperature_inst%t_mean_5yr_patch(col%patchi(c))  ! ! Marius
+
+         this%fates(nc)%bc_in(s)%t_min_yr_inst_si = &
+               temperature_inst%t_min_yr_inst_patch(col%patchi(c))  ! ! Marius
+
          this%fates(nc)%bc_in(s)%t_ref2m_min_si = &
                temperature_inst%t_ref2m_min_patch(col%patchi(c)) ! ! Marius
 
