@@ -504,41 +504,50 @@ def main():
     single point.
     """
 
+    # --------------------------------- #
     # add logging flags from ctsm_logging
     setup_logging_pre_config()
     parser = get_parser()
     args = parser.parse_args()
+
+    # --------------------------------- #
+    # print help and exit when no option is chosen
+    if args.run_type != "point" and args.run_type != "region":
+        err_msg = textwrap.dedent('''\
+                \n ------------------------------------
+                \n Must supply a positional argument: 'point' or 'region'.
+                \n See ./subset_data --help for more help.
+                '''
+                )
+        raise parser.error(err_msg)
+
+    if not any([args.create_surfdata, args.create_domain, args.create_landuse, args.create_datm]):
+        err_msg = textwrap.dedent('''\
+                \n ------------------------------------
+                \n Must supply one of:
+                \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n
+                \n See ./subset_data --help for more help.
+                '''
+                )
+        raise parser.error(err_msg)
+
+    # --------------------------------- #
+    # process logging args (i.e. debug and verbose)
     process_logging_args(args)
 
+    # --------------------------------- #
     # parse defaults file
     cesmroot = path_to_ctsm_root()
     defaults = configparser.ConfigParser()
     defaults.read(os.path.join(cesmroot, "tools/site_and_regional", DEFAULTS_FILE))
 
     # --------------------------------- #
-
     myname = getuser()
     pwd = os.getcwd()
     logger.info("User = %s", myname)
     logger.info("Current directory = %s", pwd)
 
     # --------------------------------- #
-
-    # print help and exit when no option is chosen
-    if args.run_type != "point" and args.run_type != "region":
-        err_msg = (
-                "Must supply a positional argument: 'point' or 'region'. \n"
-                "See ./subset_data --help for more help."
-                )
-        abort(err_msg)
-    if not any([args.create_surfdata, args.create_domain, args.create_landuse, args.create_datm]):
-        err_msg = (
-                "Must supply one of: \n",
-                " --create-surface \n --create-landuse \n --create-datm \n --create-domain \n "
-                "See ./subset_data --help for more help."
-                )
-        abort(err_msg)
-
     # create files and folders necessary and return dictionary of file/folder locations
     file_dict = setup_files(args, defaults, cesmroot)
 
