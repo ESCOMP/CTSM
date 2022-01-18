@@ -44,6 +44,8 @@ class SinglePointCase(BaseCase):
         flag for creating user mods directories and files
     dom_pft : int
         dominant pft type for this single point (None if not specified)
+    num_pft : int
+        total number of pfts for surface dataset (if crop 78 pft, else 16 pft)
     zero_nonveg_landunits : bool
         flag for setting all non-vegetation landunits to zero
     uni_snow : bool
@@ -90,6 +92,7 @@ class SinglePointCase(BaseCase):
             create_datm,
             create_user_mods,
             dom_pft,
+            num_pft,
             include_nonveg,
             uni_snow,
             cap_saturation,
@@ -101,11 +104,14 @@ class SinglePointCase(BaseCase):
         self.plon = plon
         self.site_name = site_name
         self.dom_pft = dom_pft
+        self.num_pft = num_pft
         self.include_nonveg = include_nonveg
         self.uni_snow = uni_snow
         self.cap_saturation = cap_saturation
         self.out_dir = out_dir
         self.create_tag()
+
+        self.check_dom_pft ()
 
     def create_tag(self):
         """
@@ -116,6 +122,14 @@ class SinglePointCase(BaseCase):
             self.tag = self.site_name
         else:
             self.tag = "{}_{}".format(str(self.plon), str(self.plat))
+
+    def check_dom_pft (self):
+        """
+        A function to compare dom_pft and num_pft
+        """
+        if self.dom_pft:
+            print (type(self.dom_pft))
+
 
     def create_domain_at_point(self, indir, file):
         """
@@ -227,7 +241,7 @@ class SinglePointCase(BaseCase):
         # modify surface data properties
         if self.dom_pft is not None:
             f_out["PCT_NAT_PFT"][:, :, :] = 0
-            if self.dom_pft < 16:
+            if self.dom_pft < self.num_pft:
                 f_out['PCT_NAT_PFT'][:, :, self.dom_pft] = 100
         if not self.include_nonveg:
             f_out["PCT_NATVEG"][:, :] = 100

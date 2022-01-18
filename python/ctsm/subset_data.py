@@ -338,6 +338,25 @@ def setup_user_mods(user_mods_dir, cesmroot):
         for line in base_file:
             user_file.write(line)
 
+def determine_num_pft (crop):
+    """
+    A simple function to determine the number of pfts.
+
+    Args:
+        crop (bool): crop flag denoting if we are using crop
+
+    Raises:
+
+    Returns:
+        num_pft (int) : number of pfts for surface dataset
+    """
+    if crop:
+        num_pft = "78"
+    else:
+        num_pft = "16"
+    logger.debug("crop_flag = %s => num_pft = %s", crop.__str__(), num_pft)
+    return num_pft
+
 
 def setup_files(args, defaults, cesmroot):
     """
@@ -363,15 +382,10 @@ def setup_files(args, defaults, cesmroot):
         logger.info("dir_output_datm: %s", os.path.join(args.out_dir, dir_output_datm))
 
     # if the crop flag is on - we need to use a different land use and surface data file
-    if args.crop_flag:
-        num_pft = "78"
-        fsurf_in = defaults.get("surfdat", "surfdat_78pft")
-        fluse_in = defaults.get("landuse", "landuse_78pft")
-    else:
-        num_pft = "16"
-        fsurf_in = defaults.get("surfdat", "surfdat_16pft")
-        fluse_in = defaults.get("landuse", "landuse_16pft")
-    logger.debug("crop_flag = %s => num_pft = %s", args.crop_flag.__str__(), num_pft)
+    num_pft = determine_num_pft(args.crop_flag)
+
+    fsurf_in = defaults.get("surfdat", "surfdat_"+num_pft+"pft")
+    fluse_in = defaults.get("landuse", "landuse_"+num_pft+"pft")
 
     file_dict = {'main_dir': defaults.get("main", "clmforcingindir"),
                  'fdomain_in': defaults.get("domain", "file"),
@@ -406,6 +420,8 @@ def subset_point(args, file_dict: dict):
     logger.info("----------------------------------------------------------------------------")
     logger.info("This script extracts a single point from the global CTSM datasets.")
 
+    num_pft = int(determine_num_pft(args.crop_flag))
+
     # --  Create SinglePoint Object
     single_point = SinglePointCase(
         plat = args.plat,
@@ -417,6 +433,7 @@ def subset_point(args, file_dict: dict):
         create_datm = args.create_datm,
         create_user_mods = args.create_user_mods,
         dom_pft = args.dom_pft,
+        num_pft = num_pft,
         include_nonveg = args.include_nonveg,
         uni_snow = args.uni_snow,
         cap_saturation = args.cap_saturation,
