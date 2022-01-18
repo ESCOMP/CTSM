@@ -137,13 +137,6 @@ def get_parser():
         required=False,
     )
     pt_parser.add_argument(
-        "--overwrite-to-single-pft",
-        help="Modify surface dataset to be 100%% one single PFT set by --dompft.",
-        action="store_true",
-        dest="overwrite_single_pft",
-        required=False,
-    )
-    pt_parser.add_argument(
         "--include-nonveg",
         help="Do not zero non-vegetation land units in the surface data.",
         action="store_true",
@@ -163,7 +156,7 @@ def get_parser():
         action="store",
         dest="dom_pft",
         type=int,
-        default=7,
+        default=None,
     )
     pt_parser.add_argument(
         "--datm-from-tower",
@@ -423,7 +416,6 @@ def subset_point(args, file_dict: dict):
         create_landuse = args.create_landuse,
         create_datm = args.create_datm,
         create_user_mods = args.create_user_mods,
-        overwrite_single_pft = args.overwrite_single_pft,
         dom_pft = args.dom_pft,
         include_nonveg = args.include_nonveg,
         uni_snow = args.uni_snow,
