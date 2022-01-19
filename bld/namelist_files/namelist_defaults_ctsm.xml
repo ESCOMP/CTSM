@@ -2586,4 +2586,19 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <init_interp_method>general</init_interp_method>
 
+<!-- =========================================  -->
+<!-- Defaults for excess_ice                    -->
+<!-- =========================================  -->
+
+<use_excess_ice>.false.</use_excess_ice>
+<stream_year_first_exice  >1901</stream_year_first_exice>
+<stream_year_last_exice   >1901</stream_year_last_exice>
+<model_year_align_exice   >1901</model_year_align_exice>
+
+<stream_fldfilename_exice hgrid="0.9x1.25">lnd/clm2/prescribed_data/exice_init_0.9x1.25_c20211102.nc</stream_fldfilename_exice>
+
+<soilm_tintalgo>nearest</soilm_tintalgo>
+<soilm_offset  >0</soilm_offset>
+
+
 </namelist_defaults>

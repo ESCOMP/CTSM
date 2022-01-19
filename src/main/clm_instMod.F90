@@ -8,7 +8,7 @@ module clm_instMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
-  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
+  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates, use_excess_ice
   use clm_varctl      , only : use_crop, snow_cover_fraction_method, paramfile
   use SoilBiogeochemDecompCascadeConType , only : century_decomp, decomp_method
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
