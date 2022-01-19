@@ -221,6 +221,59 @@ contains
          avgflag='A', long_name='surface albedo (indirect)', &
          ptr_patch=this%albi_patch, default=defaultoutput, c2l_scale_type='urbanf')
 
+! cenlin: add for snow albedo and snicar-related output 01/18/2022
+    this%albgrd_pur_col(begc:endc,:) = spval
+    call hist_addfld2d (fname='ALBGRD_PUR', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='ground albedo without aerosol in snow (direct)', &
+         ptr_col=this%albgrd_pur_col, default='inactive')
+
+    this%albgri_pur_col(begc:endc,:) = spval
+    call hist_addfld2d (fname='ALBGRI_PUR', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='ground albedo without aerosol in snow (diffuse)', &
+         ptr_col=this%albgri_pur_col, default='inactive')
+
+    this%albgrd_bc_col(begc:endc,:) = spval
+    call hist_addfld2d (fname='ALBGRD_BC', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='ground albedo without BC in snow (direct)', &
+         ptr_col=this%albgrd_bc_col, default='inactive')
+
+    this%albgri_bc_col(begc:endc,:) = spval
+    call hist_addfld2d (fname='ALBGRI_BC', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='ground albedo without BC in snow (diffuse)', &
+         ptr_col=this%albgri_bc_col, default='inactive')
+
+    this%albgrd_oc_col(begc:endc,:) = spval
+    call hist_addfld2d (fname='ALBGRD_OC', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='ground albedo without OC in snow (direct)', &
+         ptr_col=this%albgrd_oc_col, default='inactive')
+
+    this%albgri_oc_col(begc:endc,:) = spval
+    call hist_addfld2d (fname='ALBGRI_OC', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='ground albedo without OC in snow (diffuse)', &
+         ptr_col=this%albgri_oc_col, default='inactive')
+
+    this%albgrd_dst_col(begc:endc,:) = spval
+    call hist_addfld2d (fname='ALBGRD_DST', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='ground albedo without dust in snow (direct)', &
+         ptr_col=this%albgrd_dst_col, default='inactive')
+
+    this%albgri_dst_col(begc:endc,:) = spval
+    call hist_addfld2d (fname='ALBGRI_DST', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='ground albedo without dust in snow (diffuse)', &
+         ptr_col=this%albgri_dst_col, default='inactive')
+
+    this%albsnd_hst_col(begc:endc,:) = spval
+    call hist_addfld2d (fname='ALBSND', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='snow albedo (direct)', &
+         ptr_col=this%albsnd_hst_col, default='inactive')
+  
+    this%albsni_hst_col(begc:endc,:) = spval
+    call hist_addfld2d (fname='ALBSNI', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='snow albedo (diffuse)', &
+         ptr_col=this%albsni_hst_col, default='inactive')
+
+! cenlin: end 
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------

@@ -12,7 +12,7 @@ module SurfaceAlbedoMod
   use decompMod         , only : bounds_type, subgrid_level_patch
   use abortutils        , only : endrun
   use landunit_varcon   , only : istsoil, istcrop, istdlak
-  use clm_varcon        , only : grlnd
+  use clm_varcon        , only : grlnd, spval ! cenlin
   use clm_varpar        , only : numrad, nlevcan, nlevsno, nlevcan
   use clm_varctl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE
   use pftconMod         , only : pftcon
