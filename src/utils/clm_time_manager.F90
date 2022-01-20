@@ -37,7 +37,8 @@ module clm_time_manager
         get_curr_calday,          &! return calendar day at end of current timestep
         get_calday,               &! return calendar day from input date
         get_calendar,             &! return calendar
-        get_days_per_year,        &! return the days per year for current year
+        get_curr_days_per_year,   &! return the days per year for year as of the end of the current time step
+        get_prev_days_per_year,   &! return the days per year for year as of the beginning of the current time step
         get_curr_yearfrac,        &! return the fractional position in the current year, as of the end of the current timestep
         get_prev_yearfrac,        &! return the fractional position in the current year, as of the beginning of the current timestep
         get_rest_date,            &! return the date from the restart file
@@ -1228,10 +1229,14 @@ contains
 
   !=========================================================================================
 
-  integer function get_days_per_year( offset )
+  integer function get_curr_days_per_year( offset )
 
     !---------------------------------------------------------------------------------
-    ! Get the number of days per year for currrent year
+    ! Get the number of days per year for the year as of the end of the current time step
+    ! (or offset from the end of the current time step, if offset is provided).
+    !
+    ! For the last time step of the year, note that the this will give the number of days
+    ! per year in the about-to-start year, not in the just-finishing year.
 
     !
     ! Arguments
@@ -1239,7 +1244,7 @@ contains
     ! Positive for future times, negative 
     ! for previous times.
 
-    character(len=*), parameter :: sub = 'clm::get_days_per_year'
+    character(len=*), parameter :: sub = 'clm::get_curr_days_per_year'
     integer         :: yr, mon, day, tod ! current date year, month, day and time-of-day
     type(ESMF_Time) :: eDate             ! ESMF date
     integer         :: rc                ! ESMF return code
@@ -1253,10 +1258,28 @@ contains
        call get_curr_date(yr, mon, day, tod )
     end if
     eDate = TimeSetymd( ymd=yr*10000+1231, tod=0, desc="end of year" )
-    call ESMF_TimeGet( eDate, dayOfYear=get_days_per_year, rc=rc )
+    call ESMF_TimeGet( eDate, dayOfYear=get_curr_days_per_year, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeGet')
 
-  end function get_days_per_year
+  end function get_curr_days_per_year
+
+  !=========================================================================================
+
+  integer function get_prev_days_per_year()
+
+    !---------------------------------------------------------------------------------
+    ! Get the number of days per year for the year as of the beginning of the current time step
+    !
+    ! For the last time step of the year, note that the this will give the number of days
+    ! per year in the just-finishing year.
+
+    character(len=*), parameter :: sub = 'clm::get_prev_days_per_year'
+
+    if ( .not. check_timemgr_initialized(sub) ) return
+
+    get_prev_days_per_year = get_curr_days_per_year(offset = -dtime)
+
+  end function get_prev_days_per_year
 
   !=========================================================================================
 
@@ -1281,7 +1304,7 @@ contains
     if ( .not. check_timemgr_initialized(sub) ) return
 
     cday          = get_curr_calday(offset=offset)
-    days_per_year = get_days_per_year(offset=offset)
+    days_per_year = get_curr_days_per_year(offset=offset)
 
     get_curr_yearfrac = (cday - 1._r8)/days_per_year
 
@@ -1299,7 +1322,7 @@ contains
     ! Arguments
     real(r8) :: get_prev_yearfrac  ! function result
     
-    character(len=*), parameter :: sub = 'clm::get_curr_yearfrac'
+    character(len=*), parameter :: sub = 'clm::get_prev_yearfrac'
     
     if ( .not. check_timemgr_initialized(sub) ) return
     

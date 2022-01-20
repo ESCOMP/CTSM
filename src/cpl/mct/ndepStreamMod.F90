@@ -219,7 +219,7 @@ contains
  subroutine ndep_interp(bounds, atm2lnd_inst)
 
    !-----------------------------------------------------------------------
-   use clm_time_manager, only : get_curr_date, get_days_per_year
+   use clm_time_manager, only : get_curr_date, get_curr_days_per_year
    use clm_varcon      , only : secspday
    use atm2lndType     , only : atm2lnd_type
    !
@@ -244,7 +244,7 @@ contains
 
    if ( divide_by_secs_per_yr )then
       ig = 0
-      dayspyr = get_days_per_year( )
+      dayspyr = get_curr_days_per_year( )
       do g = bounds%begg,bounds%endg
          ig = ig+1
          atm2lnd_inst%forc_ndep_grc(g) = sdat%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
