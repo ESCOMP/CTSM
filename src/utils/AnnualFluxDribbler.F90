@@ -316,8 +316,14 @@ contains
     end_index = get_end(bounds, this%bounds_subgrid_level)
     SHR_ASSERT_ALL_FL((ubound(flux) == (/end_index/)), sourcefile, __LINE__)
 
-    secs_per_year = get_days_per_year() * secspday
     dtime = get_step_size_real()
+
+    ! On the last time step of the year, get_days_per_year would use the "current" date
+    ! (i.e., time 0 of the next year) and so would give the number of days per year in the
+    ! next year. But what we actually want is the number of days per year in the
+    ! just-ending year; we achieve this by using an offset of -dtime in the call to
+    ! get_days_per_year.
+    secs_per_year = get_days_per_year(offset=-dtime) * secspday
 
     do i = beg_index, end_index
        flux_from_dribbling = this%amount_to_dribble(i) / secs_per_year
