@@ -69,15 +69,15 @@ contains
     ! Create and open file
     !---------------------------
 
-    ! TODO: how to translate the following into the pio call
-    !call check_ret(nf_create(trim(fname), ior(nf_clobber,nf_64bit_offset), ncid), subname)
-    call mkpio_wopen(pioid, trim(fname), clobber=.true.)
     ! TODO: what about setting no fill values?
+    call mkpio_wopen(pioid, trim(fname), clobber=.true.)
+    call ESMF_LogWrite(subname//'successfully opened output file '//trim(fname), ESMF_LOGMSG_INFO)
 
     !---------------------------
     ! Define dimensions.
     !---------------------------
 
+    call ESMF_LogWrite(trim(subname)//'defining dimensions', ESMF_LOGMSG_INFO)
     if (outnc_1d) then
        rcode = pio_def_dim(pioid, 'gridcell', nx, dimid)
     else
@@ -103,6 +103,7 @@ contains
     ! Set global attributes.
     !---------------------------
 
+    call ESMF_LogWrite(trim(subname)//'setting global attributes', ESMF_LOGMSG_INFO)
     str = 'NCAR-CSM'
     rcode = pio_put_att(pioid, pio_global, "Conventions", trim(str))
 
