@@ -349,7 +349,7 @@ contains
           esai          =>    canopystate_inst%esai_patch         , & ! Input:  [real(r8)  (:)   ]  one-sided stem area index with burying by snow
 
           frac_sno      =>    waterdiagnosticbulk_inst%frac_sno_col        , & ! Input:  [real(r8)  (:)   ]  fraction of ground covered by snow (0 to 1)
-          fcansno      =>    waterdiagnosticbulk_inst%fcansno_patch       , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is snow-covered (0 to 1) 
+          fcansno       =>    waterdiagnosticbulk_inst%fcansno_patch       , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is snow-covered (0 to 1) 
           h2osoi_liq    =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Input:  [real(r8)  (:,:) ]  liquid water content (col,lyr) [kg/m2]
           h2osoi_ice    =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Input:  [real(r8)  (:,:) ]  ice lens content (col,lyr) [kg/m2]    
           snw_rds       =>    waterdiagnosticbulk_inst%snw_rds_col         , & ! Input:  [real(r8)  (:,:) ]  snow grain radius (col,lyr) [microns] 
@@ -387,6 +387,22 @@ contains
           albsni_hst    =>    surfalb_inst%albsni_hst_col         , & ! Output:  [real(r8) (:,:) ]  snow ground albedo, diffuse, for history files (col,bnd) [frc]
           albd          =>    surfalb_inst%albd_patch             , & ! Output:  [real(r8) (:,:) ]  surface albedo (direct)
           albi          =>    surfalb_inst%albi_patch             , & ! Output:  [real(r8) (:,:) ]  surface albedo (diffuse)
+! cenlin: add new output albedo variables for history fields
+          albgrd_hst     =>   surfalb_inst%albgrd_hst_col         , & ! Output:  [real(r8) (:,:) ]  ground albedo (direct) for history files              
+          albgri_hst     =>   surfalb_inst%albgri_hst_col         , & ! Output:  [real(r8) (:,:) ]  ground albedo (diffuse) for history files
+          albgrd_pur_hst =>   surfalb_inst%albgrd_pur_hst_col     , & ! Output:  [real(r8) (:,:) ]  pure snow ground albedo (direct) for history files
+          albgri_pur_hst =>   surfalb_inst%albgri_pur_hst_col     , & ! Output:  [real(r8) (:,:) ]  pure snow ground albedo (diffuse) for history files
+          albgrd_bc_hst  =>   surfalb_inst%albgrd_bc_hst_col      , & ! Output:  [real(r8) (:,:) ]  ground albedo without BC (direct) for history files
+          albgri_bc_hst  =>   surfalb_inst%albgri_bc_hst_col      , & ! Output:  [real(r8) (:,:) ]  ground albedo without BC (diffuse) for history files
+          albgrd_oc_hst  =>   surfalb_inst%albgrd_oc_hst_col      , & ! Output:  [real(r8) (:,:) ]  ground albedo without OC (direct) for history files
+          albgri_oc_hst  =>   surfalb_inst%albgri_oc_hst_col      , & ! Output:  [real(r8) (:,:) ]  ground albedo without OC (diffuse) for history files
+          albgrd_dst_hst =>   surfalb_inst%albgrd_dst_hst_col     , & ! Output:  [real(r8) (:,:) ]  ground albedo without dust (direct) for history files
+          albgri_dst_hst =>   surfalb_inst%albgri_dst_hst_col     , & ! Output:  [real(r8) (:,:) ]  ground albedo without dust (diffuse) for history files
+          albsnd_hst2    =>   surfalb_inst%albsnd_hst2_col        , & ! Output:  [real(r8) (:,:) ]  snow albedo, direct, for history files (col,bnd) for history files
+          albsni_hst2    =>   surfalb_inst%albsni_hst2_col        , & ! Output:  [real(r8) (:,:) ]  snow ground albedo, diffuse, for history files (col,bnd) for history files
+          albd_hst       =>   surfalb_inst%albd_hst_patch         , & ! Output:  [real(r8) (:,:) ]  surface albedo (direct) for history files
+          albi_hst       =>   surfalb_inst%albi_hst_patch         , & ! Output:  [real(r8) (:,:) ]  surface albedo (diffuse) for history files
+! cenlin: end
           albdSF        =>    surfalb_inst%albdSF_patch           , & ! Output:  [real(r8) (:,:) ]  diagnostic snow-free surface albedo (direct)
           albiSF        =>    surfalb_inst%albiSF_patch           , & ! Output:  [real(r8) (:,:) ]  diagnostic snow-free surface albedo (diffuse)
           fabd          =>    surfalb_inst%fabd_patch             , & ! Output:  [real(r8) (:,:) ]  flux absorbed by canopy per unit direct flux
@@ -420,7 +436,7 @@ contains
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)
        g = patch%gridcell(p)
-          coszen_patch(p) = coszen_gcell(g)
+       coszen_patch(p) = coszen_gcell(g)
     end do
 
     ! Initialize output because solar radiation only done if coszen > 0
@@ -440,6 +456,20 @@ contains
           albgri_oc(c,ib)  = 0._r8
           albgrd_dst(c,ib) = 0._r8
           albgri_dst(c,ib) = 0._r8
+! cenlin: add output variables for history files
+          albgrd_hst(c,ib)     = spval
+          albgri_hst(c,ib)     = spval
+          albgrd_pur_hst(c,ib) = spval
+          albgri_pur_hst(c,ib) = spval
+          albgrd_bc_hst(c,ib)  = spval
+          albgri_bc_hst(c,ib)  = spval
+          albgrd_oc_hst(c,ib)  = spval
+          albgri_oc_hst(c,ib)  = spval
+          albgrd_dst_hst(c,ib) = spval
+          albgri_dst_hst(c,ib) = spval
+          albsnd_hst2(c,ib)    = spval
+          albsni_hst2(c,ib)    = spval
+! cenlin: end
           do i=-nlevsno+1,1,1
              flx_absdv(c,i) = 0._r8
              flx_absdn(c,i) = 0._r8
@@ -452,6 +482,10 @@ contains
           p = filter_nourbanp(fp)
           albd(p,ib) = 1._r8
           albi(p,ib) = 1._r8
+! cenlin: add output variables for history files
+          albd_hst(p,ib) = spval
+          albi_hst(p,ib) = spval
+! cenlin: end
           if (use_SSRE) then
              albdSF(p,ib) = 1._r8
              albiSF(p,ib) = 1._r8
@@ -1047,6 +1081,38 @@ contains
           end if
        end do
     end do
+
+! cenlin: add output variables for history files
+    do ib = 1, numrad
+       do fc = 1,num_nourbanc
+          c = filter_nourbanc(fc)
+          if (coszen_col(c) > 0._r8) then
+             albgrd_hst(c,ib)     = albgrd(c,ib)
+             albgri_hst(c,ib)     = albgri(c,ib)
+             albgrd_pur_hst(c,ib) = albgrd_pur(c,ib)
+             albgri_pur_hst(c,ib) = albgri_pur(c,ib)
+             albgrd_bc_hst(c,ib)  = albgrd_bc(c,ib)
+             albgri_bc_hst(c,ib)  = albgri_bc(c,ib)
+             albgrd_oc_hst(c,ib)  = albgrd_oc(c,ib)
+             albgri_oc_hst(c,ib)  = albgri_oc(c,ib)
+             albgrd_dst_hst(c,ib) = albgrd_dst(c,ib)
+             albgri_dst_hst(c,ib) = albgri_dst(c,ib)
+             if (h2osno_total(c) > 0._r8) then
+                albsnd_hst2(c,ib) = albsnd_hst(c,ib)
+                albsni_hst2(c,ib) = albsnd_hst(c,ib)
+             end if
+          end if
+       end do
+
+       do fp = 1,num_nourbanp
+          p = filter_nourbanp(fp)
+          if (coszen_patch(p) > 0._r8) then
+             albd_hst(p,ib) = albd(p,ib)
+             albi_hst(p,ib) = albi(p,ib)
+          end if
+       end do
+    end do
+! cenlin: end
 
      end associate
 
