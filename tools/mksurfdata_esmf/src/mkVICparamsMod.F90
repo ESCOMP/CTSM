@@ -15,7 +15,6 @@ module mkVICparamsMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_flush
   use mkdomainMod , only : domain_checksame
 
   implicit none
@@ -87,7 +86,6 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 !-----------------------------------------------------------------------
 
   write (6,*) 'Attempting to make VIC parameters.....'
-  call shr_sys_flush(6)
 
   ! -----------------------------------------------------------------
   ! Read domain and mapping information, check for consistency
@@ -192,7 +190,6 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   write (6,*) 'Successfully made VIC parameters'
   write (6,*)
-  call shr_sys_flush(6)
 
 end subroutine mkVICparams
 

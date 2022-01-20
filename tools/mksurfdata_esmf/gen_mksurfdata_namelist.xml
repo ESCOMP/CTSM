@@ -223,7 +223,7 @@ version of the raw dataset will probably go away.
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</mesh_filename>
     </entry>
 
-    <!-- Constant year datasets -->
+    <!-- Constant year datasets TODO: this is wrong -->
     <entry pft_years="1850" >
       <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_landuse_clm52deg005_histLUH2_1850.c190119.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c200129.nc</mesh_filename>

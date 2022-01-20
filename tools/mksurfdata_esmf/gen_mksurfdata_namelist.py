@@ -318,7 +318,7 @@ def main ():
         fdyndat = f"landuse.timeseries_{res}_{ssp_rcp}_{num_pft}_CMIP6_{start_year}-{end_year}_c{time_stamp}.log"
 
     # TODO: make this an input argument
-    create_esmf_pet_files = .true.
+    create_esmf_pet_files = True
 
     with open(nlfname, "w",encoding='utf-8') as nlfile:
 
@@ -326,11 +326,13 @@ def main ():
         for key,value in rawdata_files.items():
             if key == 'mksrf_fgrid_nx' or key == 'mksrf_fgrid_ny':
                 nlfile.write(f"  {key} = {value} \n")
-            elif key != "mksrf_vic":
+            elif key != "mksrf_fvic" and key != "mksrf_fvic_mesh":
                 nlfile.write(f"  {key} = \'{value}\' \n")
         
         mksrf_hrvtyp = rawdata_files["mksrf_fvegtyp"]
-        nlfile.write( f"  mksrf_hrvtyp = {mksrf_hrvtyp} \n")
+        nlfile.write( f"  mksrf_fhrvtyp = \'{mksrf_hrvtyp}\' \n")
+        mksrf_hrvtyp_mesh = rawdata_files["mksrf_fvegtyp_mesh"]
+        nlfile.write( f"  mksrf_fhrvtyp_mesh = \'{mksrf_hrvtyp_mesh}\' \n")
 
         nlfile.write( "  outnc_double = .true. \n")
         nlfile.write( "  all_urban = .false. \n")
@@ -340,16 +342,15 @@ def main ():
         nlfile.write(f"  fsurdat = \'{fsurdat}\' \n")
         nlfile.write(f"  fsurlog = \'{fsurlog}\' \n")
 
-        nlfile.write(f"  start_year = {start_year}\n") 
-        nlfile.write(f"  end_year = {end_year}\n") 
+       #nlfile.write(f"  start_year = {start_year}\n") 
+       #nlfile.write(f"  end_year = {end_year}\n") 
         nlfile.write(f"  mksrf_fdynuse = \'{landuse_fname} \' \n")
 
         mksrf_vic = rawdata_files["mksrf_fvic"]
-        nlfile.write(f"  use_vic = {vic_flag} \n")
-        nlfile.write(f"  mksrf_fvic = f{mksrf_vic} \n") 
+        nlfile.write(f"  use_vic = .{vic_flag}. \n")
         nlfile.write( "  outnc_vic = .true. \n")
-        nlfile.write(f"  use_glc = f{glc_flag} \n")
-        nlfile.write(f"  create_esmf_pet_files = f{create_esmf_pet_files} \n")
+        nlfile.write(f"  use_glc = .{glc_flag}. \n")
+        nlfile.write(f"  create_esmf_pet_files = .{create_esmf_pet_files}. \n")
         nlfile.write("/ \n")
 
 if __name__ == "__main__":

@@ -15,7 +15,6 @@ module mkglacierregionMod
   !
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_flush
   implicit none
 
   private
@@ -66,7 +65,6 @@ contains
     !-----------------------------------------------------------------------
 
     write (6,*) 'Attempting to make glacier region .....'
-    call shr_sys_flush(6)
 
     ! ------------------------------------------------------------------------
     ! Read domain and mapping information, check for consistency
@@ -132,7 +130,6 @@ contains
 
     write (6,*) 'Successfully made glacier region'
     write (6,*)
-    call shr_sys_flush(6)
 
   end subroutine mkglacierregion
 

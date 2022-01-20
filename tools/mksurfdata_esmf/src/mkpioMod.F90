@@ -2,14 +2,17 @@ module mkpioMod
 
   use ESMF ! TODO: put in only statements
   use pio  ! TODO: put in only statements
-  use shr_kind_mod , only : r8 => shr_kind_r8, cl => shr_kind_cl, cs => shr_kind_cs
+  use shr_kind_mod , only : r8 => shr_kind_r8, cl => shr_kind_cl, cs => shr_kind_cs, r4 => shr_kind_r4
   use shr_sys_mod  , only : shr_sys_abort
   use mkutilsMod   , only : chkerr
-  use mkvarctl     , only : root_task, ndiag
+  use mkvarctl     , only : root_task, ndiag, mpicom
 
   implicit none
   private
 
+#include <mpif.h>
+
+  public :: mkpio_get_rawdata
   public :: mkpio_iodesc_rawdata
   public :: mkpio_iodesc_output
   public :: mkpio_wopen
@@ -32,9 +35,9 @@ module mkpioMod
      module procedure mkpio_put_time_slice_2d
   end interface mkpio_put_time_slice
 
-  integer, public                        :: pio_iotype
-  integer, public                        :: pio_ioformat
-  type(iosystem_desc_t), pointer, public :: io_subsystem
+  integer               , public :: pio_iotype
+  integer               , public :: pio_ioformat
+  type(iosystem_desc_t) , public :: pio_iosystem
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -43,6 +46,59 @@ module mkpioMod
 contains
 !===============================================================
 
+  subroutine mkpio_get_rawdata(filename, varname, mesh_i, data_i, rc)
+
+    ! input/output variables
+    character(len=*)       , intent(in)    :: filename  ! file name of rawdata file
+    character(len=*)       , intent(in)    :: varname   ! field name in rawdata file
+    type(ESMF_Mesh)        , intent(in)    :: mesh_i
+    real(r8)               , intent(inout) :: data_i(:) ! input raw data
+    integer                , intent(out)   :: rc
+
+    ! local variables
+    type(file_desc_t)      :: pioid
+    type(var_desc_t)       :: pio_varid
+    type(io_desc_t)        :: pio_iodesc 
+    integer                :: pio_vartype
+    real(r4), allocatable  :: data_real(:)
+    real(r8), allocatable  :: data_double(:)
+    real(r8), pointer      :: dataptr(:)
+    integer                :: lsize 
+    integer                :: rcode
+    character(len=*), parameter :: subname = 'mklakwat'
+    !-------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    ! Get data_i - Read in varname from filename 
+    lsize = size(data_i)
+    call ESMF_VMLogMemInfo("Before pio_openfile in regrid_data for "//trim(filename))
+    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(filename), pio_nowrite)
+    call ESMF_VMLogMemInfo("After pio_openfile in regrid_data")
+    call ESMF_VMLogMemInfo("After field get")
+    call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After mkpio_iodesc in regrid_data")
+    if (pio_vartype == PIO_REAL) then
+       allocate(data_real(lsize))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_real, rcode)
+       data_i(:) = real(data_real(:), kind=r8)
+       deallocate(data_real)
+    else if (pio_vartype == PIO_DOUBLE) then
+       allocate(data_double(lsize))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_double, rcode)
+       data_i(:) = data_double(:)
+       deallocate(data_double)
+    else
+       call shr_sys_abort(subName//"ERROR: only real and double types are supported")
+    end if
+    call pio_closefile(pioid)
+    call pio_freedecomp(pioid, pio_iodesc)
+    call ESMF_VMLogMemInfo("After pio_read_darry in regrid_data")
+
+  end subroutine mkpio_get_rawdata
+
+  !===============================================================
   subroutine mkpio_iodesc_rawdata( mesh, varname, pioid, pio_varid,  pio_vartype, pio_iodesc, rc)
 
     ! Determine pio io descriptor for variable on rawdata file
@@ -69,11 +125,12 @@ contains
 
     rc = ESMF_SUCCESS
 
-    if (root_task) then
-       write(ndiag,'(a,i8, i8)') 'setting iodesc for : '//trim(varname)// &
-            ' with dimlens(1), dimlens2 = ',dimlens(1),dimlens(2)
-    end if
+    !if (root_task) then
+       !write(ndiag,'(a,i8, i8)') 'setting iodesc for : '//trim(varname)// &
+       !' with dimlens(1), dimlens2 = ',dimlens(1),dimlens(2)
+    !end if
 
+    call ESMF_VMLogMemInfo("Beginning setting compdof")
     call ESMF_MeshGet(mesh, elementdistGrid=distGrid, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_DistGridGet(distGrid, localDe=0, elementCount=lsize, rc=rc)
@@ -81,25 +138,31 @@ contains
     allocate(compdof(lsize))
     call ESMF_DistGridGet(distGrid, localDe=0, seqIndexList=compdof, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("Ending setting compdof") 
 
     ! get pio variable id, type and number of dimensions
+    call ESMF_VMLogMemInfo("Beginning getting variable id")
+    call PIO_seterrorhandling(pioid, PIO_BCAST_ERROR)
     rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
     rcode = pio_inq_vartype(pioid, pio_varid, pio_vartype)
     rcode = pio_inq_varndims(pioid, pio_varid, ndims)
+    call ESMF_VMLogMemInfo("Ending getting variable id")
 
     ! get variable dimension sizes
+    call ESMF_VMLogMemInfo("Beginning getting dims")
     allocate(dimids(ndims))
     allocate(dimlens(ndims))
     rcode = pio_inq_vardimid(pioid, pio_varid, dimids(1:ndims))
     do n = 1, ndims
        rcode = pio_inq_dimlen(pioid, dimids(n), dimlens(n))
     end do
+    call ESMF_VMLogMemInfo("End getting dims")
 
     ! determine io descriptor for this variable
     if (ndims == 1) then
-       call pio_initdecomp(io_subsystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
+       call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
     else if (ndims == 2) then
-       call pio_initdecomp(io_subsystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+       call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
     else
        call shr_sys_abort('rawdata input must have ndims either 1 or 2')
     end if
@@ -110,37 +173,33 @@ contains
   end subroutine mkpio_iodesc_rawdata
 
   !===============================================================================
-  logical function mkpio_file_exists(vm, filename)
+  logical function mkpio_file_exists(filename)
 
     !---------------
     ! inquire if i/o file exists
     !---------------
 
     ! input/output variables
-    type(ESMF_VM)    , intent(in) :: vm
     character(len=*) , intent(in) :: filename
 
     ! local variables
     integer :: tmp(1)
-    integer :: rc
+    integer :: ier
     !-------------------------------------------------------------------------------
 
     tmp(1) = 0
-
     mkpio_file_exists = .false.
     if (root_task) then
        inquire(file=trim(filename), exist=mkpio_file_exists)
        if (mkpio_file_exists) tmp(1) = 1
     end if
-    call ESMF_VMBroadCast(vm, tmp, 1, 0, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    if(tmp(1) == 1) mkpio_file_exists = .true.
+    call mpi_bcast(tmp(1), 1, MPI_INTEGER, 0, mpicom, ier)
+    if (tmp(1) == 1) mkpio_file_exists = .true.
 
   end function mkpio_file_exists
 
   !===============================================================================
-  subroutine mkpio_wopen(pioid, filename, vm, clobber)
+  subroutine mkpio_wopen(pioid, filename, clobber)
 
     !---------------
     ! open netcdf file
@@ -154,43 +213,39 @@ contains
     ! input/output arguments
     type(file_desc_t) , intent(inout) :: pioid
     character(len=*)  , intent(in)    :: filename
-    type(ESMF_VM)     , intent(in)    :: vm
     logical           , intent(in)    :: clobber
 
     ! local variables
-    integer       :: rcode
-    integer       :: nmode
-    integer       :: rc
-    character(len=CL) :: wfilename
+    integer           :: rcode
+    integer           :: nmode
     character(*),parameter :: subName = '(mkpio_wopen) '
     !-------------------------------------------------------------------------------
 
     ! filename not open
-    wfilename = trim(filename)
+    call ESMF_LogWrite("opening output file "//trim(filename), ESMF_LOGMSG_INFO)
 
-    if (mkpio_file_exists(vm, filename)) then
+    if (mkpio_file_exists(filename)) then
        if (clobber) then
           nmode = pio_clobber
           ! only applies to classic NETCDF files.
           if(pio_iotype == PIO_IOTYPE_NETCDF .or. pio_iotype == PIO_IOTYPE_PNETCDF) then
              nmode = ior(nmode,pio_ioformat)
           endif
-          rcode = pio_createfile(io_subsystem, pioid, pio_iotype, trim(filename), nmode)
+          rcode = pio_createfile(pio_iosystem, pioid, pio_iotype, trim(filename), nmode)
           if (root_task) write(ndiag,'(a)') trim(subname)//' creating file '//trim(filename)
        else
-          rcode = pio_openfile(io_subsystem, pioid, pio_iotype, trim(filename), pio_write)
+          rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(filename), pio_write)
           if (root_task) write(ndiag,'(a)') trim(subname)//' opening file '//trim(filename)
-          call pio_seterrorhandling(pioid, PIO_BCAST_ERROR)
        endif
     else
-       nmode = pio_noclobber
        ! only applies to classic NETCDF files.
-       if(pio_iotype == PIO_IOTYPE_NETCDF .or. pio_iotype == PIO_IOTYPE_PNETCDF) then
+       if (pio_iotype == PIO_IOTYPE_NETCDF .or. pio_iotype == PIO_IOTYPE_PNETCDF) then
           nmode = ior(nmode,pio_ioformat)
        endif
-       rcode = pio_createfile(io_subsystem, pioid, pio_iotype, trim(filename), nmode)
+       rcode = pio_createfile(pio_iosystem, pioid, pio_iotype, trim(filename), nmode)
        if (root_task) write(ndiag,'(a)') trim(subname) //' creating file '// trim(filename)
     endif
+    call ESMF_LogWrite("successfully opened output file "//trim(filename), ESMF_LOGMSG_INFO)
 
   end subroutine mkpio_wopen
 
@@ -576,8 +631,8 @@ contains
     rc = ESMF_SUCCESS
 
     if (root_task) then
-       write(ndiag,'(a,i8, i8)') 'setting iodesc for : '//trim(varname)// &
-            ' with dimlens(1), dimlens2 = ',dimlens(1),dimlens(2)
+       !write(ndiag,'(a,i8, i8)') 'setting iodesc for : '//trim(varname)//' with dimlens(1), dimlens2 = ',dimlens(1),dimlens(2)
+       write(ndiag,'(a)') 'setting iodesc for : '//trim(varname)
     end if
 
     call ESMF_MeshGet(mesh, elementdistGrid=distGrid, rc=rc)
@@ -603,18 +658,18 @@ contains
 
     ! determine io descriptor for this variable
     if (ndims == 1)  then
-       call pio_initdecomp(io_subsystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
+       call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
     else if (ndims == 2) then
        if (trim(dimname) == 'time' .or. trim(dimname) == 'nt') then
-          call pio_initdecomp(io_subsystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
+          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
        else
-          call pio_initdecomp(io_subsystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
        end if
     else if (ndims == 3) then
        if (trim(dimname) == 'time' .or. trim(dimname) == 'nt') then
-          call pio_initdecomp(io_subsystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
        else
-          call pio_initdecomp(io_subsystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof, pio_iodesc)
+          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof, pio_iodesc)
        end if
     else if (ndims == 4) then
     end if

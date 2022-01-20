@@ -13,7 +13,6 @@ module mkharvestMod
 !-----------------------------------------------------------------------
 ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8, CL => shr_kind_CL
-  use shr_sys_mod  , only : shr_sys_flush
   use mkdomainMod  , only : domain_checksame
 
   implicit none
@@ -879,7 +878,6 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harvdata)
 !-----------------------------------------------------------------------
 
   write (6,*) 'Attempting to make harvest fields .....'
-  call shr_sys_flush(6)
 
   ! -----------------------------------------------------------------
   ! Normally read in the harvesting file, and then regrid to output grid

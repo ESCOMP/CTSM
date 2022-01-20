@@ -15,7 +15,6 @@ module mksoildepthMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_flush
   use mkdomainMod , only : domain_checksame
 
   implicit none
@@ -82,7 +81,6 @@ subroutine mksoildepth(ldomain, mapfname, datfname, ndiag, soildepth_o)
 !-----------------------------------------------------------------------
 
   write (6,*) 'Attempting to make soildepth .....'
-  call shr_sys_flush(6)
 
   ! -----------------------------------------------------------------
   ! Read domain and mapping information, check for consistency
@@ -164,7 +162,6 @@ subroutine mksoildepth(ldomain, mapfname, datfname, ndiag, soildepth_o)
 
   write (6,*) 'Successfully made soildepth'
   write (6,*)
-  call shr_sys_flush(6)
 
 end subroutine mksoildepth
 

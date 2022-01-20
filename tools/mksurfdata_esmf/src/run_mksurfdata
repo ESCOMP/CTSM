@@ -4,7 +4,8 @@
 #PBS -j oe
 #PBS -q premium
 #PBS -l walltime=45:00
-#PBS -l select=2:ncpus=36:mpiprocs=36
+##PBS -l select=1:ncpus=36:mpiprocs=36
+#PBS -l select=4:ncpus=36:mpiprocs=36
 ##PBS -l select=16:ncpus=36:mpiprocs=9
 #PBS -o log.out
 
@@ -19,4 +20,5 @@ mkdir -p $TMPDIR
 #make
 
 # -np {total_tasks}
-mpiexec_mpt -np 72 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/mksurfdata
+cd /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/mksurfdata/run
+mpiexec_mpt -np 144 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/mksurfdata

@@ -5,7 +5,6 @@ module mkchecksMod
   !-----------------------------------------------------------------------
 
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_flush
 
   implicit none
   private
@@ -54,7 +53,6 @@ contains
        end if
     end do
 
-    call shr_sys_flush(6)
     min_bad_r8 = errors_found
   end function min_bad_r8
 
@@ -87,7 +85,6 @@ contains
        end if
     end do
 
-    call shr_sys_flush(6)
     min_bad_int = errors_found
   end function min_bad_int
 
@@ -119,7 +116,6 @@ contains
        end if
     end do
 
-    call shr_sys_flush(6)
     max_bad_r8 = errors_found
   end function max_bad_r8
 
@@ -152,7 +148,6 @@ contains
        end if
     end do
 
-    call shr_sys_flush(6)
     max_bad_int = errors_found
   end function max_bad_int
 

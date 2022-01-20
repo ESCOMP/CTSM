@@ -15,7 +15,6 @@ module mkgdpMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_flush
   use mkdomainMod , only : domain_checksame
 
   implicit none
@@ -80,7 +79,6 @@ subroutine mkgdp(ldomain, mapfname, datfname, ndiag, gdp_o)
 !-----------------------------------------------------------------------
 
   write (6,*) 'Attempting to make GDP.....'
-  call shr_sys_flush(6)
 
   ! -----------------------------------------------------------------
   ! Read domain and mapping information, check for consistency
@@ -140,7 +138,6 @@ subroutine mkgdp(ldomain, mapfname, datfname, ndiag, gdp_o)
 
   write (6,*) 'Successfully made GDP'
   write (6,*)
-  call shr_sys_flush(6)
 
 end subroutine mkgdp
 

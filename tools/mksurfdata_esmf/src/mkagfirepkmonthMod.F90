@@ -13,7 +13,6 @@ module mkagfirepkmonthMod
 !-----------------------------------------------------------------------
 !!USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_flush
   use mkdomainMod , only : domain_checksame
   implicit none
 
@@ -97,7 +96,6 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
 !-----------------------------------------------------------------------
 
   write (6,*) 'Attempting to make agricultural fire peak month data .....'
-  call shr_sys_flush(6)
 
   ! -----------------------------------------------------------------
   ! Read domain and mapping information, check for consistency
@@ -208,7 +206,6 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
 
   write (6,*) 'Successfully made Agricultural fire peak month'
   write (6,*)
-  call shr_sys_flush(6)
 
 end subroutine mkagfirepkmon
 

@@ -13,7 +13,6 @@ module mkglcmecMod
 !-----------------------------------------------------------------------
 !!USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_flush
   use mkdomainMod , only : domain_checksame
   implicit none
 
@@ -229,7 +228,6 @@ subroutine mkglcmec(ldomain, mapfname, &
 
   write (6,*) 'Attempting to make percent elevation class ',&
        'and mean elevation for glaciers .....'
-  call shr_sys_flush(6)
 
   ! -----------------------------------------------------------------
   ! Read domain and dimension information from glacier raw data file
@@ -299,7 +297,6 @@ subroutine mkglcmec(ldomain, mapfname, &
 
   do lev = 1, nlev
      write(6,'(i4)',advance='no') lev
-     flush(6)
 
      ! Read this level's data
      ! We assume that the last dimension is the level dimension
@@ -478,7 +475,6 @@ subroutine mkglcmec(ldomain, mapfname, &
 
   write (6,*) 'Successfully made percent elevation class and mean elevation for glaciers'
   write (6,*)
-  call shr_sys_flush(6)
 
 end subroutine mkglcmec
 
@@ -548,7 +544,6 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
 !-----------------------------------------------------------------------
 
   write (6,*) 'Attempting to make %glacier .....'
-  call shr_sys_flush(6)
 
   ! -----------------------------------------------------------------
   ! Read input file
@@ -605,7 +600,6 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
      if ((glac_o(no)) > 100.000001_r8) then
         write (6,*) 'MKGLACIER error: glacier = ',glac_o(no), &
                 ' greater than 100.000001 for column, row = ',no
-        call shr_sys_flush(6)
         call abort()
      end if
   enddo
@@ -678,7 +672,6 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
 
   write (6,*) 'Successfully made %glacier'
   write (6,*)
-  call shr_sys_flush(6)
 
 end subroutine mkglacier
 

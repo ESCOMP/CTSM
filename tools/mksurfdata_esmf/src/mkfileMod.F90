@@ -71,7 +71,7 @@ contains
 
     ! TODO: how to translate the following into the pio call
     !call check_ret(nf_create(trim(fname), ior(nf_clobber,nf_64bit_offset), ncid), subname)
-    call mkpio_wopen(pioid, trim(fname), vm, clobber=.true.)
+    call mkpio_wopen(pioid, trim(fname), clobber=.true.)
     ! TODO: what about setting no fill values?
 
     !---------------------------
@@ -112,11 +112,13 @@ contains
     str = 'created on: ' // datetime
     rcode = pio_put_att (pioid, pio_global, 'History_Log', trim(str))
 
+#ifdef TODO
     call shr_sys_getenv ('LOGNAME', str, ier)
     rcode = pio_put_att (pioid, pio_global, 'Logname', trim(str))
 
     call shr_sys_getenv ('HOST', str, ier)
     rcode = pio_put_att (pioid, pio_global, 'Host', trim(str))
+#endif
 
     str = 'Community Land Model: CLM5'
     rcode = pio_put_att (pioid, pio_global, 'Source', trim(str))

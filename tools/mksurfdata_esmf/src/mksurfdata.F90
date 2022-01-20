@@ -90,36 +90,37 @@ program mksurfdata
   use ESMF
   use pio
   use shr_kind_mod       , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs
-  use shr_pio_mod        , only : shr_pio_getiosys, shr_pio_getiotype, shr_pio_getioformat
-  use shr_pio_mod        , only : shr_pio_init1, shr_pio_init2
   use shr_sys_mod        , only : shr_sys_abort
-  ! use mklaiMod           , only : mklai
-  ! use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
-  ! use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
-  ! use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
-  ! use mksoilMod          , only : soil_sand, soil_clay, mksoiltex, mksoilInit
-  ! use mksoilMod          , only : soil_color, mksoilcol, mkorganic
-  ! use mksoilMod          , only : soil_fmax, mkfmax
-  ! use mkvocefMod         , only : mkvocef
-  use mklanwatMod        , only : mklakwat, mkwetlnd, mklakparams
-  ! use mkglacierregionMod , only : mkglacierregion
-  ! use mkglcmecMod        , only : nglcec, mkglcmec, mkglcmecInit, mkglacier
-  ! use mkharvestMod       , only : mkharvest, mkharvest_init, mkharvest_fieldname
-  ! use mkharvestMod       , only : mkharvest_numtypes, mkharvest_parse_oride
-  ! use mkharvestMod       , only : harvestDataType
-  ! use mkurbanparCommonMod, only : mkelev
-  ! use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, numurbl
-  ! use mkgdpMod           , only : mkgdp
-  ! use mkpeatMod          , only : mkpeat
-  ! use mksoildepthMod     , only : mksoildepth
-  ! use mkagfirepkmonthMod , only : mkagfirepkmon
-  ! use mktopostatsMod     , only : mktopostats
-  ! use mkVICparamsMod     , only : mkVICparams
+
+#ifdef TODO  
+  use mklaiMod           , only : mklai
+  use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
+  use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
+  use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
+  use mksoilMod          , only : soil_sand, soil_clay, mksoiltex, mksoilInit
+  use mksoilMod          , only : soil_color, mksoilcol, mkorganic
+  use mksoilMod          , only : soil_fmax, mkfmax
+  use mkvocefMod         , only : mkvocef
+  use mkglacierregionMod , only : mkglacierregion
+  use mkglcmecMod        , only : nglcec, mkglcmec, mkglcmecInit, mkglacier
+  use mkharvestMod       , only : mkharvest, mkharvest_init, mkharvest_fieldname
+  use mkharvestMod       , only : mkharvest_numtypes, mkharvest_parse_oride
+  use mkharvestMod       , only : harvestDataType
+  use mkurbanparCommonMod, only : mkelev
+  use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, numurbl
+  use mkgdpMod           , only : mkgdp
+  use mkpeatMod          , only : mkpeat
+  use mksoildepthMod     , only : mksoildepth
+  use mkagfirepkmonthMod , only : mkagfirepkmon
+  use mktopostatsMod     , only : mktopostats
+  use mkVICparamsMod     , only : mkVICparams
+#endif
+  use mklanwatMod        , only : mklakwat
   use mkutilsMod         , only : normalize_classes_by_gcell, chkerr
   use mkfileMod          , only : mkfile
   use mkvarpar           , only : nlevsoi, elev_thresh, numstdpft
   use nanMod             , only : nan, bigint
-  use mkpioMod           , only : pio_iotype, pio_ioformat, io_subsystem
+  use mkpioMod           , only : pio_iotype, pio_ioformat, pio_iosystem
   use mkpioMod           , only : mkpio_put_time_slice, mkpio_iodesc_output
   use mkvarctl
 
@@ -203,7 +204,8 @@ program mksurfdata
   real(r8), pointer             :: lakedepth(:)            ! lake depth (m)
   integer , pointer             :: harvind1D(:)            ! Indices of 1D harvest fields
   integer , pointer             :: harvind2D(:)            ! Indices of 2D harvest fields
-  logical                       :: zero_out                ! if should zero glacier out
+  logical                       :: zero_out_lake           ! if should zero glacier out
+  logical                       :: zero_out_wetland        ! if should zero glacier out
 #ifdef TODO
   type(harvestDataType)         :: harvdata
 #endif
@@ -213,6 +215,7 @@ program mksurfdata
   type(ESMF_LogKind_Flag)       :: logkindflag
   type(ESMF_VM)                 :: vm
   character(len=CS)             :: varname
+  logical                       :: create_esmf_pet_files = .true.
   character(len=32)             :: subname = 'mksrfdata'    ! program name
 
   ! NOTE(bja, 2015-01) added to work around a ?bug? causing 1x1_urbanc_alpha to abort. See
@@ -231,31 +234,6 @@ program mksurfdata
   mpicom = mpi_comm_world
 
   ! ------------------
-  ! Initialize PIO 
-  ! ------------------
-
-  ! First phase -  reads the pio default settings from file pio_in, namelist pio_default_inparm
-  ! It then returns the new compute comm in Global_Comm and sets module variable io_comm.
-  call shr_pio_init1("pio_in", mpicom)
-
-  ! Determine my rank
-  call mpi_comm_rank(mpicom, iam, ier)
-
-  ! Initialize PIO - second phase
-  call shr_pio_init2((/mpicom/), (/mpicom/))
-  io_subsystem => shr_pio_getiosys()
-  pio_iotype   =  shr_pio_getiotype()
-  pio_ioformat =  shr_pio_getioformat()
-
-  ! ------------------
-  ! Read input namelist on root_task and broadcast to all pes
-  ! ------------------
-
-  ! root_task is a module variable in mkvarctl
-  root_task = (iam == 0)
-  call read_namelist_input()
-
-  ! ------------------
   ! Initialize ESMF and get mpicom from ESMF
   ! ------------------
 
@@ -269,10 +247,39 @@ program mksurfdata
   if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
   call ESMF_VMGetGlobal(vm, rc=rc)
   if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-  call ESMF_VMGet(vm, mpicommunicator=mpicom, rc=rc)
+  call ESMF_VMGet(vm, mpicommunicator=mpicom, localPet=iam, rc=rc)
   if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
   call ESMF_LogSet(flush=.true.)
   call ESMF_LogWrite("mksurfdata starting", ESMF_LOGMSG_INFO)
+
+  ! ------------------
+  ! Initialize PIO - first phase
+  ! ------------------
+
+  ! the following returns pio_iosystem
+  ! call pio_init(iam, mpicom, 1, 0, 36, PIO_REARR_SUBSET, pio_iosystem)
+  ! TODO: generalize iotype
+
+  call pio_init(comp_rank=iam, &
+       comp_comm=mpicom, &
+       num_iotasks = 8, &
+       num_aggregator = 0, &
+       stride = 36, &
+       rearr = PIO_REARR_SUBSET, &
+       iosystem = pio_iosystem)
+
+  pio_iotype   =  PIO_IOTYPE_PNETCDF
+  pio_ioformat =  PIO_64BIT_DATA
+
+  call ESMF_LogWrite("finished initializing PIO", ESMF_LOGMSG_INFO)
+
+  ! ------------------
+  ! Read input namelist on root_task and broadcast to all pes
+  ! ------------------
+
+  ! root_task is a module variable in mkvarctl
+  root_task = (iam == 0)
+  call read_namelist_input()
 
   ! ------------------
   ! open output ndiag file
@@ -280,43 +287,36 @@ program mksurfdata
 
   if (fsurlog == ' ') then
      call shr_sys_abort(' ERROR: must specify fsurlog in namelist')
-  else
+  end if
+  if (root_task) then
      open (newunit=ndiag, file=trim(fsurlog), iostat=ier)
      if (ier /= 0) then
         call shr_sys_abort(' failed to open ndiag file '//trim(fsurlog))
-     else
-        if (root_task) then
-           write(ndiag,*)' successfully opened ndiag file ',trim(fsurlog)
-        end if
      end if
-  end if
-
-  ! ------------------
-  ! ------------------
-
-  if (root_task) then
      write (ndiag,*) 'Attempting to create surface boundary data .....'
      write (ndiag,'(72a1)') ("-",n=1,60)
+  else
+     ndiag = 6
   end if
-
-  call check_namelist_input()
 
   ! ------------------
   ! Write out namelist input to ndiag
   ! ------------------
 
+  call check_namelist_input()
   call write_namelist_input()
 
   ! ----------------------------------------------------------------------
   ! Call module initialization routines
   ! ----------------------------------------------------------------------
 
-  ! call mksoilInit( )
-  ! call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
-  ! allocate ( elevclass(nglcec+1) )
-  ! call mkglcmecInit (elevclass)
-  ! call mkurbanInit (mksrf_furban)
-
+#ifdef TODO
+  call mksoilInit( )
+  call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
+  allocate ( elevclass(nglcec+1) )
+  call mkglcmecInit (elevclass)
+  call mkurbanInit (mksrf_furban)
+#endif 
   ! ----------------------------------------------------------------------
   ! Allocate and initialize dynamic memory for local variables
   ! ----------------------------------------------------------------------
@@ -380,16 +380,11 @@ program mksurfdata
   ! end if
 
   ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
-  zero_out = all_urban .or. all_veg
-  call mklakwat(mksrf_flakwat, mksrf_flakwat_mesh, mesh_model, zero_out, pctlak, rc)
+  zero_out_lake = all_urban .or. all_veg
+  zero_out_wetland = all_urban .or. all_veg .or. no_inlandwet
+  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
+       zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
-
-  zero_out = all_urban .or. all_veg .or. no_inlandwet
-  call mkwetlnd(mksrf_flakwat, mksrf_flakwat_mesh, mesh_model, zero_out, pctwet, rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkwetlnd')
-
-  call mklakparams(mksrf_flakwat, mksrf_flakwat_mesh, mesh_model, lakedepth, rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkwetlnd')
 
   ! ! Make glacier fraction [pctgla] from [fglacier] dataset
   ! call mkglacier ( mapfname=map_fglacier, datfname=mksrf_fglacier, ndiag=ndiag, zero_out=all_urban.or.all_veg, glac_o=pctgla)
@@ -481,6 +476,7 @@ program mksurfdata
   ! Modify interpolated fields based on additional constrants
   ! ----------------------------------------------------------------------
 
+#ifdef TODO
   do n = 1,lsize_o
      ! Truncate all percentage fields on output grid. This is needed to
      ! insure that wt is zero (not a very small number such as
@@ -533,69 +529,69 @@ program mksurfdata
         pcturb(n) = pcturb(n) * 100._r8/suma
         pctgla(n) = pctgla(n) * 100._r8/suma
      end if
-
   end do
 
-  ! call normalizencheck_landuse()
+  call normalizencheck_landuse()
 
-  ! Write out sum of PFT's
+  !Write out sum of PFT's
 
-  ! do k = natpft_lb,natpft_ub
-  !    suma = 0._r8
-  !    do n = 1,lsize_o
-  !       suma = suma + pctnatpft(n)%get_one_pct_p2g(k)
-  !    enddo
-  !    write(6,*) 'sum over domain of pft ',k,suma
-  ! enddo
-  ! write(6,*)
+  do k = natpft_lb,natpft_ub
+     suma = 0._r8
+     do n = 1,lsize_o
+        suma = suma + pctnatpft(n)%get_one_pct_p2g(k)
+     enddo
+     write(6,*) 'sum over domain of pft ',k,suma
+  enddo
+  write(6,*)
 
-  ! do k = cft_lb,cft_ub
-  !    suma = 0._r8
-  !    do n = 1,lsize_o
-  !       suma = suma + pctcft(n)%get_one_pct_p2g(k)
-  !    enddo
-  !    write(6,*) 'sum over domain of cft ',k,suma
-  ! enddo
-  ! write(6,*)
+  do k = cft_lb,cft_ub
+     suma = 0._r8
+     do n = 1,lsize_o
+        suma = suma + pctcft(n)%get_one_pct_p2g(k)
+     enddo
+     write(6,*) 'sum over domain of cft ',k,suma
+  enddo
+  write(6,*)
 
-  ! ! Make final values of percent urban by class
-  ! ! This call needs to occur after all corrections are made to pcturb
+  ! Make final values of percent urban by class
+  ! This call needs to occur after all corrections are made to pcturb
 
-  ! call normalize_classes_by_gcell(urbn_classes, pcturb, urbn_classes_g)
+  call normalize_classes_by_gcell(urbn_classes, pcturb, urbn_classes_g)
 
-  ! ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier] dataset
-  ! ! This call needs to occur after pctgla has been adjusted for the final time
+  ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier] dataset
+  ! This call needs to occur after pctgla has been adjusted for the final time
 
-  ! allocate (pctglcmec(lsize_o,nglcec), &
-  !      topoglcmec(lsize_o,nglcec) )
-  ! if ( outnc_3dglc )then
-  !    allocate( &
-  !         pctglcmec_gic(lsize_o,nglcec), &
-  !         pctglcmec_icesheet(lsize_o,nglcec))
-  !    allocate (pctglc_gic(lsize_o))
-  !    allocate (pctglc_icesheet(lsize_o))
-  ! end if
+  allocate (pctglcmec(lsize_o,nglcec), &
+       topoglcmec(lsize_o,nglcec) )
+  if ( outnc_3dglc )then
+     allocate( &
+          pctglcmec_gic(lsize_o,nglcec), &
+          pctglcmec_icesheet(lsize_o,nglcec))
+     allocate (pctglc_gic(lsize_o))
+     allocate (pctglc_icesheet(lsize_o))
+  end if
 
-  ! pctglcmec(:,:)          = spval
-  ! topoglcmec(:,:)         = spval
+  pctglcmec(:,:)          = spval
+  topoglcmec(:,:)         = spval
 
-  ! if ( outnc_3dglc )then
-  !    call mkglcmec ( mapfname=map_fglacier, &
-  !         datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
-  !         pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
-  !         pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &
-  !         pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet)
-  ! else
-  !    call mkglcmec ( mapfname=map_fglacier, &
-  !         datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
-  !         pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec )
-  ! end if
+  if ( outnc_3dglc )then
+     call mkglcmec ( mapfname=map_fglacier, &
+          datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
+          pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
+          pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &
+          pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet)
+  else
+     call mkglcmec ( mapfname=map_fglacier, &
+          datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
+          pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec )
+  end if
 
-  ! ! Determine fractional land from pft dataset
+  ! Determine fractional land from pft dataset
 
-  ! do n = 1,lsize_o
-  !    landfrac_pft(n) = pctlnd_pft(n)/100._r8
-  ! end do
+  do n = 1,lsize_o
+     landfrac_pft(n) = pctlnd_pft(n)/100._r8
+  end do
+#endif
 
   ! ----------------------------------------------------------------------
   ! Create surface dataset
@@ -615,6 +611,7 @@ program mksurfdata
 
   if (fsurdat /= ' ') then
 
+#ifdef TODO
      ! The following variables need to be output as int
      ! nf_put_var_int(ncid, varid, (/(n,n=natpft_lb,natpft_ub)/))
      ! nf_put_var_int(ncid, varid, (/(n,n=cft_lb,cft_ub)/))
@@ -624,10 +621,12 @@ program mksurfdata
      ! nf_put_var_int(ncid, varid, glacier_region)
      ! nf_put_var_int(ncid, varid, agfirepkmon)
      ! nf_put_var_int(ncid, varid, urban_region)
+#endif
 
      !call mkfile( vm, nx, ny, trim(fsurdat), harvdata, dynlanduse = .false., pioid=pioid)
      call mkfile( vm, mksrf_fgrid_mesh_nx, mksrf_fgrid_mesh_ny, trim(fsurdat), dynlanduse=.false., pioid=pioid)
 
+#ifdef TODO
      ! write area, longxy and latixy
      ! TODO: fill this in
      ! call check_ret(nf_open(trim(fname), nf_write, ncid), subname)
@@ -690,6 +689,7 @@ program mksurfdata
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
      call pio_write_darray(pioid, pio_varid, pio_iodesc, pctclay, rcode)
      call pio_freedecomp(pioid, pio_iodesc)
+#endif
 
      varname = 'PCT_WETLAND'
      call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
@@ -703,6 +703,7 @@ program mksurfdata
      call pio_write_darray(pioid, pio_varid, pio_iodesc, pctlak, rcode)
      call pio_freedecomp(pioid, pio_iodesc)
 
+#ifdef TODO
      varname = 'PCT_GLACIER'
      call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
@@ -846,9 +847,9 @@ program mksurfdata
 
      ! write(6,*)'calling mklai'
      ! call mklai( mapfname=map_flai, datfname=mksrf_flai, ndiag=ndiag, pioido=pioid )
+#endif
 
      ! Close surface dataset
-
      call pio_closefile(pioid)
 
      write (6,'(72a1)') ("-",n=1,60)
