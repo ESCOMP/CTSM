@@ -264,7 +264,8 @@ contains
     integer :: ivt, p, ip, ig
     integer :: nc, fp
 !    integer :: yr, mon, day, tod, ymd, c, g ! SSR troubleshooting
-    character(len=CL)  :: stream_var_name
+    character(len=CL)  :: stream_var_name_sdate1
+    character(len=CL)  :: stream_var_name_cultivar_gdds1
     !-----------------------------------------------------------------------
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
@@ -284,19 +285,20 @@ contains
        p = filter_pcropp(fp)
        ivt = patch%itype(p)
        ! Set crop calendars for each gridcell/patch combination
-       write(stream_var_name,"(i6)") ivt
+       write(stream_var_name_sdate1,"(i6)") ivt
+       write(stream_var_name_cultivar_gdds1,"(i6)") ivt
        
        ! SSR TODO: Add check that variable exists in netCDF
-       stream_var_name = 'sdate1_'//trim(adjustl(stream_var_name))
-       ip = mct_aVect_indexRA(sdat_sdate%avs(1),trim(stream_var_name))
+       stream_var_name_sdate1 = 'sdate1_'//trim(adjustl(stream_var_name_sdate1))
+       ip = mct_aVect_indexRA(sdat_sdate%avs(1),trim(stream_var_name_sdate1))
        if (ivt /= noveg) then
           ig = g_to_ig(patch%gridcell(p))
           crop_inst%rx_sdates_thisyr(p,1) = sdat_sdate%avs(1)%rAttr(ip,ig)
        endif
 
        ! SSR TODO: Add check that variable exists in netCDF
-       stream_var_name = 'cultivar_gdds1_'//trim(adjustl(stream_var_name))
-       ip = mct_aVect_indexRA(sdat_cultivar_gdds%avs(1),trim(stream_var_name))
+       stream_var_name_cultivar_gdds1 = 'gdd1_'//trim(adjustl(stream_var_name_cultivar_gdds1))
+       ip = mct_aVect_indexRA(sdat_cultivar_gdds%avs(1),trim(stream_var_name_cultivar_gdds1))
        if (ivt /= noveg) then
           ig = g_to_ig(patch%gridcell(p))
           crop_inst%rx_cultivar_gdds_thisyr(p,1) = sdat_cultivar_gdds%avs(1)%rAttr(ip,ig)
