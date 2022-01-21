@@ -117,9 +117,8 @@ module mkvarctl
   !
   ! Variables to override data read in with
   ! (all_urban is mostly for single-point mode, but could be used for sensitivity studies)
-  !
-  logical,  public   :: all_urban              ! output ALL data as 100% covered in urban
-  logical,  public   :: no_inlandwet           ! set wetland to 0% over land; wetland will only be used for ocean points
+  logical,  public :: all_urban              ! output ALL data as 100% covered in urban
+  logical,  public :: no_inlandwet           ! set wetland to 0% over land; wetland will only be used for ocean points
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -181,14 +180,16 @@ contains
          mksrf_fgrid_mesh,          &
          mksrf_fgrid_mesh_nx,       &
          mksrf_fgrid_mesh_ny,       &
-         !nglcec,                    &
          numpft,                    &
-         !pft_idx,                   &
          all_veg,                   &
-         !pft_frc,                   &
          all_urban,                 &
          no_inlandwet,              &
-         !gitdescribe,               &
+#ifdef TODO
+         nglcec,                    &
+         pft_idx,                   &
+         pft_frc,                   &
+         gitdescribe,               &
+#endif
          outnc_large_files,         &
          outnc_double,              &
          outnc_dims,                &
@@ -271,93 +272,56 @@ contains
     call mpi_bcast (mksrf_fvocef, len(mksrf_fvocef), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_ftopostats, len(mksrf_ftopostats), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fvic, len(mksrf_fvic), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fsurdat, len(fsurdat), MPI_CHARACTER, 0, mpicom, ier)
+
+    call mpi_bcast (mksrf_fgrid_mesh_nx, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (mksrf_fgrid_mesh_ny, 1, MPI_INTEGER, 0, mpicom, ier)
+
+    call mpi_bcast (outnc_dims, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (outnc_large_files, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (outnc_double, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (outnc_1d, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (outnc_vic, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (outnc_3dglc, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (all_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (all_veg, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (no_inlandwet, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (urban_skip_abort_on_invalid_data_check, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (numpft, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (std_elev, 1, MPI_REAL, 0, mpicom, ier)
 
   end subroutine read_namelist_input
 
   !===============================================================
   subroutine check_namelist_input()
+
     ! error check on namelist input
-
-    if (root_task) then
-       if (urban_skip_abort_on_invalid_data_check) then
-          write(ndiag, *) "WARNING: aborting on invalid data check in urban has been disabled!"
-          write(ndiag, *) "WARNING: urban data may be invalid!"
-       end if
-    end if
-
     if (mksrf_fgrid_mesh /= ' ')then
        fgrddat = mksrf_fgrid_mesh
-       if (root_task) write(ndiag,*)'mksrf_fgrid_mesh = ',trim(mksrf_fgrid_mesh)
     else
        call shr_sys_abort(" must specify mksrf_fgrid_mesh")
     endif
 
-    if (trim(mksrf_gridtype) == 'global' .or. trim(mksrf_gridtype) == 'regional') then
-       if (root_task) write(ndiag,*)'mksrf_gridtype = ',trim(mksrf_gridtype)
-    else
-       call ESMF_LogWrite(" mksrf_gridtype "//trim(mksrf_gridtype)//" is not supported", ESMF_LOGMSG_ERROR)
-       call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    if (trim(mksrf_gridtype) /= 'global' .and. trim(mksrf_gridtype) /= 'regional') then
+       call shr_sys_abort(" mksrf_gridtype "//trim(mksrf_gridtype)//" is not supported")
     endif
 
-    if (root_task) then
-       if ( outnc_large_files )then
-          if (root_task) write(ndiag,'(a)')'Output file in NetCDF 64-bit large_files format'
-       end if
-       if ( outnc_double )then
-          if (root_task) write(ndiag,'(a)')'Output ALL data in file as 64-bit'
-       end if
-       if ( outnc_vic )then
-          if (root_task) write(ndiag,'(a)')'Output VIC fields'
-       end if
-       if ( outnc_3dglc )then
-          if (root_task) write(ndiag,'(a)')'Output optional 3D glacier fields (mostly used for verification of the glacier model)'
-       end if
-       if ( outnc_3dglc )then
-          if (root_task) write(ndiag,'(a)')'Output optional 3D glacier fields (mostly used for verification of the glacier model)'
-       end if
-       if ( all_urban )then
-          if (root_task) write(ndiag,'(a)') 'Output ALL data in file as 100% urban'
-       end if
-       if ( no_inlandwet )then
-          if (root_task) write(ndiag,'(a)') 'Set wetland to 0% over land'
-       end if
+#ifdef TODO
+    if (nglcec <= 0) then
+       call shr_sys_abort('nglcec must be at least 1')
     end if
-
-    ! if (nglcec <= 0) then
-    !    call shr_sys_abort('nglcec must be at least 1')
-    ! end if
-
-    if (root_task) then
-       if (all_veg) then
-          write(ndiag,'(a)') 'Output ALL data in file as 100% vegetated'
-       end if
-    end if
-
-    if (mksrf_fgrid_mesh_ny == 1) then
-       if (root_task) then
-          write(ndiag,*)'fsurdat is 2d lat/lon grid'
-          write(ndiag,*)'nlon= ',mksrf_fgrid_mesh_nx
-          write(ndiag,*)'nlat= ',mksrf_fgrid_mesh_ny
-          if (outnc_dims == 1) then
-             write(ndiag,*)' writing output file in 1d gridcell format'
-          end if
-       end if
-    else
-       if (root_task) then
-          write(ndiag,*)'fsurdat is 1d gridcell grid'
-          outnc_dims = 1
-       end if
-    end if
+#endif
 
     outnc_1d = .true.
-    if (root_task) then
-       write(ndiag,*)'output file will be 1d'
+    if (mksrf_fgrid_mesh_ny == 1) then
+       outnc_1d = .true.
+       outnc_dims = 1
     else
-       outnc_1d = .false.
-       if (mksrf_fgrid_mesh_ny == 1) then
-          outnc_1d = .true.
-       end if
+       outnc_1d = .true.
+       outnc_dims = 2
     end if
+
 
   end subroutine check_namelist_input
 
@@ -367,49 +331,90 @@ contains
     ! Note - need to call this after ndiag has been set
 
     if (root_task) then
-       write(ndiag,'(a)') 'PFTs from:                  ',trim(mksrf_fvegtyp)
-       write(ndiag,'(a)') 'harvest from:               ',trim(mksrf_fhrvtyp)
-       write(ndiag,'(a)') 'fmax from:                  ',trim(mksrf_fmax)
-       write(ndiag,'(a)') 'glaciers from:              ',trim(mksrf_fglacier)
-       !write(ndiag,'(a)') '           with:            ', nglcec, ' glacier elevation classes'
-       write(ndiag,'(a)') 'glacier region ID from:     ',trim(mksrf_fglacierregion)
-       write(ndiag,'(a)') 'urban topography from:      ',trim(mksrf_furbtopo)
-       write(ndiag,'(a)') 'urban from:                 ',trim(mksrf_furban)
-       write(ndiag,'(a)') 'inland lake from:           ',trim(mksrf_flakwat)
-       write(ndiag,'(a)') 'inland wetland from:        ',trim(mksrf_fwetlnd)
-       write(ndiag,'(a)') 'soil texture from:          ',trim(mksrf_fsoitex)
-       write(ndiag,'(a)') 'soil organic from:          ',trim(mksrf_forganic)
-       write(ndiag,'(a)') 'soil color from:            ',trim(mksrf_fsoicol)
-       write(ndiag,'(a)') 'VOC emission factors from:  ',trim(mksrf_fvocef)
-       write(ndiag,'(a)') 'gdp from:                   ',trim(mksrf_fgdp)
-       write(ndiag,'(a)') 'peat from:                  ',trim(mksrf_fpeat)
-       write(ndiag,'(a)') 'soil depth from:            ',trim(mksrf_fsoildepth)
-       write(ndiag,'(a)') 'abm from:                   ',trim(mksrf_fabm)
-       write(ndiag,'(a)') 'topography statistics from: ',trim(mksrf_ftopostats)
-       write(ndiag,'(a)') 'VIC parameters from:        ',trim(mksrf_fvic)
-       write(ndiag,'(a)')' mesh for pft                ',trim(mksrf_fvegtyp_mesh)
-       write(ndiag,'(a)')' mesh for lake water         ',trim(mksrf_flakwat_mesh)
-       write(ndiag,'(a)')' mesh for wetland            ',trim(mksrf_fwetlnd_mesh)
-       write(ndiag,'(a)')' mesh for glacier            ',trim(mksrf_fglacier_mesh)
-       write(ndiag,'(a)')' mesh for glacier region     ',trim(mksrf_fglacierregion_mesh)
-       write(ndiag,'(a)')' mesh for soil texture       ',trim(mksrf_fsoitex_mesh)
-       write(ndiag,'(a)')' mesh for soil color         ',trim(mksrf_fsoicol_mesh)
-       write(ndiag,'(a)')' mesh for soil organic       ',trim(mksrf_forganic_mesh)
-       write(ndiag,'(a)')' mesh for urban              ',trim(mksrf_furban_mesh)
-       write(ndiag,'(a)')' mesh for fmax               ',trim(mksrf_fmax_mesh)
-       write(ndiag,'(a)')' mesh for VOC pct emis       ',trim(mksrf_fvocef_mesh)
-       write(ndiag,'(a)')' mesh for harvest            ',trim(mksrf_fhrv_mesh)
-       write(ndiag,'(a)')' mesh for lai/sai            ',trim(mksrf_flai_mesh)
-       write(ndiag,'(a)')' mesh for urb topography     ',trim(mksrf_furbtopo_mesh)
-       write(ndiag,'(a)')' mesh for GDP                ',trim(mksrf_fgdp_mesh)
-       write(ndiag,'(a)')' mesh for peatlands          ',trim(mksrf_fpeat_mesh)
-       write(ndiag,'(a)')' mesh for soil depth         ',trim(mksrf_fsoildepth_mesh)
-       write(ndiag,'(a)')' mesh for ag fire pk month   ',trim(mksrf_fabm_mesh)
-       write(ndiag,'(a)')' mesh for topography stats   ',trim(mksrf_ftopostats_mesh)
-       write(ndiag,'(a)')' mesh for VIC parameters     ',trim(mksrf_fvic_mesh)
+       write(ndiag,'(a)') 'PFTs from:                  '//trim(mksrf_fvegtyp)
+       write(ndiag,'(a)') 'harvest from:               '//trim(mksrf_fhrvtyp)
+       write(ndiag,'(a)') 'fmax from:                  '//trim(mksrf_fmax)
+       write(ndiag,'(a)') 'glaciers from:              '//trim(mksrf_fglacier)
+#ifdef TODO
+       write(ndiag,'(a)') '           with:            '// nglcec, ' glacier elevation classes'
+#endif
+       write(ndiag,'(a)') 'glacier region ID from:     '//trim(mksrf_fglacierregion)
+       write(ndiag,'(a)') 'urban topography from:      '//trim(mksrf_furbtopo)
+       write(ndiag,'(a)') 'urban from:                 '//trim(mksrf_furban)
+       write(ndiag,'(a)') 'inland lake from:           '//trim(mksrf_flakwat)
+       write(ndiag,'(a)') 'inland wetland from:        '//trim(mksrf_fwetlnd)
+       write(ndiag,'(a)') 'soil texture from:          '//trim(mksrf_fsoitex)
+       write(ndiag,'(a)') 'soil organic from:          '//trim(mksrf_forganic)
+       write(ndiag,'(a)') 'soil color from:            '//trim(mksrf_fsoicol)
+       write(ndiag,'(a)') 'VOC emission factors from:  '//trim(mksrf_fvocef)
+       write(ndiag,'(a)') 'gdp from:                   '//trim(mksrf_fgdp)
+       write(ndiag,'(a)') 'peat from:                  '//trim(mksrf_fpeat)
+       write(ndiag,'(a)') 'soil depth from:            '//trim(mksrf_fsoildepth)
+       write(ndiag,'(a)') 'abm from:                   '//trim(mksrf_fabm)
+       write(ndiag,'(a)') 'topography statistics from: '//trim(mksrf_ftopostats)
+       write(ndiag,'(a)') 'VIC parameters from:        '//trim(mksrf_fvic)
+       write(ndiag,'(a)')' mesh for pft                '//trim(mksrf_fvegtyp_mesh)
+       write(ndiag,'(a)')' mesh for lake water         '//trim(mksrf_flakwat_mesh)
+       write(ndiag,'(a)')' mesh for wetland            '//trim(mksrf_fwetlnd_mesh)
+       write(ndiag,'(a)')' mesh for glacier            '//trim(mksrf_fglacier_mesh)
+       write(ndiag,'(a)')' mesh for glacier region     '//trim(mksrf_fglacierregion_mesh)
+       write(ndiag,'(a)')' mesh for soil texture       '//trim(mksrf_fsoitex_mesh)
+       write(ndiag,'(a)')' mesh for soil color         '//trim(mksrf_fsoicol_mesh)
+       write(ndiag,'(a)')' mesh for soil organic       '//trim(mksrf_forganic_mesh)
+       write(ndiag,'(a)')' mesh for urban              '//trim(mksrf_furban_mesh)
+       write(ndiag,'(a)')' mesh for fmax               '//trim(mksrf_fmax_mesh)
+       write(ndiag,'(a)')' mesh for VOC pct emis       '//trim(mksrf_fvocef_mesh)
+       write(ndiag,'(a)')' mesh for harvest            '//trim(mksrf_fhrv_mesh)
+       write(ndiag,'(a)')' mesh for lai/sai            '//trim(mksrf_flai_mesh)
+       write(ndiag,'(a)')' mesh for urb topography     '//trim(mksrf_furbtopo_mesh)
+       write(ndiag,'(a)')' mesh for GDP                '//trim(mksrf_fgdp_mesh)
+       write(ndiag,'(a)')' mesh for peatlands          '//trim(mksrf_fpeat_mesh)
+       write(ndiag,'(a)')' mesh for soil depth         '//trim(mksrf_fsoildepth_mesh)
+       write(ndiag,'(a)')' mesh for ag fire pk month   '//trim(mksrf_fabm_mesh)
+       write(ndiag,'(a)')' mesh for topography stats   '//trim(mksrf_ftopostats_mesh)
+       write(ndiag,'(a)')' mesh for VIC parameters     '//trim(mksrf_fvic_mesh)
+
+       write(ndiag,'(a)')'mksrf_gridtype = '//trim(mksrf_gridtype)
 
        if (mksrf_fdynuse /= ' ') then
-          write(ndiag,'(a)')'mksrf_fdynuse = ',trim(mksrf_fdynuse)
+          write(ndiag,'(a)')'mksrf_fdynuse = '//trim(mksrf_fdynuse)
+       end if
+
+       write(ndiag,'(a)')'mksrf_fgrid_mesh = '//trim(mksrf_fgrid_mesh)
+       if (outnc_1d) then
+          write(ndiag,'(a)')'output file will be 1d format'
+       else
+          write(ndiag,'(a)')'fsurdat is 2d lat/lon grid'
+          write(ndiag,'(a,i8)')'nlon= ',mksrf_fgrid_mesh_nx
+          write(ndiag,'(a,i8)')'nlat= ',mksrf_fgrid_mesh_ny
+       end if
+       if ( outnc_large_files )then
+          write(ndiag,'(a)')'Output file in NetCDF 64-bit large_files format'
+       end if
+       if ( outnc_double )then
+          write(ndiag,'(a)')'Output ALL data in file as 64-bit'
+       end if
+       if ( outnc_vic )then
+          write(ndiag,'(a)')'Output VIC fields'
+       end if
+       if ( outnc_3dglc )then
+          write(ndiag,'(a)')'Output optional 3D glacier fields (mostly used for verification of the glacier model)'
+       end if
+       if ( outnc_3dglc )then
+          write(ndiag,'(a)')'Output optional 3D glacier fields (mostly used for verification of the glacier model)'
+       end if
+       if ( all_urban )then
+          write(ndiag,'(a)') 'Output ALL data in file as 100% urban'
+       end if
+       if ( no_inlandwet )then
+          write(ndiag,'(a)') 'Set wetland to 0% over land'
+       end if
+       if (all_veg) then
+          write(ndiag,'(a)') 'Output ALL data in file as 100% vegetated'
+       end if
+       if (urban_skip_abort_on_invalid_data_check) then
+          write(ndiag, '(a)') "WARNING: aborting on invalid data check in urban has been disabled!"
+          write(ndiag, '(a)') "WARNING: urban data may be invalid!"
        end if
     end if
 

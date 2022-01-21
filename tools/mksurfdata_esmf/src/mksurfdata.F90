@@ -260,13 +260,15 @@ program mksurfdata
   ! call pio_init(iam, mpicom, 1, 0, 36, PIO_REARR_SUBSET, pio_iosystem)
   ! TODO: generalize iotype
 
-  call pio_init(comp_rank=iam, &
-       comp_comm=mpicom, &
-       num_iotasks = 8, &
-       num_aggregator = 0, &
-       stride = 36, &
-       rearr = PIO_REARR_SUBSET, &
-       iosystem = pio_iosystem)
+  call pio_init(iam, mpicom, 4, 0, 36, PIO_REARR_SUBSET, pio_iosystem)
+
+  ! call pio_init(comp_rank=iam, &
+  !      comp_comm=mpicom, &
+  !      num_iotasks = 8, &
+  !      num_aggregator = 0, &
+  !      stride = 36, &
+  !      rearr = PIO_REARR_SUBSET, &
+  !      iosystem = pio_iosystem)
 
   pio_iotype   =  PIO_IOTYPE_PNETCDF
   pio_ioformat =  PIO_64BIT_DATA

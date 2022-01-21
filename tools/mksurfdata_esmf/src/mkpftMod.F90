@@ -946,37 +946,21 @@ contains
   end subroutine mkpft_check_oride
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkpftAtt
-  !
-  ! !INTERFACE:
   subroutine mkpftAtt( ncid, dynlanduse, xtype )
-    !
+
     ! !DESCRIPTION:
     ! make PFT attributes on the output file
-    !
-    use mkncdio    , only : check_ret, ncd_defvar, ncd_def_spatial_var
-    use fileutils  , only : get_filename
+
+    use mkutilsMod , only : get_filename
     use mkvarctl   , only : mksrf_fvegtyp, mksrf_flai
     use mkvarpar   
 
     ! !ARGUMENTS:
-    implicit none
-    include 'netcdf.inc'
     integer, intent(in) :: ncid         ! NetCDF file ID to write out to
     logical, intent(in) :: dynlanduse   ! if dynamic land-use file
     integer, intent(in) :: xtype        ! external type to output real data as
-    !
-    ! !CALLED FROM:
-    ! subroutine mkfile in module mkfileMod
-    !
-    ! !REVISION HISTORY:
-    ! Author: Erik Kluzek
-    !
-    !
+
     ! !LOCAL VARIABLES:
-    !EOP
     integer :: pftsize              ! size of lsmpft dimension
     integer :: natpftsize           ! size of natpft dimension
     integer :: dimid                ! input netCDF id's

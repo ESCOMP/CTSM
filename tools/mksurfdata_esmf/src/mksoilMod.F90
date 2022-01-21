@@ -1,80 +1,42 @@
 module mksoilMod
+
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !MODULE: mksoilMod
-  !
-  ! !DESCRIPTION:
   ! Make soil data (texture, color and organic)
-  !
-  ! !REVISION HISTORY:
-  ! Author: Erik Kluzek
-  !
   !-----------------------------------------------------------------------
-  !!USES:
+
   use shr_kind_mod, only : r8 => shr_kind_r8, r4=>shr_kind_r4
   use mkdomainMod , only : domain_checksame
   use mksoilUtilsMod, only : mkrank, dominant_soil_color
+
   implicit none
-
-  SAVE
   private           ! By default make data private
-  !
-  ! !PUBLIC MEMBER FUNCTIONS:
-  !
+
   public mksoilInit     ! Soil Initialization
-
   public mksoilAtt      ! Add attributes to output file
-
   public mksoiltex      ! Set soil texture
   public mkorganic      ! Set organic soil
   public mksoilcol      ! Set soil color
   public mkfmax         ! Make percent fmax
-  !
-  ! !PUBLIC DATA MEMBERS:
-  !
+
+  private :: mksoiltexInit  ! Soil texture Initialization
+  private :: mksoilcolInit  ! Soil color Initialization
+  private :: mksoilfmaxInit ! Soil fmax Initialization
+
   real(r8), public, parameter :: unset = -999.99_r8 ! Flag to signify soil texture override not set
   real(r8), public    :: soil_sand = unset     ! soil texture sand % to override with
   real(r8), public    :: soil_clay = unset     ! soil texture clay % to override with
   real(r8), public    :: soil_fmax = unset     ! soil max saturation frac to override with
   integer , parameter :: unsetcol  = -999      ! flag to indicate soil color NOT set
   integer , public    :: soil_color= unsetcol  ! soil color to override with
-  !
-  ! !PRIVATE DATA MEMBERS:
-  !
-  ! !PRIVATE MEMBER FUNCTIONS:
-  private :: mksoiltexInit  ! Soil texture Initialization
-  private :: mksoilcolInit  ! Soil color Initialization
-  private :: mksoilfmaxInit ! Soil fmax Initialization
 
-  !EOP
-  !===============================================================
+!===============================================================
 contains
-  !===============================================================
+!===============================================================
 
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mksoilInit
-  !
-  ! !INTERFACE:
   subroutine mksoilInit( )
-    !
-    ! !DESCRIPTION:
+
     ! Initialize the different soil types
-    ! !USES:
-    !
-    ! !ARGUMENTS:
-    implicit none
-    !
-    ! !REVISION HISTORY:
-    ! Author: Erik Kluzek
-    !
-    !
-    ! !LOCAL VARIABLES:
-    !EOP
-    character(len=32) :: subname = 'mksoilInit'
-    !-----------------------------------------------------------------------
+
     call mksoiltexInit()
     call mksoilcolInit()
     call mksoilfmaxInit()
@@ -82,26 +44,11 @@ contains
   end subroutine mksoilInit
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mksoiltexInit
-  !
-  ! !INTERFACE:
   subroutine mksoiltexInit( )
-    !
-    ! !DESCRIPTION:
+
     ! Initialize of make soil texture
-    ! !USES:
-    !
-    ! !ARGUMENTS:
-    implicit none
-    !
-    ! !REVISION HISTORY:
-    ! Author: Erik Kluzek
-    !
-    !
+
     ! !LOCAL VARIABLES:
-    !EOP
     real(r8) :: sumtex
     character(len=32) :: subname = 'mksoiltexInit'
     !-----------------------------------------------------------------------
@@ -129,78 +76,60 @@ contains
   end subroutine mksoiltexInit
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mksoiltex
-  !
-  ! !INTERFACE:
   subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
-    !
-    ! !DESCRIPTION:
+
     ! make %sand and %clay from IGBP soil data, which includes
     ! igbp soil 'mapunits' and their corresponding textures
-    !
-    ! !USES:
+
     use mkdomainMod, only : domain_type, domain_clean, domain_read
     use mkgridmapMod
     use mkvarpar	
     use mkvarctl    
     use mkncdio
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(domain_type), intent(in) :: ldomain
+
+    ! input/output variables
+    type(domain_type) , intent(in) :: ldomain
     character(len=*)  , intent(in) :: mapfname      ! input mapping file name
     character(len=*)  , intent(in) :: datfname      ! input data file name
     integer           , intent(in) :: ndiag         ! unit number for diag out
     real(r8)          , intent(out):: sand_o(:,:)   ! % sand (output grid)
     real(r8)          , intent(out):: clay_o(:,:)   ! % clay (output grid)
-    !
-    ! !CALLED FROM:
-    ! subroutine mksrfdat in module mksrfdatMod
-    !
-    ! !REVISION HISTORY:
-    ! Author: Mariana Vertenstein
-    !
-    !
-    ! !LOCAL VARIABLES:
-    !EOP
-    type(gridmap_type)    :: tgridmap
-    type(domain_type)    :: tdomain          ! local domain
-    character(len=38)  :: typ                 ! soil texture based on ...
-    integer  :: nlay                          ! number of soil layers
-    integer  :: mapunitmax                    ! max value of igbp soil mapunits
-    integer  :: mapunittemp                   ! temporary igbp soil mapunit
-    integer  :: maxovr
+
+    ! local variables
+    character(len=38)     :: typ                     ! soil texture based on ...
+    integer               :: nlay                    ! number of soil layers
+    integer               :: mapunitmax              ! max value of igbp soil mapunits
+    integer               :: mapunittemp             ! temporary igbp soil mapunit
+    integer               :: maxovr
     integer , allocatable :: novr(:)
     integer , allocatable :: kmap(:,:)
     real(r8), allocatable :: kwgt(:,:)
     integer , allocatable :: kmax(:)
     real(r8), allocatable :: wst(:)
-    real(r8), allocatable :: sand_i(:,:)      ! input grid: percent sand
-    real(r8), allocatable :: clay_i(:,:)      ! input grid: percent clay
-    real(r8), allocatable :: mapunit_i(:)     ! input grid: igbp soil mapunits
-    real(r8), allocatable :: frac_dst(:)      ! output fractions
-    real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
-    integer, parameter :: num=2               ! set soil mapunit number
-    integer  :: wsti(num)                     ! index to 1st and 2nd largest wst
-    integer, parameter :: nlsm=4              ! number of soil textures 
-    character(len=38)  :: soil(0:nlsm)        ! name of each soil texture
-    real(r8) :: gast_i(0:nlsm)                ! global area, by texture type
-    real(r8) :: gast_o(0:nlsm)                ! global area, by texture type
-    real(r8) :: wt                            ! map overlap weight
-    real(r8) :: sum_fldi                      ! global sum of dummy input fld
-    real(r8) :: sum_fldo                      ! global sum of dummy output fld
-    integer  :: l,k,n,m,ni,no,ns_i,ns_o       ! indices
-    integer  :: k1,k2                         ! indices
-    integer  :: ncid,dimid,varid              ! input netCDF id's
-    integer  :: ier                           ! error status
-    integer  :: miss = 99999                  ! missing data indicator
-    real(r8) :: relerr = 0.00001              ! max error: sum overlap wts ne 1
-    logical  :: found                         ! temporary
-    integer  :: kmap_max                      ! maximum overlap weights
-    integer, parameter :: kmap_max_min   = 90 ! kmap_max mininum value
-    integer, parameter :: km_mx_ns_prod = 160000 ! product of kmap_max*ns_o to keep constant
+    real(r8), allocatable :: sand_i(:,:)             ! input grid: percent sand
+    real(r8), allocatable :: clay_i(:,:)             ! input grid: percent clay
+    real(r8), allocatable :: mapunit_i(:)            ! input grid: igbp soil mapunits
+    real(r8), allocatable :: frac_dst(:)             ! output fractions
+    real(r8), allocatable :: mask_r8(:)              ! float of tdomain%mask
+    integer, parameter    :: num=2                   ! set soil mapunit number
+    integer               :: wsti(num)               ! index to 1st and 2nd largest wst
+    integer, parameter    :: nlsm=4                  ! number of soil textures 
+    character(len=38)     :: soil(0:nlsm)            ! name of each soil texture
+    real(r8)              :: gast_i(0:nlsm)          ! global area, by texture type
+    real(r8)              :: gast_o(0:nlsm)          ! global area, by texture type
+    real(r8)              :: wt                      ! map overlap weight
+    real(r8)              :: sum_fldi                ! global sum of dummy input fld
+    real(r8)              :: sum_fldo                ! global sum of dummy output fld
+    integer               :: l,k,n,m,ni,no,ns_i,ns_o ! indices
+    integer               :: k1,k2                   ! indices
+    integer               :: ncid,dimid,varid        ! input netCDF id's
+    integer               :: ier                     ! error status
+    integer               :: miss = 99999            ! missing data indicator
+    real(r8)              :: relerr = 0.00001        ! max error: sum overlap wts ne 1
+    logical               :: found                   ! temporary
+    integer               :: kmap_max                ! maximum overlap weights
+    integer, parameter    :: kmap_max_min   = 90     ! kmap_max mininum value
+    integer, parameter    :: km_mx_ns_prod = 160000  ! product of kmap_max*ns_o to keep constant
     character(len=32) :: subname = 'mksoiltex'
     !-----------------------------------------------------------------------
 
@@ -505,28 +434,11 @@ contains
   end subroutine mksoiltex
 
   !-----------------------------------------------------------------------
-
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mksoilcolInit
-  !
-  ! !INTERFACE:
   subroutine mksoilcolInit( )
     !
-    ! !DESCRIPTION:
     ! Initialize of make soil color
-    ! !USES:
-    !
-    ! !ARGUMENTS:
-    implicit none
-    !
-    ! !REVISION HISTORY:
-    ! Author: Erik Kluzek
-    !
-    !
-    ! !LOCAL VARIABLES:
-    !EOP
+
+    ! local variables
     real(r8) :: sumtex
     character(len=32) :: subname = 'mksoilcolInit'
     !-----------------------------------------------------------------------
@@ -539,61 +451,41 @@ contains
        end if
        write(6,*) 'Replace soil color for all points with: ', soil_color
     end if
+
   end subroutine mksoilcolInit
 
-
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mksoilcol
-  !
-  ! !INTERFACE:
   subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
        soil_color_o, nsoicol)
     !
-    ! !DESCRIPTION:
     ! make %sand and %clay from IGBP soil data, which includes
     ! igbp soil 'mapunits' and their corresponding textures
     !
-    ! !USES:
-    use mkdomainMod, only : domain_type, domain_clean, domain_read
-    use mkgridmapMod
     use mkvarpar	
     use mkvarctl    
     use mkncdio
-    !
+
     ! !ARGUMENTS:
-    implicit none
     type(domain_type), intent(in) :: ldomain
     character(len=*)  , intent(in) :: mapfname           ! input mapping file name
     character(len=*)  , intent(in) :: datfname           ! input data file name
     integer           , intent(in) :: ndiag              ! unit number for diag out
     integer           , intent(out):: soil_color_o(:)    ! soil color classes
     integer           , intent(out):: nsoicol            ! number of soil colors 
-    !
-    ! !CALLED FROM:
-    ! subroutine mksrfdat in module mksrfdatMod
-    !
-    ! !REVISION HISTORY:
-    ! Author: Mariana Vertenstein
-    !
-    !
+
     ! !LOCAL VARIABLES:
-    !EOP
-    type(gridmap_type)    :: tgridmap
-    type(domain_type)    :: tdomain          ! local domain
-    real(r8), allocatable :: gast_i(:)        ! global area, by surface type
-    real(r8), allocatable :: gast_o(:)        ! global area, by surface type
-    integer , allocatable :: soil_color_i(:)  ! input grid: BATS soil color
-    real(r8), allocatable :: frac_dst(:)      ! output fractions
-    real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
-    real(r8) :: sum_fldi                      ! global sum of dummy input fld
-    real(r8) :: sum_fldo                      ! global sum of dummy output fld
-    character(len=35), allocatable :: col(:)  ! name of each color
-    integer  :: k,l,m,ni,no,ns_i,ns_o       ! indices
-    integer  :: ncid,dimid,varid              ! input netCDF id's
-    integer  :: ier                           ! error status
-    real(r8) :: relerr = 0.00001              ! max error: sum overlap wts ne 1
+    real(r8), allocatable          :: gast_i(:)             ! global area, by surface type
+    real(r8), allocatable          :: gast_o(:)             ! global area, by surface type
+    integer , allocatable          :: soil_color_i(:)       ! input grid: BATS soil color
+    real(r8), allocatable          :: frac_dst(:)           ! output fractions
+    real(r8), allocatable          :: mask_r8(:)            ! float of tdomain%mask
+    real(r8)                       :: sum_fldi              ! global sum of dummy input fld
+    real(r8)                       :: sum_fldo              ! global sum of dummy output fld
+    character(len=35), allocatable :: col(:)                ! name of each color
+    integer                        :: k,l,m,ni,no,ns_i,ns_o ! indices
+    integer                        :: ncid,dimid,varid      ! input netCDF id's
+    integer                        :: ier                   ! error status
+    real(r8)                       :: relerr = 0.00001      ! max error: sum overlap wts ne 1
     character(len=32) :: subname = 'mksoilcol'
     !-----------------------------------------------------------------------
 
@@ -705,43 +597,6 @@ contains
        mask_r8 = tdomain%mask
        call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
-       ! -----------------------------------------------------------------
-       ! Error check2
-       ! Compare global area of each soil color on input and output grids
-       ! -----------------------------------------------------------------
-
-       gast_i(:) = 0.
-       do ni = 1,ns_i
-          k = soil_color_i(ni)
-          gast_i(k) = gast_i(k) + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
-       end do
-
-       gast_o(:) = 0.
-       do no = 1,ns_o
-          k = soil_color_o(no)
-          gast_o(k) = gast_o(k) + tgridmap%area_dst(no)*frac_dst(no)*re**2
-       end do
-
-       ! area comparison
-
-       write (ndiag,*)
-       write (ndiag,'(1x,70a1)') ('=',k=1,70)
-       write (ndiag,*) 'Soil Color Output'
-       write (ndiag,'(1x,70a1)') ('=',k=1,70)
-
-       write (ndiag,*)
-       write (ndiag,'(1x,70a1)') ('.',k=1,70)
-       write (ndiag,1001)
-1001   format (1x,'soil color type',20x,' input grid area output grid area',/ &
-            1x,33x,'     10**6 km**2','      10**6 km**2')
-       write (ndiag,'(1x,70a1)') ('.',k=1,70)
-       write (ndiag,*)
-
-       do k = 0, nsoicol
-          write (ndiag,1002) col(k),gast_i(k)*1.e-6,gast_o(k)*1.e-6
-1002      format (1x,a35,f16.3,f17.3)
-       end do
-
     end if
 
     ! Deallocate dynamic memory
@@ -758,41 +613,24 @@ contains
   end subroutine mksoilcol
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkorganic
-  !
-  ! !INTERFACE:
   subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
     !
-    ! !DESCRIPTION:
     ! make organic matter dataset
     !
-    ! !USES:
     use mkdomainMod, only : domain_type, domain_clean, domain_read
     use mkgridmapMod
     use mkvarpar	
     use mkvarctl    
     use mkncdio
-    !
+
     ! !ARGUMENTS:
-    implicit none
     type(domain_type), intent(in) :: ldomain
     character(len=*)  , intent(in) :: mapfname       ! input mapping file name
     character(len=*)  , intent(in) :: datfname       ! input data file name
     integer           , intent(in) :: ndiag          ! unit number for diag out
     real(r8)          , intent(out):: organic_o(:,:) ! output grid:
-    !
-    ! !CALLED FROM:
-    ! subroutine mksrfdat in module mksrfdatMod
-    !
-    ! !REVISION HISTORY:
-    ! 
-    ! Author: David Lawrence
-    !
-    !
+
     ! !LOCAL VARIABLES:
-    !EOP
     type(gridmap_type)    :: tgridmap
     type(domain_type)    :: tdomain         ! local domain
     real(r8), allocatable :: organic_i(:,:)  ! input grid: total column organic matter
@@ -871,22 +709,6 @@ contains
           end if
        enddo
 
-       !    ! Diagnostic output
-
-       ! TODO: there is nothing being written out here currently - all zeroes
-       ! So for now these are commented out
-!!$     write (ndiag,*)
-!!$     write (ndiag,'(1x,70a1)') ('.',k=1,70)
-!!$     write (ndiag,2001)
-!!$2001 format (1x,'surface type   input grid area  output grid area'/ &
-!!$             1x,'                 10**6 km**2      10**6 km**2   ')
-!!$     write (ndiag,'(1x,70a1)') ('.',k=1,70)
-!!$     write (ndiag,*)
-!!$     write (ndiag,2002) gomlev_i*1.e-06,gomlev_o*1.e-06
-!!$     write (ndiag,2004) garea_i*1.e-06,garea_o*1.e-06
-!!$2002 format (1x,'organic    ',f14.3,f17.3)
-!!$2004 format (1x,'all surface ',f14.3,f17.3)
-!!$
        write (6,*) 'Successfully made organic matter, level = ', lev
 
     end do   ! lev
@@ -1111,38 +933,21 @@ contains
   end subroutine mkfmax
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mksoilAtt
-  !
-  ! !INTERFACE:
   subroutine mksoilAtt( ncid, dynlanduse, xtype )
-    !
-    ! !DESCRIPTION:
+
     ! add atttributes to output file regarding the soil module
-    !
-    ! !USES:
-    use fileutils  , only : get_filename
+
+    use mkutilsMod , only : get_filename
     use mkncdio    , only : check_ret, ncd_defvar, ncd_def_spatial_var
     use mkvarpar   
     use mkvarctl   
 
     ! !ARGUMENTS:
-    implicit none
-    include 'netcdf.inc'
     integer, intent(in) :: ncid         ! NetCDF file ID to write out to
     logical, intent(in) :: dynlanduse   ! if dynamic land-use file
     integer, intent(in) :: xtype        ! external type to output real data as
-    !
-    ! !CALLED FROM:
-    ! subroutine mkfile in module mkfileMod
-    !
-    ! !REVISION HISTORY:
-    ! Original Author: Erik Kluzek
-    !
-    !
+
     ! !LOCAL VARIABLES:
-    !EOP
     integer :: dimid                ! temporary
     character(len=256) :: str       ! global attribute string
     character(len=32) :: subname = 'mksoilAtt'
@@ -1218,7 +1023,5 @@ contains
     end if
 
   end subroutine mksoilAtt
-
-  !-----------------------------------------------------------------------
 
 end module mksoilMod

@@ -4,6 +4,7 @@ module mkutilsMod
   ! General-purpose utilities
   use ESMF
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_sys_mod, only : shr_sys_abort
 
   implicit none
   private
@@ -12,6 +13,7 @@ module mkutilsMod
   public :: normalize_classes_by_gcell  ! renormalize array so values are given as % of total grid cell area
   public :: slightly_below
   public :: slightly_above
+  public :: get_filename  !Returns filename given full pathname
   public :: chkerr
 
   character(len=*) , parameter :: u_FILE_u = &
@@ -158,5 +160,26 @@ contains
        chkerr = .true.
     endif
   end function chkerr
+
+  !===============================================================
+  character(len=256) function get_filename (fulpath)
+    ! Returns filename given full pathname
+
+    ! input/output variables
+    character(len=*), intent(in)  :: fulpath !full pathname
+
+    ! local variables:
+    integer :: i    !loop index
+    integer :: klen !length of fulpath character string
+    !------------------------------------------------------------------------
+
+    klen = len_trim(fulpath)
+    do i = klen, 1, -1
+       if (fulpath(i:i) == '/') go to 10
+    end do
+    i = 0
+10  get_filename = fulpath(i+1:klen)
+
+  end function get_filename
 
 end module mkutilsMod

@@ -19,7 +19,7 @@ contains
     use pio
     use shr_kind_mod , only : r8 => shr_kind_r8
     use shr_sys_mod  , only : shr_sys_getenv
-    use fileutils    , only : get_filename
+    use mkutilsMod   , only : get_filename
     use mkvarpar     , only : nlevsoi, numrad, numstdpft
 #ifdef TODO
     use mkurbanparMod, only : numurbl, nlevurb
@@ -62,7 +62,7 @@ contains
     integer, allocatable :: ind1D(:)           ! Indices of 1D harvest variables
     integer, allocatable :: ind2D(:)           ! Indices of 2D harvest variables
     integer              :: rcode
-    character(len=32)    :: subname = 'mkfile' ! subroutine name
+    character(len=*), parameter :: subname=' (mkfile) '
     !-----------------------------------------------------------------------
 
     !---------------------------
@@ -77,7 +77,9 @@ contains
     ! Define dimensions.
     !---------------------------
 
-    call ESMF_LogWrite(trim(subname)//'defining dimensions', ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(subname//' defining dimensions', ESMF_LOGMSG_INFO)
+    write(6,*)'DEBUG: outnc_1d = ',outnc_1d
+
     if (outnc_1d) then
        rcode = pio_def_dim(pioid, 'gridcell', nx, dimid)
     else
@@ -103,7 +105,8 @@ contains
     ! Set global attributes.
     !---------------------------
 
-    call ESMF_LogWrite(trim(subname)//'setting global attributes', ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(subname//'setting global attributes', ESMF_LOGMSG_INFO)
+
     str = 'NCAR-CSM'
     rcode = pio_put_att(pioid, pio_global, "Conventions", trim(str))
 
@@ -232,6 +235,7 @@ contains
     ! Define variables
     ! ----------------------------------------------------------------------
 
+    call ESMF_LogWrite(subname//'defining variables', ESMF_LOGMSG_INFO)
     if ( .not. outnc_double ) then
        xtype = PIO_REAL
     else
@@ -436,22 +440,7 @@ contains
             lev1name='nglcec', &
             long_name='mean elevation on glacier elevation classes', units='m')
 
-       if ( outnc_3dglc ) then
-          call mkpio_def_spatial_var(pioid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
-               lev1name='nglcec', &
-               long_name='percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', units='unitless')
-
-          call mkpio_def_spatial_var(pioid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
-               lev1name='nglcec', &
-               long_name='percent ice sheet for each glacier elevation class (% of landunit)', units='unitless')
-
-          call mkpio_def_spatial_var(pioid, varname='PCT_GLC_GIC', xtype=xtype, &
-               long_name='percent ice caps/glaciers (% of landunit)', units='unitless')
-
-          call mkpio_def_spatial_var(pioid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
-               long_name='percent ice sheet (% of landunit)', units='unitless')
-
-       end if
+       call ESMF_LogWrite('DEBUG: here1', ESMF_LOGMSG_INFO)
 
        if ( outnc_3dglc ) then
           call mkpio_def_spatial_var(pioid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
@@ -467,50 +456,62 @@ contains
 
           call mkpio_def_spatial_var(pioid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
                long_name='percent ice sheet (% of landunit)', units='unitless')
-
        end if
+
+       call ESMF_LogWrite('DEBUG: here2', ESMF_LOGMSG_INFO)
 
        call mkpio_def_spatial_var(pioid, varname='PCT_URBAN', xtype=xtype, &
             lev1name='numurbl', &
             long_name='percent urban for each density type', units='unitless')
 
+       call ESMF_LogWrite('DEBUG: here3', ESMF_LOGMSG_INFO)
+
        call mkpio_def_spatial_var(pioid, varname='URBAN_REGION_ID', xtype=PIO_INT, &
             long_name='urban region ID', units='unitless')
 
-       ! call harvdata%getFieldsIdx( ind1D, ind2D )
-       ! do j = 1, harvdata%num1Dfields()
-       !    call mkpio_def_spatial_var(pioid, varname=mkharvest_fieldname(ind1D(j),constant=.true.), xtype=xtype, &
-       !         long_name=mkharvest_longname(ind1D(j)), units=mkharvest_units(ind1D(j)) )
-       ! end do
-       ! do j = 1, harvdata%num2Dfields()
-       !    call mkpio_def_spatial_var(pioid, varname=mkharvest_fieldname(ind2D(j),constant=.true.), xtype=xtype, &
-       !         lev1name=harvdata%getFieldsDim(ind2D(j)), &
-       !         long_name=mkharvest_longname(ind2D(j)), units=mkharvest_units(ind2D(j)) )
-       ! end do
-       ! deallocate(ind1D, ind2D)
+#ifdef TODO
+       call harvdata%getFieldsIdx( ind1D, ind2D )
+       do j = 1, harvdata%num1Dfields()
+          call mkpio_def_spatial_var(pioid, varname=mkharvest_fieldname(ind1D(j),constant=.true.), xtype=xtype, &
+               long_name=mkharvest_longname(ind1D(j)), units=mkharvest_units(ind1D(j)) )
+       end do
+       do j = 1, harvdata%num2Dfields()
+          call mkpio_def_spatial_var(pioid, varname=mkharvest_fieldname(ind2D(j),constant=.true.), xtype=xtype, &
+               lev1name=harvdata%getFieldsDim(ind2D(j)), &
+               long_name=mkharvest_longname(ind2D(j)), units=mkharvest_units(ind2D(j)) )
+       end do
+       deallocate(ind1D, ind2D)
+#endif
+
+       call ESMF_LogWrite('DEBUG: here4', ESMF_LOGMSG_INFO)
 
     else
 
-       ! call harvdata%getFieldsIdx( ind1D, ind2D )
-       ! do j = 1, harvdata%num1Dfields()
-       !    call mkpio_def_spatial_var(pioid, varname=mkharvest_fieldname(ind1D(j),constant=.false.), xtype=xtype, &
-       !         lev1name='time', &
-       !         long_name=mkharvest_longname(ind1D(j)), units=mkharvest_units(ind1D(j)) )
-       ! end do
-       ! do j = 1, harvdata%num2Dfields()
-       !    call mkpio_def_spatial_var(pioid, varname=mkharvest_fieldname(ind2D(j),constant=.false.), xtype=xtype, &
-       !         lev1name=harvdata%getFieldsDim(ind2D(j)), lev2name="time", &
-       !         long_name=mkharvest_longname(ind2D(j)), units=mkharvest_units(ind2D(j)) )
-       ! end do
-       ! deallocate(ind1D, ind2D)
+#ifdef TODO
+       call harvdata%getFieldsIdx( ind1D, ind2D )
+       do j = 1, harvdata%num1Dfields()
+          call mkpio_def_spatial_var(pioid, varname=mkharvest_fieldname(ind1D(j),constant=.false.), xtype=xtype, &
+               lev1name='time', &
+               long_name=mkharvest_longname(ind1D(j)), units=mkharvest_units(ind1D(j)) )
+       end do
+       do j = 1, harvdata%num2Dfields()
+          call mkpio_def_spatial_var(pioid, varname=mkharvest_fieldname(ind2D(j),constant=.false.), xtype=xtype, &
+               lev1name=harvdata%getFieldsDim(ind2D(j)), lev2name="time", &
+               long_name=mkharvest_longname(ind2D(j)), units=mkharvest_units(ind2D(j)) )
+       end do
+       deallocate(ind1D, ind2D)
+#endif
 
     end if  ! .not. dynlanduse
 
+    call ESMF_LogWrite('DEBUG: here5', ESMF_LOGMSG_INFO)
+
     ! End of define mode
+    rcode = pio_enddef(pioid)
 
-    call mkpio_enddef(pioid)
-
+    call ESMF_LogWrite('DEBUG: closing file', ESMF_LOGMSG_INFO)
     call pio_closefile(pioid)
+    call ESMF_LogWrite('DEBUG: closed file', ESMF_LOGMSG_INFO)
 
   end subroutine mkfile
 

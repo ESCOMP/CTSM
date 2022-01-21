@@ -17,8 +17,6 @@ module mkpioMod
   public :: mkpio_iodesc_output
   public :: mkpio_wopen
   public :: mkpio_close
-  public :: mkpio_redef
-  public :: mkpio_enddef
   public :: mkpio_defvar
   public :: mkpio_def_spatial_var
   public :: mkpio_get_dim_lengths
@@ -92,8 +90,8 @@ contains
     else
        call shr_sys_abort(subName//"ERROR: only real and double types are supported")
     end if
-    call pio_closefile(pioid)
     call pio_freedecomp(pioid, pio_iodesc)
+    call pio_closefile(pioid)
     call ESMF_VMLogMemInfo("After pio_read_darry in regrid_data")
 
   end subroutine mkpio_get_rawdata
@@ -207,7 +205,7 @@ contains
 
     use pio , only : PIO_IOTYPE_PNETCDF, PIO_IOTYPE_NETCDF, PIO_BCAST_ERROR, PIO_INTERNAL_ERROR
     use pio , only : pio_openfile, pio_createfile, PIO_GLOBAL, pio_enddef
-    use pio , only : pio_put_att, pio_redef, pio_get_att
+    use pio , only : pio_put_att, pio_get_att
     use pio , only : pio_seterrorhandling, pio_file_is_open, pio_clobber, pio_write, pio_noclobber
 
     ! input/output arguments
@@ -290,38 +288,6 @@ contains
     endif
 
   end subroutine mkpio_close
-
-  !===============================================================================
-  subroutine mkpio_redef(pioid)
-
-    use pio, only : pio_redef
-
-    ! input/output variables
-    type(file_desc_t), intent(inout) :: pioid
-
-    ! local variables
-    integer :: rcode
-    !-------------------------------------------------------------------------------
-
-    rcode = pio_redef(pioid)
-
-  end subroutine mkpio_redef
-
-  !===============================================================================
-  subroutine mkpio_enddef(pioid)
-
-    use pio, only : pio_enddef
-
-    ! input/output variables
-    type(file_desc_t), intent(inout) :: pioid
-
-    ! local variables
-    integer :: rcode
-    !-------------------------------------------------------------------------------
-
-    rcode = pio_enddef(pioid)
-
-  end subroutine mkpio_enddef
 
   !===============================================================================
   subroutine mkpio_defvar(pioid, varname, xtype, &
@@ -428,9 +394,8 @@ contains
     integer          , intent(in) :: xtype     ! external type
     character(len=*) , intent(in) :: long_name ! attribute
     character(len=*) , intent(in) :: units     ! attribute
-    !
-    ! !LOCAL VARIABLES:
 
+    ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'mkpio_def_spatial_var_0lev'
     !-----------------------------------------------------------------------
 
@@ -452,10 +417,9 @@ contains
     !
     ! The variable in question has one level (or time) dimension in addition to its
     ! spatial dimensions
-    !
-    ! !USES:
+
     use mkvarctl, only : outnc_1d
-    !
+
     ! !ARGUMENTS:
     type(file_desc_t) , intent(in)           :: pioid
     character(len=*) , intent(in) :: varname   ! variable name
@@ -463,9 +427,8 @@ contains
     character(len=*) , intent(in) :: lev1name  ! name of level (or time) dimension
     character(len=*) , intent(in) :: long_name ! attribute
     character(len=*) , intent(in) :: units     ! attribute
-    !
-    ! !LOCAL VARIABLES:
 
+    ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'mkpio_def_spatial_var_1lev'
     !-----------------------------------------------------------------------
 
@@ -501,9 +464,8 @@ contains
     character(len=*) , intent(in) :: lev2name  ! name of second level (or time) dimension
     character(len=*) , intent(in) :: long_name ! attribute
     character(len=*) , intent(in) :: units     ! attribute
-    !
-    ! !LOCAL VARIABLES:
 
+    ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'mkpio_def_spatial_var_2lev'
     !-----------------------------------------------------------------------
 
