@@ -56,20 +56,20 @@ contains
        write(6,*) 'Replace soil clay % for all points with: ', soil_clay
        if ( soil_sand == unset )then
           write (6,*) subname//':error: soil_clay set, but NOT soil_sand'
-          call abort()
+          call shr_sys_abort()
        end if
     end if
     if ( soil_sand /= unset )then
        write(6,*) 'Replace soil sand % for all points with: ', soil_sand
        if ( soil_clay == unset )then
           write (6,*) subname//':error: soil_sand set, but NOT soil_clay'
-          call abort()
+          call shr_sys_abort()
        end if
        sumtex = soil_sand + soil_clay
        if ( sumtex < 0.0_r8 .or. sumtex > 100.0_r8 )then
           write (6,*) subname//':error: soil_sand and soil_clay out of bounds: sand, clay = ', &
                soil_sand, soil_clay
-          call abort()
+          call shr_sys_abort()
        end if
     end if
 
@@ -166,7 +166,7 @@ contains
     allocate(sand_i(mapunitmax,nlay), &
          clay_i(mapunitmax,nlay), &
          mapunit_i(ns_i), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
 
     call check_ret(nf_inq_varid (ncid, 'MAPUNITS', varid), subname)
     call check_ret(nf_get_var_double (ncid, varid, mapunit_i), subname)
@@ -190,7 +190,7 @@ contains
 
        ! Obtain frac_dst
        allocate(frac_dst(ns_o), stat=ier)
-       if (ier/=0) call abort()
+       if (ier/=0) call shr_sys_abort()
        call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
        ! kmap_max are the maximum number of mapunits that will consider on
@@ -214,13 +214,13 @@ contains
        write(6,*)'kmap_max= ',kmap_max,' maxovr= ',maxovr,' ns_o= ',ns_o,' size= ',(kmap_max+1)*ns_o
 
        allocate(kmap(0:kmap_max,ns_o), stat=ier)
-       if (ier/=0) call abort()
+       if (ier/=0) call shr_sys_abort()
        allocate(kwgt(0:kmap_max,ns_o), stat=ier)
-       if (ier/=0) call abort()
+       if (ier/=0) call shr_sys_abort()
        allocate(kmax(ns_o), stat=ier)
-       if (ier/=0) call abort()
+       if (ier/=0) call shr_sys_abort()
        allocate(wst(0:kmap_max), stat=ier)
-       if (ier/=0) call abort()
+       if (ier/=0) call shr_sys_abort()
 
        kwgt(:,:) = 0.
        kmap(:,:) = 0
@@ -246,7 +246,7 @@ contains
                    write(6,*)'kmax is > kmap_max= ',kmax(no), 'kmap_max = ', &
                         kmap_max,' for no = ',no
                    write(6,*)'reset kmap_max in mksoilMod to a greater value'
-                   call abort()
+                   call shr_sys_abort()
                 end if
                 kmap(kmax(no),no) = k
                 kwgt(kmax(no),no) = wt
@@ -319,7 +319,7 @@ contains
        ! Global sum of output field 
 
        allocate(mask_r8(ns_i), stat=ier)
-       if (ier/=0) call abort()
+       if (ier/=0) call shr_sys_abort()
        mask_r8 = tdomain%mask
        call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
@@ -355,7 +355,7 @@ contains
              write (6,*) 'MKSOILTEX error: sand = ',sand_i(mapunittemp,l), &
                   ' clay = ',clay_i(mapunittemp,l), &
                   ' not assigned to soil type for input grid lon,lat,layer = ',ni,l
-             call abort()
+             call shr_sys_abort()
 101          continue
              gast_i(m) = gast_i(m) + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
           end do
@@ -383,7 +383,7 @@ contains
              write (6,*) 'MKSOILTEX error: sand = ',sand_o(no,l), &
                   ' clay = ',clay_o(no,l), &
                   ' not assigned to soil type for output grid lon,lat,layer = ',no,l
-             call abort()
+             call shr_sys_abort()
 102          continue
              gast_o(m) = gast_o(m) + tgridmap%area_dst(no)*frac_dst(no)*re**2
           end do
@@ -447,7 +447,7 @@ contains
     if ( soil_color /= unsetcol )then
        if ( soil_color < 0 .or. soil_color > 20 )then
           write(6,*)'soil_color is out of range = ', soil_color
-          call abort()
+          call shr_sys_abort()
        end if
        write(6,*) 'Replace soil color for all points with: ', soil_color
     end if
@@ -502,9 +502,9 @@ contains
     call domain_read(tdomain,datfname)
     ns_i = tdomain%ns
     allocate(soil_color_i(ns_i), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
     allocate(frac_dst(ns_o), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
 
     write (6,*) 'Open soil color file: ', trim(datfname)
     call check_ret(nf_open(datfname, 0, ncid), subname)
@@ -555,7 +555,7 @@ contains
        col(8) = 'class 8: dark                      '
     else
        write(6,*)'nsoicol value of ',nsoicol,' is not currently supported'
-       call abort()
+       call shr_sys_abort()
     end if
 
     ! Error check soil_color if it is set
@@ -563,7 +563,7 @@ contains
 
        if ( soil_color > nsoicol )then
           write(6,*)'soil_color is out of range = ', soil_color
-          call abort()
+          call shr_sys_abort()
        end if
 
        do no = 1,ns_o
@@ -593,7 +593,7 @@ contains
        ! Global sum of output field 
 
        allocate(mask_r8(ns_i), stat=ier)
-       if (ier/=0) call abort()
+       if (ier/=0) call shr_sys_abort()
        mask_r8 = tdomain%mask
        call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
@@ -668,13 +668,13 @@ contains
     call check_ret(nf_inq_dimlen (ncid, dimid, nlay), subname)
 
     allocate(organic_i(ns_i,nlay),stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
     allocate(frac_dst(ldomain%ns),stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
 
     if (nlay /= nlevsoi) then
        write(6,*)'nlay, nlevsoi= ',nlay,nlevsoi,' do not match'
-       call abort()
+       call shr_sys_abort()
     end if
 
     call check_ret(nf_inq_varid (ncid, 'ORGANIC', varid), subname)
@@ -705,7 +705,7 @@ contains
           if ((organic_o(no,lev)) > 130.000001_r8) then
              write (6,*) 'MKORGANIC error: organic = ',organic_o(no,lev), &
                   ' greater than 130.000001 for column, row = ',no
-             call abort()
+             call shr_sys_abort()
           end if
        enddo
 
@@ -754,7 +754,7 @@ contains
     if ( soil_fmax /= unset )then
        if ( soil_fmax < 0.0 .or. soil_fmax > 1.0 )then
           write(6,*)'soil_fmax is out of range = ', soil_fmax
-          call abort()
+          call shr_sys_abort()
        end if
        write(6,*) 'Replace soil fmax for all points with: ', soil_fmax
     end if
@@ -827,9 +827,9 @@ contains
     ns_i = tdomain%ns
     ns_o = ldomain%ns
     allocate(fmax_i(ns_i), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
     allocate(frac_dst(ns_o), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
 
     write (6,*) 'Open soil fmax file: ', trim(datfname)
     call check_ret(nf_open(datfname, 0, ncid), subname)
@@ -863,7 +863,7 @@ contains
        if ((fmax_o(no)) > 1.000001_r8) then
           write (6,*) 'MKFMAX error: fmax = ',fmax_o(no), &
                ' greater than 1.000001 for column, row = ',no
-          call abort()
+          call shr_sys_abort()
        end if
     enddo
 
@@ -871,7 +871,7 @@ contains
     ! output grid that is land as determined by input grid
 
     allocate(mask_r8(ns_i), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
     mask_r8 = tdomain%mask
     call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
@@ -896,7 +896,7 @@ contains
             frac_dst(no)*re**2
        if ((frac_dst(no) < 0.0) .or. (frac_dst(no) > 1.0001)) then
           write(6,*) "ERROR:: frac_dst out of range: ", frac_dst(no),no
-          call abort()
+          call shr_sys_abort ()
        end if
     end do
 

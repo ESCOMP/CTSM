@@ -73,7 +73,8 @@ contains
     call ESMF_VMLogMemInfo("Before pio_openfile in regrid_data for "//trim(filename))
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(filename), pio_nowrite)
     call ESMF_VMLogMemInfo("After pio_openfile in regrid_data")
-    call ESMF_VMLogMemInfo("After field get")
+
+    ! TODO: put this in the calling file
     call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_iodesc in regrid_data")
@@ -90,8 +91,8 @@ contains
     else
        call shr_sys_abort(subName//"ERROR: only real and double types are supported")
     end if
-    call pio_freedecomp(pioid, pio_iodesc)
     call pio_closefile(pioid)
+    call pio_freedecomp(pio_iosystem, pio_iodesc)
     call ESMF_VMLogMemInfo("After pio_read_darry in regrid_data")
 
   end subroutine mkpio_get_rawdata
@@ -140,7 +141,6 @@ contains
 
     ! get pio variable id, type and number of dimensions
     call ESMF_VMLogMemInfo("Beginning getting variable id")
-    call PIO_seterrorhandling(pioid, PIO_BCAST_ERROR)
     rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
     rcode = pio_inq_vartype(pioid, pio_varid, pio_vartype)
     rcode = pio_inq_varndims(pioid, pio_varid, ndims)
@@ -197,7 +197,7 @@ contains
   end function mkpio_file_exists
 
   !===============================================================================
-  subroutine mkpio_wopen(pioid, filename, clobber)
+  subroutine mkpio_wopen(filename, clobber, pioid)
 
     !---------------
     ! open netcdf file
@@ -209,9 +209,9 @@ contains
     use pio , only : pio_seterrorhandling, pio_file_is_open, pio_clobber, pio_write, pio_noclobber
 
     ! input/output arguments
-    type(file_desc_t) , intent(inout) :: pioid
     character(len=*)  , intent(in)    :: filename
     logical           , intent(in)    :: clobber
+    type(file_desc_t) , intent(inout) :: pioid
 
     ! local variables
     integer           :: rcode
@@ -237,6 +237,7 @@ contains
        endif
     else
        ! only applies to classic NETCDF files.
+       nmode = pio_noclobber
        if (pio_iotype == PIO_IOTYPE_NETCDF .or. pio_iotype == PIO_IOTYPE_PNETCDF) then
           nmode = ior(nmode,pio_ioformat)
        endif
@@ -389,11 +390,11 @@ contains
     use mkvarctl, only : outnc_1d
 
     ! !ARGUMENTS:
-    type(file_desc_t) , intent(in)           :: pioid
-    character(len=*) , intent(in) :: varname   ! variable name
-    integer          , intent(in) :: xtype     ! external type
-    character(len=*) , intent(in) :: long_name ! attribute
-    character(len=*) , intent(in) :: units     ! attribute
+    type(file_desc_t) , intent(in) :: pioid
+    character(len=*)  , intent(in) :: varname   ! variable name
+    integer           , intent(in) :: xtype     ! external type
+    character(len=*)  , intent(in) :: long_name ! attribute
+    character(len=*)  , intent(in) :: units     ! attribute
 
     ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'mkpio_def_spatial_var_0lev'

@@ -101,7 +101,7 @@ contains
     allocate(ef_btr_i(ns_i), ef_fet_i(ns_i), ef_fdt_i(ns_i), &
          ef_shr_i(ns_i), ef_grs_i(ns_i), ef_crp_i(ns_i), &
          frac_dst(ns_o), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
 
     write (6,*) 'Open VOC file: ', trim(datfname)
     call check_ret(nf_open(datfname, 0, ncid), subname)
@@ -147,32 +147,32 @@ contains
        if ( ef_btr_o(no) < 0._r8 ) then
           write (6,*) 'MKVOCEF error: EF btr = ',ef_btr_o(no), &
                ' is negative for no = ',no
-          call abort()
+          call shr_sys_abort()
        end if
        if ( ef_fet_o(no) < 0._r8 ) then
           write (6,*) 'MKVOCEF error: EF fet = ',ef_fet_o(no), &
                ' is negative for no = ',no
-          call abort()
+          call shr_sys_abort()
        end if
        if ( ef_fdt_o(no) < 0._r8 ) then
           write (6,*) 'MKVOCEF error: EF fdt = ',ef_fdt_o(no), &
                ' is negative for no = ',no
-          call abort()
+          call shr_sys_abort()
        end if
        if ( ef_shr_o(no) < 0._r8 ) then
           write (6,*) 'MKVOCEF error: EF shr = ',ef_shr_o(no), &
                ' is negative for no = ',no
-          call abort()
+          call shr_sys_abort()
        end if
        if ( ef_grs_o(no) < 0._r8 ) then
           write (6,*) 'MKVOCEF error: EF grs = ',ef_grs_o(no), &
                ' is negative for no = ',no
-          call abort()
+          call shr_sys_abort()
        end if
        if ( ef_crp_o(no) < 0._r8 ) then
           write (6,*) 'MKVOCEF error: EF crp = ',ef_crp_o(no), &
                ' is negative for no = ',no
-          call abort()
+          call shr_sys_abort()
        end if
     enddo
 
@@ -185,7 +185,7 @@ contains
     ! output grid that is land as determined by input grid
 
     allocate(mask_r8(ns_i), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
     mask_r8 = tdomain%mask
     call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 

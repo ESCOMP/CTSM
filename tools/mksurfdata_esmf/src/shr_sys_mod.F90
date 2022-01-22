@@ -43,9 +43,9 @@ CONTAINS
     !-------------------------------------------------------------------------------
 
     ! input/output variables
-    character(len=*) ,intent(in)  :: name    ! env var name
-    character(len=*) ,intent(out) :: val     ! env var value
-    integer          ,intent(out) :: rcode   ! return code
+    character(len=*) ,intent(in)    :: name    ! env var name
+    character(len=*) ,intent(inout) :: val     ! env var value
+    integer          ,intent(out)   :: rcode   ! return code
 
     !----- local -----
     integer                :: lenname ! length of env var name

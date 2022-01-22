@@ -1,18 +1,5 @@
 module mkpftMod
 
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !MODULE: mkpft
-  !
-  ! !DESCRIPTION:
-  ! Make PFT data
-  !
-  ! !REVISION HISTORY:
-  ! Author: Mariana Vertenstein
-  !
-  !-----------------------------------------------------------------------
-  !!USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use mkvarpar    , only : noveg
   use mkvarctl    , only : numpft
@@ -20,33 +7,27 @@ module mkpftMod
   use mkpftConstantsMod
 
   implicit none
-
   private           ! By default make data private
-  !
-  ! !PUBLIC MEMBER FUNCTIONS:
-  !
+
   public mkpftInit          ! Initialization
   public mkpft              ! Set PFT
   public mkpft_parse_oride  ! Parse the string with PFT fraction/index info to override
   public mkpftAtt           ! Write out attributes to output file on pft
-  !
-  ! !PUBLIC DATA MEMBERS: 
-  !
 
-  !
+  private :: mkpft_check_oride  ! Check the pft_frc and pft_idx values for correctness
+
   ! When pft_idx and pft_frc are set, they must be set together, and they will cause the
   ! entire area to be covered with vegetation and zero out other landunits.
   ! The sum of pft_frc must = 100%, and each pft_idx point in the array corresponds to
   ! the fraction in pft_frc. Only the first few points are used until pft_frc = 0.0.
-  !
+
   integer            :: m                     ! index
   integer, public    :: pft_idx(0:maxpft) = & ! PFT vegetation index to override with
        (/ ( -1,  m = 0, maxpft )   /)
   real(r8), public   :: pft_frc(0:maxpft) = & ! PFT vegetation fraction to override with
        (/ ( 0.0_r8, m = 0, maxpft ) /)
-  !
+
   ! !PRIVATE DATA MEMBERS:
-  !
   logical, public, protected :: use_input_pft = .false. ! Flag to override PFT with input values
   logical, public, protected :: presc_cover   = .false. ! Flag to prescribe vegetation coverage
   integer, private           :: nzero                   ! index of first zero fraction
@@ -66,54 +47,34 @@ module mkpftMod
      module procedure :: constructor  ! PFT Overide object constructor
   end interface pft_oride
 
-  type(pft_oride), private :: pft_override     ! Module instance of PFT override object
-  ! Used for both zeroing out PFT's as well
-  ! as setting specified PFT's over the gridcell
-  !
-  ! !PRIVATE MEMBER FUNCTIONS:
-  !
-  private :: mkpft_check_oride  ! Check the pft_frc and pft_idx values for correctness
-  !EOP
-  !===============================================================
-contains
-  !===============================================================
+  ! Module instance of PFT override object
+  ! Used for both zeroing out PFT's as well as setting specified PFT's over the gridcell
+  type(pft_oride), private :: pft_override     
 
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkpftInit
-  !
-  ! !INTERFACE:
+!===============================================================
+contains
+!===============================================================
+
   subroutine mkpftInit( zero_out_l, all_veg_l )
     !
-    ! !DESCRIPTION:
     ! Initialize of Make PFT data
-    ! !USES:
+    ! 
     use mkvarpar, only : numstdpft, numstdcft
-    !
+
     ! !ARGUMENTS:
-    implicit none
     logical, intent(IN) :: zero_out_l ! If veg should be zero'ed out
-    logical, intent(IN) :: all_veg_l  ! If should zero out other fractions so that
-    ! all land-cover is vegetation
-    !
-    ! !CALLED FROM:
-    ! subroutine mksrfdat in module mksrfdatMod
-    !
-    ! !REVISION HISTORY:
-    ! Author: Erik Kluzek
-    !
-    !
+    logical, intent(IN) :: all_veg_l  ! If should zero out other fractions so that all land-cover is vegetation
+
     ! !LOCAL VARIABLES:
-    !EOP
+    logical             :: error_happened    ! If an error was triggered so should return
     real(r8), parameter :: hndrd = 100.0_r8  ! A hundred percent
-    character(len=32) :: subname = 'mkpftMod::mkpftInit() '
-    logical :: error_happened    ! If an error was triggered so should return
+    character(len=*), parameter :: subname = ' (mkpftInit) '
     !-----------------------------------------------------------------------
-    write (6, '(a, a, a)') "In ", trim(subname), "..."
+
+    write (6, '(a, a, a)') "In ", subname, "..."
     if ( maxpft < numpft ) then
        write(6,*) subname//'number PFT is > max allowed!'
-       call abort()
+       call shr_sys_abort()
        return
     end if
     nzero = -1
@@ -124,7 +85,7 @@ contains
     end if
     if ( zero_out_l .and. use_input_pft )then
        write(6,*) subname//"trying to both zero out all PFT's as well as set them to specific values"
-       call abort()
+       call shr_sys_abort()
        return
     end if
     ! If zeroing out, set use_input_pft to true so the pft_override will be used
@@ -140,13 +101,12 @@ contains
     end if
     if ( all_veg_l .and. .not. use_input_pft )then
        write(6,*) subname//'if all_veg is set to true then specified PFT indices must be provided (i.e. pft_frc and pft_idx)'
-       call abort()
-       return
+       call shr_sys_abort()
     end if
 
     if ( zero_out_l .and. all_veg_l )then
        write(6,*) subname//'zeroing out vegetation and setting vegetation to 100% is a contradiction!'
-       call abort()
+       call shr_sys_abort()
        return
     end if
 
@@ -176,12 +136,10 @@ contains
     ! correspondence mentioned above
     if (cft_ub /= numpft) then
        write(6,*) 'CFT_UB set up incorrectly: cft_ub, numpft = ', cft_ub, numpft
-       call abort()
-       return
+       call shr_sys_abort()
     end if
-    !
+
     ! Set the PFT override values if applicable
-    !
     pft_override = pft_oride()
     presc_cover = .false.
     if( zero_out_l )then
@@ -213,7 +171,6 @@ contains
   subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
        pctlnd_o, pctnatpft_o, pctcft_o)
     !
-    ! !DESCRIPTION:
     ! Make PFT data
     !
     ! This dataset consists of the %cover of the [numpft]+1 PFTs used by
@@ -226,7 +183,6 @@ contains
     ! Upon return from this routine, the % cover of the natural veg + crop landunits is
     ! generally 100% everywhere; this will be normalized later to account for special landunits.
     !
-    ! !USES:
     use mkdomainMod, only : domain_type, domain_clean, domain_read
     use mkgridmapMod
     use mkvarpar	
@@ -236,7 +192,6 @@ contains
     use mkpftConstantsMod, only : natpft_lb, natpft_ub, num_cft, cft_lb, cft_ub
     !
     ! !ARGUMENTS:
-    implicit none
     type(domain_type), intent(in) :: ldomain
     character(len=*)  , intent(in) :: mapfname              ! input mapping file name
     character(len=*)  , intent(in) :: fpft                  ! input pft dataset file name
@@ -245,15 +200,7 @@ contains
     type(pct_pft_type), intent(out):: pctnatpft_o(:)        ! natural PFT cover
     type(pct_pft_type), intent(out):: pctcft_o(:)           ! crop (CFT) cover
     !
-    ! !CALLED FROM:
-    ! subroutine mksrfdat in module mksrfdatMod
-    !
-    ! !REVISION HISTORY:
-    ! Author: Mariana Vertenstein
-    !
-    !
     ! !LOCAL VARIABLES:
-    !EOP
     type(pct_pft_type), allocatable:: pctnatpft_i(:)         ! input grid: natural PFT cover
     type(pct_pft_type), allocatable:: pctcft_i(:)            ! input grid: crop (CFT) cover
     type(domain_type)    :: tdomain             ! local domain
@@ -294,12 +241,13 @@ contains
     !-----------------------------------------------------------------------
 
     write (6,*)
-    write (6, '(a, a, a)') "In ", trim(subname), "..."
+    write (6, '(a, a, a)') "In ", subname, "..."
     write (6,*) 'Attempting to make PFTs .....'
 
     ! -----------------------------------------------------------------
     ! Set the vegetation types
     ! -----------------------------------------------------------------
+
     if ( numpft >= numstdpft )then
        veg(0:maxpft) = (/                                   &
             'not vegetated                      ', &
@@ -383,37 +331,42 @@ contains
             'irrigated_tropical_soybean         ' /)
     end if
     if (      numpft == numstdpft )then
-       write(6,*)'Creating surface datasets with the standard # of PFTs =', numpft
+       if (root_task) then
+          write(ndiag, '(a,i8)')'Creating surface datasets with the standard # of PFTs =', numpft
+       end if
     else if ( numpft > numstdpft )then
-       write(6,*)'Creating surface datasets with extra types for crops; total pfts =', numpft
+       if (root_task) then
+          write(ndiag,'(a,i8)')'Creating surface datasets with extra types for crops; total pfts =', numpft
     else
        write(6,*) subname//': parameter numpft is NOT set to a known value (should be 16 or more) =',numpft
-       call abort()
-       return
+       call shr_sys_abort()
     end if
-
-    ns_o = ldomain%ns
 
     ! -----------------------------------------------------------------
     ! Read input PFT file
     ! -----------------------------------------------------------------
+
+    ns_o = size(pctlnd_o)
+
     if ( .not. presc_cover ) then
+
        ! Obtain input grid info, read PCT_PFT
 
-       call domain_read(tdomain,fpft)
-       ns_i = tdomain%ns
+       ! create field on input mesh (first read in input mesh)
+       call ESMF_VMLogMemInfo("Before create mesh_i in lanwat")
+       mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_VMLogMemInfo("After create mesh_i in lanwat")
 
-       write (6,*) 'Open PFT file: ', trim(fpft)
-       call check_ret(nf_open(fpft, 0, ncid), subname)
-
-       ! Check what variables exist to determine what format the file is in
-       call check_ret(nf_inq_varid (ncid, 'PCT_PFT', varid), subname, varexists=oldformat)
-
-       if ( oldformat ) then
-          write(6,*) subname//' ERROR: PCT_PFT field on the the file so it is in the old format, which is no longer supported'
-          call abort()
-          return
+       if (root_task) then
+          write (ndiag,'(a)') 'Opening PFT file: '//trim(fpft)
        end if
+       rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(fpft), pio_nowrite)
+
        call check_ret(nf_inq_dimid  (ncid, 'natpft', dimid), subname)
        call check_ret(nf_inq_dimlen (ncid, dimid, natpft_i), subname)
        call check_ret(nf_inq_dimid  (ncid, 'cft', dimid), subname)
@@ -426,14 +379,14 @@ contains
           if (numpft_i .eq. numstdpft+1) then
              write(6,*) subname//' ERROR: trying to use non-crop input file'
              write(6,*) 'for a surface dataset with crops.'
-             call abort()
+             call shr_sys_abort()
              return
           else if (numpft_i > numstdpft+1 .and. numpft_i == maxpft+1) then
              write(6,*) subname//' WARNING: using a crop input raw dataset for a non-crop output surface dataset'
           else
              write(6,*) subname//': parameter numpft+1= ',numpft+1, &
                   'does not equal input dataset numpft= ',numpft_i
-             call abort()
+             call shr_sys_abort()
              return
           end if
        endif
@@ -447,25 +400,55 @@ contains
 
        ! If file is in the new format, expect the following variables: 
        !      PCT_NATVEG, PCT_CROP, PCT_NAT_PFT, PCT_CFT
-       allocate(pctnatveg_i(ns_i), &
-            pctnatveg_o(ns_o), &
-            pctcrop_i(ns_i),   &
-            pctcrop_o(ns_o),   &
-            frac_dst(ns_o),    &
-            pct_cft_i(ns_i,1:num_cft), &
-            pct_cft_o(ns_o,1:num_cft), &
-            pct_nat_pft_i(ns_i,0:num_natpft), &
-            pct_nat_pft_o(ns_o,0:num_natpft), &
-            stat=ier)
-       if (ier/=0)then
-          call abort()
-          return
+       allocate(pctnatveg_i(ns_i), stat=ier)
+       if (ier/=0) call shr_sys_abort()
+
+       allocate(pctnatveg_o(ns_o), stat=ier)
+       allocate(pctcrop_i(ns_i), stat=ier)
+       allocate(pctcrop_o(ns_o), stat=ier)
+       allocate(frac_dst(ns_o), stat=ier)
+       allocate(pct_cft_i(ns_i,1:num_cft), stat=ier)
+       allocate(pct_cft_o(ns_o,1:num_cft), stat=ier)
+       allocate(pct_nat_pft_i(ns_i,0:num_natpft), stat=ier)
+       allocate(pct_nat_pft_o(ns_o,0:num_natpft),  stat=ier)
+
+       ! Open the raw data file
+       call ESMF_VMLogMemInfo("Before pio_openfile in regrid_data for "//trim(filename))
+       rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(filename), pio_nowrite)
+
+       ! Create an io descriptor
+       call ESMF_VMLogMemInfo("After pio_openfile in mkpftMod")
+       call mkpio_iodesc_rawdata(mesh_i, 'PCT_NATVEG', pioid, pio_varid, pio_vartype, pio_iodesc, rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_VMLogMemInfo("After mkpio_iodesc in mkpftMod")
+
+       ! Read in 
+       if (pio_vartype == PIO_REAL) then
+          allocate(data_real(ns_i))
+          call pio_read_darray(pioid, pio_varid, pio_iodesc, data_real, rcode)
+          data_i(:) = real(data_real(:), kind=r8)
+          deallocate(data_real)
+       else if (pio_vartype == PIO_DOUBLE) then
+          allocate(data_double(ns_i))
+          call pio_read_darray(pioid, pio_varid, pio_iodesc, data_double, rcode)
+          data_i(:) = data_double(:)
+          deallocate(data_double)
+       else
+          call shr_sys_abort(subName//"ERROR: only real and double types are supported")
        end if
+
+
+       call pio_freedecomp(pioid, pio_iodesc)
+       call pio_closefile(pioid)
+       call ESMF_VMLogMemInfo("After pio_read_darry in regrid_data")
+
+
 
        call check_ret(nf_inq_varid (ncid, 'PCT_NATVEG', varid), subname)
        call check_ret(nf_get_var_double (ncid, varid, pctnatveg_i), subname)
        call check_ret(nf_inq_varid (ncid, 'PCT_CROP', varid), subname)
        call check_ret(nf_get_var_double (ncid, varid, pctcrop_i), subname)
+
        if  ( .not. use_input_pft )then
           call check_ret(nf_inq_varid (ncid, 'PCT_CFT', varid), subname)
           call get_dim_lengths(ncid, 'PCT_CFT', ndims, dimlens(:) )
@@ -485,7 +468,7 @@ contains
              deallocate( temp_i )
           else
              write(6,*) subname//': ERROR: dimensions for PCT_CROP are NOT what is expected'
-             call abort()
+             call shr_sys_abort()
              return
           end if
           call check_ret(nf_inq_varid (ncid, 'PCT_NAT_PFT', varid), subname)
@@ -510,7 +493,7 @@ contains
             pct_nat_pft_o(ns_o,0:num_natpft), &
             stat=ier)
        if (ier/=0)then
-          call abort()
+          call shr_sys_abort()
           return
        end if
     end if
@@ -520,7 +503,7 @@ contains
          pctcft_i(ns_i),                &
          stat=ier)
     if (ier/=0)then
-       call abort()
+       call shr_sys_abort()
        return
     end if
 
@@ -599,14 +582,14 @@ contains
                 if ( pft_override%natveg <= 0.0_r8 )then
                    write(6,*) subname//': ERROR: no natural vegetation PFTs are being prescribed but there are natural '// &
                         'vegetation areas: provide at least one natural veg PFT'
-                   call abort()
+                   call shr_sys_abort()
                    return
                 end if
              end if
              if (pctlnd_o(no) > 1.0e-6 .and. pctcrop_o(no) > 1.0e-6) then
                 if ( pft_override%crop <= 0.0_r8 )then
                    write(6,*) subname//': ERROR: no crop CFTs are being prescribed but there are crop areas: provide at least one CFT'
-                   call abort()
+                   call shr_sys_abort()
                    return
                 end if
              end if
@@ -650,7 +633,7 @@ contains
           write (6,*) subname//'error: nat pft = ', &
                (pct_nat_pft_o(no,m), m = 0, num_natpft), &
                ' do not sum to 100. at no = ',no,' but to ', wst_sum
-          call abort()
+          call shr_sys_abort()
        end if
 
        ! Correct sum so that if it differs slightly from 100, it is corrected to equal
@@ -667,7 +650,7 @@ contains
           write (6,*) subname//'error: crop cft = ', &
                (pct_cft_o(no,m), m = 1, num_cft), &
                ' do not sum to 100. at no = ',no,' but to ', wst_sum
-          call abort()
+          call shr_sys_abort()
        end if
 
        ! Correct sum so that if it differs slightly from 100, it is corrected to equal
@@ -831,7 +814,7 @@ contains
     call shr_string_betweenTags( string, frc_start, frc_end, substring, rc )
     if ( rc /= 0 )then
        write(6,*) subname//'Trouble finding pft_frac start end tags'
-       call abort()
+       call shr_sys_abort()
        return
     end if
     num_elms = shr_string_countChar( substring, ",", rc )
@@ -839,12 +822,12 @@ contains
     call shr_string_betweenTags( string, idx_start, idx_end, substring, rc )
     if ( rc /= 0 )then
        write(6,*) subname//'Trouble finding pft_index start end tags'
-       call abort()
+       call shr_sys_abort()
        return
     end if
     if ( num_elms /= shr_string_countChar( substring, ",", rc ) )then
        write(6,*) subname//'number of elements different between frc and idx fields'
-       call abort()
+       call shr_sys_abort()
        return
     end if
     read(substring,*) pft_idx(0:num_elms)
@@ -887,11 +870,11 @@ contains
        ! PFT fraction is NOT used
        use_input_pft = .false.
     else if ( abs(sumpft - hndrd) > 1.e-6 )then
-       write(6, '(a, a, f15.12)') trim(subname), 'Sum of PFT fraction is NOT equal to 100% =', sumpft
+       write(6, '(a, a, f15.12)') subname, 'Sum of PFT fraction is NOT equal to 100% =', sumpft
        write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero)
        write(6,*) 'With PFT index      : ', pft_idx(0:nzero)
        error_happened = .true.
-       call abort()
+       call shr_sys_abort()
        return
     else
        use_input_pft = .true.
@@ -907,19 +890,19 @@ contains
           if ( pft_frc(i) < 0.0_r8 .or. pft_frc(i) > hndrd )then
              write(6,*) subname//'PFT fraction is out of range: pft_frc=', pft_frc(i)
              error_happened = .true.
-             call abort()
+             call shr_sys_abort()
              return
           else if ( pft_frc(i) > 0.0_r8 .and. pft_idx(i) == -1 )then
              write(6,*) subname//'PFT fraction > zero, but index NOT set: pft_idx=', pft_idx(i)
              error_happened = .true.
-             call abort()
+             call shr_sys_abort()
              return
           end if
           ! PFT index out of range
           if ( pft_idx(i) < 0 .or. pft_idx(i) > numpft )then
              write(6,*) subname//'PFT index is out of range: ', pft_idx(i)
              error_happened = .true.
-             call abort()
+             call shr_sys_abort()
              return
           end if
           ! Make sure index values NOT used twice
@@ -927,7 +910,7 @@ contains
              if ( pft_idx(i) == pft_idx(j) )then
                 write(6,*) subname//'Same PFT index is used twice: ', pft_idx(i)
                 error_happened = .true.
-                call abort()
+                call shr_sys_abort()
                 return
              end if
           end do
@@ -937,7 +920,7 @@ contains
           if ( pft_frc(i) /= 0.0_r8 .or. pft_idx(i) /= -1 )then
              write(6,*) subname//'After PFT fraction is zeroed out, fraction is non zero, or index set'
              error_happened = .true.
-             call abort()
+             call shr_sys_abort()
              return
           end if
        end do
@@ -1127,12 +1110,12 @@ contains
     this%natveg = -1.0_r8
     if ( num_natpft < 0 )then
        write(6,*) subname//'num_natpft is NOT set = ', num_natpft
-       call abort()
+       call shr_sys_abort()
        return
     end if
     if ( num_cft < 0 )then
        write(6,*) subname//'num_cft is NOT set = ', num_cft
-       call abort()
+       call shr_sys_abort()
        return
     end if
     allocate( this%natpft(noveg:num_natpft) )
@@ -1195,7 +1178,7 @@ contains
        i = pft_idx(m)
        if ( (i < noveg) .or. (i > numpft) )then
           write(6,*)  subname//'PFT index is out of valid range'
-          call abort()
+          call shr_sys_abort()
           return
        else if ( i <= num_natpft )then
           this%natpft(i) = pft_frc(m)

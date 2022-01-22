@@ -1,68 +1,66 @@
 module mkfileMod
 
+  use ESMF
+  use pio
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use shr_sys_mod  , only : shr_sys_getenv, shr_sys_abort
+  use mkutilsMod   , only : get_filename, chkerr
+  use mkvarpar     , only : nlevsoi, numrad, numstdpft
+#ifdef TODO
+  use mkurbanparMod, only : numurbl, nlevurb
+  use mkglcmecMod  , only : nglcec
+  use mkpftMod     , only : mkpftAtt
+  use mksoilMod    , only : mksoilAtt
+  use mkharvestMod , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname
+  use mkharvestMod , only : mkharvest_units, harvestDataType
+#endif
+  use mkpioMod ! TODO: add only
+  use mkvarctl 
+
   implicit none
   private
 
-  public :: mkfile
+  public :: mkfile_fsurdat
+
+  character(len=*) , parameter :: u_FILE_u = &
+       __FILE__
 
 !=================================================================================
 contains
 !=================================================================================
 
-#ifdef TODO
-  subroutine mkfile(vm, nx, ny, fname, harvdata, dynlanduse, pioid)
-#else
-  subroutine mkfile(vm, nx, ny, fname, dynlanduse, pioid)
-#endif
-
-    use ESMF
-    use pio
-    use shr_kind_mod , only : r8 => shr_kind_r8
-    use shr_sys_mod  , only : shr_sys_getenv
-    use mkutilsMod   , only : get_filename
-    use mkvarpar     , only : nlevsoi, numrad, numstdpft
-#ifdef TODO
-    use mkurbanparMod, only : numurbl, nlevurb
-    use mkglcmecMod  , only : nglcec
-    use mkpftMod     , only : mkpftAtt
-    use mksoilMod    , only : mksoilAtt
-    use mkharvestMod , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname
-    use mkharvestMod , only : mkharvest_units, harvestDataType
-#endif
-    use mkpioMod ! TODO: add only
-    use mkvarctl 
-
-    implicit none
+  subroutine mkfile_fsurdat(nx, ny, mesh_model, dynlanduse, &
+       pctlak, pctwet, lakedepth)
 
     ! input/output variables
-    type(ESMF_VM)    , intent(inout) :: vm
-    integer          , intent(in)    :: nx
-    integer          , intent(in)    :: ny
-    character(len=*) , intent(in)    :: fname
-    logical          , intent(in)    :: dynlanduse
+    integer          , intent(in) :: nx
+    integer          , intent(in) :: ny
+    logical          , intent(in) :: dynlanduse
+    type(ESMF_Mesh)  , intent(in) :: mesh_model
+    real(r8), pointer, intent(in) :: pctlak(:)               ! percent of grid cell that is lake
+    real(r8), pointer, intent(in) :: pctwet(:)               ! percent of grid cell that is wetland
+    real(r8), pointer, intent(in) :: lakedepth(:)            ! lake depth (m)
 #ifdef TODO    
     type(harvestDataType) , intent(in) :: harvdata
 #endif
 
+
     ! local variables
     type(file_desc_t)    :: pioid
-    integer              :: j                  ! index
-    integer              :: dimid              ! temporary
-    integer              :: values(8)          ! temporary
-    character(len=256)   :: str                ! global attribute string
-    character(len=256)   :: name               ! name of attribute
-    character(len=256)   :: unit               ! units of attribute
-    character(len= 18)   :: datetime           ! temporary
-    character(len=  8)   :: date               ! temporary
-    character(len= 10)   :: time               ! temporary
-    character(len=  5)   :: zone               ! temporary
-    integer              :: ier                ! error status
-    integer              :: omode              ! netCDF output mode
+    character(len=256)   :: varname
+    character(len=256)   :: longname
+    character(len=256)   :: units               
     integer              :: xtype              ! external type
     integer, allocatable :: ind1D(:)           ! Indices of 1D harvest variables
     integer, allocatable :: ind2D(:)           ! Indices of 2D harvest variables
     integer              :: rcode
-    character(len=*), parameter :: subname=' (mkfile) '
+    integer              :: rc 
+    integer              :: n, i
+    logical              :: define_mode
+    type(io_desc_t)      :: pio_iodesc 
+    type(var_desc_t)     :: pio_varid
+    real(r8), pointer    :: rpointer1d(:)
+    character(len=*), parameter :: subname=' (mkfile_fsurdat) '
     !-----------------------------------------------------------------------
 
     !---------------------------
@@ -70,15 +68,109 @@ contains
     !---------------------------
 
     ! TODO: what about setting no fill values?
-    call mkpio_wopen(pioid, trim(fname), clobber=.true.)
-    call ESMF_LogWrite(subname//'successfully opened output file '//trim(fname), ESMF_LOGMSG_INFO)
+     call mkpio_wopen(trim(fsurdat), clobber=.true., pioid=pioid)
 
-    !---------------------------
+    ! ----------------------------------------------------------------------
+    ! Define dimensions and global attributes
+    ! ----------------------------------------------------------------------
+
+     call mkfile_define_dims(pioid, nx, ny, dynlanduse)
+     call mkfile_define_atts(pioid, dynlanduse)
+
+    ! ----------------------------------------------------------------------
+    ! Define and outut variables
+    ! ----------------------------------------------------------------------
+
+    call ESMF_LogWrite(subname//'defining variables', ESMF_LOGMSG_INFO)
+
+    if ( outnc_double ) then
+       xtype = PIO_DOUBLE
+    else
+       xtype = PIO_REAL
+    end if
+
+    do n = 1,2
+
+       define_mode = (n == 1)
+       if (.not. define_mode) then
+          rcode = pio_enddef(pioid)
+       end if
+
+       if (.not. dynlanduse) then
+
+          varname = 'PCT_LAKE'
+          longname = 'percent_lake'
+          units = 'unitless'
+          rpointer1d => pctlak
+          if (define_mode) then
+             call mkpio_def_spatial_var(pioid, trim(varname), xtype, trim(longname), trim(units))
+          else
+             call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
+             rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+             call pio_write_darray(pioid, pio_varid, pio_iodesc, rpointer1d, rcode)
+             call pio_freedecomp(pioid, pio_iodesc)
+          end if
+
+          varname = 'PCT_WETLAND'
+          longname = 'percent_wetland'
+          units = 'unitless'
+          rpointer1d => pctwet
+          if (define_mode) then
+             call mkpio_def_spatial_var(pioid, trim(varname), xtype, trim(longname), trim(units))
+          else
+             call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
+             rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+             call pio_write_darray(pioid, pio_varid, pio_iodesc, rpointer1d, rcode)
+             call pio_freedecomp(pioid, pio_iodesc)
+          end if
+
+          varname = 'LAKEDEPTH'
+          longname = 'lake depth' 
+          units = 'm'
+          rpointer1d => lakedepth
+          if (define_mode) then
+             call mkpio_def_spatial_var(pioid, trim(varname), xtype, trim(longname), trim(units))
+          else
+             ! inquire about varid here
+             call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
+             rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+             call pio_write_darray(pioid, pio_varid, pio_iodesc, rpointer1d, rcode)
+             call pio_freedecomp(pioid, pio_iodesc)
+          end if
+
+       end if
+    end do
+
+    ! Close surface dataset
+    call pio_closefile(pioid)
+    
+    if (root_task) then
+       write (ndiag,'(72a1)') ("-",i=1,60)
+       write (ndiag,'(a)')' land model surface data set successfully created for '
+    end if
+
+  end subroutine mkfile_fsurdat
+
+!=================================================================================
+  subroutine mkfile_define_dims(pioid, nx, ny, dynlanduse)
+
     ! Define dimensions.
-    !---------------------------
+
+    ! input/output variables
+    type(file_desc_t) , intent(in) :: pioid
+    integer           , intent(in) :: nx, ny
+    logical           , intent(in) :: dynlanduse
+
+    ! local variables
+    integer :: dimid              ! temporary
+    integer :: rcode
+    character(len=*), parameter :: subname = 'mkfile_define_dims'
+    !-----------------------------------------------------------------------
 
     call ESMF_LogWrite(subname//' defining dimensions', ESMF_LOGMSG_INFO)
-    write(6,*)'DEBUG: outnc_1d = ',outnc_1d
 
     if (outnc_1d) then
        rcode = pio_def_dim(pioid, 'gridcell', nx, dimid)
@@ -100,6 +192,28 @@ contains
        rcode = pio_def_dim(pioid, 'numrad' , numrad, dimid)
        rcode = pio_def_dim(pioid, 'nchar'  , 256, dimid)
     end if
+
+  end subroutine mkfile_define_dims
+
+!=================================================================================
+  subroutine mkfile_define_atts(pioid, dynlanduse)
+
+    ! input/output variables
+    type(file_desc_t) , intent(in) :: pioid
+    logical           , intent(in) :: dynlanduse
+  
+    ! local variables
+    integer              :: values(8)          ! temporary
+    character(len=256)   :: str                ! global attribute string
+    character(len=256)   :: name               ! name of attribute
+    character(len=256)   :: unit               ! units of attribute
+    character(len= 18)   :: datetime           ! temporary
+    character(len=  8)   :: date               ! temporary
+    character(len= 10)   :: time               ! temporary
+    character(len=  5)   :: zone               ! temporary
+    integer              :: rcode
+    character(len=*), parameter :: subname = 'mkfile_define_atts'
+    !-----------------------------------------------------------------------
 
     !---------------------------
     ! Set global attributes.
@@ -231,288 +345,6 @@ contains
        rcode = pio_put_att(pioid, pio_global, 'mesh_vic_file', trim(str))
     end if
 
-    ! ----------------------------------------------------------------------
-    ! Define variables
-    ! ----------------------------------------------------------------------
-
-    call ESMF_LogWrite(subname//'defining variables', ESMF_LOGMSG_INFO)
-    if ( .not. outnc_double ) then
-       xtype = PIO_REAL
-    else
-       xtype = PIO_DOUBLE
-    end if
-
-    !call mksoilAtt( pioid, dynlanduse, xtype )
-
-    !call mkpftAtt( pioid, dynlanduse, xtype )
-
-    call mkpio_def_spatial_var(pioid, varname='AREA' , xtype=PIO_DOUBLE, &
-         long_name='area', units='km^2')
-
-    call mkpio_def_spatial_var(pioid, varname='LONGXY', xtype=PIO_DOUBLE, &
-         long_name='longitude', units='degrees east')
-
-    call mkpio_def_spatial_var(pioid, varname='LATIXY', xtype=PIO_double, &
-         long_name='latitude', units='degrees north')
-
-    if (.not. dynlanduse) then
-       call mkpio_def_spatial_var(pioid, varname='EF1_BTR', xtype=xtype, &
-            long_name='EF btr (isoprene)', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='EF1_FET', xtype=xtype, &
-            long_name='EF fet (isoprene)', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='EF1_FDT', xtype=xtype, &
-            long_name='EF fdt (isoprene)', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='EF1_SHR', xtype=xtype, &
-            long_name='EF shr (isoprene)', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='EF1_GRS', xtype=xtype, &
-            long_name='EF grs (isoprene)', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='EF1_CRP', xtype=xtype, &
-            long_name='EF crp (isoprene)', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='CANYON_HWR', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='canyon height to width ratio', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='EM_IMPROAD', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='emissivity of impervious road', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='EM_PERROAD', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='emissivity of pervious road', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='EM_ROOF', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='emissivity of roof', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='EM_WALL', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='emissivity of wall', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='HT_ROOF', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='height of roof', units='meters')
-
-       call mkpio_def_spatial_var(pioid, varname='THICK_ROOF', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='thickness of roof', units='meters')
-
-       call mkpio_def_spatial_var(pioid, varname='THICK_WALL', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='thickness of wall', units='meters')
-
-       call mkpio_def_spatial_var(pioid, varname='T_BUILDING_MIN', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='minimum interior building temperature', units='K')
-
-       call mkpio_def_spatial_var(pioid, varname='WIND_HGT_CANYON', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='height of wind in canyon', units='meters')
-
-       call mkpio_def_spatial_var(pioid, varname='WTLUNIT_ROOF', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='fraction of roof', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='WTROAD_PERV', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='fraction of pervious road', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='ALB_IMPROAD_DIR', xtype=xtype, &
-            lev1name='numurbl', lev2name='numrad', &
-            long_name='direct albedo of impervious road', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='ALB_IMPROAD_DIF', xtype=xtype, &
-            lev1name='numurbl', lev2name='numrad', &
-            long_name='diffuse albedo of impervious road', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='ALB_PERROAD_DIR', xtype=xtype, &
-            lev1name='numurbl', lev2name='numrad', &
-            long_name='direct albedo of pervious road', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='ALB_PERROAD_DIF', xtype=xtype, &
-            lev1name='numurbl', lev2name='numrad', &
-            long_name='diffuse albedo of pervious road', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='ALB_ROOF_DIR', xtype=xtype, &
-            lev1name='numurbl', lev2name='numrad', &
-            long_name='direct albedo of roof', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='ALB_ROOF_DIF', xtype=xtype, &
-            lev1name='numurbl', lev2name='numrad', &
-            long_name='diffuse albedo of roof', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='ALB_WALL_DIR', xtype=xtype, &
-            lev1name='numurbl', lev2name='numrad', &
-            long_name='direct albedo of wall', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='ALB_WALL_DIF', xtype=xtype, &
-            lev1name='numurbl', lev2name='numrad', &
-            long_name='diffuse albedo of wall', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='TK_ROOF', xtype=xtype, &
-            lev1name='numurbl', lev2name='nlevurb', &
-            long_name='thermal conductivity of roof', units='W/m*K')
-
-       call mkpio_def_spatial_var(pioid, varname='TK_WALL', xtype=xtype, &
-            lev1name='numurbl', lev2name='nlevurb', &
-            long_name='thermal conductivity of wall', units='W/m*K')
-
-       call mkpio_def_spatial_var(pioid, varname='TK_IMPROAD', xtype=xtype, &
-            lev1name='numurbl', lev2name='nlevurb', &
-            long_name='thermal conductivity of impervious road', units='W/m*K')
-
-       call mkpio_def_spatial_var(pioid, varname='CV_ROOF', xtype=xtype, &
-            lev1name='numurbl', lev2name='nlevurb', &
-            long_name='volumetric heat capacity of roof', units='J/m^3*K')
-
-       call mkpio_def_spatial_var(pioid, varname='CV_WALL', xtype=xtype, &
-            lev1name='numurbl', lev2name='nlevurb', &
-            long_name='volumetric heat capacity of wall', units='J/m^3*K')
-
-       call mkpio_def_spatial_var(pioid, varname='CV_IMPROAD', xtype=xtype, &
-            lev1name='numurbl', lev2name='nlevurb', &
-            long_name='volumetric heat capacity of impervious road', units='J/m^3*K')
-
-       call mkpio_def_spatial_var(pioid, varname='NLEV_IMPROAD', xtype=PIO_INT, &
-            lev1name='numurbl', &
-            long_name='number of impervious road layers', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='peatf', xtype=xtype, &
-            long_name='peatland fraction', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='zbedrock', xtype=xtype, &
-            long_name='soil depth', units='m')
-
-       call mkpio_def_spatial_var(pioid, varname='abm', xtype=PIO_INT, &
-            long_name='agricultural fire peak month', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='gdp', xtype=xtype, &
-            long_name='gdp', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='SLOPE', xtype=xtype, &
-            long_name='mean topographic slope', units='degrees')
-
-       call mkpio_def_spatial_var(pioid, varname='STD_ELEV', xtype=xtype, &
-            long_name='standard deviation of elevation', units='m')
-
-       if ( outnc_vic )then
-          call mkpio_def_spatial_var(pioid, varname='binfl', xtype=xtype, &
-               long_name='VIC b parameter for the Variable Infiltration Capacity Curve', units='unitless')
-
-          call mkpio_def_spatial_var(pioid, varname='Ws', xtype=xtype, &
-               long_name='VIC Ws parameter for the ARNO curve', units='unitless')
-
-          call mkpio_def_spatial_var(pioid, varname='Dsmax', xtype=xtype, &
-               long_name='VIC Dsmax parameter for the ARNO curve', units='mm/day')
-
-          call mkpio_def_spatial_var(pioid, varname='Ds', xtype=xtype, &
-               long_name='VIC Ds parameter for the ARNO curve', units='unitless')
-
-       end if
-       call mkpio_def_spatial_var(pioid, varname='LAKEDEPTH', xtype=xtype, &
-            long_name='lake depth', units='m')
-
-       call mkpio_def_spatial_var(pioid, varname='PCT_WETLAND', xtype=xtype, &
-            long_name='percent wetland', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='PCT_LAKE', xtype=xtype, &
-            long_name='percent lake', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='PCT_GLACIER', xtype=xtype, &
-            long_name='percent glacier', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='GLACIER_REGION', xtype=PIO_INT, &
-            long_name='glacier region ID', units='unitless')
-
-       call mkpio_defvar(pioid, varname='GLC_MEC', xtype=xtype, &
-            dim1name='nglcecp1', long_name='Glacier elevation class', units='m')
-
-       call mkpio_def_spatial_var(pioid, varname='PCT_GLC_MEC', xtype=xtype, &
-            lev1name='nglcec', &
-            long_name='percent glacier for each glacier elevation class (% of landunit)', units='unitless')
-
-       call mkpio_def_spatial_var(pioid, varname='TOPO_GLC_MEC', xtype=xtype, &
-            lev1name='nglcec', &
-            long_name='mean elevation on glacier elevation classes', units='m')
-
-       call ESMF_LogWrite('DEBUG: here1', ESMF_LOGMSG_INFO)
-
-       if ( outnc_3dglc ) then
-          call mkpio_def_spatial_var(pioid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
-               lev1name='nglcec', &
-               long_name='percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', units='unitless')
-
-          call mkpio_def_spatial_var(pioid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
-               lev1name='nglcec', &
-               long_name='percent ice sheet for each glacier elevation class (% of landunit)', units='unitless')
-
-          call mkpio_def_spatial_var(pioid, varname='PCT_GLC_GIC', xtype=xtype, &
-               long_name='percent ice caps/glaciers (% of landunit)', units='unitless')
-
-          call mkpio_def_spatial_var(pioid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
-               long_name='percent ice sheet (% of landunit)', units='unitless')
-       end if
-
-       call ESMF_LogWrite('DEBUG: here2', ESMF_LOGMSG_INFO)
-
-       call mkpio_def_spatial_var(pioid, varname='PCT_URBAN', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='percent urban for each density type', units='unitless')
-
-       call ESMF_LogWrite('DEBUG: here3', ESMF_LOGMSG_INFO)
-
-       call mkpio_def_spatial_var(pioid, varname='URBAN_REGION_ID', xtype=PIO_INT, &
-            long_name='urban region ID', units='unitless')
-
-#ifdef TODO
-       call harvdata%getFieldsIdx( ind1D, ind2D )
-       do j = 1, harvdata%num1Dfields()
-          call mkpio_def_spatial_var(pioid, varname=mkharvest_fieldname(ind1D(j),constant=.true.), xtype=xtype, &
-               long_name=mkharvest_longname(ind1D(j)), units=mkharvest_units(ind1D(j)) )
-       end do
-       do j = 1, harvdata%num2Dfields()
-          call mkpio_def_spatial_var(pioid, varname=mkharvest_fieldname(ind2D(j),constant=.true.), xtype=xtype, &
-               lev1name=harvdata%getFieldsDim(ind2D(j)), &
-               long_name=mkharvest_longname(ind2D(j)), units=mkharvest_units(ind2D(j)) )
-       end do
-       deallocate(ind1D, ind2D)
-#endif
-
-       call ESMF_LogWrite('DEBUG: here4', ESMF_LOGMSG_INFO)
-
-    else
-
-#ifdef TODO
-       call harvdata%getFieldsIdx( ind1D, ind2D )
-       do j = 1, harvdata%num1Dfields()
-          call mkpio_def_spatial_var(pioid, varname=mkharvest_fieldname(ind1D(j),constant=.false.), xtype=xtype, &
-               lev1name='time', &
-               long_name=mkharvest_longname(ind1D(j)), units=mkharvest_units(ind1D(j)) )
-       end do
-       do j = 1, harvdata%num2Dfields()
-          call mkpio_def_spatial_var(pioid, varname=mkharvest_fieldname(ind2D(j),constant=.false.), xtype=xtype, &
-               lev1name=harvdata%getFieldsDim(ind2D(j)), lev2name="time", &
-               long_name=mkharvest_longname(ind2D(j)), units=mkharvest_units(ind2D(j)) )
-       end do
-       deallocate(ind1D, ind2D)
-#endif
-
-    end if  ! .not. dynlanduse
-
-    call ESMF_LogWrite('DEBUG: here5', ESMF_LOGMSG_INFO)
-
-    ! End of define mode
-    rcode = pio_enddef(pioid)
-
-    call ESMF_LogWrite('DEBUG: closing file', ESMF_LOGMSG_INFO)
-    call pio_closefile(pioid)
-    call ESMF_LogWrite('DEBUG: closed file', ESMF_LOGMSG_INFO)
-
-  end subroutine mkfile
+  end subroutine mkfile_define_atts
 
 end module mkfileMod

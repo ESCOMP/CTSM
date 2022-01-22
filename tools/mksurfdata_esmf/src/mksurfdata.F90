@@ -117,11 +117,11 @@ program mksurfdata
 #endif
   use mklanwatMod        , only : mklakwat
   use mkutilsMod         , only : normalize_classes_by_gcell, chkerr
-  use mkfileMod          , only : mkfile
+  use mkfileMod          , only : mkfile_fsurdat
   use mkvarpar           , only : nlevsoi, elev_thresh, numstdpft
   use nanMod             , only : nan, bigint
   use mkpioMod           , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkpioMod           , only : mkpio_put_time_slice, mkpio_iodesc_output
+  use mkpioMod           , only : mkpio_put_time_slice, mkpio_iodesc_output, mkpio_wopen
   use mkvarctl
 
   implicit none
@@ -478,6 +478,12 @@ program mksurfdata
   ! Modify interpolated fields based on additional constrants
   ! ----------------------------------------------------------------------
 
+  do n = 1,lsize_o
+     pctlak(n) = float(nint(pctlak(n)))
+     pctwet(n) = float(nint(pctwet(n)))
+     write(6,*)'DEBUG: n,pctlak = ',n,pctlak(n)
+  end do
+
 #ifdef TODO
   do n = 1,lsize_o
      ! Truncate all percentage fields on output grid. This is needed to
@@ -524,7 +530,7 @@ program mksurfdata
              'pcturb and pctgla is greater than 250%'
         write (6,*)'n,pctlak,pctwet,pcturb,pctgla= ', &
              n,pctlak(n),pctwet(n),pcturb(n),pctgla(n)
-        call abort()
+        call shr_sys_abort()
      else if (suma > 100._r4) then
         pctlak(n) = pctlak(n) * 100._r8/suma
         pctwet(n) = pctwet(n) * 100._r8/suma
@@ -535,7 +541,7 @@ program mksurfdata
 
   call normalizencheck_landuse()
 
-  !Write out sum of PFT's
+  ! Write out sum of PFT's
 
   do k = natpft_lb,natpft_ub
      suma = 0._r8
@@ -564,11 +570,10 @@ program mksurfdata
   ! This call needs to occur after pctgla has been adjusted for the final time
 
   allocate (pctglcmec(lsize_o,nglcec), &
-       topoglcmec(lsize_o,nglcec) )
+            topoglcmec(lsize_o,nglcec) )
   if ( outnc_3dglc )then
-     allocate( &
-          pctglcmec_gic(lsize_o,nglcec), &
-          pctglcmec_icesheet(lsize_o,nglcec))
+     allocate( pctglcmec_gic(lsize_o,nglcec), &
+               pctglcmec_icesheet(lsize_o,nglcec))
      allocate (pctglc_gic(lsize_o))
      allocate (pctglc_icesheet(lsize_o))
   end if
@@ -611,261 +616,20 @@ program mksurfdata
   ! which processing is needed (directly or indirectly) in order to create a dynamic
   ! landuse file.
 
-  if (fsurdat /= ' ') then
-
-#ifdef TODO
-     ! The following variables need to be output as int
-     ! nf_put_var_int(ncid, varid, (/(n,n=natpft_lb,natpft_ub)/))
-     ! nf_put_var_int(ncid, varid, (/(n,n=cft_lb,cft_ub)/))
-     ! nf_put_var_int(ncid, varid, pftdata_mask) ! derived in mksurfdata
-     ! nf_put_var_int(ncid, varid, nsoicol)      ! set in mksoicol
-     ! nf_put_var_int(ncid, varid, soicol)       ! set in mksoicol
-     ! nf_put_var_int(ncid, varid, glacier_region)
-     ! nf_put_var_int(ncid, varid, agfirepkmon)
-     ! nf_put_var_int(ncid, varid, urban_region)
-#endif
-
-     !call mkfile( vm, nx, ny, trim(fsurdat), harvdata, dynlanduse = .false., pioid=pioid)
-     call mkfile( vm, mksrf_fgrid_mesh_nx, mksrf_fgrid_mesh_ny, trim(fsurdat), dynlanduse=.false., pioid=pioid)
-
-#ifdef TODO
-     ! write area, longxy and latixy
-     ! TODO: fill this in
-     ! call check_ret(nf_open(trim(fname), nf_write, ncid), subname)
-     ! File will be in define mode. Set fill mode to "no fill" to optimize performance
-     ! call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
-     ! call check_ret(nf_inq_varid(ncid, 'AREA', varid), subname)
-     ! call check_ret(nf_put_var_double(ncid, varid, domain%area), subname)
-     ! call check_ret(nf_inq_varid(ncid, 'LONGXY', varid), subname)
-     ! call check_ret(nf_put_var_double(ncid, varid, domain%lonc), subname)
-     ! call check_ret(nf_inq_varid(ncid, 'LATIXY', varid), subname)
-     ! call check_ret(nf_put_var_double(ncid, varid, domain%latc), subname)
-
-     ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
-     !call check_ret(nf_sync(ncid), subname)
-
-     ! Close grid data dataset
-     !call check_ret(nf_close(ncid), subname)
-
-     ! Write fields OTHER THAN lai, sai, heights, and urban parameters to netcdf surface dataset
-
-     ! rcode = pio_inq_varid(pioid, 'natpft', pio_varid)
-     ! rcode = pio_put_var_int(pioid, pio_varid, (/(n,n=natpft_lb,natpft_ub)/)))
-
-     ! if (num_cft > 0) then
-     !    rcode = pio_inq_varid(pioid, 'cft', pio_varid))
-     !    rcode = pio_put_var_int(pioid, pio_varid, (/(n,n=cft_lb,cft_ub)/)))
-     ! end if
-
-     varname = 'PFTDATA_MASK'
-     call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-     call pio_write_darray(pioid,              pio_varid,       pio_iodesc, pftdata_mask, rcode)
-    !call pio_write_darray(io_file(lfile_ind), varid, iodesc, fldptr2(:,n), rcode, fillval=lfillvalue)
-     call pio_freedecomp(pioid, pio_iodesc)
-
-     varname = 'LANDFRAC_PFT'
-     call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-     call pio_write_darray(pioid, pio_varid, pio_iodesc, landfrac_pft, rcode)
-     call pio_freedecomp(pioid, pio_iodesc)
-
-     varname = 'mxsoil_color'
-     ! TODO: output this as an integer - not calling darray
-     !call pio_write_darray(pioid, pio_varid, pio_iodesc, nsoicol, rcode)
-
-     varname = 'SOIL_COLOR'
-     call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-     call pio_write_darray(pioid, pio_varid, pio_iodesc, soicol, rcode)
-     call pio_freedecomp(pioid, pio_iodesc)
-
-     varname = 'PCT_SAND'
-     call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-     call pio_write_darray(pioid, pio_varid, pio_iodesc, pctsand, rcode)
-     call pio_freedecomp(pioid, pio_iodesc)
-
-     varname = 'PCT_CLAY'
-     call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-     call pio_write_darray(pioid, pio_varid, pio_iodesc, pctclay, rcode)
-     call pio_freedecomp(pioid, pio_iodesc)
-#endif
-
-     varname = 'PCT_WETLAND'
-     call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-     call pio_write_darray(pioid, pio_varid, pio_iodesc, pctwet, rcode)
-     call pio_freedecomp(pioid, pio_iodesc)
-
-     varname = 'PCT_LAKE'
-     call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-     call pio_write_darray(pioid, pio_varid, pio_iodesc, pctlak, rcode)
-     call pio_freedecomp(pioid, pio_iodesc)
-
-#ifdef TODO
-     varname = 'PCT_GLACIER'
-     call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-     call pio_write_darray(pioid, pio_varid, pio_iodesc, pctgla, rcode)
-     call pio_freedecomp(pioid, pio_iodesc)
-
-     varname = 'GLACIER_REGION'
-     call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-     call pio_write_darray(pioid, pio_varid, pio_iodesc, glacier_region, rcode)
-     call pio_freedecomp(pioid, pio_iodesc)
-
-     varname = 'PCT_GLC_MEC'
-     call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-     call pio_write_darray(pioid, pio_varid, pio_iodesc, pctglcmec, rcode)
-     call pio_freedecomp(pioid, pio_iodesc)
-
-     varname = 'GLC_MEC'
-     call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-     call pio_write_darray(pioid, pio_varid, pio_iodesc, elevclass, rcode)
-     call pio_freedecomp(pioid, pio_iodesc)
-
-     if ( outnc_3dglc )then
-        !'TOPO_GLC_MEC', topoglcmec
-        ! 'PCT_GLC_MEC_ICESHEET', pctglcmec_icesheet
-        ! 'PCT_GLC_GIC', pctglc_gic
-        ! 'PCT_GLC_ICESHEET', pctglc_icesheet
-     end if
-
-     !'PCT_URBAN', ut_urbn_classes_g
-     !'PCT_NATVEG', get_pct_l2g_array(pctnatpft)
-
-     ! rcode = pio_inq_varid(pioid, 'PCT_CROP', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, get_pct_l2g_array(pctcft)))
-
-     ! rcode = pio_inq_varid(pioid, 'PCT_NAT_PFT', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, get_pct_p2l_array(pctnatpft)))
-
-     ! if (num_cft > 0) then
-     !    rcode = pio_inq_varid(pioid, 'PCT_CFT', pio_varid))
-     !    rcode = pio_put_var_double(pioid, pio_varid, get_pct_p2l_array(pctcft)))
-     ! end if
-
-     ! call harvdata%getFieldsIdx( harvind1D, harvind2D )
-     ! do k = 1, harvdata%num1Dfields()
-     !    rcode = pio_inq_varid(pioid, trim(mkharvest_fieldname(harvind1D(k),constant=.true.)), pio_varid))
-     !    harvest1D => harvdata%get1DFieldPtr( harvind1D(k), output=.true. )
-     !    rcode = pio_put_var_double(pioid, pio_varid, harvest1D))
-     ! end do
-     ! do k = 1, harvdata%num2Dfields()
-     !    rcode = pio_inq_varid(pioid, trim(mkharvest_fieldname(harvind2D(k),constant=.true.)), pio_varid))
-     !    harvest2D => harvdata%get2DFieldPtr( harvind2D(k), output=.true. )
-     !    rcode = pio_put_var_double(pioid, pio_varid, harvest2D))
-     ! end do
-     ! deallocate( harvind1D, harvind2D )
-
-     ! rcode = pio_inq_varid(pioid, 'FMAX', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, fmax))
-
-     ! rcode = pio_inq_varid(pioid, 'gdp', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, gdp))
-
-     ! rcode = pio_inq_varid(pioid, 'peatf', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, fpeat))
-
-
-     ! !    rcode = pio_inq_varid(pioid, 'Avg_Depth_Median', pio_varid))
-     ! rcode = pio_inq_pio_varid(pioid, 'zbedrock', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, soildepth))
-
-     ! rcode = pio_inq_varid(pioid, 'abm', pio_varid))
-     ! rcode = pio_put_var_int(pioid, pio_varid, agfirepkmon))
-
-     ! rcode = pio_inq_pio_varid(pioid, 'SLOPE', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, slope))
-
-     ! rcode = pio_inq_varid(pioid, 'STD_ELEV', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, topo_stddev))
-
-     ! if ( outnc_vic )then
-     !    rcode = pio_inq_varid(pioid, 'binfl', pio_varid))
-     !    rcode = pio_put_var_double(pioid, pio_varid, vic_binfl))
-
-     !    rcode = pio_inq_varid(pioid, 'Ws', pio_varid))
-     !    rcode = pio_put_var_double(pioid, pio_varid, vic_ws))
-
-     !    rcode = pio_inq_varid(pioid, 'Dsmax', pio_varid))
-     !    rcode = pio_put_var_double(pioid, pio_varid, vic_dsmax))
-
-     !    rcode = pio_inq_varid(pioid, 'Ds', pio_varid))
-     !    rcode = pio_put_var_double(pioid, pio_varid, vic_ds))
-     ! end if
-
-     ! rcode = pio_inq_varid(pioid, 'LAKEDEPTH', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, lakedepth))
-
-     ! rcode = pio_inq_varid(pioid, 'EF1_BTR', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, ef1_btr))
-
-     ! rcode = pio_inq_varid(pioid, 'EF1_FET', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, ef1_fet))
-
-     ! rcode = pio_inq_varid(pioid, 'EF1_FDT', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, ef1_fdt))
-
-     ! rcode = pio_inq_varid(pioid, 'EF1_SHR', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, ef1_shr))
-
-     ! rcode = pio_inq_varid(pioid, 'EF1_GRS', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, ef1_grs))
-
-     ! rcode = pio_inq_varid(pioid, 'EF1_CRP', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, ef1_crp))
-
-     ! rcode = pio_inq_varid(pioid, 'ORGANIC', pio_varid))
-     ! rcode = pio_put_var_double(pioid, pio_varid, organic))
-
-     ! rcode = pio_inq_varid(pioid, 'URBAN_REGION_ID', pio_varid))
-     ! rcode = pio_put_var_int(pioid, pio_varid, urban_region))
-
-     ! ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
-
-     ! rcode = pio_sync(pioid))
-
-     ! ----------------------------------------------------------------------
-     ! Make Urban Parameters from raw input data and write to surface dataset
-     ! Write to netcdf file is done inside mkurbanpar routine
-     ! ----------------------------------------------------------------------
-
-     ! write(6,*)'calling mkurbanpar'
-     ! call mkurbanpar(datfname=mksrf_furban, pioido=pioid, region_o=urban_region, &
-     !      urbn_classes_gcell_o=urbn_classes_g, &
-     !      urban_skip_abort_on_invalid_data_check=urban_skip_abort_on_invalid_data_check)
-
-     ! ----------------------------------------------------------------------
-     ! Make LAI and SAI from 1/2 degree data and write to surface dataset
-     ! Write to netcdf file is done inside mklai routine
-     ! ----------------------------------------------------------------------
-
-     ! write(6,*)'calling mklai'
-     ! call mklai( mapfname=map_flai, datfname=mksrf_flai, ndiag=ndiag, pioido=pioid )
-#endif
-
-     ! Close surface dataset
-     call pio_closefile(pioid)
-
-     write (6,'(72a1)') ("-",n=1,60)
-     write (6,*)' land model surface data set successfully created for ', &
-          'grid of size ',lsize_o
-
-  else  ! fsurdat == ' '
-
+  if (fsurdat == ' ') then
      write (6,*) 'fsurdat is blank: skipping writing surface dataset'
-
+  else
+    !call mkfile_fsurdat( mksrf_fgrid_mesh_nx, mksrf_fgrid_mesh_ny, mesh_model, dynlanduse=.false., harvdata)
+     call mkfile_fsurdat( mksrf_fgrid_mesh_nx, mksrf_fgrid_mesh_ny, mesh_model, dynlanduse=.false., &
+          pctlak=pctlak, pctwet=pctwet, lakedepth=lakedepth) 
+     call ESMF_LogWrite(subname//'successfully created file '//trim(fsurdat), ESMF_LOGMSG_INFO)
   end if  ! if (fsurdat /= ' ')
 
   ! Deallocate arrays NOT needed for dynamic-pft section of code
 
+  deallocate ( lakedepth )
+
+#ifdef TODO
   deallocate ( organic )
   deallocate ( ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
   deallocate ( pctglcmec, topoglcmec)
@@ -878,10 +642,8 @@ program mksurfdata
   deallocate ( soildepth )
   deallocate ( topo_stddev, slope )
   deallocate ( vic_binfl, vic_ws, vic_dsmax, vic_ds )
-  deallocate ( lakedepth )
   deallocate ( glacier_region )
 
-#ifdef TODO
   call harvdata%clean()
 #endif
 
@@ -898,7 +660,7 @@ program mksurfdata
 
      ! if (fdyndat == ' ') then
      !    write(6,*)' must specify fdyndat in namelist if mksrf_fdynuse is not blank'
-     !    call abort()
+     !    call shr_sys_abort()
      ! end if
 
      ! ! Define dimensions and global attributes
@@ -962,7 +724,7 @@ program mksurfdata
      !       read(nfdyn, '(A195,1x,I4)', iostat=ier) fhrvname, year2
      !       if ( year2 /= year ) then
      !          write(6,*) subname, ' error: year for harvest not equal to year for PFT files'
-     !          call abort()
+     !          call shr_sys_abort()
      !       end if
      !    end if
      !    ntim = ntim + 1
@@ -989,7 +751,7 @@ program mksurfdata
      !          else
      !             write(6,*) ' PFT file = ', fname
      !          end if
-     !          call abort()
+     !          call shr_sys_abort()
      !       end if
      !    end do
 
@@ -1160,22 +922,22 @@ contains
        if ( pctlak(n) < 0.0_r8 )then
           write(6,*) subname, ' ERROR: pctlak is negative!'
           write(6,*) 'n, pctlak = ', n, pctlak(n)
-          call abort()
+          call shr_sys_abort()
        end if
        if ( pctwet(n) < 0.0_r8 )then
           write(6,*) subname, ' ERROR: pctwet is negative!'
           write(6,*) 'n, pctwet = ', n, pctwet(n)
-          call abort()
+          call shr_sys_abort()
        end if
        if ( pcturb(n) < 0.0_r8 )then
           write(6,*) subname, ' ERROR: pcturb is negative!'
           write(6,*) 'n, pcturb = ', n, pcturb(n)
-          call abort()
+          call shr_sys_abort()
        end if
        if ( pctgla(n) < 0.0_r8 )then
           write(6,*) subname, ' ERROR: pctgla is negative!'
           write(6,*) 'n, pctgla = ', n, pctgla(n)
-          call abort()
+          call shr_sys_abort()
        end if
 
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
@@ -1184,7 +946,7 @@ contains
           write(6,*) '<= 100% before calling this subroutine'
           write(6,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
                n, pctlak(n), pctwet(n), pcturb(n), pctgla(n)
-          call abort()
+          call shr_sys_abort()
        end if
 
        ! First normalize vegetated (natural veg + crop) cover so that the total of
@@ -1208,7 +970,7 @@ contains
        if (abs(suma - 100._r8) > tol_loose) then
           write(6,*) subname, ' ERROR in rescaling veg based on (special excluding urban'
           write(6,*) 'suma = ', suma
-          call abort()
+          call shr_sys_abort()
        end if
 
        ! Now decrease the vegetated area to account for urban area. Urban needs to be
@@ -1237,7 +999,7 @@ contains
                 else
                    write(6,*) subname, ' ERROR: trying to replace veg with urban,'
                    write(6,*) 'but pcturb_excess exceeds current vegetation percent'
-                   call abort()
+                   call shr_sys_abort()
                 end if
              end if
 
@@ -1255,7 +1017,7 @@ contains
           write(6,*) 'n, suma, pctlak, pctwet, pctgla, pcturb, pctnatveg, pctcrop = '
           write(6,*) n, suma, pctlak(n), pctwet(n), pctgla(n), pcturb(n), &
                pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
-          call abort()
+          call shr_sys_abort()
        end if
 
     end do
@@ -1306,7 +1068,7 @@ contains
                   'n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n),suma = ', &
                   n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                   pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(),suma
-             call abort()
+             call shr_sys_abort()
           end if
           call pctnatpft(n)%set_pct_l2g(0._r8)
           call pctcft(n)%set_pct_l2g(0._r8)
@@ -1318,7 +1080,7 @@ contains
           write (6,*) 'pctcft%pct_p2l = ', pctcft(n)%get_pct_p2l()
           write (6,*) 'pctnatpft%pct_l2g = ', pctnatpft(n)%get_pct_l2g()
           write (6,*) 'pctcft%pct_l2g = ', pctcft(n)%get_pct_l2g()
-          call abort()
+          call shr_sys_abort()
        end if
 
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
@@ -1326,7 +1088,7 @@ contains
           write (6,*) subname, 'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop= ', &
                n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
-          call abort()
+          call shr_sys_abort()
        end if
        suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
        if ( abs(suma-100._r8) > 1.e-10_r8) then
@@ -1335,7 +1097,7 @@ contains
           write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop,sum= ', &
                n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(), suma
-          call abort()
+          call shr_sys_abort()
        end if
 
     end do
@@ -1356,7 +1118,7 @@ contains
              write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop= ', &
                   n,pctlak(n),pctwet(n),pcturb(n),pctgla(n), &
                   pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g()
-             call abort()
+             call shr_sys_abort()
           end if
        end do
     else
@@ -1374,7 +1136,7 @@ contains
              write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop,epsilon= ', &
                   n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                   pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(), epsilon(sum8)
-             call abort()
+             call shr_sys_abort()
           end if
        end do
     end if
@@ -1384,7 +1146,7 @@ contains
        if (pftdata_mask(n) == 0 .and. (pctnatpft(n)%get_pct_l2g() > 0 .or. pctcft(n)%get_pct_l2g() > 0)) then
           write (6,*)'vegetation found outside the pft mask at n=',n
           write (6,*)'pctnatveg,pctcrop=', pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
-          call abort()
+          call shr_sys_abort()
        end if
     end do
 
@@ -1397,7 +1159,7 @@ contains
     do n = 1,ns_o
        if (abs(sum(urbn_classes(n,:)) - 100._r8) > 1.e-12_r8) then
           write(6,*) 'sum(urbn_classes(n,:)) != 100: ', n, sum(urbn_classes(n,:))
-          call abort()
+          call shr_sys_abort()
        end if
     end do
 

@@ -313,15 +313,13 @@ contains
     end if
 #endif
 
-    outnc_1d = .true.
     if (mksrf_fgrid_mesh_ny == 1) then
        outnc_1d = .true.
        outnc_dims = 1
     else
-       outnc_1d = .true.
+       outnc_1d = .false.
        outnc_dims = 2
     end if
-
 
   end subroutine check_namelist_input
 
@@ -374,47 +372,47 @@ contains
        write(ndiag,'(a)')' mesh for topography stats   '//trim(mksrf_ftopostats_mesh)
        write(ndiag,'(a)')' mesh for VIC parameters     '//trim(mksrf_fvic_mesh)
 
-       write(ndiag,'(a)')'mksrf_gridtype = '//trim(mksrf_gridtype)
+       write(ndiag,'(a)')' mksrf_gridtype = '//trim(mksrf_gridtype)
 
        if (mksrf_fdynuse /= ' ') then
-          write(ndiag,'(a)')'mksrf_fdynuse = '//trim(mksrf_fdynuse)
+          write(ndiag,'(a)')' mksrf_fdynuse = '//trim(mksrf_fdynuse)
        end if
 
-       write(ndiag,'(a)')'mksrf_fgrid_mesh = '//trim(mksrf_fgrid_mesh)
+       write(ndiag,'(a)')' mksrf_fgrid_mesh = '//trim(mksrf_fgrid_mesh)
        if (outnc_1d) then
-          write(ndiag,'(a)')'output file will be 1d format'
+          write(ndiag,'(a)')' output file will be 1d format'
        else
-          write(ndiag,'(a)')'fsurdat is 2d lat/lon grid'
-          write(ndiag,'(a,i8)')'nlon= ',mksrf_fgrid_mesh_nx
-          write(ndiag,'(a,i8)')'nlat= ',mksrf_fgrid_mesh_ny
+          write(ndiag,'(a)')' fsurdat is 2d lat/lon grid'
        end if
-       if ( outnc_large_files )then
-          write(ndiag,'(a)')'Output file in NetCDF 64-bit large_files format'
+       write(ndiag,'(a,i8)')' nlon= ',mksrf_fgrid_mesh_nx
+       write(ndiag,'(a,i8)')' nlat= ',mksrf_fgrid_mesh_ny
+       if ( outnc_large_files ) then
+          write(ndiag,'(a)')' Output file in NetCDF 64-bit large_files format'
        end if
        if ( outnc_double )then
-          write(ndiag,'(a)')'Output ALL data in file as 64-bit'
+          write(ndiag,'(a)')' Output ALL data in file as 64-bit'
        end if
        if ( outnc_vic )then
-          write(ndiag,'(a)')'Output VIC fields'
+          write(ndiag,'(a)')' Output VIC fields'
        end if
        if ( outnc_3dglc )then
-          write(ndiag,'(a)')'Output optional 3D glacier fields (mostly used for verification of the glacier model)'
+          write(ndiag,'(a)')' Output optional 3D glacier fields (mostly used for verification of the glacier model)'
        end if
        if ( outnc_3dglc )then
-          write(ndiag,'(a)')'Output optional 3D glacier fields (mostly used for verification of the glacier model)'
+          write(ndiag,'(a)')' Output optional 3D glacier fields (mostly used for verification of the glacier model)'
        end if
        if ( all_urban )then
-          write(ndiag,'(a)') 'Output ALL data in file as 100% urban'
+          write(ndiag,'(a)') ' Output ALL data in file as 100% urban'
        end if
        if ( no_inlandwet )then
-          write(ndiag,'(a)') 'Set wetland to 0% over land'
+          write(ndiag,'(a)') ' Set wetland to 0% over land'
        end if
        if (all_veg) then
-          write(ndiag,'(a)') 'Output ALL data in file as 100% vegetated'
+          write(ndiag,'(a)') ' Output ALL data in file as 100% vegetated'
        end if
        if (urban_skip_abort_on_invalid_data_check) then
-          write(ndiag, '(a)') "WARNING: aborting on invalid data check in urban has been disabled!"
-          write(ndiag, '(a)') "WARNING: urban data may be invalid!"
+          write(ndiag, '(a)') " WARNING: aborting on invalid data check in urban has been disabled!"
+          write(ndiag, '(a)') " WARNING: urban data may be invalid!"
        end if
     end if
 

@@ -182,7 +182,7 @@ contains
          urbn_classes_gcell_o(ldomain%ns, numurbl), &
          frac_dst(ldomain%ns), &
          stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
 
     ! Obtain frac_dst
     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
@@ -244,7 +244,7 @@ contains
     ! they're needed to try to avoid unnecessary memory paging
 
     allocate(region_i(ns), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
     call check_ret(nf_inq_varid (ncid, 'REGION_ID', varid), subname)
     call check_ret(nf_get_var_int (ncid, varid, region_i), subname)
 
@@ -264,7 +264,7 @@ contains
             ' ERROR: max region value exceeds length of region dimension'
        write(6,*) 'max region value          : ', max_region
        write(6,*) 'length of region dimension: ', dimlen
-       call abort()
+       call shr_sys_abort()
     end if
 
     ! Determine dominant region for each output cell
@@ -351,14 +351,14 @@ contains
        write(6,*) 'size(sums)                 = ', n_max
        write(6,*) 'size(classes_pct_tot, 1)   = ', size(classes_pct_tot, 1)
        write(6,*) 'size(classes_pct_gcell, 1) = ', size(classes_pct_gcell, 1)
-       call abort()
+       call shr_sys_abort()
     end if
 
     if (size(classes_pct_tot, 2) /= size(classes_pct_gcell, 2)) then
        write(6,*) subname//' ERROR: array size mismatch'
        write(6,*) 'size(classes_pct_tot, 2)   = ', size(classes_pct_tot, 2)
        write(6,*) 'size(classes_pct_gcell, 2) = ', size(classes_pct_gcell, 2)
-       call abort()
+       call shr_sys_abort()
     end if
 
     nclasses = size(classes_pct_gcell, 2)
@@ -366,7 +366,7 @@ contains
        write(6,*) subname//' ERROR: MD exceeds nclasses'
        write(6,*) 'MD       = ', MD
        write(6,*) 'nclasses = ', nclasses
-       call abort()
+       call shr_sys_abort()
     end if
 
     ! Do the work
@@ -389,7 +389,7 @@ contains
        if (abs(suma/100._r8 - 1._r8) > relerr) then
           write(6,*) subname//' ERROR: sum does not equal 100 at point ', n
           write(6,*) 'suma = ', suma
-          call abort()
+          call shr_sys_abort()
        end if
     end do
 
@@ -523,7 +523,7 @@ contains
        write(6,*) modname//':'//subname//' ERROR: array size mismatch'
        write(6,*) 'size(region_o) = ', size(region_o)
        write(6,*) 'size(urbn_classes_gcell_o, 1) = ', size(urbn_classes_gcell_o, 1)
-       call abort()
+       call shr_sys_abort()
     end if
     if (size(urbn_classes_gcell_o, 2) /= numurbl) then
        write(6,*) modname//':'//subname//' ERROR: array size mismatch'
@@ -546,17 +546,17 @@ contains
     if (nlevurb_i /= nlevurb) then
        write(6,*)'MKURBANPAR: parameter nlevurb= ',nlevurb, &
             'does not equal input dataset nlevurb= ',nlevurb_i
-       call abort()
+       call shr_sys_abort()
     endif
     if (numsolar_i /= numsolar) then
        write(6,*)'MKURBANPAR: parameter numsolar= ',numsolar, &
             'does not equal input dataset numsolar= ',numsolar_i
-       call abort()
+       call shr_sys_abort()
     endif
     if (numrad_i /= numrad) then
        write(6,*)'MKURBANPAR: parameter numrad= ',numrad, &
             'does not equal input dataset numrad= ',numrad_i
-       call abort()
+       call shr_sys_abort()
     endif
 
     ! Create an array that will hold the density indices
@@ -574,7 +574,7 @@ contains
 
     allocate(data_scalar_o(ns_o, numurbl), stat=ier)
     if (ier /= 0) then
-       write(6,*)'mkurbanpar allocation error'; call abort()
+       write(6,*)'mkurbanpar allocation error'; call shr_sys_abort()
     end if
 
     do p = 1, size(params_scalar)
@@ -594,7 +594,7 @@ contains
 
     allocate(data_rad_o(ns_o, numurbl, numrad, numsolar), stat=ier)
     if (ier /= 0) then
-       write(6,*)'mkurbanpar allocation error'; call abort()
+       write(6,*)'mkurbanpar allocation error'; call shr_sys_abort()
     end if
 
     allocate(extra_dims(2))
@@ -620,7 +620,7 @@ contains
           if (len_trim(params_rad(p)%name) + len_trim(solar_suffix(m)) > len(varname)) then
              write(6,*) 'variable name exceeds length of varname'
              write(6,*) trim(params_rad(p)%name)//trim(solar_suffix(m))
-             call abort()
+             call shr_sys_abort()
           end if
           varname = trim(params_rad(p)%name)//trim(solar_suffix(m))
           call check_ret(nf_inq_varid(ncido, varname, varid), subname)
@@ -637,7 +637,7 @@ contains
 
     allocate(data_levurb_o(ns_o, numurbl, nlevurb), stat=ier)
     if (ier /= 0) then
-       write(6,*)'mkurbanpar allocation error'; call abort()
+       write(6,*)'mkurbanpar allocation error'; call shr_sys_abort()
     end if
 
     allocate(extra_dims(1))
@@ -722,7 +722,7 @@ contains
          if (ierr /= 0) then
             write(6,*) modname//':'//subname//' ERROR in lookup_2d_netcdf for ', &
                  trim(varname), ' class', k, ': err=', ierr
-            call abort()
+            call shr_sys_abort()
          end if
 
          if (check_invalid) then
@@ -740,7 +740,7 @@ contains
                   if (.not. urban_skip_abort_on_invalid_data_check) then
                      ! NOTE(bja, 2015-01) added to work around a ?bug? noted in
                      ! /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
-                     call abort()
+                     call shr_sys_abort()
                   end if
                end if
             end do

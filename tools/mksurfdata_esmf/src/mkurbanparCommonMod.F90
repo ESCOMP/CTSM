@@ -92,13 +92,13 @@ contains
        write(6,*) 'tdomain%ns   = ', tdomain%ns
        write(6,*) 'size(urbn_o) = ', size(urbn_o)
        write(6,*) 'ldomain%ns   = ', ldomain%ns
-       call abort()
+       call shr_sys_abort()
     end if
     if (size(frac_dst) /= ldomain%ns) then
        write(6,*) subname//' ERROR: array size inconsistencies'
        write(6,*) 'size(frac_dst) = ', size(frac_dst)
        write(6,*) 'ldomain%ns   = ', ldomain%ns
-       call abort()
+       call shr_sys_abort()
     end if
 
     ! Error checks for domain and map consistencies
@@ -118,7 +118,7 @@ contains
        if ((urbn_o(no)) > 100.000001_r8) then
           write (6,*) 'MKURBAN error: urban = ',urbn_o(no), &
                ' greater than 100.000001 for column, row = ',no
-          call abort()
+          call shr_sys_abort()
        end if
     enddo
 
@@ -126,7 +126,7 @@ contains
     ! output grid that is land as determined by input grid
 
     allocate(mask_r8(tdomain%ns), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
     mask_r8 = tdomain%mask
     call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
@@ -190,7 +190,7 @@ contains
        write(6,*) subname//' ERROR: array size inconsistencies'
        write(6,*) 'size(frac_dst) = ', size(frac_dst)
        write(6,*) 'ldomain%ns   = ', ldomain%ns
-       call abort()
+       call shr_sys_abort()
     end if
 
     ! -----------------------------------------------------------------
@@ -315,7 +315,7 @@ contains
     allocate(elev_i(ns_i), stat=ier)
     allocate(frac_dst(ns_o), stat=ier)
     if (ier /= 0) then
-       write(6,*)'mkelev allocation error'; call abort()
+       write(6,*)'mkelev allocation error'; call shr_sys_abort()
     end if
 
     write (6,*) 'Open elevation file: ', trim(datfname)

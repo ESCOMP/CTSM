@@ -66,7 +66,7 @@ contains
        write(6,*) subname, ' ERROR: size of soil_color_i should match size of mask_i'
        write(6,*) 'size(mask_i), size(soil_color_i) = ', &
             size(mask_i), size(soil_color_i)
-       call abort()
+       call shr_sys_abort()
     end if
 
     ! find area of overlap for each soil color for each no
@@ -122,7 +122,7 @@ contains
           end if
        else
           write(6,*) 'MKSOILCOL error: unhandled nsoicol: ', nsoicol
-          call abort()
+          call shr_sys_abort()
        end if
 
        ! Error checks
@@ -130,7 +130,7 @@ contains
        if (soil_color_o(no) < 0 .or. soil_color_o(no) > nsoicol) then
           write (6,*) 'MKSOILCOL error: land model soil color = ', &
                soil_color_o(no),' is not valid for lon,lat = ',no
-          call abort()
+          call shr_sys_abort()
        end if
 
     end do
@@ -189,7 +189,7 @@ contains
 
     if (iv(1) == miss) then
        write (6,*) 'MKRANK error: iv(1) = missing'
-       call abort()
+       call shr_sys_abort()
     end if
 
     ! Find indices of the next [num]-1 largest non-zero number.

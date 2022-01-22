@@ -95,7 +95,7 @@ contains
 
     if (size(default_pct_p2l) /= size(pct_p2g)) then
        write(6,*) subname//' ERROR: size of default_pct_p2l must match size of pct_p2g'
-       call abort()
+       call shr_sys_abort()
     end if
 
     last_pft_index = first_pft_index + size(pct_p2g) - 1
@@ -274,7 +274,7 @@ contains
     if (pct_l2g_new < 0._r8 .or. pct_l2g_new > (100._r8 + tol)) then
        write(6,*) subname//' ERROR: pct_l2g_new must be between 0 and 100%'
        write(6,*) 'pct_l2g_new = ', pct_l2g_new
-       call abort()
+       call shr_sys_abort()
     end if
 
     this%pct_l2g = pct_l2g_new
@@ -310,7 +310,7 @@ contains
     if (pct_p2g_new < 0._r8 .or. pct_p2g_new > (100._r8 + tol)) then
        write(6,*) subname//' ERROR: pct_p2g_new must be between 0 and 100%'
        write(6,*) 'pct_p2g_new = ', pct_p2g_new
-       call abort()
+       call shr_sys_abort()
     end if
     
     allocate(pct_p2g(lbound(this%pct_p2l, 1) : ubound(this%pct_p2l, 1)))
@@ -435,24 +435,24 @@ contains
     if (size(pct_p2g) /= size(this%pct_p2l) .or. size(default_pct_p2l) /= size(this%pct_p2l)) then
        write(6,*) subname//' ERROR: array size mismatch: '
        write(6,*) size(pct_p2g), size(default_pct_p2l), size(this%pct_p2l)
-       call abort()
+       call shr_sys_abort()
     end if
 
     if (abs(sum(default_pct_p2l) - 100._r8) > tol) then
        write(6,*) subname//' ERROR: default_pct_p2l must sum to 100'
-       call abort()
+       call shr_sys_abort()
     end if
 
     if (any(pct_p2g < 0._r8)) then
        write(6,*) subname//' ERROR: negative values found in pct_p2g array'
        write(6,*) pct_p2g
-       call abort()
+       call shr_sys_abort()
     end if
 
     if (sum(pct_p2g) < 0._r8 .or. sum(pct_p2g) > (100._r8 + tol)) then
        write(6,*) subname//' ERROR: pct_p2g must be between 0 and 100'
        write(6,*) 'sum(pct_p2g) = ', sum(pct_p2g)
-       call abort()
+       call shr_sys_abort()
     end if
 
     ! Done checking pre-conditions
@@ -489,19 +489,19 @@ contains
     if (abs(sum(this%pct_p2l) - 100._r8) > tol) then
        write(6,*) subname//' ERROR from ', caller, ': pct_p2l does not sum to 100'
        write(6,*) 'sum(this%pct_p2l) = ', sum(this%pct_p2l)
-       call abort()
+       call shr_sys_abort()
     end if
 
     if (any(this%pct_p2l < 0._r8)) then
        write(6,*) subname//' ERROR from ', caller, ': negative values found in pct_p2l'
        write(6,*) this%pct_p2l
-       call abort()
+       call shr_sys_abort()
     end if
 
     if (this%pct_l2g < 0._r8 .or. this%pct_l2g > (100._r8 + tol)) then
        write(6,*) subname//' ERROR from ', caller, ': pct_l2g must be between 0 and 100'
        write(6,*) 'pct_l2g = ', this%pct_l2g
-       call abort()
+       call shr_sys_abort()
     end if
 
   end subroutine check_vals
@@ -542,7 +542,7 @@ contains
             ubound(pct_pft_arr(arr_index)%pct_p2l, 1) /= pft_ubound) then
           write(6,*) subname//' ERROR: all elements of pct_pft_arr must have'
           write(6,*) 'the same size and lower bound for their pct_p2l array'
-          call abort()
+          call shr_sys_abort()
        end if
           
        if (pct_pft_arr(arr_index)%pct_l2g > pct_pft_max_arr(arr_index)%pct_l2g) then
@@ -591,7 +591,7 @@ contains
             ubound(pct_pft_arr(arr_index)%pct_p2l, 1) /= pft_ubound) then
           write(6,*) subname//' ERROR: all elements of pct_pft_arr must have'
           write(6,*) 'the same size and lower bound for their pct_p2l array'
-          call abort()
+          call shr_sys_abort()
        end if
           
        do pft_index = pft_lbound, pft_ubound
