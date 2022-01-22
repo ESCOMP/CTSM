@@ -1,4 +1,80 @@
 ===============================================================
+Tag name: ctsm5.1.dev072
+Originator(s): negins (Negin Sobhani,UCAR/TSS,303-497-1224)
+Date: Mon Jan 17 10:50:25 MST 2022
+One-line Summary: mksurfdat toolchain part 1: gen_mksurf_namelist
+
+Purpose and description of changes
+----------------------------------
+
+ This tag introduces ./gen_mksurf_namelist python script, which generates
+ a user-modifiable control file (namelist) for use with #1430 (mkmap_data.py)
+ within the context of #644 (wrapper tool for generating fsurdat files).
+
+ The new namelist (control file) format does not have mapping
+ files listed since the mapping file information are stored as part of the
+ metadata for input data.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ This tag introduces the ./gen_mksurf_namelist script for generating a
+ user-modifiable control file (namelist) for use with the in-development
+ pythonized mkmapdata (#1430).
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ Currently resolution options and corresponding destination mesh files are
+ hardwired in this code. This information should be obtained from existing
+ .xml file(s).
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) cheyenne make all - PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1419
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev071
 Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Sun Jan 16 20:26:47 MST 2022
