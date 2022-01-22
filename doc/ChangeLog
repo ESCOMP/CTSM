@@ -57,9 +57,6 @@ Testing summary:
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
     (any machine) cheyenne make all - PASS
-    except for "Makefile:39: recipe for target 'lint' failed"
-    Note: No existing python code has changed. All files in this tag are new.
-
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
