@@ -7,11 +7,13 @@ One-line Summary: mksurfdat toolchain part 1: gen_mksurf_namelist
 Purpose and description of changes
 ----------------------------------
 
- A first cut at generating a user-modifiable control file (namelist) for use
- with #1430 (mkmap_data.py) within the context of #644 (wrapper tool for
- generating fsurdat files). This tag (#1419) along with #1430 provide a
- starting point in the overall development of a more user-friendly mksurfdat
- toolchain.
+ This tag introduces ./gen_mksurf_namelist python script, which generates
+ a user-modifiable control file (namelist) for use with #1430 (mkmap_data.py)
+ within the context of #644 (wrapper tool for generating fsurdat files).
+
+ The new namelist (control file) format does not have mapping
+ files listed since the mapping file information are stored as part of the
+ metadata for input data.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -36,7 +38,7 @@ Bugs fixed or introduced
 Notes of particular relevance for users
 ---------------------------------------
 Caveats for users (e.g., need to interpolate initial conditions):
- This tag introduces the gen_mksurf_namelist script for generating a
+ This tag introduces the ./gen_mksurf_namelist script for generating a
  user-modifiable control file (namelist) for use with the in-development
  pythonized mkmapdata (#1430).
 
