@@ -10,6 +10,11 @@ module mkesmfMod
 
   public :: regrid_rawdata
 
+  interface regrid_rawdata
+     module procedure regrid_rawdata1d
+     module procedure regrid_rawdata2d
+  end interface regrid_rawdata
+
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
 
@@ -17,7 +22,7 @@ module mkesmfMod
 contains
 !===============================================================
 
-  subroutine regrid_rawdata(field_i, field_o,  routehandle, data_i, data_o, rc)
+  subroutine regrid_rawdata1d(field_i, field_o,  routehandle, data_i, data_o, rc)
 
     ! input/output variables
     type(ESMF_Field)       , intent(in)    :: field_i
@@ -46,6 +51,40 @@ contains
     data_o(:) = dataptr(:)
     call ESMF_VMLogMemInfo("After field regrid in regrid_data")
 
-  end subroutine regrid_rawdata
+  end subroutine regrid_rawdata1d
+
+  !===============================================================
+  subroutine regrid_rawdata2d(field_i, field_o,  routehandle, data_i, data_o, rc)
+
+    ! input/output variables
+    type(ESMF_Field)       , intent(in)    :: field_i
+    type(ESMF_Field)       , intent(inout) :: field_o
+    type(ESMF_RouteHandle) , intent(inout) :: routehandle
+    real(r8)               , intent(in)    :: data_i(:,:)
+    real(r8)               , intent(inout) :: data_o(:,:)
+    integer                , intent(out)   :: rc
+
+    ! local variables
+    logical           :: checkflag = .false.
+    integer           :: n,l
+    real(r8), pointer :: dataptr(:,:)
+    ! --------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    ! Interpolate data_i to data_o
+    call ESMF_VMLogMemInfo("Before field regrid in regrid_rawdata2d")
+    call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
+    dataptr(:,:) = data_i(:,:)
+    call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    dataptr(:,:) = 0._r8
+    call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, &
+         termorderflag=ESMF_TERMORDER_SRCSEQ, checkflag=checkflag, zeroregion=ESMF_REGION_TOTAL, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    data_o(:,:) = dataptr(:,:)
+    call ESMF_VMLogMemInfo("After field regrid in regrid_rawdata2d")
+
+  end subroutine regrid_rawdata2d
 
 end module mkesmfMod

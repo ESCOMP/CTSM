@@ -126,7 +126,6 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_VMLogMemInfo("After regrid_data in lanwat")
        do no = 1,size(lake_o)
-          write(6,*)'DEBUG: n,lake_o = ',no,lake_o(no)
           if (lake_o(no) < 1.) lake_o(no) = 0.
        enddo
 

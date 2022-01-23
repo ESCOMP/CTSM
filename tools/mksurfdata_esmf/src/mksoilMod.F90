@@ -1,12 +1,14 @@
 module mksoilMod
 
+  implicit none
+  private           ! By default make data private
+
   !-----------------------------------------------------------------------
-  ! Make soil data (texture, color and organic)
+  ! Make soil data (texture)
   !-----------------------------------------------------------------------
 
   use shr_kind_mod, only : r8 => shr_kind_r8, r4=>shr_kind_r4
-  use mkdomainMod , only : domain_checksame
-  use mksoilUtilsMod, only : mkrank, dominant_soil_color
+  use mksoilUtilsMod, only : mkrank
 
   implicit none
   private           ! By default make data private
@@ -14,8 +16,6 @@ module mksoilMod
   public mksoilInit     ! Soil Initialization
   public mksoilAtt      ! Add attributes to output file
   public mksoiltex      ! Set soil texture
-  public mkorganic      ! Set organic soil
-  public mksoilcol      ! Set soil color
   public mkfmax         ! Make percent fmax
 
   private :: mksoiltexInit  ! Soil texture Initialization
@@ -29,9 +29,9 @@ module mksoilMod
   integer , parameter :: unsetcol  = -999      ! flag to indicate soil color NOT set
   integer , public    :: soil_color= unsetcol  ! soil color to override with
 
-!===============================================================
+!=================================================================================
 contains
-!===============================================================
+!=================================================================================
 
   subroutine mksoilInit( )
 
@@ -43,12 +43,12 @@ contains
 
   end subroutine mksoilInit
 
-  !-----------------------------------------------------------------------
+  !==========================================================================
   subroutine mksoiltexInit( )
-
+    !
     ! Initialize of make soil texture
-
-    ! !LOCAL VARIABLES:
+    !
+    ! local variables:
     real(r8) :: sumtex
     character(len=32) :: subname = 'mksoiltexInit'
     !-----------------------------------------------------------------------
@@ -75,7 +75,7 @@ contains
 
   end subroutine mksoiltexInit
 
-  !-----------------------------------------------------------------------
+  !==========================================================================
   subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
 
     ! make %sand and %clay from IGBP soil data, which includes
@@ -179,81 +179,29 @@ contains
 
     call check_ret(nf_close(ncid), subname)
 
-    ! Compute local fields _o
-    if (soil_sand==unset .and. soil_clay==unset) then
-
-       call gridmap_mapread(tgridmap, mapfname)
-
-       ! Error checks for domain and map consistencies
-
-       call domain_checksame( tdomain, ldomain, tgridmap )
-
-       ! Obtain frac_dst
-       allocate(frac_dst(ns_o), stat=ier)
-       if (ier/=0) call shr_sys_abort()
-       call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
-
-       ! kmap_max are the maximum number of mapunits that will consider on
-       ! any output gridcell - this is set currently above and can be changed
-       ! kmap(:) are the mapunit values on the input grid
-       ! kwgt(:) are the weights on the input grid
-
-       allocate(novr(ns_o))
-       novr(:) = 0
-       do n = 1,tgridmap%ns
-          ni = tgridmap%src_indx(n)
-          if (tdomain%mask(ni) > 0) then
-             no = tgridmap%dst_indx(n)
-             novr(no) = novr(no) + 1
+    ! TODO: create an array that is size of (ns_i,mapunits)
+    ! read in mapunits
+    allocate(mask_mapuntis(ns_i, mapunits))
+    mask_mapunits_i(:,:) = 0._r8
+    do ni = 1,ns_i
+       do nmap = 1,mapunits
+          if (mapunits(ni,nmap) == nmap) then
+             mask_mapunits_i(ni,nmap) = 1._r8
           end if
        end do
-       maxovr = maxval(novr(:))
-       kmap_max = min(maxovr,max(kmap_max_min,km_mx_ns_prod/ns_o))
-       deallocate(novr)
+    end do
 
-       write(6,*)'kmap_max= ',kmap_max,' maxovr= ',maxovr,' ns_o= ',ns_o,' size= ',(kmap_max+1)*ns_o
 
-       allocate(kmap(0:kmap_max,ns_o), stat=ier)
-       if (ier/=0) call shr_sys_abort()
-       allocate(kwgt(0:kmap_max,ns_o), stat=ier)
-       if (ier/=0) call shr_sys_abort()
-       allocate(kmax(ns_o), stat=ier)
-       if (ier/=0) call shr_sys_abort()
-       allocate(wst(0:kmap_max), stat=ier)
-       if (ier/=0) call shr_sys_abort()
+    ! Compute local fields _o
+    if (soil_sand==unset .and. soil_clay==unset) then
+       ! Now map mask_mapunits_i to mask_mapunits_o
+       ! result is mask_mapunits_o(no_nmap)
 
-       kwgt(:,:) = 0.
-       kmap(:,:) = 0
-       kmax(:) = 0
-
-       do n = 1,tgridmap%ns
-          ni = tgridmap%src_indx(n)
-          no = tgridmap%dst_indx(n)
-          wt = tgridmap%wovr(n) * tdomain%mask(ni)
-          if (wt > 0._r8) then
-             k = mapunit_i(ni) 
-             found = .false.
-             do l = 0,kmax(no)
-                if (k == kmap(l,no)) then
-                   kwgt(l,no) = kwgt(l,no) + wt
-                   found = .true.
-                   exit
-                end if
-             end do
-             if (.not. found) then
-                kmax(no) = kmax(no) + 1
-                if (kmax(no) > kmap_max) then
-                   write(6,*)'kmax is > kmap_max= ',kmax(no), 'kmap_max = ', &
-                        kmap_max,' for no = ',no
-                   write(6,*)'reset kmap_max in mksoilMod to a greater value'
-                   call shr_sys_abort()
-                end if
-                kmap(kmax(no),no) = k
-                kwgt(kmax(no),no) = wt
-             end if
-          end if
-       enddo
-
+       do no = 1,ns_o
+          do nmap = 1,mapunits
+             kmap(no) = maxval(mask_mapunits_o(no,:))
+          end do
+       end do
     end if
 
     do no = 1,ns_o
@@ -288,30 +236,24 @@ contains
        !   c. If this has no data or if there isn't a second most dominant
        !      mapunit, use loam for soil texture
 
-       if (soil_sand/=unset .and. soil_clay/=unset) then  !---soil texture is input
+       if (soil_sand/=unset .and. soil_clay/=unset) then  
+          ! force  soil texture to be input
           do l = 1, nlay
              sand_o(no,l) = soil_sand
              clay_o(no,l) = soil_clay
           end do
-       else if (k1 /= 0) then           !---not 'no data'
+       else if (kmap(no) /= 0) then 
           do l = 1, nlay
              sand_o(no,l) = sand_i(k1,l)
              clay_o(no,l) = clay_i(k1,l)
           end do
-       else                                  !---if (k1 == 0) then
-          if (k2 == 0 .or. k2 == miss) then     !---no data
-             do l = 1, nlay
-                sand_o(no,l) = 43.           !---use loam
-                clay_o(no,l) = 18.
-             end do
-          else                               !---if (k2 /= 0 and /= miss)
-             do l = 1, nlay
-                sand_o(no,l) = sand_i(k2,l)
-                clay_o(no,l) = clay_i(k2,l)
-             end do
-          end if       !---end of k2 if-block
+       else             
+          ! kmap(no) = 0
+          do l = 1, nlay
+             sand_o(no,l) = 43.         !---use loam
+             clay_o(no,l) = 18.
+          end do
        end if          !---end of k1 if-block
-
     enddo
 
     if (soil_sand==unset .and. soil_clay==unset) then
@@ -433,7 +375,7 @@ contains
 
   end subroutine mksoiltex
 
-  !-----------------------------------------------------------------------
+  !==========================================================================
   subroutine mksoilcolInit( )
     !
     ! Initialize of make soil color
@@ -454,298 +396,12 @@ contains
 
   end subroutine mksoilcolInit
 
-  !-----------------------------------------------------------------------
-  subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
-       soil_color_o, nsoicol)
-    !
-    ! make %sand and %clay from IGBP soil data, which includes
-    ! igbp soil 'mapunits' and their corresponding textures
-    !
-    use mkvarpar	
-    use mkvarctl    
-    use mkncdio
-
-    ! !ARGUMENTS:
-    type(domain_type), intent(in) :: ldomain
-    character(len=*)  , intent(in) :: mapfname           ! input mapping file name
-    character(len=*)  , intent(in) :: datfname           ! input data file name
-    integer           , intent(in) :: ndiag              ! unit number for diag out
-    integer           , intent(out):: soil_color_o(:)    ! soil color classes
-    integer           , intent(out):: nsoicol            ! number of soil colors 
-
-    ! !LOCAL VARIABLES:
-    real(r8), allocatable          :: gast_i(:)             ! global area, by surface type
-    real(r8), allocatable          :: gast_o(:)             ! global area, by surface type
-    integer , allocatable          :: soil_color_i(:)       ! input grid: BATS soil color
-    real(r8), allocatable          :: frac_dst(:)           ! output fractions
-    real(r8), allocatable          :: mask_r8(:)            ! float of tdomain%mask
-    real(r8)                       :: sum_fldi              ! global sum of dummy input fld
-    real(r8)                       :: sum_fldo              ! global sum of dummy output fld
-    character(len=35), allocatable :: col(:)                ! name of each color
-    integer                        :: k,l,m,ni,no,ns_i,ns_o ! indices
-    integer                        :: ncid,dimid,varid      ! input netCDF id's
-    integer                        :: ier                   ! error status
-    real(r8)                       :: relerr = 0.00001      ! max error: sum overlap wts ne 1
-    character(len=32) :: subname = 'mksoilcol'
-    !-----------------------------------------------------------------------
-
-    write (6,*) 'Attempting to make soil color classes .....'
-
-    ! -----------------------------------------------------------------
-    ! Read input file
-    ! -----------------------------------------------------------------
-
-    ns_o = ldomain%ns
-
-    ! Obtain input grid info, read local fields
-
-    call domain_read(tdomain,datfname)
-    ns_i = tdomain%ns
-    allocate(soil_color_i(ns_i), stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    allocate(frac_dst(ns_o), stat=ier)
-    if (ier/=0) call shr_sys_abort()
-
-    write (6,*) 'Open soil color file: ', trim(datfname)
-    call check_ret(nf_open(datfname, 0, ncid), subname)
-    call check_ret(nf_inq_varid (ncid, 'SOIL_COLOR', varid), subname)
-    call check_ret(nf_get_var_int (ncid, varid, soil_color_i), subname)
-    call check_ret(nf_close(ncid), subname)
-
-    nsoicol = maxval(soil_color_i)
-    write(6,*)'nsoicol = ',nsoicol
-
-    allocate(gast_i(0:nsoicol),gast_o(0:nsoicol),col(0:nsoicol))
-
-    ! -----------------------------------------------------------------
-    ! Define the model color classes: 0 to nsoicol
-    ! -----------------------------------------------------------------
-
-    if (nsoicol == 20) then
-       col(0)  = 'no soil                            '
-       col(1)  = 'class 1: light                     '
-       col(2)  = 'class 2:                           '
-       col(3)  = 'class 3:                           '
-       col(4)  = 'class 4:                           '
-       col(5)  = 'class 5:                           '
-       col(6)  = 'class 6:                           '
-       col(7)  = 'class 7:                           '
-       col(8)  = 'class 8:                           '
-       col(9)  = 'class 9:                           '
-       col(10) = 'class 10:                          '
-       col(11) = 'class 11:                          '
-       col(12) = 'class 12:                          '
-       col(13) = 'class 13:                          '
-       col(14) = 'class 14:                          '
-       col(15) = 'class 15:                          '
-       col(16) = 'class 16:                          '
-       col(17) = 'class 17:                          '
-       col(18) = 'class 18:                          '
-       col(19) = 'class 19:                          '
-       col(20) = 'class 20: dark                     '
-    else if (nsoicol == 8) then
-       col(0) = 'no soil                            '
-       col(1) = 'class 1: light                     '
-       col(2) = 'class 2:                           '
-       col(3) = 'class 3:                           '
-       col(4) = 'class 4:                           '
-       col(5) = 'class 5:                           '
-       col(6) = 'class 6:                           '
-       col(7) = 'class 7:                           '
-       col(8) = 'class 8: dark                      '
-    else
-       write(6,*)'nsoicol value of ',nsoicol,' is not currently supported'
-       call shr_sys_abort()
-    end if
-
-    ! Error check soil_color if it is set
-    if ( soil_color /= unsetcol )then
-
-       if ( soil_color > nsoicol )then
-          write(6,*)'soil_color is out of range = ', soil_color
-          call shr_sys_abort()
-       end if
-
-       do no = 1,ns_o
-          soil_color_o(no) = soil_color
-       end do
-
-    else
-
-       call gridmap_mapread(tgridmap, mapfname)
-
-       ! Error checks for domain and map consistencies
-
-       call domain_checksame( tdomain, ldomain, tgridmap )
-
-       ! Obtain frac_dst
-       call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
-
-       ! Determine dominant soil color for each output cell
-
-       call dominant_soil_color( &
-            tgridmap = tgridmap, &
-            mask_i = tdomain%mask, &
-            soil_color_i = soil_color_i, &
-            nsoicol = nsoicol, &
-            soil_color_o = soil_color_o)
-
-       ! Global sum of output field 
-
-       allocate(mask_r8(ns_i), stat=ier)
-       if (ier/=0) call shr_sys_abort()
-       mask_r8 = tdomain%mask
-       call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
-
-    end if
-
-    ! Deallocate dynamic memory
-
-    call domain_clean(tdomain)
-    if ( soil_color == unsetcol )then
-       call gridmap_clean(tgridmap)
-    end if
-    deallocate (soil_color_i,gast_i,gast_o,col, frac_dst, mask_r8)
-
-    write (6,*) 'Successfully made soil color classes'
-    write (6,*)
-
-  end subroutine mksoilcol
-
-  !-----------------------------------------------------------------------
-  subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
-    !
-    ! make organic matter dataset
-    !
-    use mkdomainMod, only : domain_type, domain_clean, domain_read
-    use mkgridmapMod
-    use mkvarpar	
-    use mkvarctl    
-    use mkncdio
-
-    ! !ARGUMENTS:
-    type(domain_type), intent(in) :: ldomain
-    character(len=*)  , intent(in) :: mapfname       ! input mapping file name
-    character(len=*)  , intent(in) :: datfname       ! input data file name
-    integer           , intent(in) :: ndiag          ! unit number for diag out
-    real(r8)          , intent(out):: organic_o(:,:) ! output grid:
-
-    ! !LOCAL VARIABLES:
-    type(gridmap_type)    :: tgridmap
-    type(domain_type)    :: tdomain         ! local domain
-    real(r8), allocatable :: organic_i(:,:)  ! input grid: total column organic matter
-    real(r8), allocatable :: frac_dst(:)     ! output fractions
-    real(r8) :: sum_fldi                     ! global sum of dummy input fld
-    real(r8) :: sum_fldo                     ! global sum of dummy output fld
-    real(r8) :: gomlev_i                     ! input  grid: global organic on lev
-    real(r8) :: garea_i                      ! input  grid: global area
-    real(r8) :: gomlev_o                     ! output grid: global organic on lev
-    real(r8) :: garea_o                      ! output grid: global area
-    integer  :: k,n,m,ni,no,ns_i             ! indices
-    integer  :: lev                          ! level index
-    integer  :: nlay                         ! number of soil layers
-    integer  :: ncid,dimid,varid             ! input netCDF id's
-    integer  :: ier                          ! error status
-    real(r8) :: relerr = 0.00001             ! max error: sum overlap wts ne 1
-    character(len=32) :: subname = 'mkorganic'
-    !-----------------------------------------------------------------------
-
-    write (6,*) 'Attempting to make organic matter dataset .....'
-
-    ! -----------------------------------------------------------------
-    ! Read input file
-    ! -----------------------------------------------------------------
-
-    ! Obtain input grid info, read local fields
-
-    call domain_read(tdomain,datfname)
-    ns_i = tdomain%ns
-
-    write (6,*) 'Open soil organic file: ', trim(datfname)
-    call check_ret(nf_open(datfname, 0, ncid), subname)
-
-    call check_ret(nf_inq_dimid  (ncid, 'number_of_layers', dimid), subname)
-    call check_ret(nf_inq_dimlen (ncid, dimid, nlay), subname)
-
-    allocate(organic_i(ns_i,nlay),stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    allocate(frac_dst(ldomain%ns),stat=ier)
-    if (ier/=0) call shr_sys_abort()
-
-    if (nlay /= nlevsoi) then
-       write(6,*)'nlay, nlevsoi= ',nlay,nlevsoi,' do not match'
-       call shr_sys_abort()
-    end if
-
-    call check_ret(nf_inq_varid (ncid, 'ORGANIC', varid), subname)
-    call check_ret(nf_get_var_double (ncid, varid, organic_i), subname)
-
-    call check_ret(nf_close(ncid), subname)
-
-    ! Area-average percent cover on input grid to output grid 
-    ! and correct according to land landmask
-    ! Note that percent cover is in terms of total grid area.
-
-    call gridmap_mapread(tgridmap, mapfname )
-
-    call domain_checksame( tdomain, ldomain, tgridmap )
-
-    ! Obtain frac_dst
-    call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
-
-    do lev = 1,nlay
-       call gridmap_areaave_srcmask(tgridmap, organic_i(:,lev), organic_o(:,lev), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-    end do
-
-    do lev = 1,nlevsoi
-
-       ! Check for conservation
-
-       do no = 1,ldomain%ns
-          if ((organic_o(no,lev)) > 130.000001_r8) then
-             write (6,*) 'MKORGANIC error: organic = ',organic_o(no,lev), &
-                  ' greater than 130.000001 for column, row = ',no
-             call shr_sys_abort()
-          end if
-       enddo
-
-       write (6,*) 'Successfully made organic matter, level = ', lev
-
-    end do   ! lev
-
-    ! Deallocate dynamic memory
-
-    call domain_clean(tdomain)
-    call gridmap_clean(tgridmap)
-    deallocate (organic_i)
-    deallocate (frac_dst)
-
-    write (6,*) 'Successfully made organic matter'
-    write(6,*)
-
-  end subroutine mkorganic
-
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mksoilfmaxInit
-  !
-  ! !INTERFACE:
+  !==========================================================================
   subroutine mksoilfmaxInit( )
     !
-    ! !DESCRIPTION:
     ! Initialize of make soil fmax
-    ! !USES:
     !
-    ! !ARGUMENTS:
-    implicit none
-    !
-    ! !REVISION HISTORY:
-    ! Author: Erik Kluzek
-    !
-    !
-    ! !LOCAL VARIABLES:
-    !EOP
+    ! local variables:
     real(r8) :: sumtex
     character(len=32) :: subname = 'mksoilfmaxInit'
     !-----------------------------------------------------------------------
@@ -761,12 +417,7 @@ contains
 
   end subroutine mksoilfmaxInit
 
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkfmax
-  !
-  ! !INTERFACE:
+  !==========================================================================
   subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
     !
     ! !DESCRIPTION:
@@ -1011,11 +662,6 @@ contains
        call ncd_def_spatial_var(ncid=ncid, varname='PCT_CLAY', xtype=xtype, &
             lev1name='nlevsoi', &
             long_name='percent clay', units='unitless')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='ORGANIC', xtype=xtype, &
-            lev1name='nlevsoi', &
-            long_name='organic matter density at soil levels', &
-            units='kg/m3 (assumed carbon content 0.58 gC per gOM)')
 
        call ncd_def_spatial_var(ncid=ncid, varname='FMAX', xtype=xtype, &
             long_name='maximum fractional saturated area', units='unitless')

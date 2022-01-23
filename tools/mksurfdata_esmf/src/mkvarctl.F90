@@ -329,63 +329,84 @@ contains
     ! Note - need to call this after ndiag has been set
 
     if (root_task) then
-       write(ndiag,'(a)') 'PFTs from:                  '//trim(mksrf_fvegtyp)
-       write(ndiag,'(a)') 'harvest from:               '//trim(mksrf_fhrvtyp)
-       write(ndiag,'(a)') 'fmax from:                  '//trim(mksrf_fmax)
-       write(ndiag,'(a)') 'glaciers from:              '//trim(mksrf_fglacier)
-#ifdef TODO
-       write(ndiag,'(a)') '           with:            '// nglcec, ' glacier elevation classes'
-#endif
-       write(ndiag,'(a)') 'glacier region ID from:     '//trim(mksrf_fglacierregion)
-       write(ndiag,'(a)') 'urban topography from:      '//trim(mksrf_furbtopo)
-       write(ndiag,'(a)') 'urban from:                 '//trim(mksrf_furban)
-       write(ndiag,'(a)') 'inland lake from:           '//trim(mksrf_flakwat)
-       write(ndiag,'(a)') 'inland wetland from:        '//trim(mksrf_fwetlnd)
-       write(ndiag,'(a)') 'soil texture from:          '//trim(mksrf_fsoitex)
-       write(ndiag,'(a)') 'soil organic from:          '//trim(mksrf_forganic)
-       write(ndiag,'(a)') 'soil color from:            '//trim(mksrf_fsoicol)
-       write(ndiag,'(a)') 'VOC emission factors from:  '//trim(mksrf_fvocef)
-       write(ndiag,'(a)') 'gdp from:                   '//trim(mksrf_fgdp)
-       write(ndiag,'(a)') 'peat from:                  '//trim(mksrf_fpeat)
-       write(ndiag,'(a)') 'soil depth from:            '//trim(mksrf_fsoildepth)
-       write(ndiag,'(a)') 'abm from:                   '//trim(mksrf_fabm)
-       write(ndiag,'(a)') 'topography statistics from: '//trim(mksrf_ftopostats)
-       write(ndiag,'(a)') 'VIC parameters from:        '//trim(mksrf_fvic)
+       write(ndiag,'(a)')'Input rawdata files and corresponding meshes'
+       write(ndiag,'(a)')' PFTs from:                  '//trim(mksrf_fvegtyp)
        write(ndiag,'(a)')' mesh for pft                '//trim(mksrf_fvegtyp_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' inland lake from:           '//trim(mksrf_flakwat)
        write(ndiag,'(a)')' mesh for lake water         '//trim(mksrf_flakwat_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' inland wetland from:        '//trim(mksrf_fwetlnd)
        write(ndiag,'(a)')' mesh for wetland            '//trim(mksrf_fwetlnd_mesh)
-       write(ndiag,'(a)')' mesh for glacier            '//trim(mksrf_fglacier_mesh)
-       write(ndiag,'(a)')' mesh for glacier region     '//trim(mksrf_fglacierregion_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' soil texture from:          '//trim(mksrf_fsoitex)
        write(ndiag,'(a)')' mesh for soil texture       '//trim(mksrf_fsoitex_mesh)
-       write(ndiag,'(a)')' mesh for soil color         '//trim(mksrf_fsoicol_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' soil organic from:          '//trim(mksrf_forganic)
        write(ndiag,'(a)')' mesh for soil organic       '//trim(mksrf_forganic_mesh)
-       write(ndiag,'(a)')' mesh for urban              '//trim(mksrf_furban_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' soil color from:            '//trim(mksrf_fsoicol)
+       write(ndiag,'(a)')' mesh for soil color         '//trim(mksrf_fsoicol_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' fmax from:                  '//trim(mksrf_fmax)
        write(ndiag,'(a)')' mesh for fmax               '//trim(mksrf_fmax_mesh)
-       write(ndiag,'(a)')' mesh for VOC pct emis       '//trim(mksrf_fvocef_mesh)
-       write(ndiag,'(a)')' mesh for harvest            '//trim(mksrf_fhrv_mesh)
-       write(ndiag,'(a)')' mesh for lai/sai            '//trim(mksrf_flai_mesh)
-       write(ndiag,'(a)')' mesh for urb topography     '//trim(mksrf_furbtopo_mesh)
-       write(ndiag,'(a)')' mesh for GDP                '//trim(mksrf_fgdp_mesh)
-       write(ndiag,'(a)')' mesh for peatlands          '//trim(mksrf_fpeat_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' soil depth from:            '//trim(mksrf_fsoildepth)
        write(ndiag,'(a)')' mesh for soil depth         '//trim(mksrf_fsoildepth_mesh)
-       write(ndiag,'(a)')' mesh for ag fire pk month   '//trim(mksrf_fabm_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' VOC emission factors from:  '//trim(mksrf_fvocef)
+       write(ndiag,'(a)')' mesh for VOC pct emis       '//trim(mksrf_fvocef_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' gdp from:                   '//trim(mksrf_fgdp)
+       write(ndiag,'(a)')' mesh for gdp                '//trim(mksrf_fgdp_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' peat from:                  '//trim(mksrf_fpeat)
+       write(ndiag,'(a)')' mesh for peatlands          '//trim(mksrf_fpeat_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' harvest from:               '//trim(mksrf_fhrvtyp)
+       write(ndiag,'(a)')' mesh for harvest            '//trim(mksrf_fhrv_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' topography statistics from: '//trim(mksrf_ftopostats)
        write(ndiag,'(a)')' mesh for topography stats   '//trim(mksrf_ftopostats_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' glaciers from:              '//trim(mksrf_fglacier)
+#ifdef TODO
+       write(ndiag,'(a)')'            with:            '// nglcec, ' glacier elevation classes'
+#endif
+       write(ndiag,'(a)')' mesh for glacier            '//trim(mksrf_fglacier_mesh)
+       write(ndiag,'(a)')' glacier region ID from:     '//trim(mksrf_fglacierregion)
+       write(ndiag,'(a)')' mesh for glacier region     '//trim(mksrf_fglacierregion_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' urban from:                 '//trim(mksrf_furban)
+       write(ndiag,'(a)')' mesh for urban              '//trim(mksrf_furban_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' urban topography from:      '//trim(mksrf_furbtopo)
+       write(ndiag,'(a)')' mesh for urban topography   '//trim(mksrf_furbtopo_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' mesh for lai/sai            '//trim(mksrf_flai_mesh)
+       write(ndiag,'(a)')' mesh for ag fire pk month   '//trim(mksrf_fabm_mesh)
+       write(ndiag,*)
+       write(ndiag,'(a)')' abm from:                   '//trim(mksrf_fabm)
+       write(ndiag,*)
+       write(ndiag,'(a)')' VIC parameters from:        '//trim(mksrf_fvic)
        write(ndiag,'(a)')' mesh for VIC parameters     '//trim(mksrf_fvic_mesh)
-
-       write(ndiag,'(a)')' mksrf_gridtype = '//trim(mksrf_gridtype)
-
+       write(ndiag,*)
        if (mksrf_fdynuse /= ' ') then
           write(ndiag,'(a)')' mksrf_fdynuse = '//trim(mksrf_fdynuse)
        end if
-
+       write(ndiag,*)
+       write(ndiag,'(a)')'Model grid configuration variables'  
        write(ndiag,'(a)')' mksrf_fgrid_mesh = '//trim(mksrf_fgrid_mesh)
+       write(ndiag,'(a,i8)')' nlon= ',mksrf_fgrid_mesh_nx
+       write(ndiag,'(a,i8)')' nlat= ',mksrf_fgrid_mesh_ny
+       write(ndiag,'(a)')' mksrf_gridtype = '//trim(mksrf_gridtype)
+       write(ndiag,*)
+       write(ndiag,'(a)')'Output configuration variables'  
        if (outnc_1d) then
           write(ndiag,'(a)')' output file will be 1d format'
        else
           write(ndiag,'(a)')' fsurdat is 2d lat/lon grid'
        end if
-       write(ndiag,'(a,i8)')' nlon= ',mksrf_fgrid_mesh_nx
-       write(ndiag,'(a,i8)')' nlat= ',mksrf_fgrid_mesh_ny
        if ( outnc_large_files ) then
           write(ndiag,'(a)')' Output file in NetCDF 64-bit large_files format'
        end if

@@ -15,7 +15,7 @@ module mkfileMod
   use mkharvestMod , only : mkharvest_units, harvestDataType
 #endif
   use mkpioMod ! TODO: add only
-  use mkvarctl 
+  use mkvarctl
 
   implicit none
   private
@@ -30,7 +30,7 @@ contains
 !=================================================================================
 
   subroutine mkfile_fsurdat(nx, ny, mesh_model, dynlanduse, &
-       pctlak, pctwet, lakedepth)
+       pctlak, pctwet, lakedepth, organic)
 
     ! input/output variables
     integer          , intent(in) :: nx
@@ -40,7 +40,8 @@ contains
     real(r8), pointer, intent(in) :: pctlak(:)               ! percent of grid cell that is lake
     real(r8), pointer, intent(in) :: pctwet(:)               ! percent of grid cell that is wetland
     real(r8), pointer, intent(in) :: lakedepth(:)            ! lake depth (m)
-#ifdef TODO    
+    real(r8), pointer, intent(in) :: organic(:,:)            ! organic
+#ifdef TODO
     type(harvestDataType) , intent(in) :: harvdata
 #endif
 
@@ -49,17 +50,19 @@ contains
     type(file_desc_t)    :: pioid
     character(len=256)   :: varname
     character(len=256)   :: longname
-    character(len=256)   :: units               
+    character(len=256)   :: units
     integer              :: xtype              ! external type
     integer, allocatable :: ind1D(:)           ! Indices of 1D harvest variables
     integer, allocatable :: ind2D(:)           ! Indices of 2D harvest variables
     integer              :: rcode
-    integer              :: rc 
+    integer              :: rc
     integer              :: n, i
     logical              :: define_mode
-    type(io_desc_t)      :: pio_iodesc 
+    type(io_desc_t)      :: pio_iodesc
     type(var_desc_t)     :: pio_varid
+    character(len=256)   :: lev1name
     real(r8), pointer    :: rpointer1d(:)
+    real(r8), pointer    :: rpointer2d(:,:)
     character(len=*), parameter :: subname=' (mkfile_fsurdat) '
     !-----------------------------------------------------------------------
 
@@ -127,7 +130,7 @@ contains
           end if
 
           varname = 'LAKEDEPTH'
-          longname = 'lake depth' 
+          longname = 'lake depth'
           units = 'm'
           rpointer1d => lakedepth
           if (define_mode) then
@@ -141,12 +144,28 @@ contains
              call pio_freedecomp(pioid, pio_iodesc)
           end if
 
+          varname = 'ORGANIC'
+          longname = 'organic matter density at soil levels'
+          units = 'kg/m3 (assumed carbon content 0.58 gC per gOM)'
+          lev1name = 'nlevsoi'
+          rpointer2d => organic
+          if (define_mode) then
+             call mkpio_def_spatial_var(pioid, trim(varname), xtype, trim(lev1name), trim(longname), trim(units))
+          else
+             ! inquire about varid here
+             call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
+             rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+             call pio_write_darray(pioid, pio_varid, pio_iodesc, rpointer2d, rcode)
+             call pio_freedecomp(pioid, pio_iodesc)
+          end if
+
        end if
     end do
 
     ! Close surface dataset
     call pio_closefile(pioid)
-    
+
     if (root_task) then
        write (ndiag,'(72a1)') ("-",i=1,60)
        write (ndiag,'(a)')' land model surface data set successfully created for '
@@ -178,6 +197,8 @@ contains
        rcode = pio_def_dim(pioid, 'lsmlon', nx, dimid)
        rcode = pio_def_dim(pioid, 'lsmlat', ny, dimid)
     end if
+    rcode = pio_def_dim(pioid, 'nlevsoi', nlevsoi, dimid)
+    rcode = pio_def_dim(pioid, 'time', PIO_UNLIMITED, dimid)
 
     if (.not. dynlanduse) then
 #ifdef TODO
@@ -201,7 +222,7 @@ contains
     ! input/output variables
     type(file_desc_t) , intent(in) :: pioid
     logical           , intent(in) :: dynlanduse
-  
+
     ! local variables
     integer              :: values(8)          ! temporary
     character(len=256)   :: str                ! global attribute string

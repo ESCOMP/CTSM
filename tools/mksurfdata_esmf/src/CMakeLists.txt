@@ -21,6 +21,7 @@ set(SRCFILES mkvarctl.F90
              mkpioMod.F90
              mkfileMod.F90
              mklanwatMod.F90
+             mkorganicMod.F90
              mkesmfMod.F90
              mkutilsMod.F90
              mkchecksMod.F90

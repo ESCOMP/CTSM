@@ -64,14 +64,14 @@ contains
        write(6,*) 'size(sums)                 = ', n_max
        write(6,*) 'size(classes_pct_tot, 1)   = ', size(classes_pct_tot, 1)
        write(6,*) 'size(classes_pct_gcell, 1) = ', size(classes_pct_gcell, 1)
-       call abort()
+       call shr_sys_abort()
     end if
 
     if (size(classes_pct_tot, 2) /= size(classes_pct_gcell, 2)) then
        write(6,*) subname//' ERROR: array size mismatch'
        write(6,*) 'size(classes_pct_tot, 2)   = ', size(classes_pct_tot, 2)
        write(6,*) 'size(classes_pct_gcell, 2) = ', size(classes_pct_gcell, 2)
-       call abort()
+       call shr_sys_abort()
     end if
 
     ! Do the work

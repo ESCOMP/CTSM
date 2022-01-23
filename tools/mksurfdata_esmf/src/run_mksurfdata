@@ -20,4 +20,4 @@ mkdir -p $TMPDIR
 #make
 
 # -np {total_tasks}
-mpiexec_mpt -p "%g:" -np 144 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/mksurfdata
+mpiexec_mpt -p "%g:" -np 144 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/run/mksurfdata

@@ -5,7 +5,7 @@ module mkpioMod
   use shr_kind_mod , only : r8 => shr_kind_r8, cl => shr_kind_cl, cs => shr_kind_cs, r4 => shr_kind_r4
   use shr_sys_mod  , only : shr_sys_abort
   use mkutilsMod   , only : chkerr
-  use mkvarctl     , only : root_task, ndiag, mpicom
+  use mkvarctl     , only : root_task, ndiag, mpicom, outnc_1d
 
   implicit none
   private
@@ -17,10 +17,11 @@ module mkpioMod
   public :: mkpio_iodesc_output
   public :: mkpio_wopen
   public :: mkpio_close
-  public :: mkpio_defvar
   public :: mkpio_def_spatial_var
-  public :: mkpio_get_dim_lengths
+  public :: mkpio_get_dimlengths
   public :: mkpio_put_time_slice
+
+  private :: mkpio_defvar
 
   interface mkpio_def_spatial_var
      module procedure mkpio_def_spatial_var_0lev
@@ -74,9 +75,9 @@ contains
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(filename), pio_nowrite)
     call ESMF_VMLogMemInfo("After pio_openfile in regrid_data")
 
-    ! TODO: put this in the calling file
     call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+
     call ESMF_VMLogMemInfo("After mkpio_iodesc in regrid_data")
     if (pio_vartype == PIO_REAL) then
        allocate(data_real(lsize))
@@ -115,19 +116,19 @@ contains
     type(ESMF_DistGrid)     :: distGrid
     integer                 :: n, ndims
     integer, pointer        :: compdof(:)
+    integer, allocatable    :: compdof3d(:)
     integer, allocatable    :: dimids(:)
     integer, allocatable    :: dimlens(:)
+    character(len=cs)       :: dimname
     integer                 :: lsize
+    integer                 :: nlev
+    integer                 :: cnt, m
+    integer                 :: offset
     integer                 :: rCode ! pio return code (only used when pio error handling is PIO_BCAST_ERROR)
-    character(*), parameter :: subname = '(shr_strdata_set_stream_iodesc) '
+    character(*), parameter :: subname = '(mkpio_iodesc_rawdata) '
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-
-    !if (root_task) then
-       !write(ndiag,'(a,i8, i8)') 'setting iodesc for : '//trim(varname)// &
-       !' with dimlens(1), dimlens2 = ',dimlens(1),dimlens(2)
-    !end if
 
     call ESMF_VMLogMemInfo("Beginning setting compdof")
     call ESMF_MeshGet(mesh, elementdistGrid=distGrid, rc=rc)
@@ -154,21 +155,211 @@ contains
     do n = 1, ndims
        rcode = pio_inq_dimlen(pioid, dimids(n), dimlens(n))
     end do
+    rcode = pio_inq_dimname(pioid, dimids(ndims), dimname)
     call ESMF_VMLogMemInfo("End getting dims")
 
+    ! Create compdof3d if needed
+    ! Assume that input data is always lon,lat as first two dimensions
+    nlev = 0
+    offset = dimlens(1)*dimlens(2)
+    if (ndims == 3 .and. trim(dimname) /= 'time') then
+       nlev = dimlens(3)
+    else if (ndims == 3 .and. trim(dimname) == 'time') then
+       ! do nothing - keep nlev at 0
+    else if (ndims == 4 .and. trim(dimname) /= 'time') then
+       nlev = dimlens(3)*dimlens(4)
+    else if (ndims == 4 .and. trim(dimname) == 'time') then
+       nlev = dimlens(3)
+    end if
+
+    if (nlev > 0) then
+       allocate(compdof3d(nlev*lsize))
+       cnt = 0
+       do n = 1,nlev
+          do m = 1,size(compdof)
+             cnt = cnt + 1
+             compdof3d(cnt) = (n-1)*offset + compdof(m)
+          enddo
+       enddo
+    end if
+
     ! determine io descriptor for this variable
-    if (ndims == 1) then
-       call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
-    else if (ndims == 2) then
+    if (ndims == 2) then
        call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+       if (root_task) then
+          write(ndiag,'(a,i8,i8)') ' set iodesc for rawdata: '//trim(varname)//' with dim(1),dim(2) = ',&
+               dimlens(1),dimlens(2)
+       end if
+    else if (ndims == 3) then
+       if (trim(dimname) == 'time') then
+          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+          if (root_task) then
+             write(ndiag,'(a,i8,i8)') ' set iodesc for rawdata: '//trim(varname)//' with dim(1),dim(2) = ',&
+                  dimlens(1),dimlens(2)
+          end if
+       else
+          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof3d, pio_iodesc)
+          if (root_task) then
+             write(ndiag,'(a,i8,i8,i8)') ' set iodesc for rawdata: '//trim(varname)//' with dim(1),dim(2),dim(3) = ',&
+                  dimlens(1),dimlens(2),dimlens(3)
+          end if
+       end if
+    else if (ndims == 4) then
+       if (trim(dimname) == 'time') then
+          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof3d, pio_iodesc)
+          if (root_task) then
+             write(ndiag,'(a,i8,i8,i8)') ' set iodesc for rawdata: '//trim(varname)//' with dim(1),dim(2),dim(3) = ',&
+                  dimlens(1),dimlens(2),dimlens(3)
+          end if
+       else
+          call shr_sys_abort('for lon/lat support up to 3 spatial dims plus a time dim')
+       end if
     else
-       call shr_sys_abort('rawdata input must have ndims either 1 or 2')
+       call shr_sys_abort('rawdata input for variable '//trim(varname)//'  must have ndims either 2, 3 or 4')
     end if
 
     ! deallocate memory
     deallocate(compdof)
+    if (allocated(compdof3d)) deallocate(compdof3d) 
 
   end subroutine mkpio_iodesc_rawdata
+
+  !===============================================================
+  subroutine mkpio_iodesc_output(pioid, mesh, varname, pio_iodesc, rc)
+
+    ! Create pio_iodesc for varname
+
+    ! input/output variables
+    type(file_desc_t) , intent(inout) :: pioid
+    character(len=*)  , intent(in)    :: varname
+    type(ESMF_Mesh)   , intent(in)    :: mesh
+    type(io_desc_t)   , intent(inout) :: pio_iodesc 
+    integer           , intent(out)   :: rc
+
+    ! local variables
+    type(ESMF_DistGrid)     :: distGrid
+    integer                 :: n, ndims
+    integer, allocatable    :: compdof(:)
+    integer, allocatable    :: compdof3d(:)
+    integer, allocatable    :: dimids(:)
+    integer, allocatable    :: dimlens(:)
+    character(len=cs)       :: dimname
+    integer                 :: lsize
+    integer                 :: nlev
+    integer                 :: cnt, m
+    integer                 :: offset
+    type(var_desc_t)        :: pio_varid
+    integer                 :: pio_vartype
+    integer                 :: rCode ! pio return code (only used when pio error handling is PIO_BCAST_ERROR)
+    character(*), parameter :: subname = '(shr_strdata_set_stream_iodesc) '
+    !-------------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    if (root_task) then
+       write(ndiag,'(a)') 'setting iodesc for : '//trim(varname)
+    end if
+
+    ! get pio variable id, type and dimension information
+    rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+    rcode = pio_inq_vartype(pioid, pio_varid, pio_vartype)
+    rcode = pio_inq_varndims(pioid, pio_varid, ndims)
+    allocate(dimids(ndims))
+    allocate(dimlens(ndims))
+    rcode = pio_inq_vardimid(pioid, pio_varid, dimids(1:ndims))
+    do n = 1, ndims
+       rcode = pio_inq_dimlen(pioid, dimids(n), dimlens(n))
+    end do
+    rcode = pio_inq_dimname(pioid, dimids(ndims), dimname)
+
+    ! Get compdof from mesh
+    call ESMF_MeshGet(mesh, elementdistGrid=distGrid, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_DistGridGet(distGrid, localDe=0, elementCount=lsize, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate(compdof(lsize))
+    call ESMF_DistGridGet(distGrid, localDe=0, seqIndexList=compdof, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create compdof3d if needed
+    nlev = 0
+    if (outnc_1d) then
+       offset = dimlens(1)
+       if (ndims == 2 .and. trim(dimname) /= 'time') then
+          nlev = dimlens(2)
+       else if (ndims == 3 .and. trim(dimname) == 'time') then
+          nlev = dimlens(2)
+       else if (ndims == 3 .and. trim(dimname) /= 'time') then
+          nlev = dimlens(2)*dimlens(3)
+       end if
+    else
+       offset = dimlens(1)*dimlens(2)
+       if (ndims == 3 .and. trim(dimname) /= 'time') then
+          nlev = dimlens(3)
+       else if (ndims == 3 .and. trim(dimname) == 'time') then
+          ! do nothing - keep nlev at 0
+       else if (ndims == 4 .and. trim(dimname) /= 'time') then
+          nlev = dimlens(3)*dimlens(4)
+       else if (ndims == 4 .and. trim(dimname) == 'time') then
+          nlev = dimlens(3)
+       end if
+    end if
+
+    if (nlev > 0) then
+       allocate(compdof3d(nlev*lsize))
+       cnt = 0
+       do n = 1,nlev
+          do m = 1,size(compdof)
+             cnt = cnt + 1
+             compdof3d(cnt) = (n-1)*offset + compdof(m)
+          enddo
+       enddo
+    end if
+
+    ! determine io descriptor for this variable
+    if (outnc_1d) then
+       ! Assume that can have (gridcell), (gridcell,lev), (gridcell,lev,time)
+       ! Where lev would correspond to an undistributed dimension in esmf
+       if (ndims == 1)  then
+          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
+       else if (ndims == 2) then
+          if (trim(dimname) == 'time') then
+             call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
+          else
+             call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+          end if
+       else if (ndims == 3) then
+          if (trim(dimname) == 'time') then
+             call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+          else
+             call shr_sys_abort('support on 2 dimensions in addition to a time dimension when outnc_1d is true')
+          end if
+       end if
+    else
+       ! Assume that can have (lon,lat), (lon,lat,lev), (lon,lat,time), (lon,lat,lev,time)
+       ! Where lev would correspond to an undistributed dimension in esmf
+       if (ndims == 2) then
+          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+       else if (ndims == 3) then
+          if (trim(dimname) == 'time') then
+             call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+          else
+             call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof3d, pio_iodesc)
+          end if
+       else if (ndims == 4) then
+          if (trim(dimname) == 'time') then
+             call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof3d, pio_iodesc)
+          else
+             call shr_sys_abort('for lon/lat support up to 3 spatial dims plus a time dim')
+          end if
+       end if
+    end if
+
+    ! deallocate memory
+    deallocate(compdof)
+    if (allocated(compdof3d)) deallocate(compdof3d) 
+
+  end subroutine mkpio_iodesc_output
 
   !===============================================================================
   logical function mkpio_file_exists(filename)
@@ -387,8 +578,6 @@ contains
     ! Define a spatial netCDF variable (convenience wrapper to mkpio_defvar)
     ! The variable in question has ONLY spatial dimensions (no level or time dimensions)
 
-    use mkvarctl, only : outnc_1d
-
     ! !ARGUMENTS:
     type(file_desc_t) , intent(in) :: pioid
     character(len=*)  , intent(in) :: varname   ! variable name
@@ -419,8 +608,6 @@ contains
     ! The variable in question has one level (or time) dimension in addition to its
     ! spatial dimensions
 
-    use mkvarctl, only : outnc_1d
-
     ! !ARGUMENTS:
     type(file_desc_t) , intent(in)           :: pioid
     character(len=*) , intent(in) :: varname   ! variable name
@@ -448,25 +635,21 @@ contains
   !-----------------------------------------------------------------------
   subroutine mkpio_def_spatial_var_2lev(pioid, varname, xtype, lev1name, lev2name, long_name, units)
     !
-    ! !DESCRIPTION:
     ! Define a spatial netCDF variable (convenience wrapper to mkpio_defvar)
     !
     ! The variable in question has two level (or time) dimensions in addition to its
     ! spatial dimensions
     !
-    ! !USES:
-    use mkvarctl, only : outnc_1d
-    !
-    ! !ARGUMENTS:
-    type(file_desc_t) , intent(in)           :: pioid
-    character(len=*) , intent(in) :: varname   ! variable name
-    integer          , intent(in) :: xtype     ! external type
-    character(len=*) , intent(in) :: lev1name  ! name of first level (or time) dimension
-    character(len=*) , intent(in) :: lev2name  ! name of second level (or time) dimension
-    character(len=*) , intent(in) :: long_name ! attribute
-    character(len=*) , intent(in) :: units     ! attribute
+    ! input/output variables
+    type(file_desc_t) , intent(in) :: pioid
+    character(len=*)  , intent(in) :: varname   ! variable name
+    integer           , intent(in) :: xtype     ! external type
+    character(len=*)  , intent(in) :: lev1name  ! name of first level (or time) dimension
+    character(len=*)  , intent(in) :: lev2name  ! name of second level (or time) dimension
+    character(len=*)  , intent(in) :: long_name ! attribute
+    character(len=*)  , intent(in) :: units     ! attribute
 
-    ! !LOCAL VARIABLES:
+    ! local variables:
     character(len=*), parameter :: subname = 'mkpio_def_spatial_var_2lev'
     !-----------------------------------------------------------------------
 
@@ -527,7 +710,7 @@ contains
   end subroutine mkpio_put_time_slice_2d
 
   !===============================================================
-  subroutine mkpio_get_dim_lengths(pioid, varname, ndims, dim_lengths)
+  subroutine mkpio_get_dimlengths(pioid, varname, ndims, dimlengths)
 
     ! Returns the number of dimensions and an array containing the dimension lengths of a
     ! variable in an open netcdf file.
@@ -540,106 +723,29 @@ contains
     type(file_desc_t) , intent(in)  :: pioid
     character(len=*)  , intent(in)  :: varname        ! name of variable of interest
     integer           , intent(out) :: ndims          ! number of dimensions of variable
-    integer           , intent(out) :: dim_lengths(:) ! lengths of dimensions of variable
+    integer           , intent(out) :: dimlengths(:)  ! lengths of dimensions of variable
     !
     ! local variables
     type(var_desc_t) :: pio_varid
-    integer          :: dimids(size(dim_lengths))
+    integer          :: dimids(size(dimlengths))
     integer          :: i
     integer          :: rcode
-    character(len=*), parameter :: subname = 'get_dim_lengths'
+    character(len=*), parameter :: subname = 'mkpio_get_dimlengths'
     !------------------------------------------------------------------------------
 
     rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
     rcode = pio_inq_varndims(pioid, pio_varid, ndims)
 
-    if (ndims > size(dim_lengths)) then
-       call shr_sys_abort(trim(subname)//' ERROR: dim_lengths too small')
+    if (ndims > size(dimlengths)) then
+       call shr_sys_abort(trim(subname)//' ERROR: dimlengths too small')
     end if
 
-    dim_lengths(:) = 0  ! pre-fill with 0 so we won't have garbage in elements past ndims
-    do i = 1, ndims
-       rcode = pio_inq_dimlen(pioid, dimids(i), dim_lengths(i))
-    end do
-
-  end subroutine mkpio_get_dim_lengths
-
-  !===============================================================
-  subroutine mkpio_iodesc_output(pioid, mesh, varname, pio_iodesc, rc)
-
-    ! Write variable varname to output file
-
-    ! input/output variables
-    type(file_desc_t) , intent(inout) :: pioid
-    character(len=*)  , intent(in)    :: varname
-    type(ESMF_Mesh)   , intent(in)    :: mesh
-    type(io_desc_t)   , intent(inout) :: pio_iodesc 
-    
-    integer           , intent(out)   :: rc
-
-    ! local variables
-    type(ESMF_DistGrid)     :: distGrid
-    integer                 :: n, ndims
-    integer, pointer        :: compdof(:)
-    integer, allocatable    :: dimids(:)
-    integer, allocatable    :: dimlens(:)
-    integer                 :: lsize
-    type(var_desc_t)        :: pio_varid
-    integer                 :: pio_vartype
-    character(len=cs)       :: dimname
-    integer                 :: rCode ! pio return code (only used when pio error handling is PIO_BCAST_ERROR)
-    character(*), parameter :: subname = '(shr_strdata_set_stream_iodesc) '
-    !-------------------------------------------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    if (root_task) then
-       !write(ndiag,'(a,i8, i8)') 'setting iodesc for : '//trim(varname)//' with dimlens(1), dimlens2 = ',dimlens(1),dimlens(2)
-       write(ndiag,'(a)') 'setting iodesc for : '//trim(varname)
-    end if
-
-    call ESMF_MeshGet(mesh, elementdistGrid=distGrid, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_DistGridGet(distGrid, localDe=0, elementCount=lsize, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    allocate(compdof(lsize))
-    call ESMF_DistGridGet(distGrid, localDe=0, seqIndexList=compdof, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! get pio variable id, type and number of dimensions
-    rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
-    rcode = pio_inq_vartype(pioid, pio_varid, pio_vartype)
-    rcode = pio_inq_varndims(pioid, pio_varid, ndims)
-
-    ! get variable dimension sizes
-    allocate(dimids(ndims))
-    allocate(dimlens(ndims))
     rcode = pio_inq_vardimid(pioid, pio_varid, dimids(1:ndims))
-    do n = 1, ndims
-       rcode = pio_inq_dimlen(pioid, dimids(n), dimlens(n))
+    dimlengths(:) = 0  ! pre-fill with 0 so we won't have garbage in elements past ndims
+    do i = 1, ndims
+       rcode = pio_inq_dimlen(pioid, dimids(i), dimlengths(i))
     end do
 
-    ! determine io descriptor for this variable
-    if (ndims == 1)  then
-       call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
-    else if (ndims == 2) then
-       if (trim(dimname) == 'time' .or. trim(dimname) == 'nt') then
-          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
-       else
-          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
-       end if
-    else if (ndims == 3) then
-       if (trim(dimname) == 'time' .or. trim(dimname) == 'nt') then
-          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
-       else
-          call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof, pio_iodesc)
-       end if
-    else if (ndims == 4) then
-    end if
-
-    ! deallocate memory
-    deallocate(compdof)
-
-  end subroutine mkpio_iodesc_output
+  end subroutine mkpio_get_dimlengths
 
 end module mkpioMod
