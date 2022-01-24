@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<use_case_desc>Conditions to simulate 1850 land-use</use_case_desc>
+
+<sim_year>1850</sim_year>
+
+<sim_year_range>constant</sim_year_range>
+
+<irrigate use_crop=".true." phys="clm5_0" >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm4_5" >.false.</irrigate>
+
+<stream_year_first_ndep phys="clm4_0" bgc="cn"   >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_0" bgc="cn"   >1850</stream_year_last_ndep>
+
+<stream_year_first_ndep phys="clm4_0" bgc="cndv" >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_0" bgc="cndv" >1850</stream_year_last_ndep>
+
+<stream_year_first_ndep phys="clm4_5" use_cn=".true." >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_5" use_cn=".true." >1850</stream_year_last_ndep>
+
+<stream_year_first_ndep phys="clm5_0" use_cn=".true." >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm5_0" use_cn=".true." >1850</stream_year_last_ndep>
+
+<stream_year_first_popdens phys="clm4_5" cnfireson=".true." >1850</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm4_5" cnfireson=".true." >1850</stream_year_last_popdens>
+
+<stream_year_first_popdens phys="clm5_0" cnfireson=".true." >1850</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm5_0" cnfireson=".true." >1850</stream_year_last_popdens>
+
+<stream_year_first_urbantv phys="clm5_0"  >1850</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm5_0"  >1850</stream_year_last_urbantv>
+
+<stream_year_first_urbantv phys="clm4_5"  >1850</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm4_5"  >1850</stream_year_last_urbantv>
+
+<!-- Use single year ndep file for CLM50 as the new multi-year file has different times that change answers relative to control sims -->
+<stream_fldfilename_ndep phys="clm5_0" use_cn=".true."
+>lnd/clm2/ndepdata/fndep_clm_WACCM6_CMIP6piControl001_y21-50avg_1850monthly_0.95x1.25_c180802.nc</stream_fldfilename_ndep>
+
+<stream_fldfilename_ndep phys="clm4_5" use_cn=".true."
+>lnd/clm2/ndepdata/fndep_clm_WACCM6_CMIP6piControl001_y21-50avg_1850monthly_0.95x1.25_c180802.nc</stream_fldfilename_ndep>
+ 
+<ndep_taxmode            phys="clm5_0" use_cn=".true." >cycle</ndep_taxmode>
+
+<ndep_varlist            phys="clm5_0" use_cn=".true." >NDEP_month</ndep_varlist>
+<!-- SMYLE L83 changes -->
+<dribble_crophrv_xsmrpool_2atm>.true.</dribble_crophrv_xsmrpool_2atm>
+<use_init_interp>.true.</use_init_interp>
+<hist_fexcl1>
+'PCT_GLC_MEC', 'SOIL1C_vr', 'SOIL1N_vr', 'SOIL2C_vr', 'SOIL2N_vr','SOIL3C_vr', 'SOIL3N_vr', 'CWDC_vr', 'CWDN_vr', 'LITR1C_vr','LITR1N_vr', 'LITR2C_vr', 'LITR2N_vr', 'LITR3C_vr','LITR3N_vr','PCT_CFT','PCT_NAT_PFT','SMIN_NO3_vr','CONC_O2_UNSAT','CONC_O2_SAT','SMIN_NH4_vr','SMINN_vr'
+</hist_fexcl1>
+<hist_fincl1>
+'EFLX_LH_TOT_ICE', 'FIRE_ICE', 'FLDS_ICE', 'FSH_ICE', 'FSNO_ICE','FSR_ICE', 'QFLX_SUB_SNOW_ICE', 'QRUNOFF_ICE', 'QSNOFRZ_ICE','QSNOMELT_ICE', 'RAIN_ICE', 'SNOW_ICE', 'SNOWICE_ICE', 'SNOWLIQ_ICE','SNOTXMASS_ICE', 'TG_ICE', 'TOPO_COL_ICE', 'TSA_ICE', 'TSOI_ICE','LEAFC_TO_LITTER','FROOTC_TO_LITTER','LITR1C_TO_SOIL1C','LITR1N_TO_SOIL1N','LITR2C_TO_SOIL1C','LITR2N_TO_SOIL1N','LITR3C_TO_SOIL2C','LITR3N_TO_SOIL2N','DWT_WOOD_PRODUCTC_GAIN_PATCH'
+</hist_fincl1>
+<hist_fincl2>'GPP', 'NPP', 'AGNPP', 'TLAI', 'TOTVEGC', 'TSA','TREFMNAV','TREFMXAV', 'BTRANMN', 'NPP_NUPTAKE', 'GRAINC_TO_FOOD', 'Vcmx25Z', 'FCTR', 'FCEV', 'FGEV', 'FSH', 'FIRE', 'FSR', 'FIRA', 'FSA', 'NFERTILIZATION', 'AR', 'HR', 'VEGWP', 'HTOP', 'GSSUNLN', 'GSSHALN', 'TSKIN'
+</hist_fincl2>
+<hist_fincl3>
+'FSR', 'H2OSNO', 'Q2M', 'SNOWDP', 'TSA', 'TREFMNAV', 'TREFMXAV', 'TG','QRUNOFF', 'FSH', 'FIRE', 'FIRA', 'FGR', 'EFLX_LH_TOT', 'RH2M','TLAI', 'GPP', 'NPP', 'SOILWATER_10CM', 'TOTSOILLIQ', 'TOTSOILICE','AR', 'HR', 'DWT_CONV_CFLUX_PATCH', 'WOOD_HARVESTC', 'U10','DWT_WOOD_PRODUCTC_GAIN_PATCH', 'GRAINC_TO_FOOD', 'SLASH_HARVESTC','TSOI_10CM', 'COL_FIRE_CLOSS', 'DWT_SLASH_CFLUX', 'QIRRIG','URBAN_HEAT', 'WASTEHEAT', 'HTOP', 'TSKIN'
+</hist_fincl3>
+<hist_fincl4>
+'PCT_CFT', 'PCT_GLC_MEC', 'SOIL1C_vr', 'SOIL1N_vr', 'SOIL2C_vr','SOIL2N_vr', 'SOIL3C_vr', 'SOIL3N_vr', 'CWDC_vr', 'CWDN_vr','LITR1C_vr', 'LITR1N_vr', 'LITR2C_vr', 'LITR2N_vr', 'LITR3C_vr','LITR3N_vr', 'QICE_FORC', 'TSRF_FORC','TOPO_FORC','PCT_NAT_PFT','PCT_LANDUNIT','TOTLITC:I','TOT_WOODPRODC:I','CROPPROD1C:I','TOTSOMC:I','TOTVEGC:I','FSNO_ICE'
+</hist_fincl4>
+<hist_fincl5>'TOTSOMC:I', 'TOTSOMC_1m:I', 'TOTECOSYSC:I', 'TOTVEGC:I', 'WOODC:I', 'TOTLITC:I', 'LIVECROOTC:I', 'DEADCROOTC:I', 'FROOTC:I'
+</hist_fincl5>
+<hist_mfilt>1,1,1,1,1</hist_mfilt>
+<hist_dov2xy> .true.,.false.,.false.,.true.,.false.</hist_dov2xy>
+<hist_nhtfrq>0,0,0,-8760,-8760</hist_nhtfrq>
+<hist_type1d_pertape>' ',' ','LAND',' ','LAND'</hist_type1d_pertape>
+<use_c13> .false.</use_c13>
+<use_c14> .false.</use_c14>
+<!-- This differs from the default in that it turns on virtual columns over Antarctica
+     This is desired so that we have the output needed to drive a later offline CISM Antarctica simulation
+     However, this increases the cost of CLM by about 10% -->
+<glacier_region_behavior> 'single_at_atm_topo', 'virtual', 'virtual', 'virtual'</glacier_region_behavior>
+</namelist_defaults>
