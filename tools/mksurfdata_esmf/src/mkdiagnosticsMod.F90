@@ -9,7 +9,6 @@ module mkdiagnosticsMod
   implicit none
   private
 
-  ! !PUBLIC MEMBER FUNCTIONS:
   public :: output_diagnostics_area               ! output diagnostics for field that is % of grid area
   public :: output_diagnostics_continuous         ! output diagnostics for a continuous (real-valued) field
   public :: output_diagnostics_continuous_outonly ! output diagnostics for a continuous (real-valued) field
@@ -20,23 +19,19 @@ module mkdiagnosticsMod
 contains
 !------------------------------------------------------------------------------
 
-  subroutine output_diagnostics_area(data_i, data_o, gridmap, name, percent, ndiag, mask_src, frac_dst)
+  subroutine output_diagnostics_area(data_i, data_o, name, percent, ndiag, mask_src)
 
     ! Output diagnostics for a field that gives either fraction or percent of grid cell area
 
-    use mkgridmapMod, only : gridmap_type
     use mkvarpar, only : re
 
-    ! !ARGUMENTS:
-    implicit none
-    real(r8)          , intent(in) :: data_i(:)    ! data on input grid
-    real(r8)          , intent(in) :: data_o(:)    ! data on output grid
-    type(gridmap_type), intent(in) :: gridmap      ! mapping info
-    character(len=*)  , intent(in) :: name         ! name of field
-    logical           , intent(in) :: percent      ! is field specified as percent? (alternative is fraction)
-    integer           , intent(in) :: ndiag        ! unit number for diagnostic output
-    integer, intent(in) :: mask_src(:)
-    real(r8), intent(in) :: frac_dst(:)
+    ! input/output variables
+    real(r8)         , intent(in) :: data_i(:)    ! data on input grid
+    real(r8)         , intent(in) :: data_o(:)    ! data on output grid
+    character(len=*) , intent(in) :: name         ! name of field
+    logical          , intent(in) :: percent      ! is field specified as percent? (alternative is fraction)
+    integer          , intent(in) :: ndiag        ! unit number for diagnostic output
+    integer          , intent(in) :: mask_src(:)
 
     ! !LOCAL VARIABLES:
     real(r8) :: gdata_i         ! global sum of input data
@@ -45,22 +40,17 @@ contains
     real(r8) :: garea_o         ! global sum of output area
     integer  :: ns_i, ns_o      ! sizes of input & output grids
     integer  :: ni,no,k         ! indices
+    real(r8), allocatable :: area_src(:)
+    real(r8), allocatable :: area_dst(:)
+    integer , allocatable :: mask_src(:)
+    integer , allocatable :: mask_dst(:)
     character(len=*), parameter :: subname = "output_diagnostics_area"
     !------------------------------------------------------------------------------
 
     ! Error check for array size consistencies
 
-    ns_i = gridmap%na
-    ns_o = gridmap%nb
-    if (size(data_i) /= ns_i .or. &
-         size(data_o) /= ns_o) then
-       write(6,*) subname//' ERROR: array size inconsistencies for ', trim(name)
-       write(6,*) 'size(data_i) = ', size(data_i)
-       write(6,*) 'ns_i         = ', ns_i
-       write(6,*) 'size(data_o) = ', size(data_o)
-       write(6,*) 'ns_o         = ', ns_o
-       call abort()
-    end if
+    ns_i = size(data_i)
+    ns_o = size(data_o)
     if (size(frac_dst) /= ns_o) then
        write(6,*) subname//' ERROR: incorrect size of frac_dst'
        write(6,*) 'size(frac_dst) = ', size(frac_dst)
@@ -75,32 +65,34 @@ contains
     end if
 
     ! Sums on input grid
-
+    ! TODO: get area_src and mask_src from input mesh
+    allocate(area_src(ns_i))
+    allocate(mask_src(ns_i))
     gdata_i = 0.
     garea_i = 0.
     do ni = 1,ns_i
-       garea_i = garea_i + gridmap%area_src(ni)*re**2
-       gdata_i = gdata_i + data_i(ni) * gridmap%area_src(ni) * mask_src(ni) * re**2
+       garea_i = garea_i + area_src(ni)*re**2
+       gdata_i = gdata_i + data_i(ni) * area_src(ni) * mask_src(ni) * re**2
     end do
 
     ! Sums on output grid
-
+    ! TODO: get area_src and mask_src from output mesh
+    allocate(area_dst(ns_i))
+    allocate(mask_dst(ns_i))
     gdata_o = 0.
     garea_o = 0.
     do no = 1,ns_o
-       garea_o = garea_o + gridmap%area_dst(no)*re**2
-       gdata_o = gdata_o + data_o(no) * gridmap%area_dst(no) * frac_dst(no) * re**2
+       garea_o = garea_o + area_dst(no)*re**2
+       gdata_o = gdata_o + data_o(no) * area_dst(no) * re**2
     end do
 
     ! Correct units
-
     if (percent) then
        gdata_i = gdata_i / 100._r8
        gdata_o = gdata_o / 100._r8
     end if
 
     ! Diagnostic output
-
     write (ndiag,*)
     write (ndiag,'(1x,70a1)') ('=',k=1,70)
     write (ndiag,*) trim(name), ' Output'
@@ -219,11 +211,10 @@ contains
   !------------------------------------------------------------------------------
   subroutine output_diagnostics_continuous_outonly(data_o, gridmap, name, units, ndiag)
     !
-    ! !DESCRIPTION:
     ! Output diagnostics for a continuous field, just on the output grid
     ! This is used when the average of the field on the input grid is not of interest (e.g.,
     ! when the output quantity is the standard deviation of the input field)
-
+    !
     use mkgridmapMod, only : gridmap_type
     use mkvarpar, only : re
 
@@ -289,14 +280,12 @@ contains
   subroutine output_diagnostics_index(data_i, data_o, gridmap, name, &
        minval, maxval, ndiag, mask_src, frac_dst)
     !
-    ! !DESCRIPTION:
     ! Output diagnostics for an index field: area of each index in input and output
     !
-    ! !USES:
     use mkvarpar, only : re
     use mkgridmapMod, only : gridmap_type
     !
-    ! !ARGUMENTS:
+    ! input/output variables
     integer            , intent(in) :: data_i(:) ! data on input grid
     integer            , intent(in) :: data_o(:) ! data on output grid
     type(gridmap_type) , intent(in) :: gridmap   ! mapping info

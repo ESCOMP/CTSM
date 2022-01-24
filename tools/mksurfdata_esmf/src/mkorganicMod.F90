@@ -40,9 +40,6 @@ contains
     type(ESMF_Field)       :: field_i
     type(ESMF_Field)       :: field_o
     type(file_desc_t)      :: pioid
-    type(var_desc_t)       :: pio_varid
-    type(io_desc_t)        :: pio_iodesc
-    integer                :: pio_vartype
     integer                :: ni,no
     integer                :: ns_i, ns_o
     integer                :: nlay
@@ -94,53 +91,25 @@ contains
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Create io descriptor for input raw data 
-    ! This will query the raw data file for the dimensions of the variable varname and 
-    ! create iodesc for either single or multi level input data
-    call ESMF_VMLogMemInfo("Before mkpio_iodesc in "//trim(subname))
-    call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After mkpio_iodesc in "//trim(subname))
-
     ! Determine ns_i and allocate data_i
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
-    allocate(data_i(nlay,ns_i),stat=ier)
-    if (ier/=0) call shr_sys_abort()
 
     ! Determine ns_o and allocate data_o
     ns_o = size(organic_o, dim=1)
     allocate(data_o(nlay,ns_o),stat=ier)
     if (ier/=0) call shr_sys_abort()
 
-    ! Read the input raw data (all levels read at once)
+    ! Read in input data
     ! - levels are the innermost dimension for esmf fields
     ! - levels are the outermost dimension in pio reads
     ! Input data is read into (ns_i,nlay) array and then transferred to data_i(nlay,ns_i)
-    if (pio_vartype == PIO_REAL) then
-       write(6,*)'DEBUG: ns_i, nlay = ',ns_i, nlay
-       allocate(data_real(ns_i,nlay))
-       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_real, rcode)
-       do l = 1,nlay
-          do n = 1,ns_i
-             data_i(l,n) = real(data_real(n,l), kind=r8)
-          end do
-       end do
-       deallocate(data_real)
-    else if (pio_vartype == PIO_DOUBLE) then
-       allocate(data_double(ns_i,nlay))
-       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_double, rcode)
-       do l = 1,nlay
-          do n = 1,ns_i
-             data_i(l,n) = data_double(n,l)
-          end do
-       end do
-       deallocate(data_double)
-    else
-       call shr_sys_abort(subName//"ERROR: only real and double types are supported")
-    end if
-    call ESMF_VMLogMemInfo("After read_darray in "//trim(subname))
+    allocate(data_i(nlay,ns_i),stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, varname, mesh_i, data_i, scale_by_landmask=.true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
     ! Create field on input mesh - using dimension information from raw data file
     field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, &
@@ -168,9 +137,8 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regrid_data in "//trim(subname))
 
-    ! Close the file and free the iodesc and deallocate memory
+    ! Close the file 
     call pio_closefile(pioid)
-    call pio_freedecomp(pio_iosystem, pio_iodesc)
     call ESMF_VMLogMemInfo("After pio_freedecomp in "//trim(subname))
 
     ! Now compute organic_o - need to remember that nlay is innermost dimension in data_o

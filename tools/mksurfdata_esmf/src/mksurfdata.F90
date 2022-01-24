@@ -386,8 +386,8 @@ program mksurfdata
   ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
   zero_out_lake = all_urban .or. all_veg
   zero_out_wetland = all_urban .or. all_veg .or. no_inlandwet
-  ! call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
-  !      zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc)
+  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
+       zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc)
   ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
   call ESMF_LogWrite("After mklakwat", ESMF_LOGMSG_INFO)
 
