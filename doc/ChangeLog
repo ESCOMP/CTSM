@@ -1,4 +1,135 @@
 ===============================================================
+Tag name: ctsm5.1.dev073
+Originator(s): sacks (Bill Sacks)
+Date: Tue Jan 25 16:33:06 MST 2022
+One-line Summary: Some fixes for Gregorian calendar
+
+Purpose and description of changes
+----------------------------------
+
+A few bug fixes for running with a Gregorian calendar. These primarily
+fix the AnnualFluxDribbler, preventing balance errors in transient runs
+(or in runs starting from restart files that came from transient runs).
+But these general fixes end up fixing a few other minor issues with
+Gregorian calendar runs as well.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1590 (Gridcell water balance errors for some
+  PLUMBER2 sites with branch_tags/PPE.n11_ctsm5.1.dev030)
+
+Known bugs found since the previous tag (include issue #):
+Other bugs with Gregorian calendar runs found in the course of making these fixes are:
+- https://github.com/ESCOMP/CTSM/issues/1595 (Bugs in crop phenology
+  when running with a Gregorian calendar)
+- https://github.com/ESCOMP/CTSM/issues/1612 (Some uses of
+  get_days_per_year should use the average number of days in a year, not
+  the number of days in the current year)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Added a multi-year test with Gregorian calendar
+  (SMS_Ly5_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropQianRs.cheyenne_gnu.clm-gregorian_cropMonthOutput);
+  as expected, this test fails on master but passes on this branch
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but very limited
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Some runs with a Gregorian calendar
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Larger than roundoff, same climate -- only very small changes
+
+   The only test with answer changes is
+   SMS_C2_D_Lh12.f09_g17.I2000Clm50Sp.cheyenne_intel.clm-pauseResume;
+   that test just has answer changes in the time-0 history file because
+   of the fix to the AnnualFluxDribbler's flux in the last time step of
+   the year (which is the time step used for time 0). There were answer
+   changes in only 6 fields, which are the fields impacted by changes in
+   the land use change correction fluxes dribbled to the atmosphere and
+   river:
+   - EFLX_DYNBAL
+   - FSH_TO_COUPLER
+   - QFLX_ICE_DYNBAL
+   - QFLX_LIQ_DYNBAL
+   - QRUNOFF_ICE_TO_COUPLER
+   - QRUNOFF_TO_COUPLER
+
+   I can get bit-for-bit with master if I make the following minimal
+   diff to master:
+       diff --git a/src/utils/AnnualFluxDribbler.F90 b/src/utils/AnnualFluxDribbler.F90
+       index c66e4fdc8..1ef2fb77f 100644
+       --- a/src/utils/AnnualFluxDribbler.F90
+       +++ b/src/utils/AnnualFluxDribbler.F90
+       @@ -306,6 +306,7 @@ contains
+            integer :: i
+            real(r8) :: secs_per_year
+            real(r8) :: dtime
+       +    integer :: dtime_int
+            real(r8) :: flux_from_dribbling
+            real(r8) :: flux_from_this_timestep
+        
+       @@ -316,8 +317,9 @@ contains
+            end_index = get_end(bounds, this%bounds_subgrid_level)
+            SHR_ASSERT_ALL_FL((ubound(flux) == (/end_index/)), sourcefile, __LINE__)
+        
+       -    secs_per_year = get_days_per_year() * secspday
+            dtime = get_step_size_real()
+       +    dtime_int = int(dtime)
+       +    secs_per_year = get_days_per_year(offset=-dtime_int) * secspday
+        
+            do i = beg_index, end_index
+               flux_from_dribbling = this%amount_to_dribble(i) / secs_per_year   
+
+
+   Other answer changes that might be seen in runs with Gregorian
+   calendar are:
+   - Possible answer changes for crop runs (these changes impact some
+     crop phenology code)
+   - Possible answer changes for C iso runs (due to use of
+     get_curr_yearfrac in C14BombSpike and C13TimeSeries), though that
+     may not be impacted
+   - Possible answer changes for CNDV runs (due to use of
+     get_curr_yearfrac)
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/1593
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev072
 Originator(s): negins (Negin Sobhani,UCAR/TSS,303-497-1224)
 Date: Mon Jan 17 10:50:25 MST 2022
