@@ -3393,12 +3393,12 @@ sub setup_logic_nitrogen_deposition {
                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
     }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
-                'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, 
                 'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
     if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
         # Also check at f19 resolution
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
-                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                    'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'},
                     'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
         # If not found report an error
         if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
@@ -3620,7 +3620,7 @@ sub setup_logic_lightning_streams {
                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lightng',
-                 'hgrid'=>$nl_flags->{'light_res'} );
+                 'hgrid'=>$nl_flags->{'light_res'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'} );
       if ($opts->{'driver'} eq "nuopc" ) {
           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lightng',
                       'hgrid'=>$nl_flags->{'light_res'} );
@@ -4523,8 +4523,8 @@ sub check_use_case_name {
                   "in namelist_files/use_cases/README\n";
   my $desc = "[a-zA-Z0-9]*";
   my $ssp_rcp  = "SSP[0-9]-[0-9\.]+";
-  if (      $use_case =~ /^[0-9]+-[0-9]+([a-zA-Z0-9_\.-]*)_transient$/ ) {
-    my $string = $1;
+  if (      $use_case =~ /^[0-9]+-(PD|[0-9]+)([a-zA-Z0-9_\.-]*)_transient$/ ) {
+    my $string = $2;
     if (      $string =~ /^_($ssp_rcp)_*($desc)$/ ) {
        # valid name
     } elsif ( $string =~ /^_*($desc)$/ ) {
@@ -4541,7 +4541,7 @@ sub check_use_case_name {
     } else {
       $log->fatal_error($diestring);
     }
-  } elsif ( $use_case =~ /^([0-9]+)_*($desc)_control$/   ) {
+  } elsif ( $use_case =~ /^(PD|[0-9]+)_*($desc)_control$/   ) {
      # valid name
   } elsif ( $use_case =~ /^($desc)_pd$/   ) {
      # valid name
