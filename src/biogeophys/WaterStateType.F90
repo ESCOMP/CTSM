@@ -13,7 +13,7 @@ module WaterStateType
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_gridcell
-  use clm_varctl     , only : use_bedrock, iulog
+  use clm_varctl     , only : use_bedrock, use_excess_ice, iulog
   use clm_varctl     , only : use_fates_planthydro
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevmaxurbgrnd, nlevsno   
   use clm_varcon     , only : spval
@@ -22,6 +22,7 @@ module WaterStateType
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
+  use ExcessIceStreamType, only : excessicestream_type
   !
   implicit none
   save
@@ -50,6 +51,14 @@ module WaterStateType
      real(r8), pointer :: dynbal_baseline_ice_col(:)   ! baseline ice content subtracted from each column's total ice calculation (mm H2O)
 
      real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
+
+     real(r8), pointer :: excess_ice_col         (:,:) ! col excess ice lenses (kg/m2) (new) (1:nlevgrnd)
+     real(r8), pointer :: init_exice             (:,:) ! initial value of col excess ice lens/(kg/m2) (new) (1:nlevgrnd)
+     real(r8), pointer :: exice_melt_lev         (:,:) ! col excess ice melting (m) (new)
+     real(r8), pointer :: exice_melt             (:)   ! column-wide excess ice melting (m) (new)
+
+
+     type(excessicestream_type), private :: exicestream ! stream type for excess ice initialization NUOPC only
 
    contains
 
@@ -150,6 +159,22 @@ contains
     call AllocateVar1d(var = this%dynbal_baseline_ice_col, name = 'dynbal_baseline_ice_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
+    !excess ice vars
+    call AllocateVar2d(var = this%excess_ice_col, name = 'excess_ice_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
+         dim2beg = 1, dim2end = nlevgrnd)
+    call AllocateVar2d(var = this%init_exice, name = 'init_exice', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
+         dim2beg = 1, dim2end = nlevgrnd)
+    call AllocateVar2d(var = this%exice_melt_lev, name = 'exice_melt_lev', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
+         dim2beg = 1, dim2end = nlevgrnd)	
+    call AllocateVar1d(var = this%exice_melt, name = 'exice_melt', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column)	
 
   end subroutine InitAllocate
 
@@ -267,6 +292,17 @@ contains
             long_name=this%info%lname('water in the unconfined aquifer (natural vegetated and crop landunits only)'), &
             ptr_col=this%wa_col, l2g_scale_type='veg')
     end if
+
+    ! Add excess ice fields to history
+    data2dptr => this%excess_ice_col(begc:endc,1:nlevsoi)
+    call hist_addfld2d (fname='EXCESS_ICE',  units='kg/m2', type2d='levsoi', &
+         avgflag='A', long_name='excess soil ice (vegetated landunits only)', &
+         ptr_col=this%excess_ice_col, l2g_scale_type='veg')
+
+    this%exice_melt(begc:endc) = spval
+    call hist_addfld1d (fname='EXICE_MELT',  units='m', &
+         avgflag='A', long_name='melt from excess ice (vegetated landunits only)', &
+         ptr_col=this%exice_melt, l2g_scale_type='veg')
 
     ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water
     !                  I think that since the value is zero in all cases except
@@ -505,6 +541,12 @@ contains
       this%dynbal_baseline_liq_col(bounds%begc:bounds%endc) = 0._r8
       this%dynbal_baseline_ice_col(bounds%begc:bounds%endc) = 0._r8
 
+      !Initialize excess ice
+      this%init_exice(:,:)=0.0_r8
+      this%excess_ice_col(:,:)=0.0_r8
+      this%exice_melt_lev(:,:)=0.0_r8
+      this%exice_melt(:)=0.0_r8
+
     end associate
 
   end subroutine InitCold
@@ -629,6 +671,18 @@ contains
          long_name=this%info%lname("baseline ice mass subtracted from each column's total ice calculation"), &
          units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_ice_col)
+
+         ! Restart excess ice vars
+    call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXCESS_ICE'), xtype=ncd_double,  &
+         dim1name='column', dim2name='levtot', switchdim=.true., &
+         long_name=this%info%lname('excess soil ice (vegetated landunits only)'), units='kg/m2', &
+         scale_by_thickness=.true., &
+         interpinic_flag='interp', readvar=readvar, data=this%excess_ice_col)
+         
+    call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXICE_MELT'), xtype=ncd_double,  &
+         dim1name='column', &
+         long_name=this%info%lname('melt from excess ice (vegetated landunits only)'), units='m', &
+         interpinic_flag='interp', readvar=readvar, data=this%exice_melt)
 
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then

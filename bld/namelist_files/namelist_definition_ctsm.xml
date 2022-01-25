@@ -2826,34 +2826,14 @@ use case.)
 Toggle to turn on the excess ice physics, (Lee et al., 2014; Cai et al., 2020)
 </entry>
 
-<entry id="stream_year_first_exice" type="integer" category="datasets"
-       group="exice_streams" valid_values="" >
-First year to loop over for excess ice data
-</entry>
-
-<entry id="stream_year_last_exice" type="integer" category="datasets"
-       group="exice_streams" valid_values="" >
-Last year to loop over for excess ice data
-</entry>
-
-<entry id="model_year_align_exice" type="integer" category="datasets"
-       group="exice_streams" valid_values="" >
-Simulation year that aligns with stream_year_first_exice value
-</entry>
-
 <entry id="stream_fldfilename_exice" type="char*256(30)" category="datasets"
        input_pathname="abs" group="exice_streams" valid_values="" >
 Filename of input stream data for excess ice data
 </entry>
 
-<entry id="exice_tintalgo" type="char*256" category="datasets"
-       group="exice_streams" valid_values="linear,nearest,lower,upper" >
-Time interpolation method to use for excess ice data
-</entry>
-
-<entry id="exice_offset" type="integer" category="datasets"
-       group="exice_streams" >
-Offset in time coordinate for excess ice streams (sec)
+<entry id="stream_meshfile_exice" type="char*256" category="datasets"
+       input_pathname="abs" group="exice_streams" valid_values="" >
+mesh filename of input stream data for excess ice
 </entry>
 
 </namelist_definition>
