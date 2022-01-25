@@ -389,7 +389,7 @@ sub print_categories {
             `grep $key $expectedfailfile > /dev/null`;
             if ( $? == 0 ) { $expect = "EXPECTED"; }
          }
-         print( "$key\t$fails\t$expect\n" );
+         print( "$key\t$fails\t\t$expect\n" );
       }
    }
 }
