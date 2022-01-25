@@ -1189,7 +1189,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock"     >01:40:00</option>
+      <option name="wallclock"     >04:00:00</option>
       <option name="tput_tolerance">0.5</option>
       <option name="comment"       >20 year single point tests with BGC-Crop (Crop keeps a 20 year running mean)</option>
     </options>

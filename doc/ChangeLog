@@ -1,4 +1,245 @@
 ===============================================================
+Tag name: ctsm5.1.dev072
+Originator(s): negins (Negin Sobhani,UCAR/TSS,303-497-1224)
+Date: Mon Jan 17 10:50:25 MST 2022
+One-line Summary: mksurfdat toolchain part 1: gen_mksurf_namelist
+
+Purpose and description of changes
+----------------------------------
+
+ This tag introduces ./gen_mksurf_namelist python script, which generates
+ a user-modifiable control file (namelist) for use with #1430 (mkmap_data.py)
+ within the context of #644 (wrapper tool for generating fsurdat files).
+
+ The new namelist (control file) format does not have mapping
+ files listed since the mapping file information are stored as part of the
+ metadata for input data.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ This tag introduces the ./gen_mksurf_namelist script for generating a
+ user-modifiable control file (namelist) for use with the in-development
+ pythonized mkmapdata (#1430).
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ Currently resolution options and corresponding destination mesh files are
+ hardwired in this code. This information should be obtained from existing
+ .xml file(s).
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) cheyenne make all - PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1419
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev071
+Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Sun Jan 16 20:26:47 MST 2022
+One-line Summary: Small changes to enable new fates dimension and update fates tag
+
+Purpose and description of changes
+----------------------------------
+
+This tag uncomments the fates_levleaf dimension which was added in PR #1540
+and rolled into PR #1542, but commented out to avoid junk DIFFs during integration
+of PR #1542.  This variable is necessary to accomodate FATES PR #752, which
+allows for an exponential spacing to bin widths in the VAI (LAI+SAI) calculations.
+This latest fates tag also includes a fix to the fates satellite phenology mode
+exact restart issue.  
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+  Fixes #1485 Forthcoming FATES satellite phenology ERS test fails
+  Fixes #1561 Uncomment fates_levleaf fields
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+  The ERS FatesColdDefReducedComplexSatPhen testmod has been removed from expected test failure
+  list as it now passes due to fates tag sci.1.52.1_api.20.0.0.
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi -------OK
+
+  fates tests: (baseline: sci.1.52.1_api.20.0.0-ctsm5.1.dev070)
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Expected DIFFs for a subset of fates testmods
+
+  Summarize any changes to answers, i.e.,
+    - CBALANCE_ERROR_FATES and FATES_ERRH2O_SCPF have round-off level errors that
+      eventually propagate to downstream calculations for some some fates test mods
+    - Differences are due to changing of the bin widths
+    - Fates PR #752 author reviewed the differences with a separate comparison
+      of the PR branch against fates master branch and determined that the science
+      resulting is as expected.
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.52.0_api.20.0.0 -> fates-sci.1.53.0_api.21.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  FATES #752 -- Variable VAI bin widths
+  #1562 -- Uncomment fates_hdim_levleaf dimension
+ 
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev070
+Originator(s): sacks (Bill Sacks), mvertens (Mariana Vertenstein), slevis (Samuel Levis)
+Date: Mon Jan 10 16:52:50 MST 2022
+One-line Summary: Update externals, remove need for LND_DOMAIN_FILE and LND_DOMAIN_PATH, etc.
+
+Purpose and description of changes
+----------------------------------
+
+(1) Update cime and cdeps externals
+
+(2) Remove the need for LND_DOMAIN_FILE and LND_DOMAIN_PATH XML
+    variables in NUOPC / LILAC cases
+
+(3) Update doc builder to fix issue with git lfs pull command
+
+(4) Fix mksurfdata unit tests
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1575 (Build problem for mksurfdata tools testers)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Running unit tests currently requires setting CIME_NO_CMAKE_MACRO=ON in your environment
+- LILACSMOKE test now has a hard-coded resolution and domain file
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- pass
+    izumi ------- pass
+
+    Note:
+    SMS_Ld5.f10_f10_mg37.ISSP370Clm50BgcCrop.cheyenne_gnu.clm-ciso_dec2050Start
+    failed with baseline diffs when first run, but passed upon rerun:
+    system glitch?
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/1581
+- https://github.com/ESCOMP/CTSM/pull/1591
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev069
 Originator(s): fang-bowen (Bowen Fang) / oleson (Keith Oleson,UCAR/TSS,303-497-1332)
                / Face2sea (Lei Zhao) / keerzhang1 (Keer Zhang) / sacks (Bill Sacks)
