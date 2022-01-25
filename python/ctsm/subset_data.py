@@ -152,11 +152,21 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--dompft",
-        help="Dominant PFT if we set the grid to 100%% one PFT [default: %(default)s].",
+        help="Dominant PFT(s): if we set the grid to 100%% one or multiple PFTs [default: %(default)s].",
         action="store",
         dest="dom_pft",
         type=int,
         default=None,
+        nargs='*',
+    )
+    pt_parser.add_argument(
+        "--pctpft",
+        help="Percetages of each pft (set by --dompft) on the land unit.",
+        action="store",
+        dest="pct_pft",
+        type=float,
+        default=None,
+        nargs='*',
     )
     pt_parser.add_argument(
         "--datm-from-tower",
@@ -433,6 +443,7 @@ def subset_point(args, file_dict: dict):
         create_datm = args.create_datm,
         create_user_mods = args.create_user_mods,
         dom_pft = args.dom_pft,
+        pct_pft = args.pct_pft,
         num_pft = num_pft,
         include_nonveg = args.include_nonveg,
         uni_snow = args.uni_snow,
