@@ -70,6 +70,10 @@ def fsurdat_modifier(cfg_path):
         item='dom_nat_pft', file_path=cfg_path,
         allowed_values=range(15),  # integers from 0 to 14
         convert_to_type=int, can_be_unset=True)
+    dom_cft = get_config_value(config=config, section=section,
+        item='dom_cft', file_path=cfg_path,
+        allowed_values=range(15, 79),  # integers from 15 to 78
+        convert_to_type=int, can_be_unset=True)
 
     lai = get_config_value(config=config, section=section, item='lai',
         file_path=cfg_path, is_list=True,
@@ -132,6 +136,12 @@ def fsurdat_modifier(cfg_path):
     if zero_nonveg:
         modify_fsurdat.zero_nonveg()
 
+    # The set_dom_cft call follows zero_nonveg because it modifies PCT_NATVEG
+    # and PCT_CROP in the user-defined rectangle
+    if dom_cft is not None and dom_nat_pft is None:
+        modify_fsurdat.set_dom_cft(dom_cft=dom_cft,
+                                   lai=lai, sai=sai,
+                                   hgt_top=hgt_top, hgt_bot=hgt_bot)
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
     # ----------------------------------------------

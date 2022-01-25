@@ -25,7 +25,7 @@ class ModifyFsurdat:
 
         self.file = my_data
 
-        self.not_rectangle = self._get_not_rectangle(
+        self.rectangle = self._get_rectangle(
             lon_1=lon_1, lon_2=lon_2,
             lat_1=lat_1, lat_2=lat_2,
             longxy=self.file.LONGXY, latixy=self.file.LATIXY)
@@ -34,8 +34,9 @@ class ModifyFsurdat:
             # overwrite self.not_rectangle with data from
             # user-specified .nc file in the .cfg file
             self._landmask_file = xr.open_dataset(landmask_file)
-            rectangle = self._landmask_file.landmask
-            self.not_rectangle = np.logical_not(rectangle)
+            self.rectangle = self._landmask_file.landmask
+
+        self.not_rectangle = np.logical_not(self.rectangle)
 
 
     @classmethod
@@ -47,7 +48,7 @@ class ModifyFsurdat:
 
 
     @staticmethod
-    def _get_not_rectangle(lon_1, lon_2, lat_1, lat_2, longxy, latixy):
+    def _get_rectangle(lon_1, lon_2, lat_1, lat_2, longxy, latixy):
         """
         Description
         -----------
@@ -86,7 +87,7 @@ class ModifyFsurdat:
         rectangle = np.logical_and(union_1, union_2)
         not_rectangle = np.logical_not(rectangle)
 
-        return not_rectangle
+        return rectangle
 
 
     def write_output(self, fsurdat_in, fsurdat_out):
@@ -165,26 +166,76 @@ class ModifyFsurdat:
                    'MONTHLY_HEIGHT_BOT': hgt_bot}
         for var, val in vars_4d.items():
             if val is not None:
-                self.set_lai_sai_hgts(dom_nat_pft=dom_nat_pft,
+                self.set_lai_sai_hgts(dom_plant=dom_nat_pft,
                                       var=var, val=val)
 
 
-    def set_lai_sai_hgts(self, dom_nat_pft, var, val):
+    def set_dom_cft(self, dom_cft, lai, sai, hgt_top, hgt_bot):
+        """
+        Description
+        -----------
+        In rectangle selected by user (or default -90 to 90 and 0 to 360),
+        replace fsurdat file's PCT_CFT with:
+        - 100 for dom_cft selected by user
+        - 0 for all other PFTs/CFTs
+        If user has specified lai, sai, hgt_top, hgt_bot, replace these with
+        values selected by the user for dom_cft
+
+        Arguments
+        ---------
+        dom_cft:
+            (int) User's entry of CFT to be set to 100% everywhere
+        lai:
+            (float) User's entry of MONTHLY_LAI for their dom_cft
+        sai:
+            (float) User's entry of MONTHLY_SAI for their dom_cft
+        hgt_top:
+            (float) User's entry of MONTHLY_HEIGHT_TOP for their dom_cft
+        hgt_bot:
+            (float) User's entry of MONTHLY_HEIGHT_BOT for their dom_cft
+        """
+
+        # Add PCT_NATVEG to PCT_CROP in the rectangle; remove from PCT_NATVEG
+        self.file['PCT_CROP'] = \
+            self.file['PCT_CROP'] + \
+            self.file['PCT_NATVEG'].where(self.rectangle, other=0)
+        self.setvar_lev0('PCT_NATVEG', 0)
+
+        for cft in self.file.cft:
+            cft_local = cft - (max(self.file.natpft) + 1)
+            # initialize 3D variable; set outside the loop below
+            self.setvar_lev1('PCT_CFT', val=0, lev1_dim=cft_local)
+
+        # set 3D variable
+        self.setvar_lev1('PCT_CFT', val=100, lev1_dim=dom_cft-(max(self.file.natpft)+1))
+
+        # dictionary of 4d variables to loop over
+        vars_4d = {'MONTHLY_LAI': lai,
+                   'MONTHLY_SAI': sai,
+                   'MONTHLY_HEIGHT_TOP': hgt_top,
+                   'MONTHLY_HEIGHT_BOT': hgt_bot}
+        for var, val in vars_4d.items():
+            if val is not None:
+                self.set_lai_sai_hgts(dom_plant=dom_cft,
+                                      var=var, val=val)
+
+
+    def set_lai_sai_hgts(self, dom_plant, var, val):
         """
         Description
         -----------
         If user has specified lai, sai, hgt_top, hgt_bot, replace these with
-        values selected by the user for dom_nat_pft. Else do nothing.
+        values selected by the user for dom_plant. Else do nothing.
         """
-        if dom_nat_pft == 0:  # bare soil: var must equal 0
+        if dom_plant == 0:  # bare soil: var must equal 0
             val = [0] * 12
         if len(val) != 12:
             errmsg = 'Error: Variable should have exactly 12 ' \
                      'entries in the configure file: ' + var
             abort(errmsg)
         for mon in self.file.time - 1:  # loop over 12 months
-            # set 4D variable to value for dom_nat_pft
-            self.setvar_lev2(var, val[int(mon)], lev1_dim=dom_nat_pft,
+            # set 4D variable to value for dom_plant
+            self.setvar_lev2(var, val[int(mon)], lev1_dim=dom_plant,
                              lev2_dim=mon)
 
 
