@@ -160,6 +160,34 @@ specify spatially variable soil thickness. If not present, use bottom
 of soil column (nlevsoi).
 </entry>
 
+<entry id="snicar_numrad_snw" type="integer" category="clm_physics"
+       group="clm_inparm" valid_values="5,480" >
+number of wavelength bands used in SNICAR snow albedo calculation
+</entry>
+
+<entry id="snicar_solarspec" type="integer" category="clm_physics"
+       group="clm_inparm" valid_values="1,2,3,4,5,6" >
+type of downward solar radiation spectrum for SNICAR snow albedo calculation
+(only used in 480-band version)
+</entry>
+
+<entry id="snicar_snw_optics" type="integer" category="clm_physics"
+       group="clm_inparm" valid_values="1,2,3" >
+snow optics type using different refractive index databases in SNICAR
+(only used in 480-band version)
+</entry>
+
+<entry id="snicar_dust_optics" type="integer" category="clm_physics"
+       group="clm_inparm" valid_values="1,2,3" >
+dust optics type for SNICAR snow albedo calculation
+(only used in 480-band version)
+</entry>
+
+<entry id="snicar_use_aerosol" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" value=".true.">
+Toggle to turn on/off aerosol deposition flux in snow in SNICAR
+</entry>
+
 <entry id="rooting_profile_method_water" type="integer" category="clm_physics"
        group="rooting_profile_inparm" valid_values="0,1,2" >
 Index of rooting profile for water
@@ -762,6 +790,12 @@ Full pathname of surface data file.
        input_pathname="abs" group="clm_inparm" valid_values="" >
 SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name
 </entry>
+
+<entry id="fsnowoptics480" type="char*256" category="datasets" 
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+SNICAR (SNow, ICe, and Aerosol Radiative model) 480-band optical data file name
+</entry>
+
 
 <entry id="fsnowaging" type="char*256"  category="datasets" 
        input_pathname="abs" group="clm_inparm" valid_values="" >

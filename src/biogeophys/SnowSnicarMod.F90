@@ -11,7 +11,7 @@ module SnowSnicarMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_sys_mod     , only : shr_sys_flush
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use clm_varctl      , only : iulog
+  use clm_varctl      , only : iulog, snicar_numrad_snw ! cenlin
   use clm_varcon      , only : tfrz
   use shr_const_mod   , only : SHR_CONST_RHOICE
   use abortutils      , only : endrun
@@ -51,9 +51,9 @@ module SnowSnicarMod
   logical,  public, parameter :: DO_SNO_AER =   .true.    ! parameter to include aerosols in snowpack radiative calculations
 
   ! !PRIVATE DATA MEMBERS:
-  integer,  parameter :: numrad_snw  =   5               ! number of spectral bands used in snow model [nbr]
-  integer,  parameter :: nir_bnd_bgn =   2               ! first band index in near-IR spectrum [idx]
-  integer,  parameter :: nir_bnd_end =   5               ! ending near-IR band index [idx]
+!  integer,  parameter :: numrad_snw  = 5              ! number of spectral bands used in snow model [nbr] cenlin
+!  integer,  parameter :: nir_bnd_bgn = 2              ! first band index in near-IR spectrum [idx] cenlin
+!  integer,  parameter :: nir_bnd_end = 5              ! ending near-IR band index [idx] cenlin
 
   integer,  parameter :: idx_Mie_snw_mx = 1471           ! number of effective radius indices used in Mie lookup table [idx]
   integer,  parameter :: idx_T_max      = 11             ! maxiumum temperature index used in aging lookup table [idx]
@@ -90,54 +90,58 @@ module SnowSnicarMod
   ! (idx_Mie_snw_mx is number of snow radii with defined parameters (i.e. from 30um to 1500um))
   
   ! direct-beam weighted ice optical properties
-  real(r8) :: ss_alb_snw_drc(idx_Mie_snw_mx,numrad_snw)
-  real(r8) :: asm_prm_snw_drc(idx_Mie_snw_mx,numrad_snw)
-  real(r8) :: ext_cff_mss_snw_drc(idx_Mie_snw_mx,numrad_snw)
+  real(r8), pointer :: ss_alb_snw_drc(:,:) !(idx_Mie_snw_mx,numrad_snw)
+  real(r8), pointer :: asm_prm_snw_drc(:,:) !(idx_Mie_snw_mx,numrad_snw)
+  real(r8), pointer :: ext_cff_mss_snw_drc(:,:) !(idx_Mie_snw_mx,numrad_snw)
 
   ! diffuse radiation weighted ice optical properties
-  real(r8) :: ss_alb_snw_dfs(idx_Mie_snw_mx,numrad_snw)
-  real(r8) :: asm_prm_snw_dfs(idx_Mie_snw_mx,numrad_snw)
-  real(r8) :: ext_cff_mss_snw_dfs(idx_Mie_snw_mx,numrad_snw)
+  real(r8), pointer :: ss_alb_snw_dfs(:,:) !(idx_Mie_snw_mx,numrad_snw)
+  real(r8), pointer :: asm_prm_snw_dfs(:,:) !(idx_Mie_snw_mx,numrad_snw)
+  real(r8), pointer :: ext_cff_mss_snw_dfs(:,:) !(idx_Mie_snw_mx,numrad_snw)
 
   ! hydrophiliic BC
-  real(r8) :: ss_alb_bc1(numrad_snw)
-  real(r8) :: asm_prm_bc1(numrad_snw)
-  real(r8) :: ext_cff_mss_bc1(numrad_snw)
+  real(r8), pointer :: ss_alb_bc1(:) !(numrad_snw)
+  real(r8), pointer :: asm_prm_bc1(:) !(numrad_snw)
+  real(r8), pointer :: ext_cff_mss_bc1(:) !(numrad_snw)
 
   ! hydrophobic BC
-  real(r8) :: ss_alb_bc2(numrad_snw)
-  real(r8) :: asm_prm_bc2(numrad_snw)
-  real(r8) :: ext_cff_mss_bc2(numrad_snw)
+  real(r8), pointer :: ss_alb_bc2(:) !(numrad_snw)
+  real(r8), pointer :: asm_prm_bc2(:) !(numrad_snw)
+  real(r8), pointer :: ext_cff_mss_bc2(:) !(numrad_snw)
 
   ! hydrophobic OC
-  real(r8) :: ss_alb_oc1(numrad_snw)
-  real(r8) :: asm_prm_oc1(numrad_snw)
-  real(r8) :: ext_cff_mss_oc1(numrad_snw)
+  real(r8), pointer :: ss_alb_oc1(:) !(numrad_snw)
+  real(r8), pointer :: asm_prm_oc1(:) !(numrad_snw)
+  real(r8), pointer :: ext_cff_mss_oc1(:) !(numrad_snw)
 
   ! hydrophilic OC
-  real(r8) :: ss_alb_oc2(numrad_snw)
-  real(r8) :: asm_prm_oc2(numrad_snw)
-  real(r8) :: ext_cff_mss_oc2(numrad_snw)
+  real(r8), pointer :: ss_alb_oc2(:) !(numrad_snw)
+  real(r8), pointer :: asm_prm_oc2(:) !(numrad_snw)
+  real(r8), pointer :: ext_cff_mss_oc2(:) !(numrad_snw)
 
   ! dust species 1:
-  real(r8) :: ss_alb_dst1(numrad_snw)
-  real(r8) :: asm_prm_dst1(numrad_snw)
-  real(r8) :: ext_cff_mss_dst1(numrad_snw)
+  real(r8), pointer :: ss_alb_dst1(:) !(numrad_snw)
+  real(r8), pointer :: asm_prm_dst1(:) !(numrad_snw)
+  real(r8), pointer :: ext_cff_mss_dst1(:) !(numrad_snw)
 
   ! dust species 2:
-  real(r8) :: ss_alb_dst2(numrad_snw)
-  real(r8) :: asm_prm_dst2(numrad_snw)
-  real(r8) :: ext_cff_mss_dst2(numrad_snw)
+  real(r8), pointer :: ss_alb_dst2(:) !(numrad_snw)
+  real(r8), pointer :: asm_prm_dst2(:) !(numrad_snw)
+  real(r8), pointer :: ext_cff_mss_dst2(:) !(numrad_snw)
 
   ! dust species 3:
-  real(r8) :: ss_alb_dst3(numrad_snw)
-  real(r8) :: asm_prm_dst3(numrad_snw)
-  real(r8) :: ext_cff_mss_dst3(numrad_snw)
+  real(r8), pointer :: ss_alb_dst3(:) !(numrad_snw)
+  real(r8), pointer :: asm_prm_dst3(:) !(numrad_snw)
+  real(r8), pointer :: ext_cff_mss_dst3(:) !(numrad_snw)
 
   ! dust species 4:
-  real(r8) :: ss_alb_dst4(numrad_snw)
-  real(r8) :: asm_prm_dst4(numrad_snw)
-  real(r8) :: ext_cff_mss_dst4(numrad_snw)
+  real(r8), pointer :: ss_alb_dst4(:) !(numrad_snw)
+  real(r8), pointer :: asm_prm_dst4(:) !(numrad_snw)
+  real(r8), pointer :: ext_cff_mss_dst4(:) !(numrad_snw)
+
+  ! downward solar radiation spectral weights for 480-band
+  real(r8), pointer :: flx_wgt_dir480(:) !(numrad_snw)  ! direct
+  real(r8), pointer :: flx_wgt_dif480(:) !(numrad_snw)  ! diffuse
 
   ! best-fit parameters for snow aging defined over:
   !  11 temperatures from 225 to 273 K
@@ -149,7 +153,8 @@ module SnowSnicarMod
   real(r8), pointer :: snowage_drdt0(:,:,:) ! idx_rhos_max,idx_Tgrd_max,idx_T_max)
   !
   ! !REVISION HISTORY:
-  ! Created by Mark Flanner
+  ! Created by Mark Flanner (Univ. of Michigan)
+  ! Updated by Cenlin He (NCAR) based on Flanner et al. 2021 GMD
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -229,17 +234,19 @@ contains
     ! !LOCAL VARIABLES:
     !
     ! variables for snow radiative transfer calculations
+    integer :: nir_bnd_bgn  ! first band index in near-IR spectrum [idx] cenlin
+    integer :: nir_bnd_end  ! ending near-IR band index [idx] cenlin
 
     ! Local variables representing single-column values of arrays:
     integer :: snl_lcl                            ! negative number of snow layers [nbr]
     integer :: snw_rds_lcl(-nlevsno+1:0)          ! snow effective radius [m^-6]
-    real(r8):: flx_slrd_lcl(1:numrad_snw)         ! direct beam incident irradiance [W/m2] (set to 1)
-    real(r8):: flx_slri_lcl(1:numrad_snw)         ! diffuse incident irradiance [W/m2] (set to 1)
+    real(r8):: flx_slrd_lcl(1:snicar_numrad_snw)         ! direct beam incident irradiance [W/m2] (set to 1)
+    real(r8):: flx_slri_lcl(1:snicar_numrad_snw)         ! diffuse incident irradiance [W/m2] (set to 1)
     real(r8):: mss_cnc_aer_lcl(-nlevsno+1:0,1:sno_nbr_aer) ! aerosol mass concentration (lyr,aer_nbr) [kg/kg]
     real(r8):: h2osno_lcl                         ! total column snow mass [kg/m2]
     real(r8):: h2osno_liq_lcl(-nlevsno+1:0)       ! liquid water mass [kg/m2]
     real(r8):: h2osno_ice_lcl(-nlevsno+1:0)       ! ice mass [kg/m2]
-    real(r8):: albsfc_lcl(1:numrad_snw)           ! albedo of underlying surface [frc]
+    real(r8):: albsfc_lcl(1:snicar_numrad_snw)           ! albedo of underlying surface [frc]
     real(r8):: ss_alb_snw_lcl(-nlevsno+1:0)       ! single-scatter albedo of ice grains (lyr) [frc]
     real(r8):: asm_prm_snw_lcl(-nlevsno+1:0)      ! asymmetry parameter of ice grains (lyr) [frc]
     real(r8):: ext_cff_mss_snw_lcl(-nlevsno+1:0)  ! mass extinction coefficient of ice grains (lyr) [m2/kg]
@@ -253,7 +260,7 @@ contains
                                                   ! (1=Eddington, 2=Quadrature, 3=Hemispheric Mean) [nbr]
     integer :: DELTA                              ! flag to use Delta approximation (Joseph, 1976)
                                                   ! (1= use, 0= don't use)
-    real(r8):: flx_wgt(1:numrad_snw)              ! weights applied to spectral bands,
+    real(r8):: flx_wgt(1:snicar_numrad_snw)              ! weights applied to spectral bands,
                                                   ! specific to direct and diffuse cases (bnd) [frc]
    
     integer :: flg_nosnl                          ! flag: =1 if there is snow, but zero snow layers,
@@ -263,8 +270,8 @@ contains
 
     real(r8):: albedo                             ! temporary snow albedo [frc]
     real(r8):: flx_sum                            ! temporary summation variable for NIR weighting
-    real(r8):: albout_lcl(numrad_snw)             ! snow albedo by band [frc]
-    real(r8):: flx_abs_lcl(-nlevsno+1:1,numrad_snw)! absorbed flux per unit incident flux at top of snowpack (lyr,bnd) [frc]
+    real(r8):: albout_lcl(snicar_numrad_snw)             ! snow albedo by band [frc]
+    real(r8):: flx_abs_lcl(-nlevsno+1:1,snicar_numrad_snw)! absorbed flux per unit incident flux at top of snowpack (lyr,bnd) [frc]
  
     real(r8):: L_snw(-nlevsno+1:0)                ! h2o mass (liquid+solid) in snow layer (lyr) [kg/m2]
     real(r8):: tau_snw(-nlevsno+1:0)              ! snow optical depth (lyr) [unitless]
@@ -286,7 +293,7 @@ contains
    
     integer :: nstep                              ! current timestep [nbr] (debugging only)
     integer :: g_idx, c_idx, l_idx                ! gridcell, column, and landunit indices [idx]
-    integer :: bnd_idx                            ! spectral band index (1 <= bnd_idx <= numrad_snw) [idx]
+    integer :: bnd_idx                            ! spectral band index (1 <= bnd_idx <= snicar_numrad_snw) [idx]
     integer :: rds_idx                            ! snow effective radius index for retrieving
                                                   ! Mie parameters from lookup table [idx]
     integer :: snl_btm                            ! index of bottom snow layer (0) [idx]
@@ -353,9 +360,12 @@ contains
 
     associate(& 
          snl         =>   col%snl                           , & ! Input:  [integer (:)]  negative number of snow layers (col) [nbr]
-
          frac_sno    =>   waterdiagnosticbulk_inst%frac_sno_eff_col    & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
          )
+
+      ! Define parameter, cenlin
+      nir_bnd_bgn = nint(snicar_numrad_snw/9.6) + 1 ! 5-band starts at 2; 480-band starts at 51
+      nir_bnd_end = snicar_numrad_snw 
 
       ! Define constants
       pi = SHR_CONST_PI
@@ -442,7 +452,7 @@ contains
 
 
             ! Set spectral underlying surface albedos to their corresponding VIS or NIR albedos
-            albsfc_lcl(1)                       = albsfc(c_idx,1)
+            albsfc_lcl(1:(nir_bnd_bgn-1))       = albsfc(c_idx,1)  ! cenlin: update for hyperspectral calculation
             albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = albsfc(c_idx,2)
 
 
@@ -470,16 +480,20 @@ contains
             !  Band 4: 1.2-1.5um (NIR)
             !  Band 5: 1.5-5.0um (NIR)
             !
+            ! Updated hyperspectral (10-nm) bands (480-band case) cenlin
+            ! Band 1~50  : 0.2-0.7um (VIS); near-UV (0.2-0.3um) is combined to VIS for now
+            ! Band 51~480: 0.7~5.0um (NIR)
+            !
             ! The following weights are appropriate for surface-incident flux in a mid-latitude winter atmosphere
             !
             ! 3-band weights
-            if (numrad_snw==3) then
+            if (snicar_numrad_snw==3) then
                ! Direct:
                if (flg_slr_in == 1) then
                   flx_wgt(1) = 1._r8
                   flx_wgt(2) = 0.66628670195247_r8
                   flx_wgt(3) = 0.33371329804753_r8
-                  ! Diffuse:
+               ! Diffuse:
                elseif (flg_slr_in == 2) then
                   flx_wgt(1) = 1._r8
                   flx_wgt(2) = 0.77887652162877_r8
@@ -487,7 +501,7 @@ contains
                endif
 
                ! 5-band weights
-            elseif(numrad_snw==5) then
+            elseif (snicar_numrad_snw==5) then
                ! Direct:
                if (flg_slr_in == 1) then
                   flx_wgt(1) = 1._r8
@@ -495,7 +509,7 @@ contains
                   flx_wgt(3) = 0.18099494230665_r8
                   flx_wgt(4) = 0.12094898498813_r8
                   flx_wgt(5) = 0.20453448749347_r8
-                  ! Diffuse:
+               ! Diffuse:
                elseif (flg_slr_in == 2) then
                   flx_wgt(1) = 1._r8
                   flx_wgt(2) = 0.58581507618433_r8
@@ -503,10 +517,20 @@ contains
                   flx_wgt(4) = 0.10917889346386_r8
                   flx_wgt(5) = 0.10343699264369_r8
                endif
+
+            ! 480-band weights, cenlin
+            elseif (snicar_numrad_snw == 480) then
+               ! Direct:
+               if (flg_slr_in == 1) then
+                  flx_wgt(1:snicar_numrad_snw) = flx_wgt_dir480(1:snicar_numrad_snw)  ! either VIS or NIR band sum is 1.0 in the input dataset
+               ! Diffuse:
+               elseif (flg_slr_in == 2) then
+                  flx_wgt(1:snicar_numrad_snw) = flx_wgt_dif480(1:snicar_numrad_snw)  ! either VIS or NIR band sum is 1.0 in the input dataset
+               endif
             endif
 
             ! Loop over snow spectral bands
-            do bnd_idx = 1,numrad_snw
+            do bnd_idx = 1,snicar_numrad_snw
 
                mu_not    = coszen(c_idx)  ! must set here, because of error handling
                flg_dover = 1              ! default is to redo
@@ -532,7 +556,7 @@ contains
                   !  3rd error (flg_dover=4): switch approximation with new zenith
                   !  Subsequent errors: repeatedly change zenith and approximations...
 
-                  if (bnd_idx == 1) then
+                  if (bnd_idx < nir_bnd_bgn) then  ! VIS, cenlin
                      if (flg_dover == 2) then
                         APRX_TYP = 3
                      elseif (flg_dover == 3) then
@@ -548,7 +572,7 @@ contains
                         APRX_TYP = 1
                      endif
 
-                  else
+                  else  ! NIR
                      if (flg_dover == 2) then
                         APRX_TYP = 1
                      elseif (flg_dover == 3) then
@@ -578,13 +602,18 @@ contains
 
                   ! Pre-emptive error handling: aerosols can reap havoc on these absorptive bands.
                   ! Since extremely high soot concentrations have a negligible effect on these bands, zero them.
-                  if ( (numrad_snw == 5).and.((bnd_idx == 5).or.(bnd_idx == 4)) ) then
+                  if ( (snicar_numrad_snw == 5).and.((bnd_idx == 5).or.(bnd_idx == 4)) ) then
                      mss_cnc_aer_lcl(:,:) = 0._r8
                   endif
 
-                  if ( (numrad_snw == 3).and.(bnd_idx == 3) ) then
+                  if ( (snicar_numrad_snw == 3).and.(bnd_idx == 3) ) then
                      mss_cnc_aer_lcl(:,:) = 0._r8
                   endif
+
+                  if ( (snicar_numrad_snw == 480).and.(bnd_idx > 100) ) then ! >1.2um cenlin
+                     mss_cnc_aer_lcl(:,:) = 0._r8
+                  endif
+
 
                   ! Define local Mie parameters based on snow grain size and aerosol species,
                   !  retrieved from a lookup table.
@@ -981,22 +1010,60 @@ contains
 
 
             ! Weight output NIR albedo appropriately
-            albout(c_idx,1) = albout_lcl(1)
-            flx_sum         = 0._r8
-            do bnd_idx= nir_bnd_bgn,nir_bnd_end
-               flx_sum = flx_sum + flx_wgt(bnd_idx)*albout_lcl(bnd_idx)
-            end do
-            albout(c_idx,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
+              ! for 5- and 3-band cases cenlin
+            if (snicar_numrad_snw <= 5) then
+              albout(c_idx,1) = albout_lcl(1)
+              flx_sum         = 0._r8
+              do bnd_idx= nir_bnd_bgn,nir_bnd_end
+                 flx_sum = flx_sum + flx_wgt(bnd_idx)*albout_lcl(bnd_idx)
+              end do
+              albout(c_idx,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
+            end if
+              ! for 480-band case, cenlin
+            if (snicar_numrad_snw == 480) then
+              ! average for VIS band
+              flx_sum         = 0._r8
+              do bnd_idx= 1, (nir_bnd_bgn-1)
+                 flx_sum = flx_sum + flx_wgt(bnd_idx)*albout_lcl(bnd_idx)
+              end do
+              albout(c_idx,1) = flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
+              ! average for NIR band
+              flx_sum         = 0._r8
+              do bnd_idx= nir_bnd_bgn,nir_bnd_end
+                 flx_sum = flx_sum + flx_wgt(bnd_idx)*albout_lcl(bnd_idx)
+              end do
+              albout(c_idx,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
+            end if
 
             ! Weight output NIR absorbed layer fluxes (flx_abs) appropriately
-            flx_abs(c_idx,:,1) = flx_abs_lcl(:,1)
-            do i=snl_top,1,1
-               flx_sum = 0._r8
-               do bnd_idx= nir_bnd_bgn,nir_bnd_end
-                  flx_sum = flx_sum + flx_wgt(bnd_idx)*flx_abs_lcl(i,bnd_idx)
-               enddo
-               flx_abs(c_idx,i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))          
-            end do
+              ! for 5- and 3-band cases cenlin
+            if (snicar_numrad_snw <= 5) then 
+              flx_abs(c_idx,:,1) = flx_abs_lcl(:,1)
+              do i=snl_top,1,1
+                 flx_sum = 0._r8
+                 do bnd_idx= nir_bnd_bgn,nir_bnd_end
+                    flx_sum = flx_sum + flx_wgt(bnd_idx)*flx_abs_lcl(i,bnd_idx)
+                 enddo
+                 flx_abs(c_idx,i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))          
+              end do
+            end if
+              ! for 480-band case cenlin
+            if (snicar_numrad_snw == 480) then
+              do i=snl_top,1,1
+                 ! average for VIS band
+                 flx_sum = 0._r8
+                 do bnd_idx= 1,(nir_bnd_bgn-1)
+                    flx_sum = flx_sum + flx_wgt(bnd_idx)*flx_abs_lcl(i,bnd_idx)
+                 enddo
+                 flx_abs(c_idx,i,1) = flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
+                 ! average for NIR band
+                 flx_sum = 0._r8
+                 do bnd_idx= nir_bnd_bgn,nir_bnd_end
+                    flx_sum = flx_sum + flx_wgt(bnd_idx)*flx_abs_lcl(i,bnd_idx)
+                 enddo
+                 flx_abs(c_idx,i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
+              end do
+            end if
 
             ! If snow < minimum_snow, but > 0, and there is sun, set albedo to underlying surface albedo
          elseif ( (coszen(c_idx) > 0._r8) .and. (h2osno_lcl < min_snw) .and. (h2osno_lcl > 0._r8) ) then
@@ -1362,7 +1429,8 @@ contains
    subroutine SnowOptics_init( )
      
      use fileutils  , only : getfil
-     use CLM_varctl , only : fsnowoptics
+     use CLM_varctl , only : fsnowoptics,snicar_numrad_snw,fsnowoptics480,snicar_solarspec,&
+                             snicar_snw_optics,snicar_dust_optics ! cenlin
      use spmdMod    , only : masterproc
      use ncdio_pio  , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
 
@@ -1373,20 +1441,84 @@ contains
 
      !
      ! Open optics file:
+     allocate(ss_alb_snw_drc(idx_Mie_snw_mx,snicar_numrad_snw))
+     allocate(asm_prm_snw_drc(idx_Mie_snw_mx,snicar_numrad_snw))
+     allocate(ext_cff_mss_snw_drc(idx_Mie_snw_mx,snicar_numrad_snw))
+     allocate(ss_alb_snw_dfs(idx_Mie_snw_mx,snicar_numrad_snw))
+     allocate(asm_prm_snw_dfs(idx_Mie_snw_mx,snicar_numrad_snw))
+     allocate(ext_cff_mss_snw_dfs(idx_Mie_snw_mx,snicar_numrad_snw))
+     allocate(ss_alb_bc1(snicar_numrad_snw))
+     allocate(asm_prm_bc1(snicar_numrad_snw))
+     allocate(ext_cff_mss_bc1(snicar_numrad_snw))
+     allocate(ss_alb_bc2(snicar_numrad_snw))
+     allocate(asm_prm_bc2(snicar_numrad_snw))
+     allocate(ext_cff_mss_bc2(snicar_numrad_snw))
+     allocate(ss_alb_oc1(snicar_numrad_snw))
+     allocate(asm_prm_oc1(snicar_numrad_snw))
+     allocate(ext_cff_mss_oc1(snicar_numrad_snw))
+     allocate(ss_alb_oc2(snicar_numrad_snw))
+     allocate(asm_prm_oc2(snicar_numrad_snw))
+     allocate(ext_cff_mss_oc2(snicar_numrad_snw))
+     allocate(ss_alb_dst1(snicar_numrad_snw))
+     allocate(asm_prm_dst1(snicar_numrad_snw))
+     allocate(ext_cff_mss_dst1(snicar_numrad_snw))
+     allocate(ss_alb_dst2(snicar_numrad_snw))
+     allocate(asm_prm_dst2(snicar_numrad_snw))
+     allocate(ext_cff_mss_dst2(snicar_numrad_snw))
+     allocate(ss_alb_dst3(snicar_numrad_snw))
+     allocate(asm_prm_dst3(snicar_numrad_snw))
+     allocate(ext_cff_mss_dst3(snicar_numrad_snw))
+     allocate(ss_alb_dst4(snicar_numrad_snw))
+     allocate(asm_prm_dst4(snicar_numrad_snw))
+     allocate(ext_cff_mss_dst4(snicar_numrad_snw))
+     allocate(flx_wgt_dir480(snicar_numrad_snw))
+     allocate(flx_wgt_dif480(snicar_numrad_snw))
+
      if(masterproc) write(iulog,*) 'Attempting to read snow optical properties .....'
-     call getfil (fsnowoptics, locfn, 0)
-     call ncd_pio_openfile(ncid, locfn, 0)
-     if(masterproc) write(iulog,*) subname,trim(fsnowoptics)
+       ! for 5-band data, cenlin
+     if (snicar_numrad_snw <= 5) then
+        call getfil (fsnowoptics, locfn, 0)
+        call ncd_pio_openfile(ncid, locfn, 0)
+        if(masterproc) write(iulog,*) subname,trim(fsnowoptics)
+     end if
+       ! for 480-band data, cenlin
+     if (snicar_numrad_snw == 480) then
+        call getfil (fsnowoptics480, locfn, 0)
+        call ncd_pio_openfile(ncid, locfn, 0)
+        if(masterproc) write(iulog,*) subname,trim(fsnowoptics480)
+     end if
 
-     ! direct-beam snow Mie parameters:
-     call ncd_io('ss_alb_ice_drc', ss_alb_snw_drc,            'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'asm_prm_ice_drc',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'ext_cff_mss_ice_drc', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+     if (snicar_numrad_snw <= 5) then
+        ! direct-beam snow Mie parameters:
+        call ncd_io( 'ss_alb_ice_drc', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'asm_prm_ice_drc',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'ext_cff_mss_ice_drc', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
 
-     ! diffuse snow Mie parameters
-     call ncd_io( 'ss_alb_ice_dfs', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'asm_prm_ice_dfs', asm_prm_snw_dfs,         'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'ext_cff_mss_ice_dfs', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+        ! diffuse snow Mie parameters
+        call ncd_io( 'ss_alb_ice_dfs', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'asm_prm_ice_dfs', asm_prm_snw_dfs,         'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'ext_cff_mss_ice_dfs', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+
+        ! dust species 1 Mie parameters
+        call ncd_io( 'ss_alb_dust01', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'asm_prm_dust01', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'ext_cff_mss_dust01', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+
+        ! dust species 2 Mie parameters
+        call ncd_io( 'ss_alb_dust02', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'asm_prm_dust02', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'ext_cff_mss_dust02', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+ 
+        ! dust species 3 Mie parameters
+        call ncd_io( 'ss_alb_dust03', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'asm_prm_dust03', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'ext_cff_mss_dust03', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+
+        ! dust species 4 Mie parameters
+        call ncd_io( 'ss_alb_dust04', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'asm_prm_dust04', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'ext_cff_mss_dust04', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+     endif
 
      ! BC species 1 Mie parameters
      call ncd_io( 'ss_alb_bcphil', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
@@ -1408,26 +1540,143 @@ contains
      call ncd_io( 'asm_prm_ocphob', asm_prm_oc2,         'read', ncid, posNOTonfile=.true.)
      call ncd_io( 'ext_cff_mss_ocphob', ext_cff_mss_oc2, 'read', ncid, posNOTonfile=.true.)
 
-     ! dust species 1 Mie parameters
-     call ncd_io( 'ss_alb_dust01', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'asm_prm_dust01', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'ext_cff_mss_dust01', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+     ! new data for 480-band
+     if (snicar_numrad_snw == 480) then
 
-     ! dust species 2 Mie parameters
-     call ncd_io( 'ss_alb_dust02', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'asm_prm_dust02', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'ext_cff_mss_dust02', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+       ! snow optical properties derived from different ice refractive index dataset
+       ! same value for direct and diffuse due to high spectral res without spectra averaging in database
+       if (snicar_snw_optics == 1) then  ! Warren (1984)
+          call ncd_io( 'ss_alb_ice_wrn84', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_ice_wrn84',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_ice_wrn84', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ss_alb_ice_wrn84', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_ice_wrn84',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_ice_wrn84', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+       elseif (snicar_snw_optics == 2) then ! Warren and Brandt (2008)
+          call ncd_io( 'ss_alb_ice_wrn08', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_ice_wrn08',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_ice_wrn08', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ss_alb_ice_wrn08', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_ice_wrn08',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_ice_wrn08', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+       elseif (snicar_snw_optics == 3) then ! Picard et al (2016)
+          call ncd_io( 'ss_alb_ice_pic16', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_ice_pic16',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_ice_pic16', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ss_alb_ice_pic16', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_ice_pic16',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_ice_pic16', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+       else
+          write(iulog,*) 'invalid snow optics type option in namelist'
+          ! for invalid spectrum type, use Picard et al (2016) (default)
+          call ncd_io( 'ss_alb_ice_pic16', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_ice_pic16',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_ice_pic16', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ss_alb_ice_pic16', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_ice_pic16',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_ice_pic16', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+       endif
 
-     ! dust species 3 Mie parameters
-     call ncd_io( 'ss_alb_dust03', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'asm_prm_dust03', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'ext_cff_mss_dust03', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+       ! dust optical properties
+       if (snicar_dust_optics == 1) then ! Saharan dust (Balkanski et al., 2007, central hematite)
+          ! dust species 1 Mie parameters
+          call ncd_io( 'ss_alb_dust01_sah', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust01_sah', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust01_sah', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+          ! dust species 2 Mie parameters
+          call ncd_io( 'ss_alb_dust02_sah', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust02_sah', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust02_sah', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+          ! dust species 3 Mie parameters
+          call ncd_io( 'ss_alb_dust03_sah', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust03_sah', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust03_sah', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+          ! dust species 4 Mie parameters
+          call ncd_io( 'ss_alb_dust04_sah', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust04_sah', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust04_sah', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+       elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
+          ! dust species 1 Mie parameters
+          call ncd_io( 'ss_alb_dust01_col', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust01_col', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust01_col', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+          ! dust species 2 Mie parameters
+          call ncd_io( 'ss_alb_dust02_col', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust02_col', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust02_col', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+          ! dust species 3 Mie parameters
+          call ncd_io( 'ss_alb_dust03_col', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust03_col', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust03_col', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+          ! dust species 4 Mie parameters
+          call ncd_io( 'ss_alb_dust04_col', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust04_col', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust04_col', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+       elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
+          ! dust species 1 Mie parameters
+          call ncd_io( 'ss_alb_dust01_gre', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust01_gre', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust01_gre', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+          ! dust species 2 Mie parameters
+          call ncd_io( 'ss_alb_dust02_gre', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust02_gre', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust02_gre', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+          ! dust species 3 Mie parameters
+          call ncd_io( 'ss_alb_dust03_gre', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust03_gre', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust03_gre', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+          ! dust species 4 Mie parameters
+          call ncd_io( 'ss_alb_dust04_gre', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust04_gre', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust04_gre', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+       else
+          write(iulog,*) 'invalid dust optics type option in namelist'
+          ! for invalid dust optics type, use Saharan dust  (default)
+          ! dust species 1 Mie parameters
+          call ncd_io( 'ss_alb_dust01_sah', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust01_sah', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust01_sah', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+          ! dust species 2 Mie parameters
+          call ncd_io( 'ss_alb_dust02_sah', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust02_sah', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust02_sah', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+          ! dust species 3 Mie parameters
+          call ncd_io( 'ss_alb_dust03_sah', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust03_sah', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust03_sah', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+          ! dust species 4 Mie parameters
+          call ncd_io( 'ss_alb_dust04_sah', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'asm_prm_dust04_sah', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'ext_cff_mss_dust04_sah', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+       endif
+ 
+       ! downward solar radiation spectral weights for 480-band
+       if (snicar_solarspec == 1) then     ! mid-latitude winter
+          call ncd_io( 'flx_wgt_dir480_mlw', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_mlw', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+       elseif (snicar_solarspec == 2) then ! mid-latitude summer
+          call ncd_io( 'flx_wgt_dir480_mls', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_mls', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+       elseif (snicar_solarspec == 3) then ! sub-Arctic winter
+          call ncd_io( 'flx_wgt_dir480_saw', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_saw', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+       elseif (snicar_solarspec == 4) then ! sub-Arctic summer
+          call ncd_io( 'flx_wgt_dir480_sas', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_sas', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+       elseif (snicar_solarspec == 5) then ! Summit,Greenland,summer
+          call ncd_io( 'flx_wgt_dir480_smm', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_smm', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+       elseif (snicar_solarspec == 6) then ! High Mountain summer
+          call ncd_io( 'flx_wgt_dir480_hmn', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_hmn', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+       else
+          write(iulog,*) 'invalid downward solar radiation spectrum option in namelist'
+          ! for invalid spectrum type, use mid-latitude winter (default)
+          call ncd_io( 'flx_wgt_dir480_mlw', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_mlw', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+       endif
 
-     ! dust species 4 Mie parameters
-     call ncd_io( 'ss_alb_dust04', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'asm_prm_dust04', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'ext_cff_mss_dust04', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
-
+     endif
 
      call ncd_pio_closefile(ncid)
      if (masterproc) then

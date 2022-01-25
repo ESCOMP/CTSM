@@ -147,7 +147,7 @@ contains
 
     namelist /clm_inparm/  &
          fsurdat, &
-         paramfile, fsnowoptics, fsnowaging
+         paramfile, fsnowoptics, fsnowaging, fsnowoptics480 ! cenlin
 
     ! History, restart options
 
@@ -201,7 +201,8 @@ contains
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
-         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests
+         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests,snicar_numrad_snw,snicar_solarspec,&
+         snicar_snw_optics,snicar_dust_optics,snicar_use_aerosol  ! cenlin
     
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -568,6 +569,30 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
+    ! check on snow albedo wavelength bands, cenlin
+    if ( (snicar_numrad_snw /= 5) .and. (snicar_numrad_snw /= 480) ) then
+       call endrun(msg=' ERROR: snicar_numrad_snw is out of a reasonable range (5 or 480)'//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
+    ! check on downward solar radiation spectrum, cenlin
+    if ( (snicar_solarspec < 0) .or. (snicar_solarspec > 6) ) then
+       call endrun(msg=' ERROR: snicar_solarspec is out of a reasonable range (1~6)'//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
+    ! check on snow optics type
+    if ( (snicar_snw_optics < 0) .or. (snicar_snw_optics > 3) ) then
+       call endrun(msg=' ERROR: snicar_snw_optics is out of a reasonable range (1~3)'//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
+    ! check on dust optics type
+    if ( (snicar_dust_optics < 0) .or. (snicar_dust_optics > 3) ) then
+       call endrun(msg=' ERROR: snicar_dust_optics is out of a reasonable range (1~3)'//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
     ! Consistency settings for nrevsn
 
     if (nsrest == nsrStartup ) nrevsn = ' '
@@ -646,6 +671,7 @@ contains
     call mpi_bcast (paramfile, len(paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowoptics, len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,  len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fsnowoptics480, len(fsnowoptics480),  MPI_CHARACTER, 0, mpicom, ier) ! cenlin
 
     ! Irrigation
     call mpi_bcast(irrigate, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -787,6 +813,11 @@ contains
     call mpi_bcast (soil_layerstruct_predefined,len(soil_layerstruct_predefined), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (soil_layerstruct_userdefined,size(soil_layerstruct_userdefined), MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (soil_layerstruct_userdefined_nlevsoi, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (snicar_numrad_snw, 1, MPI_INTEGER, 0, mpicom, ier)   ! cenlin
+    call mpi_bcast (snicar_solarspec, 1, MPI_INTEGER, 0, mpicom, ier)   ! cenlin
+    call mpi_bcast (snicar_snw_optics, 1, MPI_INTEGER, 0, mpicom, ier)   ! cenlin
+    call mpi_bcast (snicar_dust_optics, 1, MPI_INTEGER, 0, mpicom, ier)   ! cenlin
+    call mpi_bcast (snicar_use_aerosol, 1, MPI_LOGICAL, 0, mpicom, ier)  ! cenlin
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -873,6 +904,7 @@ contains
     write(iulog,*) '    use_grainproduct = ', use_grainproduct
     write(iulog,*) '    o3_veg_stress_method = ', o3_veg_stress_method
     write(iulog,*) '    use_snicar_frc = ', use_snicar_frc
+    write(iulog,*) '    snicar_use_aerosol = ',snicar_use_aerosol
     write(iulog,*) '    use_vancouver = ', use_vancouver
     write(iulog,*) '    use_mexicocity = ', use_mexicocity
     write(iulog,*) '    use_noio = ', use_noio
@@ -959,9 +991,21 @@ contains
     else
        write(iulog,*) '   snow aging parameters file = ',trim(fsnowaging)
     endif
+    ! cenlin
+    if (snicar_numrad_snw==480) then
+      if (fsnowoptics480 == ' ') then
+         write(iulog,*) '   SNICAR snow optical properties (480-band) file NOT set'
+      else
+         write(iulog,*) '   SNICAR snow optical properties (480-band) file = ',trim(fsnowoptics480)
+      endif
+      write(iulog,*) '   Downward solar radiation spectrum for SNICAR =', snicar_solarspec
+      write(iulog,*) '   Snow refractive index type = ', snicar_snw_optics
+      write(iulog,*) '   Dust optics type = ', snicar_dust_optics
+    endif
 
     write(iulog,*) '   Number of snow layers =', nlevsno
     write(iulog,*) '   Max snow depth (mm) =', h2osno_max
+    write(iulog,*) '   Number of bands in SNICAR snow albedo calculation =', snicar_numrad_snw  ! cenlin
 
     write(iulog,*) '   glc number of elevation classes =', maxpatch_glc
     if (glc_do_dynglacier) then

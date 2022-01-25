@@ -93,6 +93,7 @@ module clm_varctl
   character(len=fname_len), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=fname_len), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
+  character(len=fname_len), public :: fsnowoptics480  = ' '      ! snow optical properties file name for 480 bands, cenlin
 
   character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
                                                               ! only needed for LILAC and MCT drivers
@@ -204,6 +205,23 @@ module clm_varctl
   character(len=64), public    :: o3_veg_stress_method = 'unset'
 
   real(r8), public  :: o3_ppbv = 100._r8
+
+  ! number of wavelength bands used in SNICAR snow albedo calculation, cenlin
+  integer, public :: snicar_numrad_snw = 5 
+
+  ! type of downward solar radiation spectrum for SNICAR snow albedo calculation (only used in 480-band version), cenlin 
+  integer, public :: snicar_solarspec = 1  ! 1->mid-latitude winter;2->mid-latitude summer;3->sub-Arctic winter;
+                                           ! 4->sub-Arctic summer;5->Summit,Greenland,summer;6->High Mountain summer;
+
+  ! snow optics type using different refractive index databases in SNICAR (only used in 480-band version), cenlin
+  integer, public :: snicar_snw_optics = 3   ! 1->Warren (1984);2->Warren and Brandt (2008);3->Picard et al (2016)
+
+  ! dust optics type for SNICAR snow albedo calculation (only used in 480-band version), cenlin
+  integer, public :: snicar_dust_optics = 1 ! 1->Saharan dust (Balkanski et al., 2007, central hematite)
+                                            ! 2->San Juan Mountains dust, CO (Skiles et al, 2017)
+                                            ! 3->Greenland dust (Polashenski et al., 2015, central absorptivity)
+  ! option to turn off aerosol effect in snow in SNICAR
+  logical, public :: snicar_use_aerosol = .true. ! if .false., turn off aerosol deposition flux
 
   !----------------------------------------------------------
   ! C isotopes
