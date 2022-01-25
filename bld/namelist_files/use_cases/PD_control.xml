@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<use_case_desc>Conditions to simulate Present-Day (specific year will gradually move forward as data is available)</use_case_desc>
+
+<sim_year>PD</sim_year>
+
+<sim_year_range>constant</sim_year_range>
+
+</namelist_defaults>
