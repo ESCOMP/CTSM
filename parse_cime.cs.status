@@ -385,6 +385,9 @@ sub print_categories {
       foreach my $key ( @fails ) {
          my $expect = ""; 
          my $fails = $csstatus{$key}{'FAIL'};
+         # Remove NLCOMP and BASELINE from fails
+         $fails =~ s/NLCOMP//;
+         $fails =~ s/BASELINE//;
          foreach my $expectedfailfile ( @failfiles ) {
             `grep $key $expectedfailfile > /dev/null`;
             if ( $? == 0 ) { $expect = "EXPECTED"; }
