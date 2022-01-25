@@ -1258,6 +1258,16 @@
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
+  <test name="SMS_Ly5_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/gregorian_cropMonthOutput">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:00:00</option>
+      <option name="comment"  >Multi-year Gregorian test with transient and crop to test code that might break in leap years.</option>
+      <option name="tput_tolerance">0.5</option>
+    </options>
+  </test>
   <test name="LII_D_Ld3" grid="f19_g17" compset="I2000Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
