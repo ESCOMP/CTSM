@@ -47,10 +47,10 @@ class SinglePointCase(BaseCase):
         flag for creating user mods directories and files
     dom_pft : int
         dominant pft type for this single point (None if not specified)
-    num_pft : int
-        total number of pfts for surface dataset (if crop 78 pft, else 16 pft)
-    pct_pft : int
+    pct_pft : list
         weight or percentage of each pft.
+    num_pft : list
+        total number of pfts for surface dataset (if crop 78 pft, else 16 pft)
     zero_nonveg_landunits : bool
         flag for setting all non-vegetation landunits to zero
     uni_snow : bool
@@ -172,7 +172,7 @@ class SinglePointCase(BaseCase):
 
             #-- check dom_pft values should be between 1-78
             if min_dom_pft <1 or max_dom_pft >MAX_PFT:
-                err_msg = "values for --dompft should not be between 1 and 78."
+                err_msg = "values for --dompft should be between 1 and 78."
                 raise argparse.ArgumentTypeError(err_msg)
 
             #-- check dom_pft vs num_pft
@@ -250,12 +250,12 @@ class SinglePointCase(BaseCase):
 
             # -- check if the same number of values are given
             if len(self.dom_pft) != len(self.pct_pft):
-                err_msg = "Please provide the same number of values for --dompft and --pctpft."
+                err_msg = "Please provide the same number of inputs for --dompft and --pctpft."
                 raise argparse.ArgumentTypeError(err_msg)
 
             # -- check if the sum of pct_pft is equal to 1 or 100
             if sum(self.pct_pft)!= 1 and sum(self.pct_pft) != 100:
-                err_msg = "Sum of --pct_pft values should be equal to 1 or 100."
+                err_msg = "Sum of --pctpft values should be equal to 1 or 100."
                 raise argparse.ArgumentTypeError(err_msg)
 
             # -- convert franction to percentage
