@@ -180,7 +180,8 @@ class SinglePointCase(BaseCase):
                 err_msg = "Please use --crop flag when --dompft is above 16."
                 raise argparse.ArgumentTypeError(err_msg)
 
-            if min_dom_pft <=NAT_PFT and max_dom_pft >NAT_PFT:
+            #-- check if all dom_pft are in the same range:
+            if min_dom_pft <= NAT_PFT < max_dom_pft:
                 err_msg = """
                 \n
                 Subsetting using mixed land units is not possible.
@@ -269,7 +270,11 @@ class SinglePointCase(BaseCase):
 
         # -- if the user only gave --pctpft with no --dompft
         elif self.pct_pft:
-            err_msg = " --pctpft is specfied without --dompft. Please specify your dominant pft by --dompft."
+            err_msg = """
+                      \n
+                      --pctpft is specfied without --dompft.
+                      Please specify your dominant pft by --dompft.
+                      """
             raise argparse.ArgumentTypeError (err_msg)
 
         logger.info (" - dominant pft(s) : %s",self.dom_pft)
@@ -419,7 +424,8 @@ class SinglePointCase(BaseCase):
                 f_out["PCT_CROP"][:, :] = 100
 
         else:
-            logger.info ("You chose --include-nonveg --> Do not zero non-vegetation land units in the surface data.")
+            logger.info ("You chose --include-nonveg --> \
+                Do not zero non-vegetation land units in the surface data.")
 
         if self.uni_snow:
             f_out["STD_ELEV"][:, :] = 20.0

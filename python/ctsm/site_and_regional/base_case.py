@@ -6,7 +6,6 @@ RegionalCase are defined in this Class.
 # -- Import libraries
 
 # -- standard libraries
-import os
 import logging
 from collections import namedtuple
 

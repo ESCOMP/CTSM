@@ -53,7 +53,6 @@ To remove NPL from your environment on Cheyenne/Casper:
 
 # -- standard libraries
 import os
-import sys
 import logging
 import argparse
 import textwrap
@@ -68,7 +67,6 @@ from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.args_utils import plon_type, plat_type
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.utils import abort
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
