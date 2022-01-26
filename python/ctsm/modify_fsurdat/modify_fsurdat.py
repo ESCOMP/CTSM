@@ -85,7 +85,6 @@ class ModifyFsurdat:
 
         # union rectangles overlap
         rectangle = np.logical_and(union_1, union_2)
-        not_rectangle = np.logical_not(rectangle)
 
         return rectangle
 

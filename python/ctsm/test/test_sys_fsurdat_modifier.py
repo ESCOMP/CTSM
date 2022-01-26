@@ -87,25 +87,25 @@ class TestSysFsurdatModifier(unittest.TestCase):
 
     def _create_config_file_minimal(self):
 
-        with open (self._cfg_file_path,'w') as cfg_out:
-            with open (self._cfg_template_path,'r') as cfg_in:
+        with open (self._cfg_file_path, 'w', encoding='utf-8') as cfg_out:
+            with open (self._cfg_template_path, 'r', encoding='utf-8') as cfg_in:
                 for line in cfg_in:
                     if re.match(r' *fsurdat_in *=', line):
-                        line = 'fsurdat_in = {}'.format(self._fsurdat_in)
+                        line = f'fsurdat_in = {self._fsurdat_in}'
                     elif re.match(r' *fsurdat_out *=', line):
-                        line = 'fsurdat_out = {}'.format(self._fsurdat_out)
+                        line = f'fsurdat_out = {self._fsurdat_out}'
                     cfg_out.write(line)
 
 
     def _create_config_file_complete(self):
 
-        with open (self._cfg_file_path,'w') as cfg_out:
-            with open (self._cfg_template_path,'r') as cfg_in:
+        with open (self._cfg_file_path, 'w', encoding='utf-8') as cfg_out:
+            with open (self._cfg_template_path, 'r', encoding='utf-8') as cfg_in:
                 for line in cfg_in:
                     if re.match(r' *fsurdat_in *=', line):
-                        line = 'fsurdat_in = {}'.format(self._fsurdat_in)
+                        line = f'fsurdat_in = {self._fsurdat_in}'
                     elif re.match(r' *fsurdat_out *=', line):
-                        line = 'fsurdat_out = {}'.format(self._fsurdat_out)
+                        line = f'fsurdat_out = {self._fsurdat_out}'
                     elif re.match(r' *idealized *=', line):
                         line = 'idealized = True'
                     elif re.match(r' *lnd_lat_1 *=', line):
