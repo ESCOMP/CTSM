@@ -1849,6 +1849,7 @@ contains
                                  cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
                                  c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
+                  do_plant_prescribed = .false.
 
                else
                   gddmaturity(p) = 0._r8
@@ -1881,6 +1882,7 @@ contains
                                  cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
                                  c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
+                  do_plant_prescribed = .false.
 
                else
                   gddmaturity(p) = 0._r8
@@ -2011,8 +2013,8 @@ contains
                hui(p) = max(hui(p),huigrain(p))
             endif
 
-            if (do_plant_prescribed .and. (s == 0 .or. crop_inst%sdates_thisyr(p,s) < jday)) then
-                ! Today is the planting day, but the crop still hasn't been harvested.
+            if (do_plant_prescribed) then
+                ! Today was supposed to be the planting day, but the previous crop still hasn't been harvested.
                 do_harvest = .true.
                 force_harvest = .true.
             else if (generate_crop_gdds) then
