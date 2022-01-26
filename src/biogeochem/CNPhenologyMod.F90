@@ -2030,6 +2030,10 @@ contains
                   ! until some time next year.
                   do_harvest = .false.
                endif
+            else if (use_cropcal_streams .and. s > 0 .and. crop_inst%sdates_thisyr(p,s) == jday) then
+               ! Do not harvest on the day this growing season began;
+               ! would create challenges for postprocessing.
+               do_harvest = .false.
             else
                ! Original harvest rule
                do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))
