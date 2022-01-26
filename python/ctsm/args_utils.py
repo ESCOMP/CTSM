@@ -1,6 +1,7 @@
 """
 General-purpose utilities for handling command-line
 arguments and flags in ctsm python codes.
+Types for command-lines error handling.
 """
 
 import logging
@@ -8,9 +9,7 @@ import argparse
 
 from ctsm.config_utils import lon_range_0_to_360
 
-
-# Types for command-lines error handling:
-
+logger = logging.getLogger(__name__)
 
 def plat_type(plat):
     """
@@ -26,12 +25,11 @@ def plat_type(plat):
         plat_out (float): latitude in float
     """
     plat_out = float(plat)
-    if (plat_out < -90) or (plat_out > 90):
+    if plat_out < -90 or plat_out > 90:
         raise argparse.ArgumentTypeError(
             "ERROR: Latitude should be between -90 and 90."
         )
     return plat_out
-
 
 def plon_type(plon):
     """

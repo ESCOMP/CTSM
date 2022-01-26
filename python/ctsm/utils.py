@@ -5,22 +5,11 @@ import os
 import sys
 import string
 import pdb
-import subprocess
 
 from datetime import date
 from getpass import getuser
-from configparser import NoSectionError, NoOptionError
-from ctsm.path_utils import path_to_ctsm_root
 
 logger = logging.getLogger(__name__)
-
-# This string is used in the out-of-the-box ctsm.cfg and modify.cfg files
-# to denote a value that needs to be filled in
-_CONFIG_PLACEHOLDER = "FILL_THIS_IN"
-# This string is used in the out-of-the-box ctsm.cfg and modify.cfg files
-# to denote a value that can be filled in, but doesn't absolutely need to be
-_CONFIG_UNSET = "UNSET"
-
 
 def abort(errmsg):
     """Abort the program with the given error message
@@ -76,8 +65,8 @@ def add_tag_to_filename(filename, tag):
     if basename[cend] == "c":
         cend = cend - 1
     if (basename[cend] != ".") and (basename[cend] != "_"):
-        logger.error("Trouble figuring out where to add tag to filename:" , filename)
-        abort()
+        err_msg = "Trouble figuring out where to add tag to filename: " + filename
+        abort(err_msg)
     today = date.today()
     today_string = today.strftime("%y%m%d")
     fname_out = basename[:cend] + "_" + tag + "_c" + today_string + ".nc"
@@ -134,65 +123,3 @@ def update_metadata(file, title, summary, contact, data_script, description):
     for attr in del_attrs:
         if attr in attr_list:
             del file.attrs[attr]
-
-
-def _handle_config_value(
-    var, default, item, is_list, convert_to_type, can_be_unset, allowed_values
-):
-    """
-    Description
-    -----------
-    Assign the default value or the user-specified one to var.
-    Convert from default type (str) to reqested type (int or float).
-
-    If is_list is True, then default should be a list
-    """
-    if var == _CONFIG_UNSET:
-        if can_be_unset:
-            return default  # default may be None
-        abort("Must set a value for .cfg file variable: {}".format(item))
-
-    # convert string to list of strings; if there is just one element,
-    # we will get a list of size one, which we will convert back to a
-    # scalar later if needed
-    var = var.split()
-
-    if convert_to_type is bool:
-        try:
-            var = [_convert_to_bool(v) for v in var]
-        except ValueError:
-            abort("Non-boolean value found for .cfg file variable: {}".format(item))
-    elif convert_to_type is not None:
-        try:
-            var = [convert_to_type(v) for v in var]
-        except ValueError:
-            abort("Wrong type for .cfg file variable: {}".format(item))
-
-    if allowed_values is not None:
-        for val in var:
-            if val not in allowed_values:
-                print("val = ", val, " in var not in allowed_values")
-                errmsg = (
-                    "{} is not an allowed value for {} in .cfg file. "
-                    "Check allowed_values".format(val, item)
-                )
-                abort(errmsg)
-
-    if not is_list:
-        if len(var) > 1:
-            abort("More than 1 element found for .cfg file variable: {}".format(item))
-        var = var[0]
-
-    return var
-
-
-def _convert_to_bool(val):
-    """Convert the given value to boolean
-
-    Conversion is as in config files 'getboolean'
-    """
-    if val.lower() in ["1", "yes", "true", "on"]:
-        return True
-    if val.lower() in ["0", "no", "false", "off"]:
-        return False
-    raise ValueError("{} cannot be converted to boolean".format(val))

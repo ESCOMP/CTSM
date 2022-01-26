@@ -4,10 +4,19 @@ config files in ctsm python codes.
 """
 
 import logging
+import configparser
 
 from ctsm.utils import abort
 
 logger = logging.getLogger(__name__)
+
+# This string is used in the out-of-the-box ctsm.cfg and modify.cfg files
+# to denote a value that needs to be filled in
+_CONFIG_PLACEHOLDER = "FILL_THIS_IN"
+# This string is used in the out-of-the-box ctsm.cfg and modify.cfg files
+# to denote a value that can be filled in, but doesn't absolutely need to be
+_CONFIG_UNSET = "UNSET"
+
 
 def lon_range_0_to_360(lon_in):
     """
@@ -53,11 +62,11 @@ def get_config_value(
     """
     try:
         val = config.get(section, item)
-    except NoSectionError:
+    except configparser.NoSectionError:
         abort(
             "ERROR: Config file {} must contain section '{}'".format(file_path, section)
         )
-    except NoOptionError:
+    except configparser.NoOptionError:
         abort(
             "ERROR: Config file {} must contain item '{}' in section '{}'".format(
                 file_path, item, section
@@ -78,6 +87,7 @@ def get_config_value(
         can_be_unset=can_be_unset,
         allowed_values=allowed_values,
     )
+    return val
 
 
 def _handle_config_value(
@@ -129,6 +139,7 @@ def _handle_config_value(
 
     return var
 
+
 def _convert_to_bool(var):
     """
     Function for converting different forms of
@@ -146,12 +157,10 @@ def _convert_to_bool(var):
         var_out (bool): Boolean value corresponding to the input.
     """
     if var.lower() in ("yes", "true", "t", "y", "1"):
-        var_out =  True
+        var_out = True
     elif var.lower() in ("no", "false", "f", "n", "0"):
         var_out = False
     else:
         raise ValueError("Boolean value expected. [true or false] or [y or n]")
 
     return var_out
-
-

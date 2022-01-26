@@ -152,7 +152,8 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--dompft",
-        help="Dominant PFT(s): if we set the grid to 100%% one or multiple PFTs [default: %(default)s].",
+        help="Dominant PFT(s): if we set the grid to 100%% one or multiple PFTs \
+        [default: %(default)s].",
         action="store",
         dest="dom_pft",
         type=int,
