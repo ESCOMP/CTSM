@@ -69,7 +69,7 @@ contains
     if (ubound(pct_p2g, 1) /= cft_ub) then
        write(6,*) subname, ' ERROR: upper bound of pct_p2g should be cft_ub'
        write(6,*) 'ubound(pct_p2g), cft_ub = ', ubound(pct_p2g), cft_ub
-       call abort()
+       call shr_sys_abort()
     end if
 
     allocate(default_natpft(natpft_lb:natpft_ub))
@@ -135,7 +135,7 @@ contains
     if (num_cft == 0) then
        write(6,*) subname, ' ERROR: this routine should only be called when running with prognostic crops'
        write(6,*) '(i.e., with num_cft > 0)'
-       call abort()
+       call shr_sys_abort()
     end if
 
     do pft_index = natpft_ub + 1, ubound(pct_p2g, 1)
@@ -146,7 +146,7 @@ contains
           write(6,*) '(we do not currently handle the case where the transient input dataset'
           write(6,*) 'has non-zero areas for both pft 15 and pft 16)'
           write(6,*) 'pft_index, area = ', pft_index, pct_p2g(pft_index)
-          call abort()
+          call shr_sys_abort()
        end if
     end do
 

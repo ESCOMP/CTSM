@@ -106,14 +106,16 @@ program mksurfdata
   use mkharvestMod       , only : mkharvest, mkharvest_init, mkharvest_fieldname
   use mkharvestMod       , only : mkharvest_numtypes, mkharvest_parse_oride
   use mkharvestMod       , only : harvestDataType
-  use mkurbanparCommonMod, only : mkelev
-  use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, numurbl
   use mkgdpMod           , only : mkgdp
   use mkpeatMod          , only : mkpeat
   use mkagfirepkmonthMod , only : mkagfirepkmon
   use mktopostatsMod     , only : mktopostats
   use mkVICparamsMod     , only : mkVICparams
+  use mkurbanparCommonMod, only : mkelev
+#else
+  use mkurbanparCommonMod
 #endif
+  use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, numurbl
   use mklanwatMod        , only : mklakwat
   use mkOrganicMod       , only : mkorganic
   use mkutilsMod         , only : normalize_classes_by_gcell, chkerr
@@ -175,8 +177,9 @@ program mksurfdata
   real(r8), pointer             :: pctlak(:)               ! percent of grid cell that is lake
   real(r8), pointer             :: pctwet(:)               ! percent of grid cell that is wetland
   real(r8), pointer             :: pcturb(:)               ! percent of grid cell that is urbanized (total across all urban classes)
-  real(r8), pointer             :: urbn_classes(:,:)       ! percent cover of each urban class, as % of total urban area
-  real(r8), pointer             :: urbn_classes_g(:,:)     ! percent cover of each urban class, as % of grid cell
+  real(r8), pointer             :: urban_classes(:,:)      ! percent cover of each urban class, as % of total urban area
+  real(r8), pointer             :: urban_classes_g(:,:)    ! percent cover of each urban class, as % of grid cell
+  integer , pointer             :: urban_region(:)         ! urban region ID
   real(r8), pointer             :: elev(:)                 ! glc elevation (m)
   real(r8), pointer             :: fmax(:)                 ! fractional saturated area
   integer , pointer             :: soicol(:)               ! soil color
@@ -193,7 +196,6 @@ program mksurfdata
   real(r8), pointer             :: fpeat(:)                ! peatland fraction of gridcell
   real(r8), pointer             :: soildepth(:)            ! soil depth (m)
   integer , pointer             :: agfirepkmon(:)          ! agricultural fire peak month
-  integer , pointer             :: urban_region(:)         ! urban region ID
   real(r8), pointer             :: topo_stddev(:)          ! standard deviation of elevation (m)
   real(r8), pointer             :: slope(:)                ! topographic slope (degrees)
   real(r8), pointer             :: vic_binfl(:)            ! VIC b
@@ -318,8 +320,9 @@ program mksurfdata
   call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
   allocate ( elevclass(nglcec+1) )
   call mkglcmecInit (elevclass)
-  call mkurbanInit (mksrf_furban)
 #endif 
+  call mkurbanInit (mksrf_furban)
+
   ! ----------------------------------------------------------------------
   ! Allocate and initialize dynamic memory for local variables
   ! ----------------------------------------------------------------------
@@ -335,40 +338,63 @@ program mksurfdata
   allocate ( landfrac_pft(lsize_o))           ; landfrac_pft(:)     = spval
   allocate ( pctlnd_pft(lsize_o))             ; pctlnd_pft(:)       = spval
   allocate ( pftdata_mask(lsize_o))           ; pftdata_mask(:)     = -999
-  !allocate ( pctnatpft(lsize_o))              ;
-  !allocate ( pctnatpft_max(lsize_o))          ;
-  !allocate ( pctcft(lsize_o))                 ;
-  !allocate ( pctcft_max(lsize_o))             ;
-  allocate ( pctgla(lsize_o))                 ; pctgla(:)           = spval
-  allocate ( pctlak(lsize_o))                 ; pctlak(:)           = spval
-  allocate ( pctwet(lsize_o))                 ; pctwet(:)           = spval
-  allocate ( pcturb(lsize_o))                 ; pcturb(:)           = spval
-  allocate ( urban_region(lsize_o))           ; urban_region(:)     = -999
- !allocate ( urbn_classes(lsize_o,numurbl))   ; urbn_classes(:,:)   = spval
- !allocate ( urbn_classes_g(lsize_o,numurbl)) ; urbn_classes_g(:,:) = spval
-  allocate ( pctsand(lsize_o,nlevsoi))        ; pctsand(:,:)        = spval
-  allocate ( pctclay(lsize_o,nlevsoi))        ; pctclay(:,:)        = spval
-  allocate ( soicol(lsize_o))                 ; soicol(:)           = -999
+ !allocate ( pctnatpft(lsize_o))              ;
+ !allocate ( pctnatpft_max(lsize_o))          ;
+ !allocate ( pctcft(lsize_o))                 ;
+ !allocate ( pctcft_max(lsize_o))             ;
   allocate ( gdp(lsize_o))                    ; gdp(:)              = spval
   allocate ( fpeat(lsize_o))                  ; fpeat(:)            = spval
-  allocate ( soildepth(lsize_o))              ; soildepth(:)        = spval
   allocate ( agfirepkmon(lsize_o))            ; agfirepkmon(:)      = -999
   allocate ( topo_stddev(lsize_o))            ; topo_stddev(:)      = spval
   allocate ( slope(lsize_o))                  ; slope(:)            = spval
+
+  ! glacier properties
+  allocate ( pctgla(lsize_o))                 ; pctgla(:)           = spval
+  allocate ( glacier_region(lsize_o))         ; glacier_region(:)   = -999
+#ifdef TODO
+  allocate ( pctglcmec(lsize_o,nglcec))       ; pctglcmec(:,:)      = spval
+  allocate ( topoglcmec(lsize_o,nglcec))      ; topoglcmec(:,:)     = spval
+#endif
+
+  ! lake/wetland properties
+  allocate ( pctlak(lsize_o))                 ; pctlak(:)           = spval
+  allocate ( pctwet(lsize_o))                 ; pctwet(:)           = spval
+  allocate ( lakedepth(lsize_o))              ; lakedepth(:)        = spval
+
+  ! urban properties
+  allocate ( pcturb(lsize_o))                 ; pcturb(:)           = spval
+  allocate ( urban_classes(lsize_o,numurbl))  ; urban_classes(:,:)   = spval
+  allocate ( urban_classes_g(lsize_o,numurbl)); urban_classes_g(:,:) = spval
+  allocate ( urban_region(lsize_o))           ; urban_region(:)     = -999
+
+  ! soil properties
+  allocate ( pctsand(lsize_o,nlevsoi))        ; pctsand(:,:)        = spval
+  allocate ( pctclay(lsize_o,nlevsoi))        ; pctclay(:,:)        = spval
+  allocate ( soicol(lsize_o))                 ; soicol(:)           = -999
+  allocate ( soildepth(lsize_o))              ; soildepth(:)        = spval
+  allocate ( organic(lsize_o,nlevsoi))        ; organic(:,:)        = spval
+
+  ! vic properties
   allocate ( vic_binfl(lsize_o))              ; vic_binfl(:)        = spval
   allocate ( vic_ws(lsize_o))                 ; vic_ws(:)           = spval
   allocate ( vic_dsmax(lsize_o))              ; vic_dsmax(:)        = spval
   allocate ( vic_ds(lsize_o))                 ; vic_ds(:)           = spval
-  allocate ( lakedepth(lsize_o))              ; lakedepth(:)        = spval
-  allocate ( glacier_region(lsize_o))         ; glacier_region(:)   = -999
-  allocate ( organic(lsize_o,nlevsoi))        ; organic(:,:)        = spval
+
+  ! voc emission factors
+  allocate (ef1_btr(lsize_o)) ; ef1_btr(:) = 0._r8
+  allocate (ef1_fet(lsize_o)) ; ef1_fet(:) = 0._r8
+  allocate (ef1_fdt(lsize_o)) ; ef1_fdt(:) = 0._r8
+  allocate (ef1_shr(lsize_o)) ; ef1_shr(:) = 0._r8
+  allocate (ef1_grs(lsize_o)) ; ef1_grs(:) = 0._r8
+  allocate (ef1_crp(lsize_o)) ; ef1_crp(:) = 0._r8
 
   ! ----------------------------------------------------------------------
   ! Read in and interpolate surface data set fields
   ! ----------------------------------------------------------------------
 
   ! ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
-  ! call mkpft( mapfname=map_fpft, fpft=mksrf_fvegtyp, ndiag=ndiag, pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
+  ! call mkpft( mapfname=map_fpft, fpft=mksrf_fvegtyp, ndiag=ndiag, &
+  !    pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
 
   ! ! Create harvesting data at model resolution
   ! if (all_veg) then
@@ -383,100 +409,89 @@ program mksurfdata
   !    call mkharvest(  mapfname=map_fharvest, datfname=mksrf_fhrvtyp, ndiag=ndiag, harvdata=harvdata )
   ! end if
 
-  ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
-  zero_out_lake = all_urban .or. all_veg
-  zero_out_wetland = all_urban .or. all_veg .or. no_inlandwet
-  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
-       zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc)
-  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
-  call ESMF_LogWrite("After mklakwat", ESMF_LOGMSG_INFO)
-
   ! Make organic matter density [organic] [forganic]
-  call mkorganic ( mksrf_forganic_mesh, mksrf_forganic, mesh_model, organic, rc)
+  call mkorganic( mksrf_forganic_mesh, mksrf_forganic, mesh_model, organic, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
-  call ESMF_LogWrite("After mkorganic", ESMF_LOGMSG_INFO)
 
-  ! ! Make glacier fraction [pctgla] from [fglacier] dataset
-  ! call mkglacier ( mapfname=map_fglacier, datfname=mksrf_fglacier, ndiag=ndiag, zero_out=all_urban.or.all_veg, glac_o=pctgla)
+  ! Make urban fraction [pcturb] from [furban] dataset
+  ! call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, &
+  !      zero_out=all_veg, urbn_o=pcturb, urban_classes_o=urban_classes, region_o=urban_region, rc=rc)
+  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
 
-  ! ! Make glacier region ID [glacier_region] from [fglacierregion] dataset
-  ! call mkglacierregion ( mapfname=map_fglacierregion, &
-  !      datfname=mksrf_fglacierregion, ndiag=ndiag, glacier_region_o = glacier_region)
+  ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
+  ! zero_out_lake = all_urban .or. all_veg
+  ! zero_out_wetland = all_urban .or. all_veg .or. no_inlandwet
+  ! call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
+  !      zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
+  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
+  ! call ESMF_LogWrite("After mklakwat", ESMF_LOGMSG_INFO)
 
-  ! ! Make soil texture [pctsand, pctclay]  [fsoitex]
-  ! call mksoiltex ( mapfname=map_fsoitex, datfname=mksrf_fsoitex, ndiag=ndiag, sand_o=pctsand, clay_o=pctclay)
+#ifdef TODO
+  ! Make glacier fraction [pctgla] from [fglacier] dataset
+  call mkglacier ( mapfname=map_fglacier, datfname=mksrf_fglacier, ndiag=ndiag, zero_out=all_urban.or.all_veg, glac_o=pctgla)
 
-  ! ! Make soil color classes [soicol] [fsoicol]
-  ! call mksoicol ( mapfname=map_fsoicol, datfname=mksrf_fsoicol, ndiag=ndiag, soil_color_o=soicol, nsoicol=nsoicol)
+  ! Make glacier region ID [glacier_region] from [fglacierregion] dataset
+  call mkglacierregion ( mapfname=map_fglacierregion, &
+       datfname=mksrf_fglacierregion, ndiag=ndiag, glacier_region_o = glacier_region)
 
-  ! ! Make fmax [fmax] from [fmax] dataset
-  ! allocate(fmax(lsize_o)); fmax(:) = spval
-  ! call mkfmax ( mapfname=map_fmax, datfname=mksrf_fmax, ndiag=ndiag, fmax_o=fmax)
+  ! Make soil texture [pctsand, pctclay]  [fsoitex]
+  call mksoiltex ( mapfname=map_fsoitex, datfname=mksrf_fsoitex, ndiag=ndiag, sand_o=pctsand, clay_o=pctclay)
 
-  ! ! Make GDP data [gdp] from [gdp]
-  ! call mkgdp ( mapfname=map_fgdp, datfname=mksrf_fgdp, ndiag=ndiag, gdp_o=gdp)
+  ! Make soil color classes [soicol] [fsoicol]
+  call mksoicol ( mapfname=map_fsoicol, datfname=mksrf_fsoicol, ndiag=ndiag, soil_color_o=soicol, nsoicol=nsoicol)
 
-  ! ! Make peat data [fpeat] from [peatf]
-  ! call mkpeat ( mapfname=map_fpeat, datfname=mksrf_fpeat, ndiag=ndiag, peat_o=fpeat)
+  ! Make fmax [fmax] from [fmax] dataset
+  allocate(fmax(lsize_o)); fmax(:) = spval
+  call mkfmax ( mapfname=map_fmax, datfname=mksrf_fmax, ndiag=ndiag, fmax_o=fmax)
 
-  ! ! Make soil depth data [soildepth] from [soildepthf]
-  ! call mksoildepth ( mapfname=map_fsoildepth, datfname=mksrf_fsoildepth, ndiag=ndiag, soildepth_o=soildepth)
+  ! Make GDP data [gdp] from [gdp]
+  call mkgdp ( mapfname=map_fgdp, datfname=mksrf_fgdp, ndiag=ndiag, gdp_o=gdp)
 
-  ! ! Make agricultural fire peak month data [abm] from [abm]
-  ! call mkagfirepkmon ( mapfname=map_fabm, datfname=mksrf_fabm, ndiag=ndiag, agfirepkmon_o=agfirepkmon)
+  ! Make peat data [fpeat] from [peatf]
+  call mkpeat ( mapfname=map_fpeat, datfname=mksrf_fpeat, ndiag=ndiag, peat_o=fpeat)
 
-  ! ! Make urban fraction [pcturb] from [furban] dataset
-  ! call mkurban ( mapfname=map_furban, datfname=mksrf_furban, &
-  !      ndiag=ndiag, zero_out=all_veg, urbn_o=pcturb, urbn_classes_o=urbn_classes, region_o=urban_region)
+  ! Make soil depth data [soildepth] from [soildepthf]
+  call mksoildepth ( mapfname=map_fsoildepth, datfname=mksrf_fsoildepth, ndiag=ndiag, soildepth_o=soildepth)
 
-  ! ! Make elevation [elev] from [ftopo, ffrac] dataset
-  ! ! Used only to screen pcturb, screen pcturb by elevation threshold from elev dataset
-  ! if ( .not. all_urban .and. .not. all_veg )then
-  !    allocate(elev(lsize_o))
-  !    elev(:) = spval
-  !    ! NOTE(wjs, 2016-01-15) This uses the 'TOPO_ICE' variable for historical reasons
-  !    ! (this same dataset used to be used for glacier-related purposes as well).
-  !    ! TODO(wjs, 2016-01-15) A better solution for this urban screening would probably
-  !    ! be to modify the raw urban data; in that case, I believe we could remove furbtopo.
-  !    call mkelev ( mapfname=map_furbtopo, datfname=mksrf_furbtopo, varname='TOPO_ICE', ndiag=ndiag, elev_o=elev)
-  !    where (elev .gt. elev_thresh)
-  !       pcturb = 0._r8
-  !    end where
-  !    deallocate(elev)
-  ! end if
+  ! Make agricultural fire peak month data [abm] from [abm]
+  call mkagfirepkmon ( mapfname=map_fabm, datfname=mksrf_fabm, ndiag=ndiag, agfirepkmon_o=agfirepkmon)
+#endif
 
-  ! ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
-  ! call mktopostats ( mapfname=map_ftopostats, datfname=mksrf_ftopostats, &
-  !      ndiag=ndiag, topo_stddev_o=topo_stddev, slope_o=slope, std_elev=std_elev)
+#ifdef TODO
+  ! Make elevation [elev] from [ftopo, ffrac] dataset
+  ! Used only to screen pcturb, screen pcturb by elevation threshold from elev dataset
+  if ( .not. all_urban .and. .not. all_veg )then
+     allocate(elev(lsize_o))
+     elev(:) = spval
+     ! NOTE(wjs, 2016-01-15) This uses the 'TOPO_ICE' variable for historical reasons
+     ! (this same dataset used to be used for glacier-related purposes as well).
+     ! TODO(wjs, 2016-01-15) A better solution for this urban screening would probably
+     ! be to modify the raw urban data; in that case, I believe we could remove furbtopo.
+     call mkelev ( mapfname=map_furbtopo, datfname=mksrf_furbtopo, varname='TOPO_ICE', ndiag=ndiag, elev_o=elev)
+     where (elev .gt. elev_thresh)
+        pcturb = 0._r8
+     end where
+     deallocate(elev)
+  end if
 
-  ! ! Make VIC parameters [binfl, ws, dsmax, ds] from [fvic]
-  ! if ( outnc_vic )then
-  !    call mkVICparams ( mapfname=map_fvic, datfname=mksrf_fvic, ndiag=ndiag, &
-  !         binfl_o=vic_binfl, ws_o=vic_ws, dsmax_o=vic_dsmax, ds_o=vic_ds)
-  ! end if
+  ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
+  call mktopostats ( mapfname=map_ftopostats, datfname=mksrf_ftopostats, &
+       ndiag=ndiag, topo_stddev_o=topo_stddev, slope_o=slope, std_elev=std_elev)
 
+  ! Make VIC parameters [binfl, ws, dsmax, ds] from [fvic]
+  if ( outnc_vic )then
+     call mkVICparams ( mapfname=map_fvic, datfname=mksrf_fvic, ndiag=ndiag, &
+          binfl_o=vic_binfl, ws_o=vic_ws, dsmax_o=vic_dsmax, ds_o=vic_ds)
+  end if
 
-  ! ! Make VOC emission factors for isoprene &
-  ! ! [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp]
-  ! allocate ( ef1_btr(lsize_o) , &
-  !      ef1_fet(lsize_o) , &
-  !      ef1_fdt(lsize_o) , &
-  !      ef1_shr(lsize_o) , &
-  !      ef1_grs(lsize_o) , &
-  !      ef1_crp(lsize_o) )
-  ! ef1_btr(:) = 0._r8
-  ! ef1_fet(:) = 0._r8
-  ! ef1_fdt(:) = 0._r8
-  ! ef1_shr(:) = 0._r8
-  ! ef1_grs(:) = 0._r8
-  ! ef1_crp(:) = 0._r8
+  ! Make VOC emission factors for isoprene [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp]
+  call mkvocef ( mapfname=map_fvocef, datfname=mksrf_fvocef, ndiag=ndiag, &
+       ef_btr_o=ef1_btr, ef_fet_o=ef1_fet, ef_fdt_o=ef1_fdt,  &
+       ef_shr_o=ef1_shr, ef_grs_o=ef1_grs, ef_crp_o=ef1_crp)
 
-  ! call mkvocef ( mapfname=map_fvocef, datfname=mksrf_fvocef, ndiag=ndiag, &
-  !      ef_btr_o=ef1_btr, ef_fet_o=ef1_fet, ef_fdt_o=ef1_fdt,  &
-  !      ef_shr_o=ef1_shr, ef_grs_o=ef1_grs, ef_crp_o=ef1_crp)
-
-  ! ! Do landuse changes such as for the poles, etc.
-  ! call change_landuse(  dynpft=.false. )
+  ! Do landuse changes such as for the poles, etc.
+  call change_landuse(  dynpft=.false. )
+#endif
 
   ! ----------------------------------------------------------------------
   ! Modify interpolated fields based on additional constrants
@@ -568,24 +583,20 @@ program mksurfdata
   ! Make final values of percent urban by class
   ! This call needs to occur after all corrections are made to pcturb
 
-  call normalize_classes_by_gcell(urbn_classes, pcturb, urbn_classes_g)
+  call normalize_classes_by_gcell(urban_classes, pcturb, urban_classes_g)
 
+  ! ----------------------------------------------------------------------
   ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier] dataset
+  ! ----------------------------------------------------------------------
+
   ! This call needs to occur after pctgla has been adjusted for the final time
 
-  allocate (pctglcmec(lsize_o,nglcec), &
-            topoglcmec(lsize_o,nglcec) )
   if ( outnc_3dglc )then
-     allocate( pctglcmec_gic(lsize_o,nglcec), &
-               pctglcmec_icesheet(lsize_o,nglcec))
-     allocate (pctglc_gic(lsize_o))
-     allocate (pctglc_icesheet(lsize_o))
-  end if
+     allocate(pctglcmec_gic(lsize_o,nglcec))
+     allocate(pctglcmec_icesheet(lsize_o,nglcec))
+     allocate(pctglc_gic(lsize_o))
+     allocate(pctglc_icesheet(lsize_o))
 
-  pctglcmec(:,:)          = spval
-  topoglcmec(:,:)         = spval
-
-  if ( outnc_3dglc )then
      call mkglcmec ( mapfname=map_fglacier, &
           datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
           pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
@@ -628,7 +639,8 @@ program mksurfdata
     !call mkfile_fsurdat( mksrf_fgrid_mesh_nx, mksrf_fgrid_mesh_ny, mesh_model, dynlanduse=.false., harvdata)
      call ESMF_LogWrite("Calling mkfile_fsurdat", ESMF_LOGMSG_INFO)
      call mkfile_fsurdat( mksrf_fgrid_mesh_nx, mksrf_fgrid_mesh_ny, mesh_model, dynlanduse=.false., &
-          pctlak=pctlak, pctwet=pctwet, lakedepth=lakedepth, organic=organic) 
+          pctlak=pctlak, pctwet=pctwet, lakedepth=lakedepth, organic=organic, &
+          urban_classes=urban_classes, urban_region=urban_region)
      call ESMF_LogWrite(subname//'successfully created file '//trim(fsurdat), ESMF_LOGMSG_INFO)
   end if  ! if (fsurdat /= ' ')
 
@@ -1166,8 +1178,8 @@ program mksurfdata
       ! (Also note that we don't need to check pctnatpft or pctcft, because a similar check
       ! is done internally by the pct_pft_type routines.)
       do n = 1,ns_o
-         if (abs(sum(urbn_classes(n,:)) - 100._r8) > 1.e-12_r8) then
-            write(6,*) 'sum(urbn_classes(n,:)) != 100: ', n, sum(urbn_classes(n,:))
+         if (abs(sum(urban_classes(n,:)) - 100._r8) > 1.e-12_r8) then
+            write(6,*) 'sum(urban_classes(n,:)) != 100: ', n, sum(urban_classes(n,:))
             call shr_sys_abort()
          end if
       end do

@@ -136,7 +136,7 @@ contains
 !-----------------------------------------------------------------------
     if ( size(dims2nd) /= numharv )then
        write(*,*) subname//':ERROR:: dims2nd given to init is not the right size'
-       call abort()
+       call shr_sys_abort()
     end if
     this%CFTdimsize = 64
     this%PFTdimsize = 15
@@ -162,7 +162,7 @@ contains
              this%indicesPFT(n) = numPFT
           else
              write(*,*) 'ERROR:: dims2nd is not the right size (should be 0, 15, or 64) = ', dims2nd(n)
-             call abort()
+             call shr_sys_abort()
           end if
        end if
     end do
@@ -225,7 +225,7 @@ contains
           ptr1D => this%OutData1D(:,this%indices1D(nfield))
        end if
     else
-       call abort()
+       call shr_sys_abort()
     end if
   end function get1DFieldPtr
 
@@ -276,7 +276,7 @@ contains
           end if
        end if
     else
-       call abort()
+       call shr_sys_abort()
     end if
   end function get2DFieldPtr
 
@@ -394,7 +394,7 @@ contains
     if ( mkharvest_fieldInBounds( nfield ) )then
        if ( this%dims2nd(nfield) == 0 ) isField1D = .true.
     else
-       call abort()
+       call shr_sys_abort()
     end if
   end function isField1D
 
@@ -429,7 +429,7 @@ contains
     if ( mkharvest_fieldInBounds( nfield ) )then
        if ( this%dims2nd(nfield) /= 0 ) isField2D = .true.
     else
-       call abort()
+       call shr_sys_abort()
     end if
   end function isField2D
 
@@ -555,14 +555,14 @@ contains
           else if ( ret == nf_noerr )then
           else
              write(*,*) 'ERROR:: bad return code from NetCDF get attribute= '// nf_strerror(ret)
-             call abort()
+             call shr_sys_abort()
           end if
           call get_dim_lengths(ncid, mkharvest_fieldname(ifld, constant=lconstant), ndims, dim_lengths)
           if ( ns_i == 0 )then
              ns_i = dim_lengths(1)*dim_lengths(2)
           else if ( ns_i /= dim_lengths(1)*dim_lengths(2) )then
              write(*,*) 'ERROR:: bad dimension sizes for variable = ', mkharvest_fieldname(ifld, constant=lconstant)
-             call abort()
+             call shr_sys_abort()
           end if
           if (      ndims == 2 )then
              dims2nd(ifld) = 0
@@ -570,7 +570,7 @@ contains
              dims2nd(ifld) = dim_lengths(3)
           else
              write(*,*) 'ERROR:: bad dimensionality for variable = ', mkharvest_fieldname(ifld, constant=lconstant)
-             call abort()
+             call shr_sys_abort()
           end if
              
        end if
@@ -663,7 +663,7 @@ contains
             mkharvest_fieldname = harvest_const_fieldnames(nfield)
          end if
       else
-         call abort()
+         call shr_sys_abort()
       end if
 
   end function mkharvest_fieldname
@@ -699,7 +699,7 @@ contains
       if ( mkharvest_fieldInBounds( nfield ) )then
          mkharvest_units    = harvest_units(nfield)
       else
-         call abort()
+         call shr_sys_abort()
       end if
 
   end function mkharvest_units
@@ -735,7 +735,7 @@ contains
       if ( mkharvest_fieldInBounds( nfield ) )then
          mkharvest_longname = harvest_longnames(nfield)
       else
-         call abort()
+         call shr_sys_abort()
       end if
 
   end function mkharvest_longname
@@ -896,7 +896,7 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harvdata)
      ns_i = tdomain%ns
      ns_o = ldomain%ns
      allocate(frac_dst(ns_o), stat=ier)
-     if (ier /= 0) call abort()
+     if (ier /= 0) call shr_sys_abort()
 
      write (6,*) 'Open harvest file: ', trim(datfname)
      call check_ret(nf_open(datfname, 0, ncid), subname)
@@ -1016,14 +1016,14 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harvdata)
      if ( any(oride_harv == real_undef ) )then
          write(6,*) subname, ' error some override harvesting fields set ', &
                     'and others are not = ', oride_harv
-         call abort()
+         call shr_sys_abort()
      end if
      do k = 1, harvdata%num1Dfields()
         m = ind1D(k)
         if ( oride_harv(m) < 0.0_r8 .or. oride_harv(m) > 100.0_r8 )then
             write(6,*) subname, ' error override harvesting field out of range', &
                        oride_harv(m), ' field = ', mkharvest_fieldname(m)
-            call abort()
+            call shr_sys_abort()
         end if
      end do
      do no = 1,ns_o
@@ -1079,18 +1079,18 @@ subroutine mkharvest_parse_oride( string )
   call shr_string_betweenTags( string, harv_start, harv_end, substring, rc )
   if ( rc /= 0 )then
      write(6,*) subname//'Trouble finding harvest start end tags'
-     call abort()
+     call shr_sys_abort()
   end if
   read(substring,*) oride_harv(1:numharv-1)
   call shr_string_betweenTags( string, graz_start, graz_end, substring, rc )
   if ( rc /= 0 )then
      write(6,*) subname//'Trouble finding grazing start end tags'
-     call abort()
+     call shr_sys_abort()
   end if
   read(substring,*) oride_harv(numharv)
   if ( harvest_fieldnames(numharv) /= 'GRAZING' )then
      write(6,*) subname, ' grazing is NOT last field as was expected'
-     call abort()
+     call shr_sys_abort()
   end if
 
 !-----------------------------------------------------------------------

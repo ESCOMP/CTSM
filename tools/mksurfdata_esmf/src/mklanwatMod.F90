@@ -9,7 +9,7 @@ module mklanwatMod
   use pio
   use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_sys_mod  , only : shr_sys_abort
-  use mkvarpar     , only : re	
+  use mkvarpar     , only : re
   use mkpioMod     , only : mkpio_get_rawdata, pio_iotype, pio_ioformat, pio_iosystem
   use mkesmfMod    , only : regrid_rawdata
   use mkutilsMod   , only : chkerr
@@ -127,7 +127,7 @@ contains
        ! Read in the input data
        allocate(lake_i(ns_i), stat=rcode)
        if (rcode/=0) call shr_sys_abort()
-       call mkpio_get_rawdata(pioid, 'PCT_LAKE', mesh_i, lake_i, scale_by_landmask=.true., rc=rc)  
+       call mkpio_get_rawdata(pioid, 'PCT_LAKE', mesh_i, lake_i, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! Regrid lake_i to lake_o - this also returns lake_i to be used in the global sums below
@@ -159,7 +159,7 @@ contains
        ! read in rawdata
        allocate(swmp_i(ns_i), stat=rcode)
        if (rcode/=0) call shr_sys_abort()
-       call mkpio_get_rawdata(pioid, 'PCT_WETLAND', mesh_i, lake_i, scale_by_landmask=.true., rc=rc)  
+       call mkpio_get_rawdata(pioid, 'PCT_WETLAND', mesh_i, lake_i, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! regrid swmp_i to swmp_o - this also returns swmp_i to be used in the global sums below
@@ -190,7 +190,7 @@ contains
     ! read in rawdata
     allocate(lakedepth_i(ns_i), stat=rcode)
     if (rcode/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'LAKEDEPTH', mesh_i, lakedepth_i, scale_by_landmask=.true., rc=rc)  
+    call mkpio_get_rawdata(pioid, 'LAKEDEPTH', mesh_i, lakedepth_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! regrid lakedepth_i to lakedepth_o - this also returns lakedepth_i to be used in the global sums below

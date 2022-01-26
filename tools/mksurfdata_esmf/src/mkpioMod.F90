@@ -24,8 +24,9 @@ module mkpioMod
   private :: mkpio_defvar
 
   interface mkpio_get_rawdata
-     module procedure mkpio_get_rawdata1d
-     module procedure mkpio_get_rawdata2d
+     module procedure mkpio_get_rawdata1d_int
+     module procedure mkpio_get_rawdata1d_real
+     module procedure mkpio_get_rawdata2d_real
   end interface mkpio_get_rawdata
 
   interface mkpio_def_spatial_var
@@ -50,14 +51,55 @@ module mkpioMod
 contains
 !===============================================================
 
-  subroutine mkpio_get_rawdata1d(pioid, varname, mesh_i, data_i, scale_by_landmask, rc)
+  subroutine mkpio_get_rawdata1d_int(pioid, varname, mesh_i, data_i, rc)
+
+    ! input/output variables
+    type(file_desc_t), intent(inout) :: pioid
+    character(len=*) , intent(in)    :: varname   ! field name in rawdata file
+    type(ESMF_Mesh)  , intent(in)    :: mesh_i
+    integer          , intent(inout) :: data_i(:) ! input raw data
+    integer          , intent(out)   :: rc
+
+    ! local variables
+    type(var_desc_t)       :: pio_varid
+    integer                :: pio_vartype
+    type(io_desc_t)        :: pio_iodesc_data
+    type(io_desc_t)        :: pio_iodesc_mask
+    integer                :: lsize
+    integer                :: rcode
+    integer                :: n
+    character(len=*), parameter :: subname = 'mkpio_get_rawdata1d'
+    !-------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    ! Get data_i - Read in varname from filename
+    lsize = size(data_i)
+
+    ! Create io descriptor for input raw data
+    ! This will query the raw data file for the dimensions of the variable varname and
+    ! create iodesc for either single or multi level input data
+    call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc_data, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Read the input raw data
+    call ESMF_VMLogMemInfo("After mkpio_iodesc_data for varname "//trim(varname))
+    call pio_read_darray(pioid, pio_varid, pio_iodesc_data, data_i, rcode)
+    call ESMF_VMLogMemInfo("After call to pio_read_darrayy for varname "//trim(varname))
+    call pio_freedecomp(pioid, pio_iodesc_data)
+    call ESMF_VMLogMemInfo("After call to pio_freedecomp for "//trim(varname))
+    call ESMF_LogWrite("At end of "//trim(subname), ESMF_LOGMSG_INFO)
+
+  end subroutine mkpio_get_rawdata1d_int
+
+  !===============================================================
+  subroutine mkpio_get_rawdata1d_real(pioid, varname, mesh_i, data_i, rc)
 
     ! input/output variables
     type(file_desc_t), intent(inout) :: pioid
     character(len=*) , intent(in)    :: varname   ! field name in rawdata file
     type(ESMF_Mesh)  , intent(in)    :: mesh_i
     real(r8)         , intent(inout) :: data_i(:) ! input raw data
-    logical          , intent(in)    :: scale_by_landmask
     integer          , intent(out)   :: rc
 
     ! local variables
@@ -108,32 +150,16 @@ contains
     call pio_freedecomp(pioid, pio_iodesc_data)
     call ESMF_VMLogMemInfo("After call to pio_freedecomp for "//trim(varname))
 
-    ! Read in the variable LANDMASK and scale the input data by landmask if appropriate
-    ! if (scale_by_landmask) then
-    !    call mkpio_iodesc_rawdata(mesh_i, 'LANDMASK', pioid, pio_varid, pio_vartype, pio_iodesc_mask, rc)
-    !    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    !    allocate(landmask(lsize))
-    !    call pio_read_darray(pioid, pio_varid, pio_iodesc_mask, landmask, rcode)
-    !    do n = 1,lsize
-    !       data_i(n) = data_i(n)*landmask(n)
-    !    end do
-    !    deallocate(landmask)
-    !    call pio_freedecomp(pioid, pio_iodesc_mask)
-    ! end if
-
-    call ESMF_VMLogMemInfo("At end of "//trim(subname))
-
-  end subroutine mkpio_get_rawdata1d
+  end subroutine mkpio_get_rawdata1d_real
 
   !===============================================================
-  subroutine mkpio_get_rawdata2d(pioid, varname, mesh_i, data_i, scale_by_landmask, rc)
+  subroutine mkpio_get_rawdata2d_real(pioid, varname, mesh_i, data_i, rc)
 
     ! input/output variables
     type(file_desc_t) , intent(inout) :: pioid
     character(len=*)  , intent(in)    :: varname   ! field name in rawdata file
     type(ESMF_Mesh)   , intent(in)    :: mesh_i
     real(r8)          , intent(inout) :: data_i(:,:) ! input raw data
-    logical, optional , intent(in)    :: scale_by_landmask
     integer           , intent(out)   :: rc
 
     ! local variables
@@ -194,39 +220,7 @@ contains
     end if
     call pio_freedecomp(pioid, pio_iodesc_data)
 
-    ! Read in the variable LANDMASK and scale the input data by landmask if appropriate
-    if (scale_by_landmask) then
-       call mkpio_iodesc_rawdata(mesh_i, 'LANDMASK', pioid, pio_varid, pio_vartype, pio_iodesc_mask, rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-       call ESMF_LogWrite("Reading ing LANDMASK", ESMF_LOGMSG_INFO)
-       allocate(landmask(lsize))
-       if (pio_vartype == PIO_REAL) then
-          allocate(data_real1d(lsize))
-          call pio_read_darray(pioid, pio_varid, pio_iodesc_mask, data_real1d, rcode)
-          do n = 1,lsize
-             landmask(n) = data_real1d(n)
-          end do
-          deallocate(data_real1d)
-       else if (pio_vartype == PIO_DOUBLE) then
-          allocate(data_double1d(lsize))
-          call pio_read_darray(pioid, pio_varid, pio_iodesc_mask, data_double1d, rcode)
-          do n = 1,lsize
-             landmask(n) = real(data_double1d(n), kind=r4)
-          end do
-          deallocate(data_double1d)
-       end if
-       do l = 1,nlev
-          do n = 1,lsize
-             data_i(l,n) = data_i(l,n) * landmask(n)
-          end do
-       end do
-       call ESMF_LogWrite("Finished read in LANDMASK", ESMF_LOGMSG_INFO)
-       deallocate(landmask)
-       call pio_freedecomp(pioid, pio_iodesc_mask)
-    end if
-
-  end subroutine mkpio_get_rawdata2d
+  end subroutine mkpio_get_rawdata2d_real
 
   !===============================================================
   subroutine mkpio_iodesc_rawdata( mesh, varname, pioid, pio_varid,  pio_vartype, pio_iodesc, rc)

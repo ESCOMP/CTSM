@@ -1,10 +1,6 @@
 module mkurbanparCommonMod
+  
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !MODULE: mkurbanparCommon
-  !
-  ! !DESCRIPTION:
   ! Common routines for making urban parameter data, independent of the method used for
   ! making the urban parameters (e.g., averages, dominant type, etc.)
   !
@@ -13,136 +9,27 @@ module mkurbanparCommonMod
   ! separate mkurbanparCommonMod in case a similar split comes back in the future. However,
   ! if such a split seems unlikely in the future, these routines could be moved back into
   ! mkurbanparMod.)
-  !
-  ! !REVISION HISTORY:
-  ! Author: Bill Sacks
-  !
   !-----------------------------------------------------------------------
-  ! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  implicit none
 
+  use shr_kind_mod, only : r8 => shr_kind_r8
+
+  implicit none
   private
 
-  ! !PUBLIC MEMBER FUNCTIONS:
-  public :: mkurban_pct             ! Make output urban %, given input urban %
-  public :: mkurban_pct_diagnostics ! print diagnostics related to pct urban
-  public :: mkelev                  ! Get elevation to reduce urban for high elevation areas
-  !
-  ! !PUBLIC DATA MEMBERS:
-  !
-  real(r8), parameter :: MIN_DENS = 0.1_r8       ! minimum urban density (% of grid cell) - below this value, urban % is set to 0
+  ! !public member functions:
+#ifdef TODO
+  public :: mkurban_pct_diagnostics        ! print diagnostics related to pct urban
+  public :: mkelev                         ! Get elevation to reduce urban for high elevation areas
+#endif
+
+  ! !public data members:
+  real(r8), parameter :: MIN_DENS = 0.1_r8 ! minimum urban density (% of grid cell) - below this value, urban % is set to 0
 
   public :: MIN_DENS
-  !
-  !EOP
 
+#ifdef TODO
 contains
 
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkurban_pct
-  !
-  ! !INTERFACE:
-  subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o, frac_dst)
-    !
-    ! !DESCRIPTION:
-    ! make percent urban on output grid, given percent urban on input grid
-    !
-    ! This assumes that we're neither using all_urban or zero_out
-    !
-    !
-    ! !USES:
-    use mkdomainMod , only : domain_type, domain_checksame
-    use mkgridmapMod
-    use mkvarctl    , only : mksrf_gridtype
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(domain_type) , intent(in) :: ldomain
-    type(domain_type) , intent(in) :: tdomain    ! local domain
-    type(gridmap_type), intent(in) :: tgridmap   ! local gridmap
-    real(r8)          , intent(in) :: urbn_i(:)  ! input grid: percent urban
-    real(r8)          , intent(in) :: frac_dst(:)  ! output fractions
-    real(r8)          , intent(out):: urbn_o(:)  ! output grid: percent urban
-    !
-    ! !REVISION HISTORY:
-    ! Author: Bill Sacks
-    ! (Moved from mkurbanparMod Feb, 2012)
-    !
-    !
-    ! !LOCAL VARIABLES:
-    !EOP
-    integer  :: ier  ! error status
-    real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
-    real(r8) :: sum_fldi                        ! global sum of dummy input fld
-    real(r8) :: sum_fldo                        ! global sum of dummy output fld
-    integer  :: ni,no                           ! indices
-    real(r8) :: relerr = 0.00001_r8             ! max error: sum overlap wts ne 1
-    character(len=*), parameter :: subname = 'mkurban_pct'
-    !-----------------------------------------------------------------------
-
-    ! Error checks for array size consistencies
-
-    if (size(urbn_i) /= tdomain%ns .or. &
-         size(urbn_o) /= ldomain%ns) then
-       write(6,*) subname//' ERROR: array size inconsistencies'
-       write(6,*) 'size(urbn_i) = ', size(urbn_i)
-       write(6,*) 'tdomain%ns   = ', tdomain%ns
-       write(6,*) 'size(urbn_o) = ', size(urbn_o)
-       write(6,*) 'ldomain%ns   = ', ldomain%ns
-       call shr_sys_abort()
-    end if
-    if (size(frac_dst) /= ldomain%ns) then
-       write(6,*) subname//' ERROR: array size inconsistencies'
-       write(6,*) 'size(frac_dst) = ', size(frac_dst)
-       write(6,*) 'ldomain%ns   = ', ldomain%ns
-       call shr_sys_abort()
-    end if
-
-    ! Error checks for domain and map consistencies
-
-    call domain_checksame( tdomain, ldomain, tgridmap )
-
-    ! Determine urbn_o on ouput grid:
-    ! Area-average percent cover on input grid to output grid 
-    ! and correct according to land landmask
-    ! Note that percent cover is in terms of total grid area.   
-
-    call gridmap_areaave_srcmask(tgridmap, urbn_i, urbn_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-
-    ! Check for conservation
-
-    do no = 1, ldomain%ns
-       if ((urbn_o(no)) > 100.000001_r8) then
-          write (6,*) 'MKURBAN error: urban = ',urbn_o(no), &
-               ' greater than 100.000001 for column, row = ',no
-          call shr_sys_abort()
-       end if
-    enddo
-
-    ! Global sum of output field -- must multiply by fraction of
-    ! output grid that is land as determined by input grid
-
-    allocate(mask_r8(tdomain%ns), stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    mask_r8 = tdomain%mask
-    call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
-
-    ! (Error check2 in mkurban_pct_diagnostics, which should be called separately)
-
-    deallocate (mask_r8)
-
-  end subroutine mkurban_pct
-  !-----------------------------------------------------------------------
-
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkurban_pct_diagnostics
-  !
-  ! !INTERFACE:
   subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, ndiag, dens_class, frac_dst)
     !
     ! !DESCRIPTION:
@@ -245,17 +132,10 @@ contains
 2004 format (1x,'all surface ',f14.3,f17.3)
 
   end subroutine mkurban_pct_diagnostics
-  !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkelev
-  !
-  ! !INTERFACE:
   subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
     !
-    ! !DESCRIPTION:
     ! Make elevation data
     !
     ! !USES:
@@ -267,27 +147,16 @@ contains
     use mkdiagnosticsMod, only : output_diagnostics_continuous
     !
     ! !ARGUMENTS:
-    implicit none
     type(domain_type), intent(in) :: ldomain
     character(len=*)  , intent(in) :: mapfname  ! input mapping file name
     character(len=*)  , intent(in) :: datfname  ! input data file name
     integer           , intent(in) :: ndiag     ! unit number for diag out
     character(len=*)  , intent(in) :: varname   ! topo variable name
     real(r8)          , intent(out):: elev_o(:) ! output elevation data
-    !
-    !
-    ! !CALLED FROM:
-    ! subroutine mksrfdat in module mksrfdatMod
-    !
-    ! !REVISION HISTORY:
-    ! Author: Keith Oleson
-    !
-    !
+
     ! !LOCAL VARIABLES:
-    !EOP
     type(domain_type)     :: tdomain            ! local domain
     type(gridmap_type)    :: tgridmap           ! local gridmap
-
     real(r8), allocatable :: elev_i(:)          ! canyon_height to width ratio in
     real(r8), allocatable :: frac_dst(:)        ! output fractions
     integer  :: ns_i,ns_o                       ! indices
@@ -356,5 +225,7 @@ contains
     write (6,*)
 
   end subroutine mkelev
+#endif
 
-  module mkurbanparCommonMod
+end module mkurbanparCommonMod
+

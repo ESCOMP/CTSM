@@ -6,8 +6,8 @@ module mkfileMod
   use shr_sys_mod  , only : shr_sys_getenv, shr_sys_abort
   use mkutilsMod   , only : get_filename, chkerr
   use mkvarpar     , only : nlevsoi, numrad, numstdpft
-#ifdef TODO
   use mkurbanparMod, only : numurbl, nlevurb
+#ifdef TODO
   use mkglcmecMod  , only : nglcec
   use mkpftMod     , only : mkpftAtt
   use mksoilMod    , only : mksoilAtt
@@ -20,6 +20,12 @@ module mkfileMod
   implicit none
   private
 
+  interface mkfile_output
+     module procedure mkfile_output_int1d
+     module procedure mkfile_output_real1d
+     module procedure mkfile_output_real2d
+  end interface mkfile_output
+
   public :: mkfile_fsurdat
 
   character(len=*) , parameter :: u_FILE_u = &
@@ -29,22 +35,23 @@ module mkfileMod
 contains
 !=================================================================================
 
-  subroutine mkfile_fsurdat(nx, ny, mesh_model, dynlanduse, &
-       pctlak, pctwet, lakedepth, organic)
+  subroutine mkfile_fsurdat(nx, ny, mesh_o, dynlanduse, &
+       pctlak, pctwet, lakedepth, organic, urban_classes, urban_region)
 
     ! input/output variables
     integer          , intent(in) :: nx
     integer          , intent(in) :: ny
     logical          , intent(in) :: dynlanduse
-    type(ESMF_Mesh)  , intent(in) :: mesh_model
+    type(ESMF_Mesh)  , intent(in) :: mesh_o
     real(r8), pointer, intent(in) :: pctlak(:)               ! percent of grid cell that is lake
     real(r8), pointer, intent(in) :: pctwet(:)               ! percent of grid cell that is wetland
     real(r8), pointer, intent(in) :: lakedepth(:)            ! lake depth (m)
     real(r8), pointer, intent(in) :: organic(:,:)            ! organic
+    real(r8), pointer, intent(in) :: urban_classes(:,:)      ! percent cover of each urban class, as % of total urban area
+    integer , pointer, intent(in) :: urban_region(:)         ! urban region ID
 #ifdef TODO
     type(harvestDataType) , intent(in) :: harvdata
 #endif
-
 
     ! local variables
     type(file_desc_t)    :: pioid
@@ -58,11 +65,7 @@ contains
     integer              :: rc
     integer              :: n, i
     logical              :: define_mode
-    type(io_desc_t)      :: pio_iodesc
-    type(var_desc_t)     :: pio_varid
     character(len=256)   :: lev1name
-    real(r8), pointer    :: rpointer1d(:)
-    real(r8), pointer    :: rpointer2d(:,:)
     character(len=*), parameter :: subname=' (mkfile_fsurdat) '
     !-----------------------------------------------------------------------
 
@@ -101,64 +104,29 @@ contains
 
        if (.not. dynlanduse) then
 
-          varname = 'PCT_LAKE'
-          longname = 'percent_lake'
-          units = 'unitless'
-          rpointer1d => pctlak
-          if (define_mode) then
-             call mkpio_def_spatial_var(pioid, trim(varname), xtype, trim(longname), trim(units))
-          else
-             call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-             if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-             rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
-             call pio_write_darray(pioid, pio_varid, pio_iodesc, rpointer1d, rcode)
-             call pio_freedecomp(pioid, pio_iodesc)
-          end if
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_LAKE', 'percent_lake', &
+               'unitless', pctlak, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          varname = 'PCT_WETLAND'
-          longname = 'percent_wetland'
-          units = 'unitless'
-          rpointer1d => pctwet
-          if (define_mode) then
-             call mkpio_def_spatial_var(pioid, trim(varname), xtype, trim(longname), trim(units))
-          else
-             call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-             if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-             rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
-             call pio_write_darray(pioid, pio_varid, pio_iodesc, rpointer1d, rcode)
-             call pio_freedecomp(pioid, pio_iodesc)
-          end if
+          call mkfile_output(pioid,define_mode, mesh_o, xtype, 'PCT_WETLAND', 'percent_wetland', &
+               'unitless', pctwet, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          varname = 'LAKEDEPTH'
-          longname = 'lake depth'
-          units = 'm'
-          rpointer1d => lakedepth
-          if (define_mode) then
-             call mkpio_def_spatial_var(pioid, trim(varname), xtype, trim(longname), trim(units))
-          else
-             ! inquire about varid here
-             call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-             if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-             rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
-             call pio_write_darray(pioid, pio_varid, pio_iodesc, rpointer1d, rcode)
-             call pio_freedecomp(pioid, pio_iodesc)
-          end if
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'LAKEDEPTH', 'lake_depth', &
+               'm', lakedepth, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          varname = 'ORGANIC'
-          longname = 'organic matter density at soil levels'
-          units = 'kg/m3 (assumed carbon content 0.58 gC per gOM)'
-          lev1name = 'nlevsoi'
-          rpointer2d => organic
-          if (define_mode) then
-             call mkpio_def_spatial_var(pioid, trim(varname), xtype, trim(lev1name), trim(longname), trim(units))
-          else
-             ! inquire about varid here
-             call mkpio_iodesc_output(pioid, mesh_model, trim(varname), pio_iodesc, rc)
-             if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-             rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
-             call pio_write_darray(pioid, pio_varid, pio_iodesc, rpointer2d, rcode)
-             call pio_freedecomp(pioid, pio_iodesc)
-          end if
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'ORGANIC', 'organic matter density at soil levels', &
+               'kg/m3 (assumed carbon content 0.58 gC per gOM)', organic, lev1name='nlevsoi', rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          ! call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_URBAN', 'percent urban for each density type', &
+          !      'unitless', urban_classes, lev1name='numurbl', rc=rc)
+          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          ! call mkfile_output(pioid, define_mode, mesh_o, 'URBAN_REGION_ID', 'urban region ID', &
+          !      'unitless', urban_region, rc=rc)
+          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        end if
     end do
@@ -206,17 +174,15 @@ contains
        rcode = pio_def_dim(pioid, 'nglcecp1', nglcec+1, dimid)
 #endif
     else
-#ifdef TODO
        rcode = pio_def_dim(pioid, 'numurbl', numurbl, dimid)
        rcode = pio_def_dim(pioid, 'nlevurb', nlevurb, dimid)
-#endif
        rcode = pio_def_dim(pioid, 'numrad' , numrad, dimid)
        rcode = pio_def_dim(pioid, 'nchar'  , 256, dimid)
     end if
 
   end subroutine mkfile_define_dims
 
-!=================================================================================
+  !=================================================================================
   subroutine mkfile_define_atts(pioid, dynlanduse)
 
     ! input/output variables
@@ -367,5 +333,104 @@ contains
     end if
 
   end subroutine mkfile_define_atts
+
+  !=================================================================================
+  subroutine mkfile_output_int1d(pioid, define_mode, mesh, varname, longname, units, ipointer, rc)
+
+    ! input/output variables
+    type(file_desc_t) , intent(inout)  :: pioid
+    logical           , intent(in)  :: define_mode
+    type(ESMF_Mesh)   , intent(in)  :: mesh
+    character(len=*)  , intent(in)  :: varname
+    character(len=*)  , intent(in)  :: longname
+    character(len=*)  , intent(in)  :: units
+    integer           , pointer     :: ipointer(:)
+    integer           , intent(out) :: rc
+
+    ! local variables
+    type(io_desc_t)      :: pio_iodesc
+    type(var_desc_t)     :: pio_varid
+    integer              :: rcode
+    !-----------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    if (define_mode) then
+       call mkpio_def_spatial_var(pioid, trim(varname), PIO_INT, trim(longname), trim(units))
+    else
+       call mkpio_iodesc_output(pioid, mesh, trim(varname), pio_iodesc, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
+       rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+       call pio_write_darray(pioid, pio_varid, pio_iodesc, ipointer, rcode)
+       call pio_freedecomp(pioid, pio_iodesc)
+    end if
+  end subroutine mkfile_output_int1d
+
+  !=================================================================================
+  subroutine mkfile_output_real1d(pioid, define_mode, mesh, xtype, varname, longname, units, rpointer, rc)
+
+    ! input/output variables
+    type(file_desc_t), intent(inout) :: pioid
+    logical         , intent(in)  :: define_mode
+    type(ESMF_Mesh) , intent(in) :: mesh
+    integer         , intent(in)  :: xtype
+    character(len=*), intent(in)  :: varname
+    character(len=*), intent(in)  :: longname
+    character(len=*), intent(in)  :: units
+    real(r8)        , pointer     :: rpointer(:)
+    integer         , intent(out) :: rc
+
+    ! local variables
+    type(io_desc_t)      :: pio_iodesc
+    type(var_desc_t)     :: pio_varid
+    integer              :: rcode
+    !-----------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    if (define_mode) then
+       call mkpio_def_spatial_var(pioid, trim(varname), xtype, trim(longname), trim(units))
+    else
+       call mkpio_iodesc_output(pioid, mesh, trim(varname), pio_iodesc, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
+       rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+       call pio_write_darray(pioid, pio_varid, pio_iodesc, rpointer, rcode)
+       call pio_freedecomp(pioid, pio_iodesc)
+    end if
+  end subroutine mkfile_output_real1d
+
+  !=================================================================================
+  subroutine mkfile_output_real2d(pioid, define_mode, mesh, xtype, varname, longname, units, rpointer, lev1name, rc)
+
+    ! input/output variables
+    type(file_desc_t), intent(inout) :: pioid
+    logical         , intent(in) :: define_mode
+    type(ESMF_Mesh) , intent(in) :: mesh
+    integer         , intent(in) :: xtype
+    character(len=*), intent(in) :: varname
+    character(len=*), intent(in) :: longname
+    character(len=*), intent(in) :: units
+    character(len=*), intent(in) :: lev1name
+    real(r8)        , pointer    :: rpointer(:,:)
+    integer         , intent(out) :: rc
+
+    ! local variables
+    type(io_desc_t)      :: pio_iodesc
+    type(var_desc_t)     :: pio_varid
+    integer              :: rcode
+    !-----------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    if (define_mode) then
+       call mkpio_def_spatial_var(pioid, trim(varname), xtype, trim(lev1name), trim(longname), trim(units))
+    else
+       call mkpio_iodesc_output(pioid, mesh, trim(varname), pio_iodesc, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
+       rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+       call pio_write_darray(pioid, pio_varid, pio_iodesc, rpointer, rcode)
+       call pio_freedecomp(pioid, pio_iodesc)
+    end if
+  end subroutine mkfile_output_real2d
 
 end module mkfileMod

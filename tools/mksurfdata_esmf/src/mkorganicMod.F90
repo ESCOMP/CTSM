@@ -55,6 +55,8 @@ contains
     real(r8), allocatable  :: data_i(:,:)
     real(r8), allocatable  :: data_o(:,:)
     character(len=256)     :: varname
+    real(r8), allocatable  :: frac_i(:)
+    real(r8), allocatable  :: frac_o(:)
     character(len=*), parameter :: subname = 'mkorganic'
     !-----------------------------------------------------------------------
 
@@ -73,7 +75,6 @@ contains
     call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Get dimensions of raw data. 
-    ! NOTE:
     !  - raw data is dimensions (lon,lat,lev) 
     !  - input read from pio has dimensions(n,lev)
     !  - esmf field dataptr has dimensions (lev,n)
@@ -107,7 +108,7 @@ contains
     ! Input data is read into (ns_i,nlay) array and then transferred to data_i(nlay,ns_i)
     allocate(data_i(nlay,ns_i),stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, varname, mesh_i, data_i, scale_by_landmask=.true., rc=rc)
+    call mkpio_get_rawdata(pioid, varname, mesh_i, data_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
@@ -132,20 +133,41 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
 
-    ! Regrid raw data to model resolution
+    ! Regrid data_i to data_o and frac_i to frac_o
     call regrid_rawdata(field_i, field_o, routehandle, data_i, data_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After regrid_data in "//trim(subname))
 
-    ! Close the file 
-    call pio_closefile(pioid)
-    call ESMF_VMLogMemInfo("After pio_freedecomp in "//trim(subname))
-
-    ! Now compute organic_o - need to remember that nlay is innermost dimension in data_o
-    ! but outermost dimension in organic_o
     do l = 1,nlevsoi
        do n = 1,size(organic_o, dim=1)
           organic_o(n,l) = data_o(l,n)
+       end do
+    end do
+
+    ! Determine frac_o (regrid frac_i to frac_o)
+    allocate(frac_i(ns_i))
+    allocate(frac_o(ns_o))
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call regrid_rawdata(field_i, field_o, routehandle, frac_i, frac_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After regrid_data in data_i "//trim(subname))
+
+    ! Divide organic_o by frac_o
+    do n = 1,ns_o
+       if (frac_o(n) > 0._r8) then
+          organic_o(n,:) = organic_o(n,:) / frac_o(n)
+       end if
+    end do
+    do l = 1,nlevsoi
+       do n = 1,size(organic_o, dim=1)
           if ((organic_o(n,l)) > 130.000001_r8) then
              write (6,*) trim(subname)//' error: organic = ',organic_o(n,l), &
                   ' greater than 130.000001 for n,lev ',n,l
@@ -154,13 +176,16 @@ contains
        enddo
     end do
 
+    ! Close the file 
+    call pio_closefile(pioid)
+    call ESMF_VMLogMemInfo("After pio_closefile in "//trim(subname))
+
     ! Release memory
-    ! TODO: something is hanging here
-    ! call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
-    ! if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    ! call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
-    ! if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    ! call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
+    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
 
     if (root_task) then
        write (ndiag,'(a,i8)') 'Successfully made organic matter '
