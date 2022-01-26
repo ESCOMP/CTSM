@@ -6,6 +6,7 @@ This module includes the definition for SinglePointCase class.
 # -- Import Python Standard Libraries
 import logging
 import os
+import argparse
 
 # -- 3rd party libraries
 import numpy as np
@@ -17,6 +18,8 @@ from ctsm.utils import add_tag_to_filename
 
 logger = logging.getLogger(__name__)
 
+NAT_PFT = 15
+MAX_PFT = 78
 
 class SinglePointCase(BaseCase):
     """
@@ -46,6 +49,8 @@ class SinglePointCase(BaseCase):
         dominant pft type for this single point (None if not specified)
     num_pft : int
         total number of pfts for surface dataset (if crop 78 pft, else 16 pft)
+    pct_pft : int
+        weight or percentage of each pft.
     zero_nonveg_landunits : bool
         flag for setting all non-vegetation landunits to zero
     uni_snow : bool
@@ -92,6 +97,7 @@ class SinglePointCase(BaseCase):
             create_datm,
             create_user_mods,
             dom_pft,
+            pct_pft,
             num_pft,
             include_nonveg,
             uni_snow,
@@ -104,14 +110,17 @@ class SinglePointCase(BaseCase):
         self.plon = plon
         self.site_name = site_name
         self.dom_pft = dom_pft
+        self.pct_pft = pct_pft
         self.num_pft = num_pft
         self.include_nonveg = include_nonveg
         self.uni_snow = uni_snow
         self.cap_saturation = cap_saturation
         self.out_dir = out_dir
-        self.create_tag()
 
+        self.create_tag()
         self.check_dom_pft ()
+        self.check_nonveg ()
+        self.check_pct_pft ()
 
     def create_tag(self):
         """
@@ -125,11 +134,146 @@ class SinglePointCase(BaseCase):
 
     def check_dom_pft (self):
         """
-        A function to compare dom_pft and num_pft
-        """
-        if self.dom_pft:
-            print (type(self.dom_pft))
+        A function to sanity check values in dom_pft:
 
+        - Compare dom_pft (values if more than one) with num_pft:
+          i.e. If dom_pft is 18 without crop it fails.
+
+        - Check for mixed land-units:
+          If we have more than one dom_pft, they should be in the
+          same range.
+          e.g. If users specified multiple dom_pft, they should be
+          either in :
+            - 1-15 range
+            or
+            - 16-78 range
+            - give an error : mixed land units not possible.
+
+        dom_pft in netcdf: 1-15 which tranlate to 0-14
+        -------------
+        Raises:
+            Error (ArgumentTypeError):
+                If any dom_pft is bigger than 78.
+            Error (ArgumentTypeError):
+                If any dom_pft is less than 1.
+            Error (ArgumentTypeError):
+                If mixed land units are chosen.
+                dom_pft values are both in range of 1-15 and 16-78.
+
+
+        """
+
+        if self.dom_pft is None:
+            logger.warning ("No dominant pft type is chosen. "
+                            "If you want to choose a dominant pft type, please use --dompft flag.")
+        else:
+            min_dom_pft = min(self.dom_pft)
+            max_dom_pft = max(self.dom_pft)
+
+            #-- check dom_pft vs num_pft
+            if max_dom_pft > self.num_pft :
+                err_msg = "Please use --crop flag when --dompft is above 16."
+                raise argparse.ArgumentTypeError(err_msg)
+
+            #-- check dom_pft values should be between 1-78
+            if min_dom_pft <1 or max_dom_pft >MAX_PFT:
+                err_msg = "values for --dompft should not be between 1 and 78."
+                raise argparse.ArgumentTypeError(err_msg)
+
+            if min_dom_pft <=NAT_PFT and max_dom_pft >NAT_PFT:
+                err_msg = """
+                \n
+                Subsetting using mixed land units is not possible.
+                Please make sure all --dompft values are in only
+                one of these ranges:
+                - 1-15
+                - 16-78
+                """
+                raise argparse.ArgumentTypeError(err_msg)
+
+    def check_nonveg (self):
+        """
+        A function to check at least one of the following arguments is given:
+        --include-nonveg
+        --dompft DOMPFT
+
+        Basically, this function raises an error
+        when zero out non veg land units (by default true) and not provide a dominant pft:
+
+        The user can run ./subset_data using:
+        ./subset_data point --dom-pft
+        ./subset_data point --include-nonveg
+        ./subset_data point --dom-pft --include-nonveg
+
+        But this will raise an error:
+        ./subset_data point
+
+        By default include_nonveg = False, which means that it zeros out the non-veg landunits.
+        """
+
+        if not self.include_nonveg:
+            if self.dom_pft is None:
+                err_msg = """
+                \n
+                By default, this will zero out non-veg land units.
+                To include non-veg land units, you need to specify --include-nonveg flag.
+                To zero-out non-veg land units, you need to specify --dompft.
+
+                You should specify at least one of the following arguments:
+                --dompft DOMPFT
+                --include_nonveg
+                """
+                raise argparse.ArgumentTypeError(err_msg)
+
+
+    def check_pct_pft (self):
+        """
+        A function to error check pct_pft and calculate it if necessary.
+
+        If the user gives dom_pft and pct_pft :
+        - Check if length of dom_pft and pct_pft matches.
+          For example, --dompft 8 --pctpft 0.4 0.6 should give an error.
+
+        - Check if the sum of pct_pft is equal to 100% or 1.
+          For example, --dompft 8 15 --pctpft 0.6 0.9 should give an error.
+
+        - If the sum of pct_pft is 1, convert it to % (multiply by 100)
+
+        If the user gives one or more dom_pft but no pct_pft, assume equal pct_pft:
+        - pct_pft = 100 / number of given dom_pft
+          For example, if two dom_pft (s) are given, each of them is 50%.
+
+        """
+
+        # -- if both dom_pft and pct_pft is given:
+        if self.dom_pft and self.pct_pft:
+
+            # -- check if the same number of values are given
+            if len(self.dom_pft) != len(self.pct_pft):
+                err_msg = "Please provide the same number of values for --dompft and --pctpft."
+                raise argparse.ArgumentTypeError(err_msg)
+
+            # -- check if the sum of pct_pft is equal to 1 or 100
+            if sum(self.pct_pft)!= 1 and sum(self.pct_pft) != 100:
+                err_msg = "Sum of --pct_pft values should be equal to 1 or 100."
+                raise argparse.ArgumentTypeError(err_msg)
+
+            # -- convert franction to percentage
+            if sum(self.pct_pft) == 1:
+                self.pct_pft = [pct * 100 for pct in self.pct_pft]
+
+        # -- if the user did not give --pctpft at all (assume equal percentage)
+        elif self.dom_pft:
+            pct = 100/len(self.dom_pft)
+            self.pct_pft = [pct for pft in self.dom_pft]
+
+        # -- if the user only gave --pctpft with no --dompft
+        elif self.pct_pft:
+            err_msg = " --pctpft is specfied without --dompft. Please specify your dominant pft by --dompft."
+            raise argparse.ArgumentTypeError (err_msg)
+
+        logger.info (" - dominant pft(s) : %s",self.dom_pft)
+        logger.info (" - percentage of dominant pft(s) : %s",self.pct_pft)
 
     def create_domain_at_point(self, indir, file):
         """
@@ -237,19 +381,46 @@ class SinglePointCase(BaseCase):
         # expand dimensions
         f_out = f_out.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
 
-
-        # modify surface data properties
+        #-- modify surface data properties
         if self.dom_pft is not None:
-            f_out["PCT_NAT_PFT"][:, :, :] = 0
-            if self.dom_pft < self.num_pft:
-                f_out['PCT_NAT_PFT'][:, :, self.dom_pft] = 100
+            #-- First initialize everything:
+            f_out["PCT_NAT_PFT"][:, :, 0] = 100
+            #f_out["PCT_NATVEG"][:, :] = 0
+
+            f_out["PCT_CFT"][:, :, 0] = 100
+            #f_out["PCT_CROP"][:, :] = 0
+
+            #-- loop over all dom_pft and pct_pft
+            zip_pfts = zip (self.dom_pft, self.pct_pft)
+            for dom_pft, pct_pft in zip_pfts:
+                if dom_pft <= NAT_PFT:
+                    f_out['PCT_NAT_PFT'][:, :, dom_pft-1] = pct_pft
+                elif dom_pft > NAT_PFT:
+                    dom_pft = dom_pft-NAT_PFT
+                    f_out['PCT_CFT'][:, :, dom_pft-1] = pct_pft
+
+        # -------------------------------
+        # By default include_nonveg=False
+        # When we use --include-nonveg we turn it to True
+
         if not self.include_nonveg:
-            f_out["PCT_NATVEG"][:, :] = 100
-            f_out["PCT_CROP"][:, :] = 0
+            logger.info ("Zeroing out non-vegetation land units in the surface data.")
             f_out["PCT_LAKE"][:, :] = 0.0
             f_out["PCT_WETLAND"][:, :] = 0.0
-            f_out["PCT_URBAN"][:, :, ] = 0.0
+            f_out["PCT_URBAN"][:, :] = 0.0
             f_out["PCT_GLACIER"][:, :] = 0.0
+
+            max_dom_pft = max(self.dom_pft)
+            if max_dom_pft <=NAT_PFT :
+                f_out["PCT_NATVEG"][:, :] = 100
+                f_out["PCT_CROP"][:, :] = 0
+            else:
+                f_out["PCT_NATVEG"][:, :] = 0
+                f_out["PCT_CROP"][:, :] = 100
+
+        else:
+            logger.info ("You chose --include-nonveg --> Do not zero non-vegetation land units in the surface data.")
+
         if self.uni_snow:
             f_out["STD_ELEV"][:, :] = 20.0
         if self.cap_saturation:
