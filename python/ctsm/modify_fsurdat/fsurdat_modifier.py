@@ -65,14 +65,15 @@ def fsurdat_modifier(cfg_path):
     landmask_file = get_config_value(config=config, section=section,
         item='landmask_file', file_path=cfg_path, can_be_unset=True)
 
+    # Create ModifyFsurdat object
+    modify_fsurdat = ModifyFsurdat.init_from_file(fsurdat_in,
+        lnd_lon_1, lnd_lon_2, lnd_lat_1, lnd_lat_2, landmask_file)
+
     # not required: user may set these in the .cfg file
-    dom_nat_pft = get_config_value(config=config, section=section,
-        item='dom_nat_pft', file_path=cfg_path,
-        allowed_values=range(15),  # integers from 0 to 14
-        convert_to_type=int, can_be_unset=True)
-    dom_cft = get_config_value(config=config, section=section,
-        item='dom_cft', file_path=cfg_path,
-        allowed_values=range(15, 79),  # integers from 15 to 78
+    max_pft = int(max(modify_fsurdat.file.lsmpft))
+    dom_plant = get_config_value(config=config, section=section,
+        item='dom_plant', file_path=cfg_path,
+        allowed_values=range(max_pft + 1),  # integers from 0 to max_pft
         convert_to_type=int, can_be_unset=True)
 
     lai = get_config_value(config=config, section=section, item='lai',
@@ -88,9 +89,10 @@ def fsurdat_modifier(cfg_path):
         item='hgt_bot', file_path=cfg_path, is_list=True,
         convert_to_type=float, can_be_unset=True)
 
+    max_soil_color = int(modify_fsurdat.file.mxsoil_color)
     soil_color = get_config_value(config=config, section=section,
         item='soil_color', file_path=cfg_path,
-        allowed_values=range(1, 21),  # integers from 1 to 20
+        allowed_values=range(1, max_soil_color + 1),  # 1 to max_soil_color
         convert_to_type=int, can_be_unset=True)
 
     std_elev = get_config_value(config=config, section=section,
@@ -99,10 +101,6 @@ def fsurdat_modifier(cfg_path):
     max_sat_area = get_config_value(config=config, section=section,
         item='max_sat_area', file_path=cfg_path,
         convert_to_type=float, can_be_unset=True)
-
-    # Create ModifyFsurdat object
-    modify_fsurdat = ModifyFsurdat.init_from_file(fsurdat_in,
-        lnd_lon_1, lnd_lon_2, lnd_lat_1, lnd_lat_2, landmask_file)
 
     # ------------------------------
     # modify surface data properties
@@ -116,32 +114,34 @@ def fsurdat_modifier(cfg_path):
     if idealized:
         modify_fsurdat.set_idealized()  # set 2D variables
         # set 3D and 4D variables pertaining to natural vegetation
-        modify_fsurdat.set_dom_nat_pft(dom_nat_pft=0, lai=[], sai=[],
-                                       hgt_top=[], hgt_bot=[])
-
-    if dom_nat_pft is not None:  # overwrite "idealized" value
-        modify_fsurdat.set_dom_nat_pft(dom_nat_pft=dom_nat_pft,
-                                       lai=lai, sai=sai,
-                                       hgt_top=hgt_top, hgt_bot=hgt_bot)
+        modify_fsurdat.set_dom_plant(dom_plant=0, lai=[], sai=[],
+                                     hgt_top=[], hgt_bot=[])
+        logger.info('idealized complete')
 
     if max_sat_area is not None:  # overwrite "idealized" value
         modify_fsurdat.setvar_lev0('FMAX', max_sat_area)
+        logger.info('max_sat_area complete')
 
     if std_elev is not None:  # overwrite "idealized" value
         modify_fsurdat.setvar_lev0('STD_ELEV', std_elev)
+        logger.info('std_elev complete')
 
     if soil_color is not None:  # overwrite "idealized" value
         modify_fsurdat.setvar_lev0('SOIL_COLOR', soil_color)
+        logger.info('soil_color complete')
 
     if zero_nonveg:
         modify_fsurdat.zero_nonveg()
+        logger.info('zero_nonveg complete')
 
-    # The set_dom_cft call follows zero_nonveg because it modifies PCT_NATVEG
+    # The set_dom_plant call follows zero_nonveg because it modifies PCT_NATVEG
     # and PCT_CROP in the user-defined rectangle
-    if dom_cft is not None and dom_nat_pft is None:
-        modify_fsurdat.set_dom_cft(dom_cft=dom_cft,
-                                   lai=lai, sai=sai,
-                                   hgt_top=hgt_top, hgt_bot=hgt_bot)
+    if dom_plant is not None:
+        modify_fsurdat.set_dom_plant(dom_plant=dom_plant,
+                                     lai=lai, sai=sai,
+                                     hgt_top=hgt_top, hgt_bot=hgt_bot)
+        logger.info('dom_plant complete')
+
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
     # ----------------------------------------------
