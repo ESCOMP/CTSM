@@ -2313,8 +2313,10 @@ contains
       if (do_plant_prescribed .and. .not. generate_crop_gdds) then
          gdd_target = crop_inst%rx_cultivar_gdds_thisyr(p,s)
          if (gdd_target <= 0.0) then
-            write(iulog,*) 'If using prescribed sowing dates and not generate_crop_gdds, you must provide cultivar GDD targets > 0.0.'
-            call endrun(msg=errMsg(sourcefile, __LINE__))
+            !write(iulog,*) 'If using prescribed sowing dates and not generate_crop_gdds, you must provide cultivar GDD targets > 0.0.'
+            write(iulog,"(A,I4)") 'If using prescribed sowing dates and not generate_crop_gdds, you must provide cultivar GDD targets > 0.0. FAKING with 1.0. PFT ',ivt(p)
+            !call endrun(msg=errMsg(sourcefile, __LINE__))
+            gdd_target = 1.0
          endif
          gddmaturity(p) = gdd_target
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
