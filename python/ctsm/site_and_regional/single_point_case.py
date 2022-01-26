@@ -170,14 +170,14 @@ class SinglePointCase(BaseCase):
             min_dom_pft = min(self.dom_pft)
             max_dom_pft = max(self.dom_pft)
 
-            #-- check dom_pft vs num_pft
-            if max_dom_pft > self.num_pft :
-                err_msg = "Please use --crop flag when --dompft is above 16."
-                raise argparse.ArgumentTypeError(err_msg)
-
             #-- check dom_pft values should be between 1-78
             if min_dom_pft <1 or max_dom_pft >MAX_PFT:
                 err_msg = "values for --dompft should not be between 1 and 78."
+                raise argparse.ArgumentTypeError(err_msg)
+
+            #-- check dom_pft vs num_pft
+            if max_dom_pft > self.num_pft :
+                err_msg = "Please use --crop flag when --dompft is above 16."
                 raise argparse.ArgumentTypeError(err_msg)
 
             if min_dom_pft <=NAT_PFT and max_dom_pft >NAT_PFT:
