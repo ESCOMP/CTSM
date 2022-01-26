@@ -81,7 +81,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, info, tracer_vars, &
-       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer)
+       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer, NLFilename)
 
     class(waterstate_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds  
@@ -91,18 +91,19 @@ contains
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     logical           , intent(in)    :: use_aquifer_layer ! whether an aquifer layer is used in this run
+    character(len=*) , intent(in)     :: NLFilename ! Namelist filename
 
     this%info => info
 
     call this%InitAllocate(bounds, tracer_vars)
 
     call this%InitHistory(bounds, use_aquifer_layer)
-
     call this%InitCold(bounds = bounds, &
-         h2osno_input_col = h2osno_input_col, &
-         watsat_col = watsat_col, &
-         t_soisno_col = t_soisno_col, &
-         use_aquifer_layer = use_aquifer_layer)
+      h2osno_input_col = h2osno_input_col, &
+      watsat_col = watsat_col, &
+      t_soisno_col = t_soisno_col, &
+      use_aquifer_layer = use_aquifer_layer, &
+      NLFilename = NLFilename)
 
   end subroutine Init
 
@@ -317,7 +318,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InitCold(this, bounds, &
-       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer)
+       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer, NLFilename)
     !
     ! !DESCRIPTION:
     ! Initialize time constant variables and cold start conditions 
@@ -336,9 +337,10 @@ contains
     real(r8)              , intent(in)    :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)              , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     logical               , intent(in)    :: use_aquifer_layer ! whether an aquifer layer is used in this run
+    character(len=*) , intent(in)         :: NLFilename ! Namelist filename
     !
     ! !LOCAL VARIABLES:
-    integer            :: c,j,l,nlevs 
+    integer            :: c,j,l,nlevs,g 
     integer            :: nbedrock
     real(r8)           :: ratio
     !-----------------------------------------------------------------------
@@ -542,11 +544,38 @@ contains
       this%dynbal_baseline_ice_col(bounds%begc:bounds%endc) = 0._r8
 
       !Initialize excess ice
-      this%init_exice(:,:)=0.0_r8
-      this%excess_ice_col(:,:)=0.0_r8
-      this%exice_melt_lev(:,:)=0.0_r8
-      this%exice_melt(:)=0.0_r8
+      write(iulog,*) 'nfl =', NLFilename
+      if (use_excess_ice .and. NLFilename /= '') then
+        
+        call this%exicestream%Init(bounds, NLFilename) ! get initial fraction of excess ice per column
 
+        do c = bounds%begc,bounds%endc
+          g = col%gridcell(c)
+          l = col%landunit(c)
+          if (.not. lun%lakpoi(l)) then  !not lake
+             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+                nlevs = nlevgrnd
+                do j = 1, nlevs
+                   if (col%zi(c,j) <= 4._r8 .and. t_soisno_col(c,j) <= tfrz ) then
+                      this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exicestream%exice_bulk(g))
+                   else
+                      this%excess_ice_col(c,j) = 0.0_r8
+                   endif
+                   this%init_exice(c,j) = 0.0_r8
+                   this%init_exice(c,j) = this%excess_ice_col(c,j)
+                end do
+             endif
+          endif
+       enddo
+       this%exice_melt_lev(:,:)=0.0_r8
+       this%exice_melt(:)=0.0_r8
+
+      else
+        this%init_exice(:,:)=0.0_r8
+        this%excess_ice_col(:,:)=0.0_r8
+        this%exice_melt_lev(:,:)=0.0_r8
+        this%exice_melt(:)=0.0_r8
+      end if
     end associate
 
   end subroutine InitCold

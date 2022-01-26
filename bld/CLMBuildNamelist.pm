@@ -1732,6 +1732,11 @@ sub process_namelist_inline_logic {
   # namelist group: clm_initinterp_inparm #
   #########################################
   setup_logic_initinterp($opts, $nl_flags, $definition, $defaults, $nl);
+
+  ###############################
+  # namelist group: exice_streams   #
+  ###############################
+  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl);
 }
 
 #-------------------------------------------------------------------------------
@@ -4138,6 +4143,20 @@ sub setup_logic_fates {
 }
 
 #-------------------------------------------------------------------------------
+sub setup_logic_exice {
+  #
+  # excess ice streams
+  #
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_exice');
+  if ($opts->{'driver'} eq "nuopc" ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_exice');
+    }
+
+} # end exice streams
+
+#-------------------------------------------------------------------------------
 
 sub setup_logic_misc {
    #
@@ -4204,6 +4223,7 @@ sub write_output_files {
   push @groups, "nitrif_inparm";
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
+  push @groups, "exice_streams";
   push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {

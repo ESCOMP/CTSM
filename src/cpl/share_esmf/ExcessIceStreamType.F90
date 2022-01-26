@@ -21,7 +21,7 @@ module ExcessIceStreamType
   private
 
   type, public :: excessicestream_type
-     real(r8), pointer, private :: exice_bulk  (:)         ! excess ice bulk value (-)
+     real(r8), pointer :: exice_bulk  (:)         ! excess ice bulk value (-)
   contains
 
       ! !PUBLIC MEMBER FUNCTIONS:
@@ -106,7 +106,7 @@ contains
       stream_offset       = 0,                                                  &
       stream_taxmode      = 'extend',                                           &
       stream_dtlimit      = 1.0e30_r8,                                          &
-      stream_tintalgo     = 'linear',                                           &
+      stream_tintalgo     = 'nearest',                                           &
       stream_name         = 'excess ice ',                                 &
       rc                  = rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
@@ -123,7 +123,7 @@ contains
       sec  = 0
       mcdate = year*10000 + mon*100 + day
       
-      call shr_strdata_advance(sdat_exice, ymd=mcdate, tod=sec, logunit=iulog, istr='ch4', rc=rc) !c4 is left in 
+      call shr_strdata_advance(sdat_exice, ymd=mcdate, tod=sec, logunit=iulog, istr='exice', rc=rc) 
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
             call ESMF_Finalize(endflag=ESMF_END_ABORT)
          end if
@@ -211,11 +211,11 @@ subroutine ReadNML(this, bounds, NLFilename)
   character(len=CL)  :: stream_fldFileName_exice = ' '
   character(len=CL)  :: stream_meshfile_exice = ' '
   character(len=CL)  :: exicemapalgo = 'nn'
-  character(len=*), parameter :: namelist_name = 'exice'    ! MUST agree with name in namelist and read
-  character(len=*), parameter :: subName = "('exice::ReadNML')"
+  character(len=*), parameter :: namelist_name = 'exice_streams'    ! MUST agree with name in namelist and read
+  character(len=*), parameter :: subName = "('exice_streams::ReadNML')"
   !-----------------------------------------------------------------------
 
-  namelist /exice/ &               ! MUST agree with namelist_name above
+  namelist /exice_streams/ &               ! MUST agree with namelist_name above
        exicemapalgo,  stream_fldFileName_exice, stream_meshfile_exice
 
   ! Default values for namelist
@@ -225,7 +225,7 @@ subroutine ReadNML(this, bounds, NLFilename)
      open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
      call shr_nl_find_group_name(nu_nml, namelist_name, status=nml_error)
      if (nml_error == 0) then
-        read(nu_nml, nml=exice,iostat=nml_error)   ! MUST agree with namelist_name above
+        read(nu_nml, nml=exice_streams,iostat=nml_error)   ! MUST agree with namelist_name above
         if (nml_error /= 0) then
            call endrun(msg=' ERROR reading '//namelist_name//' namelist'//errMsg(sourcefile, __LINE__))
         end if
