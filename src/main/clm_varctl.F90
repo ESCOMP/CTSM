@@ -223,6 +223,10 @@ module clm_varctl
   ! option to turn off aerosol effect in snow in SNICAR
   logical, public :: snicar_use_aerosol = .true. ! if .false., turn off aerosol deposition flux
 
+  ! option for two different SNICAR radiative transfer solver, cenlin
+  integer, public :: snicar_rt_solver = 2   ! 1->Toon et a 1989 2-stream (Flanner et al. 2007) 
+                                            ! 2->Adding-doubling 2-stream (Dang et al.2019)
+
   !----------------------------------------------------------
   ! C isotopes
   !----------------------------------------------------------

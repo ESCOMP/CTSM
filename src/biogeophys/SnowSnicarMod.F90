@@ -11,7 +11,7 @@ module SnowSnicarMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_sys_mod     , only : shr_sys_flush
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use clm_varctl      , only : iulog, snicar_numrad_snw ! cenlin
+  use clm_varctl      , only : iulog, snicar_numrad_snw, snicar_rt_solver ! cenlin
   use clm_varcon      , only : tfrz
   use shr_const_mod   , only : SHR_CONST_RHOICE
   use abortutils      , only : endrun
@@ -209,6 +209,21 @@ contains
     ! Present-day climate forcing and response from black carbon in snow,
     ! J. Geophys. Res., 112, D11202, doi: 10.1029/2006JD008003
     !
+    ! Updated radiative transfer solver:
+    !
+    ! The multi-layer solution for multiple-scattering used here is from:
+    ! Briegleb, P. and Light, B.: A Delta-Eddington mutiple scattering
+    ! parameterization for solar radiation in the sea ice component of the
+    ! community climate system model, 2007.
+    !
+    ! The implementation of the SNICAR-AD model in CLM is described in:
+    ! Dang et al.2019, Inter-comparison and improvement of 2-stream shortwave
+    ! radiative transfer models for unified treatment of cryospheric surfaces
+    ! in ESMs; and Flanner et al. 2021, SNICAR-ADv3: a community tool for modeling 
+    ! spectral snow albedo
+    !
+    ! To use this new adding-doubling solver, set snicar_rt_solver=2 in CLM namelist
+    !
     ! !USES:
     use clm_varpar       , only : nlevsno, numrad
     use clm_time_manager , only : get_nstep
@@ -254,25 +269,21 @@ contains
     real(r8):: asm_prm_aer_lcl(sno_nbr_aer)       ! asymmetry parameter of aerosol species (aer_nbr) [frc]
     real(r8):: ext_cff_mss_aer_lcl(sno_nbr_aer)   ! mass extinction coefficient of aerosol species (aer_nbr) [m2/kg]
 
-
     ! Other local variables
     integer :: APRX_TYP                           ! two-stream approximation type
                                                   ! (1=Eddington, 2=Quadrature, 3=Hemispheric Mean) [nbr]
     integer :: DELTA                              ! flag to use Delta approximation (Joseph, 1976)
                                                   ! (1= use, 0= don't use)
     real(r8):: flx_wgt(1:snicar_numrad_snw)              ! weights applied to spectral bands,
-                                                  ! specific to direct and diffuse cases (bnd) [frc]
-   
+                                                  ! specific to direct and diffuse cases (bnd) [frc] 
     integer :: flg_nosnl                          ! flag: =1 if there is snow, but zero snow layers,
                                                   ! =0 if at least 1 snow layer [flg]   
     integer :: trip                               ! flag: =1 to redo RT calculation if result is unrealistic
     integer :: flg_dover                          ! defines conditions for RT redo (explained below)
-
     real(r8):: albedo                             ! temporary snow albedo [frc]
     real(r8):: flx_sum                            ! temporary summation variable for NIR weighting
     real(r8):: albout_lcl(snicar_numrad_snw)             ! snow albedo by band [frc]
     real(r8):: flx_abs_lcl(-nlevsno+1:1,snicar_numrad_snw)! absorbed flux per unit incident flux at top of snowpack (lyr,bnd) [frc]
- 
     real(r8):: L_snw(-nlevsno+1:0)                ! h2o mass (liquid+solid) in snow layer (lyr) [kg/m2]
     real(r8):: tau_snw(-nlevsno+1:0)              ! snow optical depth (lyr) [unitless]
     real(r8):: L_aer(-nlevsno+1:0,sno_nbr_aer)    ! aerosol mass in snow layer (lyr,nbr_aer) [kg/m2] 
@@ -281,7 +292,6 @@ contains
     real(r8):: tau_clm(-nlevsno+1:0)              ! column optical depth from layer bottom to snowpack top (lyr) [unitless] 
     real(r8):: omega_sum                          ! temporary summation of single-scatter albedo of all aerosols [frc]
     real(r8):: g_sum                              ! temporary summation of asymmetry parameter of all aerosols [frc]
-
     real(r8):: tau(-nlevsno+1:0)                  ! weighted optical depth of snow+aerosol layer (lyr) [unitless]
     real(r8):: omega(-nlevsno+1:0)                ! weighted single-scatter albedo of snow+aerosol layer (lyr) [frc]
     real(r8):: g(-nlevsno+1:0)                    ! weighted asymmetry parameter of snow+aerosol layer (lyr) [frc]
@@ -290,7 +300,6 @@ contains
     real(r8):: omega_star(-nlevsno+1:0)           ! transformed (i.e. Delta-Eddington) SSA of snow+aerosol layer (lyr) [frc]
     real(r8):: g_star(-nlevsno+1:0)               ! transformed (i.e. Delta-Eddington) asymmetry paramater of snow+aerosol layer
                                                   ! (lyr) [frc]
-   
     integer :: nstep                              ! current timestep [nbr] (debugging only)
     integer :: g_idx, c_idx, l_idx                ! gridcell, column, and landunit indices [idx]
     integer :: bnd_idx                            ! spectral band index (1 <= bnd_idx <= snicar_numrad_snw) [idx]
@@ -302,8 +311,7 @@ contains
     integer :: i                                  ! layer index [idx]
     integer :: j                                  ! aerosol number index [idx]
     integer :: n                                  ! tridiagonal matrix index [idx]
-    integer :: m                                  ! secondary layer index [idx]
-   
+    integer :: m                                  ! secondary layer index [idx]   
     real(r8):: F_direct(-nlevsno+1:0)             ! direct-beam radiation at bottom of layer interface (lyr) [W/m^2]
     real(r8):: F_net(-nlevsno+1:0)                ! net radiative flux at bottom of layer interface (lyr) [W/m^2]
     real(r8):: F_abs(-nlevsno+1:0)                ! net absorbed radiative energy (lyr) [W/m^2]
@@ -314,13 +322,14 @@ contains
     real(r8):: energy_sum                         ! sum of all energy terms; should be 0.0 [W/m^2]
     real(r8):: F_direct_btm                       ! direct-beam radiation at bottom of snowpack [W/m^2]
     real(r8):: mu_not                             ! cosine of solar zenith angle (used locally) [frc]
-
     integer :: err_idx                            ! counter for number of times through error loop [nbr]
     real(r8):: lat_coord                          ! gridcell latitude (debugging only)
     real(r8):: lon_coord                          ! gridcell longitude (debugging only)
     integer :: sfctype                            ! underlying surface type (debugging only)
     real(r8):: pi                                 ! 3.1415...
 
+    !-----------------------------------------------------------------------
+    ! variables used for Toon et al. 1989 2-stream solver (Flanner et al. 2007):
     ! intermediate variables for radiative transfer approximation:
     real(r8):: gamma1(-nlevsno+1:0)               ! two-stream coefficient from Toon et al. (lyr) [unitless]
     real(r8):: gamma2(-nlevsno+1:0)               ! two-stream coefficient from Toon et al. (lyr) [unitless]
@@ -346,6 +355,96 @@ contains
     real(r8):: X(-2*nlevsno+1:0)                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
     real(r8):: Y(-2*nlevsno+1:0)                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
     !-----------------------------------------------------------------------
+    !
+    ! variables used for Adding-doubling 2-stream solver based on SNICAR-ADv3 version 
+    ! (Dang et al. 2019; Flanner et al. 2021)
+    real(r8):: trndir(-nlevsno+1:1)               ! solar beam down transmission from top
+    real(r8):: trntdr(-nlevsno+1:1)               ! total transmission to direct beam for layers above
+    real(r8):: trndif(-nlevsno+1:1)               ! diffuse transmission to diffuse beam for layers above
+    real(r8):: rupdir(-nlevsno+1:1)               ! reflectivity to direct radiation for layers below
+    real(r8):: rupdif(-nlevsno+1:1)               ! reflectivity to diffuse radiation for layers below
+    real(r8):: rdndif(-nlevsno+1:1)               ! reflectivity to diffuse radiation for layers above
+    real(r8):: dfdir(-nlevsno+1:1)                ! down-up flux at interface due to direct beam at top surface
+    real(r8):: dfdif(-nlevsno+1:1)                ! down-up flux at interface due to diffuse beam at top surface
+    real(r8):: dftmp(-nlevsno+1:1)                ! temporary variable for down-up flux at interface
+    real(r8):: rdir(-nlevsno+1:0)                 ! layer reflectivity to direct radiation
+    real(r8):: rdif_a(-nlevsno+1:0)               ! layer reflectivity to diffuse radiation from above
+    real(r8):: rdif_b(-nlevsno+1:0)               ! layer reflectivity to diffuse radiation from below
+    real(r8):: tdir(-nlevsno+1:0)                 ! layer transmission to direct radiation (solar beam + diffuse)
+    real(r8):: tdif_a(-nlevsno+1:0)               ! layer transmission to diffuse radiation from above
+    real(r8):: tdif_b(-nlevsno+1:0)               ! layer transmission to diffuse radiation from below
+    real(r8):: trnlay(-nlevsno+1:0)               ! solar beam transm for layer (direct beam only)
+    real(r8):: ts                                 ! layer delta-scaled extinction optical depth
+    real(r8):: ws                                 ! layer delta-scaled single scattering albedo
+    real(r8):: gs                                 ! layer delta-scaled asymmetry parameter
+    real(r8):: extins                             ! extinction
+    real(r8):: alp                                ! temporary for alpha
+    real(r8):: gam                                ! temporary for agamm
+    real(r8):: amg                                ! alp - gam
+    real(r8):: apg                                ! alp + gam
+    real(r8):: ue                                 ! temporary for u
+    real(r8):: refk                               ! interface multiple scattering
+    real(r8):: refkp1                             ! interface multiple scattering for k+1
+    real(r8):: refkm1                             ! interface multiple scattering for k-1
+    real(r8):: tdrrdir                            ! direct tran times layer direct ref
+    real(r8):: tdndif                             ! total down diffuse = tot tran - direct tran
+    real(r8):: taus                               ! scaled extinction optical depth
+    real(r8):: omgs                               ! scaled single particle scattering albedo
+    real(r8):: asys                               ! scaled asymmetry parameter
+    real(r8):: lm                                 ! temporary for el
+    real(r8):: mu                                 ! cosine solar zenith for either snow or water
+    real(r8):: ne                                 ! temporary for n
+    real(r8):: R1                                 ! perpendicular polarization reflection amplitude
+    real(r8):: R2                                 ! parallel polarization reflection amplitude
+    real(r8):: T1                                 ! perpendicular polarization transmission amplitude
+    real(r8):: T2                                 ! parallel polarization transmission amplitude
+    real(r8):: Rf_dir_a                           ! fresnel reflection to direct radiation
+    real(r8):: Tf_dir_a                           ! fresnel transmission to direct radiation
+    real(r8):: Rf_dif_a                           ! fresnel reflection to diff radiation from above
+    real(r8):: Rf_dif_b                           ! fresnel reflection to diff radiation from below
+    real(r8):: Tf_dif_a                           ! fresnel transmission to diff radiation from above
+    real(r8):: Tf_dif_b                           ! fresnel transmission to diff radiation from below
+    real(r8):: gwt                                ! gaussian weight
+    real(r8):: swt                                ! sum of weights
+    real(r8):: trn                                ! layer transmission
+    real(r8):: rdr                                ! rdir for gaussian integration
+    real(r8):: tdr                                ! tdir for gaussian integration
+    real(r8):: smr                                ! accumulator for rdif gaussian integration
+    real(r8):: smt                                ! accumulator for tdif gaussian integration
+    real(r8):: exp_min                            ! minimum exponential value
+    real(r8):: difgauspt(1:8)                     ! Gaussian integration angle
+    real(r8):: difgauswt(1:8)                     ! Gaussian integration coefficients/weights
+    integer :: ng                                 ! gaussian integration index
+    integer :: snl_btm_itf                        ! index of bottom snow layer interfaces (1) [idx]
+    integer :: ngmax = 8                          ! maxmimum gaussian integration index
+    ! constants used in algorithm
+    real(r8):: c0     = 0.0_r8
+    real(r8):: c1     = 1.0_r8
+    real(r8):: c3     = 3.0_r8
+    real(r8):: c4     = 4.0_r8
+    real(r8):: c6     = 6.0_r8
+    real(r8):: cp01   = 0.01_r8
+    real(r8):: cp5    = 0.5_r8
+    real(r8):: cp75   = 0.75_r8
+    real(r8):: c1p5   = 1.5_r8
+    real(r8):: trmin  = 0.001_r8
+    real(r8):: argmax = 10.0_r8                  ! maximum argument of exponential
+    ! cconstant and coefficients used for SZA parameterization
+    real(r8):: sza_a0 =  0.085730_r8
+    real(r8):: sza_a1 = -0.630883_r8
+    real(r8):: sza_a2 =  1.303723_r8
+    real(r8):: sza_b0 =  1.467291_r8
+    real(r8):: sza_b1 = -3.338043_r8
+    real(r8):: sza_b2 =  6.807489_r8
+    real(r8):: puny   =  1.0e-11_r8
+    real(r8):: mu_75  =  0.2588_r8               ! cosine of 75 degree
+    real(r8):: sza_c1                            ! coefficient, SZA parameteirzation
+    real(r8):: sza_c0                            ! coefficient, SZA parameterization
+    real(r8):: sza_factor                        ! factor used to adjust NIR direct albedo
+    real(r8):: flx_sza_adjust                    ! direct NIR flux adjustment from sza_factor
+    real(r8):: mu0                               ! incident solar zenith angle
+    !
+    !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(coszen)         == (/bounds%endc/)),                 sourcefile, __LINE__)
@@ -364,8 +463,18 @@ contains
          )
 
       ! Define parameter, cenlin
-      nir_bnd_bgn = nint(snicar_numrad_snw/9.6) + 1 ! 5-band starts at 2; 480-band starts at 51
-      nir_bnd_end = snicar_numrad_snw 
+      nir_bnd_bgn    = nint(snicar_numrad_snw/9.6) + 1 ! 5-band starts at 2; 480-band starts at 51
+      nir_bnd_end    = snicar_numrad_snw 
+      difgauspt(1:8) = & ! gaussian angles (radians)
+                      (/ 0.9894009_r8,  0.9445750_r8, &
+                         0.8656312_r8,  0.7554044_r8, &
+                         0.6178762_r8,  0.4580168_r8, &
+                         0.2816036_r8,  0.0950125_r8/)
+      difgauswt(1:8) = & ! gaussian weights
+                      (/ 0.0271525_r8,  0.0622535_r8, &
+                         0.0951585_r8,  0.1246290_r8, &
+                         0.1495960_r8,  0.1691565_r8, &
+                         0.1826034_r8,  0.1894506_r8/)
 
       ! Define constants
       pi = SHR_CONST_PI
@@ -381,7 +490,6 @@ contains
       do fc = 1,num_nourbanc
          c_idx = filter_nourbanc(fc)
 
-
          ! Zero absorbed radiative fluxes:
          do i=-nlevsno+1,1,1
             flx_abs_lcl(:,:)   = 0._r8
@@ -394,7 +502,6 @@ contains
          else
             h2osno_lcl = h2osno_ice(c_idx,0)
          endif
-
 
          ! Qualifier for computing snow RT: 
          !  1) sunlight from atmosphere model 
@@ -430,8 +537,7 @@ contains
                lat_coord = grc%latdeg(g_idx)
                lon_coord = grc%londeg(g_idx)
 
-
-               ! Set variables specific to CSIM
+            ! Set variables specific to CSIM
             else
                flg_nosnl         = 0
                snl_lcl           = -1
@@ -443,7 +549,8 @@ contains
                sfctype           = -1
                lat_coord         = -90
                lon_coord         = 0
-            endif
+            endif ! end if flg_snw_ice == 1
+
 
             ! Set local aerosol array
             do j=1,sno_nbr_aer
@@ -454,7 +561,7 @@ contains
             ! Set spectral underlying surface albedos to their corresponding VIS or NIR albedos
             albsfc_lcl(1:(nir_bnd_bgn-1))       = albsfc(c_idx,1)  ! cenlin: update for hyperspectral calculation
             albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = albsfc(c_idx,2)
-
+            
 
             ! Error check for snow grain size:
             do i=snl_top,snl_btm,1
@@ -469,6 +576,7 @@ contains
                endif
             enddo
 
+
             ! Incident flux weighting parameters
             !  - sum of all VIS bands must equal 1
             !  - sum of all NIR bands must equal 1
@@ -481,8 +589,8 @@ contains
             !  Band 5: 1.5-5.0um (NIR)
             !
             ! Updated hyperspectral (10-nm) bands (480-band case) cenlin
-            ! Band 1~50  : 0.2-0.7um (VIS); near-UV (0.2-0.3um) is combined to VIS for now
-            ! Band 51~480: 0.7~5.0um (NIR)
+            ! Bands 1~50  : 0.2-0.7um (VIS); near-UV (0.2-0.3um) is combined to VIS for now
+            ! Bands 51~480: 0.7~5.0um (NIR)
             !
             ! The following weights are appropriate for surface-incident flux in a mid-latitude winter atmosphere
             !
@@ -500,7 +608,7 @@ contains
                   flx_wgt(3) = 0.22112347837123_r8
                endif
 
-               ! 5-band weights
+            ! 5-band weights
             elseif (snicar_numrad_snw==5) then
                ! Direct:
                if (flg_slr_in == 1) then
@@ -527,68 +635,87 @@ contains
                elseif (flg_slr_in == 2) then
                   flx_wgt(1:snicar_numrad_snw) = flx_wgt_dif480(1:snicar_numrad_snw)  ! either VIS or NIR band sum is 1.0 in the input dataset
                endif
-            endif
+            endif ! end if snicar_numrad_snw
+
+            exp_min = exp(-argmax)
 
             ! Loop over snow spectral bands
             do bnd_idx = 1,snicar_numrad_snw
 
-               mu_not    = coszen(c_idx)  ! must set here, because of error handling
-               flg_dover = 1              ! default is to redo
-               err_idx   = 0              ! number of times through loop
+               ! Toon et al 2-stream
+               if (snicar_rt_solver == 1) then
+                  mu_not = coszen(c_idx)    ! must set here, because of error handling
+
+               ! Adding-doubling 2-stream
+               elseif (snicar_rt_solver == 2) then
+                  ! flg_dover is not used since this algorithm is stable for mu_not > 0.01
+                  ! mu_not is cosine solar zenith angle above the fresnel level; make
+                  ! sure mu_not is large enough for stable and meaningful radiation
+                  ! solution: .01 is like sun just touching horizon with its lower edge
+                  ! equivalent to mu0 in sea-ice shortwave model ice_shortwave.F90
+                  mu_not = max(coszen(c_idx), cp01)
+               endif
+
+               flg_dover = 1    ! default is to redo
+               err_idx   = 0    ! number of times through loop
 
                do while (flg_dover > 0)
 
-                  ! DEFAULT APPROXIMATIONS:
-                  !  VIS:       Delta-Eddington
-                  !  NIR (all): Delta-Hemispheric Mean
-                  !  WARNING:   DO NOT USE DELTA-EDDINGTON FOR NIR DIFFUSE - this sometimes results in negative albedo
-                  !  
-                  ! ERROR CONDITIONS:
-                  !  Conditions which cause "trip", resulting in redo of RT approximation:
-                  !   1. negative absorbed flux
-                  !   2. total absorbed flux greater than incident flux
-                  !   3. negative albedo
-                  !   NOTE: These errors have only been encountered in spectral bands 4 and 5
-                  !
-                  ! ERROR HANDLING
-                  !  1st error (flg_dover=2): switch approximation (Edd->HM or HM->Edd)
-                  !  2nd error (flg_dover=3): change zenith angle by 0.02 (this happens about 1 in 10^6 cases)
-                  !  3rd error (flg_dover=4): switch approximation with new zenith
-                  !  Subsequent errors: repeatedly change zenith and approximations...
+                  ! Only for Toon et al 2-stream solver:
+                  if (snicar_rt_solver == 1) then
 
-                  if (bnd_idx < nir_bnd_bgn) then  ! VIS, cenlin
-                     if (flg_dover == 2) then
-                        APRX_TYP = 3
-                     elseif (flg_dover == 3) then
-                        APRX_TYP = 1
-                        if (coszen(c_idx) > 0.5_r8) then
-                           mu_not = mu_not - 0.02_r8
-                        else
-                           mu_not = mu_not + 0.02_r8
-                        endif
-                     elseif (flg_dover == 4) then
-                        APRX_TYP = 3
-                     else
-                        APRX_TYP = 1
-                     endif
+                    ! DEFAULT APPROXIMATIONS:
+                    !  VIS:       Delta-Eddington
+                    !  NIR (all): Delta-Hemispheric Mean
+                    !  WARNING:   DO NOT USE DELTA-EDDINGTON FOR NIR DIFFUSE - this sometimes results in negative albedo
+                    !  
+                    ! ERROR CONDITIONS:
+                    !  Conditions which cause "trip", resulting in redo of RT approximation:
+                    !   1. negative absorbed flux
+                    !   2. total absorbed flux greater than incident flux
+                    !   3. negative albedo
+                    !   NOTE: These errors have only been encountered in spectral bands 4 and 5
+                    !
+                    ! ERROR HANDLING
+                    !  1st error (flg_dover=2): switch approximation (Edd->HM or HM->Edd)
+                    !  2nd error (flg_dover=3): change zenith angle by 0.02 (this happens about 1 in 10^6 cases)
+                    !  3rd error (flg_dover=4): switch approximation with new zenith
+                    !  Subsequent errors: repeatedly change zenith and approximations...
 
-                  else  ! NIR
-                     if (flg_dover == 2) then
-                        APRX_TYP = 1
-                     elseif (flg_dover == 3) then
-                        APRX_TYP = 3
-                        if (coszen(c_idx) > 0.5_r8) then
-                           mu_not = mu_not - 0.02_r8
-                        else
-                           mu_not = mu_not + 0.02_r8
-                        endif
-                     elseif (flg_dover == 4) then
-                        APRX_TYP = 1
-                     else
-                        APRX_TYP = 3
-                     endif
+                    if (bnd_idx < nir_bnd_bgn) then  ! VIS, cenlin
+                       if (flg_dover == 2) then
+                          APRX_TYP = 3
+                       elseif (flg_dover == 3) then
+                          APRX_TYP = 1
+                          if (coszen(c_idx) > 0.5_r8) then
+                             mu_not = mu_not - 0.02_r8
+                          else
+                             mu_not = mu_not + 0.02_r8
+                          endif
+                       elseif (flg_dover == 4) then
+                          APRX_TYP = 3
+                       else
+                          APRX_TYP = 1
+                       endif
+                    else  ! NIR
+                       if (flg_dover == 2) then
+                          APRX_TYP = 1
+                       elseif (flg_dover == 3) then
+                          APRX_TYP = 3
+                          if (coszen(c_idx) > 0.5_r8) then
+                             mu_not = mu_not - 0.02_r8
+                          else
+                             mu_not = mu_not + 0.02_r8
+                          endif
+                       elseif (flg_dover == 4) then
+                          APRX_TYP = 1
+                       else
+                          APRX_TYP = 3
+                       endif
+                    endif  ! end if bnd_idx < nir_bnd_bgn
 
-                  endif
+                  endif  ! end if snicar_rt_solver == 1
+
 
                   ! Set direct or diffuse incident irradiance to 1
                   ! (This has to be within the bnd loop because mu_not is adjusted in rare cases)
@@ -615,6 +742,7 @@ contains
                   endif
 
 
+                  !--------------------------- Start snow & aerosol optics --------------------------------
                   ! Define local Mie parameters based on snow grain size and aerosol species,
                   !  retrieved from a lookup table.
                   if (flg_slr_in == 1) then
@@ -719,180 +847,183 @@ contains
                         tau_star(i)   = tau(i)
                      enddo
                   endif
+                 !--------------------------- End of snow & aerosol optics --------------------------------
 
-                  ! Total column optical depth:
-                  ! tau_clm(i) = total optical depth above the bottom of layer i
-                  tau_clm(snl_top) = 0._r8
-                  do i=snl_top+1,snl_btm,1
-                     tau_clm(i) = tau_clm(i-1)+tau_star(i-1)
-                  enddo
+       
+                 !--------------------------- Start Toon et al. RT solver  --------------------------------
+                 if (snicar_rt_solver == 1) then
 
-                  ! Direct radiation at bottom of snowpack:
-                  F_direct_btm = albsfc_lcl(bnd_idx)*mu_not * &
-                       exp(-(tau_clm(snl_btm)+tau_star(snl_btm))/mu_not)*pi*flx_slrd_lcl(bnd_idx)
+                    ! Total column optical depth:
+                    ! tau_clm(i) = total optical depth above the bottom of layer i
+                    tau_clm(snl_top) = 0._r8
+                    do i=snl_top+1,snl_btm,1
+                       tau_clm(i) = tau_clm(i-1)+tau_star(i-1)
+                    enddo
 
-                  ! Intermediates
-                  ! Gamma values are approximation-specific.
+                    ! Direct radiation at bottom of snowpack:
+                    F_direct_btm = albsfc_lcl(bnd_idx)*mu_not * &
+                         exp(-(tau_clm(snl_btm)+tau_star(snl_btm))/mu_not)*pi*flx_slrd_lcl(bnd_idx)
 
-                  ! Eddington
-                  if (APRX_TYP==1) then
-                     do i=snl_top,snl_btm,1
-                        gamma1(i) = (7._r8-(omega_star(i)*(4._r8+(3._r8*g_star(i)))))/4._r8
-                        gamma2(i) = -(1._r8-(omega_star(i)*(4._r8-(3._r8*g_star(i)))))/4._r8
-                        gamma3(i) = (2._r8-(3._r8*g_star(i)*mu_not))/4._r8
-                        gamma4(i) = 1._r8-gamma3(i)
-                        mu_one    = 0.5_r8
-                     enddo
+                    ! Intermediates
+                    ! Gamma values are approximation-specific.
 
-                     ! Quadrature
-                  elseif (APRX_TYP==2) then
-                     do i=snl_top,snl_btm,1
-                        gamma1(i) = (3._r8**0.5)*(2._r8-(omega_star(i)*(1._r8+g_star(i))))/2._r8
-                        gamma2(i) = omega_star(i)*(3._r8**0.5)*(1._r8-g_star(i))/2._r8
-                        gamma3(i) = (1._r8-((3._r8**0.5)*g_star(i)*mu_not))/2._r8
-                        gamma4(i) = 1._r8-gamma3(i)
-                        mu_one    = 1._r8/(3._r8**0.5_r8)
-                     enddo
+                    ! Eddington
+                    if (APRX_TYP==1) then
+                       do i=snl_top,snl_btm,1
+                          gamma1(i) = (7._r8-(omega_star(i)*(4._r8+(3._r8*g_star(i)))))/4._r8
+                          gamma2(i) = -(1._r8-(omega_star(i)*(4._r8-(3._r8*g_star(i)))))/4._r8
+                          gamma3(i) = (2._r8-(3._r8*g_star(i)*mu_not))/4._r8
+                          gamma4(i) = 1._r8-gamma3(i)
+                          mu_one    = 0.5_r8
+                       enddo
 
-                     ! Hemispheric Mean
-                  elseif (APRX_TYP==3) then
-                     do i=snl_top,snl_btm,1
-                        gamma1(i) = 2._r8 - (omega_star(i)*(1._r8+g_star(i)))
-                        gamma2(i) = omega_star(i)*(1-g_star(i))
-                        gamma3(i) = (1._r8-((3._r8**0.5_r8)*g_star(i)*mu_not))/2._r8
-                        gamma4(i) = 1._r8-gamma3(i)
-                        mu_one    = 0.5_r8
-                     enddo
-                  endif
+                    ! Quadrature
+                    elseif (APRX_TYP==2) then
+                       do i=snl_top,snl_btm,1
+                          gamma1(i) = (3._r8**0.5)*(2._r8-(omega_star(i)*(1._r8+g_star(i))))/2._r8
+                          gamma2(i) = omega_star(i)*(3._r8**0.5)*(1._r8-g_star(i))/2._r8
+                          gamma3(i) = (1._r8-((3._r8**0.5)*g_star(i)*mu_not))/2._r8
+                          gamma4(i) = 1._r8-gamma3(i)
+                          mu_one    = 1._r8/(3._r8**0.5_r8)
+                       enddo
 
-                  ! Intermediates for tri-diagonal solution
-                  do i=snl_top,snl_btm,1
-                     lambda(i) = sqrt(abs((gamma1(i)**2) - (gamma2(i)**2)))
-                     GAMMA(i)  = gamma2(i)/(gamma1(i)+lambda(i))
+                    ! Hemispheric Mean
+                    elseif (APRX_TYP==3) then
+                       do i=snl_top,snl_btm,1
+                          gamma1(i) = 2._r8 - (omega_star(i)*(1._r8+g_star(i)))
+                          gamma2(i) = omega_star(i)*(1-g_star(i))
+                          gamma3(i) = (1._r8-((3._r8**0.5_r8)*g_star(i)*mu_not))/2._r8
+                          gamma4(i) = 1._r8-gamma3(i)
+                          mu_one    = 0.5_r8
+                       enddo
+                    endif
 
-                     e1(i)     = 1+(GAMMA(i)*exp(-lambda(i)*tau_star(i)))
-                     e2(i)     = 1-(GAMMA(i)*exp(-lambda(i)*tau_star(i)))
-                     e3(i)     = GAMMA(i) + exp(-lambda(i)*tau_star(i))
-                     e4(i)     = GAMMA(i) - exp(-lambda(i)*tau_star(i))
-                  enddo !enddo over snow layers
+                    ! Intermediates for tri-diagonal solution
+                    do i=snl_top,snl_btm,1
+                       lambda(i) = sqrt(abs((gamma1(i)**2) - (gamma2(i)**2)))
+                       GAMMA(i)  = gamma2(i)/(gamma1(i)+lambda(i))
 
+                       e1(i)     = 1+(GAMMA(i)*exp(-lambda(i)*tau_star(i)))
+                       e2(i)     = 1-(GAMMA(i)*exp(-lambda(i)*tau_star(i)))
+                       e3(i)     = GAMMA(i) + exp(-lambda(i)*tau_star(i))
+                       e4(i)     = GAMMA(i) - exp(-lambda(i)*tau_star(i))
+                    enddo !enddo over snow layers
 
-                  ! Intermediates for tri-diagonal solution
-                  do i=snl_top,snl_btm,1
-                     if (flg_slr_in == 1) then
+                    ! Intermediates for tri-diagonal solution
+                    do i=snl_top,snl_btm,1
+                       if (flg_slr_in == 1) then
 
-                        C_pls_btm(i) = (omega_star(i)*pi*flx_slrd_lcl(bnd_idx)* &
-                             exp(-(tau_clm(i)+tau_star(i))/mu_not)*   &
-                             (((gamma1(i)-(1/mu_not))*gamma3(i))+     &
-                             (gamma4(i)*gamma2(i))))/((lambda(i)**2)-(1/(mu_not**2)))
+                          C_pls_btm(i) = (omega_star(i)*pi*flx_slrd_lcl(bnd_idx)* &
+                              exp(-(tau_clm(i)+tau_star(i))/mu_not)*   &
+                              (((gamma1(i)-(1/mu_not))*gamma3(i))+     &
+                              (gamma4(i)*gamma2(i))))/((lambda(i)**2)-(1/(mu_not**2)))
 
-                        C_mns_btm(i) = (omega_star(i)*pi*flx_slrd_lcl(bnd_idx)* &
-                             exp(-(tau_clm(i)+tau_star(i))/mu_not)*   &
-                             (((gamma1(i)+(1/mu_not))*gamma4(i))+     &
-                             (gamma2(i)*gamma3(i))))/((lambda(i)**2)-(1/(mu_not**2)))
+                          C_mns_btm(i) = (omega_star(i)*pi*flx_slrd_lcl(bnd_idx)* &
+                              exp(-(tau_clm(i)+tau_star(i))/mu_not)*   &
+                              (((gamma1(i)+(1/mu_not))*gamma4(i))+     &
+                              (gamma2(i)*gamma3(i))))/((lambda(i)**2)-(1/(mu_not**2)))
 
-                        C_pls_top(i) = (omega_star(i)*pi*flx_slrd_lcl(bnd_idx)* &
-                             exp(-tau_clm(i)/mu_not)*(((gamma1(i)-(1/mu_not))* &
-                             gamma3(i))+(gamma4(i)*gamma2(i))))/((lambda(i)**2)-(1/(mu_not**2)))
+                          C_pls_top(i) = (omega_star(i)*pi*flx_slrd_lcl(bnd_idx)* &
+                              exp(-tau_clm(i)/mu_not)*(((gamma1(i)-(1/mu_not))* &
+                              gamma3(i))+(gamma4(i)*gamma2(i))))/((lambda(i)**2)-(1/(mu_not**2)))
 
-                        C_mns_top(i) = (omega_star(i)*pi*flx_slrd_lcl(bnd_idx)* &
-                             exp(-tau_clm(i)/mu_not)*(((gamma1(i)+(1/mu_not))* &
-                             gamma4(i))+(gamma2(i)*gamma3(i))))/((lambda(i)**2)-(1/(mu_not**2)))
+                          C_mns_top(i) = (omega_star(i)*pi*flx_slrd_lcl(bnd_idx)* &
+                              exp(-tau_clm(i)/mu_not)*(((gamma1(i)+(1/mu_not))* &
+                              gamma4(i))+(gamma2(i)*gamma3(i))))/((lambda(i)**2)-(1/(mu_not**2)))
 
-                     else
-                        C_pls_btm(i) = 0._r8
-                        C_mns_btm(i) = 0._r8
-                        C_pls_top(i) = 0._r8
-                        C_mns_top(i) = 0._r8
-                     endif
-                  enddo
+                       else
+                          C_pls_btm(i) = 0._r8
+                          C_mns_btm(i) = 0._r8
+                          C_pls_top(i) = 0._r8
+                          C_mns_top(i) = 0._r8
+                       endif
+                    enddo
 
-                  ! Coefficients for tridiaganol matrix solution
-                  do i=2*snl_lcl+1,0,1
+                    ! Coefficients for tridiaganol matrix solution
+                    do i=2*snl_lcl+1,0,1
 
-                     !Boundary values for i=1 and i=2*snl_lcl, specifics for i=odd and i=even    
-                     if (i==(2*snl_lcl+1)) then
-                        A(i) = 0._r8
-                        B(i) = e1(snl_top)
-                        D(i) = -e2(snl_top)
-                        E(i) = flx_slri_lcl(bnd_idx)-C_mns_top(snl_top)
+                       !Boundary values for i=1 and i=2*snl_lcl, specifics for i=odd and i=even    
+                       if (i==(2*snl_lcl+1)) then
+                          A(i) = 0._r8
+                          B(i) = e1(snl_top)
+                          D(i) = -e2(snl_top)
+                          E(i) = flx_slri_lcl(bnd_idx)-C_mns_top(snl_top)
 
-                     elseif(i==0) then
-                        A(i) = e1(snl_btm)-(albsfc_lcl(bnd_idx)*e3(snl_btm))
-                        B(i) = e2(snl_btm)-(albsfc_lcl(bnd_idx)*e4(snl_btm))
-                        D(i) = 0._r8
-                        E(i) = F_direct_btm-C_pls_btm(snl_btm)+(albsfc_lcl(bnd_idx)*C_mns_btm(snl_btm))
+                       elseif(i==0) then
+                          A(i) = e1(snl_btm)-(albsfc_lcl(bnd_idx)*e3(snl_btm))
+                          B(i) = e2(snl_btm)-(albsfc_lcl(bnd_idx)*e4(snl_btm))
+                          D(i) = 0._r8
+                          E(i) = F_direct_btm-C_pls_btm(snl_btm)+(albsfc_lcl(bnd_idx)*C_mns_btm(snl_btm))
 
-                     elseif(mod(i,2)==-1) then   ! If odd and i>=3 (n=1 for i=3)
-                        n=floor(i/2.0)
-                        A(i) = (e2(n)*e3(n))-(e4(n)*e1(n))
-                        B(i) = (e1(n)*e1(n+1))-(e3(n)*e3(n+1))
-                        D(i) = (e3(n)*e4(n+1))-(e1(n)*e2(n+1))
-                        E(i) = (e3(n)*(C_pls_top(n+1)-C_pls_btm(n)))+(e1(n)*(C_mns_btm(n)-C_mns_top(n+1)))
+                       elseif(mod(i,2)==-1) then   ! If odd and i>=3 (n=1 for i=3)
+                          n=floor(i/2.0)
+                          A(i) = (e2(n)*e3(n))-(e4(n)*e1(n))
+                          B(i) = (e1(n)*e1(n+1))-(e3(n)*e3(n+1))
+                          D(i) = (e3(n)*e4(n+1))-(e1(n)*e2(n+1))
+                          E(i) = (e3(n)*(C_pls_top(n+1)-C_pls_btm(n)))+(e1(n)*(C_mns_btm(n)-C_mns_top(n+1)))
 
-                     elseif(mod(i,2)==0) then    ! If even and i<=2*snl_lcl
-                        n=(i/2)
-                        A(i) = (e2(n+1)*e1(n))-(e3(n)*e4(n+1))
-                        B(i) = (e2(n)*e2(n+1))-(e4(n)*e4(n+1))
-                        D(i) = (e1(n+1)*e4(n+1))-(e2(n+1)*e3(n+1))
-                        E(i) = (e2(n+1)*(C_pls_top(n+1)-C_pls_btm(n)))+(e4(n+1)*(C_mns_top(n+1)-C_mns_btm(n))) 
-                     endif
-                  enddo
+                       elseif(mod(i,2)==0) then    ! If even and i<=2*snl_lcl
+                          n=(i/2)
+                          A(i) = (e2(n+1)*e1(n))-(e3(n)*e4(n+1))
+                          B(i) = (e2(n)*e2(n+1))-(e4(n)*e4(n+1))
+                          D(i) = (e1(n+1)*e4(n+1))-(e2(n+1)*e3(n+1))
+                          E(i) = (e2(n+1)*(C_pls_top(n+1)-C_pls_btm(n)))+(e4(n+1)*(C_mns_top(n+1)-C_mns_btm(n))) 
+                       endif
+                    enddo
 
-                  AS(0) = A(0)/B(0)
-                  DS(0) = E(0)/B(0)
+                    AS(0) = A(0)/B(0)
+                    DS(0) = E(0)/B(0)
 
-                  do i=-1,(2*snl_lcl+1),-1
-                     X(i)  = 1/(B(i)-(D(i)*AS(i+1)))
-                     AS(i) = A(i)*X(i)
-                     DS(i) = (E(i)-(D(i)*DS(i+1)))*X(i)
-                  enddo
+                    do i=-1,(2*snl_lcl+1),-1
+                       X(i)  = 1/(B(i)-(D(i)*AS(i+1)))
+                       AS(i) = A(i)*X(i)
+                       DS(i) = (E(i)-(D(i)*DS(i+1)))*X(i)
+                    enddo
 
-                  Y(2*snl_lcl+1) = DS(2*snl_lcl+1)
-                  do i=(2*snl_lcl+2),0,1
-                     Y(i) = DS(i)-(AS(i)*Y(i-1))
-                  enddo
+                    Y(2*snl_lcl+1) = DS(2*snl_lcl+1)
+                    do i=(2*snl_lcl+2),0,1
+                       Y(i) = DS(i)-(AS(i)*Y(i-1))
+                    enddo
 
-                  ! Downward direct-beam and net flux (F_net) at the base of each layer:
-                  do i=snl_top,snl_btm,1
-                     F_direct(i) = mu_not*pi*flx_slrd_lcl(bnd_idx)*exp(-(tau_clm(i)+tau_star(i))/mu_not)
-                     F_net(i)    = (Y(2*i-1)*(e1(i)-e3(i))) + (Y(2*i)*(e2(i)-e4(i))) + &
-                          C_pls_btm(i) - C_mns_btm(i) - F_direct(i)
-                  enddo
+                    ! Downward direct-beam and net flux (F_net) at the base of each layer:
+                    do i=snl_top,snl_btm,1
+                       F_direct(i) = mu_not*pi*flx_slrd_lcl(bnd_idx)*exp(-(tau_clm(i)+tau_star(i))/mu_not)
+                       F_net(i)    = (Y(2*i-1)*(e1(i)-e3(i))) + (Y(2*i)*(e2(i)-e4(i))) + &
+                                     C_pls_btm(i) - C_mns_btm(i) - F_direct(i)
+                    enddo
 
-                  ! Upward flux at snowpack top:
-                  F_sfc_pls = (Y(2*snl_lcl+1)*(exp(-lambda(snl_top)*tau_star(snl_top))+ &
-                       GAMMA(snl_top))) + (Y(2*snl_lcl+2)*(exp(-lambda(snl_top)* &
-                       tau_star(snl_top))-GAMMA(snl_top))) + C_pls_top(snl_top)
+                    ! Upward flux at snowpack top:
+                    F_sfc_pls = (Y(2*snl_lcl+1)*(exp(-lambda(snl_top)*tau_star(snl_top))+ &
+                         GAMMA(snl_top))) + (Y(2*snl_lcl+2)*(exp(-lambda(snl_top)* &
+                         tau_star(snl_top))-GAMMA(snl_top))) + C_pls_top(snl_top)
 
-                  ! Net flux at bottom = absorbed radiation by underlying surface:
-                  F_btm_net = -F_net(snl_btm)
-
-
-                  ! Bulk column albedo and surface net flux
-                  albedo    = F_sfc_pls/((mu_not*pi*flx_slrd_lcl(bnd_idx))+flx_slri_lcl(bnd_idx))
-                  F_sfc_net = F_sfc_pls - ((mu_not*pi*flx_slrd_lcl(bnd_idx))+flx_slri_lcl(bnd_idx))
-
-                  trip = 0
-                  ! Absorbed flux in each layer
-                  do i=snl_top,snl_btm,1
-                     if(i==snl_top) then
-                        F_abs(i) = F_net(i)-F_sfc_net
-                     else
-                        F_abs(i) = F_net(i)-F_net(i-1)
-                     endif
-                     flx_abs_lcl(i,bnd_idx) = F_abs(i)
+                    ! Net flux at bottom = absorbed radiation by underlying surface:
+                    F_btm_net = -F_net(snl_btm)
 
 
-                     ! ERROR check: negative absorption
-                     if (flx_abs_lcl(i,bnd_idx) < -0.00001_r8) then
-                        trip = 1
-                     endif
-                  enddo
+                    ! Bulk column albedo and surface net flux
+                    albedo    = F_sfc_pls/((mu_not*pi*flx_slrd_lcl(bnd_idx))+flx_slri_lcl(bnd_idx))
+                    F_sfc_net = F_sfc_pls - ((mu_not*pi*flx_slrd_lcl(bnd_idx))+flx_slri_lcl(bnd_idx))
 
-                  flx_abs_lcl(1,bnd_idx) = F_btm_net
+                    trip = 0
+                    ! Absorbed flux in each layer
+                    do i=snl_top,snl_btm,1
+                       if(i==snl_top) then
+                          F_abs(i) = F_net(i)-F_sfc_net
+                       else
+                          F_abs(i) = F_net(i)-F_net(i-1)
+                       endif
+                       flx_abs_lcl(i,bnd_idx) = F_abs(i)
 
-                  if (flg_nosnl == 1) then
+                       ! ERROR check: negative absorption
+                       if (flx_abs_lcl(i,bnd_idx) < -0.00001_r8) then
+                          trip = 1
+                       endif
+                    enddo
+
+                    flx_abs_lcl(1,bnd_idx) = F_btm_net
+
+                    if (flg_nosnl == 1) then
                      ! If there are no snow layers (but still snow), all absorbed energy must be in top soil layer
                      !flx_abs_lcl(:,bnd_idx) = 0._r8
                      !flx_abs_lcl(1,bnd_idx) = F_abs(0) + F_btm_net
@@ -901,65 +1032,347 @@ contains
                      ! OK to put absorbed energy in the fictitous snow layer because routine SurfaceRadiation
                      ! handles the case of no snow layers. Then, if a snow layer is addded between now and
                      ! SurfaceRadiation (called in CanopyHydrology), absorbed energy will be properly distributed.
-                     flx_abs_lcl(0,bnd_idx) = F_abs(0)
-                     flx_abs_lcl(1,bnd_idx) = F_btm_net
+                       flx_abs_lcl(0,bnd_idx) = F_abs(0)
+                       flx_abs_lcl(1,bnd_idx) = F_btm_net
+                    endif
 
-                  endif
+                    !Underflow check (we've already tripped the error condition above)
+                    do i=snl_top,1,1
+                       if (flx_abs_lcl(i,bnd_idx) < 0._r8) then
+                          flx_abs_lcl(i,bnd_idx) = 0._r8
+                       endif
+                    enddo
 
-                  !Underflow check (we've already tripped the error condition above)
-                  do i=snl_top,1,1
-                     if (flx_abs_lcl(i,bnd_idx) < 0._r8) then
-                        flx_abs_lcl(i,bnd_idx) = 0._r8
-                     endif
-                  enddo
+                    F_abs_sum = 0._r8
+                    do i=snl_top,snl_btm,1
+                       F_abs_sum = F_abs_sum + F_abs(i)
+                    enddo
 
-                  F_abs_sum = 0._r8
-                  do i=snl_top,snl_btm,1
-                     F_abs_sum = F_abs_sum + F_abs(i)
-                  enddo
+                    !ERROR check: absorption greater than incident flux
+                    ! (should make condition more generic than "1._r8")
+                    if (F_abs_sum > 1._r8) then
+                       trip = 1
+                    endif
+
+                    !ERROR check:
+                    if ((albedo < 0._r8).and.(trip==0)) then
+                       trip = 1
+                    endif
+
+                    ! Set conditions for redoing RT calculation 
+                    if ((trip == 1).and.(flg_dover == 1)) then
+                       flg_dover = 2
+                    elseif ((trip == 1).and.(flg_dover == 2)) then
+                       flg_dover = 3
+                    elseif ((trip == 1).and.(flg_dover == 3)) then
+                       flg_dover = 4
+                    elseif((trip == 1).and.(flg_dover == 4).and.(err_idx < 20)) then
+                       flg_dover = 3
+                       err_idx = err_idx + 1
+                    elseif((trip == 1).and.(flg_dover == 4).and.(err_idx >= 20)) then
+                       flg_dover = 0
+                       write(iulog,*) "SNICAR ERROR: FOUND A WORMHOLE. STUCK IN INFINITE LOOP! Called from: ", flg_snw_ice
+                       write(iulog,*) "SNICAR STATS: snw_rds(0)= ", snw_rds(c_idx,0)
+                       write(iulog,*) "SNICAR STATS: L_snw(0)= ", L_snw(0)
+                       write(iulog,*) "SNICAR STATS: h2osno= ", h2osno_lcl, " snl= ", snl_lcl
+                       write(iulog,*) "SNICAR STATS: soot1(0)= ", mss_cnc_aer_lcl(0,1)
+                       write(iulog,*) "SNICAR STATS: soot2(0)= ", mss_cnc_aer_lcl(0,2)
+                       write(iulog,*) "SNICAR STATS: dust1(0)= ", mss_cnc_aer_lcl(0,3)
+                       write(iulog,*) "SNICAR STATS: dust2(0)= ", mss_cnc_aer_lcl(0,4)
+                       write(iulog,*) "SNICAR STATS: dust3(0)= ", mss_cnc_aer_lcl(0,5)
+                       write(iulog,*) "SNICAR STATS: dust4(0)= ", mss_cnc_aer_lcl(0,6)
+                       l_idx     = col%landunit(c_idx)
+                       write(iulog,*) "column index: ", c_idx
+                       write(iulog,*) "landunit type", lun%itype(l_idx)
+                       write(iulog,*) "frac_sno: ", frac_sno(c_idx)
+                       call endrun(subgrid_index=c_idx, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
+                    else
+                       flg_dover = 0
+                    endif
+
+                 endif  ! end if snicar_rt_solver==1
+                 !--------------------------- End of Toon et al. RT solver  --------------------------------
 
 
-                  !ERROR check: absorption greater than incident flux
-                  ! (should make condition more generic than "1._r8")
-                  if (F_abs_sum > 1._r8) then
-                     trip = 1
-                  endif
+                 !--------------------------- Start Adding-doubling RT solver  --------------------------------
+                 if (snicar_rt_solver == 2) then
 
-                  !ERROR check:
-                  if ((albedo < 0._r8).and.(trip==0)) then
-                     trip = 1
-                  endif
+                    ! Given input vertical profiles of optical properties, evaluate the
+                    ! monochromatic Delta-Eddington adding-doubling solution
 
-                  ! Set conditions for redoing RT calculation 
-                  if ((trip == 1).and.(flg_dover == 1)) then
-                     flg_dover = 2
-                  elseif ((trip == 1).and.(flg_dover == 2)) then
-                     flg_dover = 3
-                  elseif ((trip == 1).and.(flg_dover == 3)) then
-                     flg_dover = 4
-                  elseif((trip == 1).and.(flg_dover == 4).and.(err_idx < 20)) then
-                     flg_dover = 3
-                     err_idx = err_idx + 1
-                  elseif((trip == 1).and.(flg_dover == 4).and.(err_idx >= 20)) then
-                     flg_dover = 0
-                     write(iulog,*) "SNICAR ERROR: FOUND A WORMHOLE. STUCK IN INFINITE LOOP! Called from: ", flg_snw_ice
-                     write(iulog,*) "SNICAR STATS: snw_rds(0)= ", snw_rds(c_idx,0)
-                     write(iulog,*) "SNICAR STATS: L_snw(0)= ", L_snw(0)
-                     write(iulog,*) "SNICAR STATS: h2osno= ", h2osno_lcl, " snl= ", snl_lcl
-                     write(iulog,*) "SNICAR STATS: soot1(0)= ", mss_cnc_aer_lcl(0,1)
-                     write(iulog,*) "SNICAR STATS: soot2(0)= ", mss_cnc_aer_lcl(0,2)
-                     write(iulog,*) "SNICAR STATS: dust1(0)= ", mss_cnc_aer_lcl(0,3)
-                     write(iulog,*) "SNICAR STATS: dust2(0)= ", mss_cnc_aer_lcl(0,4)
-                     write(iulog,*) "SNICAR STATS: dust3(0)= ", mss_cnc_aer_lcl(0,5)
-                     write(iulog,*) "SNICAR STATS: dust4(0)= ", mss_cnc_aer_lcl(0,6)
-                     l_idx     = col%landunit(c_idx)
-                     write(iulog,*) "column index: ", c_idx
-                     write(iulog,*) "landunit type", lun%itype(l_idx)
-                     write(iulog,*) "frac_sno: ", frac_sno(c_idx)
-                     call endrun(subgrid_index=c_idx, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
-                  else
-                     flg_dover = 0
-                  endif
+                    ! trndir, trntdr, trndif, rupdir, rupdif, rdndif are variables at the layer interface,
+                    ! for snow with layers from snl_top to snl_btm there are snl_top to snl_btm+1 layer interface
+                    snl_btm_itf = snl_btm + 1
+
+                    ! initialization for layer interface
+                    do i = snl_top,snl_btm_itf,1
+                       trndir(i) = c0
+                       trntdr(i) = c0
+                       trndif(i) = c0
+                       rupdir(i) = c0
+                       rupdif(i) = c0
+                       rdndif(i) = c0
+                    enddo
+                    ! initialize top interface of top layer
+                    trndir(snl_top) = c1
+                    trntdr(snl_top) = c1
+                    trndif(snl_top) = c1
+                    rdndif(snl_top) = c0
+
+                    ! begin main level loop for snow layer interfaces except for the very bottom
+                    do i = snl_top,snl_btm,1
+
+                       ! initialize all layer apparent optical properties to 0
+                       rdir  (i) = c0
+                       rdif_a(i) = c0
+                       rdif_b(i) = c0
+                       tdir  (i) = c0
+                       tdif_a(i) = c0
+                       tdif_b(i) = c0
+                       trnlay(i) = c0
+
+                       ! compute next layer Delta-eddington solution only if total transmission
+                       ! of radiation to the interface just above the layer exceeds trmin.
+                       if (trntdr(i) > trmin ) then
+
+                         ! delta-transformed single-scattering properties of this layer
+                         ts = tau_star(i)
+                         ws = omega_star(i)
+                         gs = g_star(i)
+
+                         ! Delta-Eddington solution expressions, Eq. 50: Briegleb and Light 2007
+                         lm = sqrt(c3*(c1-ws)*(c1 - ws*gs))
+                         ue = c1p5*(c1 - ws*gs)/lm
+                         extins = max(exp_min, exp(-lm*ts))
+                         ne = ((ue+c1)*(ue+c1)/extins) - ((ue-c1)*(ue-c1)*extins)
+
+                         ! first calculation of rdif, tdif using Delta-Eddington formulas
+                         ! Eq.: Briegleb 1992; alpha and gamma for direct radiation
+                         rdif_a(i) = (ue**2-c1)*(c1/extins - extins)/ne
+                         tdif_a(i) = c4*ue/ne
+
+                         ! evaluate rdir,tdir for direct beam
+                         trnlay(i) = max(exp_min, exp(-ts/mu_not))
+
+                         ! Delta-Eddington solution expressions
+                         ! Eq. 50: Briegleb and Light 2007; alpha and gamma for direct radiation
+                         alp = cp75*ws*mu_not*((c1 + gs*(c1-ws))/(c1 - lm*lm*mu_not*mu_not))
+                         gam = cp5*ws*((c1 + c3*gs*(c1-ws)*mu_not*mu_not)/(c1-lm*lm*mu_not*mu_not))
+                         apg = alp + gam
+                         amg = alp - gam
+                         rdir(i) = apg*rdif_a(i) +  amg*(tdif_a(i)*trnlay(i) - c1)
+                         tdir(i) = apg*tdif_a(i) + (amg* rdif_a(i)-apg+c1)*trnlay(i)
+
+                         ! recalculate rdif,tdif using direct angular integration over rdir,tdir,
+                         ! since Delta-Eddington rdif formula is not well-behaved (it is usually
+                         ! biased low and can even be negative); use ngmax angles and gaussian
+                         ! integration for most accuracy:
+                         R1 = rdif_a(i) ! use R1 as temporary
+                         T1 = tdif_a(i) ! use T1 as temporary
+                         swt = c0
+                         smr = c0
+                         smt = c0
+                         ! gaussian angles for the AD integral
+                         do ng=1,ngmax
+                            mu  = difgauspt(ng)
+                            gwt = difgauswt(ng)
+                            swt = swt + mu*gwt
+                            trn = max(exp_min, exp(-ts/mu))
+                            alp = cp75*ws*mu*((c1 + gs*(c1-ws))/(c1 - lm*lm*mu*mu))
+                            gam = cp5*ws*((c1 + c3*gs*(c1-ws)*mu*mu)/(c1-lm*lm*mu*mu))
+                            apg = alp + gam
+                            amg = alp - gam
+                            rdr = apg*R1 + amg*T1*trn - amg
+                            tdr = apg*T1 + amg*R1*trn - apg*trn + trn
+                            smr = smr + mu*rdr*gwt
+                            smt = smt + mu*tdr*gwt
+                         enddo      ! ng
+                         rdif_a(i) = smr/swt
+                         tdif_a(i) = smt/swt
+
+                         ! homogeneous layer
+                         rdif_b(i) = rdif_a(i)
+                         tdif_b(i) = tdif_a(i)
+
+                       endif ! trntdr(k) > trmin
+
+                       ! Calculate the solar beam transmission, total transmission, and
+                       ! reflectivity for diffuse radiation from below at interface i,
+                       ! the top of the current layer k:
+                       !
+                       !              layers       interface
+                       !
+                       !       ---------------------  i-1
+                       !                i-1
+                       !       ---------------------  i
+                       !                 i
+                       !       ---------------------
+
+                       trndir(i+1) = trndir(i)*trnlay(i)            ! solar beam transmission from top
+                       refkm1      = c1/(c1 - rdndif(i)*rdif_a(i))  ! interface multiple scattering for i-1
+                       tdrrdir     = trndir(i)*rdir(i)              ! direct tran times layer direct ref
+                       tdndif      = trntdr(i) - trndir(i)          ! total down diffuse = tot tran - direct tran
+                       trntdr(i+1) = trndir(i)*tdir(i) + &          ! total transmission to direct beam for layers above
+                                     (tdndif + tdrrdir*rdndif(i))*refkm1*tdif_a(i)
+                       ! Eq. B4; Briegleb and Light 2007
+                       rdndif(i+1) = rdif_b(i) + &                  ! reflectivity to diffuse radiation for layers above
+                                     (tdif_b(i)*rdndif(i)*refkm1*tdif_a(i))
+                       trndif(i+1) = trndif(i)*refkm1*tdif_a(i)     ! diffuse transmission to diffuse beam for layers above
+
+                    enddo       ! end i main level loop
+
+                    ! compute reflectivity to direct and diffuse radiation for layers
+                    ! below by adding succesive layers starting from the underlying
+                    ! ground and working upwards:
+                    !
+                    !              layers       interface
+                    !
+                    !       ---------------------  i
+                    !                 i
+                    !       ---------------------  i+1
+                    !                i+1
+                    !       ---------------------
+
+                    ! set the underlying ground albedo == albedo of near-IR
+                    ! unless bnd_idx < nir_bnd_bgn, for visible
+                    rupdir(snl_btm_itf) = albsfc(c_idx,2)
+                    rupdif(snl_btm_itf) = albsfc(c_idx,2)
+                    if (bnd_idx < nir_bnd_bgn) then
+                        rupdir(snl_btm_itf) = albsfc(c_idx,1)
+                        rupdif(snl_btm_itf) = albsfc(c_idx,1)
+                    endif
+
+                    do i=snl_btm,snl_top,-1
+                       ! interface scattering Eq. B5; Briegleb and Light 2007
+                       refkp1 = c1/( c1 - rdif_b(i)*rupdif(i+1))
+                       ! dir from top layer plus exp tran ref from lower layer, interface
+                       ! scattered and tran thru top layer from below, plus diff tran ref
+                       ! from lower layer with interface scattering tran thru top from below
+                       rupdir(i) = rdir(i) &
+                                   + (        trnlay(i)  *rupdir(i+1) &
+                                   +  (tdir(i)-trnlay(i))*rupdif(i+1) ) * refkp1 * tdif_b(i)
+                       ! dif from top layer from above, plus dif tran upwards reflected and
+                       ! interface scattered which tran top from below
+                       rupdif(i) = rdif_a(i) + tdif_a(i)*rupdif(i+1)*refkp1*tdif_b(i)
+                    enddo       ! i
+
+                    ! net flux (down-up) at each layer interface from the
+                    ! snow top (i = snl_top) to bottom interface above land (i = snl_btm_itf)
+                    ! the interface reflectivities and transmissivities required
+                    ! to evaluate interface fluxes are returned from solution_dEdd;
+                    ! now compute up and down fluxes for each interface, using the
+                    ! combined layer properties at each interface:
+                    !
+                    !              layers       interface
+                    !
+                    !       ---------------------  i
+                    !                 i
+                    !       ---------------------
+
+                    do i = snl_top, snl_btm_itf
+                       ! interface scattering, Eq. 52; Briegleb and Light 2007
+                       refk = c1/(c1 - rdndif(i)*rupdif(i))
+                       ! dir tran ref from below times interface scattering, plus diff
+                       ! tran and ref from below times interface scattering
+                       ! fdirup(i) = (trndir(i)*rupdir(i) + &
+                       !                 (trntdr(i)-trndir(i))  &
+                       !                 *rupdif(i))*refk
+                       ! dir tran plus total diff trans times interface scattering plus
+                       ! dir tran with up dir ref and down dif ref times interface scattering
+                       ! fdirdn(i) = trndir(i) + (trntdr(i) &
+                       !               - trndir(i) + trndir(i)  &
+                       !               *rupdir(i)*rdndif(i))*refk
+                       ! diffuse tran ref from below times interface scattering
+                       ! fdifup(i) = trndif(i)*rupdif(i)*refk
+                       ! diffuse tran times interface scattering
+                       ! fdifdn(i) = trndif(i)*refk
+
+                       ! netflux, down - up
+                       ! dfdir = fdirdn - fdirup
+                       dfdir(i) = trndir(i) &
+                                 + (trntdr(i)-trndir(i)) * (c1 - rupdif(i)) * refk &
+                                 -  trndir(i)*rupdir(i)  * (c1 - rdndif(i)) * refk
+                       if (dfdir(i) < puny) dfdir(i) = c0
+                       ! dfdif = fdifdn - fdifup
+                       dfdif(i) = trndif(i) * (c1 - rupdif(i)) * refk
+                       if (dfdif(i) < puny) dfdif(i) = c0
+                    enddo  ! k
+
+                    ! SNICAR_AD_RT is called twice for direct and diffuse incident fluxes
+                    ! direct incident
+                    if (flg_slr_in == 1) then
+                       albedo = rupdir(snl_top)
+                       dftmp  = dfdir
+                       refk   = c1/(c1 - rdndif(snl_top)*rupdif(snl_top))
+                       F_sfc_pls = (trndir(snl_top)*rupdir(snl_top) + &
+                                   (trntdr(snl_top)-trndir(snl_top))  &
+                                   *rupdif(snl_top))*refk
+                    !diffuse incident
+                    else
+                       albedo = rupdif(snl_top)
+                       dftmp  = dfdif
+                       refk   = c1/(c1 - rdndif(snl_top)*rupdif(snl_top))
+                       F_sfc_pls = trndif(snl_top)*rupdif(snl_top)*refk
+                    endif
+
+                    ! Absorbed flux in each layer
+                    do i=snl_top,snl_btm,1
+                       F_abs(i) = dftmp(i)-dftmp(i+1)
+                       flx_abs_lcl(i,bnd_idx) = F_abs(i)
+
+                       ! ERROR check: negative absorption
+                       if (flx_abs_lcl(i,bnd_idx) < -0.00001_r8) then
+                         write (iulog,"(a,e13.6,a,i6,a,i6)") "SNICAR ERROR: negative absoption : ", &
+                               flx_abs_lcl(i,bnd_idx), " at timestep: ", nstep, " at column: ", c_idx
+                         write(iulog,*) "SNICAR_AD STATS: snw_rds(0)= ", snw_rds(c_idx,0)
+                         write(iulog,*) "SNICAR_AD STATS: L_snw(0)= ", L_snw(0)
+                         write(iulog,*) "SNICAR_AD STATS: h2osno= ", h2osno_lcl, " snl= ", snl_lcl
+                         write(iulog,*) "SNICAR_AD STATS: soot1(0)= ", mss_cnc_aer_lcl(0,1)
+                         write(iulog,*) "SNICAR_AD STATS: soot2(0)= ", mss_cnc_aer_lcl(0,2)
+                         write(iulog,*) "SNICAR_AD STATS: dust1(0)= ", mss_cnc_aer_lcl(0,3)
+                         write(iulog,*) "SNICAR_AD STATS: dust2(0)= ", mss_cnc_aer_lcl(0,4)
+                         write(iulog,*) "SNICAR_AD STATS: dust3(0)= ", mss_cnc_aer_lcl(0,5)
+                         write(iulog,*) "SNICAR_AD STATS: dust4(0)= ", mss_cnc_aer_lcl(0,6)
+                         call endrun(subgrid_index=c_idx, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
+                       endif
+                    enddo
+
+                    ! absobed flux by the underlying ground
+                    F_btm_net = dftmp(snl_btm_itf)
+
+                    ! note here, snl_btm_itf = 1 by snow column set up in CLM
+                    flx_abs_lcl(1,bnd_idx) = F_btm_net
+
+                    if (flg_nosnl == 1) then
+                      ! If there are no snow layers (but still snow), all absorbed energy must be in top soil layer
+                      !flx_abs_lcl(:,bnd_idx) = 0._r8
+                      !flx_abs_lcl(1,bnd_idx) = F_abs(0) + F_btm_net
+
+                      ! changed on 20070408:
+                      ! OK to put absorbed energy in the fictitous snow layer because routine SurfaceRadiation
+                      ! handles the case of no snow layers. Then, if a snow layer is addded between now and
+                      ! SurfaceRadiation (called in CanopyHydrology), absorbed energy will be properly distributed.
+                       flx_abs_lcl(0,bnd_idx) = F_abs(0)
+                       flx_abs_lcl(1,bnd_idx) = F_btm_net
+                    endif
+
+                    !Underflow check (we've already tripped the error condition above)
+                    do i=snl_top,1,1
+                       if (flx_abs_lcl(i,bnd_idx) < 0._r8) then
+                          flx_abs_lcl(i,bnd_idx) = 0._r8
+                       endif
+                    enddo
+
+                    F_abs_sum = 0._r8
+                    do i=snl_top,snl_btm,1
+                       F_abs_sum = F_abs_sum + F_abs(i)
+                    enddo
+
+                    ! no need to repeat calculations for adding-doubling solver
+                    flg_dover = 0
+
+                 endif  ! end if snicar_rt_solver==2
+                 !--------------------------- End of Adding-doubling RT solver  --------------------------------
 
                enddo !enddo while (flg_dover > 0)
 
@@ -969,6 +1382,14 @@ contains
                if (abs(energy_sum) > 0.00001_r8) then
                   write (iulog,"(a,e12.6,a,i6,a,i6)") "SNICAR ERROR: Energy conservation error of : ", energy_sum, &
                        " at timestep: ", nstep, " at column: ", c_idx
+                  write(iulog,*) "F_abs_sum: ",F_abs_sum
+                  write(iulog,*) "F_btm_net: ",F_btm_net
+                  write(iulog,*) "F_sfc_pls: ",F_sfc_pls
+                  write(iulog,*) "mu_not*pi*flx_slrd_lcl(bnd_idx): ", mu_not*pi*flx_slrd_lcl(bnd_idx)
+                  write(iulog,*) "flx_slri_lcl(bnd_idx)", flx_slri_lcl(bnd_idx)
+                  write(iulog,*) "bnd_idx", bnd_idx
+                  write(iulog,*) "F_abs", F_abs
+                  write(iulog,*) "albedo", albedo
                   call endrun(subgrid_index=c_idx, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
                endif
 
@@ -1010,7 +1431,7 @@ contains
 
 
             ! Weight output NIR albedo appropriately
-              ! for 5- and 3-band cases cenlin
+            ! for 5- and 3-band cases cenlin
             if (snicar_numrad_snw <= 5) then
               albout(c_idx,1) = albout_lcl(1)
               flx_sum         = 0._r8
@@ -1019,7 +1440,8 @@ contains
               end do
               albout(c_idx,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
             end if
-              ! for 480-band case, cenlin
+
+            ! for 480-band case, cenlin
             if (snicar_numrad_snw == 480) then
               ! average for VIS band
               flx_sum         = 0._r8
@@ -1036,7 +1458,7 @@ contains
             end if
 
             ! Weight output NIR absorbed layer fluxes (flx_abs) appropriately
-              ! for 5- and 3-band cases cenlin
+            ! for 5- and 3-band cases cenlin
             if (snicar_numrad_snw <= 5) then 
               flx_abs(c_idx,:,1) = flx_abs_lcl(:,1)
               do i=snl_top,1,1
@@ -1047,7 +1469,8 @@ contains
                  flx_abs(c_idx,i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))          
               end do
             end if
-              ! for 480-band case cenlin
+
+            ! for 480-band case cenlin
             if (snicar_numrad_snw == 480) then
               do i=snl_top,1,1
                  ! average for VIS band
@@ -1065,12 +1488,28 @@ contains
               end do
             end if
 
-            ! If snow < minimum_snow, but > 0, and there is sun, set albedo to underlying surface albedo
+            ! high solar zenith angle adjustment for Adding-doubling solver results
+            if (snicar_rt_solver==2) then
+               ! near-IR direct albedo/absorption adjustment for high solar zenith angles
+               ! solar zenith angle parameterization
+               ! calculate the scaling factor for NIR direct albedo if SZA>75 degree
+               if ((mu_not < mu_75) .and. (flg_slr_in == 1)) then
+                  sza_c1 = sza_a0 + sza_a1 * mu_not + sza_a2 * mu_not**2
+                  sza_c0 = sza_b0 + sza_b1 * mu_not + sza_b2 * mu_not**2
+                  sza_factor = sza_c1 * (log10(snw_rds_lcl(snl_top) * c1) - c6) + sza_c0
+                  flx_sza_adjust  = albout(c_idx,2) * (sza_factor-c1) * sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
+                  albout(c_idx,2) = albout(c_idx,2) * sza_factor
+                  flx_abs(c_idx,snl_top,2) = flx_abs(c_idx,snl_top,2) - flx_sza_adjust
+               endif
+            endif ! end of snicar_rt_solver==2
+
+
+         ! If snow < minimum_snow, but > 0, and there is sun, set albedo to underlying surface albedo
          elseif ( (coszen(c_idx) > 0._r8) .and. (h2osno_lcl < min_snw) .and. (h2osno_lcl > 0._r8) ) then
             albout(c_idx,1) = albsfc(c_idx,1)
             albout(c_idx,2) = albsfc(c_idx,2)
 
-            ! There is either zero snow, or no sun
+         ! There is either zero snow, or no sun
          else
             albout(c_idx,1) = 0._r8
             albout(c_idx,2) = 0._r8

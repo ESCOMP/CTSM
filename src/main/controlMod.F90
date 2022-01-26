@@ -202,7 +202,7 @@ contains
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests,snicar_numrad_snw,snicar_solarspec,&
-         snicar_snw_optics,snicar_dust_optics,snicar_use_aerosol  ! cenlin
+         snicar_snw_optics,snicar_dust_optics,snicar_use_aerosol,snicar_rt_solver  ! cenlin
     
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -593,6 +593,12 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
+    ! check on SNICAR solver option
+    if ( (snicar_rt_solver < 0) .or. (snicar_rt_solver > 2) ) then
+       call endrun(msg=' ERROR: snicar_rt_solver is out of a reasonable range (1,2)'//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
     ! Consistency settings for nrevsn
 
     if (nsrest == nsrStartup ) nrevsn = ' '
@@ -818,6 +824,7 @@ contains
     call mpi_bcast (snicar_snw_optics, 1, MPI_INTEGER, 0, mpicom, ier)   ! cenlin
     call mpi_bcast (snicar_dust_optics, 1, MPI_INTEGER, 0, mpicom, ier)   ! cenlin
     call mpi_bcast (snicar_use_aerosol, 1, MPI_LOGICAL, 0, mpicom, ier)  ! cenlin
+    call mpi_bcast (snicar_rt_solver, 1, MPI_INTEGER, 0, mpicom, ier)   ! cenlin
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -1006,6 +1013,7 @@ contains
     write(iulog,*) '   Number of snow layers =', nlevsno
     write(iulog,*) '   Max snow depth (mm) =', h2osno_max
     write(iulog,*) '   Number of bands in SNICAR snow albedo calculation =', snicar_numrad_snw  ! cenlin
+    write(iulog,*) '   SNICAR radiative transfer solver type = ',snicar_rt_solver ! cenlin
 
     write(iulog,*) '   glc number of elevation classes =', maxpatch_glc
     if (glc_do_dynglacier) then
