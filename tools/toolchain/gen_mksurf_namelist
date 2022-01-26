@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+
+# 2020-11-08                Negin Sobhani
+
+"""
+|------------------------------------------------------------------|
+|---------------------  Instructions  -----------------------------|
+|------------------------------------------------------------------|
+This is a just top-level skeleton script that calls
+gen_mksurf_namelist.py.
+The original code (./gen_mksurf_namelist.py) is located under
+python/ctsm folder.
+
+This Python script is part of the simplified toolchain for creating
+the surface dataset for ctsm cases.
+This script should be used as the first step of the new toolchain. 
+It will automatically create namelist (control  file) that is 
+needed for creating surface dataset and requisite intermediate files for
+running CTSM cases. 
+For transient cases, it will also create a txt file that includes the
+landuse files for every year. 
+
+-------------------------------------------------------------------
+Instructions for running on Cheyenne/Casper:
+
+load the following into your local environment:
+
+    module load python
+    ncar_pylib
+-------------------------------------------------------------------
+To see the available options:
+    ./gen_mksurf_namelist.py --help
+
+To run the script:
+    ./gen_mksurf_namelist.py
+ 
+To remove NPL(ncar_pylib) from your environment on Cheyenne/Casper:
+    deactivate
+-------------------------------------------------------------------
+"""
+
+#TODO (NS)
+
+# -[x] Add default values in the help page.
+# -[x] Add info for help page note for end_year -- by default is start_year
+# -[ ] Possibly remove year --years and range options
+#      Currently comment them out.
+
+# -[ ] maybe a verbose option and removing debug
+# -[x] --debug mode is not working...
+
+# -[ ] add error check for hi-res and years if they are 1850 and 2005.
+
+# -[x] different path for each range of years for transient cases. 
+#      default should be picked based on the year. 1850 - 2015 -->
+#       /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/
+#      850-1850 --> 
+#       pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012
+
+# -[ ] hirespft data only for 2005?
+
+# -- Import libraries
+import os
+import sys
+
+# -- add python/ctsm  to path
+_CTSM_PYTHON = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
+            )
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.gen_mksurf_namelist import main
+
+if __name__ == "__main__":
+        main()
+
+
