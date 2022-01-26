@@ -25,6 +25,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <co2_ppmv sim_year="2000"      >379.0</co2_ppmv>
 <co2_ppmv sim_year="2010"      >388.8</co2_ppmv>
 <co2_ppmv sim_year="2015"      >397.5</co2_ppmv>
+<co2_ppmv sim_year="2018"      >408.83</co2_ppmv>   <!-- From SSP3-7.0 scenario -->
+<co2_ppmv sim_year="2020"      >415.15</co2_ppmv>   <!-- From SSP3-7.0 scenario -->
+<co2_ppmv sim_year="PD"        >415.15</co2_ppmv>
 <co2_ppmv sim_year="1850"      >284.7</co2_ppmv>
 <co2_ppmv sim_year="PtVg"      >284.7</co2_ppmv>
 
@@ -125,9 +128,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Irrigation default -->
 <irrigate use_crop=".true." phys="clm5_1"  use_cndv=".false." sim_year_range="1850-2100">.true.</irrigate>
 <irrigate use_crop=".true." phys="clm5_1"  use_cndv=".true."  sim_year_range="1850-2100">.false.</irrigate>
+<irrigate use_crop=".true." phys="clm5_1"  use_cndv=".false." sim_year_range="2018-PD"  >.true.</irrigate>
+<irrigate use_crop=".true." phys="clm5_1"  use_cndv=".true."  sim_year_range="2018-PD"  >.false.</irrigate>
 <irrigate use_crop=".true." phys="clm5_0" use_cndv=".false."  sim_year_range="1850-2100">.true.</irrigate>
 <irrigate use_crop=".true." phys="clm5_0" use_cndv=".true."   sim_year_range="1850-2100">.false.</irrigate>
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false."  sim_year_range="2018-PD"  >.true.</irrigate>
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true."   sim_year_range="2018-PD"  >.false.</irrigate>
 <irrigate use_crop=".true." phys="clm4_5"                     sim_year_range="1850-2100">.false.</irrigate>
+<irrigate use_crop=".true." phys="clm4_5"                     sim_year_range="2018-PD"  >.false.</irrigate>
 
 <irrigate use_crop=".true." >.false.</irrigate>
 <irrigate use_crop=".false.">.true.</irrigate>
@@ -1450,6 +1458,10 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_first_ndep phys="clm4_5"  use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
 <stream_year_last_ndep  phys="clm4_5"  use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_ndep>
 <model_year_align_ndep  phys="clm4_5"  use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_ndep>
+<stream_year_first_ndep                use_cn=".true." sim_year_range="2018-PD"    >2018</stream_year_first_ndep>
+<stream_year_last_ndep                 use_cn=".true." sim_year_range="2018-PD"    >2020</stream_year_last_ndep>
+<model_year_align_ndep                 use_cn=".true." sim_year_range="2018-PD"    >2018</model_year_align_ndep>
+
 
 <stream_year_first_ndep phys="clm5_0"  use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
 <stream_year_last_ndep  phys="clm5_0"  use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_ndep>
@@ -1458,6 +1470,15 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_first_ndep phys="clm5_1"  use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
 <stream_year_last_ndep  phys="clm5_1"  use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_ndep>
 <model_year_align_ndep  phys="clm5_1"  use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_ndep>
+
+<stream_year_first_ndep use_cn=".true."   sim_year="PD"   >2020</stream_year_first_ndep>
+<stream_year_last_ndep  use_cn=".true."   sim_year="PD"   >2020</stream_year_last_ndep>
+
+<stream_year_first_ndep use_cn=".true."   sim_year="2020" >2020</stream_year_first_ndep>
+<stream_year_last_ndep  use_cn=".true."   sim_year="2020" >2020</stream_year_last_ndep>
+
+<stream_year_first_ndep use_cn=".true."   sim_year="2018" >2018</stream_year_first_ndep>
+<stream_year_last_ndep  use_cn=".true."   sim_year="2018" >2018</stream_year_last_ndep>
 
 <stream_year_first_ndep use_cn=".true."   sim_year="2010" >2010</stream_year_first_ndep>
 <stream_year_last_ndep  use_cn=".true."   sim_year="2010" >2010</stream_year_last_ndep>
@@ -1511,6 +1532,14 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+
+<!-- NEON data (just a reduced range of the data) -->
+<stream_fldfilename_ndep phys="clm4_5"      sim_year_range="2018-PD" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0">
+lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_2018-2030_monthly_c210826.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep phys="clm5_0"      sim_year_range="2018-PD" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0">
+lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_2018-2030_monthly_c210826.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep phys="clm5_1"      sim_year_range="2018-PD" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0">
+lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_2018-2030_monthly_c210826.nc</stream_fldfilename_ndep>
 
 <ndep_taxmode            phys="clm5_1"  use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm5_1"  use_cn=".true.">NDEP_month</ndep_varlist>
@@ -1589,6 +1618,10 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_fldfilename_lightng hgrid="360x720"   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
 <stream_meshfile_lightng    hgrid="360x720"   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720_ESMFmesh_cdf5_150621.nc</stream_meshfile_lightng>
 
+<!-- NEON data (just a reduced range of the data) -->
+<stream_fldfilename_lightng  sim_year_range="2018-PD" hgrid="360x720">
+atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_NEONarea_c210625.nc</stream_fldfilename_lightng>
+
 <lightngmapalgo >bilinear</lightngmapalgo>
 
 <lightngmapalgo hgrid="1x1_brazil"          >nn</lightngmapalgo>
@@ -1602,6 +1635,10 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_first_popdens phys="clm4_5"  cnfireson=".true." sim_year_range="1850-2100"  >2015</stream_year_first_popdens>
 <stream_year_last_popdens  phys="clm4_5"  cnfireson=".true." sim_year_range="1850-2100"  >2100</stream_year_last_popdens>
 <model_year_align_popdens  phys="clm4_5"  cnfireson=".true." sim_year_range="1850-2100"  >2015</model_year_align_popdens>
+<stream_year_first_popdens                cnfireson=".true." sim_year_range="2018-PD"    >2018</stream_year_first_popdens>
+<stream_year_last_popdens                 cnfireson=".true." sim_year_range="2018-PD"    >2020</stream_year_last_popdens>
+<model_year_align_popdens                 cnfireson=".true." sim_year_range="2018-PD"    >2018</model_year_align_popdens>
+
 
 <stream_year_first_popdens phys="clm5_0"  cnfireson=".true." sim_year_range="1850-2100"  >2015</stream_year_first_popdens>
 <stream_year_last_popdens  phys="clm5_0"  cnfireson=".true." sim_year_range="1850-2100"  >2100</stream_year_last_popdens>
@@ -1610,6 +1647,15 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_first_popdens phys="clm5_1"  cnfireson=".true." sim_year_range="1850-2100"  >2015</stream_year_first_popdens>
 <stream_year_last_popdens  phys="clm5_1"  cnfireson=".true." sim_year_range="1850-2100"  >2100</stream_year_last_popdens>
 <model_year_align_popdens  phys="clm5_1"  cnfireson=".true." sim_year_range="1850-2100"  >2015</model_year_align_popdens>
+
+<stream_year_first_popdens use_cn=".true."   sim_year="PD"   >2020</stream_year_first_popdens>
+<stream_year_last_popdens  use_cn=".true."   sim_year="PD"   >2020</stream_year_last_popdens>
+
+<stream_year_first_popdens use_cn=".true."   sim_year="2020" >2020</stream_year_first_popdens>
+<stream_year_last_popdens  use_cn=".true."   sim_year="2020" >2020</stream_year_last_popdens>
+
+<stream_year_first_popdens use_cn=".true."   sim_year="2018" >2018</stream_year_first_popdens>
+<stream_year_last_popdens  use_cn=".true."   sim_year="2018" >2018</stream_year_last_popdens>
 
 <stream_year_first_popdens use_cn=".true."   sim_year="2010" >2010</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="2010" >2010</stream_year_last_popdens>
@@ -1628,6 +1674,15 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="PD"   >2020</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="PD"   >2020</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="2020" >2020</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="2020" >2020</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="2018" >2018</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="2018" >2018</stream_year_last_popdens>
 
 <stream_year_first_popdens use_fates=".true." sim_year="2010" >2010</stream_year_first_popdens>
 <stream_year_last_popdens  use_fates=".true." sim_year="2010" >2010</stream_year_last_popdens>
@@ -1707,6 +1762,10 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_first_urbantv phys="clm5_1"  sim_year_range="1850-2100" >2015</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_1"  sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
 <model_year_align_urbantv  phys="clm5_1"  sim_year_range="1850-2100" >2015</model_year_align_urbantv>
+<stream_year_first_urbantv                sim_year_range="2018-PD"   >2018</stream_year_first_urbantv>
+<stream_year_last_urbantv                 sim_year_range="2018-PD"   >2020</stream_year_last_urbantv>
+<model_year_align_urbantv                 sim_year_range="2018-PD"   >2018</model_year_align_urbantv>
+
 
 <stream_year_first_urbantv phys="clm5_0"  sim_year_range="1850-2100" >2015</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0"  sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
@@ -1715,6 +1774,15 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_first_urbantv phys="clm4_5"  sim_year_range="1850-2100" >2015</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm4_5"  sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
 <model_year_align_urbantv  phys="clm4_5"  sim_year_range="1850-2100" >2015</model_year_align_urbantv>
+
+<stream_year_first_urbantv sim_year="PD"   >2020</stream_year_first_urbantv>
+<stream_year_last_urbantv  sim_year="PD"   >2020</stream_year_last_urbantv>
+
+<stream_year_first_urbantv sim_year="2020" >2020</stream_year_first_urbantv>
+<stream_year_last_urbantv  sim_year="2020" >2020</stream_year_last_urbantv>
+
+<stream_year_first_urbantv sim_year="2018" >2018</stream_year_first_urbantv>
+<stream_year_last_urbantv  sim_year="2018" >2018</stream_year_last_urbantv>
 
 <stream_year_first_urbantv sim_year="2000" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  sim_year="2000" >2000</stream_year_last_urbantv>

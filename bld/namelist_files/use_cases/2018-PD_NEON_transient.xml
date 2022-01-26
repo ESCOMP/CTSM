@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<use_case_desc                 >Simulate transient land-use, and aerosol deposition changes from 2018 to current day with historical NEON data, also using data from CMIP6 SSP3-7.0 scenario for data not currently available</use_case_desc>
+<use_case_desc use_cn=".true." >Simulate transient land-use, aerosol, and nitrogen deposition changes from 2018 to current day with historical NEON data, also using data from CMIP6 SSP3-7.0 scenario for data not currently available</use_case_desc>
+
+<!-- Have a minimal list of things set here, sim_year, sim_year_range, and ssp_rcp, other things should be dependent on these and
+     set in a namelist_defaults xml file -->
+
+<sim_year>2018</sim_year>
+
+<sim_year_range>2018-PD</sim_year_range>
+
+<!-- For now use cycle for transient cases until CDEPS issue 201 is resolved
+<ndep_taxmode use_cn=".true." >limit</ndep_taxmode>
+-->
+
+<!-- For datasets where wer don't have recent data, use the CMIP6 future scenario for SSP-RCP SSP3-7.0 to fill in. This is needed
+     for example for aerosol and nitrogen deposition -->
+<ssp_rcp>SSP3-7.0</ssp_rcp>
+
+</namelist_defaults>

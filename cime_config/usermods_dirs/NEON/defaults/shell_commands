@@ -1,6 +1,6 @@
 ./xmlchange CLM_USRDAT_NAME=NEON
 ./xmlchange RUN_STARTDATE=2018-01-01
-./xmlchange CLM_NML_USE_CASE=1850-2100_SSP3-7.0_transient
 ./xmlchange CCSM_CO2_PPMV=408.83
+./xmlchange CLM_NML_USE_CASE=2018-PD_NEON_transient
 ./xmlchange DATM_PRESAERO=SSP3-7.0
 ./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2020,DATM_YR_START=2018
