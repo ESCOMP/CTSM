@@ -207,7 +207,6 @@ contains
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
 
-    this%rx_sdates_thisyr(:,:) = -1
     this%sdates_thisyr(:,:) = -1._r8
     this%hdates_thisyr(:,:) = -1._r8
 
