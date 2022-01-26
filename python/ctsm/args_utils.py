@@ -47,7 +47,7 @@ def plon_type(plon):
         plon_out (float): converted longitude between 0 and 360
     """
     plon = float(plon)
-    if plon < 0 or plon > 360:
+    if plon < -180 or plon > 360:
         raise argparse.ArgumentTypeError(
             "ERROR: Longitude should be between 0 and 360 or -180 and 180."
         )
