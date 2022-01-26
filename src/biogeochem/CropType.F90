@@ -27,11 +27,9 @@ module CropType
   ! Crop state variables structure
   type, public :: crop_type
 
-     ! Note that cropplant and harvdate could be 2D to facilitate rotation
      integer , pointer :: nyrs_crop_active_patch  (:)   ! number of years this crop patch has been active (0 for non-crop patches)
      logical , pointer :: croplive_patch          (:)   ! patch Flag, true if planted, not harvested
-     logical , pointer :: cropplant_patch         (:)   ! patch Flag, true if planted
-     integer , pointer :: harvdate_patch          (:)   ! patch harvest date
+     integer , pointer :: harvdate_patch          (:)   ! most recent patch harvest date; 999 if currently (or never) planted
      real(r8), pointer :: fertnitro_patch         (:)   ! patch fertilizer nitrogen
      real(r8), pointer :: gddplant_patch          (:)   ! patch accum gdd past planting date for crop       (ddays)
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
@@ -41,6 +39,10 @@ module CropType
      character(len=20) :: baset_mapping
      real(r8) :: baset_latvary_intercept
      real(r8) :: baset_latvary_slope
+     real(r8), pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year
+     real(r8), pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
+     integer , pointer :: sowing_count            (:)   ! number of sowing events this year for this patch
+     integer , pointer :: harvest_count           (:)   ! number of sowing events this year for this patch
 
    contains
      ! Public routines
@@ -177,6 +179,8 @@ contains
   subroutine InitAllocate(this, bounds)
     ! !USES:
     !
+    use clm_varpar, only : mxgrowseas, mxharvests
+    !
     ! !ARGUMENTS:
     class(crop_type) , intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
@@ -191,7 +195,6 @@ contains
 
     allocate(this%nyrs_crop_active_patch(begp:endp)) ; this%nyrs_crop_active_patch(:) = 0
     allocate(this%croplive_patch (begp:endp)) ; this%croplive_patch (:) = .false.
-    allocate(this%cropplant_patch(begp:endp)) ; this%cropplant_patch(:) = .false.
     allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1) 
     allocate(this%fertnitro_patch (begp:endp)) ; this%fertnitro_patch (:) = spval
     allocate(this%gddplant_patch (begp:endp)) ; this%gddplant_patch (:) = spval
@@ -199,6 +202,14 @@ contains
     allocate(this%vf_patch       (begp:endp)) ; this%vf_patch       (:) = 0.0_r8
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
+    allocate(this%sdates_thisyr(begp:endp,1:mxgrowseas))
+    allocate(this%hdates_thisyr(begp:endp,1:mxharvests))
+    allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
+    allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
+
+    this%rx_sdates_thisyr(:,:) = -1
+    this%sdates_thisyr(:,:) = -1._r8
+    this%hdates_thisyr(:,:) = -1._r8
 
   end subroutine InitAllocate
 
@@ -206,7 +217,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d
+    use histFileMod    , only : hist_addfld1d, hist_addfld2d
     !
     ! !ARGUMENTS:
     class(crop_type),  intent(inout) :: this
@@ -246,6 +257,16 @@ contains
             avgflag='A', long_name='latitude vary base temperature for gddplant', &
             ptr_patch=this%latbaset_patch, default='inactive')
     end if
+
+    this%sdates_thisyr(begp:endp,:) = spval
+    call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxgrowseas', &
+         avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
+         ptr_patch=this%sdates_thisyr, default='inactive')
+
+    this%hdates_thisyr(begp:endp,:) = spval
+    call hist_addfld2d (fname='HDATES', units='day of year', type2d='mxharvests', &
+         avgflag='I', long_name='actual crop harvest dates; should only be output annually', &
+         ptr_patch=this%hdates_thisyr, default='inactive')
 
   end subroutine InitHistory
 
@@ -463,31 +484,6 @@ contains
                 this%croplive_patch(p) = .true.
              else
                 this%croplive_patch(p) = .false.
-             end if
-          end do
-       end if
-       deallocate(temp1d)
-
-       allocate(temp1d(bounds%begp:bounds%endp))
-       if (flag == 'write') then 
-          do p= bounds%begp,bounds%endp
-             if (this%cropplant_patch(p)) then
-                temp1d(p) = 1
-             else
-                temp1d(p) = 0
-             end if
-          end do
-       end if
-       call restartvar(ncid=ncid, flag=flag,  varname='cropplant', xtype=ncd_log,  &
-            dim1name='pft', &
-            long_name='Flag that crop is planted, but not harvested' , &
-            interpinic_flag='interp', readvar=readvar, data=temp1d)
-       if (flag == 'read') then 
-          do p= bounds%begp,bounds%endp
-             if (temp1d(p) == 1) then
-                this%cropplant_patch(p) = .true.
-             else
-                this%cropplant_patch(p) = .false.
              end if
           end do
        end if
