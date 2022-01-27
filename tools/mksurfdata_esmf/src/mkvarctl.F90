@@ -37,6 +37,8 @@ module mkvarctl
   public :: MPI_LOGICAL
   public :: MPI_CHARACTER
   public :: MPI_COMM_WORLD
+  public :: MPI_MAX
+  public :: MPI_SUCCESS
 
   real(r8), public, parameter :: spval = 1.e36    ! special value
   integer,  public, parameter :: ispval = -9999   ! special value

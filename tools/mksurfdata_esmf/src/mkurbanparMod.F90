@@ -294,7 +294,7 @@ contains
     ! First, recompute urban_classes_gcell_o, based on any changes we have made to urbn_o
     ! while handling special cases
     call ESMF_LogWrite("Before normalize_classes_by_gcell", ESMF_LOGMSG_INFO)
-    call normalize_classes_by_gcell(urban_classes_o, urbn_o, urban_classes_gcell_o)
+    !call normalize_classes_by_gcell(urban_classes_o, urbn_o, urban_classes_gcell_o)
     call ESMF_LogWrite("After normalize_classes_by_gcell", ESMF_LOGMSG_INFO)
 
 #ifdef TODO

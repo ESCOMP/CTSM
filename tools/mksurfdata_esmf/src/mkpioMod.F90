@@ -25,8 +25,10 @@ module mkpioMod
 
   interface mkpio_get_rawdata
      module procedure mkpio_get_rawdata1d_int
-     module procedure mkpio_get_rawdata1d_real
-     module procedure mkpio_get_rawdata2d_real
+     module procedure mkpio_get_rawdata1d_real4
+     module procedure mkpio_get_rawdata1d_real8
+     module procedure mkpio_get_rawdata2d_real4
+     module procedure mkpio_get_rawdata2d_real8
   end interface mkpio_get_rawdata
 
   interface mkpio_def_spatial_var
@@ -63,7 +65,7 @@ contains
     ! local variables
     type(var_desc_t)       :: pio_varid
     integer                :: pio_vartype
-    type(io_desc_t)        :: pio_iodesc_data
+    type(io_desc_t)        :: pio_iodesc
     type(io_desc_t)        :: pio_iodesc_mask
     integer                :: lsize
     integer                :: rcode
@@ -79,21 +81,21 @@ contains
     ! Create io descriptor for input raw data
     ! This will query the raw data file for the dimensions of the variable varname and
     ! create iodesc for either single or multi level input data
-    call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc_data, rc)
+    call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Read the input raw data
-    call ESMF_VMLogMemInfo("After mkpio_iodesc_data for varname "//trim(varname))
-    call pio_read_darray(pioid, pio_varid, pio_iodesc_data, data_i, rcode)
+    call ESMF_VMLogMemInfo("After mkpio_iodesc for varname "//trim(varname))
+    call pio_read_darray(pioid, pio_varid, pio_iodesc, data_i, rcode)
     call ESMF_VMLogMemInfo("After call to pio_read_darrayy for varname "//trim(varname))
-    call pio_freedecomp(pioid, pio_iodesc_data)
+    call pio_freedecomp(pioid, pio_iodesc)
     call ESMF_VMLogMemInfo("After call to pio_freedecomp for "//trim(varname))
     call ESMF_LogWrite("At end of "//trim(subname), ESMF_LOGMSG_INFO)
 
   end subroutine mkpio_get_rawdata1d_int
 
   !===============================================================
-  subroutine mkpio_get_rawdata1d_real(pioid, varname, mesh_i, data_i, rc)
+  subroutine mkpio_get_rawdata1d_real8(pioid, varname, mesh_i, data_i, rc)
 
     ! input/output variables
     type(file_desc_t), intent(inout) :: pioid
@@ -105,7 +107,7 @@ contains
     ! local variables
     type(var_desc_t)       :: pio_varid
     integer                :: pio_vartype
-    type(io_desc_t)        :: pio_iodesc_data
+    type(io_desc_t)        :: pio_iodesc
     type(io_desc_t)        :: pio_iodesc_mask
     real(r4), allocatable  :: data_real(:)
     real(r8), allocatable  :: data_double(:)
@@ -124,15 +126,15 @@ contains
     ! Create io descriptor for input raw data
     ! This will query the raw data file for the dimensions of the variable varname and
     ! create iodesc for either single or multi level input data
-    call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc_data, rc)
+    call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Read the input raw data
-    call ESMF_VMLogMemInfo("After mkpio_iodesc_data for varname "//trim(varname))
+    call ESMF_VMLogMemInfo("After mkpio_iodesc for varname "//trim(varname))
     if (pio_vartype == PIO_REAL) then
        allocate(data_real(lsize))
        call ESMF_VMLogMemInfo("Calling pio_read_darray for varname "//trim(varname))
-       call pio_read_darray(pioid, pio_varid, pio_iodesc_data, data_real, rcode)
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_real, rcode)
        call ESMF_VMLogMemInfo("Finished pio_read_darray for varname "//trim(varname))
        data_i(:) = real(data_real(:), kind=r8)
        call ESMF_LogWrite("Finished transfer to data_i for varname "//trim(varname))
@@ -140,20 +142,80 @@ contains
        call ESMF_LogWrite("Finished deallocate of data_real for varname "//trim(varname))
     else if (pio_vartype == PIO_DOUBLE) then
        allocate(data_double(lsize))
-       call pio_read_darray(pioid, pio_varid, pio_iodesc_data, data_double, rcode)
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_double, rcode)
        data_i(:) = data_double(:)
        deallocate(data_double)
     else
        call shr_sys_abort(subName//"ERROR: only real and double types are supported")
     end if
     call ESMF_VMLogMemInfo("After call to pio_read_darrayy for varname "//trim(varname))
-    call pio_freedecomp(pioid, pio_iodesc_data)
+    call pio_freedecomp(pioid, pio_iodesc)
     call ESMF_VMLogMemInfo("After call to pio_freedecomp for "//trim(varname))
 
-  end subroutine mkpio_get_rawdata1d_real
+  end subroutine mkpio_get_rawdata1d_real8
 
   !===============================================================
-  subroutine mkpio_get_rawdata2d_real(pioid, varname, mesh_i, data_i, rc)
+  subroutine mkpio_get_rawdata1d_real4(pioid, varname, mesh_i, data_i, rc)
+
+    ! input/output variables
+    type(file_desc_t), intent(inout) :: pioid
+    character(len=*) , intent(in)    :: varname   ! field name in rawdata file
+    type(ESMF_Mesh)  , intent(in)    :: mesh_i
+    real(r4)         , intent(inout) :: data_i(:) ! input raw data
+    integer          , intent(out)   :: rc
+
+    ! local variables
+    type(var_desc_t)       :: pio_varid
+    integer                :: pio_vartype
+    type(io_desc_t)        :: pio_iodesc
+    type(io_desc_t)        :: pio_iodesc_mask
+    real(r4), allocatable  :: data_real(:)
+    real(r8), allocatable  :: data_double(:)
+    real(r4), allocatable  :: landmask(:)
+    integer                :: lsize
+    integer                :: rcode
+    integer                :: n
+    character(len=*), parameter :: subname = 'mkpio_get_rawdata1d'
+    !-------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    ! Get data_i - Read in varname from filename
+    lsize = size(data_i)
+
+    ! Create io descriptor for input raw data
+    ! This will query the raw data file for the dimensions of the variable varname and
+    ! create iodesc for either single or multi level input data
+    call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Read the input raw data
+    call ESMF_VMLogMemInfo("After mkpio_iodesc for varname "//trim(varname))
+    if (pio_vartype == PIO_REAL) then
+       allocate(data_real(lsize))
+       call ESMF_VMLogMemInfo("Calling pio_read_darray for varname "//trim(varname))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_real, rcode)
+       call ESMF_VMLogMemInfo("Finished pio_read_darray for varname "//trim(varname))
+       data_i(:) = data_real(:)
+       call ESMF_LogWrite("Finished transfer to data_i for varname "//trim(varname))
+       deallocate(data_real)
+       call ESMF_LogWrite("Finished deallocate of data_real for varname "//trim(varname))
+    else if (pio_vartype == PIO_DOUBLE) then
+       allocate(data_double(lsize))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_double, rcode)
+       data_i(:) = real(data_double(:), kind=r4)
+       deallocate(data_double)
+    else
+       call shr_sys_abort(subName//"ERROR: only real and double types are supported")
+    end if
+    call ESMF_VMLogMemInfo("After call to pio_read_darrayy for varname "//trim(varname))
+    call pio_freedecomp(pioid, pio_iodesc)
+    call ESMF_VMLogMemInfo("After call to pio_freedecomp for "//trim(varname))
+
+  end subroutine mkpio_get_rawdata1d_real4
+
+  !===============================================================
+  subroutine mkpio_get_rawdata2d_real8(pioid, varname, mesh_i, data_i, rc)
 
     ! input/output variables
     type(file_desc_t) , intent(inout) :: pioid
@@ -165,7 +227,7 @@ contains
     ! local variables
     type(var_desc_t)       :: pio_varid
     integer                :: pio_vartype
-    type(io_desc_t)        :: pio_iodesc_data
+    type(io_desc_t)        :: pio_iodesc
     type(io_desc_t)        :: pio_iodesc_mask
     real(r4), allocatable  :: data_real1d(:)
     real(r4), allocatable  :: data_real2d(:,:)
@@ -189,7 +251,7 @@ contains
     ! This will query the raw data file for the dimensions of the variable varname and
     ! create iodesc for either single or multi level input data
     call ESMF_VMLogMemInfo("Before mkpio_iodesc in "//trim(subname))
-    call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc_data, rc)
+    call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_iodesc in "//trim(subname))
 
@@ -199,7 +261,7 @@ contains
     ! Input data is read into (lsize,nlev) array and then transferred to data_i(nlev,lsize)
     if (pio_vartype == PIO_REAL) then
        allocate(data_real2d(lsize,nlev))
-       call pio_read_darray(pioid, pio_varid, pio_iodesc_data, data_real2d, rcode)
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_real2d, rcode)
        do l = 1,nlev
           do n = 1,lsize
              data_i(l,n) = real(data_real2d(n,l), kind=r8)
@@ -208,7 +270,7 @@ contains
        deallocate(data_real2d)
     else if (pio_vartype == PIO_DOUBLE) then
        allocate(data_double2d(lsize,nlev))
-       call pio_read_darray(pioid, pio_varid, pio_iodesc_data, data_double2d, rcode)
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_double2d, rcode)
        do l = 1,nlev
           do n = 1,lsize
              data_i(l,n) = data_double2d(n,l)
@@ -218,9 +280,78 @@ contains
     else
        call shr_sys_abort(subName//"ERROR: only real and double types are supported")
     end if
-    call pio_freedecomp(pioid, pio_iodesc_data)
+    call pio_freedecomp(pioid, pio_iodesc)
 
-  end subroutine mkpio_get_rawdata2d_real
+  end subroutine mkpio_get_rawdata2d_real8
+
+  !===============================================================
+  subroutine mkpio_get_rawdata2d_real4(pioid, varname, mesh_i, data_i, rc)
+
+    ! input/output variables
+    type(file_desc_t) , intent(inout) :: pioid
+    character(len=*)  , intent(in)    :: varname   ! field name in rawdata file
+    type(ESMF_Mesh)   , intent(in)    :: mesh_i
+    real(r4)          , intent(inout) :: data_i(:,:) ! input raw data
+    integer           , intent(out)   :: rc
+
+    ! local variables
+    type(var_desc_t)       :: pio_varid
+    integer                :: pio_vartype
+    type(io_desc_t)        :: pio_iodesc
+    real(r4), allocatable  :: data_real1d(:)
+    real(r4), allocatable  :: data_real2d(:,:)
+    real(r8), allocatable  :: data_double1d(:)
+    real(r8), allocatable  :: data_double2d(:,:)
+    real(r4), allocatable  :: landmask(:)
+    integer                :: lsize, nlev
+    integer                :: n,l
+    integer                :: rcode
+    character(len=*), parameter :: subname = ' mkpio_get_rawdata_2d'
+    !-------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    ! Get data_i - Read in varname from filename
+    ! Note that data_i is coming in as (nlev,lsize) in terms of dimensions
+    nlev  = size(data_i, dim=1)
+    lsize = size(data_i, dim=2)
+
+    ! Create io descriptor for input raw data
+    ! This will query the raw data file for the dimensions of the variable varname and
+    ! create iodesc for either single or multi level input data
+    call ESMF_VMLogMemInfo("Before mkpio_iodesc in "//trim(subname))
+    call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After mkpio_iodesc in "//trim(subname))
+
+    ! Read the input raw data (all levels read at once)
+    ! - levels are the innermost dimension for esmf fields
+    ! - levels are the outermost dimension in pio reads
+    ! Input data is read into (lsize,nlev) array and then transferred to data_i(nlev,lsize)
+    if (pio_vartype == PIO_REAL) then
+       allocate(data_real2d(lsize,nlev))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_real2d, rcode)
+       do l = 1,nlev
+          do n = 1,lsize
+             data_i(l,n) = data_real2d(n,l)
+          end do
+       end do
+       deallocate(data_real2d)
+    else if (pio_vartype == PIO_DOUBLE) then
+       allocate(data_double2d(lsize,nlev))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_double2d, rcode)
+       do l = 1,nlev
+          do n = 1,lsize
+             data_i(l,n) = real(data_double2d(n,l), kind=r4)
+          end do
+       end do
+       deallocate(data_double2d)
+    else
+       call shr_sys_abort(subName//"ERROR: only real and double types are supported")
+    end if
+    call pio_freedecomp(pioid, pio_iodesc)
+
+  end subroutine mkpio_get_rawdata2d_real4
 
   !===============================================================
   subroutine mkpio_iodesc_rawdata( mesh, varname, pioid, pio_varid,  pio_vartype, pio_iodesc, rc)
@@ -239,7 +370,7 @@ contains
     ! local variables
     type(ESMF_DistGrid)     :: distGrid
     integer                 :: n, ndims
-    integer, pointer        :: compdof(:)
+    integer, allocatable    :: compdof(:)
     integer, allocatable    :: compdof3d(:)
     integer, allocatable    :: dimids(:)
     integer, allocatable    :: dimlens(:)
@@ -343,10 +474,10 @@ contains
     end if
 
     ! deallocate memory
-    ! deallocate(compdof)
-    ! if (allocated(compdof3d)) deallocate(compdof3d)
+    deallocate(compdof)
+    if (allocated(compdof3d)) deallocate(compdof3d)
 
-    call ESMF_VMLogMemInfo("Finished setting iodesc for "//trim(varname))
+    call ESMF_VMLogMemInfo("Finished setting iodesc for "//trim(varname)//" in "//trim(subname))
 
   end subroutine mkpio_iodesc_rawdata
 

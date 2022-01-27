@@ -8,7 +8,7 @@ module mksoilcolMod
   use mkpioMod     , only : mkpio_iodesc_rawdata, pio_iotype, pio_ioformat, pio_iosystem
   use mkesmfMod    , only : regrid_rawdata
   use mkutilsMod   , only : chkerr, mkrank
-  use mkvarctl     , only : root_task, ndiag
+  use mkvarctl     , only : root_task, ndiag, mpicom, MPI_INTEGER, MPI_MAX
 
   implicit none
   private
@@ -48,17 +48,13 @@ contains
     integer                :: srcMaskValue = -987987 ! spval for RH mask values
     integer                :: dstMaskValue = -987987 ! spval for RH mask values
     integer                :: srcTermProcessing_Value = 0
-    integer                :: ndims
-    real(r8), allocatable  :: soilcol_i(:)
-    real(r8), allocatable  :: data_i(:,:)
-    real(r8), allocatable  :: data_o(:,:)
-    real(r8), allocatable  :: mask_i(:)
-    integer, parameter          :: num = 2      ! set soil mapunit number
-    integer                     :: wsti(num)    ! index to 1st and 2nd largest wst
-    real(r8)                    :: wt           ! map overlap weight
-    logical                     :: has_color    ! whether this grid cell has non-zero color
-    integer, parameter          :: miss = 99999 ! missing data indicator
-    character(len=35), allocatable :: col(:)  ! name of each color
+    real(r4), allocatable  :: soilcol_i(:)
+    real(r4), allocatable  :: data_i(:,:)
+    real(r4), allocatable  :: data_o(:,:)
+    real(r4), allocatable  :: mask_i(:)
+    logical                :: has_color    ! whether this grid cell has non-zero color
+    integer                :: nsoilcol_local
+    integer                :: maxindex(1)
     character(len=*), parameter :: subname = 'mksoilcol'
     !-----------------------------------------------------------------------
 
@@ -100,65 +96,17 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
  
-    ! ** TODO: determine the maximum value of soilcol_i - across all processors - doing an all reduce
-    ! For now hardwire nsoilcol to 20
-    nsoilcol = 20
+    ! Determine maximum number of soil colors across all processors
+    ! This will be used for the ungridded dimension of data_o below
+    nsoilcol_local = maxval(soilcol_i)
+    call mpi_allreduce(nsoilcol_local, nsoilcol, 1, MPI_INTEGER, MPI_MAX, mpicom, rcode)
+    ! TODO: MPI_SUCCESS could not be accessed from mkvarctl
+    !if (rcode /= MPI_SUCCESS) call shr_sys_abort('error for mpi_allredice in '//trim(subname))
 
     ! Determine ns_o and allocate data_o
     ns_o = size(soil_color_o)
     allocate(data_o(0:nsoilcol, ns_o),stat=ier)
     if (ier/=0) call shr_sys_abort()
-
-    ! Define the model color classes: 0 to nsoilcol
-    allocate(col(0:nsoilcol))
-    if (nsoilcol == 20) then
-       col(0)  = 'no soil                            '
-       col(1)  = 'class 1: light                     '
-       col(2)  = 'class 2:                           '
-       col(3)  = 'class 3:                           '
-       col(4)  = 'class 4:                           '
-       col(5)  = 'class 5:                           '
-       col(6)  = 'class 6:                           '
-       col(7)  = 'class 7:                           '
-       col(8)  = 'class 8:                           '
-       col(9)  = 'class 9:                           '
-       col(10) = 'class 10:                          '
-       col(11) = 'class 11:                          '
-       col(12) = 'class 12:                          '
-       col(13) = 'class 13:                          '
-       col(14) = 'class 14:                          '
-       col(15) = 'class 15:                          '
-       col(16) = 'class 16:                          '
-       col(17) = 'class 17:                          '
-       col(18) = 'class 18:                          '
-       col(19) = 'class 19:                          '
-       col(20) = 'class 20: dark                     '
-    else if (nsoilcol == 8) then
-       col(0) = 'no soil                            '
-       col(1) = 'class 1: light                     '
-       col(2) = 'class 2:                           '
-       col(3) = 'class 3:                           '
-       col(4) = 'class 4:                           '
-       col(5) = 'class 5:                           '
-       col(6) = 'class 6:                           '
-       col(7) = 'class 7:                           '
-       col(8) = 'class 8: dark                      '
-    else
-       write(6,*)'nsoilcol value of ',nsoilcol,' is not currently supported'
-       call shr_sys_abort()
-    end if
-
-    ! Create field on input mesh
-    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, &
-         ungriddedLbound=(/0/), ungriddedUbound=(/nsoilcol/), gridToFieldMap=(/2/), rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After field_i creation in "//trim(subname))
-
-    ! Create field on model model
-    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, &
-         ungriddedLbound=(/0/), ungriddedUbound=(/nsoilcol/), gridToFieldMap=(/2/), rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After field_o creation in "//trim(subname))
 
     ! Determine input landmask (frac_i)
     allocate(mask_i(ns_i))
@@ -167,14 +115,26 @@ contains
 
     ! Now determine data_i as a real 2d array
     allocate(data_i(0:nsoilcol,ns_i))
-    data_i(:,:) = 0._r8
+    data_i(:,:) = 0._r4
     do l = 1,nsoilcol
        do n = 1,ns_i
           if (int(soilcol_i(n)) == l) then
-             data_i(l,n) = 1._r8 * mask_i(n) 
+             data_i(l,n) = 1._r4 * mask_i(n) 
           end if
        end do
     end do
+
+    ! Create field on input mesh
+    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, &
+         ungriddedLbound=(/0/), ungriddedUbound=(/nsoilcol/), gridToFieldMap=(/2/), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After field_i creation in "//trim(subname))
+
+    ! Create field on model model
+    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, &
+         ungriddedLbound=(/0/), ungriddedUbound=(/nsoilcol/), gridToFieldMap=(/2/), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After field_o creation in "//trim(subname))
 
     ! Create route handle to map field_model to field_data
     call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
@@ -207,8 +167,10 @@ contains
 
        ! Rank non-zero weights by color type. wsti(1) is the most extensive color type. 
        if (has_color) then
-          call mkrank (nsoilcol, data_o(0:nsoilcol,no), miss, num, wsti)
-          soil_color_o(no) = wsti(1)
+          !maxindex = maxloc(data_o(0:nsoilcol,no))
+          !soil_color_o(no) = maxindex
+          call mkrank (nsoilcol, data_o(0:nsoilcol,no), 9999, 1, maxindex)
+          soil_color_o(no) = maxindex(1)
        end if
 
        ! If land but no color, set color to 15 (in older dataset generic soil color 4)
@@ -239,7 +201,6 @@ contains
        write (ndiag,'(a)')
     end if
 
-    deallocate(col)
     deallocate(data_i)
     deallocate(data_o)
     deallocate(soilcol_i)
