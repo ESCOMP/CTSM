@@ -11,13 +11,29 @@ ncar_pylib
 Brief description of scripts:
 
 subset_data
-	create regional domain, surface data, and rtm directional files by 
-	extracting data from global datasets 
+    This script extracts domain files, surface dataset, and DATM files
+    at either a single point or a region using the global dataset.
+    For extracting domain files, surface dataset, and DATM files at a single point, use:
+        ./subset_data point
+
+    For extracting domain files, surface dataset, and DATM files at a region, use:
+        ./subset_data region
 
 modify_singlept_site_neon.py
-        After running subset_data.py overwrite some fields with site-specific 
-        data for neon sites
+    After running subset_data.py overwrite some fields with site-specific
+    data for neon sites. This code uses neon_sites_dompft.csv to determine dom-pft values. 
 
+run_neon.py
+    Wrapper script for running CTSM simulations for one or more
+    neon sites for spin-up or transient run types.
+
+neon_surf_wrapper.py
+    Wrapper script that run subset_data to extract data for all neon points and then
+    use modify_singlept_site_neon.py to update site-specific fields.
+
+neon_s3_upload
+    Script to rename and upload NEON site finidat files to NEON s3 bucket
+    for use in transient startup cases
 
 DEPRECATED SCRIPTS:
 
