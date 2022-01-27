@@ -154,7 +154,7 @@ class TestSinglePointCase(unittest.TestCase):
     def test_check_dom_pft_numpft(self):
         """
         Test check_dom_pft
-        When dom_pft < 16 but no crop (aka num_pft <16)
+        When dom_pft > 15 but no crop (aka num_pft <15)
         """
         single_point = SinglePointCase(
             plat=self.plat,
@@ -173,7 +173,7 @@ class TestSinglePointCase(unittest.TestCase):
             cap_saturation=self.cap_saturation,
             out_dir=self.out_dir,
         )
-        single_point.dom_pft = [16, 53]
+        single_point.dom_pft = [15, 53]
         single_point.num_pft = 16
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "Please use --crop*"):
             single_point.check_dom_pft()
@@ -201,6 +201,7 @@ class TestSinglePointCase(unittest.TestCase):
             out_dir=self.out_dir,
         )
         single_point.dom_pft = [1, 5, 16]
+        single_point.num_pft = 78
         with self.assertRaisesRegex(
             argparse.ArgumentTypeError, "mixed land units is not possible*"
         ):
