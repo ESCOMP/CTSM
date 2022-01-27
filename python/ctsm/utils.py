@@ -144,21 +144,21 @@ def download_file(url, fname):
     try:
         response = requests.get(url)
 
-        with open(fname, "wb") as this_f:
-            this_f.write(response.content)
-
-        # -- Check if download status_code
-        if response.status_code == 200:
-            logger.info("Download finished successfully for : %s", fname)
-
-        elif response.status_code == 404:
-            logger.warning ('This file is not available on the server: %s', fname)
-            err_msg = "Couldn't download file "+fname +"-- Error code: "+ "404"
-            abort(err_msg)
-
     # pylint: disable=broad-except
     except Exception as err:
         logger.warning ('The server could not fulfill the request.')
         logger.warning ('Something went wrong in downloading: %s', fname)
         err_msg = "Couldn't download file "+fname +"-- Error code:"+ err
+        abort(err_msg)
+
+    with open(fname, "wb") as this_f:
+        this_f.write(response.content)
+
+    # -- Check if download status_code
+    if response.status_code == 200:
+        logger.info("Download finished successfully for : %s", fname)
+
+    elif response.status_code == 404:
+        logger.warning ('This file is not available on the server: %s', fname)
+        err_msg = "Couldn't download file "+fname +"-- Error code: "+ "404"
         abort(err_msg)
