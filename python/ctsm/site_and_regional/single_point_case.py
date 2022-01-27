@@ -144,9 +144,9 @@ class SinglePointCase(BaseCase):
           same range.
           e.g. If users specified multiple dom_pft, they should be
           either in :
-            - 1-15 range
+            - 1-14 range
             or
-            - 16-78 range
+            - 15-78 range
             - give an error : mixed land units not possible.
 
         dom_pft in netcdf: 1-15 which tranlate to 0-14
@@ -158,7 +158,7 @@ class SinglePointCase(BaseCase):
                 If any dom_pft is less than 1.
             Error (ArgumentTypeError):
                 If mixed land units are chosen.
-                dom_pft values are both in range of 1-15 and 16-78.
+                dom_pft values are both in range of 1-14 and 15-78.
 
 
         """
@@ -176,19 +176,21 @@ class SinglePointCase(BaseCase):
                 raise argparse.ArgumentTypeError(err_msg)
 
             #-- check dom_pft vs num_pft
-            if max_dom_pft > self.num_pft :
-                err_msg = "Please use --crop flag when --dompft is above 16."
+            print (max_dom_pft)
+            print (self.num_pft)
+            if  self.num_pft -1 < max_dom_pft < MAX_PFT :
+                err_msg = "Please use --crop flag when --dompft is above 15."
                 raise argparse.ArgumentTypeError(err_msg)
 
             #-- check if all dom_pft are in the same range:
-            if min_dom_pft <= NAT_PFT < max_dom_pft:
+            if min_dom_pft < NAT_PFT <= max_dom_pft:
                 err_msg = """
                 \n
                 Subsetting using mixed land units is not possible.
                 Please make sure all --dompft values are in only
                 one of these ranges:
-                - 1-15
-                - 16-78
+                - 1-14
+                - 15-78
                 """
                 raise argparse.ArgumentTypeError(err_msg)
 
@@ -236,7 +238,7 @@ class SinglePointCase(BaseCase):
           For example, --dompft 8 --pctpft 0.4 0.6 should give an error.
 
         - Check if the sum of pct_pft is equal to 100% or 1.
-          For example, --dompft 8 15 --pctpft 0.6 0.9 should give an error.
+          For example, --dompft 8 14 --pctpft 0.6 0.9 should give an error.
 
         - If the sum of pct_pft is 1, convert it to % (multiply by 100)
 
@@ -391,7 +393,7 @@ class SinglePointCase(BaseCase):
         if self.dom_pft is not None:
             max_dom_pft = max(self.dom_pft)
             #-- First initialize everything:
-            if max_dom_pft <=NAT_PFT :
+            if max_dom_pft < NAT_PFT :
                 f_out ["PCT_NAT_PFT"][:,:,:] = 0
             else:
                 f_out["PCT_CFT"][:,:,:] = 0
@@ -404,11 +406,11 @@ class SinglePointCase(BaseCase):
             #-- loop over all dom_pft and pct_pft
             zip_pfts = zip (self.dom_pft, self.pct_pft)
             for dom_pft, pct_pft in zip_pfts:
-                if dom_pft <= NAT_PFT:
-                    f_out['PCT_NAT_PFT'][:, :, dom_pft-1] = pct_pft
-                elif dom_pft > NAT_PFT:
+                if dom_pft < NAT_PFT:
+                    f_out['PCT_NAT_PFT'][:, :, dom_pft] = pct_pft
+                else:
                     dom_pft = dom_pft-NAT_PFT
-                    f_out['PCT_CFT'][:, :, dom_pft-1] = pct_pft
+                    f_out['PCT_CFT'][:, :, dom_pft] = pct_pft
 
         # -------------------------------
         # By default include_nonveg=False
@@ -423,7 +425,7 @@ class SinglePointCase(BaseCase):
             f_out["PCT_GLACIER"][:, :] = 0.0
 
             max_dom_pft = max(self.dom_pft)
-            if max_dom_pft <=NAT_PFT :
+            if max_dom_pft < NAT_PFT :
                 f_out["PCT_NATVEG"][:, :] = 100
                 f_out["PCT_CROP"][:, :] = 0
             else:
