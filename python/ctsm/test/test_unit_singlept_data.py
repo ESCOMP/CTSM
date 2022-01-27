@@ -13,10 +13,11 @@ import sys
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
 _CTSM_PYTHON = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir
+)
 sys.path.insert(1, _CTSM_PYTHON)
 
-#pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-position
 from ctsm import unit_testing
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 
@@ -30,70 +31,69 @@ class TestSinglePointCase(unittest.TestCase):
 
     plat = 20.1
     plon = 50.5
-    site_name=None
-    create_domain=True
-    create_surfdata=True
-    create_landuse=True
-    create_datm=True
-    create_user_mods=True
+    site_name = None
+    create_domain = True
+    create_surfdata = True
+    create_landuse = True
+    create_datm = True
+    create_user_mods = True
     dom_pft = [8]
     pct_pft = None
     num_pft = 16
     include_nonveg = False
     uni_snow = True
     cap_saturation = True
-    out_dir=os.getcwd()
-
+    out_dir = os.getcwd()
 
     def test_create_tag_noname(self):
         """
         Test create_tag when site_name is NOT given.
         """
         single_point = SinglePointCase(
-            plat = self.plat,
-            plon = self.plon,
-            site_name = self.site_name,
-            create_domain = self.create_domain,
-            create_surfdata = self.create_surfdata,
-            create_landuse = self.create_landuse,
-            create_datm = self.create_datm,
-            create_user_mods = self.create_user_mods,
-            dom_pft = self.dom_pft,
-            pct_pft = self.pct_pft,
-            num_pft = self.num_pft,
-            include_nonveg = self.include_nonveg,
-            uni_snow = self.uni_snow,
-            cap_saturation = self.cap_saturation,
-            out_dir = self.out_dir,
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
         )
 
         single_point.create_tag()
-        self.assertEqual(single_point.tag,"50.5_20.1" )
+        self.assertEqual(single_point.tag, "50.5_20.1")
 
     def test_create_tag_name(self):
         """
         Test create_tag when site_name is given.
         """
         single_point = SinglePointCase(
-            plat = self.plat,
-            plon = self.plon,
-            site_name = self.site_name,
-            create_domain = self.create_domain,
-            create_surfdata = self.create_surfdata,
-            create_landuse = self.create_landuse,
-            create_datm = self.create_datm,
-            create_user_mods = self.create_user_mods,
-            dom_pft = self.dom_pft,
-            pct_pft = self.pct_pft,
-            num_pft = self.num_pft,
-            include_nonveg = self.include_nonveg,
-            uni_snow = self.uni_snow,
-            cap_saturation = self.cap_saturation,
-            out_dir = self.out_dir,
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
         )
         single_point.site_name = "foo"
         single_point.create_tag()
-        self.assertEqual(single_point.tag,"foo" )
+        self.assertEqual(single_point.tag, "foo")
 
     def test_check_dom_pft_too_big(self):
         """
@@ -101,26 +101,27 @@ class TestSinglePointCase(unittest.TestCase):
         When one of the given dom_pft(s) are bigger than 78
         """
         single_point = SinglePointCase(
-            plat = self.plat,
-            plon = self.plon,
-            site_name = self.site_name,
-            create_domain = self.create_domain,
-            create_surfdata = self.create_surfdata,
-            create_landuse = self.create_landuse,
-            create_datm = self.create_datm,
-            create_user_mods = self.create_user_mods,
-            dom_pft = self.dom_pft,
-            pct_pft = self.pct_pft,
-            num_pft = self.num_pft,
-            include_nonveg = self.include_nonveg,
-            uni_snow = self.uni_snow,
-            cap_saturation = self.cap_saturation,
-            out_dir = self.out_dir,
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
         )
-        single_point.dom_pft = [16,36,79]
-        with self.assertRaisesRegex( argparse.ArgumentTypeError, "values for --dompft should*"):
+        single_point.dom_pft = [16, 36, 79]
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError, "values for --dompft should*"
+        ):
             single_point.check_dom_pft()
-
 
     def test_check_dom_pft_too_small(self):
         """
@@ -128,26 +129,27 @@ class TestSinglePointCase(unittest.TestCase):
         When one of the given dom_pft(s) are bigger than 1
         """
         single_point = SinglePointCase(
-            plat = self.plat,
-            plon = self.plon,
-            site_name = self.site_name,
-            create_domain = self.create_domain,
-            create_surfdata = self.create_surfdata,
-            create_landuse = self.create_landuse,
-            create_datm = self.create_datm,
-            create_user_mods = self.create_user_mods,
-            dom_pft = self.dom_pft,
-            pct_pft = self.pct_pft,
-            num_pft = self.num_pft,
-            include_nonveg = self.include_nonveg,
-            uni_snow = self.uni_snow,
-            cap_saturation = self.cap_saturation,
-            out_dir = self.out_dir,
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
         )
-        single_point.dom_pft = [16,36,0]
-        with self.assertRaisesRegex( argparse.ArgumentTypeError, "values for --dompft should*"):
+        single_point.dom_pft = [16, 36, 0]
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError, "values for --dompft should*"
+        ):
             single_point.check_dom_pft()
-
 
     def test_check_dom_pft_numpft(self):
         """
@@ -155,27 +157,26 @@ class TestSinglePointCase(unittest.TestCase):
         When dom_pft < 16 but no crop (aka num_pft <16)
         """
         single_point = SinglePointCase(
-            plat = self.plat,
-            plon = self.plon,
-            site_name = self.site_name,
-            create_domain = self.create_domain,
-            create_surfdata = self.create_surfdata,
-            create_landuse = self.create_landuse,
-            create_datm = self.create_datm,
-            create_user_mods = self.create_user_mods,
-            dom_pft = self.dom_pft,
-            pct_pft = self.pct_pft,
-            num_pft = self.num_pft,
-            include_nonveg = self.include_nonveg,
-            uni_snow = self.uni_snow,
-            cap_saturation = self.cap_saturation,
-            out_dir = self.out_dir,
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
         )
         single_point.dom_pft = [16, 53]
         single_point.num_pft = 16
-        with self.assertRaisesRegex( argparse.ArgumentTypeError, "Please use --crop*"):
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, "Please use --crop*"):
             single_point.check_dom_pft()
-
 
     def test_check_dom_pft_mixed_range(self):
         """
@@ -183,24 +184,26 @@ class TestSinglePointCase(unittest.TestCase):
         Test if all dom_pft(s) are in the same range of either 1-15 or 16-78
         """
         single_point = SinglePointCase(
-            plat = self.plat,
-            plon = self.plon,
-            site_name = self.site_name,
-            create_domain = self.create_domain,
-            create_surfdata = self.create_surfdata,
-            create_landuse = self.create_landuse,
-            create_datm = self.create_datm,
-            create_user_mods = self.create_user_mods,
-            dom_pft = self.dom_pft,
-            pct_pft = self.pct_pft,
-            num_pft = self.num_pft,
-            include_nonveg = self.include_nonveg,
-            uni_snow = self.uni_snow,
-            cap_saturation = self.cap_saturation,
-            out_dir = self.out_dir,
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
         )
-        single_point.dom_pft = [1,5,16]
-        with self.assertRaisesRegex( argparse.ArgumentTypeError, "mixed land units is not possible*"):
+        single_point.dom_pft = [1, 5, 16]
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError, "mixed land units is not possible*"
+        ):
             single_point.check_dom_pft()
 
     def test_check_nonveg_nodompft(self):
@@ -209,25 +212,28 @@ class TestSinglePointCase(unittest.TestCase):
         If include_nonveg =False and no dompft it should complain.
         """
         single_point = SinglePointCase(
-            plat = self.plat,
-            plon = self.plon,
-            site_name = self.site_name,
-            create_domain = self.create_domain,
-            create_surfdata = self.create_surfdata,
-            create_landuse = self.create_landuse,
-            create_datm = self.create_datm,
-            create_user_mods = self.create_user_mods,
-            dom_pft = self.dom_pft,
-            pct_pft = self.pct_pft,
-            num_pft = self.num_pft,
-            include_nonveg = self.include_nonveg,
-            uni_snow = self.uni_snow,
-            cap_saturation = self.cap_saturation,
-            out_dir = self.out_dir,
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
         )
         single_point.dom_pft = None
         single_point.include_nonveg = False
-        with self.assertRaisesRegex( argparse.ArgumentTypeError, "To include non-veg land units, you need to specify*"):
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError,
+            "To include non-veg land units, you need to specify*",
+        ):
             single_point.check_nonveg()
 
     def test_check_pct_pft_notsamenumbers(self):
@@ -236,27 +242,28 @@ class TestSinglePointCase(unittest.TestCase):
         Check if pct_pft is the same length as dom_pft
         """
         single_point = SinglePointCase(
-            plat = self.plat,
-            plon = self.plon,
-            site_name = self.site_name,
-            create_domain = self.create_domain,
-            create_surfdata = self.create_surfdata,
-            create_landuse = self.create_landuse,
-            create_datm = self.create_datm,
-            create_user_mods = self.create_user_mods,
-            dom_pft = self.dom_pft,
-            pct_pft = self.pct_pft,
-            num_pft = self.num_pft,
-            include_nonveg = self.include_nonveg,
-            uni_snow = self.uni_snow,
-            cap_saturation = self.cap_saturation,
-            out_dir = self.out_dir,
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
         )
         single_point.dom_pft = [1, 5]
         single_point.pct_pft = [0.5]
-        with self.assertRaisesRegex( argparse.ArgumentTypeError, "Please provide the same number of inputs*"):
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError, "Please provide the same number of inputs*"
+        ):
             single_point.check_pct_pft()
-
 
     def test_check_pct_pft_sum_not1(self):
         """
@@ -264,27 +271,28 @@ class TestSinglePointCase(unittest.TestCase):
         Check if pct_pft adds up to 1 or 100.
         """
         single_point = SinglePointCase(
-            plat = self.plat,
-            plon = self.plon,
-            site_name = self.site_name,
-            create_domain = self.create_domain,
-            create_surfdata = self.create_surfdata,
-            create_landuse = self.create_landuse,
-            create_datm = self.create_datm,
-            create_user_mods = self.create_user_mods,
-            dom_pft = self.dom_pft,
-            pct_pft = self.pct_pft,
-            num_pft = self.num_pft,
-            include_nonveg = self.include_nonveg,
-            uni_snow = self.uni_snow,
-            cap_saturation = self.cap_saturation,
-            out_dir = self.out_dir,
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
         )
         single_point.dom_pft = [1, 5]
-        single_point.pct_pft = [0.1,0.5]
-        with self.assertRaisesRegex( argparse.ArgumentTypeError, "Sum of --pctpft values should be equal to 1*"):
+        single_point.pct_pft = [0.1, 0.5]
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError, "Sum of --pctpft values should be equal to 1*"
+        ):
             single_point.check_pct_pft()
-
 
     def test_check_pct_pft_fraction_topct(self):
         """
@@ -292,27 +300,26 @@ class TestSinglePointCase(unittest.TestCase):
         Check if pct_pft is corretly converted to percent.
         """
         single_point = SinglePointCase(
-            plat = self.plat,
-            plon = self.plon,
-            site_name = self.site_name,
-            create_domain = self.create_domain,
-            create_surfdata = self.create_surfdata,
-            create_landuse = self.create_landuse,
-            create_datm = self.create_datm,
-            create_user_mods = self.create_user_mods,
-            dom_pft = self.dom_pft,
-            pct_pft = self.pct_pft,
-            num_pft = self.num_pft,
-            include_nonveg = self.include_nonveg,
-            uni_snow = self.uni_snow,
-            cap_saturation = self.cap_saturation,
-            out_dir = self.out_dir,
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
         )
         single_point.dom_pft = [1, 5, 8]
         single_point.pct_pft = [0.5, 0.4, 0.1]
         single_point.check_pct_pft()
-        self.assertEqual(single_point.pct_pft,[50,40,10] )
-
+        self.assertEqual(single_point.pct_pft, [50, 40, 10])
 
 
 if __name__ == "__main__":
