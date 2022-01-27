@@ -1,4 +1,88 @@
 ===============================================================
+Tag name: ctsm5.1.dev073
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Thu Jan 27 09:52:00 MST 2022
+One-line Summary: Replace dom_nat_pft with dom_plant to enable crop in fsurdat_modifier tool
+
+Purpose and description of changes
+----------------------------------
+
+ Allow user to replace vegetation in fsurdat files with any pft/cft using the
+ fsurdat_modifier tool option dom_plant. This option replaces now obsolete
+ option dom_nat_pft which handled pfts only and not cfts.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ Instead of dom_nat_pft = UNSET, modify_template.cfg now includes the line
+ dom_plant = UNSET to allow users to set the pft/cft of their choice to replace
+ the existing vegetation.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ New system test that checks the new code compares a generated file to a
+ baseline file. I added the baseline file to this PR:
+ .../python/ctsm/test/testinputs/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified_with_crop.nc
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Added a system test to test_sys_fsurdat_modifier.py to run with the new option
+ dom_plant set to 15 (i.e. a crop).
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) - cheyenne PASS
+
+    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
+     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
+     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
+     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
+     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
+     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
+     separately run the clm_pymods test suite, and you can remove the following line.]
+
+    clm_pymods test suite on cheyenne - PASS
+
+  any other testing (give details below):
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1615
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev072
 Originator(s): negins (Negin Sobhani,UCAR/TSS,303-497-1224)
 Date: Mon Jan 17 10:50:25 MST 2022
