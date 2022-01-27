@@ -299,6 +299,10 @@ contains
     call hist_addfld2d (fname='EXCESS_ICE',  units='kg/m2', type2d='levsoi', &
          avgflag='A', long_name='excess soil ice (vegetated landunits only)', &
          ptr_col=this%excess_ice_col, l2g_scale_type='veg')
+    data2dptr => this%excess_ice_col(begc:endc,1:nlevsoi)
+    call hist_addfld2d (fname='EXICE_MELT_LEV',  units='kg/m2', type2d='levsoi', &
+              avgflag='A', long_name='melt from excess ice per layer (vegetated landunits only)', &
+              ptr_col=this%exice_melt_lev, l2g_scale_type='veg')
 
     this%exice_melt(begc:endc) = spval
     call hist_addfld1d (fname='EXICE_MELT',  units='m', &
@@ -554,9 +558,13 @@ contains
           l = col%landunit(c)
           if (.not. lun%lakpoi(l)) then  !not lake
              if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-                nlevs = nlevgrnd
-                do j = 1, nlevs
-                   if (col%zi(c,j) <= 4._r8 .and. t_soisno_col(c,j) <= tfrz ) then
+              if (use_bedrock) then
+                nbedrock = col%nbedrock(c)
+             else
+                nbedrock = nlevsoi
+             endif
+                do j = 1, nlevgrnd
+                   if (j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
                       this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exicestream%exice_bulk(g))
                    else
                       this%excess_ice_col(c,j) = 0.0_r8
@@ -707,6 +715,11 @@ contains
          long_name=this%info%lname('excess soil ice (vegetated landunits only)'), units='kg/m2', &
          scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%excess_ice_col)
+    call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXCESS_MELT_LEV'), xtype=ncd_double,  &
+         dim1name='column', dim2name='levtot', switchdim=.true., &
+         long_name=this%info%lname('melt from excess ice per layer (vegetated landunits only)'), units='kg/m2', &
+         scale_by_thickness=.true., &
+         interpinic_flag='interp', readvar=readvar, data=this%exice_melt_lev)
          
     call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXICE_MELT'), xtype=ncd_double,  &
          dim1name='column', &
