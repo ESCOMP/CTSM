@@ -20,8 +20,12 @@
 
 flanduse_timeseries = ' '   ! This isn't needed for a non transient case, but will be once we start using transient compsets
 fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/NEON/surfdata_hist_78pfts_CMIP6_simyr2000_${NEONSITE}_c211102.nc"
-! h1 output stream 
+! h1 daily output stream 
+! Base SP variables:
 hist_fincl2 = 'AR','ELAI','FCEV','FCTR','FGEV','FIRA','FSA','FSH','GPP','H2OSOI',
              'HR','SNOW_DEPTH','TBOT','TSOI','SOILC_vr','FV','NET_NMIN_vr'
+! Add variables for BGC:
+!hist_fincl2 += 'AR','GPP', 'HR', 'SOILC_vr','FV','NET_NMIN_vr'
+
 hist_mfilt(2) = 48
 hist_nhtfrq(2) = 1  
