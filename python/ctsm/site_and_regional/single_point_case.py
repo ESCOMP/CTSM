@@ -367,6 +367,7 @@ class SinglePointCase(BaseCase):
         """
         Create surface data file at a single point.
         """
+        # pylint: disable=too-many-statements
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating surface dataset file at %s, %s", self.plon.__str__(), self.plat.__str__())
@@ -388,13 +389,17 @@ class SinglePointCase(BaseCase):
 
         #-- modify surface data properties
         if self.dom_pft is not None:
+            max_dom_pft = max(self.dom_pft)
             #-- First initialize everything:
-            #f_out["PCT_NAT_PFT"][:, :, 0] = 100
-            ##f_out["PCT_NATVEG"][:, :] = 0
+            if max_dom_pft <=NAT_PFT :
+                f_out ["PCT_NAT_PFT"][:,:,:] = 0
+            else:
+                f_out["PCT_CFT"][:,:,:] = 0
 
-            #f_out["PCT_CFT"][:, :, 0] = 100
-            ##f_out["PCT_CROP"][:, :] = 0
-            f_out ["PCT_NAT_PFT"] = 0
+            # Do we need to initialize these here?
+            # Because we set them in include_nonveg
+            #f_out["PCT_NATVEG"][:, :] = 0
+            #f_out["PCT_CROP"][:, :] = 0
 
             #-- loop over all dom_pft and pct_pft
             zip_pfts = zip (self.dom_pft, self.pct_pft)
@@ -408,6 +413,7 @@ class SinglePointCase(BaseCase):
         # -------------------------------
         # By default include_nonveg=False
         # When we use --include-nonveg we turn it to True
+        # Therefore by default we are hitting the following if:
 
         if not self.include_nonveg:
             logger.info ("Zeroing out non-vegetation land units in the surface data.")
