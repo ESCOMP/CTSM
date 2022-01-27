@@ -22,12 +22,13 @@ set(SRCFILES mkvarctl.F90
              mkfileMod.F90
              mklanwatMod.F90
              mkorganicMod.F90
+             mksoilcolMod.F90
+             mkurbanparMod.F90
+             mkurbanparCommonMod.F90
              mkesmfMod.F90
              mkutilsMod.F90
              mkchecksMod.F90
              mkindexmapMod.F90
-             mkurbanparMod.F90
-             mkurbanparCommonMod.F90
              nanMod.F90
              shr_const_mod.F90
              shr_kind_mod.F90

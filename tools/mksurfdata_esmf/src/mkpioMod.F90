@@ -554,11 +554,14 @@ contains
        endif
     else
        ! only applies to classic NETCDF files.
+       write(6,*)'DEBUG: here1'
        nmode = pio_noclobber
        if (pio_iotype == PIO_IOTYPE_NETCDF .or. pio_iotype == PIO_IOTYPE_PNETCDF) then
           nmode = ior(nmode,pio_ioformat)
        endif
+       write(6,*)'DEBUG: here2'
        rcode = pio_createfile(pio_iosystem, pioid, pio_iotype, trim(filename), nmode)
+       write(6,*)'DEBUG: here3'
        if (root_task) write(ndiag,'(a)') trim(subname) //' creating file '// trim(filename)
     endif
     call ESMF_LogWrite("successfully opened output file "//trim(filename), ESMF_LOGMSG_INFO)

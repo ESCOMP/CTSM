@@ -7,7 +7,7 @@ module mkorganicMod
   use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_sys_mod  , only : shr_sys_abort
   use mkpioMod     , only : mkpio_get_rawdata, mkpio_get_dimlengths
-  use mkpioMod     , only : mkpio_iodesc_rawdata, pio_iotype, pio_ioformat, pio_iosystem
+  use mkpioMod     , only : pio_iotype, pio_ioformat, pio_iosystem
   use mkesmfMod    , only : regrid_rawdata
   use mkutilsMod   , only : chkerr
   use mkvarctl     , only : root_task, ndiag
@@ -54,7 +54,6 @@ contains
     real(r8), allocatable  :: data_double(:,:)
     real(r8), allocatable  :: data_i(:,:)
     real(r8), allocatable  :: data_o(:,:)
-    character(len=256)     :: varname
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
     character(len=*), parameter :: subname = 'mkorganic'
@@ -66,9 +65,6 @@ contains
        write (ndiag,'(a)') ' Attempting to make organic mater dataset .....'
     end if
 
-    ! Set variable name in raw data file
-    varname = 'ORGANIC'
-
     ! Open raw data file - need to do this first to obtain ungridded dimension size
     call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
@@ -79,7 +75,7 @@ contains
     !  - input read from pio has dimensions(n,lev)
     !  - esmf field dataptr has dimensions (lev,n)
     allocate(dimlengths(3))
-    call mkpio_get_dimlengths(pioid, trim(varname), ndims, dimlengths)
+    call mkpio_get_dimlengths(pioid, 'ORGANIC', ndims, dimlengths)
     nlay = dimlengths(3)
     if (nlay /= nlevsoi) then
        write(6,*)'nlay, nlevsoi= ',nlay,nlevsoi,' do not match'
@@ -96,6 +92,8 @@ contains
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
+    allocate(data_i(nlay,ns_i),stat=ier)
+    if (ier/=0) call shr_sys_abort()
 
     ! Determine ns_o and allocate data_o
     ns_o = size(organic_o, dim=1)
@@ -106,9 +104,7 @@ contains
     ! - levels are the innermost dimension for esmf fields
     ! - levels are the outermost dimension in pio reads
     ! Input data is read into (ns_i,nlay) array and then transferred to data_i(nlay,ns_i)
-    allocate(data_i(nlay,ns_i),stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, varname, mesh_i, data_i, rc=rc)
+    call mkpio_get_rawdata(pioid, 'ORGANIC', mesh_i, data_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
@@ -164,6 +160,8 @@ contains
     do n = 1,ns_o
        if (frac_o(n) > 0._r8) then
           organic_o(n,:) = organic_o(n,:) / frac_o(n)
+       else
+          organic_o(n,:) = 0._r8
        end if
     end do
     do l = 1,nlevsoi

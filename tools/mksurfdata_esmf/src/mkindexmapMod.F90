@@ -478,18 +478,8 @@ contains
        call check_dimsize(dimlens(2+i), extra_dims(i)%val, 2+i)
     end do
 
-    ! Read the lookup table; if the given variable has more than 2 dimensions, we read
-    ! a single 2-d slice
-
-    allocate(starts(ndims), counts(ndims))
     allocate(lookup_table(dimlens(1), dimlens(2)))
-    starts(1:2) = 1
-    counts(1:2) = dimlens(1:2)
-    do i = 1, n_extra_dims
-       starts(2+i) = extra_dims(i)%val
-       counts(2+i) = 1
-    end do
-    rcode = pio_get_var(pioid, pio_varid, starts, counts, lookup_table)
+    rcode = pio_get_var(pioid, pio_varid, lookup_table)
 
     ! Determine which entries are valid
 

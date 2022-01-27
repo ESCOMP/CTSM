@@ -39,7 +39,7 @@
 
   <mksrf_fsoicol>
     <entry>
-      <data_filename>lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005.c170623.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005_cd5.c220126.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</mesh_filename>
     </entry>
     <entry hires_pft='on'>

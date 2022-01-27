@@ -114,12 +114,10 @@ contains
     logical          , intent(in)  :: zero_out            ! if should zero urban out
     real(r8)         , intent(out) :: urbn_o(:)           ! output grid: total % urban
     real(r8)         , intent(out) :: urban_classes_o(:,:) ! output grid: breakdown of total urban into each class
-    integer          , intent(out) :: region_o(:)         ! output grid: region ID
+    integer          , intent(inout) :: region_o(:)         ! output grid: region ID
     integer          , intent(out) :: rc
 
     ! local variables:
-    integer , pointer      :: factorindexlist(:,:)
-    real(r8), pointer      :: factorlist(:)
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
     type(ESMF_Field)       :: field_i
@@ -141,6 +139,8 @@ contains
     integer                :: srcMaskValue = -987987    ! spval for RH mask values
     integer                :: dstMaskValue = -987987    ! spval for RH mask values
     integer                :: srcTermProcessing_Value = 0
+    real(r8), allocatable  :: frac_i(:)
+    real(r8), allocatable  :: frac_o(:)
     character(len=*), parameter :: subname = 'mkurban'
     !-----------------------------------------------------------------------
 
@@ -202,8 +202,7 @@ contains
         !srcMaskValues=(/srcMaskValue/), dstMaskValues=(/dstMaskValue/), &
          regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=ESMF_NORMTYPE_DSTAREA, &
          srcTermProcessing=srcTermProcessing_Value, &
-         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, &
-         factorlist=factorlist, factorindexlist=factorindexlist, rc=rc)
+         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
 
@@ -227,6 +226,31 @@ contains
        do n = 1,ns_o
           urban_classes_gcell_o(n,l) = data_o(l,n)
        end do
+    end do
+
+    ! Determine frac_o (regrid frac_i to frac_o)
+    allocate(frac_i(ns_i))
+    allocate(frac_o(ns_o))
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call regrid_rawdata(field_i, field_o, routehandle, frac_i, frac_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After regrid_data in data_i "//trim(subname))
+
+    do n = 1,ns_o
+       if (frac_o(n) > 0._r8) then
+          urban_classes_gcell_o(n,:) = urban_classes_gcell_o(n,:) / frac_o(n)
+       else
+          urban_classes_gcell_o(n,:) = 0._r8
+       end if
     end do
     do n = 1, ns_o
        urbn_o(n) = sum(urban_classes_gcell_o(n,:))
@@ -285,6 +309,7 @@ contains
        write (ndiag,'(a)') 'Attempting to make urban region .....'
     end if
 
+#ifdef TODO
     ! Read in region field
     ! Note: we do this here, rather than with the rest of the reads above, because we
     ! expect the input urban fields to be large, so we're just reading the fields as
@@ -333,7 +358,6 @@ contains
        write (ndiag,*)
     end if
 
-#ifdef TODO
     ! Output diagnostics
     ! call output_diagnostics_index(factorlist, factorindex, region_i, region_o, 'Urban Region ID', &
     !      1, max_region, ndiag)
@@ -346,7 +370,6 @@ contains
     deallocate (urban_classes_gcell_i, urban_classes_gcell_o, region_i)
 
     call ESMF_VMLogMemInfo("Before destroy operation in "//trim(subname))
-    deallocate(factorlist, factorindexlist)
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)

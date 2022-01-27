@@ -36,7 +36,7 @@ contains
 !=================================================================================
 
   subroutine mkfile_fsurdat(nx, ny, mesh_o, dynlanduse, &
-       pctlak, pctwet, lakedepth, organic, urban_classes, urban_region)
+       pctlak, pctwet, lakedepth, organic, urban_classes, urban_region, soil_color, nsoilcol)
 
     ! input/output variables
     integer          , intent(in) :: nx
@@ -49,6 +49,8 @@ contains
     real(r8), pointer, intent(in) :: organic(:,:)            ! organic
     real(r8), pointer, intent(in) :: urban_classes(:,:)      ! percent cover of each urban class, as % of total urban area
     integer , pointer, intent(in) :: urban_region(:)         ! urban region ID
+    integer , pointer, intent(in) :: soil_color(:)
+    integer          , intent(in) :: nsoilcol 
 #ifdef TODO
     type(harvestDataType) , intent(in) :: harvdata
 #endif
@@ -120,11 +122,16 @@ contains
                'kg/m3 (assumed carbon content 0.58 gC per gOM)', organic, lev1name='nlevsoi', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+          call mkfile_output(pioid, define_mode, mesh_o, 'SOIL_COLOR', 'soil color', &
+               'unitless', soil_color,  rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          write(6,*)'wrote out soil_color'
+
           ! call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_URBAN', 'percent urban for each density type', &
           !      'unitless', urban_classes, lev1name='numurbl', rc=rc)
           ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          ! call mkfile_output(pioid, define_mode, mesh_o, 'URBAN_REGION_ID', 'urban region ID', &
+          ! call mkfile_output(pioid, define_mode, mesh_o, PIO_INT, 'URBAN_REGION_ID', 'urban region ID', &
           !      'unitless', urban_region, rc=rc)
           ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -356,13 +363,20 @@ contains
     rc = ESMF_SUCCESS
 
     if (define_mode) then
+       write(6,*)'DEBUG: here1'
        call mkpio_def_spatial_var(pioid, trim(varname), PIO_INT, trim(longname), trim(units))
+       write(6,*)'DEBUG: here2'
     else
+       write(6,*)'DEBUG: here3'
        call mkpio_iodesc_output(pioid, mesh, trim(varname), pio_iodesc, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
+       write(6,*)'DEBUG: here4'
        rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+       write(6,*)'DEBUG: here5'
        call pio_write_darray(pioid, pio_varid, pio_iodesc, ipointer, rcode)
+       write(6,*)'DEBUG: here6'
        call pio_freedecomp(pioid, pio_iodesc)
+       write(6,*)'DEBUG: here7'
     end if
   end subroutine mkfile_output_int1d
 

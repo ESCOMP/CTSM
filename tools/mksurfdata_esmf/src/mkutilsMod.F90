@@ -15,6 +15,7 @@ module mkutilsMod
   public :: slightly_above
   public :: get_filename  !Returns filename given full pathname
   public :: chkerr
+  public :: mkrank
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -25,7 +26,6 @@ contains
 
   subroutine normalize_classes_by_gcell(classes_pct_tot, sums, classes_pct_gcell)
     !
-    ! !DESCRIPTION:
     ! Renormalizes an array (gcell x class) so that values are given as % of total grid cell area
     !
     ! Specifically: Given (1) an array specifying the % cover of different classes, as a % of
@@ -42,10 +42,7 @@ contains
     ! classes_pct_gcell(n,i) will give the % of the total area of grid cell n that is in urban
     ! class #i.
     !
-    ! !USES:
-    !
     ! !ARGUMENTS:
-    implicit none
     real(r8), intent(in) :: classes_pct_tot(:,:)   ! % cover of classes as % of total
     real(r8), intent(in) :: sums(:)                ! totals, as % of grid cell
     real(r8), intent(out):: classes_pct_gcell(:,:) ! % cover of classes as % of grid cell
@@ -116,18 +113,18 @@ contains
   !===============================================================
   logical function slightly_above(a, b, eps)
 
-    ! !DESCRIPTION:
     ! Returns true if a is slightly above b; false if a is significantly above b or if a is
     ! less than or equal to b
-
-    ! !ARGUMENTS:
+    !
     ! if provided, eps gives the relative error allowed for checking the "slightly"
     ! condition; if not provided, the tolerance defaults to the value given by eps_default
+
+    ! input/output variables
     real(r8), intent(in) :: a
     real(r8), intent(in) :: b
     real(r8), intent(in), optional :: eps
 
-    ! !LOCAL VARIABLES:
+    ! local variables:
     real(r8) :: l_eps
     real(r8), parameter :: eps_default = 1.e-15_r8  ! default relative error tolerance
     !------------------------------------------------------------------------------
@@ -181,5 +178,74 @@ contains
 10  get_filename = fulpath(i+1:klen)
 
   end function get_filename
+
+  !===============================================================
+  subroutine mkrank (n, a, miss, num, iv)
+    !
+    ! Return indices of largest [num] values in array [a].
+    !
+    ! input/output variables
+    integer , intent(in) :: n        !array length
+    real(r8), intent(in) :: a(0:n)   !array to be ranked
+    integer , intent(in) :: miss     !missing data value
+    integer , intent(in) :: num      !number of largest values requested
+    integer , intent(out):: iv(num)  !index to [num] largest values in array [a]
+
+    ! local variables:
+    real(r8) a_max       !maximum value in array
+    integer i            !array index
+    real(r8) delmax      !tolerance for finding if larger value
+    integer m            !do loop index
+    integer k            !do loop index
+    logical exclude      !true if data value has already been chosen
+    !-----------------------------------------------------------------------
+
+    delmax = 1.e-06
+
+    ! Find index of largest non-zero number
+
+    iv(1) = miss
+    a_max = -9999.
+
+    do i = 0, n
+       if (a(i)>0. .and. (a(i)-a_max)>delmax) then
+          a_max = a(i)
+          iv(1)  = i
+       end if
+    end do
+
+    ! iv(1) = miss indicates no values > 0. this is an error
+
+    if (iv(1) == miss) then
+       write (6,*) 'MKRANK error: iv(1) = missing'
+       call shr_sys_abort()
+    end if
+
+    ! Find indices of the next [num]-1 largest non-zero number.
+    ! iv(m) = miss if there are no more values > 0
+
+    do m = 2, num
+       iv(m) = miss
+       a_max = -9999.
+       do i = 0, n
+
+          ! exclude if data value has already been chosen
+          exclude = .false.
+          do k = 1, m-1
+             if (i == iv(k)) exclude = .true.
+          end do
+
+          ! if not already chosen, see if it is the largest of
+          ! the remaining values
+          if (.not. exclude) then
+             if (a(i)>0. .and. (a(i)-a_max)>delmax) then
+                a_max = a(i)
+                iv(m)  = i
+             end if
+          end if
+       end do
+    end do
+
+  end subroutine mkrank
 
 end module mkutilsMod
