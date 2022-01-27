@@ -97,7 +97,8 @@ def main():
         site = row['Site']
         pft = row['pft']
         print ("Now processing site :", site)
-        command = ['./subset_data.py','point','--lat',str(lat),'--lon',str(lon),'--site',site,'--dompft',str(pft),'--crop']
+        command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),'--site',site,'--dompft',str(pft),'--crop',
+                '--create-surface','--uniform-snowpack','--cap-saturation','--verbose']
         execute(command)
 
         command = ['./modify_singlept_site_neon.py','--neon_site',site]
