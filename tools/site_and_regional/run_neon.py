@@ -633,29 +633,6 @@ def download_file(url, fname):
         print ('Something went wrong in downloading', fname)
         print ('Error code:', err.code)
 
-
-def download_file(url, fname):
-    """
-    Function to download a file.
- 
-    Args:
-        url (str): 
-            url of the file for downloading
- 
-        fname (str) : 
-            file name to save the downloaded file.
-    """
-    response = requests.get(url)
- 
-    with open(fname, 'wb') as f:
-        f.write(response.content)
- 
-    #-- Check if download status_code
-    if response.status_code == 200:
-        print('Download finished successfully for', fname,'.')
-    elif response.status_code == 404:
-        print('File '+fname+'was not available on the neon server:'+ url)
-
 def main(description):
     cesmroot = path_to_ctsm_root()
     # Get the list of supported neon sites from usermods
