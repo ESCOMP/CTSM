@@ -1787,6 +1787,16 @@ contains
             end do
          end if
 
+         ! Ensure that everything is correctly set when resuming from a run with old code
+         if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
+             sowing_count(p) = 1
+             crop_inst%sdates_thisyr(p,1) = 1._r8
+             do s = 1, mxharvests
+                 crop_inst%hdates_thisyr(p,s) = -1._r8
+             end do
+         end if
+
+
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
          if ( (.not. croplive(p)) .and. sowing_count(p) == 0 ) then
 
