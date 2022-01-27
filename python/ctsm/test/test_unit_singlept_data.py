@@ -230,6 +230,88 @@ class TestSinglePointCase(unittest.TestCase):
         with self.assertRaisesRegex( argparse.ArgumentTypeError, "To include non-veg land units, you need to specify*"):
             single_point.check_nonveg()
 
+    def test_check_pct_pft_notsamenumbers(self):
+        """
+        Test check_pct_pft
+        Check if pct_pft is the same length as dom_pft
+        """
+        single_point = SinglePointCase(
+            plat = self.plat,
+            plon = self.plon,
+            site_name = self.site_name,
+            create_domain = self.create_domain,
+            create_surfdata = self.create_surfdata,
+            create_landuse = self.create_landuse,
+            create_datm = self.create_datm,
+            create_user_mods = self.create_user_mods,
+            dom_pft = self.dom_pft,
+            pct_pft = self.pct_pft,
+            num_pft = self.num_pft,
+            include_nonveg = self.include_nonveg,
+            uni_snow = self.uni_snow,
+            cap_saturation = self.cap_saturation,
+            out_dir = self.out_dir,
+        )
+        single_point.dom_pft = [1, 5]
+        single_point.pct_pft = [0.5]
+        with self.assertRaisesRegex( argparse.ArgumentTypeError, "Please provide the same number of inputs*"):
+            single_point.check_pct_pft()
+
+
+    def test_check_pct_pft_sum_not1(self):
+        """
+        Test check_pct_pft
+        Check if pct_pft adds up to 1 or 100.
+        """
+        single_point = SinglePointCase(
+            plat = self.plat,
+            plon = self.plon,
+            site_name = self.site_name,
+            create_domain = self.create_domain,
+            create_surfdata = self.create_surfdata,
+            create_landuse = self.create_landuse,
+            create_datm = self.create_datm,
+            create_user_mods = self.create_user_mods,
+            dom_pft = self.dom_pft,
+            pct_pft = self.pct_pft,
+            num_pft = self.num_pft,
+            include_nonveg = self.include_nonveg,
+            uni_snow = self.uni_snow,
+            cap_saturation = self.cap_saturation,
+            out_dir = self.out_dir,
+        )
+        single_point.dom_pft = [1, 5]
+        single_point.pct_pft = [0.1,0.5]
+        with self.assertRaisesRegex( argparse.ArgumentTypeError, "Sum of --pctpft values should be equal to 1*"):
+            single_point.check_pct_pft()
+
+
+    def test_check_pct_pft_fraction_topct(self):
+        """
+        Test check_pct_pft
+        Check if pct_pft is corretly converted to percent.
+        """
+        single_point = SinglePointCase(
+            plat = self.plat,
+            plon = self.plon,
+            site_name = self.site_name,
+            create_domain = self.create_domain,
+            create_surfdata = self.create_surfdata,
+            create_landuse = self.create_landuse,
+            create_datm = self.create_datm,
+            create_user_mods = self.create_user_mods,
+            dom_pft = self.dom_pft,
+            pct_pft = self.pct_pft,
+            num_pft = self.num_pft,
+            include_nonveg = self.include_nonveg,
+            uni_snow = self.uni_snow,
+            cap_saturation = self.cap_saturation,
+            out_dir = self.out_dir,
+        )
+        single_point.dom_pft = [1, 5, 8]
+        single_point.pct_pft = [0.5, 0.4, 0.1]
+        single_point.check_pct_pft()
+        self.assertEqual(single_point.pct_pft,[50,40,10] )
 
 
 
