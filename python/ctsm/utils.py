@@ -9,6 +9,8 @@ import pdb
 from datetime import date
 from getpass import getuser
 
+import requests
+
 logger = logging.getLogger(__name__)
 
 def abort(errmsg):
@@ -123,3 +125,40 @@ def update_metadata(file, title, summary, contact, data_script, description):
     for attr in del_attrs:
         if attr in attr_list:
             del file.attrs[attr]
+
+def download_file(url, fname):
+    """
+    Function to download a file.
+    Args:
+        url (str):
+            url of the file for downloading
+        fname (str) :
+            file name to save the downloaded file.
+
+    Raises:
+        Error :
+            When the file is not available on the server (status_code:404)
+        Error:
+            When download fails for any reason.
+    """
+    try:
+        response = requests.get(url)
+
+        with open(fname, "wb") as this_f:
+            this_f.write(response.content)
+
+        # -- Check if download status_code
+        if response.status_code == 200:
+            logger.info("Download finished successfully for : %s", fname)
+
+        elif response.status_code == 404:
+            logger.warning ('This file is not available on the server: %s', fname)
+            err_msg = "Couldn't download file "+fname +"-- Error code: "+ "404"
+            abort(err_msg)
+
+    # pylint: disable=broad-except
+    except Exception as err:
+        logger.warning ('The server could not fulfill the request.')
+        logger.warning ('Something went wrong in downloading: %s', fname)
+        err_msg = "Couldn't download file "+fname +"-- Error code:"+ err
+        abort(err_msg)

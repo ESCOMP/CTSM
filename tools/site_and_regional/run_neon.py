@@ -76,6 +76,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm import add_cime_to_path
 from ctsm.path_utils import path_to_ctsm_root
+from ctsm.utils import download_file
 
 import CIME.build as build
 from standard_script_setup import *
@@ -191,7 +192,7 @@ def get_parser(args, description, valid_neon_sites):
                 [default: %(default)s]
                 ''',               
                 action="store", 
-                dest="start_date",                                                                                     
+                dest="start_date", 
                 required = False,
                 type = datetime.date.fromisoformat,
                 default = datetime.datetime.strptime("2018-01-01",'%Y-%m-%d'))
@@ -608,30 +609,6 @@ def parse_neon_listing(listing_file, valid_neon_sites):
  
     return available_list
 
-def download_file(url, fname):
-    """
-    Function to download a file.
-    Args:
-        url (str):
-            url of the file for downloading
-        fname (str) :
-            file name to save the downloaded file.
-    """
-    try:
-        response = requests.get(url)
-
-        with open(fname, "wb") as f:
-            f.write(response.content)
-
-        # -- Check if download status_code
-        if response.status_code == 200:
-            print("Download finished successfully for", fname, ".")
-        elif response.status_code == 404:
-            print("File " + fname + "was not available on the neon server:" + url)
-    except Exception as err:
-        print ('The server could not fulfill the request.')
-        print ('Something went wrong in downloading', fname)
-        print ('Error code:', err.code)
 
 def main(description):
     cesmroot = path_to_ctsm_root()
