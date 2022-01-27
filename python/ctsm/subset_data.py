@@ -167,14 +167,6 @@ def get_parser():
         default=None,
         nargs='*',
     )
-    pt_parser.add_argument(
-        "--datm-from-tower",
-        help="Create DATM forcing data at single point for a tower data.",
-        action="store_true",
-        dest="datm_tower",
-        required=False,
-        default=False,
-    )
     # -- region-specific parser options
     rg_parser.add_argument(
         "--lat1",
@@ -234,7 +226,8 @@ def get_parser():
     for subparser in [pt_parser, rg_parser]:
         subparser.add_argument(
             "--create-domain",
-            help="Create CLM domain file at single point/region.",
+            help="Create CLM domain file at single point/region. \
+            Domain files are not needed for NUOPC cases.",
             action="store_true",
             dest="create_domain",
             required=False,
@@ -255,7 +248,7 @@ def get_parser():
         )
         subparser.add_argument(
             "--create-datm",
-            help="Create DATM forcing data at single point/region.",
+            help="Create DATM forcing data at single point.",
             action="store_true",
             dest="create_datm",
             required=False,
