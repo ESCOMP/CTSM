@@ -222,7 +222,7 @@ class SinglePointCase(BaseCase):
 
                 You should specify at least one of the following arguments:
                 --dompft DOMPFT
-                --include_nonveg
+                --include-nonveg
                 """
                 raise argparse.ArgumentTypeError(err_msg)
 
@@ -389,11 +389,12 @@ class SinglePointCase(BaseCase):
         #-- modify surface data properties
         if self.dom_pft is not None:
             #-- First initialize everything:
-            f_out["PCT_NAT_PFT"][:, :, 0] = 100
-            #f_out["PCT_NATVEG"][:, :] = 0
+            #f_out["PCT_NAT_PFT"][:, :, 0] = 100
+            ##f_out["PCT_NATVEG"][:, :] = 0
 
-            f_out["PCT_CFT"][:, :, 0] = 100
-            #f_out["PCT_CROP"][:, :] = 0
+            #f_out["PCT_CFT"][:, :, 0] = 100
+            ##f_out["PCT_CROP"][:, :] = 0
+            f_out ["PCT_NAT_PFT"] = 0
 
             #-- loop over all dom_pft and pct_pft
             zip_pfts = zip (self.dom_pft, self.pct_pft)
