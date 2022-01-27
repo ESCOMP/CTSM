@@ -12,7 +12,7 @@ This documents various conventions for the user interface of python scripts. The
  Separation of front-end scripts from implementation
 ====================================================
 
-Most python code resides in the ``python/ctsm`` directory, and modules there have a ``.py`` extension. However, scripts that are run from the command-line have small wrapper files that reside in appropriate places throughout the repository (e.g., in the ``tools`` directory). These wrapper files should *not* have a ``.py`` extension, and should contain as little python code as possible (since these files aren't checked by pylint and cannot easily be unit tested): typically they contain just enough code to setup the python path, load a python module and then call the main function from that module. See examples throughout CTSM for details.
+Most python code resides in the ``python/ctsm`` directory, and modules there have a ``.py`` extension. However, scripts that are run from the command-line have small wrapper files that reside in appropriate places throughout the repository (e.g., in the ``tools`` directory). These wrapper files should *not* have a ``.py`` extension, and should contain as little python code as possible (since these files aren't checked by pylint and cannot easily be unit tested): typically they contain just enough code to setup the python path, load a python module, and then call the main function from that module. See examples throughout CTSM for details.
 
 Rationale: Modules meant to be imported (i.e., everything under ``python/ctsm``) should have a ``.py`` extension. However, it is valuable to keep the extension off of the scripts that users run for a few reasons:
 
@@ -73,6 +73,11 @@ In general, ``print`` statements should be used sparingly, just for output that 
 * A final "success" message at the end of the script
 * Paths to directories or files created by the script
 
-More verbose output should go in ``logger.info`` statements (or ``logger.debug`` statements for output that a normal user would rarely want to see).
+More verbose output should go in ``logger.info`` or ``logger.debug`` statements for output that a normal user would rarely want to see. The difference between output that should go in ``logger.info`` vs. ``logger.debug`` statements is somewhat subjective, but some general rules are:
+
+* INFO statements include high-level, informational statements about the program state, the user, which files are being used and where, etc.
+      * e.g. A ``logging.info`` statement might be ``logger.info("Reading in file %s from %s", file_name, dir_name)``.
+* DEBUG statements include fine-grained statements about program state, that really only developers digging into the code would want to see.
+      * e.g. You might want to output a ``logging.debug`` statement for every variable in a file you are editing.
 
 Near the top of each python module where logging is used, there should be a line, ``logger = logging.getLogger(__name__)``. Then logging statements should be done using statements like ``logger.info(...)``, *not* ``logging.info(...)``: this allows more contextual information in logging output.
