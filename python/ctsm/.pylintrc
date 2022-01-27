@@ -140,6 +140,7 @@ disable=print-statement,
         deprecated-sys-function,
         exception-escape,
         comprehension-escape,
+        C0330,                         # This is an option that the formatter "black" requires us to disable
 # --- default list is above here, our own list is below here ---
 # While pylint's recommendations to keep the number of arguments, local
 # variables and branches low is generally a good one, I don't want it to

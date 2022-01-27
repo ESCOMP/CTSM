@@ -1807,21 +1807,21 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <!-- mapping files for 1x1_brazil START added on Thu Jul 19 13:06:18 2012-->
 <map frm_hgrid="0.125x0.125" frm_lmask="nomask" to_hgrid="1x1_brazil" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_brazil/map_0.125x0.125_nomask_to_1x1_brazil_nomask_aave_da_c200206.nc</map>
+>lnd/clm2/mappingdata/maps/1x1_brazil/map_0.125x0.125_nomask_to_1x1_brazil_nomask_aave_da_c211212.nc</map>
 <map frm_hgrid="0.5x0.5"    frm_lmask="nomask"  to_hgrid="1x1_brazil"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_brazil/map_0.5x0.5_nomask_to_1x1_brazil_nomask_aave_da_c200206.nc</map>
+>lnd/clm2/mappingdata/maps/1x1_brazil/map_0.5x0.5_nomask_to_1x1_brazil_nomask_aave_da_c211212.nc</map>
 <map frm_hgrid="0.25x0.25"  frm_lmask="nomask"  to_hgrid="1x1_brazil"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_brazil/map_0.25x0.25_nomask_to_1x1_brazil_nomask_aave_da_c200309.nc</map>
+>lnd/clm2/mappingdata/maps/1x1_brazil/map_0.25x0.25_nomask_to_1x1_brazil_nomask_aave_da_c211212.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="nomask"  to_hgrid="1x1_brazil"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_brazil/map_3x3min_nomask_to_1x1_brazil_nomask_aave_da_c200309.nc</map>
+>lnd/clm2/mappingdata/maps/1x1_brazil/map_3x3min_nomask_to_1x1_brazil_nomask_aave_da_c211212.nc</map>
 <map frm_hgrid="10x10min"    frm_lmask="nomask"  to_hgrid="1x1_brazil"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_brazil/map_10x10min_nomask_to_1x1_brazil_nomask_aave_da_c200206.nc</map>
+>lnd/clm2/mappingdata/maps/1x1_brazil/map_10x10min_nomask_to_1x1_brazil_nomask_aave_da_c211212.nc</map>
 <map frm_hgrid="5x5min"    frm_lmask="nomask"  to_hgrid="1x1_brazil"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_brazil/map_5x5min_nomask_to_1x1_brazil_nomask_aave_da_c200309.nc</map>
+>lnd/clm2/mappingdata/maps/1x1_brazil/map_5x5min_nomask_to_1x1_brazil_nomask_aave_da_c211212.nc</map>
 <map frm_hgrid="0.9x1.25"    frm_lmask="nomask"  to_hgrid="1x1_brazil"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_brazil/map_0.9x1.25_nomask_to_1x1_brazil_nomask_aave_da_c200206.nc</map>
+>lnd/clm2/mappingdata/maps/1x1_brazil/map_0.9x1.25_nomask_to_1x1_brazil_nomask_aave_da_c211212.nc</map>
 <map frm_hgrid="1km-merge-10min"    frm_lmask="HYDRO1K-merge-nomask"  to_hgrid="1x1_brazil"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_brazil/map_1km-merge-10min_HYDRO1K-merge-nomask_to_1x1_brazil_nomask_aave_da_c130403.nc</map>
+>lnd/clm2/mappingdata/maps/1x1_brazil/map_1km-merge-10min_HYDRO1K-merge-nomask_to_1x1_brazil_nomask_aave_da_c211212.nc</map>
 <!-- mapping files for 1x1_brazil END -->
 
 <!-- mapping files for 1x1_mexicocityMEX START added on Thu Jul 19 13:06:18 2012-->
@@ -2564,6 +2564,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- are set in the BuildNamelist code)         -->
 <!-- =========================================  -->
 <do_transient_lakes>.false.</do_transient_lakes>
+<do_transient_urban>.false.</do_transient_urban>
 <reset_dynbal_baselines>.false.</reset_dynbal_baselines>
 
 <!-- =========================================  -->
