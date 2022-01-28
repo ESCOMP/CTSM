@@ -204,9 +204,9 @@ class SinglePointCase(BaseCase):
         when zero out non veg land units (by default true) and not provide a dominant pft:
 
         The user can run ./subset_data using:
-        ./subset_data point --dom-pft
+        ./subset_data point --dompft
         ./subset_data point --include-nonveg
-        ./subset_data point --dom-pft --include-nonveg
+        ./subset_data point --dompft --include-nonveg
 
         But this will raise an error:
         ./subset_data point
