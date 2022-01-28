@@ -107,33 +107,40 @@ contains
 
        if (.not. dynlanduse) then
 
+          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out pct_lake"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_LAKE', 'percent_lake', &
                'unitless', pctlak, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out pct_wetland"
           call mkfile_output(pioid,define_mode, mesh_o, xtype, 'PCT_WETLAND', 'percent_wetland', &
                'unitless', pctwet, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out lakedepth"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'LAKEDEPTH', 'lake_depth', &
                'm', lakedepth, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out organic"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'ORGANIC', 'organic matter density at soil levels', &
                'kg/m3 (assumed carbon content 0.58 gC per gOM)', organic, lev1name='nlevsoi', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out soil color"
           call mkfile_output(pioid, define_mode, mesh_o, 'SOIL_COLOR', 'soil color', &
                'unitless', soil_color,  rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          ! call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_URBAN', 'percent urban for each density type', &
-          !      'unitless', urban_classes, lev1name='numurbl', rc=rc)
-          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out urban region id"
+          call mkfile_output(pioid, define_mode, mesh_o, 'URBAN_REGION_ID', 'urban region ID', &
+               'unitless', urban_region, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          ! call mkfile_output(pioid, define_mode, mesh_o, 'URBAN_REGION_ID', 'urban region ID', &
-          !      'unitless', urban_region, rc=rc)
-          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out percnt urban"
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_URBAN', 'percent urban for each density type', &
+               'unitless', urban_classes, lev1name='numurbl', rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           ! ----------------------------------------------------------------------
           ! Make Urban Parameters from raw input data and write to surface dataset 
@@ -181,20 +188,19 @@ contains
        rcode = pio_def_dim(pioid, 'lsmlon', nx, dimid)
        rcode = pio_def_dim(pioid, 'lsmlat', ny, dimid)
     end if
-    rcode = pio_def_dim(pioid, 'nlevsoi', nlevsoi, dimid)
-    rcode = pio_def_dim(pioid, 'time', PIO_UNLIMITED, dimid)
+    rcode = pio_def_dim(pioid, 'nlevsoi', nlevsoi       , dimid)
+    rcode = pio_def_dim(pioid, 'nlevurb', nlevurb       , dimid)
+    rcode = pio_def_dim(pioid, 'numurbl', numurbl       , dimid)
 
-    if (.not. dynlanduse) then
 #ifdef TODO
+    rcode = pio_def_dim(pioid, 'time'   , PIO_UNLIMITED , dimid)
+    rcode = pio_def_dim(pioid, 'nchar'  , 256           , dimid)
+    rcode = pio_def_dim(pioid, 'numrad' , numrad        , dimid)
+    if (.not. dynlanduse) then
        rcode = pio_def_dim(pioid, 'nglcec', nglcec, dimid)
        rcode = pio_def_dim(pioid, 'nglcecp1', nglcec+1, dimid)
-#endif
-    else
-       rcode = pio_def_dim(pioid, 'numurbl', numurbl, dimid)
-       rcode = pio_def_dim(pioid, 'nlevurb', nlevurb, dimid)
-       rcode = pio_def_dim(pioid, 'numrad' , numrad, dimid)
-       rcode = pio_def_dim(pioid, 'nchar'  , 256, dimid)
     end if
+#endif
 
   end subroutine mkfile_define_dims
 

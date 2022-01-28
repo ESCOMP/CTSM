@@ -411,9 +411,9 @@ program mksurfdata
   ! end if
 
   ! Make urban fraction [pcturb] from [furban] dataset
-  ! call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, &
-  !      zero_out=all_veg, urbn_o=pcturb, urban_classes_o=urban_classes, region_o=urban_region, rc=rc)
-  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
+  call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, &
+       zero_out=all_veg, urbn_o=pcturb, urban_classes_o=urban_classes, region_o=urban_region, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
 
   ! Make soil color classes [soicol] [fsoicol]
   call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, soil_color, nsoilcol, rc)
@@ -424,12 +424,12 @@ program mksurfdata
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
 
   ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
-  zero_out_lake = all_urban .or. all_veg
-  zero_out_wetland = all_urban .or. all_veg .or. no_inlandwet
-  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
-       zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
-  call ESMF_LogWrite("After mklakwat", ESMF_LOGMSG_INFO)
+  ! zero_out_lake = all_urban .or. all_veg
+  ! zero_out_wetland = all_urban .or. all_veg .or. no_inlandwet
+  ! call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
+  !      zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
+  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
+  ! call ESMF_LogWrite("After mklakwat", ESMF_LOGMSG_INFO)
 
 #ifdef TODO
   ! ! Make glacier fraction [pctgla] from [fglacier] dataset

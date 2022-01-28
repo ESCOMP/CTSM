@@ -116,9 +116,7 @@ contains
     type(io_desc_t)        :: pio_iodesc
     type(io_desc_t)        :: pio_iodesc_mask
     integer , allocatable  :: data_int(:)
-    real(r4), allocatable  :: data_real(:)
     real(r8), allocatable  :: data_double(:)
-    real(r4), allocatable  :: landmask(:)
     integer                :: lsize
     integer                :: rcode
     integer                :: n
@@ -135,7 +133,7 @@ contains
     ! create iodesc for either single or multi level input data
     call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After mkpio_iodesc for varname "//trim(varname))
+    call ESMF_VMLogMemInfo("After mkpio_iodesc for varname "//trim(varname)//" in "//trim(subname))
 
     ! Read the input raw data
     if (pio_vartype == PIO_INT) then
@@ -196,7 +194,7 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Read the input raw data
-    call ESMF_VMLogMemInfo("After mkpio_iodesc for varname "//trim(varname))
+    call ESMF_VMLogMemInfo("After mkpio_iodesc for varname for "//trim(varname)//" in "//trim(subname))
     if (pio_vartype == PIO_INT) then
        allocate(data_int(lsize))
        call pio_read_darray(pioid, pio_varid, pio_iodesc, data_int, rcode)
