@@ -232,7 +232,6 @@ contains
 
   !================================================================
 
-  ! STUB
   subroutine cropcal_interp(bounds, num_pcropp, filter_pcropp, crop_inst)
     !
     ! Interpolate data stream information for crop calendars.
@@ -251,10 +250,61 @@ contains
     integer                , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
     type(crop_type)        , intent(inout) :: crop_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ivt, p, ip, ig
+    integer :: nc, fp
+!    integer :: yr, mon, day, tod, ymd, c, g ! SSR troubleshooting
+    integer           :: n, g
+    integer           :: lsize
+    integer           :: rc
+    real(r8), pointer :: dataptr1d_sdate(:)
+    real(r8), pointer :: dataptr2d_sdate(:,:)
+    real(r8), pointer :: dataptr1d_cultivar_gdds(:)
+    real(r8), pointer :: dataptr2d_cultivar_gdds(:,:)
     !-----------------------------------------------------------------------
+    SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
 
-    write(iulog,*) 'cropcal_interp() needs to be written for share_esmf.'
-    call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    ! Get pointer for stream data that is time and spatially interpolate to model time and grid
+    ! Place all data from each type into a temporary 2d array
+    lsize = bounds%endg - bounds%begg + 1
+    allocate(dataptr2d_sdate(lsize, mxpft))
+    allocate(dataptr2d_cultivar_gdds(lsize, mxpft))
+    do n = 1,mxpft
+       call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
+            fldptr1=dataptr1d_sdate,  rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       end if
+       call dshr_fldbun_getFldPtr(sdat_cropcal_cultivar_gdds%pstrm(1)%fldbun_model, trim(stream_varnames_cultivar_gdds(n)), &
+            fldptr1=dataptr1d_cultivar_gdds,  rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       end if
+       ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
+       ! So an explicit loop is required here
+       do g = 1,lsize
+         dataptr2d_sdate(g,n) = dataptr1d_sdate(g)
+         dataptr2d_cultivar_gdds(g,n) = dataptr1d_cultivar_gdds(g)
+       end do
+    end do
+
+    ! Set rx_sdate and rx_cultivar_gdd for each gridcell/patch combination
+    do p = bounds%begp, bounds%endp
+       ivt = patch%itype(p)
+       if (ivt /= noveg) then
+          ! vegetated pft
+          ig = g_to_ig(patch%gridcell(p))
+          crop_inst%rx_sdates_thisyr(p,1) = dataptr2d_sdate(ig,ivt)
+          crop_inst%rx_cultivar_gdds_thisyr(p,1) = dataptr2d_cultivar_gdds(ig,ivt)
+
+          ! Only for first sowing date of the year
+          crop_inst%next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
+       endif
+    end do
+    deallocate(dataptr2d_sdate)
+    deallocate(dataptr2d_cultivar_gdds)
 
   end subroutine cropcal_interp
 
