@@ -535,7 +535,6 @@ def main():
         err_msg = textwrap.dedent('''\
                 \n ------------------------------------
                 \n Must supply a positional argument: 'point' or 'region'.
-                \n See ./subset_data --help for more help.
                 '''
                 )
         raise parser.error(err_msg)
@@ -545,7 +544,6 @@ def main():
                 \n ------------------------------------
                 \n Must supply one of:
                 \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n
-                \n See ./subset_data --help for more help.
                 '''
                 )
         raise parser.error(err_msg)
