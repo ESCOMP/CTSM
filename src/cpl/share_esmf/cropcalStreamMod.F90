@@ -30,7 +30,9 @@ module cropcalStreamMod
   ! !PRIVATE MEMBER DATA:
   integer, allocatable        :: g_to_ig(:)         ! Array matching gridcell index to data index
   type(shr_strdata_type)      :: sdat_cropcal_sdate           ! sdate input data stream
+  type(shr_strdata_type)      :: sdat_cropcal_cultivar_gdds   ! sdate input data stream
   character(len=CS)           :: stream_varnames_sdate(mxpft)
+  character(len=CS)           :: stream_varnames_cultivar_gdds(mxpft)
 
   character(len=*), parameter :: sourcefile = &
        __FILE__
@@ -61,6 +63,7 @@ contains
     integer                 :: nu_nml                     ! unit for namelist file
     integer                 :: nml_error                  ! namelist i/o error flag
     character(len=CL)       :: stream_fldFileName_sdate   ! sdate stream filename to read
+    character(len=CL)       :: stream_fldFileName_cultivar_gdds ! cultivar growing degree-days stream filename to read
     character(len=CL)       :: stream_meshfile_cropcal    ! crop calendar stream meshfile
     character(len=CL)       :: cropcal_mapalgo  = 'nn'        ! Mapping alogrithm
     character(len=CL)       :: cropcal_tintalgo = 'nearest'   ! Time interpolation alogrithm
@@ -76,6 +79,7 @@ contains
          stream_year_last_cropcal,     &
          model_year_align_cropcal,     &
          stream_fldFileName_sdate,     &
+         stream_fldFileName_cultivar_gdds, &
          stream_meshfile_cropcal
 
     ! Default values for namelist
@@ -84,9 +88,11 @@ contains
     model_year_align_cropcal   = 1      ! align stream_year_first_cropcal with this model year
     stream_meshfile_cropcal    = ''
     stream_fldFileName_sdate = ''
+    stream_fldFileName_cultivar_gdds = ''
     ! SSR TODO: Make below work with arbitrary # of growing seasons per year
     do n = 1,mxpft
        write(stream_varnames_sdate(n),'(a,i0)') "sdate1",n
+       write(stream_varnames_cultivar_gdds(n),'(a,i0)') "gdd1",n
     end do
 
     ! Read cropcal_streams namelist
@@ -107,6 +113,7 @@ contains
     call shr_mpi_bcast(stream_year_last_cropcal   , mpicom)
     call shr_mpi_bcast(model_year_align_cropcal   , mpicom)
     call shr_mpi_bcast(stream_fldFileName_sdate   , mpicom)
+    call shr_mpi_bcast(stream_fldFileName_cultivar_gdds, mpicom)
     call shr_mpi_bcast(stream_meshfile_cropcal    , mpicom)
 
     if (masterproc) then
@@ -116,9 +123,11 @@ contains
        write(iulog,'(a,i8)') '  stream_year_last_cropcal   = ',stream_year_last_cropcal
        write(iulog,'(a,i8)') '  model_year_align_cropcal   = ',model_year_align_cropcal
        write(iulog,'(a,a)' ) '  stream_fldFileName_sdate   = ',trim(stream_fldFileName_sdate)
+       write(iulog,'(a,a)' ) '  stream_fldFileName_cultivar_gdds   = ',trim(stream_fldFileName_cultivar_gdds)
        write(iulog,'(a,a)' ) '  stream_meshfile_cropcal    = ',trim(stream_meshfile_cropcal)
        do n = 1,mxpft
           write(iulog,'(a,a)' ) '  stream_varnames_sdate  = ',trim(stream_varnames_sdate(n))
+          write(iulog,'(a,a)' ) '  stream_varnames_cultivar_gdds  = ',trim(stream_varnames_cultivar_gdds(n))
        end do
        write(iulog,*)
     endif
@@ -136,6 +145,32 @@ contains
          stream_filenames    = (/trim(stream_fldFileName_sdate)/), &
          stream_fldlistFile  = stream_varnames_sdate,              &
          stream_fldListModel = stream_varnames_sdate,              &
+         stream_yearFirst    = stream_year_first_cropcal,          &
+         stream_yearLast     = stream_year_last_cropcal,           &
+         stream_yearAlign    = model_year_align_cropcal,           &
+         stream_offset       = cropcal_offset,                     &
+         stream_taxmode      = 'cycle',                            &
+         stream_dtlimit      = 1.5_r8,                             &
+         stream_tintalgo     = cropcal_tintalgo,                   &
+         stream_name         = 'sowing date data',                 &
+         rc                  = rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    end if
+
+    ! Initialize the cdeps data type sdat_cropcal_cultivar_gdds
+    call shr_strdata_init_from_inline(sdat_cropcal_cultivar_gdds,  &
+         my_task             = iam,                                &
+         logunit             = iulog,                              &
+         compname            = 'LND',                              &
+         model_clock         = model_clock,                        &
+         model_mesh          = mesh,                               &
+         stream_meshfile     = trim(stream_meshfile_cropcal),      &
+         stream_lev_dimname  = 'null',                             &
+         stream_mapalgo      = trim(cropcal_mapalgo),              &
+         stream_filenames    = (/trim(stream_fldFileName_cultivar_gdds)/), &
+         stream_fldlistFile  = stream_varnames_cultivar_gdds,      &
+         stream_fldListModel = stream_varnames_cultivar_gdds,      &
          stream_yearFirst    = stream_year_first_cropcal,          &
          stream_yearLast     = stream_year_last_cropcal,           &
          stream_yearAlign    = model_year_align_cropcal,           &
@@ -176,6 +211,10 @@ contains
     call get_curr_date(year, mon, day, sec)
     mcdate = year*10000 + mon*100 + day
     call shr_strdata_advance(sdat_cropcal_sdate, ymd=mcdate, tod=sec, logunit=iulog, istr='cropcaldyn', rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    end if
+    call shr_strdata_advance(sdat_cropcal_cultivar_gdds, ymd=mcdate, tod=sec, logunit=iulog, istr='cropcaldyn', rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
     end if
