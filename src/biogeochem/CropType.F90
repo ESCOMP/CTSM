@@ -215,8 +215,8 @@ contains
 
     this%rx_sdates_thisyr(:,:) = -1
     this%rx_cultivar_gdds_thisyr(:,:) = -1
-    this%sdates_thisyr(:,:) = -1._r8
-    this%hdates_thisyr(:,:) = -1._r8
+    this%sdates_thisyr(:,:) = spval
+    this%hdates_thisyr(:,:) = spval
 
   end subroutine InitAllocate
 

@@ -1782,7 +1782,8 @@ contains
          ! initialize other variables that are calculated for crops
          ! on an annual basis in cropresidue subroutine
 
-         if ( is_beg_curr_year() ) then
+         ! Second condition ensures everything is correctly set when resuming from a run with old code
+         if ( is_beg_curr_year() .or. crop_inst%sdates_thisyr(p,1) == spval ) then
             sowing_count(p) = 0
             harvest_count(p) = 0
             do s = 1, mxgrowseas
@@ -1793,6 +1794,12 @@ contains
             end do
          end if
 
+         ! When resuming from a run with old code, may need to manually set these
+         if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
+            sowing_count(p) = 1
+            crop_inst%sdates_thisyr(p,1) = 1._r8
+         end if
+         
          do_plant_prescribed = next_rx_sdate(p) == jday
          s = sowing_count(p)
 
@@ -2069,7 +2076,7 @@ contains
             else if (do_harvest) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                harvest_count(p) = harvest_count(p) + 1
-               crop_inst%hdates_thisyr(p, harvest_count(p)) = DBLE(jday)
+               crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = 4._r8
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
