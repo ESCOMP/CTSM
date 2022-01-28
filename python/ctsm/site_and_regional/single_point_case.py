@@ -362,7 +362,7 @@ class SinglePointCase(BaseCase):
         # write to user_nl_clm data if specified
         if self.create_user_mods:
             with open(os.path.join(user_mods_dir, "user_nl_clm"), "a") as nl_clm:
-                line = "landuse = '${}'".format(os.path.join(USRDAT_DIR, fluse_out))
+                line = "flanduse_timeseries = '${}'".format(os.path.join(USRDAT_DIR, fluse_out))
                 self.write_to_file(line, nl_clm)
 
     def create_surfdata_at_point(self, indir, file, user_mods_dir):
