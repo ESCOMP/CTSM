@@ -10,13 +10,12 @@ module cropcalStreamMod
   use ESMF
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_CL, CS => shr_kind_CS
   use dshr_strdata_mod , only : shr_strdata_type
-  use decompMod        , only : bounds_type, get_proc_clumps
+  use decompMod        , only : bounds_type
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog
   use clm_varpar       , only : mxpft
   use perf_mod         , only : t_startf, t_stopf
   use spmdMod          , only : masterproc, mpicom, iam
-  use filterMod        , only : filter
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -240,8 +239,7 @@ contains
     use pftconMod       , only : noveg
     use CropType        , only : crop_type
     use PatchType       , only : patch
-    use filterMod       , only : filter
-    use decompMod       , only : get_proc_clumps
+    use dshr_methods_mod , only : dshr_fldbun_getfldptr
 !    use clm_time_manager , only : get_curr_date ! SSR troubleshooting
     !
     ! !ARGUMENTS:
