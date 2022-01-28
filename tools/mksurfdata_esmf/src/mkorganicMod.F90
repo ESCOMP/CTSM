@@ -8,7 +8,7 @@ module mkorganicMod
   use shr_sys_mod  , only : shr_sys_abort
   use mkpioMod     , only : mkpio_get_rawdata, mkpio_get_dimlengths
   use mkpioMod     , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod    , only : regrid_rawdata
+  use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8
   use mkutilsMod   , only : chkerr
   use mkvarctl     , only : root_task, ndiag
   use mkvarpar     , only : nlevsoi
@@ -37,21 +37,14 @@ contains
     ! local variables
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
-    type(ESMF_Field)       :: field_i
-    type(ESMF_Field)       :: field_o
     type(file_desc_t)      :: pioid
     integer                :: ni,no
     integer                :: ns_i, ns_o
     integer                :: nlay
     integer                :: n, l  ! indices
     integer                :: rcode, ier             ! error status
-    integer                :: srcMaskValue = -987987 ! spval for RH mask values
-    integer                :: dstMaskValue = -987987 ! spval for RH mask values
-    integer                :: srcTermProcessing_Value = 0
     integer                :: ndims
     integer , allocatable  :: dimlengths(:)
-    real(r4), allocatable  :: data_real(:,:)
-    real(r8), allocatable  :: data_double(:,:)
     real(r8), allocatable  :: data_i(:,:)
     real(r8), allocatable  :: data_o(:,:)
     real(r8), allocatable  :: frac_i(:)
@@ -65,7 +58,7 @@ contains
        write (ndiag,'(a)') ' Attempting to make organic mater dataset .....'
     end if
 
-    ! Open raw data file - need to do this first to obtain ungridded dimension size
+    ! Open input data file - need to do this first to obtain ungridded dimension size
     call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
     call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
@@ -87,6 +80,11 @@ contains
     call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
+
+    ! Create a route handle between the input and output mesh
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, rc)
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
     ! Determine ns_i and allocate data_i
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
@@ -108,30 +106,10 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-    ! Create field on input mesh - using dimension information from raw data file
-    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, &
-               ungriddedLbound=(/1/), ungriddedUbound=(/nlay/), gridToFieldMap=(/2/), rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After field_i creation in "//trim(subname))
-
-    ! Create field on model model
-    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, &
-               ungriddedLbound=(/1/), ungriddedUbound=(/nlay/), gridToFieldMap=(/2/), rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After field_o creation in "//trim(subname))
-
-    ! Create route handle to map field_model to field_data
-    call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
-        !srcMaskValues=(/srcMaskValue/), dstMaskValues=(/dstMaskValue/), &
-         regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=ESMF_NORMTYPE_FRACAREA, &
-         srcTermProcessing=srcTermProcessing_Value, &
-         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
-
     ! Regrid data_i to data_o and frac_i to frac_o
-    call regrid_rawdata(field_i, field_o, routehandle, data_i, data_o, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 1, nlay, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After regrid organic_i in  "//trim(subname))
 
     do l = 1,nlevsoi
        do n = 1,size(organic_o, dim=1)
@@ -144,17 +122,9 @@ contains
     allocate(frac_o(ns_o))
     call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call regrid_rawdata(field_i, field_o, routehandle, frac_i, frac_o, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, frac_i, frac_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After regrid_data in data_i "//trim(subname))
+    call ESMF_VMLogMemInfo("After regrid landmask in  "//trim(subname))
 
     ! Divide organic_o by frac_o
     do n = 1,ns_o

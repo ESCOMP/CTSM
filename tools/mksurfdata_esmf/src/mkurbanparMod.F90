@@ -6,15 +6,16 @@ module mkurbanparMod
 
   use ESMF
   use pio
-  use shr_kind_mod , only : r8 => shr_kind_r8, cs => shr_kind_cs
+  use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs
   use shr_sys_mod  , only : shr_sys_abort
   use mkpioMod     , only : mkpio_get_rawdata, pio_iotype, pio_ioformat, pio_iosystem
   use mkpioMod     , only : mkpio_iodesc_output, mkpio_def_spatial_var, mkpio_wopen
   use mkpioMod     , only : mkpio_get_dimlengths, mkpio_get_rawdata
   use mkpioMod     , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod    , only : regrid_rawdata
+  use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8
   use mkutilsMod   , only : chkerr
   use mkvarctl     , only : root_task, ndiag, ispval, fsurdat, outnc_double
+  use mkvarctl     , only : root_task, ndiag, mpicom, MPI_INTEGER, MPI_MAX
 
   implicit none
   private
@@ -30,6 +31,7 @@ module mkurbanparMod
   ! public data members
   integer, public :: numurbl           ! number of urban classes
   integer, public :: nlevurb = ispval  ! number of urban layers
+  integer, public :: nregions
 
   ! private data members:
   ! flag to indicate nodata for index variables in output file:
@@ -66,6 +68,8 @@ contains
     rcode = pio_inq_dimlen(pioid, dimid, numurbl)
     rcode = pio_inq_dimid(pioid, 'nlevurb', dimid)
     rcode = pio_inq_dimlen(pioid, dimid, dimid)
+    rcode = pio_inq_dimid(pioid, 'region', dimid)
+    rcode = pio_inq_dimlen(pioid, dimid, nregions)
     call pio_closefile(pioid)
 
   end subroutine mkurbanInit
@@ -108,23 +112,21 @@ contains
 #endif
 
     ! input/output variables
-    character(len=*) , intent(in)  :: file_mesh_i         ! input mesh file name
-    character(len=*) , intent(in)  :: file_data_i         ! input data file name
-    type(ESMF_Mesh)  , intent(in)  :: mesh_o              ! model mesh
-    logical          , intent(in)  :: zero_out            ! if should zero urban out
-    real(r8)         , intent(out) :: urbn_o(:)           ! output grid: total % urban
-    real(r8)         , intent(out) :: urban_classes_o(:,:) ! output grid: breakdown of total urban into each class
-    integer          , intent(inout) :: region_o(:)         ! output grid: region ID
-    integer          , intent(out) :: rc
+    character(len=*) , intent(in)    :: file_mesh_i          ! input mesh file name
+    character(len=*) , intent(in)    :: file_data_i          ! input data file name
+    type(ESMF_Mesh)  , intent(in)    :: mesh_o               ! model mesh
+    logical          , intent(in)    :: zero_out             ! if should zero urban out
+    real(r8)         , intent(out)   :: urbn_o(:)            ! output grid: total % urban
+    real(r8)         , intent(out)   :: urban_classes_o(:,:) ! output grid: breakdown of total urban into each class
+    integer          , intent(inout) :: region_o(:)          ! output grid: region ID
+    integer          , intent(out)   :: rc
 
     ! local variables:
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
-    type(ESMF_Field)       :: field_i
-    type(ESMF_Field)       :: field_o
     type(file_desc_t)      :: pioid
-    real(r8), allocatable  :: urban_classes_gcell_i(:,:) ! input grid: percent urban in each density class (% of total grid cell area)
-    real(r8), allocatable  :: urban_classes_gcell_o(:,:) ! output grid: percent urban in each density class (% of total grid cell area)
+    real(r8), allocatable  :: urban_classes_gcell_i(:,:) ! % input urban in each density class (% of total grid cell area)
+    real(r8), allocatable  :: urban_classes_gcell_o(:,:) ! % putput urban in each density class (% of total grid cell area)
     real(r8), allocatable  :: data_i(:,:)
     real(r8), allocatable  :: data_o(:,:)
     integer , allocatable  :: region_i(:)               ! input grid: region ID
@@ -133,14 +135,13 @@ contains
     integer                :: ns_i, ns_o                ! array sizes
     integer                :: dimlen                    ! netCDF dimension length
     integer, allocatable   :: dimlengths(:)
-    integer                :: ndims
     integer                :: max_region                ! maximum region index
+    real(r4), allocatable  :: frac_i(:)
+    real(r4), allocatable  :: frac_o(:)
+    integer                :: max_regions_local
+    integer                :: max_regions
+    integer                :: max_index(1)
     integer                :: rcode, ier                ! error status
-    integer                :: srcMaskValue = -987987    ! spval for RH mask values
-    integer                :: dstMaskValue = -987987    ! spval for RH mask values
-    integer                :: srcTermProcessing_Value = 0
-    real(r8), allocatable  :: frac_i(:)
-    real(r8), allocatable  :: frac_o(:)
     character(len=*), parameter :: subname = 'mkurban'
     !-----------------------------------------------------------------------
 
@@ -159,14 +160,18 @@ contains
     call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
-    call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
-    ! Determine ns_i and allocate urban_classes_gcell_i
+    ! Create a route handle between the input and output mesh
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, rc)
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Determine ns_i and allocate data_i
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
     allocate(data_i(numurbl,ns_i),stat=ier)
     if (ier/=0) call shr_sys_abort()
 
@@ -180,31 +185,9 @@ contains
     ! - levels are the innermost dimension for esmf fields
     ! - levels are the outermost dimension in pio reads
     ! Input data is read into (ns_i,numurbl) array and then transferred to urban_classes_gcell_i(numurbl,ns_i)
-    if (ier/=0) call shr_sys_abort()
     call mkpio_get_rawdata(pioid, 'PCT_URBAN', mesh_i, urban_classes_gcell_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
-
-    ! Create field on input mesh - using dimension information from raw data file
-    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, &
-               ungriddedLbound=(/1/), ungriddedUbound=(/numurbl/), gridToFieldMap=(/2/), rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After field_i creation in "//trim(subname))
-
-    ! Create field on model model
-    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, &
-               ungriddedLbound=(/1/), ungriddedUbound=(/numurbl/), gridToFieldMap=(/2/), rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After field_o creation in "//trim(subname))
-
-    ! Create route handle to map field_model to field_data
-    call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
-        !srcMaskValues=(/srcMaskValue/), dstMaskValues=(/dstMaskValue/), &
-         regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=ESMF_NORMTYPE_DSTAREA, &
-         srcTermProcessing=srcTermProcessing_Value, &
-         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
 
     ! Regrid raw data to model resolution
     ! make percent urban on output grid, given percent urban on input grid
@@ -213,9 +196,9 @@ contains
     ! Area-average percent cover on input grid to output grid
     ! and correct according to land landmask
     ! Note that percent cover is in terms of total grid area.
-    call regrid_rawdata(field_i, field_o, routehandle, data_i, data_o, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 1, numurbl, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After regrid_data in "//trim(subname))
+    call ESMF_VMLogMemInfo("After regrid_data for in "//trim(subname))
 
     ! Now Determine total % urban
     call ESMF_LogWrite("Before allocate of urban_classes_gcell_o", ESMF_LOGMSG_INFO)
@@ -233,17 +216,9 @@ contains
     allocate(frac_o(ns_o))
     call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, frac_i, frac_o, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call regrid_rawdata(field_i, field_o, routehandle, frac_i, frac_o, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After regrid_data in data_i "//trim(subname))
+    call ESMF_VMLogMemInfo("After regrid_data for landmask in "//trim(subname))
 
     do n = 1,ns_o
        if (frac_o(n) > 0._r8) then
@@ -258,6 +233,7 @@ contains
     call ESMF_LogWrite("After loop", ESMF_LOGMSG_INFO)
 
     ! Check for conservation
+#ifdef TODO
     do no = 1, ns_o
        if ((urbn_o(no)) > 100.000001_r8) then
           write (6,'(a,i8,a,i8)') 'MKURBAN error: percent urban = ',urbn_o(no), &
@@ -266,6 +242,7 @@ contains
        end if
     enddo
     !call shr_sys_abort()
+#endif
 
     ! determine urban_classes_o
     call ESMF_LogWrite("Before normalize_urbn", ESMF_LOGMSG_INFO)
@@ -290,14 +267,13 @@ contains
        end do
     end if
 
-    ! Print diagnostics
-    ! First, recompute urban_classes_gcell_o, based on any changes we have made to urbn_o
-    ! while handling special cases
-    call ESMF_LogWrite("Before normalize_classes_by_gcell", ESMF_LOGMSG_INFO)
-    !call normalize_classes_by_gcell(urban_classes_o, urbn_o, urban_classes_gcell_o)
-    call ESMF_LogWrite("After normalize_classes_by_gcell", ESMF_LOGMSG_INFO)
+    deallocate(data_i)
+    deallocate(data_o)
 
 #ifdef TODO
+    ! Print diagnostics
+    ! First, recompute urban_classes_gcell_o, based on any changes we have made to urbn_o
+    call normalize_classes_by_gcell(urban_classes_o, urbn_o, urban_classes_gcell_o)
     do k = 1, numurbl
        call mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, &
             urban_classes_gcell_i(:,k), urban_classes_gcell_o(:,k), &
@@ -309,49 +285,54 @@ contains
        write (ndiag,'(a)') 'Attempting to make urban region .....'
     end if
 
-#ifdef TODO
+    ! ------------------------------------------------------
     ! Read in region field
-    ! Note: we do this here, rather than with the rest of the reads above, because we
-    ! expect the input urban fields to be large, so we're just reading the fields as
-    ! they're needed to try to avoid unnecessary memory paging
-    ! REGION_ID is (lsmlon,lsmlat) but integer - so use pio and create and iodesc to read this in
-    ! for the local grid points
+    ! ------------------------------------------------------
 
     allocate(region_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
+
     call ESMF_LogWrite("Before mkpio_get_rawdata", ESMF_LOGMSG_INFO)
     call mkpio_get_rawdata(pioid, 'REGION_ID', mesh_i, region_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_LogWrite("After mkpio_get_rawdata", ESMF_LOGMSG_INFO)
 
-    ! Determine max region value, and make sure it doesn't exceed bounds of the lookup tables.
-    !
-    ! (Note: this check assumes that region_i=1 refers to region(1), region_i=2 refers to
-    ! region(2), etc. The alternative would be to use a coordinate variable associated with
-    ! the region dimension of the lookup table, which could result in an arbitrary mapping
-    ! between region values and the indices of the lookup table; however, this use of
-    ! coordinate variables currently isn't supported by lookup_2d_netcdf [as of 2-8-12].)
+    max_regions = nregions
 
-    call ESMF_LogWrite("Before allocate dimlengths", ESMF_LOGMSG_INFO)
-    allocate(dimlengths(2))
-    call mkpio_get_dimlengths(pioid, trim('REGION_ID'), ndims, dimlengths)
-    max_region = maxval(region_i)
-    if (max_region > dimlengths(2)) then
-       write(6,*) modname//':'//subname// &
-            ' ERROR: max region value exceeds length of region dimension'
-       write(6,*) 'max region value          : ', max_region
-       write(6,*) 'length of region dimension: ', dimlengths(2)
-       call shr_sys_abort()
-    end if
-    deallocate(dimlengths)
-    call ESMF_LogWrite("After allocate dimlengths", ESMF_LOGMSG_INFO)
+    ! Now determine data_i as a real 2d array
+    allocate(data_i(max_regions, ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort('error allocating data_i(max_regions, ns_i)')
+    allocate(data_o(max_regions, ns_o), stat=ier)
+    if (ier/=0) call shr_sys_abort('error allocating data_i(max_regions, ns_o)')
 
-    ! Determine dominant region for each output cell
-    call ESMF_LogWrite("Before get_dominant_indices", ESMF_LOGMSG_INFO)
-    call get_dominant_indices(factorindexlist, factorlist, &
-         src_array=region_i, dst_array=region_o, &
-         minval=1, maxval=max_region, nodata=index_nodata)
-    call ESMF_LogWrite("After get_dominant_indices", ESMF_LOGMSG_INFO)
+    data_i(:,:) = 0._r4
+    do l = 1,max_regions
+       do n = 1,ns_i
+          if (region_i(n) == l) then
+             !data_i(l,n) = 1._r4 * mask_i(n) 
+             data_i(l,n) = 1. ! DEBUG
+          end if
+       end do
+    end do
+
+    ! Regrid data_i to data_o
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 1, nregions, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Now find dominant region in each output gridcell - this is identical to the maximum index
+    do n = 1,ns_o
+       max_index = maxloc(data_o(:,n))
+    end do
+    ! do n = 1,ns_o
+    !    maxindex = 1
+    !    maxval = data_o(1,n)
+    !    do l = 2, max_regions
+    !       if (data_o(l,n) > maxval) then
+    !          maxindex = l
+    !          maxval = data_o(l,n)
+    !       end if
+    !    end do
+    ! end do
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made urban region'
@@ -361,20 +342,18 @@ contains
     ! Output diagnostics
     ! call output_diagnostics_index(factorlist, factorindex, region_i, region_o, 'Urban Region ID', &
     !      1, max_region, ndiag)
-#endif
 
     ! Close the file
     call pio_closefile(pioid)
 
     ! Deallocate dynamic memory & other clean up
-    deallocate (urban_classes_gcell_i, urban_classes_gcell_o, region_i)
+    ! TODO: determine what to deallocate
+    ! deallocate (urban_classes_gcell_i, urban_classes_gcell_o, region_i)
 
     call ESMF_VMLogMemInfo("Before destroy operation in "//trim(subname))
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
+    call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_VMLogMemInfo("after destroy operation in "//trim(subname))
 

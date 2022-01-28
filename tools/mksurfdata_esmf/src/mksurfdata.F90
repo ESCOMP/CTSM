@@ -410,6 +410,11 @@ program mksurfdata
   !    call mkharvest(  mapfname=map_fharvest, datfname=mksrf_fhrvtyp, ndiag=ndiag, harvdata=harvdata )
   ! end if
 
+  ! Make urban fraction [pcturb] from [furban] dataset
+  ! call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, &
+  !      zero_out=all_veg, urbn_o=pcturb, urban_classes_o=urban_classes, region_o=urban_region, rc=rc)
+  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
+
   ! Make soil color classes [soicol] [fsoicol]
   call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, soil_color, nsoilcol, rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilcol')
@@ -425,11 +430,6 @@ program mksurfdata
        zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
   call ESMF_LogWrite("After mklakwat", ESMF_LOGMSG_INFO)
-
-  ! Make urban fraction [pcturb] from [furban] dataset
-  ! call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, &
-  !      zero_out=all_veg, urbn_o=pcturb, urban_classes_o=urban_classes, region_o=urban_region, rc=rc)
-  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
 
 #ifdef TODO
   ! ! Make glacier fraction [pctgla] from [fglacier] dataset

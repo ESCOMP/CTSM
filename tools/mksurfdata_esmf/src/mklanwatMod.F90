@@ -11,7 +11,7 @@ module mklanwatMod
   use shr_sys_mod  , only : shr_sys_abort
   use mkvarpar     , only : re
   use mkpioMod     , only : mkpio_get_rawdata, pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod    , only : regrid_rawdata
+  use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8
   use mkutilsMod   , only : chkerr
   use mkvarctl     , only : root_task, ndiag
 
@@ -53,8 +53,6 @@ contains
     ! local variables
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
-    type(ESMF_Field)       :: field_i
-    type(ESMF_Field)       :: field_o
     type(file_desc_t)      :: pioid
     real(r8), allocatable  :: lake_i(:)              ! input grid: percent lake
     real(r8), allocatable  :: swmp_i(:)              ! input grid: percent wetland
@@ -62,9 +60,6 @@ contains
     integer                :: ni,no,k                ! indices
     integer                :: ns_i,ns_o              ! local sizes
     integer                :: rcode                  ! error status
-    integer                :: srcMaskValue = -987987 ! spval for RH mask values
-    integer                :: dstMaskValue = -987987 ! spval for RH mask values
-    integer                :: srcTermProcessing_Value = 0
     real(r8), parameter    :: min_valid_lakedepth = 0._r8
     character(len=*), parameter :: subname = ' mklakwat '
     !-----------------------------------------------------------------------
@@ -78,41 +73,25 @@ contains
        swmp_o(no) = 0.
     enddo
 
-    ! create field on model mesh
-    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! Open raw data file
+    ! ASSUME for now that have only 1 input data file
+    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
+    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
-    ! ----------------------------------------
-    ! Create route handle for rawdata mesh to model mesh
-    ! ----------------------------------------
-
-    ! create field on input mesh (first read in input mesh)
-    call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
+    ! Read in input mesh
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
-    ! create route handle to map field_model to field_data
-    call ESMF_VMLogMemInfo("Before regridstore in "//trim(subname))
-    call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
-         srcMaskValues=(/srcMaskValue/), dstMaskValues=(/dstMaskValue/), &
-         regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=ESMF_NORMTYPE_DSTAREA, &
-         srcTermProcessing=srcTermProcessing_Value, &
-         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
+    ! Create a route handle between the input and output mesh
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, rc)
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
-    ! ----------------------------------------
-    ! Open input data file
-    ! ----------------------------------------
-    ! ASSUME for now that have only 1 input data file
-    call ESMF_VMLogMemInfo("Before pio_openfile in "//trim(subname))
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
-    call ESMF_VMLogMemInfo("After pio_openfile in "//trim(subname))
+    ! Determine number of elements in input mesh
+    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
     ! ----------------------------------------
     ! Create %lake
@@ -124,17 +103,16 @@ contains
           write (ndiag,*) 'Attempting to make %lake .....'
        end if
 
-       ! Read in the input data
+       ! Read in lake_i
        allocate(lake_i(ns_i), stat=rcode)
        if (rcode/=0) call shr_sys_abort()
        call mkpio_get_rawdata(pioid, 'PCT_LAKE', mesh_i, lake_i, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       ! Regrid lake_i to lake_o - this also returns lake_i to be used in the global sums below
-       call ESMF_VMLogMemInfo("Before regrid_rawdata for PCT_LAKE")
-       call regrid_rawdata(field_i, field_o, routehandle, lake_i, lake_o, rc)
+       ! Regrid lake_i to lake_o
+       call regrid_rawdata(mesh_i, mesh_o, routehandle, lake_i, lake_o, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_VMLogMemInfo("Before regrid_rawdata for PCT_LAKE")
+       call ESMF_VMLogMemInfo("After regrid_rawdata for PCT_LAKE in "//trim(subname))
        do no = 1,size(lake_o)
           if (lake_o(no) < 1.) lake_o(no) = 0.
        enddo
@@ -156,15 +134,14 @@ contains
           write (ndiag,*) 'Attempting to make %wetland .....'
        end if
 
-       ! read in rawdata
+       ! read in swmp_i
        allocate(swmp_i(ns_i), stat=rcode)
        if (rcode/=0) call shr_sys_abort()
        call mkpio_get_rawdata(pioid, 'PCT_WETLAND', mesh_i, lake_i, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! regrid swmp_i to swmp_o - this also returns swmp_i to be used in the global sums below
-       call ESMF_VMLogMemInfo("Before regrid_data for wetland")
-       call regrid_rawdata(field_i, field_o, routehandle, swmp_i, swmp_o, rc)
+       call regrid_rawdata(mesh_i, mesh_o, routehandle, swmp_i, swmp_o, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_VMLogMemInfo("After regrid_data for wetland")
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -180,25 +157,23 @@ contains
     end if
 
     ! ----------------------------------------
-    ! Create lake parameter (lakdepth)
+    ! Create lake parameter (lakedepth)
     ! ----------------------------------------
 
     if (root_task) then
        write (ndiag,*) 'Attempting to make lake parameters.....'
     end if
 
-    ! read in rawdata
+    ! lakedepth
     allocate(lakedepth_i(ns_i), stat=rcode)
     if (rcode/=0) call shr_sys_abort()
     call mkpio_get_rawdata(pioid, 'LAKEDEPTH', mesh_i, lakedepth_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! regrid lakedepth_i to lakedepth_o - this also returns lakedepth_i to be used in the global sums below
-    call ESMF_VMLogMemInfo("Before regrid_data for lakedepth")
-    call regrid_rawdata(field_i, field_o, routehandle, lakedepth_i, lakedepth_o, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, lakedepth_i, lakedepth_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After regrid_data for lakedepth")
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After regrid_rawdata for lakedepth in "//trim(subname))
 
     ! Check validity of output data
     if (min_bad(lakedepth_o, min_valid_lakedepth, 'lakedepth')) then
@@ -219,7 +194,7 @@ contains
     call ESMF_VMLogMemInfo("Before destroy operation for lanwat ")
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
+    call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_VMLogMemInfo("After destroy operation for lanwat ")
 

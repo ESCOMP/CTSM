@@ -61,7 +61,7 @@ contains
 
     n_max = size(sums)
     if (size(classes_pct_tot, 1)   /= n_max .or. &
-         size(classes_pct_gcell, 1) /= n_max) then
+        size(classes_pct_gcell, 1) /= n_max) then
        write(6,*) subname//' ERROR: array size mismatch'
        write(6,*) 'size(sums)                 = ', n_max
        write(6,*) 'size(classes_pct_tot, 1)   = ', size(classes_pct_tot, 1)

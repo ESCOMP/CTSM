@@ -22,6 +22,7 @@ module mkfileMod
 
   interface mkfile_output
      module procedure mkfile_output_int1d
+     module procedure mkfile_output_int2d
      module procedure mkfile_output_real1d
      module procedure mkfile_output_real2d
   end interface mkfile_output
@@ -125,15 +126,23 @@ contains
           call mkfile_output(pioid, define_mode, mesh_o, 'SOIL_COLOR', 'soil color', &
                'unitless', soil_color,  rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          write(6,*)'wrote out soil_color'
 
           ! call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_URBAN', 'percent urban for each density type', &
           !      'unitless', urban_classes, lev1name='numurbl', rc=rc)
           ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          ! call mkfile_output(pioid, define_mode, mesh_o, PIO_INT, 'URBAN_REGION_ID', 'urban region ID', &
+          ! call mkfile_output(pioid, define_mode, mesh_o, 'URBAN_REGION_ID', 'urban region ID', &
           !      'unitless', urban_region, rc=rc)
           ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          ! ----------------------------------------------------------------------
+          ! Make Urban Parameters from raw input data and write to surface dataset 
+          ! Write to netcdf file is done inside mkurbanpar routine
+          ! ----------------------------------------------------------------------
+
+          ! call mkurbanpar(datfname=mksrf_furban, ncido=ncid, region_o=urban_region, &
+          !      urbn_classes_gcell_o=urbn_classes_g, &
+          !      urban_skip_abort_on_invalid_data_check=urban_skip_abort_on_invalid_data_check)
 
        end if
     end do
@@ -363,22 +372,47 @@ contains
     rc = ESMF_SUCCESS
 
     if (define_mode) then
-       write(6,*)'DEBUG: here1'
        call mkpio_def_spatial_var(pioid, trim(varname), PIO_INT, trim(longname), trim(units))
-       write(6,*)'DEBUG: here2'
     else
-       write(6,*)'DEBUG: here3'
        call mkpio_iodesc_output(pioid, mesh, trim(varname), pio_iodesc, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
-       write(6,*)'DEBUG: here4'
        rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
-       write(6,*)'DEBUG: here5'
        call pio_write_darray(pioid, pio_varid, pio_iodesc, ipointer, rcode)
-       write(6,*)'DEBUG: here6'
        call pio_freedecomp(pioid, pio_iodesc)
-       write(6,*)'DEBUG: here7'
     end if
   end subroutine mkfile_output_int1d
+
+  !=================================================================================
+  subroutine mkfile_output_int2d(pioid, define_mode, mesh, varname, longname, units, ipointer, rc)
+
+    ! input/output variables
+    type(file_desc_t) , intent(inout)  :: pioid
+    logical           , intent(in)  :: define_mode
+    type(ESMF_Mesh)   , intent(in)  :: mesh
+    character(len=*)  , intent(in)  :: varname
+    character(len=*)  , intent(in)  :: longname
+    character(len=*)  , intent(in)  :: units
+    integer           , pointer     :: ipointer(:,:)
+    integer           , intent(out) :: rc
+
+    ! local variables
+    type(io_desc_t)      :: pio_iodesc
+    type(var_desc_t)     :: pio_varid
+    integer              :: rcode
+    !-----------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    if (define_mode) then
+       call mkpio_def_spatial_var(pioid, trim(varname), PIO_INT, trim(longname), trim(units))
+    else
+       call mkpio_iodesc_output(pioid, mesh, trim(varname), pio_iodesc, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
+       rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+       call pio_write_darray(pioid, pio_varid, pio_iodesc, ipointer, rcode)
+       call pio_freedecomp(pioid, pio_iodesc)
+    end if
+  end subroutine mkfile_output_int2d
 
   !=================================================================================
   subroutine mkfile_output_real1d(pioid, define_mode, mesh, xtype, varname, longname, units, rpointer, rc)

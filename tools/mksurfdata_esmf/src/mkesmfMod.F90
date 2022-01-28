@@ -9,6 +9,8 @@ module mkesmfMod
   private
 
   public :: regrid_rawdata
+  public :: create_routehandle_r4
+  public :: create_routehandle_r8
 
   interface regrid_rawdata
      module procedure regrid_rawdata1d_r4
@@ -24,134 +26,273 @@ module mkesmfMod
 contains
 !===============================================================
 
-  subroutine regrid_rawdata1d_r4(field_i, field_o,  routehandle, data_i, data_o, rc)
+  subroutine create_routehandle_r8(mesh_i, mesh_o, routehandle, rc)
 
     ! input/output variables
-    type(ESMF_Field)       , intent(in)    :: field_i
-    type(ESMF_Field)       , intent(inout) :: field_o
+    type(ESMF_Mesh)        , intent(in)    :: mesh_i
+    type(ESMF_Mesh)        , intent(in)    :: mesh_o
+    type(ESMF_RouteHandle) , intent(inout) :: routehandle
+    integer                , intent(out)   :: rc
+
+    ! local variables
+    integer                     :: srcMaskValue = -987987    ! spval for RH mask values
+    integer                     :: dstMaskValue = -987987    ! spval for RH mask values
+    integer                     :: srcTermProcessing_Value = 0
+    type(ESMF_Field)            :: field_i
+    type(ESMF_Field)            :: field_o
+    character(len=*), parameter :: subname = 'create_routehandle_r8'
+    ! --------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create route handle to map field_model to field_data
+    call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
+        !srcMaskValues=(/srcMaskValue/), dstMaskValues=(/dstMaskValue/), &
+         regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=ESMF_NORMTYPE_DSTAREA, &
+         srcTermProcessing=srcTermProcessing_Value, &
+         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
+
+    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+
+  end subroutine create_routehandle_r8
+
+  !===============================================================
+  subroutine create_routehandle_r4(mesh_i, mesh_o, routehandle, rc)
+
+    ! input/output variables
+    type(ESMF_Mesh)        , intent(in)    :: mesh_i
+    type(ESMF_Mesh)        , intent(in)    :: mesh_o
+    type(ESMF_RouteHandle) , intent(inout) :: routehandle
+    integer                , intent(out)   :: rc
+
+    ! local variables
+    integer          :: srcMaskValue = -987987    ! spval for RH mask values
+    integer          :: dstMaskValue = -987987    ! spval for RH mask values
+    integer          :: srcTermProcessing_Value = 0
+    type(ESMF_Field) :: field_i
+    type(ESMF_Field) :: field_o
+    character(len=*), parameter :: subname = 'create_routehandle_r4'
+    ! --------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create route handle to map field_model to field_data
+    call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
+        !srcMaskValues=(/srcMaskValue/), dstMaskValues=(/dstMaskValue/), &
+         regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=ESMF_NORMTYPE_DSTAREA, &
+         srcTermProcessing=srcTermProcessing_Value, &
+         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
+
+    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+
+  end subroutine create_routehandle_r4
+
+  !===============================================================
+  subroutine regrid_rawdata1d_r4(mesh_i, mesh_o, routehandle, data_i, data_o, rc)
+
+    ! input/output variables
+    type(ESMF_Mesh)        , intent(in)    :: mesh_i
+    type(ESMF_Mesh)        , intent(in)    :: mesh_o
     type(ESMF_RouteHandle) , intent(inout) :: routehandle
     real(r4)               , intent(in)    :: data_i(:)
     real(r4)               , intent(inout) :: data_o(:)
     integer                , intent(out)   :: rc
 
     ! local variables
-    logical           :: checkflag = .false.
+    type(ESMF_Field)  :: field_i
+    type(ESMF_Field)  :: field_o
     real(r4), pointer :: dataptr(:)
+    logical           :: checkflag = .false.
+    character(len=*), parameter :: subname = 'regrid_rawdata1d_r4'
     ! --------------------------------------------
 
     rc = ESMF_SUCCESS
+
+    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Interpolate data_i to data_o
     call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
     dataptr(:) = data_i(:)
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     dataptr(:) = 0._r8
     call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, &
          termorderflag=ESMF_TERMORDER_SRCSEQ, checkflag=checkflag, zeroregion=ESMF_REGION_TOTAL, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     data_o(:) = dataptr(:)
-    call ESMF_VMLogMemInfo("After field regrid in regrid_data")
+
+    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
   end subroutine regrid_rawdata1d_r4
 
   !===============================================================
-  subroutine regrid_rawdata1d_r8(field_i, field_o,  routehandle, data_i, data_o, rc)
+  subroutine regrid_rawdata1d_r8(mesh_i, mesh_o,  routehandle, data_i, data_o, rc)
 
     ! input/output variables
-    type(ESMF_Field)       , intent(in)    :: field_i
-    type(ESMF_Field)       , intent(inout) :: field_o
+    type(ESMF_Mesh)        , intent(in)    :: mesh_i
+    type(ESMF_Mesh)        , intent(in)    :: mesh_o
     type(ESMF_RouteHandle) , intent(inout) :: routehandle
     real(r8)               , intent(in)    :: data_i(:)
     real(r8)               , intent(inout) :: data_o(:)
     integer                , intent(out)   :: rc
 
     ! local variables
-    logical           :: checkflag = .false.
+    type(ESMF_Field)  :: field_i
+    type(ESMF_Field)  :: field_o
     real(r8), pointer :: dataptr(:)
+    logical           :: checkflag = .false.
+    character(len=*), parameter :: subname = 'regrid_rawdata1d_r8'
     ! --------------------------------------------
 
     rc = ESMF_SUCCESS
 
+    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
     ! Interpolate data_i to data_o
     call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     dataptr(:) = data_i(:)
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     dataptr(:) = 0._r8
     call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, &
          termorderflag=ESMF_TERMORDER_SRCSEQ, checkflag=checkflag, zeroregion=ESMF_REGION_TOTAL, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     data_o(:) = dataptr(:)
-    call ESMF_VMLogMemInfo("After field regrid in regrid_data")
+
+    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
   end subroutine regrid_rawdata1d_r8
 
   !===============================================================
-  subroutine regrid_rawdata2d_r4(field_i, field_o,  routehandle, data_i, data_o, rc)
+  subroutine regrid_rawdata2d_r4(mesh_i, mesh_o,  routehandle, data_i, data_o, lbound, ubound, rc)
 
     ! input/output variables
-    type(ESMF_Field)       , intent(in)    :: field_i
-    type(ESMF_Field)       , intent(inout) :: field_o
+    type(ESMF_Mesh)        , intent(in)    :: mesh_i
+    type(ESMF_Mesh)        , intent(in)    :: mesh_o
     type(ESMF_RouteHandle) , intent(inout) :: routehandle
+    integer                , intent(in)    :: lbound
+    integer                , intent(in)    :: ubound
     real(r4)               , intent(in)    :: data_i(:,:)
     real(r4)               , intent(inout) :: data_o(:,:)
     integer                , intent(out)   :: rc
 
     ! local variables
+    type(ESMF_Field)  :: field_i
+    type(ESMF_Field)  :: field_o
     logical           :: checkflag = .false.
-    integer           :: n,l
     real(r4), pointer :: dataptr(:,:)
     ! --------------------------------------------
 
     rc = ESMF_SUCCESS
 
+    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, &
+         ungriddedLbound=(/lbound/), ungriddedUbound=(/ubound/), gridToFieldMap=(/2/), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, &
+         ungriddedLbound=(/lbound/), ungriddedUbound=(/ubound/), gridToFieldMap=(/2/), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
     ! Interpolate data_i to data_o
-    call ESMF_VMLogMemInfo("Before field regrid in regrid_rawdata2d")
     call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     dataptr(:,:) = data_i(:,:)
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     dataptr(:,:) = 0._r8
     call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, &
          termorderflag=ESMF_TERMORDER_SRCSEQ, checkflag=checkflag, zeroregion=ESMF_REGION_TOTAL, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     data_o(:,:) = dataptr(:,:)
-    call ESMF_VMLogMemInfo("After field regrid in regrid_rawdata2d")
+
+    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
   end subroutine regrid_rawdata2d_r4
 
   !===============================================================
-  subroutine regrid_rawdata2d_r8(field_i, field_o,  routehandle, data_i, data_o, rc)
+  subroutine regrid_rawdata2d_r8(mesh_i, mesh_o,  routehandle, data_i, data_o, lbound, ubound, rc)
 
     ! input/output variables
-    type(ESMF_Field)       , intent(in)    :: field_i
-    type(ESMF_Field)       , intent(inout) :: field_o
+    type(ESMF_Mesh)        , intent(in)    :: mesh_i
+    type(ESMF_Mesh)        , intent(in)    :: mesh_o
     type(ESMF_RouteHandle) , intent(inout) :: routehandle
+    integer                , intent(in)    :: lbound
+    integer                , intent(in)    :: ubound
     real(r8)               , intent(in)    :: data_i(:,:)
     real(r8)               , intent(inout) :: data_o(:,:)
     integer                , intent(out)   :: rc
 
     ! local variables
+    type(ESMF_Field)  :: field_i
+    type(ESMF_Field)  :: field_o
     logical           :: checkflag = .false.
-    integer           :: n,l
     real(r8), pointer :: dataptr(:,:)
     ! --------------------------------------------
 
     rc = ESMF_SUCCESS
 
+    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, &
+         ungriddedLbound=(/lbound/), ungriddedUbound=(/ubound/), gridToFieldMap=(/2/), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, &
+         ungriddedLbound=(/lbound/), ungriddedUbound=(/ubound/), gridToFieldMap=(/2/), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
     ! Interpolate data_i to data_o
-    call ESMF_VMLogMemInfo("Before field regrid in regrid_rawdata2d")
     call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     dataptr(:,:) = data_i(:,:)
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     dataptr(:,:) = 0._r8
+
     call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, &
          termorderflag=ESMF_TERMORDER_SRCSEQ, checkflag=checkflag, zeroregion=ESMF_REGION_TOTAL, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     data_o(:,:) = dataptr(:,:)
-    call ESMF_VMLogMemInfo("After field regrid in regrid_rawdata2d")
 
   end subroutine regrid_rawdata2d_r8
 
