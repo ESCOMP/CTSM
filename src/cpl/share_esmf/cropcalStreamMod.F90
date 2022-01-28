@@ -192,67 +192,30 @@ contains
   end subroutine cropcal_advance
 
   !================================================================
-  subroutine cropcal_interp(bounds, canopystate_inst)
+
+  ! STUB
+  subroutine cropcal_interp(bounds, num_pcropp, filter_pcropp, crop_inst)
     !
-    ! Interpolate data stream information for crop calendar.
+    ! Interpolate data stream information for crop calendars.
     !
     ! !USES:
-    use pftconMod        , only : noveg
-    use PatchType        , only : patch
-    use CanopyStateType  , only : canopystate_type
-    use dshr_methods_mod , only : dshr_fldbun_getfldptr
+    use pftconMod       , only : noveg
+    use CropType        , only : crop_type
+    use PatchType       , only : patch
+    use filterMod       , only : filter
+    use decompMod       , only : get_proc_clumps
+!    use clm_time_manager , only : get_curr_date ! SSR troubleshooting
     !
     ! !ARGUMENTS:
+    implicit none
     type(bounds_type)      , intent(in)    :: bounds
+    integer                , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
+    integer                , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
     type(crop_type)        , intent(inout) :: crop_inst
-    !
-    ! !LOCAL VARIABLES:
-    integer           :: ivt, fp, p, ip, ig, n, g
-    integer           :: lsize
-    integer           :: rc_sdate
-    real(r8), pointer :: dataptr1d_sdate(:)
-    real(r8), pointer :: dataptr2d_sdate(:,:)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
-
-    ! Get pointer for stream data that is time and spatially interpolate to model time and grid
-    ! Place all crop calendar data from each type into a temporary 2d array
-    ! SSR TODO: Make below work with arbitrary # of growing seasons per year
-    lsize = bounds%endg - bounds%begg + 1
-    allocate(dataptr2d(lsize, mxpft))
-    do n = 1,mxpft
-       call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
-            fldptr1=dataptr1d_sdate,  rc=rc_sdate)
-       ! SSR TODO: Fail on any error except "variable not found"
-      !  if (ESMF_LogFoundError(rcToCheck=rc_sdate, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-      !     call ESMF_Finalize(endflag=ESMF_END_ABORT)
-      !  end if
-      
-       ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
-       ! So an explicit loop is required here
-       do g = 1,lsize
-         if (.not. ESMF_LogFoundError(rcToCheck=rc_sdate, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-            dataptr2d_sdate(g,n) = dataptr1d_sdate(g)
-         end if
-       end do
-    end do
-
-    do nc = 1, get_proc_clumps()
-      do fp = 1, filter(nc)%num_pcropp
-         p = filter(nc)%pcropp(fp)
-         ! Set crop calendar for each gridcell/patch combination
-         ig = g_to_ig(patch%gridcell(p))
-         ivt = patch%itype
-         ! SSR TODO: Make below work with arbitrary # of growing seasons per year
-         crop_inst%rx_sdates_thisyr(p,1) = dataptr2d_sdate(ig,ivt)
-
-         ! Only for first sowing date of the year
-         crop_inst%next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
-      end do
-    end do
-    deallocate(dataptr2d)
+    write(iulog,*) 'cropcal_interp() needs to be written for share_esmf.'
+    call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
   end subroutine cropcal_interp
 
