@@ -21,7 +21,7 @@ subset_data
 
 modify_singlept_site_neon.py
     After running subset_data.py overwrite some fields with site-specific
-    data for neon sites. This code uses neon_sites_dompft.csv to determine dom-pft values. 
+    data for neon sites.
 
 run_neon.py
     Wrapper script for running CTSM simulations for one or more
@@ -30,6 +30,7 @@ run_neon.py
 neon_surf_wrapper.py
     Wrapper script that run subset_data to extract data for all neon points and then
     use modify_singlept_site_neon.py to update site-specific fields.
+    This code uses neon_sites_dompft.csv to determine --dompft (dominant pft types) values.
 
 neon_s3_upload
     Script to rename and upload NEON site finidat files to NEON s3 bucket
