@@ -11,7 +11,8 @@ module SnowSnicarMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_sys_mod     , only : shr_sys_flush
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use clm_varctl      , only : iulog, snicar_numrad_snw, snicar_rt_solver ! cenlin
+  use clm_varctl      , only : iulog, snicar_numrad_snw, snicar_rt_solver, &
+                               snicar_snw_shape ! cenlin
   use clm_varcon      , only : tfrz
   use shr_const_mod   , only : SHR_CONST_RHOICE
   use abortutils      , only : endrun
@@ -354,8 +355,8 @@ contains
     real(r8):: DS(-2*nlevsno+1:0)                 ! tri-diag intermediate variable from Toon et al. (2*lyr)
     real(r8):: X(-2*nlevsno+1:0)                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
     real(r8):: Y(-2*nlevsno+1:0)                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
+
     !-----------------------------------------------------------------------
-    !
     ! variables used for Adding-doubling 2-stream solver based on SNICAR-ADv3 version 
     ! (Dang et al. 2019; Flanner et al. 2021)
     real(r8):: trndir(-nlevsno+1:1)               ! solar beam down transmission from top
@@ -428,7 +429,7 @@ contains
     real(r8):: cp75   = 0.75_r8
     real(r8):: c1p5   = 1.5_r8
     real(r8):: trmin  = 0.001_r8
-    real(r8):: argmax = 10.0_r8                  ! maximum argument of exponential
+    real(r8):: argmax = 10.0_r8                   ! maximum argument of exponential
     ! cconstant and coefficients used for SZA parameterization
     real(r8):: sza_a0 =  0.085730_r8
     real(r8):: sza_a1 = -0.630883_r8
@@ -437,12 +438,54 @@ contains
     real(r8):: sza_b1 = -3.338043_r8
     real(r8):: sza_b2 =  6.807489_r8
     real(r8):: puny   =  1.0e-11_r8
-    real(r8):: mu_75  =  0.2588_r8               ! cosine of 75 degree
-    real(r8):: sza_c1                            ! coefficient, SZA parameteirzation
-    real(r8):: sza_c0                            ! coefficient, SZA parameterization
-    real(r8):: sza_factor                        ! factor used to adjust NIR direct albedo
-    real(r8):: flx_sza_adjust                    ! direct NIR flux adjustment from sza_factor
-    real(r8):: mu0                               ! incident solar zenith angle
+    real(r8):: mu_75  =  0.2588_r8                ! cosine of 75 degree
+    real(r8):: sza_c1                             ! coefficient, SZA parameteirzation
+    real(r8):: sza_c0                             ! coefficient, SZA parameterization
+    real(r8):: sza_factor                         ! factor used to adjust NIR direct albedo
+    real(r8):: flx_sza_adjust                     ! direct NIR flux adjustment from sza_factor
+    real(r8):: mu0                                ! incident solar zenith angle
+
+    !-----------------------------------------------------------------------
+    ! variables used for nonspherical snow grain treatment (He et al. 2017 J of Climate):
+    integer  :: sno_shp(-nlevsno+1:0)             ! Snow shape type: 1=sphere; 2=spheroid; 3=hexagonal plate; 4=koch snowflake
+                                                  ! currently only assuming same shapes for all snow layers
+    real(r8) :: sno_fs(-nlevsno+1:0)              ! Snow shape factor: ratio of nonspherical grain effective radii to that of equal-volume sphere
+                                                  ! only activated when snicar_snw_shape > 1 (i.e. nonspherical)
+                                                  ! 0=use recommended default value (He et al. 2017);
+                                                  ! others(0<sno_fs<1)= user-specified value
+    real(r8) :: sno_AR(-nlevsno+1:0)              ! Snow grain aspect ratio: ratio of grain width to length
+                                                  ! only activated when snicar_snw_shape > 1 (i.e. nonspherical)
+                                                  ! 0=use recommended default value (He et al. 2017);
+                                                  ! others(0.1<fs<20)= use user-specified value
+    ! Constants and parameters for aspherical ice particles    
+    ! asymmetry factor parameterization coefficients (6 bands) from Table 3 & Eqs. 6-7 in He et al. (2017)
+    real(r8) :: g_wvl(1:8)                        ! wavelength (um) division point
+    real(r8) :: g_wvl_ct(1:7)                     ! center point for wavelength band (um)
+    real(r8) :: g_b0(1:7)
+    real(r8) :: g_b1(1:7)
+    real(r8) :: g_b2(1:7)
+    ! Tables 1 & 2 and Eqs. 3.1-3.4 from Fu, 2007 JAS
+    real(r8) :: g_F07_c2(1:7)
+    real(r8) :: g_F07_c1(1:7)
+    real(r8) :: g_F07_c0(1:7)
+    real(r8) :: g_F07_p2(1:7)
+    real(r8) :: g_F07_p1(1:7)
+    real(r8) :: g_F07_p0(1:7)
+    ! other temporary variables
+    real(r8) :: wvl_ct5(1:5)                      ! band center wavelength (um) for 5-band case
+    real(r8) :: wvl_ct480(1:480)                  ! band center wavelength (um) for 480-band case, computed below
+    real(r8) :: diam_ice                          ! effective snow grain diameter (SSA-equivalent) unit: microns
+    real(r8) :: fs_sphd                           ! shape factor for spheroid snow
+    real(r8) :: fs_hex                            ! shape factor for reference hexagonal snow
+    real(r8) :: fs_hex0                           ! shape factor for hexagonal plate
+    real(r8) :: fs_koch                           ! shape factor for Koch snowflake
+    real(r8) :: AR_tmp                            ! aspect ratio temporary
+    real(r8) :: g_ice_Cg_tmp(1:7)                 ! temporary asymmetry factor correction coeff
+    real(r8) :: gg_ice_F07_tmp(1:7)               ! temporary asymmetry factor related to geometric reflection & refraction
+    real(r8) :: g_Cg_intp                         ! interpolated asymmetry factor correction coeff to target bands 
+    real(r8) :: gg_F07_intp                       ! interpolated asymmetry factor related to geometric reflection & refraction
+    real(r8) :: g_ice_F07                         ! asymmetry factor for Fu 2007 parameterization value
+    integer  :: igb                               ! loop index
     !
     !-----------------------------------------------------------------------
 
@@ -462,9 +505,11 @@ contains
          frac_sno    =>   waterdiagnosticbulk_inst%frac_sno_eff_col    & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
          )
 
-      ! Define parameter, cenlin
+      ! initialize parameter, cenlin
       nir_bnd_bgn    = nint(snicar_numrad_snw/9.6) + 1 ! 5-band starts at 2; 480-band starts at 51
       nir_bnd_end    = snicar_numrad_snw 
+
+      ! initialize for adding-doubling solver
       difgauspt(1:8) = & ! gaussian angles (radians)
                       (/ 0.9894009_r8,  0.9445750_r8, &
                          0.8656312_r8,  0.7554044_r8, &
@@ -475,6 +520,39 @@ contains
                          0.0951585_r8,  0.1246290_r8, &
                          0.1495960_r8,  0.1691565_r8, &
                          0.1826034_r8,  0.1894506_r8/)
+
+      ! initialize for nonspherical snow grains
+      sno_shp(:) = snicar_snw_shape ! currently only assuming same shapes for all snow layers
+      sno_fs(:)  = 0._r8
+      sno_AR(:)  = 0._r8
+      ! Table 3 of He et al 2017 JC
+      g_wvl(1:8)    = (/ 0.25_r8, 0.70_r8, 1.41_r8, 1.90_r8, &
+                         2.50_r8, 3.50_r8, 4.00_r8, 5.00_r8 /)
+      g_wvl_ct(1:7) = g_wvl(2:8) / 2._r8 + g_wvl(1:7) / 2._r8
+      g_b0(1:7)     = (/  9.76029E-1_r8,  9.67798E-1_r8,  1.00111_r8, 1.00224_r8, &
+                          9.64295E-1_r8,  9.97475E-1_r8,  9.97475E-1_r8 /)
+      g_b1(1:7)     = (/  5.21042E-1_r8,  4.96181E-1_r8,  1.83711E-1_r8,  1.37082E-1_r8, &
+                          5.50598E-2_r8,  8.48743E-2_r8,  8.48743E-2_r8 /)
+      g_b2(1:7)     = (/ -2.66792E-4_r8,  1.14088E-3_r8,  2.37011E-4_r8, -2.35905E-4_r8, &
+                          8.40449E-4_r8, -4.71484E-4_r8, -4.71484E-4_r8 /)
+      ! Tables 1 & 2 and Eqs. 3.1-3.4 from Fu, 2007 JAS
+      g_F07_c2(1:7) = (/  1.349959E-1_r8,  1.115697E-1_r8,  9.853958E-2_r8,  5.557793E-2_r8, &
+                         -1.233493E-1_r8,  0.0_r8        ,  0.0_r8         /)
+      g_F07_c1(1:7) = (/ -3.987320E-1_r8, -3.723287E-1_r8, -3.924784E-1_r8, -3.259404E-1_r8, &
+                          4.429054E-2_r8, -1.726586E-1_r8, -1.726586E-1_r8 /)
+      g_F07_c0(1:7) = (/  7.938904E-1_r8,  8.030084E-1_r8,  8.513932E-1_r8,  8.692241E-1_r8, &
+                          7.085850E-1_r8,  6.412701E-1_r8,  6.412701E-1_r8 /)
+      g_F07_p2(1:7) = (/  3.165543E-3_r8,  2.014810E-3_r8,  1.780838E-3_r8,  6.987734E-4_r8, &
+                         -1.882932E-2_r8, -2.277872E-2_r8, -2.277872E-2_r8 /)
+      g_F07_p1(1:7) = (/  1.140557E-1_r8,  1.143152E-1_r8,  1.143814E-1_r8,  1.071238E-1_r8, &
+                          1.353873E-1_r8,  1.914431E-1_r8,  1.914431E-1_r8 /)
+      g_F07_p0(1:7) = (/  5.292852E-1_r8,  5.425909E-1_r8,  5.601598E-1_r8,  6.023407E-1_r8, &
+                          6.473899E-1_r8,  4.634944E-1_r8,  4.634944E-1_r8 /)
+      ! band center wavelength (um)
+      wvl_ct5(1:5)  = (/ 0.5_r8, 0.85_r8, 1.1_r8, 1.35_r8, 3.25_r8 /)  ! 5-band
+      do igb = 1,480 
+         wvl_ct480(igb) = 0.205_r8 + 0.01_r8 * (igb-1)  ! 480-band
+      enddo
 
       ! Define constants
       pi = SHR_CONST_PI
@@ -492,7 +570,7 @@ contains
 
          ! Zero absorbed radiative fluxes:
          do i=-nlevsno+1,1,1
-            flx_abs_lcl(:,:)   = 0._r8
+            flx_abs_lcl(i,:)   = 0._r8
             flx_abs(c_idx,i,:) = 0._r8
          enddo
 
@@ -743,25 +821,109 @@ contains
 
 
                   !--------------------------- Start snow & aerosol optics --------------------------------
-                  ! Define local Mie parameters based on snow grain size and aerosol species,
-                  !  retrieved from a lookup table.
+                  ! Define local Mie parameters based on snow grain size and aerosol species retrieved from a lookup table.
+
+                  ! Spherical snow: single-scatter albedo, mass extinction coefficient, asymmetry factor
                   if (flg_slr_in == 1) then
                      do i=snl_top,snl_btm,1
                         rds_idx = snw_rds_lcl(i) - snw_rds_min_tbl + 1
                         ! snow optical properties (direct radiation)
                         ss_alb_snw_lcl(i)      = ss_alb_snw_drc(rds_idx,bnd_idx)
-                        asm_prm_snw_lcl(i)     = asm_prm_snw_drc(rds_idx,bnd_idx)
                         ext_cff_mss_snw_lcl(i) = ext_cff_mss_snw_drc(rds_idx,bnd_idx)
+                        if (sno_shp(i) == 1) asm_prm_snw_lcl(i) = asm_prm_snw_drc(rds_idx,bnd_idx)
                      enddo
                   elseif (flg_slr_in == 2) then
                      do i=snl_top,snl_btm,1
                         rds_idx = snw_rds_lcl(i) - snw_rds_min_tbl + 1
                         ! snow optical properties (diffuse radiation)
                         ss_alb_snw_lcl(i)      = ss_alb_snw_dfs(rds_idx,bnd_idx)
-                        asm_prm_snw_lcl(i)     = asm_prm_snw_dfs(rds_idx,bnd_idx)
                         ext_cff_mss_snw_lcl(i) = ext_cff_mss_snw_dfs(rds_idx,bnd_idx)
+                        if (sno_shp(i) == 1) asm_prm_snw_lcl(i) = asm_prm_snw_dfs(rds_idx,bnd_idx)
                      enddo
                   endif
+
+                  ! Nonspherical snow: shape-dependent asymmetry factors
+                  do i=snl_top,snl_btm,1
+
+                     ! spheroid
+                     if (sno_shp(i) == 2) then
+                        diam_ice = 2._r8 * snw_rds_lcl(i)   ! unit: microns
+                        if (sno_fs(i) == 0._r8) then
+                           fs_sphd = 0.929_r8  ! default; He et al. (2017), Table 1
+                        else
+                           fs_sphd = sno_fs(i) ! user specified value
+                        endif
+                        fs_hex = 0.788_r8      ! reference shape factor
+                        if (sno_AR(i) == 0._r8) then
+                           AR_tmp = 0.5_r8     ! default; He et al. (2017), Table 1
+                        else
+                           AR_tmp = sno_AR(i)  ! user specified value
+                        endif
+                        do igb = 1,7
+                           g_ice_Cg_tmp(igb) = g_b0(igb) * ((fs_sphd/fs_hex)**g_b1(igb)) * (diam_ice**g_b2(igb))   ! Eq.7, He et al. (2017)
+                           gg_ice_F07_tmp(igb) = g_F07_c0(igb) + g_F07_c1(igb)*AR_tmp + g_F07_c2(igb)*(AR_tmp**2._r8)  ! Eqn. 3.1 in Fu (2007)
+                        enddo
+
+                     ! hexagonal plate
+                     elseif (sno_shp(i) == 3) then
+                        diam_ice = 2._r8 * snw_rds_lcl(i)   ! unit: microns
+                        if (sno_fs(i) == 0._r8) then
+                           fs_hex0 = 0.788_r8  ! default; He et al. (2017), Table 1
+                        else
+                           fs_hex0 = sno_fs(i) ! user specified value
+                        endif
+                        fs_hex = 0.788_r8      ! reference shape factor
+                        if (sno_AR(i) == 0._r8) then
+                           AR_tmp = 2.5_r8     ! default; He et al. (2017), Table 1
+                        else
+                           AR_tmp = sno_AR(i)  ! user specified value
+                        endif
+                        do igb = 1,7
+                           g_ice_Cg_tmp(igb) = g_b0(igb) * ((fs_hex0/fs_hex)**g_b1(igb)) * (diam_ice**g_b2(igb))   ! Eq.7, He et al. (2017)
+                           gg_ice_F07_tmp(igb) = g_F07_p0(igb) + g_F07_p1(igb) * LOG(AR_tmp) + g_F07_p2(igb) * ((LOG(AR_tmp))**2._r8) ! Eqn. 3.3 in Fu (2007)
+                        enddo
+
+                     ! Koch snowflake
+                     elseif (sno_shp(i) == 4) then
+                        diam_ice = 2._r8 * snw_rds_lcl(i) / 0.544_r8  ! unit: microns
+                        if (sno_fs(i) == 0._r8) then
+                           fs_koch = 0.712_r8  ! default; He et al. (2017), Table 1
+                        else
+                           fs_koch = sno_fs(i) ! user specified value
+                        endif
+                        fs_hex = 0.788_r8      ! reference shape factor
+                        if (sno_AR(i) == 0._r8) then
+                           AR_tmp = 2.5_r8     ! default; He et al. (2017), Table 1
+                        else
+                           AR_tmp = sno_AR(i)  ! user specified value
+                        endif
+                        do igb = 1,7
+                           g_ice_Cg_tmp(igb) = g_b0(igb) * ((fs_koch/fs_hex)**g_b1(igb)) * (diam_ice**g_b2(igb))   ! Eq.7, He et al. (2017)
+                           gg_ice_F07_tmp(igb) = g_F07_p0(igb) + g_F07_p1(igb) * LOG(AR_tmp) + g_F07_p2(igb) * ((LOG(AR_tmp))**2._r8) ! Eqn. 3.3 in Fu (2007)
+                        enddo
+
+                     endif ! if snow shape
+
+                     ! compute nonspherical snow asymmetry factor
+                     if (sno_shp(i) > 1) then
+                        ! 7 wavelength bands for g_ice to be interpolated into targeted SNICAR bands here
+                        ! use the piecewise linear interpolation subroutine created at the end of this module
+                        if (snicar_numrad_snw == 5) then
+                           call piecewise_linear_interp1d(7,g_wvl_ct,g_ice_Cg_tmp,wvl_ct5(bnd_idx),g_Cg_intp)
+                           call piecewise_linear_interp1d(7,g_wvl_ct,gg_ice_F07_tmp,wvl_ct5(bnd_idx),gg_F07_intp)
+                        endif
+                        if (snicar_numrad_snw == 480) then
+                           call piecewise_linear_interp1d(7,g_wvl_ct,g_ice_Cg_tmp,wvl_ct480(bnd_idx),g_Cg_intp)
+                           call piecewise_linear_interp1d(7,g_wvl_ct,gg_ice_F07_tmp,wvl_ct480(bnd_idx),gg_F07_intp)
+                        endif
+                        g_ice_F07 = gg_F07_intp + (1._r8 - gg_F07_intp) / ss_alb_snw_lcl(i) / 2._r8  ! Eq.2.2 in Fu (2007)
+                        asm_prm_snw_lcl(i) = g_ice_F07 * g_Cg_intp     ! Eq.6, He et al. (2017)
+                     endif
+
+                     if (asm_prm_snw_lcl(i) > 0.99_r8) asm_prm_snw_lcl(i) = 0.99_r8 !avoid unreasonable values (rarely occur in large-size spheroid cases)
+
+                  enddo ! snow layer loop
+
 
                   ! aerosol species 1 optical properties
                   ss_alb_aer_lcl(1)        = ss_alb_bc1(bnd_idx)      
@@ -2197,5 +2359,53 @@ contains
      endif
 
    end subroutine SnowAge_init
-   
+
+   !-----------------------------------------------------------------------
+   subroutine piecewise_linear_interp1d(nd, xd, yd, xi, yi)
+
+     ! piecewise linear interpolation method for 1-dimensional data
+     ! original author: John Burkardt, Florida State University, 09/22/2012
+     ! Added and modified by Cenlin He (NCAR), 01/27/2022
+
+     implicit none
+
+     integer , intent(in)   :: nd         ! number of data points of (xd)
+     real(r8), intent(in)   :: xd(1:nd)   ! x-value of data points
+     real(r8), intent(in)   :: yd(1:nd)   ! y-value of data points
+     real(r8), intent(in)   :: xi         ! x-value for to-be-interpolated point
+     real(r8), intent(out)  :: yi         ! the interpolated value at xi
+
+     ! local variables
+     integer  :: i, k    ! loop index
+     real(r8) :: t
+
+     yi = 0._r8
+
+     ! if only one data point
+     if ( nd == 1 ) then
+        yi = yd(1)
+        return
+     endif
+
+     ! if multiple data points
+     if ( xi < xd(1) ) then ! extrapolate
+        t  = ( xi - xd(1) ) / ( xd(2) - xd(1) )
+        yi = (1._r8 - t) * yd(1) + t * yd(2)
+     elseif ( xi > xd(nd) ) then ! extrapolate
+        t  = ( xi - xd(nd-1) ) / ( xd(nd) - xd(nd-1) )
+        yi = (1._r8 - t) * yd(nd-1) + t * yd(nd)
+     else  ! piecsewise interpolate
+        do k = 2, nd
+           if ( (xd(k-1) <= xi) .and. (xi <= xd(k)) ) then
+              t  = ( xi - xd(k-1) ) / ( xd(k) - xd(k-1) )
+              yi = (1._r8 - t) * yd(k-1) + t * yd(k)
+              exit
+           endif
+        enddo
+     endif
+
+     return
+
+   end subroutine piecewise_linear_interp1d
+ 
  end module SnowSnicarMod

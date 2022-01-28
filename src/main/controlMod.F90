@@ -201,8 +201,9 @@ contains
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
-         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests,snicar_numrad_snw,snicar_solarspec,&
-         snicar_snw_optics,snicar_dust_optics,snicar_use_aerosol,snicar_rt_solver  ! cenlin
+         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
+         snicar_numrad_snw, snicar_solarspec, snicar_snw_optics, snicar_dust_optics, &
+         snicar_use_aerosol, snicar_rt_solver, snicar_snw_shape  ! cenlin
     
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -571,31 +572,37 @@ contains
 
     ! check on snow albedo wavelength bands, cenlin
     if ( (snicar_numrad_snw /= 5) .and. (snicar_numrad_snw /= 480) ) then
-       call endrun(msg=' ERROR: snicar_numrad_snw is out of a reasonable range (5 or 480)'//&
+       call endrun(msg=' ERROR: snicar_numrad_snw is out of a reasonable range (5, 480)'//&
             errMsg(sourcefile, __LINE__))
     end if
 
     ! check on downward solar radiation spectrum, cenlin
-    if ( (snicar_solarspec < 0) .or. (snicar_solarspec > 6) ) then
-       call endrun(msg=' ERROR: snicar_solarspec is out of a reasonable range (1~6)'//&
+    if ( (snicar_solarspec < 1) .or. (snicar_solarspec > 6) ) then
+       call endrun(msg=' ERROR: snicar_solarspec is out of a reasonable range (1,2,3,4,5,6)'//&
             errMsg(sourcefile, __LINE__))
     end if
 
     ! check on snow optics type
-    if ( (snicar_snw_optics < 0) .or. (snicar_snw_optics > 3) ) then
-       call endrun(msg=' ERROR: snicar_snw_optics is out of a reasonable range (1~3)'//&
+    if ( (snicar_snw_optics < 1) .or. (snicar_snw_optics > 3) ) then
+       call endrun(msg=' ERROR: snicar_snw_optics is out of a reasonable range (1,2,3)'//&
             errMsg(sourcefile, __LINE__))
     end if
 
     ! check on dust optics type
-    if ( (snicar_dust_optics < 0) .or. (snicar_dust_optics > 3) ) then
-       call endrun(msg=' ERROR: snicar_dust_optics is out of a reasonable range (1~3)'//&
+    if ( (snicar_dust_optics < 1) .or. (snicar_dust_optics > 3) ) then
+       call endrun(msg=' ERROR: snicar_dust_optics is out of a reasonable range (1,2,3)'//&
             errMsg(sourcefile, __LINE__))
     end if
 
     ! check on SNICAR solver option
-    if ( (snicar_rt_solver < 0) .or. (snicar_rt_solver > 2) ) then
+    if ( (snicar_rt_solver < 1) .or. (snicar_rt_solver > 2) ) then
        call endrun(msg=' ERROR: snicar_rt_solver is out of a reasonable range (1,2)'//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
+    ! check on SNICAR snow grain shape option
+    if ( (snicar_snw_shape < 1) .or. (snicar_snw_shape > 4) ) then
+       call endrun(msg=' ERROR: snicar_snw_shape is out of a reasonable range (1,2,3,4)'//&
             errMsg(sourcefile, __LINE__))
     end if
 
@@ -825,6 +832,7 @@ contains
     call mpi_bcast (snicar_dust_optics, 1, MPI_INTEGER, 0, mpicom, ier)   ! cenlin
     call mpi_bcast (snicar_use_aerosol, 1, MPI_LOGICAL, 0, mpicom, ier)  ! cenlin
     call mpi_bcast (snicar_rt_solver, 1, MPI_INTEGER, 0, mpicom, ier)   ! cenlin
+    call mpi_bcast (snicar_snw_shape, 1, MPI_INTEGER, 0, mpicom, ier) ! cenlin
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -1001,19 +1009,21 @@ contains
     ! cenlin
     if (snicar_numrad_snw==480) then
       if (fsnowoptics480 == ' ') then
-         write(iulog,*) '   SNICAR snow optical properties (480-band) file NOT set'
+         write(iulog,*) '   SNICAR: snow optical properties (480-band) file NOT set'
       else
-         write(iulog,*) '   SNICAR snow optical properties (480-band) file = ',trim(fsnowoptics480)
+         write(iulog,*) '   SNICAR: snow optical properties (480-band) file = ',trim(fsnowoptics480)
       endif
-      write(iulog,*) '   Downward solar radiation spectrum for SNICAR =', snicar_solarspec
-      write(iulog,*) '   Snow refractive index type = ', snicar_snw_optics
-      write(iulog,*) '   Dust optics type = ', snicar_dust_optics
+      write(iulog,*) '   SNICAR: downward solar radiation spectrum type =', snicar_solarspec
+      write(iulog,*) '   SNICAR: snow refractive index type = ', snicar_snw_optics
+      write(iulog,*) '   SNICAR: dust optics type = ', snicar_dust_optics
     endif
 
     write(iulog,*) '   Number of snow layers =', nlevsno
     write(iulog,*) '   Max snow depth (mm) =', h2osno_max
-    write(iulog,*) '   Number of bands in SNICAR snow albedo calculation =', snicar_numrad_snw  ! cenlin
-    write(iulog,*) '   SNICAR radiative transfer solver type = ',snicar_rt_solver ! cenlin
+    write(iulog,*) '   SNICAR: number of bands in snow albedo calculation =', snicar_numrad_snw  ! cenlin
+    write(iulog,*) '   SNICAR: radiative transfer solver type = ',snicar_rt_solver ! cenlin
+    write(iulog,*) '   SNICAR: snow grain shape type = ',snicar_snw_shape ! cenlin
+
 
     write(iulog,*) '   glc number of elevation classes =', maxpatch_glc
     if (glc_do_dynglacier) then
