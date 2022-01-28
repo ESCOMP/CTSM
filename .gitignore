@@ -13,8 +13,10 @@ manage_externals.log
 **/.svn/**
 .svn/
 
-# binary files
+# netcdf files
 *.nc
+# but don't ignore netcdf files here:
+!/python/ctsm/test/testinputs/*.nc
 
 # editor files
 *.swp
@@ -110,3 +112,6 @@ core.*
 *.log !run.log
 *.pyc
 Depends
+
+# ssr
+.vscode/

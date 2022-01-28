@@ -19,7 +19,7 @@ This script will do the following:
     2) Make the case for the specific neon site(s).
     3) Make changes to the case, for:
         a. AD spinup
-	    b. post-AD spinup
+	b. post-AD spinup
         c. transient
     	#---------------
     	d. SASU or Matrix spinup
@@ -67,7 +67,7 @@ import re
 import subprocess
 import pandas as pd
 import glob 
-from datetime import datetime
+import datetime
 from getpass import getuser
  
 # Get the ctsm util tools and then the cime tools.
@@ -106,18 +106,6 @@ def get_parser(args, description, valid_neon_sites):
                 default=["OSBS"],
                 nargs='+')
 
-# not used
-#    parser.add_argument('--surf-dir',
-#                help='''
-#                Directory of single point surface dataset.
-#                [default: %(default)s]
-#                ''', 
-#                action="store", 
-#                dest="surf_dir",
-#                type =str,
-#                required=False,
-#                default="/glade/scratch/"+myname+"/single_point/")
-
     parser.add_argument('--base-case',
                 help='''
                 Root Directory of base case build
@@ -129,13 +117,13 @@ def get_parser(args, description, valid_neon_sites):
                 required=False,
                 default=None)
 
-    parser.add_argument('--case-root',
+    parser.add_argument('--output-root',
                 help='''
-                Root Directory of cases
+                Root output directory of cases
                 [default: %(default)s] 
                 ''',
                 action="store", 
-                dest="case_root",
+                dest="output_root",
                 type =str,
                 required=False,
                 default="CIME_OUTPUT_ROOT as defined in cime")
@@ -150,99 +138,83 @@ def get_parser(args, description, valid_neon_sites):
                 required = False,
                 default = False)
 
-    subparsers = parser.add_subparsers (
-                        dest='run_type',
-                        help='Four different ways to run this script.')
-
-    ad_parser = subparsers.add_parser ('ad',
-                help=''' AD spin-up options ''') 
-
-    pad_parser = subparsers.add_parser ('postad',
-                help=''' Post-AD spin-up options ''')
-
-    tr_parser = subparsers.add_parser ('transient',
-                help=''' Transient spin-up options ''')
-
-    sasu_parser = subparsers.add_parser ('sasu',
-                help=''' Sasu spin-up options --not in CTSM yet''')
-
-    ad_parser.add_argument ('--ad-length',
+    parser.add_argument('--setup-only',
                 help='''
-                How many years to run AD spin-up
+                Only setup the requested cases, do not build or run
+                [default: %(default)s]
+                ''', 
+                action="store_true",
+                dest="setup_only",
+                required = False,
+                default = False)
+
+    parser.add_argument('--rerun',
+                help='''
+                If the case exists but does not appear to be complete, restart it. 
+                [default: %(default)s]
+                ''', 
+                action="store_true",
+                dest="rerun",
+                required = False,
+                default = False)
+
+    parser.add_argument('--no-batch',
+                help='''
+                Run locally, do not use batch queueing system (if defined for Machine)
+                [default: %(default)s]
+                ''', 
+                action="store_true",
+                dest="no_batch",
+                required = False,
+                default = False)
+
+    parser.add_argument('--run-type',
+                        help='''
+                        Type of run to do
+                        [default: %(default)s]
+                        ''',
+                        choices = ["ad", "postad", "transient", "sasu"],
+                        default = "transient")
+
+    parser.add_argument ('--run-length',
+                help='''
+                How long to run (modified ISO 8601 duration)
                 [default: %(default)s]
                 ''', 
                 required = False,
-                type = int, 
-                default = 200)
+                type = str, 
+                default = '0Y')
 
-    pad_parser.add_argument ('--postad-length',
-                help='''
-                How many years to run in post-AD mode
-                [default: %(default)s]
-                ''', 
-                required = False,
-                type = int, 
-                default = 100)
-
-    tr_parser.add_argument('--start-year',
+    parser.add_argument('--start-date',
                 help='''           
-                Start year for running CTSM simulation.
+                Start date for running CTSM simulation in ISO format.
                 [default: %(default)s]
                 ''',               
                 action="store", 
-                dest="start_year",                                                                                                                                                 
+                dest="start_date",                                                                                     
                 required = False,
-                type = int,        
-                default = 2018)
+                type = datetime.date.fromisoformat,
+                default = datetime.datetime.strptime("2018-01-01",'%Y-%m-%d'))
 
-    tr_parser.add_argument('--end-year',
+    parser.add_argument('--end-date',
                 help='''
-                End year for running CTSM simulation.
+                End date for running CTSM simulation in ISO format.
                 [default: %(default)s]
                 ''', 
                 action="store",
-                dest="end_year",
+                dest="end_date",
                 required = False,
-                type = int,
-                default = 2020)
+                type = datetime.date.fromisoformat,
+                default = datetime.datetime.strptime("2021-01-01",'%Y-%m-%d'))
 
-    #parser.add_argument('--spinup',
-    #            help='''
-    #            AD spin-up
-    #            [default: %(default)s]
-    #            ''', 
-    #            action="store_true",
-    #            dest="ad_flag",
-    #            required = False,
-    #            default = True)
-    #parser.add_argument('--postad',
-    #            help='''
-    #            Post-AD spin-up
-    #            [default: %(default)s]
-    #            ''', 
-    #            action="store_true",
-    #            dest="postad_flag",
-    #            required = False,
-    #            default = True)
-    #parser.add_argument('--transient',
-    #            help='''
-    #            Transient
-    #            [default: %(default)s]
-    #            ''', 
-    #            action="store_true",
-    #            dest="transient_flag",
-    #            required = False,
-    #            default = True)
-
-    #parser.add_argument('--sasu','--matrix',
-    #            help='''
-    #            Matrix (SASU) spin-up
-    #            [default: %(default)s]
-    #            ''', 
-    #            action="store_true",
-    #            dest="sasu_flag",
-    #            required = False,
-    #            default = False)
+    parser.add_argument('--run-from-postad',
+                        help='''
+                        For transient runs only - should we start from the postad spinup or finidat?
+                        By default start from finidat, if this flag is used the postad run must be available.
+                        ''',
+                        action="store_true",
+                        required = False,
+                        default = False)
 
     args = CIME.utils.parse_args_and_handle_standard_logging_options(args, parser)
 
@@ -254,20 +226,53 @@ def get_parser(args, description, valid_neon_sites):
             if site not in valid_neon_sites:
                 raise ValueError("Invalid site name {}".format(site))
 
-    if "CIME_OUTPUT_ROOT" in args.case_root:
-        args.case_root = None
-    if args.run_type:
-        run_type = args.run_type
-    else:
-        run_type = "ad"
-    if run_type == "ad":
-        run_length = int(args.ad_length)
-    elif run_type == "postad":
-        run_length = int(args.postad_length)
-    else:
-        run_length = 0
+    if "CIME_OUTPUT_ROOT" in args.output_root:
+        args.output_root = None
 
-    return neon_sites, args.case_root, run_type, args.overwrite, run_length, args.base_case_root
+    if args.run_length == '0Y':
+        if args.run_type == 'ad':
+            run_length = '200Y'
+        elif args.run_type == 'postad':
+            run_length = '50Y'
+        else:
+            # The transient run length is set by cdeps atm buildnml to the last date of the available tower data
+            # this value is not used
+            run_length = '4Y'
+
+    run_length = parse_isoduration(run_length)
+    base_case_root = None
+    if args.base_case_root:
+        base_case_root = os.path.abspath(args.base_case_root)
+
+    # Reduce output level for this script unless --debug or --verbose is provided on the command line
+    if not args.debug and not args.verbose:
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.WARN)
+
+    return neon_sites, args.output_root, args.run_type, args.overwrite, run_length, base_case_root, args.run_from_postad, args.setup_only, args.no_batch, args.rerun
+
+def get_isosplit(s, split):
+    if split in s:
+        n, s = s.split(split)
+    else:
+        n = 0
+    return n, s
+
+def parse_isoduration(s):
+    '''
+    simple ISO 8601 duration parser, does not account for leap years and assumes 30 day months
+    '''
+    # Remove prefix
+    s = s.split('P')[-1]
+    
+    # Step through letter dividers
+    years, s = get_isosplit(s, 'Y')
+    months, s = get_isosplit(s, 'M')
+    days, s = get_isosplit(s, 'D')
+    
+    # Convert all to timedelta
+    dt = datetime.timedelta(days=int(days)+365*int(years)+30*int(months))
+    return int(dt.total_seconds()/86400)
 
 class NeonSite :
     """
@@ -281,19 +286,20 @@ class NeonSite :
     Methods
     -------
     """
-    def __init__(self, name, start_year, end_year, start_month, end_month):
+    def __init__(self, name, start_year, end_year, start_month, end_month, finidat):
         self.name = name
         self.start_year= int(start_year)
         self.end_year = int(end_year)
         self.start_month = int(start_month)
         self.end_month = int(end_month)
         self.cesmroot = path_to_ctsm_root()
+        self.finidat = finidat
         
     def __str__(self):
         return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' 
                     for item in (self.__dict__)))
 
-    def build_base_case(self, cesmroot, case_root, res, compset, overwrite):
+    def build_base_case(self, cesmroot, output_root, res, compset, overwrite=False, setup_only=False):
         """
         Function for building a base_case to clone.
         To spend less time on building ctsm for the neon cases,
@@ -311,77 +317,99 @@ class NeonSite :
         overwrite (bool) : 
             Flag to overwrite the case if exists
         """
-        logger.info("---- building a base case -------")
-        self.base_case_root = case_root
+        print("---- building a base case -------")
+        self.base_case_root = output_root
         user_mods_dirs = [os.path.join(cesmroot,"cime_config","usermods_dirs","NEON",self.name)]
-        if case_root:
-            case_path = os.path.join(case_root,self.name)
-            logger.info ('case_root      : {}'.format(case_root))
-        else:
-            case_path = self.name
+        if not output_root:
+            output_root = os.getcwd()
+        case_path = os.path.join(output_root,self.name)
             
         logger.info ('base_case_name : {}'.format(self.name))
         logger.info ('user_mods_dir  : {}'.format(user_mods_dirs[0]))
 
         if overwrite and os.path.isdir(case_path):
-            logger.info ("Removing the existing case at: {}".format(case_path))
+            print ("Removing the existing case at: {}".format(case_path))
             shutil.rmtree(case_path)
-            
+
         with Case(case_path, read_only=False) as case:
             if not os.path.isdir(case_path):
-                logger.info("---- creating a base case -------")
+                print("---- creating a base case -------")
 
-                case.create(case_path, cesmroot, compset, res, mpilib="mpi-serial",
-                            run_unsupported=True, answer="r",
+                case.create(case_path, cesmroot, compset, res, 
+                            run_unsupported=True, answer="r",output_root=output_root,
                             user_mods_dirs = user_mods_dirs, driver="nuopc")
 
-                logger.info("---- base case created ------")
+                print("---- base case created ------")
 
                 #--change any config for base_case:
                 #case.set_value("RUN_TYPE","startup")
 
 
-                logger.info("---- base case setup ------")
+                print("---- base case setup ------")
                 case.case_setup()
             else:
                 case.case_setup(reset=True)
+            case_path = case.get_value("CASEROOT")
 
-            logger.info("---- base case build ------")
+            if setup_only:
+                return case_path
+
+            print("---- base case build ------")
             # always walk through the build process to make sure it's up to date. 
             t0 = time.time()
             build.case_build(case_path, case=case)
             t1 = time.time()
             total = t1-t0
-            logger.info ("Time required to building the base case: {} s.".format(total))
+            print ("Time required to building the base case: {} s.".format(total))
             # update case_path to be the full path to the base case
-            case_path = case.get_value("CASEROOT")
         return case_path
 
     def diff_month(self):
-        d1 = datetime(self.end_year,self.end_month, 1)
-        d2 = datetime(self.start_year, self.start_month, 1)
+        d1 = datetime.datetime(self.end_year,self.end_month, 1)
+        d2 = datetime.datetime(self.start_year, self.start_month, 1)
         return (d1.year - d2.year) * 12 + d1.month - d2.month
     
 
     
-    def run_case(self, base_case_root, run_type, run_length, overwrite=False):
+    def run_case(self, base_case_root, run_type, run_length, overwrite=False, setup_only=False, no_batch=False, rerun=False):
         user_mods_dirs = [os.path.join(self.cesmroot,"cime_config","usermods_dirs","NEON",self.name)]
         expect(os.path.isdir(base_case_root), "Error base case does not exist in {}".format(base_case_root))
         case_root = os.path.abspath(os.path.join(base_case_root,"..", self.name+"."+run_type))
-        if os.path.isdir(case_root) and overwrite:
-            logger.info("---- removing the existing case -------")
-            shutil.rmtree(case_root)
+        rundir = None
+        if os.path.isdir(case_root):
+            if overwrite:
+                print("---- removing the existing case -------")
+                shutil.rmtree(case_root)
+            elif rerun:
+                with Case(case_root, read_only=False) as case:
+                    rundir = case.get_value("RUNDIR")
+                    if os.path.isfile(os.path.join(rundir,"ESMF_Profile.summary")):
+                        print("Case {} appears to be complete, not rerunning.".format(case_root))
+                    elif not setup_only:
+                        print("Resubmitting case {}".format(case_root))
+                        case.submit(no_batch=no_batch)
+                    return
+            else:
+                logger.warning("Case already exists in {}, not overwritting.".format(case_root))
+                return
+
+        if run_type == "postad":
+            adcase_root = case_root.replace('.postad','.ad')
+            if not os.path.isdir(adcase_root):
+                logger.warning("postad requested but no ad case found in {}".format(adcase_root))
+                return
+
         if not os.path.isdir(case_root):
             # read_only = False should not be required here
             with Case(base_case_root, read_only=False) as basecase:
-                logger.info("---- cloning the base case in {}".format(case_root))
+                print("---- cloning the base case in {}".format(case_root))
                 basecase.create_clone(case_root, keepexe=True, user_mods_dirs=user_mods_dirs)
 
-
         with Case(case_root, read_only=False) as case:
-            case.set_value("STOP_OPTION", "nyears")
+            # in order to avoid the complication of leap years we always set the run_length in units of days.
+            case.set_value("STOP_OPTION", "ndays")
             case.set_value("STOP_N", run_length)
-            case.set_value("REST_N", 100)
+            case.set_value("REST_OPTION","end")
             case.set_value("CONTINUE_RUN", False)
             
             if run_type == "ad":
@@ -398,13 +426,17 @@ class NeonSite :
                 self.set_ref_case(case)
                 
             if run_type == "transient":
-                self.set_ref_case(case)
+                if self.finidat:
+                    case.set_value("RUN_TYPE","startup")
+                else:
+                    if not self.set_ref_case(case):
+                        return
                 case.set_value("STOP_OPTION","nmonths")
                 case.set_value("STOP_N", self.diff_month())
-                case.set_value("REST_N", "12")
                 case.set_value("DATM_YR_ALIGN",self.start_year)
                 case.set_value("DATM_YR_START",self.start_year)
                 case.set_value("DATM_YR_END",self.end_year)
+                case.set_value("CALENDAR","GREGORIAN")
             else:
                 # for the spinup we want the start and end on year boundaries
                 if self.start_month == 1:
@@ -418,11 +450,16 @@ class NeonSite :
                 else:
                     case.set_value("DATM_YR_END",self.end_year-1)
 
-                    
-                self.modify_user_nl(case_root, run_type)
+            if not rundir:
+                rundir = case.get_value("RUNDIR")
+
+            self.modify_user_nl(case_root, run_type, rundir)
                 
             case.create_namelists()
-            case.submit()
+            # explicitly run check_input_data
+            case.check_all_input_data()
+            if not setup_only:
+                case.submit(no_batch=no_batch)
 
     def set_ref_case(self, case):
         rundir = case.get_value("RUNDIR")
@@ -433,31 +470,45 @@ class NeonSite :
         else:
             ref_case_root = case_root.replace(".transient",".postad")
             root = ".postad"
-        expect(os.path.isdir(ref_case_root), "ERROR: spinup must be completed first, could not find directory {}".format(ref_case_root))
+        if not os.path.isdir(ref_case_root):
+            logger.warning("ERROR: spinup must be completed first, could not find directory {}".format(ref_case_root))
+            return False
+  
         with Case(ref_case_root) as refcase:
             refrundir = refcase.get_value("RUNDIR")
         case.set_value("RUN_REFDIR", refrundir)
         case.set_value("RUN_REFCASE", os.path.basename(ref_case_root))
-        for reffile in glob.iglob(refrundir + "/{}{}.*.nc".format(self.name, root)):
+        refdate = None
+        for reffile in glob.iglob(refrundir + "/{}{}.clm2.r.*.nc".format(self.name, root)):
             m = re.search("(\d\d\d\d-\d\d-\d\d)-\d\d\d\d\d.nc", reffile)
             if m:
                 refdate = m.group(1)
             symlink_force(reffile, os.path.join(rundir,os.path.basename(reffile)))
+        logger.info("Found refdate of {}".format(refdate))
+        if not refdate:
+            logger.warning("Could not find refcase for {}".format(case_root))
+            return False
+
         for rpfile in glob.iglob(refrundir + "/rpointer*"):
             safe_copy(rpfile, rundir)
         if not os.path.isdir(os.path.join(rundir, "inputdata")) and os.path.isdir(os.path.join(refrundir,"inputdata")):
             symlink_force(os.path.join(refrundir,"inputdata"),os.path.join(rundir,"inputdata"))
+
+
         case.set_value("RUN_REFDATE", refdate)
         if case_root.endswith(".postad"):
             case.set_value("RUN_STARTDATE", refdate)
         else:
             case.set_value("RUN_STARTDATE", "{yr:04d}-{mo:02d}-01".format(yr=self.start_year, mo=self.start_month))
-                
+        return True
         
-    def modify_user_nl(self, case_root, run_type):
+    def modify_user_nl(self, case_root, run_type, rundir):
         user_nl_fname = os.path.join(case_root, "user_nl_clm")
-
-        if run_type != "transient":
+        user_nl_lines = None
+        if run_type == "transient":
+            if self.finidat:
+                user_nl_lines = ["finidat = '{}/inputdata/lnd/ctsm/initdata/{}'".format(rundir,self.finidat)]
+        else:
             user_nl_lines = [
                 "hist_fincl2 = ''",
                 "hist_mfilt = 20",
@@ -465,9 +516,10 @@ class NeonSite :
                 "hist_empty_htapes = .true.",
                 "hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC', 'TOTVEGN', 'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS', 'H2OSNO'"]
                         
-        with open(user_nl_fname, "a") as fd:
-            for line in user_nl_lines:
-                fd.write("{}\n".format(line))
+        if user_nl_lines:
+            with open(user_nl_fname, "a") as fd:
+                for line in user_nl_lines:
+                    fd.write("{}\n".format(line))
 
         
 
@@ -503,8 +555,9 @@ def parse_neon_listing(listing_file, valid_neon_sites):
  
     df = pd.read_csv(listing_file)
  
-    #-- TODO: do we want to check for v2 in future?
- 
+    # check for finidat files for transient run
+    finidatlist = df[df['object'].str.contains("lnd/ctsm")]
+
     #-- filter lines with atm/cdep
     df = df[df['object'].str.contains("atm/cdeps/")]
 
@@ -544,8 +597,12 @@ def parse_neon_listing(listing_file, valid_neon_sites):
             logger.debug ('end_year={}'.format(end_year))
             logger.debug ('start_month={}'.format(start_month))
             logger.debug ('end_month={}'.format(end_month))
- 
-            neon_site = NeonSite(site_name, start_year, end_year, start_month, end_month)
+            finidat = None
+            for line in finidatlist['object']:
+                if site_name in line:
+                    finidat = line.split(',')[0].split('/')[-1]
+                
+            neon_site = NeonSite(site_name, start_year, end_year, start_month, end_month, finidat)
             logger.debug (neon_site)
             available_list.append(neon_site)
  
@@ -577,14 +634,14 @@ def main(description):
     cesmroot = path_to_ctsm_root()
     # Get the list of supported neon sites from usermods
     valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
-    valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
+    valid_neon_sites = sorted([v.split('/')[-1] for v in valid_neon_sites])
 
-    site_list, case_root, run_type, overwrite, run_length, base_case_root = get_parser(sys.argv, description, valid_neon_sites)
+    site_list, output_root, run_type, overwrite, run_length, base_case_root, run_from_postad, setup_only, no_batch, rerun = get_parser(sys.argv, description, valid_neon_sites)
 
-    logger.debug ("case_root : "+ case_root)
-
-    if not os.path.exists(case_root):
-        os.makedirs(case_root)
+    if output_root:
+        logger.debug ("output_root : "+ output_root)
+        if not os.path.exists(output_root):
+            os.makedirs(output_root)
 
     #-- check neon listing file for available data: 
     available_list = check_neon_listing(valid_neon_sites)
@@ -600,12 +657,14 @@ def main(description):
 
     for neon_site in available_list: 
         if neon_site.name in site_list:
+            if run_from_postad:
+                neon_site.finidat = None
             if not base_case_root:
-                base_case_root = neon_site.build_base_case(cesmroot, case_root, res,
-                                                      compset, overwrite)
+                base_case_root = neon_site.build_base_case(cesmroot, output_root, res,
+                                                           compset, overwrite, setup_only)
             logger.info ("-----------------------------------")
             logger.info ("Running CTSM for neon site : {}".format(neon_site.name))
-            neon_site.run_case(base_case_root, run_type, run_length, overwrite)
+            neon_site.run_case(base_case_root, run_type, run_length, overwrite, setup_only, no_batch, rerun)
 
 if __name__ == "__main__":                                                                                                                                  
         main(__doc__) 

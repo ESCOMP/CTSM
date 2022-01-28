@@ -122,7 +122,7 @@ subroutine mkgdp(ldomain, mapfname, datfname, ndiag, gdp_o)
 
   ! Check validity of output data
   if (min_bad(gdp_o, min_valid, 'gdp')) then
-     stop
+     call abort()
   end if
 
   call output_diagnostics_continuous(data_i, gdp_o, tgridmap, "GDP", "x1000 US$ per capita", ndiag, tdomain%mask, frac_dst)

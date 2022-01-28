@@ -1085,6 +1085,12 @@ contains
 
        if ( use_fates) then
 
+          ! FATES has its own running mean functions, such as 24hr
+          ! vegetation temperature and exponential moving averages
+          ! for leaf photosynthetic acclimation temperature. These
+          ! moving averages are updated here
+          call clm_fates%WrapUpdateFatesRmean(nc,temperature_inst)
+          
           call EDBGCDyn(bounds_clump,                                                              &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
                filter(nc)%num_soilp, filter(nc)%soilp,                                             &
@@ -1107,11 +1113,11 @@ contains
                 c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                 soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
                 clm_fates, nc)
-
+          
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
                soilbiogeochem_carbonstate_inst)
-
+          
 
           if( is_beg_curr_day() ) then
 
@@ -1122,7 +1128,6 @@ contains
              if ( masterproc ) then
                 write(iulog,*)  'clm: calling FATES model ', get_nstep()
              end if
-
              call clm_fates%dynamics_driv( nc, bounds_clump,                        &
                   atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
                   water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
@@ -1134,7 +1139,9 @@ contains
              call setFilters( bounds_clump, glc_behavior )
 
           end if
-
+          
+    
+          
        end if ! use_fates branch
 
        ! ============================================================================

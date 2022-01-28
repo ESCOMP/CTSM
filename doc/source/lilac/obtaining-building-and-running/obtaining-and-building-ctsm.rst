@@ -41,7 +41,7 @@ On a machine that has *not* been ported to CIME, you will need to provide some a
 information. Run ``./lilac/build_ctsm -h`` for details, but the basic command will look
 like this::
 
-  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-lib-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default --max-mpitasks-per-node 4 --no-pnetcdf
+  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-mkfile-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default/esmf.mk --max-mpitasks-per-node 4 --no-pnetcdf
 
 In both cases, you will then need to include the necessary information in the include and
 link lines of the atmosphere model's build. For a Makefile-based build, this can be done
@@ -205,7 +205,7 @@ above<building-ctsm-and-lilac-prerequisites>`.
 
 The minimal amount of information needed is given by the following::
 
-  ./lilac/build_ctsm /PATH/TO/CTSM/BUILD --os OS --compiler COMPILER --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH --max-mpitasks-per-node MAX_MPITASKS_PER_NODE --pnetcdf-path PNETCDF_PATH
+  ./lilac/build_ctsm /PATH/TO/CTSM/BUILD --os OS --compiler COMPILER --netcdf-path NETCDF_PATH --esmf-mkfile-path ESMF_MKFILE_PATH --max-mpitasks-per-node MAX_MPITASKS_PER_NODE --pnetcdf-path PNETCDF_PATH
 
 where you should fill in the capitalized arguments with appropriate values for your
 machine. Run ``./lilac/build_ctsm -h`` for details on these arguments, as well as documentation
@@ -229,17 +229,16 @@ model performance.
 
 Example usage for a Mac (a simple case) is::
 
-  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-lib-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default --max-mpitasks-per-node 4 --no-pnetcdf
+  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-mkfile-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default/esmf.mk --max-mpitasks-per-node 4 --no-pnetcdf
 
 Example usage for NCAR's ``cheyenne`` machine (a more complex case) is::
 
   module purge
-  module load ncarenv/1.3 intel/19.0.5 esmf_libs mkl
-  module use /glade/work/himanshu/PROGS/modulefiles/esmfpkgs/intel/19.0.5
-  module load esmf-8.1.0b14-ncdfio-mpt-O mpt/2.21 netcdf/4.7.3 pnetcdf/1.12.1 ncarcompilers/0.5.0
-  module load python
+  module load ncarenv/1.3 python/3.7.9 cmake intel/19.1.1 esmf_libs mkl
+  module use /glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/
+  module load esmf-8.2.0b23-ncdfio-mpt-O mpt/2.22 netcdf-mpi/4.8.0 pnetcdf/1.12.2 ncarcompilers/0.5.0
 
-  ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --os linux --compiler intel --netcdf-path '$ENV{NETCDF}' --pio-filesystem-hints gpfs --pnetcdf-path '$ENV{PNETCDF}' --esmf-lib-path '$ENV{ESMF_LIBDIR}' --max-mpitasks-per-node 36 --extra-cflags '-xCORE_AVX2 -no-fma' --extra-fflags '-xCORE_AVX2 -no-fma'
+  ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --os linux --compiler intel --netcdf-path '$ENV{NETCDF}' --pio-filesystem-hints gpfs --pnetcdf-path '$ENV{PNETCDF}' --esmf-mkfile-path '$ENV{ESMFMKFILE}' --max-mpitasks-per-node 36 --extra-cflags '-xCORE_AVX2 -no-fma' --extra-fflags '-xCORE_AVX2 -no-fma'
 
 (It's better to use the :ref:`alternative process for a CIME-supported
 machine<building-on-a-cime-supported-machine>` in this case, but the above illustrates

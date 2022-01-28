@@ -1,6 +1,6 @@
 $CTSMROOT/doc/Quickstart.GUIDE                                    Jun/08/2018
 
-          Quick-Start to Using cpl7 Scripts for clm5_0
+          Quick-Start to Using NUOPC Scripts for clm5_0
           ============================================
 
 Assumptions: You want to use cheyenne with clm5_0 BGC
@@ -39,7 +39,7 @@ Process:
 
 Information on Compsets:
 
-     "I" compsets are the ones with clm and datm7 without ice and ocean.
+     "I" compsets are the ones with clm and NUOPC driver and CDEPS data models without ice and ocean.
      Most of the "I" compsets for CLM5.0 use the GSWP3v1 data with solar following
      the cosine of solar zenith angle, precipitation constant, and other
      variables linear interpolated in time (and with appropriate time-stamps on
