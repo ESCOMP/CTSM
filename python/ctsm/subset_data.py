@@ -219,7 +219,6 @@ def get_parser():
         action="store_true",
         dest="create_mesh",
         required=False,
-        default=False,
     )
 
     # -- common options between both subparsers
