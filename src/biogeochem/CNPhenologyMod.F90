@@ -1776,7 +1776,8 @@ contains
          ! initialize other variables that are calculated for crops
          ! on an annual basis in cropresidue subroutine
 
-         if ( is_beg_curr_year() ) then
+         ! Second condition ensures everything is correctly set when resuming from a run with old code
+         if ( is_beg_curr_year() .or. crop_inst%sdates_thisyr(p,1) == spval ) then
             sowing_count(p) = 0
             harvest_count(p) = 0
             do s = 1, mxgrowseas
@@ -1787,13 +1788,10 @@ contains
             end do
          end if
 
-         ! Ensure that everything is correctly set when resuming from a run with old code
+         ! When resuming from a run with old code, may need to manually set these
          if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
              sowing_count(p) = 1
              crop_inst%sdates_thisyr(p,1) = 1._r8
-             do s = 1, mxharvests
-                 crop_inst%hdates_thisyr(p,s) = -1._r8
-             end do
          end if
 
 
