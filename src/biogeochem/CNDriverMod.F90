@@ -314,6 +314,7 @@ contains
     !--------------------------------------------
 
     call t_startf('SoilBiogeochem')
+    call t_startf('DecompRate')
     if (decomp_method == century_decomp) then
        call decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
@@ -322,7 +323,9 @@ contains
             soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, &
             soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
     end if
+    call t_stopf('DecompRate')
 
+    call t_startf('SoilBiogeochemPotential')
     ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)
     call SoilBiogeochemPotential (bounds, num_soilc, filter_soilc,                                                    &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,                  &
@@ -332,6 +335,7 @@ contains
          p_decomp_cn_gain=p_decomp_cn_gain(begc:endc,1:nlevdecomp,1:ndecomp_pools), &
          pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
          p_decomp_npool_to_din=p_decomp_npool_to_din(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions))
+    call t_stopf('SoilBiogeochemPotential')
 
     ! calculate vertical profiles for distributing soil and litter C and N (previously subroutine decomp_vertprofiles called from CNDecompAlloc)
     call SoilBiogeochemVerticalProfile(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -1052,6 +1056,7 @@ contains
     ! cnveg carbon/nitrogen flux summary
     ! ----------------------------------------------
 
+    call t_startf('CNvegCflux_summary')
     call cnveg_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
          isotope='bulk', &
          soilbiogeochem_hr_col=soilbiogeochem_carbonflux_inst%hr_col(begc:endc), &
@@ -1088,6 +1093,7 @@ contains
             soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
             product_closs_grc=c14_products_inst%product_loss_grc(begg:endg))
     end if
+    call t_stopf('CNvegCflux_summary')
 
     call cnveg_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
 
