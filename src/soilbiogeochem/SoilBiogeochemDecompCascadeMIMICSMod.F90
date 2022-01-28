@@ -1071,6 +1071,9 @@ contains
          end do
       end do
 
+      ! TODO @ekluzek suggested possibly making the Left Hand Sides into arrays
+      ! and I wonder in that case whether to skip these assignments altogether
+      ! and use the Right Hand Sides directly
       mimics_fmet_p1 = params_inst%mimics_fmet(1)
       mimics_fmet_p2 = params_inst%mimics_fmet(2)
       mimics_fmet_p3 = params_inst%mimics_fmet(3)
