@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev074
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date: Thu Jan 27 12:55:45 MST 2022
+Date: Fri Jan 28 18:40:45 MST 2022
 One-line Summary: Introduce vert. resolved MIMICS as new method to solve below ground decomp.
 
 Purpose and description of changes
@@ -36,6 +36,8 @@ Bugs fixed or introduced
 ------------------------
 Issues fixed (include CTSM Issue #):
  #1356 : remove decompCN code and testing
+ #1473 : decomp_depth_efolding appears (with the same value) in the namelist
+         and the params files; the model ends up using the one from the namelist
 
 
 Notes of particular relevance for users
