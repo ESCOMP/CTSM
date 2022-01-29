@@ -596,8 +596,7 @@ contains
           end if
        end if
     else
-       ! Assume that can have (lon,lat), (lon,lat,lev), (lon,lat,time), (lon,lat,lev,time)
-       ! Where lev would correspond to an undistributed dimension in esmf
+       ! Assume that can have (lon,lat), (lon,lat,lev1), (lon,lat,lev1,lev2), (lon,lat,time) or (lon,lat,lev1,time)
        if (ndims == 2) then
           call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
        else if (ndims == 3) then
@@ -610,7 +609,7 @@ contains
           if (trim(dimname) == 'time') then
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof3d, pio_iodesc)
           else
-             call shr_sys_abort('for lon/lat support up to 3 spatial dims plus a time dim')
+             call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3),dimlens(4)/), compdof3d, pio_iodesc)
           end if
        end if
     end if

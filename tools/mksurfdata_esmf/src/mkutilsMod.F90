@@ -47,12 +47,12 @@ contains
     ! classes_pct_gcell(n,i) will give the % of the total area of grid cell n that is in urban
     ! class #i.
     !
-    ! !ARGUMENTS:
-    real(r4), intent(in) :: classes_pct_tot(:,:)   ! % cover of classes as % of total
-    real(r4), intent(in) :: sums(:)                ! totals, as % of grid cell
-    real(r4), intent(out):: classes_pct_gcell(:,:) ! % cover of classes as % of grid cell
+    ! input/output variables
+    real(r8), intent(in) :: classes_pct_tot(:,:)   ! % cover of classes as % of total
+    real(r8), intent(in) :: sums(:)                ! totals, as % of grid cell
+    real(r8), intent(out):: classes_pct_gcell(:,:) ! % cover of classes as % of grid cell
     !
-    ! !LOCAL VARIABLES:
+    ! local variables
     integer :: n, n_max
     character(len=*), parameter :: subname = "normalize_classes_by_gcell"
     !------------------------------------------------------------------------------

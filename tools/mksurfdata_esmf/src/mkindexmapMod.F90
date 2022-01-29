@@ -3,10 +3,8 @@ module mkindexmapMod
   !-----------------------------------------------------------------------
   ! Module containing subroutines for making maps of index data.
   !
-  ! This includes a routine for making a map using the dominant type among the input grid
-  ! cells making up a given output cell, as well as routines for using an index map as
-  ! indices into a lookup table, to essentially paint-by-number some other field, and some
-  ! other related routines
+  ! Includes routines for using an index map as indices into a lookup
+  ! table, to essentially paint-by-number some other field.
   !
   ! WJS (2-1-12): There is a lookup_2d subroutine, but not a lookup_1d (or any other
   ! dimensionality). That is simply because I needed lookup_2d, but have not yet needed a
@@ -33,8 +31,6 @@ module mkindexmapMod
   public :: dim_slice_type
 
   ! public member functions:
-  public :: get_dominant_indices  ! make output map based on dominant type in each grid cell
-  public :: get_max_indices       ! make output map based on maximum type in each grid cell
   public :: lookup_2d             ! create map based on a 2-d lookup table
   public :: lookup_2d_netcdf      ! wrapper to lookup_2d; first read table from netcdf file
   public :: which_max             ! get index of the maximum value in an array
@@ -43,158 +39,6 @@ module mkindexmapMod
 contains
 !------------------------------------------------------------------------------
 
-  subroutine get_dominant_indices(factorindexlist, factorlist, &
-       src_array, dst_array, minval, maxval, nodata, filter)
-    !
-    ! Fills an output array on the destination grid (dst_array) whose values are equal to the
-    ! (weighted) dominant value in the source grid cells overlapping a given destination grid
-    ! cell
-    !
-    ! Ignores all values in src_array that are less than minval or greater than maxval (treats
-    ! those values the same as if they had wt=0).  (Note: for memory-use efficiency, it is
-    ! best if the indices are designed such that most values between minval and maxval are
-    ! actually used, since an array is allocated of size (maxval - minval + 1)*gridmap%nb.)
-    !
-    ! The filter argument can be used to exclude certain overlaps -- if provided, we only
-    ! consider overlaps where filter is .true. If not provided, filter is treated as being
-    ! .true. everywhere.
-    ! 
-    ! Output grid cells with no contributing valid source points are given the nodata value
-    !
-    ! input/output variables
-    integer           , pointer    :: factorindexlist(:,:)
-    real(r8)          , pointer    :: factorlist(:)
-    integer           , intent(in) :: src_array(:)  ! input values; length gridmap%na
-    integer           , intent(out):: dst_array(:)  ! output values; length gridmap%nb
-    integer           , intent(in) :: minval        ! minimum valid value in src_array
-    integer           , intent(in) :: maxval        ! maximum valid value in src_array
-    integer           , intent(in) :: nodata        ! value to assign to dst_array where there are no valid source points
-    logical, optional , intent(in) :: filter(:)     ! only consider overlaps where filter is .true.; length gridmap%ns
-
-    ! local variables
-    logical , allocatable :: lfilter(:)    ! local version of filter
-    logical , allocatable :: hasdata(:)    ! true if an output cell has any valid data;
-    real(r8), allocatable :: weights(:,:)  ! summed weight of each index value for each output cell
-    integer  :: n, ni, no
-    integer  :: k
-    integer  :: maxindex
-    real(r8) :: wt
-    real(r8) :: maxwt
-    integer  :: ns_o
-    character(len=*), parameter :: subname = "get_dominant_indices"
-    !-----------------------------------------------------------------------
-
-    ns_o = size(dst_array)
-    allocate(lfilter(ns_o))
-
-    if (present(filter)) then
-       if (size(filter) /= ns_o) then
-          write(6,*) subname//' ERROR: incorrect size of filter'
-          write(6,*) 'size(filter) = ', size(filter)
-          write(6,*) 'ns_o = ', ns_o
-          call shr_sys_abort()
-       end if
-       lfilter(:) = filter(:)
-    else
-       lfilter(:) = .true.
-    end if
-
-    allocate(hasdata(ns_o))
-    hasdata(:) = .false.
-    allocate(weights(minval:maxval, ns_o))
-    weights(minval:maxval,:) = 0.
-
-    ! Determine weight of each index value for each output (destination) cell
-    do n = 1, size(factorlist)
-       ni = factorIndexList(1,n)
-       no = factorIndexList(2,n)
-       wt = factorList(n)
-       k = src_array(ni)
-       if (k >= minval .and. k <= maxval) then
-          weights(k,no) = weights(k,no) + wt
-          hasdata(no) = .true.
-       end if
-    end do
-
-    ! Determine output values
-    ! Note: if a given destination cell has no contributing source points (thus
-    ! hasdata(no) = false), or the max weight of any index overlapping this destination
-    ! cell is <= 0, then the output value there will be nodata.
-    ! (I don't think this latter condition -- weight <= 0 -- is possible, but we handle
-    ! it anyway)
-    
-    dst_array(:) = nodata
-    do no = 1, ns_o
-       if (hasdata(no)) then
-          call which_max(weights(:,no), maxwt, maxindex, lbound=minval)
-          if (maxwt > 0.) then
-             dst_array(no) = maxindex
-          end if
-       end if
-    end do
-
-    deallocate(lfilter, weights, hasdata)
-
-  end subroutine get_dominant_indices
-
-  !------------------------------------------------------------------------------
-  subroutine get_max_indices(factorindexlist, factorlist, src_array, dst_array, nodata)
-    !
-    ! Fills an output array on the destination grid (dst_array) whose values are equal to
-    ! the maximum value in the source grid cells overlapping a given destination grid cell.
-    !
-    ! The frequency of occurrence of the source values is irrelevant. For example, if the
-    ! value 1 appears in 99% of source cells overlapping a given destination cell and the
-    ! value 2 appears in just 1%, we'll put 2 in the destination cell because it is the
-    ! maximum value.
-    !
-    ! Output grid cells with no contributing valid source points are given the nodata value
-    !
-    ! input/output variables
-    integer , pointer     :: factorindexlist(:,:)
-    integer , pointer     :: factorlist(:)
-    integer , intent(in)  :: src_array(:) ! input values
-    integer , intent(out) :: dst_array(:) ! output values
-    integer , intent(in)  :: nodata       ! value to assign to dst_array where there are no valid source points
-
-    ! local variables:
-    logical, allocatable :: hasdata(:)    ! true if an output cell has any valid data;
-    integer              :: n, ni, no
-    real(r8)             :: wt
-    integer              :: src_val
-    integer              :: ns_o
-    character(len=*), parameter :: subname = 'get_max_indices'
-    !-----------------------------------------------------------------------
-
-    ! Initialize local variables
-    ns_o = size(dst_array)
-    allocate(hasdata(ns_o))
-    hasdata(:) = .false.
-
-    do n = 1, size(factorlist)
-       ni = factorIndexList(1,n)
-       no = factorIndexList(2,n)
-       wt = factorList(n)
-       if (wt > 0._r8) then
-          src_val = src_array(ni)
-          if (.not. hasdata(no)) then
-             hasdata(no) = .true.
-             dst_array(no) = src_val
-          else if (src_val > dst_array(no)) then
-             dst_array(no) = src_val
-          end if
-       end if
-    end do
-
-    do no = 1, ns_o
-       if (.not. hasdata(no)) then
-          dst_array(no) = nodata
-       end if
-    end do
-
-  end subroutine get_max_indices
-
-  !------------------------------------------------------------------------------
   subroutine lookup_2d(index1, index2, lookup_table, fill_val, data, ierr, &
        nodata, valid_entries, invalid_okay)
     !
@@ -392,18 +236,18 @@ contains
     !
     ! input/output variables
     type(file_desc_t) , intent(inout) :: pioid
-    character(len=*)  , intent(in)  :: tablename          ! name of the lookup table variable
-    logical           , intent(in)  :: lookup_has_invalid ! should we use _FillValue? (see above)
-    character(len=*)  , intent(in)  :: dimname1           ! name of the first (fastest-varying) dimension of the lookup table
-    character(len=*)  , intent(in)  :: dimname2           ! name of the second dimension of the lookup table
-    integer           , intent(in)  :: n_extra_dims       ! number of extra dimensions in the lookup table
+    character(len=*)  , intent(in)    :: tablename          ! name of the lookup table variable
+    logical           , intent(in)    :: lookup_has_invalid ! should we use _FillValue? (see above)
+    character(len=*)  , intent(in)    :: dimname1           ! name of the first (fastest-varying) dimension of the lookup table
+    character(len=*)  , intent(in)    :: dimname2           ! name of the second dimension of the lookup table
+    integer           , intent(in)    :: n_extra_dims       ! number of extra dimensions in the lookup table
 
     ! The following arguments are passed directly to lookup_2d:
-    integer           , intent(in)  :: index1(:)          ! index into dim 1 of lookup table
-    integer           , intent(in)  :: index2(:)          ! index into dim 2 of lookup table
-    real(r8)          , intent(in)  :: fill_val           ! value to put in data where we don't have a valid value
-    real(r8)          , intent(out) :: data(:)            ! output array
-    integer           , intent(out) :: ierr               ! error return code from the call to lookup_2d
+    integer           , intent(in)    :: index1(:)          ! index into dim 1 of lookup table
+    integer           , intent(in)    :: index2(:)          ! index into dim 2 of lookup table
+    real(r8)          , intent(in)    :: fill_val           ! value to put in data where we don't have a valid value
+    real(r8)          , intent(out)   :: data(:)            ! output array
+    integer           , intent(out)   :: ierr               ! error return code from the call to lookup_2d
 
     ! slice to use if lookup table variable has more than 2 dimensions:
     type(dim_slice_type), intent(in), optional :: extra_dims(:)
@@ -478,11 +322,23 @@ contains
        call check_dimsize(dimlens(2+i), extra_dims(i)%val, 2+i)
     end do
 
+    ! Read the lookup table; if the given variable has more than 2 dimensions, we read
+    ! a single 2-d slice
+
+    allocate(starts(ndims), counts(ndims))
     allocate(lookup_table(dimlens(1), dimlens(2)))
-    rcode = pio_get_var(pioid, pio_varid, lookup_table)
+    starts(1:2) = 1
+    counts(1:2) = dimlens(1:2)
+    do i = 1, n_extra_dims
+       starts(2+i) = extra_dims(i)%val
+       counts(2+i) = 1
+    end do
+    rcode = pio_get_var(pioid, pio_varid, starts, counts, lookup_table)
+
+    !allocate(lookup_table(dimlens(1), dimlens(2)))
+    !rcode = pio_get_var(pioid, pio_varid, lookup_table)
 
     ! Determine which entries are valid
-
     allocate(valid_entries(size(lookup_table, 1), size(lookup_table, 2)))
     valid_entries(:,:) = .true.
     if (lookup_has_invalid) then
@@ -542,31 +398,26 @@ contains
   subroutine which_max(arr, maxval, maxindex, lbound)
     !
     ! Returns maximum value in arr along with the index of the maximum value
-    !
     ! If multiple values are tied, returns index of the first maximum
     !
-    ! !ARGUMENTS:
+    ! input/output variables
     real(r8), intent(in) :: arr(:)
     real(r8), intent(out):: maxval   ! maximum value in arr(:)
     integer , intent(out):: maxindex ! first index of maxval
-
-    ! lower bound of indices of arr; if not supplied, assumed to be 1:
-    integer , intent(in), optional :: lbound
-
-    ! !LOCAL VARIABLES:
+    integer , intent(in), optional :: lbound ! lower bound of indices of arr; 
+                                             ! if not supplied, assumed to be 1:
+    ! local variables
     integer :: i
     !-----------------------------------------------------------------------
 
     maxindex = 1
     maxval = arr(1)
-
     do i = 2, size(arr)
        if (arr(i) > maxval) then
           maxindex = i
           maxval = arr(i)
        end if
     end do
-
     if (present(lbound)) then
        maxindex = maxindex + (lbound - 1)
     end if

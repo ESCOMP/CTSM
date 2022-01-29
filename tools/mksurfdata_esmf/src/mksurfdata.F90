@@ -222,10 +222,6 @@ program mksurfdata
   logical                       :: create_esmf_pet_files = .true.
   character(len=32)             :: subname = 'mksrfdata'    ! program name
 
-  ! NOTE(bja, 2015-01) added to work around a ?bug? causing 1x1_urbanc_alpha to abort. See
-  !/glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
-  logical :: urban_skip_abort_on_invalid_data_check
-
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
   ! ------------------------------------------------------------
@@ -410,9 +406,11 @@ program mksurfdata
   !    call mkharvest(  mapfname=map_fharvest, datfname=mksrf_fhrvtyp, ndiag=ndiag, harvdata=harvdata )
   ! end if
 
+  ! --------------------------------------------------
+  ! begin working
+
   ! Make urban fraction [pcturb] from [furban] dataset
-  call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, &
-       zero_out=all_veg, urbn_o=pcturb, urban_classes_o=urban_classes, region_o=urban_region, rc=rc)
+  call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, all_veg, pcturb, urban_classes, urban_region, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
 
   ! Make soil color classes [soicol] [fsoicol]
@@ -424,14 +422,16 @@ program mksurfdata
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
 
   ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
-  ! zero_out_lake = all_urban .or. all_veg
-  ! zero_out_wetland = all_urban .or. all_veg .or. no_inlandwet
-  ! call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
-  !      zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
-  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
-  ! call ESMF_LogWrite("After mklakwat", ESMF_LOGMSG_INFO)
+  zero_out_lake = all_urban .or. all_veg
+  zero_out_wetland = all_urban .or. all_veg .or. no_inlandwet
+  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
+       zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
+  call ESMF_LogWrite("After mklakwat", ESMF_LOGMSG_INFO)
 
-#ifdef TODO
+  ! end working
+  ! --------------------------------------------------
+
   ! ! Make glacier fraction [pctgla] from [fglacier] dataset
   ! call mkglacier ( mapfname=map_fglacier, datfname=mksrf_fglacier, ndiag=ndiag, zero_out=all_urban.or.all_veg, glac_o=pctgla)
 
@@ -457,9 +457,7 @@ program mksurfdata
 
   ! ! Make agricultural fire peak month data [abm] from [abm]
   ! call mkagfirepkmon ( mapfname=map_fabm, datfname=mksrf_fabm, ndiag=ndiag, agfirepkmon_o=agfirepkmon)
-#endif
 
-#ifdef TODO
   ! ! Make elevation [elev] from [ftopo, ffrac] dataset
   ! ! Used only to screen pcturb, screen pcturb by elevation threshold from elev dataset
   ! if ( .not. all_urban .and. .not. all_veg )then
@@ -493,7 +491,6 @@ program mksurfdata
 
   ! ! Do landuse changes such as for the poles, etc.
   ! call change_landuse(  dynpft=.false. )
-#endif
 
   ! ----------------------------------------------------------------------
   ! Modify interpolated fields based on additional constrants
@@ -505,7 +502,6 @@ program mksurfdata
   end do
   call ESMF_LogWrite("After fixes", ESMF_LOGMSG_INFO)
 
-#ifdef TODO
   ! do n = 1,lsize_o
   !    ! Truncate all percentage fields on output grid. This is needed to
   !    ! insure that wt is zero (not a very small number such as
@@ -582,10 +578,9 @@ program mksurfdata
   ! enddo
   ! write(6,*)
 
-  ! ! Make final values of percent urban by class
-  ! ! This call needs to occur after all corrections are made to pcturb
-
-  ! call normalize_classes_by_gcell(urban_classes, pcturb, urban_classes_g)
+  ! Make final values of percent urban by class
+  ! This call needs to occur after all corrections are made to pcturb
+  call normalize_classes_by_gcell(urban_classes, pcturb, urban_classes_g)
 
   ! ! ----------------------------------------------------------------------
   ! ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier] dataset
@@ -615,7 +610,6 @@ program mksurfdata
   ! do n = 1,lsize_o
   !    landfrac_pft(n) = pctlnd_pft(n)/100._r8
   ! end do
-#endif
 
   ! ----------------------------------------------------------------------
   ! Create surface dataset
@@ -642,8 +636,8 @@ program mksurfdata
      call ESMF_LogWrite("Calling mkfile_fsurdat", ESMF_LOGMSG_INFO)
      call mkfile_fsurdat( mksrf_fgrid_mesh_nx, mksrf_fgrid_mesh_ny, mesh_model, dynlanduse=.false., &
           pctlak=pctlak, pctwet=pctwet, lakedepth=lakedepth, organic=organic, &
-          urban_classes=urban_classes, urban_region=urban_region, &
-          soil_color=soil_color, nsoilcol=nsoilcol)
+          soil_color=soil_color, nsoilcol=nsoilcol, &
+          urban_classes_g=urban_classes_g, urban_region=urban_region)
      call ESMF_LogWrite(subname//'successfully created file '//trim(fsurdat), ESMF_LOGMSG_INFO)
   end if  ! if (fsurdat /= ' ')
 

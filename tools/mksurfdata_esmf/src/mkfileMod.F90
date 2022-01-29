@@ -6,7 +6,7 @@ module mkfileMod
   use shr_sys_mod  , only : shr_sys_getenv, shr_sys_abort
   use mkutilsMod   , only : get_filename, chkerr
   use mkvarpar     , only : nlevsoi, numrad, numstdpft
-  use mkurbanparMod, only : numurbl, nlevurb
+  use mkurbanparMod, only : numurbl, nlevurb, mkurbanpar
 #ifdef TODO
   use mkglcmecMod  , only : nglcec
   use mkpftMod     , only : mkpftAtt
@@ -37,7 +37,8 @@ contains
 !=================================================================================
 
   subroutine mkfile_fsurdat(nx, ny, mesh_o, dynlanduse, &
-       pctlak, pctwet, lakedepth, organic, urban_classes, urban_region, soil_color, nsoilcol)
+       pctlak, pctwet, lakedepth, organic, soil_color, nsoilcol, &
+       urban_classes_g, urban_region)
 
     ! input/output variables
     integer          , intent(in) :: nx
@@ -48,10 +49,10 @@ contains
     real(r8), pointer, intent(in) :: pctwet(:)               ! percent of grid cell that is wetland
     real(r8), pointer, intent(in) :: lakedepth(:)            ! lake depth (m)
     real(r8), pointer, intent(in) :: organic(:,:)            ! organic
-    real(r8), pointer, intent(in) :: urban_classes(:,:)      ! percent cover of each urban class, as % of total urban area
-    integer , pointer, intent(in) :: urban_region(:)         ! urban region ID
     integer , pointer, intent(in) :: soil_color(:)
     integer          , intent(in) :: nsoilcol 
+    real(r8), pointer, intent(in) :: urban_classes_g(:,:)    ! percent cover of each urban class, as % of grid cell
+    integer , pointer, intent(in) :: urban_region(:)         ! urban region ID
 #ifdef TODO
     type(harvestDataType) , intent(in) :: harvdata
 #endif
@@ -139,20 +140,18 @@ contains
 
           if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out percnt urban"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_URBAN', 'percent urban for each density type', &
-               'unitless', urban_classes, lev1name='numurbl', rc=rc)
+               'unitless', urban_classes_g, lev1name='numurbl', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-          ! ----------------------------------------------------------------------
-          ! Make Urban Parameters from raw input data and write to surface dataset 
-          ! Write to netcdf file is done inside mkurbanpar routine
-          ! ----------------------------------------------------------------------
-
-          ! call mkurbanpar(datfname=mksrf_furban, ncido=ncid, region_o=urban_region, &
-          !      urbn_classes_gcell_o=urbn_classes_g, &
-          !      urban_skip_abort_on_invalid_data_check=urban_skip_abort_on_invalid_data_check)
 
        end if
     end do
+
+    ! ----------------------------------------------------------------------
+    ! Make Urban Parameters from raw input data and write to surface dataset 
+    ! Write to netcdf file is done inside mkurbanpar routine
+    ! ----------------------------------------------------------------------
+    
+    call mkurbanpar(pioid, mksrf_furban, mesh_o, urban_region, urban_classes_g, urban_skip_abort_on_invalid_data_check)
 
     ! Close surface dataset
     call pio_closefile(pioid)
@@ -195,7 +194,6 @@ contains
 #ifdef TODO
     rcode = pio_def_dim(pioid, 'time'   , PIO_UNLIMITED , dimid)
     rcode = pio_def_dim(pioid, 'nchar'  , 256           , dimid)
-    rcode = pio_def_dim(pioid, 'numrad' , numrad        , dimid)
     if (.not. dynlanduse) then
        rcode = pio_def_dim(pioid, 'nglcec', nglcec, dimid)
        rcode = pio_def_dim(pioid, 'nglcecp1', nglcec+1, dimid)

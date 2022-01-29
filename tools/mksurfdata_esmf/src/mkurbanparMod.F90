@@ -79,13 +79,13 @@ contains
 
   !===============================================================
   subroutine mkurban(file_mesh_i, file_data_i, mesh_o, &
-       zero_out, urbn_o, urban_classes_o, region_o, rc)
+       zero_out, pcturb_o, urban_classes_o, region_o, rc)
     !
     ! make total percent urban, breakdown into urban classes, and region ID on the output grid
     !
     ! urban_classes_o(n, i) gives the percent of the urban area in grid cell n that is in class #i.
     ! This is normalized so that sum(urban_classes_o(n,:)) = 100 for all n, even for grid
-    ! cells where urbn_o(n) = 0 (in the case where urbn_o(n) = 0, we come up with an
+    ! cells where pcturb_o(n) = 0 (in the case where pcturb_o(n) = 0, we come up with an
     ! arbitrary assignment of urban into the different classes).
     !
     ! See comments under the normalize_urbn_by_tot subroutine for how urban_classes_o is
@@ -98,19 +98,16 @@ contains
     ! better, in terms of maintaining helpful abstractions, there could be a new type to
     ! handle urban, and both that and pct_pft_type could be build on a single set of shared
     ! code - either as a single base class or through a "has-a" mechanism). This would allow
-    ! us to combine urbn_o and urban_classes_o into a single derived type variable. I think
+    ! us to combine pcturb_o and urban_classes_o into a single derived type variable. I think
     ! this would also replace the use of normalize_classes_by_gcell, and maybe some other
     ! urban-specific code.
     !
-    use mkindexmapMod       , only : get_dominant_indices
-#ifdef TODO
-    use mkurbanparCommonMod , only : mkurban_pct_diagnostics
-#endif
     use mkurbanparCommonMod , only : MIN_DENS
     use mkutilsMod          , only : normalize_classes_by_gcell
     use mkvarctl            , only : all_urban
     use mkvarpar
 #ifdef TODO
+    use mkurbanparCommonMod , only : mkurban_pct_diagnostics
     use mkdiagnosticsMod    , only : output_diagnostics_index
 #endif
 
@@ -119,7 +116,7 @@ contains
     character(len=*) , intent(in)    :: file_data_i          ! input data file name
     type(ESMF_Mesh)  , intent(in)    :: mesh_o               ! model mesh
     logical          , intent(in)    :: zero_out             ! if should zero urban out
-    real(r8)         , intent(out)   :: urbn_o(:)            ! output grid: total % urban
+    real(r8)         , intent(out)   :: pcturb_o(:)            ! output grid: total % urban
     real(r8)         , intent(out)   :: urban_classes_o(:,:) ! output grid: breakdown of total urban into each class
     integer          , intent(inout) :: region_o(:)          ! output grid: region ID
     integer          , intent(out)   :: rc
@@ -178,7 +175,7 @@ contains
     if (ier/=0) call shr_sys_abort()
 
     ! Determine ns_o and allocate data_o
-    ns_o = size(urbn_o)
+    ns_o = size(pcturb_o)
     if (ier/=0) call shr_sys_abort()
     allocate(data_o(numurbl,ns_o),stat=ier)
     if (ier/=0) call shr_sys_abort()
@@ -213,7 +210,6 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call regrid_rawdata(mesh_i, mesh_o, routehandle, frac_i, frac_o, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    deallocate(frac_i)
 
     ! Area-average percent cover on input grid to output grid and correct according to frac_o
     ! Note that percent cover is in terms of total grid area.
@@ -225,13 +221,13 @@ contains
        end if
     end do
     do n = 1, ns_o
-       urbn_o(n) = sum(urban_classes_gcell_o(n,:))
+       pcturb_o(n) = sum(urban_classes_gcell_o(n,:))
     end do
 
     ! Check for conservation
     do no = 1, ns_o
-       if ((urbn_o(no)) > 100.000001_r8) then
-          write (6,'(a,d13.5,a,i8)') trim(subname)//' error: percent urban = ',urbn_o(no), &
+       if ((pcturb_o(no)) > 100.000001_r8) then
+          write (6,'(a,d13.5,a,i8)') trim(subname)//' error: percent urban = ',pcturb_o(no), &
                ' greater than 100.000001 for no = ',no
           call shr_sys_abort()
        end if
@@ -240,31 +236,31 @@ contains
     ! Determine urban_classes_o
     ! Make percent urban on output grid, given percent urban on input grid
     ! This assumes that we're neither using all_urban or zero_out
-    ! Determine urbn_o on ouput grid:
-    call normalize_urbn_by_tot(urban_classes_gcell_o, urbn_o, urban_classes_o)
+    ! Determine pcturb_o on ouput grid:
+    call normalize_urbn_by_tot(urban_classes_gcell_o, pcturb_o, urban_classes_o)
     call ESMF_LogWrite("After normalize_urbn", ESMF_LOGMSG_INFO)
 
     ! Handle special cases
     ! Note that, for all these adjustments of total urban %, we do not change the breakdown
-    ! into the different urban classes. In particular: when urbn_o is set to 0 for a point, 
+    ! into the different urban classes. In particular: when pcturb_o is set to 0 for a point, 
     ! the breakdown into the different urban classes is maintained as it was before.
     if (all_urban) then
-       urbn_o(:) = 100._r8
+       pcturb_o(:) = 100._r8
     else if (zero_out) then
-       urbn_o(:) = 0._r8
+       pcturb_o(:) = 0._r8
     else
        ! Set points to 0% if they fall below a given threshold
        do no = 1, ns_o
-          if (urbn_o(no) < MIN_DENS) then
-             urbn_o(no) = 0._r8
+          if (pcturb_o(no) < MIN_DENS) then
+             pcturb_o(no) = 0._r8
           end if
        end do
     end if
 
     ! Print diagnostics
     ! TODO: call to mkurban_pct_diagnostics has to be rewritten
-    ! First, recompute urban_classes_gcell_o, based on any changes we have made to urbn_o
-    ! call normalize_classes_by_gcell(urban_classes_o, urbn_o, urban_classes_gcell_o)
+    ! First, recompute urban_classes_gcell_o, based on any changes we have made to pcturb_o
+    ! call normalize_classes_by_gcell(urban_classes_o, pcturb_o, urban_classes_gcell_o)
     ! do k = 1, numurbl
     !    call mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, &
     !         urban_classes_gcell_i(:,k), urban_classes_gcell_o(:,k), &
@@ -301,11 +297,12 @@ contains
     do l = 1,max_regions
        do n = 1,ns_i
           if (region_i(n) == l) then
-            !data_i(l,n) = 1._r8 * mask_i(n)  ! TODO:
-             data_i(l,n) = 1._r8
+             data_i(l,n) = 1._r8 * frac_i(n)
+            !data_i(l,n) = 1._r8
           end if
        end do
     end do
+    deallocate(frac_i)
 
     ! Regrid data_i to data_o
     if (allocated(data_o)) deallocate(data_o)
@@ -315,20 +312,13 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Now find dominant region in each output gridcell - this is identical to the maximum index
+    region_o(:) = 0
     do n = 1,ns_o
        max_index = maxloc(data_o(:,n))
-       region_o(n) = max_index(1)
+       if (data_o(max_index(1),n) > 0._r8) then
+          region_o(n) = max_index(1)
+       end if
     end do
-    ! do n = 1,ns_o
-    !    maxindex = 1
-    !    maxval = data_o(1,n)
-    !    do l = 2, max_regions
-    !       if (data_o(l,n) > maxval) then
-    !          maxindex = l
-    !          maxval = data_o(l,n)
-    !       end if
-    !    end do
-    ! end do
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made urban region'
@@ -443,7 +433,7 @@ contains
   end subroutine normalize_urbn_by_tot
 
   !===============================================================
-  subroutine mkurbanpar(datfname_i, mesh_o, &
+  subroutine mkurbanpar(pioid_o, datfname_i, mesh_o, &
        region_o, urban_classes_gcell_o, urban_skip_abort_on_invalid_data_check)
     !
     ! Make Urban Parameter data
@@ -460,11 +450,12 @@ contains
     use mkvarpar
 
     ! input/output variables
-    character(len=*)  , intent(in) :: datfname_i                ! input data file name
-    type(ESMF_Mesh)   , intent(in) :: mesh_o                    ! model mesh
-    integer           , intent(in) :: region_o(:)               ! output grid: region ID (length: ns_o)
+    type(file_desc_t) , intent(inout) :: pioid_o
+    character(len=*)  , intent(in) :: datfname_i                 ! input data file name
+    type(ESMF_Mesh)   , intent(in) :: mesh_o                     ! model mesh
+    integer           , intent(in) :: region_o(:)                ! output grid: region ID (length: ns_o)
     real(r8)          , intent(in) :: urban_classes_gcell_o(:,:) ! output grid: percent urban in each density class
-                                                                ! (% of total grid cell area) (dimensions: ns_o, numurbl)
+                                                                 ! (% of total grid cell area) (dimensions: ns_o, numurbl)
     logical           , intent(in) :: urban_skip_abort_on_invalid_data_check
 
     ! local variables
@@ -474,23 +465,24 @@ contains
        real(r8)          :: fill_val      ! value to put where we have no data in output
        logical           :: check_invalid ! should we check whether there are any invalid data in the output?
     end type param
-    real(r8), allocatable      :: data_scalar_o(:,:)   ! output array for parameters with no extra dimensions
-    real(r8), allocatable      :: data_rad_o(:,:,:,:)  ! output array for parameters dimensioned by numrad & numsolar
-    real(r8), allocatable      :: data_levurb_o(:,:,:) ! output array for parameters dimensioned by nlevurb
-    integer , allocatable      :: unity_dens_o(:,:)    ! artificial density indices
-    integer                    :: nlevurb_i            ! input  grid: number of urban vertical levels
-    integer                    :: numsolar_i           ! input  grid: number of solar type (DIR/DIF)
-    integer                    :: numrad_i             ! input  grid: number of solar bands (VIS/NIR)
-    integer                    :: m,n,no,ns_o,p,k      ! indices
-    type(file_desc_t)          :: pioid_i
-    type(file_desc_t)          :: pioid_o
-    type(var_desc_t)           :: pio_varid
-    integer                    :: pio_vartype
-    type(io_desc_t)            :: pio_iodesc
-    integer                    :: dimid 
-    integer                    :: ier, rcode, rc       ! error status
-    character(len=cs)          :: varname              ! variable name
-    integer                    :: xtype                ! external type
+    integer , allocatable :: idata_scalar_o(:,:)  ! output array for parameters with no extra dimensions
+    real(r8), allocatable :: data_scalar_o(:,:)   ! output array for parameters with no extra dimensions
+    real(r8), allocatable :: data_rad_o(:,:,:,:)  ! output array for parameters dimensioned by numrad & numsolar
+    real(r8), allocatable :: data_levurb_o(:,:,:) ! output array for parameters dimensioned by nlevurb
+    integer , allocatable :: unity_dens_o(:,:)    ! artificial density indices
+    integer               :: nlevurb_i            ! input  grid: number of urban vertical levels
+    integer               :: numsolar_i           ! input  grid: number of solar type (DIR/DIF)
+    integer               :: numrad_i             ! input  grid: number of solar bands (VIS/NIR)
+    integer               :: m,n,no,ns_o,p,k      ! indices
+    type(file_desc_t)     :: pioid_i
+    type(var_desc_t)      :: pio_varid
+    type(io_desc_t)       :: pio_iodesc
+    integer               :: pio_vartype
+    integer               :: dimid 
+    integer               :: ier, rcode, rc       ! error status
+    character(len=cs)     :: varname              ! variable name
+    integer               :: xtype                ! external type
+
     ! information on extra dimensions for lookup tables greater than 2-d:
     type(dim_slice_type), allocatable :: extra_dims(:)
 
@@ -544,11 +536,12 @@ contains
             param('CV_IMPROAD', fill_val_real, .false.), & ! 5
             param('TK_IMPROAD', fill_val_real, .false.) /) ! 6
 
-
     character(len=*), parameter :: subname = 'mkurbanpar'
     !-----------------------------------------------------------------------
 
-    write (6,*) 'Attempting to make Urban Parameters .....'
+    if (root_task) then
+       write (ndiag,'(a)') 'Attempting to make Urban Parameters .....'
+    end if
 
     ! Determine & error-check array sizes
     ns_o = size(region_o)
@@ -563,7 +556,6 @@ contains
        write(6,*) 'size(urban_classes_gcell_o, 2) = ', size(urban_classes_gcell_o, 2)
        write(6,*) 'numurbl = ', numurbl
     end if
-
 
     ! Read dimensions from input file
     if (root_task) then
@@ -604,123 +596,97 @@ contains
        unity_dens_o(:,k) = k
     end do
 
-    ! Open output file (this will go into define mode)
-    call mkpio_wopen(trim(fsurdat), clobber=.false., pioid=pioid_o)
-
     if ( outnc_double ) then
        xtype = PIO_DOUBLE
     else
        xtype = PIO_REAL
     end if
 
-    ! Define urbanoutput variables
+    ! Put output file back in define mode and define urban parameter output variables
+    rcode = pio_redef(pioid_o)
+
+    rcode = pio_def_dim(pioid_o, 'numrad' , numrad, dimid)
+
     call mkpio_def_spatial_var(pioid_o, varname='CANYON_HWR', xtype=xtype, &
-         lev1name='numurbl', &
-         long_name='canyon height to width ratio', units='unitless')
+         lev1name='numurbl', long_name='canyon height to width ratio', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='EM_IMPROAD', xtype=xtype, &
-         lev1name='numurbl', &
-         long_name='emissivity of impervious road', units='unitless')
+         lev1name='numurbl', long_name='emissivity of impervious road', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='EM_PERROAD', xtype=xtype, &
-         lev1name='numurbl', &
-         long_name='emissivity of pervious road', units='unitless')
+         lev1name='numurbl', long_name='emissivity of pervious road', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='EM_ROOF', xtype=xtype, &
-         lev1name='numurbl', &
-         long_name='emissivity of roof', units='unitless')
+         lev1name='numurbl', long_name='emissivity of roof', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='EM_WALL', xtype=xtype, &
-         lev1name='numurbl', &
-         long_name='emissivity of wall', units='unitless')
+         lev1name='numurbl', long_name='emissivity of wall', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='HT_ROOF', xtype=xtype, &
-         lev1name='numurbl', &
-         long_name='height of roof', units='meters')
+         lev1name='numurbl', long_name='height of roof', units='meters')
 
     call mkpio_def_spatial_var(pioid_o, varname='THICK_ROOF', xtype=xtype, &
-         lev1name='numurbl', &
-         long_name='thickness of roof', units='meters')
+         lev1name='numurbl', long_name='thickness of roof', units='meters')
 
     call mkpio_def_spatial_var(pioid_o, varname='THICK_WALL', xtype=xtype, &
-         lev1name='numurbl', &
-         long_name='thickness of wall', units='meters')
+         lev1name='numurbl', long_name='thickness of wall', units='meters')
 
     call mkpio_def_spatial_var(pioid_o, varname='T_BUILDING_MIN', xtype=xtype, &
-         lev1name='numurbl', &
-         long_name='minimum interior building temperature', units='K')
+         lev1name='numurbl', long_name='minimum interior building temperature', units='K')
 
     call mkpio_def_spatial_var(pioid_o, varname='WIND_HGT_CANYON', xtype=xtype, &
-         lev1name='numurbl', &
-         long_name='height of wind in canyon', units='meters')
+         lev1name='numurbl', long_name='height of wind in canyon', units='meters')
 
     call mkpio_def_spatial_var(pioid_o, varname='WTLUNIT_ROOF', xtype=xtype, &
-         lev1name='numurbl', &
-         long_name='fraction of roof', units='unitless')
+         lev1name='numurbl', long_name='fraction of roof', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='WTROAD_PERV', xtype=xtype, &
-         lev1name='numurbl', &
-         long_name='fraction of pervious road', units='unitless')
+         lev1name='numurbl', long_name='fraction of pervious road', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='ALB_IMPROAD_DIR', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', &
-         long_name='direct albedo of impervious road', units='unitless')
+         lev1name='numurbl', lev2name='numrad', long_name='direct albedo of impervious road', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='ALB_IMPROAD_DIF', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', &
-         long_name='diffuse albedo of impervious road', units='unitless')
+         lev1name='numurbl', lev2name='numrad', long_name='diffuse albedo of impervious road', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='ALB_PERROAD_DIR', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', &
-         long_name='direct albedo of pervious road', units='unitless')
+         lev1name='numurbl', lev2name='numrad', long_name='direct albedo of pervious road', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='ALB_PERROAD_DIF', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', &
-         long_name='diffuse albedo of pervious road', units='unitless')
+         lev1name='numurbl', lev2name='numrad', long_name='diffuse albedo of pervious road', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='ALB_ROOF_DIR', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', &
-         long_name='direct albedo of roof', units='unitless')
+         lev1name='numurbl', lev2name='numrad', long_name='direct albedo of roof', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='ALB_ROOF_DIF', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', &
-         long_name='diffuse albedo of roof', units='unitless')
+         lev1name='numurbl', lev2name='numrad', long_name='diffuse albedo of roof', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='ALB_WALL_DIR', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', &
-         long_name='direct albedo of wall', units='unitless')
+         lev1name='numurbl', lev2name='numrad', long_name='direct albedo of wall', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='ALB_WALL_DIF', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', &
-         long_name='diffuse albedo of wall', units='unitless')
+         lev1name='numurbl', lev2name='numrad', long_name='diffuse albedo of wall', units='unitless')
 
     call mkpio_def_spatial_var(pioid_o, varname='TK_ROOF', xtype=xtype, &
-         lev1name='numurbl', lev2name='nlevurb', &
-         long_name='thermal conductivity of roof', units='W/m*K')
+         lev1name='numurbl', lev2name='nlevurb', long_name='thermal conductivity of roof', units='W/m*K')
 
     call mkpio_def_spatial_var(pioid_o, varname='TK_WALL', xtype=xtype, &
-         lev1name='numurbl', lev2name='nlevurb', &
-         long_name='thermal conductivity of wall', units='W/m*K')
+         lev1name='numurbl', lev2name='nlevurb', long_name='thermal conductivity of wall', units='W/m*K')
 
     call mkpio_def_spatial_var(pioid_o, varname='TK_IMPROAD', xtype=xtype, &
-         lev1name='numurbl', lev2name='nlevurb', &
-         long_name='thermal conductivity of impervious road', units='W/m*K')
+         lev1name='numurbl', lev2name='nlevurb', long_name='thermal conductivity of impervious road', units='W/m*K')
 
     call mkpio_def_spatial_var(pioid_o, varname='CV_ROOF', xtype=xtype, &
-         lev1name='numurbl', lev2name='nlevurb', &
-         long_name='volumetric heat capacity of roof', units='J/m^3*K')
+         lev1name='numurbl', lev2name='nlevurb', long_name='volumetric heat capacity of roof', units='J/m^3*K')
 
     call mkpio_def_spatial_var(pioid_o, varname='CV_WALL', xtype=xtype, &
-         lev1name='numurbl', lev2name='nlevurb', &
-         long_name='volumetric heat capacity of wall', units='J/m^3*K')
+         lev1name='numurbl', lev2name='nlevurb', long_name='volumetric heat capacity of wall', units='J/m^3*K')
 
     call mkpio_def_spatial_var(pioid_o, varname='CV_IMPROAD', xtype=xtype, &
-         lev1name='numurbl', lev2name='nlevurb', &
-         long_name='volumetric heat capacity of impervious road', units='J/m^3*K')
+         lev1name='numurbl', lev2name='nlevurb', long_name='volumetric heat capacity of impervious road', units='J/m^3*K')
 
     call mkpio_def_spatial_var(pioid_o, varname='NLEV_IMPROAD', xtype=PIO_INT, &
-         lev1name='numurbl', &
-         long_name='number of impervious road layers', units='unitless')
+         lev1name='numurbl', long_name='number of impervious road layers', units='unitless')
 
     ! End define model
     rcode = pio_enddef(pioid_o)
@@ -728,99 +694,92 @@ contains
     ! ------------------------------------------------
     ! Handle urban parameters with no extra dimensions
     ! ------------------------------------------------
+    
+    allocate(data_scalar_o(ns_o, numurbl), stat=ier)
+    data_scalar_o(:,:) = 0._r8
+    if (ier /= 0) call shr_sys_abort('mkurbanpar allocation error')
 
-   allocate(data_scalar_o(ns_o, numurbl), stat=ier)
-   if (ier /= 0) then
-      write(6,*)'mkurbanpar allocation error'; call shr_sys_abort()
-   end if
-   
-   do p = 1, size(params_scalar)
-      ! get variable output (data_scalar_o)
-      call lookup_and_check_err(pioid_i, params_scalar(p)%name, params_scalar(p)%fill_val, &
-           params_scalar(p)%check_invalid, urban_skip_abort_on_invalid_data_check, &
-           data_scalar_o, 0)
+    do p = 1, size(params_scalar)
+       ! get variable output (data_scalar_o)
+       call lookup_and_check_err(pioid_i, params_scalar(p)%name, params_scalar(p)%fill_val, &
+            params_scalar(p)%check_invalid, urban_skip_abort_on_invalid_data_check, &
+            data_scalar_o, n_extra_dims = 0)
 
-      ! get io descriptor for variable output 
-      call mkpio_iodesc_output(pioid_o, mesh_o, params_scalar(p)%name, pio_iodesc, rc)
-      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//&
-           trim(params_scalar(p)%name))
+       ! get io descriptor for variable output, write out variable and free memory for io descriptor 
+       call mkpio_iodesc_output(pioid_o, mesh_o, params_scalar(p)%name, pio_iodesc, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//&
+            trim(params_scalar(p)%name))
+       rcode = pio_inq_varid(pioid_o, params_scalar(p)%name, pio_varid)
+       rcode = pio_inq_vartype(pioid_o, pio_varid, pio_vartype)
+       if (pio_vartype == PIO_INT) then
+          allocate(idata_scalar_o(ns_o, numurbl))
+          idata_scalar_o(:,:) = int(data_scalar_o)
+          call pio_write_darray(pioid_o, pio_varid, pio_iodesc, idata_scalar_o(:,:), rcode)
+          deallocate(idata_scalar_o)
+       else
+          call pio_write_darray(pioid_o, pio_varid, pio_iodesc, data_scalar_o(:,:), rcode)
+       end if
+       call pio_freedecomp(pioid_o, pio_iodesc)
+    end do
 
-      ! write out variable
-      rcode = pio_inq_varid(pioid_o, params_scalar(p)%name, pio_varid)
-      call pio_write_darray(pioid_o, pio_varid, pio_iodesc, data_scalar_o(:,:), rcode)
+    deallocate(data_scalar_o)
 
-      ! Free memory for io descriptor
-      call pio_freedecomp(pioid_o, pio_iodesc)
-   end do
+    ! ------------------------------------------------
+    ! Handle urban parameters dimensioned by numrad & numsolar
+    ! ------------------------------------------------
 
-   deallocate(data_scalar_o)
+    allocate(data_rad_o(ns_o, numurbl, numrad, numsolar), stat=ier)
+    if (ier /= 0) call shr_sys_abort('mkurbanpar allocation error for data_rad_o')
 
-   ! ------------------------------------------------
-   ! Handle urban parameters with no extra dimensions
-   ! ------------------------------------------------
+    allocate(extra_dims(2))
+    extra_dims(1)%name = 'numrad'
+    extra_dims(2)%name = 'numsolar'
 
-   ! Handle urban parameters dimensioned by numrad & numsolar
+    do p = 1, size(params_rad)
 
-   allocate(data_rad_o(ns_o, numurbl, numrad, numsolar), stat=ier)
-   if (ier /= 0) then
-      write(6,*)'mkurbanpar allocation error'; call shr_sys_abort()
-   end if
+       ! Get variable output (data_rad_o)
+       do m = 1,numsolar
+          extra_dims(2)%val = m
+          do n = 1,numrad
+             extra_dims(1)%val = n
+             call lookup_and_check_err(pioid_i, params_rad(p)%name, params_rad(p)%fill_val, &
+                  params_rad(p)%check_invalid, urban_skip_abort_on_invalid_data_check, &
+                  data_rad_o(:,:,n,m), n_extra_dims=2, extra_dims=extra_dims)
+          end do
+       end do
 
-   allocate(extra_dims(2))
-   extra_dims(1)%name = 'numrad'
-   extra_dims(2)%name = 'numsolar'
+       ! Special handling of numsolar: rather than outputting variables with a numsolar
+       ! dimension, we output separate variables for each value of numsolar
+       do m = 1,numsolar
+          if (len_trim(params_rad(p)%name) + len_trim(solar_suffix(m)) > len(varname)) then
+             write(6,*) 'variable name exceeds length of varname'
+             write(6,*) trim(params_rad(p)%name)//trim(solar_suffix(m))
+             call shr_sys_abort()
+          end if
 
-   do p = 1, size(params_rad)
+          ! Determine variable name
+          varname = trim(params_rad(p)%name)//trim(solar_suffix(m))
 
-      ! Get variable output (data_rad_o)
-      do m = 1,numsolar
-         extra_dims(2)%val = m
-         do n = 1,numrad
-            extra_dims(1)%val = n
-            call lookup_and_check_err(pioid_i, params_rad(p)%name, params_rad(p)%fill_val, &
-                 params_rad(p)%check_invalid, urban_skip_abort_on_invalid_data_check, &
-                 data_rad_o(:,:,n,m), 2, extra_dims)
-         end do
-      end do
+          ! get io descriptor for variable output, write out variable and free memory for io descriptor 
+          call mkpio_iodesc_output(pioid_o, mesh_o, varname, pio_iodesc, rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//&
+               trim(params_scalar(p)%name))
+          rcode = pio_inq_varid(pioid_o, varname, pio_varid)
+          call pio_write_darray(pioid_o, pio_varid, pio_iodesc, data_rad_o(:,:,:,m), rcode)
+          call pio_freedecomp(pioid_o, pio_iodesc)
+       end do
 
-      ! Special handling of numsolar: rather than outputting variables with a numsolar
-      ! dimension, we output separate variables for each value of numsolar
-      do m = 1,numsolar
-         if (len_trim(params_rad(p)%name) + len_trim(solar_suffix(m)) > len(varname)) then
-            write(6,*) 'variable name exceeds length of varname'
-            write(6,*) trim(params_rad(p)%name)//trim(solar_suffix(m))
-            call shr_sys_abort()
-         end if
+    end do
 
-         ! Determine variable name
-         varname = trim(params_rad(p)%name)//trim(solar_suffix(m))
-
-         ! get io descriptor for variable output 
-         call mkpio_iodesc_output(pioid_o, mesh_o, varname, pio_iodesc, rc)
-         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//&
-              trim(params_scalar(p)%name))
-
-         ! write out variable
-         rcode = pio_inq_varid(pioid_o, varname, pio_varid)
-         call pio_write_darray(pioid_o, pio_varid, pio_iodesc, data_rad_o(:,:,:,m), rcode)
-
-         ! Free memory for io descriptor
-         call pio_freedecomp(pioid_o, pio_iodesc)
-      end do
-
-   end do
-
-   deallocate(data_rad_o)
-   deallocate(extra_dims)
+    deallocate(data_rad_o)
+    deallocate(extra_dims)
 
     ! ------------------------------------------------
     ! Handle urban parameters dimensioned by nlevurb
     ! ------------------------------------------------
 
     allocate(data_levurb_o(ns_o, numurbl, nlevurb), stat=ier)
-    if (ier /= 0) then
-       write(6,*)'mkurbanpar allocation error'; call shr_sys_abort()
-    end if
+    if (ier /= 0) call shr_sys_abort('mkurbanpar allocation error for data_levurb_o')
 
     allocate(extra_dims(1))
     extra_dims(1)%name = 'nlevurb'
@@ -830,28 +789,24 @@ contains
           extra_dims(1)%val = n
           call lookup_and_check_err(pioid_i, params_levurb(p)%name, params_levurb(p)%fill_val, &
                params_levurb(p)%check_invalid, &
-               urban_skip_abort_on_invalid_data_check, data_levurb_o(:,:,n), 1, extra_dims)
+               urban_skip_abort_on_invalid_data_check, data_levurb_o(:,:,n), &
+               n_extra_dims=1, extra_dims=extra_dims)
        end do
 
-       ! get io descriptor for variable output 
+       ! get io descriptor for variable output, write out variable and free memory for io descriptor 
        call mkpio_iodesc_output(pioid_o, mesh_o, params_levurb(p)%name, pio_iodesc, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//&
             trim(params_levurb(p)%name))
-
-       ! write out variable
        rcode = pio_inq_varid(pioid_o, params_levurb(p)%name, pio_varid)
        call pio_write_darray(pioid_o, pio_varid, pio_iodesc, data_levurb_o(:,:,:), rcode)
-
-       ! Free memory for io descriptor
        call pio_freedecomp(pioid_o, pio_iodesc)
     end do
 
     deallocate(data_levurb_o)
     deallocate(extra_dims)
 
-    ! Close input data file and output surface dataset
+    ! Close input data file
     call pio_closefile(pioid_i)
-    call pio_closefile(pioid_o)
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made Urban Parameters'
@@ -861,6 +816,7 @@ contains
     deallocate(unity_dens_o)
 
   contains
+
     !------------------------------------------------------------------------------
     subroutine lookup_and_check_err(pioid, varname, fill_val, check_invalid, &
          urban_skip_abort_on_invalid_data_check, data, n_extra_dims, extra_dims)

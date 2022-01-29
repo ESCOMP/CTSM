@@ -53,7 +53,7 @@ module mkvarctl
 
   ! NOTE(bja, 2015-01) added to work around a ?bug? causing 1x1_urbanc_alpha to abort. See
   !/glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
-  logical :: urban_skip_abort_on_invalid_data_check
+  logical, public    :: urban_skip_abort_on_invalid_data_check
 
   logical, public    :: outnc_large_files     ! output files in 64-bit format for large files
   logical, public    :: outnc_double          ! output ALL data in files as 64-bit
