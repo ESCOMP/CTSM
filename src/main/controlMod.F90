@@ -203,7 +203,8 @@ contains
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
          snicar_numrad_snw, snicar_solarspec, snicar_snw_optics, snicar_dust_optics, &
-         snicar_use_aerosol, snicar_rt_solver, snicar_snw_shape, snicar_snobc_intmix  ! cenlin
+         snicar_use_aerosol, snicar_rt_solver, snicar_snw_shape, snicar_snobc_intmix,&
+         snicar_snodst_intmix  ! cenlin
     
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -606,6 +607,12 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
+    ! check on SNICAR BC-snow and dust-snow internal mixing
+    if ( snicar_snobc_intmix .and. snicar_snodst_intmix ) then
+       call endrun(msg=' ERROR: currently dust-snow and BC-snow internal mixing cannot be activated together'//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
     ! Consistency settings for nrevsn
 
     if (nsrest == nsrStartup ) nrevsn = ' '
@@ -834,6 +841,7 @@ contains
     call mpi_bcast (snicar_rt_solver, 1, MPI_INTEGER, 0, mpicom, ier)   ! cenlin
     call mpi_bcast (snicar_snw_shape, 1, MPI_INTEGER, 0, mpicom, ier) ! cenlin
     call mpi_bcast (snicar_snobc_intmix, 1, MPI_LOGICAL, 0, mpicom, ier) ! cenlin
+    call mpi_bcast (snicar_snodst_intmix, 1, MPI_LOGICAL, 0, mpicom, ier) ! cenlin
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -1025,6 +1033,7 @@ contains
     write(iulog,*) '   SNICAR: radiative transfer solver type = ',snicar_rt_solver ! cenlin
     write(iulog,*) '   SNICAR: snow grain shape type = ',snicar_snw_shape ! cenlin
     write(iulog,*) '   SNICAR: BC-snow internal mixing = ', snicar_snobc_intmix ! cenlin
+    write(iulog,*) '   SNICAR: dust-snow internal mixing = ', snicar_snodst_intmix ! cenlin
 
     write(iulog,*) '   glc number of elevation classes =', maxpatch_glc
     if (glc_do_dynglacier) then

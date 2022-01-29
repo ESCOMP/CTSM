@@ -12,7 +12,8 @@ module SnowSnicarMod
   use shr_sys_mod     , only : shr_sys_flush
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use clm_varctl      , only : iulog, snicar_numrad_snw, snicar_rt_solver, &
-                               snicar_snw_shape, snicar_snobc_intmix ! cenlin
+                               snicar_snw_shape, snicar_snobc_intmix, &
+                               snicar_snodst_intmix ! cenlin
   use clm_varcon      , only : tfrz
   use shr_const_mod   , only : SHR_CONST_RHOICE
   use abortutils      , only : endrun
@@ -509,7 +510,22 @@ contains
     real(r8) :: wvl_doint                         ! wavelength doing BC-snow int mixing (<=1.2um)
     integer  :: ibb                               ! loop index
 
-    !
+    !-----------------------------------------------------------------------
+    ! variables used for dust-snow internal mixing (He et al. 2019 JAMES):
+    real(r8) :: enh_omg_dstint                    ! dust-induced enhancement in snow single-scattering co-albedo (1-omega)
+    real(r8) :: enh_omg_dstint_tmp(1:6)           ! temporary dust-induced enhancement in snow 1-omega
+    real(r8) :: enh_omg_dstint_tmp2(1:6)          ! temporary dust-induced enhancement in snow 1-omega
+    real(r8) :: dstint_wvl(1:7)                   ! Parameterization band (0.2-1.2um) for dust-induced enhancement in snow 1-omega
+    real(r8) :: dstint_wvl_ct(1:6)                ! Parameterization band center wavelength (um)
+    real(r8) :: dstint_a1(1:6)                    ! Parameterization coefficients at each band center wavelength
+    real(r8) :: dstint_a2(1:6)                    ! Parameterization coefficients at each band center wavelength
+    real(r8) :: dstint_a3(1:6)                    ! Parameterization coefficients at each band center wavelength
+    real(r8) :: enh_omg_dstint_intp               ! dust-induced enhancement in snow 1-omega (logscale) interpolated to CLM wavelength
+    real(r8) :: enh_omg_dstint_intp2              ! dust-induced enhancement in snow 1-omega interpolated to CLM wavelength
+    real(r8) :: wvl_doint2                        ! wavelength doing dust-snow int mixing (<=1.2um)
+    real(r8) :: tot_dst_snw_conc                  ! total dust content in snow across all size bins (ppm=ug/g)
+    integer  :: idb                               ! loop index
+
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -573,10 +589,10 @@ contains
                           6.473899E-1_r8,  4.634944E-1_r8,  4.634944E-1_r8 /)
 
       ! initialize for BC-snow internal mixing
-      ! Eq. 8b & Table 4 in He et al., 2017 J. Climate (wavelength>1.2um, no BC-snow int mixi effect)
+      ! Eq. 8b & Table 4 in He et al., 2017 J. Climate (wavelength>1.2um, no BC-snow int mixing effect)
       bcint_wvl(1:17) = (/ 0.20_r8, 0.25_r8, 0.30_r8, 0.33_r8, 0.36_r8, 0.40_r8, 0.44_r8, 0.48_r8, &
                            0.52_r8, 0.57_r8, 0.64_r8, 0.69_r8, 0.75_r8, 0.78_r8, 0.87_r8, 1._r8, 1.2_r8 /)
-      bcint_wvl_ct(1:16) = bcint_wvl(2:17) / 2._r8 + bcint_wvl(1:16) / 2._r8
+      bcint_wvl_ct(1:16) = bcint_wvl(2:17)/2._r8 + bcint_wvl(1:16)/2._r8
       bcint_d0(1:16)  = (/ 2.48045_r8   , 4.70305_r8   , 4.68619_r8   , 4.67369_r8   , 4.65040_r8   , &
                            2.40364_r8   , 7.95408E-1_r8, 2.92745E-1_r8, 8.63396E-2_r8, 2.76299E-2_r8, &
                            1.40864E-2_r8, 8.65705E-3_r8, 6.12971E-3_r8, 4.45697E-3_r8, 3.06648E-2_r8, &
@@ -592,6 +608,14 @@ contains
       ! Eq. 1a,1b and Table S1 in He et al. 2018 GRL
       bcint_m(1:3)    = (/ -0.8724_r8, -0.1866_r8, -0.0046_r8 /)
       bcint_n(1:3)    = (/ -0.0072_r8, -0.1918_r8, -0.5177_r8 /)
+
+      ! initialize for dust-snow internal mixing
+      ! Eq. 1 and Table 1 in He et al. 2019 JAMES (wavelength>1.2um, no dust-snow int mixing effect)
+      dstint_wvl(1:7) = (/ 0.2_r8, 0.2632_r8, 0.3448_r8, 0.4415_r8, 0.625_r8, 0.7782_r8, 1.2422_r8/)
+      dstint_wvl_ct(1:6) = dstint_wvl(2:7)/2._r8 + dstint_wvl(1:6)/2._r8
+      dstint_a1(1:6) = (/ -2.1307E+1_r8, -1.5815E+1_r8, -9.2880_r8   , 1.1115_r8   , 1.0307_r8   , 1.0185_r8    /)
+      dstint_a2(1:6) = (/  1.1746E+2_r8,  9.3241E+1_r8,  4.0605E+1_r8, 3.7389E-1_r8, 1.4800E-2_r8, 2.8921E-4_r8 /)
+      dstint_a3(1:6) = (/  9.9701E-1_r8,  9.9781E-1_r8,  9.9848E-1_r8, 1.0035_r8   , 1.0024_r8   , 1.0356_r8    /)
 
       ! SNICAR/CLM snow band center wavelength (um)
       wvl_ct5(1:5)  = (/ 0.5_r8, 0.85_r8, 1.1_r8, 1.35_r8, 3.25_r8 /)  ! 5-band
@@ -925,7 +949,7 @@ contains
                         endif
                         do igb = 1,7
                            g_ice_Cg_tmp(igb) = g_b0(igb) * ((fs_hex0/fs_hex)**g_b1(igb)) * (diam_ice**g_b2(igb))   ! Eq.7, He et al. (2017)
-                           gg_ice_F07_tmp(igb) = g_F07_p0(igb) + g_F07_p1(igb) * LOG(AR_tmp) + g_F07_p2(igb) * ((LOG(AR_tmp))**2._r8) ! Eqn. 3.3 in Fu (2007)
+                           gg_ice_F07_tmp(igb) = g_F07_p0(igb)+g_F07_p1(igb)*LOG(AR_tmp)+g_F07_p2(igb)*((LOG(AR_tmp))**2._r8) ! Eqn. 3.3 in Fu (2007)
                         enddo
 
                      ! Koch snowflake
@@ -944,7 +968,7 @@ contains
                         endif
                         do igb = 1,7
                            g_ice_Cg_tmp(igb) = g_b0(igb) * ((fs_koch/fs_hex)**g_b1(igb)) * (diam_ice**g_b2(igb))   ! Eq.7, He et al. (2017)
-                           gg_ice_F07_tmp(igb) = g_F07_p0(igb) + g_F07_p1(igb) * LOG(AR_tmp) + g_F07_p2(igb) * ((LOG(AR_tmp))**2._r8) ! Eqn. 3.3 in Fu (2007)
+                           gg_ice_F07_tmp(igb) = g_F07_p0(igb)+g_F07_p1(igb)*LOG(AR_tmp)+g_F07_p2(igb)*((LOG(AR_tmp))**2._r8) ! Eqn. 3.3 in Fu (2007)
                         enddo
 
                      endif ! if snow shape
@@ -1020,11 +1044,11 @@ contains
 
                      ! BC-snow internal mixing applied to hydrophilic BC if activated
                      ! BC-snow internal mixing primarily affect snow single-scattering albedo
-                     if ( snicar_snobc_intmix .and. (mss_cnc_aer_lcl(i,1)>0._r8) ) then
+                     if ( snicar_snobc_intmix .and. (mss_cnc_aer_lcl(i,1) > 0._r8) ) then
                         if (snicar_numrad_snw == 5)   wvl_doint = wvl_ct5(bnd_idx)
                         if (snicar_numrad_snw == 480) wvl_doint = wvl_ct480(bnd_idx)
-
-                        if (wvl_doint <= 1.2_r8) then ! only do for wavelength<=1.2um
+                        ! only do for wavelength<=1.2um
+                        if (wvl_doint <= 1.2_r8) then
                            ! result from Eq.8b in He et al.(2017) is based on BC Re=0.1um &
                            ! MAC=6.81 m2/g (@550 nm) & BC density=1.7g/cm3.
                            ! To be consistent with Bond et al. 2006 recommeded value (BC MAC=7.5 m2/g @550nm)
@@ -1053,25 +1077,55 @@ contains
                                  bcint_dd2 = (0.1_r8/0.05_r8)**bcint_m(3)
                                  bcint_f  = (Re_bc/0.1_r8)**bcint_n(3)
                               endif
-                              enh_omg_bcint_tmp2(ibb) = LOG10( bcint_dd * ((enh_omg_bcint_tmp(ibb) / bcint_dd2)**bcint_f) )
+                              enh_omg_bcint_tmp2(ibb)=LOG10(max(1._r8,bcint_dd*((enh_omg_bcint_tmp(ibb)/bcint_dd2)**bcint_f)))
                            enddo
-
                            ! piecewise linear interpolate into targeted SNICAR bands in a logscale space
                            call piecewise_linear_interp1d(16,bcint_wvl_ct,enh_omg_bcint_tmp2,wvl_doint,enh_omg_bcint_intp)
-
                            ! update snow single-scattering albedo
                            enh_omg_bcint_intp2 = 10._r8 ** enh_omg_bcint_intp                           
                            enh_omg_bcint_intp2 = max(enh_omg_bcint_intp2, 1._r8) ! BC does not reduce snow absorption
                            ss_alb_snw_lcl(i) = 1._r8 - (1._r8 - ss_alb_snw_lcl(i)) * enh_omg_bcint_intp2
                            ss_alb_snw_lcl(i) = max(0._r8, min(ss_alb_snw_lcl(i),1._r8))
-                        
                            ! reset hydrophilic BC property to 0 since it is accounted by updated snow ss_alb above
                            ss_alb_aer_lcl(1)        = 0.0
                            asm_prm_aer_lcl(1)       = 0.0
                            ext_cff_mss_aer_lcl(1)   = 0.0
-
                         endif ! end if wvl_doint <= 1.2
                      endif ! end if BC-snow internal mixing
+
+
+                     ! Dust-snow internal mixing applied to all size bins if activated
+                     ! Dust-snow internal mixing primarily affect snow single-scattering albedo
+                     ! default optics of externally mixed dust at 4 size bins based on effective
+                     ! radius of 1.38um and sigma=2.0 with truncation to each size bin (Flanner et al. 2021 GMD)
+                     ! parameterized dust-snow int mix results based on effective radius of 1.1um and sigma=2.0
+                     ! from (He et al. 2019 JAMES). Thus, the parameterization can be approximately applied to
+                     ! all dust size bins here.
+                     tot_dst_snw_conc = (mss_cnc_aer_lcl(i,5) + mss_cnc_aer_lcl(i,6) + &
+                                         mss_cnc_aer_lcl(i,7) + mss_cnc_aer_lcl(i,8)) * 1.0E6_r8
+                     if ( snicar_snodst_intmix .and. (tot_dst_snw_conc > 0._r8) ) then
+                        if (snicar_numrad_snw == 5)   wvl_doint2 = wvl_ct5(bnd_idx)
+                        if (snicar_numrad_snw == 480) wvl_doint2 = wvl_ct480(bnd_idx)
+                        ! only do for wavelength<=1.2um
+                        if (wvl_doint2 <= 1.2_r8) then
+                           do idb=1,6
+                              enh_omg_dstint_tmp(idb) = dstint_a1(idb)+dstint_a2(idb)*(tot_dst_snw_conc**dstint_a3(idb))
+                              enh_omg_dstint_tmp2(idb) = LOG10(max(enh_omg_dstint_tmp(idb),1._r8))
+                           enddo
+                           ! piecewise linear interpolate into targeted SNICAR bands in a logscale space
+                           call piecewise_linear_interp1d(6,dstint_wvl_ct,enh_omg_dstint_tmp2,wvl_doint2,enh_omg_dstint_intp)
+                           ! update snow single-scattering albedo
+                           enh_omg_dstint_intp2 = 10._r8 ** enh_omg_dstint_intp
+                           enh_omg_dstint_intp2 = max(enh_omg_dstint_intp2, 1._r8)
+                           ss_alb_snw_lcl(i) = 1._r8 - (1._r8 - ss_alb_snw_lcl(i)) * enh_omg_dstint_intp2
+                           ss_alb_snw_lcl(i) = max(0._r8, min(ss_alb_snw_lcl(i),1._r8))
+                           ! reset all dust optics to zero  since it is accounted by updated snow ss_alb above
+                           ss_alb_aer_lcl(5:8)      = 0._r8
+                           asm_prm_aer_lcl(5:8)     = 0._r8
+                           ext_cff_mss_aer_lcl(5:8) = 0._r8
+                        endif ! end if wvl_doint2 <= 1.2
+                     endif ! end if dust-snow internal mixing
+
 
                      L_snw(i)   = h2osno_ice_lcl(i)+h2osno_liq_lcl(i)
                      tau_snw(i) = L_snw(i)*ext_cff_mss_snw_lcl(i)

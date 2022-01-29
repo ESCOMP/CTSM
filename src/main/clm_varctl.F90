@@ -233,6 +233,10 @@ module clm_varctl
   ! option to activate BC-snow internal mixing in SNICAR (He et al. 2017 JC), ceniln
   logical, public :: snicar_snobc_intmix = .true.   ! false->external mixing for all BC; true->internal mixing for hydrophilic BC
 
+  ! option to activate dust-snow internal mixing in SNICAR (He et al. 2017 JC), ceniln
+  logical, public :: snicar_snodst_intmix = .false.   ! false->external mixing for all dust; true->internal mixing for all dust
+
+
   !----------------------------------------------------------
   ! C isotopes
   !----------------------------------------------------------
