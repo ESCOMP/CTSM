@@ -12,7 +12,7 @@ module SnowSnicarMod
   use shr_sys_mod     , only : shr_sys_flush
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use clm_varctl      , only : iulog, snicar_numrad_snw, snicar_rt_solver, &
-                               snicar_snw_shape ! cenlin
+                               snicar_snw_shape, snicar_snobc_intmix ! cenlin
   use clm_varcon      , only : tfrz
   use shr_const_mod   , only : SHR_CONST_RHOICE
   use abortutils      , only : endrun
@@ -486,6 +486,29 @@ contains
     real(r8) :: gg_F07_intp                       ! interpolated asymmetry factor related to geometric reflection & refraction
     real(r8) :: g_ice_F07                         ! asymmetry factor for Fu 2007 parameterization value
     integer  :: igb                               ! loop index
+
+    !-----------------------------------------------------------------------
+    ! variables used for BC-snow internal mixing (He et al. 2017 J of Climate):
+    real(r8) :: enh_omg_bcint                     ! BC-induced enhancement in snow single-scattering co-albedo (1-omega)
+    real(r8) :: enh_omg_bcint_tmp(1:16)           ! temporary BC-induced enhancement in snow 1-omega
+    real(r8) :: enh_omg_bcint_tmp2(1:16)          ! temporary BC-induced enhancement in snow 1-omega
+    real(r8) :: bcint_wvl(1:17)                   ! Parameterization band (0.2-1.2um) for BC-induced enhancement in snow 1-omega
+    real(r8) :: bcint_wvl_ct(1:16)                ! Parameterization band center wavelength (um)
+    real(r8) :: bcint_d0(1:16)                    ! Parameterization coefficients at each band center wavelength
+    real(r8) :: bcint_d1(1:16)                    ! Parameterization coefficients at each band center wavelength
+    real(r8) :: bcint_d2(1:16)                    ! Parameterization coefficients at each band center wavelength
+    real(r8) :: den_bc = 1.49_r8                  ! target BC particle density (g/cm3) used in BC MAC adjustment
+    real(r8) :: Re_bc = 0.045                     ! target BC effective radius (um) used in BC MAC adjustment
+    real(r8) :: bcint_m(1:3)                      ! Parameterization coefficients for BC size adjustment in BC-snow int mix
+    real(r8) :: bcint_n(1:3)                      ! Parameterization coefficients for BC size adjustment in BC-snow int mix
+    real(r8) :: bcint_dd                          ! intermediate parameter
+    real(r8) :: bcint_dd2                         ! intermediate parameter
+    real(r8) :: bcint_f                           ! intermediate parameter
+    real(r8) :: enh_omg_bcint_intp                ! BC-induced enhancement in snow 1-omega (logscale) interpolated to CLM wavelength
+    real(r8) :: enh_omg_bcint_intp2               ! BC-induced enhancement in snow 1-omega interpolated to CLM wavelength
+    real(r8) :: wvl_doint                         ! wavelength doing BC-snow int mixing (<=1.2um)
+    integer  :: ibb                               ! loop index
+
     !
     !-----------------------------------------------------------------------
 
@@ -548,7 +571,29 @@ contains
                           1.353873E-1_r8,  1.914431E-1_r8,  1.914431E-1_r8 /)
       g_F07_p0(1:7) = (/  5.292852E-1_r8,  5.425909E-1_r8,  5.601598E-1_r8,  6.023407E-1_r8, &
                           6.473899E-1_r8,  4.634944E-1_r8,  4.634944E-1_r8 /)
-      ! band center wavelength (um)
+
+      ! initialize for BC-snow internal mixing
+      ! Eq. 8b & Table 4 in He et al., 2017 J. Climate (wavelength>1.2um, no BC-snow int mixi effect)
+      bcint_wvl(1:17) = (/ 0.20_r8, 0.25_r8, 0.30_r8, 0.33_r8, 0.36_r8, 0.40_r8, 0.44_r8, 0.48_r8, &
+                           0.52_r8, 0.57_r8, 0.64_r8, 0.69_r8, 0.75_r8, 0.78_r8, 0.87_r8, 1._r8, 1.2_r8 /)
+      bcint_wvl_ct(1:16) = bcint_wvl(2:17) / 2._r8 + bcint_wvl(1:16) / 2._r8
+      bcint_d0(1:16)  = (/ 2.48045_r8   , 4.70305_r8   , 4.68619_r8   , 4.67369_r8   , 4.65040_r8   , &
+                           2.40364_r8   , 7.95408E-1_r8, 2.92745E-1_r8, 8.63396E-2_r8, 2.76299E-2_r8, &
+                           1.40864E-2_r8, 8.65705E-3_r8, 6.12971E-3_r8, 4.45697E-3_r8, 3.06648E-2_r8, &
+                           7.96544E-1_r8 /)
+      bcint_d1(1:16)  = (/ 9.77209E-1_r8, 9.73317E-1_r8, 9.79650E-1_r8, 9.84579E-1_r8, 9.93537E-1_r8, &
+                           9.95955E-1_r8, 9.95218E-1_r8, 9.74284E-1_r8, 9.81193E-1_r8, 9.81239E-1_r8, &
+                           9.55515E-1_r8, 9.10491E-1_r8, 8.74196E-1_r8, 8.27238E-1_r8, 4.82870E-1_r8, &
+                           4.36649E-2_r8 /)
+      bcint_d2(1:16)  = (/ 3.95960E-1_r8, 2.04820E-1_r8, 2.07410E-1_r8, 2.09390E-1_r8, 2.13030E-1_r8, &
+                           4.18570E-1_r8, 1.29682_r8   , 3.75514_r8   , 1.27372E+1_r8, 3.93293E+1_r8, &
+                           8.78918E+1_r8, 1.86969E+2_r8, 3.45600E+2_r8, 7.08637E+2_r8, 1.41067E+3_r8, &
+                           2.57288E+2_r8 /)
+      ! Eq. 1a,1b and Table S1 in He et al. 2018 GRL
+      bcint_m(1:3)    = (/ -0.8724_r8, -0.1866_r8, -0.0046_r8 /)
+      bcint_n(1:3)    = (/ -0.0072_r8, -0.1918_r8, -0.5177_r8 /)
+
+      ! SNICAR/CLM snow band center wavelength (um)
       wvl_ct5(1:5)  = (/ 0.5_r8, 0.85_r8, 1.1_r8, 1.35_r8, 3.25_r8 /)  ! 5-band
       do igb = 1,480 
          wvl_ct480(igb) = 0.205_r8 + 0.01_r8 * (igb-1)  ! 480-band
@@ -925,42 +970,42 @@ contains
                   enddo ! snow layer loop
 
 
-                  ! aerosol species 1 optical properties
+                  ! aerosol species 1 optical properties, hydrophilic BC
                   ss_alb_aer_lcl(1)        = ss_alb_bc1(bnd_idx)      
                   asm_prm_aer_lcl(1)       = asm_prm_bc1(bnd_idx)
                   ext_cff_mss_aer_lcl(1)   = ext_cff_mss_bc1(bnd_idx)
 
-                  ! aerosol species 2 optical properties
+                  ! aerosol species 2 optical properties, hydrophobic BC
                   ss_alb_aer_lcl(2)        = ss_alb_bc2(bnd_idx)      
                   asm_prm_aer_lcl(2)       = asm_prm_bc2(bnd_idx)
                   ext_cff_mss_aer_lcl(2)   = ext_cff_mss_bc2(bnd_idx)
 
-                  ! aerosol species 3 optical properties
+                  ! aerosol species 3 optical properties, hydrophilic OC
                   ss_alb_aer_lcl(3)        = ss_alb_oc1(bnd_idx)      
                   asm_prm_aer_lcl(3)       = asm_prm_oc1(bnd_idx)
                   ext_cff_mss_aer_lcl(3)   = ext_cff_mss_oc1(bnd_idx)
 
-                  ! aerosol species 4 optical properties
+                  ! aerosol species 4 optical properties, hydrophobic OC
                   ss_alb_aer_lcl(4)        = ss_alb_oc2(bnd_idx)      
                   asm_prm_aer_lcl(4)       = asm_prm_oc2(bnd_idx)
                   ext_cff_mss_aer_lcl(4)   = ext_cff_mss_oc2(bnd_idx)
 
-                  ! aerosol species 5 optical properties
+                  ! aerosol species 5 optical properties, dust size1
                   ss_alb_aer_lcl(5)        = ss_alb_dst1(bnd_idx)      
                   asm_prm_aer_lcl(5)       = asm_prm_dst1(bnd_idx)
                   ext_cff_mss_aer_lcl(5)   = ext_cff_mss_dst1(bnd_idx)
 
-                  ! aerosol species 6 optical properties
+                  ! aerosol species 6 optical properties, dust size2
                   ss_alb_aer_lcl(6)        = ss_alb_dst2(bnd_idx)      
                   asm_prm_aer_lcl(6)       = asm_prm_dst2(bnd_idx)
                   ext_cff_mss_aer_lcl(6)   = ext_cff_mss_dst2(bnd_idx)
 
-                  ! aerosol species 7 optical properties
+                  ! aerosol species 7 optical properties, dust size3
                   ss_alb_aer_lcl(7)        = ss_alb_dst3(bnd_idx)      
                   asm_prm_aer_lcl(7)       = asm_prm_dst3(bnd_idx)
                   ext_cff_mss_aer_lcl(7)   = ext_cff_mss_dst3(bnd_idx)
 
-                  ! aerosol species 8 optical properties
+                  ! aerosol species 8 optical properties, dust size4
                   ss_alb_aer_lcl(8)        = ss_alb_dst4(bnd_idx)      
                   asm_prm_aer_lcl(8)       = asm_prm_dst4(bnd_idx)
                   ext_cff_mss_aer_lcl(8)   = ext_cff_mss_dst4(bnd_idx)
@@ -972,6 +1017,62 @@ contains
 
                   ! Weighted Mie parameters of each layer
                   do i=snl_top,snl_btm,1
+
+                     ! BC-snow internal mixing applied to hydrophilic BC if activated
+                     ! BC-snow internal mixing primarily affect snow single-scattering albedo
+                     if ( snicar_snobc_intmix .and. (mss_cnc_aer_lcl(i,1)>0._r8) ) then
+                        if (snicar_numrad_snw == 5)   wvl_doint = wvl_ct5(bnd_idx)
+                        if (snicar_numrad_snw == 480) wvl_doint = wvl_ct480(bnd_idx)
+
+                        if (wvl_doint <= 1.2_r8) then ! only do for wavelength<=1.2um
+                           ! result from Eq.8b in He et al.(2017) is based on BC Re=0.1um &
+                           ! MAC=6.81 m2/g (@550 nm) & BC density=1.7g/cm3.
+                           ! To be consistent with Bond et al. 2006 recommeded value (BC MAC=7.5 m2/g @550nm)
+                           ! we made adjustments on BC size & density as follows to get MAC=7.5m2/g:
+                           ! (1) We use BC Re=0.045um [geometric mean diameter=0.06um (Dentener et al.2006, 
+                           ! Yu and Luo,2009) & geometric std=1.5 (Flanner et al.2007;Aoki et al., 2011)].
+                           ! (2) We tune BC density from 1.7 to 1.49 g/cm3 (Aoki et al., 2011).
+                           ! These adjustments also lead to consistent results with Flanner et al. 2012 (ACP) lookup table
+                           ! for BC-snow internal mixing enhancement in albedo reduction (He et al. 2018 ACP)
+                           do ibb=1,16
+                              enh_omg_bcint_tmp(ibb) = bcint_d0(ibb) * &
+                                 ( (mss_cnc_aer_lcl(i,1)*1.0E9_r8*1.7_r8/den_bc + bcint_d2(ibb)) **bcint_d1(ibb) )
+                              ! adjust enhancment factor for BC effective size from 0.1um to Re_bc (He et al. 2018 GRL Eqs.1a,1b)
+                              if (ibb < 3) then ! near-UV
+                                 bcint_dd  = (Re_bc/0.05_r8)**bcint_m(1)
+                                 bcint_dd2 = (0.1_r8/0.05_r8)**bcint_m(1)
+                                 bcint_f  = (Re_bc/0.1_r8)**bcint_n(1)
+                              endif
+                              if ( (ibb >= 3) .and. (ibb <= 11) ) then ! visible
+                                 bcint_dd  = (Re_bc/0.05_r8)**bcint_m(2)
+                                 bcint_dd2 = (0.1_r8/0.05_r8)**bcint_m(2)
+                                 bcint_f  = (Re_bc/0.1_r8)**bcint_n(2)
+                              endif
+                              if ( ibb > 11 ) then ! NIR
+                                 bcint_dd  = (Re_bc/0.05_r8)**bcint_m(3)
+                                 bcint_dd2 = (0.1_r8/0.05_r8)**bcint_m(3)
+                                 bcint_f  = (Re_bc/0.1_r8)**bcint_n(3)
+                              endif
+                              enh_omg_bcint_tmp2(ibb) = LOG10( bcint_dd * ((enh_omg_bcint_tmp(ibb) / bcint_dd2)**bcint_f) )
+                           enddo
+
+                           ! piecewise linear interpolate into targeted SNICAR bands in a logscale space
+                           call piecewise_linear_interp1d(16,bcint_wvl_ct,enh_omg_bcint_tmp2,wvl_doint,enh_omg_bcint_intp)
+
+                           ! update snow single-scattering albedo
+                           enh_omg_bcint_intp2 = 10._r8 ** enh_omg_bcint_intp                           
+                           enh_omg_bcint_intp2 = max(enh_omg_bcint_intp2, 1._r8) ! BC does not reduce snow absorption
+                           ss_alb_snw_lcl(i) = 1._r8 - (1._r8 - ss_alb_snw_lcl(i)) * enh_omg_bcint_intp2
+                           ss_alb_snw_lcl(i) = max(0._r8, min(ss_alb_snw_lcl(i),1._r8))
+                        
+                           ! reset hydrophilic BC property to 0 since it is accounted by updated snow ss_alb above
+                           ss_alb_aer_lcl(1)        = 0.0
+                           asm_prm_aer_lcl(1)       = 0.0
+                           ext_cff_mss_aer_lcl(1)   = 0.0
+
+                        endif ! end if wvl_doint <= 1.2
+                     endif ! end if BC-snow internal mixing
+
                      L_snw(i)   = h2osno_ice_lcl(i)+h2osno_liq_lcl(i)
                      tau_snw(i) = L_snw(i)*ext_cff_mss_snw_lcl(i)
 
@@ -2121,22 +2222,22 @@ contains
         call ncd_io( 'ext_cff_mss_dust04', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
      endif
 
-     ! BC species 1 Mie parameters
-     call ncd_io( 'ss_alb_bcphil', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'asm_prm_bcphil', asm_prm_bc1,         'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'ext_cff_mss_bcphil', ext_cff_mss_bc1, 'read', ncid, posNOTonfile=.true.)
+     ! BC species 1 Mie parameters, uncoated BC, same as bc2 without BC-snow internal mixing
+     call ncd_io( 'ss_alb_bcphob', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
+     call ncd_io( 'asm_prm_bcphob', asm_prm_bc1,         'read', ncid, posNOTonfile=.true.)
+     call ncd_io( 'ext_cff_mss_bcphob', ext_cff_mss_bc1, 'read', ncid, posNOTonfile=.true.)
 
-     ! BC species 2 Mie parameters
+     ! BC species 2 Mie parameters, uncoated BC
      call ncd_io( 'ss_alb_bcphob', ss_alb_bc2,           'read', ncid, posNOTonfile=.true.)
      call ncd_io( 'asm_prm_bcphob', asm_prm_bc2,         'read', ncid, posNOTonfile=.true.)
      call ncd_io( 'ext_cff_mss_bcphob', ext_cff_mss_bc2, 'read', ncid, posNOTonfile=.true.)
 
-     ! OC species 1 Mie parameters
-     call ncd_io( 'ss_alb_ocphil', ss_alb_oc1,           'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'asm_prm_ocphil', asm_prm_oc1,         'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'ext_cff_mss_ocphil', ext_cff_mss_oc1, 'read', ncid, posNOTonfile=.true.)
+     ! OC species 1 Mie parameters, uncoated OC, same as oc2 without OC-snow internal mixing
+     call ncd_io( 'ss_alb_ocphob', ss_alb_oc1,           'read', ncid, posNOTonfile=.true.)
+     call ncd_io( 'asm_prm_ocphob', asm_prm_oc1,         'read', ncid, posNOTonfile=.true.)
+     call ncd_io( 'ext_cff_mss_ocphob', ext_cff_mss_oc1, 'read', ncid, posNOTonfile=.true.)
 
-     ! OC species 2 Mie parameters
+     ! OC species 2 Mie parameters, uncoated OC
      call ncd_io( 'ss_alb_ocphob', ss_alb_oc2,           'read', ncid, posNOTonfile=.true.)
      call ncd_io( 'asm_prm_ocphob', asm_prm_oc2,         'read', ncid, posNOTonfile=.true.)
      call ncd_io( 'ext_cff_mss_ocphob', ext_cff_mss_oc2, 'read', ncid, posNOTonfile=.true.)

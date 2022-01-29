@@ -230,6 +230,9 @@ module clm_varctl
   ! option for snow grain shape in SNICAR (He et al. 2017 JC), ceniln
   integer, public :: snicar_snw_shape = 1   ! 1->sphere; 2->spheroid; 3->hexagonal plate; 4->Koch snowflake
 
+  ! option to activate BC-snow internal mixing in SNICAR (He et al. 2017 JC), ceniln
+  logical, public :: snicar_snobc_intmix = .true.   ! false->external mixing for all BC; true->internal mixing for hydrophilic BC
+
   !----------------------------------------------------------
   ! C isotopes
   !----------------------------------------------------------

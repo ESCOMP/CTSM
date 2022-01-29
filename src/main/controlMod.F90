@@ -203,7 +203,7 @@ contains
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
          snicar_numrad_snw, snicar_solarspec, snicar_snw_optics, snicar_dust_optics, &
-         snicar_use_aerosol, snicar_rt_solver, snicar_snw_shape  ! cenlin
+         snicar_use_aerosol, snicar_rt_solver, snicar_snw_shape, snicar_snobc_intmix  ! cenlin
     
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -833,6 +833,7 @@ contains
     call mpi_bcast (snicar_use_aerosol, 1, MPI_LOGICAL, 0, mpicom, ier)  ! cenlin
     call mpi_bcast (snicar_rt_solver, 1, MPI_INTEGER, 0, mpicom, ier)   ! cenlin
     call mpi_bcast (snicar_snw_shape, 1, MPI_INTEGER, 0, mpicom, ier) ! cenlin
+    call mpi_bcast (snicar_snobc_intmix, 1, MPI_LOGICAL, 0, mpicom, ier) ! cenlin
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -1023,7 +1024,7 @@ contains
     write(iulog,*) '   SNICAR: number of bands in snow albedo calculation =', snicar_numrad_snw  ! cenlin
     write(iulog,*) '   SNICAR: radiative transfer solver type = ',snicar_rt_solver ! cenlin
     write(iulog,*) '   SNICAR: snow grain shape type = ',snicar_snw_shape ! cenlin
-
+    write(iulog,*) '   SNICAR: BC-snow internal mixing = ', snicar_snobc_intmix ! cenlin
 
     write(iulog,*) '   glc number of elevation classes =', maxpatch_glc
     if (glc_do_dynglacier) then
