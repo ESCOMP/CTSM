@@ -522,7 +522,6 @@ contains
     real(r8) :: dstint_a3(1:6)                    ! Parameterization coefficients at each band center wavelength
     real(r8) :: enh_omg_dstint_intp               ! dust-induced enhancement in snow 1-omega (logscale) interpolated to CLM wavelength
     real(r8) :: enh_omg_dstint_intp2              ! dust-induced enhancement in snow 1-omega interpolated to CLM wavelength
-    real(r8) :: wvl_doint2                        ! wavelength doing dust-snow int mixing (<=1.2um)
     real(r8) :: tot_dst_snw_conc                  ! total dust content in snow across all size bins (ppm=ug/g)
     integer  :: idb                               ! loop index
 
@@ -995,9 +994,9 @@ contains
 
 
                   ! aerosol species 1 optical properties, hydrophilic BC
-                  ss_alb_aer_lcl(1)        = ss_alb_bc1(bnd_idx)      
-                  asm_prm_aer_lcl(1)       = asm_prm_bc1(bnd_idx)
-                  ext_cff_mss_aer_lcl(1)   = ext_cff_mss_bc1(bnd_idx)
+                  !ss_alb_aer_lcl(1)        = ss_alb_bc1(bnd_idx)      
+                  !asm_prm_aer_lcl(1)       = asm_prm_bc1(bnd_idx)
+                  !ext_cff_mss_aer_lcl(1)   = ext_cff_mss_bc1(bnd_idx)
 
                   ! aerosol species 2 optical properties, hydrophobic BC
                   ss_alb_aer_lcl(2)        = ss_alb_bc2(bnd_idx)      
@@ -1015,24 +1014,24 @@ contains
                   ext_cff_mss_aer_lcl(4)   = ext_cff_mss_oc2(bnd_idx)
 
                   ! aerosol species 5 optical properties, dust size1
-                  ss_alb_aer_lcl(5)        = ss_alb_dst1(bnd_idx)      
-                  asm_prm_aer_lcl(5)       = asm_prm_dst1(bnd_idx)
-                  ext_cff_mss_aer_lcl(5)   = ext_cff_mss_dst1(bnd_idx)
+                  !ss_alb_aer_lcl(5)        = ss_alb_dst1(bnd_idx)      
+                  !asm_prm_aer_lcl(5)       = asm_prm_dst1(bnd_idx)
+                  !ext_cff_mss_aer_lcl(5)   = ext_cff_mss_dst1(bnd_idx)
 
                   ! aerosol species 6 optical properties, dust size2
-                  ss_alb_aer_lcl(6)        = ss_alb_dst2(bnd_idx)      
-                  asm_prm_aer_lcl(6)       = asm_prm_dst2(bnd_idx)
-                  ext_cff_mss_aer_lcl(6)   = ext_cff_mss_dst2(bnd_idx)
+                  !ss_alb_aer_lcl(6)        = ss_alb_dst2(bnd_idx)      
+                  !asm_prm_aer_lcl(6)       = asm_prm_dst2(bnd_idx)
+                  !ext_cff_mss_aer_lcl(6)   = ext_cff_mss_dst2(bnd_idx)
 
                   ! aerosol species 7 optical properties, dust size3
-                  ss_alb_aer_lcl(7)        = ss_alb_dst3(bnd_idx)      
-                  asm_prm_aer_lcl(7)       = asm_prm_dst3(bnd_idx)
-                  ext_cff_mss_aer_lcl(7)   = ext_cff_mss_dst3(bnd_idx)
+                  !ss_alb_aer_lcl(7)        = ss_alb_dst3(bnd_idx)      
+                  !asm_prm_aer_lcl(7)       = asm_prm_dst3(bnd_idx)
+                  !ext_cff_mss_aer_lcl(7)   = ext_cff_mss_dst3(bnd_idx)
 
                   ! aerosol species 8 optical properties, dust size4
-                  ss_alb_aer_lcl(8)        = ss_alb_dst4(bnd_idx)      
-                  asm_prm_aer_lcl(8)       = asm_prm_dst4(bnd_idx)
-                  ext_cff_mss_aer_lcl(8)   = ext_cff_mss_dst4(bnd_idx)
+                  !ss_alb_aer_lcl(8)        = ss_alb_dst4(bnd_idx)      
+                  !asm_prm_aer_lcl(8)       = asm_prm_dst4(bnd_idx)
+                  !ext_cff_mss_aer_lcl(8)   = ext_cff_mss_dst4(bnd_idx)
 
 
                   ! 1. snow and aerosol layer column mass (L_snw, L_aer [kg/m^2])
@@ -1042,13 +1041,37 @@ contains
                   ! Weighted Mie parameters of each layer
                   do i=snl_top,snl_btm,1
 
-                     ! BC-snow internal mixing applied to hydrophilic BC if activated
-                     ! BC-snow internal mixing primarily affect snow single-scattering albedo
-                     if ( snicar_snobc_intmix .and. (mss_cnc_aer_lcl(i,1) > 0._r8) ) then
-                        if (snicar_numrad_snw == 5)   wvl_doint = wvl_ct5(bnd_idx)
-                        if (snicar_numrad_snw == 480) wvl_doint = wvl_ct480(bnd_idx)
-                        ! only do for wavelength<=1.2um
-                        if (wvl_doint <= 1.2_r8) then
+                     ! Optics for BC/dust-snow external mixing:
+                     ! aerosol species 1 optical properties, hydrophilic BC
+                     ss_alb_aer_lcl(1)        = ss_alb_bc1(bnd_idx)
+                     asm_prm_aer_lcl(1)       = asm_prm_bc1(bnd_idx)
+                     ext_cff_mss_aer_lcl(1)   = ext_cff_mss_bc1(bnd_idx)
+                     ! aerosol species 5 optical properties, dust size1
+                     ss_alb_aer_lcl(5)      = ss_alb_dst1(bnd_idx)
+                     asm_prm_aer_lcl(5)     = asm_prm_dst1(bnd_idx)
+                     ext_cff_mss_aer_lcl(5) = ext_cff_mss_dst1(bnd_idx)
+                     ! aerosol species 6 optical properties, dust size2
+                     ss_alb_aer_lcl(6)      = ss_alb_dst2(bnd_idx)
+                     asm_prm_aer_lcl(6)     = asm_prm_dst2(bnd_idx)
+                     ext_cff_mss_aer_lcl(6) = ext_cff_mss_dst2(bnd_idx)
+                     ! aerosol species 7 optical properties, dust size3
+                     ss_alb_aer_lcl(7)      = ss_alb_dst3(bnd_idx)
+                     asm_prm_aer_lcl(7)     = asm_prm_dst3(bnd_idx)
+                     ext_cff_mss_aer_lcl(7) = ext_cff_mss_dst3(bnd_idx)
+                     ! aerosol species 8 optical properties, dust size4
+                     ss_alb_aer_lcl(8)      = ss_alb_dst4(bnd_idx)
+                     asm_prm_aer_lcl(8)     = asm_prm_dst4(bnd_idx)
+                     ext_cff_mss_aer_lcl(8) = ext_cff_mss_dst4(bnd_idx)
+
+
+                     ! Start BC/dust-snow internal mixing for wavelength<=1.2um
+                     if (snicar_numrad_snw == 5)   wvl_doint = wvl_ct5(bnd_idx)
+                     if (snicar_numrad_snw == 480) wvl_doint = wvl_ct480(bnd_idx)
+                     if (wvl_doint <= 1.2_r8) then
+ 
+                        ! BC-snow internal mixing applied to hydrophilic BC if activated
+                        ! BC-snow internal mixing primarily affect snow single-scattering albedo
+                        if ( snicar_snobc_intmix .and. (mss_cnc_aer_lcl(i,1) > 0._r8) ) then
                            ! result from Eq.8b in He et al.(2017) is based on BC Re=0.1um &
                            ! MAC=6.81 m2/g (@550 nm) & BC density=1.7g/cm3.
                            ! To be consistent with Bond et al. 2006 recommeded value (BC MAC=7.5 m2/g @550nm)
@@ -1083,48 +1106,43 @@ contains
                            call piecewise_linear_interp1d(16,bcint_wvl_ct,enh_omg_bcint_tmp2,wvl_doint,enh_omg_bcint_intp)
                            ! update snow single-scattering albedo
                            enh_omg_bcint_intp2 = 10._r8 ** enh_omg_bcint_intp                           
-                           enh_omg_bcint_intp2 = max(enh_omg_bcint_intp2, 1._r8) ! BC does not reduce snow absorption
-                           ss_alb_snw_lcl(i) = 1._r8 - (1._r8 - ss_alb_snw_lcl(i)) * enh_omg_bcint_intp2
-                           ss_alb_snw_lcl(i) = max(0._r8, min(ss_alb_snw_lcl(i),1._r8))
+                           enh_omg_bcint_intp2 = min(1.0E5_r8, max(enh_omg_bcint_intp2,1._r8)) ! constrain enhancement to a reasonable range
+                           ss_alb_snw_lcl(i)   = 1._r8 - (1._r8 - ss_alb_snw_lcl(i)) * enh_omg_bcint_intp2
+                           ss_alb_snw_lcl(i)   = max(0.5_r8, min(ss_alb_snw_lcl(i),1._r8))
                            ! reset hydrophilic BC property to 0 since it is accounted by updated snow ss_alb above
-                           ss_alb_aer_lcl(1)        = 0.0
-                           asm_prm_aer_lcl(1)       = 0.0
-                           ext_cff_mss_aer_lcl(1)   = 0.0
-                        endif ! end if wvl_doint <= 1.2
-                     endif ! end if BC-snow internal mixing
+                           ss_alb_aer_lcl(1)       = 0.0
+                           asm_prm_aer_lcl(1)      = 0.0
+                           ext_cff_mss_aer_lcl(1)  = 0.0
+                        endif ! end if BC-snow mixing type
 
-
-                     ! Dust-snow internal mixing applied to all size bins if activated
-                     ! Dust-snow internal mixing primarily affect snow single-scattering albedo
-                     ! default optics of externally mixed dust at 4 size bins based on effective
-                     ! radius of 1.38um and sigma=2.0 with truncation to each size bin (Flanner et al. 2021 GMD)
-                     ! parameterized dust-snow int mix results based on effective radius of 1.1um and sigma=2.0
-                     ! from (He et al. 2019 JAMES). Thus, the parameterization can be approximately applied to
-                     ! all dust size bins here.
-                     tot_dst_snw_conc = (mss_cnc_aer_lcl(i,5) + mss_cnc_aer_lcl(i,6) + &
-                                         mss_cnc_aer_lcl(i,7) + mss_cnc_aer_lcl(i,8)) * 1.0E6_r8
-                     if ( snicar_snodst_intmix .and. (tot_dst_snw_conc > 0._r8) ) then
-                        if (snicar_numrad_snw == 5)   wvl_doint2 = wvl_ct5(bnd_idx)
-                        if (snicar_numrad_snw == 480) wvl_doint2 = wvl_ct480(bnd_idx)
-                        ! only do for wavelength<=1.2um
-                        if (wvl_doint2 <= 1.2_r8) then
+                        ! Dust-snow internal mixing applied to all size bins if activated
+                        ! Dust-snow internal mixing primarily affect snow single-scattering albedo
+                        ! default optics of externally mixed dust at 4 size bins based on effective
+                        ! radius of 1.38um and sigma=2.0 with truncation to each size bin (Flanner et al. 2021 GMD)
+                        ! parameterized dust-snow int mix results based on effective radius of 1.1um and sigma=2.0
+                        ! from (He et al. 2019 JAMES). Thus, the parameterization can be approximately applied to
+                        ! all dust size bins here.
+                        tot_dst_snw_conc = (mss_cnc_aer_lcl(i,5) + mss_cnc_aer_lcl(i,6) + &
+                                            mss_cnc_aer_lcl(i,7) + mss_cnc_aer_lcl(i,8)) * 1.0E6_r8 !kg/kg->ppm
+                        if ( snicar_snodst_intmix .and. (tot_dst_snw_conc > 0._r8) ) then
                            do idb=1,6
                               enh_omg_dstint_tmp(idb) = dstint_a1(idb)+dstint_a2(idb)*(tot_dst_snw_conc**dstint_a3(idb))
                               enh_omg_dstint_tmp2(idb) = LOG10(max(enh_omg_dstint_tmp(idb),1._r8))
                            enddo
                            ! piecewise linear interpolate into targeted SNICAR bands in a logscale space
-                           call piecewise_linear_interp1d(6,dstint_wvl_ct,enh_omg_dstint_tmp2,wvl_doint2,enh_omg_dstint_intp)
+                           call piecewise_linear_interp1d(6,dstint_wvl_ct,enh_omg_dstint_tmp2,wvl_doint,enh_omg_dstint_intp)
                            ! update snow single-scattering albedo
                            enh_omg_dstint_intp2 = 10._r8 ** enh_omg_dstint_intp
-                           enh_omg_dstint_intp2 = max(enh_omg_dstint_intp2, 1._r8)
+                           enh_omg_dstint_intp2 = min(1.0E5_r8, max(enh_omg_dstint_intp2,1._r8)) ! constrain enhancement to a reasonable range
                            ss_alb_snw_lcl(i) = 1._r8 - (1._r8 - ss_alb_snw_lcl(i)) * enh_omg_dstint_intp2
-                           ss_alb_snw_lcl(i) = max(0._r8, min(ss_alb_snw_lcl(i),1._r8))
+                           ss_alb_snw_lcl(i) = max(0.5_r8, min(ss_alb_snw_lcl(i),1._r8))
                            ! reset all dust optics to zero  since it is accounted by updated snow ss_alb above
                            ss_alb_aer_lcl(5:8)      = 0._r8
                            asm_prm_aer_lcl(5:8)     = 0._r8
                            ext_cff_mss_aer_lcl(5:8) = 0._r8
-                        endif ! end if wvl_doint2 <= 1.2
-                     endif ! end if dust-snow internal mixing
+                        endif ! end if dust-snow internal mixing
+
+                     endif ! end if BC/dust-snow internal mixing (bands<1.2um)
 
 
                      L_snw(i)   = h2osno_ice_lcl(i)+h2osno_liq_lcl(i)
@@ -1148,7 +1166,8 @@ contains
                      tau(i)    = tau_sum + tau_snw(i)
                      omega(i)  = (1/tau(i))*(omega_sum+(ss_alb_snw_lcl(i)*tau_snw(i)))
                      g(i)      = (1/(tau(i)*omega(i)))*(g_sum+ (asm_prm_snw_lcl(i)*ss_alb_snw_lcl(i)*tau_snw(i)))
-                  enddo
+
+                  enddo  ! end do snow layers
 
                   ! DELTA transformations, if requested
                   if (DELTA == 1) then
