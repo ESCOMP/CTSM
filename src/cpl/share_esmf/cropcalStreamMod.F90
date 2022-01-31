@@ -94,8 +94,8 @@ contains
     ncft = mxpft - npcropmin + 1 ! Ignores generic crops
     do n = 1,ncft
        ivt = npcropmin + n - 1
-       write(stream_varnames_sdate(n),'(a,i0)') "sdate1",ivt
-       write(stream_varnames_cultivar_gdds(n),'(a,i0)') "gdd1",ivt
+       write(stream_varnames_sdate(n),'(a,i0)') "sdate1_",ivt
+       write(stream_varnames_cultivar_gdds(n),'(a,i0)') "gdd1_",ivt
     end do
 
     ! Read cropcal_streams namelist
