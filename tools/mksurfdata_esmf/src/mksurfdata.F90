@@ -76,6 +76,10 @@ program mksurfdata
   !    all_urban --------- If entire area is urban
   !    all_veg ----------- If entire area is to be vegetated (pft_idx and pft_frc then required)
   !    no_inlandwet ------ If wetland should be set to 0% over land
+  !    soil_color_override -------- If you want to change the soil_color to this value everywhere
+  !    soil_clay --------- If you want to change the soil_clay % to this value everywhere
+  !    soil_fmax --------- If you want to change the soil_fmax  to this value everywhere
+  !    soil_sand --------- If you want to change the soil_sand % to this value everywhere
   !    pft_idx ----------- If you want to change to 100% veg covered with given PFT indices
   !    pft_frc ----------- Fractions that correspond to the pft_idx above
   ! ==================
@@ -92,14 +96,11 @@ program mksurfdata
   use shr_kind_mod       , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs
   use shr_sys_mod        , only : shr_sys_abort
 
-#ifdef TODO  
+#ifdef TODO
   use mklaiMod           , only : mklai
   use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
   use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
   use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
-  use mksoilMod          , only : soil_sand, soil_clay, mksoiltex, mksoilInit
-  use mksoilMod          , only : soil_fmax, mkfmax
-  use mksoildepthMod     , only : mksoildepth
   use mkvocefMod         , only : mkvocef
   use mkglacierregionMod , only : mkglacierregion
   use mkglcmecMod        , only : nglcec, mkglcmec, mkglcmecInit, mkglacier
@@ -115,6 +116,9 @@ program mksurfdata
 #else
   use mkurbanparCommonMod
 #endif
+  use mksoiltexMod       , only : mksoiltex 
+  use mksoilfmaxMod      , only : mksoilfmax
+  use mksoildepthMod     , only : mksoildepth
   use mksoilcolMod       , only : mksoilcol
   use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, numurbl
   use mklanwatMod        , only : mklakwat
@@ -130,12 +134,12 @@ program mksurfdata
   implicit none
 
   ! local variables
-  type(ESMF_Mesh)               :: mesh_model 
+  type(ESMF_Mesh)               :: mesh_model
   type(ESMF_Field)              :: field_model
   integer                       :: nsoilcol                ! number of model color classes
   integer                       :: k,m,n                   ! indices
   integer                       :: ni,nj,ns_o              ! indices
-  integer                       :: lsize_o 
+  integer                       :: lsize_o
   integer                       :: ier                     ! error status
   integer                       :: nfdyn                   ! unit numbers
   integer                       :: omode                   ! netCDF output mode
@@ -150,7 +154,7 @@ program mksurfdata
   ! pio variables
   type(file_desc_t)             :: pioid
   type(var_desc_t)              :: pio_varid
-  type(io_desc_t)               :: pio_iodesc 
+  type(io_desc_t)               :: pio_iodesc
 
   ! data arrays
   real(r8), pointer             :: landfrac_pft(:)         ! PFT data: % land per gridcell
@@ -182,10 +186,11 @@ program mksurfdata
   real(r8), pointer             :: urban_classes_g(:,:)    ! percent cover of each urban class, as % of grid cell
   integer , pointer             :: urban_region(:)         ! urban region ID
   real(r8), pointer             :: elev(:)                 ! glc elevation (m)
-  real(r8), pointer             :: fmax(:)                 ! fractional saturated area
   integer , pointer             :: soil_color(:)           ! soil color
+  real(r8), pointer             :: fmaxsoil(:)             ! soil_fractional saturated area
   real(r8), pointer             :: pctsand(:,:)            ! soil texture: percent sand
   real(r8), pointer             :: pctclay(:,:)            ! soil texture: percent clay
+  integer , pointer             :: mapunits(:)             ! input grid: igbp soil mapunits
   real(r8), pointer             :: ef1_btr(:)              ! Isoprene emission factor for broadleaf
   real(r8), pointer             :: ef1_fet(:)              ! Isoprene emission factor for fine/everg
   real(r8), pointer             :: ef1_fdt(:)              ! Isoprene emission factor for fine/dec
@@ -313,11 +318,10 @@ program mksurfdata
   ! ----------------------------------------------------------------------
 
 #ifdef TODO
-  call mksoilInit( )
   call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
   allocate ( elevclass(nglcec+1) )
   call mkglcmecInit (elevclass)
-#endif 
+#endif
   call mkurbanInit (mksrf_furban)
 
   ! ----------------------------------------------------------------------
@@ -353,24 +357,6 @@ program mksurfdata
   allocate ( topoglcmec(lsize_o,nglcec))      ; topoglcmec(:,:)     = spval
 #endif
 
-  ! lake/wetland properties
-  allocate ( pctlak(lsize_o))                 ; pctlak(:)           = spval
-  allocate ( pctwet(lsize_o))                 ; pctwet(:)           = spval
-  allocate ( lakedepth(lsize_o))              ; lakedepth(:)        = spval
-
-  ! urban properties
-  allocate ( pcturb(lsize_o))                 ; pcturb(:)           = spval
-  allocate ( urban_classes(lsize_o,numurbl))  ; urban_classes(:,:)   = spval
-  allocate ( urban_classes_g(lsize_o,numurbl)); urban_classes_g(:,:) = spval
-  allocate ( urban_region(lsize_o))           ; urban_region(:)     = -999
-
-  ! soil properties
-  allocate ( pctsand(lsize_o,nlevsoi))        ; pctsand(:,:)        = spval
-  allocate ( pctclay(lsize_o,nlevsoi))        ; pctclay(:,:)        = spval
-  allocate ( soil_color(lsize_o))             ; soil_color(:)       = -999
-  allocate ( soildepth(lsize_o))              ; soildepth(:)        = spval
-  allocate ( organic(lsize_o,nlevsoi))        ; organic(:,:)        = spval
-
   ! vic properties
   allocate ( vic_binfl(lsize_o))              ; vic_binfl(:)        = spval
   allocate ( vic_ws(lsize_o))                 ; vic_ws(:)           = spval
@@ -393,7 +379,7 @@ program mksurfdata
   ! call mkpft( mapfname=map_fpft, fpft=mksrf_fvegtyp, ndiag=ndiag, &
   !    pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
 
-  ! ! Create harvesting data at model resolution
+  ! Create harvesting data at model resolution
   ! if (all_veg) then
   !    ! In this case, we don't call mkharvest, so we want the harvest variables to be
   !    ! initialized reasonably.
@@ -409,24 +395,50 @@ program mksurfdata
   ! --------------------------------------------------
   ! begin working
 
+  ! Make soil texture [pctsand, pctclay]
+  allocate(mapunits(lsize_o))        ; mapunits(:) = 0
+  allocate(pctsand(lsize_o,nlevsoi)) ; pctsand(:,:) = spval
+  allocate(pctclay(lsize_o,nlevsoi)) ; pctclay(:,:) = spval
+  call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pctsand, pctclay, mapunits, rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
+
+  ! Make soil fmax [fmaxsoil]
+  allocate(fmaxsoil(lsize_o)); fmaxsoil(:) = spval
+  !call mksoilfmax( mksrf_fmax_mesh, mksrf_fmax, mesh_model, fmaxsoil, rc)
+  !if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
+
+  ! Make soil depth data [soildepth] from [soildepthf]
+  allocate ( soildepth(lsize_o)); soildepth(:) = spval
+  !call mksoildepth( mksrf_fsoildepth_mesh, mksrf_fsoildepth, mesh_model, soildepth, rc)
+  !if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
+
   ! Make urban fraction [pcturb] from [furban] dataset
-  call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, all_veg, pcturb, urban_classes, urban_region, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
+  allocate (pcturb(lsize_o))                 ; pcturb(:)           = spval
+  allocate (urban_classes(lsize_o,numurbl))  ; urban_classes(:,:)   = spval
+  allocate (urban_classes_g(lsize_o,numurbl)); urban_classes_g(:,:) = spval
+  allocate (urban_region(lsize_o))           ; urban_region(:)     = -999
+  ! call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, all_veg, pcturb, urban_classes, urban_region, rc=rc)
+  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
 
   ! Make soil color classes [soicol] [fsoicol]
-  call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, soil_color, nsoilcol, rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilcol')
+  allocate (soil_color(lsize_o)); soil_color(:) = -999
+  ! call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, soil_color, nsoilcol, rc)
+  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilcol')
 
   ! Make organic matter density [organic] [forganic]
-  call mkorganic( mksrf_forganic_mesh, mksrf_forganic, mesh_model, organic, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
+  allocate ( organic(lsize_o,nlevsoi)); organic(:,:) = spval
+  ! call mkorganic( mksrf_forganic_mesh, mksrf_forganic, mesh_model, organic, rc=rc)
+  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
 
   ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
-  zero_out_lake = all_urban .or. all_veg
-  zero_out_wetland = all_urban .or. all_veg .or. no_inlandwet
-  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
-       zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
+  allocate ( pctlak(lsize_o))    ; pctlak(:)    = spval
+  allocate ( pctwet(lsize_o))    ; pctwet(:)    = spval
+  allocate ( lakedepth(lsize_o)) ; lakedepth(:) = spval
+  zero_out_lake = (all_urban .or. all_veg)
+  zero_out_wetland = (all_urban .or. all_veg .or. no_inlandwet)
+  ! call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
+  !      zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
+  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
   call ESMF_LogWrite("After mklakwat", ESMF_LOGMSG_INFO)
 
   ! end working
@@ -439,21 +451,11 @@ program mksurfdata
   ! call mkglacierregion ( mapfname=map_fglacierregion, &
   !      datfname=mksrf_fglacierregion, ndiag=ndiag, glacier_region_o = glacier_region)
 
-  ! ! Make soil texture [pctsand, pctclay]  [fsoitex]
-  ! call mksoiltex ( mapfname=map_fsoitex, datfname=mksrf_fsoitex, ndiag=ndiag, sand_o=pctsand, clay_o=pctclay)
-
-  ! ! Make fmax [fmax] from [fmax] dataset
-  ! allocate(fmax(lsize_o)); fmax(:) = spval
-  ! call mkfmax ( mapfname=map_fmax, datfname=mksrf_fmax, ndiag=ndiag, fmax_o=fmax)
-
   ! ! Make GDP data [gdp] from [gdp]
   ! call mkgdp ( mapfname=map_fgdp, datfname=mksrf_fgdp, ndiag=ndiag, gdp_o=gdp)
 
   ! ! Make peat data [fpeat] from [peatf]
   ! call mkpeat ( mapfname=map_fpeat, datfname=mksrf_fpeat, ndiag=ndiag, peat_o=fpeat)
-
-  ! ! Make soil depth data [soildepth] from [soildepthf]
-  ! call mksoildepth ( mapfname=map_fsoildepth, datfname=mksrf_fsoildepth, ndiag=ndiag, soildepth_o=soildepth)
 
   ! ! Make agricultural fire peak month data [abm] from [abm]
   ! call mkagfirepkmon ( mapfname=map_fabm, datfname=mksrf_fabm, ndiag=ndiag, agfirepkmon_o=agfirepkmon)
@@ -496,10 +498,25 @@ program mksurfdata
   ! Modify interpolated fields based on additional constrants
   ! ----------------------------------------------------------------------
 
+  !    ! Truncate all percentage fields on output grid. This is needed to
+  !    ! insure that wt is zero (not a very small number such as
+  !    ! 1e-16) where it really should be zero
+
+  !DEBUG
   do n = 1,lsize_o
-     !pctlak(n) = float(nint(pctlak(n)))
-     !pctwet(n) = float(nint(pctwet(n)))
+     if (pctlak(n) < 101.) then
+        pctlak(n) = float(nint(pctlak(n)))
+        pctwet(n) = float(nint(pctwet(n)))
+     end if
+     do k = 1,nlevsoi
+        if (pctsand(n,k) < 101.) then
+           pctsand(n,k) = float(nint(pctsand(n,k)))
+           pctclay(n,k) = float(nint(pctclay(n,k)))
+        end if
+     end do
   end do
+  !DEBUG
+
   call ESMF_LogWrite("After fixes", ESMF_LOGMSG_INFO)
 
   ! do n = 1,lsize_o
@@ -507,13 +524,13 @@ program mksurfdata
   !    ! insure that wt is zero (not a very small number such as
   !    ! 1e-16) where it really should be zero
 
-  !    do k = 1,nlevsoi
-  !       pctsand(n,k) = float(nint(pctsand(n,k)))
-  !       pctclay(n,k) = float(nint(pctclay(n,k)))
-  !    end do
-  !    pctlak(n) = float(nint(pctlak(n)))
-  !    pctwet(n) = float(nint(pctwet(n)))
-  !    pctgla(n) = float(nint(pctgla(n)))
+       ! do k = 1,nlevsoi
+       !    pctsand(n,k) = float(nint(pctsand(n,k)))
+       !    pctclay(n,k) = float(nint(pctclay(n,k)))
+       ! end do
+       ! pctlak(n) = float(nint(pctlak(n)))
+       ! pctwet(n) = float(nint(pctwet(n)))
+       ! pctgla(n) = float(nint(pctgla(n)))
 
   !    ! Assume wetland, glacier and/or lake when dataset landmask implies ocean
   !    ! (assume medium soil color (15) and loamy texture).
@@ -637,13 +654,15 @@ program mksurfdata
      call mkfile_fsurdat( mksrf_fgrid_mesh_nx, mksrf_fgrid_mesh_ny, mesh_model, dynlanduse=.false., &
           pctlak=pctlak, pctwet=pctwet, lakedepth=lakedepth, organic=organic, &
           soil_color=soil_color, nsoilcol=nsoilcol, &
-          urban_classes_g=urban_classes_g, urban_region=urban_region)
+          urban_classes_g=urban_classes_g, urban_region=urban_region, &
+          pctsand=pctsand, pctclay=pctclay, mapunits=mapunits, fmaxsoil=fmaxsoil, soildepth=soildepth)
      call ESMF_LogWrite(subname//'successfully created file '//trim(fsurdat), ESMF_LOGMSG_INFO)
   end if  ! if (fsurdat /= ' ')
 
   ! Deallocate arrays NOT needed for dynamic-pft section of code
 
   deallocate ( lakedepth )
+  deallocate ( soil_color )
 
 #ifdef TODO
   deallocate ( organic )
@@ -653,7 +672,6 @@ program mksurfdata
   deallocate ( elevclass )
   deallocate ( fmax )
   deallocate ( pctsand, pctclay )
-  deallocate ( soil_color )
   deallocate ( gdp, fpeat, agfirepkmon )
   deallocate ( soildepth )
   deallocate ( topo_stddev, slope )
@@ -871,7 +889,7 @@ program mksurfdata
       character(len=32) :: subname = 'change_landuse'  ! subroutine name
       !-----------------------------------------------------------------------
 
-      ! 
+      !
 
       do n = 1,lsize_o
          ! TODO: define latc

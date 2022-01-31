@@ -1,51 +1,28 @@
 module mkvocefMod
+
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !MODULE: mkvocMod
-  !
-  ! !DESCRIPTION:
   ! Make VOC percentage emissions for surface dataset
-  !
-  ! !REVISION HISTORY:
-  ! Author: Erik Kluzek
-  !
   !-----------------------------------------------------------------------
-  ! !USES:
+
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use mkdomainMod , only : domain_checksame
+  use mkvarpar	
+  use mkvarctl    
+  use mkncdio
 
   implicit none
   private
 
-  ! !PUBLIC MEMBER FUNCTIONS:
-  public :: mkvocef  ! Get the percentage emissions for VOC for different
-  ! land cover types
-  !EOP
+  public :: mkvocef  ! Get the percentage emissions for VOC for different land cover types
 
 contains
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkvocef
-  !
-  ! !INTERFACE:
   subroutine mkvocef(ldomain, mapfname, datfname, ndiag, &
        ef_btr_o, ef_fet_o, ef_fdt_o, ef_shr_o, ef_grs_o, ef_crp_o)
-    !
-    ! !DESCRIPTION:
+
     ! make volatile organic coumpunds (VOC) emission factors.
-    !
-    ! !USES:
-    use mkdomainMod, only : domain_type, domain_clean, domain_read
-    use mkgridmapMod
-    use mkvarpar	
-    use mkvarctl    
-    use mkncdio
-    !
-    ! !ARGUMENTS:
-    implicit none
+
+    ! input/output variables
     type(domain_type) , intent(in) :: ldomain
     character(len=*)  , intent(in) :: mapfname    ! input mapping file name
     character(len=*)  , intent(in) :: datfname    ! input data file name
@@ -57,18 +34,7 @@ contains
     real(r8)          , intent(out):: ef_grs_o(:) ! output grid: EFs for grasses
     real(r8)          , intent(out):: ef_crp_o(:) ! output grid: EFs for crops
     !
-    ! !CALLED FROM:
-    ! subroutine mksrfdat in module mksrfdatMod
-    !
-    ! !REVISION HISTORY:
-    ! Author: Colette L. Heald
-    ! 17 Jul 2007 F Vitt -- updated to pftintdat06_clm3_5_05 and corrected indexing of ef_*_i arrarys
-    !
-    !EOP
-    !
-    ! !LOCAL VARIABLES:
-    type(gridmap_type)    :: tgridmap
-    type(domain_type)     :: tdomain          ! local domain
+    ! local variables:
     real(r8), allocatable :: ef_btr_i(:)      ! input grid: EFs for broadleaf trees
     real(r8), allocatable :: ef_fet_i(:)      ! input grid: EFs for fineleaf evergreen
     real(r8), allocatable :: ef_fdt_i(:)      ! input grid: EFs for fineleaf deciduous
@@ -99,8 +65,8 @@ contains
     call domain_read(tdomain,datfname)
     ns_i = tdomain%ns
     allocate(ef_btr_i(ns_i), ef_fet_i(ns_i), ef_fdt_i(ns_i), &
-         ef_shr_i(ns_i), ef_grs_i(ns_i), ef_crp_i(ns_i), &
-         frac_dst(ns_o), stat=ier)
+             ef_shr_i(ns_i), ef_grs_i(ns_i), ef_crp_i(ns_i), &
+             frac_dst(ns_o), stat=ier)
     if (ier/=0) call shr_sys_abort()
 
     write (6,*) 'Open VOC file: ', trim(datfname)
@@ -145,33 +111,27 @@ contains
 
     do no = 1, ns_o
        if ( ef_btr_o(no) < 0._r8 ) then
-          write (6,*) 'MKVOCEF error: EF btr = ',ef_btr_o(no), &
-               ' is negative for no = ',no
+          write (6,*) 'MKVOCEF error: EF btr = ',ef_btr_o(no), ' is negative for no = ',no
           call shr_sys_abort()
        end if
        if ( ef_fet_o(no) < 0._r8 ) then
-          write (6,*) 'MKVOCEF error: EF fet = ',ef_fet_o(no), &
-               ' is negative for no = ',no
+          write (6,*) 'MKVOCEF error: EF fet = ',ef_fet_o(no), ' is negative for no = ',no
           call shr_sys_abort()
        end if
        if ( ef_fdt_o(no) < 0._r8 ) then
-          write (6,*) 'MKVOCEF error: EF fdt = ',ef_fdt_o(no), &
-               ' is negative for no = ',no
+          write (6,*) 'MKVOCEF error: EF fdt = ',ef_fdt_o(no), ' is negative for no = ',no
           call shr_sys_abort()
        end if
        if ( ef_shr_o(no) < 0._r8 ) then
-          write (6,*) 'MKVOCEF error: EF shr = ',ef_shr_o(no), &
-               ' is negative for no = ',no
+          write (6,*) 'MKVOCEF error: EF shr = ',ef_shr_o(no), ' is negative for no = ',no
           call shr_sys_abort()
        end if
        if ( ef_grs_o(no) < 0._r8 ) then
-          write (6,*) 'MKVOCEF error: EF grs = ',ef_grs_o(no), &
-               ' is negative for no = ',no
+          write (6,*) 'MKVOCEF error: EF grs = ',ef_grs_o(no), ' is negative for no = ',no
           call shr_sys_abort()
        end if
        if ( ef_crp_o(no) < 0._r8 ) then
-          write (6,*) 'MKVOCEF error: EF crp = ',ef_crp_o(no), &
-               ' is negative for no = ',no
+          write (6,*) 'MKVOCEF error: EF crp = ',ef_crp_o(no), ' is negative for no = ',no
           call shr_sys_abort()
        end if
     enddo
@@ -195,9 +155,7 @@ contains
     ! Deallocate dynamic memory
 
     deallocate ( ef_btr_i, ef_fet_i, ef_fdt_i, &
-         ef_shr_i, ef_grs_i, ef_crp_i, frac_dst, mask_r8 )
-    call domain_clean(tdomain)
-    call gridmap_clean(tgridmap)
+                 ef_shr_i, ef_grs_i, ef_crp_i, frac_dst, mask_r8 )
 
   end subroutine mkvocef
 

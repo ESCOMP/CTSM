@@ -11,6 +11,7 @@ module mkesmfMod
   public :: regrid_rawdata
   public :: create_routehandle_r4
   public :: create_routehandle_r8
+  public :: get_meshareas
 
   interface regrid_rawdata
      module procedure regrid_rawdata1d_r4
@@ -294,6 +295,37 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     data_o(:,:) = dataptr(:,:)
 
+    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+
   end subroutine regrid_rawdata2d_r8
+
+  !===============================================================
+  subroutine get_meshareas(mesh, areas, rc)
+
+    ! input/output variables
+    type(ESMF_Mesh) , intent(in)    :: mesh
+    real(r8)        , intent(inout) :: areas(:)
+    integer         , intent(out)   :: rc
+    
+    ! local variables
+    real(r8), pointer :: dataptr(:)
+    type(ESMF_Field)  :: lfield
+    ! --------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    lfield = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_FieldGet(lfield, farrayPtr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    areas(:) = dataptr(:)
+
+    call ESMF_FieldDestroy(lfield, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+
+  end subroutine get_meshareas
 
 end module mkesmfMod

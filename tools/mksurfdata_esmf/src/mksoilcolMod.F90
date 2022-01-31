@@ -9,14 +9,12 @@ module mksoilcolMod
   use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8
   use mkutilsMod   , only : chkerr, mkrank
   use mkvarctl     , only : root_task, ndiag, mpicom, MPI_INTEGER, MPI_MAX
+  use mkvarctl     , only : soil_color_override, unsetcol
 
   implicit none
   private
 
   public  :: mksoilcol      ! Set soil colors
-
-  integer , parameter :: unsetcol  = -999      ! flag to indicate soil color NOT set
-  integer , private   :: soil_color= unsetcol  ! soil color to override with
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -56,14 +54,14 @@ contains
     rc = ESMF_SUCCESS
 
     ! Error check soil_color if it is set
-    if ( soil_color /= unsetcol )then
-       if ( soil_color < 0 .or. soil_color > 20 )then
-          write(6,*)'soil_color is out of range = ', soil_color
+    if ( soil_color_override /= unsetcol )then
+       if ( soil_color_override < 0 .or. soil_color_override > 20 )then
+          write(6,*)'soil_color is out of range = ', soil_color_override
           call shr_sys_abort()
        end if
-       write(6,*) 'Replace soil color for all points with: ', soil_color
+       write(6,*) 'Replace soil color for all points with: ', soil_color_override
        do no = 1,size(soil_color_o)
-          soil_color_o(no) = soil_color
+          soil_color_o(no) = soil_color_override
        end do
        RETURN
     end if

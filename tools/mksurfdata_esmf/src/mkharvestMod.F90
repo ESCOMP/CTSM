@@ -6,8 +6,8 @@ module mkharvestMod
 
   use ESMF
   use pio
-  use mkpioMod
   use shr_kind_mod , only : r8 => shr_kind_r8, CL => shr_kind_CL
+  use mkpioMod
   use mkvarpar
   use mkvarctl
 
@@ -20,18 +20,22 @@ module mkharvestMod
   ! public types
   type :: harvestDataType
      private
-     real(r8), pointer :: data1D(:,:)         ! Input 1D data
-     real(r8), pointer :: data2DCFT(:,:,:)    ! Input 2D data with CFT's
-     real(r8), pointer :: data2DPFT(:,:,:)    ! Input 2D data with PFT's
-     real(r8), pointer :: OutData1D(:,:)      ! Output 1D data
-     real(r8), pointer :: OutData2DCFT(:,:,:) ! Output 2D data with CFT's
-     real(r8), pointer :: OutData2DPFT(:,:,:) ! Output 2D data with natural PFT's
-     integer           :: dims2nd(numharv)    ! 2nd dimension size
-     integer           :: CFTdimsize          ! Size of CFT dimension
-     integer           :: PFTdimsize          ! Size of PFT dimension
-     integer           :: indices1D(numharv)  ! Field indices for CFT variables
-     integer           :: indicesCFT(numharv) ! Field indices for CFT variables
-     integer           :: indicesPFT(numharv) ! Field indices for PFT variables
+     type(ESMF_Routehandle) :: routehandle
+     type(ESMF_Mesh)        :: mesh_i
+     integer                :: ns_i
+     integer                :: ns_o
+     integer                :: dims2nd(numharv)    ! 2nd dimension size
+     integer                :: CFTdimsize          ! Size of CFT dimension
+     integer                :: PFTdimsize          ! Size of PFT dimension
+     integer                :: indices1D(numharv)  ! Field indices for CFT variables
+     integer                :: indicesCFT(numharv) ! Field indices for CFT variables
+     integer                :: indicesPFT(numharv) ! Field indices for PFT variables
+     real(r8), pointer      :: data1D(:,:)         ! Input 1D data
+     real(r8), pointer      :: data2DCFT(:,:,:)    ! Input 2D data with CFT's
+     real(r8), pointer      :: data2DPFT(:,:,:)    ! Input 2D data with PFT's
+     real(r8), pointer      :: OutData1D(:,:)      ! Output 1D data
+     real(r8), pointer      :: OutData2DCFT(:,:,:) ! Output 2D data with CFT's
+     real(r8), pointer      :: OutData2DPFT(:,:,:) ! Output 2D data with natural PFT's
    contains
      procedure :: init           ! Initialization
      procedure :: get1DFieldPtr  ! Get a pointer to a 1D field
@@ -46,13 +50,13 @@ module mkharvestMod
   end type harvestDataType
 
   ! public member functions
-  public mkharvest_init            ! Initialization
-  public mkharvest                 ! Calculate the harvest values on output grid
-  public mkharvest_fieldname       ! Field name for harvest fields on landuse.timeseries
-  public mkharvest_longname        ! Long name
-  public mkharvest_units           ! units
-  public mkharvest_numtypes        ! Number of harvest types
-  public mkharvest_parse_oride     ! Parse the over-ride string
+  public :: mkharvest_init            ! Initialization
+  public :: mkharvest                 ! Calculate the harvest values on output grid
+  public :: mkharvest_fieldname       ! Field name for harvest fields on landuse.timeseries
+  public :: mkharvest_longname        ! Long name
+  public :: mkharvest_units           ! units
+  public :: mkharvest_numtypes        ! Number of harvest types
+  public :: mkharvest_parse_oride     ! Parse the over-ride string
 
   ! private member functions: (but public because unit test uses them)
   public mkharvest_fieldInBounds    ! Check that field index is within bounds
@@ -116,6 +120,7 @@ contains
        write(*,*) subname//':ERROR:: dims2nd given to init is not the right size'
        call shr_sys_abort()
     end if
+
     this%CFTdimsize = 64
     this%PFTdimsize = 15
     this%dims2nd = dims2nd
@@ -126,13 +131,14 @@ contains
     this%indices1D  = -1
     this%indicesPFT = -1
     this%indicesCFT = -1
+
     do n = 1, numharv
        if ( dims2nd(n) == 0 )then
           num1D = num1D + 1
           this%indices1D(n) = num1D
        else
           num2nd = num2nd + 1
-          if (      dims2nd(n) == this%CFTdimsize )then
+          if (dims2nd(n) == this%CFTdimsize) then
              numCFT = numCFT + 1
              this%indicesCFT(n) = numCFT
           else if ( dims2nd(n) == this%PFTdimsize )then
@@ -165,20 +171,19 @@ contains
   end subroutine init
 
   !=================================================================================
-  subroutine mkharvest_init( ns_o, init_val, harvdata, fharvest, constant )
+  subroutine mkharvest_init(file_mesh_i, file_data_i, mesh_o, init_val, harvdata, pioid, constant)
     !
     ! Initialization of mkharvest module.
     !
     ! input/output variables:
-    integer               , intent(in)    :: ns_o     ! clm output grid resolution
     real(r8)              , intent(in)    :: init_val ! initial value to set to
-    type(harvestDataType) , intent(inout) :: harvdata ! Harvest data
     character(len=*)      , intent(in)    :: fharvest ! input harvest dataset file name
+    type(file_desc_t)     , intent(out)   :: pioid
+    type(harvestDataType) , intent(inout) :: harvdata ! Harvest data
     logical, optional     , intent(in)    :: constant ! Flag if variables are CONST_ version for surface dataset
 
     ! local variables:
     character(len=CL) :: lunits           ! local units read in
-    integer           :: ncid,varid       ! input netCDF id's
     integer           :: ifld             ! indices
     integer           :: ret              ! return code
     logical           :: lconstant        ! local version of constant flag
@@ -186,28 +191,50 @@ contains
     integer           :: dim_lengths(3)   ! Dimension lengths on file
     integer           :: dims2nd(numharv) ! Dimension lengths of 3rd dimension for each variable on file
     integer           :: ndims            ! Number of dimensions on file
-    integer           :: ns_i             ! clm input grid resolution (nlat*nlon)
+    integer           :: rcode
     character(len=*),  parameter :: subname = 'mkharvest_init'
     !-----------------------------------------------------------------------
 
+    ! TODO: check that number of global elements in mesh is identical to number of global elements in input data
+
     lconstant = .false.
     if ( present(constant) ) lconstant = constant
-
     initialized = .true.
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(fharvest), pio_nowrite)
 
-    dims2nd(:) = 0
-    ns_i       = 0
+    ! Open fharvest
+    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
+    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(fharvest), pio_nowrite)
+    call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
+
+    ! Read in input mesh
+    mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Determine ns_i 
+    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Determine ns_o and allocate data_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create a route handle between the input and output mesh
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, rc)
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+
     do ifld = 1, numharv
        call pio_seterrorhandling(pioid, PIO_BCAST_ERROR)
+       ! Determine if variable is on input dataset (fharvest)
        varname = mkharvest_fieldname(ifld, constant=lconstant)
        rCode = pio_inq_varid(varname, pio_varid)
        call pio_seterrorhandling(pioid, PIO_INTERNAL_ERROR)
-       if (rcode /= PIO_NOERR) then
-          write(*,*) "SKIP: "//mkharvest_fieldname(ifld, constant=lconstant)
-          harvest_longnames(ifld) = trim(mkharvest_fieldname(ifld, constant=lconstant)) // " (zeroed out)"
-          harvest_units(ifld) = "not_read_in"
+       if (rcode == PIO_NOERR) then
+          varexists = .true.
        else
+          varexists = .false.
+       end if
+       if (varexists) then
+          ! Get variable attributes if they exist
           call pio_seterrorhandling(pioid, PIO_BCAST_ERROR)
           rcode = pio_inq_attname(pioid, pio_varid, attnum, attname)
           call pio_seterrorhandling(pioid, PIO_INTERNAL_ERROR)
@@ -215,14 +242,10 @@ contains
              rcode = pio_get_att_text( pioid, pio_varid, 'long_name', harvest_longnames(ifld))
              rcode = pio_get_att_text( pioid, pio_varid, 'units',     harvest_units(ifld))
           end if
+
+          ! get dims2nd for variable
           call mkpio_get_dimlengths(pioid, varname, ndims, dim_lengths)
-          if ( ns_i == 0 )then
-             ns_i = dim_lengths(1)*dim_lengths(2)
-          else if ( ns_i /= dim_lengths(1)*dim_lengths(2) )then
-             write(*,*) 'ERROR:: bad dimension sizes for variable = ', mkharvest_fieldname(ifld, constant=lconstant)
-             call shr_sys_abort()
-          end if
-          if (      ndims == 2 )then
+          if ( ndims == 2 )then
              dims2nd(ifld) = 0
           else if ( ndims == 3 )then
              dims2nd(ifld) = dim_lengths(3)
@@ -230,12 +253,18 @@ contains
              write(*,*) 'ERROR:: bad dimensionality for variable = ', mkharvest_fieldname(ifld, constant=lconstant)
              call shr_sys_abort()
           end if
+       else
+          if (root_task) then
+             write(ndiag,'(a)') "SKIPPING: "//mkharvest_fieldname(ifld, constant=lconstant)
+          end if
+          harvest_longnames(ifld) = trim(mkharvest_fieldname(ifld, constant=lconstant)) // " (zeroed out)"
+          harvest_units(ifld) = "not_read_in"
        end if
     end do
     call pio_closefile(pioid)
 
     ! Initialize harvest datatype
-    call harvdata%init( dims2nd, ns_i, ns_o, init_val )
+    call harvdata%init( dims2nd, ns_i, ns_o, init_val, routehandle, mesh_i )
 
     allocate( oride_harv(numharv) )
     oride_harv(:) = real_undef
@@ -243,22 +272,19 @@ contains
   end subroutine mkharvest_init
 
   !=================================================================================
-  subroutine mkorganic(file_mesh_i, file_data_i, mesh_o, harvdata, rc)
+  subroutine mkharvest(file_data_i, mesh_o, harvdata, rc)
     !
     ! Make harvest data for the dynamic PFT dataset.
     ! This dataset consists of the normalized harvest or grazing fraction (0-1) of
     ! the model.
     !
     ! input/output variables:
-    character(len=*)      , intent(in)    :: file_mesh_i ! input mesh file name
     character(len=*)      , intent(in)    :: file_data_i ! input data file name
     type(ESMF_Mesh)       , intent(in)    :: mesh_o      ! model mesh
     type(harvestDataType) , intent(inout) :: harvdata    ! Harvest data
     integer               , intent(out)   :: rc          ! return code
 
     ! local variables:
-    type(ESMF_RouteHandle)      :: routehandle
-    type(ESMF_Mesh)             :: mesh_i
     type(file_desc_t)           :: pioid
     type(var_desc_t)            :: pio_varid
     integer                     :: ni,no,ns_i,ns_o       ! indices
@@ -307,34 +333,7 @@ contains
        ! -----------------------------------------------------------------
        ! Read input harvesting file
        ! -----------------------------------------------------------------
-
-       ! Open input data file - need to do this first to obtain ungridded dimension size
-       call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
-       rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
-       call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
-
-       ! Read in input mesh
-       call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
-       mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
-
-       ! Create a route handle between the input and output mesh
-       call create_routehandle_r8(mesh_i, mesh_o, routehandle, rc)
-       call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
        
-       ! Determine ns_i and allocate data_i
-       call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
-       allocate(data_i(nlay,ns_i),stat=ier)
-       if (ier/=0) call shr_sys_abort()
-
-       ! Determine ns_o and allocate data_o
-       call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
-       allocate(frac_o(ns_o), stat=ier)
-       if (ier/=0) call shr_sys_abort()
-
        ! Determine frac_o (regrid frac_i to frac_o)
        allocate(frac_i(ns_i))
        allocate(frac_o(ns_o))
@@ -372,7 +371,6 @@ contains
        end do
 
        ! Read in input 1d fields if they exists and map to output grid
-       ! TODO: enter this in
        do k = 1, harvdata%num2Dfields()
           ifld = ind2D(k)
           data2d_i => harvdata%get2DFieldPtr( ifld )
@@ -384,8 +382,8 @@ contains
           call pio_seterrorhandling(pioid, PIO_INTERNAL_ERROR)
           if (rcode == PIO_NOERR) then
              nlev = size(data2d_i, dim=2)
-             allocate(read_data2d_i(nlev, ns_i)
-             allocate(read_data2d_o(nlev, ns_o)
+             allocate(read_data2d_i(nlev, ns_i))
+             allocate(read_data2d_o(nlev, ns_o))
              call mkpio_get_rawdata(pioid, varname, mesh_i, read_data2d_i, rc=rc)
              if (chkerr(rc,__LINE__,u_FILE_u)) return
              call regrid_rawdata(mesh_i, mesh_o, routehandle, read_data2d_i, read_data2d_o, rc)

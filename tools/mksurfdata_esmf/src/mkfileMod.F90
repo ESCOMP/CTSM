@@ -8,11 +8,9 @@ module mkfileMod
   use mkvarpar     , only : nlevsoi, numrad, numstdpft
   use mkurbanparMod, only : numurbl, nlevurb, mkurbanpar
 #ifdef TODO
-  use mkglcmecMod  , only : nglcec
   use mkpftMod     , only : mkpftAtt
-  use mksoilMod    , only : mksoilAtt
-  use mkharvestMod , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname
-  use mkharvestMod , only : mkharvest_units, harvestDataType
+  use mkglcmecMod  , only : nglcec
+  use mkharvestMod , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname, mkharvest_units, harvestDataType 
 #endif
   use mkpioMod ! TODO: add only
   use mkvarctl
@@ -38,21 +36,26 @@ contains
 
   subroutine mkfile_fsurdat(nx, ny, mesh_o, dynlanduse, &
        pctlak, pctwet, lakedepth, organic, soil_color, nsoilcol, &
-       urban_classes_g, urban_region)
+       urban_classes_g, urban_region, pctsand, pctclay, mapunits, fmaxsoil, soildepth)
 
     ! input/output variables
-    integer          , intent(in) :: nx
-    integer          , intent(in) :: ny
-    logical          , intent(in) :: dynlanduse
-    type(ESMF_Mesh)  , intent(in) :: mesh_o
-    real(r8), pointer, intent(in) :: pctlak(:)               ! percent of grid cell that is lake
-    real(r8), pointer, intent(in) :: pctwet(:)               ! percent of grid cell that is wetland
-    real(r8), pointer, intent(in) :: lakedepth(:)            ! lake depth (m)
-    real(r8), pointer, intent(in) :: organic(:,:)            ! organic
-    integer , pointer, intent(in) :: soil_color(:)
-    integer          , intent(in) :: nsoilcol 
-    real(r8), pointer, intent(in) :: urban_classes_g(:,:)    ! percent cover of each urban class, as % of grid cell
-    integer , pointer, intent(in) :: urban_region(:)         ! urban region ID
+    integer           , intent(in) :: nx
+    integer           , intent(in) :: ny
+    logical           , intent(in) :: dynlanduse
+    type(ESMF_Mesh)   , intent(in) :: mesh_o
+    real(r8), pointer , intent(in) :: pctlak(:)            ! percent of grid cell that is lake
+    real(r8), pointer , intent(in) :: pctwet(:)            ! percent of grid cell that is wetland
+    real(r8), pointer , intent(in) :: lakedepth(:)         ! lake depth (m)
+    real(r8), pointer , intent(in) :: organic(:,:)         ! organic
+    integer , pointer , intent(in) :: soil_color(:)
+    integer           , intent(in) :: nsoilcol 
+    real(r8), pointer , intent(in) :: urban_classes_g(:,:) ! percent cover of each urban class, as % of grid cell
+    integer , pointer , intent(in) :: urban_region(:)      ! urban region ID
+    real(r8), pointer , intent(in) :: fmaxsoil(:)          ! soil_fractional saturated area
+    real(r8), pointer , intent(in) :: pctsand(:,:)         ! soil texture: percent sand
+    real(r8), pointer , intent(in) :: pctclay(:,:)         ! soil texture: percent clay
+    integer , pointer , intent(in) :: mapunits(:)
+    real(r8), pointer , intent(in) :: soildepth(:)         ! soil depth (m)
 #ifdef TODO
     type(harvestDataType) , intent(in) :: harvdata
 #endif
@@ -99,6 +102,8 @@ contains
        xtype = PIO_REAL
     end if
 
+    ! call mkpftAtt(  ncid, dynlanduse, xtype )
+
     do n = 1,2
 
        define_mode = (n == 1)
@@ -108,37 +113,62 @@ contains
 
        if (.not. dynlanduse) then
 
-          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out pct_lake"
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_lake"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_LAKE', 'percent_lake', &
                'unitless', pctlak, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out pct_wetland"
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_wetland"
           call mkfile_output(pioid,define_mode, mesh_o, xtype, 'PCT_WETLAND', 'percent_wetland', &
                'unitless', pctwet, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out lakedepth"
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out lakedepth"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'LAKEDEPTH', 'lake_depth', &
                'm', lakedepth, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out organic"
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil organic matter density"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'ORGANIC', 'organic matter density at soil levels', &
                'kg/m3 (assumed carbon content 0.58 gC per gOM)', organic, lev1name='nlevsoi', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out soil color"
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_SAND', 'percent sand', &
+               'unitless', pctsand, lev1name='nlevsoi', rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent clay"
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_CLAY', 'percent sand', &
+               'unitless', pctclay, lev1name='nlevsoi', rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil mapunits"
+          call mkfile_output(pioid, define_mode, mesh_o, 'mapunits', 'igbp mapunits', &
+               'unitless', mapunits, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil fmax (maximum fraction saturated area)"
+          call mkfile_output (pioid, define_mode, mesh_o, xtype, 'FMAX', 'maximum fractional saturated area', &
+               'unitless', fmaxsoil, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil depth"
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'zbedrock', 'soil depth', &
+               'm', soildepth, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil color"
           call mkfile_output(pioid, define_mode, mesh_o, 'SOIL_COLOR', 'soil color', &
                'unitless', soil_color,  rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out urban region id"
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out urban region id"
           call mkfile_output(pioid, define_mode, mesh_o, 'URBAN_REGION_ID', 'urban region ID', &
                'unitless', urban_region, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          if (root_task)  write(ndiag, '(a)') trim(subname)//"writing out percnt urban"
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out percnt urban"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_URBAN', 'percent urban for each density type', &
                'unitless', urban_classes_g, lev1name='numurbl', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -350,6 +380,29 @@ contains
     if ( outnc_vic )then
        str = get_filename(mksrf_fvic_mesh)
        rcode = pio_put_att(pioid, pio_global, 'mesh_vic_file', trim(str))
+    end if
+
+    if (.not. dynlanduse) then
+       if ( soil_color_override /= unsetcol )then
+          rcode = pio_put_att(pioid, pio_global, 'soil_color_override', 'TRUE')
+       else
+          str = get_filename(mksrf_fsoicol)
+          rcode = pio_put_att(pioid, pio_global, 'soil_color_raw_data_file_name', trim(str))
+       end if
+       if ( soil_clay_override /= unsetsoil .and. soil_sand_override /= unsetsoil) then
+          rcode = pio_put_att(pioid, pio_global, 'soil_clay_override', 'TRUE')
+       else
+          str = get_filename(mksrf_fsoitex)
+          rcode = pio_put_att(pioid, pio_global, 'soil_texture_raw_data_file_name', trim(str))
+       end if
+       if ( soil_fmax_override /= unsetsoil )then
+          rcode = pio_put_att(pioid, pio_global, 'soil_fmax_override', 'TRUE')
+       else
+          str = get_filename(mksrf_fmax)
+          rcode = pio_put_att(pioid, pio_global, 'fmax_raw_data_file_name', trim(str))
+       end if
+       str = get_filename(mksrf_forganic)
+       rcode = pio_put_att(pioid, pio_global, 'organic_matter_raw_data_file_name', trim(str))
     end if
 
   end subroutine mkfile_define_atts
