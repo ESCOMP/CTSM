@@ -143,10 +143,11 @@ contains
                'unitless', pctclay, lev1name='nlevsoi', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil mapunits"
-          call mkfile_output(pioid, define_mode, mesh_o, 'mapunits', 'igbp mapunits', &
-               'unitless', mapunits, rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          ! TODO: uncommenting this gives garbage in the PCT_SAND and PCT_CLAY output
+          ! if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil mapunits"
+          ! call mkfile_output(pioid, define_mode, mesh_o, 'mapunits', 'igbp mapunits', &
+          !      'unitless', mapunits, rc=rc)
+          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil fmax (maximum fraction saturated area)"
           call mkfile_output (pioid, define_mode, mesh_o, xtype, 'FMAX', 'maximum fractional saturated area', &
@@ -181,7 +182,8 @@ contains
     ! Write to netcdf file is done inside mkurbanpar routine
     ! ----------------------------------------------------------------------
     
-    call mkurbanpar(pioid, mksrf_furban, mesh_o, urban_region, urban_classes_g, urban_skip_abort_on_invalid_data_check)
+    call mkurbanpar(pioid, mksrf_furban, mesh_o, urban_region, urban_classes_g, &
+         urban_skip_abort_on_invalid_data_check)
 
     ! Close surface dataset
     call pio_closefile(pioid)

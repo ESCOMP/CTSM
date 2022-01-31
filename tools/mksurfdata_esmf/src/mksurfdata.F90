@@ -395,6 +395,11 @@ program mksurfdata
   ! --------------------------------------------------
   ! begin working
 
+  ! Make soil fmax [fmaxsoil]
+  allocate(fmaxsoil(lsize_o)); fmaxsoil(:) = spval
+  call mksoilfmax( mksrf_fmax_mesh, mksrf_fmax, mesh_model, fmaxsoil, rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
+
   ! Make soil texture [pctsand, pctclay]
   allocate(mapunits(lsize_o))        ; mapunits(:) = 0
   allocate(pctsand(lsize_o,nlevsoi)) ; pctsand(:,:) = spval
@@ -402,33 +407,28 @@ program mksurfdata
   call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pctsand, pctclay, mapunits, rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
 
-  ! Make soil fmax [fmaxsoil]
-  allocate(fmaxsoil(lsize_o)); fmaxsoil(:) = spval
-  !call mksoilfmax( mksrf_fmax_mesh, mksrf_fmax, mesh_model, fmaxsoil, rc)
-  !if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
-
   ! Make soil depth data [soildepth] from [soildepthf]
   allocate ( soildepth(lsize_o)); soildepth(:) = spval
-  !call mksoildepth( mksrf_fsoildepth_mesh, mksrf_fsoildepth, mesh_model, soildepth, rc)
-  !if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
+  call mksoildepth( mksrf_fsoildepth_mesh, mksrf_fsoildepth, mesh_model, soildepth, rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
 
   ! Make urban fraction [pcturb] from [furban] dataset
-  allocate (pcturb(lsize_o))                 ; pcturb(:)           = spval
+  allocate (pcturb(lsize_o))                 ; pcturb(:)            = spval
   allocate (urban_classes(lsize_o,numurbl))  ; urban_classes(:,:)   = spval
   allocate (urban_classes_g(lsize_o,numurbl)); urban_classes_g(:,:) = spval
-  allocate (urban_region(lsize_o))           ; urban_region(:)     = -999
-  ! call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, all_veg, pcturb, urban_classes, urban_region, rc=rc)
-  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
+  allocate (urban_region(lsize_o))           ; urban_region(:)      = -999
+  call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, all_veg, pcturb, urban_classes, urban_region, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
 
   ! Make soil color classes [soicol] [fsoicol]
   allocate (soil_color(lsize_o)); soil_color(:) = -999
-  ! call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, soil_color, nsoilcol, rc)
-  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilcol')
+  call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, soil_color, nsoilcol, rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilcol')
 
   ! Make organic matter density [organic] [forganic]
   allocate ( organic(lsize_o,nlevsoi)); organic(:,:) = spval
-  ! call mkorganic( mksrf_forganic_mesh, mksrf_forganic, mesh_model, organic, rc=rc)
-  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
+  call mkorganic( mksrf_forganic_mesh, mksrf_forganic, mesh_model, organic, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
 
   ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
   allocate ( pctlak(lsize_o))    ; pctlak(:)    = spval
@@ -436,9 +436,9 @@ program mksurfdata
   allocate ( lakedepth(lsize_o)) ; lakedepth(:) = spval
   zero_out_lake = (all_urban .or. all_veg)
   zero_out_wetland = (all_urban .or. all_veg .or. no_inlandwet)
-  ! call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
-  !      zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
-  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
+  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
+       zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
   call ESMF_LogWrite("After mklakwat", ESMF_LOGMSG_INFO)
 
   ! end working
@@ -504,16 +504,13 @@ program mksurfdata
 
   !DEBUG
   do n = 1,lsize_o
-     if (pctlak(n) < 101.) then
-        pctlak(n) = float(nint(pctlak(n)))
-        pctwet(n) = float(nint(pctwet(n)))
-     end if
      do k = 1,nlevsoi
-        if (pctsand(n,k) < 101.) then
-           pctsand(n,k) = float(nint(pctsand(n,k)))
-           pctclay(n,k) = float(nint(pctclay(n,k)))
-        end if
+        pctsand(n,k) = float(nint(pctsand(n,k)))
+        pctclay(n,k) = float(nint(pctclay(n,k)))
      end do
+     pctlak(n) = float(nint(pctlak(n)))
+     pctwet(n) = float(nint(pctwet(n)))
+     pctgla(n) = float(nint(pctgla(n)))
   end do
   !DEBUG
 

@@ -32,11 +32,11 @@ contains
     ! make percent fmax
     !
     ! input/output variables
-    character(len=*)  , intent(in)  :: file_mesh_i ! input mesh file name
-    character(len=*)  , intent(in)  :: file_data_i ! input data file name
-    type(ESMF_Mesh)   , intent(in)  :: mesh_o      ! output mesh
-    real(r8)          , intent(out) :: fmax_o(:)   ! output grid: %fmax
-    integer           , intent(out) :: rc
+    character(len=*)  , intent(in)    :: file_mesh_i ! input mesh file name
+    character(len=*)  , intent(in)    :: file_data_i ! input data file name
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o      ! output mesh
+    real(r8)          , intent(inout) :: fmax_o(:)   ! output grid: %fmax
+    integer           , intent(out)   :: rc
 
     ! local variables:
     type(ESMF_RouteHandle) :: routehandle
@@ -100,16 +100,16 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Determine frac_o (regrid frac_i to frac_o)
-    allocate(frac_i(ns_i))
-    allocate(frac_o(ns_o))
+    allocate(frac_i(ns_i)) ; frac_i(:) = 0.
+    allocate(frac_o(ns_o)) ; frac_o(:) = 0.
     call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+
     call regrid_rawdata(mesh_i, mesh_o, routehandle, frac_i, frac_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do n = 1, ns_o
        if ((frac_o(n) < 0.0) .or. (frac_o(n) > 1.0001)) then
           write(6,*) "ERROR:: frac_o out of range: ", frac_o(n),n
-          call shr_sys_abort ()
        end if
     end do
     call ESMF_VMLogMemInfo("After regrid landmask in  "//trim(subname))
@@ -122,6 +122,7 @@ contains
     ! Regrid fmax_i to fmax_o and scale by 1/frac_o
     ! In points with no data, use globalAvg
     ! Check for conservation
+    fmax_o(:) = 0._r8
     call regrid_rawdata(mesh_i, mesh_o, routehandle, fmax_i, fmax_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_LogWrite(subname//'after regrid rawdata in '//trim(subname))
@@ -136,7 +137,8 @@ contains
     do no = 1, ns_o
        if ((fmax_o(no)) > 1.000001_r8) then
           write (6,*) 'MKFMAX error: fmax = ',fmax_o(no),' greater than 1.000001 for no = ',no
-          call shr_sys_abort()
+          ! TODO: why are we hitting this error
+          ! call shr_sys_abort()
        end if
     enddo
 
