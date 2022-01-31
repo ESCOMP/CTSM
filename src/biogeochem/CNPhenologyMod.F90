@@ -1694,6 +1694,7 @@ contains
     logical allow_unprescribed_planting ! should crop be allowed to be planted according to sowing window rules?
     logical do_harvest    ! Are harvest conditions satisfied?
     logical force_harvest ! Should we harvest today no matter what?
+    logical fake_harvest  ! Dealing with incorrect Dec. 31 planting
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -1795,15 +1796,6 @@ contains
             next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
          end if
 
-         ! When resuming from a run with old code, may need to manually set these
-         if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
-            sowing_count(p) = 1
-            crop_inst%sdates_thisyr(p,1) = 1._r8
-            if (sowing_count(p) < mxgrowseas) then
-                next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,2)
-            end if
-         end if
-         
          do_plant_prescribed = next_rx_sdate(p) == jday
          s = sowing_count(p)
          
@@ -2035,7 +2027,16 @@ contains
                hui(p) = max(hui(p),huigrain(p))
             endif
 
-            if (do_plant_prescribed) then
+            do_harvest = .false.
+            force_harvest = .false.
+            fake_harvest = .false.
+
+            if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
+                ! Crop was incorrectly planted in last time step of Dec. 31.
+                do_harvest = .true.
+                force_harvest = .true.
+                fake_harvest = .true.
+            else if (do_plant_prescribed) then
                 ! Today was supposed to be the planting day, but the previous crop still hasn't been harvested.
                 do_harvest = .true.
                 force_harvest = .true.
@@ -2089,9 +2090,14 @@ contains
                ! changes to the offset subroutine below
 
             else if (do_harvest) then
-               if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
-               harvest_count(p) = harvest_count(p) + 1
-               crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
+               ! Don't update these if you're just harvesting because of incorrect Dec.
+               ! 31 planting
+               if (.not. fake_harvest) then
+                  if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
+                  harvest_count(p) = harvest_count(p) + 1
+                  crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
+               endif
+
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = 4._r8
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
