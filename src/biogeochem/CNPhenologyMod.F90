@@ -1792,16 +1792,31 @@ contains
             do s = 1, mxharvests
                crop_inst%hdates_thisyr(p,s) = -1._r8
             end do
+            next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
          end if
 
          ! When resuming from a run with old code, may need to manually set these
          if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
             sowing_count(p) = 1
             crop_inst%sdates_thisyr(p,1) = 1._r8
+            if (sowing_count(p) < mxgrowseas) then
+                next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,2)
+            end if
          end if
          
          do_plant_prescribed = next_rx_sdate(p) == jday
          s = sowing_count(p)
+         
+         if (generate_crop_gdds) then
+             if (s==0 .and. next_rx_sdate(p)<=0) then
+                 write(iulog,"(A,I4)") 'If using generate_crop_gdds, all simulated patches must have rx sdate. next_rx_sdate(p) <=0. PFT ',ivt(p)
+                 call endrun(msg=errMsg(sourcefile, __LINE__))
+             else if (s==0 .and. crop_inst%rx_sdates_thisyr(p,1)<=0) then
+                 write(iulog,"(A,I4)") 'If using generate_crop_gdds, all simulated patches must have rx sdate. rx_sdates_thisyr(p,1) <=0. PFT ',ivt(p)
+                 call endrun(msg=errMsg(sourcefile, __LINE__))
+             end if
+         end if
+
 
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
          if ( (.not. croplive(p)) .and. s == 0 ) then
