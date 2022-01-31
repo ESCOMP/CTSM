@@ -1754,7 +1754,7 @@ contains
 
       ! get time info
       dayspyr = get_curr_days_per_year()
-      jday    = get_curr_calday()
+      jday    = get_curr_calday(offset = -1)
       dtrad   = real( get_rad_step_size(), r8 )
 
       if (use_fertilizer) then
