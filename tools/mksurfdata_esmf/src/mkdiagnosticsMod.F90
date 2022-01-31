@@ -5,6 +5,7 @@ module mkdiagnosticsMod
   !-----------------------------------------------------------------------
 
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use mkvarctl, only : ndiag
 
   implicit none
   private
@@ -19,13 +20,15 @@ module mkdiagnosticsMod
 contains
 !------------------------------------------------------------------------------
 
-  subroutine output_diagnostics_area(data_i, data_o, name, percent, ndiag, mask_src)
+  subroutine output_diagnostics_area(mesh_i, mesh_o, data_i, data_o, name, percent, mask_src)
 
     ! Output diagnostics for a field that gives either fraction or percent of grid cell area
 
     use mkvarpar, only : re
 
     ! input/output variables
+    type(ESMF_Mesh)  , intent(in) :: mesh_i
+    type(ESMF_Mesh)  , intent(in) :: mesh_o
     real(r8)         , intent(in) :: data_i(:)    ! data on input grid
     real(r8)         , intent(in) :: data_o(:)    ! data on output grid
     character(len=*) , intent(in) :: name         ! name of field
@@ -116,7 +119,6 @@ contains
 
     ! Output diagnostics for a continuous field (but not area, for which there is a different routine)
 
-    use mkgridmapMod, only : gridmap_type
     use mkvarpar, only : re
 
     ! !ARGUMENTS:

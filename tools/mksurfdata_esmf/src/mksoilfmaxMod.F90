@@ -104,7 +104,6 @@ contains
     allocate(frac_o(ns_o)) ; frac_o(:) = 0.
     call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-
     call regrid_rawdata(mesh_i, mesh_o, routehandle, frac_i, frac_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do n = 1, ns_o
@@ -122,6 +121,7 @@ contains
     ! Regrid fmax_i to fmax_o and scale by 1/frac_o
     ! In points with no data, use globalAvg
     ! Check for conservation
+    fmax_i(:) = fmax_i(:) * frac_i(:)
     fmax_o(:) = 0._r8
     call regrid_rawdata(mesh_i, mesh_o, routehandle, fmax_i, fmax_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return

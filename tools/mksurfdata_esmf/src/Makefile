@@ -19,9 +19,9 @@
 ################################################################################
 
 
-COMPILEPATH = -I/glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/bld -I/glade/u/apps/ch/opt/pio/2.5.5/mpt/2.22/intel/19.1.1/include
-#LINKPATH = -L/glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/bld -L/glade/u/apps/ch/opt/pio/2.5.5/mpt/2.22/intel/19.1.1/lib/
-LINKPATH = -L/glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/bld 
+COMPILEPATH = -I/glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/bld -I/glade/u/apps/ch/opt/pio/2.5.5/mpt/2.22/intel/19.1.1/include
+#LINKPATH = -L/glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/bld -L/glade/u/apps/ch/opt/pio/2.5.5/mpt/2.22/intel/19.1.1/lib/
+LINKPATH = -L/glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/bld 
 PIO_LINKPATH = -L/glade/work/jedwards/tools/pio/2.5.5/intel/19.1.1/mpt/2.22/lib -L/glade/u/apps/ch/opt/pnetcdf/1.12.2/mpt/2.22/intel/19.1.1//lib -L/glade/u/apps/ch/opt/netcdf/4.7.3/intel/19.0.5/lib 
 
 ESMFMKFILE=/glade/work/oehmke/ESMF/scalable_mesh_from_file/lib/libg/Linux.intel.64.mpt.default/esmf.mk

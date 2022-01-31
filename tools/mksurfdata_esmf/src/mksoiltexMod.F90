@@ -10,15 +10,18 @@ module mksoiltexMod
   use shr_sys_mod    , only : shr_sys_abort
   use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
   use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
+  use mkesmfMod      , only : regrid_rawdata, create_routehandle_frac, get_meshareas
   use mkutilsMod     , only : chkerr
   use mkvarctl
   use mkvarpar
 
   implicit none
-  private           ! By default make data private
+  private ! By default make data private
 
   public :: mksoiltex      ! Set soil texture
+
+  integer, parameter :: num=2  ! set soil mapunit number
+  integer, parameter :: nlsm=4 ! number of soil textures
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -56,20 +59,21 @@ contains
     integer                :: nlay                    ! number of soil layers
     integer                :: mapunittemp             ! temporary igbp soil mapunit
     integer                :: maxovr
-    real(r8), allocatable  :: frac_i(:)
-    real(r8), allocatable  :: frac_o(:)
-    real(r8), allocatable  :: sand_i(:,:)             ! input grid: percent sand
-    real(r8), allocatable  :: clay_i(:,:)             ! input grid: percent clay
-    integer, parameter     :: num=2                   ! set soil mapunit number
-    integer, parameter     :: nlsm=4                  ! number of soil textures
+    integer , allocatable  :: mask_i(:)
+    real(r4), allocatable  :: area_i(:)
+    real(r4), allocatable  :: area_o(:)
+    real(r4), allocatable  :: frac_i(:)
+    real(r4), allocatable  :: frac_o(:)
+    real(r4), allocatable  :: sand_i(:,:)             ! input grid: percent sand
+    real(r4), allocatable  :: clay_i(:,:)             ! input grid: percent clay
     character(len=38)      :: soil(0:nlsm)            ! name of each soil texture
-    real(r8)               :: gast_i(0:nlsm)          ! global area, by texture type
-    real(r8)               :: gast_o(0:nlsm)          ! global area, by texture type
-    real(r8)               :: wt                      ! map overlap weight
-    real(r8)               :: sum_fldi                ! global sum of dummy input fld
-    real(r8)               :: sum_fldo                ! global sum of dummy output fld
+    real(r4)               :: gast_i(0:nlsm)          ! global area, by texture type
+    real(r4)               :: gast_o(0:nlsm)          ! global area, by texture type
+    real(r4)               :: wt                      ! map overlap weight
+    real(r4)               :: sum_fldi                ! global sum of dummy input fld
+    real(r4)               :: sum_fldo                ! global sum of dummy output fld
+    real(r4)               :: sumtex
     integer                :: rcode, ier              ! error status
-    real(r8)               :: sumtex
     integer                :: mapunit_value_max
     integer                :: mapunit_value_min
     integer                :: mapunit_value
@@ -77,11 +81,11 @@ contains
     integer                :: loop, nloops
     real(r4)               :: max_value 
     integer                :: max_index(1)
-    real(r8), allocatable  :: mapunit_i(:)            ! input grid: igbp soil mapunits
-    real(r8), allocatable  :: data_i(:,:)
-    real(r8), allocatable  :: data_o(:,:)
-    real(r8), allocatable  :: global_max_value(:)
-    real(r8), allocatable  :: global_max_index(:)
+    real(r4), allocatable  :: mapunit_i(:)            ! input grid: igbp soil mapunits
+    real(r4), allocatable  :: data_i(:,:)
+    real(r4), allocatable  :: data_o(:,:)
+    real(r4), allocatable  :: global_max_value(:)
+    real(r4), allocatable  :: global_max_index(:)
     character(len=*), parameter :: subname = 'mksoiltex'
     !-----------------------------------------------------------------------
 
@@ -103,7 +107,7 @@ contains
           call shr_sys_abort()
        end if
        sumtex = soil_sand_override + soil_clay_override
-       if ( sumtex < 0.0_r8 .or. sumtex > 100.0_r8 )then
+       if ( sumtex < 0.0_r4 .or. sumtex > 100.0_r4 )then
           write (6,*) subname//':error: soil_sand and soil_clay out of bounds: sand, clay = ', &
                soil_sand_override, soil_clay_override
           call shr_sys_abort()
@@ -136,13 +140,31 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
-    ! Create a route handle between the input and output mesh
-    call create_routehandle_r8(mesh_i, mesh_o, routehandle, rc)
-    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-
-    ! Determine ns_i and allocate data_i
+    ! Determine ns_i
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Get the landmask from the file and reset the mesh mask based on that
+    allocate(frac_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(mask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do ni = 1,ns_i
+       if (frac_i(ni) > 0._r4) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
+       end if
+    end do
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create a route handle between the input and output mesh
+    ! Can only use this routehandle to map fields containing r4 data
+    call create_routehandle_frac(mesh_i, mesh_o, routehandle, frac_o, rc=rc)
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
     ! Determine ns_o and allocate data_o
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
@@ -155,17 +177,13 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-    ! TODO: Determine minimum and maximum mapunit values across all processors- for now hardwire
-
     ! Now determine data_i as a real 2d array - for every possible soil color create a global
     ! field with gridcells equal to 1 for that soil color and zero elsewhere
     rcode = pio_inq_dimid  (pioid, 'max_value_mapunit', dimid)
     rcode = pio_inq_dimlen (pioid, dimid, mapunit_value_max)
-
     mapunit_value_min = 0
     nmax = 100
     nloops = (mapunit_value_max - mapunit_value_min + nmax)/nmax
-    !write(6,*)'nloops = ',nloops
 
     allocate(global_max_value(ns_o)) ; global_max_value(:) = -999.
     if (ier/=0) call shr_sys_abort()
@@ -176,9 +194,10 @@ contains
     allocate(data_o(nmax,ns_o))
     if (ier/=0) call shr_sys_abort()
 
+
     mapunit_o(:) = 0
     do loop = 1,nloops
-       data_i(:,:) = 0._r8
+       data_i(:,:) = 0._r4
        do lindex = 0,nmax-1
           mapunit_value = lindex + (nmax*(loop-1))
           if (mapunit_value <= mapunit_value_max) then
@@ -205,7 +224,6 @@ contains
           end if
        end do
     end do
-
     deallocate(data_i)
     deallocate(data_o)
 
@@ -247,98 +265,104 @@ contains
     end do
 
     ! -----------------------------------------------------------------
-    ! Error check2
+    ! Error check
     ! Compare global area of each soil type on input and output grids
     ! -----------------------------------------------------------------
 
-    ! input grid: global areas by texture class
+    !     allocate(area_i(ns_i))
+    !     call get_meshareas(mesh_i, area_i, rc)
+    !     if (chkerr(rc,__LINE__,u_FILE_u)) return
+    !     allocate(area_o(ns_o))
+    !     call get_meshareas(mesh_o, area_o, rc)
+    !     if (chkerr(rc,__LINE__,u_FILE_u)) return
     
-!     gast_i(:) = 0.
-!     do l = 1, nlay
-!        do ni = 1,ns_i
-!           mapunittemp = nint(mapunit_i(ni))
-!           if (mapunittemp==0) then
-!              typ = 'no soil: ocean, glacier, lake, no data'
-!           else if (clay_i(mapunittemp,l) >= 40.) then
-!              typ = 'clays'
-!           else if (sand_i(mapunittemp,l) >= 50.) then
-!              typ = 'sands'
-!           else if (clay_i(mapunittemp,l)+sand_i(mapunittemp,l) < 50.) then
-!              if (mask(ni) /= 0.) then
-!                 typ = 'silts'
-!              else            !if (mask(ni) == 0.) then no data
-!                 typ = 'no soil: ocean, glacier, lake, no data'
-!              end if
-!           else
-!              typ = 'loams'
-!           end if
-!           do m = 0, nlsm
-!              if (typ == soil(m)) go to 101
-!           end do
-!           write (6,*) 'MKSOILTEX error: sand = ',sand_i(mapunittemp,l), &
-!                ' clay = ',clay_i(mapunittemp,l), &
-!                ' not assigned to soil type for input grid lon,lat,layer = ',ni,l
-!           call shr_sys_abort()
-! 101       continue
-!           gast_i(m) = gast_i(m) + area_src(ni)*mask(ni)*re**2
-!        end do
-!     end do
-
-!     ! output grid: global areas by texture class
-
-!     gast_o(:) = 0.
-!     do l = 1, nlay
-!        do no = 1,ns_o
-!           if (clay_o(no,l)==0. .and. sand_o(no,l)==0.) then
-!              typ = 'no soil: ocean, glacier, lake, no data'
-!           else if (clay_o(no,l) >= 40.) then
-!              typ = 'clays'
-!           else if (sand_o(no,l) >= 50.) then
-!              typ = 'sands'
-!           else if (clay_o(no,l)+sand_o(no,l) < 50.) then
-!              typ = 'silts'
-!           else
-!              typ = 'loams'
-!           end if
-!           do m = 0, nlsm
-!              if (typ == soil(m)) go to 102
-!           end do
-!           write (6,*) 'MKSOILTEX error: sand = ',sand_o(no,l), &
-!                ' clay = ',clay_o(no,l), &
-!                ' not assigned to soil type for output grid lon,lat,layer = ',no,l
-!           call shr_sys_abort()
-! 102       continue
-!           gast_o(m) = gast_o(m) + area_dst(no)*frac_o(no)*re**2
-!        end do
-!     end do
-
-!     ! Diagnostic output
-
-!     write (ndiag,*)
-!     write (ndiag,'(1x,70a1)') ('=',l=1,70)
-!     write (ndiag,*) 'Soil Texture Output'
-!     write (ndiag,'(1x,70a1)') ('=',l=1,70)
-!     write (ndiag,*)
-
-!     write (ndiag,*) 'The following table of soil texture classes is for comparison only.'
-!     write (ndiag,*) 'The actual data is continuous %sand, %silt and %clay not textural classes'
-!     write (ndiag,*)
-
-!     write (ndiag,*)
-!     write (ndiag,'(1x,70a1)') ('.',l=1,70)
-!     write (ndiag,1001)
-! 1001 format (1x,'soil texture class',17x,' input grid area output grid area',/ &
-!          1x,33x,'     10**6 km**2','      10**6 km**2')
-!     write (ndiag,'(1x,70a1)') ('.',l=1,70)
-!     write (ndiag,*)
-
-!     do l = 0, nlsm
-!        write (ndiag,1002) soil(l),gast_i(l)*1.e-6,gast_o(l)*1.e-6
-! 1002   format (1x,a38,f16.3,f17.3)
-!     end do
-
+    !     ! input grid: global areas by texture class
+    !     gast_i(:) = 0.
+    !     do l = 1, nlay
+    !        do ni = 1,ns_i
+    !           mapunittemp = nint(mapunit_i(ni))
+    !           if (mapunittemp==0) then
+    !              typ = 'no soil: ocean, glacier, lake, no data'
+    !           else if (clay_i(mapunittemp,l) >= 40.) then
+    !              typ = 'clays'
+    !           else if (sand_i(mapunittemp,l) >= 50.) then
+    !              typ = 'sands'
+    !           else if (clay_i(mapunittemp,l)+sand_i(mapunittemp,l) < 50.) then
+    !              if (frac_i(ni) /= 0.) then
+    !                 typ = 'silts'
+    !              else            !if (mask(ni) == 0.) then no data
+    !                 typ = 'no soil: ocean, glacier, lake, no data'
+    !              end if
+    !           else
+    !              typ = 'loams'
+    !           end if
+    !           do m = 0, nlsm
+    !              if (typ == soil(m)) go to 101
+    !           end do
+    !           write (6,*) 'MKSOILTEX error: sand = ',sand_i(mapunittemp,l), &
+    !                ' clay = ',clay_i(mapunittemp,l), &
+    !                ' not assigned to soil type for input grid lon,lat,layer = ',ni,l
+    !           call shr_sys_abort()
+    ! 101       continue
+    !           gast_i(m) = gast_i(m) + area_i(ni)*mask_i(ni)*re**2
+    !        end do
+    !     end do
+    
+    !     ! output grid: global areas by texture class
+    !     gast_o(:) = 0.
+    !     do l = 1, nlay
+    !        do no = 1,ns_o
+    !           if (clay_o(no,l)==0. .and. sand_o(no,l)==0.) then
+    !              typ = 'no soil: ocean, glacier, lake, no data'
+    !           else if (clay_o(no,l) >= 40.) then
+    !              typ = 'clays'
+    !           else if (sand_o(no,l) >= 50.) then
+    !              typ = 'sands'
+    !           else if (clay_o(no,l)+sand_o(no,l) < 50.) then
+    !              typ = 'silts'
+    !           else
+    !              typ = 'loams'
+    !           end if
+    !           do m = 0, nlsm
+    !              if (typ == soil(m)) go to 102
+    !           end do
+    !           write (6,*) 'MKSOILTEX error: sand = ',sand_o(no,l), &
+    !                ' clay = ',clay_o(no,l), &
+    !                ' not assigned to soil type for output grid lon,lat,layer = ',no,l
+    !           call shr_sys_abort()
+    ! 102       continue
+    !           gast_o(m) = gast_o(m) + area_o(no)*frac_o(no)*re**2
+    !        end do
+    !     end do
+    
+    !     ! Diagnostic output
+    
+    !     write (ndiag,*)
+    !     write (ndiag,'(1x,70a1)') ('=',l=1,70)
+    !     write (ndiag,*) 'Soil Texture Output'
+    !     write (ndiag,'(1x,70a1)') ('=',l=1,70)
+    !     write (ndiag,*)
+    
+    !     write (ndiag,*) 'The following table of soil texture classes is for comparison only.'
+    !     write (ndiag,*) 'The actual data is continuous %sand, %silt and %clay not textural classes'
+    !     write (ndiag,*)
+    
+    !     write (ndiag,*)
+    !     write (ndiag,'(1x,70a1)') ('.',l=1,70)
+    !     write (ndiag,1001)
+    ! 1001 format (1x,'soil texture class',17x,' input grid area output grid area',/ &
+    !              1x,33x,'     10**6 km**2','      10**6 km**2')
+    !     write (ndiag,'(1x,70a1)') ('.',l=1,70)
+    !     write (ndiag,*)
+    
+    !     do l = 0, nlsm
+    !        write (ndiag,'(1x,a38,f16.3,f17.3)') soil(l),gast_i(l)*1.e-6,gast_o(l)*1.e-6
+    !     end do
+    
     ! Deallocate dynamic memory
-    deallocate (sand_i,clay_i,mapunit_i)
+    deallocate(sand_i,clay_i,mapunit_i)
+    deallocate(mask_i)
+
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)

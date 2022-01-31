@@ -1,0 +1,22 @@
+============================
+building the executable (this will be built in src/ for now)
+============================
+> mkdir ./bld
+> cd bld
+> module load cmake
+> CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src/
+> make
+(note - if you change src/CMakeList.txt the issue the following in bld
+> rm -rf *
+> CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src/
+> make
+> cd ../
+> make clean
+> make
+
+============================
+running the code (you could add mksurfdata_in)
+============================
+> cd ../run
+> ln -s ../src/mksurfdata .
+> qsub run_mksurfdata

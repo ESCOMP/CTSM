@@ -1,135 +1,143 @@
 module mkglacierregionMod
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !MODULE: mkglacierregionMod
-  !
-  ! !DESCRIPTION:
   ! make glacier region ID
-  !
-  ! !REVISION HISTORY:
-  ! Author: Bill Sacks
-  !
+  ! Regridding is done by finding the nearest neighbor source cell for each destination cell.
   !-----------------------------------------------------------------------
-  !
-  ! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  implicit none
 
+  use ESMF
+  use pio
+  use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
+  use shr_sys_mod    , only : shr_sys_abort
+  use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
+  use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
+  use mkesmfMod      , only : regrid_rawdata, create_routehandle_nn, get_meshareas
+  use mkutilsMod     , only : chkerr
+#ifdef TODO
+  ! use mkdiagnosticsMod, only : output_diagnostics_index
+#endif
+  use mkchecksMod, only : min_bad
+  use mkvarctl
+
+  implicit none
   private
 
-  ! !PUBLIC MEMBER FUNCTIONS:
-  public mkglacierregion  ! make glacier region ID
-  !
-  !EOP
+  public :: mkglacierregion  ! make glacier region ID
 
+  character(len=*) , parameter :: u_FILE_u = &
+       __FILE__
+
+!=================================================================================
 contains
+!=================================================================================
 
-  !-----------------------------------------------------------------------
-  subroutine mkglacierregion(ldomain, mapfname, datfname, ndiag, &
-       glacier_region_o)
+  subroutine mkglacierregion(file_mesh_i, file_data_i, mesh_o, glacier_region_o, rc)
     !
-    ! !DESCRIPTION:
     ! Make glacier region ID
     !
-    ! Regridding is done by finding the max index that overlaps each destination cell,
-    ! without regard to the weight of overlap or dominance of each overlapping index.
-    !
-    ! !USES:
-    use mkdomainMod, only : domain_type, domain_clean, domain_read, domain_checksame
-    use mkgridmapMod
-    use mkncdio
-    use mkindexmapMod, only : get_max_indices
-    use mkdiagnosticsMod, only : output_diagnostics_index
-    use mkchecksMod, only : min_bad
-    !
-    ! !ARGUMENTS:
-    type(domain_type), intent(in) :: ldomain
-    character(len=*) , intent(in)  :: mapfname            ! input mapping file name
-    character(len=*) , intent(in)  :: datfname            ! input data file name
-    integer          , intent(in)  :: ndiag               ! unit number for diag out
-    integer          , intent(out) :: glacier_region_o(:) ! glacier region
-    !
-    ! !LOCAL VARIABLES:
-    type(gridmap_type)   :: tgridmap
-    type(domain_type)    :: tdomain             ! local domain
-    integer, allocatable :: glacier_region_i(:) ! glacier region on input grid
-    real(r8), allocatable :: frac_dst(:)        ! output fractions
-    real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
-    integer              :: ncid,varid          ! input netCDF id's
-    integer              :: ier                 ! error status
-    integer              :: max_region          ! max region ID
+    ! input/output variables
+    character(len=*)  , intent(in)  :: file_mesh_i ! input mesh file name
+    character(len=*)  , intent(in)  :: file_data_i ! input data file name
+    type(ESMF_Mesh)   , intent(in)  :: mesh_o      ! output mesh
+    integer           , intent(out) :: glacier_region_o(:) ! glacier region
+    integer           , intent(out) :: rc
 
+    ! local variables:
+    type(ESMF_RouteHandle) :: routehandle ! nearest neighbor routehandle
+    type(ESMF_Mesh)        :: mesh_i
+    type(file_desc_t)      :: pioid
+    integer                :: ni,no
+    integer                :: ns_i, ns_o
+    integer , allocatable  :: glacier_region_i(:) ! glacier region on input grid
+    real(r4), allocatable  :: frac_i(:)           ! input mask
+    real(r4), allocatable  :: frac_o(:)           ! output fractions
+    real(r4), allocatable  :: data_i(:) 
+    real(r4), allocatable  :: data_o(:) 
+    integer                :: ier, rcode          ! error status
+    integer                :: max_region          ! max region ID
     character(len=*), parameter :: subname = 'mkglacierregion'
     !-----------------------------------------------------------------------
 
-    write (6,*) 'Attempting to make glacier region .....'
+    rc = ESMF_SUCCESS
 
-    ! ------------------------------------------------------------------------
-    ! Read domain and mapping information, check for consistency
-    ! ------------------------------------------------------------------------
-
-    call domain_read(tdomain, datfname)
-
-    call gridmap_mapread(tgridmap, mapfname)
-
-    ! Obtain frac_dst
-    allocate(frac_dst(ldomain%ns), stat=ier)
-    if (ier/=0) call abort()
-    call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
-
-    allocate(mask_r8(tdomain%ns), stat=ier)
-    if (ier/=0) call abort()
-    mask_r8 = tdomain%mask
-    call gridmap_check(tgridmap, mask_r8, frac_dst, subname)
-
-    call domain_checksame(tdomain, ldomain, tgridmap)
-
-    ! ------------------------------------------------------------------------
-    ! Open input file, allocate memory for input data
-    ! ------------------------------------------------------------------------
-
-    write (6,*) 'Open glacier region raw data file: ', trim(datfname)
-    call check_ret(nf_open(datfname, 0, ncid), subname)
-
-    allocate(glacier_region_i(tdomain%ns), stat=ier)
-    if (ier/=0) call abort()
-
-    ! ------------------------------------------------------------------------
-    ! Regrid glacier_region
-    ! ------------------------------------------------------------------------
-
-    call check_ret(nf_inq_varid(ncid, 'GLACIER_REGION', varid), subname)
-    call check_ret(nf_get_var_int(ncid, varid, glacier_region_i), subname)
-    if (min_bad(glacier_region_i, 0, 'GLACIER_REGION')) then
-       call abort()
+    if (root_task) then
+       write (ndiag,'(a)') 'Attempting to make glacier region .....'
     end if
 
-    call get_max_indices( &
-         gridmap = tgridmap, &
-         src_array = glacier_region_i, &
-         dst_array = glacier_region_o, &
-         nodata = 0, &
-         mask_src = tdomain%mask)
+    ! Open input data file
+    if (root_task) then
+       write (ndiag,'(a)') 'Opening glacier region raw data file: ', trim(file_data_i)
+    end if
+    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
+    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
 
-    max_region = maxval(glacier_region_i)
-    call output_diagnostics_index(glacier_region_i, glacier_region_o, tgridmap, &
-         'Glacier Region ID', 0, max_region, ndiag, mask_src=tdomain%mask, frac_dst=frac_dst)
+    ! Read in input mesh
+    call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
+    mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
-    ! ------------------------------------------------------------------------
-    ! Deallocate dynamic memory & other clean up
-    ! ------------------------------------------------------------------------
+    ! Create a nearest neighbor route handle between the input and output mesh
+    call create_routehandle_nn(mesh_i, mesh_o, routehandle, rc=rc)
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
-    call check_ret(nf_close(ncid), subname)
-    call domain_clean(tdomain)
-    call gridmap_clean(tgridmap)
+    ! Determine ns_i and allocate glacier_region_i
+    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate(glacier_region_i(ns_i), stat=ier)
+    if (ier/=0) call abort()
+
+    ! Determine ns_o (glacier_region_o has already been allocated)
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Read in input data
+    call mkpio_get_rawdata(pioid, 'GLACIER_REGION', mesh_i, glacier_region_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
+
+    ! Confirm that no value of glacier_region is less than min_allowed.
+    if (min_bad(glacier_region_i, 0, 'GLACIER_REGION')) then
+       call shr_sys_abort()
+    end if
+
+    ! Convert to real4
+    allocate(data_i(ns_i))
+    do ni = 1,ns_i
+       data_i(ni) = real(glacier_region_i(ni), kind=r4)
+    end do
+    allocate(data_o(ns_o))
+
+    ! Regrid raw data - yse a nearest neighbor map here
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Now convert back to integer
+    do no = 1,ns_o
+       glacier_region_o(no) = nint(data_o(no))
+    end do
+
+    ! call output_diagnostics_index(glacier_region_i, glacier_region_o, tgridmap, &
+    !      'Glacier Region ID', 0, max_region, ndiag, mask_src=tdomain%mask, frac_dst=frac_dst)
+
+    ! Close the input file
+    call pio_closefile(pioid)
+    call ESMF_VMLogMemInfo("After pio_closefile in "//trim(subname))
+
+    ! Release memory
+    deallocate (frac_i)
+    deallocate (frac_o)
     deallocate(glacier_region_i)
-    deallocate(frac_dst)
-    deallocate(mask_r8)
+    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
 
-    write (6,*) 'Successfully made glacier region'
-    write (6,*)
+    if (root_task) then
+       write (ndiag,'(a)') 'Successfully made glacier region'
+       write (ndiag,*)
+    end if
 
   end subroutine mkglacierregion
 
