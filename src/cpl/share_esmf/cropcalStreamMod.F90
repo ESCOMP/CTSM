@@ -31,8 +31,8 @@ module cropcalStreamMod
   integer, allocatable        :: g_to_ig(:)         ! Array matching gridcell index to data index
   type(shr_strdata_type)      :: sdat_cropcal_sdate           ! sdate input data stream
   type(shr_strdata_type)      :: sdat_cropcal_cultivar_gdds   ! sdate input data stream
-  character(len=CS)           :: stream_varnames_sdate(mxpft)
-  character(len=CS)           :: stream_varnames_cultivar_gdds(mxpft)
+  character(len=CS), allocatable :: stream_varnames_sdate(:)
+  character(len=CS), allocatable :: stream_varnames_cultivar_gdds(:)
   integer                     :: ncft               ! Number of crop functional types (excl. generic crops)
 
   character(len=*), parameter :: sourcefile = &
@@ -92,6 +92,8 @@ contains
     stream_fldFileName_cultivar_gdds = ''
     ! SSR TODO: Make below work with arbitrary # of growing seasons per year
     ncft = mxpft - npcropmin + 1 ! Ignores generic crops
+    allocate(stream_varnames_sdate(ncft))
+    allocate(stream_varnames_cultivar_gdds(ncft))
     do n = 1,ncft
        ivt = npcropmin + n - 1
        write(stream_varnames_sdate(n),'(a,i0)') "sdate1_",ivt
