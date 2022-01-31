@@ -16,6 +16,7 @@ module cropcalStreamMod
   use clm_varpar       , only : mxpft
   use perf_mod         , only : t_startf, t_stopf
   use spmdMod          , only : masterproc, mpicom, iam
+  use pftconMod        , only : npcropmin
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -32,6 +33,7 @@ module cropcalStreamMod
   type(shr_strdata_type)      :: sdat_cropcal_cultivar_gdds   ! sdate input data stream
   character(len=CS)           :: stream_varnames_sdate(mxpft)
   character(len=CS)           :: stream_varnames_cultivar_gdds(mxpft)
+  integer                     :: ncft               ! Number of crop functional types (excl. generic crops)
 
   character(len=*), parameter :: sourcefile = &
        __FILE__
@@ -55,7 +57,7 @@ contains
     type(bounds_type), intent(in) :: bounds          ! bounds
     !
     ! !LOCAL VARIABLES:
-    integer                 :: i,n                        ! index
+    integer                 :: i,n,ivt                    ! index
     integer                 :: stream_year_first_cropcal  ! first year in crop calendar streams to use
     integer                 :: stream_year_last_cropcal   ! last year in crop calendar streams to use
     integer                 :: model_year_align_cropcal   ! align stream_year_first_cropcal with
@@ -89,9 +91,11 @@ contains
     stream_fldFileName_sdate = ''
     stream_fldFileName_cultivar_gdds = ''
     ! SSR TODO: Make below work with arbitrary # of growing seasons per year
-    do n = 1,mxpft
-       write(stream_varnames_sdate(n),'(a,i0)') "sdate1",n
-       write(stream_varnames_cultivar_gdds(n),'(a,i0)') "gdd1",n
+    ncft = mxpft - npcropmin + 1 ! Ignores generic crops
+    do n = 1,ncft
+       ivt = npcropmin + n - 1
+       write(stream_varnames_sdate(n),'(a,i0)') "sdate1",ivt
+       write(stream_varnames_cultivar_gdds(n),'(a,i0)') "gdd1",ivt
     end do
 
     ! Read cropcal_streams namelist
@@ -236,7 +240,6 @@ contains
     ! Interpolate data stream information for crop calendars.
     !
     ! !USES:
-    use pftconMod       , only : noveg
     use CropType        , only : crop_type
     use PatchType       , only : patch
     use dshr_methods_mod , only : dshr_fldbun_getfldptr
@@ -267,9 +270,10 @@ contains
     ! Get pointer for stream data that is time and spatially interpolate to model time and grid
     ! Place all data from each type into a temporary 2d array
     lsize = bounds%endg - bounds%begg + 1
-    allocate(dataptr2d_sdate(lsize, mxpft))
-    allocate(dataptr2d_cultivar_gdds(lsize, mxpft))
-    do n = 1,mxpft
+    allocate(dataptr2d_sdate(lsize, ncft))
+    allocate(dataptr2d_cultivar_gdds(lsize, ncft))
+    ! Starting with npcropmin will skip generic crops
+    do n = 1, ncft
        call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
             fldptr1=dataptr1d_sdate,  rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
@@ -291,11 +295,13 @@ contains
     ! Set rx_sdate and rx_cultivar_gdd for each gridcell/patch combination
     do p = bounds%begp, bounds%endp
        ivt = patch%itype(p)
-       if (ivt /= noveg) then
+       ! Will skip generic crops
+       if (ivt >= npcropmin) then
+          n = ivt - npcropmin + 1
           ! vegetated pft
           ig = g_to_ig(patch%gridcell(p))
-          crop_inst%rx_sdates_thisyr(p,1) = dataptr2d_sdate(ig,ivt)
-          crop_inst%rx_cultivar_gdds_thisyr(p,1) = dataptr2d_cultivar_gdds(ig,ivt)
+          crop_inst%rx_sdates_thisyr(p,1) = dataptr2d_sdate(ig,n)
+          crop_inst%rx_cultivar_gdds_thisyr(p,1) = dataptr2d_cultivar_gdds(ig,n)
 
           ! Only for first sowing date of the year
           crop_inst%next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
