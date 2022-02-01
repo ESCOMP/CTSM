@@ -1796,8 +1796,18 @@ contains
             next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
          end if
 
-         do_plant_prescribed = next_rx_sdate(p) == jday
          s = sowing_count(p)
+
+         ! SSR: I don't know why this is necessary. next_rx_sdate should get properly set in PlantCrop()
+         ! or above, but sometimes (NOT in first year after restart) I'm seeing crops planted Jan. 1 that
+         ! are harvested the same day. This (specifically, the second condition) fixes that.
+         if (s < mxgrowseas) then
+             next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,s+1)
+         else
+             next_rx_sdate(p) = -1
+         end if
+
+         do_plant_prescribed = next_rx_sdate(p) == jday
          
          if (generate_crop_gdds) then
              if (s==0 .and. next_rx_sdate(p)<=0) then
