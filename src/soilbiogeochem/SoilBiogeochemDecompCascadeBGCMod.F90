@@ -582,7 +582,7 @@ contains
     !  written by C. Koven based on original CLM4 decomposition cascade
     !
     ! !USES:
-    use clm_time_manager , only : get_curr_days_per_year
+    use clm_time_manager , only : get_average_days_per_year
     use shr_const_mod    , only : SHR_CONST_PI
     use clm_varcon       , only : secspday
     !
@@ -654,7 +654,7 @@ contains
               errMsg(sourcefile, __LINE__))
       endif
 
-      days_per_year = get_curr_days_per_year()
+      days_per_year = get_average_days_per_year()
 
       ! set "Q10" parameter
       Q10 = CNParamsShareInst%Q10

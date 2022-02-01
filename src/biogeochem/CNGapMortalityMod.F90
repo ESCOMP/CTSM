@@ -88,7 +88,7 @@ contains
     ! Gap-phase mortality routine for coupled carbon-nitrogen code (CN)
     !
     ! !USES:
-    use clm_time_manager , only: get_curr_days_per_year
+    use clm_time_manager , only: get_average_days_per_year
     use clm_varpar       , only: nlevdecomp_full
     use clm_varcon       , only: secspday
     use clm_varctl       , only: use_cndv, spinup_state
@@ -180,7 +180,7 @@ contains
 
          end if
 
-         m  = am/(get_curr_days_per_year() * secspday)
+         m  = am/(get_average_days_per_year() * secspday)
 
          !------------------------------------------------------
          ! patch-level gap mortality carbon fluxes
