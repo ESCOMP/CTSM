@@ -11,15 +11,25 @@ module mkurbanparCommonMod
   ! mkurbanparMod.)
   !-----------------------------------------------------------------------
 
-  use shr_kind_mod, only : r8 => shr_kind_r8
+  use ESMF
+  use pio
+  use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs
+  use shr_sys_mod  , only : shr_sys_abort
+  use mkpioMod     , only : mkpio_get_rawdata, pio_iotype, pio_ioformat, pio_iosystem
+  use mkpioMod     , only : mkpio_iodesc_output, mkpio_def_spatial_var, mkpio_wopen
+  use mkpioMod     , only : mkpio_get_dimlengths, mkpio_get_rawdata
+  use mkpioMod     , only : pio_iotype, pio_ioformat, pio_iosystem
+  use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8
+  use mkutilsMod   , only : chkerr
+  use mkvarctl     , only : ndiag
 
   implicit none
   private
 
   ! !public member functions:
-#ifdef TODO
   public :: mkurban_pct_diagnostics        ! print diagnostics related to pct urban
-  public :: mkelev                         ! Get elevation to reduce urban for high elevation areas
+#ifdef TODO
+  public :: mkurban_topo                   ! Get elevation to reduce urban for high elevation areas
 #endif
 
   ! !public data members:
@@ -27,88 +37,60 @@ module mkurbanparCommonMod
 
   public :: MIN_DENS
 
-#ifdef TODO
-contains
+  character(len=*) , parameter :: u_FILE_u = &
+       __FILE__
 
-  subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, ndiag, dens_class, frac_dst)
+!===============================================================
+contains
+!===============================================================
+
+  subroutine mkurban_pct_diagnostics(area_i, area_o, mask_i, frac_o, urbn_i, urbn_o, dens_class)
     !
-    ! !DESCRIPTION:
     ! print diagnostics related to pct urban
+    ! Compare global areas on input and output grids
     !
     ! This is intended to be called after mkurban_pct, but is split out into a separate
     ! routine so that modifications to urbn_o can be made in between the two calls (e.g.,
     ! setting urbn_o to 0 wherever it is less than a certain threshold; the rules for doing
     ! this can't always be applied inline in mkurban_pct).
     !
-    ! !USES:
-    use mkdomainMod , only : domain_type
-    use mkgridmapMod, only : gridmap_type
     use mkvarpar
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(domain_type) , intent(in) :: ldomain
-    type(domain_type) , intent(in) :: tdomain    ! local domain
-    type(gridmap_type), intent(in) :: tgridmap   ! local gridmap
+
+    ! input/output variables
+    real(r8)          , intent(in) :: area_i(:)
+    real(r8)          , intent(in) :: area_o(:)
+    integer           , intent(in) :: mask_i(:)
+    real(r8)          , intent(in) :: frac_o(:) 
     real(r8)          , intent(in) :: urbn_i(:)  ! input grid: percent urban
     real(r8)          , intent(in) :: urbn_o(:)  ! output grid: percent urban
-    real(r8)          , intent(in) :: frac_dst(:)  ! output fractions
-    integer           , intent(in) :: ndiag      ! unit number for diag out
-
     integer , intent(in), optional :: dens_class ! density class
-    !
-    ! !REVISION HISTORY:
-    ! Author: Bill Sacks
-    ! (Moved from mkurbanparMod Feb, 2012)
-    !
-    !
-    ! !LOCAL VARIABLES:
-    !EOP
-    real(r8) :: gurbn_i                         ! input  grid: global urbn
-    real(r8) :: garea_i                         ! input  grid: global area
-    real(r8) :: gurbn_o                         ! output grid: global urbn
-    real(r8) :: garea_o                         ! output grid: global area
-    integer  :: ni,no,k                         ! indices
+
+    ! local variables:
+    real(r8) :: gurbn_i ! input  grid: global urbn
+    real(r8) :: garea_i ! input  grid: global area
+    real(r8) :: gurbn_o ! output grid: global urbn
+    real(r8) :: garea_o ! output grid: global area
+    integer  :: ni,no,k ! indices
     character(len=*), parameter :: subname = 'mkurban_pct_diagnostics'
     !-----------------------------------------------------------------------
 
-    ! Error check inputs
-    if (size(frac_dst) /= ldomain%ns) then
-       write(6,*) subname//' ERROR: array size inconsistencies'
-       write(6,*) 'size(frac_dst) = ', size(frac_dst)
-       write(6,*) 'ldomain%ns   = ', ldomain%ns
-       call shr_sys_abort()
-    end if
-
-    ! -----------------------------------------------------------------
-    ! Error check2
-    ! Compare global areas on input and output grids
-    ! -----------------------------------------------------------------
-
     ! Input grid
-
     gurbn_i = 0._r8
     garea_i = 0._r8
-
-    do ni = 1, tdomain%ns
-       garea_i = garea_i + tgridmap%area_src(ni)*re**2
-       gurbn_i = gurbn_i + urbn_i(ni)*(tgridmap%area_src(ni)/100._r8)*&
-            tdomain%mask(ni)*re**2
+    do ni = 1, size(area_i)
+       garea_i = garea_i + area_i(ni)*re**2
+       gurbn_i = gurbn_i + urbn_i(ni)*(area_i(ni)/100._r8)* mask_i(ni)*re**2
     end do
 
     ! Output grid
-
     gurbn_o = 0._r8
     garea_o = 0._r8
-
-    do no = 1, ldomain%ns
-       garea_o = garea_o + tgridmap%area_dst(no)*re**2
-       gurbn_o = gurbn_o + urbn_o(no)* (tgridmap%area_dst(no)/100._r8)*&
-            frac_dst(no)*re**2
+    do no = 1, size(area_o)
+       garea_o = garea_o + area_o(no)*re**2
+       gurbn_o = gurbn_o + urbn_o(no)* (area_o(no)/100._r8)*frac_o(no)*re**2
     end do
 
     ! Diagnostic output
-
     write (ndiag,*)
     write (ndiag,'(1x,70a1)') ('=',k=1,70)
     if (present(dens_class)) then
@@ -117,12 +99,11 @@ contains
        write (ndiag,'(1x,a)') 'Urban Output'
     end if
     write (ndiag,'(1x,70a1)') ('=',k=1,70)
-
     write (ndiag,*)
     write (ndiag,'(1x,70a1)') ('.',k=1,70)
     write (ndiag,2001)
-2001 format (1x,'surface type   input grid area  output grid area'/ &
-         1x,'                 10**6 km**2      10**6 km**2   ')
+2001 format (1x,'surface type   input grid area  output grid area'/&
+             1x,'                 10**6 km**2      10**6 km**2   ')
     write (ndiag,'(1x,70a1)') ('.',k=1,70)
     write (ndiag,*)
     write (ndiag,2003) gurbn_i*1.e-06,gurbn_o*1.e-06
@@ -133,98 +114,77 @@ contains
 
   end subroutine mkurban_pct_diagnostics
 
-  !-----------------------------------------------------------------------
-  subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
+#ifdef TODO
+  !===============================================================
+  subroutine mkurban_topo(mesh_i, mesh_o, file_data_i, varname, elev_o)
     !
     ! Make elevation data
     !
-    ! !USES:
-    use mkdomainMod  , only : domain_type, domain_clean, domain_read, domain_checksame
-    use mkgridmapMod
-    use mkvarpar	
-    use mkvarctl    
-    use mkncdio
     use mkdiagnosticsMod, only : output_diagnostics_continuous
     !
     ! !ARGUMENTS:
-    type(domain_type), intent(in) :: ldomain
-    character(len=*)  , intent(in) :: mapfname  ! input mapping file name
     character(len=*)  , intent(in) :: datfname  ! input data file name
     integer           , intent(in) :: ndiag     ! unit number for diag out
     character(len=*)  , intent(in) :: varname   ! topo variable name
     real(r8)          , intent(out):: elev_o(:) ! output elevation data
 
     ! !LOCAL VARIABLES:
-    type(domain_type)     :: tdomain            ! local domain
-    type(gridmap_type)    :: tgridmap           ! local gridmap
-    real(r8), allocatable :: elev_i(:)          ! canyon_height to width ratio in
-    real(r8), allocatable :: frac_dst(:)        ! output fractions
-    integer  :: ns_i,ns_o                       ! indices
-    integer  :: k,l,n,m,ni                      ! indices
-    integer  :: ncidi,dimid,varid               ! input netCDF id's
-    integer  :: ier                             ! error status
-    character(len=256) :: name                  ! name of attribute
-    character(len=256) :: unit                  ! units of attribute
-    character(len= 32) :: subname = 'mkelev'
+    real(r8), allocatable :: elev_i(:)  ! canyon_height to width ratio in
+    real(r8), allocatable :: frac_o(:)  ! output fractions
+    integer               :: ns_i,ns_o  ! indices
+    integer               :: k,l,n,m,ni ! indices
+    integer               :: ier        ! error status
+    character(len=CS)     :: name       ! name of attribute
+    character(len=CS)     :: unit       ! units of attribute
+    character(len=*), parameter :: subname = 'mkelev'
     !-----------------------------------------------------------------------
 
     write (6,*) 'Attempting to make elevation .....'
 
-    ns_o = ldomain%ns
-
-    ! -----------------------------------------------------------------
-    ! Read input file
-    ! -----------------------------------------------------------------
-
-    ! Obtain input grid info, read local fields
-
-    call domain_read(tdomain,datfname)
-
-    ns_i = tdomain%ns
-    allocate(elev_i(ns_i), stat=ier)
-    allocate(frac_dst(ns_o), stat=ier)
-    if (ier /= 0) then
-       write(6,*)'mkelev allocation error'; call shr_sys_abort()
-    end if
-
-    write (6,*) 'Open elevation file: ', trim(datfname)
-    call check_ret(nf_open(datfname, 0, ncidi), subname)
-    call check_ret(nf_inq_varid (ncidi, trim(varname), varid), subname)
-    call check_ret(nf_get_var_double (ncidi, varid, elev_i), subname)
-    call check_ret(nf_close(ncidi), subname)
+    ! Query local mesh sizes
+    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Read topo elev dataset with unit mask everywhere
+    write (6,*) 'Open elevation file: ', trim(datfname)
+    allocate(elev_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    call mkpio_get_rawdata(pioid, trim(varname), mesh_i, elev_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call pio_closefile(pioid)
 
-    call gridmap_mapread(tgridmap, mapfname)
+    ! Create a route handle between the input and output mesh
+    allocate(frac_o(ns_o), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
-    ! Error checks for domain and map consistencies
-    ! Note that the topo dataset has no landmask - so a unit landmask is assumed
-
-    call domain_checksame( tdomain, ldomain, tgridmap )
-
-    ! Obtain frac_dst
-    call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
-
-    ! Determine elev_o on output grid
-
+    ! Regrid input data to model resolution - determine elev_o on output grid
     elev_o(:) = 0.
+    if (ier/=0) call shr_sys_abort()
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, elev_i, elev_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call gridmap_areaave_srcmask(tgridmap, elev_i, elev_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-
-    call output_diagnostics_continuous(elev_i, elev_o, tgridmap, "Urban elev variable", "m", ndiag, tdomain%mask, frac_dst)
-
+    call output_diagnostics_continuous(elev_i, elev_o, tgridmap, &
+         "Urban elev variable", "m", ndiag, mask_i, frac_o)
 
     ! Deallocate dynamic memory
-
-    call domain_clean(tdomain)
-    call gridmap_clean(tgridmap)
     deallocate (elev_i)
-    deallocate (frac_dst)
+    deallocate (frac_o)
 
-    write (6,*) 'Successfully made elevation' 
-    write (6,*)
+    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
-  end subroutine mkelev
+    if (root_task) then
+       write (ndiag,'(a)') 'Successfully made elevation' 
+       write (ndiag,'(a)')
+    end if
+
+  end subroutine mkurban_topo
 #endif
 
 end module mkurbanparCommonMod

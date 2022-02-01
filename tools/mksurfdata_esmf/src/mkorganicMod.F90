@@ -45,10 +45,13 @@ contains
     integer                :: rcode, ier             ! error status
     integer                :: ndims
     integer , allocatable  :: dimlengths(:)
-    real(r8), allocatable  :: data_i(:,:)
-    real(r8), allocatable  :: data_o(:,:)
+    integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
+    real(r8), allocatable  :: area_i(:)
+    real(r8), allocatable  :: area_o(:)
+    real(r8), allocatable  :: data_i(:,:)
+    real(r8), allocatable  :: data_o(:,:)
     character(len=*), parameter :: subname = 'mkorganic'
     !-----------------------------------------------------------------------
 
@@ -58,7 +61,7 @@ contains
        write (ndiag,'(a)') ' Attempting to make organic mater dataset .....'
     end if
 
-    ! Open input data file - need to do this first to obtain ungridded dimension size
+    ! Open input data file
     call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
     call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
@@ -82,63 +85,66 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
-    ! Create a route handle between the input and output mesh
-    call create_routehandle_r8(mesh_i, mesh_o, routehandle, rc)
-    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-
-    ! Determine ns_i and allocate data_i
+    ! Determine ns_i
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
-    allocate(data_i(nlay,ns_i),stat=ier)
-    if (ier/=0) call shr_sys_abort()
 
-    ! Determine ns_o and allocate data_o
-    ns_o = size(organic_o, dim=1)
-    allocate(data_o(nlay,ns_o),stat=ier)
+    ! Determine ns_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Get the landmask from the file and reset the mesh mask based on that
+    allocate(frac_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
+    allocate(mask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do ni = 1,ns_i
+       if (frac_i(ni) > 0._r8) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
+       end if
+    end do
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create a route handle between the input and output mesh and get frac_o
+    allocate(frac_o(ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
     ! Read in input data
     ! - levels are the innermost dimension for esmf fields
     ! - levels are the outermost dimension in pio reads
     ! Input data is read into (ns_i,nlay) array and then transferred to data_i(nlay,ns_i)
+    allocate(data_i(nlay,ns_i),stat=ier)
+    if (ier/=0) call shr_sys_abort()
     call mkpio_get_rawdata(pioid, 'ORGANIC', mesh_i, data_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-    ! Regrid data_i to data_o and frac_i to frac_o
+    ! Regrid data_i to data_o
+    allocate(data_o(nlay,ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort()
     call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 1, nlay, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regrid organic_i in  "//trim(subname))
 
+    ! Set organic_o
     do l = 1,nlevsoi
-       do n = 1,size(organic_o, dim=1)
-          organic_o(n,l) = data_o(l,n)
+       do no = 1,ns_o
+          organic_o(no,l) = data_o(l,no)
        end do
     end do
-
-    ! Determine frac_o (regrid frac_i to frac_o)
-    allocate(frac_i(ns_i))
-    allocate(frac_o(ns_o))
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, frac_i, frac_o, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After regrid landmask in  "//trim(subname))
-
-    ! Divide organic_o by frac_o
-    do n = 1,ns_o
-       if (frac_o(n) > 0._r8) then
-          organic_o(n,:) = organic_o(n,:) / frac_o(n)
-       else
-          organic_o(n,:) = 0._r8
-       end if
-    end do
     do l = 1,nlevsoi
-       do n = 1,size(organic_o, dim=1)
-          if ((organic_o(n,l)) > 130.000001_r8) then
-             write (6,*) trim(subname)//' error: organic = ',organic_o(n,l), &
-                  ' greater than 130.000001 for n,lev ',n,l
+       do no = 1,ns_o
+          if ((organic_o(no,l)) > 130.000001_r8) then
+             write (6,*) trim(subname)//' error: organic = ',organic_o(no,l), &
+                  ' greater than 130.000001 for n,lev ',no,l
              call shr_sys_abort()
           end if
        enddo

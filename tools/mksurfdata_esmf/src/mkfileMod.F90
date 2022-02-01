@@ -182,7 +182,7 @@ contains
     ! Write to netcdf file is done inside mkurbanpar routine
     ! ----------------------------------------------------------------------
     
-    call mkurbanpar(pioid, mksrf_furban, mesh_o, urban_region, urban_classes_g, &
+    call mkurbanpar(mksrf_furban, pioid, mesh_o, urban_region, urban_classes_g, &
          urban_skip_abort_on_invalid_data_check)
 
     ! Close surface dataset

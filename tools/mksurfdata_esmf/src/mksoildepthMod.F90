@@ -12,7 +12,7 @@ module mksoildepthMod
   use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
   use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8
   use mkutilsMod     , only : chkerr
-  use mkchecksMod    , only : min_bad, max_bad  
+  use mkchecksMod    , only : min_bad, max_bad
   use mkvarctl
 
   implicit none
@@ -43,15 +43,16 @@ contains
     type(ESMF_Mesh)             :: mesh_i
     type(file_desc_t)           :: pioid
     integer                     :: ns_i, ns_o
-    integer                     :: n
-    real(r8), allocatable       :: soildepth_i(:)  
+    integer                     :: ni, no
+    integer , allocatable       :: mask_i(:)
     real(r8), allocatable       :: frac_i(:)
     real(r8), allocatable       :: frac_o(:)
-    integer                     :: ier, rcode                ! error status
-    character(len=CS)           :: varname 
+    real(r8), allocatable       :: soildepth_i(:)
+    character(len=CS)           :: varname
     integer                     :: varnum
     real(r8), parameter         :: min_valid = 0._r8         ! minimum valid value
     real(r8), parameter         :: max_valid = 100.000001_r8 ! maximum valid value
+    integer                     :: ier, rcode                ! error status
     character(len=*), parameter :: subname = 'mksoildepth'
     !-----------------------------------------------------------------------
 
@@ -71,30 +72,45 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
-    ! Create a route handle between the input and output mesh
-    call create_routehandle_r8(mesh_i, mesh_o, routehandle, rc)
-    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-
-    ! Determine ns_i and allocate soildepth_i
+    ! Determine ns_i
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    allocate(soildepth_i(ns_i), stat=ier)
-    if (ier/=0) call shr_sys_abort()
 
-    ! Determine frac_o (regrid frac_i to frac_o)
-    allocate(frac_i(ns_i))
-    allocate(frac_o(ns_o))
+    ! Determine ns_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Get the landmask from the file and reset the mesh mask based on that
+    allocate(frac_o(ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+    allocate(frac_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(mask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
     call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, frac_i, frac_o, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    do n = 1, ns_o
-       if ((frac_o(n) < 0.0) .or. (frac_o(n) > 1.0001)) then
-          write(6,*) "ERROR:: frac_o out of range: ", frac_o(n),n
+    do ni = 1,ns_i
+       if (frac_i(ni) > 0._r4) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
+       end if
+    end do
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create a route handle between the input and output mesh and get frac_o
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+    do no = 1, ns_o
+       if ((frac_o(no) < 0.0) .or. (frac_o(no) > 1.0001)) then
+          write(6,*) "ERROR:: frac_o out of range: ", frac_o(no),no
           call shr_sys_abort ()
        end if
     end do
-    call ESMF_VMLogMemInfo("After regrid landmask in  "//trim(subname))
 
     ! Determine variable name to read in
     varnum = 1
@@ -117,25 +133,21 @@ contains
        varname = 'Lowland_Depth_Mean'
     end select
 
-    ! Read in input data
+    ! Read in input soil depth data
+    allocate(soildepth_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
     call mkpio_get_rawdata(pioid, trim(varname), mesh_i, soildepth_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-    ! Regrid soildepth_i to soildepth_o and scale by 1/frac_o
+    ! Regrid soildepth_i to soildepth_o
     call regrid_rawdata(mesh_i, mesh_o, routehandle, soildepth_i, soildepth_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_LogWrite(subname//'after regrid rawdata in '//trim(subname))
-    do n = 1,ns_o
-       if (frac_o(n) > 0._r8) then
-          soildepth_o(n) = soildepth_o(n) / frac_o(n)
-       else
-          soildepth_o(n) = 0._r8
-       end if
-    end do
 
     ! Check validity of output data
-    if ( min_bad(soildepth_o, min_valid, 'soildepth') .or. max_bad(soildepth_o, max_valid, 'soildepth')) then
+    if ( min_bad(soildepth_o, min_valid, 'soildepth') .or. &
+         max_bad(soildepth_o, max_valid, 'soildepth')) then
        call shr_sys_abort()
     end if
 

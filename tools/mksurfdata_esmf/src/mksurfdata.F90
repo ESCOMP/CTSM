@@ -112,7 +112,7 @@ program mksurfdata
   use mkagfirepkmonthMod , only : mkagfirepkmon
   use mktopostatsMod     , only : mktopostats
   use mkVICparamsMod     , only : mkVICparams
-  use mkurbanparCommonMod, only : mkelev
+  use mkurbanparCommonMod, only : mkurban_topo
 #else
   use mkurbanparCommonMod
 #endif
@@ -469,7 +469,7 @@ program mksurfdata
   !    ! (this same dataset used to be used for glacier-related purposes as well).
   !    ! TODO(wjs, 2016-01-15) A better solution for this urban screening would probably
   !    ! be to modify the raw urban data; in that case, I believe we could remove furbtopo.
-  !    call mkelev ( mapfname=map_furbtopo, datfname=mksrf_furbtopo, varname='TOPO_ICE', ndiag=ndiag, elev_o=elev)
+  !    call mkurban_topo ( mapfname=map_furbtopo, datfname=mksrf_furbtopo, varname='TOPO_ICE', ndiag=ndiag, elev_o=elev)
   !    where (elev .gt. elev_thresh)
   !       pcturb = 0._r8
   !    end where

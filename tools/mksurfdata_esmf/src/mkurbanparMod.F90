@@ -15,7 +15,8 @@ module mkurbanparMod
   use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8
   use mkutilsMod   , only : chkerr
   use mkvarctl     , only : root_task, ndiag, ispval, fsurdat, outnc_double
-  use mkvarctl     , only : root_task, ndiag, mpicom, MPI_INTEGER, MPI_MAX
+  use mkvarctl     , only : mpicom, MPI_INTEGER, MPI_MAX
+  use mkvarpar	
 
   implicit none
   private
@@ -64,13 +65,10 @@ contains
 
     ! Set numurbl, nlevurb and nregions
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(datafname), pio_nowrite)
-
     rcode = pio_inq_dimid(pioid, 'density_class', dimid)
     rcode = pio_inq_dimlen(pioid, dimid, numurbl)
-
     rcode = pio_inq_dimid(pioid, 'nlevurb', dimid)
     rcode = pio_inq_dimlen(pioid, dimid, nlevurb)
-
     rcode = pio_inq_dimid(pioid, 'region', dimid)
     rcode = pio_inq_dimlen(pioid, dimid, nregions)
     call pio_closefile(pioid)
@@ -125,22 +123,19 @@ contains
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
     type(file_desc_t)      :: pioid
-    real(r8), allocatable  :: urban_classes_gcell_o(:,:) ! % putput urban in each density class (% of total grid cell area)
-    real(r8), allocatable  :: data_i(:,:)
-    real(r8), allocatable  :: data_o(:,:)
-    integer , allocatable  :: region_i(:)               ! input grid: region ID
-    integer                :: ni,no                     ! indices
-    integer                :: n,k,l                     ! indices   
-    integer                :: ns_i, ns_o                ! array sizes
-    integer                :: dimlen                    ! netCDF dimension length
-    integer, allocatable   :: dimlengths(:)
-    integer                :: max_region                ! maximum region index
+    integer , allocatable  :: mask_i(:) 
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
-    integer                :: max_regions_local
-    integer                :: max_regions
+    real(r8), allocatable  :: data_i(:,:)
+    real(r8), allocatable  :: data_o(:,:)
+    real(r8), allocatable  :: urban_classes_gcell_o(:,:) ! % putput urban in each density class (% of total grid cell area)
+    integer , allocatable  :: region_i(:)                ! input grid: region ID
+    integer                :: ni,no                      ! indices
+    integer                :: ns_i, ns_o                 ! array sizes
+    integer                :: n,k,l                      ! indices   
+    integer                :: max_regions                ! maximum region index
     integer                :: max_index(1)
-    integer                :: rcode, ier                ! error status
+    integer                :: rcode, ier                 ! error status
     character(len=*), parameter :: subname = 'mkurban'
     !-----------------------------------------------------------------------
 
@@ -148,42 +143,59 @@ contains
 
     if (root_task) then
        write (ndiag,'(a)') 'Attempting to make %urban .....'
-    end if
-
-    ! Open raw data file - need to do this first to obtain ungridded dimension size
-    if (root_task) then
        write (ndiag,'(a)') 'Opening urban file: '//trim(file_data_i)
     end if
+
+    ! Open input data file
     call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
     call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
+    call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
-    ! Create a route handle between the input and output mesh
-    call create_routehandle_r8(mesh_i, mesh_o, routehandle, rc)
-    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    ! Determine ns_i and allocate data_i
+    ! Determine ns_i
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    allocate(data_i(numurbl,ns_i),stat=ier)
-    if (ier/=0) call shr_sys_abort()
 
-    ! Determine ns_o and allocate data_o
-    ns_o = size(pcturb_o)
+    ! Determine ns_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Get the landmask from the input data file and reset the mesh mask based on that
+    allocate(frac_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    allocate(data_o(numurbl,ns_o),stat=ier)
+    allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do ni = 1,ns_i
+       if (frac_i(ni) > 0._r8) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
+       end if
+    end do
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create a route handle between the input and output mesh
+    allocate(frac_o(ns_o))
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
     ! Read in input data
     ! - levels are the outermost dimension in pio reads
     ! - levels are the innermost dimension for esmf fields
     ! Input data is read into (ns_i,numurbl) array and then transferred to data_i(numurbl,ns_i)
+    allocate(data_i(numurbl,ns_i),stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(data_o(numurbl,ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort()
     call mkpio_get_rawdata(pioid, 'PCT_URBAN', mesh_i, data_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
@@ -198,32 +210,13 @@ contains
     allocate(urban_classes_gcell_o(ns_o, numurbl), stat=ier)
     if (ier/=0) call shr_sys_abort()
     do l = 1,numurbl
-       do n = 1,ns_o
-          urban_classes_gcell_o(n,l) = data_o(l,n)
+       do no = 1,ns_o
+          urban_classes_gcell_o(no,l) = data_o(l,no)
        end do
     end do
-
-    ! Determine frac_o (regrid frac_i to frac_o)
-    allocate(frac_o(ns_o),stat=ier)
-    allocate(frac_i(ns_i) ,stat=ier)
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, frac_i, frac_o, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    ! Area-average percent cover on input grid to output grid and correct according to frac_o
-    ! Note that percent cover is in terms of total grid area.
-    do n = 1,ns_o
-       if (frac_o(n) > 0._r8) then
-          urban_classes_gcell_o(n,:) = urban_classes_gcell_o(n,:) / frac_o(n)
-       else
-          urban_classes_gcell_o(n,:) = 0._r8
-       end if
+    do no = 1, ns_o
+       pcturb_o(no) = sum(urban_classes_gcell_o(no,:))
     end do
-    do n = 1, ns_o
-       pcturb_o(n) = sum(urban_classes_gcell_o(n,:))
-    end do
-
     ! Check for conservation
     do no = 1, ns_o
        if ((pcturb_o(no)) > 100.000001_r8) then
@@ -289,16 +282,14 @@ contains
 
     ! Create a multi-dimensional array (data_i) where each ungridded dimension corresponds to a 2d field
     ! where there is a 1 for every gridcell that has region_i equal to a given region
-    ! TODO: do we need to multiply by mask_i?
     if (allocated(data_i)) deallocate(data_i)
     allocate(data_i(max_regions, ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort('error allocating data_i(max_regions, ns_i)')
     data_i(:,:) = 0._r8
     do l = 1,max_regions
-       do n = 1,ns_i
-          if (region_i(n) == l) then
-             data_i(l,n) = 1._r8 * frac_i(n)
-            !data_i(l,n) = 1._r8
+       do ni = 1,ns_i
+          if (region_i(ni) == l) then
+             data_i(l,ni) = 1._r8 * frac_i(ni)
           end if
        end do
     end do
@@ -313,10 +304,10 @@ contains
 
     ! Now find dominant region in each output gridcell - this is identical to the maximum index
     region_o(:) = 0
-    do n = 1,ns_o
-       max_index = maxloc(data_o(:,n))
-       if (data_o(max_index(1),n) > 0._r8) then
-          region_o(n) = max_index(1)
+    do no = 1,ns_o
+       max_index = maxloc(data_o(:,no))
+       if (data_o(max_index(1),no) > 0._r8) then
+          region_o(no) = max_index(1)
        end if
     end do
 
@@ -433,10 +424,10 @@ contains
   end subroutine normalize_urbn_by_tot
 
   !===============================================================
-  subroutine mkurbanpar(pioid_o, datfname_i, mesh_o, &
+  subroutine mkurbanpar(datfname_i, pioid_o, mesh_o, &
        region_o, urban_classes_gcell_o, urban_skip_abort_on_invalid_data_check)
     !
-    ! Make Urban Parameter data
+    ! Make Urban Parameter data using the information from region_o input
     !
     ! Note that, in a grid cell with region_o==r, parameter values are filled from region r
     ! for ALL density classes. Thus, the parameter variables have a numurbl dimension along
@@ -450,13 +441,13 @@ contains
     use mkvarpar
 
     ! input/output variables
-    type(file_desc_t) , intent(inout) :: pioid_o
-    character(len=*)  , intent(in) :: datfname_i                 ! input data file name
-    type(ESMF_Mesh)   , intent(in) :: mesh_o                     ! model mesh
-    integer           , intent(in) :: region_o(:)                ! output grid: region ID (length: ns_o)
-    real(r8)          , intent(in) :: urban_classes_gcell_o(:,:) ! output grid: percent urban in each density class
-                                                                 ! (% of total grid cell area) (dimensions: ns_o, numurbl)
-    logical           , intent(in) :: urban_skip_abort_on_invalid_data_check
+    character(len=*)  , intent(in)    :: datfname_i                 ! input data file name
+    type(file_desc_t) , intent(inout) :: pioid_o                    ! output file pio id
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o                     ! model mesh
+    integer           , intent(in)    :: region_o(:)                ! output grid: region ID (length: ns_o)
+    real(r8)          , intent(in)    :: urban_classes_gcell_o(:,:) ! output grid: percent urban in each density class
+                                                                    ! (% of total grid cell area) (dimensions: ns_o, numurbl)
+    logical           , intent(in)    :: urban_skip_abort_on_invalid_data_check
 
     ! local variables
     ! Type to store information about each urban parameter

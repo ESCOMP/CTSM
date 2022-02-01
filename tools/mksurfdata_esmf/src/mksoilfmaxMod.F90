@@ -45,6 +45,7 @@ contains
     integer                :: ni,no
     integer                :: ns_i, ns_o
     integer                :: n,l,k
+    integer , allocatable  :: mask_i(:) 
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
     real(r8), allocatable  :: fmax_i(:)             ! input grid: percent fmax
@@ -85,55 +86,62 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
-    ! Create a route handle between the input and output mesh
-    call create_routehandle_r8(mesh_i, mesh_o, routehandle, rc)
-    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-
-    ! Determine ns_i and allocate fmax_i
+    ! Determine ns_i
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    allocate(fmax_i(ns_i), stat=ier)
-    if (ier/=0) call shr_sys_abort()
 
     ! Determine ns_o
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Determine frac_o (regrid frac_i to frac_o)
-    allocate(frac_i(ns_i)) ; frac_i(:) = 0.
-    allocate(frac_o(ns_o)) ; frac_o(:) = 0.
+    ! Get the landmask from the file and reset the mesh mask based on that
+    allocate(frac_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(mask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
     call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, frac_i, frac_o, rc)
+    do ni = 1,ns_i
+       if (frac_i(ni) > 0._r8) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
+       end if
+    end do
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create a route handle between the input and output mesh
+    allocate(frac_o(ns_o))
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
     do n = 1, ns_o
        if ((frac_o(n) < 0.0) .or. (frac_o(n) > 1.0001)) then
           write(6,*) "ERROR:: frac_o out of range: ", frac_o(n),n
        end if
     end do
-    call ESMF_VMLogMemInfo("After regrid landmask in  "//trim(subname))
 
     ! Read in input data
+    allocate(fmax_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
     call mkpio_get_rawdata(pioid, 'FMAX', mesh_i, fmax_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-    ! Regrid fmax_i to fmax_o and scale by 1/frac_o
-    ! In points with no data, use globalAvg
-    ! Check for conservation
+    ! Regrid fmax_i to fmax_o, in points with no data, use globalAvg
     fmax_i(:) = fmax_i(:) * frac_i(:)
     fmax_o(:) = 0._r8
     call regrid_rawdata(mesh_i, mesh_o, routehandle, fmax_i, fmax_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_LogWrite(subname//'after regrid rawdata in '//trim(subname))
-
     do n = 1,ns_o
-       if (frac_o(n) > 0._r8) then
-          fmax_o(n) = fmax_o(n) / frac_o(n)
-       else
+       if (frac_o(n) == 0._r8) then
           fmax_o(n) = .365783_r8
        end if
     end do
+
+    ! Check for conservation
     do no = 1, ns_o
        if ((fmax_o(no)) > 1.000001_r8) then
           write (6,*) 'MKFMAX error: fmax = ',fmax_o(no),' greater than 1.000001 for no = ',no

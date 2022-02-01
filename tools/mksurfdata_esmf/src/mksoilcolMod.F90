@@ -6,15 +6,17 @@ module mksoilcolMod
   use shr_sys_mod  , only : shr_sys_abort
   use mkpioMod     , only : mkpio_get_rawdata
   use mkpioMod     , only : mkpio_iodesc_rawdata, pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8
-  use mkutilsMod   , only : chkerr, mkrank
+  use mkesmfMod    , only : regrid_rawdata, create_routehandle_r4, get_meshareas
+  use mkutilsMod   , only : chkerr
   use mkvarctl     , only : root_task, ndiag, mpicom, MPI_INTEGER, MPI_MAX
   use mkvarctl     , only : soil_color_override, unsetcol
+  use mkvarpar     , only : re
 
   implicit none
   private
 
   public  :: mksoilcol      ! Set soil colors
+  private :: mkrank
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -28,7 +30,7 @@ contains
     ! input/output variables
     character(len=*)  , intent(in)    :: file_mesh_i     ! input mesh file name
     character(len=*)  , intent(in)    :: file_data_i     ! input data file name
-    type(ESMF_Mesh)   , intent(in)    :: mesh_o
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o          ! model mesho
     integer           , pointer       :: soil_color_o(:) ! soil color classes
     integer           , intent(out)   :: nsoilcol        ! number of soil colors
     integer           , intent(out)   :: rc
@@ -39,14 +41,22 @@ contains
     type(file_desc_t)      :: pioid
     integer                :: ni,no
     integer                :: ns_i, ns_o
-    integer                :: n,l
-    real(r8), allocatable  :: soilcol_i(:)
-    real(r8), allocatable  :: data_i(:,:)
-    real(r8), allocatable  :: data_o(:,:)
-    real(r8), allocatable  :: mask_i(:)
-    logical                :: has_color    ! whether this grid cell has non-zero color
+    integer                :: n,l,k
+    integer , allocatable  :: mask_i(:)
+    real(r4), allocatable  :: frac_i(:)
+    real(r4), allocatable  :: frac_o(:)
+    real(r4), allocatable  :: area_i(:)
+    real(r4), allocatable  :: area_o(:)
+    real(r4), allocatable  :: data_i(:,:)
+    real(r4), allocatable  :: data_o(:,:)
+    real(r4), allocatable  :: soil_color_i(:)
+    logical                :: has_color ! whether this grid cell has non-zero color
     integer                :: nsoilcol_local
     integer                :: maxindex(1)
+    real(r4), allocatable  :: gast_i(:) ! global area, by surface type
+    real(r4), allocatable  :: gast_o(:) ! global area, by surface type
+    real(r4)               :: sum_fldi  ! global sum of dummy input fld
+    real(r4)               :: sum_fldo  ! global sum of dummy output fld
     integer                :: rcode, ier
     character(len=*), parameter :: subname = 'mksoilcol'
     !-----------------------------------------------------------------------
@@ -80,37 +90,51 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
-    ! Create a route handle between the input and output mesh
-    call create_routehandle_r8(mesh_i, mesh_o, routehandle, rc)
-    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-
-    ! Determine ns_i and allocate data_i
+    ! Determine ns_i
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    allocate(soilcol_i(ns_i),stat=ier)
-    if (ier/=0) call shr_sys_abort()
 
-    ! Read in input data
-    call mkpio_get_rawdata(pioid, 'SOIL_COLOR', mesh_i, soilcol_i, rc=rc)
+    ! Determine ns_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Get the landmask from the file and reset the mesh mask based on that
+    allocate(frac_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(mask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do ni = 1,ns_i
+       if (frac_i(ni) > 0._r4) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
+       end if
+    end do
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create a route handle between the input and output mesh and get frac_o
+    allocate(frac_o(ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call create_routehandle_r4(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+
+    ! Read in input soil color data
+    allocate(soil_color_i(ns_i),stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, 'SOIL_COLOR', mesh_i, soil_color_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
     ! Determine maximum number of soil colors across all processors
     ! This will be used for the ungridded dimension of data_o below
-    nsoilcol_local = maxval(soilcol_i)
+    nsoilcol_local = maxval(soil_color_i)
     call mpi_allreduce(nsoilcol_local, nsoilcol, 1, MPI_INTEGER, MPI_MAX, mpicom, rcode)
     ! TODO: MPI_SUCCESS could not be accessed from mkvarctl
     !if (rcode /= MPI_SUCCESS) call shr_sys_abort('error for mpi_allredice in '//trim(subname))
-
-    ! Determine ns_o and allocate data_o
-    ns_o = size(soil_color_o)
-    allocate(data_o(0:nsoilcol, ns_o),stat=ier)
-    if (ier/=0) call shr_sys_abort()
-
-    ! Determine input landmask (frac_i)
-    allocate(mask_i(ns_i))
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, mask_i, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Now determine data_i as a real 2d array - for every possible soil color create a global
     ! field with gridcells equal to 1 for that soil color and zero elsewhere
@@ -118,17 +142,20 @@ contains
     data_i(:,:) = 0._r4
     do l = 1,nsoilcol
        do n = 1,ns_i
-          if (int(soilcol_i(n)) == l) then
+          if (int(soil_color_i(n)) == l) then
              data_i(l,n) = 1._r4 * mask_i(n)
           end if
        end do
     end do
 
     ! Regrid data_i to data_o
+    allocate(data_o(0:nsoilcol, ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort()
     call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, nsoilcol, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_LogWrite(subname//'after regrid rawdata in '//trim(subname))
 
+    ! Determine output soil color
     soil_color_o(:) = 0
     do no = 1,ns_o
        ! If the output cell has any non-zero-colored inputs, then set the weight of
@@ -142,7 +169,7 @@ contains
 
        ! Rank non-zero weights by color type. wsti(1) is the most extensive color type.
        if (has_color) then
-          call mkrank (nsoilcol, data_o(0:nsoilcol,no), 9999, 1, maxindex)
+          call mkrank (nsoilcol, data_o(0:nsoilcol,no), maxindex)
           soil_color_o(no) = maxindex(1)
        end if
 
@@ -166,7 +193,43 @@ contains
                soil_color_o(no),' is not valid for lon,lat = ',no
           call shr_sys_abort()
        end if
+    end do
 
+    ! Compare global area of each soil color on input and output grids
+
+    allocate(gast_i(0:nsoilcol))
+    allocate(gast_o(0:nsoilcol))
+    allocate(area_i(ns_i))
+    allocate(area_o(ns_o))
+    call get_meshareas(mesh_i, area_i, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call get_meshareas(mesh_o, area_o, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    gast_i(:) = 0.
+    do ni = 1,ns_i
+       k = soil_color_i(ni)
+       gast_i(k) = gast_i(k) + area_i(ni) * mask_i(ni) * re**2
+    end do
+    gast_o(:) = 0.
+    do no = 1,ns_o
+       k = soil_color_o(no)
+       gast_o(k) = gast_o(k) + area_o(no) * frac_o(no) * re**2
+    end do
+
+    write (ndiag,*)
+    write (ndiag,'(1x,70a1)') ('=',k=1,70)
+    write (ndiag,*) 'Soil Color Output'
+    write (ndiag,'(1x,70a1)') ('=',k=1,70)
+    write (ndiag,*)
+    write (ndiag,'(1x,70a1)') ('.',k=1,70)
+    write (ndiag,101)
+101 format (1x,'soil color type',5x,' input grid area output grid area',/ &
+            1x,20x,'     10**6 km**2','      10**6 km**2')
+    write (ndiag,'(1x,70a1)') ('.',k=1,70)
+    write (ndiag,*)
+    do k = 0, nsoilcol
+       write (ndiag,'(1x,a,i3,d16.3,d17.3)') 'class ',k, gast_i(k)*1.e-6, gast_o(k)*1.e-6
     end do
 
     if (root_task) then
@@ -174,10 +237,11 @@ contains
        write (ndiag,'(a)')
     end if
 
+    ! Clean up memory
+    deallocate(mask_i)
     deallocate(data_i)
     deallocate(data_o)
-    deallocate(soilcol_i)
-    deallocate(mask_i)
+    deallocate(soil_color_i)
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
@@ -186,5 +250,43 @@ contains
     call ESMF_LogWrite(subname//' finished routine mksoilcol')
 
   end subroutine mksoilcol
+
+  !===============================================================
+  subroutine mkrank (n, a, iv)
+    !
+    ! Return indices of largest [num] values in array [a].
+    !
+    ! input/output variables
+    integer , intent(in) :: n      !array length
+    real(r4), intent(in) :: a(0:n) !array to be ranked
+    integer , intent(out):: iv(1)  !index to [num] largest values in array [a]
+
+    ! local variables:
+    real(r4) :: a_max  !maximum value in array
+    real(r4) :: delmax !tolerance for finding if larger value
+    integer  :: i      !array index
+    integer  :: m      !do loop index
+    integer  :: k      !do loop index
+    integer  :: miss   !missing data value
+    !-----------------------------------------------------------------------
+
+    ! Find index of largest non-zero number
+    delmax = 1.e-06
+    miss = 9999
+    iv(1) = miss
+
+    a_max = -9999.
+    do i = 0, n
+       if (a(i)>0. .and. (a(i)-a_max)>delmax) then
+          a_max = a(i)
+          iv(1)  = i
+       end if
+    end do
+    ! iv(1) = miss indicates no values > 0. this is an error
+    if (iv(1) == miss) then
+       write (6,*) 'MKRANK error: iv(1) = missing'
+       call shr_sys_abort()
+    end if
+  end subroutine mkrank
 
 end module mksoilcolMod

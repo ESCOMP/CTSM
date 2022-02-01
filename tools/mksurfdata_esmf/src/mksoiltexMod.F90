@@ -10,7 +10,7 @@ module mksoiltexMod
   use shr_sys_mod    , only : shr_sys_abort
   use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
   use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod      , only : regrid_rawdata, create_routehandle_frac, get_meshareas
+  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r4, get_meshareas
   use mkutilsMod     , only : chkerr
   use mkvarctl
   use mkvarpar
@@ -144,6 +144,10 @@ contains
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    ! Determine ns_o and allocate data_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
     ! Get the landmask from the file and reset the mesh mask based on that
     allocate(frac_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
@@ -163,12 +167,11 @@ contains
 
     ! Create a route handle between the input and output mesh
     ! Can only use this routehandle to map fields containing r4 data
-    call create_routehandle_frac(mesh_i, mesh_o, routehandle, frac_o, rc=rc)
+    allocate(frac_o(ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call create_routehandle_r4(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-
-    ! Determine ns_o and allocate data_o
-    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Read in mapunit data
     allocate(mapunit_i(ns_i), stat=ier)
