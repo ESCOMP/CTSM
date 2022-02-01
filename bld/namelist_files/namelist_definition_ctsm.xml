@@ -205,6 +205,11 @@ option to activate BC-snow internal mixing in SNICAR snow albedo calculation
 option to activate dust-snow internal mixing in SNICAR snow albedo calculation
 </entry>
 
+<entry id="DO_SNO_OC" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" value=".false." >
+option to activate organic carbon (OC) in SNICAR snow albedo calculation
+</entry>
+
 <entry id="rooting_profile_method_water" type="integer" category="clm_physics"
        group="rooting_profile_inparm" valid_values="0,1,2" >
 Index of rooting profile for water
