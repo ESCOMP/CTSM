@@ -497,7 +497,7 @@ contains
     ! For coupled carbon-nitrogen code (CN).
     !
     ! !USES:
-    use clm_time_manager , only : get_days_per_year
+    use clm_time_manager , only : get_curr_days_per_year
     use clm_time_manager , only : get_curr_date, is_first_step
     !
     ! !ARGUMENTS:
@@ -537,7 +537,7 @@ contains
 
       ! set time steps
       
-      dayspyr = get_days_per_year()
+      dayspyr = get_curr_days_per_year()
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)
@@ -589,7 +589,7 @@ contains
     !
     ! !USES:
     use clm_varcon       , only : secspday
-    use clm_time_manager , only : get_days_per_year
+    use clm_time_manager , only : get_curr_days_per_year
     use clm_varctl       , only : CN_evergreen_phenology_opt   
     !
     ! !ARGUMENTS:
@@ -677,7 +677,7 @@ contains
          lgsf       => cnveg_state_inst%lgsf_patch    & ! Output: [real(r8) (:) ]  long growing season factor [0-1]                  
          )
 
-      dayspyr   = get_days_per_year()
+      dayspyr   = get_curr_days_per_year()
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)
@@ -1204,7 +1204,7 @@ contains
     ! per year.
     !
     ! !USES:
-    use clm_time_manager , only : get_days_per_year
+    use clm_time_manager , only : get_curr_days_per_year
     use CNSharedParamsMod, only : use_fun
     use clm_varcon       , only : secspday
     use shr_const_mod    , only : SHR_CONST_TKFRZ, SHR_CONST_PI
@@ -1323,7 +1323,7 @@ contains
          )
 
       ! set time steps
-      dayspyr = get_days_per_year()
+      dayspyr = get_curr_days_per_year()
 
       ! specify rain threshold for leaf onset
       rain_threshold = 20._r8
@@ -1644,7 +1644,7 @@ contains
     ! handle CN fluxes during the phenological onset                       & offset periods.
     
     ! !USES:
-    use clm_time_manager , only : get_curr_date, get_curr_calday, get_days_per_year, get_rad_step_size
+    use clm_time_manager , only : get_curr_date, get_curr_calday, get_curr_days_per_year, get_rad_step_size
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1749,7 +1749,7 @@ contains
          )
 
       ! get time info
-      dayspyr = get_days_per_year()
+      dayspyr = get_curr_days_per_year()
       jday    = get_curr_calday()
       call get_curr_date(kyr, kmo, kda, mcsec)
       dtrad   = real( get_rad_step_size(), r8 )
