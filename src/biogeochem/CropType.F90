@@ -202,13 +202,10 @@ contains
     allocate(this%vf_patch       (begp:endp)) ; this%vf_patch       (:) = 0.0_r8
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
-    allocate(this%sdates_thisyr(begp:endp,1:mxgrowseas))
-    allocate(this%hdates_thisyr(begp:endp,1:mxharvests))
+    allocate(this%sdates_thisyr(begp:endp,1:mxgrowseas)) ; this%sdates_thisyr(:,:) = spval
+    allocate(this%hdates_thisyr(begp:endp,1:mxharvests)) ; this%hdates_thisyr(:,:) = spval
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
-
-    this%sdates_thisyr(:,:) = spval
-    this%hdates_thisyr(:,:) = spval
 
   end subroutine InitAllocate
 
