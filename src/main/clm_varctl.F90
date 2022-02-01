@@ -209,14 +209,14 @@ module clm_varctl
   ! number of wavelength bands used in SNICAR snow albedo calculation, cenlin
   integer, public :: snicar_numrad_snw = 5 
 
-  ! type of downward solar radiation spectrum for SNICAR snow albedo calculation (only used in 480-band version), cenlin 
+  ! type of downward solar radiation spectrum for SNICAR snow albedo calculation cenlin 
   integer, public :: snicar_solarspec = 1  ! 1->mid-latitude winter;2->mid-latitude summer;3->sub-Arctic winter;
                                            ! 4->sub-Arctic summer;5->Summit,Greenland,summer;6->High Mountain summer;
 
-  ! snow optics type using different refractive index databases in SNICAR (only used in 480-band version), cenlin
+  ! snow optics type using different refractive index databases in SNICAR, cenlin
   integer, public :: snicar_snw_optics = 3   ! 1->Warren (1984);2->Warren and Brandt (2008);3->Picard et al (2016)
 
-  ! dust optics type for SNICAR snow albedo calculation (only used in 480-band version), cenlin
+  ! dust optics type for SNICAR snow albedo calculation, cenlin
   integer, public :: snicar_dust_optics = 1 ! 1->Saharan dust (Balkanski et al., 2007, central hematite)
                                             ! 2->San Juan Mountains dust, CO (Skiles et al, 2017)
                                             ! 3->Greenland dust (Polashenski et al., 2015, central absorptivity)
@@ -236,6 +236,8 @@ module clm_varctl
   ! option to activate dust-snow internal mixing in SNICAR (He et al. 2017 JC), ceniln
   logical, public :: snicar_snodst_intmix = .false.   ! false->external mixing for all dust; true->internal mixing for all dust
 
+  ! option to activate OC in snow in SNICAR, cenlin
+  logical, public :: DO_SNO_OC = .false.    ! control to include organic carbon (OC) in snow
 
   !----------------------------------------------------------
   ! C isotopes

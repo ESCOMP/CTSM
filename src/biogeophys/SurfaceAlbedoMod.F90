@@ -14,9 +14,9 @@ module SurfaceAlbedoMod
   use landunit_varcon   , only : istsoil, istcrop, istdlak
   use clm_varcon        , only : grlnd, spval ! cenlin
   use clm_varpar        , only : numrad, nlevcan, nlevsno, nlevcan
-  use clm_varctl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE
+  use clm_varctl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE, DO_SNO_OC !cenlin
   use pftconMod         , only : pftcon
-  use SnowSnicarMod     , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
+  use SnowSnicarMod     , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER
   use AerosolMod        , only : aerosol_type
   use CanopyStateType   , only : canopystate_type
   use LakeStateType     , only : lakestate_type

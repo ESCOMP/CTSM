@@ -168,19 +168,16 @@ number of wavelength bands used in SNICAR snow albedo calculation
 <entry id="snicar_solarspec" type="integer" category="clm_physics"
        group="clm_inparm" valid_values="1,2,3,4,5,6" >
 type of downward solar radiation spectrum for SNICAR snow albedo calculation
-(only used in 480-band version)
 </entry>
 
 <entry id="snicar_snw_optics" type="integer" category="clm_physics"
        group="clm_inparm" valid_values="1,2,3" >
 snow optics type using different refractive index databases in SNICAR
-(only used in 480-band version)
 </entry>
 
 <entry id="snicar_dust_optics" type="integer" category="clm_physics"
        group="clm_inparm" valid_values="1,2,3" >
 dust optics type for SNICAR snow albedo calculation
-(only used in 480-band version)
 </entry>
 
 <entry id="snicar_use_aerosol" type="logical" category="clm_physics"

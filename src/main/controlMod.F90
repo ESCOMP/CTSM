@@ -204,7 +204,7 @@ contains
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
          snicar_numrad_snw, snicar_solarspec, snicar_snw_optics, snicar_dust_optics, &
          snicar_use_aerosol, snicar_rt_solver, snicar_snw_shape, snicar_snobc_intmix,&
-         snicar_snodst_intmix  ! cenlin
+         snicar_snodst_intmix,DO_SNO_OC  ! cenlin
     
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -842,6 +842,7 @@ contains
     call mpi_bcast (snicar_snw_shape, 1, MPI_INTEGER, 0, mpicom, ier) ! cenlin
     call mpi_bcast (snicar_snobc_intmix, 1, MPI_LOGICAL, 0, mpicom, ier) ! cenlin
     call mpi_bcast (snicar_snodst_intmix, 1, MPI_LOGICAL, 0, mpicom, ier) ! cenlin
+    call mpi_bcast (DO_SNO_OC, 1, MPI_LOGICAL, 0, mpicom, ier) ! cenlin
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -1016,24 +1017,23 @@ contains
        write(iulog,*) '   snow aging parameters file = ',trim(fsnowaging)
     endif
     ! cenlin
-    if (snicar_numrad_snw==480) then
-      if (fsnowoptics480 == ' ') then
-         write(iulog,*) '   SNICAR: snow optical properties (480-band) file NOT set'
-      else
-         write(iulog,*) '   SNICAR: snow optical properties (480-band) file = ',trim(fsnowoptics480)
-      endif
-      write(iulog,*) '   SNICAR: downward solar radiation spectrum type =', snicar_solarspec
-      write(iulog,*) '   SNICAR: snow refractive index type = ', snicar_snw_optics
-      write(iulog,*) '   SNICAR: dust optics type = ', snicar_dust_optics
+    if (fsnowoptics480 == ' ') then
+       write(iulog,*) '   SNICAR: snow optical properties (480-band) file NOT set'
+    else
+       write(iulog,*) '   SNICAR: snow optical properties (480-band) file = ',trim(fsnowoptics480)
     endif
-
-    write(iulog,*) '   Number of snow layers =', nlevsno
-    write(iulog,*) '   Max snow depth (mm) =', h2osno_max
+    write(iulog,*) '   SNICAR: downward solar radiation spectrum type =', snicar_solarspec
+    write(iulog,*) '   SNICAR: snow refractive index type = ', snicar_snw_optics
+    write(iulog,*) '   SNICAR: dust optics type = ', snicar_dust_optics
     write(iulog,*) '   SNICAR: number of bands in snow albedo calculation =', snicar_numrad_snw  ! cenlin
     write(iulog,*) '   SNICAR: radiative transfer solver type = ',snicar_rt_solver ! cenlin
     write(iulog,*) '   SNICAR: snow grain shape type = ',snicar_snw_shape ! cenlin
     write(iulog,*) '   SNICAR: BC-snow internal mixing = ', snicar_snobc_intmix ! cenlin
     write(iulog,*) '   SNICAR: dust-snow internal mixing = ', snicar_snodst_intmix ! cenlin
+    write(iulog,*) '   SNICAR: OC in snow = ', DO_SNO_OC ! cenlin
+
+    write(iulog,*) '   Number of snow layers =', nlevsno
+    write(iulog,*) '   Max snow depth (mm) =', h2osno_max
 
     write(iulog,*) '   glc number of elevation classes =', maxpatch_glc
     if (glc_do_dynglacier) then

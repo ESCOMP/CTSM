@@ -477,9 +477,9 @@ contains
      use clm_varpar       , only : numrad, nlevsno
      use clm_varcon       , only : spval
      use landunit_varcon  , only : istsoil, istcrop 
-     use clm_varctl       , only : use_subgrid_fluxes, use_snicar_frc, iulog, use_SSRE
+     use clm_varctl       , only : use_subgrid_fluxes, use_snicar_frc, iulog, use_SSRE, DO_SNO_OC !cenlin
      use clm_time_manager , only : get_step_size_real, is_near_local_noon
-     use SnowSnicarMod    , only : DO_SNO_OC
+    ! use SnowSnicarMod    , only : DO_SNO_OC
      use abortutils       , only : endrun
      !
      ! !ARGUMENTS:

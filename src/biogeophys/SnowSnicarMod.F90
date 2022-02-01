@@ -13,7 +13,7 @@ module SnowSnicarMod
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use clm_varctl      , only : iulog, snicar_numrad_snw, snicar_rt_solver, &
                                snicar_snw_shape, snicar_snobc_intmix, &
-                               snicar_snodst_intmix ! cenlin
+                               snicar_snodst_intmix, DO_SNO_OC ! cenlin
   use clm_varcon      , only : tfrz
   use shr_const_mod   , only : SHR_CONST_RHOICE
   use abortutils      , only : endrun
@@ -48,8 +48,9 @@ module SnowSnicarMod
   ! !PUBLIC DATA MEMBERS:
   integer,  public, parameter :: sno_nbr_aer =   8        ! number of aerosol species in snowpack
                                                           ! (indices described above) [nbr]
-  logical,  public, parameter :: DO_SNO_OC =    .false.   ! parameter to include organic carbon (OC)
-                                                          ! in snowpack radiative calculations
+  ! DO_SNO_OC moved to namelist control
+  !logical,  public, parameter :: DO_SNO_OC =    .false.   ! parameter to include organic carbon (OC)
+  !                                                        ! in snowpack radiative calculations
   logical,  public, parameter :: DO_SNO_AER =   .true.    ! parameter to include aerosols in snowpack radiative calculations
 
   ! !PRIVATE DATA MEMBERS:
@@ -141,9 +142,9 @@ module SnowSnicarMod
   real(r8), pointer :: asm_prm_dst4(:) !(numrad_snw)
   real(r8), pointer :: ext_cff_mss_dst4(:) !(numrad_snw)
 
-  ! downward solar radiation spectral weights for 480-band
-  real(r8), pointer :: flx_wgt_dir480(:) !(numrad_snw)  ! direct
-  real(r8), pointer :: flx_wgt_dif480(:) !(numrad_snw)  ! diffuse
+  ! downward solar radiation spectral weights for 5-band or 480-band
+  real(r8), pointer :: flx_wgt_dir(:) !(numrad_snw)  ! direct
+  real(r8), pointer :: flx_wgt_dif(:) !(numrad_snw)  ! diffuse
 
   ! best-fit parameters for snow aging defined over:
   !  11 temperatures from 225 to 273 K
@@ -544,7 +545,8 @@ contains
          )
 
       ! initialize parameter, cenlin
-      nir_bnd_bgn    = nint(snicar_numrad_snw/9.6) + 1 ! 5-band starts at 2; 480-band starts at 51
+      if (snicar_numrad_snw == 5)   nir_bnd_bgn = 2
+      if (snicar_numrad_snw == 480) nir_bnd_bgn = 51
       nir_bnd_end    = snicar_numrad_snw 
 
       ! initialize for adding-doubling solver
@@ -705,7 +707,7 @@ contains
 
 
             ! Set spectral underlying surface albedos to their corresponding VIS or NIR albedos
-            albsfc_lcl(1:(nir_bnd_bgn-1))       = albsfc(c_idx,1)  ! cenlin: update for hyperspectral calculation
+            albsfc_lcl(1:(nir_bnd_bgn-1))       = albsfc(c_idx,1)  ! cenlin
             albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = albsfc(c_idx,2)
             
 
@@ -734,8 +736,8 @@ contains
             !  Band 4: 1.2-1.5um (NIR)
             !  Band 5: 1.5-5.0um (NIR)
             !
-            ! Updated hyperspectral (10-nm) bands (480-band case) cenlin
-            ! Bands 1~50  : 0.2-0.7um (VIS); near-UV (0.2-0.3um) is combined to VIS for now
+            ! Hyperspectral (10-nm) bands (480-band case) cenlin
+            ! Bands 1~50  : 0.2-0.7um (VIS)
             ! Bands 51~480: 0.7~5.0um (NIR)
             !
             ! The following weights are appropriate for surface-incident flux in a mid-latitude winter atmosphere
@@ -753,33 +755,30 @@ contains
                   flx_wgt(2) = 0.77887652162877_r8
                   flx_wgt(3) = 0.22112347837123_r8
                endif
-
             ! 5-band weights
-            elseif (snicar_numrad_snw==5) then
+            !elseif (snicar_numrad_snw==5) then
+            !   ! Direct:
+            !   if (flg_slr_in == 1) then
+            !      flx_wgt(1) = 1._r8
+            !      flx_wgt(2) = 0.49352158521175_r8
+            !      flx_wgt(3) = 0.18099494230665_r8
+            !      flx_wgt(4) = 0.12094898498813_r8
+            !      flx_wgt(5) = 0.20453448749347_r8
+            !   ! Diffuse:
+            !   elseif (flg_slr_in == 2) then
+            !      flx_wgt(1) = 1._r8
+            !      flx_wgt(2) = 0.58581507618433_r8
+            !      flx_wgt(3) = 0.20156903770812_r8
+            !      flx_wgt(4) = 0.10917889346386_r8
+            !      flx_wgt(5) = 0.10343699264369_r8
+            !   endif
+            else     ! works for both 5-band & 480-band, flux weights directly read from input data, cenlin
                ! Direct:
                if (flg_slr_in == 1) then
-                  flx_wgt(1) = 1._r8
-                  flx_wgt(2) = 0.49352158521175_r8
-                  flx_wgt(3) = 0.18099494230665_r8
-                  flx_wgt(4) = 0.12094898498813_r8
-                  flx_wgt(5) = 0.20453448749347_r8
+                  flx_wgt(1:snicar_numrad_snw) = flx_wgt_dir(1:snicar_numrad_snw)  ! VIS or NIR band sum is already normalized to 1.0 in input data
                ! Diffuse:
                elseif (flg_slr_in == 2) then
-                  flx_wgt(1) = 1._r8
-                  flx_wgt(2) = 0.58581507618433_r8
-                  flx_wgt(3) = 0.20156903770812_r8
-                  flx_wgt(4) = 0.10917889346386_r8
-                  flx_wgt(5) = 0.10343699264369_r8
-               endif
-
-            ! 480-band weights, cenlin
-            elseif (snicar_numrad_snw == 480) then
-               ! Direct:
-               if (flg_slr_in == 1) then
-                  flx_wgt(1:snicar_numrad_snw) = flx_wgt_dir480(1:snicar_numrad_snw)  ! either VIS or NIR band sum is 1.0 in the input dataset
-               ! Diffuse:
-               elseif (flg_slr_in == 2) then
-                  flx_wgt(1:snicar_numrad_snw) = flx_wgt_dif480(1:snicar_numrad_snw)  ! either VIS or NIR band sum is 1.0 in the input dataset
+                  flx_wgt(1:snicar_numrad_snw) = flx_wgt_dif(1:snicar_numrad_snw)  ! VIS or NIR band sum is already normalized to 1.0 in input data
                endif
             endif ! end if snicar_numrad_snw
 
@@ -976,6 +975,7 @@ contains
                      if (sno_shp(i) > 1) then
                         ! 7 wavelength bands for g_ice to be interpolated into targeted SNICAR bands here
                         ! use the piecewise linear interpolation subroutine created at the end of this module
+                        ! tests showed the piecewise linear interpolation has similar results as pchip interpolation
                         if (snicar_numrad_snw == 5) then
                            call piecewise_linear_interp1d(7,g_wvl_ct,g_ice_Cg_tmp,wvl_ct5(bnd_idx),g_Cg_intp)
                            call piecewise_linear_interp1d(7,g_wvl_ct,gg_ice_F07_tmp,wvl_ct5(bnd_idx),gg_F07_intp)
@@ -1063,7 +1063,6 @@ contains
                      asm_prm_aer_lcl(8)     = asm_prm_dst4(bnd_idx)
                      ext_cff_mss_aer_lcl(8) = ext_cff_mss_dst4(bnd_idx)
 
-
                      ! Start BC/dust-snow internal mixing for wavelength<=1.2um
                      if (snicar_numrad_snw == 5)   wvl_doint = wvl_ct5(bnd_idx)
                      if (snicar_numrad_snw == 480) wvl_doint = wvl_ct480(bnd_idx)
@@ -1143,7 +1142,6 @@ contains
                         endif ! end if dust-snow internal mixing
 
                      endif ! end if BC/dust-snow internal mixing (bands<1.2um)
-
 
                      L_snw(i)   = h2osno_ice_lcl(i)+h2osno_liq_lcl(i)
                      tau_snw(i) = L_snw(i)*ext_cff_mss_snw_lcl(i)
@@ -2215,7 +2213,7 @@ contains
      integer            :: ier                         ! error status
 
      !
-     ! Open optics file:
+     ! Initialize optical variables
      allocate(ss_alb_snw_drc(idx_Mie_snw_mx,snicar_numrad_snw))
      allocate(asm_prm_snw_drc(idx_Mie_snw_mx,snicar_numrad_snw))
      allocate(ext_cff_mss_snw_drc(idx_Mie_snw_mx,snicar_numrad_snw))
@@ -2246,77 +2244,629 @@ contains
      allocate(ss_alb_dst4(snicar_numrad_snw))
      allocate(asm_prm_dst4(snicar_numrad_snw))
      allocate(ext_cff_mss_dst4(snicar_numrad_snw))
-     allocate(flx_wgt_dir480(snicar_numrad_snw))
-     allocate(flx_wgt_dif480(snicar_numrad_snw))
+     allocate(flx_wgt_dir(snicar_numrad_snw))
+     allocate(flx_wgt_dif(snicar_numrad_snw))
 
      if(masterproc) write(iulog,*) 'Attempting to read snow optical properties .....'
-       ! for 5-band data, cenlin
-     if (snicar_numrad_snw <= 5) then
+
+     !--------------------- for 5-band data, cenlin
+     if (snicar_numrad_snw == 5) then
+
         call getfil (fsnowoptics, locfn, 0)
         call ncd_pio_openfile(ncid, locfn, 0)
         if(masterproc) write(iulog,*) subname,trim(fsnowoptics)
-     end if
-       ! for 480-band data, cenlin
+
+        ! mid-latitude winter spectrum
+        if (snicar_solarspec == 1) then
+           ! flux weights/spectrum
+           call ncd_io( 'flx_wgt_dir5_mlw', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'flx_wgt_dif5_mlw', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
+           ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
+           call ncd_io( 'ss_alb_bcphob_dif_mlw', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_bcphob_dif_mlw', asm_prm_bc1,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_bcphob_dif_mlw', ext_cff_mss_bc1, 'read', ncid, posNOTonfile=.true.)
+           ! BC species 2 Mie parameters, uncoated BC
+           call ncd_io( 'ss_alb_bcphob_dif_mlw', ss_alb_bc2,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_bcphob_dif_mlw', asm_prm_bc2,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_bcphob_dif_mlw', ext_cff_mss_bc2, 'read', ncid, posNOTonfile=.true.)
+           ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
+           call ncd_io( 'ss_alb_ocphob_dif_mlw', ss_alb_oc1,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_ocphob_dif_mlw', asm_prm_oc1,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_ocphob_dif_mlw', ext_cff_mss_oc1, 'read', ncid, posNOTonfile=.true.)
+           ! OC species 2 Mie parameters, uncoated OC
+           call ncd_io( 'ss_alb_ocphob_dif_mlw', ss_alb_oc2,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_ocphob_dif_mlw', asm_prm_oc2,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_ocphob_dif_mlw', ext_cff_mss_oc2, 'read', ncid, posNOTonfile=.true.)
+           ! ice refractive index options
+           if (snicar_snw_optics == 1) then  ! Warren (1984)
+              call ncd_io( 'ss_alb_ice_wrn84_dir_mlw', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn84_dir_mlw',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn84_dir_mlw', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_wrn84_dif_mlw', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn84_dif_mlw',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn84_dif_mlw', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_snw_optics == 2) then ! Warren and Brandt (2008)
+              call ncd_io( 'ss_alb_ice_wrn08_dir_mlw', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn08_dir_mlw',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn08_dir_mlw', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_wrn08_dif_mlw', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn08_dif_mlw',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn08_dif_mlw', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_snw_optics == 3) then ! Picard et al (2016)
+              call ncd_io( 'ss_alb_ice_pic16_dir_mlw', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_pic16_dir_mlw',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_pic16_dir_mlw', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_pic16_dif_mlw', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_pic16_dif_mlw',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_pic16_dif_mlw', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           endif
+           ! dust optical properties
+           if (snicar_dust_optics == 1) then ! Saharan dust (Balkanski et al., 2007, central hematite)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_sah_dif_mlw', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_sah_dif_mlw', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_sah_dif_mlw', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_sah_dif_mlw', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_sah_dif_mlw', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_sah_dif_mlw', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_sah_dif_mlw', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_sah_dif_mlw', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_sah_dif_mlw', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_sah_dif_mlw', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_sah_dif_mlw', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_sah_dif_mlw', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_col_dif_mlw', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_col_dif_mlw', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_col_dif_mlw', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_col_dif_mlw', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_col_dif_mlw', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_col_dif_mlw', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_col_dif_mlw', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_col_dif_mlw', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_col_dif_mlw', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_col_dif_mlw', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_col_dif_mlw', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_col_dif_mlw', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_gre_dif_mlw', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_gre_dif_mlw', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_gre_dif_mlw', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_gre_dif_mlw', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_gre_dif_mlw', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_gre_dif_mlw', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_gre_dif_mlw', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_gre_dif_mlw', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_gre_dif_mlw', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_gre_dif_mlw', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_gre_dif_mlw', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_gre_dif_mlw', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           endif
+
+        ! mid-latitude summer spectrum
+        elseif (snicar_solarspec == 2) then
+           ! flux weights/spectrum
+           call ncd_io( 'flx_wgt_dir5_mls', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'flx_wgt_dif5_mls', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
+           ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
+           call ncd_io( 'ss_alb_bcphob_dif_mls', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_bcphob_dif_mls', asm_prm_bc1,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_bcphob_dif_mls', ext_cff_mss_bc1, 'read', ncid, posNOTonfile=.true.)
+           ! BC species 2 Mie parameters, uncoated BC
+           call ncd_io( 'ss_alb_bcphob_dif_mls', ss_alb_bc2,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_bcphob_dif_mls', asm_prm_bc2,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_bcphob_dif_mls', ext_cff_mss_bc2, 'read', ncid, posNOTonfile=.true.)
+           ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
+           call ncd_io( 'ss_alb_ocphob_dif_mls', ss_alb_oc1,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_ocphob_dif_mls', asm_prm_oc1,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_ocphob_dif_mls', ext_cff_mss_oc1, 'read', ncid, posNOTonfile=.true.)
+           ! OC species 2 Mie parameters, uncoated OC
+           call ncd_io( 'ss_alb_ocphob_dif_mls', ss_alb_oc2,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_ocphob_dif_mls', asm_prm_oc2,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_ocphob_dif_mls', ext_cff_mss_oc2, 'read', ncid, posNOTonfile=.true.)
+           ! ice refractive index options
+           if (snicar_snw_optics == 1) then  ! Warren (1984)
+              call ncd_io( 'ss_alb_ice_wrn84_dir_mls', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn84_dir_mls',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn84_dir_mls', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_wrn84_dif_mls', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn84_dif_mls',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn84_dif_mls', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_snw_optics == 2) then ! Warren and Brandt (2008)
+              call ncd_io( 'ss_alb_ice_wrn08_dir_mls', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn08_dir_mls',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn08_dir_mls', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_wrn08_dif_mls', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn08_dif_mls',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn08_dif_mls', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_snw_optics == 3) then ! Picard et al (2016)
+              call ncd_io( 'ss_alb_ice_pic16_dir_mls', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_pic16_dir_mls',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_pic16_dir_mls', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_pic16_dif_mls', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_pic16_dif_mls',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_pic16_dif_mls', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           endif
+           ! dust optical properties
+           if (snicar_dust_optics == 1) then ! Saharan dust (Balkanski et al., 2007, central hematite)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_sah_dif_mls', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_sah_dif_mls', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_sah_dif_mls', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_sah_dif_mls', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_sah_dif_mls', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_sah_dif_mls', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_sah_dif_mls', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_sah_dif_mls', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_sah_dif_mls', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_sah_dif_mls', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_sah_dif_mls', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_sah_dif_mls', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_col_dif_mls', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_col_dif_mls', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_col_dif_mls', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_col_dif_mls', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_col_dif_mls', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_col_dif_mls', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_col_dif_mls', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_col_dif_mls', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_col_dif_mls', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_col_dif_mls', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_col_dif_mls', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_col_dif_mls', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_gre_dif_mls', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_gre_dif_mls', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_gre_dif_mls', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_gre_dif_mls', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_gre_dif_mls', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_gre_dif_mls', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_gre_dif_mls', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_gre_dif_mls', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_gre_dif_mls', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_gre_dif_mls', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_gre_dif_mls', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_gre_dif_mls', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           endif
+
+        ! sub-Arctic winter spectrum
+        elseif (snicar_solarspec == 3) then
+           call ncd_io( 'flx_wgt_dir5_saw', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'flx_wgt_dif5_saw', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
+           ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
+           call ncd_io( 'ss_alb_bcphob_dif_saw', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_bcphob_dif_saw', asm_prm_bc1,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_bcphob_dif_saw', ext_cff_mss_bc1, 'read', ncid, posNOTonfile=.true.)
+           ! BC species 2 Mie parameters, uncoated BC
+           call ncd_io( 'ss_alb_bcphob_dif_saw', ss_alb_bc2,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_bcphob_dif_saw', asm_prm_bc2,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_bcphob_dif_saw', ext_cff_mss_bc2, 'read', ncid, posNOTonfile=.true.)
+           ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
+           call ncd_io( 'ss_alb_ocphob_dif_saw', ss_alb_oc1,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_ocphob_dif_saw', asm_prm_oc1,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_ocphob_dif_saw', ext_cff_mss_oc1, 'read', ncid, posNOTonfile=.true.)
+           ! OC species 2 Mie parameters, uncoated OC
+           call ncd_io( 'ss_alb_ocphob_dif_saw', ss_alb_oc2,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_ocphob_dif_saw', asm_prm_oc2,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_ocphob_dif_saw', ext_cff_mss_oc2, 'read', ncid, posNOTonfile=.true.)
+           ! ice refractive index options
+           if (snicar_snw_optics == 1) then  ! Warren (1984)
+              call ncd_io( 'ss_alb_ice_wrn84_dir_saw', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn84_dir_saw',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn84_dir_saw', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_wrn84_dif_saw', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn84_dif_saw',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn84_dif_saw', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_snw_optics == 2) then ! Warren and Brandt (2008)
+              call ncd_io( 'ss_alb_ice_wrn08_dir_saw', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn08_dir_saw',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn08_dir_saw', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_wrn08_dif_saw', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn08_dif_saw',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn08_dif_saw', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_snw_optics == 3) then ! Picard et al (2016)
+              call ncd_io( 'ss_alb_ice_pic16_dir_saw', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_pic16_dir_saw',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_pic16_dir_saw', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_pic16_dif_saw', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_pic16_dif_saw',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_pic16_dif_saw', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           endif
+           ! dust optical properties
+           if (snicar_dust_optics == 1) then ! Saharan dust (Balkanski et al., 2007, central hematite)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_sah_dif_saw', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_sah_dif_saw', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_sah_dif_saw', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_sah_dif_saw', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_sah_dif_saw', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_sah_dif_saw', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_sah_dif_saw', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_sah_dif_saw', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_sah_dif_saw', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_sah_dif_saw', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_sah_dif_saw', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_sah_dif_saw', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_col_dif_saw', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_col_dif_saw', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_col_dif_saw', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_col_dif_saw', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_col_dif_saw', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_col_dif_saw', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_col_dif_saw', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_col_dif_saw', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_col_dif_saw', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_col_dif_saw', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_col_dif_saw', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_col_dif_saw', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_gre_dif_saw', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_gre_dif_saw', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_gre_dif_saw', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_gre_dif_saw', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_gre_dif_saw', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_gre_dif_saw', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_gre_dif_saw', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_gre_dif_saw', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_gre_dif_saw', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_gre_dif_saw', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_gre_dif_saw', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_gre_dif_saw', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           endif
+
+        ! sub-Arctic summer spectrum
+        elseif (snicar_solarspec == 4) then
+           call ncd_io( 'flx_wgt_dir5_sas', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'flx_wgt_dif5_sas', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
+           ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
+           call ncd_io( 'ss_alb_bcphob_dif_sas', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_bcphob_dif_sas', asm_prm_bc1,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_bcphob_dif_sas', ext_cff_mss_bc1, 'read', ncid, posNOTonfile=.true.)
+           ! BC species 2 Mie parameters, uncoated BC
+           call ncd_io( 'ss_alb_bcphob_dif_sas', ss_alb_bc2,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_bcphob_dif_sas', asm_prm_bc2,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_bcphob_dif_sas', ext_cff_mss_bc2, 'read', ncid, posNOTonfile=.true.)
+           ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
+           call ncd_io( 'ss_alb_ocphob_dif_sas', ss_alb_oc1,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_ocphob_dif_sas', asm_prm_oc1,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_ocphob_dif_sas', ext_cff_mss_oc1, 'read', ncid, posNOTonfile=.true.)
+           ! OC species 2 Mie parameters, uncoated OC
+           call ncd_io( 'ss_alb_ocphob_dif_sas', ss_alb_oc2,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_ocphob_dif_sas', asm_prm_oc2,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_ocphob_dif_sas', ext_cff_mss_oc2, 'read', ncid, posNOTonfile=.true.)
+           ! ice refractive index options
+           if (snicar_snw_optics == 1) then  ! Warren (1984)
+              call ncd_io( 'ss_alb_ice_wrn84_dir_sas', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn84_dir_sas',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn84_dir_sas', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_wrn84_dif_sas', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn84_dif_sas',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn84_dif_sas', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_snw_optics == 2) then ! Warren and Brandt (2008)
+              call ncd_io( 'ss_alb_ice_wrn08_dir_sas', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn08_dir_sas',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn08_dir_sas', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_wrn08_dif_sas', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn08_dif_sas',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn08_dif_sas', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_snw_optics == 3) then ! Picard et al (2016)
+              call ncd_io( 'ss_alb_ice_pic16_dir_sas', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_pic16_dir_sas',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_pic16_dir_sas', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_pic16_dif_sas', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_pic16_dif_sas',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_pic16_dif_sas', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           endif
+           ! dust optical properties
+           if (snicar_dust_optics == 1) then ! Saharan dust (Balkanski et al., 2007, central hematite)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_sah_dif_sas', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_sah_dif_sas', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_sah_dif_sas', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_sah_dif_sas', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_sah_dif_sas', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_sah_dif_sas', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_sah_dif_sas', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_sah_dif_sas', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_sah_dif_sas', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_sah_dif_sas', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_sah_dif_sas', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_sah_dif_sas', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_col_dif_sas', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_col_dif_sas', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_col_dif_sas', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_col_dif_sas', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_col_dif_sas', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_col_dif_sas', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_col_dif_sas', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_col_dif_sas', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_col_dif_sas', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_col_dif_sas', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_col_dif_sas', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_col_dif_sas', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_gre_dif_sas', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_gre_dif_sas', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_gre_dif_sas', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_gre_dif_sas', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_gre_dif_sas', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_gre_dif_sas', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_gre_dif_sas', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_gre_dif_sas', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_gre_dif_sas', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_gre_dif_sas', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_gre_dif_sas', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_gre_dif_sas', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           endif
+
+        ! Summit,Greenland,summer spectrum
+        elseif (snicar_solarspec == 5) then
+           call ncd_io( 'flx_wgt_dir5_smm', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'flx_wgt_dif5_smm', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
+           ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
+           call ncd_io( 'ss_alb_bcphob_dif_smm', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_bcphob_dif_smm', asm_prm_bc1,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_bcphob_dif_smm', ext_cff_mss_bc1, 'read', ncid, posNOTonfile=.true.)
+           ! BC species 2 Mie parameters, uncoated BC
+           call ncd_io( 'ss_alb_bcphob_dif_smm', ss_alb_bc2,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_bcphob_dif_smm', asm_prm_bc2,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_bcphob_dif_smm', ext_cff_mss_bc2, 'read', ncid, posNOTonfile=.true.)
+           ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
+           call ncd_io( 'ss_alb_ocphob_dif_smm', ss_alb_oc1,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_ocphob_dif_smm', asm_prm_oc1,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_ocphob_dif_smm', ext_cff_mss_oc1, 'read', ncid, posNOTonfile=.true.)
+           ! OC species 2 Mie parameters, uncoated OC
+           call ncd_io( 'ss_alb_ocphob_dif_smm', ss_alb_oc2,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_ocphob_dif_smm', asm_prm_oc2,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_ocphob_dif_smm', ext_cff_mss_oc2, 'read', ncid, posNOTonfile=.true.)
+           ! ice refractive index options
+           if (snicar_snw_optics == 1) then  ! Warren (1984)
+              call ncd_io( 'ss_alb_ice_wrn84_dir_smm', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn84_dir_smm',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn84_dir_smm', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_wrn84_dif_smm', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn84_dif_smm',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn84_dif_smm', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_snw_optics == 2) then ! Warren and Brandt (2008)
+              call ncd_io( 'ss_alb_ice_wrn08_dir_smm', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn08_dir_smm',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn08_dir_smm', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_wrn08_dif_smm', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn08_dif_smm',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn08_dif_smm', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_snw_optics == 3) then ! Picard et al (2016)
+              call ncd_io( 'ss_alb_ice_pic16_dir_smm', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_pic16_dir_smm',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_pic16_dir_smm', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_pic16_dif_smm', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_pic16_dif_smm',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_pic16_dif_smm', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           endif
+           ! dust optical properties
+           if (snicar_dust_optics == 1) then ! Saharan dust (Balkanski et al., 2007, central hematite)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_sah_dif_smm', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_sah_dif_smm', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_sah_dif_smm', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_sah_dif_smm', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_sah_dif_smm', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_sah_dif_smm', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_sah_dif_smm', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_sah_dif_smm', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_sah_dif_smm', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_sah_dif_smm', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_sah_dif_smm', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_sah_dif_smm', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_col_dif_smm', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_col_dif_smm', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_col_dif_smm', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_col_dif_smm', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_col_dif_smm', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_col_dif_smm', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_col_dif_smm', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_col_dif_smm', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_col_dif_smm', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_col_dif_smm', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_col_dif_smm', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_col_dif_smm', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_gre_dif_smm', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_gre_dif_smm', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_gre_dif_smm', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_gre_dif_smm', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_gre_dif_smm', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_gre_dif_smm', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_gre_dif_smm', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_gre_dif_smm', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_gre_dif_smm', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_gre_dif_smm', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_gre_dif_smm', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_gre_dif_smm', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           endif
+
+        ! High Mountain summer spectrum
+        elseif (snicar_solarspec == 6) then
+           call ncd_io( 'flx_wgt_dir5_hmn', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'flx_wgt_dif5_hmn', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
+           ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
+           call ncd_io( 'ss_alb_bcphob_dif_hmn', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_bcphob_dif_hmn', asm_prm_bc1,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_bcphob_dif_hmn', ext_cff_mss_bc1, 'read', ncid, posNOTonfile=.true.)
+           ! BC species 2 Mie parameters, uncoated BC
+           call ncd_io( 'ss_alb_bcphob_dif_hmn', ss_alb_bc2,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_bcphob_dif_hmn', asm_prm_bc2,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_bcphob_dif_hmn', ext_cff_mss_bc2, 'read', ncid, posNOTonfile=.true.)
+           ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
+           call ncd_io( 'ss_alb_ocphob_dif_hmn', ss_alb_oc1,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_ocphob_dif_hmn', asm_prm_oc1,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_ocphob_dif_hmn', ext_cff_mss_oc1, 'read', ncid, posNOTonfile=.true.)
+           ! OC species 2 Mie parameters, uncoated OC
+           call ncd_io( 'ss_alb_ocphob_dif_hmn', ss_alb_oc2,           'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'asm_prm_ocphob_dif_hmn', asm_prm_oc2,         'read', ncid, posNOTonfile=.true.)
+           call ncd_io( 'ext_cff_mss_ocphob_dif_hmn', ext_cff_mss_oc2, 'read', ncid, posNOTonfile=.true.)
+           ! ice refractive index options
+           if (snicar_snw_optics == 1) then  ! Warren (1984)
+              call ncd_io( 'ss_alb_ice_wrn84_dir_hmn', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn84_dir_hmn',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn84_dir_hmn', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_wrn84_dif_hmn', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn84_dif_hmn',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn84_dif_hmn', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_snw_optics == 2) then ! Warren and Brandt (2008)
+              call ncd_io( 'ss_alb_ice_wrn08_dir_hmn', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn08_dir_hmn',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn08_dir_hmn', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_wrn08_dif_hmn', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_wrn08_dif_hmn',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_wrn08_dif_hmn', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_snw_optics == 3) then ! Picard et al (2016)
+              call ncd_io( 'ss_alb_ice_pic16_dir_hmn', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_pic16_dir_hmn',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_pic16_dir_hmn', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ss_alb_ice_pic16_dif_hmn', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_ice_pic16_dif_hmn',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_ice_pic16_dif_hmn', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
+           endif
+           ! dust optical properties
+           if (snicar_dust_optics == 1) then ! Saharan dust (Balkanski et al., 2007, central hematite)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_sah_dif_hmn', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_sah_dif_hmn', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_sah_dif_hmn', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_sah_dif_hmn', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_sah_dif_hmn', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_sah_dif_hmn', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_sah_dif_hmn', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_sah_dif_hmn', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_sah_dif_hmn', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_sah_dif_hmn', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_sah_dif_hmn', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_sah_dif_hmn', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_col_dif_hmn', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_col_dif_hmn', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_col_dif_hmn', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_col_dif_hmn', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_col_dif_hmn', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_col_dif_hmn', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_col_dif_hmn', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_col_dif_hmn', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_col_dif_hmn', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_col_dif_hmn', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_col_dif_hmn', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_col_dif_hmn', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
+              ! dust species 1 Mie parameters
+              call ncd_io( 'ss_alb_dust01_gre_dif_hmn', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust01_gre_dif_hmn', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust01_gre_dif_hmn', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 2 Mie parameters
+              call ncd_io( 'ss_alb_dust02_gre_dif_hmn', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust02_gre_dif_hmn', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust02_gre_dif_hmn', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 3 Mie parameters
+              call ncd_io( 'ss_alb_dust03_gre_dif_hmn', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust03_gre_dif_hmn', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust03_gre_dif_hmn', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
+              ! dust species 4 Mie parameters
+              call ncd_io( 'ss_alb_dust04_gre_dif_hmn', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'asm_prm_dust04_gre_dif_hmn', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+              call ncd_io( 'ext_cff_mss_dust04_gre_dif_hmn', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
+           endif
+        endif ! end of snicar_solarspec
+
+     end if  ! end if snicar_numrad_snw == 5
+
+
+     !-------------------- for 480-band data, cenlin
      if (snicar_numrad_snw == 480) then
+
         call getfil (fsnowoptics480, locfn, 0)
         call ncd_pio_openfile(ncid, locfn, 0)
         if(masterproc) write(iulog,*) subname,trim(fsnowoptics480)
-     end if
 
-     if (snicar_numrad_snw <= 5) then
-        ! direct-beam snow Mie parameters:
-        call ncd_io( 'ss_alb_ice_drc', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
-        call ncd_io( 'asm_prm_ice_drc',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
-        call ncd_io( 'ext_cff_mss_ice_drc', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
-
-        ! diffuse snow Mie parameters
-        call ncd_io( 'ss_alb_ice_dfs', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
-        call ncd_io( 'asm_prm_ice_dfs', asm_prm_snw_dfs,         'read', ncid, posNOTonfile=.true.)
-        call ncd_io( 'ext_cff_mss_ice_dfs', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
-
-        ! dust species 1 Mie parameters
-        call ncd_io( 'ss_alb_dust01', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
-        call ncd_io( 'asm_prm_dust01', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
-        call ncd_io( 'ext_cff_mss_dust01', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
-
-        ! dust species 2 Mie parameters
-        call ncd_io( 'ss_alb_dust02', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
-        call ncd_io( 'asm_prm_dust02', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
-        call ncd_io( 'ext_cff_mss_dust02', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
- 
-        ! dust species 3 Mie parameters
-        call ncd_io( 'ss_alb_dust03', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
-        call ncd_io( 'asm_prm_dust03', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
-        call ncd_io( 'ext_cff_mss_dust03', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
-
-        ! dust species 4 Mie parameters
-        call ncd_io( 'ss_alb_dust04', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
-        call ncd_io( 'asm_prm_dust04', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
-        call ncd_io( 'ext_cff_mss_dust04', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
-     endif
-
-     ! BC species 1 Mie parameters, uncoated BC, same as bc2 without BC-snow internal mixing
-     call ncd_io( 'ss_alb_bcphob', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'asm_prm_bcphob', asm_prm_bc1,         'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'ext_cff_mss_bcphob', ext_cff_mss_bc1, 'read', ncid, posNOTonfile=.true.)
-
-     ! BC species 2 Mie parameters, uncoated BC
-     call ncd_io( 'ss_alb_bcphob', ss_alb_bc2,           'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'asm_prm_bcphob', asm_prm_bc2,         'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'ext_cff_mss_bcphob', ext_cff_mss_bc2, 'read', ncid, posNOTonfile=.true.)
-
-     ! OC species 1 Mie parameters, uncoated OC, same as oc2 without OC-snow internal mixing
-     call ncd_io( 'ss_alb_ocphob', ss_alb_oc1,           'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'asm_prm_ocphob', asm_prm_oc1,         'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'ext_cff_mss_ocphob', ext_cff_mss_oc1, 'read', ncid, posNOTonfile=.true.)
-
-     ! OC species 2 Mie parameters, uncoated OC
-     call ncd_io( 'ss_alb_ocphob', ss_alb_oc2,           'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'asm_prm_ocphob', asm_prm_oc2,         'read', ncid, posNOTonfile=.true.)
-     call ncd_io( 'ext_cff_mss_ocphob', ext_cff_mss_oc2, 'read', ncid, posNOTonfile=.true.)
-
-     ! new data for 480-band
-     if (snicar_numrad_snw == 480) then
+        ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
+        call ncd_io( 'ss_alb_bcphob', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'asm_prm_bcphob', asm_prm_bc1,         'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'ext_cff_mss_bcphob', ext_cff_mss_bc1, 'read', ncid, posNOTonfile=.true.)
+        ! BC species 2 Mie parameters, uncoated BC
+        call ncd_io( 'ss_alb_bcphob', ss_alb_bc2,           'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'asm_prm_bcphob', asm_prm_bc2,         'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'ext_cff_mss_bcphob', ext_cff_mss_bc2, 'read', ncid, posNOTonfile=.true.)
+        ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
+        call ncd_io( 'ss_alb_ocphob', ss_alb_oc1,           'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'asm_prm_ocphob', asm_prm_oc1,         'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'ext_cff_mss_ocphob', ext_cff_mss_oc1, 'read', ncid, posNOTonfile=.true.)
+        ! OC species 2 Mie parameters, uncoated OC
+        call ncd_io( 'ss_alb_ocphob', ss_alb_oc2,           'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'asm_prm_ocphob', asm_prm_oc2,         'read', ncid, posNOTonfile=.true.)
+        call ncd_io( 'ext_cff_mss_ocphob', ext_cff_mss_oc2, 'read', ncid, posNOTonfile=.true.)
 
        ! snow optical properties derived from different ice refractive index dataset
        ! same value for direct and diffuse due to high spectral res without spectra averaging in database
@@ -2335,15 +2885,6 @@ contains
           call ncd_io( 'asm_prm_ice_wrn08',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
           call ncd_io( 'ext_cff_mss_ice_wrn08', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
        elseif (snicar_snw_optics == 3) then ! Picard et al (2016)
-          call ncd_io( 'ss_alb_ice_pic16', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'asm_prm_ice_pic16',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'ext_cff_mss_ice_pic16', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'ss_alb_ice_pic16', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'asm_prm_ice_pic16',asm_prm_snw_dfs,          'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'ext_cff_mss_ice_pic16', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
-       else
-          write(iulog,*) 'invalid snow optics type option in namelist'
-          ! for invalid spectrum type, use Picard et al (2016) (default)
           call ncd_io( 'ss_alb_ice_pic16', ss_alb_snw_drc,           'read', ncid, posNOTonfile=.true.)
           call ncd_io( 'asm_prm_ice_pic16',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
           call ncd_io( 'ext_cff_mss_ice_pic16', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
@@ -2404,54 +2945,30 @@ contains
           call ncd_io( 'ss_alb_dust04_gre', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
           call ncd_io( 'asm_prm_dust04_gre', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
           call ncd_io( 'ext_cff_mss_dust04_gre', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
-       else
-          write(iulog,*) 'invalid dust optics type option in namelist'
-          ! for invalid dust optics type, use Saharan dust  (default)
-          ! dust species 1 Mie parameters
-          call ncd_io( 'ss_alb_dust01_sah', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'asm_prm_dust01_sah', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'ext_cff_mss_dust01_sah', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
-          ! dust species 2 Mie parameters
-          call ncd_io( 'ss_alb_dust02_sah', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'asm_prm_dust02_sah', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'ext_cff_mss_dust02_sah', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
-          ! dust species 3 Mie parameters
-          call ncd_io( 'ss_alb_dust03_sah', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'asm_prm_dust03_sah', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'ext_cff_mss_dust03_sah', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
-          ! dust species 4 Mie parameters
-          call ncd_io( 'ss_alb_dust04_sah', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'asm_prm_dust04_sah', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'ext_cff_mss_dust04_sah', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
        endif
  
        ! downward solar radiation spectral weights for 480-band
        if (snicar_solarspec == 1) then     ! mid-latitude winter
-          call ncd_io( 'flx_wgt_dir480_mlw', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'flx_wgt_dif480_mlw', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dir480_mlw', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_mlw', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
        elseif (snicar_solarspec == 2) then ! mid-latitude summer
-          call ncd_io( 'flx_wgt_dir480_mls', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'flx_wgt_dif480_mls', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dir480_mls', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_mls', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
        elseif (snicar_solarspec == 3) then ! sub-Arctic winter
-          call ncd_io( 'flx_wgt_dir480_saw', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'flx_wgt_dif480_saw', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dir480_saw', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_saw', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
        elseif (snicar_solarspec == 4) then ! sub-Arctic summer
-          call ncd_io( 'flx_wgt_dir480_sas', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'flx_wgt_dif480_sas', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dir480_sas', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_sas', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
        elseif (snicar_solarspec == 5) then ! Summit,Greenland,summer
-          call ncd_io( 'flx_wgt_dir480_smm', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'flx_wgt_dif480_smm', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dir480_smm', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_smm', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
        elseif (snicar_solarspec == 6) then ! High Mountain summer
-          call ncd_io( 'flx_wgt_dir480_hmn', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'flx_wgt_dif480_hmn', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
-       else
-          write(iulog,*) 'invalid downward solar radiation spectrum option in namelist'
-          ! for invalid spectrum type, use mid-latitude winter (default)
-          call ncd_io( 'flx_wgt_dir480_mlw', flx_wgt_dir480,     'read', ncid, posNOTonfile=.true.)
-          call ncd_io( 'flx_wgt_dif480_mlw', flx_wgt_dif480,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dir480_hmn', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
+          call ncd_io( 'flx_wgt_dif480_hmn', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
        endif
 
-     endif
+     endif ! end if snicar_numrad_snw == 480
 
      call ncd_pio_closefile(ncid)
      if (masterproc) then
