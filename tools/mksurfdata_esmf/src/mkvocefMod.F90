@@ -4,111 +4,155 @@ module mkvocefMod
   ! Make VOC percentage emissions for surface dataset
   !-----------------------------------------------------------------------
 
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use mkvarpar	
-  use mkvarctl    
-  use mkncdio
+  use ESMF
+  use pio
+  use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4
+  use shr_sys_mod  , only : shr_sys_abort
+  use mkpioMod     , only : mkpio_get_rawdata
+  use mkpioMod     , only : mkpio_iodesc_rawdata, pio_iotype, pio_ioformat, pio_iosystem
+  use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8, get_meshareas
+  use mkutilsMod   , only : chkerr
+  use mkvarctl     , only : root_task, ndiag, mpicom, MPI_INTEGER, MPI_MAX
+  use mkvarctl     , only : soil_color_override, unsetcol
+  use mkvarpar     , only : re
 
   implicit none
   private
 
   public :: mkvocef  ! Get the percentage emissions for VOC for different land cover types
 
-contains
+  character(len=*) , parameter :: u_FILE_u = &
+       __FILE__
 
-  !-----------------------------------------------------------------------
-  subroutine mkvocef(ldomain, mapfname, datfname, ndiag, &
-       ef_btr_o, ef_fet_o, ef_fdt_o, ef_shr_o, ef_grs_o, ef_crp_o)
+!=================================================================================
+contains
+!=================================================================================
+
+  subroutine mkvocef(file_data_i, file_mesh_i, mesh_o, &
+       ef_btr_o, ef_fet_o, ef_fdt_o, ef_shr_o, ef_grs_o, ef_crp_o, rc)
 
     ! make volatile organic coumpunds (VOC) emission factors.
 
     ! input/output variables
-    type(domain_type) , intent(in) :: ldomain
-    character(len=*)  , intent(in) :: mapfname    ! input mapping file name
-    character(len=*)  , intent(in) :: datfname    ! input data file name
-    integer           , intent(in) :: ndiag       ! unit number for diagnostic output
-    real(r8)          , intent(out):: ef_btr_o(:) ! output grid: EFs for broadleaf trees
-    real(r8)          , intent(out):: ef_fet_o(:) ! output grid: EFs for fineleaf evergreen
-    real(r8)          , intent(out):: ef_fdt_o(:) ! output grid: EFs for fineleaf deciduous
-    real(r8)          , intent(out):: ef_shr_o(:) ! output grid: EFs for shrubs
-    real(r8)          , intent(out):: ef_grs_o(:) ! output grid: EFs for grasses
-    real(r8)          , intent(out):: ef_crp_o(:) ! output grid: EFs for crops
-    !
+    character(len=*)  , intent(in)  :: file_mesh_i ! input mesh file name
+    character(len=*)  , intent(in)  :: file_data_i ! input data file name
+    type(ESMF_Mesh)   , intent(in)  :: mesh_o      ! model mesho
+    real(r8)          , intent(out) :: ef_btr_o(:) ! output grid: EFs for broadleaf trees
+    real(r8)          , intent(out) :: ef_fet_o(:) ! output grid: EFs for fineleaf evergreen
+    real(r8)          , intent(out) :: ef_fdt_o(:) ! output grid: EFs for fineleaf deciduous
+    real(r8)          , intent(out) :: ef_shr_o(:) ! output grid: EFs for shrubs
+    real(r8)          , intent(out) :: ef_grs_o(:) ! output grid: EFs for grasses
+    real(r8)          , intent(out) :: ef_crp_o(:) ! output grid: EFs for crops
+    integer           , intent(out) :: rc
+
     ! local variables:
-    real(r8), allocatable :: ef_btr_i(:)      ! input grid: EFs for broadleaf trees
-    real(r8), allocatable :: ef_fet_i(:)      ! input grid: EFs for fineleaf evergreen
-    real(r8), allocatable :: ef_fdt_i(:)      ! input grid: EFs for fineleaf deciduous
-    real(r8), allocatable :: ef_shr_i(:)      ! input grid: EFs for shrubs
-    real(r8), allocatable :: ef_grs_i(:)      ! input grid: EFs for grasses
-    real(r8), allocatable :: ef_crp_i(:)      ! input grid: EFs for crops
-    real(r8), allocatable :: frac_dst(:)      ! output fractions
-    real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
-    real(r8) :: sum_fldo                      ! global sum of dummy input fld
-    real(r8) :: sum_fldi                      ! global sum of dummy input fld
-    integer  :: k,n,no,ni,ns_o,ns_i           ! indices
-    integer  :: ncid,dimid,varid              ! input netCDF id's
-    integer  :: ier                           ! error status
-    real(r8) :: relerr = 0.00001_r8           ! max error: sum overlap wts ne 1
-    character(len=32) :: subname = 'mkvocef'
+    type(ESMF_RouteHandle) :: routehandle
+    type(ESMF_Mesh)        :: mesh_i
+    type(file_desc_t)      :: pioid
+    integer                :: ni,no
+    integer                :: ns_i, ns_o
+    integer                :: n,l,k
+    integer , allocatable  :: mask_i(:)
+    real(r8), allocatable  :: frac_i(:)
+    real(r8), allocatable  :: frac_o(:)
+    real(r8), allocatable  :: area_i(:)
+    real(r8), allocatable  :: area_o(:)
+    real(r8), allocatable  :: ef_btr_i(:)         ! input grid: EFs for broadleaf trees
+    real(r8), allocatable  :: ef_fet_i(:)         ! input grid: EFs for fineleaf evergreen
+    real(r8), allocatable  :: ef_fdt_i(:)         ! input grid: EFs for fineleaf deciduous
+    real(r8), allocatable  :: ef_shr_i(:)         ! input grid: EFs for shrubs
+    real(r8), allocatable  :: ef_grs_i(:)         ! input grid: EFs for grasses
+    real(r8), allocatable  :: ef_crp_i(:)         ! input grid: EFs for crops
+    real(r8)               :: sum_fldo            ! global sum of dummy input fld
+    real(r8)               :: sum_fldi            ! global sum of dummy input fld
+    integer                :: ier, rcode          ! error status
+    real(r8)               :: relerr = 0.00001_r8 ! max error: sum overlap wts ne 1
+    character(len=*), parameter :: subname = 'mkvocef'
     !-----------------------------------------------------------------------
 
-    write (6,*) 'Attempting to make VOC emission factors .....'
+    rc = ESMF_SUCCESS
 
-    ns_o = ldomain%ns
+    if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to make VOC emission factors .....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+    end if
 
-    ! -----------------------------------------------------------------
+    ! Open input data file
+    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
+    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
+
+    ! Read in input mesh
+    call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
+    mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
+
+    ! Determine ns_i
+    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Determine ns_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Get the landmask from the input data file and reset the mesh mask based on that
+    allocate(frac_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(mask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do ni = 1,ns_i
+       if (frac_i(ni) > 0._r8) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
+       end if
+    end do
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create a route handle between the input and output mesh
+    allocate(frac_o(ns_o))
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+
     ! Read input Emission Factors
-    ! -----------------------------------------------------------------
-
-    ! Obtain input grid info, read local fields
-
-    call domain_read(tdomain,datfname)
-    ns_i = tdomain%ns
     allocate(ef_btr_i(ns_i), ef_fet_i(ns_i), ef_fdt_i(ns_i), &
-             ef_shr_i(ns_i), ef_grs_i(ns_i), ef_crp_i(ns_i), &
-             frac_dst(ns_o), stat=ier)
+             ef_shr_i(ns_i), ef_grs_i(ns_i), ef_crp_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
 
-    write (6,*) 'Open VOC file: ', trim(datfname)
-    call check_ret(nf_open(datfname, 0, ncid), subname)
-    call check_ret(nf_inq_varid (ncid, 'ef_btr', varid), subname)
-    call check_ret(nf_get_var_double(ncid, varid, ef_btr_i), subname)
-    call check_ret(nf_inq_varid (ncid, 'ef_fet', varid), subname)
-    call check_ret(nf_get_var_double(ncid, varid, ef_fet_i), subname)
-    call check_ret(nf_inq_varid (ncid, 'ef_fdt', varid), subname)
-    call check_ret(nf_get_var_double(ncid, varid, ef_fdt_i), subname)
-    call check_ret(nf_inq_varid (ncid, 'ef_shr', varid), subname)
-    call check_ret(nf_get_var_double(ncid, varid, ef_shr_i), subname)
-    call check_ret(nf_inq_varid (ncid, 'ef_grs', varid), subname)
-    call check_ret(nf_get_var_double(ncid, varid, ef_grs_i), subname)
-    call check_ret(nf_inq_varid (ncid, 'ef_crp', varid), subname)
-    call check_ret(nf_get_var_double(ncid, varid, ef_crp_i), subname)
-    call check_ret(nf_close(ncid), subname)
+    call mkpio_get_rawdata(pioid, 'ef_btr', mesh_i, ef_btr_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call mkpio_get_rawdata(pioid, 'ef_fet', mesh_i, ef_fet_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call mkpio_get_rawdata(pioid, 'ef_fdt', mesh_i, ef_fdt_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call mkpio_get_rawdata(pioid, 'ef_shr', mesh_i, ef_shr_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call mkpio_get_rawdata(pioid, 'ef_grs', mesh_i, ef_grs_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call mkpio_get_rawdata(pioid, 'ef_crp', mesh_i, ef_crp_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    ! Area-average percent cover on input grid to output grid 
-    ! and correct according to land landmask
-    ! Note that percent cover is in terms of total grid area.
-
-    call gridmap_mapread(tgridmap, mapfname )
-
-    ! Error checks for domain and map consistencies
-
-    call domain_checksame( tdomain, ldomain, tgridmap )
-
-    ! Obtain frac_dst
-    call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
-
-    ! Do mapping from input to output grid
-
-    call gridmap_areaave_srcmask(tgridmap, ef_btr_i, ef_btr_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-    call gridmap_areaave_srcmask(tgridmap, ef_fet_i, ef_fet_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-    call gridmap_areaave_srcmask(tgridmap, ef_fdt_i, ef_fdt_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-    call gridmap_areaave_srcmask(tgridmap, ef_shr_i, ef_shr_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-    call gridmap_areaave_srcmask(tgridmap, ef_grs_i, ef_grs_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-    call gridmap_areaave_srcmask(tgridmap, ef_crp_i, ef_crp_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+    ! Regrid input data to model resolution
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, ef_btr_i, ef_btr_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, ef_fet_i, ef_fet_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, ef_fdt_i, ef_fdt_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, ef_shr_i, ef_shr_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, ef_grs_i, ef_grs_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, ef_btr_i, ef_crp_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Check for conservation
-
     do no = 1, ns_o
        if ( ef_btr_o(no) < 0._r8 ) then
           write (6,*) 'MKVOCEF error: EF btr = ',ef_btr_o(no), ' is negative for no = ',no
@@ -136,26 +180,15 @@ contains
        end if
     enddo
 
-    ! -----------------------------------------------------------------
-    ! Error check1
-    ! Compare global sum fld_o to global sum fld_i.
-    ! -----------------------------------------------------------------
+    if (root_task) then
+       write (ndiag,'(a)') 'Successfully made VOC Emission Factors'
+       write (ndiag,*)
+    end if
 
-    ! Global sum of output field -- must multiply by fraction of
-    ! output grid that is land as determined by input grid
+    deallocate ( ef_btr_i, ef_fet_i, ef_fdt_i, ef_shr_i, ef_grs_i, ef_crp_i, frac_o)
 
-    allocate(mask_r8(ns_i), stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    mask_r8 = tdomain%mask
-    call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
-
-    write (6,*) 'Successfully made VOC Emission Factors'
-    write (6,*)
-
-    ! Deallocate dynamic memory
-
-    deallocate ( ef_btr_i, ef_fet_i, ef_fdt_i, &
-                 ef_shr_i, ef_grs_i, ef_crp_i, frac_dst, mask_r8 )
+    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
   end subroutine mkvocef
 

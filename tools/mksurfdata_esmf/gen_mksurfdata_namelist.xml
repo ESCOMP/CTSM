@@ -109,7 +109,7 @@
   <!-- topography for urban threshold -->
   <mksrf_furbtopo>
     <entry>
-      <data_filename>lnd/clm2/rawdata/mksrf_topo.10min.c191120.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/mksrf_topo.10min.cdf5.c220201.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_c200129.nc</mesh_filename>
     </entry>
   </mksrf_furbtopo>
@@ -146,7 +146,7 @@ version of the raw dataset will probably go away.
   <mksrf_fglacierregion>
     <entry>
       <data_filename>lnd/clm2/rawdata/mksrf_GlacierRegion_10x10min_nomask_c191120.nc</data_filename>
-      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_c200129.nc</mesh_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
   </mksrf_fglacierregion>
 

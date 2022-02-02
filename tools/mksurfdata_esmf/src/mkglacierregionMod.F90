@@ -11,7 +11,7 @@ module mkglacierregionMod
   use shr_sys_mod    , only : shr_sys_abort
   use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
   use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod      , only : regrid_rawdata, create_routehandle_nn, get_meshareas
+  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
   use mkutilsMod     , only : chkerr
 #ifdef TODO
   ! use mkdiagnosticsMod, only : output_diagnostics_index
@@ -23,6 +23,8 @@ module mkglacierregionMod
   private
 
   public :: mkglacierregion  ! make glacier region ID
+
+  integer, private :: nglacier_regions = 3
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -46,30 +48,31 @@ contains
     type(ESMF_RouteHandle) :: routehandle ! nearest neighbor routehandle
     type(ESMF_Mesh)        :: mesh_i
     type(file_desc_t)      :: pioid
-    integer                :: ni,no
+    integer                :: ni,no,l 
     integer                :: ns_i, ns_o
+    integer , allocatable  :: mask_i(:)
+    real(r8), allocatable  :: frac_i(:)
+    real(r8), allocatable  :: frac_o(:)
+    real(r8), allocatable  :: data_i(:,:)
+    real(r8), allocatable  :: data_o(:,:)
     integer , allocatable  :: glacier_region_i(:) ! glacier region on input grid
-    real(r4), allocatable  :: frac_i(:)           ! input mask
-    real(r4), allocatable  :: frac_o(:)           ! output fractions
-    real(r4), allocatable  :: data_i(:) 
-    real(r4), allocatable  :: data_o(:) 
     integer                :: ier, rcode          ! error status
-    integer                :: max_region          ! max region ID
+    integer                :: max_index(1)
     character(len=*), parameter :: subname = 'mkglacierregion'
     !-----------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
 
     if (root_task) then
-       write (ndiag,'(a)') 'Attempting to make glacier region .....'
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to make glacier region .....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
     end if
 
     ! Open input data file
-    if (root_task) then
-       write (ndiag,'(a)') 'Opening glacier region raw data file: ', trim(file_data_i)
-    end if
     call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
     call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
@@ -77,21 +80,40 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
-    ! Create a nearest neighbor route handle between the input and output mesh
-    call create_routehandle_nn(mesh_i, mesh_o, routehandle, rc=rc)
-    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-
-    ! Determine ns_i and allocate glacier_region_i
+    ! Determine ns_i
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    allocate(glacier_region_i(ns_i), stat=ier)
-    if (ier/=0) call abort()
 
-    ! Determine ns_o (glacier_region_o has already been allocated)
+    ! Determine ns_o
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    ! Get the landmask from the input data file and reset the mesh mask based on that
+    allocate(frac_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(mask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do ni = 1,ns_i
+       if (frac_i(ni) > 0._r8) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
+       end if
+    end do
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create a route handle between the input and output mesh
+    allocate(frac_o(ns_o))
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+
     ! Read in input data
+    allocate(glacier_region_i(ns_i), stat=ier)
+    if (ier/=0) call abort()
     call mkpio_get_rawdata(pioid, 'GLACIER_REGION', mesh_i, glacier_region_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
@@ -101,20 +123,28 @@ contains
        call shr_sys_abort()
     end if
 
-    ! Convert to real4
-    allocate(data_i(ns_i))
-    do ni = 1,ns_i
-       data_i(ni) = real(glacier_region_i(ni), kind=r4)
+    ! Now determine data_i as a real 2d array - for every possible soil color create a global
+    ! field with gridcells equal to 1 for that soil color and zero elsewhere
+    allocate(data_i(0:nglacier_regions,ns_i))
+    data_i(:,:) = 0._r4
+    do l = 0,nglacier_regions
+       do ni = 1,ns_i
+          if (glacier_region_i(ni) == l) then
+             data_i(l,ni) = 1._r4
+          end if
+       end do
     end do
-    allocate(data_o(ns_o))
 
-    ! Regrid raw data - yse a nearest neighbor map here
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, rc)
+    ! Regrid data_i to data_o
+    allocate(data_o(0:nglacier_regions, ns_o), stat=ier)
+    if (ier/=0) call shr_sys_abort('error allocating data_i(max_regions, ns_o)')
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, nglacier_regions, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Now convert back to integer
+    glacier_region_o(:) = 0
     do no = 1,ns_o
-       glacier_region_o(no) = nint(data_o(no))
+       max_index = maxloc(data_o(:,no))
+       glacier_region_o(no) = max_index(1) - 1
     end do
 
     ! call output_diagnostics_index(glacier_region_i, glacier_region_o, tgridmap, &

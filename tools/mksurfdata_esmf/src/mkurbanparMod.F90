@@ -16,7 +16,7 @@ module mkurbanparMod
   use mkutilsMod   , only : chkerr
   use mkvarctl     , only : root_task, ndiag, ispval, fsurdat, outnc_double
   use mkvarctl     , only : mpicom, MPI_INTEGER, MPI_MAX
-  use mkvarpar	
+  use mkvarpar
 
   implicit none
   private
@@ -25,6 +25,8 @@ module mkurbanparMod
   public :: mkurban
   public :: mkurbanpar
   public :: normalize_urbn_by_tot
+  public :: mkurban_topo                   ! Get elevation to reduce urban for high elevation areas
+  public :: mkurban_pct_diagnostics        ! print diagnostics related to pct urban
 
   ! Note: normalize_urbn_by_tot could be private, but because there
   ! are associated test routines in a separate module, it needs to be public
@@ -33,6 +35,8 @@ module mkurbanparMod
   integer, public :: numurbl           ! number of urban classes
   integer, public :: nlevurb = ispval  ! number of urban layers
   integer, public :: nregions
+
+  real(r8), parameter :: MIN_DENS = 0.1_r8 ! minimum urban density (% of grid cell) - below this value, urban % is set to 0
 
   ! private data members:
   ! flag to indicate nodata for index variables in output file:
@@ -100,13 +104,11 @@ contains
     ! this would also replace the use of normalize_classes_by_gcell, and maybe some other
     ! urban-specific code.
     !
-    use mkurbanparCommonMod , only : MIN_DENS
     use mkutilsMod          , only : normalize_classes_by_gcell
     use mkvarctl            , only : all_urban
     use mkvarpar
 #ifdef TODO
-    use mkurbanparCommonMod , only : mkurban_pct_diagnostics
-    use mkdiagnosticsMod    , only : output_diagnostics_index
+    !use mkdiagnosticsMod    , only : output_diagnostics_index
 #endif
 
     ! input/output variables
@@ -114,8 +116,8 @@ contains
     character(len=*) , intent(in)    :: file_data_i          ! input data file name
     type(ESMF_Mesh)  , intent(in)    :: mesh_o               ! model mesh
     logical          , intent(in)    :: zero_out             ! if should zero urban out
-    real(r8)         , intent(out)   :: pcturb_o(:)            ! output grid: total % urban
-    real(r8)         , intent(out)   :: urban_classes_o(:,:) ! output grid: breakdown of total urban into each class
+    real(r8)         , intent(inout) :: pcturb_o(:)            ! output grid: total % urban
+    real(r8)         , intent(inout) :: urban_classes_o(:,:) ! output grid: breakdown of total urban into each class
     integer          , intent(inout) :: region_o(:)          ! output grid: region ID
     integer          , intent(out)   :: rc
 
@@ -123,7 +125,7 @@ contains
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
     type(file_desc_t)      :: pioid
-    integer , allocatable  :: mask_i(:) 
+    integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
     real(r8), allocatable  :: data_i(:,:)
@@ -132,7 +134,7 @@ contains
     integer , allocatable  :: region_i(:)                ! input grid: region ID
     integer                :: ni,no                      ! indices
     integer                :: ns_i, ns_o                 ! array sizes
-    integer                :: n,k,l                      ! indices   
+    integer                :: n,k,l                      ! indices
     integer                :: max_regions                ! maximum region index
     integer                :: max_index(1)
     integer                :: rcode, ier                 ! error status
@@ -142,8 +144,9 @@ contains
     rc = ESMF_SUCCESS
 
     if (root_task) then
-       write (ndiag,'(a)') 'Attempting to make %urban .....'
-       write (ndiag,'(a)') 'Opening urban file: '//trim(file_data_i)
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to make %urban .....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
     end if
 
     ! Open input data file
@@ -206,7 +209,7 @@ contains
     call ESMF_VMLogMemInfo("After regrid_data for in "//trim(subname))
 
     ! Now Determine total % urban
-    ! urbn_classes_gcell_o is % urban  of total grid cell area for each density class 
+    ! urbn_classes_gcell_o is % urban  of total grid cell area for each density class
     allocate(urban_classes_gcell_o(ns_o, numurbl), stat=ier)
     if (ier/=0) call shr_sys_abort()
     do l = 1,numurbl
@@ -235,7 +238,7 @@ contains
 
     ! Handle special cases
     ! Note that, for all these adjustments of total urban %, we do not change the breakdown
-    ! into the different urban classes. In particular: when pcturb_o is set to 0 for a point, 
+    ! into the different urban classes. In particular: when pcturb_o is set to 0 for a point,
     ! the breakdown into the different urban classes is maintained as it was before.
     if (all_urban) then
        pcturb_o(:) = 100._r8
@@ -262,12 +265,17 @@ contains
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made %urban'
-       write (ndiag,'(a)') 'Attempting to make urban region .....'
     end if
 
     ! ------------------------------------------------------
     ! Read in region field
     ! ------------------------------------------------------
+
+    if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to make urban region .....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+    end if
 
     ! Read in region_i
     allocate(region_i(ns_i), stat=ier)
@@ -277,7 +285,7 @@ contains
     call ESMF_LogWrite("After reading in region_id in "//trim(subname), ESMF_LOGMSG_INFO)
     max_regions = nregions
     if (root_task) then
-       write(ndiag,'(a,i8)') trim(subname)//" max urban regions = ",max_regions   
+       write(ndiag,'(a,i8)')" max urban regions = ",max_regions
     end if
 
     ! Create a multi-dimensional array (data_i) where each ungridded dimension corresponds to a 2d field
@@ -316,7 +324,7 @@ contains
        write (ndiag,*)
     end if
 
-    ! Output diagnostics 
+    ! Output diagnostics
     ! TODO: (not currently done)
 
     ! Close the file
@@ -354,9 +362,9 @@ contains
     ! The returned array satisfies sum(classes_pct_tot(n,:))==100 for all n (within rounding error)
 
     ! input/output variables
-    real(r8), intent(in) :: classes_pct_gcell(:,:) ! % cover of classes as % of grid cell
-    real(r8), intent(in) :: sums(:)                ! totals, as % of grid cell
-    real(r8), intent(out):: classes_pct_tot(:,:)   ! % cover of classes as % of total
+    real(r8), intent(in)   :: classes_pct_gcell(:,:) ! % cover of classes as % of grid cell
+    real(r8), intent(in)   :: sums(:)                ! totals, as % of grid cell
+    real(r8), intent(inout):: classes_pct_tot(:,:)   ! % cover of classes as % of total
 
     ! local variables:
     integer  :: n         ! index
@@ -469,7 +477,7 @@ contains
     type(var_desc_t)      :: pio_varid
     type(io_desc_t)       :: pio_iodesc
     integer               :: pio_vartype
-    integer               :: dimid 
+    integer               :: dimid
     integer               :: ier, rcode, rc       ! error status
     character(len=cs)     :: varname              ! variable name
     integer               :: xtype                ! external type
@@ -681,11 +689,11 @@ contains
 
     ! End define model
     rcode = pio_enddef(pioid_o)
-    
+
     ! ------------------------------------------------
     ! Handle urban parameters with no extra dimensions
     ! ------------------------------------------------
-    
+
     allocate(data_scalar_o(ns_o, numurbl), stat=ier)
     data_scalar_o(:,:) = 0._r8
     if (ier /= 0) call shr_sys_abort('mkurbanpar allocation error')
@@ -696,7 +704,7 @@ contains
             params_scalar(p)%check_invalid, urban_skip_abort_on_invalid_data_check, &
             data_scalar_o, n_extra_dims = 0)
 
-       ! get io descriptor for variable output, write out variable and free memory for io descriptor 
+       ! get io descriptor for variable output, write out variable and free memory for io descriptor
        call mkpio_iodesc_output(pioid_o, mesh_o, params_scalar(p)%name, pio_iodesc, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//&
             trim(params_scalar(p)%name))
@@ -751,7 +759,7 @@ contains
           ! Determine variable name
           varname = trim(params_rad(p)%name)//trim(solar_suffix(m))
 
-          ! get io descriptor for variable output, write out variable and free memory for io descriptor 
+          ! get io descriptor for variable output, write out variable and free memory for io descriptor
           call mkpio_iodesc_output(pioid_o, mesh_o, varname, pio_iodesc, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//&
                trim(params_scalar(p)%name))
@@ -784,7 +792,7 @@ contains
                n_extra_dims=1, extra_dims=extra_dims)
        end do
 
-       ! get io descriptor for variable output, write out variable and free memory for io descriptor 
+       ! get io descriptor for variable output, write out variable and free memory for io descriptor
        call mkpio_iodesc_output(pioid_o, mesh_o, params_levurb(p)%name, pio_iodesc, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//&
             trim(params_levurb(p)%name))
@@ -830,7 +838,7 @@ contains
       real(r8)          , intent(in)    :: fill_val      ! value to put where we have no data in output variables
       logical           , intent(in)    :: check_invalid ! should we check whether there are any invalid data in the output?
       logical           , intent(in)    :: urban_skip_abort_on_invalid_data_check
-      real(r8)          , intent(out)   :: data(:,:)     ! output from lookup_2d_netcdf
+      real(r8)          , intent(inout) :: data(:,:)     ! output from lookup_2d_netcdf
       integer           , intent(in)    :: n_extra_dims  ! number of extra dimensions in the lookup table
 
       ! slice to use if lookup table variable has more than 2 dimensions:
@@ -885,5 +893,168 @@ contains
     end subroutine lookup_and_check_err
 
   end subroutine mkurbanpar
+
+  subroutine mkurban_pct_diagnostics(area_i, area_o, mask_i, frac_o, urbn_i, urbn_o, dens_class)
+    !
+    ! print diagnostics related to pct urban
+    ! Compare global areas on input and output grids
+    !
+    ! This is intended to be called after mkurban_pct, but is split out into a separate
+    ! routine so that modifications to urbn_o can be made in between the two calls (e.g.,
+    ! setting urbn_o to 0 wherever it is less than a certain threshold; the rules for doing
+    ! this can't always be applied inline in mkurban_pct).
+    !
+    use mkvarpar
+
+    ! input/output variables
+    real(r8)          , intent(in) :: area_i(:)
+    real(r8)          , intent(in) :: area_o(:)
+    integer           , intent(in) :: mask_i(:)
+    real(r8)          , intent(in) :: frac_o(:)
+    real(r8)          , intent(in) :: urbn_i(:)  ! input grid: percent urban
+    real(r8)          , intent(in) :: urbn_o(:)  ! output grid: percent urban
+    integer , intent(in), optional :: dens_class ! density class
+
+    ! local variables:
+    real(r8) :: gurbn_i ! input  grid: global urbn
+    real(r8) :: garea_i ! input  grid: global area
+    real(r8) :: gurbn_o ! output grid: global urbn
+    real(r8) :: garea_o ! output grid: global area
+    integer  :: ni,no,k ! indices
+    character(len=*), parameter :: subname = 'mkurban_pct_diagnostics'
+    !-----------------------------------------------------------------------
+
+    ! Input grid
+    gurbn_i = 0._r8
+    garea_i = 0._r8
+    do ni = 1, size(area_i)
+       garea_i = garea_i + area_i(ni)*re**2
+       gurbn_i = gurbn_i + urbn_i(ni)*(area_i(ni)/100._r8)* mask_i(ni)*re**2
+    end do
+
+    ! Output grid
+    gurbn_o = 0._r8
+    garea_o = 0._r8
+    do no = 1, size(area_o)
+       garea_o = garea_o + area_o(no)*re**2
+       gurbn_o = gurbn_o + urbn_o(no)* (area_o(no)/100._r8)*frac_o(no)*re**2
+    end do
+
+    ! Diagnostic output
+    write (ndiag,*)
+    write (ndiag,'(1x,70a1)') ('=',k=1,70)
+    if (present(dens_class)) then
+       write (ndiag,'(1x,a,i0)') 'Urban Output -- class ', dens_class
+    else
+       write (ndiag,'(1x,a)') 'Urban Output'
+    end if
+    write (ndiag,'(1x,70a1)') ('=',k=1,70)
+    write (ndiag,*)
+    write (ndiag,'(1x,70a1)') ('.',k=1,70)
+    write (ndiag,2001)
+2001 format (1x,'surface type   input grid area  output grid area'/&
+             1x,'                 10**6 km**2      10**6 km**2   ')
+    write (ndiag,'(1x,70a1)') ('.',k=1,70)
+    write (ndiag,*)
+    write (ndiag,2003) gurbn_i*1.e-06,gurbn_o*1.e-06
+    write (ndiag,2004) garea_i*1.e-06,garea_o*1.e-06
+2002 format (1x,'urban       ',f14.3,f17.3)
+2003 format (1x,'urban       ',f14.3,f22.8)
+2004 format (1x,'all surface ',f14.3,f17.3)
+
+  end subroutine mkurban_pct_diagnostics
+
+  !===============================================================
+  subroutine mkurban_topo(file_mesh_i, file_data_i, mesh_o, varname, elev_o, rc)
+    !
+    ! Make elevation data
+    !
+    ! input/output variables
+    character(len=*) , intent(in)    :: file_mesh_i ! input mesh file name
+    character(len=*) , intent(in)    :: file_data_i ! input data file name
+    type(ESMF_Mesh)  , intent(in)    :: mesh_o      ! model mesh
+    character(len=*) , intent(in)    :: varname     ! topo variable name
+    real(r8)         , intent(inout) :: elev_o(:)   ! output elevation data
+    integer          , intent(out)   :: rc
+
+    ! local variables:
+    type(ESMF_RouteHandle)      :: routehandle
+    type(ESMF_Mesh)             :: mesh_i
+    type(file_desc_t)           :: pioid
+    real(r8), allocatable       :: frac_o(:)
+    real(r8), allocatable       :: data_i(:,:)
+    real(r8), allocatable       :: data_o(:,:)
+    real(r8), allocatable       :: elev_i(:)  ! canyon_height to width ratio in
+    integer                     :: ns_i,ns_o  ! bounds
+    integer                     :: ni, no     ! indices
+    integer                     :: k,l,n,m    ! indices
+    character(len=CS)           :: name       ! name of attribute
+    character(len=CS)           :: unit       ! units of attribute
+    integer                     :: ier,rcode        ! error status
+    character(len=*), parameter :: subname = 'mkelev'
+    !-----------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    if (root_task) then
+       write(ndiag,'(a)') 'Attempting to make urban topo elevation .....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+    end if
+
+    ! Open input data file
+    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
+    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
+
+    ! Read in input mesh
+    call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
+    mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
+
+    ! Determine ns_i
+    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Determine ns_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Read topo elev dataset with unit mask everywhere
+    write (6,*) 'Open elevation file: ', trim(file_data_i)
+    allocate(elev_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, trim(varname), mesh_i, elev_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call pio_closefile(pioid)
+
+    ! Create a route handle between the input and output mesh
+    allocate(frac_o(ns_o), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+
+    ! Regrid input data to model resolution - determine elev_o on output grid
+    elev_o(:) = 0.
+    if (ier/=0) call shr_sys_abort()
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, elev_i, elev_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+    !    data_i, data_o, "Urban elev variable", "m", ndiag)
+
+    ! Deallocate dynamic memory
+    deallocate (elev_i)
+    deallocate (frac_o)
+    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+
+    if (root_task) then
+       write (ndiag,'(a)') 'Successfully made elevation'
+       write (ndiag,'(a)')
+    end if
+
+  end subroutine mkurban_topo
 
 end module mkurbanparMod

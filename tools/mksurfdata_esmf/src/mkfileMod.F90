@@ -10,7 +10,7 @@ module mkfileMod
 #ifdef TODO
   use mkpftMod     , only : mkpftAtt
   use mkglcmecMod  , only : nglcec
-  use mkharvestMod , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname, mkharvest_units, harvestDataType 
+  use mkharvestMod , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname, mkharvest_units, harvestDataType
 #endif
   use mkpioMod ! TODO: add only
   use mkvarctl
@@ -36,26 +36,35 @@ contains
 
   subroutine mkfile_fsurdat(nx, ny, mesh_o, dynlanduse, &
        pctlak, pctwet, lakedepth, organic, soil_color, nsoilcol, &
-       urban_classes_g, urban_region, pctsand, pctclay, mapunits, fmaxsoil, soildepth)
+       urban_classes_g, urban_region, pctsand, pctclay, mapunits, fmaxsoil, soildepth, &
+       glacier_region, ef_btr, ef_fet, ef_fdt, ef_shr, ef_grs, ef_crp, rc)
 
     ! input/output variables
-    integer           , intent(in) :: nx
-    integer           , intent(in) :: ny
-    logical           , intent(in) :: dynlanduse
-    type(ESMF_Mesh)   , intent(in) :: mesh_o
-    real(r8), pointer , intent(in) :: pctlak(:)            ! percent of grid cell that is lake
-    real(r8), pointer , intent(in) :: pctwet(:)            ! percent of grid cell that is wetland
-    real(r8), pointer , intent(in) :: lakedepth(:)         ! lake depth (m)
-    real(r8), pointer , intent(in) :: organic(:,:)         ! organic
-    integer , pointer , intent(in) :: soil_color(:)
-    integer           , intent(in) :: nsoilcol 
-    real(r8), pointer , intent(in) :: urban_classes_g(:,:) ! percent cover of each urban class, as % of grid cell
-    integer , pointer , intent(in) :: urban_region(:)      ! urban region ID
-    real(r8), pointer , intent(in) :: fmaxsoil(:)          ! soil_fractional saturated area
-    real(r8), pointer , intent(in) :: pctsand(:,:)         ! soil texture: percent sand
-    real(r8), pointer , intent(in) :: pctclay(:,:)         ! soil texture: percent clay
-    integer , pointer , intent(in) :: mapunits(:)
-    real(r8), pointer , intent(in) :: soildepth(:)         ! soil depth (m)
+    integer         , intent(in) :: nx
+    integer         , intent(in) :: ny
+    type(ESMF_Mesh) , intent(in) :: mesh_o
+    logical         , intent(in) :: dynlanduse
+    real(r8)        , intent(in) :: pctlak(:)            ! percent of grid cell that is lake
+    real(r8)        , intent(in) :: pctwet(:)            ! percent of grid cell that is wetland
+    real(r8)        , intent(in) :: lakedepth(:)         ! lake depth (m)
+    real(r8)        , intent(in) :: organic(:,:)         ! organic
+    integer         , intent(in) :: soil_color(:)
+    integer         , intent(in) :: nsoilcol
+    real(r8)        , intent(in) :: urban_classes_g(:,:) ! percent cover of each urban class, as % of grid cell
+    integer         , intent(in) :: urban_region(:)      ! urban region ID
+    real(r8)        , intent(in) :: fmaxsoil(:)          ! soil_fractional saturated area
+    real(r8)        , intent(in) :: pctsand(:,:)         ! soil texture: percent sand
+    real(r8)        , intent(in) :: pctclay(:,:)         ! soil texture: percent clay
+    integer         , intent(in) :: mapunits(:)
+    real(r8)        , intent(in) :: soildepth(:)         ! soil depth (m)
+    integer         , intent(in) :: glacier_region(:)
+    real(r8)        , intent(in) :: ef_btr(:)
+    real(r8)        , intent(in) :: ef_fet(:)
+    real(r8)        , intent(in) :: ef_fdt(:)
+    real(r8)        , intent(in) :: ef_shr(:)
+    real(r8)        , intent(in) :: ef_grs(:)
+    real(r8)        , intent(in) :: ef_crp(:)
+    integer         , intent(out):: rc
 #ifdef TODO
     type(harvestDataType) , intent(in) :: harvdata
 #endif
@@ -69,7 +78,6 @@ contains
     integer, allocatable :: ind1D(:)           ! Indices of 1D harvest variables
     integer, allocatable :: ind2D(:)           ! Indices of 2D harvest variables
     integer              :: rcode
-    integer              :: rc
     integer              :: n, i
     logical              :: define_mode
     character(len=256)   :: lev1name
@@ -81,20 +89,22 @@ contains
     !---------------------------
 
     ! TODO: what about setting no fill values?
-     call mkpio_wopen(trim(fsurdat), clobber=.true., pioid=pioid)
+    call mkpio_wopen(trim(fsurdat), clobber=.true., pioid=pioid)
 
     ! ----------------------------------------------------------------------
     ! Define dimensions and global attributes
     ! ----------------------------------------------------------------------
 
-     call mkfile_define_dims(pioid, nx, ny, dynlanduse)
-     call mkfile_define_atts(pioid, dynlanduse)
+    call mkfile_define_dims(pioid, nx, ny, dynlanduse)
+    call mkfile_define_atts(pioid, dynlanduse)
 
     ! ----------------------------------------------------------------------
     ! Define and outut variables
     ! ----------------------------------------------------------------------
 
-    call ESMF_LogWrite(subname//'defining variables', ESMF_LOGMSG_INFO)
+    if (root_task) then
+       write(ndiag,'(a)') 'Writing out output variables'
+    end if
 
     if ( outnc_double ) then
        xtype = PIO_DOUBLE
@@ -174,16 +184,67 @@ contains
                'unitless', urban_classes_g, lev1name='numurbl', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'EF1_BTR', 'EF btr (isoprene)', &
+               'unitless', ef_btr, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'EF1_FET', 'EF fet (isoprene)', &
+               'unitless', ef_fet, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'EF1_FDT', 'EF fdt (isoprene)', &
+               'unitless', ef_fdt, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'EF1_SHR', 'EF shr (isoprene)', &
+               'unitless', ef_shr, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'EF1_GRS', 'EF grs (isoprene)', &
+               'unitless', ef_grs, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'EF1_CRP', 'EF crp (isoprene)', &
+               'unitless', ef_crp, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
        end if
     end do
 
     ! ----------------------------------------------------------------------
-    ! Make Urban Parameters from raw input data and write to surface dataset 
+    ! Make Urban Parameters from raw input data and write to surface dataset
     ! Write to netcdf file is done inside mkurbanpar routine
     ! ----------------------------------------------------------------------
-    
+
     call mkurbanpar(mksrf_furban, pioid, mesh_o, urban_region, urban_classes_g, &
          urban_skip_abort_on_invalid_data_check)
+
+    ! ----------------------------------------------------------------------
+    ! Make LAI and SAI from 1/2 degree data and write to surface dataset 
+    ! Write to netcdf file is done inside mklai routine
+    ! ----------------------------------------------------------------------
+    ! if (root_task) then
+    !    write(ndiag,'(a)')'calling mklai'
+    ! end if
+    ! call mklai(mksrf_lai, mksrf_lai_mesh, pioid, mesh_o, rc=rc) 
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! ----------------------------------------------------------------------
+    ! TODO: Write out variables that did not work in the loop
+    ! ----------------------------------------------------------------------
+    do n = 1,2
+       if (n == 1) then
+          define_mode = .true.
+          rcode = pio_redef(pioid)
+       else
+          define_mode = .false.
+          rcode = pio_enddef(pioid)
+       end if
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out glacier_region"
+       call mkfile_output(pioid, define_mode, mesh_o, 'GLACIER_REGION', 'glacier region ID', &
+            'unitless', glacier_region, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end do
 
     ! Close surface dataset
     call pio_closefile(pioid)
@@ -410,17 +471,17 @@ contains
   end subroutine mkfile_define_atts
 
   !=================================================================================
-  subroutine mkfile_output_int1d(pioid, define_mode, mesh, varname, longname, units, ipointer, rc)
+  subroutine mkfile_output_int1d(pioid, define_mode, mesh, varname, longname, units, data, rc)
 
     ! input/output variables
-    type(file_desc_t) , intent(inout)  :: pioid
-    logical           , intent(in)  :: define_mode
-    type(ESMF_Mesh)   , intent(in)  :: mesh
-    character(len=*)  , intent(in)  :: varname
-    character(len=*)  , intent(in)  :: longname
-    character(len=*)  , intent(in)  :: units
-    integer           , pointer     :: ipointer(:)
-    integer           , intent(out) :: rc
+    type(file_desc_t) , intent(inout) :: pioid
+    logical           , intent(in)    :: define_mode
+    type(ESMF_Mesh)   , intent(in)    :: mesh
+    character(len=*)  , intent(in)    :: varname
+    character(len=*)  , intent(in)    :: longname
+    character(len=*)  , intent(in)    :: units
+    integer           , intent(in)    :: data(:)
+    integer           , intent(out)   :: rc
 
     ! local variables
     type(io_desc_t)      :: pio_iodesc
@@ -436,23 +497,23 @@ contains
        call mkpio_iodesc_output(pioid, mesh, trim(varname), pio_iodesc, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
        rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
-       call pio_write_darray(pioid, pio_varid, pio_iodesc, ipointer, rcode)
+       call pio_write_darray(pioid, pio_varid, pio_iodesc, data, rcode)
        call pio_freedecomp(pioid, pio_iodesc)
     end if
   end subroutine mkfile_output_int1d
 
   !=================================================================================
-  subroutine mkfile_output_int2d(pioid, define_mode, mesh, varname, longname, units, ipointer, rc)
+  subroutine mkfile_output_int2d(pioid, define_mode, mesh, varname, longname, units, data, rc)
 
     ! input/output variables
-    type(file_desc_t) , intent(inout)  :: pioid
-    logical           , intent(in)  :: define_mode
-    type(ESMF_Mesh)   , intent(in)  :: mesh
-    character(len=*)  , intent(in)  :: varname
-    character(len=*)  , intent(in)  :: longname
-    character(len=*)  , intent(in)  :: units
-    integer           , pointer     :: ipointer(:,:)
-    integer           , intent(out) :: rc
+    type(file_desc_t) , intent(inout) :: pioid
+    logical           , intent(in)    :: define_mode
+    type(ESMF_Mesh)   , intent(in)    :: mesh
+    character(len=*)  , intent(in)    :: varname
+    character(len=*)  , intent(in)    :: longname
+    character(len=*)  , intent(in)    :: units
+    integer           , intent(in)    :: data(:,:)
+    integer           , intent(out)   :: rc
 
     ! local variables
     type(io_desc_t)      :: pio_iodesc
@@ -468,13 +529,13 @@ contains
        call mkpio_iodesc_output(pioid, mesh, trim(varname), pio_iodesc, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
        rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
-       call pio_write_darray(pioid, pio_varid, pio_iodesc, ipointer, rcode)
+       call pio_write_darray(pioid, pio_varid, pio_iodesc, data, rcode)
        call pio_freedecomp(pioid, pio_iodesc)
     end if
   end subroutine mkfile_output_int2d
 
   !=================================================================================
-  subroutine mkfile_output_real1d(pioid, define_mode, mesh, xtype, varname, longname, units, rpointer, rc)
+  subroutine mkfile_output_real1d(pioid, define_mode, mesh, xtype, varname, longname, units, data, rc)
 
     ! input/output variables
     type(file_desc_t), intent(inout) :: pioid
@@ -484,7 +545,7 @@ contains
     character(len=*), intent(in)  :: varname
     character(len=*), intent(in)  :: longname
     character(len=*), intent(in)  :: units
-    real(r8)        , pointer     :: rpointer(:)
+    real(r8)        , intent(in)  :: data(:)
     integer         , intent(out) :: rc
 
     ! local variables
@@ -501,13 +562,13 @@ contains
        call mkpio_iodesc_output(pioid, mesh, trim(varname), pio_iodesc, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
        rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
-       call pio_write_darray(pioid, pio_varid, pio_iodesc, rpointer, rcode)
+       call pio_write_darray(pioid, pio_varid, pio_iodesc, data, rcode)
        call pio_freedecomp(pioid, pio_iodesc)
     end if
   end subroutine mkfile_output_real1d
 
   !=================================================================================
-  subroutine mkfile_output_real2d(pioid, define_mode, mesh, xtype, varname, longname, units, rpointer, lev1name, rc)
+  subroutine mkfile_output_real2d(pioid, define_mode, mesh, xtype, varname, longname, units, data, lev1name, rc)
 
     ! input/output variables
     type(file_desc_t), intent(inout) :: pioid
@@ -518,7 +579,7 @@ contains
     character(len=*), intent(in) :: longname
     character(len=*), intent(in) :: units
     character(len=*), intent(in) :: lev1name
-    real(r8)        , pointer    :: rpointer(:,:)
+    real(r8)        , intent(in) :: data(:,:)
     integer         , intent(out) :: rc
 
     ! local variables
@@ -535,7 +596,7 @@ contains
        call mkpio_iodesc_output(pioid, mesh, trim(varname), pio_iodesc, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
        rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
-       call pio_write_darray(pioid, pio_varid, pio_iodesc, rpointer, rcode)
+       call pio_write_darray(pioid, pio_varid, pio_iodesc, data, rcode)
        call pio_freedecomp(pioid, pio_iodesc)
     end if
   end subroutine mkfile_output_real2d

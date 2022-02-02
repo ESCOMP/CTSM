@@ -20,6 +20,7 @@ set(SRCFILES mkvarctl.F90
              mkvarpar.F90
              mkpioMod.F90
              mkfileMod.F90
+             mkglacierregionMod.F90
              mklanwatMod.F90
              mkorganicMod.F90
              mksoilcolMod.F90
@@ -27,7 +28,6 @@ set(SRCFILES mkvarctl.F90
              mksoiltexMod.F90
              mksoildepthMod.F90
              mkurbanparMod.F90
-             mkurbanparCommonMod.F90
              mkesmfMod.F90
              mkutilsMod.F90
              mkchecksMod.F90

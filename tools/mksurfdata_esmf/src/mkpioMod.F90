@@ -159,14 +159,16 @@ contains
   end subroutine mkpio_get_rawdata1d_real4
 
   !===============================================================
-  subroutine mkpio_get_rawdata1d_real8(pioid, varname, mesh_i, data_i, rc)
+  subroutine mkpio_get_rawdata1d_real8(pioid, varname, mesh_i, data_i, nt, rc)
 
     ! input/output variables
     type(file_desc_t), intent(inout) :: pioid
     character(len=*) , intent(in)    :: varname   ! field name in rawdata file
     type(ESMF_Mesh)  , intent(in)    :: mesh_i
     real(r8)         , intent(inout) :: data_i(:) ! input raw data
+    integer, optional, intent(in)    :: nt
     integer          , intent(out)   :: rc
+
 
     ! local variables
     type(var_desc_t)       :: pio_varid
@@ -192,6 +194,10 @@ contains
     ! create iodesc for either single or multi level input data
     call mkpio_iodesc_rawdata(mesh_i, trim(varname), pioid, pio_varid, pio_vartype, pio_iodesc, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    if (present(nt))  then
+       call pio_setframe(pioid, pio_varid, int(nt,kind=Pio_Offset_Kind))
+    end if
 
     ! Read the input raw data
     call ESMF_VMLogMemInfo("After mkpio_iodesc for varname for "//trim(varname)//" in "//trim(subname))

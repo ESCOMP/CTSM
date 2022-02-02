@@ -31,7 +31,7 @@ contains
     character(len=*)  , intent(in)    :: file_mesh_i     ! input mesh file name
     character(len=*)  , intent(in)    :: file_data_i     ! input data file name
     type(ESMF_Mesh)   , intent(in)    :: mesh_o          ! model mesho
-    integer           , pointer       :: soil_color_o(:) ! soil color classes
+    integer           , intent(inout) :: soil_color_o(:) ! soil color classes
     integer           , intent(out)   :: nsoilcol        ! number of soil colors
     integer           , intent(out)   :: rc
 
@@ -140,7 +140,7 @@ contains
     ! field with gridcells equal to 1 for that soil color and zero elsewhere
     allocate(data_i(0:nsoilcol,ns_i))
     data_i(:,:) = 0._r4
-    do l = 1,nsoilcol
+    do l = 0,nsoilcol
        do n = 1,ns_i
           if (int(soil_color_i(n)) == l) then
              data_i(l,n) = 1._r4 * mask_i(n)
