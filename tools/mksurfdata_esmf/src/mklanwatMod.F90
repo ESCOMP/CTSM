@@ -57,8 +57,8 @@ contains
     integer , allocatable  :: mask_i(:) 
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
-    real(r4), allocatable  :: area_i(:)
-    real(r4), allocatable  :: area_o(:)
+    real(r8), allocatable  :: area_i(:)
+    real(r8), allocatable  :: area_o(:)
     real(r8), allocatable  :: lake_i(:)      ! input grid: percent lake
     real(r8), allocatable  :: swmp_i(:)      ! input grid: percent wetland
     real(r8), allocatable  :: lakedepth_i(:) ! iput grid: lake depth

@@ -14,51 +14,48 @@ program mksurfdata
   ! ======================================
   !    mksrf_fgrid_mesh -- mesh for output grid
   ! ======================================
-  ! Must specify settings for input high resolution datafiles
+  ! Must specify settings for input high resolution datafiles and corresponding meshes
   ! ======================================
-  !    mksrf_fglacier - Glacier dataset
-  !    mksrf_fglacierregion - Glacier region ID dataset
-  !    mksrf_flai ----- Leaf Area Index dataset
-  !    mksrf_flakwat -- Lake water dataset
-  !    mksrf_fwetlnd -- Wetland water dataset
-  !    mksrf_forganic - Organic soil carbon dataset
-  !    mksrf_fmax ----- Max fractional saturated area dataset
-  !    mksrf_fsoicol -- Soil color dataset
-  !    mksrf_fsoitex -- Soil texture dataset
-  !    mksrf_furbtopo-- Topography dataset (for limiting urban areas)
-  !    mksrf_furban --- Urban dataset
-  !    mksrf_fvegtyp -- PFT vegetation type dataset
-  !    mksrf_fhrvtyp -- harvest type dataset
-  !    mksrf_fvocef  -- Volatile Organic Compund Emission Factor dataset
-  !    mksrf_fgdp ----- GDP dataset
-  !    mksrf_fpeat ---- Peatland dataset
-  !    mksrf_fsoildepth Soil depth dataset
-  !    mksrf_fabm ----- Agricultural fire peak month dataset
-  !    mksrf_ftopostats Topography statistics dataset
-  !    mksrf_fvic ----- VIC parameters dataset
-  ! ======================================
-  ! Must specify meshes for input high resolutin datasets
-  ! ======================================
-  !    mksrf_fpft_mesh --------    Mesh for mksrf_fvegtyp
-  !    mksrf_flakwat_mesh -----    Mesh for mksrf_flakwat
-  !    mksrf_fwetlnd_mesh -----    Mesh for mksrf_fwetlnd
-  !    mksrf_fglacier_mesh ----    Mesh for mksrf_fglacier
-  !    mksrf_fglacierregion_mesh   Mesh for mksrf_fglacierregion
-  !    mksrf_fsoitex_mesh -----    Mesh for mksrf_fsoitex
-  !    mksrf_fsoicol_mesh -----    Mesh for mksrf_fsoicol
-  !    mksrf_furban_mesh ------    Mesh for mksrf_furban
-  !    mksrf_furbtopo_mesh ----    Mesh for mksrf_furbtopo
-  !    mksrf_fmax_mesh --------    Mesh for mksrf_fmax
-  !    mksrf_forganic_mesh ----    Mesh for mksrf_forganic
-  !    mksrf_fvocef_mesh ------    Mesh for mksrf_fvocef
-  !    mksrf_flai_mesh --------    Mesh for mksrf_flai
-  !    mksrf_fhrv_mesh --------    Mesh for mksrf_flai harvesting
-  !    mksrf_fgdp_mesh --------    Mesh for mksrf_fgdp
-  !    mksrf_fpeat_mesh -------    Mesh for mksrf_fpeat
-  !    mksrf_fsoildepth_mesh --    Mesh for mksrf_fsoildepth
-  !    mksrf_fabm_mesh --------    Mesh for mksrf_fabm
-  !    mksrf_ftopostats_mesh --    Mesh for mksrf_ftopostats
-  !    mksrf_fvic_mesh --------    Mesh for mksrf_fvic
+  !    mksrf_fglacier            - Glacier dataset
+  !    mksrf_fglacier_mesh       - Mesh for mksrf_fglacier
+  !    mksrf_fglacierregion      - Glacier region ID dataset
+  !    mksrf_fglacierregion_mesh - Mesh for mksrf_fglacierregion
+  !    mksrf_flai                - Leaf Area Index dataset
+  !    mksrf_flai_mesh           - Mesh for mksrf_flai
+  !    mksrf_flakwat             - Lake water dataset
+  !    mksrf_flakwat_mesh        - Mesh for mksrf_flakwat
+  !    mksrf_fwetlnd             - Wetland water dataset
+  !    mksrf_fwetlnd_mesh        - Mesh for mksrf_fwetlnd
+  !    mksrf_forganic            - Organic soil carbon dataset
+  !    mksrf_forganic_mesh       - Mesh for mksrf_forganic
+  !    mksrf_fmax                - Max fractional saturated area dataset
+  !    mksrf_fmax_mesh           - Mesh for mksrf_fmax
+  !    mksrf_fsoicol             - Soil color dataset
+  !    mksrf_fsoicol_mesh        - Mesh for mksrf_fsoicol
+  !    mksrf_fsoitex             - Soil texture dataset
+  !    mksrf_fsoitex_mesh        - Mesh for mksrf_fsoitex
+  !    mksrf_furbtopo            - Topography dataset (for limiting urban areas)
+  !    mksrf_furbtopo_mesh       - Mesh for mksrf_furbtopo
+  !    mksrf_furban              - Urban dataset
+  !    mksrf_furban_mesh         - Mesh for mksrf_furban
+  !    mksrf_fvegtyp             - PFT vegetation type dataset
+  !    mksrf_fpft_mesh           - Mesh for mksrf_fvegtyp
+  !    mksrf_fhrvtyp             - harvest type dataset
+  !    mksrf_fhrvtyp_mesh        - Mesh for mksrf_flai harvesting
+  !    mksrf_fvocef              - Volatile Organic Compund Emission Factor dataset
+  !    mksrf_fvocef_mesh         - Mesh for mksrf_fvocef
+  !    mksrf_fgdp                - GDP dataset
+  !    mksrf_fgdp_mesh           - Mesh for mksrf_fgdp
+  !    mksrf_fpeat               - Peatland dataset
+  !    mksrf_fpeat_mesh          - Mesh for mksrf_fpeat
+  !    mksrf_fsoildepth          - Soil depth dataset
+  !    mksrf_fsoildepth_mesh     - Mesh for mksrf_fsoildepth
+  !    mksrf_fabm                - Agricultural fire peak month dataset
+  !    mksrf_fabm_mesh           - Mesh for mksrf_fabm
+  !    mksrf_ftopostats          - Topography statistics dataset
+  !    mksrf_ftopostats_mesh     - Mesh for mksrf_ftopostats
+  !    mksrf_fvic                - VIC parameters dataset
+  !    mksrf_fvic_mesh           - Mesh for mksrf_fvic
   ! ======================================
   ! Optionally specify setting for:
   ! ======================================
@@ -110,10 +107,10 @@ program mksurfdata
   use mkagfirepkmonthMod , only : mkagfirepkmon
   use mktopostatsMod     , only : mktopostats
   use mkVICparamsMod     , only : mkVICparams
-  use mkvocefMod         , only : mkvocef
 #endif
+  use mkvocefMod         , only : mkvocef
   use mkglacierregionMod , only : mkglacierregion
-  use mksoiltexMod       , only : mksoiltex 
+  use mksoiltexMod       , only : mksoiltex
   use mksoilfmaxMod      , only : mksoilfmax
   use mksoildepthMod     , only : mksoildepth
   use mksoilcolMod       , only : mksoilcol
@@ -386,27 +383,24 @@ program mksurfdata
   ! begin working
 
   ! ! Make VOC emission factors for isoprene [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp]
-  write(6,*)'DEBUG: i am here1'
-  call flush(6)
   allocate (ef1_btr(lsize_o)) ; ef1_btr(:) = 0._r8
   allocate (ef1_fet(lsize_o)) ; ef1_fet(:) = 0._r8
   allocate (ef1_fdt(lsize_o)) ; ef1_fdt(:) = 0._r8
   allocate (ef1_shr(lsize_o)) ; ef1_shr(:) = 0._r8
   allocate (ef1_grs(lsize_o)) ; ef1_grs(:) = 0._r8
   allocate (ef1_crp(lsize_o)) ; ef1_crp(:) = 0._r8
-  ! call mkvocef ( mksrf_fvocef, mksrf_fvocef_mesh, mesh_model, &
-  !      ef_btr_o=ef1_btr, ef_fet_o=ef1_fet, ef_fdt_o=ef1_fdt,  &
-  !      ef_shr_o=ef1_shr, ef_grs_o=ef1_grs, ef_crp_o=ef1_crp, rc=rc)
-  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkvocef')
-  write(6,*)'DEBUG: i am here2'
-  call flush(6)
+  call ESMF_LogWrite("DEBUG: mksrf_fvocef_mesh is "//trim(mksrf_fvocef_mesh), ESMF_LOGMSG_INFO)
+  call mkvocef ( mksrf_fvocef, mksrf_fvocef_mesh, mesh_model, &
+       ef_btr_o=ef1_btr, ef_fet_o=ef1_fet, ef_fdt_o=ef1_fdt,  &
+       ef_shr_o=ef1_shr, ef_grs_o=ef1_grs, ef_crp_o=ef1_crp, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkvocef')
 
   ! Make glacier region ID [glacier_region] from [fglacierregion] dataset
   allocate (glacier_region(lsize_o)) ; glacier_region(:) = -999
   call mkglacierregion(mksrf_fglacierregion_mesh, mksrf_fglacierregion, mesh_model, glacier_region, rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacierregion')
 
-  ! Make urban fraction [pcturb] from [furban] dataset
+  ! ! Make urban fraction [pcturb] from [furban] dataset
   allocate (pcturb(lsize_o))                 ; pcturb(:)            = spval
   allocate (urban_classes(lsize_o,numurbl))  ; urban_classes(:,:)   = spval
   allocate (urban_classes_g(lsize_o,numurbl)); urban_classes_g(:,:) = spval
@@ -515,7 +509,7 @@ program mksurfdata
      pctwet(n) = float(nint(pctwet(n)))
      pctgla(n) = float(nint(pctgla(n)))
   end do
-  !DEBUG
+  !Debug
 
   call ESMF_LogWrite("After fixes", ESMF_LOGMSG_INFO)
 

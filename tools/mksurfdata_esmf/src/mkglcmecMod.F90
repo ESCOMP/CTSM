@@ -1,84 +1,59 @@
 module mkglcmecMod
+
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !MODULE: mkglcmecMod
-  !
-  ! !DESCRIPTION:
   ! Make glacier multi-elevation class  data
-  !
-  ! !REVISION HISTORY:
-  ! Author: Erik Kluzek, Mariana Vertenstein
-  !
   !-----------------------------------------------------------------------
-  !!USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use mkdomainMod , only : domain_checksame
+
+  use ESMF
+  use pio
+  use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
+  use shr_sys_mod    , only : shr_sys_abort
+  use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
+  use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
+  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
+  use mkutilsMod     , only : chkerr
+  use mkvarctl       , only : ndiag, root_task
+
   implicit none
-
   private           ! By default make data private
-  !
-  ! !PUBLIC MEMBER FUNCTIONS:
-  !
-  public mkglcmecInit  ! Initialization
-  public mkglcmec      ! Set glacier multi-elevation class
-  public mkglacier     ! Set percent glacier
-  !
-  ! !PUBLIC DATA MEMBERS: 
-  !
-  integer, public       :: nglcec         = 10   ! number of elevation classes for glaciers
-  real(r8), allocatable :: elevclass(:)          ! elevation classes
-  !
-  ! !PRIVATE MEMBER FUNCTIONS:
-  private get_elevclass      ! get elevation class index
-  private mean_elevation_vc  ! get the elevation of a virtual column
-  !EOP
-  !===============================================================
-contains
-  !===============================================================
 
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkglcmecInit
-  !
-  ! !INTERFACE:
+  public  :: mkglcmecInit      ! Initialization
+  public  :: mkglcmec          ! Set glacier multi-elevation class
+  public  :: mkglacier         ! Set percent glacier
+  private :: get_elevclass     ! get elevation class index
+  private :: mean_elevation_vc ! get the elevation of a virtual column
+
+  integer, public       :: nglcec = 10   ! number of elevation classes for glaciers
+  real(r8), allocatable :: elevclass(:)          ! elevation classes
+
+!=================================================================================
+contains
+!=================================================================================
+
   subroutine mkglcmecInit( elevclass_o )
     !
-    ! !DESCRIPTION:
     ! Initialize of Make glacier multi-elevation class data
-    ! !USES:
     !
-    ! !ARGUMENTS:
-    implicit none
-    real(r8), intent(OUT) :: elevclass_o(:)          ! elevation classes
-    !
-    ! !CALLED FROM:
-    ! subroutine mksrfdat in module mksrfdatMod
-    !
-    ! !REVISION HISTORY:
-    ! Author: Erik Kluzek
-    !
-    !
+    ! input/output variables
+    real(r8), intent(out) :: elevclass_o(:)          ! elevation classes
+
     ! !LOCAL VARIABLES:
-    !EOP
-    character(len=32) :: subname = 'mkglcmecInit:: '
+    character(len=*), parameter :: subname = 'mkglcmecInit:: '
     !-----------------------------------------------------------------------
+
     allocate( elevclass(nglcec+1) )
 
-    ! -----------------------------------------------------------------
     ! Define elevation classes, represents lower boundary of each class
-    ! -----------------------------------------------------------------
 
-    if (      nglcec == 36 )then
-       elevclass(:) = (/ 0.,   200.,   400.,   600.,   800.,  &
-            1000.,  1200.,  1400.,  1600.,  1800.,  &
-            2000.,  2200.,  2400.,  2600.,  2800.,  &
-            3000.,  3200.,  3400.,  3600.,  3800.,  &
-            4000.,  4200.,  4400.,  4600.,  4800.,  &
-            5000.,  5200.,  5400.,  5600.,  5800.,  &
-            6000.,  6200.,  6400.,  6600.,  6800.,  &
-            7000., 10000./)
+    if ( nglcec == 36 )then
+       elevclass(:) = (/ 0.,     200.,   400.,   600.,   800.,  &
+                        1000.,  1200.,  1400.,  1600.,  1800.,  &
+                        2000.,  2200.,  2400.,  2600.,  2800.,  &
+                        3000.,  3200.,  3400.,  3600.,  3800.,  &
+                        4000.,  4200.,  4400.,  4600.,  4800.,  &
+                        5000.,  5200.,  5400.,  5600.,  5800.,  &
+                        6000.,  6200.,  6400.,  6600.,  6800.,  &
+                        7000., 10000./)
     else if ( nglcec == 10 )then
        elevclass(1)  =     0.
        elevclass(2)  =   200.
@@ -109,19 +84,14 @@ contains
     else
        write(6,*) subname//"ERROR:: nglcec must be 1, 3, 5, 10 or 36",&
             " to work with CLM: "
-       call abort()
+       call shr_sys_abort()
     end if
 
     elevclass_o(:) = elevclass(:)
 
   end subroutine mkglcmecInit
 
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkglcmec
-  !
-  ! !INTERFACE:
+  !=================================================================================
   subroutine mkglcmec(ldomain, mapfname, &
        datfname_fglacier, ndiag, &
        pctglcmec_o, topoglcmec_o, &
@@ -145,16 +115,11 @@ contains
     ! variables in an arbitrary way.
     !
     ! !USES:
-    use shr_sys_mod, only : shr_sys_abort
-    use mkdomainMod, only : domain_type, domain_clean, domain_read
-    use mkgridmapMod
     use mkvarpar	
     use mkutilsMod, only : slightly_below, slightly_above
-    use mkncdio
     use mkvarctl  , only : outnc_3dglc
     !
     ! !ARGUMENTS:
-    implicit none
     type(domain_type) , intent(in) :: ldomain
     character(len=*)  , intent(in) :: mapfname                  ! input mapping file name
     character(len=*)  , intent(in) :: datfname_fglacier         ! raw glacier data
@@ -166,21 +131,7 @@ contains
     real(r8), optional, intent(out):: pctglc_gic_o(:)           ! % glc gic on output grid, summed across elevation classes (% of landunit)
     real(r8), optional, intent(out):: pctglc_icesheet_o(:)      ! % glc ice sheet on output grid, summed across elevation classes (% of landunit)
     !
-    ! !CALLED FROM:
-    ! subroutine mksrfdat in module mksrfdatMod
-    !
-    ! !REVISION HISTORY:
-    ! Author: David Lawrence
-    ! 7/12/11: Bill Sacks: substantial rewrite to use input topo and % glacier at same resolution
-    ! 9/25/12: Bill Sacks: substantial rewrite to use new format of fglacier, which provides
-    !          percent by elevation bin (thus the separate topo dataset is no longer needed
-    !          in this routine)
-    !
-    !
-    ! !LOCAL VARIABLES:
-    !EOP
-    type(domain_type)     :: tdomain              ! local domain
-    type(gridmap_type)    :: tgridmap             ! local gridmap
+    ! local variables:
     real(r8), allocatable :: pctglc_gic_i(:)      ! input GIC percentage for a single level
     real(r8), allocatable :: pctglc_icesheet_i(:) ! input icesheet percentage for a single level
     real(r8), allocatable :: topoglcmec_unnorm_o(:,:) ! same as topoglcmec_o, but unnormalized
@@ -201,8 +152,7 @@ contains
     logical  :: errors                            ! error status
 
     real(r8), parameter :: eps = 2.e-5_r8         ! epsilon for error checks (note that we use a large-ish value
-    ! because data are stored as single-precision floats in the
-    ! raw dataset)
+                                                  ! because data are stored as single-precision floats in the raw dataset)
     real(r8), parameter :: eps_small = 1.e-12_r8  ! epsilon for error checks that expect close match
     character(len=32) :: subname = 'mkglcmec'
     !-----------------------------------------------------------------------
@@ -245,7 +195,7 @@ contains
        write (6,*) trim(datfname_fglacier)
        write (6,*) 'Perhaps you are trying to use an old-format glacier file?'
        write (6,*) '(prior to Sept., 2012)'
-       call abort()
+       call shr_sys_abort()
     end if
     call check_ret(nf_inq_dimlen (ncid, dimid, nlev), subname)
 
@@ -267,7 +217,7 @@ contains
     call get_dim_lengths(ncid, 'PCT_GLC_GIC', ndims, dim_lengths)
 
     allocate(starts(ndims), counts(ndims), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
 
     starts(1:ndims) = 1
 
@@ -280,13 +230,13 @@ contains
     ! -------------------------------------------------------------------- 
 
     allocate(pctglc_gic_i(nst), pctglc_icesheet_i(nst), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
 
     allocate(topoglcmec_unnorm_o(ns_o,nglcec), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
 
     allocate(frac_dst(ns_o), stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
 
     topoglcmec_unnorm_o(:,:) = 0.
 
@@ -311,7 +261,7 @@ contains
        ! Determine elevation class
        m = get_elevclass(topoice_i)
        if (m < 1 .or. m > nglcec) then 
-          call abort()
+          call shr_sys_abort()
        end if
 
        do n = 1,tgridmap%ns
@@ -379,7 +329,7 @@ contains
     ! Renormalize percentages to be given as % of landunit rather than % of grid cell.
 
     allocate(pctglc_tot_o(ns_o), stat=ier)
-    if (ier/=0) call abort()  
+    if (ier/=0) call shr_sys_abort()  
 
     do no = 1,ns_o
        pctglc_tot_o(no) = sum(pctglcmec_o(no,:))
@@ -460,7 +410,7 @@ contains
     end do
 
     if (errors) then
-       call abort()
+       call shr_sys_abort()
     end if
 
     ! Deallocate dynamic memory
@@ -478,15 +428,9 @@ contains
 
   end subroutine mkglcmec
 
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkglacier
-  !
-  ! !INTERFACE:
+  !=================================================================================
   subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
     !
-    ! !DESCRIPTION:
     ! make percent glacier
     !
     ! In contrast to mkglcmec, this uses a "flat" PCT_GLACIER field (not separated by
@@ -557,7 +501,7 @@ contains
     allocate(glac_i(ns),  &
          frac_dst(ns_o),  &
          stat=ier)
-    if (ier/=0) call abort()
+    if (ier/=0) call shr_sys_abort()
 
     write (6,*) 'Open glacier file: ', trim(datfname)
     call check_ret(nf_open(datfname, 0, ncid), subname)
@@ -600,7 +544,7 @@ contains
        if ((glac_o(no)) > 100.000001_r8) then
           write (6,*) 'MKGLACIER error: glacier = ',glac_o(no), &
                ' greater than 100.000001 for column, row = ',no
-          call abort()
+          call shr_sys_abort()
        end if
     enddo
 
@@ -612,7 +556,7 @@ contains
        ! output grid that is land as determined by input grid
 
        allocate(mask_r8(ns), stat=ier)
-       if (ier/=0) call abort()
+       if (ier/=0) call shr_sys_abort()
        mask_r8 = tdomain%mask
        call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
@@ -675,31 +619,20 @@ contains
 
   end subroutine mkglacier
 
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: get_elevclass
-  !
-  ! !INTERFACE:
+  !=================================================================================
   integer function get_elevclass(topo, writewarn)
     !
-    ! !DESCRIPTION:
     ! Returns elevation class index (1..nglcec) given the topographic height.
     ! If topo is lower than the lowest elevation class, returns 0.
     ! If topo is higher than the highest elevation class, returns (nglcec+1).
     ! In either of the two latter cases, the function also writes a warning message, unless
     ! writewarn is present and false.
     !
-    ! !ARGUMENTS:
-    implicit none
+    ! input/output variables
     real(r8), intent(in) :: topo  ! topographic height (m)
     logical, intent(in), optional :: writewarn  ! should warning messages be written? (default: true)
     !
-    ! !REVISION HISTORY:
-    ! Author: Bill Sacks
-    !
-    ! !LOCAL VARIABLES:
-    !EOP
+    ! local variables
     integer :: m
     logical :: my_writewarn
     character(len=32) :: subname = 'get_elevclass'
@@ -741,12 +674,7 @@ contains
 
   end function get_elevclass
 
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mean_elevation_vc
-  !
-  ! !INTERFACE:
+  !=================================================================================
   real(r8) function mean_elevation_vc(class)
     !
     ! !DESCRIPTION:
@@ -779,7 +707,7 @@ contains
        end if
     else
        write(6,*) 'ERROR in ', trim(subname), ': class out of bounds= ', class
-       call abort()
+       call shr_sys_abort()
     end if
 
   end function mean_elevation_vc

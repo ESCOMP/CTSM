@@ -13,11 +13,11 @@ module mkglacierregionMod
   use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
   use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
   use mkutilsMod     , only : chkerr
+  use mkchecksMod    , only : min_bad
+  use mkvarctl       , only : ndiag, root_task
 #ifdef TODO
   ! use mkdiagnosticsMod, only : output_diagnostics_index
 #endif
-  use mkchecksMod, only : min_bad
-  use mkvarctl
 
   implicit none
   private
@@ -53,6 +53,8 @@ contains
     integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
+    real(r8), allocatable  :: area_i(:)
+    real(r8), allocatable  :: area_o(:)
     real(r8), allocatable  :: data_i(:,:)
     real(r8), allocatable  :: data_o(:,:)
     integer , allocatable  :: glacier_region_i(:) ! glacier region on input grid
@@ -67,6 +69,7 @@ contains
        write(ndiag,*)
        write(ndiag,'(a)') 'Attempting to make glacier region .....'
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
 
     ! Open input data file
@@ -88,18 +91,26 @@ contains
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Get the landmask from the input data file and reset the mesh mask based on that
+    ! Read in input data (Confirm that no value of glacier_region is less than min_allowed)
+    allocate(glacier_region_i(ns_i), stat=ier)
+    if (ier/=0) call abort()
+    call mkpio_get_rawdata(pioid, 'GLACIER_REGION', mesh_i, glacier_region_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (min_bad(glacier_region_i, 0, 'GLACIER_REGION')) then
+       call shr_sys_abort()
+    end if
+    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
+
+    ! Reset mesh mask to zero where glacier_region_i is zero
     allocate(frac_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
-       if (frac_i(ni) > 0._r8) then
-          mask_i(ni) = 1
-       else
+       if (glacier_region_i(ni) == 0) then
           mask_i(ni) = 0
+       else
+          mask_i(ni) = 1
        end if
     end do
     call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
@@ -107,24 +118,13 @@ contains
 
     ! Create a route handle between the input and output mesh
     allocate(frac_o(ns_o))
+    if (ier/=0) call abort()
     call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
-    ! Read in input data
-    allocate(glacier_region_i(ns_i), stat=ier)
-    if (ier/=0) call abort()
-    call mkpio_get_rawdata(pioid, 'GLACIER_REGION', mesh_i, glacier_region_i, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
-
-    ! Confirm that no value of glacier_region is less than min_allowed.
-    if (min_bad(glacier_region_i, 0, 'GLACIER_REGION')) then
-       call shr_sys_abort()
-    end if
-
-    ! Now determine data_i as a real 2d array - for every possible soil color create a global
-    ! field with gridcells equal to 1 for that soil color and zero elsewhere
+    ! Now determine data_i as a real 2d array - for every possible glacier region create a global
+    ! field with gridcells equal to 1 for that region and zero elsewhere
     allocate(data_i(0:nglacier_regions,ns_i))
     data_i(:,:) = 0._r4
     do l = 0,nglacier_regions
@@ -141,22 +141,36 @@ contains
     call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, nglacier_regions, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    ! Determine glacier_region_o
     glacier_region_o(:) = 0
     do no = 1,ns_o
        max_index = maxloc(data_o(:,no))
        glacier_region_o(no) = max_index(1) - 1
     end do
 
-    ! call output_diagnostics_index(glacier_region_i, glacier_region_o, tgridmap, &
-    !      'Glacier Region ID', 0, max_region, ndiag, mask_src=tdomain%mask, frac_dst=frac_dst)
+    ! Determine mesh areas
+    allocate(area_i(ns_i))
+    allocate(area_o(ns_o))
+    call get_meshareas(mesh_i, area_i, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call get_meshareas(mesh_o, area_o, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+#ifdef TODO
+    ! call output_diagnostic_index(area_i, area_o, mask_i, frac_o, &
+    !      glacier_region_i, glacier_region_o, 'Glacier Region ID', 0, max_region, ndiag)
+#endif
 
     ! Close the input file
     call pio_closefile(pioid)
     call ESMF_VMLogMemInfo("After pio_closefile in "//trim(subname))
 
     ! Release memory
-    deallocate (frac_i)
-    deallocate (frac_o)
+    deallocate(mask_i)
+    deallocate(frac_i)
+    deallocate(frac_o)
+    deallocate(area_i)
+    deallocate(area_o)
     deallocate(glacier_region_i)
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()

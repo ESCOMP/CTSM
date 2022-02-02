@@ -28,6 +28,7 @@ set(SRCFILES mkvarctl.F90
              mksoiltexMod.F90
              mksoildepthMod.F90
              mkurbanparMod.F90
+             mkvocefMod.F90
              mkesmfMod.F90
              mkutilsMod.F90
              mkchecksMod.F90

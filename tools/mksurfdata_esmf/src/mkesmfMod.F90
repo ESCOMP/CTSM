@@ -13,11 +13,6 @@ module mkesmfMod
   public :: create_routehandle_r4
   public :: create_routehandle_r8
 
-  interface get_meshareas
-     module procedure get_meshareas_r4
-     module procedure get_meshareas_r8
-  end interface get_meshareas
-
   interface regrid_rawdata
      module procedure regrid_rawdata1d_r4
      module procedure regrid_rawdata1d_r8
@@ -338,7 +333,9 @@ contains
   end subroutine regrid_rawdata2d_r8
 
   !===============================================================
-  subroutine get_meshareas_r8(mesh, areas, rc)
+  subroutine get_meshareas(mesh, areas, rc)
+
+    use mkvarpar, only : re
 
     ! input/output variables
     type(ESMF_Mesh) , intent(in)    :: mesh
@@ -348,51 +345,20 @@ contains
     ! local variables
     real(r8), pointer :: dataptr(:)
     type(ESMF_Field)  :: lfield
-    integer           :: ns
     ! --------------------------------------------
 
     rc = ESMF_SUCCESS
 
-    call ESMF_MeshGet(mesh, numOwnedElements=ns, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
     lfield = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_FieldRegridGetArea(lfield, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_FieldGet(lfield, farrayPtr=dataptr, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    areas(:) = dataptr(:)
+    areas(:) = dataptr(:) * re**2
 
     call ESMF_FieldDestroy(lfield, nogarbage = .true., rc=rc)
-  end subroutine get_meshareas_r8
 
-  !===============================================================
-  subroutine get_meshareas_r4(mesh, areas, rc)
-
-    ! input/output variables
-    type(ESMF_Mesh) , intent(in)    :: mesh
-    real(r4)        , intent(inout) :: areas(:)
-    integer         , intent(out)   :: rc
-
-    ! local variables
-    real(r8), pointer :: dataptr(:)
-    type(ESMF_Field)  :: lfield
-    integer           :: ns 
-    ! --------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    call ESMF_MeshGet(mesh, numOwnedElements=ns, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    lfield = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldRegridGetArea(lfield, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldGet(lfield, farrayPtr=dataptr, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    areas(:) = real(dataptr(:), kind=r4)
-
-    call ESMF_FieldDestroy(lfield, nogarbage = .true., rc=rc)
-  end subroutine get_meshareas_r4
+  end subroutine get_meshareas
 
 end module mkesmfMod

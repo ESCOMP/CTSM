@@ -10,7 +10,6 @@ module mksoilcolMod
   use mkutilsMod   , only : chkerr
   use mkvarctl     , only : root_task, ndiag, mpicom, MPI_INTEGER, MPI_MAX
   use mkvarctl     , only : soil_color_override, unsetcol
-  use mkvarpar     , only : re
 
   implicit none
   private
@@ -45,8 +44,8 @@ contains
     integer , allocatable  :: mask_i(:)
     real(r4), allocatable  :: frac_i(:)
     real(r4), allocatable  :: frac_o(:)
-    real(r4), allocatable  :: area_i(:)
-    real(r4), allocatable  :: area_o(:)
+    real(r8), allocatable  :: area_i(:)
+    real(r8), allocatable  :: area_o(:)
     real(r4), allocatable  :: data_i(:,:)
     real(r4), allocatable  :: data_o(:,:)
     real(r4), allocatable  :: soil_color_i(:)
@@ -209,18 +208,14 @@ contains
     gast_i(:) = 0.
     do ni = 1,ns_i
        k = soil_color_i(ni)
-       gast_i(k) = gast_i(k) + area_i(ni) * mask_i(ni) * re**2
+       gast_i(k) = gast_i(k) + area_i(ni) * mask_i(ni)
     end do
     gast_o(:) = 0.
     do no = 1,ns_o
        k = soil_color_o(no)
-       gast_o(k) = gast_o(k) + area_o(no) * frac_o(no) * re**2
+       gast_o(k) = gast_o(k) + area_o(no) * frac_o(no)
     end do
 
-    write (ndiag,*)
-    write (ndiag,'(1x,70a1)') ('=',k=1,70)
-    write (ndiag,*) 'Soil Color Output'
-    write (ndiag,'(1x,70a1)') ('=',k=1,70)
     write (ndiag,*)
     write (ndiag,'(1x,70a1)') ('.',k=1,70)
     write (ndiag,101)
@@ -241,6 +236,8 @@ contains
     deallocate(mask_i)
     deallocate(data_i)
     deallocate(data_o)
+    deallocate(area_i)
+    deallocate(area_o)
     deallocate(soil_color_i)
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()

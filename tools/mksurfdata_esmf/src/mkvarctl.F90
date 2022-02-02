@@ -322,10 +322,10 @@ contains
     call mpi_bcast (mksrf_flai_mesh, len(mksrf_flai_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_fvocef, len(mksrf_fvocef), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (mksrf_fvocef, len(mksrf_fvocef), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (mksrf_fvocef_mesh, len(mksrf_fvocef_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_ftopostats, len(mksrf_ftopostats), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (mksrf_ftopostats, len(mksrf_ftopostats), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (mksrf_ftopostats_mesh, len(mksrf_ftopostats_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_fvic, len(mksrf_fvic), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fvic_mesh, len(mksrf_fvic), MPI_CHARACTER, 0, mpicom, ier)

@@ -260,17 +260,19 @@ contains
   end subroutine output_diagnostics_continuous_outonly
 
   !===============================================================
-  subroutine output_diagnostics_index(data_i, data_o, mask_i, frac_o, name, minval, maxval, ndiag)
+  subroutine output_diagnostics_index(area_i, area_o, mask_i, frac_o, data_i, data_o, name, minval, maxval, ndiag)
     !
     ! Output diagnostics for an index field: area of each index in input and output
     !
     use mkvarpar, only : re
 
     ! input/output variables
-    integer            , intent(in) :: data_i(:) ! data on input grid
-    integer            , intent(in) :: data_o(:) ! data on output grid
+    real(r8)           , intent(in) :: area_i(:) 
+    real(r8)           , intent(in) :: area_o(:) 
     integer            , intent(in) :: mask_i(:)
     real(r8)           , intent(in) :: frac_o(:)
+    integer            , intent(in) :: data_i(:) ! data on input grid
+    integer            , intent(in) :: data_o(:) ! data on output grid
     character(len=*)   , intent(in) :: name      ! name of field
     integer            , intent(in) :: minval    ! minimum valid value
     integer            , intent(in) :: maxval    ! minimum valid value

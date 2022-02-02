@@ -71,20 +71,20 @@ contains
     !-----------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
+    call ESMF_VMLogMemInfo("At start of "//trim(subname))
 
     if (root_task) then
        write(ndiag,*)
        write(ndiag,'(a)') 'Attempting to make VOC emission factors .....'
-       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input data file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
 
     ! Open input data file
-    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
     call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
-    call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
@@ -149,7 +149,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call regrid_rawdata(mesh_i, mesh_o, routehandle, ef_grs_i, ef_grs_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, ef_btr_i, ef_crp_o, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, ef_crp_i, ef_crp_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Check for conservation
@@ -180,15 +180,15 @@ contains
        end if
     enddo
 
+    ! Deallocate memory
+    deallocate ( ef_btr_i, ef_fet_i, ef_fdt_i, ef_shr_i, ef_grs_i, ef_crp_i, frac_o)
+    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made VOC Emission Factors'
        write (ndiag,*)
     end if
-
-    deallocate ( ef_btr_i, ef_fet_i, ef_fdt_i, ef_shr_i, ef_grs_i, ef_crp_i, frac_o)
-
-    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
   end subroutine mkvocef
 
