@@ -508,6 +508,7 @@ contains
     use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot, use_biomass_heat_storage
     use spmdMod     , only : masterproc
     use CLMFatesParamInterfaceMod, only : FatesReadPFTs
+    use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, decomp_method
     !
     ! !ARGUMENTS:
     class(pftcon_type) :: this
@@ -765,11 +766,18 @@ contains
     ! in do-loops. While executing the next few lines, we do not yet have access
     ! to i_litr_min, i_litr_max.
     this%fr_f(:,1) = this%fr_flab
-    this%fr_f(:,2) = this%fr_fcel
-    this%fr_f(:,3) = this%fr_flig
     this%lf_f(:,1) = this%lf_flab
-    this%lf_f(:,2) = this%lf_fcel
-    this%lf_f(:,3) = this%lf_flig
+    if (decomp_method == mimics_decomp) then
+       this%fr_f(:,2) = this%fr_fcel + this%fr_flig
+       this%fr_f(:,3) = 0.0_r8
+       this%lf_f(:,2) = this%lf_fcel + this%lf_flig
+       this%lf_f(:,3) = 0.0_r8
+    else
+       this%fr_f(:,2) = this%fr_fcel
+       this%fr_f(:,3) = this%fr_flig
+       this%lf_f(:,2) = this%lf_fcel
+       this%lf_f(:,3) = this%lf_flig
+    end if
 
     call ncd_io('leaf_long', this%leaf_long, 'read', ncid, readvar=readv, posNOTonfile=.true.)    
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))

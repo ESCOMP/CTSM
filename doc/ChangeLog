@@ -1,4 +1,118 @@
 ===============================================================
+Tag name: ctsm5.1.dev074
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Wed Feb  2 00:44:27 MST 2022
+One-line Summary: Introduce vert. resolved MIMICS as new method to solve below ground decomp.
+
+Purpose and description of changes
+----------------------------------
+
+ Introducing new option to solve below ground decomposition: MIMICSWieder2015.
+ The old option (CENTURYKoven2013) remains available. User will select one or
+ the other via the namelist variable soil_decomp_method.
+
+ Elin's MIMICS+ github issue relates: #1260.
+ MIMICS spinup issues relate and are listed in caveats for users.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+ #1473 : decomp_depth_efolding appears (with the same value) in the namelist
+         and the params files; the model ends up using the one from the namelist
+
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ MIMICS spinup method is in development
+ Issues related to spinup
+ #1451 -- MIMICS spinup
+ #1455 -- Additional history output for Newton-Krylov spinup
+ #1457 -- Adding history variables for Newton-Krylov spinup
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New option MIMICSWieder2015 for use with namelist variable soil_decomp_method
+ decomp_depth_efolding removed as values on param files was already being used
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ CLM parameter files now include new MIMICS-related parameters prefixed with
+ mimics_. Existing CENTURYKoven-specific parameters were renamed to include the
+ prefix bgc_. Parameters used by both CENTURYKoven2013 and MIMICSWieder2015 have
+ neither prefix.
+
+Substantial timing or memory changes:
+ Timing comparison between CENTURYKoven (BGC for short) and MIMICSWieder:
+ In a 1x1_brazil test writing annual output and restarts every 10 yrs,
+ BGC took ~2.8 hrs/100 yrs, MIMICS took ~3.6 hrs/100 yrs.
+
+ More timing comparisons shown here:
+ https://github.com/ESCOMP/CTSM/pull/1318#issuecomment-1008211485
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ New test-suite tests:
+ ERP_D_P36x2_Ld3.f10_f10_mg37.I1850Clm51BgcCrop.cheyenne_gnu.clm-mimics
+ SMS_Ld5_Mmpi-serial.1x1_brazil.IHistClm50BgcQianRs.izumi_gnu.clm-mimics
+ SMS_Ly5_Mmpi-serial.1x1_brazil.IHistClm50BgcQianRs.cheyenne_intel.clm-newton_krylov_spinup
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+       cheyenne - PASS (831 tests are different from baseline because of new param files)
+
+   python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne ---- OK (black test fails)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK (see one answer change below)
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO (almost)
+
+ One test in the izumi test-suite fails
+ SMS_Vmct.f10_f10_mg37.I2000Clm50BgcCrop.izumi_pgi.clm-crop
+ and this is due to diffs from baseline (dev073).
+ cprnc.out shows diffs only in one variable:
+ RMS TOTECOSYSC 1.9853E-12 NORMALIZED 6.5087E-17
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1318 -- MIMICS into vertically resolved CTSM
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev073
 Originator(s): sacks (Bill Sacks)
 Date: Tue Jan 25 16:33:06 MST 2022

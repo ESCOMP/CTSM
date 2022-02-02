@@ -1077,8 +1077,6 @@ contains
     integer            :: idata
     logical            :: exit_spinup  = .false.
     logical            :: enter_spinup = .false.
-    ! flags for comparing the model and restart decomposition cascades
-    integer            :: decomp_cascade_state, restart_file_decomp_cascade_state 
     ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
     integer            :: restart_file_spinup_state
     integer            :: total_num_reseed_patch      ! Total number of patches to reseed across all processors
@@ -2394,7 +2392,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine Summary_carbonstate(this, bounds, num_allc, filter_allc, &
        num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       soilbiogeochem_cwdc_col, soilbiogeochem_totlitc_col, soilbiogeochem_totsomc_col, &
+       soilbiogeochem_cwdc_col, soilbiogeochem_totlitc_col, &
+       soilbiogeochem_totmicc_col, soilbiogeochem_totsomc_col, &
        soilbiogeochem_ctrunc_col)
     !
     ! !USES:
@@ -2415,6 +2414,7 @@ contains
     integer           , intent(in) :: num_soilp       ! number of soil patches in filter
     integer           , intent(in) :: filter_soilp(:) ! filter for soil patches
     real(r8)          , intent(in) :: soilbiogeochem_cwdc_col(bounds%begc:)   
+    real(r8)          , intent(in) :: soilbiogeochem_totmicc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_totlitc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_totsomc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_ctrunc_col(bounds%begc:)
@@ -2425,6 +2425,7 @@ contains
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_cwdc_col)    == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_totmicc_col) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_totlitc_col) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_totsomc_col) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_ctrunc_col)  == (/bounds%endc/)), sourcefile, __LINE__)
@@ -2515,6 +2516,7 @@ contains
        ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
        this%totecosysc_col(c) =    &
             soilbiogeochem_cwdc_col(c)    + &
+            soilbiogeochem_totmicc_col(c) + &
             soilbiogeochem_totlitc_col(c) + &
             soilbiogeochem_totsomc_col(c) + &
             this%totvegc_col(c)
@@ -2522,6 +2524,7 @@ contains
        ! total column carbon, including veg and cpool (TOTCOLC)
        this%totc_col(c) =  this%totc_p2c_col(c) + &
             soilbiogeochem_cwdc_col(c)      + &
+            soilbiogeochem_totmicc_col(c)   + &
             soilbiogeochem_totlitc_col(c)   + &
             soilbiogeochem_totsomc_col(c)   + &
             soilbiogeochem_ctrunc_col(c)
