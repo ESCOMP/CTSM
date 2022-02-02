@@ -90,7 +90,7 @@ OPTIONS
                                 sp    = Satellite Phenology (SP)
                                     This toggles off the namelist variable: use_cn
                                 bgc   = Carbon Nitrogen with methane, nitrification, vertical soil C,
-                                        CENTURY decomposition
+                                        CENTURY or MIMICS decomposition
                                     This toggles on the namelist variables:
                                           use_cn, use_lch4, use_nitrif_denitrif
                                 fates = FATES/Ecosystem Demography with below ground BGC
@@ -852,7 +852,6 @@ sub setup_cmdl_bgc {
      $log->fatal_error("The namelist variable use_fates is inconsistent with the -bgc option");
   }
 
-
   # Now set use_cn and use_fates
   foreach $var ( "use_cn", "use_fates" ) {
      $val = $nl_flags->{$var};
@@ -876,7 +875,7 @@ sub setup_cmdl_bgc {
         $log->fatal_error("$var must NOT be None if use_cn or use_fates are on");
      }
   } elsif ( $soil_decomp_method ne "None" ) {
-     $log->fatal_error("$var must be None if use_cn or use_fates are not");
+     $log->fatal_error("$var must be None if use_cn and use_fates are off");
   }
   #
   # Soil decomposition control variables, methane and Nitrification-Denitrification
@@ -2825,7 +2824,6 @@ sub setup_logic_bgc_shared {
   if ( $nl_flags->{'bgc_mode'} ne "sp" ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'constrain_stress_deciduous_onset', 'phys'=>$physv->as_string() );
   }
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'decomp_depth_efolding', 'phys'=>$physv->as_string() );
 }
 
 #-------------------------------------------------------------------------------

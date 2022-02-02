@@ -83,7 +83,7 @@ module CLMFatesInterfaceMod
    use clm_time_manager  , only : is_restart
    use ncdio_pio         , only : file_desc_t, ncd_int, ncd_double
    use restUtilMod,        only : restartvar
-   use clm_time_manager  , only : get_days_per_year, &
+   use clm_time_manager  , only : get_curr_days_per_year, &
                                   get_curr_date,     &
                                   get_ref_date,      &
                                   timemgr_datediff,  &
@@ -3059,7 +3059,7 @@ module CLMFatesInterfaceMod
  subroutine GetAndSetTime()
 
    ! CLM MODULES
-   use clm_time_manager  , only : get_days_per_year, &
+   use clm_time_manager  , only : get_curr_days_per_year, &
                                   get_curr_date,     &
                                   get_ref_date,      &
                                   timemgr_datediff
@@ -3095,7 +3095,7 @@ module CLMFatesInterfaceMod
    reference_date = yr*10000 + mon*100 + day
 
    ! Get the defined number of days per year
-   days_per_year = get_days_per_year()
+   days_per_year = get_curr_days_per_year()
 
    ! Determine the model day
    call timemgr_datediff(reference_date, sec, current_date, current_tod, model_day)
