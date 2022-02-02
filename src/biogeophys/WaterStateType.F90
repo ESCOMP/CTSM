@@ -164,15 +164,15 @@ contains
     call AllocateVar2d(var = this%excess_ice_col, name = 'excess_ice_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column, &
-         dim2beg = 1, dim2end = nlevgrnd)
+         dim2beg = 1, dim2end = nlevmaxurbgrnd)
     call AllocateVar2d(var = this%init_exice, name = 'init_exice', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column, &
-         dim2beg = 1, dim2end = nlevgrnd)
+         dim2beg = 1, dim2end = nlevmaxurbgrnd)
     call AllocateVar2d(var = this%exice_melt_lev, name = 'exice_melt_lev', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column, &
-         dim2beg = 1, dim2end = nlevgrnd)	
+         dim2beg = 1, dim2end = nlevmaxurbgrnd)	
     call AllocateVar1d(var = this%exice_melt, name = 'exice_melt', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)	
@@ -550,7 +550,12 @@ contains
       !Initialize excess ice
       write(iulog,*) 'nfl =', NLFilename
       if (use_excess_ice .and. NLFilename /= '') then
-        
+        ! enforce initialization with 0 for everything
+        this%init_exice(:,:)=0.0_r8
+        this%excess_ice_col(:,:)=0.0_r8
+        this%exice_melt_lev(:,:)=0.0_r8
+        this%exice_melt(:)=0.0_r8
+
         call this%exicestream%Init(bounds, NLFilename) ! get initial fraction of excess ice per column
 
         do c = bounds%begc,bounds%endc
@@ -558,22 +563,25 @@ contains
           l = col%landunit(c)
           if (.not. lun%lakpoi(l)) then  !not lake
              if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-              if (use_bedrock) then
-                nbedrock = col%nbedrock(c)
-             else
-                nbedrock = nlevsoi
-             endif
-                do j = 1, nlevgrnd
-                   if (j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
+                if (use_bedrock) then
+                  nbedrock = col%nbedrock(c)
+                else
+                  nbedrock = nlevsoi
+                endif
+                  do j = 1, nlevmaxurbgrnd
+                    if (j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
                       this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exicestream%exice_bulk(g))
-                   else
+                    else
                       this%excess_ice_col(c,j) = 0.0_r8
-                   endif
-                   this%init_exice(c,j) = 0.0_r8
-                   this%init_exice(c,j) = this%excess_ice_col(c,j)
-                end do
+                    endif
+                    this%init_exice(c,j) = 0.0_r8
+                    this%init_exice(c,j) = this%excess_ice_col(c,j)
+                  end do
              endif
-          endif
+          else ! just in case zeros for lakes and other columns
+            this%excess_ice_col(c,:) = 0.0_r8
+            this%init_exice(c,:) = 0.0_r8
+          end if
        enddo
        this%exice_melt_lev(:,:)=0.0_r8
        this%exice_melt(:)=0.0_r8
@@ -709,7 +717,7 @@ contains
          units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_ice_col)
 
-         ! Restart excess ice vars
+    ! Restart excess ice vars
     call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXCESS_ICE'), xtype=ncd_double,  &
          dim1name='column', dim2name='levtot', switchdim=.true., &
          long_name=this%info%lname('excess soil ice (vegetated landunits only)'), units='kg/m2', &
