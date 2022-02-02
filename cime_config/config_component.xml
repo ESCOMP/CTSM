@@ -127,7 +127,7 @@
       <value compset="^AMIP_"	                    >20thC_transient</value>
       <value compset="^PIPD_"                       >1850-2100_SSP5-8.5_transient</value>
       <!-- SMYLE L83 -->
-      <value compset="1850_CAM60%WCSC%SMYLE_CLM50%BGC-CROP_CICE_POP2%ECO%ABIO-DIC_MOSART_CISM2%NOEVOLVE_WW3_BGC%BDRD">1850_smyle_control</value>
+      <value compset="1850_CAM60%WCSC%SMYLE_CLM50%BGC-CROP_CICE_POP2%ECO%ABIO-DIC_MOSART_CISM2%NOEVOLVE_WW3_BGC%BDRD">20thC_smyle_transient</value>
     </values>
     <group>run_component_clm</group>
     <file>env_run.xml</file>
