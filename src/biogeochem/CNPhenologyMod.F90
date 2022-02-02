@@ -1777,6 +1777,8 @@ contains
          ! on an annual basis in cropresidue subroutine
 
          ! Second condition ensures everything is correctly set when resuming from a run with old code
+         ! OR starting a run mid-year without any restart file OR handling a new crop column that just
+         ! came into existence (and not at the year boundary for some reason).
          if ( is_beg_curr_year() .or. crop_inst%sdates_thisyr(p,1) == spval ) then
             sowing_count(p) = 0
             harvest_count(p) = 0
