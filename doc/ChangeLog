@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev074
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date: Tue Feb  1 18:02:39 MST 2022
+Date: Wed Feb  2 00:44:27 MST 2022
 One-line Summary: Introduce vert. resolved MIMICS as new method to solve below ground decomp.
 
 Purpose and description of changes
@@ -35,7 +35,6 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed or introduced
 ------------------------
 Issues fixed (include CTSM Issue #):
- #1356 : remove decompCN code and testing
  #1473 : decomp_depth_efolding appears (with the same value) in the namelist
          and the params files; the model ends up using the one from the namelist
 
@@ -43,13 +42,15 @@ Issues fixed (include CTSM Issue #):
 Notes of particular relevance for users
 ---------------------------------------
 Caveats for users (e.g., need to interpolate initial conditions):
- MIMICS spinup method is in development:
- #1451
- #1455
- #1457
+ MIMICS spinup method is in development
+ Issues related to spinup
+ #1451 -- MIMICS spinup
+ #1455 -- Additional history output for Newton-Krylov spinup
+ #1457 -- Adding history variables for Newton-Krylov spinup
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
  New option MIMICSWieder2015 for use with namelist variable soil_decomp_method
+ decomp_depth_efolding removed as values on param files was already being used
 
 Changes to the datasets (e.g., parameter, surface or initial files):
  CLM parameter files now include new MIMICS-related parameters prefixed with
@@ -78,20 +79,24 @@ Testing summary:
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+       cheyenne - PASS (831 tests are different from baseline because of new param files)
+
+   python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne ---- OK (black test fails)
+
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- PASS
-    izumi ------- OK (see answer changes below)
+    izumi ------- OK (see one answer change below)
 
 
 Answer changes
 --------------
 
 Changes answers relative to baseline: NO (almost)
-
-  [ If a tag changes answers relative to baseline comparison the
-    following should be filled in (otherwise remove this section).
-    And always remove these three lines and parts that don't apply. ]
 
  One test in the izumi test-suite fails
  SMS_Vmct.f10_f10_mg37.I2000Clm50BgcCrop.izumi_pgi.clm-crop
@@ -102,10 +107,9 @@ Changes answers relative to baseline: NO (almost)
 
 Other details
 -------------
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
 
 Pull Requests that document the changes (include PR ids):
- https://github.com/ESCOMP/ctsm/pull/1318
+ https://github.com/ESCOMP/ctsm/pull/1318 -- MIMICS into vertically resolved CTSM
 
 ===============================================================
 ===============================================================
