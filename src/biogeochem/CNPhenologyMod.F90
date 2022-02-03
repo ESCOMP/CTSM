@@ -291,13 +291,14 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
        filter_soilp, num_pcropp, filter_pcropp, &
-       doalb, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, crop_inst, &
+       waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, crop_inst, &
        canopystate_inst, soilstate_inst, dgvs_inst, &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,    &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
        c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
        leaf_prof_patch, froot_prof_patch, phase)
     ! !USES:
+    use clm_time_manager , only: is_first_step
     use CNSharedParamsMod, only: use_fun
     !
     ! !DESCRIPTION:
@@ -312,7 +313,6 @@ contains
     integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
     integer                        , intent(in)    :: num_pcropp      ! number of prog. crop patches in filter
     integer                        , intent(in)    :: filter_pcropp(:)! filter for prognostic crop patches
-    logical                        , intent(in)    :: doalb           ! true if time for sfc albedo calc
     type(waterdiagnosticbulk_type)          , intent(in)    :: waterdiagnosticbulk_inst
     type(wateratm2lndbulk_type)          , intent(in)    :: wateratm2lndbulk_inst
     type(temperature_type)         , intent(inout) :: temperature_inst
@@ -355,7 +355,19 @@ contains
             soilstate_inst, temperature_inst, atm2lnd_inst, wateratm2lndbulk_inst, cnveg_state_inst, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
-       if (doalb .and. num_pcropp > 0 ) then
+       ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-03) Old restart files generated at the end
+       ! of the year can indicate that a crop was panted on Jan 1, because that used to be
+       ! the time given to the last time step of the year. This would cause problems if we
+       ! ran CropPhenology in time step 0, because now time step 0 is labeled as Dec 31,
+       ! so CropPhenology would see the crop as having been planted 364 days ago, and so
+       ! would want to harvest this newly-planted crop. To avoid this situation, we avoid
+       ! calling CropPhenology on time step 0.
+       !
+       ! This .not. is_first_step() condition can be removed either when we can rely on
+       ! all restart files having been generated with
+       ! https://github.com/ESCOMP/CTSM/issues/1623 resolved, or we stop having a time
+       ! step 0 (https://github.com/ESCOMP/CTSM/issues/925).
+       if (num_pcropp > 0 .and. .not. is_first_step()) then
           call CropPhenology(num_pcropp, filter_pcropp, &
                waterdiagnosticbulk_inst, temperature_inst, crop_inst, canopystate_inst, cnveg_state_inst, &
                cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
@@ -547,6 +559,10 @@ contains
       !
       ! The following crop related steps are done here rather than CropPhenology
       ! so that they will be completed each time-step rather than with doalb.
+      !
+      ! NOTE(wjs, 2022-02-03) The above comment about doalb no longer applies, because
+      ! there is no longer a doalb conditional around the CropPhenology call. Therefore,
+      ! we could move these calculations into CropPhenology if it made sense to do so.
       !
       ! The following lines come from ibis's climate.f + stats.f
       ! gdd SUMMATIONS ARE RELATIVE TO THE PLANTING DATE (see subr. updateAccFlds)
