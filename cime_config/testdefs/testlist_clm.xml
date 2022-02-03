@@ -1506,6 +1506,15 @@
       <option name="comment"  >This gives a short debug test of the cmip6 configuration as well as a test of the cmip6 configuration at the production resolution, both of which we want. This test needs to use init_interp to work, because of adding virtual Antarctica columns (currently the default out-of-the-box setting uses init_interp for this). Note, use of basic testmod her means no output will happen</option>
     </options>
   </test>
+  <test name="SMS_Ld5_D" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/smyle_hist">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Add a test of the smyle use-case</option>
+    </options>
+  </test>
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm50BgcCropCmip6" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
