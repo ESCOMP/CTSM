@@ -1660,7 +1660,7 @@ contains
     ! handle CN fluxes during the phenological onset                       & offset periods.
     
     ! !USES:
-    use clm_time_manager , only : get_curr_date, get_curr_calday, get_curr_days_per_year, get_rad_step_size
+    use clm_time_manager , only : get_prev_date, get_prev_calday, get_curr_days_per_year, get_rad_step_size
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1766,8 +1766,8 @@ contains
 
       ! get time info
       dayspyr = get_curr_days_per_year()
-      jday    = get_curr_calday()
-      call get_curr_date(kyr, kmo, kda, mcsec)
+      jday    = get_prev_calday()
+      call get_prev_date(kyr, kmo, kda, mcsec)
       dtrad   = real( get_rad_step_size(), r8 )
 
       if (use_fertilizer) then
