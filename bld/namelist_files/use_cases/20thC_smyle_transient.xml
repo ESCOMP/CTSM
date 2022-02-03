@@ -2,8 +2,8 @@
 
 <namelist_defaults>
 
-<flanduse_timeseries>lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_0.9x1.25_hist_78pfts_CMIP6_simyr1700-2020_c210908.nc</flanduse_timeseries>
-<fsurdat>lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr1700_c210820.nc</fsurdat>
+<flanduse_timeseries hgrid="0.9x1.25" >lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_0.9x1.25_hist_78pfts_CMIP6_simyr1700-2020_c210908.nc</flanduse_timeseries>
+<fsurdat             hgrid="0.9x1.25" >lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr1700_c210820.nc</fsurdat>
 
 <use_case_desc            >Simulate transient land-use, and aerosol deposition changes from 1850 to 2015</use_case_desc>
 <use_case_desc bgc="cn"   >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2015</use_case_desc>
