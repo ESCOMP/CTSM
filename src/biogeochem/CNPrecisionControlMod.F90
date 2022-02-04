@@ -151,9 +151,9 @@ contains
     ! cnveg_carbonstate_inst%livestemc_xfer_patch            Output:  [real(r8) (:)     ]  (gC/m2) live stem C transfer                      
     ! cnveg_carbonstate_inst%ctrunc_patch                    Output:  [real(r8) (:)     ]  (gC/m2) patch-level sink for C truncation           
     ! cnveg_carbonstate_inst%xsmrpool_patch                  Output:  [real(r8) (:)     ]  (gC/m2) execss maint resp C pool                  
-    ! cnveg_carbonstate_inst%grainc_patch                    Output:  [real(r8) (:)     ]  (gC/m2) grain C                                   
-    ! cnveg_carbonstate_inst%grainc_storage_patch            Output:  [real(r8) (:)     ]  (gC/m2) grain C storage                           
-    ! cnveg_carbonstate_inst%grainc_xfer_patch               Output:  [real(r8) (:)     ]  (gC/m2) grain C transfer                          
+    ! cnveg_carbonstate_inst%reproductive_grainc_patch                    Output:  [real(r8) (:)     ]  (gC/m2) grain C
+    ! cnveg_carbonstate_inst%reproductive_grainc_storage_patch            Output:  [real(r8) (:)     ]  (gC/m2) grain C storage
+    ! cnveg_carbonstate_inst%reproductive_grainc_xfer_patch               Output:  [real(r8) (:)     ]  (gC/m2) grain C transfer
     
     ! cnveg_nitrogenstate_inst%deadcrootn_patch              Output:  [real(r8) (:)     ]  (gN/m2) dead coarse root N                        
     ! cnveg_nitrogenstate_inst%deadcrootn_storage_patch      Output:  [real(r8) (:)     ]  (gN/m2) dead coarse root N storage                
@@ -170,9 +170,9 @@ contains
     ! cnveg_nitrogenstate_inst%livecrootn_patch              Output:  [real(r8) (:)     ]  (gN/m2) live coarse root N                        
     ! cnveg_nitrogenstate_inst%livecrootn_storage_patch      Output:  [real(r8) (:)     ]  (gN/m2) live coarse root N storage                
     ! cnveg_nitrogenstate_inst%livecrootn_xfer_patch         Output:  [real(r8) (:)     ]  (gN/m2) live coarse root N transfer               
-    ! cnveg_nitrogenstate_inst%grainn_patch                  Output:  [real(r8) (:)     ]  (gC/m2) grain N                                   
-    ! cnveg_nitrogenstate_inst%grainn_storage_patch          Output:  [real(r8) (:)     ]  (gC/m2) grain N storage                           
-    ! cnveg_nitrogenstate_inst%grainn_xfer_patch             Output:  [real(r8) (:)     ]  (gC/m2) grain N transfer                          
+    ! cnveg_nitrogenstate_inst%reproductive_grainn_patch                  Output:  [real(r8) (:)     ]  (gC/m2) grain N
+    ! cnveg_nitrogenstate_inst%reproductive_grainn_storage_patch          Output:  [real(r8) (:)     ]  (gC/m2) grain N storage
+    ! cnveg_nitrogenstate_inst%reproductive_grainn_xfer_patch             Output:  [real(r8) (:)     ]  (gC/m2) grain N transfer
     ! cnveg_nitrogenstate_inst%livestemn_patch               Output:  [real(r8) (:)     ]  (gN/m2) live stem N                               
     ! cnveg_nitrogenstate_inst%livestemn_storage_patch       Output:  [real(r8) (:)     ]  (gN/m2) live stem N storage                       
     ! cnveg_nitrogenstate_inst%livestemn_xfer_patch          Output:  [real(r8) (:)     ]  (gN/m2) live stem N transfer                      
@@ -302,48 +302,48 @@ contains
 
       if ( use_crop )then
          ! grain C and N
-         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_patch(bounds%begp:bounds%endp), &
-                                   ns%grainn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
+         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%reproductive_grainc_patch(bounds%begp:bounds%endp), &
+                                   ns%reproductive_grainn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                    num_truncatep, filter_truncatep, croponly=.true. )
          if (use_c13) then
              call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
-                                      c13cs%grainc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                      c13cs%reproductive_grainc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
                                       __LINE__)
          end if
          if (use_c14) then
              call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
-                                      c14cs%grainc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                      c14cs%reproductive_grainc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
                                       __LINE__)
          end if
 
          ! grain storage C and N
-         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_storage_patch(bounds%begp:bounds%endp), &
-                                   ns%grainn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
+         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%reproductive_grainc_storage_patch(bounds%begp:bounds%endp), &
+                                   ns%reproductive_grainn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
                                    __LINE__, num_truncatep, filter_truncatep, croponly=.true. )
 
          if (use_c13) then
              call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
-                                      c13cs%grainc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                      c13cs%reproductive_grainc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
                                       __LINE__)
          end if
          if (use_c14) then
              call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
-                                      c14cs%grainc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                      c14cs%reproductive_grainc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
                                       __LINE__)
          end if
 
          ! grain transfer C and N
-         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_xfer_patch(bounds%begp:bounds%endp), &
-                                   ns%grainn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
+         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%reproductive_grainc_xfer_patch(bounds%begp:bounds%endp), &
+                                   ns%reproductive_grainn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                    num_truncatep, filter_truncatep, croponly=.true.)
          if (use_c13) then
              call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
-                                      c13cs%grainc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                      c13cs%reproductive_grainc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
                                       __LINE__)
          end if
          if (use_c14) then
              call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
-                                      c14cs%grainc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                      c14cs%reproductive_grainc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
                                       __LINE__)
          end if
 

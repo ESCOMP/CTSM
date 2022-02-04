@@ -29,9 +29,9 @@ module CNVegNitrogenStateType
   !
   type, public :: cnveg_nitrogenstate_type
 
-     real(r8), pointer :: grainn_patch             (:) ! (gN/m2) grain N (crop)
-     real(r8), pointer :: grainn_storage_patch     (:) ! (gN/m2) grain N storage (crop)
-     real(r8), pointer :: grainn_xfer_patch        (:) ! (gN/m2) grain N transfer (crop)
+     real(r8), pointer :: reproductive_grainn_patch             (:) ! (gN/m2) grain N (crop)
+     real(r8), pointer :: reproductive_grainn_storage_patch     (:) ! (gN/m2) grain N storage (crop)
+     real(r8), pointer :: reproductive_grainn_xfer_patch        (:) ! (gN/m2) grain N transfer (crop)
      real(r8), pointer :: leafn_patch              (:) ! (gN/m2) leaf N 
      real(r8), pointer :: leafn_storage_patch      (:) ! (gN/m2) leaf N storage
      real(r8), pointer :: leafn_xfer_patch         (:) ! (gN/m2) leaf N transfer
@@ -126,9 +126,9 @@ contains
     begc = bounds%begc; endc = bounds%endc
     begg = bounds%begg; endg = bounds%endg
 
-    allocate(this%grainn_patch             (begp:endp)) ; this%grainn_patch             (:) = nan     
-    allocate(this%grainn_storage_patch     (begp:endp)) ; this%grainn_storage_patch     (:) = nan
-    allocate(this%grainn_xfer_patch        (begp:endp)) ; this%grainn_xfer_patch        (:) = nan     
+    allocate(this%reproductive_grainn_patch             (begp:endp)) ; this%reproductive_grainn_patch             (:) = nan
+    allocate(this%reproductive_grainn_storage_patch     (begp:endp)) ; this%reproductive_grainn_storage_patch     (:) = nan
+    allocate(this%reproductive_grainn_xfer_patch        (begp:endp)) ; this%reproductive_grainn_xfer_patch        (:) = nan
     allocate(this%leafn_patch              (begp:endp)) ; this%leafn_patch              (:) = nan
     allocate(this%leafn_storage_patch      (begp:endp)) ; this%leafn_storage_patch      (:) = nan     
     allocate(this%leafn_xfer_patch         (begp:endp)) ; this%leafn_xfer_patch         (:) = nan     
@@ -199,10 +199,10 @@ contains
     !-------------------------------
     
     if (use_crop) then
-       this%grainn_patch(begp:endp) = spval
+       this%reproductive_grainn_patch(begp:endp) = spval
        call hist_addfld1d (fname='GRAINN', units='gN/m^2', &
             avgflag='A', long_name='grain N', &
-            ptr_patch=this%grainn_patch)
+            ptr_patch=this%reproductive_grainn_patch)
        call hist_addfld1d (fname='CROPSEEDN_DEFICIT', units='gN/m^2', &
             avgflag='A', long_name='N used for crop seed that needs to be repaid', &
             ptr_patch=this%cropseedn_deficit_patch, default='inactive')
@@ -450,9 +450,9 @@ contains
           this%storage_ndemand_patch(p)   = 0._r8
 
           if ( use_crop )then
-             this%grainn_patch(p)         = 0._r8
-             this%grainn_storage_patch(p) = 0._r8
-             this%grainn_xfer_patch(p)    = 0._r8
+             this%reproductive_grainn_patch(p)         = 0._r8
+             this%reproductive_grainn_storage_patch(p) = 0._r8
+             this%reproductive_grainn_xfer_patch(p)    = 0._r8
              this%cropseedn_deficit_patch(p)  = 0._r8
           end if
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
@@ -667,17 +667,17 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%ntrunc_patch) 
 
     if (use_crop) then
-       call restartvar(ncid=ncid, flag=flag,  varname='grainn', xtype=ncd_double,  &
+       call restartvar(ncid=ncid, flag=flag,  varname='reproductive_grainn:grainn', xtype=ncd_double,  &
             dim1name='pft',    long_name='grain N', units='gN/m2', &
-            interpinic_flag='interp', readvar=readvar, data=this%grainn_patch)
+            interpinic_flag='interp', readvar=readvar, data=this%reproductive_grainn_patch)
 
-       call restartvar(ncid=ncid, flag=flag,  varname='grainn_storage', xtype=ncd_double,  &
+       call restartvar(ncid=ncid, flag=flag,  varname='reproductive_grainn_storage:grainn_storage', xtype=ncd_double,  &
             dim1name='pft',    long_name='grain N storage', units='gN/m2', &
-            interpinic_flag='interp', readvar=readvar, data=this%grainn_storage_patch)
+            interpinic_flag='interp', readvar=readvar, data=this%reproductive_grainn_storage_patch)
 
-       call restartvar(ncid=ncid, flag=flag,  varname='grainn_xfer', xtype=ncd_double,  &
+       call restartvar(ncid=ncid, flag=flag,  varname='reproductive_grainn_xfer:grainn_xfer', xtype=ncd_double,  &
             dim1name='pft',    long_name='grain N transfer', units='gN/m2', &
-            interpinic_flag='interp', readvar=readvar, data=this%grainn_xfer_patch)
+            interpinic_flag='interp', readvar=readvar, data=this%reproductive_grainn_xfer_patch)
 
        call restartvar(ncid=ncid, flag=flag, varname='cropseedn_deficit', xtype=ncd_double,  &
             dim1name='pft', long_name='pool for seeding new crop growth', units='gN/m2', &
@@ -763,9 +763,9 @@ contains
              this%storage_ndemand_patch(p)   = 0._r8
    
              if ( use_crop )then
-                this%grainn_patch(p)         = 0._r8
-                this%grainn_storage_patch(p) = 0._r8
-                this%grainn_xfer_patch(p)    = 0._r8
+                this%reproductive_grainn_patch(p)         = 0._r8
+                this%reproductive_grainn_storage_patch(p) = 0._r8
+                this%reproductive_grainn_xfer_patch(p)    = 0._r8
                 this%cropseedn_deficit_patch(p)  = 0._r8
              end if
              if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
@@ -829,9 +829,9 @@ contains
              if ( use_crop )then
                  this%totvegn_patch(p) =         &
                               this%totvegn_patch(p)    + &
-                              this%grainn_patch(p)         + &
-                              this%grainn_storage_patch(p) + &
-                              this%grainn_xfer_patch(p)
+                              this%reproductive_grainn_patch(p)         + &
+                              this%reproductive_grainn_storage_patch(p) + &
+                              this%reproductive_grainn_xfer_patch(p)
              end if
        end do
      end if
@@ -894,9 +894,9 @@ contains
     if ( use_crop )then
        do fi = 1,num_patch
           i = filter_patch(fi)
-          this%grainn_patch(i)          = value_patch
-          this%grainn_storage_patch(i)  = value_patch
-          this%grainn_xfer_patch(i)     = value_patch   
+          this%reproductive_grainn_patch(i)          = value_patch
+          this%reproductive_grainn_storage_patch(i)  = value_patch
+          this%reproductive_grainn_xfer_patch(i)     = value_patch
           this%cropseedn_deficit_patch(i)  = value_patch
        end do
     end if
@@ -998,12 +998,12 @@ contains
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%dispvegn_patch(p) = &
                this%dispvegn_patch(p) + &
-               this%grainn_patch(p)
+               this%reproductive_grainn_patch(p)
 
           this%storvegn_patch(p) = &
                this%storvegn_patch(p) + &
-               this%grainn_storage_patch(p)     + &
-               this%grainn_xfer_patch(p) + &
+               this%reproductive_grainn_storage_patch(p)     + &
+               this%reproductive_grainn_xfer_patch(p) + &
                this%cropseedn_deficit_patch(p)
        end if
 
@@ -1240,15 +1240,15 @@ contains
 
     if (use_crop) then
        call update_patch_state( &
-            var = this%grainn_patch(begp:endp), &
+            var = this%reproductive_grainn_patch(begp:endp), &
             flux_out_grc_area = crop_product_nflux(begp:endp))
 
        call update_patch_state( &
-            var = this%grainn_storage_patch(begp:endp), &
+            var = this%reproductive_grainn_storage_patch(begp:endp), &
             flux_out_grc_area = conv_nflux(begp:endp))
 
        call update_patch_state( &
-            var = this%grainn_xfer_patch(begp:endp), &
+            var = this%reproductive_grainn_xfer_patch(begp:endp), &
             flux_out_grc_area = conv_nflux(begp:endp))
 
        if (use_crop) then

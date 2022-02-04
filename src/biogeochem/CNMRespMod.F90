@@ -195,13 +195,13 @@ contains
          frootn         =>    cnveg_nitrogenstate_inst%frootn_patch     , & ! Input:  [real(r8) (:)   ]  (gN/m2) fine root N                               
          livestemn      =>    cnveg_nitrogenstate_inst%livestemn_patch  , & ! Input:  [real(r8) (:)   ]  (gN/m2) live stem N                               
          livecrootn     =>    cnveg_nitrogenstate_inst%livecrootn_patch , & ! Input:  [real(r8) (:)   ]  (gN/m2) live coarse root N                        
-         grainn         =>    cnveg_nitrogenstate_inst%grainn_patch     , & ! Input:  [real(r8) (:)   ]  (kgN/m2) grain N
+         reproductive_grainn         =>    cnveg_nitrogenstate_inst%reproductive_grainn_patch     , & ! Input:  [real(r8) (:)   ]  (kgN/m2) grain N
 
          leaf_mr        =>    cnveg_carbonflux_inst%leaf_mr_patch       , & ! Output: [real(r8) (:)   ]                                                    
          froot_mr       =>    cnveg_carbonflux_inst%froot_mr_patch      , & ! Output: [real(r8) (:)   ]                                                    
          livestem_mr    =>    cnveg_carbonflux_inst%livestem_mr_patch   , & ! Output: [real(r8) (:)   ]                                                    
          livecroot_mr   =>    cnveg_carbonflux_inst%livecroot_mr_patch  , & ! Output: [real(r8) (:)   ]                                                    
-         grain_mr       =>    cnveg_carbonflux_inst%grain_mr_patch        & ! Output: [real(r8) (:)   ]                                                    
+         reproductive_grain_mr       =>    cnveg_carbonflux_inst%reproductive_grain_mr_patch        & ! Output: [real(r8) (:)   ]
 
          )
 
@@ -266,7 +266,7 @@ contains
             livecroot_mr(p) = livecrootn(p)*br_root*tc
          else if (ivt(p) >= npcropmin) then
             livestem_mr(p) = livestemn(p)*br*tc
-            grain_mr(p) = grainn(p)*br*tc
+            reproductive_grain_mr(p) = reproductive_grainn(p)*br*tc
          end if
       end do
 

@@ -95,18 +95,18 @@ contains
          cpool_to_livecrootc_storage   =>    cnveg_carbonflux_inst%cpool_to_livecrootc_storage_patch   , & ! Input:  [real(r8) (:)]                                                    
          cpool_to_deadcrootc           =>    cnveg_carbonflux_inst%cpool_to_deadcrootc_patch           , & ! Input:  [real(r8) (:)]  allocation to dead coarse root C (gC/m2/s)        
          cpool_to_deadcrootc_storage   =>    cnveg_carbonflux_inst%cpool_to_deadcrootc_storage_patch   , & ! Input:  [real(r8) (:)]  allocation to dead coarse root C storage (gC/m2/s)
-         cpool_to_grainc               =>    cnveg_carbonflux_inst%cpool_to_grainc_patch               , & ! Input:  [real(r8) (:)]  allocation to grain C (gC/m2/s)                   
-         cpool_to_grainc_storage       =>    cnveg_carbonflux_inst%cpool_to_grainc_storage_patch       , & ! Input:  [real(r8) (:)]  allocation to grain C storage (gC/m2/s)           
-         grainc_xfer_to_grainc         =>    cnveg_carbonflux_inst%grainc_xfer_to_grainc_patch         , & ! Input:  [real(r8) (:)]  grain C growth from storage (gC/m2/s)             
+         cpool_to_reproductive_grainc               =>    cnveg_carbonflux_inst%cpool_to_reproductive_grainc_patch               , & ! Input:  [real(r8) (:)]  allocation to grain C (gC/m2/s)
+         cpool_to_reproductive_grainc_storage       =>    cnveg_carbonflux_inst%cpool_to_reproductive_grainc_storage_patch       , & ! Input:  [real(r8) (:)]  allocation to grain C storage (gC/m2/s)
+         reproductive_grainc_xfer_to_reproductive_grainc         =>    cnveg_carbonflux_inst%reproductive_grainc_xfer_to_reproductive_grainc_patch         , & ! Input:  [real(r8) (:)]  grain C growth from storage (gC/m2/s)
          leafc_xfer_to_leafc           =>    cnveg_carbonflux_inst%leafc_xfer_to_leafc_patch           , & ! Input:  [real(r8) (:)]  leaf C growth from storage (gC/m2/s)              
          frootc_xfer_to_frootc         =>    cnveg_carbonflux_inst%frootc_xfer_to_frootc_patch         , & ! Input:  [real(r8) (:)]  fine root C growth from storage (gC/m2/s)         
          livestemc_xfer_to_livestemc   =>    cnveg_carbonflux_inst%livestemc_xfer_to_livestemc_patch   , & ! Input:  [real(r8) (:)]  live stem C growth from storage (gC/m2/s)         
          deadstemc_xfer_to_deadstemc   =>    cnveg_carbonflux_inst%deadstemc_xfer_to_deadstemc_patch   , & ! Input:  [real(r8) (:)]  dead stem C growth from storage (gC/m2/s)         
          livecrootc_xfer_to_livecrootc =>    cnveg_carbonflux_inst%livecrootc_xfer_to_livecrootc_patch , & ! Input:  [real(r8) (:)]  live coarse root C growth from storage (gC/m2/s)  
          deadcrootc_xfer_to_deadcrootc =>    cnveg_carbonflux_inst%deadcrootc_xfer_to_deadcrootc_patch , & ! Input:  [real(r8) (:)]  dead coarse root C growth from storage (gC/m2/s)  
-         cpool_grain_gr                =>    cnveg_carbonflux_inst%cpool_grain_gr_patch                , & ! Output: [real(r8) (:)]                                                    
-         cpool_grain_storage_gr        =>    cnveg_carbonflux_inst%cpool_grain_storage_gr_patch        , & ! Output: [real(r8) (:)]                                                    
-         transfer_grain_gr             =>    cnveg_carbonflux_inst%transfer_grain_gr_patch             , & ! Output: [real(r8) (:)]                                                    
+         cpool_reproductive_grain_gr                =>    cnveg_carbonflux_inst%cpool_reproductive_grain_gr_patch                , & ! Output: [real(r8) (:)]
+         cpool_reproductive_grain_storage_gr        =>    cnveg_carbonflux_inst%cpool_reproductive_grain_storage_gr_patch        , & ! Output: [real(r8) (:)]
+         transfer_reproductive_grain_gr             =>    cnveg_carbonflux_inst%transfer_reproductive_grain_gr_patch             , & ! Output: [real(r8) (:)]
          cpool_leaf_gr                 =>    cnveg_carbonflux_inst%cpool_leaf_gr_patch                 , & ! Output: [real(r8) (:)]                                                    
          cpool_leaf_storage_gr         =>    cnveg_carbonflux_inst%cpool_leaf_storage_gr_patch         , & ! Output: [real(r8) (:)]                                                    
          transfer_leaf_gr              =>    cnveg_carbonflux_inst%transfer_leaf_gr_patch              , & ! Output: [real(r8) (:)]                                                    
@@ -154,11 +154,11 @@ contains
             transfer_livestem_gr(p) = livestemc_xfer_to_livestemc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p))) * &
                  respfact_livestem_storage   
 
-            cpool_grain_gr(p) = cpool_to_grainc(p) * grperc(ivt(p))   
+            cpool_reproductive_grain_gr(p) = cpool_to_reproductive_grainc(p) * grperc(ivt(p))
 
-            cpool_grain_storage_gr(p) = cpool_to_grainc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p)) 
+            cpool_reproductive_grain_storage_gr(p) = cpool_to_reproductive_grainc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p))
 
-            transfer_grain_gr(p) = grainc_xfer_to_grainc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p))) 
+            transfer_reproductive_grain_gr(p) = reproductive_grainc_xfer_to_reproductive_grainc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p)))
          end if
 
          ! leaf and fine root growth respiration
