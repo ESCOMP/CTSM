@@ -464,7 +464,7 @@ contains
     integer :: restyear
     integer :: p
     logical :: readvar   ! determine if variable is on initial file
-    integer :: c, d      ! getting number of sowings/harvests in patch
+    integer :: seasons_found, seasons_loopvar      ! getting number of sowings/harvests in patch
 
     character(len=*), parameter :: subname = 'Restart'
     !-----------------------------------------------------------------------
@@ -549,15 +549,15 @@ contains
            ! Fill variable(s) derived from read-in variable(s)
            if (flag == 'read' .and. readvar) then
              do p = bounds%begp,bounds%endp
-                c = 0
-                do d = 1,mxgrowseas
-                   if (this%sdates_thisyr(p,d) >= 1 .and. this%sdates_thisyr(p,d) <= 366) then
-                      c = d
+                seasons_found = 0
+                do seasons_loopvar = 1,mxgrowseas
+                   if (this%sdates_thisyr(p,seasons_loopvar) >= 1 .and. this%sdates_thisyr(p,seasons_loopvar) <= 366) then
+                      seasons_found = seasons_loopvar
                    else
                       exit
                    end if
                 end do ! loop through possible sowings
-                this%sowing_count(p) = c
+                this%sowing_count(p) = seasons_found
              end do ! loop through patches
            end if
        end if
@@ -573,15 +573,15 @@ contains
            ! Fill variable(s) derived from read-in variable(s)
            if (flag == 'read' .and. readvar) then
              do p = bounds%begp,bounds%endp
-                c = 0
-                do d = 1,mxharvests
-                   if (this%hdates_thisyr(p,d) >= 1 .and. this%hdates_thisyr(p,d) <= 366) then
-                      c = d
+                seasons_found = 0
+                do seasons_loopvar = 1,mxharvests
+                   if (this%hdates_thisyr(p,seasons_loopvar) >= 1 .and. this%hdates_thisyr(p,seasons_loopvar) <= 366) then
+                      seasons_found = seasons_loopvar
                    else
                       exit
                    end if
                 end do ! loop through possible harvests
-                this%harvest_count(p) = c
+                this%harvest_count(p) = seasons_found
              end do ! loop through patches
            end if
        end if
