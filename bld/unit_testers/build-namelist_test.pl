@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 916;
+my $ntests = 932;
 if ( defined($opts{'compare'}) ) {
    $ntests += 558;
 }
@@ -316,9 +316,13 @@ foreach my $options (
                       "-bgc sp  -use_case 1850-2100_SSP2-4.5_transient -namelist '&a start_ymd=18501223/'",
                       "-bgc bgc -use_case 1850-2100_SSP3-7.0_transient -namelist '&a start_ymd=20701029/'",
                       "-bgc fates  -use_case 2000_control -no-megan",
+                      "-bgc bgc -use_case 2010_control",
+                      "-res 1x1_mexicocityMEX -use_case stdurbpt_pd",
                       "-bgc sp  -use_case 2000_control -res 0.9x1.25 -namelist '&a use_soil_moisture_streams = T/'",
                       "-bgc cn  -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19201023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
+                      "-res 0.9x1.25 -bgc sp -use_case 20thC_smyle_transient ",
+                      "-bgc sp -use_case 20thC_transient ",
                       "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
                      ) {
    my $file = $startfile;
@@ -1032,12 +1036,12 @@ my %warntest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "missing_ndep_file"         =>{ options=>"-envxml_dir . -bgc bgc -ssp_rcp SSP5-3.4",
+     "missing_ndep_file"         =>{ options=>"-envxml_dir . -bgc bgc -ssp_rcp SSP4-6.0",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "ext_SSP5-3.4"              =>{ options=>"-res 0.9x1.25 -envxml_dir . -bgc bgc -crop -use_case 2100-2300_SSP5-3.4_transient",
+     "ext_SSP1-2.6"              =>{ options=>"-res 0.9x1.25 -envxml_dir . -bgc bgc -crop -use_case 2100-2300_SSP1-2.6_transient",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
@@ -1296,7 +1300,7 @@ $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 @glc_res = ( "0.9x1.25" );
 my @use_cases = ( "2100-2300_SSP5-8.5_transient",
-                  "2100-2300_SSP1-2.6_transient",
+                  "2100-2300_SSP5-3.4_transient",
                 );
 foreach my $res ( @glc_res ) {
    foreach my $usecase ( @use_cases ) {

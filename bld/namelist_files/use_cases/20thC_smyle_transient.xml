@@ -2,8 +2,8 @@
 
 <namelist_defaults>
 
-<flanduse_timeseries>lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_0.9x1.25_hist_78pfts_CMIP6_simyr1700-2020_c210908.nc</flanduse_timeseries>
-<fsurdat>lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr1700_c210820.nc</fsurdat>
+<flanduse_timeseries hgrid="0.9x1.25" use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_0.9x1.25_hist_78pfts_CMIP6_simyr1700-2020_c210908.nc</flanduse_timeseries>
+<fsurdat             hgrid="0.9x1.25" use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr1700_c210820.nc</fsurdat>
 
 <use_case_desc            >Simulate transient land-use, and aerosol deposition changes from 1850 to 2015</use_case_desc>
 <use_case_desc bgc="cn"   >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2015</use_case_desc>
@@ -15,6 +15,8 @@
 <sim_year_range>1850-2000</sim_year_range>
 
 <clm_start_type>arb_ic</clm_start_type>
+
+<ssp_rcp>hist</ssp_rcp>
 
 <clm_demand >flanduse_timeseries</clm_demand>
 
@@ -57,10 +59,10 @@
 <model_year_align_urbantv  phys="clm4_5"  >1850</model_year_align_urbantv>
 
 <!-- SMYLE L83 changes -->
-<dribble_crophrv_xsmrpool_2atm>.true.</dribble_crophrv_xsmrpool_2atm>
+<dribble_crophrv_xsmrpool_2atm use_crop=".true.">.true.</dribble_crophrv_xsmrpool_2atm>
 <use_init_interp>.true.</use_init_interp>
-<use_c13> .false.</use_c13>
-<use_c14> .false.</use_c14>
+<use_c13 use_cn=".true."> .false.</use_c13>
+<use_c14 use_cn=".true."> .false.</use_c14>
 <!-- This differs from the default in that it turns on virtual columns over Antarctica
      This is desired so that we have the output needed to drive a later offline CISM Antarctica simulation
      However, this increases the cost of CLM by about 10% -->
