@@ -428,17 +428,15 @@ contains
     use ncdio_pio
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(in)    :: ncid
+    type(file_desc_t), intent(inout) :: ncid
     character(len=*) , intent(in)    :: flag
     character(len=*) , intent(in)    :: dimname
     !
     ! !LOCAL VARIABLES:
-    type(file_desc_t) :: ncid_local
     !-----------------------------------------------------------------------
 
-    ncid_local = ncid
     if (flag == 'read') then
-       call check_var_or_dim(ncid_local, dimname, is_dim=.true., exists=CallRestartvarDimOK)
+       call check_var_or_dim(ncid, dimname, is_dim=.true., exists=CallRestartvarDimOK)
     else
        CallRestartvarDimOK = .true.
     end if
