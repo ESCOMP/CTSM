@@ -436,7 +436,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (flag == 'read') then
-       call check_var_or_dim(ncid, dimname, is_dim=.true., exists=CallRestartvarDimOK)
+       call check_dim(ncid, dimname, dimexist=CallRestartvarDimOK)
     else
        CallRestartvarDimOK = .true.
     end if
