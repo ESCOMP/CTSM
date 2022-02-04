@@ -1,0 +1,4 @@
+user_nl_clm contains this line:
+hist_nhtfrq = 0,-175200
+0 means monthly history frequency and
+-175200 means 20 years history frequency (indicated in hours)
