@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<use_case_desc>Conditions to simulate 1850 land-use</use_case_desc>
+
+<sim_year>1850</sim_year>
+
+<sim_year_range>constant</sim_year_range>
+
+<irrigate use_crop=".true." phys="clm5_0" >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm4_5" >.false.</irrigate>
+
+<stream_year_first_ndep phys="clm4_0" bgc="cn"   >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_0" bgc="cn"   >1850</stream_year_last_ndep>
+
+<stream_year_first_ndep phys="clm4_0" bgc="cndv" >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_0" bgc="cndv" >1850</stream_year_last_ndep>
+
+<stream_year_first_ndep phys="clm4_5" use_cn=".true." >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_5" use_cn=".true." >1850</stream_year_last_ndep>
+
+<stream_year_first_ndep phys="clm5_0" use_cn=".true." >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm5_0" use_cn=".true." >1850</stream_year_last_ndep>
+
+<stream_year_first_popdens phys="clm4_5" cnfireson=".true." >1850</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm4_5" cnfireson=".true." >1850</stream_year_last_popdens>
+
+<stream_year_first_popdens phys="clm5_0" cnfireson=".true." >1850</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm5_0" cnfireson=".true." >1850</stream_year_last_popdens>
+
+<stream_year_first_urbantv phys="clm5_0"  >1850</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm5_0"  >1850</stream_year_last_urbantv>
+
+<stream_year_first_urbantv phys="clm4_5"  >1850</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm4_5"  >1850</stream_year_last_urbantv>
+
+<!-- Use single year ndep file for CLM50 as the new multi-year file has different times that change answers relative to control sims -->
+<stream_fldfilename_ndep phys="clm5_0" use_cn=".true."
+>lnd/clm2/ndepdata/fndep_clm_WACCM6_CMIP6piControl001_y21-50avg_1850monthly_0.95x1.25_c180802.nc</stream_fldfilename_ndep>
+
+<stream_fldfilename_ndep phys="clm4_5" use_cn=".true."
+>lnd/clm2/ndepdata/fndep_clm_WACCM6_CMIP6piControl001_y21-50avg_1850monthly_0.95x1.25_c180802.nc</stream_fldfilename_ndep>
+ 
+<ndep_taxmode            phys="clm5_0" use_cn=".true." >cycle</ndep_taxmode>
+
+<ndep_varlist            phys="clm5_0" use_cn=".true." >NDEP_month</ndep_varlist>
+
+<!-- SMYLE L83 changes -->
+<dribble_crophrv_xsmrpool_2atm>.true.</dribble_crophrv_xsmrpool_2atm>
+<use_init_interp>.true.</use_init_interp>
+<use_c13> .false.</use_c13>
+<use_c14> .false.</use_c14>
+<!-- This differs from the default in that it turns on virtual columns over Antarctica
+     This is desired so that we have the output needed to drive a later offline CISM Antarctica simulation
+     However, this increases the cost of CLM by about 10% -->
+<glacier_region_behavior> 'single_at_atm_topo', 'virtual', 'virtual', 'virtual'</glacier_region_behavior>
+</namelist_defaults>
