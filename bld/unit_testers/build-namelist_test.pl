@@ -1032,12 +1032,12 @@ my %warntest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "missing_ndep_file"         =>{ options=>"-envxml_dir . -bgc bgc -ssp_rcp SSP5-3.4",
+     "missing_ndep_file"         =>{ options=>"-envxml_dir . -bgc bgc -ssp_rcp SSP4-6.0",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "ext_SSP5-3.4"              =>{ options=>"-res 0.9x1.25 -envxml_dir . -bgc bgc -crop -use_case 2100-2300_SSP5-3.4_transient",
+     "ext_SSP1-2.6"              =>{ options=>"-res 0.9x1.25 -envxml_dir . -bgc bgc -crop -use_case 2100-2300_SSP1-2.6_transient",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
@@ -1296,7 +1296,7 @@ $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 @glc_res = ( "0.9x1.25" );
 my @use_cases = ( "2100-2300_SSP5-8.5_transient",
-                  "2100-2300_SSP1-2.6_transient",
+                  "2100-2300_SSP5-3.4_transient",
                 );
 foreach my $res ( @glc_res ) {
    foreach my $usecase ( @use_cases ) {
