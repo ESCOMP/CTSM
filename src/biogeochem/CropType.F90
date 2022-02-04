@@ -206,8 +206,8 @@ contains
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
     allocate(this%next_rx_sdate(begp:endp)) ; this%next_rx_sdate(:) = -1
-    allocate(this%rx_sdates_thisyr(begp:endp,1:mxgrowseas))
-    allocate(this%rx_cultivar_gdds_thisyr(begp:endp,1:mxgrowseas))
+    allocate(this%rx_sdates_thisyr(begp:endp,1:mxgrowseas)) ; this%rx_sdates_thisyr(:,:) = -1
+    allocate(this%rx_cultivar_gdds_thisyr(begp:endp,1:mxgrowseas)) ; this%rx_cultivar_gdds_thisyr(:,:) = -1
     allocate(this%sdates_thisyr(begp:endp,1:mxgrowseas))
     allocate(this%hdates_thisyr(begp:endp,1:mxharvests))
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
@@ -215,8 +215,6 @@ contains
 
     this%rx_sdates_thisyr(:,:) = -1
     this%rx_cultivar_gdds_thisyr(:,:) = -1
-    this%sdates_thisyr(:,:) = spval
-    this%hdates_thisyr(:,:) = spval
 
   end subroutine InitAllocate
 
@@ -422,6 +420,39 @@ contains
   end subroutine InitAccVars
 
   !-----------------------------------------------------------------------
+  logical function CallRestartvarDimOK (ncid, flag, dimname)
+    !
+    ! !DESCRIPTION:
+    ! Answer whether to call restartvar(), if necessary checking whether
+    ! a dimension exists in the restart file
+    !
+    ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02)
+    ! Used in Restart(). Even though restartvar() can safely be called for a
+    ! non-existent variable, it gives an error for a non-existent dimension, so
+    ! check whether the dimension exists before trying to read. The need for this
+    ! function arose because we recently added the mxgrowseas and mxharvests
+    ! dimensions to the restart file.
+    !
+    ! !USES:
+    use ncdio_pio
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
+    character(len=*) , intent(in)    :: dimname
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    if (flag == 'read') then
+       call check_dim(ncid, dimname, dimexist=CallRestartvarDimOK)
+    else
+       CallRestartvarDimOK = .true.
+    end if
+
+  end function CallRestartvarDimOK
+
+  !-----------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
     !
     ! !USES:
@@ -429,6 +460,7 @@ contains
     use ncdio_pio
     use PatchType, only : patch
     use pftconMod, only : npcropmin, npcropmax
+    use clm_varpar, only : mxgrowseas, mxharvests
     !
     ! !ARGUMENTS:
     class(crop_type), intent(inout)  :: this
@@ -441,6 +473,7 @@ contains
     integer :: restyear
     integer :: p
     logical :: readvar   ! determine if variable is on initial file
+    integer :: seasons_found, seasons_loopvar      ! getting number of sowings/harvests in patch
 
     character(len=*), parameter :: subname = 'Restart'
     !-----------------------------------------------------------------------
@@ -512,6 +545,54 @@ contains
           call this%checkDates( )  ! Check that restart date is same calendar date (even if year is different)
                                    ! This is so that it properly goes through
                                    ! the crop phases
+       end if
+
+       ! Read or write variable(s) with mxgrowseas dimension
+       ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02) See note in CallRestartvarDimOK()
+       if (CallRestartvarDimOK(ncid, flag, 'mxgrowseas')) then
+           call restartvar(ncid=ncid, flag=flag, varname='sdates_thisyr', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxgrowseas', switchdim=.true., &
+                long_name='crop sowing dates for this patch this year', units='day of year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%sdates_thisyr)
+           ! Fill variable(s) derived from read-in variable(s)
+           if (flag == 'read' .and. readvar) then
+             do p = bounds%begp,bounds%endp
+                seasons_found = 0
+                do seasons_loopvar = 1,mxgrowseas
+                   if (this%sdates_thisyr(p,seasons_loopvar) >= 1 .and. this%sdates_thisyr(p,seasons_loopvar) <= 366) then
+                      seasons_found = seasons_loopvar
+                   else
+                      exit
+                   end if
+                end do ! loop through possible sowings
+                this%sowing_count(p) = seasons_found
+             end do ! loop through patches
+           end if
+       end if
+
+       ! Read or write variable(s) with mxharvests dimension
+       ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02) See note in CallRestartvarDimOK()
+       if (CallRestartvarDimOK(ncid, flag, 'mxharvests')) then
+           call restartvar(ncid=ncid, flag=flag, varname='hdates_thisyr', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+                long_name='crop harvest dates for this patch this year', units='day of year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%hdates_thisyr)
+           ! Fill variable(s) derived from read-in variable(s)
+           if (flag == 'read' .and. readvar) then
+             do p = bounds%begp,bounds%endp
+                seasons_found = 0
+                do seasons_loopvar = 1,mxharvests
+                   if (this%hdates_thisyr(p,seasons_loopvar) >= 1 .and. this%hdates_thisyr(p,seasons_loopvar) <= 366) then
+                      seasons_found = seasons_loopvar
+                   else
+                      exit
+                   end if
+                end do ! loop through possible harvests
+                this%harvest_count(p) = seasons_found
+             end do ! loop through patches
+           end if
        end if
     end if
 

@@ -994,7 +994,6 @@ contains
                   filter(nc)%num_pcropp, filter(nc)%pcropp, &
                   filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
                   filter(nc)%num_noexposedvegp, filter(nc)%noexposedvegp, &
-                  doalb,              &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
