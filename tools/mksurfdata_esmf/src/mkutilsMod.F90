@@ -86,13 +86,13 @@ contains
     ! condition; if not provided, the tolerance defaults to the value given by eps_default
 
     ! !ARGUMENTS:
-    real(r4), intent(in) :: a
-    real(r4), intent(in) :: b
-    real(r4), intent(in), optional :: eps
+    real(r8), intent(in) :: a
+    real(r8), intent(in) :: b
+    real(r8), intent(in), optional :: eps
 
     ! !LOCAL VARIABLES:
-    real(r4) :: l_eps
-    real(r4), parameter :: eps_default = 1.e-15_r4  ! default relative error tolerance
+    real(r8) :: l_eps
+    real(r8), parameter :: eps_default = 1.e-15_r8  ! default relative error tolerance
     !------------------------------------------------------------------------------
 
     if (present(eps)) then
@@ -119,13 +119,13 @@ contains
     ! condition; if not provided, the tolerance defaults to the value given by eps_default
 
     ! input/output variables
-    real(r4), intent(in) :: a
-    real(r4), intent(in) :: b
-    real(r4), intent(in), optional :: eps
+    real(r8), intent(in) :: a
+    real(r8), intent(in) :: b
+    real(r8), intent(in), optional :: eps
 
     ! local variables:
-    real(r4) :: l_eps
-    real(r4), parameter :: eps_default = 1.e-15_r4  ! default relative error tolerance
+    real(r8) :: l_eps
+    real(r8), parameter :: eps_default = 1.e-15_r8  ! default relative error tolerance
     !------------------------------------------------------------------------------
 
     if (present(eps)) then

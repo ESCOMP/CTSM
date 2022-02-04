@@ -16,7 +16,7 @@ module mkorganicMod
   implicit none
   private
 
-  public mkorganic      ! Set organic soil
+  public :: mkorganic      ! Set organic soil
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -38,6 +38,7 @@ contains
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
     type(file_desc_t)      :: pioid
+    type(var_desc_t)       :: pio_varid
     integer                :: ni,no
     integer                :: ns_i, ns_o
     integer                :: nlay
@@ -58,7 +59,10 @@ contains
     rc = ESMF_SUCCESS
 
     if (root_task) then
-       write (ndiag,'(a)') ' Attempting to make organic mater dataset .....'
+       write(ndiag,*)
+       write (ndiag,'(a)')'Attempting to make organic mater dataset .....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
 
     ! Open input data file
@@ -162,7 +166,7 @@ contains
     call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
 
     if (root_task) then
-       write (ndiag,'(a,i8)') 'Successfully made organic matter '
+       write (ndiag,'(a)') 'Successfully made organic matter '
     end if
 
   end subroutine mkorganic

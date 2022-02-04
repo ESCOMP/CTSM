@@ -2,7 +2,9 @@ module mkpioMod
 
   use ESMF ! TODO: put in only statements
   use pio  ! TODO: put in only statements
-  use shr_kind_mod , only : r8 => shr_kind_r8, cl => shr_kind_cl, cs => shr_kind_cs, r4 => shr_kind_r4
+  use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4
+  use shr_kind_mod , only : i2 => shr_kind_i2, i4 => shr_kind_i4
+  use shr_kind_mod , only : cl => shr_kind_cl, cs => shr_kind_cs
   use shr_sys_mod  , only : shr_sys_abort
   use mkutilsMod   , only : chkerr
   use mkvarctl     , only : root_task, ndiag, mpicom, outnc_1d
@@ -13,6 +15,7 @@ module mkpioMod
 #include <mpif.h>
 
   public :: mkpio_get_rawdata
+  public :: mkpio_get_rawdata_level
   public :: mkpio_iodesc_rawdata
   public :: mkpio_iodesc_output
   public :: mkpio_wopen
@@ -22,6 +25,11 @@ module mkpioMod
   public :: mkpio_put_time_slice
 
   private :: mkpio_defvar
+
+  interface mkpio_get_rawdata_level
+     module procedure mkpio_get_rawdata1d_level_real4
+     module procedure mkpio_get_rawdata1d_level_real8
+  end interface mkpio_get_rawdata_level
 
   interface mkpio_get_rawdata
      module procedure mkpio_get_rawdata1d_int
@@ -70,6 +78,7 @@ contains
     integer                :: lsize
     integer                :: rcode
     integer                :: n
+    integer(i2), allocatable :: data_short(:)
     character(len=*), parameter :: subname = 'mkpio_get_rawdata1d_int'
     !-------------------------------------------------
 
@@ -88,13 +97,17 @@ contains
     ! Read the input raw data
     if (pio_vartype == PIO_INT) then
        call pio_read_darray(pioid, pio_varid, pio_iodesc, data_i, rcode)
-       call ESMF_VMLogMemInfo("After pio_read_darray for "//trim(varname)//" in "//trim(subname))
+    else if (pio_vartype == PIO_SHORT) then
+       allocate(data_short(lsize))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_short, rcode)
+       data_i = int(data_short, i4)
+       deallocate(data_short)
     else
-       call shr_sys_abort(subName//"ERROR: only int, real and double types are supported in "//trim(subname))
+       call shr_sys_abort(subName//" ERROR: only int and short is supported for "//trim(varname))
     end if
+    call ESMF_VMLogMemInfo("After pio_read_darray for "//trim(varname)//" in "//trim(subname))
 
     ! Free the memory of the io descriptor
-
     call pio_freedecomp(pioid, pio_iodesc)
     call ESMF_VMLogMemInfo("After call to pio_freedecomp for "//trim(varname))
 
@@ -111,15 +124,16 @@ contains
     integer          , intent(out)   :: rc
 
     ! local variables
-    type(var_desc_t)       :: pio_varid
-    integer                :: pio_vartype
-    type(io_desc_t)        :: pio_iodesc
-    type(io_desc_t)        :: pio_iodesc_mask
-    integer , allocatable  :: data_int(:)
-    real(r8), allocatable  :: data_double(:)
-    integer                :: lsize
-    integer                :: rcode
-    integer                :: n
+    type(var_desc_t)          :: pio_varid
+    integer                   :: pio_vartype
+    type(io_desc_t)           :: pio_iodesc
+    type(io_desc_t)           :: pio_iodesc_mask
+    integer(i2) , allocatable :: data_short(:)
+    integer(i4) , allocatable :: data_int(:)
+    real(r8)    , allocatable :: data_double(:)
+    integer                   :: lsize
+    integer                   :: rcode
+    integer                   :: n
     character(len=*), parameter :: subname = 'mkpio_get_rawdata1d_real4'
     !-------------------------------------------------
 
@@ -136,7 +150,12 @@ contains
     call ESMF_VMLogMemInfo("After mkpio_iodesc for varname "//trim(varname)//" in "//trim(subname))
 
     ! Read the input raw data
-    if (pio_vartype == PIO_INT) then
+    if (pio_vartype == PIO_SHORT) then
+       allocate(data_short(lsize))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_short, rcode)
+       data_i(:) = real(data_short(:), kind=r8)
+       deallocate(data_short)
+    else if (pio_vartype == PIO_INT) then
        allocate(data_int(lsize))
        call pio_read_darray(pioid, pio_varid, pio_iodesc, data_int, rcode)
        data_i(:) = real(data_int(:), kind=r4)
@@ -149,7 +168,7 @@ contains
        data_i(:) = real(data_double(:), kind=r4)
        deallocate(data_double)
     else
-       call shr_sys_abort(subName//"ERROR: only int, real and double types are supported")
+       call shr_sys_abort(subName//" ERROR: only real and double types are supported for "//trim(varname))
     end if
     call ESMF_VMLogMemInfo("After call to pio_read_darray for varname "//trim(varname))
 
@@ -171,16 +190,17 @@ contains
 
 
     ! local variables
-    type(var_desc_t)       :: pio_varid
-    integer                :: pio_vartype
-    type(io_desc_t)        :: pio_iodesc
-    type(io_desc_t)        :: pio_iodesc_mask
-    integer , allocatable  :: data_int(:)
-    real(r4), allocatable  :: data_real(:)
-    real(r8), allocatable  :: data_double(:)
-    integer                :: lsize
-    integer                :: rcode
-    integer                :: n
+    type(var_desc_t)          :: pio_varid
+    integer                   :: pio_vartype
+    type(io_desc_t)           :: pio_iodesc
+    type(io_desc_t)           :: pio_iodesc_mask
+    integer(i2) , allocatable :: data_short(:)
+    integer(i4) , allocatable :: data_int(:)
+    real(r4)    , allocatable :: data_real(:)
+    real(r8)    , allocatable :: data_double(:)
+    integer                   :: lsize
+    integer                   :: rcode
+    integer                   :: n
     character(len=*), parameter :: subname = 'mkpio_get_rawdata1d_real8'
     !-------------------------------------------------
 
@@ -201,7 +221,12 @@ contains
 
     ! Read the input raw data
     call ESMF_VMLogMemInfo("After mkpio_iodesc for varname for "//trim(varname)//" in "//trim(subname))
-    if (pio_vartype == PIO_INT) then
+    if (pio_vartype == PIO_SHORT) then
+       allocate(data_short(lsize))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_short, rcode)
+       data_i(:) = real(data_short(:), kind=r8)
+       deallocate(data_short)
+    else if (pio_vartype == PIO_INT) then
        allocate(data_int(lsize))
        call pio_read_darray(pioid, pio_varid, pio_iodesc, data_int, rcode)
        data_i(:) = real(data_int(:), kind=r8)
@@ -214,7 +239,7 @@ contains
     else if (pio_vartype == PIO_DOUBLE) then
        call pio_read_darray(pioid, pio_varid, pio_iodesc, data_i, rcode)
     else
-       call shr_sys_abort(subName//"ERROR: only int, real and double types are supported")
+       call shr_sys_abort(subName//" ERROR: supported variable type not found for "//trim(varname))
     end if
     call ESMF_VMLogMemInfo("After call to pio_read_darrayy for varname "//trim(varname))
 
@@ -286,7 +311,7 @@ contains
        end do
        deallocate(data_double2d)
     else
-       call shr_sys_abort(subName//"ERROR: only real and double types are supported")
+       call shr_sys_abort(subName//" ERROR: only real and double types are supported for "//trim(varname))
     end if
     call pio_freedecomp(pioid, pio_iodesc)
 
@@ -389,6 +414,8 @@ contains
     integer                 :: cnt, m
     integer                 :: offset
     integer                 :: rCode ! pio return code (only used when pio error handling is PIO_BCAST_ERROR)
+    integer                 :: unlimdim
+    logical                 :: unlimited_dim
     character(*), parameter :: subname = '(mkpio_iodesc_rawdata) '
     !-------------------------------------------------------------------------------
 
@@ -405,33 +432,30 @@ contains
     call ESMF_VMLogMemInfo("Ending setting compdof for "//trim(varname))
 
     ! get pio variable id, type and number of dimensions
-    call ESMF_VMLogMemInfo("Beginning getting variable id for "//trim(varname))
     rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
     rcode = pio_inq_vartype(pioid, pio_varid, pio_vartype)
     rcode = pio_inq_varndims(pioid, pio_varid, ndims)
-    call ESMF_VMLogMemInfo("Ending getting variable id" //trim(varname))
 
     ! get variable dimension sizes
-    call ESMF_VMLogMemInfo("Beginning getting dims for" //trim(varname))
     allocate(dimids(ndims))
     allocate(dimlens(ndims))
     rcode = pio_inq_vardimid(pioid, pio_varid, dimids(1:ndims))
     do n = 1, ndims
        rcode = pio_inq_dimlen(pioid, dimids(n), dimlens(n))
     end do
-    rcode = pio_inq_dimname(pioid, dimids(ndims), dimname)
-    call ESMF_VMLogMemInfo("End getting dims for "//trim(varname))
+    rcode = pio_inq_unlimdim(pioid, unlimdim)
+    unlimited_dim = (dimids(ndims) == unlimdim)
 
     ! Create compdof3d if needed
     ! Assume that input data is always lon,lat as first two dimensions
     nlev = 0
-    if (ndims == 3 .and. trim(dimname) /= 'time') then
+    if (ndims == 3 .and. .not. unlimited_dim) then
        nlev = dimlens(3)
-    else if (ndims == 3 .and. trim(dimname) == 'time') then
+    else if (ndims == 3 .and. unlimited_dim) then
        ! do nothing - keep nlev at 0
-    else if (ndims == 4 .and. trim(dimname) /= 'time') then
+    else if (ndims == 4 .and. .not. unlimited_dim) then
        nlev = dimlens(3)*dimlens(4)
-    else if (ndims == 4 .and. trim(dimname) == 'time') then
+    else if (ndims == 4 .and. unlimited_dim) then
        nlev = dimlens(3)
     end if
 
@@ -455,7 +479,7 @@ contains
                dimlens(1),dimlens(2)
        end if
     else if (ndims == 3) then
-       if (trim(dimname) == 'time') then
+       if (unlimited_dim) then
           call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
           if (root_task) then
              write(ndiag,'(a,i8,i8)') ' set iodesc for rawdata: '//trim(varname)//' with dim(1),dim(2) = ',&
@@ -469,7 +493,7 @@ contains
           end if
        end if
     else if (ndims == 4) then
-       if (trim(dimname) == 'time') then
+       if (unlimited_dim) then
           call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof3d, pio_iodesc)
           if (root_task) then
              write(ndiag,'(a,i8,i8,i8)') ' set iodesc for rawdata: '//trim(varname)//' with dim(1),dim(2),dim(3) = ',&
@@ -485,7 +509,6 @@ contains
     ! deallocate memory
     deallocate(compdof)
     if (allocated(compdof3d)) deallocate(compdof3d)
-
     call ESMF_VMLogMemInfo("Finished setting iodesc for "//trim(varname)//" in "//trim(subname))
 
   end subroutine mkpio_iodesc_rawdata
@@ -517,6 +540,7 @@ contains
     type(var_desc_t)        :: pio_varid
     integer                 :: pio_vartype
     integer                 :: rCode ! pio return code (only used when pio error handling is PIO_BCAST_ERROR)
+    logical                 :: unlimited_dim
     character(*), parameter :: subname = '(shr_strdata_set_stream_iodesc) '
     !-------------------------------------------------------------------------------
 
@@ -537,6 +561,7 @@ contains
        rcode = pio_inq_dimlen(pioid, dimids(n), dimlens(n))
     end do
     rcode = pio_inq_dimname(pioid, dimids(ndims), dimname)
+    unlimited_dim = (dimids(ndims) == PIO_UNLIMITED)
 
     ! Get compdof from mesh
     call ESMF_MeshGet(mesh, elementdistGrid=distGrid, rc=rc)
@@ -551,22 +576,22 @@ contains
     nlev = 0
     if (outnc_1d) then
        offset = dimlens(1)
-       if (ndims == 2 .and. trim(dimname) /= 'time') then
+       if (ndims == 2 .and. .not. unlimited_dim) then
           nlev = dimlens(2)
-       else if (ndims == 3 .and. trim(dimname) == 'time') then
+       else if (ndims == 3 .and. unlimited_dim) then
           nlev = dimlens(2)
-       else if (ndims == 3 .and. trim(dimname) /= 'time') then
+       else if (ndims == 3 .and. .not. unlimited_dim) then
           nlev = dimlens(2)*dimlens(3)
        end if
     else
        offset = dimlens(1)*dimlens(2)
-       if (ndims == 3 .and. trim(dimname) /= 'time') then
+       if (ndims == 3 .and. .not. unlimited_dim) then
           nlev = dimlens(3)
-       else if (ndims == 3 .and. trim(dimname) == 'time') then
+       else if (ndims == 3 .and. unlimited_dim) then
           ! do nothing - keep nlev at 0
-       else if (ndims == 4 .and. trim(dimname) /= 'time') then
+       else if (ndims == 4 .and. .not. unlimited_dim) then
           nlev = dimlens(3)*dimlens(4)
-       else if (ndims == 4 .and. trim(dimname) == 'time') then
+       else if (ndims == 4 .and. unlimited_dim) then
           nlev = dimlens(3)
        end if
     end if
@@ -589,13 +614,13 @@ contains
        if (ndims == 1)  then
           call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
        else if (ndims == 2) then
-          if (trim(dimname) == 'time') then
+          if (unlimited_dim) then
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
           else
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
           end if
        else if (ndims == 3) then
-          if (trim(dimname) == 'time') then
+          if (unlimited_dim) then
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
           else
              call shr_sys_abort('support on 2 dimensions in addition to a time dimension when outnc_1d is true')
@@ -606,13 +631,13 @@ contains
        if (ndims == 2) then
           call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
        else if (ndims == 3) then
-          if (trim(dimname) == 'time') then
+          if (unlimited_dim) then
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
           else
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof3d, pio_iodesc)
           end if
        else if (ndims == 4) then
-          if (trim(dimname) == 'time') then
+          if (unlimited_dim) then
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof3d, pio_iodesc)
           else
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3),dimlens(4)/), compdof3d, pio_iodesc)
@@ -950,7 +975,7 @@ contains
 
   end subroutine mkpio_put_time_slice_1d
 
-  !-----------------------------------------------------------------------
+  ! ========================================================================
   subroutine mkpio_put_time_slice_2d(pioid, pio_varid, pio_iodesc, time_index, data)
 
     ! Write a single time slice of a 2-d variable
@@ -1011,4 +1036,113 @@ contains
 
   end subroutine mkpio_get_dimlengths
 
+  ! ========================================================================
+  subroutine mkpio_get_rawdata1d_level_real4(pioid, pio_iodesc, unlimited_index, varname, data_i)
+
+    ! input/output variables
+    type(file_desc_t), intent(inout) :: pioid
+    type(io_desc_t)  , intent(inout) :: pio_iodesc
+    integer          , intent(in)    :: unlimited_index
+    character(len=*) , intent(in)    :: varname   ! field name in rawdata file
+    real(r4)         , intent(inout) :: data_i(:) ! input raw data
+
+    ! local variables
+    type(var_desc_t)          :: pio_varid
+    integer                   :: pio_vartype
+    integer(i2) , allocatable :: data_short(:)
+    integer(i4) , allocatable :: data_int(:)
+    real(r8)    , allocatable :: data_double(:)
+    integer                   :: ns_i
+    integer                   :: rcode
+    character(len=*), parameter :: subname = 'mkpio_get_rawdata1d_real4'
+    !-------------------------------------------------
+
+    ! Get variable id and type
+    rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+    rcode = pio_inq_vartype(pioid, pio_varid, pio_vartype)
+
+    ! Set unlimited frame index
+    call pio_setframe(pioid, pio_varid, int(unlimited_index, kind=Pio_Offset_Kind))
+
+    ! Read the input raw data
+    ns_i = size(data_i)
+    if (pio_vartype == PIO_SHORT) then
+       allocate(data_short(ns_i))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_short, rcode)
+       data_i(:) = real(data_short(:), kind=r8)
+       deallocate(data_short)
+    else if (pio_vartype == PIO_INT) then
+       allocate(data_int(ns_i))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_int, rcode)
+       data_i(:) = real(data_int(:), kind=r4)
+       deallocate(data_int)
+    else if (pio_vartype == PIO_REAL) then
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_i, rcode)
+    else if (pio_vartype == PIO_DOUBLE) then
+       ns_i = size(data_i)
+       allocate(data_double(ns_i))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_double, rcode)
+       data_i(:) = real(data_double(:), kind=r4)
+       deallocate(data_double)
+    else
+       call shr_sys_abort(subName//" ERROR: vartype not supported for "//trim(varname))
+    end if
+    call ESMF_VMLogMemInfo("After call to pio_read_darray for varname "//trim(varname))
+
+  end subroutine mkpio_get_rawdata1d_level_real4
+
+  ! ========================================================================
+  subroutine mkpio_get_rawdata1d_level_real8(pioid, pio_iodesc, unlimited_index, varname, data_i)
+
+    ! input/output variables
+    type(file_desc_t), intent(inout) :: pioid
+    type(io_desc_t)  , intent(inout) :: pio_iodesc
+    integer          , intent(in)    :: unlimited_index
+    character(len=*) , intent(in)    :: varname   ! field name in rawdata file
+    real(r8)         , intent(inout) :: data_i(:) ! input raw data
+
+    ! local variables
+    type(var_desc_t)          :: pio_varid
+    integer                   :: pio_vartype
+    integer(i2) , allocatable :: data_short(:)
+    integer(i4) , allocatable :: data_int(:)
+    real(r4)    , allocatable :: data_real(:)
+    integer                   :: ns_i
+    integer                   :: rcode
+    character(len=*), parameter :: subname = 'mkpio_get_rawdata1d_real4'
+    !-------------------------------------------------
+
+    ! Get variable id and type
+    rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+    rcode = pio_inq_vartype(pioid, pio_varid, pio_vartype)
+
+    ! Set unlimited frame index
+    call pio_setframe(pioid, pio_varid, int(unlimited_index, kind=Pio_Offset_Kind))
+
+    ! Read the input raw data
+    ns_i = size(data_i)
+    if (pio_vartype == PIO_SHORT) then
+       allocate(data_short(ns_i))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_short, rcode)
+       data_i(:) = real(data_short(:), kind=r8)
+       deallocate(data_short)
+    else if (pio_vartype == PIO_INT) then
+       allocate(data_int(ns_i))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_int, rcode)
+       data_i(:) = real(data_int(:), kind=r4)
+       deallocate(data_int)
+    else if (pio_vartype == PIO_REAL) then
+       allocate(data_real(ns_i))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_real, rcode)
+       data_i(:) = real(data_real(:), kind=r8)
+       deallocate(data_real)
+    else if (pio_vartype == PIO_DOUBLE) then
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_i, rcode)
+    else
+       call shr_sys_abort(subName//" ERROR: vartype not supported for "//trim(varname))
+    end if
+    call ESMF_VMLogMemInfo("After call to pio_read_darray for varname "//trim(varname))
+
+  end subroutine mkpio_get_rawdata1d_level_real8
+  
 end module mkpioMod

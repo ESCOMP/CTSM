@@ -21,6 +21,7 @@ set(SRCFILES mkvarctl.F90
              mkpioMod.F90
              mkfileMod.F90
              mkglacierregionMod.F90
+             mkglcmecMod.F90
              mklanwatMod.F90
              mkorganicMod.F90
              mksoilcolMod.F90

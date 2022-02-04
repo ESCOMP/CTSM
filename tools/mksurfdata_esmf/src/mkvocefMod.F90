@@ -28,7 +28,7 @@ module mkvocefMod
 contains
 !=================================================================================
 
-  subroutine mkvocef(file_data_i, file_mesh_i, mesh_o, &
+  subroutine mkvocef(file_mesh_i, file_data_i, mesh_o, &
        ef_btr_o, ef_fet_o, ef_fdt_o, ef_shr_o, ef_grs_o, ef_crp_o, rc)
 
     ! make volatile organic coumpunds (VOC) emission factors.

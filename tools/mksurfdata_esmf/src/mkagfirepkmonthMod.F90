@@ -1,270 +1,257 @@
 module mkagfirepkmonthMod
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: mkagfirepkmonthMod
-!
-! !DESCRIPTION:
-! Make agricultural fire peak month data
-!
-! !REVISION HISTORY:
-! Author: Sam Levis and Bill Sacks
-!
-!-----------------------------------------------------------------------
-!!USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use mkdomainMod , only : domain_checksame
-  implicit none
 
-  SAVE
+  !-----------------------------------------------------------------------
+  ! Make agricultural fire peak month data
+  !-----------------------------------------------------------------------
+
+  use ESMF
+  use pio
+  use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
+  use shr_sys_mod    , only : shr_sys_abort
+  use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
+  use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
+  use mkpioMod       , only : mkpio_iodesc_rawdata, mkpio_get_rawdata_level
+  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
+  use mkutilsMod     , only : chkerr
+  use mkvarctl       , only : ndiag, root_task, outnc_3dglc
+  use mkvarpar       , only : re
+
+  implicit none
   private           ! By default make data private
-!
-! !PUBLIC MEMBER FUNCTIONS:
-!
-  public mkagfirepkmon        ! Set agricultural fire peak month
-!
-! !PRIVATE MEMBER FUNCTIONS:
-  private define_months       ! define month strings
-!
-! !PRIVATE DATA MEMBERS:
-!
+
+  public  :: mkagfirepkmon       ! Set agricultural fire peak month
+  private :: define_months       ! define month strings
+
   integer , parameter :: min_valid_value = 1
   integer , parameter :: max_valid_value = 12
   integer , parameter :: unsetmon        = 13   ! flag to indicate agricultural fire peak month NOT set
-!
-! !PRIVATE DATA MEMBERS:
-!
-!EOP
+
+  character(len=*) , parameter :: u_FILE_u = &
+       __FILE__
+
 !===============================================================
 contains
 !===============================================================
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: mkagfirepkmon
-!
-! !INTERFACE:
-subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
-                         agfirepkmon_o)
-!
-! !DESCRIPTION:
-! Make agricultural fire peak month data from higher resolution data
-!
-! !USES:
-  use mkdomainMod, only : domain_type, domain_clean, domain_read
-  use mkgridmapMod
-  use mkindexmapMod, only : get_dominant_indices
-  use mkvarpar, only : re
-  use mkncdio
-  use mkchecksMod, only : min_bad, max_bad
-!
-! !ARGUMENTS:
-  implicit none
-  type(domain_type) , intent(in) :: ldomain
-  character(len=*)  , intent(in) :: mapfname           ! input mapping file name
-  character(len=*)  , intent(in) :: datfname           ! input data file name
-  integer           , intent(in) :: ndiag              ! unit number for diag out
-  integer           , intent(out):: agfirepkmon_o(:)   ! agricultural fire peak month
-!
-! !CALLED FROM:
-! subroutine mksrfdat in module mksrfdatMod
-!
-! !REVISION HISTORY:
-! Author: Sam Levis and Bill Sacks
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-  type(gridmap_type)    :: tgridmap
-  type(domain_type)     :: tdomain          ! local domain
-  real(r8), allocatable :: gast_i(:)        ! global area, by surface type
-  real(r8), allocatable :: gast_o(:)        ! global area, by surface type
-  real(r8), allocatable :: frac_dst(:)      ! output fractions
-  real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
-  integer , allocatable :: agfirepkmon_i(:) ! input grid: agricultural fire peak month
-  integer  :: nagfirepkmon                  ! number of peak months 
-  character(len=35), allocatable :: month(:)! name of each month
-  integer  :: k,ni,no,ns_i,ns_o             ! indices
-  integer  :: ncid,varid                    ! input netCDF id's
-  integer  :: ier                           ! error status
+  subroutine mkagfirepkmon(file_mesh_i, file_data_i, mesh_o, agfirepkmon_o, rc)
+    !
+    ! Make agricultural fire peak month data from higher resolution data
+    !
+    ! input/output variables
+    character(len=*) , intent(in)  :: file_mesh_i      ! input mesh file name
+    character(len=*) , intent(in)  :: file_data_i      ! input data file name
+    type(ESMF_Mesh)  , intent(in)  :: mesh_o           ! output mesh
+    integer          , intent(out) :: agfirepkmon_o(:) ! agricultural fire peak month
+    integer          , intent(out) :: rc
+    !
+    ! local variables:
+    type(ESMF_RouteHandle)         :: routehandle
+    type(ESMF_Mesh)                :: mesh_i
+    type(file_desc_t)              :: pioid
+    integer                        :: ni,no,k
+    integer                        :: ns_i, ns_o
+    integer , allocatable          :: mask_i(:)
+    real(r8), allocatable          :: frac_i(:)
+    real(r8), allocatable          :: frac_o(:)
+    real(r8), allocatable          :: area_i(:)
+    real(r8), allocatable          :: area_o(:)
+    real(r8), allocatable          :: gast_i(:)         ! global area, by surface type
+    real(r8), allocatable          :: gast_o(:)         ! global area, by surface type
+    real(r8), allocatable          :: frac_dst(:)       ! output fractions
+    real(r4), allocatable          :: data_i(:,:)
+    real(r4), allocatable          :: data_o(:,:)
+    integer , allocatable          :: agfirepkmon_i(:)  ! input grid: agricultural fire peak month
+    integer                        :: nagfirepkmon      ! number of peak months 
+    character(len=35), allocatable :: month(:)          ! name of each month
+    integer                        :: rcode, ier        ! error status
+    integer, parameter             :: miss   = unsetmon ! missing data indicator
+    integer, parameter             :: min_valid = 1     ! minimum valid value
+    integer, parameter             :: max_valid = 13    ! maximum valid value
+    character(len=*), parameter    :: subname = 'mkagfirepkmon'
+    !-----------------------------------------------------------------------
 
-  integer, parameter :: miss   = unsetmon   ! missing data indicator
-  integer, parameter :: min_valid = 1       ! minimum valid value
-  integer, parameter :: max_valid = 13      ! maximum valid value
-  character(len=32) :: subname = 'mkagfirepkmon'
-!-----------------------------------------------------------------------
+    if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to make agricultural fire peak month data .....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
+    end if
 
-  write (6,*) 'Attempting to make agricultural fire peak month data .....'
+    ! Open input data file
+    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
-  ! -----------------------------------------------------------------
-  ! Read domain and mapping information, check for consistency
-  ! -----------------------------------------------------------------
+    ! Read in input mesh
+    mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
-  call domain_read( tdomain,datfname )
+    ! Determine ns_i
+    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-  call gridmap_mapread( tgridmap, mapfname )
+    ! Determine ns_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-  ! Obtain frac_dst
-  ns_o = ldomain%ns
-  allocate(frac_dst(ns_o), stat=ier)
-  if (ier/=0) call abort()
-  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+    ! Get the landmask from the file and reset the mesh mask based on that
+    allocate(frac_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort(subname//" ERROR in allocating frac_i")
+    allocate(mask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort(subname//" ERROR in allocating mask_i")
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do ni = 1,ns_i
+       if (frac_i(ni) > 0._r4) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
+       end if
+    end do
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-  ns_i = tdomain%ns
-  allocate(mask_r8(ns_i), stat=ier)
-  if (ier/=0) call abort()
-  mask_r8 = tdomain%mask
-  call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
+    ! Read in agfirepkmon_i
+    allocate(agfirepkmon_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort(subname//" error in allocating agfirepkmon_i")
+    call mkpio_get_rawdata(pioid, 'abm', mesh_i, agfirepkmon_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-  call domain_checksame( tdomain, ldomain, tgridmap )
+    ! Create a route handle between the input and output mesh and get frac_o
+    allocate(frac_o(ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
-  ! -----------------------------------------------------------------
-  ! Open input file, allocate memory for input data
-  ! -----------------------------------------------------------------
+    ! Now determine data_i as a real 2d array - for every possible soil color create a global
+    ! field with gridcells equal to 1 for that soil color and zero elsewhere
+    allocate(data_i(min_valid_value:max_valid_value,ns_i))
+    data_i(:,:) = 0._r4
+    do l = min_valid_value,max_valid_value
+       do n = 1,ns_i
+          if (int(soil_color_i(n)) == l) then
+             data_i(l,n) = 1._r4 * mask_i(n)
+          end if
+       end do
+    end do
 
-  write (6,*) 'Open agricultural fire peak month file: ', trim(datfname)
-  call check_ret(nf_open(datfname, 0, ncid), subname)
+    ! Regrid data_i to data_o
+    allocate(data_o(0:nsoilcol, ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, nsoilcol, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_LogWrite(subname//'after regrid rawdata in '//trim(subname))
 
-  allocate(agfirepkmon_i(ns_i), stat=ier)
-  if (ier/=0) call abort()
 
-  ! -----------------------------------------------------------------
-  ! Regrid ag fire peak month
-  ! -----------------------------------------------------------------
 
-  call check_ret(nf_inq_varid (ncid, 'abm', varid), subname)
-  call check_ret(nf_get_var_int (ncid, varid, agfirepkmon_i), subname)
-  ! Note that any input point that is outside the range [min_valid_value,max_valid_value]
-  ! will be ignored; this ignores input points with value of unsetmon
-  call get_dominant_indices(tgridmap, agfirepkmon_i, agfirepkmon_o, &
-       min_valid_value, max_valid_value, miss, mask_src=tdomain%mask)
 
-  ! Check validity of output data
-  if (min_bad(agfirepkmon_o, min_valid, 'agfirepkmon') .or. &
-      max_bad(agfirepkmon_o, max_valid, 'agfirepkmon')) then
-     call abort()
-  end if
-  
+    ! Note that any input point that is outside the range [min_valid_value,max_valid_value]
+    ! will be ignored; this ignores input points with value of unsetmon
+    call get_dominant_indices(tgridmap, agfirepkmon_i, agfirepkmon_o, &
+         min_valid_value, max_valid_value, miss, mask_src=tdomain%mask)
 
-  ! -----------------------------------------------------------------
-  ! Output diagnostics comparing global area of each peak month on input and output grids
-  !
-  ! WJS (3-4-13): I am trying to generally put these diagnostics in mkdiagnosticsMod, but
-  ! so far there isn't a general diagnostics routine for categorical data
-  !
-  ! TODO(wjs, 2016-01-22) Now there is a routine for this: output_diagnostics_index.
-  ! However, it currently doesn't provide the capability for named months. Either add
-  ! that capability or decide it's not important, then delete the below code, instead
-  ! calling output_diagnostics_index.
-  ! -----------------------------------------------------------------
+    ! Check validity of output data
+    if (min_bad(agfirepkmon_o, min_valid, 'agfirepkmon') .or. &
+        max_bad(agfirepkmon_o, max_valid, 'agfirepkmon')) then
+       call shr_sys_abort()
+    end if
 
-  nagfirepkmon = maxval(agfirepkmon_i)
-  allocate(gast_i(1:nagfirepkmon),gast_o(1:nagfirepkmon),month(1:nagfirepkmon))
-  call define_months(nagfirepkmon, month)
+    ! -----------------------------------------------------------------
+    ! Output diagnostics comparing global area of each peak month on input and output grids
+    !
+    ! WJS (3-4-13): I am trying to generally put these diagnostics in mkdiagnosticsMod, but
+    ! so far there isn't a general diagnostics routine for categorical data
+    !
+    ! TODO(wjs, 2016-01-22) Now there is a routine for this: output_diagnostics_index.
+    ! However, it currently doesn't provide the capability for named months. Either add
+    ! that capability or decide it's not important, then delete the below code, instead
+    ! calling output_diagnostics_index.
+    ! -----------------------------------------------------------------
 
-  gast_i(:) = 0.0_r8
-  do ni = 1,ns_i
-     k = agfirepkmon_i(ni)
-     gast_i(k) = gast_i(k) + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
-  end do
+    nagfirepkmon = maxval(agfirepkmon_i)
+    allocate(gast_i(1:nagfirepkmon),gast_o(1:nagfirepkmon),month(1:nagfirepkmon))
+    call define_months(nagfirepkmon, month)
 
-  gast_o(:) = 0.0_r8
-  do no = 1,ns_o
-     k = agfirepkmon_o(no)
-     gast_o(k) = gast_o(k) + tgridmap%area_dst(no)*frac_dst(no)*re**2
-  end do
+    gast_i(:) = 0.0_r8
+    do ni = 1,ns_i
+       k = agfirepkmon_i(ni)
+       gast_i(k) = gast_i(k) + area_src(ni)*mask(ni)*re**2
+    end do
+    gast_o(:) = 0.0_r8
+    do no = 1,ns_o
+       k = agfirepkmon_o(no)
+       gast_o(k) = gast_o(k) + area_dst(no)*frac_dst(no)*re**2
+    end do
 
-  ! area comparison
+    ! area comparison
 
-  write (ndiag,*)
-  write (ndiag,'(1x,70a1)') ('=',k=1,70)
-  write (ndiag,*) 'Agricultural fire peak month Output'
-  write (ndiag,'(1x,70a1)') ('=',k=1,70)
+    write (ndiag,*)
+    write (ndiag,'(1x,70a1)') ('=',k=1,70)
+    write (ndiag,*) 'Agricultural fire peak month Output'
+    write (ndiag,'(1x,70a1)') ('=',k=1,70)
 
-  write (ndiag,*)
-  write (ndiag,'(1x,70a1)') ('.',k=1,70)
-  write (ndiag,1001)
+    write (ndiag,*)
+    write (ndiag,'(1x,70a1)') ('.',k=1,70)
+    write (ndiag,1001)
 1001 format (1x,'peak month',20x,' input grid area output grid area',/ &
-       1x,33x,'     10**6 km**2','      10**6 km**2')
-  write (ndiag,'(1x,70a1)') ('.',k=1,70)
-  write (ndiag,*)
+         1x,33x,'     10**6 km**2','      10**6 km**2')
+    write (ndiag,'(1x,70a1)') ('.',k=1,70)
+    write (ndiag,*)
 
-  do k = 1, nagfirepkmon
-     write (ndiag,1002) month(k),gast_i(k)*1.e-6,gast_o(k)*1.e-6
-1002 format (1x,a35,f16.3,f17.3)
-  end do
+    do k = 1, nagfirepkmon
+       write (ndiag,1002) month(k),gast_i(k)*1.e-6,gast_o(k)*1.e-6
+1002   format (1x,a35,f16.3,f17.3)
+    end do
 
-  ! -----------------------------------------------------------------
-  ! Close files and deallocate dynamic memory
-  ! -----------------------------------------------------------------
+    ! -----------------------------------------------------------------
+    ! Close files and deallocate dynamic memory
+    ! -----------------------------------------------------------------
 
-  call check_ret(nf_close(ncid), subname)
-  call domain_clean(tdomain)
-  call gridmap_clean(tgridmap)
-  deallocate (agfirepkmon_i,gast_i,gast_o,month, frac_dst, mask_r8)
+    call check_ret(nf_close(ncid), subname)
+    call domain_clean(tdomain)
+    call gridmap_clean(tgridmap)
+    deallocate (agfirepkmon_i,gast_i,gast_o,month, frac_dst, mask_r8)
 
-  write (6,*) 'Successfully made Agricultural fire peak month'
-  write (6,*)
+    write (6,*) 'Successfully made Agricultural fire peak month'
+    write (6,*)
 
-end subroutine mkagfirepkmon
+  end subroutine mkagfirepkmon
 
-!-----------------------------------------------------------------------
+  !===============================================================
+  subroutine define_months(nagfirepkmon, month)
+    ! 
+    ! Define month strings
+    !
+    ! input/output variables
+    integer         , intent(in) :: nagfirepkmon    ! max input value (including the 'unset' special value)
+    character(len=*), intent(out):: month(:)        ! name of each month value
+    !-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: define_months
-!
-! !INTERFACE:
-subroutine define_months(nagfirepkmon, month)
-!
-! !DESCRIPTION:
-! Define month strings
-!
-! !USES:
-!
-! !ARGUMENTS:
-  implicit none
-  integer         , intent(in) :: nagfirepkmon    ! max input value (including the 'unset' special value)
-  character(len=*), intent(out):: month(:)        ! name of each month value
-!
-! !CALLED FROM:
-! subroutine mkagfirepkmon
-!
-! !REVISION HISTORY:
-! Author: Bill Sacks
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-!-----------------------------------------------------------------------
+    if (nagfirepkmon == unsetmon) then
+       if (size(month) < 13) then
+          write(6,*) 'month array too small: ', size(month), ' < 13'
+          call shr_sys_abort()
+       end if
+       month(1)  = 'January                             '
+       month(2)  = 'February                            '
+       month(3)  = 'March                               '
+       month(4)  = 'April                               '
+       month(5)  = 'May                                 '
+       month(6)  = 'June                                '
+       month(7)  = 'July                                '
+       month(8)  = 'August                              '
+       month(9)  = 'September                           '
+       month(10) = 'October                             '
+       month(11) = 'November                            '
+       month(12) = 'December                            '
+       month(13) = 'no agricultural fire peak month data'
+    else
+       write(6,*)'nagfirepkmon value of ',nagfirepkmon,' not supported'
+       call shr_sys_abort()
+    end if
 
-  if (nagfirepkmon == unsetmon) then
-     if (size(month) < 13) then
-        write(6,*) 'month array too small: ', size(month), ' < 13'
-        call abort()
-     end if
-     month(1)  = 'January                             '
-     month(2)  = 'February                            '
-     month(3)  = 'March                               '
-     month(4)  = 'April                               '
-     month(5)  = 'May                                 '
-     month(6)  = 'June                                '
-     month(7)  = 'July                                '
-     month(8)  = 'August                              '
-     month(9)  = 'September                           '
-     month(10) = 'October                             '
-     month(11) = 'November                            '
-     month(12) = 'December                            '
-     month(13) = 'no agricultural fire peak month data'
-  else
-     write(6,*)'nagfirepkmon value of ',nagfirepkmon,' not supported'
-     call abort()
-  end if
-
-end subroutine define_months
-!-----------------------------------------------------------------------
-
+  end subroutine define_months
 
 end module mkagfirepkmonthMod

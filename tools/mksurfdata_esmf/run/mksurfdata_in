@@ -19,7 +19,7 @@
   mksrf_fvocef_mesh = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c200129.nc' 
   mksrf_furbtopo = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_topo.10min.cdf5.c220201.nc'
   mksrf_furbtopo_mesh = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_c200129.nc' 
-  mksrf_fglacier = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000.c120926.nc' 
+  mksrf_fglacier = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000.cdf5.c120926.nc' 
   mksrf_fglacier_mesh = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c200129.nc' 
   mksrf_fglacierregion = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_GlacierRegion_10x10min_nomask_cd5_c220131.nc'
   mksrf_fglacierregion_mesh = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_cdf5_c200129.nc'

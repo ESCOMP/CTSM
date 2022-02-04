@@ -140,6 +140,8 @@ program mksurfdat
     integer, allocatable :: harvind1D(:)         ! Indices of 1D harvest fields
     integer, allocatable :: harvind2D(:)         ! Indices of 2D harvest fields
 
+    logical              :: zero_out
+
     ! NOTE(bja, 2015-01) added to work around a ?bug? causing 1x1_urbanc_alpha to abort. See
     !/glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
     logical :: urban_skip_abort_on_invalid_data_check
@@ -379,7 +381,7 @@ program mksurfdat
     ! Call module initialization routines
     !
     call mksoilInit( )
-    call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
+    !call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
     allocate ( elevclass(nglcec+1) )
     call mkglcmecInit (elevclass)
     call mkurbanInit (mksrf_furban)

@@ -7,9 +7,9 @@ module mkfileMod
   use mkutilsMod   , only : get_filename, chkerr
   use mkvarpar     , only : nlevsoi, numrad, numstdpft
   use mkurbanparMod, only : numurbl, nlevurb, mkurbanpar
+  use mkglcmecMod  , only : nglcec
 #ifdef TODO
   use mkpftMod     , only : mkpftAtt
-  use mkglcmecMod  , only : nglcec
   use mkharvestMod , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname, mkharvest_units, harvestDataType
 #endif
   use mkpioMod ! TODO: add only
@@ -37,7 +37,9 @@ contains
   subroutine mkfile_fsurdat(nx, ny, mesh_o, dynlanduse, &
        pctlak, pctwet, lakedepth, organic, soil_color, nsoilcol, &
        urban_classes_g, urban_region, pctsand, pctclay, mapunits, fmaxsoil, soildepth, &
-       glacier_region, ef_btr, ef_fet, ef_fdt, ef_shr, ef_grs, ef_crp, rc)
+       glacier_region, ef_btr, ef_fet, ef_fdt, ef_shr, ef_grs, ef_crp, &
+       pctgla, pctglcmec, topoglcmec, pctglcmec_gic, pctglcmec_icesheet, pctglc_gic, &
+       pctglc_icesheet, rc)
 
     ! input/output variables
     integer         , intent(in) :: nx
@@ -64,6 +66,13 @@ contains
     real(r8)        , intent(in) :: ef_shr(:)
     real(r8)        , intent(in) :: ef_grs(:)
     real(r8)        , intent(in) :: ef_crp(:)
+    real(r8)        , intent(in) :: pctgla(:)
+    real(r8)        , intent(in) :: pctglcmec(:,:)
+    real(r8)        , intent(in) :: topoglcmec(:,:)
+    real(r8)        , intent(in) :: pctglcmec_gic(:,:)
+    real(r8)        , intent(in) :: pctglcmec_icesheet(:,:)
+    real(r8)        , intent(in) :: pctglc_gic(:)
+    real(r8)        , intent(in) :: pctglc_icesheet(:)
     integer         , intent(out):: rc
 #ifdef TODO
     type(harvestDataType) , intent(in) :: harvdata
@@ -122,6 +131,46 @@ contains
        end if
 
        if (.not. dynlanduse) then
+
+          ! TODO: implement this with pio
+          ! call ncd_defvar(ncid=ncid, 'GLC_MEC', xtype=xtype, &
+          !      dim1name='nglcecp1', long_name='Glacier elevation class', units='m')
+
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glacier"
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLACIER', 'percent glacier', 'unitless', &
+               pctgla, rc=rc)
+
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_mec"
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLC_MEC', &
+               'percent glacier for each glacier elevation class (% of landunit)', 'unitless', &
+               pctglcmec, lev1name='nglcec', rc=rc)
+
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out topo_glc_mec"
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'TOPO_GLC_MEC', &
+               'mean elevation on glacier elevation classes', 'm', &
+               topoglcmec, lev1name='nglcec', rc=rc)
+
+          if ( outnc_3dglc ) then
+             if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_mec_gic"
+             call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLC_MEC_GIC', &
+                  'percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', 'unitless', &
+                  pctglcmec_gic, lev1name='nglcec', rc=rc)
+
+             if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_mec_icesheet"
+             call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLC_MEC_ICESHEET', &
+                  'percent ice sheet for each glacier elevation class (% of landunit)', 'unitless', &
+                  pctglcmec_icesheet, lev1name='nglcec', rc=rc)
+
+             if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_gic"
+             call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLC_GIC', &
+                  'percent ice caps/glaciers (% of landunit)', 'unitless', &
+                  pctglc_gic, rc=rc)
+
+             if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_icesheet"
+             call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLC_ICESHEET', &
+                  'percent ice sheet (% of landunit)', 'unitless', &
+                  pctglc_icesheet, rc=rc)
+          end if
 
           if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_lake"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_LAKE', 'percent_lake', &
@@ -220,13 +269,13 @@ contains
          urban_skip_abort_on_invalid_data_check)
 
     ! ----------------------------------------------------------------------
-    ! Make LAI and SAI from 1/2 degree data and write to surface dataset 
+    ! Make LAI and SAI from 1/2 degree data and write to surface dataset
     ! Write to netcdf file is done inside mklai routine
     ! ----------------------------------------------------------------------
     ! if (root_task) then
     !    write(ndiag,'(a)')'calling mklai'
     ! end if
-    ! call mklai(mksrf_lai, mksrf_lai_mesh, pioid, mesh_o, rc=rc) 
+    ! call mklai(mksrf_lai, mksrf_lai_mesh, pioid, mesh_o, rc=rc)
     ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ----------------------------------------------------------------------
@@ -258,17 +307,17 @@ contains
 
 !=================================================================================
   subroutine mkfile_define_dims(pioid, nx, ny, dynlanduse)
-
+    !
     ! Define dimensions.
-
+    !
     ! input/output variables
     type(file_desc_t) , intent(in) :: pioid
     integer           , intent(in) :: nx, ny
     logical           , intent(in) :: dynlanduse
 
     ! local variables
-    integer :: dimid              ! temporary
-    integer :: rcode
+    integer :: dimid  ! temporary
+    integer :: rcode  ! error status
     character(len=*), parameter :: subname = 'mkfile_define_dims'
     !-----------------------------------------------------------------------
 
@@ -283,15 +332,12 @@ contains
     rcode = pio_def_dim(pioid, 'nlevsoi', nlevsoi       , dimid)
     rcode = pio_def_dim(pioid, 'nlevurb', nlevurb       , dimid)
     rcode = pio_def_dim(pioid, 'numurbl', numurbl       , dimid)
-
-#ifdef TODO
-    rcode = pio_def_dim(pioid, 'time'   , PIO_UNLIMITED , dimid)
-    rcode = pio_def_dim(pioid, 'nchar'  , 256           , dimid)
     if (.not. dynlanduse) then
-       rcode = pio_def_dim(pioid, 'nglcec', nglcec, dimid)
+       rcode = pio_def_dim(pioid, 'nglcec'  , nglcec  , dimid)
        rcode = pio_def_dim(pioid, 'nglcecp1', nglcec+1, dimid)
     end if
-#endif
+    rcode = pio_def_dim(pioid, 'time'   , PIO_UNLIMITED , dimid)
+    rcode = pio_def_dim(pioid, 'nchar'  , 256           , dimid)
 
   end subroutine mkfile_define_dims
 

@@ -98,7 +98,6 @@ program mksurfdata
   use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
   use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
   use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
-  use mkglcmecMod        , only : nglcec, mkglcmec, mkglcmecInit, mkglacier
   use mkharvestMod       , only : mkharvest, mkharvest_init, mkharvest_fieldname
   use mkharvestMod       , only : mkharvest_numtypes, mkharvest_parse_oride
   use mkharvestMod       , only : harvestDataType
@@ -109,6 +108,7 @@ program mksurfdata
   use mkVICparamsMod     , only : mkVICparams
 #endif
   use mkvocefMod         , only : mkvocef
+  use mkglcmecMod        , only : mkglcmecInit, mkglcmec, mkglacier, nglcec 
   use mkglacierregionMod , only : mkglacierregion
   use mksoiltexMod       , only : mksoiltex
   use mksoilfmaxMod      , only : mksoilfmax
@@ -209,6 +209,7 @@ program mksurfdata
   integer , allocatable             :: harvind2D(:)            ! Indices of 2D harvest fields
   logical                           :: zero_out_lake           ! if should zero glacier out
   logical                           :: zero_out_wetland        ! if should zero glacier out
+  logical                           :: zero_out 
 #ifdef TODO
   type(harvestDataType)             :: harvdata
 #endif
@@ -313,9 +314,9 @@ program mksurfdata
 
 #ifdef TODO
   call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
+#endif
   allocate ( elevclass(nglcec+1) )
   call mkglcmecInit (elevclass)
-#endif
   call mkurbanInit (mksrf_furban)
 
   ! ----------------------------------------------------------------------
@@ -344,10 +345,7 @@ program mksurfdata
   allocate ( slope(lsize_o))                  ; slope(:)            = spval
 
   ! glacier properties
-  allocate ( pctgla(lsize_o))                 ; pctgla(:)           = spval
 #ifdef TODO
-  allocate ( pctglcmec(lsize_o,nglcec))       ; pctglcmec(:,:)      = spval
-  allocate ( topoglcmec(lsize_o,nglcec))      ; topoglcmec(:,:)     = spval
 #endif
 
   ! vic properties
@@ -382,15 +380,50 @@ program mksurfdata
   ! --------------------------------------------------
   ! begin working
 
-  ! ! Make VOC emission factors for isoprene [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp]
+  !DEBUG - place here for debugging
+  ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier] dataset
+  allocate ( pctglcmec(lsize_o,nglcec))  ; pctglcmec(:,:) = spval
+  allocate ( topoglcmec(lsize_o,nglcec)) ; topoglcmec(:,:)= spval
+  if ( outnc_3dglc )then
+     allocate(pctglcmec_gic(lsize_o,nglcec))
+     allocate(pctglcmec_icesheet(lsize_o,nglcec))
+     allocate(pctglc_gic(lsize_o))
+     allocate(pctglc_icesheet(lsize_o))
+
+     call mkglcmec(mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, &
+          pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
+          pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &
+          pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglcmec')
+  else
+     call mkglcmec(mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, &
+          pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, rc=rc )
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglcmec')
+  end if
+  !DEBUG
+
+  ! Make glacier fraction [pctgla] from [fglacier] dataset
+  allocate ( pctgla(lsize_o)) ; pctgla(:) = spval
+  zero_out = (all_urban .or. all_veg)
+  if (.not. zero_out) then
+     call mkglacier ( mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, glac_o=pctgla, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacier')
+  else
+     if (root_task) then
+       write (ndiag,'(a)') 'Attempting to make %glacier .....'
+       write(ndiag, '(a)') ' zeroing out all pct glacier data'
+       pctgla(:) = 0.
+    end if
+ end if
+
+  ! Make VOC emission factors for isoprene [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp]
   allocate (ef1_btr(lsize_o)) ; ef1_btr(:) = 0._r8
   allocate (ef1_fet(lsize_o)) ; ef1_fet(:) = 0._r8
   allocate (ef1_fdt(lsize_o)) ; ef1_fdt(:) = 0._r8
   allocate (ef1_shr(lsize_o)) ; ef1_shr(:) = 0._r8
   allocate (ef1_grs(lsize_o)) ; ef1_grs(:) = 0._r8
   allocate (ef1_crp(lsize_o)) ; ef1_crp(:) = 0._r8
-  call ESMF_LogWrite("DEBUG: mksrf_fvocef_mesh is "//trim(mksrf_fvocef_mesh), ESMF_LOGMSG_INFO)
-  call mkvocef ( mksrf_fvocef, mksrf_fvocef_mesh, mesh_model, &
+  call mkvocef ( mksrf_fvocef_mesh, mksrf_fvocef, mesh_model, &
        ef_btr_o=ef1_btr, ef_fet_o=ef1_fet, ef_fdt_o=ef1_fdt,  &
        ef_shr_o=ef1_shr, ef_grs_o=ef1_grs, ef_crp_o=ef1_crp, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkvocef')
@@ -465,9 +498,6 @@ program mksurfdata
 
   ! end working
   ! --------------------------------------------------
-
-  ! ! Make glacier fraction [pctgla] from [fglacier] dataset
-  ! call mkglacier ( mapfname=map_fglacier, datfname=mksrf_fglacier, ndiag=ndiag, zero_out=all_urban.or.all_veg, glac_o=pctgla)
 
   ! ! Make GDP data [gdp] from [gdp]
   ! call mkgdp ( mapfname=map_fgdp, datfname=mksrf_fgdp, ndiag=ndiag, gdp_o=gdp)
@@ -593,30 +623,34 @@ program mksurfdata
   ! This call needs to occur after all corrections are made to pcturb
   call normalize_classes_by_gcell(urban_classes, pcturb, urban_classes_g)
 
-  ! ! ----------------------------------------------------------------------
-  ! ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier] dataset
-  ! ! ----------------------------------------------------------------------
+  ! ----------------------------------------------------------------------
+  ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier] dataset
+  ! ----------------------------------------------------------------------
 
-  ! ! This call needs to occur after pctgla has been adjusted for the final time
+  ! This call needs to occur after pctgla has been adjusted for the final time
 
+  ! allocate ( pctglcmec(lsize_o,nglcec))  ; pctglcmec(:,:) = spval
+  ! allocate ( topoglcmec(lsize_o,nglcec)) ; topoglcmec(:,:)= spval
   ! if ( outnc_3dglc )then
   !    allocate(pctglcmec_gic(lsize_o,nglcec))
   !    allocate(pctglcmec_icesheet(lsize_o,nglcec))
   !    allocate(pctglc_gic(lsize_o))
   !    allocate(pctglc_icesheet(lsize_o))
 
-  !    call mkglcmec ( mapfname=map_fglacier, &
-  !         datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
+  !    call mkglcmec(mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, &
   !         pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
   !         pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &
-  !         pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet)
+  !         pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet, rc=rc)
+  !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglcmec')
   ! else
-  !    call mkglcmec ( mapfname=map_fglacier, &
-  !         datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
-  !         pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec )
+  !    call mkglcmec(mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, &
+  !         pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, rc=rc )
+  !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglcmec')
   ! end if
 
-  ! ! Determine fractional land from pft dataset
+  ! ----------------------------------------------------------------------
+  ! Determine fractional land from pft dataset
+  ! ----------------------------------------------------------------------
 
   ! do n = 1,lsize_o
   !    landfrac_pft(n) = pctlnd_pft(n)/100._r8
@@ -643,7 +677,6 @@ program mksurfdata
         write (ndiag,'(a)') ' fsurdat is blank: skipping writing surface dataset'
      end if
   else
-    !call mkfile_fsurdat( mksrf_fgrid_mesh_nx, mksrf_fgrid_mesh_ny, mesh_model, dynlanduse=.false., harvdata)
      if (root_task)then
         write(ndiag,'(a)')"Calling mkfile_fsurdat"
      end if
@@ -671,7 +704,14 @@ program mksurfdata
                           ef_shr=ef1_shr, &
                           ef_grs=ef1_grs, &
                           ef_crp=ef1_crp, &
-                          rc = rc)
+                          pctgla=pctgla, &
+                          pctglcmec=pctglcmec, &
+                          topoglcmec=topoglcmec, &
+                          pctglcmec_gic=pctglcmec_gic, &
+                          pctglcmec_icesheet=pctglcmec_icesheet, &
+                          pctglc_gic=pctglc_gic, &
+                          pctglc_icesheet=pctglc_icesheet, &
+                          rc=rc)
      if (root_task) then
         write(ndiag,*)
         write(ndiag,'(a)')'successfully created file '//trim(fsurdat)
@@ -679,24 +719,28 @@ program mksurfdata
 
   end if  ! if (fsurdat /= ' ')
 
+  ! ----------------------------------------------------------------------
   ! Deallocate arrays NOT needed for dynamic-pft section of code
+  ! ----------------------------------------------------------------------
 
-  deallocate ( lakedepth )
-  deallocate ( soil_color )
-
-#ifdef TODO
   deallocate ( organic )
   deallocate ( ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
-  deallocate ( pctglcmec, topoglcmec)
-  if ( outnc_3dglc ) deallocate ( pctglc_gic, pctglc_icesheet)
-  deallocate ( elevclass )
-  deallocate ( fmax )
-  deallocate ( pctsand, pctclay )
-  deallocate ( gdp, fpeat, agfirepkmon )
+  deallocate ( lakedepth )
+  deallocate ( soil_color )
   deallocate ( soildepth )
+  deallocate ( pctsand, pctclay )
+  deallocate ( glacier_region )
+  deallocate ( pctglcmec, topoglcmec)
+  deallocate ( elevclass )
+  deallocate ( fmaxsoil )
+  if ( outnc_3dglc ) then
+     deallocate ( pctglc_gic, pctglc_icesheet)
+  end if
+
+#ifdef TODO
+  deallocate ( gdp, fpeat, agfirepkmon )
   deallocate ( topo_stddev, slope )
   deallocate ( vic_binfl, vic_ws, vic_dsmax, vic_ds )
-  deallocate ( glacier_region )
   call harvdata%clean()
 #endif
 

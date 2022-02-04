@@ -79,6 +79,13 @@ contains
 
     rc = ESMF_SUCCESS
 
+    if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(a)')'Attempting to %lake, %wetland and lakdepth data'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
+    end if
+
     ! Open raw data file
     ! ASSUME for now that have only 1 input data file
     call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
