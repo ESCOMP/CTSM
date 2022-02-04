@@ -19,6 +19,8 @@ module mkagfirepkmonthMod
   implicit none
   private           ! By default make data private
 
+#include <mpif.h>
+
   public  :: mkagfirepkmon       ! Set agricultural fire peak month
   private :: define_months       ! define month strings
 
@@ -55,13 +57,15 @@ contains
     real(r8), allocatable          :: frac_o(:)
     real(r8), allocatable          :: area_i(:)
     real(r8), allocatable          :: area_o(:)
+    real(r8), allocatable          :: loc_gast_i(:)     ! local global area, by surface type
+    real(r8), allocatable          :: loc_gast_i(:)     ! local global area, by surface type
     real(r8), allocatable          :: gast_i(:)         ! global area, by surface type
     real(r8), allocatable          :: gast_o(:)         ! global area, by surface type
     real(r8), allocatable          :: frac_dst(:)       ! output fractions
     real(r4), allocatable          :: data_i(:,:)
     real(r4), allocatable          :: data_o(:,:)
     integer , allocatable          :: agfirepkmon_i(:)  ! input grid: agricultural fire peak month
-    integer                        :: nagfirepkmon      ! number of peak months 
+    integer                        :: nagfirepkmon      ! number of peak months
     character(len=35), allocatable :: month(:)          ! name of each month
     integer                        :: rcode, ier        ! error status
     integer, parameter             :: miss   = unsetmon ! missing data indicator
@@ -130,27 +134,26 @@ contains
     allocate(data_i(min_valid_value:max_valid_value,ns_i))
     data_i(:,:) = 0._r4
     do l = min_valid_value,max_valid_value
-       do n = 1,ns_i
-          if (int(soil_color_i(n)) == l) then
+       do ni = 1,ns_i
+          if (int(agfilepkmon_i(ni)) == l .and. int(agfilepkmon_i(ni)) /= miss) then
              data_i(l,n) = 1._r4 * mask_i(n)
           end if
        end do
     end do
 
     ! Regrid data_i to data_o
-    allocate(data_o(0:nsoilcol, ns_o),stat=ier)
+    ! Note that any input point that is outside the range [min_valid_value,max_valid_value]
+    ! will be ignored; this ignores input points with value of unsetmon
+    allocate(data_o(min_valid_value:max_valid_value, ns_o),stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, nsoilcol, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, min_valid_value, max_valid_value, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_LogWrite(subname//'after regrid rawdata in '//trim(subname))
 
-
-
-
-    ! Note that any input point that is outside the range [min_valid_value,max_valid_value]
-    ! will be ignored; this ignores input points with value of unsetmon
-    call get_dominant_indices(tgridmap, agfirepkmon_i, agfirepkmon_o, &
-         min_valid_value, max_valid_value, miss, mask_src=tdomain%mask)
+    do no = 1,ns_o
+       max_index = maxloc(data_o(:,no))
+       agfirepkmon_o(no) = max_index(1)
+    end do
 
     ! Check validity of output data
     if (min_bad(agfirepkmon_o, min_valid, 'agfirepkmon') .or. &
@@ -170,58 +173,61 @@ contains
     ! calling output_diagnostics_index.
     ! -----------------------------------------------------------------
 
-    nagfirepkmon = maxval(agfirepkmon_i)
-    allocate(gast_i(1:nagfirepkmon),gast_o(1:nagfirepkmon),month(1:nagfirepkmon))
-    call define_months(nagfirepkmon, month)
+!     nagfirepkmon = maxval(agfirepkmon_i)
+!     allocate(gast_i(1:nagfirepkmon),gast_o(1:nagfirepkmon),month(1:nagfirepkmon))
+!     call define_months(nagfirepkmon, month)
 
-    gast_i(:) = 0.0_r8
-    do ni = 1,ns_i
-       k = agfirepkmon_i(ni)
-       gast_i(k) = gast_i(k) + area_src(ni)*mask(ni)*re**2
-    end do
-    gast_o(:) = 0.0_r8
-    do no = 1,ns_o
-       k = agfirepkmon_o(no)
-       gast_o(k) = gast_o(k) + area_dst(no)*frac_dst(no)*re**2
-    end do
+!     gast_i(:) = 0.0_r8
+!     do ni = 1,ns_i
+!        k = agfirepkmon_i(ni)
+!        gast_i(k) = gast_i(k) + area_src(ni)*mask(ni)*re**2
+!     end do
+!     gast_o(:) = 0.0_r8
+!     do no = 1,ns_o
+!        k = agfirepkmon_o(no)
+!        gast_o(k) = gast_o(k) + area_dst(no)*frac_dst(no)*re**2
+!     end do
 
-    ! area comparison
+!     area comparison
 
-    write (ndiag,*)
-    write (ndiag,'(1x,70a1)') ('=',k=1,70)
-    write (ndiag,*) 'Agricultural fire peak month Output'
-    write (ndiag,'(1x,70a1)') ('=',k=1,70)
+!     write (ndiag,*)
+!     write (ndiag,'(1x,70a1)') ('=',k=1,70)
+!     write (ndiag,*) 'Agricultural fire peak month Output'
+!     write (ndiag,'(1x,70a1)') ('=',k=1,70)
 
-    write (ndiag,*)
-    write (ndiag,'(1x,70a1)') ('.',k=1,70)
-    write (ndiag,1001)
-1001 format (1x,'peak month',20x,' input grid area output grid area',/ &
-         1x,33x,'     10**6 km**2','      10**6 km**2')
-    write (ndiag,'(1x,70a1)') ('.',k=1,70)
-    write (ndiag,*)
+!     write (ndiag,*)
+!     write (ndiag,'(1x,70a1)') ('.',k=1,70)
+!     write (ndiag,1001)
+! 1001 format (1x,'peak month',20x,' input grid area output grid area',/ &
+!          1x,33x,'     10**6 km**2','      10**6 km**2')
+!     write (ndiag,'(1x,70a1)') ('.',k=1,70)
+!     write (ndiag,*)
 
-    do k = 1, nagfirepkmon
-       write (ndiag,1002) month(k),gast_i(k)*1.e-6,gast_o(k)*1.e-6
-1002   format (1x,a35,f16.3,f17.3)
-    end do
+!     do k = 1, nagfirepkmon
+!        write (ndiag,1002) month(k),gast_i(k)*1.e-6,gast_o(k)*1.e-6
+! 1002   format (1x,a35,f16.3,f17.3)
+!     end do
 
-    ! -----------------------------------------------------------------
-    ! Close files and deallocate dynamic memory
-    ! -----------------------------------------------------------------
+    ! Close the file 
+    call pio_closefile(pioid)
+    call ESMF_VMLogMemInfo("After pio_closefile in "//trim(subname))
 
-    call check_ret(nf_close(ncid), subname)
-    call domain_clean(tdomain)
-    call gridmap_clean(tgridmap)
-    deallocate (agfirepkmon_i,gast_i,gast_o,month, frac_dst, mask_r8)
+    ! Release memory
+    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
 
-    write (6,*) 'Successfully made Agricultural fire peak month'
-    write (6,*)
+    if (root_task) then
+       write (ndiag,'(a)') 'Successfully made Agricultural fire peak month'
+    end if
 
   end subroutine mkagfirepkmon
 
   !===============================================================
   subroutine define_months(nagfirepkmon, month)
-    ! 
+    !
     ! Define month strings
     !
     ! input/output variables

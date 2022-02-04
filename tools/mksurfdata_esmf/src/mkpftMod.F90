@@ -1,18 +1,26 @@
 module mkpftMod
 
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use mkvarpar    , only : noveg
-  use mkvarctl    , only : numpft
-  use mkdomainMod , only : domain_checksame
+  use ESMF
+  use pio
+  use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
+  use shr_sys_mod    , only : shr_sys_abort
+  use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
+  use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
+  use mkpioMod       , only : mkpio_iodesc_rawdata, mkpio_get_rawdata_level
+  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
+  use mkutilsMod     , only : chkerr
+  use mkvarctl       , only : ndiag, root_task, outnc_3dglc, numpft
+  use mkvarpar       , only : noveg
+  use mkvarctl    ,    only : numpft
   use mkpftConstantsMod
 
   implicit none
   private           ! By default make data private
 
-  public mkpftInit          ! Initialization
-  public mkpft              ! Set PFT
-  public mkpft_parse_oride  ! Parse the string with PFT fraction/index info to override
-  public mkpftAtt           ! Write out attributes to output file on pft
+  public :: mkpftInit          ! Initialization
+  public :: mkpft              ! Set PFT
+  public :: mkpft_parse_oride  ! Parse the string with PFT fraction/index info to override
+  public :: mkpftAtt           ! Write out attributes to output file on pft
 
   private :: mkpft_check_oride  ! Check the pft_frc and pft_idx values for correctness
 
@@ -61,11 +69,11 @@ contains
     ! 
     use mkvarpar, only : numstdpft, numstdcft
 
-    ! !ARGUMENTS:
-    logical, intent(IN) :: zero_out_l ! If veg should be zero'ed out
-    logical, intent(IN) :: all_veg_l  ! If should zero out other fractions so that all land-cover is vegetation
+    ! input/output variables
+    logical, intent(in) :: zero_out_l ! If veg should be zero'ed out
+    logical, intent(in) :: all_veg_l  ! If should zero out other fractions so that all land-cover is vegetation
 
-    ! !LOCAL VARIABLES:
+    ! local variables:
     logical             :: error_happened    ! If an error was triggered so should return
     real(r8), parameter :: hndrd = 100.0_r8  ! A hundred percent
     character(len=*), parameter :: subname = ' (mkpftInit) '
@@ -162,14 +170,8 @@ contains
 
   end subroutine mkpftInit
 
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkpft
-  !
-  ! !INTERFACE:
-  subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
-       pctlnd_o, pctnatpft_o, pctcft_o)
+  !===============================================================
+  subroutine mkpft(file_mesh_i, file_data_i, mesh_o, pctlnd_o, pctnatpft_o, pctcft_o, rc)
     !
     ! Make PFT data
     !
@@ -183,73 +185,74 @@ contains
     ! Upon return from this routine, the % cover of the natural veg + crop landunits is
     ! generally 100% everywhere; this will be normalized later to account for special landunits.
     !
-    use mkdomainMod, only : domain_type, domain_clean, domain_read
-    use mkgridmapMod
-    use mkvarpar	
-    use mkvarctl    
-    use mkncdio
     use mkpctPftTypeMod,   only : pct_pft_type
     use mkpftConstantsMod, only : natpft_lb, natpft_ub, num_cft, cft_lb, cft_ub
     !
-    ! !ARGUMENTS:
-    type(domain_type), intent(in) :: ldomain
-    character(len=*)  , intent(in) :: mapfname              ! input mapping file name
-    character(len=*)  , intent(in) :: fpft                  ! input pft dataset file name
-    integer           , intent(in) :: ndiag                 ! unit number for diag out
-    real(r8)          , intent(out):: pctlnd_o(:)           ! output grid:%land/gridcell
-    type(pct_pft_type), intent(out):: pctnatpft_o(:)        ! natural PFT cover
-    type(pct_pft_type), intent(out):: pctcft_o(:)           ! crop (CFT) cover
+    ! input/output variables
+    character(len=*)  , intent(in)  :: file_mesh_i    ! input mesh file name
+    character(len=*)  , intent(in)  :: file_data_i    ! input data file name
+    type(ESMF_Mesh)   , intent(in)  :: mesh_o
+    real(r8)          , intent(out) :: pctlnd_o(:)    ! output grid:%land/gridcell
+    type(pct_pft_type), intent(out) :: pctnatpft_o(:) ! natural PFT cover
+    type(pct_pft_type), intent(out) :: pctcft_o(:)    ! crop (CFT) cover
     !
-    ! !LOCAL VARIABLES:
-    type(pct_pft_type), allocatable:: pctnatpft_i(:)         ! input grid: natural PFT cover
-    type(pct_pft_type), allocatable:: pctcft_i(:)            ! input grid: crop (CFT) cover
-    type(domain_type)    :: tdomain             ! local domain
-    type(gridmap_type)    :: tgridmap           ! local gridmap
-    real(r8), allocatable :: pctpft_i(:,:)      ! input grid: PFT percent
-    real(r8), allocatable :: pctpft_o(:,:)      ! output grid: PFT percent (% of grid cell)
-    real(r8), allocatable :: pctnatveg_i(:)     ! input grid: natural veg percent (% of grid cell)
-    real(r8), allocatable :: pctnatveg_o(:)     ! output grid: natural veg percent (% of grid cell)
-    real(r8), allocatable :: pctcrop_i(:)       ! input grid: all crop percent (% of grid cell)
-    real(r8), allocatable :: pctcrop_o(:)       ! output grid: all crop percent (% of grid cell)
-    real(r8), allocatable :: frac_dst(:)        ! output fractions
-    real(r8), allocatable :: pct_cft_i(:,:)     ! input grid: CFT (Crop Functional Type) percent (% of landunit cell)
-    real(r8), allocatable :: temp_i(:,:)        ! input grid: temporary 2D variable to read in
-    real(r8), allocatable :: pct_cft_o(:,:)     ! output grid: CFT (Crop Functional Type) percent (% of landunit cell)
-    real(r8), allocatable :: pct_nat_pft_i(:,:) ! input grid: natural PFT percent (% of landunit cell)
-    real(r8), allocatable :: pct_nat_pft_o(:,:) ! output grid: natural PFT percent (% of landunit cell)
-    integer  :: numpft_i                        ! num of plant types input data
-    integer  :: natpft_i                        ! num of natural plant types input data
-    integer  :: ncft_i                          ! num of crop types input data
-    real(r8) :: sum_fldo                        ! global sum of dummy output fld
-    real(r8) :: sum_fldi                        ! global sum of dummy input fld
-    real(r8) :: wst_sum                         ! sum of %pft
-    real(r8), allocatable :: gpft_o(:)          ! output grid: global area pfts
-    real(r8) :: garea_o                         ! output grid: global area
-    real(r8), allocatable :: gpft_i(:)          ! input grid: global area pfts
-    real(r8) :: garea_i                         ! input grid: global area
-    integer  :: k,n,m,ni,no,ns_i,ns_o           ! indices
-    integer  :: ncid,dimid,varid                ! input netCDF id's
-    integer  :: ndims                           ! number of dimensions for a variable on the file
-    integer  :: dimlens(3)                      ! dimension lengths for a variable on the file
-    integer  :: ier                             ! error status
-    real(r8) :: relerr = 0.0001_r8              ! max error: sum overlap wts ne 1
-    logical  :: oldformat                       ! if input file is in the old format or not (based on what variables exist)
-    logical :: error_happened                   ! If an error was triggered so should return
-
-    character(len=35)  veg(0:maxpft)            ! vegetation types
-    character(len=32) :: subname = 'mkpftMod::mkpft()'
+    ! local variables:
+    type(ESMF_RouteHandle)          :: routehandle
+    type(ESMF_Mesh)                 :: mesh_i
+    type(file_desc_t)               :: pioid
+    integer                         :: ni,no,k
+    integer                         :: ns_i, ns_o
+    integer , allocatable           :: mask_i(:)
+    real(r8), allocatable           :: frac_i(:)
+    real(r8), allocatable           :: frac_o(:)
+    real(r8), allocatable           :: area_i(:)
+    real(r8), allocatable           :: area_o(:)
+    type(pct_pft_type), allocatable :: pctnatpft_i(:)        ! input grid: natural PFT cover
+    type(pct_pft_type), allocatable :: pctcft_i(:)           ! input grid: crop (CFT) cover
+    real(r8), allocatable           :: pctpft_i(:,:)         ! input grid: PFT percent
+    real(r8), allocatable           :: pctpft_o(:,:)         ! output grid: PFT percent (% of grid cell)
+    real(r8), allocatable           :: pctnatveg_i(:)        ! input grid: natural veg percent (% of grid cell)
+    real(r8), allocatable           :: pctnatveg_o(:)        ! output grid: natural veg percent (% of grid cell)
+    real(r8), allocatable           :: pctcrop_i(:)          ! input grid: all crop percent (% of grid cell)
+    real(r8), allocatable           :: pctcrop_o(:)          ! output grid: all crop percent (% of grid cell)
+    real(r8), allocatable           :: pct_cft_i(:,:)        ! input grid: CFT (Crop Functional Type) percent (% of landunit cell)
+    real(r8), allocatable           :: pct_cft_o(:,:)        ! output grid: CFT (Crop Functional Type) percent (% of landunit cell)
+    real(r8), allocatable           :: pct_nat_pft_i(:,:)    ! input grid: natural PFT percent (% of landunit cell)
+    real(r8), allocatable           :: pct_nat_pft_o(:,:)    ! output grid: natural PFT percent (% of landunit cell)
+    real(r8), allocatable           :: temp_i(:,:)           ! input grid: temporary 2D variable to read in
+    integer                         :: numpft_i              ! num of plant types input data
+    integer                         :: natpft_i              ! num of natural plant types input data
+    integer                         :: ncft_i                ! num of crop types input data
+    real(r8)                        :: sum_fldo              ! global sum of dummy output fld
+    real(r8)                        :: sum_fldi              ! global sum of dummy input fld
+    real(r8)                        :: wst_sum               ! sum of %pft
+    real(r8), allocatable           :: gpft_o(:)             ! output grid: global area pfts
+    real(r8)                        :: garea_o               ! output grid: global area
+    real(r8), allocatable           :: gpft_i(:)             ! input grid: global area pfts
+    real(r8)                        :: garea_i               ! input grid: global area
+    integer                         :: k,n,m,ni,no,ns_i,ns_o ! indices
+    integer                         :: ndims                 ! number of dimensions for a variable on the file
+    integer                         :: dimlens(3)            ! dimension lengths for a variable on the file
+    integer                         :: ier                   ! error status
+    real(r8)                        :: relerr = 0.0001_r8    ! max error: sum overlap wts ne 1
+    logical                         :: error_happened        ! If an error was triggered so should return
+    character(len=35)               :: veg(0:maxpft)         ! vegetation types
+    character(len=*), parameter :: subname = 'mkpf'
     !-----------------------------------------------------------------------
 
-    write (6,*)
-    write (6, '(a, a, a)') "In ", subname, "..."
-    write (6,*) 'Attempting to make PFTs .....'
+    if (root_task)
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to make PFTs .....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
+    end if
 
     ! -----------------------------------------------------------------
     ! Set the vegetation types
     ! -----------------------------------------------------------------
 
-    if ( numpft >= numstdpft )then
-       veg(0:maxpft) = (/                                   &
+    if ( numpft >= numstdpft ) then
+       veg(0:maxpft) = (/                          &
             'not vegetated                      ', &
             'needleleaf evergreen temperate tree', &
             'needleleaf evergreen boreal tree   ', &
@@ -346,141 +349,132 @@ contains
     ! Read input PFT file
     ! -----------------------------------------------------------------
 
-    ns_o = size(pctlnd_o)
+    ! Open input data file
+    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
+
+    ! Read in input mesh
+    mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
+
+    ! Determine ns_i
+    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Determine ns_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Get the landmask from the file and reset the mesh mask based on that
+    allocate(frac_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(mask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do ni = 1,ns_i
+       if (frac_i(ni) > 0._r4) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
+       end if
+    end do
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     if ( .not. presc_cover ) then
 
-       ! Obtain input grid info, read PCT_PFT
-
-       ! create field on input mesh (first read in input mesh)
-       call ESMF_VMLogMemInfo("Before create mesh_i in lanwat")
-       mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_VMLogMemInfo("After create mesh_i in lanwat")
-
-       if (root_task) then
-          write (ndiag,'(a)') 'Opening PFT file: '//trim(fpft)
-       end if
-       rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(fpft), pio_nowrite)
-
-       call check_ret(nf_inq_dimid  (ncid, 'natpft', dimid), subname)
-       call check_ret(nf_inq_dimlen (ncid, dimid, natpft_i), subname)
-       call check_ret(nf_inq_dimid  (ncid, 'cft', dimid), subname)
-       call check_ret(nf_inq_dimlen (ncid, dimid, ncft_i), subname)
+       ! get dimensions
+       rcode = pio_inq_dimid(pioid, 'natpft', dimid)
+       rcode = pio_inq_dimlen(pioid, dimid, natpft_i)
+       rcode = pio_inq_dimid(pioid, 'cft', dimid)
+       rcode = pio_inq_dimlen(pioid, dimid, ncfg_i)
        numpft_i = natpft_i + ncft_i
 
        ! Check if the number of pfts on the input matches the expected number. A mismatch
        ! is okay if the input raw dataset has prognostic crops and the output does not.
-       if (numpft_i .ne. numpft+1) then
-          if (numpft_i .eq. numstdpft+1) then
+       if (numpft_i /= numpft+1) then
+          if (numpft_i == numstdpft+1) then
              write(6,*) subname//' ERROR: trying to use non-crop input file'
              write(6,*) 'for a surface dataset with crops.'
              call shr_sys_abort()
-             return
           else if (numpft_i > numstdpft+1 .and. numpft_i == maxpft+1) then
              write(6,*) subname//' WARNING: using a crop input raw dataset for a non-crop output surface dataset'
           else
              write(6,*) subname//': parameter numpft+1= ',numpft+1, &
                   'does not equal input dataset numpft= ',numpft_i
              call shr_sys_abort()
-             return
           end if
        endif
 
-       ! TODO: create a route handle 
-       ! for starts just do everything on one processor to make sure it works
+       ! Create a route handle between the input and output mesh and get frac_o
+       allocate(frac_o(ns_o),stat=ier)
+       if (ier/=0) call shr_sys_abort()
+       call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
-       ! TODO: determine local number of points and allocate memory only for the local number
-       ! the local number can be determined from the mesh
-       ! TODO: initialize pio and set global decomposition
-
-       ! If file is in the new format, expect the following variables: 
-       !      PCT_NATVEG, PCT_CROP, PCT_NAT_PFT, PCT_CFT
+       ! Allocate memory
        allocate(pctnatveg_i(ns_i), stat=ier)
        if (ier/=0) call shr_sys_abort()
-
        allocate(pctnatveg_o(ns_o), stat=ier)
+       if (ier/=0) call shr_sys_abort()
+
        allocate(pctcrop_i(ns_i), stat=ier)
+       if (ier/=0) call shr_sys_abort()
        allocate(pctcrop_o(ns_o), stat=ier)
-       allocate(frac_dst(ns_o), stat=ier)
+       if (ier/=0) call shr_sys_abort()
+
        allocate(pct_cft_i(ns_i,1:num_cft), stat=ier)
+       if (ier/=0) call shr_sys_abort()
        allocate(pct_cft_o(ns_o,1:num_cft), stat=ier)
+       if (ier/=0) call shr_sys_abort()
+
        allocate(pct_nat_pft_i(ns_i,0:num_natpft), stat=ier)
+       if (ier/=0) call shr_sys_abort()
        allocate(pct_nat_pft_o(ns_o,0:num_natpft),  stat=ier)
+       if (ier/=0) call shr_sys_abort()
 
-       ! Open the raw data file
-       call ESMF_VMLogMemInfo("Before pio_openfile in regrid_data for "//trim(filename))
-       rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(filename), pio_nowrite)
-
-       ! Create an io descriptor
-       call ESMF_VMLogMemInfo("After pio_openfile in mkpftMod")
-       call mkpio_iodesc_rawdata(mesh_i, 'PCT_NATVEG', pioid, pio_varid, pio_vartype, pio_iodesc, rc)
+       ! Read in 1d data
+       call mkpio_get_rawdata(pioid, 'PCT_NATVEG', mesh_i, pctnatveg_i, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_VMLogMemInfo("After mkpio_iodesc in mkpftMod")
+       call mkpio_get_rawdata(pioid, 'PCT_CROP', mesh_i, pctcrop_i, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-       ! Read in 
-       if (pio_vartype == PIO_REAL) then
-          allocate(data_real(ns_i))
-          call pio_read_darray(pioid, pio_varid, pio_iodesc, data_real, rcode)
-          data_i(:) = real(data_real(:), kind=r8)
-          deallocate(data_real)
-       else if (pio_vartype == PIO_DOUBLE) then
-          allocate(data_double(ns_i))
-          call pio_read_darray(pioid, pio_varid, pio_iodesc, data_double, rcode)
-          data_i(:) = data_double(:)
-          deallocate(data_double)
-       else
-          call shr_sys_abort(subName//"ERROR: only real and double types are supported")
-       end if
-
-
-       call pio_freedecomp(pioid, pio_iodesc)
-       call pio_closefile(pioid)
-       call ESMF_VMLogMemInfo("After pio_read_darry in regrid_data")
-
-
-
-       call check_ret(nf_inq_varid (ncid, 'PCT_NATVEG', varid), subname)
-       call check_ret(nf_get_var_double (ncid, varid, pctnatveg_i), subname)
-       call check_ret(nf_inq_varid (ncid, 'PCT_CROP', varid), subname)
-       call check_ret(nf_get_var_double (ncid, varid, pctcrop_i), subname)
-
+       ! Read in 2d data
        if  ( .not. use_input_pft )then
-          call check_ret(nf_inq_varid (ncid, 'PCT_CFT', varid), subname)
-          call get_dim_lengths(ncid, 'PCT_CFT', ndims, dimlens(:) )
-          if (      ndims == 3 .and. dimlens(1)*dimlens(2) == ns_i .and. dimlens(3) == num_cft )then
-             call check_ret(nf_get_var_double (ncid, varid, pct_cft_i), subname)
+          allocate(data_cft_i(1:numcft, ns_i)
+          if (ier/=0) call shr_sys_abort()
+
+          call mkpio_get_dimlengths(pioid, 'PCT_CFT', ndims, dimlens(:))
+          if (ndims == 3 .and. dimlens(1)*dimlens(2) == ns_i .and. dimlens(3) == num_cft )then
+             call mkpio_get_rawdata(pioid, 'PCT_CFT', mesh_i, data_cft_i, rc=rc)
+             if (chkerr(rc,__LINE__,u_FILE_u)) return
           else if ( ndims == 3 .and. dimlens(1)*dimlens(2) == ns_i .and. dimlens(3) > num_cft )then
-             ! Read in the whole array: then sum the rainfed and irrigated
-             ! seperately
-             allocate( temp_i(ns_i,dimlens(3)) )
-             call check_ret(nf_get_var_double (ncid, varid, temp_i), subname)
+             ! Read in the whole array: then sum the rainfed and irrigated seperately
+             allocate(temp_i(dimlens(3),ns_i))
+             call mkpio_get_rawdata(pioid, 'PCT_CFT', mesh_i, temp_i, rc=rc)
+             if (chkerr(rc,__LINE__,u_FILE_u)) return
              do n = 1, num_cft
-                pct_cft_i(:,n) = 0.0_r8
+                data_cft_i(n,:) = 0.0_r8
                 do m = n, dimlens(3), 2
-                   pct_cft_i(:,n) = pct_cft_i(:,n) + temp_i(:,m)
+                   data_cft_i(n,:) = data_cft_i(n,:) + temp_i(m,:)
                 end do
              end do
              deallocate( temp_i )
           else
-             write(6,*) subname//': ERROR: dimensions for PCT_CROP are NOT what is expected'
-             call shr_sys_abort()
-             return
+             call shr_sys_abort(subname//' error: dimensions for PCT_CROP are NOT what is expected')
           end if
-          call check_ret(nf_inq_varid (ncid, 'PCT_NAT_PFT', varid), subname)
-          call check_ret(nf_get_var_double (ncid, varid, pct_nat_pft_i), subname)
+
+          allocate(data_nat_pft_i(0:num_natpft,ns_i) 
+          if (ier/=0) call shr_sys_abort()
+          call mkpio_get_rawdata(pioid, 'PCT_NAT_PFT', mesh_i, data_nat_pft_i, rc=rc)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
        end if
 
-       call check_ret(nf_close(ncid), subname)
-
-       ! -----------------------------------------------------------------
-       ! Otherwise if vegetation is prescribed everywhere
-       ! -----------------------------------------------------------------
     else
+
        ns_i = 1
        numpft_i = numpft+1
        allocate(pctnatveg_i(ns_i), &
@@ -508,8 +502,8 @@ contains
     end if
 
     ! Determine pctpft_o on output grid
-
     ! If total vegetation cover is prescribed from input...
+
     if ( use_input_pft .and. presc_cover ) then
 
        do no = 1,ns_o
@@ -518,39 +512,32 @@ contains
           pctcrop_o(no)   = pft_override%crop
        end do
 
-       ! otherewise if total cover isn't prescribed read it from the datasets
+    ! otherewise if total cover isn't prescribed read it from the datasets
     else
 
        ! Compute pctlnd_o, pctpft_o
-
-       ! TODO: create a route handle here
-       call gridmap_mapread(tgridmap, mapfname)
-
-       ! Error checks for domain and map consistencies
-       ! TODO: remove this check
-       call domain_checksame( tdomain, ldomain, tgridmap )
-
-       ! Obtain frac_dst
-       call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+       call regrid_rawdata(mesh_i, mesh_o, routehandle, pctnatveg_i, pctnatveg_o, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call regrid_rawdata(mesh_i, mesh_o, routehandle, pctcrop_i, pctcrop_o, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! Area-average percent cover on input grid [pctpft_i] to output grid 
        ! [pctpft_o] and correct [pctpft_o] according to land landmask
        ! Note that percent cover is in terms of total grid area.
-       pctlnd_o(:) = frac_dst(:) * 100._r8
+       pctlnd_o(:) = frac_dst(:) * 100._r8 ! ????
 
-       ! New format with extra variables on input
-       call gridmap_areaave_srcmask(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-       call gridmap_areaave_srcmask(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-
-       !
        ! If specific PFT/CFT's are NOT prescribed set them from the input file
-       !
        if ( .not. use_input_pft )then
           do m = 0, num_natpft
+
+             ! multiply data_pct_nat_pft_i(m,:) by pctnatveg_i*0.01_r8*mask_i
+             ! then regrid that
+
              call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), &
-                  pct_nat_pft_o(:,m), nodata=0._r8, &
-                  src_wt=pctnatveg_i*0.01_r8*tdomain%mask, &
-                  dst_wt=pctnatveg_o*0.01_r8, frac_dst=frac_dst)
+                                      pct_nat_pft_o(:,m), nodata=0._r8, &
+                                      src_wt = pctnatveg_i(:)*0.01_r8*mask(:), &
+                                      dst_wt = pctnatveg_o(:)*0.01_r8, frac_dst=frac_dst)
+
              do no = 1,ns_o
                 if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
                    if (m == 0) then
@@ -766,34 +753,18 @@ contains
   end subroutine mkpft
 
   !-----------------------------------------------------------------------
-
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkpft_parse_oride
-  !
-  ! !INTERFACE:
   subroutine mkpft_parse_oride( string )
     !
-    ! !DESCRIPTION:
     ! Parse the string with pft fraction and index information on it, to override
     ! the file with this information rather than reading from a file.
     !
-    ! !USES:
+
     use shr_string_mod, only: shr_string_betweenTags, shr_string_countChar
+
     ! !ARGUMENTS:
-    character(len=256), intent(IN) :: string  ! String to parse with PFT fraction 
-    ! and index data
-    !
-    ! !CALLED FROM:
-    ! subroutine mksrfdat in module mksrfdatMod
-    !
-    ! !REVISION HISTORY:
-    ! Author: Erik Kluzek
-    !
+    character(len=256), intent(IN) :: string  ! String to parse with PFT fraction  and index data
     !
     ! !LOCAL VARIABLES:
-    !EOP
     integer :: rc                         ! error return code
     integer :: num_elms                   ! number of elements
     character(len=256) :: substring       ! string between tags
@@ -836,28 +807,14 @@ contains
   end subroutine mkpft_parse_oride
 
   !-----------------------------------------------------------------------
-
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mkpft_check_oride
-  !
-  ! !INTERFACE:
   subroutine  mkpft_check_oride( error_happened )
     !
-    ! !DESCRIPTION:
     ! Check that the pft override values are valid
-    ! !USES:
-    implicit none
+
     ! !ARGUMENTS:
     logical, intent(out) :: error_happened ! Result, true if there was a problem
     !
-    ! !REVISION HISTORY:
-    ! Author: Erik Kluzek
-    !
-    !
     ! !LOCAL VARIABLES:
-    !EOP
     integer  :: i, j                         ! indices
     real(r8) :: sumpft                       ! Sum of pft_frc
     real(r8), parameter :: hndrd = 100.0_r8  ! A hundred percent
@@ -931,7 +888,6 @@ contains
   !-----------------------------------------------------------------------
   subroutine mkpftAtt( ncid, dynlanduse, xtype )
 
-    ! !DESCRIPTION:
     ! make PFT attributes on the output file
 
     use mkutilsMod , only : get_filename
@@ -1090,20 +1046,12 @@ contains
   end subroutine mkpftAtt
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: constructor
-  !
-  ! !INTERFACE:
   function constructor( ) result(this)
     !
-    ! !DESCRIPTION:
     ! Construct a new PFT override object
     !
     ! !ARGUMENTS:
-    implicit none
     type(pft_oride) :: this
-    !EOP
     character(len=32) :: subname = 'mkpftMod::constructor() '
 
     this%crop   = -1.0_r8
@@ -1123,24 +1071,17 @@ contains
     this%natpft(:) = -1.0_r8
     this%cft(:)    = -1.0_r8
     call this%InitZeroOut()
+
   end function constructor
 
-
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: InitZeroOut
-  !
-  ! !INTERFACE:
   subroutine InitZeroOut( this )
     !
-    ! !DESCRIPTION:
     ! Initialize a pft_oride object with vegetation that's zeroed out
     !
     ! !ARGUMENTS:
-    implicit none
     class(pft_oride), intent(inout) :: this
-    !EOP
+
     this%crop          = 0.0_r8
     this%natveg        = 0.0_r8
 
@@ -1148,23 +1089,17 @@ contains
     this%natpft(noveg) = 100.0_r8
     this%cft           = 0.0_r8
     this%cft(1)        = 100.0_r8
+
   end subroutine InitZeroOut
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: InitZeroOut
-  !
-  ! !INTERFACE:
   subroutine InitAllPFTIndex( this )
     !
-    ! !DESCRIPTION:
     ! Initialize a pft_oride object with vegetation that's zeroed out
     !
     ! !ARGUMENTS:
-    implicit none
     class(pft_oride), intent(inout) :: this
-    !EOP
+
     integer :: m, i                  ! Indices
     real(r8) :: croptot              ! Total of crop
     real(r8) :: natvegtot            ! Total of natural vegetation
@@ -1205,27 +1140,18 @@ contains
   end subroutine InitAllPFTIndex
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: clean
-  !
-  ! !INTERFACE:
   subroutine Clean( this )
     !
-    ! !DESCRIPTION:
     ! Clean up a PFT Oride object
     !
     ! !ARGUMENTS:
-    implicit none
     class(pft_oride), intent(inout) :: this
-    !EOP
+
     this%crop   = -1.0_r8
     this%natveg = -1.0_r8
     deallocate( this%natpft )
     deallocate( this%cft    )
 
   end subroutine Clean
-
-  !-----------------------------------------------------------------------
 
 end module mkpftMod

@@ -1,49 +1,27 @@
 module mktopostatsMod
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !MODULE: mktopostatsMod
-  !
-  ! !DESCRIPTION:
   ! make various topography statistics
-  !
-  ! !REVISION HISTORY:
-  ! Author: Bill Sacks
-  !
   !-----------------------------------------------------------------------
-  !
-  ! !USES:
+
   use shr_kind_mod, only : r8 => shr_kind_r8
   use mkdomainMod , only : domain_checksame
 
   implicit none
-
   private
 
-  ! !PUBLIC MEMBER FUNCTIONS:
-  public mktopostats            ! make topo stddev & mean slope
-  !
-  !EOP
-  !===============================================================
-contains
-  !===============================================================
+  public :: mktopostats            ! make topo stddev & mean slope
 
-  !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !IROUTINE: mktopostats
-  !
-  ! !INTERFACE:
+  type(ESMF_DynamicMask) :: dynamicMask
+
+!===============================================================
+contains
+!===============================================================
+
   subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_o, std_elev)
     !
-    ! !DESCRIPTION:
     ! make various topography statistics
     !
-    ! !USES:
-    use mkdomainMod, only : domain_type, domain_clean, domain_read
-    use mkgridmapMod
-    use mkncdio
     use mkdiagnosticsMod, only : output_diagnostics_continuous, output_diagnostics_continuous_outonly
     use mkchecksMod, only : min_bad, max_bad
     !
@@ -90,19 +68,31 @@ contains
        bypass_reading = .false.
     end if
 
-    ! -----------------------------------------------------------------
-    ! Read domain and mapping information, check for consistency
-    ! -----------------------------------------------------------------
+    ! Create a dynamic mask object
+    ! The dynamic mask object further holds a pointer to the routine that will be called in order to
+    ! handle dynamically masked elements - in this case its DynMaskProc (see below)
+    call ESMF_DynamicMaskSetR8R8R8(dynamicMask, dynamicSrcMaskValue=czero, dynamicMaskRoutine=DynMaskProc, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    if ( .not. bypass_reading )then
-       call domain_read(tdomain,datfname)
+    ! Create a route handle - the normal way
 
-       call gridmap_mapread(tgridmap, mapfname )
+    ! Do the regridding the normal way to create the mean
 
-       call gridmap_check( tgridmap, tgridmap%frac_src, tgridmap%frac_dst, subname )
-
-       call domain_checksame( tdomain, ldomain, tgridmap )
-
+    ! Compute the standard deviation
+    ! Use the dynamic masking could be used to do this. 
+    ! dst_array(no) = dst_array(no) + wt * (src_array(ni) - weighted_means(no))**2 part,
+    ! and then just do a plain sparse matrix multiply on a src Field of all 1.0 to do the
+    ! weight sum part, and then do the divide and sqrt locally on each PET.
+    
+    !  One issue is how to get the weight_means() in for each
+    !  dest. location. I think that you could pass them in via the
+    !  dst_array and then pull them out before doing the calculation, but
+    !  to do so that you to stop it from zeroing out the
+    !  dst array which you can do by setting
+    !  zeroregion=ESMF_REGION_EMPTY.This would also depend on the
+    !  calculation happening only once for each destination location,
+    !  which I would guess is true, but Gerhard can confirm.
+    
        ! -----------------------------------------------------------------
        ! Open input file, allocate memory for input data
        ! -----------------------------------------------------------------
@@ -176,5 +166,48 @@ contains
 
   end subroutine mktopostats
 
+  !================================================================================================
+  subroutine dynMaskProc(dynamicMaskList, dynamicSrcMaskValue, dynamicDstMaskValue, rc)
+
+    use ESMF, only : ESMF_RC_ARG_BAD
+
+    ! input/output arguments
+    type(ESMF_DynamicMaskElementR8R8R8) , pointer              :: dynamicMaskList(:)
+    real(ESMF_KIND_R8)                  , intent(in), optional :: dynamicSrcMaskValue
+    real(ESMF_KIND_R8)                  , intent(in), optional :: dynamicDstMaskValue
+    integer                             , intent(out)          :: rc
+
+    ! local variables
+    integer  :: i, j
+    real(ESMF_KIND_R8)  :: renorm
+    !---------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    ! Below - ONLY if you do NOT have the source masked out then do
+    ! the regridding (which is done explicitly here)
+
+    if (associated(dynamicMaskList)) then
+       do i=1, size(dynamicMaskList)
+          dynamicMaskList(i)%dstElement = czero ! set to zero
+          renorm = 0.d0 ! reset
+          if (dynamicSrcMaskValue /= dynamicMaskList(i)%srcElement(j)) then
+             do j = 1, size(dynamicMaskList(i)%factor)
+                dynamicMaskList(i)%dstElement = dynamicMaskList(i)%dstElement + &
+                     (dynamicMaskList(i)%factor(j) * dynamicMaskList(i)%srcElement(j))
+                renorm = renorm + dynamicMaskList(i)%factor(j)
+          enddo
+          if (renorm > 0.d0) then
+             dynamicMaskList(i)%dstElement = dynamicMaskList(i)%dstElement / renorm
+          else if (present(dynamicSrcMaskValue)) then
+             dynamicMaskList(i)%dstElement = dynamicSrcMaskValue
+          else
+             rc = ESMF_RC_ARG_BAD  ! error detected
+             return
+          endif
+       enddo
+    endif
+
+  end subroutine DynOcnMaskProc
 
 end module mktopostatsMod

@@ -34,17 +34,19 @@ module mkfileMod
 contains
 !=================================================================================
 
-  subroutine mkfile_fsurdat(nx, ny, mesh_o, dynlanduse, &
+  subroutine mkfile_fsurdat(nx, ny, mesh_o, lon, lat, dynlanduse, &
        pctlak, pctwet, lakedepth, organic, soil_color, nsoilcol, &
        urban_classes_g, urban_region, pctsand, pctclay, mapunits, fmaxsoil, soildepth, &
        glacier_region, ef_btr, ef_fet, ef_fdt, ef_shr, ef_grs, ef_crp, &
        pctgla, pctglcmec, topoglcmec, pctglcmec_gic, pctglcmec_icesheet, pctglc_gic, &
-       pctglc_icesheet, rc)
+       pctglc_icesheet, fpeat, rc)
 
     ! input/output variables
     integer         , intent(in) :: nx
     integer         , intent(in) :: ny
     type(ESMF_Mesh) , intent(in) :: mesh_o
+    real(r8)        , intent(in) :: lon(:) 
+    real(r8)        , intent(in) :: lat(:) 
     logical         , intent(in) :: dynlanduse
     real(r8)        , intent(in) :: pctlak(:)            ! percent of grid cell that is lake
     real(r8)        , intent(in) :: pctwet(:)            ! percent of grid cell that is wetland
@@ -73,6 +75,7 @@ contains
     real(r8)        , intent(in) :: pctglcmec_icesheet(:,:)
     real(r8)        , intent(in) :: pctglc_gic(:)
     real(r8)        , intent(in) :: pctglc_icesheet(:)
+    real(r8)        , intent(in) :: fpeat(:)
     integer         , intent(out):: rc
 #ifdef TODO
     type(harvestDataType) , intent(in) :: harvdata
@@ -80,16 +83,18 @@ contains
 
     ! local variables
     type(file_desc_t)    :: pioid
+    type(var_desc_t)     :: pio_varid
     character(len=256)   :: varname
     character(len=256)   :: longname
     character(len=256)   :: units
     integer              :: xtype              ! external type
-    integer, allocatable :: ind1D(:)           ! Indices of 1D harvest variables
-    integer, allocatable :: ind2D(:)           ! Indices of 2D harvest variables
-    integer              :: rcode
-    integer              :: n, i
+    integer              :: dimid
     logical              :: define_mode
     character(len=256)   :: lev1name
+    integer, allocatable :: ind1D(:)           ! Indices of 1D harvest variables
+    integer, allocatable :: ind2D(:)           ! Indices of 2D harvest variables
+    integer              :: n, i               ! Indices
+    integer              :: rcode              ! Error status
     character(len=*), parameter :: subname=' (mkfile_fsurdat) '
     !-----------------------------------------------------------------------
 
@@ -130,46 +135,90 @@ contains
           rcode = pio_enddef(pioid)
        end if
 
+       ! Write out non-spatial variables
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out mksoil_color"
+       if (define_mode) then
+          rcode = pio_def_var(pioid, 'mxsoil_color', PIO_INT, pio_varid)
+          rcode = pio_put_att(pioid, pio_varid, 'long_name', 'maximum numbers of soil colors')
+          rcode = pio_put_att(pioid, pio_varid, 'units', 'unitless')
+       else
+          rcode = pio_inq_varid(pioid, 'mxsoil_color', pio_varid)
+          rcode = pio_put_var(pioid, pio_varid, nsoilcol)
+       end if
+
+       if (.not. dynlanduse) then
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out GLC_MEC"
+          if (define_mode) then
+             rcode = pio_inq_dimid(pioid, 'nglcecp1', dimid)
+             rcode = pio_def_var(pioid, 'GLC_MEC', PIO_INT, (/dimid/), pio_varid)
+             rcode = pio_put_att(pioid, pio_varid, 'long_name', 'Glacier elevation class')
+             rcode = pio_put_att(pioid, pio_varid, 'm', 'unitless')
+          else
+             rcode = pio_inq_varid(pioid, 'GLC_MEC', pio_varid)
+             rcode = pio_put_var(pioid, pio_varid, nsoilcol)
+          end if
+       end if
+
+       ! Write out model grid
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LONGXY"
+       call mkfile_output(pioid, define_mode, mesh_o, xtype, 'LONGXY', 'model longitudes', &
+            'degrees', lat, rc=rc) 
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LATIXY"
+       call mkfile_output(pioid, define_mode, mesh_o, xtype, 'LATIXY', 'model latitudes', &
+            'degrees', lon, rc=rc) 
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! Write out spatial mapped variables
        if (.not. dynlanduse) then
 
-          ! TODO: implement this with pio
-          ! call ncd_defvar(ncid=ncid, 'GLC_MEC', xtype=xtype, &
-          !      dim1name='nglcecp1', long_name='Glacier elevation class', units='m')
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out peatland fraction"
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'peatf', 'peatland fraction', &
+               'unitless', fpeat, rc=rc) 
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glacier"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLACIER', 'percent glacier', 'unitless', &
                pctgla, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_mec"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLC_MEC', &
                'percent glacier for each glacier elevation class (% of landunit)', 'unitless', &
                pctglcmec, lev1name='nglcec', rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out topo_glc_mec"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'TOPO_GLC_MEC', &
                'mean elevation on glacier elevation classes', 'm', &
                topoglcmec, lev1name='nglcec', rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           if ( outnc_3dglc ) then
              if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_mec_gic"
              call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLC_MEC_GIC', &
                   'percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', 'unitless', &
                   pctglcmec_gic, lev1name='nglcec', rc=rc)
-
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          
              if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_mec_icesheet"
              call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLC_MEC_ICESHEET', &
                   'percent ice sheet for each glacier elevation class (% of landunit)', 'unitless', &
                   pctglcmec_icesheet, lev1name='nglcec', rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
              if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_gic"
              call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLC_GIC', &
                   'percent ice caps/glaciers (% of landunit)', 'unitless', &
                   pctglc_gic, rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
              if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_icesheet"
              call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLC_ICESHEET', &
                   'percent ice sheet (% of landunit)', 'unitless', &
                   pctglc_icesheet, rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
           end if
 
           if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_lake"

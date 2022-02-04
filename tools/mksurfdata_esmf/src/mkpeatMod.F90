@@ -13,10 +13,12 @@ module mkpeatMod
   use mkpioMod       , only : mkpio_iodesc_rawdata, mkpio_get_rawdata_level
   use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
   use mkutilsMod     , only : chkerr
-  use mkvarctl       , only : ndiag, root_task, outnc_3dglc
+  use mkvarctl       , only : ndiag, root_task, mpicom
 
   implicit none
   private
+
+#include <mpif.h>
 
   public :: mkpeat           ! regrid peat data
 
@@ -27,20 +29,20 @@ module mkpeatMod
 contains
 !===============================================================
 
-  subroutine mkpeat(file_mesh_i, file_data_i, mesh_o, organic_o, rc)
+  subroutine mkpeat(file_mesh_i, file_data_i, mesh_o, peat_o, rc)
 
     use mkdiagnosticsMod, only : output_diagnostics_area
     use mkchecksMod     , only : min_bad, max_bad
 
     ! input/output variables
-    character(len=*)  , intent(in)    :: file_mesh_i      ! input mesh file name
-    character(len=*)  , intent(in)    :: file_data_i      ! input data file name
+    character(len=*)  , intent(in)    :: file_mesh_i   ! input mesh file name
+    character(len=*)  , intent(in)    :: file_data_i   ! input data file name
     type(ESMF_Mesh)   , intent(in)    :: mesh_o
-    real(r8)          , intent(out)   :: peat_o(:,:)   ! output grid: fraction peat
+    real(r8)          , intent(inout) :: peat_o(:)     ! output grid: fraction peat
     integer           , intent(out)   :: rc
 
     ! local variables:
-    type(ESMF_RouteHandle) :: routehandle          ! nearest neighbor routehandle
+    type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
     type(file_desc_t)      :: pioid
     integer                :: ni,no,k
@@ -65,7 +67,7 @@ contains
     character(len=*), parameter :: subname = 'mkpeat'
     !-----------------------------------------------------------------------
 
-    if (root_task)
+    if (root_task) then
        write(ndiag,*)
        write(ndiag,'(a)') 'Attempting to make peat .....'
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
@@ -109,7 +111,7 @@ contains
     ! Read in peat_i
     allocate(peat_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'peat', mesh_i, peat_i, rc=rc)
+    call mkpio_get_rawdata(pioid, 'peatf', mesh_i, peat_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
@@ -124,16 +126,21 @@ contains
     call regrid_rawdata(mesh_i, mesh_o, routehandle, peat_i, peat_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     if (min_bad(peat_o, min_valid, 'peat') .or. max_bad(peat_o, max_valid, 'peat')) then
-       call shr_abort()
+       call shr_sys_abort(subname//" peat_o does not fall in range of min_valid/max_valid")
     end if
 
-#ifdef TODO
-    ! call output_diagnostics_area(area_i, area_o, mask_i, peat_i, peat_o, 'peat', .true., ndiag)
-#endif
-
-    ! Close the file 
+    ! Close the file
     call pio_closefile(pioid)
     call ESMF_VMLogMemInfo("After pio_closefile in "//trim(subname))
+
+    ! Output diagnostic info
+    allocate(area_i(ns_i))
+    allocate(area_o(ns_o))
+    call get_meshareas(mesh_i, area_i, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call get_meshareas(mesh_o, area_o, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call output_diagnostics_area(area_i, area_o, mask_i, peat_i, peat_o, 'peat', .true., ndiag)
 
     ! Release memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)

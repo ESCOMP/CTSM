@@ -14,6 +14,8 @@ module mksoilcolMod
   implicit none
   private
 
+#include <mpif.h>
+
   public  :: mksoilcol      ! Set soil colors
   private :: mkrank
 
@@ -49,13 +51,13 @@ contains
     real(r4), allocatable  :: data_i(:,:)
     real(r4), allocatable  :: data_o(:,:)
     real(r4), allocatable  :: soil_color_i(:)
-    logical                :: has_color ! whether this grid cell has non-zero color
+    logical                :: has_color     ! whether this grid cell has non-zero color
     integer                :: nsoilcol_local
     integer                :: maxindex(1)
-    real(r4), allocatable  :: gast_i(:) ! global area, by surface type
-    real(r4), allocatable  :: gast_o(:) ! global area, by surface type
-    real(r4)               :: sum_fldi  ! global sum of dummy input fld
-    real(r4)               :: sum_fldo  ! global sum of dummy output fld
+    real(r4), allocatable  :: loc_gast_i(:) ! local global area, by surface type
+    real(r4), allocatable  :: loc_gast_o(:) ! local global area, by surface type
+    real(r4), allocatable  :: gast_i(:)     ! global area, by surface type
+    real(r4), allocatable  :: gast_o(:)     ! global area, by surface type
     integer                :: rcode, ier
     character(len=*), parameter :: subname = 'mksoilcol'
     !-----------------------------------------------------------------------
@@ -196,8 +198,6 @@ contains
 
     ! Compare global area of each soil color on input and output grids
 
-    allocate(gast_i(0:nsoilcol))
-    allocate(gast_o(0:nsoilcol))
     allocate(area_i(ns_i))
     allocate(area_o(ns_o))
     call get_meshareas(mesh_i, area_i, rc)
@@ -205,27 +205,33 @@ contains
     call get_meshareas(mesh_o, area_o, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    gast_i(:) = 0.
-    do ni = 1,ns_i
-       k = soil_color_i(ni)
-       gast_i(k) = gast_i(k) + area_i(ni) * mask_i(ni)
-    end do
-    gast_o(:) = 0.
-    do no = 1,ns_o
-       k = soil_color_o(no)
-       gast_o(k) = gast_o(k) + area_o(no) * frac_o(no)
-    end do
+!     allocate(loc_gast_i(0:nsoilcol))
+!     allocate(loc_gast_o(0:nsoilcol))
+!     allocate(gast_i(0:nsoilcol))
+!     allocate(gast_o(0:nsoilcol))
+!     loc_gast_i(:) = 0.
+!     do ni = 1,ns_i
+!        k = soil_color_i(ni)
+!        loc_gast_i(k) = loc_gast_i(k) + area_i(ni) * mask_i(ni)
+!     end do
+!     call mpi_reduce(loc_gast_i, gast_i, nsoilcol+1, nsoilcol+1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
+!     loc_gast_o(:) = 0.
+!     do no = 1,ns_o
+!        k = soil_color_o(no)
+!        loc_gast_o(k) = loc_gast_o(k) + area_o(no) * frac_o(no)
+!     end do
+!     call mpi_reduce(loc_gast_o, gast_o, nsoilcol+1, nsoilcol+1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
 
-    write (ndiag,*)
-    write (ndiag,'(1x,70a1)') ('.',k=1,70)
-    write (ndiag,101)
-101 format (1x,'soil color type',5x,' input grid area output grid area',/ &
-            1x,20x,'     10**6 km**2','      10**6 km**2')
-    write (ndiag,'(1x,70a1)') ('.',k=1,70)
-    write (ndiag,*)
-    do k = 0, nsoilcol
-       write (ndiag,'(1x,a,i3,d16.3,d17.3)') 'class ',k, gast_i(k)*1.e-6, gast_o(k)*1.e-6
-    end do
+!     write (ndiag,*)
+!     write (ndiag,'(1x,70a1)') ('.',k=1,70)
+!     write (ndiag,101)
+! 101 format (1x,'soil color type',5x,' input grid area output grid area',/ &
+!             1x,20x,'     10**6 km**2','      10**6 km**2')
+!     write (ndiag,'(1x,70a1)') ('.',k=1,70)
+!     write (ndiag,*)
+!     do k = 0, nsoilcol
+!        write (ndiag,'(1x,a,i3,d16.3,d17.3)') 'class ',k, gast_i(k)*1.e-6, gast_o(k)*1.e-6
+!     end do
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made soil color classes'
@@ -233,12 +239,6 @@ contains
     end if
 
     ! Clean up memory
-    deallocate(mask_i)
-    deallocate(data_i)
-    deallocate(data_o)
-    deallocate(area_i)
-    deallocate(area_o)
-    deallocate(soil_color_i)
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
