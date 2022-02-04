@@ -21,6 +21,7 @@ manage_externals.log
 # editor files
 *.swp
 *~
+.vscode/
 
 # vim files (from https://github.com/github/gitignore/blob/master/Global/Vim.gitignore)
 # Swap
@@ -112,6 +113,3 @@ core.*
 *.log !run.log
 *.pyc
 Depends
-
-# ssr
-.vscode/
