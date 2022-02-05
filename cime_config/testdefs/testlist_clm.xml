@@ -1568,6 +1568,15 @@
       <option name="comment"  >Transient production future scenario SSP5-8.5 extension case</option>
     </options>
   </test>
+  <test name="SMS_Ld5" grid="f09_g17" compset="ISSP370ExtClm50BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Control 2100 production future scenario SSP3-7.0 extension case</option>
+    </options>
+  </test>
   <test name="SMS_Ld5" grid="f10_f10_musgs" compset="ISSP245Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>

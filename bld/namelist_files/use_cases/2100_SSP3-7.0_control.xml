@@ -23,4 +23,7 @@
 <stream_year_first_urbantv >2100</stream_year_first_urbantv>
 <stream_year_last_urbantv  >2100</stream_year_last_urbantv>
 
+<fsurdat hgrid="0.9x1.25"  use_crop=".true." >
+lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr1850_c190214.nc</fsurdat>
+
 </namelist_defaults>
