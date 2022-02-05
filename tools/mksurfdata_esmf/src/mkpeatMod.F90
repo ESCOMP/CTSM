@@ -3,7 +3,7 @@ module mkpeatMod
   !-----------------------------------------------------------------------
   ! make fraction peat from input peat data
   !-----------------------------------------------------------------------
-  !
+
   use ESMF
   use pio
   use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
@@ -35,10 +35,10 @@ contains
     use mkchecksMod     , only : min_bad, max_bad
 
     ! input/output variables
-    character(len=*)  , intent(in)    :: file_mesh_i   ! input mesh file name
-    character(len=*)  , intent(in)    :: file_data_i   ! input data file name
-    type(ESMF_Mesh)   , intent(in)    :: mesh_o
-    real(r8)          , intent(inout) :: peat_o(:)     ! output grid: fraction peat
+    character(len=*)  , intent(in)    :: file_mesh_i ! input mesh file name
+    character(len=*)  , intent(in)    :: file_data_i ! input data file name
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o      ! input model mesh
+    real(r8)          , intent(inout) :: peat_o(:)   ! output grid: fraction peat
     integer           , intent(out)   :: rc
 
     ! local variables:
@@ -52,18 +52,17 @@ contains
     real(r8), allocatable  :: frac_o(:)
     real(r8), allocatable  :: area_i(:)
     real(r8), allocatable  :: area_o(:)
-    real(r8), allocatable  :: peat_i(:)            ! input grid: percent glac
-    real(r8)               :: sum_fldi             ! global sum of dummy input fld
-    real(r8)               :: sum_fldo             ! global sum of dummy output fld
-    real(r8)               :: gglac_i              ! input  grid: global glac
-    real(r8)               :: garea_i              ! input  grid: global area
-    real(r8)               :: gglac_o              ! output grid: global glac
-    real(r8)               :: garea_o              ! output grid: global area
-    integer                :: ier, rcode           ! error status
-    real(r8)               :: relerr = 0.00001     ! max error: sum overlap wts ne 1
-    real(r8), allocatable :: data_i(:)          ! data on input grid
-    real(r8), parameter :: min_valid = 0._r8          ! minimum valid value
-    real(r8), parameter :: max_valid = 100.000001_r8  ! maximum valid value
+    real(r8), allocatable  :: peat_i(:)              ! input grid: percent peat
+    real(r8)               :: sum_fldi               ! global sum of dummy input fld
+    real(r8)               :: sum_fldo               ! global sum of dummy output fld
+    real(r8)               :: gglac_i                ! input  grid: global glac
+    real(r8)               :: garea_i                ! input  grid: global area
+    real(r8)               :: gglac_o                ! output grid: global glac
+    real(r8)               :: garea_o                ! output grid: global area
+    integer                :: ier, rcode             ! error status
+    real(r8), allocatable  :: data_i(:)              ! 2d data on input grid for dominant search
+    real(r8), parameter :: min_valid = 0._r8         ! minimum valid value
+    real(r8), parameter :: max_valid = 100.000001_r8 ! maximum valid value
     character(len=*), parameter :: subname = 'mkpeat'
     !-----------------------------------------------------------------------
 
@@ -99,7 +98,7 @@ contains
     call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
-       if (frac_i(ni) > 0._r4) then
+       if (frac_i(ni) > 0._r8) then
           mask_i(ni) = 1
        else
           mask_i(ni) = 0
@@ -131,16 +130,15 @@ contains
 
     ! Close the file
     call pio_closefile(pioid)
-    call ESMF_VMLogMemInfo("After pio_closefile in "//trim(subname))
 
     ! Output diagnostic info
-    allocate(area_i(ns_i))
-    allocate(area_o(ns_o))
-    call get_meshareas(mesh_i, area_i, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call get_meshareas(mesh_o, area_o, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call output_diagnostics_area(area_i, area_o, mask_i, peat_i, peat_o, 'peat', .true., ndiag)
+    ! allocate(area_i(ns_i))
+    ! allocate(area_o(ns_o))
+    ! call get_meshareas(mesh_i, area_i, rc)
+    ! if (chkerr(rc,__LINE__,u_FILE_u)) return
+    ! call get_meshareas(mesh_o, area_o, rc)
+    ! if (chkerr(rc,__LINE__,u_FILE_u)) return
+    ! call output_diagnostics_area(area_i, area_o, mask_i, peat_i, peat_o, 'peat', .true., ndiag)
 
     ! Release memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
@@ -148,10 +146,6 @@ contains
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
-
-    if (root_task) then
-       write (ndiag,'(a)') 'Successfully made organic matter '
-    end if
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made peat'

@@ -38,8 +38,8 @@ contains
        pctlak, pctwet, lakedepth, organic, soil_color, nsoilcol, &
        urban_classes_g, urban_region, pctsand, pctclay, mapunits, fmaxsoil, soildepth, &
        glacier_region, ef_btr, ef_fet, ef_fdt, ef_shr, ef_grs, ef_crp, &
-       pctgla, pctglcmec, topoglcmec, pctglcmec_gic, pctglcmec_icesheet, pctglc_gic, &
-       pctglc_icesheet, fpeat, rc)
+       elevclass, pctgla, pctglcmec, topoglcmec, pctglcmec_gic, pctglcmec_icesheet, pctglc_gic, &
+       pctglc_icesheet, fpeat, agfirepkmon, gdp, rc)
 
     ! input/output variables
     integer         , intent(in) :: nx
@@ -68,6 +68,7 @@ contains
     real(r8)        , intent(in) :: ef_shr(:)
     real(r8)        , intent(in) :: ef_grs(:)
     real(r8)        , intent(in) :: ef_crp(:)
+    real(r8)        , intent(in) :: elevclass(:)
     real(r8)        , intent(in) :: pctgla(:)
     real(r8)        , intent(in) :: pctglcmec(:,:)
     real(r8)        , intent(in) :: topoglcmec(:,:)
@@ -76,6 +77,8 @@ contains
     real(r8)        , intent(in) :: pctglc_gic(:)
     real(r8)        , intent(in) :: pctglc_icesheet(:)
     real(r8)        , intent(in) :: fpeat(:)
+    integer         , intent(in) :: agfirepkmon(:)
+    real(r8)        , intent(in) :: gdp(:)
     integer         , intent(out):: rc
 #ifdef TODO
     type(harvestDataType) , intent(in) :: harvdata
@@ -135,7 +138,26 @@ contains
           rcode = pio_enddef(pioid)
        end if
 
+       ! --------------------------------
+       ! Write out model grid
+       ! --------------------------------
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out model grid"
+
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LONGXY"
+       call mkfile_output(pioid, define_mode, mesh_o, xtype, 'LONGXY', 'model longitudes', &
+            'degrees', lat, rc=rc) 
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LATIXY"
+       call mkfile_output(pioid, define_mode, mesh_o, xtype, 'LATIXY', 'model latitudes', &
+            'degrees', lon, rc=rc) 
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! --------------------------------
        ! Write out non-spatial variables
+       ! --------------------------------
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out non-spatial variables"
+
        if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out mksoil_color"
        if (define_mode) then
           rcode = pio_def_var(pioid, 'mxsoil_color', PIO_INT, pio_varid)
@@ -150,28 +172,31 @@ contains
           if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out GLC_MEC"
           if (define_mode) then
              rcode = pio_inq_dimid(pioid, 'nglcecp1', dimid)
-             rcode = pio_def_var(pioid, 'GLC_MEC', PIO_INT, (/dimid/), pio_varid)
+             rcode = pio_def_var(pioid, 'GLC_MEC', PIO_DOUBLE, (/dimid/), pio_varid)
              rcode = pio_put_att(pioid, pio_varid, 'long_name', 'Glacier elevation class')
              rcode = pio_put_att(pioid, pio_varid, 'm', 'unitless')
           else
              rcode = pio_inq_varid(pioid, 'GLC_MEC', pio_varid)
-             rcode = pio_put_var(pioid, pio_varid, nsoilcol)
+             rcode = pio_put_var(pioid, pio_varid, elevclass)
           end if
        end if
 
-       ! Write out model grid
-       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LONGXY"
-       call mkfile_output(pioid, define_mode, mesh_o, xtype, 'LONGXY', 'model longitudes', &
-            'degrees', lat, rc=rc) 
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LATIXY"
-       call mkfile_output(pioid, define_mode, mesh_o, xtype, 'LATIXY', 'model latitudes', &
-            'degrees', lon, rc=rc) 
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       ! Write out spatial mapped variables
+       ! --------------------------------
+       ! Write out spatial variables
+       ! --------------------------------
        if (.not. dynlanduse) then
+
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out spatial variables"
+
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out gdp"
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'gdp', 'gdp', &
+               'unitless', gdp, rc=rc) 
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out peatland fraction"
+          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'peatf', 'peatland fraction', &
+               'unitless', fpeat, rc=rc) 
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out peatland fraction"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'peatf', 'peatland fraction', &
@@ -342,6 +367,12 @@ contains
        call mkfile_output(pioid, define_mode, mesh_o, 'GLACIER_REGION', 'glacier region ID', &
             'unitless', glacier_region, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing abm (agricultural fire peak month)"
+       call mkfile_output(pioid, define_mode, mesh_o, 'abm', 'agricultural fire peak month', &
+            'unitless', agfirepkmon, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
     end do
 
     ! Close surface dataset

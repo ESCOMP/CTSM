@@ -467,15 +467,17 @@ contains
        write(ndiag,*)
        write(ndiag,'(a)')'Output configuration variables'
        if (outnc_1d) then
-          write(ndiag,'(a)')' output file will be 1d format'
+          write(ndiag,'(a)')' output file is 1d format'
        else
-          write(ndiag,'(a)')' fsurdat is 2d lat/lon grid'
+          write(ndiag,'(a)')' output file is 2d lat/lon format'
        end if
        if ( outnc_large_files ) then
           write(ndiag,'(a)')' Output file in NetCDF 64-bit large_files format'
        end if
        if ( outnc_double )then
           write(ndiag,'(a)')' Output ALL data in file as 64-bit'
+       else
+          write(ndiag,'(a)')' Output ALL data in file as 32-bit'
        end if
        if ( outnc_vic )then
           write(ndiag,'(a)')' Output VIC fields'
@@ -483,17 +485,20 @@ contains
        if ( outnc_3dglc )then
           write(ndiag,'(a)')' Output optional 3D glacier fields (mostly used for verification of the glacier model)'
        end if
-       if ( outnc_3dglc )then
-          write(ndiag,'(a)')' Output optional 3D glacier fields (mostly used for verification of the glacier model)'
-       end if
        if ( all_urban )then
-          write(ndiag,'(a)') ' Output ALL data in file as 100% urban'
+          write(ndiag,'(a)') ' all_urban is true => Output ALL data in file as 100% urban'
+       else
+          write(ndiag,'(a)') ' all_urban is false '
        end if
        if ( no_inlandwet )then
-          write(ndiag,'(a)') ' Set wetland to 0% over land'
+          write(ndiag,'(a)') ' no_inlandwet is true => Set wetland to 0% over land'
+       else
+          write(ndiag,'(a)') ' no_inlandwet is false'
        end if
        if (all_veg) then
-          write(ndiag,'(a)') ' Output ALL data in file as 100% vegetated'
+          write(ndiag,'(a)') ' all_veg is true => Output ALL data in file as 100% vegetated'
+       else
+          write(ndiag,'(a)') ' all_veg is false '
        end if
        if (urban_skip_abort_on_invalid_data_check) then
           write(ndiag, '(a)') " WARNING: aborting on invalid data check in urban has been disabled!"

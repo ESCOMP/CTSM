@@ -233,18 +233,16 @@ contains
 !        write (ndiag,'(1x,a,i3,d16.3,d17.3)') 'class ',k, gast_i(k)*1.e-6, gast_o(k)*1.e-6
 !     end do
 
-    if (root_task) then
-       write (ndiag,'(a)') 'Successfully made soil color classes'
-       write (ndiag,'(a)')
-    end if
-
     ! Clean up memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
-    call ESMF_LogWrite(subname//' finished routine mksoilcol')
+    if (root_task) then
+       write (ndiag,'(a)') 'Successfully made soil color classes'
+       write (ndiag,'(a)')
+    end if
 
   end subroutine mksoilcol
 

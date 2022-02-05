@@ -7,6 +7,7 @@ module mkdomainMod
   use ESMF
   use shr_kind_mod, only : r8 => shr_kind_r8
   use mkutilsMod  , only : chkerr
+  use mkvarctl    , only : root_task, ndiag
 
   implicit none
   private
@@ -38,6 +39,11 @@ contains
 
     rc = ESMF_SUCCESS
 
+    if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to create model lats and lons from model mesh .....'
+    end if
+
     call ESMF_MeshGet(mesh_o, spatialDim=spatialDim, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     allocate(ownedElemCoords(spatialDim*ns_o))
@@ -47,6 +53,10 @@ contains
        lon_o(no) = ownedElemCoords(2*no-1)
        lat_o(no) = ownedElemCoords(2*no)
     end do
+
+    if (root_task) then
+       write (ndiag,'(a)') 'Successfully made model lats and lons'
+    end if
 
   end subroutine mkdomain
 

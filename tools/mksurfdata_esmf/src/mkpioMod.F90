@@ -546,10 +546,6 @@ contains
 
     rc = ESMF_SUCCESS
 
-    if (root_task) then
-       write(ndiag,'(a)') 'setting iodesc for : '//trim(varname)
-    end if
-
     ! get pio variable id, type and dimension information
     rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
     rcode = pio_inq_vartype(pioid, pio_varid, pio_vartype)

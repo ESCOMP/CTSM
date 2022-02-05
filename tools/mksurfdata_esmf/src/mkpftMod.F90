@@ -94,8 +94,8 @@ contains
     if ( zero_out_l .and. use_input_pft )then
        write(6,*) subname//"trying to both zero out all PFT's as well as set them to specific values"
        call shr_sys_abort()
-       return
     end if
+
     ! If zeroing out, set use_input_pft to true so the pft_override will be used
     if( zero_out_l )then
        nzero = 0
@@ -383,6 +383,7 @@ contains
     call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    ! pres_cover is true if zero_out_l is true
     if ( .not. presc_cover ) then
 
        ! get dimensions
@@ -478,28 +479,24 @@ contains
        ns_i = 1
        numpft_i = numpft+1
        allocate(pctnatveg_i(ns_i), &
-            pctnatveg_o(ns_o), &
-            pctcrop_i(ns_i),   &
-            pctcrop_o(ns_o),   &
-            pct_cft_i(ns_i,1:num_cft), &
-            pct_cft_o(ns_o,1:num_cft), &
-            pct_nat_pft_i(ns_i,0:num_natpft), &
-            pct_nat_pft_o(ns_o,0:num_natpft), &
-            stat=ier)
-       if (ier/=0)then
-          call shr_sys_abort()
-          return
-       end if
+                pctnatveg_o(ns_o), &
+                pctcrop_i(ns_i),   &
+                pctcrop_o(ns_o),   &
+                pct_cft_i(ns_i,1:num_cft), &
+                pct_cft_o(ns_o,1:num_cft), &
+                pct_nat_pft_i(ns_i,0:num_natpft), &
+                pct_nat_pft_o(ns_o,0:num_natpft), &
+                stat=ier)
+       if (ier/=0) call shr_sys_abort()
+
     end if
+
     allocate(pctpft_i(ns_i,0:(numpft_i-1)), &
-         pctpft_o(ns_o,0:(numpft_i-1)), &
-         pctnatpft_i(ns_i),             &
-         pctcft_i(ns_i),                &
-         stat=ier)
-    if (ier/=0)then
-       call shr_sys_abort()
-       return
-    end if
+             pctpft_o(ns_o,0:(numpft_i-1)), &
+             pctnatpft_i(ns_i),             &
+             pctcft_i(ns_i),                &
+             stat=ier)
+    if (ier/=0) call shr_sys_abort()
 
     ! Determine pctpft_o on output grid
     ! If total vegetation cover is prescribed from input...
@@ -511,8 +508,10 @@ contains
           pctnatveg_o(no) = pft_override%natveg
           pctcrop_o(no)   = pft_override%crop
        end do
-
+       
+    ! ----------------------------------------
     ! otherewise if total cover isn't prescribed read it from the datasets
+    ! ----------------------------------------
     else
 
        ! Compute pctlnd_o, pctpft_o
@@ -524,21 +523,26 @@ contains
        ! Area-average percent cover on input grid [pctpft_i] to output grid 
        ! [pctpft_o] and correct [pctpft_o] according to land landmask
        ! Note that percent cover is in terms of total grid area.
-       pctlnd_o(:) = frac_dst(:) * 100._r8 ! ????
+       pctlnd_o(:) = frac_o(:) * 100._r8
 
+         
+       ! ----------------------------------------
        ! If specific PFT/CFT's are NOT prescribed set them from the input file
+       ! ----------------------------------------
        if ( .not. use_input_pft )then
-          do m = 0, num_natpft
 
-             ! multiply data_pct_nat_pft_i(m,:) by pctnatveg_i*0.01_r8*mask_i
-             ! then regrid that
+          ! TODO: allocate data_pct_nat_pft_i and data_pct_nat_pft_o
 
-             call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), &
-                                      pct_nat_pft_o(:,m), nodata=0._r8, &
-                                      src_wt = pctnatveg_i(:)*0.01_r8*mask(:), &
-                                      dst_wt = pctnatveg_o(:)*0.01_r8, frac_dst=frac_dst)
-
+          do m = 0,num_natpft
+             do ni = 1,ns_i
+                data_pct_nat_pft_i(m,ni) = pct_nat_pft_i(ni,m) * pctnatveg_i(ni) * 0.01_r8 * mask_i(ni)
+             end do
+          end do
+          call regrid_rawdata(mesh_i, mesh_o, routehandle, data_pct_nat_pft_i, data_pct_nat_pft_o, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          do m = 0,num_natpft
              do no = 1,ns_o
+                pct_nat_pft_o(no,m) = data_pct_nat_pft_o(no,m) / pctnatveg_o(no) * 0.01_r8 
                 if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
                    if (m == 0) then
                       pct_nat_pft_o(no,m) = 100._r8
@@ -546,12 +550,15 @@ contains
                       pct_nat_pft_o(no,m) = 0._r8
                    endif
                 end if
-             enddo
+             end do
           end do
+
           do m = 1, num_cft
+
              call gridmap_areaave_scs(tgridmap, pct_cft_i(:,m), pct_cft_o(:,m), &
                   nodata=0._r8, src_wt=pctcrop_i*0.01_r8*tdomain%mask, &
                   dst_wt=pctcrop_o*0.01_r8, frac_dst=frac_dst)
+
              do no = 1,ns_o
                 if (pctlnd_o(no) < 1.0e-6 .or. pctcrop_o(no) < 1.0e-6) then
                    if (m == 1) then
@@ -562,7 +569,11 @@ contains
                 end if
              enddo
           end do
-          ! Otherwise do some error checking to make sure specific veg types are given where nat-veg and crop is assigned
+
+       ! ----------------------------------------
+       ! Otherwise do some error checking to make sure specific veg
+       ! types are given where nat-veg and crop is assigned
+       ! ----------------------------------------
        else
           do no = 1,ns_o
              if (pctlnd_o(no) > 1.0e-6 .and. pctnatveg_o(no) > 1.0e-6) then
@@ -570,14 +581,13 @@ contains
                    write(6,*) subname//': ERROR: no natural vegetation PFTs are being prescribed but there are natural '// &
                         'vegetation areas: provide at least one natural veg PFT'
                    call shr_sys_abort()
-                   return
                 end if
              end if
              if (pctlnd_o(no) > 1.0e-6 .and. pctcrop_o(no) > 1.0e-6) then
                 if ( pft_override%crop <= 0.0_r8 )then
-                   write(6,*) subname//': ERROR: no crop CFTs are being prescribed but there are crop areas: provide at least one CFT'
+                   write(6,*) subname//': ERROR: no crop CFTs are being prescribed '&
+                        //' but there are crop areas: provide at least one CFT'
                    call shr_sys_abort()
-                   return
                 end if
              end if
           end do
@@ -802,7 +812,6 @@ contains
        return
     end if
     read(substring,*) pft_idx(0:num_elms)
-    !-----------------------------------------------------------------------
 
   end subroutine mkpft_parse_oride
 
@@ -810,11 +819,11 @@ contains
   subroutine  mkpft_check_oride( error_happened )
     !
     ! Check that the pft override values are valid
-
-    ! !ARGUMENTS:
+    !
+    ! input/output variables
     logical, intent(out) :: error_happened ! Result, true if there was a problem
     !
-    ! !LOCAL VARIABLES:
+    ! local variables:
     integer  :: i, j                         ! indices
     real(r8) :: sumpft                       ! Sum of pft_frc
     real(r8), parameter :: hndrd = 100.0_r8  ! A hundred percent
@@ -832,7 +841,6 @@ contains
        write(6,*) 'With PFT index      : ', pft_idx(0:nzero)
        error_happened = .true.
        call shr_sys_abort()
-       return
     else
        use_input_pft = .true.
        nzero = numpft
@@ -848,19 +856,16 @@ contains
              write(6,*) subname//'PFT fraction is out of range: pft_frc=', pft_frc(i)
              error_happened = .true.
              call shr_sys_abort()
-             return
           else if ( pft_frc(i) > 0.0_r8 .and. pft_idx(i) == -1 )then
              write(6,*) subname//'PFT fraction > zero, but index NOT set: pft_idx=', pft_idx(i)
              error_happened = .true.
              call shr_sys_abort()
-             return
           end if
           ! PFT index out of range
           if ( pft_idx(i) < 0 .or. pft_idx(i) > numpft )then
              write(6,*) subname//'PFT index is out of range: ', pft_idx(i)
              error_happened = .true.
              call shr_sys_abort()
-             return
           end if
           ! Make sure index values NOT used twice
           do j = 0, i-1
@@ -868,7 +873,6 @@ contains
                 write(6,*) subname//'Same PFT index is used twice: ', pft_idx(i)
                 error_happened = .true.
                 call shr_sys_abort()
-                return
              end if
           end do
        end do
@@ -878,7 +882,6 @@ contains
              write(6,*) subname//'After PFT fraction is zeroed out, fraction is non zero, or index set'
              error_happened = .true.
              call shr_sys_abort()
-             return
           end if
        end do
     end if

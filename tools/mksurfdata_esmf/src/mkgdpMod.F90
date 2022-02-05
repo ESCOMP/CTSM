@@ -1,144 +1,156 @@
 module mkgdpMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: mkgdpMod
-!
-! !DESCRIPTION:
-! make GDP from input GDP data
-!
-! !REVISION HISTORY:
-! Author: Sam Levis and Bill Sacks
-!
-!-----------------------------------------------------------------------
-!
-! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use mkdomainMod , only : domain_checksame
+  !-----------------------------------------------------------------------
+  ! make GDP from input GDP data
+  !-----------------------------------------------------------------------
+  !
+  use ESMF
+  use pio
+  use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
+  use shr_sys_mod    , only : shr_sys_abort
+  use mkpioMod       , only : mkpio_get_rawdata, pio_iotype, pio_ioformat, pio_iosystem
+  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
+  use mkutilsMod     , only : chkerr
+  use mkvarctl       , only : ndiag, root_task, mpicom
 
   implicit none
-
   private
 
-! !PUBLIC MEMBER FUNCTIONS:
-  public mkgdp            ! regrid gdp data
-!
-!EOP
+#include <mpif.h>
+
+  public :: mkgdp            ! regrid gdp data
+
+  character(len=*) , parameter :: u_FILE_u = &
+       __FILE__
+
 !===============================================================
 contains
 !===============================================================
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: mkgdp
-!
-! !INTERFACE:
-subroutine mkgdp(ldomain, mapfname, datfname, ndiag, gdp_o)
-!
-! !DESCRIPTION:
-! make GDP from input GDP data
-!
-! !USES:
-  use mkdomainMod, only : domain_type, domain_clean, domain_read
-  use mkgridmapMod
-  use mkncdio
-  use mkdiagnosticsMod, only : output_diagnostics_continuous
-  use mkchecksMod, only : min_bad
-!
-! !ARGUMENTS:
-  
-  implicit none
-  type(domain_type) , intent(in) :: ldomain
-  character(len=*)  , intent(in) :: mapfname  ! input mapping file name
-  character(len=*)  , intent(in) :: datfname  ! input data file name
-  integer           , intent(in) :: ndiag     ! unit number for diag out
-  real(r8)          , intent(out):: gdp_o(:)  ! output grid: GDP (x1000 1995 US$ per capita)
-!
-! !CALLED FROM:
-! subroutine mksrfdat in module mksrfdatMod
-!
-! !REVISION HISTORY:
-! Author: Sam Levis and Bill Sacks
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-  type(gridmap_type)    :: tgridmap
-  type(domain_type)     :: tdomain            ! local domain
-  real(r8), allocatable :: data_i(:)          ! data on input grid
-  real(r8), allocatable :: frac_dst(:)        ! output fractions
-  real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
-  integer  :: ncid,varid                      ! input netCDF id's
-  integer  :: ier                             ! error status
+  subroutine mkgdp(file_mesh_i, file_data_i, mesh_o, gdp_o, rc)
+    !
+    ! make GDP from input GDP data
+    !
+    use mkdiagnosticsMod, only : output_diagnostics_continuous
+    use mkchecksMod, only : min_bad
+    !
+    ! input/output variables
+    character(len=*)  , intent(in)    :: file_mesh_i ! input mesh file name
+    character(len=*)  , intent(in)    :: file_data_i ! input data file name
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o      ! input model mesh
+    real(r8)          , intent(inout) :: gdp_o(:)    ! output grid: GDP (x1000 1995 US$ per capita)
+    integer           , intent(out)   :: rc
 
-  real(r8), parameter :: min_valid = 0._r8    ! minimum valid value
+    ! local variables:
+    type(ESMF_RouteHandle) :: routehandle
+    type(ESMF_Mesh)        :: mesh_i
+    type(file_desc_t)      :: pioid
+    integer                :: ni,no,k
+    integer                :: ns_i, ns_o
+    integer , allocatable  :: mask_i(:)
+    real(r8), allocatable  :: frac_i(:)
+    real(r8), allocatable  :: frac_o(:)
+    real(r8), allocatable  :: area_i(:)
+    real(r8), allocatable  :: area_o(:)
+    real(r8), allocatable  :: gdp_i(:)             ! input grid: percent gdp
+    real(r8)               :: sum_fldi             ! global sum of dummy input fld
+    real(r8)               :: sum_fldo             ! global sum of dummy output fld
+    real(r8)               :: gglac_i              ! input  grid: global glac
+    real(r8)               :: garea_i              ! input  grid: global area
+    real(r8)               :: gglac_o              ! output grid: global glac
+    real(r8)               :: garea_o              ! output grid: global area
+    integer                :: ier, rcode           ! error status
+    real(r8), parameter    :: min_valid = 0._r8    ! minimum valid value
+    character(len=*), parameter :: subname = 'mkgdp'
+    !-----------------------------------------------------------------------
 
-  character(len=32) :: subname = 'mkgdp'
-!-----------------------------------------------------------------------
+    if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to make GDP.....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
+    end if
 
-  write (6,*) 'Attempting to make GDP.....'
+    ! Open input data file
+    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
-  ! -----------------------------------------------------------------
-  ! Read domain and mapping information, check for consistency
-  ! -----------------------------------------------------------------
+    ! Read in input mesh
+    mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
 
-  call domain_read(tdomain,datfname)
-  
-  call gridmap_mapread(tgridmap, mapfname )
+    ! Determine ns_i
+    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-  ! Obtain frac_dst
-  allocate(frac_dst(ldomain%ns), stat=ier)
-  if (ier/=0) call abort()
-  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+    ! Determine ns_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-  allocate(mask_r8(tdomain%ns), stat=ier)
-  if (ier/=0) call abort()
-  mask_r8 = tdomain%mask
-  call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
+    ! Get the landmask from the file and reset the mesh mask based on that
+    allocate(frac_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(mask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do ni = 1,ns_i
+       if (frac_i(ni) > 0._r4) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
+       end if
+    end do
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-  call domain_checksame( tdomain, ldomain, tgridmap )
+    ! Read in peat_i
+    allocate(gdp_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, 'gdp', mesh_i, gdp_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-  ! -----------------------------------------------------------------
-  ! Open input file, allocate memory for input data
-  ! -----------------------------------------------------------------
+    ! Create a route handle between the input and output mesh and get frac_o
+    allocate(frac_o(ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
-  write(6,*)'Open GDP file: ', trim(datfname)
-  call check_ret(nf_open(datfname, 0, ncid), subname)
+    ! Regrid gdp
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, gdp_i, gdp_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (min_bad(gdp_o, min_valid, 'gdp')) then
+       call shr_sys_abort(subname//' error in reading gdp_i')
+    end if
 
-  allocate(data_i(tdomain%ns), stat=ier)
-  if (ier/=0) call abort()
+    ! Close the file
+    call pio_closefile(pioid)
+    call ESMF_VMLogMemInfo("After pio_closefile in "//trim(subname))
 
-  ! -----------------------------------------------------------------
-  ! Regrid gdp
-  ! -----------------------------------------------------------------
+    ! Output diagnostic info
+    allocate(area_i(ns_i))
+    allocate(area_o(ns_o))
+    call get_meshareas(mesh_i, area_i, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call get_meshareas(mesh_o, area_o, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    ! call  output_diagnostics_continuous(area_i, area_o, mask_i, frac_o, &
+    !      gdp_i, gdp_o, "GDP", "x1000 US$ per capita", ndiag)
 
-  call check_ret(nf_inq_varid (ncid, 'gdp', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave_srcmask(tgridmap, data_i, gdp_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+    ! Clean up memory
+    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
-  ! Check validity of output data
-  if (min_bad(gdp_o, min_valid, 'gdp')) then
-     call abort()
-  end if
+    if (root_task) then
+       write (ndiag,'(a)') 'Successfully made GDP'
+       write (ndiag,'(a)')
+    end if
 
-  call output_diagnostics_continuous(data_i, gdp_o, tgridmap, "GDP", "x1000 US$ per capita", ndiag, tdomain%mask, frac_dst)
-
-  ! -----------------------------------------------------------------
-  ! Close files and deallocate dynamic memory
-  ! -----------------------------------------------------------------
-
-  call check_ret(nf_close(ncid), subname)
-  call domain_clean(tdomain) 
-  call gridmap_clean(tgridmap)
-  deallocate (data_i)
-  deallocate (frac_dst)
-  deallocate (mask_r8)
-
-  write (6,*) 'Successfully made GDP'
-  write (6,*)
-
-end subroutine mkgdp
+  end subroutine mkgdp
 
 end module mkgdpMod

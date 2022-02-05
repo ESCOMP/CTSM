@@ -96,16 +96,16 @@ program mksurfdata
   use mklaiMod           , only : mklai
   use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
   use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
+  use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
   use mkharvestMod       , only : mkharvest, mkharvest_init, mkharvest_fieldname
   use mkharvestMod       , only : mkharvest_numtypes, mkharvest_parse_oride
   use mkharvestMod       , only : harvestDataType
-  use mkgdpMod           , only : mkgdp
-  use mkagfirepkmonthMod , only : mkagfirepkmon
   use mktopostatsMod     , only : mktopostats
   use mkVICparamsMod     , only : mkVICparams
-  use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
 #endif
   use mkdomainMod        , only : mkdomain
+  use mkgdpMod           , only : mkgdp
+  use mkagfirepkmonthMod , only : mkagfirepkmon
   use mkpeatMod          , only : mkpeat
   use mkvocefMod         , only : mkvocef
   use mkglcmecMod        , only : mkglcmecInit, mkglcmec, mkglacier, nglcec 
@@ -116,7 +116,7 @@ program mksurfdata
   use mksoilcolMod       , only : mksoilcol
   use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, mkurban_topo, numurbl
   use mklanwatMod        , only : mklakwat
-  use mkOrganicMod       , only : mkorganic
+  use mkorganicMod       , only : mkorganic
   use mkutilsMod         , only : normalize_classes_by_gcell, chkerr
   use mkfileMod          , only : mkfile_fsurdat
   use mkvarpar           , only : nlevsoi, elev_thresh, numstdpft
@@ -315,6 +315,8 @@ program mksurfdata
   ! ----------------------------------------------------------------------
 
 #ifdef TODO
+  ! zero_out_l => If veg should be zero'ed out  
+  ! all_veg_l  => If should zero out other fractions so that all land-cover is vegetation
   call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
 #endif
   allocate ( elevclass(nglcec+1) )
@@ -322,7 +324,7 @@ program mksurfdata
   call mkurbanInit (mksrf_furban)
 
   ! ----------------------------------------------------------------------
-  ! Allocate and initialize dynamic memory for local variables
+  ! Read in model mesh
   ! ----------------------------------------------------------------------
 
   ! Read in model mesh to determine the number of local points
@@ -333,14 +335,10 @@ program mksurfdata
   call ESMF_MeshGet(mesh_model, numOwnedElements=lsize_o, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
-  allocate ( landfrac_pft(lsize_o))           ; landfrac_pft(:)     = spval
-  allocate ( pctlnd_pft(lsize_o))             ; pctlnd_pft(:)       = spval
-  allocate ( pftdata_mask(lsize_o))           ; pftdata_mask(:)     = -999
- !allocate ( pctnatpft(lsize_o))              ;
- !allocate ( pctnatpft_max(lsize_o))          ;
- !allocate ( pctcft(lsize_o))                 ;
- !allocate ( pctcft_max(lsize_o))             ;
-  allocate ( gdp(lsize_o))                    ; gdp(:)              = spval
+  ! ----------------------------------------------------------------------
+  ! Allocate and initialize dynamic memory for local variables
+  ! ----------------------------------------------------------------------
+
   allocate ( topo_stddev(lsize_o))            ; topo_stddev(:)      = spval
   allocate ( slope(lsize_o))                  ; slope(:)            = spval
   allocate ( vic_binfl(lsize_o))              ; vic_binfl(:)        = spval
@@ -348,15 +346,23 @@ program mksurfdata
   allocate ( vic_dsmax(lsize_o))              ; vic_dsmax(:)        = spval
   allocate ( vic_ds(lsize_o))                 ; vic_ds(:)           = spval
 
-  ! voc emission factors
-
   ! ----------------------------------------------------------------------
   ! Read in and interpolate surface data set fields
   ! ----------------------------------------------------------------------
 
-  ! ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
+  ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
+  ! Determine fractional land from pft dataset
+  allocate ( landfrac_pft(lsize_o))           ; landfrac_pft(:)     = spval
+  allocate ( pctlnd_pft(lsize_o))             ; pctlnd_pft(:)       = spval
+  allocate ( pftdata_mask(lsize_o))           ; pftdata_mask(:)     = -999
+  ! allocate ( pctnatpft(lsize_o))              ;
+  ! allocate ( pctnatpft_max(lsize_o))          ;
+  ! allocate ( pctcft(lsize_o))                 ;
+  ! allocate ( pctcft_max(lsize_o))             ;
   ! call mkpft( mapfname=map_fpft, fpft=mksrf_fvegtyp, ndiag=ndiag, &
   !    pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
+  ! landfrac_pft(:) = pctlnd_pft(:)/100._r8
+  ! end do
 
   ! Create harvesting data at model resolution
   ! if (all_veg) then
@@ -371,30 +377,32 @@ program mksurfdata
   !    call mkharvest(  mapfname=map_fharvest, datfname=mksrf_fhrvtyp, ndiag=ndiag, harvdata=harvdata )
   ! end if
 
-  ! --------------------------------------------------
-  ! begin working
-
   ! Make lats/lons of model
   allocate (lon(lsize_o)) ; lon(:) = spval
   allocate (lat(lsize_o)) ; lat(:) = spval
   call mkdomain(mesh_model, lon_o=lon, lat_o=lat, rc=rc) 
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
 
-  ! Make peat data [fpeat] from [peatf]
-  allocate (fpeat(lsize_o)) ; fpeat(:) = spval
-  call mkpeat ( mksrf_fpeat_mesh, mksrf_fpeat, mesh_model, peat_o=fpeat, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpeat')
+  ! Make GDP data [gdp] from [gdp]
+  allocate ( gdp(lsize_o)); gdp(:) = spval
+  call mkgdp (mksrf_fgdp_mesh, mksrf_fgdp, mesh_model, gdp_o=gdp, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
 
   ! Make agricultural fire peak month data [abm] from [abm]
-  allocate ( agfirepkmon(lsize_o)); agfirepkmon(:) = -999
-  ! call mkagfirepkmon (mksrf_fabm_mesh, mksrf_fabm, mesh_model, agfirepkmon_o=agfirepkmon, rc=rc)
-  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkagfirepkmon')
+  allocate (agfirepkmon(lsize_o)); agfirepkmon(:) = -999
+  call mkagfirepkmon (mksrf_fabm_mesh, mksrf_fabm, mesh_model, agfirepkmon_o=agfirepkmon, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkagfirepkmon')
+
+  ! Make peat data [fpeat] from [peatf]
+  allocate (fpeat(lsize_o)) ; fpeat(:) = spval
+  call mkpeat (mksrf_fpeat_mesh, mksrf_fpeat, mesh_model, peat_o=fpeat, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpeat')
 
   ! Make glacier fraction [pctgla] from [fglacier] dataset
-  allocate ( pctgla(lsize_o)) ; pctgla(:) = spval
+  allocate (pctgla(lsize_o)) ; pctgla(:) = spval
   zero_out = (all_urban .or. all_veg)
   if (.not. zero_out) then
-     call mkglacier ( mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, glac_o=pctgla, rc=rc)
+     call mkglacier (mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, glac_o=pctgla, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacier')
   else
      if (root_task) then
@@ -486,9 +494,6 @@ program mksurfdata
 
   ! end working
   ! --------------------------------------------------
-
-  ! ! Make GDP data [gdp] from [gdp]
-  ! call mkgdp ( mapfname=map_fgdp, datfname=mksrf_fgdp, ndiag=ndiag, gdp_o=gdp)
 
   ! ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
   ! call mktopostats ( mapfname=map_ftopostats, datfname=mksrf_ftopostats, &
@@ -632,9 +637,9 @@ program mksurfdata
   end if
 
   ! ----------------------------------------------------------------------
-  ! Determine fractional land from pft dataset
   ! ----------------------------------------------------------------------
 
+  ! Determine fractional land from pft dataset
   ! do n = 1,lsize_o
   !    landfrac_pft(n) = pctlnd_pft(n)/100._r8
   ! end do
@@ -689,6 +694,7 @@ program mksurfdata
                           ef_shr=ef1_shr, &
                           ef_grs=ef1_grs, &
                           ef_crp=ef1_crp, &
+                          elevclass=elevclass, &
                           pctgla=pctgla, &
                           pctglcmec=pctglcmec, &
                           topoglcmec=topoglcmec, &
@@ -697,6 +703,8 @@ program mksurfdata
                           pctglc_gic=pctglc_gic, &
                           pctglc_icesheet=pctglc_icesheet, &
                           fpeat=fpeat, &
+                          agfirepkmon=agfirepkmon, &
+                          gdp=gdp, &
                           rc=rc)
      if (root_task) then
         write(ndiag,*)
@@ -723,8 +731,8 @@ program mksurfdata
      deallocate (pctglc_gic, pctglc_icesheet)
   end if
   deallocate(fpeat)
-#ifdef TODO
   deallocate(gdp)
+#ifdef TODO
   deallocate(agfirepkmon)
   deallocate(topo_stddev
   deallocate(slope)

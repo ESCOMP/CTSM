@@ -238,10 +238,10 @@ contains
     type(ESMF_Mesh)        , intent(in)    :: mesh_i
     type(ESMF_Mesh)        , intent(in)    :: mesh_o
     type(ESMF_RouteHandle) , intent(inout) :: routehandle
-    integer                , intent(in)    :: lbound
-    integer                , intent(in)    :: ubound
     real(r4)               , intent(in)    :: data_i(:,:)
     real(r4)               , intent(inout) :: data_o(:,:)
+    integer                , intent(in)    :: lbound
+    integer                , intent(in)    :: ubound
     integer                , intent(out)   :: rc
 
     ! local variables
@@ -288,10 +288,10 @@ contains
     type(ESMF_Mesh)        , intent(in)    :: mesh_i
     type(ESMF_Mesh)        , intent(in)    :: mesh_o
     type(ESMF_RouteHandle) , intent(inout) :: routehandle
-    integer                , intent(in)    :: lbound
-    integer                , intent(in)    :: ubound
     real(r8)               , intent(in)    :: data_i(:,:)
     real(r8)               , intent(inout) :: data_o(:,:)
+    integer                , intent(in)    :: lbound
+    integer                , intent(in)    :: ubound
     integer                , intent(out)   :: rc
 
     ! local variables
