@@ -4312,6 +4312,15 @@ sub check_use_case_name {
     } else {
       $log->fatal_error($diestring);
     }
+  } elsif ( $use_case =~ /^[0-9]+([a-zA-Z0-9_\.-]*)_control$/ ) {
+    my $string = $1;
+    if (      $string =~ /^_($ssp_rcp)_*($desc)$/ ) {
+       # valid name
+    } elsif ( $string =~ /^_*($desc)$/ ) {
+       # valid name
+    } else {
+      $log->fatal_error($diestring);
+    }
   } elsif ( $use_case =~ /^([0-9]+)_*($desc)_control$/   ) {
      # valid name
   } elsif ( $use_case =~ /^($desc)_pd$/   ) {

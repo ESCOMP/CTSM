@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 936;
+my $ntests = 940;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 558;
+   $ntests += 576;
 }
 plan( tests=>$ntests );
 
@@ -1302,6 +1302,7 @@ system( "../configure -s $mode" );
 @glc_res = ( "0.9x1.25" );
 my @use_cases = ( "2100-2300_SSP5-8.5_transient",
                   "2100-2300_SSP5-3.4_transient",
+                  "2100_SSP3-7.0_control",
                 );
 foreach my $res ( @glc_res ) {
    foreach my $usecase ( @use_cases ) {
