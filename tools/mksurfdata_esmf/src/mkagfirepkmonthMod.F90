@@ -155,7 +155,6 @@ contains
 
     do no = 1,ns_o
        max_index = maxloc(data_o(:,no))
-       write(6,*)'DEBUG: no,max_index = ',no,max_index
        agfirepkmon_o(no) = max_index(1)
     end do
 
