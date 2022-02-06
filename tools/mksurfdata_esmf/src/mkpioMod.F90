@@ -29,6 +29,7 @@ module mkpioMod
   interface mkpio_get_rawdata_level
      module procedure mkpio_get_rawdata1d_level_real4
      module procedure mkpio_get_rawdata1d_level_real8
+     module procedure mkpio_get_rawdata2d_level_real8
   end interface mkpio_get_rawdata_level
 
   interface mkpio_get_rawdata
@@ -1050,7 +1051,7 @@ contains
     real(r8)    , allocatable :: data_double(:)
     integer                   :: ns_i
     integer                   :: rcode
-    character(len=*), parameter :: subname = 'mkpio_get_rawdata1d_real4'
+    character(len=*), parameter :: subname = 'mkpio_get_rawdata_level_real4'
     !-------------------------------------------------
 
     ! Get variable id and type
@@ -1141,4 +1142,60 @@ contains
 
   end subroutine mkpio_get_rawdata1d_level_real8
   
+  ! ========================================================================
+  subroutine mkpio_get_rawdata2d_level_real8(pioid, pio_iodesc, unlimited_index, varname, data_i)
+
+    ! input/output variables
+    type(file_desc_t), intent(inout) :: pioid
+    type(io_desc_t)  , intent(inout) :: pio_iodesc
+    integer          , intent(in)    :: unlimited_index
+    character(len=*) , intent(in)    :: varname     ! field name in rawdata file
+    real(r8)         , intent(inout) :: data_i(:,:) ! input raw data
+
+    ! local variables
+    type(var_desc_t)          :: pio_varid
+    integer                   :: pio_vartype
+    integer(i2) , allocatable :: data_short(:,:)
+    integer(i4) , allocatable :: data_int(:,:)
+    real(r4)    , allocatable :: data_real(:,:)
+    integer                   :: ns_i
+    integer                   :: nlev
+    integer                   :: rcode
+    character(len=*), parameter :: subname = 'mkpio_get_rawdata1d_real4'
+    !-------------------------------------------------
+
+    ! Get variable id and type
+    rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+    rcode = pio_inq_vartype(pioid, pio_varid, pio_vartype)
+
+    ! Set unlimited frame index
+    call pio_setframe(pioid, pio_varid, int(unlimited_index, kind=Pio_Offset_Kind))
+
+    ! Read the input raw data
+    ns_i = size(data_i, dim=1)
+    nlev = size(data_i, dim=2)
+    if (pio_vartype == PIO_SHORT) then
+       allocate(data_short(ns_i,nlev))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_short, rcode)
+       data_i(:,:) = real(data_short(:,:), kind=r8)
+       deallocate(data_short)
+    else if (pio_vartype == PIO_INT) then
+       allocate(data_int(ns_i,nlev))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_int, rcode)
+       data_i(:,:) = real(data_int(:,:), kind=r4)
+       deallocate(data_int)
+    else if (pio_vartype == PIO_REAL) then
+       allocate(data_real(ns_i,nlev))
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_real, rcode)
+       data_i(:,:) = real(data_real(:,:), kind=r8)
+       deallocate(data_real)
+    else if (pio_vartype == PIO_DOUBLE) then
+       call pio_read_darray(pioid, pio_varid, pio_iodesc, data_i, rcode)
+    else
+       call shr_sys_abort(subName//" ERROR: vartype not supported for "//trim(varname))
+    end if
+    call ESMF_VMLogMemInfo("After call to pio_read_darray for varname "//trim(varname))
+
+  end subroutine mkpio_get_rawdata2d_level_real8
+
 end module mkpioMod
