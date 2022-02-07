@@ -1,108 +1,92 @@
 module mklaiMod
-
   !-----------------------------------------------------------------------
   ! Make LAI/SAI/height data
   !-----------------------------------------------------------------------
 
   use ESMF
   use pio
-  use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
-  use shr_sys_mod    , only : shr_sys_abort
-  use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
-  use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
-  use mkutilsMod     , only : chkerr
-  use mkvarctl
-
+  use shr_kind_mod      , only : r8 => shr_kind_r8, r4=>shr_kind_r4
+  use shr_sys_mod       , only : shr_sys_abort
+  use mkpioMod          , only : pio_iotype, pio_ioformat, pio_iosystem
+  use mkpioMod          , only : mkpio_get_rawdata, mkpio_get_rawdata_level
+  use mkpioMod          , only : mkpio_def_spatial_var, mkpio_iodesc_output, mkpio_iodesc_rawdata
+  use mkpioMod          , only : mkpio_put_time_slice
+  use mkesmfMod         , only : regrid_rawdata, create_routehandle_r8, get_meshareas
+  use mkutilsMod        , only : chkerr
+  use mkpftConstantsMod , only : c3cropindex, c3irrcropindex
+  use mkvarctl          , only : root_task, ndiag, outnc_double, numpft, mpicom
 
   implicit none
   private
 
+#include <mpif.h>
+
   public  :: mklai
-  private :: pft_laicheck
+  private :: check_global_sums
+
+  character(len=*) , parameter :: u_FILE_u = &
+       __FILE__
 
 !=================================================================================
 contains
 !=================================================================================
 
-  subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
+  subroutine mklai(file_mesh_i, file_data_i, mesh_o, pioid_o, rc)
     !
     ! Make LAI/SAI/height data
-    ! Portions of this code could be moved out of the month loop
-    ! for improved efficiency
-    !
-    use mkvarpar, only : re
-    use mkpftConstantsMod, only : c3cropindex, c3irrcropindex
     !
     ! input/output variables
-    character(len=*)  , intent(in)  :: file_mesh_i ! input mesh file name
-    character(len=*)  , intent(in)  :: file_data_i ! input data file name
-    type(ESMF_Mesh)   , intent(in)  :: mesh_o      ! output mesh
-    integer           , intent(out) :: glacier_region_o(:) ! glacier region
-    integer           , intent(out) :: rc
+    character(len=*)  , intent(in)    :: file_mesh_i ! input mesh file name
+    character(len=*)  , intent(in)    :: file_data_i ! input data file name
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o      ! output mesh
+    type(file_desc_t) , intent(inout) :: pioid_o
+    integer           , intent(out)   :: rc
     !
     ! local variables
-    integer                :: numpft_i          ! number of plant types on input
-    type(ESMF_RouteHandle) :: routehandle       ! nearest neighbor routehandle
+    type(ESMF_RouteHandle) :: routehandle           ! nearest neighbor routehandle
     type(ESMF_Mesh)        :: mesh_i
-    type(file_desc_t)      :: pioid
-    integer                :: ni,no,l 
+    type(file_desc_t)      :: pioid_i
+    type(io_desc_t)        :: pio_iodesc_i
+    type(io_desc_t)        :: pio_iotype_i
+    type(var_desc_t)       :: pio_varid_i
+    integer                :: pio_vartype_i
+    type(io_desc_t)        :: pio_iodesc_o
+    type(var_desc_t)       :: pio_varid_o
+    integer                :: dimid
+    integer                :: ni,no
     integer                :: ns_i, ns_o
+    integer                :: k,l,m,nt              ! indices
+    integer                :: numpft_i              ! number of plant types on input
+    integer                :: ntime                  ! number of input time samples
     integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
     real(r8), allocatable  :: data_i(:,:)
     real(r8), allocatable  :: data_o(:,:)
-    real(r8), allocatable  :: mlai_o(:,:)       ! monthly lai
-    real(r8), allocatable  :: msai_o(:,:)       ! monthly sai
-    real(r8), allocatable  :: mhgtt_o(:,:)      ! monthly height (top)
-    real(r8), allocatable  :: mhgtb_o(:,:)      ! monthly height (bottom)
-    real(r8), allocatable  :: mlai_max(:,:)     ! monthly lai
-    real(r8), allocatable  :: msai_max(:,:)     ! monthly sai
-    real(r8), allocatable  :: mhgtt_max(:,:)    ! monthly height (top)
-    real(r8), allocatable  :: mhgtb_max(:,:)    ! monthly height (bottom)
-    real(r8), allocatable  :: mlai_i(:,:)       ! monthly lai in
-    real(r8), allocatable  :: msai_i(:,:)       ! monthly sai in
-    real(r8), allocatable  :: mhgtt_i(:,:)      ! monthly height (top) in
-    real(r8), allocatable  :: mhgtb_i(:,:)      ! monthly height (bottom) in
-    real(r8), allocatable  :: frac_dst(:)       ! output fractions: same as frac_dst
-    integer,  allocatable  :: laimask(:,:)      ! lai+sai output mask for each plant function type
-    real(r8)               :: glai_o(0:numpft)  ! output grid: global area pfts
-    real(r8)               :: gsai_o(0:numpft)  ! output grid: global area pfts
-    real(r8)               :: ghgtt_o(0:numpft) ! output grid: global area pfts
-    real(r8)               :: ghgtb_o(0:numpft) ! output grid: global area pfts
-    real(r8)               :: glai_i(0:numpft)  ! input grid: global area pfts
-    real(r8)               :: gsai_i(0:numpft)  ! input grid: global area pfts
-    real(r8)               :: ghgtt_i(0:numpft) ! input grid: global area pfts
-    real(r8)               :: ghgtb_i(0:numpft) ! input grid: global area pfts
-    real(r8)               :: garea_i           ! input  grid: global area
-    real(r8)               :: garea_o           ! output grid: global area
-    integer                :: mwts              ! number of weights
-    integer                :: ni,no,ns_i,ns_o   ! indices
-    integer                :: k,l,n,m           ! indices
-    integer                :: dimids(4)         ! netCDF dimension ids
-    integer                :: bego(4),leno(4)   ! netCDF bounds
-    integer                :: begi(4),leni(4)   ! netCDF bounds 
-    integer                :: ntim              ! number of input time samples
-    integer                :: ier               ! error status
-    real(r8)               :: relerr = 0.00001  ! max error: sum overlap wts ne 1
-    character(len=256)     :: name              ! name of attribute
-    character(len=256)     :: unit              ! units of attribute
-    character(len= 32) :: subname = 'mklai'
+    real(r8), allocatable  :: mlai_o(:,:)           ! monthly lai
+    real(r8), allocatable  :: msai_o(:,:)           ! monthly sai
+    real(r8), allocatable  :: mhgtt_o(:,:)          ! monthly height (top)
+    real(r8), allocatable  :: mhgtb_o(:,:)          ! monthly height (bottom)
+    integer,  allocatable  :: laimask(:,:)          ! lai+sai output mask for each plant function type
+    real(r8), allocatable  :: area_i(:)
+    real(r8), allocatable  :: area_o(:)
+    integer                :: ier, rcode            ! error status
+    integer                :: xtype                 ! external type
+    character(len=*), parameter :: subname = 'mklai'
     !-----------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
 
     if (root_task) then
        write(ndiag,*)
-       write (ndiag,'(a)') 'Attempting to make LAIs/SAIs/heights .....'
+       write(ndiag,'(a)') 'Attempting to make LAIs/SAIs/heights .....'
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
-
 
     ! Open input data file
     call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
     call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
@@ -124,7 +108,7 @@ contains
     if (ier/=0) call shr_sys_abort()
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, frac_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
        if (frac_i(ni) > 0._r8) then
@@ -133,6 +117,7 @@ contains
           mask_i(ni) = 0
        end if
     end do
+    deallocate(frac_i)
     call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
@@ -142,10 +127,10 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
-    rcode = pio_inq_dimid(pioid 'pft', dimid)
-    rcode = pio_inq_dimlen(pioid, dimid, numpft_i)
-    rcode = pio_inq_dimid(pioid, 'time', dimid)
-    rcode = pio_inq_dimlen(pioid, dimid, ntim)
+    rcode = pio_inq_dimid(pioid_i, 'pft', dimid)
+    rcode = pio_inq_dimlen(pioid_i, dimid, numpft_i)
+    rcode = pio_inq_dimid(pioid_i, 'time', dimid)
+    rcode = pio_inq_dimlen(pioid_i, dimid, ntime)
 
     if (numpft_i /= numpft+1) then
        write(6,*) 'WARNING: ' // trim(subname) // '(): parameter numpft+1 = ', numpft+1, &
@@ -160,19 +145,10 @@ contains
           call shr_sys_abort()
        end if
     endif
-    if (ntim /= 12) then
+    if (ntime /= 12) then
        write(6,*)'MKLAI: must have 12 time samples on input data'
        call shr_sys_abort()
     endif
-
-    ! Dynamic allocation of variables of size 0:numpft_i
-    allocate(mlai_i(ns_i,0:numpft_i),  &
-             msai_i(ns_i,0:numpft_i),  &
-             mhgtt_i(ns_i,0:numpft_i), &
-             mhgtb_i(ns_i,0:numpft_i), stat=ier)
-    if (ier /= 0) then
-       write(6,*)'mklai allocation error'; call shr_sys_abort()
-    end if
 
     ! Dynamic allocation of variables of size 0:numpft
     allocate(mlai_o(ns_o,0:numpft),  &
@@ -184,255 +160,201 @@ contains
        write(6,*)'mklai allocation error'; call shr_sys_abort()
     end if
 
+    ! Create iodescriptor for a single level of the input data
+    call mkpio_iodesc_rawdata(mesh_i, 'MONTHLY_LAI', pioid_i, pio_varid_i, pio_vartype_i, pio_iodesc_i, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Put output file back in define mode, define variables and then end define mode
+    if ( outnc_double ) then
+       xtype = PIO_DOUBLE
+    else
+       xtype = PIO_REAL
+    end if
+
+    rcode = pio_redef(pioid_o)
+    call mkpio_def_spatial_var(pioid_o, 'MONTHLY_LAI', xtype,  &
+         lev1name='lsmpft', lev2name='time', long_name='monthly leaf area index', units='unitless')
+    call mkpio_def_spatial_var(pioid_o, 'MONTHLY_SAI',xtype,  &
+         lev1name='lsmpft', lev2name='time', long_name='monthly stem area index', units='unitless')
+    call mkpio_def_spatial_var(pioid_o, 'MONTHLY_HEIGHT_TOP', xtype,  &
+         lev1name='lsmpft', lev2name='time',long_name='monthly height top', units='meters')
+    call mkpio_def_spatial_var(pioid_o, 'MONTHLY_HEIGHT_BOT', xtype,  &
+         lev1name='lsmpft', lev2name='time', long_name='monthly height bottom', units='meters')
+    rcode = pio_enddef(pioid_o)
+
+    ! Create iodescriptor for a single level of the output data
+    call mkpio_iodesc_output(pioid_o, mesh_o, 'MONTHLY_LAI', pio_iodesc_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for MONTHLY_LAI')
+
+    ! Allocate memory that will be used in time loop below
     allocate(data_i(0:numpft_i,ns_i),stat=ier)
     if (ier/=0) call shr_sys_abort()
+    allocate(data_o(0:numpft_i,ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort()
 
-    ! Determine number of dimensions in output by querying MONTHLY_LAI
+    ! The following is needed for the global check
+    allocate(area_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(area_o(ns_o), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call get_meshareas(mesh_i, area_i, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call get_meshareas(mesh_o, area_o, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-
-    ! Loop over months 
+    ! Loop over the 12 months and write out data
     mlai_o(:,:)  = 0.
     msai_o(:,:)  = 0.
     mhgtt_o(:,:) = 0.
     mhgtb_o(:,:) = 0.
+    do nt = 1, ntime
 
-    do nt = 1, ntim
-       call mkpio_get_rawdata(pioid, 'MONTHLY_LAI', mesh_i, data_i, nt=nt, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, numpft, rc)
+       ! Below - copy LAI, SAI, & heights from the C3 crop (pft15)
+       ! to the irrigated (pft16) whether crop is on or off
+
+       ! Read in one time slice of data for mlai, regrid and write out
+       rcode = pio_inq_varid(pioid_i, 'MONTHLY_LAI', pio_varid_i)
+       call pio_setframe(pioid_i, pio_varid_i, int(nt, kind=Pio_Offset_Kind))
+       call mkpio_get_rawdata_level(pioid_i, pio_iodesc_i, nt, 'MONTHLY_LAI', data_i)
+       call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, numpft_i, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do l = 0,numpft_i-1
+       do l = 0,numpft_i-1  ! TODO: why -1?
           do no = 1,ns_o
              mlai_o(no,l) = data_o(l,no)
           end do
        end do
+       mlai_o(:,c3irrcropindex)  = mlai_o(:,c3cropindex)
+       rcode = pio_inq_varid(pioid_o, 'MONTHLY_LAI', pio_varid_o)
+       call mkpio_put_time_slice(pioid_o, pio_varid_o, pio_iodesc_o, nt, mlai_o)
+       call check_global_sums('LAI', ns_i, ns_o, numpft_i, nt, &
+            data_i, data_o, area_i, area_o, mask_i, frac_o)
 
-       call mkpio_get_rawdata(pioid, 'MONTHLY_SAI', mesh_i, data_i, nt=nt, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, numpft, rc)
+       ! Read in one time slice of data for msai, regrid and write out
+       rcode = pio_inq_varid(pioid_i, 'MONTHLY_SAI', pio_varid_i)
+       call pio_setframe(pioid_i, pio_varid_i, int(nt, kind=Pio_Offset_Kind))
+       call mkpio_get_rawdata_level(pioid_i, pio_iodesc_i, nt, 'MONTHLY_SAI', data_i)
+       call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, numpft_i, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do l = 0,numpft_i-1
+       do l = 0,numpft_i-1  ! TODO: why -1?
           do no = 1,ns_o
-             lai_o(no,l) = data_o(l,no)
+             msai_o(no,l) = data_o(l,no)
           end do
        end do
+       msai_o(:,c3irrcropindex)  = msai_o(:,c3cropindex)
+       rcode = pio_inq_varid(pioid_o, 'MONTHLY_SAI', pio_varid_o)
+       call mkpio_put_time_slice(pioid_o, pio_varid_o, pio_iodesc_o, nt, msai_o)
 
-       call mkpio_get_rawdata(pioid, 'MONTHLY_HEIGHT_TOP', mesh_i, data_i, nt=nt, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, numpft, rc)
+       ! Read in one time slice of data for msai, regrid and write out
+       rcode = pio_inq_varid(pioid_i, 'MONTHLY_HEIGHT_TOP', pio_varid_i)
+       call pio_setframe(pioid_i, pio_varid_i, int(nt, kind=Pio_Offset_Kind))
+       call mkpio_get_rawdata_level(pioid_i, pio_iodesc_i, nt, 'MONTHLY_HEIGHT_TOP', data_i)
+       call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, numpft_i, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do l = 0,numpft_i-1
+       do l = 0,numpft_i-1  ! TODO: why -1?
           do no = 1,ns_o
              mhgtt_o(no,l) = data_o(l,no)
           end do
        end do
+       mhgtt_o(:,c3irrcropindex) = mhgtt_o(:,c3cropindex)
+       rcode = pio_inq_varid(pioid_o, 'MONTHLY_HEIGHT_TOP', pio_varid_o)
+       call mkpio_put_time_slice(pioid_o, pio_varid_o, pio_iodesc_o, nt, mhgtt_o)
 
-       call mkpio_get_rawdata(pioid, 'MONTHLY_HEIGHT_BOT', mesh_i, data_i, nt=nt, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, numpft, rc)
+       ! Read in one time slice of data for msai, regrid and write out
+       rcode = pio_inq_varid(pioid_i, 'MONTHLY_HEIGHT_BOT', pio_varid_i)
+       call pio_setframe(pioid_i, pio_varid_i, int(nt, kind=Pio_Offset_Kind))
+       call mkpio_get_rawdata_level(pioid_i, pio_iodesc_i, nt, 'MONTHLY_HEIGHT_BOT', data_i)
+       call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, numpft_i, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do l = 0,numpft_i-1
+       do l = 0,numpft_i-1  ! TODO: why -1?
           do no = 1,ns_o
              mhgtb_o(no,l) = data_o(l,no)
           end do
        end do
-
-       ! copy LAI, SAI, & heights from the C3 crop (pft15)
-       ! to the irrigated (pft16) whether crop is on or off
-       mlai_o(:,c3irrcropindex)  = mlai_o(:,c3cropindex)
-       msai_o(:,c3irrcropindex)  = msai_o(:,c3cropindex)
-       mhgtt_o(:,c3irrcropindex) = mhgtt_o(:,c3cropindex)
        mhgtb_o(:,c3irrcropindex) = mhgtb_o(:,c3cropindex)
+       rcode = pio_inq_varid(pioid_o, 'MONTHLY_HEIGHT_BOT', pio_varid_o)
+       call mkpio_put_time_slice(pioid_o, pio_varid_o, pio_iodesc_o, nt, mhgtb_o)
 
-       ! Determine laimask
-       laimask(:,:) = 0
-
-       ! -----------------------------------------------------------------
-       ! Output model resolution LAI/SAI/HEIGHT data
-       ! -----------------------------------------------------------------
-
-       if ( outnc_double ) then
-          xtype = PIO_DOUBLE
-       else
-          xtype = PIO_REAL
+       if (root_task) then
+          write (ndiag,*) 'Successfully made LAIs/SAIs/heights for month ', nt
        end if
 
-       rcode = pio_redef(pioid_o)
+    end do  ! end loop over months
 
-       call mkpio_def_spatial_var(pioid_o, varname='MONTHLY_LAI', xtype=xtype,  &
-          lev1name='lsmpft', lev2name='time', long_name='monthly leaf area index', units='unitless')
+    ! Close the  input file
+    call pio_closefile(pioid_i)
+    call ESMF_VMLogMemInfo("After pio_closefile for input in "//trim(subname))
 
-       call mkpio_def_spatial_var(pioid_o, varname='MONTHLY_SAI', xtype=xtype,  &
-            lev1name='lsmpft', lev2name='time', long_name='monthly stem area index', units='unitless')
-
-       call mkpio_def_spatial_var(pioid_o, varname='MONTHLY_HEIGHT_TOP', xtype=xtype,  &
-          lev1name='lsmpft', lev2name='time',long_name='monthly height top', units='meters')
-
-       call mkpio_def_spatial_var(pioid_o, varname='MONTHLY_HEIGHT_BOT', xtype=xtype,  &
-            lev1name='lsmpft', lev2name='time', long_name='monthly height bottom', units='meters')
-
-       ! End define model
-       rcode = pio_enddef(pioid_o)
-
-       ! Only need to define 1 PIO descriptor here
-       call mkpio_iodesc_output(pioid_o, mesh_o, 'MONTHLY_LAI', pio_iodesc, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for MONTHLY_LAI')
-
-       rcode = pio_inq_varid(pioid_o, 'MONTHLY_LAI', pio_varid)
-       call pio_write_darray(pioid_o, pio_varid, pio_iodesc, mlai_o, rcode)
-
-       rcode = pio_inq_varid(pioid_o, 'MONTHLY_SAI', pio_varid)
-       call pio_write_darray(pioid_o, pio_varid, pio_iodesc, msai_o, rcode)
-
-       rcode = pio_inq_varid(pioid_o, 'MONTHLY_HEIGHT_TOP', pio_varid)
-       call pio_write_darray(pioid_o, pio_varid, pio_iodesc, mhgtt_o, rcode)
-
-       rcode = pio_inq_varid(pioid_o, 'MONTHLY_HEIGHT_BOT', pio_varid)
-       call pio_write_darray(pioid_o, pio_varid, pio_iodesc, mhgtt_o, rcode)
-
-       ! TODO - output time - write out the wholE time array at once
-       !rcode = pio_inq_varid(pioid_o, 'time', pio_varid)
-       !rcode = pio_put_var(pioid_o, pio_varid, bego(ndimso), leno(ndimso), m)
-
-       ! -----------------------------------------------------------------
-       ! Compare global areas on input and output grids
-       ! -----------------------------------------------------------------
-
-       ! Input grid global area
-
-       garea_i    = 0.
-       do ni = 1,ns_i
-          garea_i = garea_i + tgridmap%area_src(ni)
-       end do
-
-       glai_i(:)  = 0.
-       gsai_i(:)  = 0.
-       ghgtt_i(:) = 0.
-       ghgtb_i(:) = 0.
-       do l = 0, numpft_i - 1
-          do ni = 1, ns_i
-             glai_i(l)  = glai_i(l) + mlai_i(ni,l) *tgridmap%area_src(ni)*&
-                  tdomain%mask(ni)*re**2
-             gsai_i(l)  = gsai_i(l) + msai_i(ni,l) *tgridmap%area_src(ni)*&
-                  tdomain%mask(ni)*re**2
-             ghgtt_i(l) = ghgtt_i(l)+ mhgtt_i(ni,l)*tgridmap%area_src(ni)*&
-                  tdomain%mask(ni)*re**2
-             ghgtb_i(l) = ghgtb_i(l)+ mhgtb_i(ni,l)*tgridmap%area_src(ni)*&
-                  tdomain%mask(ni)*re**2
-          end do
-       end do
-
-       ! Output grid global area
-
-       garea_o    = 0.
-       do no = 1,ns_o
-          garea_o = garea_o + tgridmap%area_dst(no)
-       end do
-
-       glai_o(:)  = 0.
-       gsai_o(:)  = 0.
-       ghgtt_o(:) = 0.
-       ghgtb_o(:) = 0.
-       do l = 0, numpft_i - 1
-          do no = 1,ns_o
-             glai_o(l)  = glai_o(l) + mlai_o(no,l)*tgridmap%area_dst(no)* &
-                  frac_dst(no)*re**2
-             gsai_o(l)  = gsai_o(l) + msai_o(no,l)*tgridmap%area_dst(no)* &
-                  frac_dst(no)*re**2
-             ghgtt_o(l) = ghgtt_o(l)+ mhgtt_o(no,l)*tgridmap%area_dst(no)* &
-                  frac_dst(no)*re**2
-             ghgtb_o(l) = ghgtb_o(l)+ mhgtb_o(no,l)*tgridmap%area_dst(no)* &
-                  frac_dst(no)*re**2
-          end do
-       end do
-
-       ! Comparison
-
-       write (ndiag,*)
-       write (ndiag,'(1x,70a1)') ('=',k=1,70)
-       write (ndiag,*) 'LAI Output for month ',m
-       write (ndiag,'(1x,70a1)') ('=',k=1,70)
-
-       write (ndiag,*)
-       write (ndiag,'(1x,70a1)') ('.',k=1,70)
-       write (ndiag,1001)
-1001   format (1x,'PFT input grid area output grid area',/ &
-            1x,3x,'     10**6 km**2','      10**6 km**2')
-       write (ndiag,'(1x,70a1)') ('.',k=1,70)
-       write (ndiag,*)
-       do l = 0, numpft
-          write (ndiag,1002) l, glai_i(l)*1.e-06*1.e-02,glai_o(l)*1.e-06*1.e-02
-1002      format (1x,i3,f16.3,f17.3)
-       end do
-
-       write (6,*) 'Successfully made LAIs/SAIs/heights for month ', m
-
-    enddo
-    write (6,*)
-
-    ! Close input file
-    call check_ret(nf_close(ncidi), subname)
-
-    ! consistency check that PFT and LAI+SAI make sense
-    !call pft_laicheck( ni_s, pft_i, laimask )
-
-    ! Deallocate dynamic memory
-    deallocate(mlai_i)
-    deallocate(msai_i)
-    deallocate(mhgtt_i)
-    deallocate(mhgtb_i)
-    deallocate(mlai_o)
-    deallocate(msai_o)
-    deallocate(mhgtt_o)
-    deallocate(mhgtb_o)
-    deallocate(laimask)
-    deallocate(frac_dst)
-
-    call gridmap_clean(tgridmap)
-    call domain_clean(tdomain) 
+    ! Release memory
+    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
 
   end subroutine mklai
 
-  !-----------------------------------------------------------------------
-  subroutine pft_laicheck( ni_s, pctpft_i, laimask )
+  !=================================================================================
+  subroutine check_global_sums(name, ns_i, ns_o, numpft_i, nt, &
+       data_i, data_o, area_i, area_o, mask_i, frac_o)
 
-    ! !USES:
-    !
-    ! !DESCRIPTION:
-    !
-    ! consistency check that PFT and LAI+SAI make sense
-    !
-    ! !ARGUMENTS:
-    integer , intent(in) :: ni_s          ! input PFT grid resolution
-    real(r8), intent(in) :: pctpft_i(:,:)  ! % plant function types
-    integer,  intent(in) :: laimask(:,:)   ! mask where LAI+SAI > 0
+    ! Compare global areas on input and output grids
+
+    ! input/otuput variables
+    character(len=*) , intent(in) :: name  
+    integer          , intent(in) :: ns_i 
+    integer          , intent(in) :: ns_o
+    integer          , intent(in) :: nt
+    integer          , intent(in) :: numpft_i
+    real(r8)         , intent(in) :: data_i(:,:)
+    real(r8)         , intent(in) :: data_o(:,:)
+    real(r8)         , intent(in) :: area_i(:)
+    real(r8)         , intent(in) :: area_o(:)
+    integer          , intent(in) :: mask_i(:)
+    real(r8)         , intent(in) :: frac_o(:) 
 
     ! local variables
-    character(len=*), parameter :: subName="pft_laicheck"
-    integer :: ni,l,n,nc      ! Indices
+    integer  :: ni, no, l, k
+    integer  :: ier
+    real(r8) :: local_i(0:numpft_i)  ! local global area, by surface type
+    real(r8) :: local_o(0:numpft_i)  ! local global area, by surface type
+    real(r8) :: global_i(0:numpft_i)   ! input grid: global area pfts
+    real(r8) :: global_o(0:numpft_i)   ! output grid: global area pfts
     !-----------------------------------------------------------------------
 
-    do l  = 0, numpft
-       n  = 0
-       nc = 0
-       do ni = 1,ni_s
-          if ( pctpft_i(ni,l) > 0.0_r8 ) nc = nc + 1
-          if ( (pctpft_i(ni,l) > 0.0_r8) .and. (laimask(ni,l) /= 1) )then
-             write (6,*) subName//' :: warning: pft and LAI+SAI mask not consistent!'
-             write (6,*) 'ni,l   = ', ni, l
-             write (6,*) 'pctpft_i  = ',pctpft_i(ni,l)
-             write (6,*) 'laimask   = ', laimask(ni,l)
-             n = n + 1
-          end if
+    ! Input grid global area
+    local_i(:) = 0.
+    do l = 0, numpft_i - 1
+       do ni = 1, ns_i
+          local_i(l)  = local_i(l) + data_i(l,ni) *area_i(ni)*mask_i(ni)
        end do
-       if ( n > max(4,nc/4) ) then
-          write (6,*) subName//' :: pft/LAI+SAI inconsistency over more than 25% land-cover'
-          write (6,*) '# inconsistent points, total PFT pts, total LAI+SAI pts = ', &
-               n, nc, sum(laimask(:,l))
-          call abort()
-       end if
     end do
+    call mpi_reduce(local_i, global_i , numpft_i, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
 
-  end subroutine pft_laicheck
+    ! Output grid global area
+    local_o(:) = 0.
+    do l = 0, numpft_i - 1
+       do no = 1, ns_o
+          local_o(l) = local_o(l) + data_o(l,no) *area_o(no)*frac_o(no)
+       end do
+    end do
+    call mpi_reduce(local_o, global_o , numpft_i, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
+
+    ! Comparison
+    if (root_task) then
+       write (ndiag,*)
+       write (ndiag,*) trim(name)//' Output for month ',nt
+       write (ndiag,'(1x,70a1)') ('.',k=1,70)
+       write (ndiag,101)
+101    format (1x,'PFT input grid area output grid area',/ &
+               1x,3x,'     10**6 km**2','      10**6 km**2')
+       write (ndiag,'(1x,70a1)') ('.',k=1,70)
+       write (ndiag,*)
+       do l = 0, numpft_i-1
+          write (ndiag,102) l, global_i(l)*1.e-06*1.e-02, global_o(l)*1.e-06*1.e-02
+102       format (1x,i3,f16.3,f17.3)
+       end do
+    end if
+
+  end subroutine check_global_sums
 
 end module mklaiMod

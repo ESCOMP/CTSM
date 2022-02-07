@@ -281,7 +281,6 @@ contains
     do lev = 1, nlev
        write(6,'(i4)',advance='no') lev
 
-       call ESMF_LogWrite("DEBUG here0")
        ! Read in one level of data
        rcode = pio_inq_varid(pioid, 'PCT_GLC_GIC', pio_varid)
        call pio_setframe(pioid, pio_varid, int(lev,kind=Pio_Offset_Kind))
@@ -295,18 +294,15 @@ contains
        data_pctglc_i(:) = data_pctglc_gic_i(:) + data_pctglc_icesheet_i(:)
 
        ! Map level of data to output grid
-       call ESMF_LogWrite("DEBUG here1")
        call regrid_rawdata(mesh_i, mesh_o, routehandle, data_pctglc_i, data_pctglc_o, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call regrid_rawdata(mesh_i, mesh_o, routehandle, data_pctglc_gic_i, data_pctglc_gic_o, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call regrid_rawdata(mesh_i, mesh_o, routehandle, data_pctglc_icesheet_i, data_pctglc_icesheet_o, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_LogWrite("DEBUG here2")
 
        ! Compute output variables
        m = get_elevclass(topoice_i(lev))
-       write(6,*)'DEBUG: m= ',m
        do no = 1,ns_o
           pctglcmec_o(no,m) = pctglcmec_o(no,m) + data_pctglc_o(no)
           if (outnc_3dglc) then
@@ -315,7 +311,6 @@ contains
           end if
           topoglcmec_unnorm_o(no,m) = topoglcmec_unnorm_o(no,m) + data_pctglc_o(no)*topoice_i(lev)
        end do
-       call ESMF_LogWrite("DEBUG here4")
     end do
 
     ! Close glacier input file

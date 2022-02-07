@@ -20,14 +20,16 @@ set(SRCFILES mkvarctl.F90
              mkvarpar.F90
              mkpioMod.F90
              mkfileMod.F90
-             mkdomainMod.F90
              mkagfirepkmonthMod.F90
+             mkdomainMod.F90
              mkgdpMod.F90
              mkglacierregionMod.F90
              mkglcmecMod.F90
+             mklaiMod.F90
              mklanwatMod.F90
              mkorganicMod.F90
              mkpeatMod.F90
+             mkpftConstantsMod.F90
              mksoilcolMod.F90
              mksoilfmaxMod.F90
              mksoiltexMod.F90

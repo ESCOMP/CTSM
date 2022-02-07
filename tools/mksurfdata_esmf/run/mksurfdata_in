@@ -1,5 +1,5 @@
 &mksurfdata_input 
-  mksrf_flai = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.c170413.nc' 
+  mksrf_flai = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.cdf5.c220206.nc'
   mksrf_flai_mesh = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc' 
   mksrf_flakwat = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc' 
   mksrf_flakwat_mesh = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c200129.nc' 

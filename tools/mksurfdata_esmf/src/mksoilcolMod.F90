@@ -17,7 +17,9 @@ module mksoilcolMod
 #include <mpif.h>
 
   public  :: mksoilcol      ! Set soil colors
+
   private :: mkrank
+  private :: check_global_areas
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -54,10 +56,6 @@ contains
     logical                :: has_color     ! whether this grid cell has non-zero color
     integer                :: nsoilcol_local
     integer                :: maxindex(1)
-    real(r4), allocatable  :: loc_gast_i(:) ! local global area, by surface type
-    real(r4), allocatable  :: loc_gast_o(:) ! local global area, by surface type
-    real(r4), allocatable  :: gast_i(:)     ! global area, by surface type
-    real(r4), allocatable  :: gast_o(:)     ! global area, by surface type
     integer                :: rcode, ier
     character(len=*), parameter :: subname = 'mksoilcol'
     !-----------------------------------------------------------------------
@@ -113,6 +111,7 @@ contains
           mask_i(ni) = 0
        end if
     end do
+    deallocate(frac_i)
     call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
@@ -197,41 +196,14 @@ contains
     end do
 
     ! Compare global area of each soil color on input and output grids
-
     allocate(area_i(ns_i))
     allocate(area_o(ns_o))
     call get_meshareas(mesh_i, area_i, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call get_meshareas(mesh_o, area_o, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-!     allocate(loc_gast_i(0:nsoilcol))
-!     allocate(loc_gast_o(0:nsoilcol))
-!     allocate(gast_i(0:nsoilcol))
-!     allocate(gast_o(0:nsoilcol))
-!     loc_gast_i(:) = 0.
-!     do ni = 1,ns_i
-!        k = soil_color_i(ni)
-!        loc_gast_i(k) = loc_gast_i(k) + area_i(ni) * mask_i(ni)
-!     end do
-!     call mpi_reduce(loc_gast_i, gast_i, nsoilcol+1, nsoilcol+1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
-!     loc_gast_o(:) = 0.
-!     do no = 1,ns_o
-!        k = soil_color_o(no)
-!        loc_gast_o(k) = loc_gast_o(k) + area_o(no) * frac_o(no)
-!     end do
-!     call mpi_reduce(loc_gast_o, gast_o, nsoilcol+1, nsoilcol+1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
-
-!     write (ndiag,*)
-!     write (ndiag,'(1x,70a1)') ('.',k=1,70)
-!     write (ndiag,101)
-! 101 format (1x,'soil color type',5x,' input grid area output grid area',/ &
-!             1x,20x,'     10**6 km**2','      10**6 km**2')
-!     write (ndiag,'(1x,70a1)') ('.',k=1,70)
-!     write (ndiag,*)
-!     do k = 0, nsoilcol
-!        write (ndiag,'(1x,a,i3,d16.3,d17.3)') 'class ',k, gast_i(k)*1.e-6, gast_o(k)*1.e-6
-!     end do
+    call check_global_areas('soil color type', ns_i, ns_o, nsoilcol, &
+         soil_color_i, soil_color_o, area_i, area_o, mask_i, frac_o)
 
     ! Clean up memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
@@ -283,5 +255,65 @@ contains
        call shr_sys_abort()
     end if
   end subroutine mkrank
+
+  !===============================================================
+  subroutine check_global_areas(name, ns_i, ns_o, nsoilcol, &
+       soil_color_i, soil_color_o, area_i, area_o, mask_i, frac_o)
+
+    use mkvarctl, only : mpicom, MPI_INTEGER, MPI_MAX
+
+    ! Compare global areas on input and output grids
+
+    ! input/otuput variables
+    character(len=*) , intent(in) :: name  
+    integer          , intent(in) :: ns_i 
+    integer          , intent(in) :: ns_o
+    integer          , intent(in) :: nsoilcol
+    real(r4)         , intent(in) :: soil_color_i(ns_i)
+    integer          , intent(in) :: soil_color_o(ns_o)
+    real(r8)         , intent(in) :: area_i(ns_i)
+    real(r8)         , intent(in) :: area_o(ns_o)
+    integer          , intent(in) :: mask_i(ns_i)
+    real(r4)         , intent(in) :: frac_o(ns_o) 
+
+    ! local variables
+    integer  :: ni, no, l, k
+    integer  :: ier
+    real(r4) :: local_i(0:nsoilcol)  ! local global area, by surface type
+    real(r4) :: local_o(0:nsoilcol)  ! local global area, by surface type
+    real(r4) :: global_i(0:nsoilcol)   ! input grid: global area pfts
+    real(r4) :: global_o(0:nsoilcol)   ! output grid: global area pfts
+    !-----------------------------------------------------------------------
+
+    ! Input grid global area
+    local_i(:) = 0
+    do ni = 1,ns_i
+       k = int(soil_color_i(ni))
+       local_i(k) = local_i(k) + area_i(ni) * mask_i(ni)
+    end do
+    call mpi_reduce(local_i, global_i, nsoilcol+1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
+
+    ! Output grid global area
+    local_o(:) = 0.
+    do no = 1,ns_o
+       k = soil_color_o(no)
+       local_o(k) = local_o(k) + area_o(no) * frac_o(no)
+    end do
+    call mpi_reduce(local_o, global_o, nsoilcol+1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
+
+    ! Comparison
+    if (root_task) then
+       write (ndiag,*)
+       write (ndiag,'(1x,70a1)') ('.',k=1,70)
+       write (ndiag,101)
+101    format (1x,'soil color type',5x,' input grid area output grid area',/ &
+               1x,20x,'     10**6 km**2','      10**6 km**2')
+       write (ndiag,'(1x,70a1)') ('.',k=1,70)
+       write (ndiag,*)
+       do k = 0, nsoilcol
+          write (ndiag,'(1x,a,i3,d16.3,d17.3)') 'class ',k, global_i(k)*1.e-6, global_o(k)*1.e-6
+       end do
+    end if
+  end subroutine check_global_areas
 
 end module mksoilcolMod

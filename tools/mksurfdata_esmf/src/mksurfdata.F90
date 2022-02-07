@@ -93,7 +93,6 @@ program mksurfdata
   use shr_kind_mod       , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs
   use shr_sys_mod        , only : shr_sys_abort
 #ifdef TODO
-  use mklaiMod           , only : mklai
   use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
   use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
   use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
@@ -526,7 +525,7 @@ program mksurfdata
      pctwet(n) = float(nint(pctwet(n)))
      pctgla(n) = float(nint(pctgla(n)))
   end do
-  !Debug
+  !DEBUG
 
   call ESMF_LogWrite("After fixes", ESMF_LOGMSG_INFO)
 

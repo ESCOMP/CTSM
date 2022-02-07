@@ -8,6 +8,7 @@ module mkfileMod
   use mkvarpar     , only : nlevsoi, numrad, numstdpft
   use mkurbanparMod, only : numurbl, nlevurb, mkurbanpar
   use mkglcmecMod  , only : nglcec
+  use mklaiMod     , only : mklai          
 #ifdef TODO
   use mkpftMod     , only : mkpftAtt
   use mkharvestMod , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname, mkharvest_units, harvestDataType
@@ -198,11 +199,6 @@ contains
                'unitless', fpeat, rc=rc) 
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out peatland fraction"
-          call mkfile_output(pioid, define_mode, mesh_o, xtype, 'peatf', 'peatland fraction', &
-               'unitless', fpeat, rc=rc) 
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
           if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glacier"
           call mkfile_output(pioid, define_mode, mesh_o, xtype, 'PCT_GLACIER', 'percent glacier', 'unitless', &
                pctgla, rc=rc)
@@ -346,11 +342,11 @@ contains
     ! Make LAI and SAI from 1/2 degree data and write to surface dataset
     ! Write to netcdf file is done inside mklai routine
     ! ----------------------------------------------------------------------
-    ! if (root_task) then
-    !    write(ndiag,'(a)')'calling mklai'
-    ! end if
-    ! call mklai(mksrf_lai, mksrf_lai_mesh, pioid, mesh_o, rc=rc)
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (root_task) then
+       write(ndiag,'(a)')'calling mklai'
+    end if
+    call mklai(mksrf_flai_mesh, mksrf_flai, mesh_o, pioid, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ----------------------------------------------------------------------
     ! TODO: Write out variables that did not work in the loop
