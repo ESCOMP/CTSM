@@ -93,15 +93,14 @@ program mksurfdata
   use shr_kind_mod       , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs
   use shr_sys_mod        , only : shr_sys_abort
 #ifdef TODO
-  use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
-  use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
-  use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
   use mkharvestMod       , only : mkharvest, mkharvest_init, mkharvest_fieldname
-  use mkharvestMod       , only : mkharvest_numtypes, mkharvest_parse_oride
-  use mkharvestMod       , only : harvestDataType
+  use mkharvestMod       , only : mkharvest_numtypes, mkharvest_parse_oride, harvestDataType
   use mktopostatsMod     , only : mktopostats
   use mkVICparamsMod     , only : mkVICparams
 #endif
+  use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
+  use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
+  use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
   use mkdomainMod        , only : mkdomain
   use mkgdpMod           , only : mkgdp
   use mkagfirepkmonthMod , only : mkagfirepkmon
@@ -156,12 +155,10 @@ program mksurfdata
   real(r8), allocatable             :: pctlnd_pft(:)           ! PFT data: % of gridcell for PFTs
   real(r8), allocatable             :: pctlnd_pft_dyn(:)       ! PFT data: % of gridcell for dyn landuse PFTs
   integer , allocatable             :: pftdata_mask(:)         ! mask indicating real or fake land type
-#ifdef TODO
   type(pct_pft_type), allocatable   :: pctnatpft(:)            ! % of grid cell that is nat veg, and breakdown into PFTs
   type(pct_pft_type), allocatable   :: pctnatpft_max(:)        ! % of grid cell maximum PFTs of the time series
   type(pct_pft_type), allocatable   :: pctcft(:)               ! % of grid cell that is crop, and breakdown into CFTs
   type(pct_pft_type), allocatable   :: pctcft_max(:)           ! % of grid cell maximum CFTs of the time series
-#endif
   real(r8)                          :: harvest_initval         ! initial value for harvest variables
   real(r8), allocatable             :: harvest1D(:)            ! harvest 1D data: normalized harvesting
   real(r8), allocatable             :: harvest2D(:,:)          ! harvest 1D data: normalized harvesting
@@ -310,19 +307,6 @@ program mksurfdata
   call write_namelist_input()
 
   ! ----------------------------------------------------------------------
-  ! Call module initialization routines
-  ! ----------------------------------------------------------------------
-
-#ifdef TODO
-  ! zero_out_l => If veg should be zero'ed out  
-  ! all_veg_l  => If should zero out other fractions so that all land-cover is vegetation
-  call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
-#endif
-  allocate ( elevclass(nglcec+1) )
-  call mkglcmecInit (elevclass)
-  call mkurbanInit (mksrf_furban)
-
-  ! ----------------------------------------------------------------------
   ! Read in model mesh
   ! ----------------------------------------------------------------------
 
@@ -335,33 +319,47 @@ program mksurfdata
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
   ! ----------------------------------------------------------------------
-  ! Allocate and initialize dynamic memory for local variables
-  ! ----------------------------------------------------------------------
-
-  allocate ( topo_stddev(lsize_o))            ; topo_stddev(:)      = spval
-  allocate ( slope(lsize_o))                  ; slope(:)            = spval
-  allocate ( vic_binfl(lsize_o))              ; vic_binfl(:)        = spval
-  allocate ( vic_ws(lsize_o))                 ; vic_ws(:)           = spval
-  allocate ( vic_dsmax(lsize_o))              ; vic_dsmax(:)        = spval
-  allocate ( vic_ds(lsize_o))                 ; vic_ds(:)           = spval
-
-  ! ----------------------------------------------------------------------
   ! Read in and interpolate surface data set fields
   ! ----------------------------------------------------------------------
 
+  ! Call module initialization routines
+  allocate ( elevclass(nglcec+1) )
+  call mkglcmecInit (elevclass)
+  call mkurbanInit (mksrf_furban)
+
+  ! Make lats/lons of model
+  allocate (lon(lsize_o)) ; lon(:) = spval
+  allocate (lat(lsize_o)) ; lat(:) = spval
+  call mkdomain(mesh_model, lon_o=lon, lat_o=lat, rc=rc) 
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
+
   ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
   ! Determine fractional land from pft dataset
-  allocate ( landfrac_pft(lsize_o))           ; landfrac_pft(:)     = spval
-  allocate ( pctlnd_pft(lsize_o))             ; pctlnd_pft(:)       = spval
-  allocate ( pftdata_mask(lsize_o))           ; pftdata_mask(:)     = -999
-  ! allocate ( pctnatpft(lsize_o))              ;
-  ! allocate ( pctnatpft_max(lsize_o))          ;
-  ! allocate ( pctcft(lsize_o))                 ;
-  ! allocate ( pctcft_max(lsize_o))             ;
-  ! call mkpft( mapfname=map_fpft, fpft=mksrf_fvegtyp, ndiag=ndiag, &
-  !    pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
-  ! landfrac_pft(:) = pctlnd_pft(:)/100._r8
-  ! end do
+  allocate ( landfrac_pft(lsize_o))  ; landfrac_pft(:)     = spval
+  allocate ( pctlnd_pft(lsize_o))    ; pctlnd_pft(:)       = spval
+  allocate ( pftdata_mask(lsize_o))  ; pftdata_mask(:)     = -999
+  allocate ( pctnatpft(lsize_o))     ;
+  allocate ( pctnatpft_max(lsize_o)) ;
+  allocate ( pctcft(lsize_o))        ;
+  allocate ( pctcft_max(lsize_o))    ;
+  call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
+  call mkpft( mksrf_fvegtyp_mesh, mksrf_fvegtyp, mesh_model, &
+       pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
+
+  ! Set landfrac_pft and pftdata_mask
+  do n = 1,lsize_o
+     landfrac_pft(n) = pctlnd_pft(n)/100._r8
+     if (pctlnd_pft(n) < 1.e-6_r8) then
+        pftdata_mask(n) = 0
+     else
+        pftdata_mask(n) = 1
+     end if
+     if (pctlnd_pft(n) < 1.e-6_r8) then
+        !call pctnatpft(n)%set_pct_l2g(0._r8)
+        !call pctcft(n)%set_pct_l2g(0._r8)
+     end if
+  end do
 
   ! Create harvesting data at model resolution
   ! if (all_veg) then
@@ -376,26 +374,16 @@ program mksurfdata
   !    call mkharvest(  mapfname=map_fharvest, datfname=mksrf_fhrvtyp, ndiag=ndiag, harvdata=harvdata )
   ! end if
 
-  ! Make lats/lons of model
-  allocate (lon(lsize_o)) ; lon(:) = spval
-  allocate (lat(lsize_o)) ; lat(:) = spval
-  call mkdomain(mesh_model, lon_o=lon, lat_o=lat, rc=rc) 
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
-
-  ! Make GDP data [gdp] from [gdp]
-  allocate ( gdp(lsize_o)); gdp(:) = spval
-  call mkgdp (mksrf_fgdp_mesh, mksrf_fgdp, mesh_model, gdp_o=gdp, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
-
-  ! Make agricultural fire peak month data [abm] from [abm]
-  allocate (agfirepkmon(lsize_o)); agfirepkmon(:) = -999
-  call mkagfirepkmon (mksrf_fabm_mesh, mksrf_fabm, mesh_model, agfirepkmon_o=agfirepkmon, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkagfirepkmon')
-
-  ! Make peat data [fpeat] from [peatf]
-  allocate (fpeat(lsize_o)) ; fpeat(:) = spval
-  call mkpeat (mksrf_fpeat_mesh, mksrf_fpeat, mesh_model, peat_o=fpeat, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpeat')
+  ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
+  allocate ( pctlak(lsize_o))    ; pctlak(:)    = spval
+  allocate ( pctwet(lsize_o))    ; pctwet(:)    = spval
+  allocate ( lakedepth(lsize_o)) ; lakedepth(:) = spval
+  zero_out_lake = (all_urban .or. all_veg)
+  zero_out_wetland = (all_urban .or. all_veg .or. no_inlandwet)
+  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
+       zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
+  call ESMF_LogWrite("After mklakwat", ESMF_LOGMSG_INFO)
 
   ! Make glacier fraction [pctgla] from [fglacier] dataset
   allocate (pctgla(lsize_o)) ; pctgla(:) = spval
@@ -411,24 +399,67 @@ program mksurfdata
     end if
  end if
 
-  ! Make VOC emission factors for isoprene [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp]
-  allocate (ef1_btr(lsize_o)) ; ef1_btr(:) = 0._r8
-  allocate (ef1_fet(lsize_o)) ; ef1_fet(:) = 0._r8
-  allocate (ef1_fdt(lsize_o)) ; ef1_fdt(:) = 0._r8
-  allocate (ef1_shr(lsize_o)) ; ef1_shr(:) = 0._r8
-  allocate (ef1_grs(lsize_o)) ; ef1_grs(:) = 0._r8
-  allocate (ef1_crp(lsize_o)) ; ef1_crp(:) = 0._r8
-  call mkvocef ( mksrf_fvocef_mesh, mksrf_fvocef, mesh_model, &
-       ef_btr_o=ef1_btr, ef_fet_o=ef1_fet, ef_fdt_o=ef1_fdt,  &
-       ef_shr_o=ef1_shr, ef_grs_o=ef1_grs, ef_crp_o=ef1_crp, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkvocef')
-
   ! Make glacier region ID [glacier_region] from [fglacierregion] dataset
   allocate (glacier_region(lsize_o)) ; glacier_region(:) = -999
   call mkglacierregion(mksrf_fglacierregion_mesh, mksrf_fglacierregion, mesh_model, glacier_region, rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacierregion')
 
-  ! ! Make urban fraction [pcturb] from [furban] dataset
+  ! Make soil texture [pctsand, pctclay]
+  ! Truncate all percentage fields on output grid. This is needed to insure that wt is zero 
+  ! (not a very small number such as 1e-16) where it really should be zero
+  allocate(mapunits(lsize_o))        ; mapunits(:) = 0
+  allocate(pctsand(lsize_o,nlevsoi)) ; pctsand(:,:) = spval
+  allocate(pctclay(lsize_o,nlevsoi)) ; pctclay(:,:) = spval
+  call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pctsand, pctclay, mapunits, rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
+  do n = 1,lsize_o
+     do k = 1,nlevsoi
+        pctsand(n,k) = float(nint(pctsand(n,k)))
+        pctclay(n,k) = float(nint(pctclay(n,k)))
+     end do
+     if (pctlnd_pft(n) < 1.e-6_r8) then
+        pctsand(n,:) = 43._r8
+        pctclay(n,:) = 18._r8
+     end if
+  end do
+
+  ! Make soil color classes [soicol] [fsoicol]
+  allocate (soil_color(lsize_o)); soil_color(:) = -999
+  call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, soil_color, nsoilcol, rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilcol')
+  do n = 1,lsize_o
+     if (pctlnd_pft(n) < 1.e-6_r8) then
+        ! assume medium soil color (15) and loamy texture
+        soil_color(n) = 15
+     end if
+  end do
+
+  ! Make soil fmax [fmaxsoil]
+  allocate(fmaxsoil(lsize_o)); fmaxsoil(:) = spval
+  call mksoilfmax( mksrf_fmax_mesh, mksrf_fmax, mesh_model, fmaxsoil, rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilfmax')
+
+  ! Make GDP data [gdp] from [gdp]
+  allocate (gdp(lsize_o)); gdp(:) = spval
+  call mkgdp (mksrf_fgdp_mesh, mksrf_fgdp, mesh_model, gdp_o=gdp, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
+
+  ! Make peat data [fpeat] from [peatf]
+  allocate (fpeat(lsize_o)) ; fpeat(:) = spval
+  call mkpeat (mksrf_fpeat_mesh, mksrf_fpeat, mesh_model, peat_o=fpeat, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpeat')
+
+  ! Make soil depth data [soildepth] from [soildepthf]
+  allocate ( soildepth(lsize_o)); soildepth(:) = spval
+  call mksoildepth( mksrf_fsoildepth_mesh, mksrf_fsoildepth, mesh_model, soildepth, rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoildepth')
+
+  ! Make agricultural fire peak month data [abm] from [abm]
+  allocate (agfirepkmon(lsize_o)); agfirepkmon(:) = -999
+  call mkagfirepkmon (mksrf_fabm_mesh, mksrf_fabm, mesh_model, agfirepkmon_o=agfirepkmon, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkagfirepkmon')
+
+  !  Make urban fraction [pcturb] from [furban] dataset
   allocate (pcturb(lsize_o))                 ; pcturb(:)            = spval
   allocate (urban_classes(lsize_o,numurbl))  ; urban_classes(:,:)   = spval
   allocate (urban_classes_g(lsize_o,numurbl)); urban_classes_g(:,:) = spval
@@ -453,140 +484,95 @@ program mksurfdata
      deallocate(elev)
   end if
 
-  ! Make soil fmax [fmaxsoil]
-  allocate(fmaxsoil(lsize_o)); fmaxsoil(:) = spval
-  call mksoilfmax( mksrf_fmax_mesh, mksrf_fmax, mesh_model, fmaxsoil, rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilfmax')
+  ! TODO:
+  ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
+  ! allocate ( topo_stddev(lsize_o))            ; topo_stddev(:)      = spval
+  ! allocate ( slope(lsize_o))                  ; slope(:)            = spval
+  ! call mktopostats ( mapfname=map_ftopostats, datfname=mksrf_ftopostats, &
+  !      ndiag=ndiag, topo_stddev_o=topo_stddev, slope_o=slope, std_elev=std_elev)
 
-  ! Make soil texture [pctsand, pctclay]
-  allocate(mapunits(lsize_o))        ; mapunits(:) = 0
-  allocate(pctsand(lsize_o,nlevsoi)) ; pctsand(:,:) = spval
-  allocate(pctclay(lsize_o,nlevsoi)) ; pctclay(:,:) = spval
-  call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pctsand, pctclay, mapunits, rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
-
-  ! Make soil depth data [soildepth] from [soildepthf]
-  allocate ( soildepth(lsize_o)); soildepth(:) = spval
-  call mksoildepth( mksrf_fsoildepth_mesh, mksrf_fsoildepth, mesh_model, soildepth, rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoildepth')
-
-  ! Make soil color classes [soicol] [fsoicol]
-  allocate (soil_color(lsize_o)); soil_color(:) = -999
-  call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, soil_color, nsoilcol, rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilcol')
+  ! TODO:
+  ! Make VIC parameters [binfl, ws, dsmax, ds] from [fvic]
+  ! if ( outnc_vic )then
+  !    allocate ( vic_binfl(lsize_o))              ; vic_binfl(:)        = spval
+  !    allocate ( vic_ws(lsize_o))                 ; vic_ws(:)           = spval
+  !    allocate ( vic_dsmax(lsize_o))              ; vic_dsmax(:)        = spval
+  !    allocate ( vic_ds(lsize_o))                 ; vic_ds(:)           = spval
+  !    call mkVICparams ( mapfname=map_fvic, datfname=mksrf_fvic, ndiag=ndiag, &
+  !         binfl_o=vic_binfl, ws_o=vic_ws, dsmax_o=vic_dsmax, ds_o=vic_ds)
+  ! end if
 
   ! Make organic matter density [organic] [forganic]
   allocate ( organic(lsize_o,nlevsoi)); organic(:,:) = spval
   call mkorganic( mksrf_forganic_mesh, mksrf_forganic, mesh_model, organic, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
-
-  ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
-  allocate ( pctlak(lsize_o))    ; pctlak(:)    = spval
-  allocate ( pctwet(lsize_o))    ; pctwet(:)    = spval
-  allocate ( lakedepth(lsize_o)) ; lakedepth(:) = spval
-  zero_out_lake = (all_urban .or. all_veg)
-  zero_out_wetland = (all_urban .or. all_veg .or. no_inlandwet)
-  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
-       zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
-  call ESMF_LogWrite("After mklakwat", ESMF_LOGMSG_INFO)
-
-  ! end working
-  ! --------------------------------------------------
-
-  ! ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
-  ! call mktopostats ( mapfname=map_ftopostats, datfname=mksrf_ftopostats, &
-  !      ndiag=ndiag, topo_stddev_o=topo_stddev, slope_o=slope, std_elev=std_elev)
-
-  ! ! Make VIC parameters [binfl, ws, dsmax, ds] from [fvic]
-  ! if ( outnc_vic )then
-  !    call mkVICparams ( mapfname=map_fvic, datfname=mksrf_fvic, ndiag=ndiag, &
-  !         binfl_o=vic_binfl, ws_o=vic_ws, dsmax_o=vic_dsmax, ds_o=vic_ds)
-  ! end if
-
-  ! ! Do landuse changes such as for the poles, etc.
-  ! call change_landuse(  dynpft=.false. )
-
-  ! ----------------------------------------------------------------------
-  ! Modify interpolated fields based on additional constrants
-  ! ----------------------------------------------------------------------
-
-  !    ! Truncate all percentage fields on output grid. This is needed to
-  !    ! insure that wt is zero (not a very small number such as
-  !    ! 1e-16) where it really should be zero
-
-  !DEBUG
   do n = 1,lsize_o
-     do k = 1,nlevsoi
-        pctsand(n,k) = float(nint(pctsand(n,k)))
-        pctclay(n,k) = float(nint(pctclay(n,k)))
-     end do
+     if (pctlnd_pft(n) < 1.e-6_r8) then
+        organic(n,:) = 0._r8
+     end if
+  end do
+
+  ! Make VOC emission factors for isoprene [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp]
+  allocate (ef1_btr(lsize_o)) ; ef1_btr(:) = 0._r8
+  allocate (ef1_fet(lsize_o)) ; ef1_fet(:) = 0._r8
+  allocate (ef1_fdt(lsize_o)) ; ef1_fdt(:) = 0._r8
+  allocate (ef1_shr(lsize_o)) ; ef1_shr(:) = 0._r8
+  allocate (ef1_grs(lsize_o)) ; ef1_grs(:) = 0._r8
+  allocate (ef1_crp(lsize_o)) ; ef1_crp(:) = 0._r8
+  call mkvocef ( mksrf_fvocef_mesh, mksrf_fvocef, mesh_model, &
+       ef_btr_o=ef1_btr, ef_fet_o=ef1_fet, ef_fdt_o=ef1_fdt,  &
+       ef_shr_o=ef1_shr, ef_grs_o=ef1_grs, ef_crp_o=ef1_crp, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkvocef')
+
+  ! TODO:
+  ! Do landuse changes such as for the poles, etc.
+  ! call change_landuse(dynpft=.false., lat_o=lat_o)
+
+  ! ----------------------------------------------------------------------
+  ! Modify pctlak, pctwet, pctgla and pcturb where needed
+  ! ----------------------------------------------------------------------
+
+  do n = 1,lsize_o
+     ! Truncate all percentage fields on output grid. This is needed to insure that 
+     ! wt is zero (not a very small number such as 1e-16) where it should be zero
      pctlak(n) = float(nint(pctlak(n)))
      pctwet(n) = float(nint(pctwet(n)))
      pctgla(n) = float(nint(pctgla(n)))
+
+     ! Assume wetland, glacier and/or lake when dataset landmask implies ocean
+     if (pctlnd_pft(n) < 1.e-6_r8) then
+        if (pctgla(n) < 1.e-6_r8) then
+           pctwet(n) = 100._r8 - pctlak(n)
+           pctgla(n) = 0._r8
+        else
+           pctwet(n)  = max(100._r8 - pctgla(n) - pctlak(n), 0.0_r8)
+        end if
+        pcturb(n) = 0._r8
+     end if
+
+     ! Make sure sum of land cover types does not exceed 100. If it does,
+     ! subtract excess from most dominant land cover.
+     suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
+     if (suma > 250._r4) then
+        write (6,*) subname, ' error: sum of pctlak, pctwet,', &
+             'pcturb and pctgla is greater than 250%'
+        write (6,*)'n,pctlak,pctwet,pcturb,pctgla= ', &
+             n,pctlak(n),pctwet(n),pcturb(n),pctgla(n)
+        call shr_sys_abort()
+     else if (suma > 100._r4) then
+        pctlak(n) = pctlak(n) * 100._r8/suma
+        pctwet(n) = pctwet(n) * 100._r8/suma
+        pcturb(n) = pcturb(n) * 100._r8/suma
+        pctgla(n) = pctgla(n) * 100._r8/suma
+     end if
   end do
-  !DEBUG
 
-  call ESMF_LogWrite("After fixes", ESMF_LOGMSG_INFO)
-
-  ! do n = 1,lsize_o
-  !    ! Truncate all percentage fields on output grid. This is needed to
-  !    ! insure that wt is zero (not a very small number such as
-  !    ! 1e-16) where it really should be zero
-
-       ! do k = 1,nlevsoi
-       !    pctsand(n,k) = float(nint(pctsand(n,k)))
-       !    pctclay(n,k) = float(nint(pctclay(n,k)))
-       ! end do
-       ! pctlak(n) = float(nint(pctlak(n)))
-       ! pctwet(n) = float(nint(pctwet(n)))
-       ! pctgla(n) = float(nint(pctgla(n)))
-
-  !    ! Assume wetland, glacier and/or lake when dataset landmask implies ocean
-  !    ! (assume medium soil color (15) and loamy texture).
-  !    ! Also set pftdata_mask here
-
-  !    if (pctlnd_pft(n) < 1.e-6_r8) then
-  !       pftdata_mask(n)  = 0
-  !       soicol(n)        = 15
-  !       if (pctgla(n) < 1.e-6_r8) then
-  !          pctwet(n)    = 100._r8 - pctlak(n)
-  !          pctgla(n)    = 0._r8
-  !       else
-  !          pctwet(n)    = max(100._r8 - pctgla(n) - pctlak(n), 0.0_r8)
-  !       end if
-  !       pcturb(n)        = 0._r8
-  !       !call pctnatpft(n)%set_pct_l2g(0._r8)
-  !       !call pctcft(n)%set_pct_l2g(0._r8)
-  !       pctsand(n,:)     = 43._r8
-  !       pctclay(n,:)     = 18._r8
-  !       organic(n,:)   = 0._r8
-  !    else
-  !       pftdata_mask(n) = 1
-  !    end if
-
-  !    ! Make sure sum of land cover types does not exceed 100. If it does,
-  !    ! subtract excess from most dominant land cover.
-
-  !    suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-  !    if (suma > 250._r4) then
-  !       write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-  !            'pcturb and pctgla is greater than 250%'
-  !       write (6,*)'n,pctlak,pctwet,pcturb,pctgla= ', &
-  !            n,pctlak(n),pctwet(n),pcturb(n),pctgla(n)
-  !       call shr_sys_abort()
-  !    else if (suma > 100._r4) then
-  !       pctlak(n) = pctlak(n) * 100._r8/suma
-  !       pctwet(n) = pctwet(n) * 100._r8/suma
-  !       pcturb(n) = pcturb(n) * 100._r8/suma
-  !       pctgla(n) = pctgla(n) * 100._r8/suma
-  !    end if
-  ! end do
-
+  ! ----------------------------------------------------------------------
+  ! TODO:
   ! call normalizencheck_landuse()
 
-  ! ! Write out sum of PFT's
-
+  ! TODO:
+  ! Write out sum of PFT's
   ! do k = natpft_lb,natpft_ub
   !    suma = 0._r8
   !    do n = 1,lsize_o
@@ -594,8 +580,8 @@ program mksurfdata
   !    enddo
   !    write(6,*) 'sum over domain of pft ',k,suma
   ! enddo
-  ! write(6,*)
-
+  ! if (root_task) write(ndiag,*)
+  !
   ! do k = cft_lb,cft_ub
   !    suma = 0._r8
   !    do n = 1,lsize_o
@@ -603,7 +589,7 @@ program mksurfdata
   !    enddo
   !    write(6,*) 'sum over domain of cft ',k,suma
   ! enddo
-  ! write(6,*)
+  ! if (root_task) write(ndiag,*)
 
   ! Make final values of percent urban by class
   ! This call needs to occur after all corrections are made to pcturb
@@ -636,18 +622,8 @@ program mksurfdata
   end if
 
   ! ----------------------------------------------------------------------
+  ! Create netCDF surface dataset
   ! ----------------------------------------------------------------------
-
-  ! Determine fractional land from pft dataset
-  ! do n = 1,lsize_o
-  !    landfrac_pft(n) = pctlnd_pft(n)/100._r8
-  ! end do
-
-  ! ----------------------------------------------------------------------
-  ! Create surface dataset
-  ! ----------------------------------------------------------------------
-
-  ! Create netCDF surface dataset.
 
   ! If fsurdat is blank, then we do not write a surface dataset - but we may still
   ! write a dynamic landuse file. This is useful if we are creating many datasets at
@@ -747,19 +723,20 @@ program mksurfdata
   ! Create dynamic land use dataset if appropriate
   ! ----------------------------------------------------------------------
 
+  if (mksrf_fdynuse /= ' '.and. fdyndat == ' ') then
+     call shr_sys_abort(' must specify fdyndat in namelist if mksrf_fdynuse is not blank')
+  end if
+
   if (mksrf_fdynuse /= ' ') then
 
-     ! write(6,*)'creating dynamic land use dataset'
+     if (root_task) then
+        write(ndiag,'(a)')'creating dynamic land use dataset'
+     end if
 
      ! allocate(pctlnd_pft_dyn(lsize_o))
      ! call mkharvest_init( lsize_o, spval, harvdata, mksrf_fhrvtyp )
 
-     ! if (fdyndat == ' ') then
-     !    write(6,*)' must specify fdyndat in namelist if mksrf_fdynuse is not blank'
-     !    call shr_sys_abort()
-     ! end if
-
-     ! ! Define dimensions and global attributes
+     ! Define dimensions and global attributes
 
      ! call mkfile( fdyndat, harvdata, dynlanduse=.true., pioid)
 
@@ -936,8 +913,7 @@ program mksurfdata
   contains
   !-----------------------------------------------------------------------
 
-#ifdef TODO
-    subroutine change_landuse(  dynpft, lsize_o, mesh_o)
+    subroutine change_landuse(dynpft)
 
       ! Do landuse changes such as for the poles, etc.
       ! If have pole points on grid - set south pole to glacier
@@ -946,54 +922,48 @@ program mksurfdata
       ! input/output variables
       logical, intent(in)  :: dynpft   ! if part of the dynpft section of code
 
-      ! !LOCAL VARIABLES:
-      integer  :: n,lsize_o                       ! indices
-      character(len=32) :: subname = 'change_landuse'  ! subroutine name
+      ! local variables:
+      integer  :: n  ! indices
+      character(len=*), parameter :: subname = 'change_landuse'  ! subroutine name
       !-----------------------------------------------------------------------
 
-      !
-
       do n = 1,lsize_o
-         ! TODO: define latc
-         if (abs(latc(n) - 90._r8) < 1.e-6_r8) then
-            pctlak(n)   = 0._r8
-            pctwet(n)   = 0._r8
-            pcturb(n)   = 0._r8
-            pctgla(n)   = 100._r8
+         if (abs(lat(n) - 90._r8) < 1.e-6_r8) then
+            pctlak(n) = 0._r8
+            pctwet(n) = 0._r8
+            pcturb(n) = 0._r8
+            pctgla(n) = 100._r8
             call pctnatpft(n)%set_pct_l2g(0._r8)
             call pctcft(n)%set_pct_l2g(0._r8)
             if ( .not. dynpft )then
-               organic(n,:)   = 0._r8
-               ef1_btr(n)     = 0._r8
-               ef1_fet(n)     = 0._r8
-               ef1_fdt(n)     = 0._r8
-               ef1_shr(n)     = 0._r8
-               ef1_grs(n)     = 0._r8
-               ef1_crp(n)     = 0._r8
+               organic(n,:) = 0._r8
+               ef1_btr(n)   = 0._r8
+               ef1_fet(n)   = 0._r8
+               ef1_fdt(n)   = 0._r8
+               ef1_shr(n)   = 0._r8
+               ef1_grs(n)   = 0._r8
+               ef1_crp(n)   = 0._r8
             end if
          end if
-
       end do
     end subroutine change_landuse
 
     !-----------------------------------------------------------------------
-    subroutine normalizencheck_landuse(ldomain)
+    subroutine normalizencheck_landuse(ns_o)
       !
       ! Normalize land use and make sure things add up to 100% as well as
       ! checking that things are as they should be.
       !
       ! Precondition: pctlak + pctwet + pcturb + pctgla <= 100 (within roundoff)
       !
-      ! !USES:
       use mkpftConstantsMod , only : baregroundindex
       use mkpftUtilsMod     , only : adjust_total_veg_area
-      implicit none
 
-      ! !ARGUMENTS:
-      type(domain_type)   :: ldomain
-      !
-      ! !LOCAL VARIABLES:
-      integer  :: m,k,n,ns_o                  ! indices
+      ! input/output variables:
+      integer, intent(in) :: ns_o
+
+      ! local variables:
+      integer  :: m,k,n                       ! indices
       integer  :: nsmall                      ! number of small PFT values for a single check
       integer  :: nsmall_tot                  ! total number of small PFT values in all grid cells
       real(r8) :: suma                        ! sum for error check
@@ -1013,7 +983,6 @@ program mksurfdata
       ! Normalize vegetated area so that vegetated + special area is 100%
       ! ------------------------------------------------------------------------
 
-      ns_o = ldomain%ns
       do n = 1,ns_o
 
          ! Check preconditions
@@ -1057,13 +1026,13 @@ program mksurfdata
 
          suma = pctlak(n)+pctwet(n)+pctgla(n)
          new_total_veg_pct = 100._r8 - suma
+
          ! correct for rounding error:
          new_total_veg_pct = max(new_total_veg_pct, 0._r8)
 
-         call adjust_total_veg_area(new_total_veg_pct, pctnatpft=pctnatpft(n), pctcft=pctcft(n))
+         ! call adjust_total_veg_area(new_total_veg_pct, pctnatpft=pctnatpft(n), pctcft=pctcft(n))
 
          ! Make sure we did the above rescaling correctly
-
          suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
          if (abs(suma - 100._r8) > tol_loose) then
             write(6,*) subname, ' ERROR in rescaling veg based on (special excluding urban'
@@ -1266,6 +1235,5 @@ program mksurfdata
       end if
 
     end subroutine normalizencheck_landuse
-#endif
 
 end program mksurfdata

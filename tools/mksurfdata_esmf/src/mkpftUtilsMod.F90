@@ -1,34 +1,19 @@
 module mkpftUtilsMod
 
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !MODULE: mkpftUtils
-  !
-  ! !DESCRIPTION:
   ! Lower-level utilities used in making PFT data.
   !
   ! These are separated out from mkpftMod mainly as an aid to testing.
-  !
-  ! !REVISION HISTORY:
-  ! Author: Bill Sacks
-  !
   !-----------------------------------------------------------------------
-  !!USES:
+
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_sys_mod , only : shr_sys_abort
 
   implicit none
   private
 
-  !
-  ! !PUBLIC MEMBER FUNCTIONS:
-  !
   public :: convert_from_p2g      ! Convert a p2g array into pct_pft_type objects
   public :: adjust_total_veg_area ! Adjust the total vegetated area (natural veg & crop) to a new specified total
-
-  !
-  ! !PRIVATE MEMBER FUNCTIONS:
-  !
 
   private :: get_default_natpft   ! Get the default natural pft breakdown, for a 0-area natural veg. landunit
   private :: get_default_cft      ! Get the default cft breakdown, for a 0-area crop landunit
@@ -38,10 +23,9 @@ module mkpftUtilsMod
      module procedure convert_from_p2g_missing_crops
   end interface convert_from_p2g
 
-  !EOP
-  !===============================================================
+!===============================================================
 contains
-  !===============================================================
+!===============================================================
 
   !-----------------------------------------------------------------------
   subroutine convert_from_p2g_default(pct_p2g, pctnatpft, pctcft)
@@ -250,7 +234,6 @@ contains
     end if
 
   end subroutine adjust_total_veg_area
-
 
 end module mkpftUtilsMod
 

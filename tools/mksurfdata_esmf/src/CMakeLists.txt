@@ -30,6 +30,9 @@ set(SRCFILES mkvarctl.F90
              mkorganicMod.F90
              mkpeatMod.F90
              mkpftConstantsMod.F90
+             mkpftMod.F90
+             mkpftUtilsMod.F90
+             mkpctPftTypeMod.F90
              mksoilcolMod.F90
              mksoilfmaxMod.F90
              mksoiltexMod.F90
