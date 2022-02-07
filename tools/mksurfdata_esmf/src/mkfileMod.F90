@@ -9,7 +9,9 @@ module mkfileMod
   use mkurbanparMod, only : numurbl, nlevurb, mkurbanpar
   use mkglcmecMod  , only : nglcec
   use mklaiMod     , only : mklai          
+  use mkpftConstantsMod , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft, num_natpft
 #ifdef TODO
+  use mkpctPftTypeMod   , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
   use mkpftMod     , only : mkpftAtt
   use mkharvestMod , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname, mkharvest_units, harvestDataType
 #endif
@@ -394,6 +396,8 @@ contains
     ! local variables
     integer :: dimid  ! temporary
     integer :: rcode  ! error status
+    integer :: pftsize
+    integer :: natpftsize
     character(len=*), parameter :: subname = 'mkfile_define_dims'
     !-----------------------------------------------------------------------
 
@@ -414,6 +418,21 @@ contains
     end if
     rcode = pio_def_dim(pioid, 'time'   , PIO_UNLIMITED , dimid)
     rcode = pio_def_dim(pioid, 'nchar'  , 256           , dimid)
+
+    if (.not. dynlanduse) then
+       pftsize = numpft + 1
+       rcode = pio_def_dim(pioid, 'lsmpft' , pftsize, dimid)
+    end if
+    ! TODO: uncomment this
+    ! natpftsize = num_natpft + 1
+    ! rcode = pio_def_dim (pioid, 'natpft', natpftsize, dimid)
+
+    ! zero-size dimensions can cause problems, so we only include the
+    ! cft dimension if num_cft > 0 Note that this implies that we can
+    ! only include PCT_CFT on the dataset if num_cft > 0
+    if (num_cft > 0) then
+       rcode = pio_def_dim (pioid, 'cft', num_cft, dimid)
+    end if
 
   end subroutine mkfile_define_dims
 
