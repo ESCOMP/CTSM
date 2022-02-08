@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-clm5.0.35
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Tue Feb  8 15:18:15 MST 2022
+Date: Tue Feb  8 16:09:57 MST 2022
 One-line Summary: Add SSP3-7.0 extension, and SMYLE 1850 and transient, compsets and use-cases
 
 Purpose of this version:
@@ -74,12 +74,20 @@ Testing:
     izumi_pgi --------- OK
     izumi_intel ------- PASS
 
+  fates tests (fates):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ PASS
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- PASS
+
 Summary of Answer changes:
 -------------------------
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: Yes, only for some SSP cases and for AD spinup
 
   Summarize any changes to answers, i.e.,
     - what code configurations: AD spinup mode, and SSP3-7.0, SSP2-4.5 and SSP5-3.4 because of ndep files
