@@ -1,4 +1,5 @@
 module mklaiMod
+
   !-----------------------------------------------------------------------
   ! Make LAI/SAI/height data
   !-----------------------------------------------------------------------
@@ -9,8 +10,7 @@ module mklaiMod
   use shr_sys_mod       , only : shr_sys_abort
   use mkpioMod          , only : pio_iotype, pio_ioformat, pio_iosystem
   use mkpioMod          , only : mkpio_get_rawdata, mkpio_get_rawdata_level
-  use mkpioMod          , only : mkpio_def_spatial_var, mkpio_iodesc_output, mkpio_iodesc_rawdata
-  use mkpioMod          , only : mkpio_put_time_slice
+  use mkpioMod          , only : mkpio_iodesc_output, mkpio_iodesc_rawdata, mkpio_put_time_slice
   use mkesmfMod         , only : regrid_rawdata, create_routehandle_r8, get_meshareas
   use mkutilsMod        , only : chkerr
   use mkpftConstantsMod , only : c3cropindex, c3irrcropindex
@@ -85,9 +85,7 @@ contains
     end if
 
     ! Open input data file
-    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
     rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
-    call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
     call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
@@ -163,24 +161,6 @@ contains
     ! Create iodescriptor for a single level of the input data
     call mkpio_iodesc_rawdata(mesh_i, 'MONTHLY_LAI', pioid_i, pio_varid_i, pio_vartype_i, pio_iodesc_i, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    ! Put output file back in define mode, define variables and then end define mode
-    if ( outnc_double ) then
-       xtype = PIO_DOUBLE
-    else
-       xtype = PIO_REAL
-    end if
-
-    rcode = pio_redef(pioid_o)
-    call mkpio_def_spatial_var(pioid_o, 'MONTHLY_LAI', xtype,  &
-         lev1name='lsmpft', lev2name='time', long_name='monthly leaf area index', units='unitless')
-    call mkpio_def_spatial_var(pioid_o, 'MONTHLY_SAI',xtype,  &
-         lev1name='lsmpft', lev2name='time', long_name='monthly stem area index', units='unitless')
-    call mkpio_def_spatial_var(pioid_o, 'MONTHLY_HEIGHT_TOP', xtype,  &
-         lev1name='lsmpft', lev2name='time',long_name='monthly height top', units='meters')
-    call mkpio_def_spatial_var(pioid_o, 'MONTHLY_HEIGHT_BOT', xtype,  &
-         lev1name='lsmpft', lev2name='time', long_name='monthly height bottom', units='meters')
-    rcode = pio_enddef(pioid_o)
 
     ! Create iodescriptor for a single level of the output data
     call mkpio_iodesc_output(pioid_o, mesh_o, 'MONTHLY_LAI', pio_iodesc_o, rc)

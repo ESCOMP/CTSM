@@ -20,11 +20,10 @@ module mkpioMod
   public :: mkpio_iodesc_output
   public :: mkpio_wopen
   public :: mkpio_close
+  public :: mkpio_defvar
   public :: mkpio_def_spatial_var
   public :: mkpio_get_dimlengths
   public :: mkpio_put_time_slice
-
-  private :: mkpio_defvar
 
   interface mkpio_get_rawdata_level
      module procedure mkpio_get_rawdata1d_level_real4

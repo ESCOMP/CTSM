@@ -26,8 +26,6 @@ contains
     use mkchecksMod, only : min_bad, max_bad
     !
     ! !ARGUMENTS:
-
-    implicit none
     type(domain_type) , intent(in) :: ldomain
     character(len=*)  , intent(in) :: mapfname          ! input mapping file name
     character(len=*)  , intent(in) :: datfname          ! input data file name
@@ -36,15 +34,7 @@ contains
     real(r8)          , intent(out):: topo_stddev_o(:)  ! output grid: standard deviation of elevation (m)
     real(r8)          , intent(out):: slope_o(:)        ! output grid: slope (degrees)
     !
-    ! !CALLED FROM:
-    ! subroutine mksrfdat in module mksrfdatMod
-    !
-    ! !REVISION HISTORY:
-    ! Author: Bill Sacks
-    !
-    !
     ! !LOCAL VARIABLES:
-    !EOP
     type(gridmap_type)    :: tgridmap
     type(domain_type)     :: tdomain            ! local domain
     real(r8), allocatable :: data_i(:)          ! data on input grid
@@ -83,7 +73,7 @@ contains
     ! dst_array(no) = dst_array(no) + wt * (src_array(ni) - weighted_means(no))**2 part,
     ! and then just do a plain sparse matrix multiply on a src Field of all 1.0 to do the
     ! weight sum part, and then do the divide and sqrt locally on each PET.
-    
+
     !  One issue is how to get the weight_means() in for each
     !  dest. location. I think that you could pass them in via the
     !  dst_array and then pull them out before doing the calculation, but
@@ -92,79 +82,79 @@ contains
     !  zeroregion=ESMF_REGION_EMPTY.This would also depend on the
     !  calculation happening only once for each destination location,
     !  which I would guess is true, but Gerhard can confirm.
-    
-       ! -----------------------------------------------------------------
-       ! Open input file, allocate memory for input data
-       ! -----------------------------------------------------------------
-
-       write(6,*)'Open Topography file: ', trim(datfname)
-       call check_ret(nf_open(datfname, 0, ncid), subname)
-
-       allocate(data_i(tdomain%ns), stat=ier)
-       if (ier/=0) call abort()
-
-       ! -----------------------------------------------------------------
-       ! Make topography standard deviation
-       ! -----------------------------------------------------------------
-
-       call check_ret(nf_inq_varid (ncid, 'ELEVATION', varid), subname)
-       call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-       call gridmap_areastddev(tgridmap, data_i, topo_stddev_o, nodata=0._r8)
-
-       call output_diagnostics_continuous_outonly(topo_stddev_o, tgridmap, "Topo Std Dev", "m", ndiag)
-    else
-       write (6,*) '    Set std deviation of topography to ', std_elev
-       topo_stddev_o = std_elev
-    end if
-
-    ! Check validity of output data
-    if (min_bad(topo_stddev_o, min_valid_topo_stddev, 'topo_stddev')) then
-       call abort()
-    end if
-
 
     ! -----------------------------------------------------------------
-    ! Regrid slope
+    ! Open input file, allocate memory for input data
     ! -----------------------------------------------------------------
 
-    if ( .not. bypass_reading )then
-       call check_ret(nf_inq_varid (ncid, 'SLOPE', varid), subname)
-       call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
+    write(6,*)'Open Topography file: ', trim(datfname)
+    call check_ret(nf_open(datfname, 0, ncid), subname)
 
-       ! Subr. gridmap_areaave_no_srcmask should NOT be used in general. We have
-       ! kept it to support the rare raw data files for which we have masking on
-       ! the mapping file and, therefore, we do not explicitly pass the src_mask
-       ! as an argument. In general, users are advised to use subroutine
-       ! gridmap_areaave_srcmask.
-       call gridmap_areaave_no_srcmask(tgridmap, data_i, slope_o, nodata=0._r8)
-
-       call output_diagnostics_continuous(data_i, slope_o, tgridmap, "Slope", "degrees", ndiag, tdomain%mask, tgridmap%frac_dst)
-    else
-       write (6,*) '    Set slope of topography to ', 0.0_r8
-       slope_o = 0.0_r8
-    end if
-    ! Check validity of output data
-    if (min_bad(slope_o, min_valid_slope, 'slope') .or. &
-         max_bad(slope_o, max_valid_slope, 'slope')) then
-       call abort()
-    end if
-
+    allocate(data_i(tdomain%ns), stat=ier)
+    if (ier/=0) call abort()
 
     ! -----------------------------------------------------------------
-    ! Close files and deallocate dynamic memory
+    ! Make topography standard deviation
     ! -----------------------------------------------------------------
 
-    if ( .not. bypass_reading )then
-       call check_ret(nf_close(ncid), subname)
-       call domain_clean(tdomain) 
-       call gridmap_clean(tgridmap)
-       deallocate (data_i)
-    end if
+    call check_ret(nf_inq_varid (ncid, 'ELEVATION', varid), subname)
+    call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
+    call gridmap_areastddev(tgridmap, data_i, topo_stddev_o, nodata=0._r8)
 
-    write (6,*) 'Successfully made Topography statistics'
-    write (6,*)
+    call output_diagnostics_continuous_outonly(topo_stddev_o, tgridmap, "Topo Std Dev", "m", ndiag)
+ else
+    write (6,*) '    Set std deviation of topography to ', std_elev
+    topo_stddev_o = std_elev
+ end if
 
-  end subroutine mktopostats
+ ! Check validity of output data
+ if (min_bad(topo_stddev_o, min_valid_topo_stddev, 'topo_stddev')) then
+    call abort()
+ end if
+
+
+ ! -----------------------------------------------------------------
+ ! Regrid slope
+ ! -----------------------------------------------------------------
+
+ if ( .not. bypass_reading )then
+    call check_ret(nf_inq_varid (ncid, 'SLOPE', varid), subname)
+    call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
+
+    ! Subr. gridmap_areaave_no_srcmask should NOT be used in general. We have
+    ! kept it to support the rare raw data files for which we have masking on
+    ! the mapping file and, therefore, we do not explicitly pass the src_mask
+    ! as an argument. In general, users are advised to use subroutine
+    ! gridmap_areaave_srcmask.
+    call gridmap_areaave_no_srcmask(tgridmap, data_i, slope_o, nodata=0._r8)
+
+    call output_diagnostics_continuous(data_i, slope_o, tgridmap, "Slope", "degrees", ndiag, tdomain%mask, tgridmap%frac_dst)
+ else
+    write (6,*) '    Set slope of topography to ', 0.0_r8
+    slope_o = 0.0_r8
+ end if
+ ! Check validity of output data
+ if (min_bad(slope_o, min_valid_slope, 'slope') .or. &
+      max_bad(slope_o, max_valid_slope, 'slope')) then
+    call abort()
+ end if
+
+
+ ! -----------------------------------------------------------------
+ ! Close files and deallocate dynamic memory
+ ! -----------------------------------------------------------------
+
+ if ( .not. bypass_reading )then
+    call check_ret(nf_close(ncid), subname)
+    call domain_clean(tdomain) 
+    call gridmap_clean(tgridmap)
+    deallocate (data_i)
+ end if
+
+ write (6,*) 'Successfully made Topography statistics'
+ write (6,*)
+
+end subroutine mktopostats
 
   !================================================================================================
   subroutine dynMaskProc(dynamicMaskList, dynamicSrcMaskValue, dynamicDstMaskValue, rc)

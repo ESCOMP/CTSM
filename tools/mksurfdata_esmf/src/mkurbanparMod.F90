@@ -9,8 +9,7 @@ module mkurbanparMod
   use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs
   use shr_sys_mod  , only : shr_sys_abort
   use mkpioMod     , only : mkpio_get_rawdata, pio_iotype, pio_ioformat, pio_iosystem
-  use mkpioMod     , only : mkpio_iodesc_output, mkpio_def_spatial_var, mkpio_wopen
-  use mkpioMod     , only : mkpio_get_dimlengths, mkpio_get_rawdata
+  use mkpioMod     , only : mkpio_iodesc_output, mkpio_get_dimlengths, mkpio_get_rawdata
   use mkpioMod     , only : pio_iotype, pio_ioformat, pio_iosystem
   use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8
   use mkutilsMod   , only : chkerr
@@ -594,101 +593,6 @@ contains
     do k = 1, numurbl
        unity_dens_o(:,k) = k
     end do
-
-    if ( outnc_double ) then
-       xtype = PIO_DOUBLE
-    else
-       xtype = PIO_REAL
-    end if
-
-    ! Put output file back in define mode and define urban parameter output variables
-    rcode = pio_redef(pioid_o)
-
-    rcode = pio_def_dim(pioid_o, 'numrad' , numrad, dimid)
-
-    call mkpio_def_spatial_var(pioid_o, varname='CANYON_HWR', xtype=xtype, &
-         lev1name='numurbl', long_name='canyon height to width ratio', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='EM_IMPROAD', xtype=xtype, &
-         lev1name='numurbl', long_name='emissivity of impervious road', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='EM_PERROAD', xtype=xtype, &
-         lev1name='numurbl', long_name='emissivity of pervious road', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='EM_ROOF', xtype=xtype, &
-         lev1name='numurbl', long_name='emissivity of roof', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='EM_WALL', xtype=xtype, &
-         lev1name='numurbl', long_name='emissivity of wall', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='HT_ROOF', xtype=xtype, &
-         lev1name='numurbl', long_name='height of roof', units='meters')
-
-    call mkpio_def_spatial_var(pioid_o, varname='THICK_ROOF', xtype=xtype, &
-         lev1name='numurbl', long_name='thickness of roof', units='meters')
-
-    call mkpio_def_spatial_var(pioid_o, varname='THICK_WALL', xtype=xtype, &
-         lev1name='numurbl', long_name='thickness of wall', units='meters')
-
-    call mkpio_def_spatial_var(pioid_o, varname='T_BUILDING_MIN', xtype=xtype, &
-         lev1name='numurbl', long_name='minimum interior building temperature', units='K')
-
-    call mkpio_def_spatial_var(pioid_o, varname='WIND_HGT_CANYON', xtype=xtype, &
-         lev1name='numurbl', long_name='height of wind in canyon', units='meters')
-
-    call mkpio_def_spatial_var(pioid_o, varname='WTLUNIT_ROOF', xtype=xtype, &
-         lev1name='numurbl', long_name='fraction of roof', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='WTROAD_PERV', xtype=xtype, &
-         lev1name='numurbl', long_name='fraction of pervious road', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='ALB_IMPROAD_DIR', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', long_name='direct albedo of impervious road', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='ALB_IMPROAD_DIF', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', long_name='diffuse albedo of impervious road', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='ALB_PERROAD_DIR', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', long_name='direct albedo of pervious road', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='ALB_PERROAD_DIF', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', long_name='diffuse albedo of pervious road', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='ALB_ROOF_DIR', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', long_name='direct albedo of roof', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='ALB_ROOF_DIF', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', long_name='diffuse albedo of roof', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='ALB_WALL_DIR', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', long_name='direct albedo of wall', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='ALB_WALL_DIF', xtype=xtype, &
-         lev1name='numurbl', lev2name='numrad', long_name='diffuse albedo of wall', units='unitless')
-
-    call mkpio_def_spatial_var(pioid_o, varname='TK_ROOF', xtype=xtype, &
-         lev1name='numurbl', lev2name='nlevurb', long_name='thermal conductivity of roof', units='W/m*K')
-
-    call mkpio_def_spatial_var(pioid_o, varname='TK_WALL', xtype=xtype, &
-         lev1name='numurbl', lev2name='nlevurb', long_name='thermal conductivity of wall', units='W/m*K')
-
-    call mkpio_def_spatial_var(pioid_o, varname='TK_IMPROAD', xtype=xtype, &
-         lev1name='numurbl', lev2name='nlevurb', long_name='thermal conductivity of impervious road', units='W/m*K')
-
-    call mkpio_def_spatial_var(pioid_o, varname='CV_ROOF', xtype=xtype, &
-         lev1name='numurbl', lev2name='nlevurb', long_name='volumetric heat capacity of roof', units='J/m^3*K')
-
-    call mkpio_def_spatial_var(pioid_o, varname='CV_WALL', xtype=xtype, &
-         lev1name='numurbl', lev2name='nlevurb', long_name='volumetric heat capacity of wall', units='J/m^3*K')
-
-    call mkpio_def_spatial_var(pioid_o, varname='CV_IMPROAD', xtype=xtype, &
-         lev1name='numurbl', lev2name='nlevurb', long_name='volumetric heat capacity of impervious road', units='J/m^3*K')
-
-    call mkpio_def_spatial_var(pioid_o, varname='NLEV_IMPROAD', xtype=PIO_INT, &
-         lev1name='numurbl', long_name='number of impervious road layers', units='unitless')
-
-    ! End define model
-    rcode = pio_enddef(pioid_o)
 
     ! ------------------------------------------------
     ! Handle urban parameters with no extra dimensions
