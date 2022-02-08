@@ -312,7 +312,7 @@ contains
           crop_inst%rx_sdates_thisyr(p,1) = dataptr2d_sdate(ig,n)
 
           ! Sanity check: Should only read in valid values
-          if (crop_inst%rx_sdates_thisyr(p,1) <= 0 .or. dataptr1d_sdate(g) > 365) then
+          if (crop_inst%rx_sdates_thisyr(p,1) <= 0 .or. crop_inst%rx_sdates_thisyr(p,1) > 365) then
               write(iulog,'(a,i0,a,i0)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed sowing date ',crop_inst%rx_sdates_thisyr(p,1)
               call ESMF_Finalize(endflag=ESMF_END_ABORT)
           end if
