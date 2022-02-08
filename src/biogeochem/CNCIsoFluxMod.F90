@@ -18,7 +18,7 @@ module CNCIsoFluxMod
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
-  use clm_varctl                         , only : use_crop
+  use clm_varctl                         , only : use_crop, iulog
   use clm_varctl                         , only : use_grainproduct
   !
   implicit none
@@ -135,7 +135,7 @@ contains
            iso_cnveg_cf%frootc_to_litter_patch              , cnveg_cf%frootc_to_litter_patch, &
            iso_cnveg_cs%frootc_patch                        , cnveg_cs%frootc_patch, &
            num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
-
+ 
       call CIsoFluxCalc(&
            iso_cnveg_cf%livestemc_to_deadstemc_patch        , cnveg_cf%livestemc_to_deadstemc_patch, &
            iso_cnveg_cs%livestemc_patch                     , cnveg_cs%livestemc_patch, &
@@ -413,6 +413,17 @@ contains
               iso_cnveg_cf%crop_seedc_to_leaf_patch            , cnveg_cf%crop_seedc_to_leaf_patch, &
               iso_cnveg_cs%totvegc_patch                       , cnveg_cs%totvegc_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%crop_seedc_to_froot_patch            , cnveg_cf%crop_seedc_to_froot_patch, &
+              iso_cnveg_cs%totvegc_patch                       , cnveg_cs%totvegc_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%crop_seedc_to_deadstem_patch        , cnveg_cf%crop_seedc_to_deadstem_patch, &
+              iso_cnveg_cs%totvegc_patch                       , cnveg_cs%totvegc_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
 
          call CIsoFluxCalc(&
               iso_cnveg_cf%grain_curmr_patch                   , cnveg_cf%grain_curmr_patch, &
@@ -1222,7 +1233,7 @@ contains
                           + frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
                      phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
                           + frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
-
+                     
 !DML
                      if (ivt(p) >= npcropmin) then ! add livestemc to litter
                         ! stem litter carbon fluxes

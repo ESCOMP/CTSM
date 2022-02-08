@@ -84,6 +84,7 @@ module TemperatureType
      ! being: that way one parameterization is free to change the exact meaning of its
      ! accumulator without affecting the other).
      !
+     real(r8), pointer :: t_ref24_patch           (:)   ! patch 24hr average 2 m air temperature (K)
      real(r8), pointer :: t_veg24_patch           (:)   ! patch 24hr average vegetation temperature (K)
      real(r8), pointer :: t_veg240_patch          (:)   ! patch 240hr average vegetation temperature (Kelvin)
      real(r8), pointer :: gdd0_patch              (:)   ! patch growing degree-days base  0C from planting  (ddays)
@@ -246,6 +247,7 @@ contains
     allocate(this%t_ref2m_min_inst_u_patch (begp:endp))                      ; this%t_ref2m_min_inst_u_patch (:)   = nan
 
     ! Accumulated fields
+    allocate(this%t_ref24_patch            (begp:endp))                      ; this%t_ref24_patch            (:)   = nan
     allocate(this%t_veg24_patch            (begp:endp))                      ; this%t_veg24_patch            (:)   = nan
     allocate(this%t_veg240_patch           (begp:endp))                      ; this%t_veg240_patch           (:)   = nan
     allocate(this%gdd0_patch               (begp:endp))                      ; this%gdd0_patch               (:)   = spval
@@ -443,6 +445,7 @@ contains
     else
        active = "inactive"
     end if
+
     this%t_a10_patch(begp:endp) = spval
     call hist_addfld1d (fname='T10', units='K',  &
          avgflag='A', long_name='10-day running mean of 2-m temperature', &
@@ -559,6 +562,11 @@ contains
     end if
 
     ! Accumulated quantities
+
+    this%t_ref24_patch(begp:endp) = spval
+    call hist_addfld1d (fname='TREF24', units='K',  &
+         avgflag='A', long_name='2 m air temperature (last 24hrs)', &
+         ptr_patch=this%t_ref24_patch, default='inactive')
 
     this%t_veg24_patch(begp:endp) = spval
     call hist_addfld1d (fname='TV24', units='K',  &
@@ -921,6 +929,10 @@ contains
          long_name='Urban 2m height surface air temperature', units='K',                                              &
          interpinic_flag='interp', readvar=readvar, data=this%t_ref2m_u_patch)
 
+    call restartvar(ncid=ncid, flag=flag, varname='T_REF24', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='daily average 2 m height surface air temperature (K)', units='K', &
+         interpinic_flag='interp', readvar=readvar, data=this%t_ref24_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='T_REF2M_MIN', xtype=ncd_double,  &
          dim1name='pft', &
@@ -1119,6 +1131,10 @@ contains
 
     dtime = get_step_size()
 
+    call init_accum_field (name='T_REF24', units='K', &
+         desc='24hr average of 2 m air temperature',  accum_type='timeavg', accum_period=-1,    &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
     this%t_veg24_patch(bounds%begp:bounds%endp) = spval
     call init_accum_field (name='T_VEG24', units='K',                                              &
          desc='24hr average of vegetation temperature',  accum_type='runmean', accum_period=-1,    &
@@ -1147,6 +1163,10 @@ contains
          subgrid_type='pft', numlev=1,init_value=SHR_CONST_TKFRZ+20._r8)
 
     if ( use_crop )then
+       call init_accum_field (name='T24', units='K', &
+            desc='24-hour running mean of 2-m temperature', accum_type='runmean', accum_period=-1, &
+            subgrid_type='pft', numlev=1,init_value=SHR_CONST_TKFRZ+20._r8)
+
        call init_accum_field (name='TDM10', units='K', &
             desc='10-day running mean of min 2-m temperature', accum_type='runmean', accum_period=-10, &
             subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
@@ -1222,6 +1242,9 @@ contains
     ! Determine time step
     nstep = get_nstep()
 
+    call extract_accum_field ('T_REF24', rbufslp, nstep)
+    this%t_ref24_patch(begp:endp) = rbufslp(begp:endp)
+
     call extract_accum_field ('T_VEG24', rbufslp, nstep)
     this%t_veg24_patch(begp:endp) = rbufslp(begp:endp)
 
@@ -1232,6 +1255,7 @@ contains
     this%t_a10_patch(begp:endp) = rbufslp(begp:endp)
 
     if (use_crop) then
+
        call extract_accum_field ('TDM10', rbufslp, nstep)
        this%t_a10min_patch(begp:endp)= rbufslp(begp:endp)
 
@@ -1318,7 +1342,7 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
-    ! Accumulate and extract T_VEG24 & T_VEG240
+    ! Accumulate and extract  T_VEG24 & T_VEG240
     do p = begp,endp
        rbufslp(p) = this%t_veg_patch(p)
     end do
@@ -1326,6 +1350,7 @@ contains
     call extract_accum_field ('T_VEG24' , this%t_veg24_patch  , nstep)
     call update_accum_field  ('T_VEG240', rbufslp             , nstep)
     call extract_accum_field ('T_VEG240', this%t_veg240_patch , nstep)
+
 
     ! Accumulate and extract TREFAV - hourly average 2m air temperature
     ! Used to compute maximum and minimum of hourly averaged 2m reference
@@ -1416,6 +1441,11 @@ contains
     call extract_accum_field ('T10', this%t_a10_patch, nstep)
 
     if ( use_crop )then
+       ! Accumulate and extract T_REF24
+
+       call update_accum_field  ('T_REF24' ,  this%t_ref2m_patch, nstep)
+       call extract_accum_field ('T_REF24' , this%t_ref24_patch  , nstep)
+
        ! Accumulate and extract TDM10
 
        do p = begp,endp

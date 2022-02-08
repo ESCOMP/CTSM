@@ -128,7 +128,8 @@ contains
     associate(                                         & 
          ivt        =>    patch%itype                  , & ! Input:  [integer  (:) ]  patch vegetation type                                
 
-         woody      =>    pftcon%woody               , & ! Input:  binary flag for woody lifeform                    
+         woody      =>    pftcon%woody               , & ! Input:  binary flag for woody lifeform         
+         perennial  =>    pftcon%perennial           , & ! Input:  binary flag for perennial crop types           
          
          greffic    =>    dgvs_inst%greffic_patch    , & ! Input:  [real(r8) (:) ]                                                    
          heatstress =>    dgvs_inst%heatstress_patch , & ! Input:  [real(r8) (:) ]    
@@ -235,7 +236,7 @@ contains
            cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_patch(p)          * m 
          end if
 
-         if (ivt(p) < npcropmin) then
+         if (ivt(p) < npcropmin .or. perennial(ivt(p)) == 1._r8) then ! perennial flag added by O.Dombrowski
             cnveg_nitrogenflux_inst%m_retransn_to_litter_patch(p) = cnveg_nitrogenstate_inst%retransn_patch(p) * m
          end if
             

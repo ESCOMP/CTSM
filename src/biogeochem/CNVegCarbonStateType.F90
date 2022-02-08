@@ -48,6 +48,8 @@ module CNVegCarbonStateType
      real(r8), pointer :: deadstemc_patch          (:) ! (gC/m2) dead stem C
      real(r8), pointer :: deadstemc_storage_patch  (:) ! (gC/m2) dead stem C storage
      real(r8), pointer :: deadstemc_xfer_patch     (:) ! (gC/m2) dead stem C transfer
+     real(r8), pointer :: deadstemc_soy_patch      (:) ! (gC/m2) dead stem C at the start of year
+     real(r8), pointer :: deadstemc_storage_soy_patch (:) ! (gC/m2) dead stem C storage at the start of year
      real(r8), pointer :: livecrootc_patch         (:) ! (gC/m2) live coarse root C
      real(r8), pointer :: livecrootc_storage_patch (:) ! (gC/m2) live coarse root C storage
      real(r8), pointer :: livecrootc_xfer_patch    (:) ! (gC/m2) live coarse root C transfer
@@ -234,6 +236,8 @@ contains
     allocate(this%deadstemc_patch          (begp:endp)) ; this%deadstemc_patch          (:) = nan
     allocate(this%deadstemc_storage_patch  (begp:endp)) ; this%deadstemc_storage_patch  (:) = nan
     allocate(this%deadstemc_xfer_patch     (begp:endp)) ; this%deadstemc_xfer_patch     (:) = nan
+    allocate(this%deadstemc_soy_patch     (begp:endp)) ; this%deadstemc_soy_patch     (:) = nan
+    allocate(this%deadstemc_storage_soy_patch     (begp:endp)) ; this%deadstemc_storage_soy_patch     (:) = nan
     allocate(this%livecrootc_patch         (begp:endp)) ; this%livecrootc_patch         (:) = nan
     allocate(this%livecrootc_storage_patch (begp:endp)) ; this%livecrootc_storage_patch (:) = nan
     allocate(this%livecrootc_xfer_patch    (begp:endp)) ; this%livecrootc_xfer_patch    (:) = nan
@@ -399,6 +403,16 @@ contains
        call hist_addfld1d (fname='DEADSTEMC_XFER', units='gC/m^2', &
             avgflag='A', long_name='dead stem C transfer', &
             ptr_patch=this%deadstemc_xfer_patch, default='inactive')    
+
+       this%deadstemc_soy_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DEADSTEMC_SOY', units='gC/m^2', &
+            avgflag='A', long_name='dead stem C at start of year', &
+            ptr_patch=this%deadstemc_soy_patch, default='inactive')
+
+       this%deadstemc_storage_soy_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DEADSTEMC_STORAGE_SOY', units='gC/m^2', &
+            avgflag='A', long_name='dead stem C storage at start of year', &
+            ptr_patch=this%deadstemc_storage_soy_patch, default='inactive')
 
        this%livecrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTC', units='gC/m^2', &
@@ -941,7 +955,15 @@ contains
                 this%leafc_patch(p)          = 0._r8
                 this%leafc_storage_patch(p)  = 0._r8
                 this%frootc_patch(p)         = 0._r8            
-                this%frootc_storage_patch(p) = 0._r8    
+                this%frootc_storage_patch(p) = 0._r8   
+                if (pftcon%perennial(patch%itype(p)) == 1._r8 .and. pftcon%woody(patch%itype(p)) == 1._r8) then
+                   this%leafc_patch(p)          = 0._r8
+                   this%leafc_storage_patch(p)  = cnvegcstate_const%initial_vegC * ratio
+                   this%frootc_patch(p)         = 0._r8
+                   this%frootc_storage_patch(p) = cnvegcstate_const%initial_vegC * ratio
+                   this%deadstemc_soy_patch(p)  = 0._r8
+                   this%deadstemc_storage_soy_patch(p) = 0._r8
+                end if
              else
                 this%leafc_patch(p)          = 0._r8
                 this%leafc_storage_patch(p)  = cnvegcstate_const%initial_vegC * ratio   
@@ -952,7 +974,6 @@ contains
           this%leafc_xfer_patch(p) = 0._r8
           this%leafc_storage_xfer_acc_patch(p)  = 0._r8
           this%storage_cdemand_patch(p)         = 0._r8
-
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
              this%frootc_patch(p)            = 0._r8 
              this%frootc_storage_patch(p)    = 0._r8 
@@ -964,7 +985,11 @@ contains
           this%livestemc_xfer_patch(p)    = 0._r8 
 
           if (pftcon%woody(patch%itype(p)) == 1._r8) then
-             this%deadstemc_patch(p) = 0.1_r8 * ratio
+             if (patch%itype(p) < npcropmin)then ! (added by O.Dombrowski)
+                this%deadstemc_patch(p) = 0.1_r8 * ratio
+             else
+                this%deadstemc_patch(p) = 0.1_r8 ! (added by O.Dombrowski)
+             end if
           else
              this%deadstemc_patch(p) = 0._r8 
           end if
@@ -1188,6 +1213,14 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadstemc_xfer_patch) 
 
+       call restartvar(ncid=ncid, flag=flag, varname='deadstemc_soy', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%deadstemc_soy_patch)
+
+       call restartvar(ncid=ncid, flag=flag, varname='deadstemc_storage_soy', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%deadstemc_storage_soy_patch)
+
        call restartvar(ncid=ncid, flag=flag, varname='livecrootc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livecrootc_patch) 
@@ -1379,9 +1412,14 @@ contains
                    !-----------------------------------------------
 
                    this%leafcmax_patch(i) = 0._r8
-
+                   
+                   if (lun%itype(l) == istcrop .and. pftcon%perennial(patch%itype(i)) == 1._r8) then
+                     this%deadstemc_soy_patch(i) = 0._r8
+                     this%deadstemc_storage_soy_patch(i) = 0._r8
+                   end if
                    l = patch%landunit(i)
-                   if (lun%itype(l) == istsoil  .or. patch%itype(i) == nc3crop .or. patch%itype(i) == nc3irrig)then
+                   if (lun%itype(l) == istsoil  .or. patch%itype(i) == nc3crop .or. patch%itype(i) == nc3irrig .or. &
+                      (lun%itype(l) == istcrop .and. pftcon%perennial(patch%itype(i)) == 1._r8)) then ! (added by O.Dombrowski)
                       if ( present(num_reseed_patch) ) then
                          num_reseed_patch = num_reseed_patch + 1
                          filter_reseed_patch(num_reseed_patch) = i
@@ -2367,6 +2405,8 @@ contains
        this%deadstemc_patch(i)          = value_patch
        this%deadstemc_storage_patch(i)  = value_patch
        this%deadstemc_xfer_patch(i)     = value_patch
+       this%deadstemc_soy_patch(i)      = value_patch
+       this%deadstemc_storage_soy_patch(i)     = value_patch
        this%livecrootc_patch(i)         = value_patch
        this%livecrootc_storage_patch(i) = value_patch
        this%livecrootc_xfer_patch(i)    = value_patch
@@ -2480,7 +2520,6 @@ contains
             this%deadstemc_patch(p)  + &
             this%livecrootc_patch(p) + &
             this%deadcrootc_patch(p)
-
        ! stored vegetation carbon, excluding cpool (STORVEGC)
        this%storvegc_patch(p) =                &
             this%cpool_patch(p)              + &
@@ -2514,13 +2553,11 @@ contains
        this%totvegc_patch(p) = &
             this%dispvegc_patch(p) + &
             this%storvegc_patch(p)
-
        ! total patch-level carbon, including xsmrpool, ctrunc
        this%totc_patch(p) = &
             this%totvegc_patch(p) + &
             this%xsmrpool_patch(p) + &
             this%ctrunc_patch(p)
-
        if (use_crop) then 
           this%totc_patch(p) = this%totc_patch(p) + this%cropseedc_deficit_patch(p) + &
                this%xsmrpool_loss_patch(p)
@@ -2563,7 +2600,6 @@ contains
             soilbiogeochem_totlitc_col(c)   + &
             soilbiogeochem_totsomc_col(c)   + &
             soilbiogeochem_ctrunc_col(c)
-
     end do
 
   end subroutine Summary_carbonstate

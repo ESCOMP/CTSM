@@ -33,7 +33,7 @@ module dynHarvestMod
   public :: CNHarvest          ! harvest mortality routine for CN code
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: CNHarvestPftToColumn   ! gather patch-level harvest fluxes to the column level
+  public :: CNHarvestPftToColumn   ! gather patch-level harvest fluxes to the column level
   !
   ! !PRIVATE TYPES:
 
@@ -184,7 +184,7 @@ contains
     ! !USES:
     use pftconMod       , only : noveg, nbrdlf_evr_shrub
     use clm_varcon      , only : secspday
-    use clm_time_manager, only : get_step_size_real, is_beg_curr_year
+    use clm_time_manager, only : get_step_size_real, is_beg_curr_year   
     !
     ! !ARGUMENTS:
     integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
@@ -330,13 +330,14 @@ contains
             else
                m = 0._r8
             end if
-
+            
             ! patch-level harvest carbon fluxes
             ! displayed pools
             hrv_leafc_to_litter(p)               = leafc(p)               * m
             hrv_frootc_to_litter(p)              = frootc(p)              * m
             hrv_livestemc_to_litter(p)           = livestemc(p)           * m
             wood_harvestc(p)                     = deadstemc(p)           * m
+            
             hrv_livecrootc_to_litter(p)          = livecrootc(p)          * m
             hrv_deadcrootc_to_litter(p)          = deadcrootc(p)          * m
             hrv_xsmrpool_to_atm(p)               = xsmrpool(p)            * m
@@ -630,7 +631,7 @@ contains
                  ! wood harvest mortality carbon fluxes to product pools
                  cwood_harvestc(c)  = cwood_harvestc(c)  + &
                       pwood_harvestc(p)  * wtcol(p)
-
+                 
                  ! wood harvest mortality nitrogen fluxes to product pools
                  cwood_harvestn(c)  = cwood_harvestn(c)  + &
                       pwood_harvestn(p)  * wtcol(p)
