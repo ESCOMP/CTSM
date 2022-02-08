@@ -34,6 +34,7 @@ module cropcalStreamMod
   character(len=CS), allocatable :: stream_varnames_sdate(:)
   character(len=CS), allocatable :: stream_varnames_cultivar_gdds(:)
   integer                     :: ncft               ! Number of crop functional types (excl. generic crops)
+  logical                     :: warned_about_bad_interp_sdate, warned_about_bad_interp_cultivar_gdds
 
   character(len=*), parameter :: sourcefile = &
        __FILE__
@@ -189,6 +190,9 @@ contains
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
     end if
 
+    warned_about_bad_interp_sdate = .false.
+    warned_about_bad_interp_cultivar_gdds = .false.
+
   end subroutine cropcal_init
 
   !================================================================
@@ -291,8 +295,9 @@ contains
        do g = 1,lsize
 
           ! Warn about possible bad interpolation. Not a problem unless it actually gets assigned to a patch.
-          if (dataptr1d_sdate(g) <= 0 .or. dataptr1d_sdate(g) > 365) then
-              write(iulog,'(a,i0,a,i0,a)') 'WARNING: cropcal_interp(): Crop n ',n,' has dataptr1d prescribed sowing date ',dataptr1d_sdate(g),'. Bad interpolation?'
+          if ((.not. warned_about_bad_interp_sdate) .and. (dataptr1d_sdate(g) <= 0 .or. dataptr1d_sdate(g) > 365)) then
+              write(iulog,'(a,i0,a,i0,a)') 'WARNING: cropcal_interp(): Crop n ',n,' (and maybe others) has dataptr1d prescribed sowing date ',dataptr1d_sdate(g),'. Bad interpolation?'
+              warned_about_bad_interp_sdate = .true.
           end if
 
          dataptr2d_sdate(g,n) = dataptr1d_sdate(g)
@@ -344,8 +349,9 @@ contains
           do g = 1,lsize
    
              ! Warn about possible bad interpolation. Not a problem unless it actually gets assigned to a patch.
-             if (dataptr1d_cultivar_gdds(g) < 0.0 .or. dataptr1d_cultivar_gdds(g) > 1000000.0) then
-                 write(iulog,'(a,i0,a,f0.0,a)') 'WARNING: cropcal_interp(): Crop n ',n,' has dataptr1d prescribed GDD requirement ',dataptr1d_cultivar_gdds(g),'. Bad interpolation?'
+             if ((.not. warned_about_bad_interp_cultivar_gdds) .and. (dataptr1d_cultivar_gdds(g) <= 0 .or. dataptr1d_cultivar_gdds(g) > 365)) then
+                 write(iulog,'(a,i0,a,f0.0,a)') 'WARNING: cropcal_interp(): Crop n ',n,' (and maybe others) has dataptr1d prescribed GDD requirement ',dataptr1d_cultivar_gdds(g),'. Bad interpolation?'
+                 warned_about_bad_interp_cultivar_gdds = .true.
              end if
             
              dataptr2d_cultivar_gdds(g,n) = dataptr1d_cultivar_gdds(g)
@@ -369,7 +375,7 @@ contains
                  write(iulog,'(a,i0,a,f0.0)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed GDD requirement ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
                  call ESMF_Finalize(endflag=ESMF_END_ABORT)
              end if
-         else
+          else
              write(iulog,'(a,i0)') 'cropcal_interp(), rx_cultivar_gdds: Crop patch has ivt ',ivt
              call ESMF_Finalize(endflag=ESMF_END_ABORT)
           endif
