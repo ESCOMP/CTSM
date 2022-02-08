@@ -1567,7 +1567,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_first_cropcal  >1850</stream_year_first_cropcal>
 <stream_year_last_cropcal   >2100</stream_year_last_cropcal>
 <model_year_align_cropcal   >1850</model_year_align_cropcal>
-<stream_meshfile_cropcal    hgrid="360x720cru"       >lnd/clm2/lai_streams/MODISPFTLAI_0.5x0_ESMFmesh_cdf5_090621.nc</stream_meshfile_cropcal>
+<stream_meshfile_cropcal    hgrid="360x720cru"       >/glade/p/cesmdata/cseg/inputdata/share/meshes/10x15_nomask_c110308_ESMFmesh.nc</stream_meshfile_cropcal>
 
 <stream_fldfilename_sdate hgrid="360x720cru"       >/glade/u/home/samrabin/crop_dates/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.nc</stream_fldfilename_sdate>
 <stream_fldfilename_cultivar_gdds hgrid="360x720cru">/glade/u/home/samrabin/crop_dates/gdds_20220121_155415.nc</stream_fldfilename_cultivar_gdds>
