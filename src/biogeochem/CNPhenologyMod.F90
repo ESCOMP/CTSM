@@ -124,7 +124,7 @@ module CNPhenologyMod
 
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
 
-  logical,  private :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
+  logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
 
   ! Constants for seasonal decidious leaf onset and offset
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
