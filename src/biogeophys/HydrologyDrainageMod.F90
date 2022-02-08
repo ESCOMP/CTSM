@@ -115,8 +115,7 @@ contains
          qflx_runoff        => waterfluxbulk_inst%qflx_runoff_col        , & ! total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_runoff_u      => waterfluxbulk_inst%qflx_runoff_u_col      , & ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
          qflx_runoff_r      => waterfluxbulk_inst%qflx_runoff_r_col      , & ! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-         qflx_ice_runoff_snwcp => waterfluxbulk_inst%qflx_ice_runoff_snwcp_col, &  ! solid runoff from snow capping (mm H2O /s)
-         qflx_sfc_irrig     => waterfluxbulk_inst%qflx_sfc_irrig_col       & ! surface irrigation flux (mm H2O /s)   
+         qflx_ice_runoff_snwcp => waterfluxbulk_inst%qflx_ice_runoff_snwcp_col &  ! solid runoff from snow capping (mm H2O /s)
          )
 
       ! Determine time step and step size
@@ -217,9 +216,6 @@ contains
 
          qflx_runoff(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
 
-         if ((lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) .and. col%active(c)) then
-            qflx_runoff(c) = qflx_runoff(c) - qflx_sfc_irrig(c)
-         end if
          if (lun%urbpoi(l)) then
             qflx_runoff_u(c) = qflx_runoff(c)
          else if (lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) then
