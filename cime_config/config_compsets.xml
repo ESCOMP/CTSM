@@ -311,6 +311,11 @@
     <lname>SSP126EXT_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
+  <compset>
+    <alias>ISSP370ExtClm50BgcCrop</alias>
+    <lname>SSP370EXT_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
 
 <!-- I CLM45 Compsets -->
 

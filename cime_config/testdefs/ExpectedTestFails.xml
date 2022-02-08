@@ -7,6 +7,8 @@
     <entry issue="#442"            >FAIL SMS.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop RUN</entry>
     <entry issue="#442"            >FAIL SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop RUN</entry>
     <entry issue="#840"            >FAIL PEPEM_Ld1.f10_f10_musgs.I2000Clm50BgcCrop.hobart_intel.clm-crop RUN</entry>
+    <entry issue="#1637"           >FAIL SMS.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop RUN</entry>
+    <entry issue="#1637"           >FAIL SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop RUN</entry>
   </category>
   <category name="fates">
     <entry issue="NGEET/fates/#559" >FAIL SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesHydro RUN</entry>
