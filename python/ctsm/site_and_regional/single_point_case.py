@@ -179,8 +179,6 @@ class SinglePointCase(BaseCase):
                 raise argparse.ArgumentTypeError(err_msg)
 
             #-- check dom_pft vs num_pft
-            print (max_dom_pft)
-            print (self.num_pft)
             if  self.num_pft -1 < max_dom_pft < MAX_PFT :
                 err_msg = "Please use --crop flag when --dompft is above 15."
                 raise argparse.ArgumentTypeError(err_msg)
