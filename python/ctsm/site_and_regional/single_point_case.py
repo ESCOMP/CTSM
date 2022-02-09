@@ -21,6 +21,10 @@ logger = logging.getLogger(__name__)
 NAT_PFT = 15
 MAX_PFT = 78
 
+# -- constants to represent months of year
+FIRST_MONTH = 1
+LAST_MONTH = 12
+
 class SinglePointCase(BaseCase):
     """
     A class to encapsulate everything for single point cases.
@@ -144,21 +148,21 @@ class SinglePointCase(BaseCase):
           same range.
           e.g. If users specified multiple dom_pft, they should be
           either in :
-            - 1-14 range
+            - 0 - NAT_PFT-1 range (i.e. 0-14)
             or
-            - 15-78 range
+            - NAT_PFT - MAX_PFT range (i.e. 15-78)
             - give an error : mixed land units not possible.
 
         dom_pft in netcdf: 1-15 which tranlate to 0-14
         -------------
         Raises:
             Error (ArgumentTypeError):
-                If any dom_pft is bigger than 78.
+                If any dom_pft is bigger than (MAX_PFT)78.
             Error (ArgumentTypeError):
                 If any dom_pft is less than 1.
             Error (ArgumentTypeError):
                 If mixed land units are chosen.
-                dom_pft values are both in range of 1-14 and 15-78.
+                dom_pft values are both in range of 0- NAT_PFT-1 (i.e. 0-14) and 15-78 (i.e. NAT_PFT - MAX_PFT).
 
 
         """
@@ -170,8 +174,8 @@ class SinglePointCase(BaseCase):
             min_dom_pft = min(self.dom_pft)
             max_dom_pft = max(self.dom_pft)
 
-            #-- check dom_pft values should be between 1-78
-            if min_dom_pft <1 or max_dom_pft >MAX_PFT:
+            #-- check dom_pft values should be between 0-MAX_PFT
+            if min_dom_pft <0 or max_dom_pft >MAX_PFT:
                 err_msg = "values for --dompft should be between 1 and 78."
                 raise argparse.ArgumentTypeError(err_msg)
 
@@ -582,7 +586,7 @@ class SinglePointCase(BaseCase):
         tpqwfiles = []
         for year in range(datm_syr, datm_eyr + 1):
             ystr = str(year)
-            for month in range(1, 13):
+            for month in range(FIRST_MONTH, LAST_MONTH + 1):
                 mstr = str(month)
                 if month < 10:
                     mstr = "0" + mstr
