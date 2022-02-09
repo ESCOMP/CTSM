@@ -1,6 +1,6 @@
 $CTSMROOT/README                                          06/08/2018
 
-##################################################################
+###################################################################################
 Modified Community Land Surface Model (CLM) science version 5.0.0 
 Modifications to the model code include: 
 (1) Addition of a new perennial crop phenology description.
@@ -39,7 +39,7 @@ Dombrowski, O., Brogi, C., HendricksFranssen, H.-J., Zanotelli, D., Bogena, H. (
 Abstract: 
 
 The inclusion of perennial, woody crops in land surface models is crucial to address their role in carbon (C) sequestration, food production, and water requirements under climate change. To help quantifying the biogeochemical and biogeophysical processes associated with these agro-ecosystems, we developed and tested a new sub-model, CLM-FruitTree, for deciduous fruit orchards within the framework of the Community Land Model version 5 (CLM5). The model development included (1) a new perennial crop phenology description, (2) an adapted C and nitrogen allocation scheme, considering both storage and photosynthetic growth of annual and perennial plant organs, (3) typical management practices associated with fruit orchards, and (4) the parameterization of an apple plant functional type. CLM-FruitTree was tested using extensive field measurements from an apple orchard in South Tyrol, Italy. Growth and partitioning of biomass to the individual plant components was well represented by CLM-FruitTree and average yield was predicted within 2.3 % of the observed values despite low simulated inter-annual variability compared to observations. The simulated seasonal course of C, energy, and water fluxes was in good agreement with the EC measurements owing to the accurate representation of the prolonged growing season and typical leaf area development of the orchard. We found that gross primary production, net radiation, and latent heat flux were highly correlated (r > 0.94) with EC measurements and showed little bias (< ±5 %). Simulated respiration components, sensible heat, and ground heat flux were less consistent with observations. This was attributed to simplifications in the orchard structure and to the presence of additional management practices that are not yet represented in CLM-FruitTree. Finally, the results suggested that the representation of microbial and autotrophic respiration, and energy partitioning in complex, heterogeneous canopies in CLM5 requires further attention. The new sub-model CLM-FruitTree improved the representation of agricultural systems in CLM5 and can be used to study land surface processes in fruit orchards at the local, regional or larger scale. 
-########################################################################
+#############################################################################################################
 
 
 Community Land Surface Model (CLM) science version 5.0.0  series -- source code, tools, 
