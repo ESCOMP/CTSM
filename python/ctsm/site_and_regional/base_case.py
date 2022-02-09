@@ -6,6 +6,7 @@ RegionalCase are defined in this Class.
 # -- Import libraries
 
 # -- standard libraries
+import os.path
 import logging
 from collections import namedtuple
 
@@ -108,7 +109,12 @@ class BaseCase:
 
         """
         logger.debug("Open file: %s", filename)
-        f_in = xr.open_dataset(filename)
+
+        if os.path.exists:
+            f_in = xr.open_dataset(filename)
+        else:
+            err_msg = "File not found : " + filename
+            abort(err_msg)
 
         # create 1d coordinate variables to enable sel() method
         lon0 = np.asarray(f_in[lon_varname][0, :])
