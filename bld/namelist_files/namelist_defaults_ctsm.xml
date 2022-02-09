@@ -481,9 +481,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c210923.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c210803.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c210803.nc</paramfile>
+<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c211112.nc</paramfile>
+<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c211112.nc</paramfile>
+<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c211112.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
@@ -565,11 +565,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <min_critical_dayl_method         use_cn=".true." phys="clm5_1" >DependsOnLat</min_critical_dayl_method>
 <onset_thresh_depends_on_veg                                    >.false.</onset_thresh_depends_on_veg>
 <min_critical_dayl_method                                       >Constant</min_critical_dayl_method>
-
-<!-- turnover time modifications    -->
-<decomp_depth_efolding phys="clm4_5" >0.5</decomp_depth_efolding>
-<decomp_depth_efolding phys="clm5_0" >10.0</decomp_depth_efolding>
-<decomp_depth_efolding phys="clm5_1" >10.0</decomp_depth_efolding>
 
 <!-- use additional stress deciduous onset trigger    -->
 <constrain_stress_deciduous_onset phys="clm4_5" >.false.</constrain_stress_deciduous_onset>
@@ -2535,7 +2530,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 >lnd/clm2/paramdata/finundated_inversiondata_0.9x1_ESMFmesh_cdf5_130621.nc</stream_meshfile_ch4finundated>
 
 <!-- =========================================  -->
-<!-- Defaults for different BGC modes           -->
+<!-- Defaults for different BGC/decomp modes    -->
 <!-- =========================================  -->
 
 <soil_decomp_method use_cn=".true."    >CENTURYKoven2013</soil_decomp_method>
