@@ -148,21 +148,20 @@ class SinglePointCase(BaseCase):
           same range.
           e.g. If users specified multiple dom_pft, they should be
           either in :
-            - 0 - NAT_PFT-1 range (i.e. 0-14)
+            - 0 - NAT_PFT-1 range
             or
-            - NAT_PFT - MAX_PFT range (i.e. 15-78)
+            - NAT_PFT - MAX_PFT range
             - give an error : mixed land units not possible.
 
-        dom_pft in netcdf: 1-15 which tranlate to 0-14
         -------------
         Raises:
             Error (ArgumentTypeError):
-                If any dom_pft is bigger than (MAX_PFT)78.
+                If any dom_pft is bigger than MAX_PFT.
             Error (ArgumentTypeError):
                 If any dom_pft is less than 1.
             Error (ArgumentTypeError):
                 If mixed land units are chosen.
-                dom_pft values are both in range of 0- NAT_PFT-1 (i.e. 0-14) and 15-78 (i.e. NAT_PFT - MAX_PFT).
+                dom_pft values are both in range of (0 - NAT_PFT-1) and (NAT_PFT - MAX_PFT).
 
 
         """
@@ -193,9 +192,9 @@ class SinglePointCase(BaseCase):
                 Subsetting using mixed land units is not possible.
                 Please make sure all --dompft values are in only
                 one of these ranges:
-                - 1-14
-                - 15-78
-                """
+                - 0-{}  natural pfts
+                - {}-{} crop pfts (cfts)
+                """.format(NAT_PFT-1, NAT_PFT, MAX_PFT)
                 raise argparse.ArgumentTypeError(err_msg)
 
     def check_nonveg (self):
