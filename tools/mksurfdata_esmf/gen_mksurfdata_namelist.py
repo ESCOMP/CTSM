@@ -175,6 +175,8 @@ def main ():
         pft_years = "1850"
     elif start_year == 2000 and end_year == 2000:
         pft_years = "2005"
+    elif start_year == 2005 and end_year == 2005:
+        pft_years = "2005"
     elif start_year >= 850 and end_year <= 1849:
         pft_years = "0850-1849"
     elif start_year >= 1850 and end_year <= 2005:
