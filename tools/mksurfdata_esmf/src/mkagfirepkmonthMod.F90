@@ -224,7 +224,6 @@ contains
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made Agricultural fire peak month'
     end if
-    write(6,*)'finished mkagfirepkmon'
 
   end subroutine mkagfirepkmon
 

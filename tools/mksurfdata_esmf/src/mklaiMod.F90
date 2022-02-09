@@ -131,20 +131,26 @@ contains
     rcode = pio_inq_dimlen(pioid_i, dimid, ntime)
 
     if (numpft_i /= numpft+1) then
-       write(6,*) 'WARNING: ' // trim(subname) // '(): parameter numpft+1 = ', numpft+1, &
-            'does not equal input dataset numpft = ', numpft_i
-       write(6,*)'This inconsistency used to stop the program. Now we allow it '
-       write(6,*)'because crop pfts 17-last are assumed to never use satellite lai data.'
+       if (root_task) then
+          write(ndiag,*) 'WARNING: ' // trim(subname) // '(): parameter numpft+1 = ', numpft+1, &
+               'does not equal input dataset numpft = ', numpft_i
+          write(ndiag,*)'This inconsistency used to stop the program. Now we allow it '
+          write(ndiag,*)'because crop pfts 17-last are assumed to never use satellite lai data.'
+       end if
        if (numpft_i > numpft + 1) then
           ! NOTE(bja, 2015-01) If this error check is determined to be
           ! invalid, all the loop bounds over output data in this
           ! routine will need to be double checked!
-          write(6, *) "ERROR:" // trim(subname) // "(): input numpft must be less than or equal to output numpft+1."
+          if (root_task) then
+             write(ndiag,*) (subname) //' error input numpft must be less than or equal to output numpft+1.'
+          end if
           call shr_sys_abort()
        end if
     endif
     if (ntime /= 12) then
-       write(6,*)'MKLAI: must have 12 time samples on input data'
+       if (root_task) then
+          write(ndiag,*) subname // 'error must have 12 time samples on input data'
+       end if
        call shr_sys_abort()
     endif
 
@@ -155,7 +161,7 @@ contains
              mhgtb_o(ns_o,0:numpft), &
              laimask(ns_i,0:numpft), stat=ier )
     if (ier /= 0) then
-       write(6,*)'mklai allocation error'; call shr_sys_abort()
+       call shr_sys_abort(subname //' mklai allocation error ')
     end if
 
     ! Create iodescriptor for a single level of the input data

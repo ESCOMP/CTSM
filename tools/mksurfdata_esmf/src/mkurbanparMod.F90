@@ -925,7 +925,6 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Read topo elev dataset with unit mask everywhere
-    write (6,*) 'Open elevation file: ', trim(file_data_i)
     allocate(elev_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
     call mkpio_get_rawdata(pioid, trim(varname), mesh_i, elev_i, rc=rc)

@@ -178,21 +178,24 @@ contains
        end do
 
        ! Diagnostic output
-       write (ndiag,*)
-       write (ndiag,'(1x,70a1)') ('=',k=1,70)
-       write (ndiag,*) 'Inland Water Output'
-       write (ndiag,'(1x,70a1)') ('=',k=1,70)
-       write (ndiag,*)
-       write (ndiag,'(1x,70a1)') ('.',k=1,70)
-       write (ndiag,201)
-201    format (1x,'surface type   input grid area  output grid area'/ &
+       if (root_task) then
+          write (ndiag,*)
+          write (ndiag,'(1x,70a1)') ('=',k=1,70)
+          write (ndiag,*) 'Inland Water Output'
+          write (ndiag,'(1x,70a1)') ('=',k=1,70)
+          write (ndiag,*)
+          write (ndiag,'(1x,70a1)') ('.',k=1,70)
+          write (ndiag,201)
+201       format (1x,'surface type   input grid area  output grid area'/ &
                1x,'                 10**6 km**2      10**6 km**2   ')
-       write (ndiag,'(1x,70a1)') ('.',k=1,70)
-       write (ndiag,*)
-       write (ndiag,202) glake_i*1.e-06, glake_o*1.e-06
-       write (ndiag,204) garea_i*1.e-06, garea_o*1.e-06
-202    format (1x,'lakes       ',f14.3,f17.3)
-204    format (1x,'all surface ',f14.3,f17.3)
+          write (ndiag,'(1x,70a1)') ('.',k=1,70)
+          write (ndiag,*)
+          write (ndiag,202) glake_i*1.e-06, glake_o*1.e-06
+          write (ndiag,204) garea_i*1.e-06, garea_o*1.e-06
+202       format (1x,'lakes       ',f14.3,f17.3)
+204       format (1x,'all surface ',f14.3,f17.3)
+       end if
+
     else
        do no = 1,ns_o
           lake_o(no) = 0.

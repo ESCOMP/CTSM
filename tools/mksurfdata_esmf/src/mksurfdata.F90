@@ -93,8 +93,8 @@ program mksurfdata
   use shr_kind_mod       , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs
   use shr_sys_mod        , only : shr_sys_abort
 #ifdef TODO
-  use mktopostatsMod     , only : mktopostats
   use mkVICparamsMod     , only : mkVICparams
+  use mktopostatsMod     , only : mktopostats
 #endif
   use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
   use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
@@ -661,18 +661,19 @@ program mksurfdata
      write(ndiag,'(a)')'calling mklai'
   end if
   call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
   call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! TODO:
   ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
   ! -----------------------------------
-  ! allocate ( topo_stddev(lsize_o))            ; topo_stddev(:)      = spval
-  ! allocate ( slope(lsize_o))                  ; slope(:)            = spval
-  ! call mktopostats ( mapfname=map_ftopostats, datfname=mksrf_ftopostats, &
-  !      ndiag=ndiag, topo_stddev_o=topo_stddev, slope_o=slope, std_elev=std_elev)
-  ! deallocate(topo_stddev
+  ! allocate ( topo_stddev(lsize_o)) ; topo_stddev(:) = spval
+  ! allocate ( slope(lsize_o))       ; slope(:)       = spval
+  ! call mktopostats ( mksrf_ftopostats_mesh, mksrf_ftopostats, mesh_model, &
+  !      topo_stddev_o=topo_stddev, slope_o=slope, std_elev=std_elev, rc=rc)
+  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mktopostats')
+  ! deallocate(topo_stddev)
   ! deallocate(slope)
 
   ! -----------------------------------

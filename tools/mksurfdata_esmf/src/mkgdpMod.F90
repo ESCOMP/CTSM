@@ -3,7 +3,7 @@ module mkgdpMod
   !-----------------------------------------------------------------------
   ! make GDP from input GDP data
   !-----------------------------------------------------------------------
-  !
+
   use ESMF
   use pio
   use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
@@ -63,6 +63,8 @@ contains
     real(r8), parameter    :: min_valid = 0._r8    ! minimum valid value
     character(len=*), parameter :: subname = 'mkgdp'
     !-----------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
 
     if (root_task) then
        write(ndiag,*)
