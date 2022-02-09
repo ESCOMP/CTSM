@@ -31,6 +31,10 @@ src/biogeochem/NutrientCompetitionFlexibleCNMod.F90
 src/main/pftconMod.F90
 src/biogeophys/TemperatureType.F90
 
+new paramater file to be used with the development:
+
+clm5_params.c171117__FruitTree.nc
+
 
 For additional information and results please refer to Dombrowski et al. (submitted Feb 2022):  
 
