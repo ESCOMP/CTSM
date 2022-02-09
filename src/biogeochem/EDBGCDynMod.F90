@@ -184,6 +184,7 @@ contains
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     else if (decomp_method == mimics_decomp) then
        call decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
+            num_soilp, filter_soilp, &
             soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, &
             soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
     end if
