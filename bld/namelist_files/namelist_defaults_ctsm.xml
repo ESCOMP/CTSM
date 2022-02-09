@@ -1492,7 +1492,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_fldfilename_ndep phys="clm5_1"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm5_1"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc</stream_fldfilename_ndep>
 
 <stream_fldfilename_ndep phys="clm5_0"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
@@ -1501,16 +1501,16 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_fldfilename_ndep phys="clm5_0"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm5_0"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc</stream_fldfilename_ndep>
 
 <stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP1-2.6-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc</stream_fldfilename_ndep>
 
 <ndep_taxmode            phys="clm5_1"  use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm5_1"  use_cn=".true.">NDEP_month</ndep_varlist>
