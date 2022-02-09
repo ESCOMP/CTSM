@@ -96,18 +96,17 @@ program mksurfdata
   use mktopostatsMod     , only : mktopostats
   use mkVICparamsMod     , only : mkVICparams
 #endif
- ! use mkharvestMod       , only : mkharvest, mkharvest_init, mkharvest_fieldname
- ! use mkharvestMod       , only : mkharvest_numtypes, mkharvest_parse_oride, harvestDataType
   use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
   use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
   use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
   use mkdomainMod        , only : mkdomain
+  use mkharvestMod       , only : mkharvest, mkharvest_parse_oride
   use mkgdpMod           , only : mkgdp
   use mkagfirepkmonthMod , only : mkagfirepkmon
   use mklaiMod           , only : mklai
   use mkpeatMod          , only : mkpeat
   use mkvocefMod         , only : mkvocef
-  use mkglcmecMod        , only : mkglcmecInit, mkglcmec, mkglacier, nglcec 
+  use mkglcmecMod        , only : mkglcmecInit, mkglcmec, mkglacier, nglcec
   use mkglacierregionMod , only : mkglacierregion
   use mksoiltexMod       , only : mksoiltex
   use mksoilfmaxMod      , only : mksoilfmax
@@ -118,7 +117,7 @@ program mksurfdata
   use mkorganicMod       , only : mkorganic
   use mkutilsMod         , only : normalize_classes_by_gcell, chkerr
   use mkfileMod          , only : mkfile_define_dims, mkfile_define_atts, mkfile_define_vars
-  use mkfileMod          , only : mkfile_fdyndat, mkfile_output
+  use mkfileMod          , only : mkfile_output
   use mkvarpar           , only : nlevsoi, elev_thresh, numstdpft
   use nanMod             , only : nan, bigint
   use mkpioMod           , only : pio_iotype, pio_ioformat, pio_iosystem
@@ -155,14 +154,13 @@ program mksurfdata
   real(r8), allocatable             :: lat(:)
   real(r8), allocatable             :: landfrac_pft(:)         ! PFT data: % land per gridcell
   real(r8), allocatable             :: pctlnd_pft(:)           ! PFT data: % of gridcell for PFTs
+  real(r8), allocatable             :: pctlnd_pft_dyn(:)       ! PFT data: % of gridcell for dyn landuse PFTs
   integer , allocatable             :: pftdata_mask(:)         ! mask indicating real or fake land type
   type(pct_pft_type), allocatable   :: pctnatpft(:)            ! % of grid cell that is nat veg, and breakdown into PFTs
   type(pct_pft_type), allocatable   :: pctnatpft_max(:)        ! % of grid cell maximum PFTs of the time series
   type(pct_pft_type), allocatable   :: pctcft(:)               ! % of grid cell that is crop, and breakdown into CFTs
   type(pct_pft_type), allocatable   :: pctcft_max(:)           ! % of grid cell maximum CFTs of the time series
   real(r8)                          :: harvest_initval         ! initial value for harvest variables
-  real(r8), allocatable             :: harvest1D(:)            ! harvest 1D data: normalized harvesting
-  real(r8), allocatable             :: harvest2D(:,:)          ! harvest 1D data: normalized harvesting
   real(r8), allocatable             :: pctgla(:)               ! percent of grid cell that is glacier
   real(r8), allocatable             :: pctglc_gic(:)           ! percent of grid cell that is gic (% of glc landunit)
   real(r8), allocatable             :: pctglc_icesheet(:)      ! percent of grid cell that is ice sheet (% of glc landunit)
@@ -206,8 +204,8 @@ program mksurfdata
   integer , allocatable             :: harvind2D(:)            ! Indices of 2D harvest fields
   logical                           :: zero_out_lake           ! if should zero glacier out
   logical                           :: zero_out_wetland        ! if should zero glacier out
-  logical                           :: zero_out 
- !type(harvestDataType)             :: harvdata
+  logical                           :: zero_out
+  character(len=cs)                 :: fname
 
   ! esmf variables
   integer                       :: rc
@@ -315,9 +313,9 @@ program mksurfdata
   call ESMF_MeshGet(mesh_model, numOwnedElements=lsize_o, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
-  ! ----------------------------------------------------------------------
-  ! Create netCDF surface dataset
-  ! ----------------------------------------------------------------------
+  ! ======================================================================
+  ! Create fsurdat
+  ! ======================================================================
 
   ! Initialize urban dimensions (needed to initialize the dimensions in fsurdat)
   call mkurbanInit (mksrf_furban)
@@ -357,7 +355,19 @@ program mksurfdata
 
      ! Define variables
      call mkfile_define_vars(pioid, dynlanduse = .false.)
+
+     ! End define model
      rcode = pio_enddef(pioid)
+  end if
+
+  ! -----------------------------------
+  ! Write out coordinate variables
+  ! -----------------------------------
+  rcode = pio_inq_varid(pioid, 'natpft', pio_varid)
+  rcode = pio_put_var(pioid, pio_varid, (/(n,n=natpft_lb,natpft_ub)/))
+  if (num_cft > 0) then
+     rcode = pio_inq_varid(pioid, 'cft', pio_varid)
+     rcode = pio_put_var(pioid, pio_varid, (/(n,n=cft_lb,cft_ub)/))
   end if
 
   ! -----------------------------------
@@ -365,15 +375,15 @@ program mksurfdata
   ! -----------------------------------
   allocate (lon(lsize_o)) ; lon(:) = spval
   allocate (lat(lsize_o)) ; lat(:) = spval
-  call mkdomain(mesh_model, lon_o=lon, lat_o=lat, rc=rc) 
+  call mkdomain(mesh_model, lon_o=lon, lat_o=lat, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out model grid"
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LONGXY"
-     call mkfile_output(pioid, mesh_model, 'LONGXY', lon, rc=rc) 
+     call mkfile_output(pioid, mesh_model, 'LONGXY', lon, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LATIXY"
-     call mkfile_output(pioid, mesh_model, 'LATIXY', lat, rc=rc) 
+     call mkfile_output(pioid, mesh_model, 'LATIXY', lat, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
   end if
 
@@ -421,26 +431,19 @@ program mksurfdata
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land mask from pft dataset"
      call mkfile_output(pioid,  mesh_model, 'PFTDATA_MASK', pftdata_mask, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land fraction  from pft dataset"
+     call mkfile_output(pioid,  mesh_model, 'LANDFRAC_PFT', landfrac_pft, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      call pio_syncfile(pioid)
   end if
 
   ! -----------------------------------
   ! Create constant harvesting data at model resolution
   ! -----------------------------------
-  ! if (all_veg) then
-  !    ! In this case, we don't call mkharvest, but want the harvest
-  !    ! variables to be initialized reasonably.
-  !    harvest_initval = 0._r8
-  ! else
-  !    harvest_initval = spval
-  ! end if
-  ! call mkharvest_init(mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, &
-  !      init_val=harvest_initval, harvdata=harvdata, constant=.true., rc=rc)
-  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
-  ! if (.not. all_veg )then
-  !    call mkharvest(  mksrf_fhrvtyp, mesh_model, harvdata=harvdata, constant=.true., rc=rc )
-  !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
-  ! end if
+  ! Note that this call must come after call to mkpftInit - since num_cft is set there
+  call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, &
+       pioid_o=pioid, all_veg=all_veg, constant=.true., rc=rc )
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
 
   ! -----------------------------------
   ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
@@ -457,13 +460,6 @@ program mksurfdata
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out lakedepth"
      call mkfile_output(pioid,  mesh_model,  'LAKEDEPTH', lakedepth, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-!DEBUG
-     call mkfile_output(pioid,  mesh_model,  'PCT_LAKE', pctlak, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_wetland"
-     call mkfile_output(pioid, mesh_model,  'PCT_WETLAND', pctwet, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-!DEBUG
      call pio_syncfile(pioid)
   end if
   deallocate (lakedepth )
@@ -476,12 +472,6 @@ program mksurfdata
   if (.not. zero_out) then
      call mkglacier (mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, glac_o=pctgla, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacier')
-!DEBUG
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glacier"
-     call mkfile_output(pioid, mesh_model, 'PCT_GLACIER', pctgla, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out percnt urban"
-!DEBUG
   else
      if (root_task) then
        write (ndiag,'(a)') 'Attempting to make %glacier .....'
@@ -506,7 +496,7 @@ program mksurfdata
   ! -----------------------------------
   ! Make soil texture [pctsand, pctclay]
   ! -----------------------------------
-  ! Truncate all percentage fields on output grid. This is needed to insure that wt is zero 
+  ! Truncate all percentage fields on output grid. This is needed to insure that wt is zero
   ! (not a very small number such as 1e-16) where it really should be zero
   allocate(mapunits(lsize_o))        ; mapunits(:) = 0
   allocate(pctsand(lsize_o,nlevsoi)) ; pctsand(:,:) = spval
@@ -581,7 +571,7 @@ program mksurfdata
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out gdp"
-     call mkfile_output(pioid, mesh_model, 'gdp', gdp, rc=rc) 
+     call mkfile_output(pioid, mesh_model, 'gdp', gdp, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      call pio_syncfile(pioid)
   end if
@@ -595,7 +585,7 @@ program mksurfdata
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpeat')
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out peatland fraction"
-     call mkfile_output(pioid, mesh_model, 'peatf', fpeat, rc=rc) 
+     call mkfile_output(pioid, mesh_model, 'peatf', fpeat, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      call pio_syncfile(pioid)
   end if
@@ -630,7 +620,7 @@ program mksurfdata
   deallocate(agfirepkmon)
 
   ! -----------------------------------
-  ! Make urban fraction [pcturb] from [furban] dataset and 
+  ! Make urban fraction [pcturb] from [furban] dataset and
   ! -----------------------------------
   allocate (pcturb(lsize_o))                 ; pcturb(:)            = spval
   allocate (urban_classes(lsize_o,numurbl))  ; urban_classes(:,:)   = spval
@@ -643,7 +633,7 @@ program mksurfdata
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      call pio_syncfile(pioid)
   end if
-  ! Note that final values of urban are not set and written out until further down 
+  ! Note that final values of urban are not set and written out until further down
 
   ! Adjust pcturb
   ! Make elevation [elev] from [ftopo, ffrac] dataset
@@ -755,12 +745,12 @@ program mksurfdata
   ! Do landuse changes such as for the poles, etc.
   ! call change_landuse(dynpft=.false., lat_o=lat_o)
 
-  ! ----------------------------------------------------------------------
+  ! -----------------------------------
   ! Modify pctlak, pctwet, pctgla and pcturb where needed
-  ! ----------------------------------------------------------------------
+  ! -----------------------------------
 
   do n = 1,lsize_o
-     ! Truncate all percentage fields on output grid. This is needed to insure that 
+     ! Truncate all percentage fields on output grid. This is needed to insure that
      ! wt is zero (not a very small number such as 1e-16) where it should be zero
      pctlak(n) = float(nint(pctlak(n)))
      pctwet(n) = float(nint(pctwet(n)))
@@ -797,14 +787,17 @@ program mksurfdata
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glacier"
      call mkfile_output(pioid, mesh_model, 'PCT_GLACIER', pctgla, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in mkfile_output for pctgla')
+
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_lake"
      call mkfile_output(pioid,  mesh_model,  'PCT_LAKE', pctlak, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in mkfile_output for pctlak')
+
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_wetland"
      call mkfile_output(pioid, mesh_model,  'PCT_WETLAND', pctwet, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in in mkfile_output for pctwet')
   end if
+  ! NOTE: do not deallocate pctlak, pctwet, pctglacier and pcturban
 
   ! ----------------------------------------------------------------------
   ! TODO:
@@ -928,22 +921,180 @@ program mksurfdata
      write(ndiag,'(a)')'successfully created file '//trim(fsurdat)
   end if
 
-  ! ----------------------------------------------------------------------
-  ! Create dynamic land use dataset if appropriate
-  ! ----------------------------------------------------------------------
+  ! ======================================================================
+  ! Create fdyndat if appropriate
+  ! ======================================================================
 
-  ! allocate ( pctcft_max(lsize_o))    ;
-  ! allocate ( pctnatpft_max(lsize_o)) ;
-  ! if (mksrf_fdynuse) then
-     ! if (fdyndat == ' ') then
-     !    call shr_sys_abort(' must specify fdyndat in namelist if mksrf_fdynuse is not blank')
-     ! end if
-     ! call mkfile_fdyndat()
-  ! end if   ! end of if-create dynamic landust dataset
+  if (mksrf_fdynuse /= ' ') then
 
-  ! ----------------------------------------------------------------------
-  ! Close diagnostic dataset
-  ! ----------------------------------------------------------------------
+     if (fdyndat == ' ') then
+        call shr_sys_abort(' must specify fdyndat in namelist if mksrf_fdynuse is not blank')
+     end if
+
+     if (root_task) then
+        write(ndiag,'(a)')'creating dynamic land use dataset'
+     end if
+
+     allocate(pctcft_max(lsize_o))    ;
+     allocate(pctnatpft_max(lsize_o)) ;
+     allocate(pctlnd_pft_dyn(ns_o))
+
+     ! open output file
+     call mkpio_wopen(trim(fdyndat), clobber=.true., pioid=pioid)
+
+     ! Define dimensions
+     call mkfile_define_dims(pioid, nx=mksrf_fgrid_mesh_nx, ny=mksrf_fgrid_mesh_ny, dynlanduse=.true.)
+
+     ! Define global attributes
+     call mkfile_define_atts(pioid, dynlanduse = .true.)
+
+     ! End define model
+     rcode = pio_enddef(pioid)
+
+     ! Write out model grid
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LONGXY"
+     call mkfile_output(pioid, mesh_model, 'LONGXY', lon, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LATIXY"
+     call mkfile_output(pioid, mesh_model, 'LATIXY', lat, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+
+     ! Write out natpft
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out natpft"
+     rcode = pio_inq_varid(pioid, 'natpft', pio_varid)
+     rcode = pio_put_var(pioid, pio_varid, (/(n,n=natpft_lb,natpft_ub)/))
+
+     ! Write out cft
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out cft"
+     rcode = pio_inq_varid(pioid, 'cft', pio_varid)
+     rcode = pio_put_var(pioid, pio_varid, (/(n,n=cft_lb,cft_ub)/))
+
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land mask from pft dataset"
+     call mkfile_output(pioid,  mesh_model, 'PFTDATA_MASK', pftdata_mask, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land fraction  from pft dataset"
+     call mkfile_output(pioid,  mesh_model, 'LANDFRAC_PFT', landfrac_pft, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+
+     ! -----------------------------------------
+     ! Read in each dynamic pft landuse dataset
+     ! -----------------------------------------
+
+     ! Open txt file
+     open (newunit=nfdyn, file=trim(mksrf_fdynuse), form='formatted', iostat=ier)
+     if (ier /= 0) then
+        call shr_sys_abort(subname//" failed to open file "//trim(mksrf_fdynuse))
+     end if
+
+     pctnatpft_max = pctnatpft
+     pctcft_max = pctcft
+
+     ntim = 0
+     do
+
+        ! Determine file name
+        read(nfdyn, '(A195,1x,I4)', iostat=ier) string, year
+        if (ier /= 0) EXIT
+
+        ! If pft fraction override is set, than intrepret string as PFT and harvesting override values
+        ! Otherwise intrepret string as a filename with PFT and harvesting values in it
+        if ( all_veg )then
+           fname = ' '
+           fhrvname  = ' '
+           call mkpft_parse_oride(string)
+           call mkharvest_parse_oride(string)
+           write(6, '(a, i4, a)') 'PFT and harvesting values for year ', year, ' :'
+           write(6, '(a, a)') '    ', trim(string)
+        else
+           fname = string
+           read(nfdyn, '(A195,1x,I4)', iostat=ier) fhrvname, year2
+           if (root_task) then
+              write(ndiag,'(a,i8,a)')' input pft dynamic dataset for year ', year,' is : '//trim(fname)
+           end if
+           if ( year2 /= year ) then
+              write(6,*) subname, ' error: year for harvest not equal to year for PFT files'
+              call shr_sys_abort()
+           end if
+        end if
+        ntim = ntim + 1
+
+        ! Create pctpft data at model resolution from file fname
+        ! Note that pctlnd_o below is different than the above call and returns pctlnd_pft_dyn
+        call mkpft( mksrf_fvegtyp_mesh, fname, mesh_model, &
+             pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpft')
+
+        ! Consistency check on input land fraction
+        do n = 1,lsize_o
+           if (pctlnd_pft_dyn(n) /= pctlnd_pft(n)) then
+              write(6,*) subname,' error: pctlnd_pft for dynamics data = ',&
+                   pctlnd_pft_dyn(n), ' not equal to pctlnd_pft for surface data = ',&
+                   pctlnd_pft(n),' at n= ',n
+              if ( trim(fname) == ' ' )then
+                 write(6,*) ' PFT string = ', string
+              else
+                 write(6,*) ' PFT file = ', fname
+              end if
+              call shr_sys_abort()
+           end if
+        end do
+
+        ! Create harvesting data at model resolution
+        call mkharvest( mksrf_fhrvtyp_mesh, fhrvname, mesh_model, &
+             pioid_o=pioid, all_veg=.false., constant=.false., ntime=ntim, rc=rc )
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest')
+
+        ! Do landuse changes such as for the poles, etc.
+        call change_landuse( dynpft=.true.)
+
+        ! Normalize land use and make sure things add up to 100% as well as
+        ! checking that things are as they should be.
+        call normalizencheck_landuse(ns_o)
+
+        ! Given an array of pct_pft_type variables, update all the max_p2l variables.
+        call update_max_array(pctnatpft_max,pctnatpft)
+        call update_max_array(pctcft_max,pctcft)
+
+        ! TODO: need to create an io descriptor here - need to actually put this in mkpft?
+        ! Output time-varying data for current year
+        ! rcode = pio_inq_varid(pioid, 'PCT_NAT_PFT', pio_varid)
+        ! call mkpio_put_time_slice(pioid, pio_varid, ntim, get_pct_p2l_array(pctnatpft))
+        ! rcode = pio_inq_varid(pioid, 'PCT_CROP', pio_varid)
+        ! call mkpio_put_time_slice(pioid, pio_varid, ntim, get_pct_l2g_array(pctcft))
+        ! if (num_cft > 0) then
+        !    rcode = pio_inq_varid(pioid, 'PCT_CFT', pio_varid)
+        !    call mkpio_put_time_slice(pioid, pio_varid, ntim, get_pct_p2l_array(pctcft))
+        ! end if
+        ! TODO: make sure the following is correct
+        ! rcode = pio_inq_varid(pioid, 'YEAR', pio_varid)
+        ! rcode = pio_put_var(pioid, pio_varid, ntim, 1, year)
+        ! rcode = pio_inq_varid(pioid, 'time', pio_varid)
+        ! rcode = pio_put_var(pioid, pio_varid, ntim, 1, year)
+        ! rcode = pio_inq_varid(pioid, 'input_pftdata_filename', pio_varid)
+        ! rcode = pio_put_var(pioid, pio_varid, (/ 1, ntim /), (/ len_trim(string), 1 /), trim(string))
+
+     end do   ! end of read loop
+
+     rcode = pio_inq_varid(pioid, 'PCT_NAT_PFT_MAX', pio_varid)
+     rcode = pio_put_var(pioid, pio_varid, get_pct_p2l_array(pctnatpft_max))
+
+     rcode = pio_inq_varid(pioid, 'PCT_CROP_MAX', pio_varid)
+     rcode = pio_put_var(pioid, pio_varid, get_pct_l2g_array(pctcft_max))
+
+     if (num_cft > 0) then
+        rcode = pio_inq_varid(pioid, 'PCT_CFT_MAX', pio_varid)
+        rcode = pio_put_var(pioid, pio_varid, get_pct_p2l_array(pctcft_max))
+     end if
+
+     ! Close the file
+     call pio_closefile(pioid)
+
+  end if   ! end of if-create dynamic landust dataset
+
+  ! ======================================================================
+  ! Wrap things up
+  ! ======================================================================
 
   if (root_task) then
      write (ndiag,'(a)')
@@ -954,15 +1105,15 @@ program mksurfdata
      write (ndiag,'(a)')
      write (ndiag,'(a)') 'Successfully created surface dataset'
   end if
-
   close (ndiag)
 
+  ! TODO: fix the error condition here
   call ESMF_Finalize()
 
   !-----------------------------------------------------------------------
   contains
   !-----------------------------------------------------------------------
-    
+
     subroutine change_landuse(dynpft)
 
       ! Do landuse changes such as for the poles, etc.

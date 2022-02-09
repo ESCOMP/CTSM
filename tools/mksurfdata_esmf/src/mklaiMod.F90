@@ -261,6 +261,9 @@ contains
     end do  ! end loop over months
 
     ! Close the  input file
+    call pio_freedecomp(pioid_i, pio_iodesc_i)
+    call pio_freedecomp(pioid_o, pio_iodesc_o)
+
     call pio_closefile(pioid_i)
     call ESMF_VMLogMemInfo("After pio_closefile for input in "//trim(subname))
 
@@ -280,8 +283,8 @@ contains
     ! Compare global areas on input and output grids
 
     ! input/otuput variables
-    character(len=*) , intent(in) :: name  
-    integer          , intent(in) :: ns_i 
+    character(len=*) , intent(in) :: name
+    integer          , intent(in) :: ns_i
     integer          , intent(in) :: ns_o
     integer          , intent(in) :: nt
     integer          , intent(in) :: numpft_i
@@ -290,7 +293,7 @@ contains
     real(r8)         , intent(in) :: area_i(:)
     real(r8)         , intent(in) :: area_o(:)
     integer          , intent(in) :: mask_i(:)
-    real(r8)         , intent(in) :: frac_o(:) 
+    real(r8)         , intent(in) :: frac_o(:)
 
     ! local variables
     integer  :: ni, no, l, k

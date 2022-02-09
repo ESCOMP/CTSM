@@ -10,8 +10,9 @@ module mkharvestMod
   use shr_sys_mod       , only : shr_sys_abort
   use mkpioMod          , only : pio_iotype, pio_ioformat, pio_iosystem
   use mkpioMod          , only : mkpio_get_rawdata, mkpio_get_rawdata_level, mkpio_get_dimlengths
-  use mkpioMod          , only : mkpio_def_spatial_var, mkpio_iodesc_output, mkpio_iodesc_rawdata
-  use mkpioMod          , only : mkpio_put_time_slice
+  use mkpioMod          , only : mkpio_def_spatial_var, mkpio_iodesc_rawdata
+  use mkpioMod          , only : mkpio_put_time_slice, mkpio_iodesc_output
+  use mkfileMod         , only : mkfile_output
   use mkesmfMod         , only : regrid_rawdata, create_routehandle_r8, get_meshareas
   use mkutilsMod        , only : chkerr
   use mkvarctl          , only : root_task, ndiag, mpicom
@@ -21,13 +22,12 @@ module mkharvestMod
 
 #include <mpif.h>
 
-  integer, private, parameter :: numharv =  9  ! number of harvest and grazing fields
-
   ! public member functions
   public :: mkharvest                 ! Calculate the harvest values on output grid
   public :: mkharvest_parse_oride     ! Parse the over-ride string
 
   ! private data members:
+  integer, parameter :: numharv =  9  ! number of harvest and grazing fields
   integer, parameter :: harlen  = 25  ! length of strings for harvest fieldnames
   character(len=harlen), parameter  :: harvest_fieldnames(numharv) = (/ &
        'HARVEST_VH1            ',  &
@@ -52,18 +52,14 @@ module mkharvestMod
        'UNREPRESENTED_CFT_LULCC'   &
        /)
 
-  logical :: is_field_1d(num_harv)
-
   character(len=CL), parameter :: string_undef = 'UNSET'
   real(r8),          parameter :: real_undef   = -999.99
-  character(len=CL)            :: harvest_longnames(numharv) = string_undef
-  character(len=CL)            :: harvest_units(numharv)     = string_undef
   real(r8),  pointer           :: oride_harv(:)        ! array that can override harvesting
-  logical                      :: initialized = .false.
 
-  type(ESMF_Mesh)       , private :: mesh_i
-  type(ESMF_RouteHandle), private :: routehandle
-  real(r8), allocatable , private :: frac_o(:)
+  type(ESMF_Mesh)        :: mesh_i
+  type(ESMF_RouteHandle) :: routehandle_r8
+  real(r8), allocatable  :: frac_o(:)
+  logical                :: initialized = .false.
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -71,244 +67,230 @@ module mkharvestMod
 !=================================================================================
 contains
 !=================================================================================
-    !-----------------------------------------------------------------------
 
-    rc = ESMF_SUCCESS
-
-    ! TODO: check that number of global elements in mesh is identical
-    ! to number of global elements in input data
-
-    if (root_task) then
-       write (ndiag,'(a)') 'Attempting to initialize harvest module .... '
-    end if
-
-    lconstant = .false.
-    if ( present(constant) ) lconstant = constant
-
-    initialized = .true.
-
-    ! Open input harvest file
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
-
-    do ifld = 1, numharv
-       call pio_seterrorhandling(pioid, PIO_BCAST_ERROR)
-       ! Determine if variable is on input dataset (fharvest)
-       varname = mkharvest_fieldname(ifld, constant=lconstant)
-       rCode = pio_inq_varid(pioid, varname, pio_varid)
-       call pio_seterrorhandling(pioid, PIO_INTERNAL_ERROR)
-       if (rcode == PIO_NOERR) then
-          varexists = .true.
-       else
-          varexists = .false.
-       end if
-       if (varexists) then
-          ! get dims2nd for variable
-          call mkpio_get_dimlengths(pioid, varname, ndims, dim_lengths)
-          if ( ndims == 2 )then
-             dims2nd(ifld) = 0
-          else if ( ndims == 3 )then
-             dims2nd(ifld) = dim_lengths(3)
-          else
-             write(*,*) 'ERROR:: bad dimensionality for variable = ', mkharvest_fieldname(ifld, constant=lconstant)
-             call shr_sys_abort()
-          end if
-          if (root_task) then
-             write(ndiag,'(a)') "Will Read: "//mkharvest_fieldname(ifld, constant=lconstant)
-          end if
-       else
-          if (root_task) then
-             write(ndiag,'(a)') "Will Skip: "//mkharvest_fieldname(ifld, constant=lconstant)
-          end if
-       end if
-    end do
-    call pio_closefile(pioid)
-
-    if (root_task) then
-       write (ndiag,'(a)') 'finished mkharvest_init'
-    end if
-
-  end subroutine mkharvest_init
-
-  !=================================================================================
-  subroutine mkharvest(file_data_i, mesh_o, pioid_o, constant, rc)
+  subroutine mkharvest(file_mesh_i, file_data_i, mesh_o, pioid_o, all_veg, constant, ntime, rc)
     !
     ! Make harvest data for the dynamic PFT dataset.
     ! This dataset consists of the normalized harvest or grazing fraction (0-1) of
     ! the model.
     !
     ! input/output variables:
+    character(len=*)      , intent(in)    :: file_mesh_i
     character(len=*)      , intent(in)    :: file_data_i ! input data file name
     type(ESMF_Mesh)       , intent(in)    :: mesh_o      ! model mesh
-    type(file_desc_t)     , intent(in)    :: pioid_o 
-    logical, optional     , intent(in)    :: constant
+    type(file_desc_t)     , intent(inout) :: pioid_o
+    logical               , intent(in)    :: all_veg
+    logical               , intent(in)    :: constant
+    integer, optional     , intent(in)    :: ntime
     integer               , intent(out)   :: rc          ! return code
 
     ! local variables:
     type(file_desc_t)      :: pioid_i
-    type(var_desc_t)       :: pio_varid
-    integer                :: ni,no,ns_i,ns_o    ! indices
-    integer                :: k,l,n,m            ! indices
-    integer                :: ndims
-    integer                :: nlev               ! inner dimension of input 2d data read in
+    type(var_desc_t)       :: pio_varid_i
+    type(var_desc_t)       :: pio_varid_o
+    type(io_desc_t)        :: pio_iodesc_i
+    type(io_desc_t)        :: pio_iodesc_o
+    integer                :: ns_i, ns_o         ! input/output sizes
+    integer                :: ni,no              ! indices
+    integer                :: k,l,m              ! indices
     integer                :: ifld               ! indices
-    character(len=cs)      :: varname
-    logical                :: varexists          ! If variable exists or not
-    integer  , allocatable :: mask_i(:)
-    real(r8) , allocatable :: frac_i(:)
-    real(r8) , allocatable :: frac_o(:)
-    real(r8) , allocatable :: data_i(:,:)
-    real(r8) , allocatable :: data_o(:,:)
-    real(r8) , allocatable :: read_data2d_i(:,:) ! input 2d data read in
-    real(r8) , allocatable :: read_data2d_o(:,:) ! regridded input 2d data
-    real(r8) , allocatable :: area_i(:)
-    real(r8) , allocatable :: area_o(:)
-    integer                :: dims2nd(numharv)   ! Dimension lengths of 3rd dimension for each variable on file
-    logical                :: lconstant          ! local version of constant flag
-    integer                :: dim_lengths(3)     ! Dimension lengths on file
-    integer                :: ndims              ! Number of dimensions on file
-    logical                :: varexists          ! If variable exists on file
-    integer                :: ifld               ! indices
+    integer                :: dims2nd            ! variable dimension lengths of 3rd dimension
+    character(len=cs)      :: name2nd            ! name of 2nd dimension
+    logical                :: varexists          ! true if variable exists on file
+    character(len=cs)      :: varname_i          ! input variable name
+    character(len=cs)      :: varname_o          ! output variable name
+    real(r8) , allocatable :: rmask_i(:)         ! real value of input mask (read in)
+    integer  , allocatable :: mask_i(:)          ! integer value of rmask_i
+    real(r8) , allocatable :: data1d_i(:)        ! input 1d data
+    real(r8) , allocatable :: data1d_o(:)        ! otuput 1d data
+    real(r8) , allocatable :: data2d_o(:,:)      ! output 2d data
+    real(r8) , allocatable :: read_data2d_i(:,:)
+    real(r8) , allocatable :: read_data2d_o(:,:)
+    real(r8) , allocatable :: area_i(:)          ! areas on input mesh
+    real(r8) , allocatable :: area_o(:)          ! areas on output mesh
     integer                :: rcode, ier         ! error status
-    logical                :: lconstant
     character(len=*), parameter :: subname = 'mkharvest'
     !-----------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
 
-    ! Normally read in the harvesting file, and then regrid to output grid
-
     if (root_task) then
-       write (ndiag,'(a)') 'Attempting to make harvest fields .....'
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to make harvest fields .....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
 
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    ! Determine ns_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Normally read in the harvesting file, and then regrid to output grid
+    if (root_task) write(ndiag,'(a)') ' opening input data file'   
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
+    if (root_task) write(ndiag,'(a)') ' finished opening input data file'   
+
+    ! If all veg then write out output data with values set to harvest_initval and return
+    if (all_veg) then
+       varname_i = trim(harvest_fieldnames(ifld))
+       if (constant) then
+          varname_o = trim(harvest_const_fieldnames(ifld))
+       else
+          varname_o = varname_i
+       end if
+       call mkharvest_check_input_var(pioid_i, trim(varname_i), varexists, dims2nd, name2nd)
+       if (varexists) then
+          if (dims2nd == 0) then
+             allocate(data1d_o(ns_o))
+             data1d_o(:) = 0._r8
+             call mkfile_output(pioid_o, mesh_o, trim(varname_o), data1d_o, rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             deallocate(data1d_o)
+          else
+             allocate(data2d_o(ns_o,dims2nd))
+             data2d_o(:,:) = 0._r8
+             call mkfile_output(pioid_o, mesh_o, trim(varname_o), data2d_o, lev1name=name2nd, rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             deallocate(data2d_o)
+          end if
+       end if
+       call pio_closefile(pioid_i)
+       RETURN
+    end if
 
     ! Read in input mesh
-    if (.not. ESMF_MeshCreated(mesh_i)) then
+    if (.not. ESMF_MeshIsCreated(mesh_i)) then
+       if (root_task) write(ndiag,'(a)') ' creating input mesh'
        mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
-    
-    ! Create a route handle between the input and output mesh
-    if (.not. RouteHandleisCreated(routehandle_r8)) then
-       allocate(frac_o(ns_o))
-       call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
-       call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+       if (root_task) write(ndiag,'(a)') ' finished creating input mesh'
     end if
 
     ! Determine ns_i
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    
-    ! Determine ns_o
-    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    
+
+    ! TODO: imlement oride_harv funcitionality - this is hard-wired for now
     allocate( oride_harv(numharv) )
     oride_harv(:) = real_undef
 
     if ( all(oride_harv == real_undef ) )then
 
        ! Get the landmask from the file and reset the mesh mask based on that
-       allocate(frac_i(ns_i), stat=ier)
+       allocate(rmask_i(ns_i), stat=ier)
        if (ier/=0) call shr_sys_abort()
        allocate(mask_i(ns_i), stat=ier)
        if (ier/=0) call shr_sys_abort()
-       call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+       call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, rmask_i, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
        do ni = 1,ns_i
-          if (frac_i(ni) > 0._r4) then
+          if (rmask_i(ni) > 0._r4) then
              mask_i(ni) = 1
           else
              mask_i(ni) = 0
           end if
        end do
+       deallocate(rmask_i)
        call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+       ! Create a route handle between the input and output mesh
+       ! NOTE: this must be done after mask_i is set in mesh_i
+       if (.not. ESMF_RouteHandleIsCreated(routehandle_r8)) then
+          if (root_task) write(ndiag,'(a)') ' creating route handle '
+          allocate(frac_o(ns_o))
+          call create_routehandle_r8(mesh_i, mesh_o, routehandle_r8, frac_o=frac_o, rc=rc)
+          call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+          if (root_task) write(ndiag,'(a)') ' finished creating route handle '
+       end if
 
        ! Read in input 1d fields if they exists and map to output grid
        do ifld = 1,numharv
           varname_i = trim(harvest_fieldnames(ifld))
-          if (lconstant) then
-             varname_o = trim(harvest_const_fieldnames(ifld)
+          if (constant) then
+             varname_o = trim(harvest_const_fieldnames(ifld))
           else
              varname_o = varname_i
           end if
-          ! Check if the variable is on the input file
-          call pio_seterrorhandling(pioid_i, PIO_BCAST_ERROR)
-          rCode = pio_inq_varid(pioid, varname, pio_varid)
-          call pio_seterrorhandling(pioid, PIO_INTERNAL_ERROR)
-          if (rcode == PIO_NOERR) then
-             varexists = .true.
-          else
-             varexists = .false.
-          end if
+          call mkharvest_check_input_var(pioid_i, trim(varname_i), varexists, dims2nd, name2nd)
           if (varexists) then
-             call mkpio_get_dimlengths(pioid, varname, ndims, dim_lengths)
-             if ( ndims == 2 )then
-                dims2nd(ifld) = 0
-             else if (ndims == 3 )then
-                dims2nd(ifld) = dim_lengths(3)
-             else
-                write(*,*) 'ERROR:: bad dimensionality for variable = ',trim(varname_i)
-                call shr_sys_abort()
-             end if
-             if (root_task) then
-                write(ndiag,'(a)') "Will Read: "//trim(varname_i)
-             end if
-          else
-             if (root_task) then
-                write(ndiag,'(a)') "Will Skip: "//trim(varname_i)
-             end if
-          end if
-          if (varexists) then
-             if (dim2nd(ifld) == 0) then
+             if (dims2nd == 0) then
+
+                ! 1d output
                 allocate(data1d_i(ns_i))
                 allocate(data1d_o(ns_o))
+
                 ! read in input 1d variable
-                call mkpio_get_rawdata(pioid, varname, mesh_i, data1d_i, rc=rc)
+                call mkpio_get_rawdata(pioid_i, varname_i, mesh_i, data1d_i, rc=rc)
                 if (chkerr(rc,__LINE__,u_FILE_u)) return
 
                 ! regrid input variable
-                call regrid_rawdata(mesh_i, mesh_o, routehandle, data1d_i, data1d_o, rc=rc)
+                call regrid_rawdata(mesh_i, mesh_o, routehandle_r8, data1d_i, data1d_o, rc=rc)
                 if (ChkErr(rc,__LINE__,u_FILE_u)) return
-                deallocate(data1d_i)
-                if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out "//trim(varname_o)
 
                 ! write out mapped variable
-                call mkfile_output(pioid_o, mesh_o, trim(varname_o), data1d_o, rc=rc)
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-                deallocate(data1d_o))
-             else
-                nlev = dims2nd(ifld)
-                allocate(read_data2d_i(nlev, ns_i))
-                allocate(read_data2d_o(nlev, ns_o))
-                ! read in input variable
-                call mkpio_get_rawdata(pioid, varname, mesh_i, read_data2d_i, rc=rc)
+                if (present(ntime)) then
+                   rcode = pio_inq_varid(pioid_o, trim(varname_o), pio_varid_o)
+                   call mkpio_iodesc_output(pioid_o, mesh_o, trim(varname_o), pio_iodesc_o, rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in making an iodesc for '//trim(varname_o))
+                   call mkpio_put_time_slice(pioid_o, pio_varid_o, pio_iodesc_o, ntime, data2d_o)
+                   call pio_freedecomp(pioid_o, pio_iodesc_o)
+                else
+                   if (root_task)  write(ndiag, '(a)') " writing out 1d "//trim(varname_o)
+                   call mkfile_output(pioid_o, mesh_o, trim(varname_o), data1d_o, rc=rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                   call pio_syncfile(pioid_o)
+                end if
+
+                ! TODO: uncomment the following and validate
+                ! Compare global areas on input and output grids for 1d variables
+                ! call mkharvest check_global_sums('harvest type '//trim(varname_o), ns_i, ns_o, &
+                !      mesh_i, mesh_o, mask_i, frac_o, data1d_i, data1d_o, rc)
+                ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+                deallocate(data1d_i)
+                deallocate(data1d_o)
+
+             else ! 2d output
+                
+                ! Read in input data 
+                allocate(read_data2d_i(dims2nd, ns_i))
+                allocate(read_data2d_o(dims2nd, ns_o))
+                call mkpio_get_rawdata(pioid_i, trim(varname_i), mesh_i, read_data2d_i, rc=rc)
                 if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-                ! regrid input variable
-                call regrid_rawdata(mesh_i, mesh_o, routehandle, read_data2d_i, read_data2d_o, 1, nlev, rc)
+                ! Regrid input input data
+                call regrid_rawdata(mesh_i, mesh_o, routehandle_r8, read_data2d_i, read_data2d_o, 1, dims2nd, rc)
                 if (ChkErr(rc,__LINE__,u_FILE_u)) return
                 deallocate(read_data2d_i)
 
-                ! write out variable
-                allocate(data2d_o(ns_o, nlev))
-                do l = 1,nlev
-                   do n = 1,ns_o
-                      data2d_o(n,l) = read_data2d_o(l,n)
+                ! Fill in output 2d array
+                allocate(data2d_o(ns_o,dims2nd))
+                do l = 1,dims2nd 
+                   do no = 1,ns_o
+                      data2d_o(no,l) = read_data2d_o(l,no)
                    end do
                 end do
-                call mkfile_output(pioid_o, mesh_o, trim(varname_o), data2d_o, rc=rc)
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                deallocate(read_data2d_o)
+
+                ! write out variable
+                if (present(ntime)) then
+                   rcode = pio_inq_varid(pioid_o, trim(varname_o), pio_varid_o)
+                   call mkpio_iodesc_output(pioid_o, mesh_o, trim(varname_o), pio_iodesc_o, rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in making an iodesc for '//trim(varname_o))
+                   call mkpio_put_time_slice(pioid_o, pio_varid_o, pio_iodesc_o, ntime, data2d_o)
+                   call pio_freedecomp(pioid_o, pio_iodesc_o)
+                else
+                   if (root_task)  write(ndiag, '(a)') " writing out 2d "//trim(varname_o)
+                   call mkfile_output(pioid_o, mesh_o, trim(varname_o), data2d_o, lev1name=trim(name2nd), rc=rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                end if
                 deallocate(data2d_o)
+
              end if
           end if
-       end do
 
-       ! Compare global areas on input and output grids
-       ! call check_global_sums('harvest type', ns_i, ns_o, mesh_i, mesh_o, mask_i, frac_o, IND1d, rc)
-       ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end do
 
     else
 
@@ -336,11 +318,9 @@ contains
     end if
 
     ! If constant model, clean up the mapping
-    lconstant = .false.
-    if ( present(constant) ) lconstant = constant
-    if (lconstant) then
+    if (constant) then
        deallocate(frac_o)
-       call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+       call ESMF_RouteHandleDestroy(routehandle_r8, nogarbage = .true., rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
        call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
@@ -394,19 +374,20 @@ contains
   end subroutine mkharvest_parse_oride
 
   !=================================================================================
-  subroutine check_global_sums(this, name, ns_i, ns_o, mesh_i, mesh_o, mask_i, frac_o, ind1D, rc)
+  subroutine mkharvest_check_global_sums(name, ns_i, ns_o, mesh_i, mesh_o, mask_i, frac_o, &
+       data_i, data_o, rc)
 
     ! input/otuput variables
-    class(harvestDataType), intent(inout) :: this       ! harvestData object
-    character(len=*)      , intent(in)    :: name
-    integer               , intent(in)    :: ns_i
-    integer               , intent(in)    :: ns_o
-    type(ESMF_Mesh)       , intent(in)    :: mesh_i
-    type(ESMF_Mesh)       , intent(in)    :: mesh_o
-    integer               , intent(in)    :: mask_i(:)
-    real(r8)              , intent(in)    :: frac_o(:)
-    integer               , intent(in)    :: ind1D(:)
-    integer               , intent(out)   :: rc
+    character(len=*) , intent(in)  :: name
+    integer          , intent(in)  :: ns_i
+    integer          , intent(in)  :: ns_o
+    type(ESMF_Mesh)  , intent(in)  :: mesh_i
+    type(ESMF_Mesh)  , intent(in)  :: mesh_o
+    integer          , intent(in)  :: mask_i(:)
+    real(r8)         , intent(in)  :: frac_o(:)
+    real(r8)         , intent(in)  :: data_i(:) ! 1D input data
+    real(r8)         , intent(in)  :: data_o(:) ! 1D output data
+    integer          , intent(out) :: rc
 
     ! local variables
     integer               :: ni, no, k, m
@@ -417,8 +398,6 @@ contains
     real(r8)              :: local_o(numharv)  ! output grid: global area harvesting
     real(r8)              :: global_i(numharv) ! input  grid: global area harvesting
     real(r8)              :: global_o(numharv) ! output grid: global area harvesting
-    real(r8), pointer     :: data1D_i(:)            ! 1D input data
-    real(r8), pointer     :: data1D_o(:)            ! 1D output data
     real(r8), parameter   :: fac = 1.e-06_r8   ! Output factor
     real(r8), parameter   :: rat = fac/100._r8 ! Output factor divided by 100%
     character(len=*) , parameter :: unit = '10**6 km**2' ! Output units
@@ -438,22 +417,14 @@ contains
     ! Input grid global area
     local_i(:) = 0.
     do ni = 1, ns_i
-       do k = 1, this%num1Dfields()
-          m = ind1D(k)
-          data1D_i => this%get1DFieldPtr( m )
-          local_i(m) = local_i(m) + data1D_i(ni)  *area_i(ni) * mask_i(ni)
-       end do
+       local_i(m) = local_i(m) + data_i(ni)  *area_i(ni) * mask_i(ni)
     end do
     call mpi_reduce(local_i, global_i, numharv, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
 
     ! Output grid global area
     local_o(:) = 0.
     do no = 1,ns_o
-       do k = 1, this%num1Dfields()
-          m = ind1D(k)
-          data1D_o => this%get1DFieldPtr( m, output=.true. )
-          local_o(m) = local_o(m) + data1D_o(no) * area_o(no) * frac_o(no)
-       end do
+       local_o(m) = local_o(m) + data_o(no) * area_o(no) * frac_o(no)
     end do
     call mpi_reduce(local_o, global_o, numharv, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
 
@@ -462,16 +433,69 @@ contains
     write (ndiag,*)
     write (ndiag,'(1x,70a1)') ('.',k=1,70)
     write (ndiag,101) unit, unit
-101 format (1x,'harvest type   ',20x,' input grid area',' output grid area',/ &
+101 format (1x,'harvest type' ,20x,' input grid area',' output grid area',/ &
             1x,33x,'     ',A,'      ',A)
     write (ndiag,'(1x,70a1)') ('.',k=1,70)
     write (ndiag,*)
-    do k = 1, this%num1Dfields()
-       m = ind1D(k)
-       write (ndiag,102) mkharvest_fieldname(m), global_i(m)*rat, global_o(m)*rat
-    end do
+    write (ndiag,102) trim(name), global_i*rat, global_o*rat
 102 format (1x,a35,f16.3,f17.3)
 
-  end subroutine check_global_sums
+  end subroutine mkharvest_check_global_sums
+
+  !=================================================================================
+  subroutine mkharvest_check_input_var(pioid, varname, varexists, dims2nd, name2nd)
+
+    ! input/output variables
+    type(file_desc_t) , intent(inout) :: pioid
+    character(len=*)  , intent(in)    :: varname
+    logical           , intent(out)   :: varexists
+    integer           , intent(out)   :: dims2nd
+    character(len=*)  , intent(out)   :: name2nd
+
+    ! local variable
+    type(var_desc_t) :: pio_varid
+    integer          :: ndims          ! number of variable dimension
+    integer          :: dimids(3)      ! variable dimension dim ids
+    integer          :: dimlens(3)     ! variable dimensions sizes
+    integer          :: ifld           ! index
+    integer          :: rcode          ! error status
+    character(len=*)  , parameter :: subname = 'mkharvest_check_input_var'
+    !-----------------------------------------------------------------------
+
+    dims2nd = -999
+    name2nd = 'unset'
+
+    call pio_seterrorhandling(pioid, PIO_BCAST_ERROR)
+    rcode = pio_inq_varid(pioid, varname, pio_varid)
+    call pio_seterrorhandling(pioid, PIO_INTERNAL_ERROR)
+    if (rcode == PIO_NOERR) then
+       varexists = .true.
+    else
+       varexists = .false.
+    end if
+    if (varexists) then
+       rcode = pio_inq_varndims(pioid, pio_varid, ndims)
+       if ( ndims == 2 )then
+          dims2nd = 0
+       else if (ndims == 3 )then
+          rcode = pio_inq_vardimid(pioid, pio_varid, dimids)
+          rcode = pio_inq_dimlen(pioid, dimids(3), dimlens(3))
+          dims2nd = dimlens(3)
+          rcode = pio_inq_vardimid(pioid, pio_varid, dimids)
+          rcode = pio_inq_dimname(pioid, dimids(3), name2nd)
+       else
+          write(*,*) 'ERROR:: bad dimensionality for variable = ',trim(varname)
+          call shr_sys_abort()
+       end if
+       if (root_task) then
+          write(ndiag,'(a)') " reading: "//trim(varname)
+       end if
+    else
+       if (root_task) then
+          write(ndiag,'(a)') " skipping: "//trim(varname)
+       end if
+    end if
+
+  end subroutine mkharvest_check_input_var
 
 end module mkharvestMod

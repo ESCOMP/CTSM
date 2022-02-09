@@ -258,9 +258,9 @@ def main ():
                         model_mesh = child2.text
                         rawdata_files["mksrf_fgrid_mesh"] = os.path.join(input_path,model_mesh.strip('$DIN_LOC_ROOT/'))
                     if child2.tag == 'nx':
-                        rawdata_files["mksrf_fgrid_nx"] = child2.text
+                        rawdata_files["mksrf_fgrid_mesh_nx"] = child2.text
                     if child2.tag == 'ny':
-                        rawdata_files["mksrf_fgrid_ny"] = child2.text
+                        rawdata_files["mksrf_fgrid_mesh_ny"] = child2.text
 
     if len(model_mesh) == 0:
         print (f"ERROR: input res {res} is invalid")
@@ -317,14 +317,11 @@ def main ():
         fsurlog = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.log"
         fdyndat = f"landuse.timeseries_{res}_{ssp_rcp}_{num_pft}_CMIP6_{start_year}-{end_year}_c{time_stamp}.log"
 
-    # TODO: make this an input argument
-    create_esmf_pet_files = True
-
     with open(nlfname, "w",encoding='utf-8') as nlfile:
 
         nlfile.write("&mksurfdata_input \n")
         for key,value in rawdata_files.items():
-            if key == 'mksrf_fgrid_nx' or key == 'mksrf_fgrid_ny':
+            if key == 'mksrf_fgrid_mesh_nx' or key == 'mksrf_fgrid_mesh_ny':
                 nlfile.write(f"  {key} = {value} \n")
             elif key != "mksrf_fvic" and key != "mksrf_fvic_mesh":
                 nlfile.write(f"  {key} = \'{value}\' \n")
@@ -347,10 +344,10 @@ def main ():
         nlfile.write(f"  mksrf_fdynuse = \'{landuse_fname} \' \n")
 
         mksrf_vic = rawdata_files["mksrf_fvic"]
-        nlfile.write(f"  use_vic = .{vic_flag}. \n")
         nlfile.write( "  outnc_vic = .true. \n")
-        nlfile.write(f"  use_glc = .{glc_flag}. \n")
-        nlfile.write(f"  create_esmf_pet_files = .{create_esmf_pet_files}. \n")
+       #nlfile.write(f"  use_vic = .{vic_flag}. \n")
+       #nlfile.write(f"  use_glc = .{glc_flag}. \n")
+       #nlfile.write(f"  create_esmf_pet_files = .{create_esmf_pet_files}. \n")
         nlfile.write("/ \n")
 
 if __name__ == "__main__":

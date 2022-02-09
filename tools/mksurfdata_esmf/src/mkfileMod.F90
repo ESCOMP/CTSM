@@ -8,17 +8,15 @@ module mkfileMod
   use mkvarpar          , only : nlevsoi, numrad, numstdpft
   use mkurbanparMod     , only : numurbl, nlevurb, mkurbanpar
   use mkglcmecMod       , only : nglcec
-  use mklaiMod          , only : mklai          
+  use mklaiMod          , only : mklai
   use mkpftConstantsMod , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft, num_natpft
   use mkpctPftTypeMod   , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
-  !use mkharvestMod      , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname, mkharvest_units, harvestDataType
   use mkpioMod ! TODO: add only
   use mkvarctl
 
   implicit none
   private
 
-  public :: mkfile_fdyndat
   public :: mkfile_define_dims
   public :: mkfile_define_atts
   public :: mkfile_define_vars
@@ -38,247 +36,6 @@ module mkfileMod
 contains
 !=================================================================================
 
-  subroutine mkfile_fdyndat(nx, ny, mesh_o, ns_o, lon, lat, rc) 
-
-    ! input/output variables
-    integer         , intent(in) :: nx
-    integer         , intent(in) :: ny
-    type(ESMF_Mesh) , intent(in) :: mesh_o
-    integer         , intent(in) :: ns_o
-    real(r8)        , intent(in) :: lon(:) 
-    real(r8)        , intent(in) :: lat(:) 
-    integer         , intent(out) :: rc
-
-    ! local variables
-    type(file_desc_t)     :: pioid_o
-    type(var_desc_t)      :: pio_varid_o
-    type(file_desc_t)     :: pioid_i
-    type(var_desc_t)      :: pio_varid_i
-    real(r8), allocatable :: pctlnd_pft_dyn(:) ! PFT data: % of gridcell for dyn landuse PFTs
-    character(len=256)    :: varname
-    character(len=256)    :: longname
-    character(len=256)    :: units
-    integer               :: xtype             ! external type
-    integer               :: dimid
-    logical               :: define_mode
-    character(len=256)    :: lev1name
-    integer, allocatable  :: ind1D(:)          ! Indices of 1D harvest variables
-    integer, allocatable  :: ind2D(:)          ! Indices of 2D harvest variables
-    integer               :: n, i              ! Indices
-    integer               :: rcode             ! Error status
-    character(len=*), parameter :: subname=' (mkfile_fdyndat) '
-    ! ------------------------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    ! if (root_task) then
-    !    write(ndiag,'(a)')'creating dynamic land use dataset'
-    ! end if
-
-    ! allocate(pctlnd_pft_dyn(ns_o))
-    ! !call mkharvest_init( lsize_o, spval, harvdata, mksrf_fhrvtyp )
-
-    ! ! open output file
-    ! call mkpio_wopen(trim(fdyndat), clobber=.true., pioid=pioid_o)
-
-    ! ! Define dimensions and global attributes
-    ! call mkfile_define_dims(pioid, nx, ny, dynlanduse=.true.)
-    ! call mkfile_define_atts(pioid, dynlanduse = .true.)
-
-    ! if ( outnc_double ) then
-    !    xtype = PIO_DOUBLE
-    ! else
-    !    xtype = PIO_REAL
-    ! end if
-
-    ! do n = 1,2
-
-    !    define_mode = (n == 1)
-    !    if (.not. define_mode) then
-    !       rcode = pio_enddef(pioid_o)
-    !    end if
-
-    !    ! --------------------------------
-    !    ! Write out model grid
-    !    ! --------------------------------
-    !    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out model grid"
-
-    !    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LONGXY"
-    !    call mkfile_output(pioid_o,  mesh_o,  'LONGXY', 'model longitudes', &
-    !         'degrees', lat, rc=rc) 
-    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    !    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LATIXY"
-    !    call mkfile_output(pioid_o,  mesh_o,  'LATIXY', 'model latitudes', &
-    !         'degrees', lon, rc=rc) 
-    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    !    !rcode = pio_open(trim(fdyndat), nf_write, pioid_o))
-    !    !rcode = pio_set_fill (pioid_o, nf_nofill, omode))
-
-    !    ! --------------------------------
-    !    ! Write out non-spatial variables
-    !    ! --------------------------------
-    !    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out non-spatial variables"
-
-    !    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out natpft"
-    !    if (define_mode) then
-    !       rcode = pio_def_var(pioid_o, 'natpft', PIO_INT, pio_varid)
-    !    else
-    !       rcode = pio_inq_varid(pioid_o, 'natpft', pio_varid)
-    !       rcode = pio_put_var_int(pioid_o, pio_varid, (/(n,n=natpft_lb,natpft_ub)/))
-    !    end if
-
-    !    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out cft"
-    !    if (define_mode) then
-    !       rcode = pio_def_var(pioid_o, 'cft', PIO_INT, pio_varid)
-    !    else
-    !       rcode = pio_inq_varid(pioid_o, 'cft', pio_varid)
-    !       rcode = pio_put_var_int(pioid_o, pio_varid, (/(n,n=cft_lb,cft_ub)/))
-    !    end if
-
-    !    ! --------------------------------
-    !    ! Write out spatial variables
-    !    ! --------------------------------
-
-    !    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land mask from pft dataset"
-    !    call mkfile_output(pioid_o,  mesh_o, 'PFTDATA_MASK', &
-    !         'land mask from pft dataset, indicative of real/fake points', 'unitless', pftdata_mask, rc=rc)
-    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    !    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil depth"
-    !    call mkfile_output(pioid_o,  mesh_o,  'LANDFRAC_PFT', &
-    !         'land fraction from pft dataset', 'unitless', landfrac_pft, rc=rc)
-    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! end do
-
-    ! ! -----------------------------------------
-    ! ! Read in each dynamic pft landuse dataset
-    ! ! -----------------------------------------
-
-    ! ! Open txt file
-    ! open (newunit=nfdyn, file=trim(mksrf_fdynuse), form='formatted', iostat=ier)
-    ! if (ioe /= 0) then
-    !    call shr_sys_abort(subname//" failed to open file "//trim(mksrf_fdynuse))
-    ! end if
-
-    ! pctnatpft_max = pctnatpft
-    ! pctcft_max = pctcft
-
-    ! ntim = 0
-    ! do
-
-    !    ! Determine file name
-    !    read(nfdyn, '(A195,1x,I4)', iostat=ier) string, year
-    !    if (ier /= 0) exit
-
-    !    ! If pft fraction override is set, than intrepret string as PFT and harvesting override values
-    !    ! Otherwise intrepret string as a filename with PFT and harvesting values in it
-    !    if ( all_veg )then
-    !       fname = ' '
-    !       fhrvname  = ' '
-    !       call mkpft_parse_oride(string)
-    !       call mkharvest_parse_oride(string)
-    !       write(6, '(a, i4, a)') 'PFT and harvesting values for year ', year, ' :'
-    !       write(6, '(a, a)') '    ', trim(string)
-    !    else
-    !       fname = string
-    !       read(nfdyn, '(A195,1x,I4)', iostat=ier) fhrvname, year2
-    !       if (root_task) then
-    !          write(ndiat,'(a,i8,a)')' input pft dynamic dataset for year ', year,' is : '//trim(fname)
-    !       end if
-    !       if ( year2 /= year ) then
-    !          write(6,*) subname, ' error: year for harvest not equal to year for PFT files'
-    !          call shr_sys_abort()
-    !       end if
-    !    end if
-    !    ntim = ntim + 1
-
-    !    ! Create pctpft data at model resolution from file fname
-    !    call mkpft( mksrf_fvegtyp_mesh, fname, mesh_model, &
-    !         pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
-    !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
-
-    !    ! Create harvesting data at model resolution
-    !    call mkharvest(  mksrf_fhrvtyp, mesh_model, harvdata=harvdata, rc )
-    !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
-
-    !    ! Consistency check on input land fraction
-    !    do n = 1,lsize_o
-    !       if (pctlnd_pft_dyn(n) /= pctlnd_pft(n)) then
-    !          write(6,*) subname,' error: pctlnd_pft for dynamics data = ',&
-    !               pctlnd_pft_dyn(n), ' not equal to pctlnd_pft for surface data = ',&
-    !               pctlnd_pft(n),' at n= ',n
-    !          if ( trim(fname) == ' ' )then
-    !             write(6,*) ' PFT string = ', string
-    !          else
-    !             write(6,*) ' PFT file = ', fname
-    !          end if
-    !          call shr_sys_abort()
-    !       end if
-    !    end do
-
-    !    call change_landuse( dynpft=.true.)
-
-    !    call normalizencheck_landuse(ldomain)
-
-    !    call update_max_array(pctnatpft_max,pctnatpft)
-    !    call update_max_array(pctcft_max,pctcft)
-
-    !    ! Output time-varying data for current year
-
-    !    rcode = pio_inq_varid(pioid, 'PCT_NAT_PFT', pio_varid)
-    !    call mkpio_put_time_slice(pioid, pio_varid, ntim, get_pct_p2l_array(pctnatpft))
-
-    !    rcode = pio_inq_varid(pioid, 'PCT_CROP', pio_varid)
-    !    call mkpio_put_time_slice(pioid, pio_varid, ntim, get_pct_l2g_array(pctcft))
-
-    !    if (num_cft > 0) then
-    !       rcode = pio_inq_varid(pioid, 'PCT_CFT', pio_varid)
-    !       call mkpio_put_time_slice(pioid, pio_varid, ntim, get_pct_p2l_array(pctcft))
-    !    end if
-
-    !    call harvdata%getFieldsIdx( harvind1D, harvind2D)
-    !    do k = 1, harvdata%num1Dfields()
-    !       rcode = pio_inq_varid(pioid, trim(mkharvest_fieldname(harvind1D(k),constant=.false.)), pio_varid)
-    !       harvest1D => harvdata%get1DFieldPtr( harvind1D(k), output=.true. )
-    !       call mkpio_put_time_slice(pioid, pio_varid, ntim, harvest1D)
-    !    end do
-    !    do k = 1, harvdata%num2Dfields()
-    !       rcode = pio_inq_varid(pioid, trim(mkharvest_fieldname(harvind2D(k),constant=.false.)), pio_varid)
-    !       harvest2D => harvdata%get2DFieldPtr( harvind2D(k), output=.true. )
-    !       call mkpio_put_time_slice(pioid, pio_varid, ntim, harvest2D)
-    !    end do
-    !    deallocate( harvind1D, harvind2D )
-
-    !    rcode = pio_inq_varid(pioid, 'YEAR', pio_varid)
-    !    rcode = pio_put_vara_int(pioid, pio_varid, ntim, 1, year)
-
-    !    rcode = pio_inq_varid(pioid, 'time', pio_varid)
-    !    rcode = pio_put_vara_int(pioid, pio_varid, ntim, 1, year)
-
-    !    rcode = pio_inq_varid(pioid, 'input_pftdata_filename', pio_varid)
-    !    rcode = pio_put_vara_text(pioid, pio_varid, (/ 1, ntim /), (/ len_trim(string), 1 /), trim(string))
-
-    ! end do   ! end of read loop
-
-    ! rcode = pio_inq_varid(pioid, 'PCT_NAT_PFT_MAX', pio_varid)
-    ! rcode = pio_put_var_double(pioid, pio_varid, get_pct_p2l_array(pctnatpft_max))
-
-    ! rcode = pio_inq_varid(pioid, 'PCT_CROP_MAX', pio_varid)
-    ! rcode = pio_put_var_double(pioid, pio_varid, get_pct_l2g_array(pctcft_max))
-
-    ! if (num_cft > 0) then
-    !    rcode = pio_inq_varid(pioid, 'PCT_CFT_MAX', pio_varid)
-    !    rcode = pio_put_var_double(pioid, pio_varid, get_pct_p2l_array(pctcft_max))
-    ! end if
-
-    ! rcode = pio_closefile(pioid)
-
-  end subroutine mkfile_fdyndat
-
-  !=================================================================================
   subroutine mkfile_define_dims(pioid, nx, ny, dynlanduse)
     !
     ! Define dimensions.
@@ -536,7 +293,7 @@ contains
 
        call mkpio_defvar(pioid=pioid, varname='mxsoil_color', xtype=PIO_INT, &
           long_name='maximum numbers of soil colors', units='unitless')
-     
+
        call mkpio_def_spatial_var(pioid=pioid, varname='SOIL_COLOR', xtype=PIO_INT, &
             long_name='soil color', units='unitless')
 
@@ -786,44 +543,60 @@ contains
     if (.not. dynlanduse) then
        call mkpio_def_spatial_var(pioid=pioid, varname='CONST_HARVEST_VH1', xtype=xtype, &
             long_name = "harvest from primary forest", units = "gC/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='CONST_HARVEST_VH2', xtype=xtype, &
             long_name = "harvest from primary non-forest", units = "gC/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='CONST_HARVEST_SH1', xtype=xtype, &
             long_name = "harvest from secondary mature-forest", units = "gC/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='CONST_HARVEST_SH2', xtype=xtype, &
             long_name = "harvest from secondary young-forest", units = "gC/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='CONST_HARVEST_SH3', xtype=xtype, &
             long_name = "harvest from secondary non-forest", units = "gC/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='CONST_GRAZING', xtype=xtype, &
             long_name = "grazing of herbacous pfts", units = "gC/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='CONST_FERTNITRO_CFT', xtype=xtype, &
             lev1name = 'cft', &
             long_name = "nitrogen fertilizer for each crop", units = "gN/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='UNREPRESENTED_PFT_LULCC', xtype=xtype,&
             lev1name = 'natpft', &
             long_name = "unrepresented PFT gross LULCC transitions", units = "unitless")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='UNREPRESENTED_CFT_LULCC', xtype=xtype, &
             lev1name = 'cft', &
             long_name = "unrepresented crop gross LULCC transitions", units = "unitless")
     else
        call mkpio_def_spatial_var(pioid=pioid, varname='HARVEST_VH1', xtype=xtype, &
             long_name = "harvest from primary forest", units = "gC/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='HARVEST_VH2', xtype=xtype, &
             long_name = "harvest from primary non-forest", units = "gC/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='HARVEST_SH1', xtype=xtype, &
             long_name = "harvest from secondary mature-forest", units = "gC/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='HARVEST_SH2', xtype=xtype, &
             long_name = "harvest from secondary young-forest", units = "gC/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='HARVEST_SH3', xtype=xtype, &
             long_name = "harvest from secondary non-forest", units = "gC/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='GRAZING', xtype=xtype, &
             long_name = "grazing of herbacous pfts", units = "gC/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='FERTNITRO_CFT', xtype=xtype, &
             lev1name = 'cft', &
             long_name = "nitrogen fertilizer for each crop", units = "gN/m2/yr")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='UNREPRESENTED_PFT_LULCC', xtype=xtype, &
             lev1name = 'natpft', &
             long_name = "unrepresented PFT gross LULCC transitions", units = "unitless")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='UNREPRESENTED_CFT_LULCC', xtype=xtype, &
             lev1name = 'cft', &
             long_name = "unrepresented crop gross LULCC transitions", units = "unitless")
@@ -893,12 +666,15 @@ contains
        call mkpio_def_spatial_var(pioid=pioid, varname='MONTHLY_LAI', xtype=xtype,  &
             lev1name='lsmpft', lev2name='time', &
             long_name='monthly leaf area index', units='unitless')
+
        call mkpio_def_spatial_var(pioid=pioid, varname='MONTHLY_SAI', xtype=xtype,  &
             lev1name='lsmpft', lev2name='time', &
             long_name='monthly stem area index', units='unitless')
+
        call mkpio_def_spatial_var(pioid=pioid, varname='MONTHLY_HEIGHT_TOP', xtype=xtype,  &
             lev1name='lsmpft', lev2name='time', &
             long_name='monthly height top', units='meters')
+
        call mkpio_def_spatial_var(pioid=pioid, varname='MONTHLY_HEIGHT_BOT', xtype=xtype,  &
             lev1name='lsmpft', lev2name='time', &
             long_name='monthly height bottom', units='meters')

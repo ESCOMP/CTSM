@@ -84,7 +84,6 @@ contains
     character(len=*), parameter :: subname = ' (mkpftInit) '
     !-----------------------------------------------------------------------
 
-    write (6, '(a, a, a)') "In ", subname, "..."
     if ( maxpft < numpft ) then
        write(6,*) subname//'number PFT is > max allowed!'
        call shr_sys_abort()

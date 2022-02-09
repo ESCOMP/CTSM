@@ -66,12 +66,11 @@ contains
     end if
 
     ! Open input data file
-    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
     call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
-    ! Get dimensions of raw data. 
-    !  - raw data is dimensions (lon,lat,lev) 
+    ! Get dimensions of raw data.
+    !  - raw data is dimensions (lon,lat,lev)
     !  - input read from pio has dimensions(n,lev)
     !  - esmf field dataptr has dimensions (lev,n)
     allocate(dimlengths(3))
@@ -154,7 +153,7 @@ contains
        enddo
     end do
 
-    ! Close the file 
+    ! Close the file
     call pio_closefile(pioid)
     call ESMF_VMLogMemInfo("After pio_closefile in "//trim(subname))
 

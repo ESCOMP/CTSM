@@ -16,34 +16,35 @@ string(REPLACE "-I" "" ESMF_F90COMPILEPATHS ${ESMF_F90COMPILEPATHS})
 string(REPLACE " " ";" ESMF_F90COMPILEPATHS ${ESMF_F90COMPILEPATHS})
 message("ESMF_F90COMPILEPATHS:   ${ESMF_F90COMPILEPATHS}")
 
-set(SRCFILES mkvarctl.F90
-             mkvarpar.F90
-             mkpioMod.F90
-             mkfileMod.F90
-             mkagfirepkmonthMod.F90
+set(SRCFILES mkagfirepkmonthMod.F90
+             mkchecksMod.F90
+             mkdiagnosticsMod.F90
              mkdomainMod.F90
+             mkesmfMod.F90
+             mkfileMod.F90
              mkgdpMod.F90
              mkglacierregionMod.F90
              mkglcmecMod.F90
+             mkharvestMod.F90
+             mkindexmapMod.F90
              mklaiMod.F90
              mklanwatMod.F90
              mkorganicMod.F90
              mkpeatMod.F90
-             mkpftConstantsMod.F90
+             mkpioMod.F90
              mkpftMod.F90
-             mkpftUtilsMod.F90
+             mkpftConstantsMod.F90
              mkpctPftTypeMod.F90
+             mkpftUtilsMod.F90
              mksoilcolMod.F90
              mksoilfmaxMod.F90
              mksoiltexMod.F90
              mksoildepthMod.F90
              mkurbanparMod.F90
-             mkvocefMod.F90
-             mkesmfMod.F90
              mkutilsMod.F90
-             mkchecksMod.F90
-             mkdiagnosticsMod.F90
-             mkindexmapMod.F90
+             mkvarctl.F90
+             mkvarpar.F90
+             mkvocefMod.F90
              nanMod.F90
              shr_const_mod.F90
              shr_kind_mod.F90
