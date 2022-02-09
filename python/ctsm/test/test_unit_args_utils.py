@@ -63,6 +63,30 @@ class TestArgsPlon(unittest.TestCase):
         ):
             _ = plon_type(-200)
 
+    # -- = -180
+    def test_plonType_negative_180(self):
+        """
+        Test for when plon values are  -180
+        """
+        result = plon_type(-180)
+        self.assertEqual(result, 180.0)
+
+    # -- = 0
+    def test_plonType_zero(self):
+        """
+        Test for when plon values are 0
+        """
+        result = plon_type(0)
+        self.assertEqual(result, 0)
+
+    # -- = 360
+    def test_plonType_positive_360(self):
+        """
+        Test for when plon values are 360.
+        """
+        result = plon_type(360)
+        self.assertEqual(result, 360.0)
+
 class TestArgsPlat(unittest.TestCase):
     """
     Tests for plat_type in args_util.py
@@ -75,6 +99,20 @@ class TestArgsPlat(unittest.TestCase):
             argparse.ArgumentTypeError, "Latitude.*should be between"
         ):
             _ = plat_type(91)
+
+    def test_platType_outOfBounds_90(self):
+        """
+        Test of plat_type is 90
+        """
+        result = plat_type(90)
+        self.assertEqual(result, 90.0)
+
+    def test_platType_outOfBounds_90(self):
+        """
+        Test of plat_type is -90
+        """
+        result = plat_type(-90)
+        self.assertEqual(result, -90.0)
 
     def test_platType_outOfBounds_negative(self):
         """
