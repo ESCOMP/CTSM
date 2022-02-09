@@ -123,14 +123,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="SSP5-8.5" >lnd/clm2/isotopes/atm_delta_C14_CMIP6_SSP5B_3x1_global_1850-2100_yearly_c181209.nc</atm_c14_filename>
 
 <!-- Irrigation default -->
-<irrigate use_crop=".true." phys="clm5_1"  use_cndv=".false." sim_year_range="1850-2100">.true.</irrigate>
-<irrigate use_crop=".true." phys="clm5_1"  use_cndv=".true."  sim_year_range="1850-2100">.false.</irrigate>
-<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false."  sim_year_range="1850-2100">.true.</irrigate>
-<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true."   sim_year_range="1850-2100">.false.</irrigate>
-<irrigate use_crop=".true." phys="clm4_5"                     sim_year_range="1850-2100">.false.</irrigate>
+<irrigate phys="clm5_1"  use_cndv=".false." sim_year_range="1850-2100">.true.</irrigate>
+<irrigate phys="clm5_1"  use_cndv=".true."  sim_year_range="1850-2100">.false.</irrigate>
+<irrigate phys="clm5_0" use_cndv=".false."  sim_year_range="1850-2100">.true.</irrigate>
+<irrigate phys="clm5_0" use_cndv=".true."   sim_year_range="1850-2100">.false.</irrigate>
+<irrigate phys="clm4_5"                     sim_year_range="1850-2100">.false.</irrigate>
 
-<irrigate use_crop=".true." >.false.</irrigate>
-<irrigate use_crop=".false.">.true.</irrigate>
+<irrigate >.false.</irrigate>
 
 
 <!-- Saturation excess runoff for crops  -->
