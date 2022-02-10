@@ -2,7 +2,7 @@ module mkfileMod
 
   use ESMF
   use pio
-  use shr_kind_mod      , only : r8 => shr_kind_r8
+  use shr_kind_mod      , only : r8 => shr_kind_r8, r4=> shr_kind_r4
   use shr_sys_mod       , only : shr_sys_getenv, shr_sys_abort
   use mkutilsMod        , only : get_filename, chkerr
   use mkvarpar          , only : nlevsoi, numrad, numstdpft
@@ -25,8 +25,10 @@ module mkfileMod
   interface mkfile_output
      module procedure mkfile_output_int1d
      module procedure mkfile_output_int2d
-     module procedure mkfile_output_real1d
-     module procedure mkfile_output_real2d
+     module procedure mkfile_output_real1dr8
+     module procedure mkfile_output_real2dr8
+     module procedure mkfile_output_real1dr4
+     module procedure mkfile_output_real2dr4
   end interface mkfile_output
 
   character(len=*) , parameter :: u_FILE_u = &
@@ -451,10 +453,10 @@ contains
        call mkpio_def_spatial_var(pioid=pioid, varname='gdp', xtype=xtype, &
             long_name='gdp', units='unitless')
 
-       call mkpio_def_spatial_var(pioid=pioid, varname='SLOPE', xtype=xtype, &
+       call mkpio_def_spatial_var(pioid=pioid, varname='SLOPE', xtype=PIO_REAL, &
             long_name='mean topographic slope', units='degrees')
 
-       call mkpio_def_spatial_var(pioid=pioid, varname='STD_ELEV', xtype=xtype, &
+       call mkpio_def_spatial_var(pioid=pioid, varname='STD_ELEV', xtype=PIO_REAL, &
             long_name='standard deviation of elevation', units='m')
 
        if ( outnc_vic )then
@@ -751,7 +753,7 @@ contains
   end subroutine mkfile_output_int2d
 
   !=================================================================================
-  subroutine mkfile_output_real1d(pioid, mesh, varname, data, rc)
+  subroutine mkfile_output_real1dr8(pioid, mesh, varname, data, rc)
 
     ! input/output variables
     type(file_desc_t) , intent(inout) :: pioid
@@ -774,10 +776,10 @@ contains
     call pio_write_darray(pioid, pio_varid, pio_iodesc, data, rcode)
     call pio_freedecomp(pioid, pio_iodesc)
 
-  end subroutine mkfile_output_real1d
+  end subroutine mkfile_output_real1dr8
 
   !=================================================================================
-  subroutine mkfile_output_real2d(pioid, mesh, varname, data, lev1name, rc)
+  subroutine mkfile_output_real2dr8(pioid, mesh, varname, data, lev1name, rc)
 
     ! input/output variables
     type(file_desc_t) , intent(inout) :: pioid
@@ -800,6 +802,61 @@ contains
     rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
     call pio_write_darray(pioid, pio_varid, pio_iodesc, data, rcode)
     call pio_freedecomp(pioid, pio_iodesc)
-  end subroutine mkfile_output_real2d
+    
+  end subroutine mkfile_output_real2dr8
+
+  !=================================================================================
+  subroutine mkfile_output_real1dr4(pioid, mesh, varname, data, rc)
+
+    ! input/output variables
+    type(file_desc_t) , intent(inout) :: pioid
+    type(ESMF_Mesh)   , intent(in)    :: mesh
+    character(len=*)  , intent(in)    :: varname
+    real(r4)          , intent(in)    :: data(:)
+    integer           , intent(out)   :: rc
+
+    ! local variables
+    type(io_desc_t)      :: pio_iodesc
+    type(var_desc_t)     :: pio_varid
+    integer              :: rcode
+    !-----------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    call mkpio_iodesc_output(pioid, mesh, trim(varname), pio_iodesc, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
+    rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+    call pio_write_darray(pioid, pio_varid, pio_iodesc, data, rcode)
+    call pio_freedecomp(pioid, pio_iodesc)
+
+  end subroutine mkfile_output_real1dr4
+
+  !=================================================================================
+  subroutine mkfile_output_real2dr4(pioid, mesh, varname, data, lev1name, rc)
+
+    ! input/output variables
+    type(file_desc_t) , intent(inout) :: pioid
+    type(ESMF_Mesh)   , intent(in)    :: mesh
+    character(len=*)  , intent(in)    :: varname
+    character(len=*)  , intent(in)    :: lev1name
+    real(r4)          , intent(in)    :: data(:,:)
+    integer           , intent(out)   :: rc
+
+    ! local variables
+    type(io_desc_t)      :: pio_iodesc
+    type(var_desc_t)     :: pio_varid
+    integer              :: rcode
+    !-----------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    call mkpio_iodesc_output(pioid, mesh, trim(varname), pio_iodesc, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in generating an iodesc for '//trim(varname))
+    rcode = pio_inq_varid(pioid, trim(varname), pio_varid)
+    call pio_write_darray(pioid, pio_varid, pio_iodesc, data, rcode)
+    call pio_freedecomp(pioid, pio_iodesc)
+
+  end subroutine mkfile_output_real2dr4
 
 end module mkfileMod
+

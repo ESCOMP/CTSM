@@ -40,6 +40,7 @@ set(SRCFILES mkagfirepkmonthMod.F90
              mksoilfmaxMod.F90
              mksoiltexMod.F90
              mksoildepthMod.F90
+             mktopostatsMod.F90
              mkurbanparMod.F90
              mkutilsMod.F90
              mkvarctl.F90

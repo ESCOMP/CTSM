@@ -94,8 +94,8 @@ program mksurfdata
   use shr_sys_mod        , only : shr_sys_abort
 #ifdef TODO
   use mkVICparamsMod     , only : mkVICparams
-  use mktopostatsMod     , only : mktopostats
 #endif
+  use mktopostatsMod     , only : mktopostats
   use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
   use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
   use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
@@ -193,8 +193,8 @@ program mksurfdata
   real(r8), allocatable             :: fpeat(:)                ! peatland fraction of gridcell
   real(r8), allocatable             :: soildepth(:)            ! soil depth (m)
   integer , allocatable             :: agfirepkmon(:)          ! agricultural fire peak month
-  real(r8), allocatable             :: topo_stddev(:)          ! standard deviation of elevation (m)
-  real(r8), allocatable             :: slope(:)                ! topographic slope (degrees)
+  real(r4), allocatable             :: topo_stddev(:)          ! standard deviation of elevation (m)
+  real(r4), allocatable             :: slope(:)                ! topographic slope (degrees)
   real(r8), allocatable             :: vic_binfl(:)            ! VIC b
   real(r8), allocatable             :: vic_ws(:)               ! VIC Ws parameter (unitless)
   real(r8), allocatable             :: vic_dsmax(:)            ! VIC Dsmax parameter (mm/day)
@@ -211,6 +211,8 @@ program mksurfdata
   integer                       :: rc
   type(ESMF_LogKind_Flag)       :: logkindflag
   type(ESMF_VM)                 :: vm
+  integer                       :: petcount
+  integer                       :: stride
   character(len=CS)             :: varname
   logical                       :: create_esmf_pet_files = .true.
   character(len=32)             :: subname = 'mksrfdata'    ! program name
@@ -240,8 +242,8 @@ program mksurfdata
   if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
   call ESMF_VMGetGlobal(vm, rc=rc)
   if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-  call ESMF_VMGet(vm, mpicommunicator=mpicom, localPet=iam, rc=rc)
-  if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+  call ESMF_VMGet(vm, mpicommunicator=mpicom, localPet=iam, petcount=petcount, &
+       ssiLocalPetCount=stride, rc=rc)
   call ESMF_LogSet(flush=.true.)
   call ESMF_LogWrite("mksurfdata starting", ESMF_LOGMSG_INFO)
 
@@ -250,20 +252,9 @@ program mksurfdata
   ! ------------------
 
   ! the following returns pio_iosystem
-  ! call pio_init(iam, mpicom, 1, 0, 36, PIO_REARR_SUBSET, pio_iosystem)
-  ! TODO: generalize iotype
+  call pio_init(iam, mpicom, max(1,petcount/stride), 0, stride, PIO_REARR_SUBSET, pio_iosystem)
 
-  call pio_init(iam, mpicom, 4, 0, 36, PIO_REARR_SUBSET, pio_iosystem)
-
-  ! call pio_init(comp_rank=iam, &
-  !      comp_comm=mpicom, &
-  !      num_iotasks = 8, &
-  !      num_aggregator = 0, &
-  !      stride = 36, &
-  !      rearr = PIO_REARR_SUBSET, &
-  !      iosystem = pio_iosystem)
-
-  pio_iotype   =  PIO_IOTYPE_PNETCDF
+  pio_iotype = PIO_IOTYPE_NETCDF
   pio_ioformat =  PIO_64BIT_DATA
 
   call ESMF_LogWrite("finished initializing PIO", ESMF_LOGMSG_INFO)
@@ -359,6 +350,25 @@ program mksurfdata
      ! End define model
      rcode = pio_enddef(pioid)
   end if
+
+  ! DEBUG
+  allocate ( topo_stddev(lsize_o)) ; topo_stddev(:) = spval
+  allocate ( slope(lsize_o))       ; slope(:)       = spval
+  call mktopostats ( mksrf_ftopostats_mesh, mksrf_ftopostats, mesh_model, &
+       topo_stddev_o=topo_stddev, slope_o=slope, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mktopostats')
+  if (fsurdat /= ' ') then
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing topo_stddev "
+     call mkfile_output(pioid,  mesh_model, 'STD_ELEV', topo_stddev, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for STD_ELEV')
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing slope"
+     call mkfile_output(pioid,  mesh_model, 'SLOPE', slope, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for SLOPE')
+     call pio_syncfile(pioid)
+  end if
+  deallocate(topo_stddev)
+  deallocate(slope)
+  ! DEBUG
 
   ! -----------------------------------
   ! Write out coordinate variables

@@ -325,7 +325,7 @@ contains
     character(len=*)  , intent(in)    :: varname   ! field name in rawdata file
     type(ESMF_Mesh)   , intent(in)    :: mesh_i
     real(r8)          , intent(inout) :: data_i(:,:) ! input raw data
-    integer, optional , intent(in)    :: setframe    
+    integer, optional , intent(in)    :: setframe
     integer           , intent(out)   :: rc
 
     ! local variables
@@ -473,7 +473,13 @@ contains
     end if
 
     ! determine io descriptor for this variable
-    if (ndims == 2) then
+    if (ndims == 1) then
+       call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
+       if (root_task) then
+          write(ndiag,'(a,i20)') ' set iodesc for rawdata: '//trim(varname)//' with dim(1) = ',&
+               dimlens(1)
+       end if
+    else if (ndims == 2) then
        call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
        if (root_task) then
           write(ndiag,'(a,i8,i8)') ' set iodesc for rawdata: '//trim(varname)//' with dim(1),dim(2) = ',&
@@ -506,7 +512,7 @@ contains
           call shr_sys_abort('for lon/lat support up to 3 spatial dims plus a time dim')
        end if
     else
-       call shr_sys_abort('rawdata input for variable '//trim(varname)//'  must have ndims either 2, 3 or 4')
+       call shr_sys_abort('rawdata input for variable '//trim(varname)//'  must have ndims either 1,2,3 or 4')
     end if
 
     ! deallocate memory
@@ -1145,7 +1151,7 @@ contains
     call ESMF_VMLogMemInfo("After call to pio_read_darray for varname "//trim(varname))
 
   end subroutine mkpio_get_rawdata1d_level_real8
-  
+
   ! ========================================================================
   subroutine mkpio_get_rawdata2d_level_real8(pioid, pio_iodesc, unlimited_index, varname, data_i)
 
@@ -1164,7 +1170,7 @@ contains
     real(r4)    , allocatable :: data_real2d(:,:)
     real(r8)    , allocatable :: data_double2d(:,:)
     integer                   :: ns_i, nlev
-    integer                   :: n, l 
+    integer                   :: n, l
     integer                   :: rcode
     character(len=*), parameter :: subname = 'mkpio_get_rawdata1d_real4'
     !-------------------------------------------------
