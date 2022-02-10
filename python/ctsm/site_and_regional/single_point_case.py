@@ -76,6 +76,9 @@ class SinglePointCase(BaseCase):
     create_landuse_at_point:
         Create landuse file at a single point.
 
+    modify_surfdata_atpoint:
+        Modify surface dataset based on combination of user choices.
+
     create_surfdata_at_point:
         Create surface dataset at a single point.
 
@@ -368,6 +371,68 @@ class SinglePointCase(BaseCase):
                 line = "flanduse_timeseries = '${}'".format(os.path.join(USRDAT_DIR, fluse_out))
                 self.write_to_file(line, nl_clm)
 
+
+
+    def modify_surfdata_atpoint (self, f_tmp):
+        """
+        Function to modify surface dataset based on the user flags chosen.
+        """
+
+        #-- modify surface data properties
+        if self.dom_pft is not None:
+            max_dom_pft = max(self.dom_pft)
+            #-- First initialize everything:
+            if max_dom_pft < NAT_PFT :
+                f_tmp ["PCT_NAT_PFT"][:,:,:] = 0
+            else:
+                f_tmp ["PCT_CFT"][:,:,:] = 0
+
+            # Do we need to initialize these here?
+            # Because we set them in include_nonveg
+            #f_tmp["PCT_NATVEG"][:, :] = 0
+            #f_tmp["PCT_CROP"][:, :] = 0
+
+            #-- loop over all dom_pft and pct_pft
+            zip_pfts = zip (self.dom_pft, self.pct_pft)
+            for dom_pft, pct_pft in zip_pfts:
+                if dom_pft < NAT_PFT:
+                    f_tmp['PCT_NAT_PFT'][:, :, dom_pft] = pct_pft
+                else:
+                    dom_pft = dom_pft-NAT_PFT
+                    f_tmp['PCT_CFT'][:, :, dom_pft] = pct_pft
+
+        # -------------------------------
+        # By default include_nonveg=False
+        # When we use --include-nonveg we turn it to True
+        # Therefore by default we are hitting the following if:
+
+        if not self.include_nonveg:
+            logger.info ("Zeroing out non-vegetation land units in the surface data.")
+            f_tmp["PCT_LAKE"][:, :] = 0.0
+            f_tmp["PCT_WETLAND"][:, :] = 0.0
+            f_tmp["PCT_URBAN"][:, :] = 0.0
+            f_tmp["PCT_GLACIER"][:, :] = 0.0
+
+            max_dom_pft = max(self.dom_pft)
+            if max_dom_pft < NAT_PFT :
+                f_tmp["PCT_NATVEG"][:, :] = 100
+                f_tmp["PCT_CROP"][:, :] = 0
+            else:
+                f_tmp["PCT_NATVEG"][:, :] = 0
+                f_tmp["PCT_CROP"][:, :] = 100
+
+        else:
+            logger.info ("You chose --include-nonveg --> \
+                Do not zero non-vegetation land units in the surface data.")
+
+        if self.uni_snow:
+            f_tmp["STD_ELEV"][:, :] = 20.0
+        if self.cap_saturation:
+            f_tmp["FMAX"][:, :] = 0.0
+
+        return f_tmp
+
+
     def create_surfdata_at_point(self, indir, file, user_mods_dir):
         """
         Create surface data file at a single point.
@@ -387,62 +452,12 @@ class SinglePointCase(BaseCase):
         f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
 
         # extract gridcell closest to plon/plat
-        f_out = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
+        f_tmp = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
 
         # expand dimensions
-        f_out = f_out.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
+        f_tmp = f_tmp.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
 
-        #-- modify surface data properties
-        if self.dom_pft is not None:
-            max_dom_pft = max(self.dom_pft)
-            #-- First initialize everything:
-            if max_dom_pft < NAT_PFT :
-                f_out ["PCT_NAT_PFT"][:,:,:] = 0
-            else:
-                f_out["PCT_CFT"][:,:,:] = 0
-
-            # Do we need to initialize these here?
-            # Because we set them in include_nonveg
-            #f_out["PCT_NATVEG"][:, :] = 0
-            #f_out["PCT_CROP"][:, :] = 0
-
-            #-- loop over all dom_pft and pct_pft
-            zip_pfts = zip (self.dom_pft, self.pct_pft)
-            for dom_pft, pct_pft in zip_pfts:
-                if dom_pft < NAT_PFT:
-                    f_out['PCT_NAT_PFT'][:, :, dom_pft] = pct_pft
-                else:
-                    dom_pft = dom_pft-NAT_PFT
-                    f_out['PCT_CFT'][:, :, dom_pft] = pct_pft
-
-        # -------------------------------
-        # By default include_nonveg=False
-        # When we use --include-nonveg we turn it to True
-        # Therefore by default we are hitting the following if:
-
-        if not self.include_nonveg:
-            logger.info ("Zeroing out non-vegetation land units in the surface data.")
-            f_out["PCT_LAKE"][:, :] = 0.0
-            f_out["PCT_WETLAND"][:, :] = 0.0
-            f_out["PCT_URBAN"][:, :] = 0.0
-            f_out["PCT_GLACIER"][:, :] = 0.0
-
-            max_dom_pft = max(self.dom_pft)
-            if max_dom_pft < NAT_PFT :
-                f_out["PCT_NATVEG"][:, :] = 100
-                f_out["PCT_CROP"][:, :] = 0
-            else:
-                f_out["PCT_NATVEG"][:, :] = 0
-                f_out["PCT_CROP"][:, :] = 100
-
-        else:
-            logger.info ("You chose --include-nonveg --> \
-                Do not zero non-vegetation land units in the surface data.")
-
-        if self.uni_snow:
-            f_out["STD_ELEV"][:, :] = 20.0
-        if self.cap_saturation:
-            f_out["FMAX"][:, :] = 0.0
+        f_out = self.modify_surfdata_atpoint (f_tmp)
 
         # specify dimension order
         f_out = f_out.transpose(
@@ -476,6 +491,7 @@ class SinglePointCase(BaseCase):
         self.write_to_netcdf (f_out, wfile)
         logger.info("Successfully created file (fsurf_out) %s", wfile)
         f_in.close()
+        f_tmp.close()
         f_out.close()
 
         # write to user_nl_clm if specified
