@@ -43,6 +43,9 @@ class RegionalCase(BaseCase):
         flag for creating DATM files
     create_user_mods : bool
         flag for creating user mods files and folders
+    overwrite : bool
+        flag for over-writing files if they already exist
+
 
     Methods
     -------
@@ -75,12 +78,13 @@ class RegionalCase(BaseCase):
             create_datm,
             create_user_mods,
             out_dir,
+            overwrite,
     ):
         """
         Initializes RegionalCase with the given arguments.
         """
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm,
-                         create_user_mods)
+                         create_user_mods, overwrite)
         self.lat1 = lat1
         self.lat2 = lat2
         self.lon1 = lon1
@@ -129,7 +133,7 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         wfile = os.path.join(self.out_dir, fdomain_out)
-        f_out.to_netcdf(path=wfile, mode="w", format='NETCDF3_64BIT')
+        self.write_to_netcdf (f_out, wfile)
         logger.info("Successfully created file (fdomain_out) %s", wfile)
         f_in.close()
         f_out.close()
@@ -163,7 +167,7 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         wfile = os.path.join(self.out_dir, fsurf_out)
-        f_out.to_netcdf(path=wfile, mode="w", format='NETCDF3_64BIT')
+        self.write_to_netcdf (f_out, wfile)
         logger.info("created file (fsurf_out) %s", wfile)
         f_in.close()
         f_out.close()
@@ -205,7 +209,7 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         wfile = os.path.join(self.out_dir, fluse_out)
-        f_out.to_netcdf(path=wfile, mode="w", format='NETCDF3_64BIT')
+        self.write_to_netcdf (f_out, wfile)
         logger.info("Successfully created file (fluse_out) %s", wfile)
         f_in.close()
         f_out.close()

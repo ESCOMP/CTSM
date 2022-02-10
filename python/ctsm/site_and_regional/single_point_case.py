@@ -61,6 +61,8 @@ class SinglePointCase(BaseCase):
         flag for creating datasets using uniform snowpack
     saturation_excess : bool
         flag for making dataset using saturation excess
+    overwrite : bool
+        flag for over-writing files if they already exist
 
     Methods
     -------
@@ -107,9 +109,10 @@ class SinglePointCase(BaseCase):
             uni_snow,
             cap_saturation,
             out_dir,
+            overwrite,
     ):
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm,
-                         create_user_mods)
+                         create_user_mods, overwrite)
         self.plat = plat
         self.plon = plon
         self.site_name = site_name
@@ -310,7 +313,7 @@ class SinglePointCase(BaseCase):
         f_out.attrs["Created_from"] = fdomain_in
 
         wfile = os.path.join(self.out_dir, fdomain_out)
-        f_out.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
+        self.write_to_netcdf (f_out, wfile)
         logger.info("Successfully created file (fdomain_out) %s", wfile)
         f_in.close()
         f_out.close()
@@ -354,8 +357,7 @@ class SinglePointCase(BaseCase):
         f_out.attrs["Created_from"] = fluse_in
 
         wfile = os.path.join(self.out_dir, fluse_out)
-        # mode 'w' overwrites file
-        f_out.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
+        self.write_to_netcdf (f_out, wfile)
         logger.info("Successfully created file (fluse_out), %s", wfile)
         f_in.close()
         f_out.close()
@@ -469,9 +471,9 @@ class SinglePointCase(BaseCase):
         # update attributes
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = fsurf_in
-        # mode 'w' overwrites file
+
         wfile = os.path.join(self.out_dir, fsurf_out)
-        f_out.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
+        self.write_to_netcdf (f_out, wfile)
         logger.info("Successfully created file (fsurf_out) %s", wfile)
         f_in.close()
         f_out.close()
@@ -510,9 +512,8 @@ class SinglePointCase(BaseCase):
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = fdatmdomain_in
 
-        # mode 'w' overwrites file
         wfile = os.path.join(self.out_dir, fdatmdomain_out)
-        f_out.to_netcdf(path=wfile, mode="w", format = 'NETCDF3_64BIT')
+        self.write_to_netcdf (f_out, wfile)
         logger.info("Successfully created file (fdatmdomain_out) : %s", wfile)
         f_in.close()
         f_out.close()
@@ -537,8 +538,7 @@ class SinglePointCase(BaseCase):
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = file_in
 
-        # mode 'w' overwrites file
-        f_out.to_netcdf(path=file_out, mode="w")
+        self.write_to_netcdf (f_out, file_out)
         logger.info("Successfully created file : %s", file_out)
         f_in.close()
         f_out.close()
