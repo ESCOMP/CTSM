@@ -241,10 +241,9 @@ contains
              rc = ESMF_RC_ARG_BAD  ! error detected
              return
           endif
-          dynamicMaskList(i)%dstElement = dynamicMaskList(i)%dstElement / renorm
-          mean = dynamicMaskList(i)%dstElement
 
           ! Now compute the standard deviation
+          mean = dynamicMaskList(i)%dstElement
           dynamicMaskList(i)%dstElement = 0.d0 ! reset to zero
           do j = 1, size(dynamicMaskList(i)%factor)
              dynamicMaskList(i)%dstElement = dynamicMaskList(i)%dstElement + &
