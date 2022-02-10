@@ -9,7 +9,6 @@ You can run this by:
 """
 
 import unittest
-import argparse
 import os
 import sys
 
