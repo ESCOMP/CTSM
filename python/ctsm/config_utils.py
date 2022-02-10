@@ -156,9 +156,9 @@ def _convert_to_bool(var):
     Returns:
         var_out (bool): Boolean value corresponding to the input.
     """
-    if var.lower() in ("yes", "true", "t", "y", "1"):
+    if var.lower() in ("yes", "true", "t", "y", "1", "on"):
         var_out = True
-    elif var.lower() in ("no", "false", "f", "n", "0"):
+    elif var.lower() in ("no", "false", "f", "n", "0", "off"):
         var_out = False
     else:
         raise ValueError("Boolean value expected. [true or false] or [y or n]")
