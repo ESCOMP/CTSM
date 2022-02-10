@@ -66,7 +66,7 @@ class TestSinglePointCase(unittest.TestCase):
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
             out_dir=self.out_dir,
-            overwrite = self.overwrite,
+            overwrite=self.overwrite,
         )
 
         single_point.create_tag()
@@ -92,7 +92,7 @@ class TestSinglePointCase(unittest.TestCase):
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
             out_dir=self.out_dir,
-            overwrite = self.overwrite,
+            overwrite=self.overwrite,
         )
         single_point.site_name = "foo"
         single_point.create_tag()
@@ -119,7 +119,7 @@ class TestSinglePointCase(unittest.TestCase):
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
             out_dir=self.out_dir,
-            overwrite = self.overwrite,
+            overwrite=self.overwrite,
         )
         single_point.dom_pft = [16, 36, 79]
         with self.assertRaisesRegex(
@@ -148,7 +148,7 @@ class TestSinglePointCase(unittest.TestCase):
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
             out_dir=self.out_dir,
-            overwrite = self.overwrite,
+            overwrite=self.overwrite,
         )
         single_point.dom_pft = [16, 36, -1]
         with self.assertRaisesRegex(
@@ -177,7 +177,7 @@ class TestSinglePointCase(unittest.TestCase):
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
             out_dir=self.out_dir,
-            overwrite = self.overwrite,
+            overwrite=self.overwrite,
         )
         single_point.dom_pft = [15, 53]
         single_point.num_pft = 16
@@ -205,7 +205,7 @@ class TestSinglePointCase(unittest.TestCase):
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
             out_dir=self.out_dir,
-            overwrite = self.overwrite,
+            overwrite=self.overwrite,
         )
         single_point.dom_pft = [1, 5, 15]
         single_point.num_pft = 78
@@ -235,7 +235,7 @@ class TestSinglePointCase(unittest.TestCase):
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
             out_dir=self.out_dir,
-            overwrite = self.overwrite,
+            overwrite=self.overwrite,
         )
         single_point.dom_pft = None
         single_point.include_nonveg = False
@@ -266,7 +266,7 @@ class TestSinglePointCase(unittest.TestCase):
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
             out_dir=self.out_dir,
-            overwrite = self.overwrite,
+            overwrite=self.overwrite,
         )
         single_point.dom_pft = [1, 5]
         single_point.pct_pft = [0.5]
@@ -296,7 +296,7 @@ class TestSinglePointCase(unittest.TestCase):
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
             out_dir=self.out_dir,
-            overwrite = self.overwrite,
+            overwrite=self.overwrite,
         )
         single_point.dom_pft = [1, 5]
         single_point.pct_pft = [0.1, 0.5]
@@ -326,7 +326,7 @@ class TestSinglePointCase(unittest.TestCase):
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
             out_dir=self.out_dir,
-            overwrite = self.overwrite,
+            overwrite=self.overwrite,
         )
         single_point.dom_pft = [1, 5, 8]
         single_point.pct_pft = [0.5, 0.4, 0.1]
