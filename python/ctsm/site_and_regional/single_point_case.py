@@ -25,6 +25,7 @@ MAX_PFT = 78
 FIRST_MONTH = 1
 LAST_MONTH = 12
 
+
 class SinglePointCase(BaseCase):
     """
     A class to encapsulate everything for single point cases.
@@ -96,26 +97,32 @@ class SinglePointCase(BaseCase):
     # the ones we have are useful
 
     def __init__(
-            self,
-            plat,
-            plon,
-            site_name,
+        self,
+        plat,
+        plon,
+        site_name,
+        create_domain,
+        create_surfdata,
+        create_landuse,
+        create_datm,
+        create_user_mods,
+        dom_pft,
+        pct_pft,
+        num_pft,
+        include_nonveg,
+        uni_snow,
+        cap_saturation,
+        out_dir,
+        overwrite,
+    ):
+        super().__init__(
             create_domain,
             create_surfdata,
             create_landuse,
             create_datm,
             create_user_mods,
-            dom_pft,
-            pct_pft,
-            num_pft,
-            include_nonveg,
-            uni_snow,
-            cap_saturation,
-            out_dir,
             overwrite,
-    ):
-        super().__init__(create_domain, create_surfdata, create_landuse, create_datm,
-                         create_user_mods, overwrite)
+        )
         self.plat = plat
         self.plon = plon
         self.site_name = site_name
@@ -128,9 +135,9 @@ class SinglePointCase(BaseCase):
         self.out_dir = out_dir
 
         self.create_tag()
-        self.check_dom_pft ()
-        self.check_nonveg ()
-        self.check_pct_pft ()
+        self.check_dom_pft()
+        self.check_nonveg()
+        self.check_pct_pft()
 
     def create_tag(self):
         """
@@ -142,7 +149,7 @@ class SinglePointCase(BaseCase):
         else:
             self.tag = "{}_{}".format(str(self.plon), str(self.plat))
 
-    def check_dom_pft (self):
+    def check_dom_pft(self):
         """
         A function to sanity check values in dom_pft:
 
@@ -173,23 +180,25 @@ class SinglePointCase(BaseCase):
         """
 
         if self.dom_pft is None:
-            logger.warning ("No dominant pft type is chosen. "
-                            "If you want to choose a dominant pft type, please use --dompft flag.")
+            logger.warning(
+                "No dominant pft type is chosen. "
+                "If you want to choose a dominant pft type, please use --dompft flag."
+            )
         else:
             min_dom_pft = min(self.dom_pft)
             max_dom_pft = max(self.dom_pft)
 
-            #-- check dom_pft values should be between 0-MAX_PFT
-            if min_dom_pft <0 or max_dom_pft >MAX_PFT:
+            # -- check dom_pft values should be between 0-MAX_PFT
+            if min_dom_pft < 0 or max_dom_pft > MAX_PFT:
                 err_msg = "values for --dompft should be between 1 and 78."
                 raise argparse.ArgumentTypeError(err_msg)
 
-            #-- check dom_pft vs num_pft
-            if  self.num_pft -1 < max_dom_pft < MAX_PFT :
+            # -- check dom_pft vs num_pft
+            if self.num_pft - 1 < max_dom_pft < MAX_PFT:
                 err_msg = "Please use --crop flag when --dompft is above 15."
                 raise argparse.ArgumentTypeError(err_msg)
 
-            #-- check if all dom_pft are in the same range:
+            # -- check if all dom_pft are in the same range:
             if min_dom_pft < NAT_PFT <= max_dom_pft:
                 err_msg = """
                 \n
@@ -198,10 +207,12 @@ class SinglePointCase(BaseCase):
                 one of these ranges:
                 - 0-{}  natural pfts
                 - {}-{} crop pfts (cfts)
-                """.format(NAT_PFT-1, NAT_PFT, MAX_PFT)
+                """.format(
+                    NAT_PFT - 1, NAT_PFT, MAX_PFT
+                )
                 raise argparse.ArgumentTypeError(err_msg)
 
-    def check_nonveg (self):
+    def check_nonveg(self):
         """
         A function to check at least one of the following arguments is given:
         --include-nonveg
@@ -235,8 +246,7 @@ class SinglePointCase(BaseCase):
                 """
                 raise argparse.ArgumentTypeError(err_msg)
 
-
-    def check_pct_pft (self):
+    def check_pct_pft(self):
         """
         A function to error check pct_pft and calculate it if necessary.
 
@@ -264,7 +274,7 @@ class SinglePointCase(BaseCase):
                 raise argparse.ArgumentTypeError(err_msg)
 
             # -- check if the sum of pct_pft is equal to 1 or 100
-            if sum(self.pct_pft)!= 1 and sum(self.pct_pft) != 100:
+            if sum(self.pct_pft) != 1 and sum(self.pct_pft) != 100:
                 err_msg = "Sum of --pctpft values should be equal to 1 or 100."
                 raise argparse.ArgumentTypeError(err_msg)
 
@@ -274,7 +284,7 @@ class SinglePointCase(BaseCase):
 
         # -- if the user did not give --pctpft at all (assume equal percentage)
         elif self.dom_pft:
-            pct = 100/len(self.dom_pft)
+            pct = 100 / len(self.dom_pft)
             self.pct_pft = [pct for pft in self.dom_pft]
 
         # -- if the user only gave --pctpft with no --dompft
@@ -284,17 +294,21 @@ class SinglePointCase(BaseCase):
                       --pctpft is specfied without --dompft.
                       Please specify your dominant pft by --dompft.
                       """
-            raise argparse.ArgumentTypeError (err_msg)
+            raise argparse.ArgumentTypeError(err_msg)
 
-        logger.info (" - dominant pft(s) : %s",self.dom_pft)
-        logger.info (" - percentage of dominant pft(s) : %s",self.pct_pft)
+        logger.info(" - dominant pft(s) : %s", self.dom_pft)
+        logger.info(" - percentage of dominant pft(s) : %s", self.pct_pft)
 
     def create_domain_at_point(self, indir, file):
         """
         Create domain file for this SinglePointCase class.
         """
-        logger.info("----------------------------------------------------------------------")
-        logger.info("Creating domain file at %s, %s.", self.plon.__str__(), self.plat.__str__())
+        logger.info(
+            "----------------------------------------------------------------------"
+        )
+        logger.info(
+            "Creating domain file at %s, %s.", self.plon.__str__(), self.plat.__str__()
+        )
 
         # specify files
         fdomain_in = os.path.join(indir, file)
@@ -316,7 +330,7 @@ class SinglePointCase(BaseCase):
         f_out.attrs["Created_from"] = fdomain_in
 
         wfile = os.path.join(self.out_dir, fdomain_out)
-        self.write_to_netcdf (f_out, wfile)
+        self.write_to_netcdf(f_out, wfile)
         logger.info("Successfully created file (fdomain_out) %s", wfile)
         f_in.close()
         f_out.close()
@@ -325,8 +339,14 @@ class SinglePointCase(BaseCase):
         """
         Create landuse file at a single point.
         """
-        logger.info("----------------------------------------------------------------------")
-        logger.info("Creating land use file at %s, %s.", self.plon.__str__(), self.plat.__str__())
+        logger.info(
+            "----------------------------------------------------------------------"
+        )
+        logger.info(
+            "Creating land use file at %s, %s.",
+            self.plon.__str__(),
+            self.plat.__str__(),
+        )
 
         # specify files
         fluse_in = os.path.join(indir, file)
@@ -335,9 +355,7 @@ class SinglePointCase(BaseCase):
         logger.info("fluse_out: %s", os.path.join(self.out_dir, fluse_out))
 
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(
-            fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat"
-        )
+        f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
 
         # extract gridcell closest to plon/plat
         f_out = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
@@ -346,11 +364,13 @@ class SinglePointCase(BaseCase):
         f_out = f_out.expand_dims(["lsmlat", "lsmlon"])
 
         # specify dimension order
-        f_out = f_out.transpose(u"time", u"cft", u"natpft", u"lsmlat", u"lsmlon")
+        f_out = f_out.transpose("time", "cft", "natpft", "lsmlat", "lsmlon")
 
         # revert expand dimensions of YEAR
         year = np.squeeze(np.asarray(f_out["YEAR"]))
-        temp_xr = xr.DataArray(year, coords={"time": f_out["time"]}, dims="time", name="YEAR")
+        temp_xr = xr.DataArray(
+            year, coords={"time": f_out["time"]}, dims="time", name="YEAR"
+        )
         temp_xr.attrs["units"] = "unitless"
         temp_xr.attrs["long_name"] = "Year of PFT data"
         f_out["YEAR"] = temp_xr
@@ -360,7 +380,7 @@ class SinglePointCase(BaseCase):
         f_out.attrs["Created_from"] = fluse_in
 
         wfile = os.path.join(self.out_dir, fluse_out)
-        self.write_to_netcdf (f_out, wfile)
+        self.write_to_netcdf(f_out, wfile)
         logger.info("Successfully created file (fluse_out), %s", wfile)
         f_in.close()
         f_out.close()
@@ -368,38 +388,38 @@ class SinglePointCase(BaseCase):
         # write to user_nl_clm data if specified
         if self.create_user_mods:
             with open(os.path.join(user_mods_dir, "user_nl_clm"), "a") as nl_clm:
-                line = "flanduse_timeseries = '${}'".format(os.path.join(USRDAT_DIR, fluse_out))
+                line = "flanduse_timeseries = '${}'".format(
+                    os.path.join(USRDAT_DIR, fluse_out)
+                )
                 self.write_to_file(line, nl_clm)
 
-
-
-    def modify_surfdata_atpoint (self, f_tmp):
+    def modify_surfdata_atpoint(self, f_tmp):
         """
         Function to modify surface dataset based on the user flags chosen.
         """
 
-        #-- modify surface data properties
+        # -- modify surface data properties
         if self.dom_pft is not None:
             max_dom_pft = max(self.dom_pft)
-            #-- First initialize everything:
-            if max_dom_pft < NAT_PFT :
-                f_tmp ["PCT_NAT_PFT"][:,:,:] = 0
+            # -- First initialize everything:
+            if max_dom_pft < NAT_PFT:
+                f_tmp["PCT_NAT_PFT"][:, :, :] = 0
             else:
-                f_tmp ["PCT_CFT"][:,:,:] = 0
+                f_tmp["PCT_CFT"][:, :, :] = 0
 
             # Do we need to initialize these here?
             # Because we set them in include_nonveg
-            #f_tmp["PCT_NATVEG"][:, :] = 0
-            #f_tmp["PCT_CROP"][:, :] = 0
+            # f_tmp["PCT_NATVEG"][:, :] = 0
+            # f_tmp["PCT_CROP"][:, :] = 0
 
-            #-- loop over all dom_pft and pct_pft
-            zip_pfts = zip (self.dom_pft, self.pct_pft)
+            # -- loop over all dom_pft and pct_pft
+            zip_pfts = zip(self.dom_pft, self.pct_pft)
             for dom_pft, pct_pft in zip_pfts:
                 if dom_pft < NAT_PFT:
-                    f_tmp['PCT_NAT_PFT'][:, :, dom_pft] = pct_pft
+                    f_tmp["PCT_NAT_PFT"][:, :, dom_pft] = pct_pft
                 else:
-                    dom_pft = dom_pft-NAT_PFT
-                    f_tmp['PCT_CFT'][:, :, dom_pft] = pct_pft
+                    dom_pft = dom_pft - NAT_PFT
+                    f_tmp["PCT_CFT"][:, :, dom_pft] = pct_pft
 
         # -------------------------------
         # By default include_nonveg=False
@@ -407,14 +427,14 @@ class SinglePointCase(BaseCase):
         # Therefore by default we are hitting the following if:
 
         if not self.include_nonveg:
-            logger.info ("Zeroing out non-vegetation land units in the surface data.")
+            logger.info("Zeroing out non-vegetation land units in the surface data.")
             f_tmp["PCT_LAKE"][:, :] = 0.0
             f_tmp["PCT_WETLAND"][:, :] = 0.0
             f_tmp["PCT_URBAN"][:, :] = 0.0
             f_tmp["PCT_GLACIER"][:, :] = 0.0
 
             max_dom_pft = max(self.dom_pft)
-            if max_dom_pft < NAT_PFT :
+            if max_dom_pft < NAT_PFT:
                 f_tmp["PCT_NATVEG"][:, :] = 100
                 f_tmp["PCT_CROP"][:, :] = 0
             else:
@@ -422,8 +442,10 @@ class SinglePointCase(BaseCase):
                 f_tmp["PCT_CROP"][:, :] = 100
 
         else:
-            logger.info ("You chose --include-nonveg --> \
-                Do not zero non-vegetation land units in the surface data.")
+            logger.info(
+                "You chose --include-nonveg --> \
+                Do not zero non-vegetation land units in the surface data."
+            )
 
         if self.uni_snow:
             f_tmp["STD_ELEV"][:, :] = 20.0
@@ -432,15 +454,19 @@ class SinglePointCase(BaseCase):
 
         return f_tmp
 
-
     def create_surfdata_at_point(self, indir, file, user_mods_dir):
         """
         Create surface data file at a single point.
         """
         # pylint: disable=too-many-statements
-        logger.info("----------------------------------------------------------------------")
         logger.info(
-            "Creating surface dataset file at %s, %s", self.plon.__str__(), self.plat.__str__())
+            "----------------------------------------------------------------------"
+        )
+        logger.info(
+            "Creating surface dataset file at %s, %s",
+            self.plon.__str__(),
+            self.plat.__str__(),
+        )
 
         # specify file
         fsurf_in = os.path.join(indir, file)
@@ -457,20 +483,20 @@ class SinglePointCase(BaseCase):
         # expand dimensions
         f_tmp = f_tmp.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
 
-        f_out = self.modify_surfdata_atpoint (f_tmp)
+        f_out = self.modify_surfdata_atpoint(f_tmp)
 
         # specify dimension order
         f_out = f_out.transpose(
-            u"time",
-            u"cft",
-            u"lsmpft",
-            u"natpft",
-            u"nglcec",
-            u"nglcecp1",
-            u"nlevsoi",
-            u"nlevurb",
-            u"numrad",
-            u"numurbl",
+            "time",
+            "cft",
+            "lsmpft",
+            "natpft",
+            "nglcec",
+            "nglcecp1",
+            "nlevsoi",
+            "nlevurb",
+            "numrad",
+            "numurbl",
             "lsmlat",
             "lsmlon",
         )
@@ -478,17 +504,17 @@ class SinglePointCase(BaseCase):
         # update lsmlat and lsmlon to match site specific instead of the nearest point
         # we do this so that if we create user_mods the PTS_LON and PTS_LAT in CIME match
         # the surface data coordinates - which is required
-        f_out['lsmlon'] = np.atleast_1d(self.plon)
-        f_out['lsmlat'] = np.atleast_1d(self.plat)
-        f_out['LATIXY'][:, :] = self.plat
-        f_out['LONGXY'][:, :] = self.plon
+        f_out["lsmlon"] = np.atleast_1d(self.plon)
+        f_out["lsmlat"] = np.atleast_1d(self.plat)
+        f_out["LATIXY"][:, :] = self.plat
+        f_out["LONGXY"][:, :] = self.plon
 
         # update attributes
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = fsurf_in
 
         wfile = os.path.join(self.out_dir, fsurf_out)
-        self.write_to_netcdf (f_out, wfile)
+        self.write_to_netcdf(f_out, wfile)
         logger.info("Successfully created file (fsurf_out) %s", wfile)
         f_in.close()
         f_tmp.close()
@@ -504,9 +530,14 @@ class SinglePointCase(BaseCase):
         """
         Create DATM domain file at a single point
         """
-        logger.info("----------------------------------------------------------------------")
         logger.info(
-            "Creating DATM domain file at %s, %s", self.plon.__str__(), self.plat.__str__())
+            "----------------------------------------------------------------------"
+        )
+        logger.info(
+            "Creating DATM domain file at %s, %s",
+            self.plon.__str__(),
+            self.plat.__str__(),
+        )
 
         # specify files
         fdatmdomain_in = os.path.join(datm_tuple.indir, datm_tuple.fdomain_in)
@@ -529,7 +560,7 @@ class SinglePointCase(BaseCase):
         f_out.attrs["Created_from"] = fdatmdomain_in
 
         wfile = os.path.join(self.out_dir, fdatmdomain_out)
-        self.write_to_netcdf (f_out, wfile)
+        self.write_to_netcdf(f_out, wfile)
         logger.info("Successfully created file (fdatmdomain_out) : %s", wfile)
         f_in.close()
         f_out.close()
@@ -548,13 +579,13 @@ class SinglePointCase(BaseCase):
         f_out = f_out.expand_dims(["lat", "lon"])
 
         # specify dimension order
-        f_out = f_out.transpose(u"scalar", "time", "lat", "lon")
+        f_out = f_out.transpose("scalar", "time", "lat", "lon")
 
         # update attributes
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = file_in
 
-        self.write_to_netcdf (f_out, file_out)
+        self.write_to_netcdf(f_out, file_out)
         logger.info("Successfully created file : %s", file_out)
         f_in.close()
         f_out.close()
@@ -564,9 +595,13 @@ class SinglePointCase(BaseCase):
         writes out xml commands commands to a file (i.e. shell_commands) for single-point runs
         """
         # write_to_file surrounds text with newlines
-        with open(file, 'w') as nl_file:
-            self.write_to_file("# Change below line if you move the subset data directory", nl_file)
-            self.write_to_file("./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file)
+        with open(file, "w") as nl_file:
+            self.write_to_file(
+                "# Change below line if you move the subset data directory", nl_file
+            )
+            self.write_to_file(
+                "./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file
+            )
             self.write_to_file("./xmlchange PTS_LON={}".format(str(self.plon)), nl_file)
             self.write_to_file("./xmlchange PTS_LAT={}".format(str(self.plat)), nl_file)
             self.write_to_file("./xmlchange MPILIB=mpi-serial", nl_file)
@@ -580,16 +615,24 @@ class SinglePointCase(BaseCase):
         datmfiles - comma-separated list (str) of DATM file names
         file - file connection to user_nl_datm_streams file
         """
-        self.write_to_file("{}:datafiles={}".format(streamname, ','.join(datmfiles)), file)
+        self.write_to_file(
+            "{}:datafiles={}".format(streamname, ",".join(datmfiles)), file
+        )
         self.write_to_file("{}:mapalgo=none".format(streamname), file)
         self.write_to_file("{}:meshfile=none".format(streamname), file)
 
-    def create_datm_at_point(self, datm_tuple: DatmFiles, datm_syr, datm_eyr, datm_streams_file):
+    def create_datm_at_point(
+        self, datm_tuple: DatmFiles, datm_syr, datm_eyr, datm_streams_file
+    ):
         """
         Create all of a DATM dataset at a point.
         """
-        logger.info("----------------------------------------------------------------------")
-        logger.info("Creating DATM files at %s, %s", self.plon.__str__(), self.plat.__str__())
+        logger.info(
+            "----------------------------------------------------------------------"
+        )
+        logger.info(
+            "Creating DATM files at %s, %s", self.plon.__str__(), self.plat.__str__()
+        )
 
         # --  create data files
         infile = []
@@ -606,27 +649,41 @@ class SinglePointCase(BaseCase):
 
                 dtag = ystr + "-" + mstr
 
-                fsolar = os.path.join(datm_tuple.indir, datm_tuple.dir_solar,
-                                      "{}{}.nc".format(datm_tuple.tag_solar, dtag))
+                fsolar = os.path.join(
+                    datm_tuple.indir,
+                    datm_tuple.dir_solar,
+                    "{}{}.nc".format(datm_tuple.tag_solar, dtag),
+                )
                 fsolar2 = "{}{}.{}.nc".format(datm_tuple.tag_solar, self.tag, dtag)
-                fprecip = os.path.join(datm_tuple.indir, datm_tuple.dir_prec,
-                                       "{}{}.nc".format(datm_tuple.tag_prec, dtag))
+                fprecip = os.path.join(
+                    datm_tuple.indir,
+                    datm_tuple.dir_prec,
+                    "{}{}.nc".format(datm_tuple.tag_prec, dtag),
+                )
                 fprecip2 = "{}{}.{}.nc".format(datm_tuple.tag_prec, self.tag, dtag)
-                ftpqw = os.path.join(datm_tuple.indir, datm_tuple.dir_tpqw,
-                                     "{}{}.nc".format(datm_tuple.tag_tpqw, dtag))
+                ftpqw = os.path.join(
+                    datm_tuple.indir,
+                    datm_tuple.dir_tpqw,
+                    "{}{}.nc".format(datm_tuple.tag_tpqw, dtag),
+                )
                 ftpqw2 = "{}{}.{}.nc".format(datm_tuple.tag_tpqw, self.tag, dtag)
 
                 outdir = os.path.join(self.out_dir, datm_tuple.outdir)
                 infile += [fsolar, fprecip, ftpqw]
-                outfile += [os.path.join(outdir, fsolar2),
-                            os.path.join(outdir, fprecip2),
-                            os.path.join(outdir, ftpqw2)]
+                outfile += [
+                    os.path.join(outdir, fsolar2),
+                    os.path.join(outdir, fprecip2),
+                    os.path.join(outdir, ftpqw2),
+                ]
                 solarfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fsolar2))
+                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fsolar2)
+                )
                 precfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fprecip2))
+                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fprecip2)
+                )
                 tpqwfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2))
+                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2)
+                )
 
         for idx, out_f in enumerate(outfile):
             logger.debug(out_f)
