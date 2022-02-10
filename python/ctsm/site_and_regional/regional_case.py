@@ -66,25 +66,31 @@ class RegionalCase(BaseCase):
     """
 
     def __init__(
-            self,
-            lat1,
-            lat2,
-            lon1,
-            lon2,
-            reg_name,
+        self,
+        lat1,
+        lat2,
+        lon1,
+        lon2,
+        reg_name,
+        create_domain,
+        create_surfdata,
+        create_landuse,
+        create_datm,
+        create_user_mods,
+        out_dir,
+        overwrite,
+    ):
+        """
+        Initializes RegionalCase with the given arguments.
+        """
+        super().__init__(
             create_domain,
             create_surfdata,
             create_landuse,
             create_datm,
             create_user_mods,
-            out_dir,
             overwrite,
-    ):
-        """
-        Initializes RegionalCase with the given arguments.
-        """
-        super().__init__(create_domain, create_surfdata, create_landuse, create_datm,
-                         create_user_mods, overwrite)
+        )
         self.lat1 = lat1
         self.lat2 = lat2
         self.lon1 = lon1
@@ -102,8 +108,9 @@ class RegionalCase(BaseCase):
         if self.reg_name:
             self.tag = self.reg_name
         else:
-            self.tag = "{}-{}_{}-{}".format(str(self.lon1), str(self.lon2), str(self.lat1),
-                                            str(self.lat2))
+            self.tag = "{}-{}_{}-{}".format(
+                str(self.lon1), str(self.lon2), str(self.lat1), str(self.lat2)
+            )
 
     def create_domain_at_reg(self, indir, file):
         """
@@ -133,7 +140,7 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         wfile = os.path.join(self.out_dir, fdomain_out)
-        self.write_to_netcdf (f_out, wfile)
+        self.write_to_netcdf(f_out, wfile)
         logger.info("Successfully created file (fdomain_out) %s", wfile)
         f_in.close()
         f_out.close()
@@ -167,7 +174,7 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         wfile = os.path.join(self.out_dir, fsurf_out)
-        self.write_to_netcdf (f_out, wfile)
+        self.write_to_netcdf(f_out, wfile)
         logger.info("created file (fsurf_out) %s", wfile)
         f_in.close()
         f_out.close()
@@ -180,8 +187,8 @@ class RegionalCase(BaseCase):
 
     def create_landuse_at_reg(self, indir, file, user_mods_dir):
         """
-         Create land use data file for this RegionalCase class.
-         """
+        Create land use data file for this RegionalCase class.
+        """
 
         logger.info("Creating landuse file at region: %s", self.tag)
 
@@ -192,9 +199,7 @@ class RegionalCase(BaseCase):
         logger.info("fluse_out: %s", os.path.join(self.out_dir, fluse_out))
 
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(
-            fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat"
-        )
+        f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         lat = f_in["lat"]
         lon = f_in["lon"]
 
@@ -209,13 +214,15 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         wfile = os.path.join(self.out_dir, fluse_out)
-        self.write_to_netcdf (f_out, wfile)
+        self.write_to_netcdf(f_out, wfile)
         logger.info("Successfully created file (fluse_out) %s", wfile)
         f_in.close()
         f_out.close()
 
         if self.create_user_mods:
             with open(os.path.join(user_mods_dir, "user_nl_clm"), "a") as nl_clm:
-                #line = "landuse = '${}'".format(os.path.join(USRDAT_DIR, fluse_out))
-                line = "flanduse_timeseries = '${}'".format(os.path.join(USRDAT_DIR, fluse_out))
+                # line = "landuse = '${}'".format(os.path.join(USRDAT_DIR, fluse_out))
+                line = "flanduse_timeseries = '${}'".format(
+                    os.path.join(USRDAT_DIR, fluse_out)
+                )
                 self.write_to_file(line, nl_clm)
