@@ -57,6 +57,10 @@ class BaseCase:
     update_metadata(nc)
         Class method for adding some new attributes (such as date, username) and
         remove the old attributes from the netcdf file.
+    write_to_file:
+        Writes text to a file, surrounding text with \n characters
+    write_to_netcdf:
+        write xarray dataset to netcdf
     """
 
     def __init__(self, create_domain, create_surfdata, create_landuse, create_datm,
@@ -187,11 +191,11 @@ class BaseCase:
                 del nc_file.attrs[attr]
 
     @staticmethod
-    def write_to_file(text, file):
+    def write_to_file(text, file_out):
         """
         Writes text to a file, surrounding text with \n characters
         """
-        file.write("\n{}\n".format(text))
+        file_out.write("\n{}\n".format(text))
 
     def write_to_netcdf (self, xr_ds, nc_fname):
         """
