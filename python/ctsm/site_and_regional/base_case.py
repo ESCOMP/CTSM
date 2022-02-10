@@ -217,6 +217,6 @@ class BaseCase:
             xr_ds.to_netcdf(path=nc_fname, mode="w", format="NETCDF3_64BIT")
         else:
             err_msg = ("File "+nc_fname+ " already exists."+
-                       "\n Either remove the file or use --overwrite to overwrite the existing files.")
+                       "\n Either remove the file or use "+
+                       "--overwrite to overwrite the existing files.")
             abort (err_msg)
-
