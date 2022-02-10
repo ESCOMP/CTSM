@@ -95,7 +95,7 @@ contains
     ! Computes column-level burned area
     !
     ! !USES:
-    use clm_time_manager     , only: get_step_size_real, get_days_per_year, get_curr_date, get_nstep
+    use clm_time_manager     , only: get_step_size_real, get_curr_days_per_year, get_curr_date, get_nstep
     use clm_varcon           , only: secspday, secsphr
     use clm_varctl           , only: spinup_state
     use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
@@ -267,7 +267,7 @@ contains
            deadstemc_col(bounds%begc:bounds%endc))
 
      call get_curr_date (kyr, kmo, kda, mcsec)
-     dayspyr = get_days_per_year()
+     dayspyr = get_curr_days_per_year()
      ! Get model step size
      dt      = get_step_size_real()
      !
