@@ -28,8 +28,9 @@ logger = logging.getLogger(__name__)
 DatmFiles = namedtuple(
     "DatmFiles",
     "indir outdir fdomain_in dir_solar dir_prec dir_tpqw tag_solar tag_prec tag_tpqw name_solar "
-    "name_prec name_tpqw "
+    "name_prec name_tpqw ",
 )
+
 
 class BaseCase:
     """
@@ -63,8 +64,15 @@ class BaseCase:
         write xarray dataset to netcdf
     """
 
-    def __init__(self, create_domain, create_surfdata, create_landuse, create_datm,
-                 create_user_mods, overwrite):
+    def __init__(
+        self,
+        create_domain,
+        create_surfdata,
+        create_landuse,
+        create_datm,
+        create_user_mods,
+        overwrite,
+    ):
         """
         Initializes BaseCase with the given arguments.
 
@@ -94,8 +102,15 @@ class BaseCase:
         """
         Converts ingredients of the BaseCase to string for printing.
         """
-        return "{}\n{}".format(str(self.__class__), "\n".join(
-            ("{} = {}".format(str(key), str(self.__dict__[key])) for key in sorted(self.__dict__))))
+        return "{}\n{}".format(
+            str(self.__class__),
+            "\n".join(
+                (
+                    "{} = {}".format(str(key), str(self.__dict__[key]))
+                    for key in sorted(self.__dict__)
+                )
+            ),
+        )
 
     @staticmethod
     def create_1d_coord(filename, lon_varname, lat_varname, x_dim, y_dim):
@@ -169,7 +184,7 @@ class BaseCase:
 
         nc_file.attrs["Created_on"] = today_string
         nc_file.attrs["Created_by"] = getuser()
-        nc_file.attrs["Created_with"] = './subset_data' + " -- " + sha
+        nc_file.attrs["Created_with"] = "./subset_data" + " -- " + sha
 
         # delete unrelated attributes if they exist
         del_attrs = [
@@ -197,7 +212,7 @@ class BaseCase:
         """
         file_out.write("\n{}\n".format(text))
 
-    def write_to_netcdf (self, xr_ds, nc_fname):
+    def write_to_netcdf(self, xr_ds, nc_fname):
         """
         Writes a netcdf file if
             - the file does not exist.
@@ -216,7 +231,11 @@ class BaseCase:
             # mode 'w' overwrites file
             xr_ds.to_netcdf(path=nc_fname, mode="w", format="NETCDF3_64BIT")
         else:
-            err_msg = ("File "+nc_fname+ " already exists."+
-                       "\n Either remove the file or use "+
-                       "--overwrite to overwrite the existing files.")
-            abort (err_msg)
+            err_msg = (
+                "File "
+                + nc_fname
+                + " already exists."
+                + "\n Either remove the file or use "
+                + "--overwrite to overwrite the existing files."
+            )
+            abort(err_msg)
