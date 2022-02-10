@@ -201,7 +201,7 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
         single_point.dom_pft = [5]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
-        self.assertEqual(ds_out['PCT_NATVEG'].data[:,:], 100)
+        self.assertEqual(ds_out["PCT_NATVEG"].data[:, :], 100)
 
     def test_modify_surfdata_atpoint_nocrop_1pft_pctcrop(self):
         """
@@ -230,7 +230,7 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
         single_point.dom_pft = [5]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
-        self.assertEqual(ds_out['PCT_CROP'].data[:,:], 0)
+        self.assertEqual(ds_out["PCT_CROP"].data[:, :], 0)
 
     def test_modify_surfdata_atpoint_nocrop_1pft_glacier(self):
         """
@@ -259,8 +259,7 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
         single_point.dom_pft = [5]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
-        self.assertEqual(ds_out['PCT_GLACIER'].data[:,:], 0)
-
+        self.assertEqual(ds_out["PCT_GLACIER"].data[:, :], 0)
 
     def test_modify_surfdata_atpoint_nocrop_1pft_unisnow(self):
         """
@@ -290,7 +289,7 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
         single_point.uni_snow = True
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
-        self.assertEqual(ds_out['STD_ELEV'].data[:,:], 20)
+        self.assertEqual(ds_out["STD_ELEV"].data[:, :], 20)
 
     def test_modify_surfdata_atpoint_nocrop_1pft_capsat(self):
         """
@@ -320,7 +319,7 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
         single_point.cap_saturation = True
 
-        self.assertEqual(ds_out['FMAX'].data[:,:], 0)
+        self.assertEqual(ds_out["FMAX"].data[:, :], 0)
 
     def test_modify_surfdata_atpoint_nocrop_multipft(self):
         """
@@ -346,7 +345,7 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             overwrite=self.overwrite,
         )
         single_point.include_nonveg = False
-        single_point.dom_pft = [1,3,5]
+        single_point.dom_pft = [1, 3, 5]
         single_point.pct_pft = [0.5, 0.4, 0.1]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
@@ -379,7 +378,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     num_pft = 78
     include_nonveg = False
     uni_snow = False
-    cap_saturation =False
+    cap_saturation = False
     out_dir = os.getcwd()
     overwrite = False
 
@@ -529,7 +528,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
         single_point.dom_pft = [17]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
-        self.assertEqual(ds_out['PCT_NATVEG'].data[:,:], 0)
+        self.assertEqual(ds_out["PCT_NATVEG"].data[:, :], 0)
 
     def test_modify_surfdata_atpoint_crop_1pft_pctcrop(self):
         """
@@ -557,7 +556,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
         single_point.dom_pft = [17]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
-        self.assertEqual(ds_out['PCT_CROP'].data[:,:], 100)
+        self.assertEqual(ds_out["PCT_CROP"].data[:, :], 100)
 
     def test_modify_surfdata_atpoint_crop_1pft_glacier(self):
         """
@@ -585,8 +584,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
         single_point.dom_pft = [17]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
-        self.assertEqual(ds_out['PCT_GLACIER'].data[:,:], 0)
-
+        self.assertEqual(ds_out["PCT_GLACIER"].data[:, :], 0)
 
     def test_modify_surfdata_atpoint_nocrop_1pft_unisnow(self):
         """
@@ -615,7 +613,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
         single_point.uni_snow = True
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
-        self.assertEqual(ds_out['STD_ELEV'].data[:,:], 20)
+        self.assertEqual(ds_out["STD_ELEV"].data[:, :], 20)
 
     def test_modify_surfdata_atpoint_crop_1pft_capsat(self):
         """
@@ -645,7 +643,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
         single_point.cap_saturation = True
 
-        self.assertEqual(ds_out['FMAX'].data[:,:], 0)
+        self.assertEqual(ds_out["FMAX"].data[:, :], 0)
 
     def test_modify_surfdata_atpoint_crop_multipft(self):
         """
@@ -670,7 +668,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             out_dir=self.out_dir,
             overwrite=self.overwrite,
         )
-        single_point.dom_pft = [17,22]
+        single_point.dom_pft = [17, 22]
         single_point.pct_pft = [0.6, 0.4]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
@@ -678,11 +676,8 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
         expected_out[:, :, 2] = 0.6
         expected_out[:, :, 7] = 0.4
 
-
         # self.assertEqual(ds_out['PCT_NAT_PFT'].data[:,:,5], 100)
         np.testing.assert_array_equal(ds_out["PCT_CFT"].data, expected_out)
-
-
 
 
 if __name__ == "__main__":
