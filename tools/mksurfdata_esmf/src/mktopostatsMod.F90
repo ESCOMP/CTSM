@@ -133,8 +133,8 @@ contains
     ! Create a dynamic mask object
     ! The dynamic mask object further holds a pointer to the routine that will be called in order to
     ! handle dynamically masked elements - in this case its DynMaskProc (see below)
-    ! call ESMF_DynamicMaskSetR4R8R4(dynamicMask, dynamicMaskRoutine=StdDevProc, rc=rc)
-    ! if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_DynamicMaskSetR4R8R4(dynamicMask, dynamicMaskRoutine=StdDevProc, handleAllElements=.true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Interpolate data_i to data_o
     call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
@@ -143,10 +143,10 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     dataptr(:) = 0._r4
 
-    ! call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, dynamicMask=dynamicMask, rc=rc)
-    ! if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, rc=rc)
+    call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, dynamicMask=dynamicMask, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+    ! call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, rc=rc)
+    ! if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
@@ -241,14 +241,16 @@ contains
              rc = ESMF_RC_ARG_BAD  ! error detected
              return
           endif
+          dynamicMaskList(i)%dstElement = dynamicMaskList(i)%dstElement / renorm
           mean = dynamicMaskList(i)%dstElement
 
           ! Now compute the standard deviation
           dynamicMaskList(i)%dstElement = 0.d0 ! reset to zero
           do j = 1, size(dynamicMaskList(i)%factor)
              dynamicMaskList(i)%dstElement = dynamicMaskList(i)%dstElement + &
-                  (dynamicMaskList(i)%factor(j) * (dynamicMaskList(i)%srcElement(j)) - mean)**2
+                  (dynamicMaskList(i)%factor(j) * (dynamicMaskList(i)%srcElement(j) - mean)**2)
           enddo
+          dynamicMaskList(i)%dstElement = sqrt(dynamicMaskList(i)%dstElement/renorm)
        enddo
     endif
 
