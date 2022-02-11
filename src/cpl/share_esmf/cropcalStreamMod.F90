@@ -17,6 +17,7 @@ module cropcalStreamMod
   use perf_mod         , only : t_startf, t_stopf
   use spmdMod          , only : masterproc, mpicom, iam
   use pftconMod        , only : npcropmin
+  use CNPhenologyMod  , only : generate_crop_gdds
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -165,29 +166,31 @@ contains
     end if
 
     ! Initialize the cdeps data type sdat_cropcal_cultivar_gdds
-    call shr_strdata_init_from_inline(sdat_cropcal_cultivar_gdds,  &
-         my_task             = iam,                                &
-         logunit             = iulog,                              &
-         compname            = 'LND',                              &
-         model_clock         = model_clock,                        &
-         model_mesh          = mesh,                               &
-         stream_meshfile     = trim(stream_meshfile_cropcal),      &
-         stream_lev_dimname  = 'null',                             &
-         stream_mapalgo      = trim(cropcal_mapalgo),              &
-         stream_filenames    = (/trim(stream_fldFileName_cultivar_gdds)/), &
-         stream_fldlistFile  = stream_varnames_cultivar_gdds,      &
-         stream_fldListModel = stream_varnames_cultivar_gdds,      &
-         stream_yearFirst    = stream_year_first_cropcal,          &
-         stream_yearLast     = stream_year_last_cropcal,           &
-         stream_yearAlign    = model_year_align_cropcal,           &
-         stream_offset       = cropcal_offset,                     &
-         stream_taxmode      = 'cycle',                            &
-         stream_dtlimit      = 1.5_r8,                             &
-         stream_tintalgo     = cropcal_tintalgo,                   &
-         stream_name         = 'cultivar gdd data',                &
-         rc                  = rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-       call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    if (.not. generate_crop_gdds) then
+       call shr_strdata_init_from_inline(sdat_cropcal_cultivar_gdds,  &
+            my_task             = iam,                                &
+            logunit             = iulog,                              &
+            compname            = 'LND',                              &
+            model_clock         = model_clock,                        &
+            model_mesh          = mesh,                               &
+            stream_meshfile     = trim(stream_meshfile_cropcal),      &
+            stream_lev_dimname  = 'null',                             &
+            stream_mapalgo      = trim(cropcal_mapalgo),              &
+            stream_filenames    = (/trim(stream_fldFileName_cultivar_gdds)/), &
+            stream_fldlistFile  = stream_varnames_cultivar_gdds,      &
+            stream_fldListModel = stream_varnames_cultivar_gdds,      &
+            stream_yearFirst    = stream_year_first_cropcal,          &
+            stream_yearLast     = stream_year_last_cropcal,           &
+            stream_yearAlign    = model_year_align_cropcal,           &
+            stream_offset       = cropcal_offset,                     &
+            stream_taxmode      = 'cycle',                            &
+            stream_dtlimit      = 1.5_r8,                             &
+            stream_tintalgo     = cropcal_tintalgo,                   &
+            stream_name         = 'cultivar gdd data',                &
+            rc                  = rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       end if
     end if
 
     warned_about_bad_interp_sdate = .false.
@@ -223,10 +226,12 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
     end if
-    call shr_strdata_advance(sdat_cropcal_cultivar_gdds, ymd=mcdate, tod=sec, logunit=iulog, istr='cropcaldyn', rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-       call ESMF_Finalize(endflag=ESMF_END_ABORT)
-    end if
+    if (.not. generate_crop_gdds) then
+       call shr_strdata_advance(sdat_cropcal_cultivar_gdds, ymd=mcdate, tod=sec, logunit=iulog, istr='cropcaldyn', rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       end if
+   end if
 
     if ( .not. allocated(g_to_ig) )then
        allocate (g_to_ig(bounds%begg:bounds%endg) )
@@ -249,7 +254,6 @@ contains
     use CropType        , only : crop_type
     use PatchType       , only : patch
     use dshr_methods_mod , only : dshr_fldbun_getfldptr
-    use CNPhenologyMod  , only : generate_crop_gdds
 !    use clm_time_manager , only : get_curr_date ! SSR troubleshooting
     !
     ! !ARGUMENTS:
