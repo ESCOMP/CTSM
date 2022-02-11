@@ -431,7 +431,7 @@ class SinglePointCase(BaseCase):
             logger.info("Zeroing out non-vegetation land units in the surface data.")
             f_mod["PCT_LAKE"][:, :] = 0.0
             f_mod["PCT_WETLAND"][:, :] = 0.0
-            f_mod["PCT_URBAN"][:, :] = 0.0
+            f_mod["PCT_URBAN"][:, :, :] = 0.0
             f_mod["PCT_GLACIER"][:, :] = 0.0
 
             max_dom_pft = max(self.dom_pft)
