@@ -125,7 +125,7 @@ contains
 
     if (masterproc) then
        write(iulog,*)
-       write(iulog,'(a)') 'cropcal_stream settings:'
+       write(iulog,*) 'cropcal_stream settings:'
        write(iulog,'(a,i8)') '  stream_year_first_cropcal  = ',stream_year_first_cropcal
        write(iulog,'(a,i8)') '  stream_year_last_cropcal   = ',stream_year_last_cropcal
        write(iulog,'(a,i8)') '  model_year_align_cropcal   = ',model_year_align_cropcal
@@ -280,7 +280,7 @@ contains
     real(r8), pointer :: dataptr2d_cultivar_gdds(:,:)
     !-----------------------------------------------------------------------
 
-    write(iulog,'(a)') 'cropcal_interp(): Beginning'
+    write(iulog,*) 'cropcal_interp(): Beginning'
 
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
@@ -317,7 +317,7 @@ contains
     end do
 
     ! Set rx_sdate for each gridcell/patch combination
-    write(iulog,'(a)') 'cropcal_interp(): Set rx_sdate for each gridcell/patch combination'
+    write(iulog,*) 'cropcal_interp(): Set rx_sdate for each gridcell/patch combination'
     do fp = 1, num_pcropp
        p = filter_pcropp(fp)
        ivt = patch%itype(p)
@@ -344,11 +344,11 @@ contains
     deallocate(dataptr1d_sdate)
     deallocate(dataptr2d_sdate)
 
-    write(iulog,'(a)') 'cropcal_interp(): Allocating dataptrs for cultivar_gdds'
+    write(iulog,*) 'cropcal_interp(): Allocating dataptrs for cultivar_gdds'
     allocate(dataptr1d_cultivar_gdds(lsize))
     allocate(dataptr2d_cultivar_gdds(lsize, ncft))
     if (.not. generate_crop_gdds) then
-       write(iulog,'(a)') 'cropcal_interp(): Reading cultivar_gdds'
+       write(iulog,*) 'cropcal_interp(): Reading cultivar_gdds file'
        ! Read prescribed cultivar GDDs from input files
        dataptr1d_cultivar_gdds(:) = -4
        dataptr2d_cultivar_gdds(:,:) = -5
@@ -376,7 +376,7 @@ contains
        end do
    
        ! Set rx_cultivar_gdd for each gridcell/patch combination
-       write(iulog,'(a)') 'cropcal_interp(): Set rx_cultivar_gdd for each gridcell/patch combination'
+       write(iulog,*) 'cropcal_interp(): Set rx_cultivar_gdd for each gridcell/patch combination'
        do fp = 1, num_pcropp
           p = filter_pcropp(fp)
 
@@ -443,7 +443,7 @@ contains
    deallocate(dataptr1d_cultivar_gdds)
    deallocate(dataptr2d_cultivar_gdds)
 
-   write(iulog,'(a)') 'cropcal_interp(): All done!'
+   write(iulog,*) 'cropcal_interp(): All done!'
 
 
   end subroutine cropcal_interp
