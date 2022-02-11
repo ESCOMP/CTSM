@@ -295,8 +295,8 @@ contains
     allocate(dataptr2d_sdate(lsize, ncft))
     dataptr2d_sdate(:,:) = -5
     ! Starting with npcropmin will skip generic crops
+    write(iulog,*) 'cropcal_interp(): Reading sdate file'
     do n = 1, ncft
-       write(iulog,'(a,a)') 'cropcal_interp(): Reading sdat_cropcal_sdate variable ',trim(stream_varnames_sdate(n))
        call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
             fldptr1=dataptr1d_sdate,  rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
@@ -354,7 +354,6 @@ contains
        dataptr2d_cultivar_gdds(:,:) = -5
        ! Starting with npcropmin will skip generic crops
        do n = 1, ncft
-          write(iulog,'(a,a)') 'cropcal_interp(): Reading sdat_cropcal_cultivar_gdds variable ',trim(stream_varnames_cultivar_gdds(n))
           call dshr_fldbun_getFldPtr(sdat_cropcal_cultivar_gdds%pstrm(1)%fldbun_model, trim(stream_varnames_cultivar_gdds(n)), &
                fldptr1=dataptr1d_cultivar_gdds,  rc=rc)
 
