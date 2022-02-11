@@ -393,33 +393,34 @@ class SinglePointCase(BaseCase):
                 )
                 self.write_to_file(line, nl_clm)
 
-    def modify_surfdata_atpoint(self, f_tmp):
+    def modify_surfdata_atpoint(self, f_orig):
         """
         Function to modify surface dataset based on the user flags chosen.
         """
+        f_mod = f_orig.copy (deep= True)
 
         # -- modify surface data properties
         if self.dom_pft is not None:
             max_dom_pft = max(self.dom_pft)
             # -- First initialize everything:
             if max_dom_pft < NAT_PFT:
-                f_tmp["PCT_NAT_PFT"][:, :, :] = 0
+                f_mod["PCT_NAT_PFT"][:, :, :] = 0
             else:
-                f_tmp["PCT_CFT"][:, :, :] = 0
+                f_mod["PCT_CFT"][:, :, :] = 0
 
             # Do we need to initialize these here?
             # Because we set them in include_nonveg
-            # f_tmp["PCT_NATVEG"][:, :] = 0
-            # f_tmp["PCT_CROP"][:, :] = 0
+            # f_mod["PCT_NATVEG"][:, :] = 0
+            # f_mod["PCT_CROP"][:, :] = 0
 
             # -- loop over all dom_pft and pct_pft
             zip_pfts = zip(self.dom_pft, self.pct_pft)
             for dom_pft, pct_pft in zip_pfts:
                 if dom_pft < NAT_PFT:
-                    f_tmp["PCT_NAT_PFT"][:, :, dom_pft] = pct_pft
+                    f_mod["PCT_NAT_PFT"][:, :, dom_pft] = pct_pft
                 else:
                     dom_pft = dom_pft - NAT_PFT
-                    f_tmp["PCT_CFT"][:, :, dom_pft] = pct_pft
+                    f_mod["PCT_CFT"][:, :, dom_pft] = pct_pft
 
         # -------------------------------
         # By default include_nonveg=False
@@ -428,18 +429,18 @@ class SinglePointCase(BaseCase):
 
         if not self.include_nonveg:
             logger.info("Zeroing out non-vegetation land units in the surface data.")
-            f_tmp["PCT_LAKE"][:, :] = 0.0
-            f_tmp["PCT_WETLAND"][:, :] = 0.0
-            f_tmp["PCT_URBAN"][:, :] = 0.0
-            f_tmp["PCT_GLACIER"][:, :] = 0.0
+            f_mod["PCT_LAKE"][:, :] = 0.0
+            f_mod["PCT_WETLAND"][:, :] = 0.0
+            f_mod["PCT_URBAN"][:, :] = 0.0
+            f_mod["PCT_GLACIER"][:, :] = 0.0
 
             max_dom_pft = max(self.dom_pft)
             if max_dom_pft < NAT_PFT:
-                f_tmp["PCT_NATVEG"][:, :] = 100
-                f_tmp["PCT_CROP"][:, :] = 0
+                f_mod["PCT_NATVEG"][:, :] = 100
+                f_mod["PCT_CROP"][:, :] = 0
             else:
-                f_tmp["PCT_NATVEG"][:, :] = 0
-                f_tmp["PCT_CROP"][:, :] = 100
+                f_mod["PCT_NATVEG"][:, :] = 0
+                f_mod["PCT_CROP"][:, :] = 100
 
         else:
             logger.info(
@@ -448,11 +449,11 @@ class SinglePointCase(BaseCase):
             )
 
         if self.uni_snow:
-            f_tmp["STD_ELEV"][:, :] = 20.0
+            f_mod["STD_ELEV"][:, :] = 20.0
         if self.cap_saturation:
-            f_tmp["FMAX"][:, :] = 0.0
+            f_mod["FMAX"][:, :] = 0.0
 
-        return f_tmp
+        return f_mod
 
     def create_surfdata_at_point(self, indir, file, user_mods_dir):
         """
