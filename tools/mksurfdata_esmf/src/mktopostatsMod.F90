@@ -178,9 +178,7 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     dataptr(:) = 0._r4
 
-    calculate_stddev = .false.
-    ! call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, &
-    !      termorderflag=ESMF_TERMORDER_SRCSEQ, zeroregion=ESMF_REGION_EMPTY, rc=rc)
+    calculate_stddev = .false.  ! module variable used by dynamic mask
     call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, dynamicMask=dynamicMask, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
