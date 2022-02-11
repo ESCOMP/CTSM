@@ -350,7 +350,6 @@ contains
     ! Below i are the destination points and j are the source points
 
     if (associated(dynamicMaskList)) then
-       call ESMF_LogWrite("DEBUG: determining soil colors")
 
        do no = 1, size(dynamicMaskList)
 
@@ -377,7 +376,6 @@ contains
 
           ! Find index of maximum weight
           if (has_color) then
-             call ESMF_LogWrite("DEBUG: ranking soil colors")
              call mkrank (num_soilcolors, wts_o(0:num_soilcolors), maxindex)
              soil_color_o = maxindex(1)
           end if
@@ -389,7 +387,6 @@ contains
              end if
           else if (num_soilcolors == 20) then
              if (soil_color_o == 0) then
-                call ESMF_LogWrite("DEBUG: setting soil color to 15")
                 soil_color_o = 15
              end if
           end if
