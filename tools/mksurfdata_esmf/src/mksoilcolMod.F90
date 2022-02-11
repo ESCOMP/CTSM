@@ -6,7 +6,7 @@ module mksoilcolMod
   use shr_sys_mod  , only : shr_sys_abort
   use mkpioMod     , only : mkpio_get_rawdata
   use mkpioMod     , only : mkpio_iodesc_rawdata, pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod    , only : regrid_rawdata, create_routehandle_r4, get_meshareas
+  use mkesmfMod    , only : get_meshareas
   use mkutilsMod   , only : chkerr
   use mkvarctl     , only : root_task, ndiag, mpicom, MPI_INTEGER, MPI_MAX
   use mkvarctl     , only : soil_color_override, unsetcol
@@ -20,6 +20,9 @@ module mksoilcolMod
 
   private :: mkrank
   private :: check_global_areas
+
+  integer :: num_soilcolors
+  type(ESMF_DynamicMask) :: dynamicMask
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -41,22 +44,24 @@ contains
     ! local variables:
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
+    type(ESMF_Field)       :: field_i
+    type(ESMF_Field)       :: field_o
+    type(ESMF_Field)       :: field_dstfrac
     type(file_desc_t)      :: pioid
     integer                :: ni,no
     integer                :: ns_i, ns_o
     integer                :: n,l,k
     integer , allocatable  :: mask_i(:)
-    real(r4), allocatable  :: frac_i(:)
+    real(r4), allocatable  :: rmask_i(:)
     real(r4), allocatable  :: frac_o(:)
     real(r8), allocatable  :: area_i(:)
     real(r8), allocatable  :: area_o(:)
-    real(r4), allocatable  :: data_i(:,:)
-    real(r4), allocatable  :: data_o(:,:)
     real(r4), allocatable  :: soil_color_i(:)
-    logical                :: has_color     ! whether this grid cell has non-zero color
+    real(r4), pointer      :: dataptr(:)
+    real(r8), pointer      :: dataptr_r8(:)
     integer                :: nsoilcol_local
-    integer                :: maxindex(1)
     integer                :: rcode, ier
+    integer                :: srcTermProcessing_Value = 0
     character(len=*), parameter :: subname = 'mksoilcol'
     !-----------------------------------------------------------------------
 
@@ -98,29 +103,22 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Get the landmask from the file and reset the mesh mask based on that
-    allocate(frac_i(ns_i), stat=ier)
+    allocate(rmask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, rmask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
-       if (frac_i(ni) > 0._r4) then
+       if (rmask_i(ni) > 0._r4) then
           mask_i(ni) = 1
        else
           mask_i(ni) = 0
        end if
     end do
-    deallocate(frac_i)
+    deallocate(rmask_i)
     call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    ! Create a route handle between the input and output mesh and get frac_o
-    allocate(frac_o(ns_o),stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    call create_routehandle_r4(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
     ! Read in input soil color data
     allocate(soil_color_i(ns_i),stat=ier)
@@ -129,6 +127,13 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
+    ! Scale the input soil color by the input mask
+    do ni = 1,ns_i
+       if (mask_i(ni) == 0) then
+          soil_color_i(ni) = 0._r4
+       end if
+    end do
+
     ! Determine maximum number of soil colors across all processors
     ! This will be used for the ungridded dimension of data_o below
     nsoilcol_local = maxval(soil_color_i)
@@ -136,58 +141,55 @@ contains
     ! TODO: MPI_SUCCESS could not be accessed from mkvarctl
     !if (rcode /= MPI_SUCCESS) call shr_sys_abort('error for mpi_allredice in '//trim(subname))
 
-    ! Now determine data_i as a real 2d array - for every possible soil color create a global
-    ! field with gridcells equal to 1 for that soil color and zero elsewhere
-    allocate(data_i(0:nsoilcol,ns_i))
-    data_i(:,:) = 0._r4
-    do l = 0,nsoilcol
-       do n = 1,ns_i
-          if (int(soil_color_i(n)) == l) then
-             data_i(l,n) = 1._r4 * mask_i(n)
-          end if
-       end do
-    end do
+    ! Set module variable (used in the get_dominant_soilcol routine)
+    num_soilcolors = nsoilcol
+    if (root_task) then
+       write(ndiag,*)'DEBUG: num_soilcolors = ',num_soilcolors
+    end if
 
-    ! Regrid data_i to data_o
-    allocate(data_o(0:nsoilcol, ns_o),stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, nsoilcol, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_LogWrite(subname//'after regrid rawdata in '//trim(subname))
+     ! Create ESMF fields that will be used below
+    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    field_dstfrac = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    ! Determine output soil color
-    soil_color_o(:) = 0
+    ! Create a route handle
+    call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
+         regridmethod=ESMF_REGRIDMETHOD_CONSERVE, srcTermProcessing=srcTermProcessing_Value, &
+         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, &
+         dstFracField= field_dstfrac, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
+
+    ! Determin frac_o
+    call ESMF_FieldGet(field_dstfrac, farrayptr=dataptr_r8, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    allocate(frac_o(ns_o))
+    frac_o(:) = real(dataptr_r8(:), kind=r4)
+
+    ! Create a dynamic mask object
+    ! The dynamic mask object further holds a pointer to the routine that will be called in order to
+    ! handle dynamically masked elements - in this case its DynMaskProc (see below)
+    call ESMF_DynamicMaskSetR4R8R4(dynamicMask, dynamicMaskRoutine=get_dominant_soilcol,  &
+         dynamicSrcMaskValue=0._r4, handleAllElements=.true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Determine dominant soil color in the field regrid call below
+    call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
+    dataptr(:) = soil_color_i(:)
+    call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    dataptr(:) = 0._r4
+
+    call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, dynamicMask=dynamicMask, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
     do no = 1,ns_o
-       ! If the output cell has any non-zero-colored inputs, then set the weight of
-       ! zero-colored inputs to 0, to ensure that the zero-color is NOT dominant.
-       if (any(data_o(1:nsoilcol,no) > 0.)) then
-          has_color = .true.
-          data_o(0,no) = 0.0
-       else
-          has_color = .false.
-       end if
-
-       ! Rank non-zero weights by color type. wsti(1) is the most extensive color type.
-       if (has_color) then
-          call mkrank (nsoilcol, data_o(0:nsoilcol,no), maxindex)
-          soil_color_o(no) = maxindex(1)
-       end if
-
-       ! If land but no color, set color to 15 (in older dataset generic soil color 4)
-       if (nsoilcol == 8) then
-          if (soil_color_o(no)==0) then
-             soil_color_o(no) = 4
-          end if
-       else if (nsoilcol == 20) then
-          if (soil_color_o(no)==0) then
-             soil_color_o(no) = 15
-          end if
-       else
-          write(6,*) 'MKSOILCOL error: unhandled nsoilcol: ', nsoilcol
-          call shr_sys_abort()
-       end if
-
-       ! Error checks
+       soil_color_o(no) = int(dataptr(no))
        if (soil_color_o(no) < 0 .or. soil_color_o(no) > nsoilcol) then
           write (6,*) 'MKSOILCOL error: land model soil color = ', &
                soil_color_o(no),' is not valid for lon,lat = ',no
@@ -209,6 +211,12 @@ contains
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_dstfrac, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
     if (root_task) then
@@ -265,8 +273,8 @@ contains
     ! Compare global areas on input and output grids
 
     ! input/otuput variables
-    character(len=*) , intent(in) :: name  
-    integer          , intent(in) :: ns_i 
+    character(len=*) , intent(in) :: name
+    integer          , intent(in) :: ns_i
     integer          , intent(in) :: ns_o
     integer          , intent(in) :: nsoilcol
     real(r4)         , intent(in) :: soil_color_i(ns_i)
@@ -274,7 +282,7 @@ contains
     real(r8)         , intent(in) :: area_i(ns_i)
     real(r8)         , intent(in) :: area_o(ns_o)
     integer          , intent(in) :: mask_i(ns_i)
-    real(r4)         , intent(in) :: frac_o(ns_o) 
+    real(r4)         , intent(in) :: frac_o(ns_o)
 
     ! local variables
     integer  :: ni, no, l, k
@@ -315,5 +323,119 @@ contains
        end do
     end if
   end subroutine check_global_areas
+
+  !================================================================================================
+  subroutine get_dominant_soilcol(dynamicMaskList, dynamicSrcMaskValue, dynamicDstMaskValue, rc)
+
+    use ESMF, only : ESMF_RC_ARG_BAD
+
+    ! input/output arguments
+    type(ESMF_DynamicMaskElementR4R8R4) , pointer              :: dynamicMaskList(:)
+    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicSrcMaskValue
+    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicDstMaskValue
+    integer                             , intent(out)          :: rc
+
+    ! local variables
+    integer            :: ni, no, n
+    real(ESMF_KIND_R4) :: wts_o(0:num_soilcolors)
+    logical            :: has_color
+    integer            :: soil_color_o
+    integer            :: maxindex(1)
+    !---------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    ! Below - ONLY if you do NOT have the source masked out then do
+    ! the regridding (which is done explicitly here)
+    ! Below i are the destination points and j are the source points
+
+    if (associated(dynamicMaskList)) then
+       call ESMF_LogWrite("DEBUG: determining soil colors")
+
+       do no = 1, size(dynamicMaskList)
+
+          wts_o(:) = 0.d0
+          do ni = 1, size(dynamicMaskList(no)%factor)
+             if (dynamicSrcMaskValue /= dynamicMaskList(no)%srcElement(ni)) then
+                do n = 0,num_soilcolors
+                   if (dynamicMaskList(no)%srcElement(ni) == n) then
+                      wts_o(n) = wts_o(n) + dynamicMaskList(no)%factor(ni)
+                   end if
+                enddo
+             end if
+          end do
+
+          ! If the output cell has any non-zero-colored inputs, then set the weight of
+          ! zero-colored inputs to 0, to ensure that the zero-color is NOT dominant.
+          soil_color_o = 0
+          if (any(wts_o(1:num_soilcolors) > 0.)) then
+             has_color = .true.
+             wts_o(0) = 0.0
+          else
+             has_color = .false.
+          end if
+
+          ! Find index of maximum weight
+          if (has_color) then
+             call ESMF_LogWrite("DEBUG: ranking soil colors")
+             call mkrank (num_soilcolors, wts_o(0:num_soilcolors), maxindex)
+             soil_color_o = maxindex(1)
+          end if
+
+          ! If land but no color, set color to 15 (in older dataset generic soil color 4)
+          if (num_soilcolors == 8) then
+             if (soil_color_o == 0) then
+                soil_color_o = 4
+             end if
+          else if (num_soilcolors == 20) then
+             if (soil_color_o == 0) then
+                call ESMF_LogWrite("DEBUG: setting soil color to 15")
+                soil_color_o = 15
+             end if
+          end if
+          dynamicMaskList(no)%dstElement = real(soil_color_o, kind=r4)
+
+       end do
+    end if
+
+    contains
+
+      subroutine mkrank (n, a, iv)
+        ! Return indices of largest [num] values in array [a].
+
+        ! input/output variables
+        integer , intent(in) :: n      !array length
+        real(r4), intent(in) :: a(0:n) !array to be ranked
+        integer , intent(out):: iv(1)  !index to [num] largest values in array [a]
+
+        ! local variables:
+        real(r4) :: a_max  !maximum value in array
+        real(r4) :: delmax !tolerance for finding if larger value
+        integer  :: i      !array index
+        integer  :: m      !do loop index
+        integer  :: k      !do loop index
+        integer  :: miss   !missing data value
+        !-----------------------------------------------------------------------
+
+        ! Find index of largest non-zero number
+        delmax = 1.e-06
+        miss = 9999
+        iv(1) = miss
+
+        a_max = -9999.
+        do i = 0, n
+           if (a(i)>0. .and. (a(i)-a_max)>delmax) then
+              a_max = a(i)
+              iv(1)  = i
+           end if
+        end do
+        ! iv(1) = miss indicates no values > 0. this is an error
+        if (iv(1) == miss) then
+           write (6,*) 'MKRANK error: iv(1) = missing'
+           call shr_sys_abort()
+        end if
+      end subroutine mkrank
+
+  end subroutine get_dominant_soilcol
 
 end module mksoilcolMod
