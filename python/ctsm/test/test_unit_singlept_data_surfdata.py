@@ -164,7 +164,6 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             out_dir=self.out_dir,
             overwrite=self.overwrite,
         )
-        single_point.include_nonveg = False
         single_point.dom_pft = [5]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
@@ -197,7 +196,6 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             out_dir=self.out_dir,
             overwrite=self.overwrite,
         )
-        single_point.include_nonveg = False
         single_point.dom_pft = [5]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
@@ -226,7 +224,6 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             out_dir=self.out_dir,
             overwrite=self.overwrite,
         )
-        single_point.include_nonveg = False
         single_point.dom_pft = [5]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
@@ -516,12 +513,10 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
 
         self.assertNotEqual(ds_out['PCT_WETLAND'].data[:,:], 0)
 
-
 class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     """
     Basic class for testing creating and modifying surface dataset for
     crop cases (aka using 78 pft dataset) in SinglePointCase class in single_point_case.py.
-
     """
 
     plat = 20.1
