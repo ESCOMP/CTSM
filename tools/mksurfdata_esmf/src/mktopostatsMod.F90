@@ -22,6 +22,8 @@ module mktopostatsMod
 
   type(ESMF_DynamicMask) :: dynamicMask
 
+  logical :: calculate_stddev = .true.
+
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
 
@@ -176,8 +178,11 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     dataptr(:) = 0._r4
 
-    call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, &
-         termorderflag=ESMF_TERMORDER_SRCSEQ, zeroregion=ESMF_REGION_EMPTY, rc=rc)
+    calculate_stddev = .false.
+    ! call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, &
+    !      termorderflag=ESMF_TERMORDER_SRCSEQ, zeroregion=ESMF_REGION_EMPTY, rc=rc)
+    call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, dynamicMask=dynamicMask, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -243,13 +248,15 @@ contains
           endif
 
           ! Now compute the standard deviation
-          mean = dynamicMaskList(i)%dstElement
-          dynamicMaskList(i)%dstElement = 0.d0 ! reset to zero
-          do j = 1, size(dynamicMaskList(i)%factor)
-             dynamicMaskList(i)%dstElement = dynamicMaskList(i)%dstElement + &
-                  (dynamicMaskList(i)%factor(j) * (dynamicMaskList(i)%srcElement(j) - mean)**2)
-          enddo
-          dynamicMaskList(i)%dstElement = sqrt(dynamicMaskList(i)%dstElement/renorm)
+          if (calculate_stddev) then
+             mean = dynamicMaskList(i)%dstElement
+             dynamicMaskList(i)%dstElement = 0.d0 ! reset to zero
+             do j = 1, size(dynamicMaskList(i)%factor)
+                dynamicMaskList(i)%dstElement = dynamicMaskList(i)%dstElement + &
+                     (dynamicMaskList(i)%factor(j) * (dynamicMaskList(i)%srcElement(j) - mean)**2)
+             enddo
+             dynamicMaskList(i)%dstElement = sqrt(dynamicMaskList(i)%dstElement/renorm)
+          end if
        enddo
     endif
 
