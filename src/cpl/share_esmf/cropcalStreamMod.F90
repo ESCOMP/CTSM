@@ -297,6 +297,7 @@ contains
     ! Starting with npcropmin will skip generic crops
     write(iulog,*) 'cropcal_interp(): Reading sdate file'
     do n = 1, ncft
+       ivt = n + npcropmin - 1
        call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
             fldptr1=dataptr1d_sdate,  rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
@@ -308,7 +309,7 @@ contains
 
           ! Warn about possible bad interpolation. Not a problem unless it actually gets assigned to a patch.
           if ((.not. warned_about_bad_interp_sdate) .and. (dataptr1d_sdate(g) <= 0 .or. dataptr1d_sdate(g) > 365)) then
-              write(iulog,'(a,i0,a,i0,a)') 'WARNING: cropcal_interp(): Crop n ',n,' (and maybe others) has dataptr1d prescribed sowing date ',dataptr1d_sdate(g),'. Bad interpolation?'
+              write(iulog,'(a,i0,a,i0,a)') 'WARNING: cropcal_interp(): Crop ivt ',ivt,' (and maybe others) has dataptr1d prescribed sowing date ',dataptr1d_sdate(g),'. Bad interpolation?'
               warned_about_bad_interp_sdate = .true.
           end if
 
