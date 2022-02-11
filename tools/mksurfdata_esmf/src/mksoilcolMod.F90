@@ -143,9 +143,6 @@ contains
 
     ! Set module variable (used in the get_dominant_soilcol routine)
     num_soilcolors = nsoilcol
-    if (root_task) then
-       write(ndiag,*)'DEBUG: num_soilcolors = ',num_soilcolors
-    end if
 
      ! Create ESMF fields that will be used below
     field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)

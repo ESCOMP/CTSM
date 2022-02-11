@@ -307,6 +307,9 @@ contains
             lev1name='nlevsoi', &
             long_name='percent clay', units='unitless')
 
+       call mkpio_def_spatial_var(pioid=pioid, varname='mapunits', xtype=PIO_INT, &
+            long_name='soil texture map units', units='unitless')
+
        call mkpio_def_spatial_var(pioid=pioid, varname='ORGANIC', xtype=xtype, &
             lev1name='nlevsoi', &
             long_name='organic matter density at soil levels', &

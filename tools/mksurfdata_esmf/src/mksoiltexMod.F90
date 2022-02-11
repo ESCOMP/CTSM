@@ -10,7 +10,7 @@ module mksoiltexMod
   use shr_sys_mod    , only : shr_sys_abort
   use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
   use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r4, get_meshareas
+  use mkesmfMod      , only : get_meshareas
   use mkutilsMod     , only : chkerr
   use mkvarctl
   use mkvarpar
@@ -22,6 +22,11 @@ module mksoiltexMod
 
   integer, parameter :: num=2  ! set soil mapunit number
   integer, parameter :: nlsm=4 ! number of soil textures
+
+  integer :: num_soil_textures
+  type(ESMF_DynamicMask) :: dynamicMask
+
+  integer :: mapunit_value_max
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -47,6 +52,9 @@ contains
     ! local variables
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
+    type(ESMF_Field)       :: field_i
+    type(ESMF_Field)       :: field_o
+    type(ESMF_Field)       :: field_dstfrac
     type(file_desc_t)      :: pioid
     type(var_desc_t)       :: pio_varid
     integer                :: pio_vartype
@@ -54,38 +62,28 @@ contains
     integer                :: ni,no
     integer                :: ns_i, ns_o
     integer                :: n,l,m
-    integer                :: gindex, lindex
     character(len=38)      :: typ                     ! soil texture based on ...
     integer                :: nlay                    ! number of soil layers
     integer                :: mapunittemp             ! temporary igbp soil mapunit
     integer                :: maxovr
     integer , allocatable  :: mask_i(:)
-    real(r4), allocatable  :: area_i(:)
-    real(r4), allocatable  :: area_o(:)
-    real(r4), allocatable  :: frac_i(:)
+    real(r8), allocatable  :: area_i(:)
+    real(r8), allocatable  :: area_o(:)
+    real(r4), allocatable  :: rmask_i(:)
     real(r4), allocatable  :: frac_o(:)
     real(r4), allocatable  :: sand_i(:,:)             ! input grid: percent sand
     real(r4), allocatable  :: clay_i(:,:)             ! input grid: percent clay
+    real(r4), allocatable  :: mapunit_i(:)            ! input grid: igbp soil mapunits
+    real(r4), pointer      :: dataptr(:)
+    real(r8), pointer      :: dataptr_r8(:)
     character(len=38)      :: soil(0:nlsm)            ! name of each soil texture
     real(r4)               :: gast_i(0:nlsm)          ! global area, by texture type
     real(r4)               :: gast_o(0:nlsm)          ! global area, by texture type
-    real(r4)               :: wt                      ! map overlap weight
     real(r4)               :: sum_fldi                ! global sum of dummy input fld
     real(r4)               :: sum_fldo                ! global sum of dummy output fld
     real(r4)               :: sumtex
     integer                :: rcode, ier              ! error status
-    integer                :: mapunit_value_max
-    integer                :: mapunit_value_min
-    integer                :: mapunit_value
-    integer                :: nmax
-    integer                :: loop, nloops
-    real(r4)               :: max_value 
-    integer                :: max_index(1)
-    real(r4), allocatable  :: mapunit_i(:)            ! input grid: igbp soil mapunits
-    real(r4), allocatable  :: data_i(:,:)
-    real(r4), allocatable  :: data_o(:,:)
-    real(r4), allocatable  :: global_max_value(:)
-    real(r4), allocatable  :: global_max_index(:)
+    integer                :: srcTermProcessing_Value = 0
     character(len=*), parameter :: subname = 'mksoiltex'
     !-----------------------------------------------------------------------
 
@@ -149,14 +147,14 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Get the landmask from the file and reset the mesh mask based on that
-    allocate(frac_i(ns_i), stat=ier)
+    allocate(rmask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, rmask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
-       if (frac_i(ni) > 0._r4) then
+       if (rmask_i(ni) > 0._r4) then
           mask_i(ni) = 1
        else
           mask_i(ni) = 0
@@ -165,14 +163,6 @@ contains
     call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    ! Create a route handle between the input and output mesh
-    ! Can only use this routehandle to map fields containing r4 data
-    allocate(frac_o(ns_o),stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    call create_routehandle_r4(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-
     ! Read in mapunit data
     allocate(mapunit_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
@@ -180,55 +170,62 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-    ! Now determine data_i as a real 2d array - for every possible soil color create a global
-    ! field with gridcells equal to 1 for that soil color and zero elsewhere
+    ! Scale the input soil color by the input mask
+    ! do ni = 1,ns_i
+    !    if (mask_i(ni) == 0) then
+    !       mapunit_i(ni) = 0._r4
+    !    end if
+    ! end do
+
+    ! Determine mapunit_value_max (set it as a module variable so that it can be 
+    ! accessible to gen_dominant_mapunit)
     rcode = pio_inq_dimid  (pioid, 'max_value_mapunit', dimid)
     rcode = pio_inq_dimlen (pioid, dimid, mapunit_value_max)
-    mapunit_value_min = 0
-    nmax = 100
-    nloops = (mapunit_value_max - mapunit_value_min + nmax)/nmax
 
-    allocate(global_max_value(ns_o)) ; global_max_value(:) = -999.
-    if (ier/=0) call shr_sys_abort()
-    allocate(global_max_index(ns_o)) ; global_max_index(:) = 0
-    if (ier/=0) call shr_sys_abort()
-    allocate(data_i(nmax,ns_i))
-    if (ier/=0) call shr_sys_abort()
-    allocate(data_o(nmax,ns_o))
-    if (ier/=0) call shr_sys_abort()
+     ! Create ESMF fields that will be used below
+    field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    field_dstfrac = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    ! Create a route handle
+    call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
+         regridmethod=ESMF_REGRIDMETHOD_CONSERVE, srcTermProcessing=srcTermProcessing_Value, &
+         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, &
+         dstFracField= field_dstfrac, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
 
-    mapunit_o(:) = 0
-    do loop = 1,nloops
-       data_i(:,:) = 0._r4
-       do lindex = 0,nmax-1
-          mapunit_value = lindex + (nmax*(loop-1))
-          if (mapunit_value <= mapunit_value_max) then
-             do ni = 1,ns_i
-                if (int(mapunit_i(ni)) == mapunit_value) then
-                   data_i(lindex+1,ni) = 1._r4
-                end if
-             end do
-          end if
-       end do
-       
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 1, nmax, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! Determin frac_o
+    call ESMF_FieldGet(field_dstfrac, farrayptr=dataptr_r8, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    allocate(frac_o(ns_o))
+    frac_o(:) = real(dataptr_r8(:), kind=r4)
 
-       do no = 1,ns_o
-          max_index = maxloc(data_o(:,no))
-          max_value = data_o(max_index(1),no)
-          if ( max_value > global_max_value(no)) then
-             global_max_value(no) = max_value
-             mapunit_o(no) = max_index(1) + (nmax*(loop-1)) - 1
-             if (mapunit_o(no) < 0 .or. mapunit_o(no) > mapunit_value_max) then
-                call shr_sys_abort('mapunit_o is invalid')
-             end if
-          end if
-       end do
+    ! Create a dynamic mask object
+    ! The dynamic mask object further holds a pointer to the routine that will be called in order to
+    ! handle dynamically masked elements - in this case its DynMaskProc (see below)
+    call ESMF_DynamicMaskSetR4R8R4(dynamicMask, dynamicMaskRoutine=get_dominant_mapunit,  &
+         handleAllElements=.true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Determine dominant soil color in the field regrid call below
+    call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
+    dataptr(:) = mapunit_i(:)
+    call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    dataptr(:) = 0._r4
+
+    call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, dynamicMask=dynamicMask, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do no = 1,ns_o
+       mapunit_o(no) = int(dataptr(no))
     end do
-    deallocate(data_i)
-    deallocate(data_o)
 
     ! Get dimensions from input file and allocate memory for sand_i and clay_i
     rcode = pio_inq_dimid  (pioid, 'number_of_layers', dimid)
@@ -252,7 +249,8 @@ contains
        if (mapunit_o(no) > 0) then
           ! valid value is obtained
           if (mapunit_o(no) > mapunit_value_max) then
-             call shr_sys_abort("mapunit_o is out of bounds")
+             write(6,*)'mapunit_o is out of bounds ',mapunit_o(no)
+             ! call shr_sys_abort("mapunit_o is out of bounds")
           end if
           do l = 1, nlay
              sand_o(no,l) = sand_i(mapunit_o(no),l)
@@ -268,7 +266,7 @@ contains
     end do
 
     ! -----------------------------------------------------------------
-    ! Error check
+    ! TODO:
     ! Compare global area of each soil type on input and output grids
     ! -----------------------------------------------------------------
 
@@ -291,7 +289,7 @@ contains
     !           else if (sand_i(mapunittemp,l) >= 50.) then
     !              typ = 'sands'
     !           else if (clay_i(mapunittemp,l)+sand_i(mapunittemp,l) < 50.) then
-    !              if (frac_i(ni) /= 0.) then
+    !              if (rmask_i(ni) /= 0.) then
     !                 typ = 'silts'
     !              else            !if (mask(ni) == 0.) then no data
     !                 typ = 'no soil: ocean, glacier, lake, no data'
@@ -362,10 +360,6 @@ contains
     !        write (ndiag,'(1x,a38,f16.3,f17.3)') soil(l),gast_i(l)*1.e-6,gast_o(l)*1.e-6
     !     end do
     
-    ! Deallocate dynamic memory
-    deallocate(sand_i,clay_i,mapunit_i)
-    deallocate(mask_i)
-
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
@@ -378,5 +372,46 @@ contains
     end if
 
   end subroutine mksoiltex
+
+  !================================================================================================
+  subroutine get_dominant_mapunit(dynamicMaskList, dynamicSrcMaskValue, dynamicDstMaskValue, rc)
+
+    use ESMF, only : ESMF_RC_ARG_BAD
+
+    ! input/output arguments
+    type(ESMF_DynamicMaskElementR4R8R4) , pointer              :: dynamicMaskList(:)
+    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicSrcMaskValue
+    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicDstMaskValue
+    integer                             , intent(out)          :: rc
+
+    ! local variables
+    integer            :: ni, no, n
+    real(ESMF_KIND_R4) :: wts_o(0:mapunit_value_max)
+    integer            :: maxindex(1)
+    !---------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    if (associated(dynamicMaskList)) then
+       do no = 1, size(dynamicMaskList)
+          dynamicMaskList(no)%dstElement = 0.d0
+          wts_o(:) = 0.d0
+          do ni = 1, size(dynamicMaskList(no)%factor)
+             if (dynamicMaskList(no)%srcElement(ni) > 0.d0) then
+                do n = 0,mapunit_value_max
+                   if (dynamicMaskList(no)%srcElement(ni) == n) then
+                      wts_o(n) = wts_o(n) + dynamicMaskList(no)%factor(ni)
+                   end if
+                enddo
+             end if
+          end do
+          
+          ! Determine the most dominant index of wts_o
+          maxindex = maxloc(wts_o(:)) 
+          dynamicMaskList(no)%dstElement = real(maxindex(1)-1, kind=r4)
+       end do
+    end if
+
+  end subroutine get_dominant_mapunit
 
 end module mksoiltexMod

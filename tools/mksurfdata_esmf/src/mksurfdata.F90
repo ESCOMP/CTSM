@@ -351,25 +351,6 @@ program mksurfdata
      rcode = pio_enddef(pioid)
   end if
 
-  ! DEBUG
-  allocate ( topo_stddev(lsize_o)) ; topo_stddev(:) = spval
-  allocate ( slope(lsize_o))       ; slope(:)       = spval
-  call mktopostats ( mksrf_ftopostats_mesh, mksrf_ftopostats, mesh_model, &
-       topo_stddev_o=topo_stddev, slope_o=slope, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mktopostats')
-  if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing topo_stddev "
-     call mkfile_output(pioid,  mesh_model, 'STD_ELEV', topo_stddev, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for STD_ELEV')
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing slope"
-     call mkfile_output(pioid,  mesh_model, 'SLOPE', slope, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for SLOPE')
-     call pio_syncfile(pioid)
-  end if
-  deallocate(topo_stddev)
-  deallocate(slope)
-  ! DEBUG
-
   ! -----------------------------------
   ! Write out coordinate variables
   ! -----------------------------------
@@ -675,16 +656,24 @@ program mksurfdata
   call pio_syncfile(pioid)
 
   ! -----------------------------------
-  ! TODO:
   ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
   ! -----------------------------------
-  ! allocate ( topo_stddev(lsize_o)) ; topo_stddev(:) = spval
-  ! allocate ( slope(lsize_o))       ; slope(:)       = spval
-  ! call mktopostats ( mksrf_ftopostats_mesh, mksrf_ftopostats, mesh_model, &
-  !      topo_stddev_o=topo_stddev, slope_o=slope, std_elev=std_elev, rc=rc)
-  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mktopostats')
-  ! deallocate(topo_stddev)
-  ! deallocate(slope)
+  allocate ( topo_stddev(lsize_o)) ; topo_stddev(:) = spval
+  allocate ( slope(lsize_o))       ; slope(:)       = spval
+  call mktopostats ( mksrf_ftopostats_mesh, mksrf_ftopostats, mesh_model, &
+       topo_stddev_o=topo_stddev, slope_o=slope, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mktopostats')
+  if (fsurdat /= ' ') then
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing topo_stddev "
+     call mkfile_output(pioid,  mesh_model, 'STD_ELEV', topo_stddev, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for STD_ELEV')
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing slope"
+     call mkfile_output(pioid,  mesh_model, 'SLOPE', slope, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for SLOPE')
+     call pio_syncfile(pioid)
+  end if
+  deallocate(topo_stddev)
+  deallocate(slope)
 
   ! -----------------------------------
   ! TODO:
