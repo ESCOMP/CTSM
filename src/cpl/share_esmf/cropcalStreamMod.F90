@@ -220,6 +220,8 @@ contains
     integer :: rc
     !-----------------------------------------------------------------------
 
+    write(iulog,*) 'cropcal_advance(): Beginning'
+
     call get_curr_date(year, mon, day, sec)
     mcdate = year*10000 + mon*100 + day
     call shr_strdata_advance(sdat_cropcal_sdate, ymd=mcdate, tod=sec, logunit=iulog, istr='cropcaldyn', rc=rc)
@@ -241,6 +243,8 @@ contains
           g_to_ig(g) = ig
        end do
     end if
+
+    write(iulog,*) 'cropcal_advance(): Ending'
 
   end subroutine cropcal_advance
 
