@@ -475,7 +475,7 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
         single_point.plon = [118.25]
 
         # -- change it to something known
-        self.ds_test['PCT_URBAN'][:,:,:] = 1
+        self.ds_test["PCT_URBAN"][:, :, :] = 1
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
         expected_out = np.ones((1, 1, 3))
@@ -511,7 +511,8 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
 
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
-        self.assertNotEqual(ds_out['PCT_WETLAND'].data[:,:], 0)
+        self.assertNotEqual(ds_out["PCT_WETLAND"].data[:, :], 0)
+
 
 class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     """
@@ -828,7 +829,6 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
 
         self.assertEqual(ds_out["STD_ELEV"].data[:, :], 20)
 
-
     def test_modify_surfdata_atpoint_crop_1pft_capsat(self):
         """
         Test modify_surfdata_atpoint for crop cases
@@ -956,7 +956,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
         single_point.plon = [118.25]
 
         # -- change it to something known
-        self.ds_test['PCT_URBAN'][:,:,:] = 1
+        self.ds_test["PCT_URBAN"][:, :, :] = 1
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
         expected_out = np.ones((1, 1, 3))
@@ -992,7 +992,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
 
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
-        self.assertNotEqual(ds_out['PCT_LAKE'].data[:,:], 0)
+        self.assertNotEqual(ds_out["PCT_LAKE"].data[:, :], 0)
 
 
 if __name__ == "__main__":
