@@ -397,7 +397,7 @@ class SinglePointCase(BaseCase):
         """
         Function to modify surface dataset based on the user flags chosen.
         """
-        f_mod = f_orig.copy (deep= True)
+        f_mod = f_orig.copy(deep=True)
 
         # -- modify surface data properties
         if self.dom_pft is not None:
