@@ -261,6 +261,64 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
 
         self.assertEqual(ds_out["PCT_GLACIER"].data[:, :], 0)
 
+    def test_modify_surfdata_atpoint_nocrop_1pft_wetland(self):
+        """
+        Test modify_surfdata_atpoint
+        Checks WETLAND for one pft
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.dom_pft = [5]
+
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        self.assertEqual(ds_out["PCT_WETLAND"].data[:, :], 0)
+
+    def test_modify_surfdata_atpoint_nocrop_1pft_lake(self):
+        """
+        Test modify_surfdata_atpoint
+        Checks PCT_LAKE for one pft
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.dom_pft = [5]
+
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        self.assertEqual(ds_out["PCT_LAKE"].data[:, :], 0)
+
     def test_modify_surfdata_atpoint_nocrop_1pft_unisnow(self):
         """
         Test modify_surfdata_atpoint
@@ -356,6 +414,107 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
 
         # self.assertEqual(ds_out['PCT_NAT_PFT'].data[:,:,5], 100)
         np.testing.assert_array_equal(ds_out["PCT_NAT_PFT"].data, expected_out)
+
+    def test_modify_surfdata_atpoint_nocrop_urban_nononveg(self):
+        """
+        Test modify_surfdata_atpoint for crop cases
+        Checks URBAN for one pft
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.include_nonveg = False
+        single_point.dom_pft = [7]
+        single_point.plat = [34.05]
+        single_point.plon = [118.25]
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        expected_out = np.zeros((1, 1, 3))
+
+        # self.assertEqual(ds_out['PCT_NAT_PFT'].data[:,:,5], 100)
+        np.testing.assert_array_equal(ds_out["PCT_URBAN"].data, expected_out)
+
+    def test_modify_surfdata_atpoint_nocrop_urban_include_nonveg(self):
+        """
+        Test modify_surfdata_atpoint for crop cases
+        Checks URBAN for one pft
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.include_nonveg = True
+        single_point.dom_pft = [7]
+        single_point.plat = [34.05]
+        single_point.plon = [118.25]
+
+        # -- change it to something known
+        self.ds_test['PCT_URBAN'][:,:,:] = 1
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        expected_out = np.ones((1, 1, 3))
+
+        # self.assertEqual(ds_out['PCT_NAT_PFT'].data[:,:,5], 100)
+        np.testing.assert_array_equal(ds_out["PCT_URBAN"].data, expected_out)
+
+    def test_modify_surfdata_atpoint_nocrop_wetland_include_nonveg(self):
+        """
+        Test modify_surfdata_atpoint for crop cases
+        Checks PCT_WETLAND for one pft to make sure it is not zerod-out
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.include_nonveg = True
+        single_point.dom_pft = [7]
+
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        self.assertNotEqual(ds_out['PCT_WETLAND'].data[:,:], 0)
 
 
 class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
@@ -582,11 +741,70 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             overwrite=self.overwrite,
         )
         single_point.dom_pft = [17]
+
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
         self.assertEqual(ds_out["PCT_GLACIER"].data[:, :], 0)
 
-    def test_modify_surfdata_atpoint_nocrop_1pft_unisnow(self):
+    def test_modify_surfdata_atpoint_crop_1pft_wetland(self):
+        """
+        Test modify_surfdata_atpoint
+        Checks WETLAND for one pft
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.dom_pft = [17]
+
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        self.assertEqual(ds_out["PCT_WETLAND"].data[:, :], 0)
+
+    def test_modify_surfdata_atpoint_crop_1pft_lake(self):
+        """
+        Test modify_surfdata_atpoint
+        Checks PCT_LAKE for one pft
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.dom_pft = [17]
+
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        self.assertEqual(ds_out["PCT_LAKE"].data[:, :], 0)
+
+    def test_modify_surfdata_atpoint_crop_1pft_unisnow(self):
         """
         Test modify_surfdata_atpoint for crop cases
         Checks STD_ELV for one pft and unisnow
@@ -614,6 +832,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
         self.assertEqual(ds_out["STD_ELEV"].data[:, :], 20)
+
 
     def test_modify_surfdata_atpoint_crop_1pft_capsat(self):
         """
@@ -678,6 +897,107 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
 
         # self.assertEqual(ds_out['PCT_NAT_PFT'].data[:,:,5], 100)
         np.testing.assert_array_equal(ds_out["PCT_CFT"].data, expected_out)
+
+    def test_modify_surfdata_atpoint_crop_urban_nononveg(self):
+        """
+        Test modify_surfdata_atpoint for crop cases
+        Checks URBAN for one pft
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.include_nonveg = False
+        single_point.dom_pft = [17]
+        single_point.plat = [34.05]
+        single_point.plon = [118.25]
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        expected_out = np.zeros((1, 1, 3))
+
+        # self.assertEqual(ds_out['PCT_NAT_PFT'].data[:,:,5], 100)
+        np.testing.assert_array_equal(ds_out["PCT_URBAN"].data, expected_out)
+
+    def test_modify_surfdata_atpoint_crop_urban_include_nonveg(self):
+        """
+        Test modify_surfdata_atpoint for crop cases
+        Checks URBAN for one pft
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.include_nonveg = True
+        single_point.dom_pft = [17]
+        single_point.plat = [34.05]
+        single_point.plon = [118.25]
+
+        # -- change it to something known
+        self.ds_test['PCT_URBAN'][:,:,:] = 1
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        expected_out = np.ones((1, 1, 3))
+
+        # self.assertEqual(ds_out['PCT_NAT_PFT'].data[:,:,5], 100)
+        np.testing.assert_array_equal(ds_out["PCT_URBAN"].data, expected_out)
+
+    def test_modify_surfdata_atpoint_crop_lake_include_nonveg(self):
+        """
+        Test modify_surfdata_atpoint for crop cases
+        Checks PCT_LAKE for one pft to make sure it is not zerod-out
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.include_nonveg = True
+        single_point.dom_pft = [17]
+
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        self.assertNotEqual(ds_out['PCT_LAKE'].data[:,:], 0)
 
 
 if __name__ == "__main__":
