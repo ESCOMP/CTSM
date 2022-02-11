@@ -365,7 +365,7 @@ contains
           do g = 1,lsize
    
              ! Warn about possible bad interpolation. Not a problem unless it actually gets assigned to a patch.
-             if ((.not. warned_about_bad_interp_cultivar_gdds) .and. (dataptr1d_cultivar_gdds(g) <= 0 .or. dataptr1d_cultivar_gdds(g) > 1000000.0)) then
+             if ((.not. warned_about_bad_interp_cultivar_gdds) .and. (dataptr1d_cultivar_gdds(g) < 0 .or. dataptr1d_cultivar_gdds(g) > 1000000.0)) then
                  write(iulog,'(a,i0,a,f0.0,a)') 'WARNING: cropcal_interp(): Crop n ',n,' (and maybe others) has dataptr1d prescribed GDD requirement ',dataptr1d_cultivar_gdds(g),'. Bad interpolation?'
                  warned_about_bad_interp_cultivar_gdds = .true.
              end if
