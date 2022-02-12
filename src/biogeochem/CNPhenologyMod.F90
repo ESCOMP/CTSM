@@ -1711,6 +1711,7 @@ contains
     logical do_harvest    ! Are harvest conditions satisfied?
     logical force_harvest ! Should we harvest today no matter what?
     logical fake_harvest  ! Dealing with incorrect Dec. 31 planting
+    logical sown_today    ! Was the crop sown today?
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -2058,6 +2059,10 @@ contains
             do_harvest = .false.
             force_harvest = .false.
             fake_harvest = .false.
+            sown_today = .false.
+            if (use_cropcal_streams .and. s > 0) then
+                sown_today = crop_inst%sdates_thisyr(p,s) == real(jday, r8)
+            end if
 
             if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
                 ! Crop was incorrectly planted in last time step of Dec. 31.
@@ -2081,7 +2086,7 @@ contains
                   ! until some time next year.
                   do_harvest = .false.
                endif
-            else if (use_cropcal_streams .and. s > 0 .and. crop_inst%sdates_thisyr(p,s) == jday) then
+            else if (sown_today) then
                ! Do not harvest on the day this growing season began;
                ! would create challenges for postprocessing.
                do_harvest = .false.
