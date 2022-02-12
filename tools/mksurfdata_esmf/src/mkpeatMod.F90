@@ -60,7 +60,6 @@ contains
     real(r8)               :: gglac_o                ! output grid: global glac
     real(r8)               :: garea_o                ! output grid: global area
     integer                :: ier, rcode             ! error status
-    real(r8), allocatable  :: data_i(:)              ! 2d data on input grid for dominant search
     real(r8), parameter :: min_valid = 0._r8         ! minimum valid value
     real(r8), parameter :: max_valid = 100.000001_r8 ! maximum valid value
     character(len=*), parameter :: subname = 'mkpeat'
