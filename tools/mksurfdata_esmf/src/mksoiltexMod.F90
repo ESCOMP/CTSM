@@ -177,7 +177,7 @@ contains
     !    end if
     ! end do
 
-    ! Determine mapunit_value_max (set it as a module variable so that it can be 
+    ! Determine mapunit_value_max (set it as a module variable so that it can be
     ! accessible to gen_dominant_mapunit)
     rcode = pio_inq_dimid  (pioid, 'max_value_mapunit', dimid)
     rcode = pio_inq_dimlen (pioid, dimid, mapunit_value_max)
@@ -276,7 +276,7 @@ contains
     !     allocate(area_o(ns_o))
     !     call get_meshareas(mesh_o, area_o, rc)
     !     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    
+
     !     ! input grid: global areas by texture class
     !     gast_i(:) = 0.
     !     do l = 1, nlay
@@ -308,7 +308,7 @@ contains
     !           gast_i(m) = gast_i(m) + area_i(ni)*mask_i(ni)*re**2
     !        end do
     !     end do
-    
+
     !     ! output grid: global areas by texture class
     !     gast_o(:) = 0.
     !     do l = 1, nlay
@@ -335,19 +335,19 @@ contains
     !           gast_o(m) = gast_o(m) + area_o(no)*frac_o(no)*re**2
     !        end do
     !     end do
-    
+
     !     ! Diagnostic output
-    
+
     !     write (ndiag,*)
     !     write (ndiag,'(1x,70a1)') ('=',l=1,70)
     !     write (ndiag,*) 'Soil Texture Output'
     !     write (ndiag,'(1x,70a1)') ('=',l=1,70)
     !     write (ndiag,*)
-    
+
     !     write (ndiag,*) 'The following table of soil texture classes is for comparison only.'
     !     write (ndiag,*) 'The actual data is continuous %sand, %silt and %clay not textural classes'
     !     write (ndiag,*)
-    
+
     !     write (ndiag,*)
     !     write (ndiag,'(1x,70a1)') ('.',l=1,70)
     !     write (ndiag,1001)
@@ -355,11 +355,11 @@ contains
     !              1x,33x,'     10**6 km**2','      10**6 km**2')
     !     write (ndiag,'(1x,70a1)') ('.',l=1,70)
     !     write (ndiag,*)
-    
+
     !     do l = 0, nlsm
     !        write (ndiag,'(1x,a38,f16.3,f17.3)') soil(l),gast_i(l)*1.e-6,gast_o(l)*1.e-6
     !     end do
-    
+
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
@@ -388,6 +388,8 @@ contains
     integer            :: ni, no, n
     real(ESMF_KIND_R4) :: wts_o(0:mapunit_value_max)
     integer            :: maxindex(1)
+    real(ESMF_KIND_R4) :: maxvalue
+    character(len=*), parameter :: subname = 'mksoiltex'
     !---------------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -405,10 +407,21 @@ contains
                 enddo
              end if
           end do
-          
+
           ! Determine the most dominant index of wts_o
-          maxindex = maxloc(wts_o(:)) 
-          dynamicMaskList(no)%dstElement = real(maxindex(1)-1, kind=r4)
+          maxvalue = -999._r4
+          maxindex = -999
+          do n = 0,mapunit_value_max
+             if (wts_o(n) > maxvalue) then
+                maxindex(1) = n
+                maxvalue = wts_o(n)
+             end if
+          end do
+          if (maxindex(1) > mapunit_value_max) then
+             write(6,*)'mapunit_o is out of bounds ',maxindex(1)
+             call shr_sys_abort(subname//" mapunit_o is out of bounds")
+          end if
+          dynamicMaskList(no)%dstElement = real(maxindex(1), kind=r4)
        end do
     end if
 
