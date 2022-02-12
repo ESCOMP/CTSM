@@ -2344,7 +2344,7 @@ contains
       else
          next_rx_sdate(p) = -1
       endif
-      crop_inst%sdates_thisyr(p,s) = jday
+      crop_inst%sdates_thisyr(p,s) = real(jday, r8)
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
