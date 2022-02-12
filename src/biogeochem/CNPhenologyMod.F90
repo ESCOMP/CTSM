@@ -2377,6 +2377,11 @@ contains
             write(iulog,*) 'If using prescribed sowing dates and not generate_crop_gdds, you must provide cultivar GDD targets >= 0.0.'
             call endrun(msg=errMsg(sourcefile, __LINE__))
          endif
+
+         ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
+         ! Just manually set a minimum of 1.0
+         gdd_target = max(gdd_target, 1._r8)
+
          gddmaturity(p) = gdd_target
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
          gddmaturity(p) = hybgdd(ivt(p))
