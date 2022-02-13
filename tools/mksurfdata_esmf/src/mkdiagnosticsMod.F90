@@ -215,7 +215,7 @@ contains
 2002   format (1x,'                 ', a24, a24)
        write (ndiag,'(1x,70a1)') ('.',k=1,70)
        write (ndiag,*)
-       write (ndiag,2003) name,          gdata_i, gdata_o
+       write (ndiag,2003) name, gdata_i, gdata_o
 2003   format (1x,a12,           f22.3,f17.3)
     end if
 
@@ -269,7 +269,6 @@ contains
 
     ! Diagnostic output
     if (root_task) then
-       write (ndiag,*)
        write (ndiag,*)
        write (ndiag,'(1x,70a1)') ('.',k=1,70)
        write (ndiag,2001)

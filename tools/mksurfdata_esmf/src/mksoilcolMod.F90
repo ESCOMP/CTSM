@@ -17,9 +17,7 @@ module mksoilcolMod
 #include <mpif.h>
 
   public  :: mksoilcol      ! Set soil colors
-
-  private :: mkrank
-  private :: check_global_areas
+  private :: check_global_sums
 
   integer :: num_soilcolors
   type(ESMF_DynamicMask) :: dynamicMask
@@ -48,14 +46,11 @@ contains
     type(ESMF_Field)       :: field_o
     type(ESMF_Field)       :: field_dstfrac
     type(file_desc_t)      :: pioid
-    integer                :: ni,no
+    integer                :: ni,no, k
     integer                :: ns_i, ns_o
-    integer                :: n,l,k
     integer , allocatable  :: mask_i(:)
     real(r4), allocatable  :: rmask_i(:)
     real(r4), allocatable  :: frac_o(:)
-    real(r8), allocatable  :: area_i(:)
-    real(r8), allocatable  :: area_o(:)
     real(r4), allocatable  :: soil_color_i(:)
     real(r4), pointer      :: dataptr(:)
     real(r8), pointer      :: dataptr_r8(:)
@@ -81,7 +76,12 @@ contains
     end if
 
     if (root_task) then
-       write (ndiag,'(a)') 'Attempting to make soil color classes .....'
+       write(ndiag,*)
+       write(ndiag,'(1x,80a1)') ('=',k=1,80)
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to make soil color classes .....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
 
     ! Open soil color data file
@@ -195,14 +195,9 @@ contains
     end do
 
     ! Compare global area of each soil color on input and output grids
-    allocate(area_i(ns_i))
-    allocate(area_o(ns_o))
-    call get_meshareas(mesh_i, area_i, rc)
+    call check_global_sums(mesh_i, mesh_o, mask_i, frac_o, &
+         soil_color_i, soil_color_o, 'soil color type', nsoilcol, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call get_meshareas(mesh_o, area_o, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call check_global_areas('soil color type', ns_i, ns_o, nsoilcol, &
-         soil_color_i, soil_color_o, area_i, area_o, mask_i, frac_o)
 
     ! Clean up memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
@@ -215,6 +210,7 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_FieldDestroy(field_dstfrac, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made soil color classes'
@@ -223,108 +219,8 @@ contains
 
   end subroutine mksoilcol
 
-  !===============================================================
-  subroutine mkrank (n, a, iv)
-    !
-    ! Return indices of largest [num] values in array [a].
-    !
-    ! input/output variables
-    integer , intent(in) :: n      !array length
-    real(r4), intent(in) :: a(0:n) !array to be ranked
-    integer , intent(out):: iv(1)  !index to [num] largest values in array [a]
-
-    ! local variables:
-    real(r4) :: a_max  !maximum value in array
-    real(r4) :: delmax !tolerance for finding if larger value
-    integer  :: i      !array index
-    integer  :: m      !do loop index
-    integer  :: k      !do loop index
-    integer  :: miss   !missing data value
-    !-----------------------------------------------------------------------
-
-    ! Find index of largest non-zero number
-    delmax = 1.e-06
-    miss = 9999
-    iv(1) = miss
-
-    a_max = -9999.
-    do i = 0, n
-       if (a(i)>0. .and. (a(i)-a_max)>delmax) then
-          a_max = a(i)
-          iv(1)  = i
-       end if
-    end do
-    ! iv(1) = miss indicates no values > 0. this is an error
-    if (iv(1) == miss) then
-       write (6,*) 'MKRANK error: iv(1) = missing'
-       call shr_sys_abort()
-    end if
-  end subroutine mkrank
-
-  !===============================================================
-  subroutine check_global_areas(name, ns_i, ns_o, nsoilcol, &
-       soil_color_i, soil_color_o, area_i, area_o, mask_i, frac_o)
-
-    use mkvarctl, only : mpicom, MPI_INTEGER, MPI_MAX
-
-    ! Compare global areas on input and output grids
-
-    ! input/otuput variables
-    character(len=*) , intent(in) :: name
-    integer          , intent(in) :: ns_i
-    integer          , intent(in) :: ns_o
-    integer          , intent(in) :: nsoilcol
-    real(r4)         , intent(in) :: soil_color_i(ns_i)
-    integer          , intent(in) :: soil_color_o(ns_o)
-    real(r8)         , intent(in) :: area_i(ns_i)
-    real(r8)         , intent(in) :: area_o(ns_o)
-    integer          , intent(in) :: mask_i(ns_i)
-    real(r4)         , intent(in) :: frac_o(ns_o)
-
-    ! local variables
-    integer  :: ni, no, l, k
-    integer  :: ier
-    real(r4) :: local_i(0:nsoilcol)  ! local global area, by surface type
-    real(r4) :: local_o(0:nsoilcol)  ! local global area, by surface type
-    real(r4) :: global_i(0:nsoilcol)   ! input grid: global area pfts
-    real(r4) :: global_o(0:nsoilcol)   ! output grid: global area pfts
-    !-----------------------------------------------------------------------
-
-    ! Input grid global area
-    local_i(:) = 0
-    do ni = 1,ns_i
-       k = int(soil_color_i(ni))
-       local_i(k) = local_i(k) + area_i(ni) * mask_i(ni)
-    end do
-    call mpi_reduce(local_i, global_i, nsoilcol+1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
-
-    ! Output grid global area
-    local_o(:) = 0.
-    do no = 1,ns_o
-       k = soil_color_o(no)
-       local_o(k) = local_o(k) + area_o(no) * frac_o(no)
-    end do
-    call mpi_reduce(local_o, global_o, nsoilcol+1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
-
-    ! Comparison
-    if (root_task) then
-       write (ndiag,*)
-       write (ndiag,'(1x,70a1)') ('.',k=1,70)
-       write (ndiag,101)
-101    format (1x,'soil color type',5x,' input grid area output grid area',/ &
-               1x,20x,'     10**6 km**2','      10**6 km**2')
-       write (ndiag,'(1x,70a1)') ('.',k=1,70)
-       write (ndiag,*)
-       do k = 0, nsoilcol
-          write (ndiag,'(1x,a,i3,d16.3,d17.3)') 'class ',k, global_i(k)*1.e-6, global_o(k)*1.e-6
-       end do
-    end if
-  end subroutine check_global_areas
-
   !================================================================================================
   subroutine get_dominant_soilcol(dynamicMaskList, dynamicSrcMaskValue, dynamicDstMaskValue, rc)
-
-    use ESMF, only : ESMF_RC_ARG_BAD
 
     ! input/output arguments
     type(ESMF_DynamicMaskElementR4R8R4) , pointer              :: dynamicMaskList(:)
@@ -342,14 +238,8 @@ contains
 
     rc = ESMF_SUCCESS
 
-    ! Below - ONLY if you do NOT have the source masked out then do
-    ! the regridding (which is done explicitly here)
-    ! Below i are the destination points and j are the source points
-
     if (associated(dynamicMaskList)) then
-
        do no = 1, size(dynamicMaskList)
-
           wts_o(:) = 0.d0
           do ni = 1, size(dynamicMaskList(no)%factor)
              if (dynamicSrcMaskValue /= dynamicMaskList(no)%srcElement(ni)) then
@@ -431,5 +321,85 @@ contains
       end subroutine mkrank
 
   end subroutine get_dominant_soilcol
+
+  !===============================================================
+  subroutine check_global_sums(mesh_i, mesh_o, mask_i, frac_o, &
+    soil_color_i, soil_color_o, name, nsoilcol, rc)
+
+    use mkvarctl, only : mpicom, MPI_INTEGER, MPI_MAX
+
+    ! Compare global sums on input and output grids
+
+    ! input/otuput variables
+    type(ESMF_Mesh)  , intent(in)  :: mesh_i
+    type(ESMF_Mesh)  , intent(in)  :: mesh_o
+    integer          , intent(in)  :: mask_i(:)
+    real(r4)         , intent(in)  :: frac_o(:)
+    real(r4)         , intent(in)  :: soil_color_i(:)
+    integer          , intent(in)  :: soil_color_o(:)
+    character(len=*) , intent(in)  :: name
+    integer          , intent(in)  :: nsoilcol
+    integer          , intent(out) :: rc
+
+    ! local variables
+    integer               :: ns_i
+    integer               :: ns_o
+    integer               :: ni, no, l, k
+    integer               :: ier
+    real(r8), allocatable :: area_i(:)
+    real(r8), allocatable :: area_o(:)
+    real(r4)              :: local_i(0:nsoilcol)  ! local global area, by surface type
+    real(r4)              :: local_o(0:nsoilcol)  ! local global area, by surface type
+    real(r4)              :: global_i(0:nsoilcol)   ! input grid: global area pfts
+    real(r4)              :: global_o(0:nsoilcol)   ! output grid: global area pfts
+    !-----------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    ! Determine ns_i and ns_o
+    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Get areas from mesh
+    allocate(area_i(ns_i))
+    allocate(area_o(ns_o))
+    call get_meshareas(mesh_i, area_i, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call get_meshareas(mesh_o, area_o, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Input grid global area
+    local_i(:) = 0.
+    do ni = 1,ns_i
+       k = int(soil_color_i(ni))
+       ! TODO: is this change okay?
+       ! local_i(k) = local_i(k) + area_i(ni) * mask_i(ni)
+       local_i(k) = local_i(k) + area_i(ni)
+    end do
+    call mpi_reduce(local_i, global_i, nsoilcol+1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
+
+    ! Output grid global area
+    local_o(:) = 0.
+    do no = 1,ns_o
+       k = int(soil_color_o(no))
+       ! TODO: is this change okay?
+       ! local_o(k) = local_o(k) + area_o(no) * frac_o(no)
+       local_o(k) = local_o(k) + area_o(no) 
+    end do
+    call mpi_reduce(local_o, global_o, nsoilcol+1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
+
+    ! Comparison
+    if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(a)')'soil color type    input grid area   output grid area'
+       write(ndiag,'(a)')'                   10**6 km**2       10**6 km**2'
+       write(ndiag,'(1x,60a1)') ('.',k=1,60)
+       do k = 0, nsoilcol
+          write (ndiag,'(a,i3,d16.3,d17.3)') 'class ',k, global_i(k)*1.e-6, global_o(k)*1.e-6
+       end do
+    end if
+  end subroutine check_global_sums
 
 end module mksoilcolMod

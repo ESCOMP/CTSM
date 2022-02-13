@@ -48,7 +48,7 @@ contains
     type(ESMF_RouteHandle) :: routehandle ! nearest neighbor routehandle
     type(ESMF_Mesh)        :: mesh_i
     type(file_desc_t)      :: pioid
-    integer                :: ni,no,l 
+    integer                :: ni,no,l,k
     integer                :: ns_i, ns_o
     integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
@@ -66,6 +66,8 @@ contains
     rc = ESMF_SUCCESS
 
     if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(1x,80a1)') ('=',k=1,80)
        write(ndiag,*)
        write(ndiag,'(a)') 'Attempting to make glacier region .....'
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)

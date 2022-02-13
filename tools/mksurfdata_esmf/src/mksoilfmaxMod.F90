@@ -64,7 +64,12 @@ contains
     rc = ESMF_SUCCESS
 
     if (root_task) then
-       write (ndiag,'(a)') 'Attempting to make %fmax .....'
+       write(ndiag,*)
+       write(ndiag,'(1x,80a1)') ('=',k=1,80)
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to make %fmax .....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
 
     ! Error check soil_fmax if it is set
@@ -145,8 +150,7 @@ contains
     do no = 1, ns_o
        if ((fmax_o(no)) > 1.000001_r8) then
           write (6,*) 'MKFMAX error: fmax = ',fmax_o(no),' greater than 1.000001 for no = ',no
-          ! TODO: why are we hitting this error
-          ! call shr_sys_abort()
+          call shr_sys_abort()
        end if
     enddo
 

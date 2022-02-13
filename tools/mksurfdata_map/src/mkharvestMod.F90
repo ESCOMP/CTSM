@@ -68,27 +68,28 @@ module mkharvestMod
 
   integer, parameter :: harlen  = 25  ! length of strings for harvest fieldnames
   character(len=harlen), parameter  :: harvest_fieldnames(numharv) = (/ &
-                                                        'HARVEST_VH1            ',  &
-                                                        'HARVEST_VH2            ',  &
-                                                        'HARVEST_SH1            ',  &
-                                                        'HARVEST_SH2            ',  &
-                                                        'HARVEST_SH3            ',  &
-                                                        'GRAZING                ',  &
-                                                        'FERTNITRO_CFT          ',  &
-                                                        'UNREPRESENTED_PFT_LULCC',  &
-                                                        'UNREPRESENTED_CFT_LULCC'   &
-                                                      /)
+       'HARVEST_VH1            ',  &
+       'HARVEST_VH2            ',  &
+       'HARVEST_SH1            ',  &
+       'HARVEST_SH2            ',  &
+       'HARVEST_SH3            ',  &
+       'GRAZING                ',  &
+       'FERTNITRO_CFT          ',  &
+       'UNREPRESENTED_PFT_LULCC',  &
+       'UNREPRESENTED_CFT_LULCC'   &
+       /)
   character(len=harlen), parameter  :: harvest_const_fieldnames(numharv) = (/ &
-                                                        'CONST_HARVEST_VH1      ',  &
-                                                        'CONST_HARVEST_VH2      ',  &
-                                                        'CONST_HARVEST_SH1      ',  &
-                                                        'CONST_HARVEST_SH2      ',  &
-                                                        'CONST_HARVEST_SH3      ',  &
-                                                        'CONST_GRAZING          ',  &
-                                                        'CONST_FERTNITRO_CFT    ',  &
-                                                        'UNREPRESENTED_PFT_LULCC',  &
-                                                        'UNREPRESENTED_CFT_LULCC'   &
-                                                      /)
+       'CONST_HARVEST_VH1      ',  &
+       'CONST_HARVEST_VH2      ',  &
+       'CONST_HARVEST_SH1      ',  &
+       'CONST_HARVEST_SH2      ',  &
+       'CONST_HARVEST_SH3      ',  &
+       'CONST_GRAZING          ',  &
+       'CONST_FERTNITRO_CFT    ',  &
+       'UNREPRESENTED_PFT_LULCC',  &
+       'UNREPRESENTED_CFT_LULCC'   &
+       /)
+
   character(len=CL), parameter :: string_undef = 'UNSET'
   real(r8),          parameter :: real_undef   = -999.99
   character(len=CL), save :: harvest_longnames(numharv) = string_undef

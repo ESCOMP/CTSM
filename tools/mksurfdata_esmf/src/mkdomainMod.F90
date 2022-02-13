@@ -33,6 +33,7 @@ contains
     integer               :: no
     integer               :: ns_o
     integer               :: spatialDim
+    integer               :: k
     real(r8), allocatable :: ownedElemCoords(:)
     character(len=*), parameter :: subname = 'mkdomain'
     !-----------------------------------------------------------------------
@@ -40,6 +41,8 @@ contains
     rc = ESMF_SUCCESS
 
     if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(1x,70a1)') ('=',k=1,80)
        write(ndiag,*)
        write(ndiag,'(a)') 'Attempting to create model lats and lons from model mesh .....'
     end if

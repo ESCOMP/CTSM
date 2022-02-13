@@ -30,8 +30,7 @@ module mkagfirepkmonthMod
 ! !PRIVATE DATA MEMBERS:
 !
   integer , parameter :: min_valid_value = 1
-  integer , parameter :: max_valid_value = 12
-  integer , parameter :: unsetmon        = 13   ! flag to indicate agricultural fire peak month NOT set
+  integer , parameter :: max_valid_value = 13
 !
 ! !PRIVATE DATA MEMBERS:
 !

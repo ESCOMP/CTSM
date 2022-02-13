@@ -61,7 +61,7 @@ contains
     integer                :: dimid
     integer                :: ni,no
     integer                :: ns_i, ns_o
-    integer                :: n,l,m
+    integer                :: k,l,m,n
     character(len=38)      :: typ                     ! soil texture based on ...
     integer                :: nlay                    ! number of soil layers
     integer                :: mapunittemp             ! temporary igbp soil mapunit
@@ -88,7 +88,12 @@ contains
     !-----------------------------------------------------------------------
 
     if (root_task) then
-       write (ndiag,'(a)') 'Attempting to make %sand and %clay .....'
+       write(ndiag,*)
+       write(ndiag,'(1x,80a1)') ('=',k=1,80)
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to make %sand and %clay .....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
 
     if ( soil_clay_override /= unsetsoil )then
@@ -170,12 +175,10 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-    ! Scale the input soil color by the input mask
-    ! do ni = 1,ns_i
-    !    if (mask_i(ni) == 0) then
-    !       mapunit_i(ni) = 0._r4
-    !    end if
-    ! end do
+    ! Set mapunit values to zero where the input mask is 0
+    do ni = 1,ns_i
+       mapunit_i(ni) = mapunit_i(ni) * rmask_i(ni)
+    end do
 
     ! Determine mapunit_value_max (set it as a module variable so that it can be
     ! accessible to gen_dominant_mapunit)
@@ -213,7 +216,7 @@ contains
 
     ! Determine dominant soil color in the field regrid call below
     call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
-    dataptr(:) = mapunit_i(:)
+    dataptr(:) = real(mapunit_i(:), kind=r4)
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     dataptr(:) = 0._r4

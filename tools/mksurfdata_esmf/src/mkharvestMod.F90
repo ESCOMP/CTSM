@@ -116,6 +116,8 @@ contains
 
     if (root_task) then
        write(ndiag,*)
+       write(ndiag,'(1x,80a1)') ('=',k=1,80)
+       write(ndiag,*)
        write(ndiag,'(a)') 'Attempting to make harvest fields .....'
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
        write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
@@ -126,9 +128,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Normally read in the harvesting file, and then regrid to output grid
-    if (root_task) write(ndiag,'(a)') ' opening input data file'   
     rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
-    if (root_task) write(ndiag,'(a)') ' finished opening input data file'   
 
     ! If all veg then write out output data with values set to harvest_initval and return
     if (all_veg) then
@@ -160,10 +160,8 @@ contains
 
     ! Read in input mesh
     if (.not. ESMF_MeshIsCreated(mesh_i)) then
-       if (root_task) write(ndiag,'(a)') ' creating input mesh'
        mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       if (root_task) write(ndiag,'(a)') ' finished creating input mesh'
     end if
 
     ! Determine ns_i
@@ -197,11 +195,9 @@ contains
        ! Create a route handle between the input and output mesh
        ! NOTE: this must be done after mask_i is set in mesh_i
        if (.not. ESMF_RouteHandleIsCreated(routehandle_r8)) then
-          if (root_task) write(ndiag,'(a)') ' creating route handle '
           allocate(frac_o(ns_o))
           call create_routehandle_r8(mesh_i, mesh_o, routehandle_r8, frac_o=frac_o, rc=rc)
           call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-          if (root_task) write(ndiag,'(a)') ' finished creating route handle '
        end if
 
        ! Read in input 1d fields if they exists and map to output grid
@@ -328,7 +324,6 @@ contains
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made harvest and grazing'
-       write (ndiag,*)
     end if
 
   end subroutine mkharvest

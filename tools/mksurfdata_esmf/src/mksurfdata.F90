@@ -149,9 +149,11 @@ program mksurfdata
   type(var_desc_t)              :: pio_varid
   type(io_desc_t)               :: pio_iodesc
 
-  ! data arrays
+  ! model grid
   real(r8), allocatable             :: lon(:)
   real(r8), allocatable             :: lat(:)
+
+  ! pct vegetation data
   real(r8), allocatable             :: landfrac_pft(:)         ! PFT data: % land per gridcell
   real(r8), allocatable             :: pctlnd_pft(:)           ! PFT data: % of gridcell for PFTs
   real(r8), allocatable             :: pctlnd_pft_dyn(:)       ! PFT data: % of gridcell for dyn landuse PFTs
@@ -160,48 +162,78 @@ program mksurfdata
   type(pct_pft_type), allocatable   :: pctnatpft_max(:)        ! % of grid cell maximum PFTs of the time series
   type(pct_pft_type), allocatable   :: pctcft(:)               ! % of grid cell that is crop, and breakdown into CFTs
   type(pct_pft_type), allocatable   :: pctcft_max(:)           ! % of grid cell maximum CFTs of the time series
+
+  ! harvest initial value
   real(r8)                          :: harvest_initval         ! initial value for harvest variables
+
+  ! soil fracation saturated area data
+  real(r8), allocatable             :: fmaxsoil(:)             ! soil_fractional saturated area
+
+  ! oranic matter density data
+  real(r8), allocatable             :: organic(:,:)            ! organic matter density (kg/m3)
+
+  ! gdp data
+  real(r8), allocatable             :: gdp(:)                  ! GDP (x1000 1995 US$/capita)
+
+  ! peatland data
+  real(r8), allocatable             :: fpeat(:)                ! peatland fraction of gridcell
+
+  ! topography statistics data
+  real(r4), allocatable             :: topo_stddev(:)          ! standard deviation of elevation (m)
+  real(r4), allocatable             :: slope(:)                ! topographic slope (degrees)
+
+  ! agricultural peak month data
+  integer , allocatable             :: agfirepkmon(:)          ! agricultural fire peak month
+
+  ! inland water data
+  real(r8), allocatable             :: pctlak(:)               ! percent of grid cell that is lake
+  real(r8), allocatable             :: pctwet(:)               ! percent of grid cell that is wetland
+  real(r8), allocatable             :: lakedepth(:)            ! lake depth (m)
+
+  ! glacier data
+  integer,  allocatable             :: glacier_region(:)       ! glacier region ID
   real(r8), allocatable             :: pctgla(:)               ! percent of grid cell that is glacier
   real(r8), allocatable             :: pctglc_gic(:)           ! percent of grid cell that is gic (% of glc landunit)
   real(r8), allocatable             :: pctglc_icesheet(:)      ! percent of grid cell that is ice sheet (% of glc landunit)
   real(r8), allocatable             :: pctglcmec(:,:)          ! glacier_mec pct coverage in each class (% of landunit)
-  real(r8), allocatable             :: topoglcmec(:,:)         ! glacier_mec sfc elevation in each gridcell and class
   real(r8), allocatable             :: pctglcmec_gic(:,:)      ! GIC pct coverage in each class (% of landunit)
   real(r8), allocatable             :: pctglcmec_icesheet(:,:) ! icesheet pct coverage in each class (% of landunit)
   real(r8), allocatable             :: elevclass(:)            ! glacier_mec elevation classes
-  integer,  allocatable             :: glacier_region(:)       ! glacier region ID
-  real(r8), allocatable             :: pctlak(:)               ! percent of grid cell that is lake
-  real(r8), allocatable             :: pctwet(:)               ! percent of grid cell that is wetland
+  real(r8), allocatable             :: topoglcmec(:,:)         ! glacier_mec sfc elevation in each gridcell and class
+
+  ! urban data
+  integer , allocatable             :: urban_region(:)         ! urban region ID
   real(r8), allocatable             :: pcturb(:)               ! percent of grid cell that is urbanized (total across all urban classes)
   real(r8), allocatable             :: urban_classes(:,:)      ! percent cover of each urban class, as % of total urban area
   real(r8), allocatable             :: urban_classes_g(:,:)    ! percent cover of each urban class, as % of grid cell
-  integer , allocatable             :: urban_region(:)         ! urban region ID
   real(r8), allocatable             :: elev(:)                 ! glc elevation (m)
+
+  ! soil color data
   integer , allocatable             :: soil_color(:)           ! soil color
-  real(r8), allocatable             :: fmaxsoil(:)             ! soil_fractional saturated area
+
+  ! soil texture data
   real(r8), allocatable             :: pctsand(:,:)            ! soil texture: percent sand
   real(r8), allocatable             :: pctclay(:,:)            ! soil texture: percent clay
   integer , allocatable             :: mapunits(:)             ! input grid: igbp soil mapunits
+
+  ! soil depth data
+  real(r8), allocatable             :: soildepth(:)            ! soil depth (m)
+
+  ! VOC data
   real(r8), allocatable             :: ef1_btr(:)              ! Isoprene emission factor for broadleaf
   real(r8), allocatable             :: ef1_fet(:)              ! Isoprene emission factor for fine/everg
   real(r8), allocatable             :: ef1_fdt(:)              ! Isoprene emission factor for fine/dec
   real(r8), allocatable             :: ef1_shr(:)              ! Isoprene emission factor for shrubs
   real(r8), allocatable             :: ef1_grs(:)              ! Isoprene emission factor for grasses
   real(r8), allocatable             :: ef1_crp(:)              ! Isoprene emission factor for crops
-  real(r8), allocatable             :: organic(:,:)            ! organic matter density (kg/m3)
-  real(r8), allocatable             :: gdp(:)                  ! GDP (x1000 1995 US$/capita)
-  real(r8), allocatable             :: fpeat(:)                ! peatland fraction of gridcell
-  real(r8), allocatable             :: soildepth(:)            ! soil depth (m)
-  integer , allocatable             :: agfirepkmon(:)          ! agricultural fire peak month
-  real(r4), allocatable             :: topo_stddev(:)          ! standard deviation of elevation (m)
-  real(r4), allocatable             :: slope(:)                ! topographic slope (degrees)
+
+  ! VIC data
   real(r8), allocatable             :: vic_binfl(:)            ! VIC b
   real(r8), allocatable             :: vic_ws(:)               ! VIC Ws parameter (unitless)
   real(r8), allocatable             :: vic_dsmax(:)            ! VIC Dsmax parameter (mm/day)
   real(r8), allocatable             :: vic_ds(:)               ! VIC Ds parameter (unitless)
-  real(r8), allocatable             :: lakedepth(:)            ! lake depth (m)
-  integer , allocatable             :: harvind1D(:)            ! Indices of 1D harvest fields
-  integer , allocatable             :: harvind2D(:)            ! Indices of 2D harvest fields
+
+  ! logicals
   logical                           :: zero_out_lake           ! if should zero glacier out
   logical                           :: zero_out_wetland        ! if should zero glacier out
   logical                           :: zero_out
@@ -402,7 +434,7 @@ program mksurfdata
   end if
 
   ! -----------------------------------
-  ! Set landfrac_pft and pftdata_mask
+  ! Make landfrac_pft and pftdata_mask
   ! -----------------------------------
   allocate ( pftdata_mask(lsize_o))  ; pftdata_mask(:) = -999
   allocate ( landfrac_pft(lsize_o))  ; landfrac_pft(:) = spval
@@ -429,7 +461,7 @@ program mksurfdata
   end if
 
   ! -----------------------------------
-  ! Create constant harvesting data at model resolution
+  ! Make constant harvesting data at model resolution
   ! -----------------------------------
   ! Note that this call must come after call to mkpftInit - since num_cft is set there
   call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, &
@@ -506,8 +538,13 @@ program mksurfdata
   end do
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
+     call mkfile_output(pioid,  mesh_model,  'mapunits', mapunits,  rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for mapunits')
+
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
      call mkfile_output(pioid,  mesh_model,  'PCT_SAND', pctsand, lev1name='nlevsoi', rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent clay"
      call mkfile_output(pioid,  mesh_model,  'PCT_CLAY', pctclay, lev1name='nlevsoi', rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
