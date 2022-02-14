@@ -61,8 +61,8 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: hrv_livecrootn_to_litter_patch            (:)     ! patch live coarse root N harvest mortality (gN/m2/s)
      real(r8), pointer :: hrv_deadcrootn_to_litter_patch            (:)     ! patch dead coarse root N harvest mortality (gN/m2/s)
      real(r8), pointer :: hrv_retransn_to_litter_patch              (:)     ! patch retranslocated N pool harvest mortality (gN/m2/s)
-     real(r8), pointer :: reproductive_grainn_to_cropprodn_patch                 (:)     ! patch grain N to crop product pool (gN/m2/s)
-     real(r8), pointer :: reproductive_grainn_to_cropprodn_col                   (:)     ! col grain N to crop product pool (gN/m2/s)
+     real(r8), pointer :: crop_harvestn_to_cropprodn_patch          (:)     ! patch crop harvest N to crop product pool (gN/m2/s)
+     real(r8), pointer :: crop_harvestn_to_cropprodn_col            (:)     ! col crop harvest N to crop product pool (gN/m2/s)
      real(r8), pointer :: m_n_to_litr_fire_col                      (:,:,:) ! col N from leaf, froot, xfer and storage N to litter N by fire (gN/m3/s)
      real(r8), pointer :: harvest_n_to_litr_n_col                   (:,:,:) ! col N fluxes associated with harvest to litter pools (gN/m3/s)
      real(r8), pointer :: harvest_n_to_cwdn_col                     (:,:)   ! col N fluxes associated with harvest to CWD pool (gN/m3/s)
@@ -414,8 +414,8 @@ contains
     allocate(this%fert_counter_patch                        (begp:endp)) ; this%fert_counter_patch                        (:) = nan
     allocate(this%soyfixn_patch                             (begp:endp)) ; this%soyfixn_patch                             (:) = nan
 
-    allocate(this%reproductive_grainn_to_cropprodn_patch                 (begp:endp)) ; this%reproductive_grainn_to_cropprodn_patch                 (:) = nan
-    allocate(this%reproductive_grainn_to_cropprodn_col                   (begc:endc)) ; this%reproductive_grainn_to_cropprodn_col                   (:) = nan
+    allocate(this%crop_harvestn_to_cropprodn_patch                 (begp:endp)) ; this%crop_harvestn_to_cropprodn_patch                 (:) = nan
+    allocate(this%crop_harvestn_to_cropprodn_col                   (begc:endc)) ; this%crop_harvestn_to_cropprodn_col                   (:) = nan
 
     allocate(this%fire_nloss_col                            (begc:endc)) ; this%fire_nloss_col                            (:) = nan
     allocate(this%fire_nloss_p2c_col                        (begc:endc)) ; this%fire_nloss_p2c_col                        (:) = nan
@@ -1644,7 +1644,7 @@ contains
        this%fire_nloss_patch(i)                          = value_patch
 
        this%crop_seedn_to_leaf_patch(i)                  = value_patch
-       this%reproductive_grainn_to_cropprodn_patch(i)                 = value_patch
+       this%crop_harvestn_to_cropprodn_patch(i)                 = value_patch
     end do
 
     if ( use_crop )then
@@ -1684,7 +1684,7 @@ contains
     do fi = 1,num_column
        i = filter_column(fi)
 
-       this%reproductive_grainn_to_cropprodn_col(i)       = value_column
+       this%crop_harvestn_to_cropprodn_col(i)       = value_column
        this%fire_nloss_col(i)                = value_column
 
        ! Zero p2c column fluxes

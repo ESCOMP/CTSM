@@ -3038,29 +3038,33 @@ contains
     if (use_crop) then
        do fp = 1, num_soilp
           p = filter_soilp(fp)
-          cnveg_carbonflux_inst%reproductive_grainc_to_cropprodc_patch(p) = cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p) + &
+          cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
+               cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p) + &
                cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p)
-          cnveg_nitrogenflux_inst%reproductive_grainn_to_cropprodn_patch(p) = cnveg_nitrogenflux_inst%leafn_to_biofueln_patch(p) + &
+          cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
+               cnveg_nitrogenflux_inst%leafn_to_biofueln_patch(p) + &
                cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch(p)
        end do
 
        if (use_grainproduct) then
           do fp = 1, num_soilp
              p = filter_soilp(fp)
-             cnveg_carbonflux_inst%reproductive_grainc_to_cropprodc_patch(p) = cnveg_carbonflux_inst%reproductive_grainc_to_cropprodc_patch(p) + &
+             cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
+                  cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) + &
                   cnveg_carbonflux_inst%reproductive_grainc_to_food_patch(p)
-             cnveg_nitrogenflux_inst%reproductive_grainn_to_cropprodn_patch(p) = cnveg_nitrogenflux_inst%reproductive_grainn_to_cropprodn_patch(p) + &
+             cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
+                  cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) + &
                   cnveg_nitrogenflux_inst%reproductive_grainn_to_food_patch(p)
           end do
        end if
        
        call p2c (bounds, num_soilc, filter_soilc, &
-            cnveg_carbonflux_inst%reproductive_grainc_to_cropprodc_patch(bounds%begp:bounds%endp), &
-            cnveg_carbonflux_inst%reproductive_grainc_to_cropprodc_col(bounds%begc:bounds%endc))
+            cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(bounds%begp:bounds%endp), &
+            cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_col(bounds%begc:bounds%endc))
 
        call p2c (bounds, num_soilc, filter_soilc, &
-            cnveg_nitrogenflux_inst%reproductive_grainn_to_cropprodn_patch(bounds%begp:bounds%endp), &
-            cnveg_nitrogenflux_inst%reproductive_grainn_to_cropprodn_col(bounds%begc:bounds%endc))
+            cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(bounds%begp:bounds%endp), &
+            cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_col(bounds%begc:bounds%endc))
 
     end if
 

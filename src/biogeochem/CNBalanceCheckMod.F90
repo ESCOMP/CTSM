@@ -231,7 +231,7 @@ contains
          col_begcb               =>    this%begcb_col                                   , & ! Input:  [real(r8) (:) ]  (gC/m2) carbon mass, beginning of time step 
          col_endcb               =>    this%endcb_col                                   , & ! Output: [real(r8) (:) ]  (gC/m2) carbon mass, end of time step 
          wood_harvestc           =>    cnveg_carbonflux_inst%wood_harvestc_col          , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
-         reproductive_grainc_to_cropprodc     =>    cnveg_carbonflux_inst%reproductive_grainc_to_cropprodc_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) grain C to 1-year crop product pool
+         crop_harvestc_to_cropprodc     =>    cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) crop harvest C to 1-year crop product pool
          gpp                     =>    cnveg_carbonflux_inst%gpp_col                    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) gross primary production
          er                      =>    cnveg_carbonflux_inst%er_col                     , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
          col_fire_closs          =>    cnveg_carbonflux_inst%fire_closs_col             , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total column-level fire C loss
@@ -267,7 +267,7 @@ contains
          ! after the dwt term has already been taken out.)
          col_coutputs = col_coutputs + &
               wood_harvestc(c) + &
-              reproductive_grainc_to_cropprodc(c)
+              crop_harvestc_to_cropprodc(c)
 
          ! subtract leaching flux
          col_coutputs = col_coutputs - som_c_leached(c)
@@ -304,7 +304,7 @@ contains
          write(iulog,*)'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
          write(iulog,*)'col_xsmrpool_to_atm      = ',col_xsmrpool_to_atm(c)*dt
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
-         write(iulog,*)'reproductive_grainc_to_cropprodc      = ',reproductive_grainc_to_cropprodc(c)*dt
+         write(iulog,*)'crop_harvestc_to_cropprodc = ', crop_harvestc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
@@ -454,7 +454,7 @@ contains
 
          col_fire_nloss      => cnveg_nitrogenflux_inst%fire_nloss_col                   , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total column-level fire N loss 
          wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
-         reproductive_grainn_to_cropprodn => cnveg_nitrogenflux_inst%reproductive_grainn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) grain N to 1-year crop product pool
+         crop_harvestn_to_cropprodn => cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) crop harvest N to 1-year crop product pool
 
          totcoln             => cnveg_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
          )
@@ -496,7 +496,7 @@ contains
          ! after the dwt term has already been taken out.)
          col_noutputs(c) = col_noutputs(c) + &
               wood_harvestn(c) + &
-              reproductive_grainn_to_cropprodn(c)
+              crop_harvestn_to_cropprodn(c)
 
          if (.not. use_nitrif_denitrif) then
             col_noutputs(c) = col_noutputs(c) + sminn_leached(c)
@@ -510,7 +510,7 @@ contains
 
          col_noutputs_partial(c) = col_noutputs(c) - &
                                    wood_harvestn(c) - &
-                                   reproductive_grainn_to_cropprodn(c)
+                                   crop_harvestn_to_cropprodn(c)
 
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &

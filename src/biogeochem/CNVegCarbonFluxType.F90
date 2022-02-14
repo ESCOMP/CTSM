@@ -242,8 +242,8 @@ module CNVegCarbonFluxType
      ! harvest
      real(r8), pointer :: harvest_c_to_litr_c_col                   (:,:,:) ! C fluxes associated with harvest to litter pools (gC/m3/s)
      real(r8), pointer :: harvest_c_to_cwdc_col                     (:,:)   ! C fluxes associated with harvest to CWD pool (gC/m3/s)
-     real(r8), pointer :: reproductive_grainc_to_cropprodc_patch                 (:)     ! grain C to crop product pool (gC/m2/s)
-     real(r8), pointer :: reproductive_grainc_to_cropprodc_col                   (:)     ! grain C to crop product pool (gC/m2/s)
+     real(r8), pointer :: crop_harvestc_to_cropprodc_patch          (:)     ! crop harvest C to crop product pool (gC/m2/s)
+     real(r8), pointer :: crop_harvestc_to_cropprodc_col            (:)     ! crop harvest C to crop product pool (gC/m2/s)
 
      ! fire fluxes
      real(r8), pointer :: m_decomp_cpools_to_fire_vr_col            (:,:,:) ! vertically-resolved decomposing C fire loss (gC/m3/s)
@@ -648,11 +648,11 @@ contains
     allocate(this%cwdc_loss_col                     (begc:endc))                  ; this%cwdc_loss_col             (:)  =nan
     allocate(this%litterc_loss_col                  (begc:endc))                  ; this%litterc_loss_col          (:)  =nan
 
-    allocate(this%reproductive_grainc_to_cropprodc_patch(begp:endp))
-    this%reproductive_grainc_to_cropprodc_patch(:) = nan
+    allocate(this%crop_harvestc_to_cropprodc_patch(begp:endp))
+    this%crop_harvestc_to_cropprodc_patch(:) = nan
 
-    allocate(this%reproductive_grainc_to_cropprodc_col(begc:endc))
-    this%reproductive_grainc_to_cropprodc_col(:) = nan
+    allocate(this%crop_harvestc_to_cropprodc_col(begc:endc))
+    this%crop_harvestc_to_cropprodc_col(:) = nan
 
     allocate(this%m_decomp_cpools_to_fire_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                
     this%m_decomp_cpools_to_fire_vr_col(:,:,:)= nan
@@ -3834,7 +3834,7 @@ contains
        this%woodc_loss_patch(i)                          = value_patch
 
        this%crop_seedc_to_leaf_patch(i)                  = value_patch
-       this%reproductive_grainc_to_cropprodc_patch(i)                 = value_patch
+       this%crop_harvestc_to_cropprodc_patch(i)                 = value_patch
     end do
 
     if ( use_crop )then
@@ -3893,7 +3893,7 @@ contains
     do fi = 1,num_column
        i = filter_column(fi)
 
-       this%reproductive_grainc_to_cropprodc_col(i)       = value_column
+       this%crop_harvestc_to_cropprodc_col(i)       = value_column
        this%cwdc_loss_col(i)                 = value_column
        this%litterc_loss_col(i)              = value_column
 
