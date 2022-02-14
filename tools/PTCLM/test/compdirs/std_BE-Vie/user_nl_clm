@@ -1,5 +1,0 @@
-! user_nl_clm namelist options written by PTCLMmkdata:
-! ../PTCLMmkdata --verbose --ctsm_root $CTSMROOTDIR -s BE-Vie -d $DIN_LOC_ROOT --debug --sdate 140204 --map_gdate 140204 --mydatadir testing_dir/std_file_creation 
- fsurdat = '$CTSMROOTDIR/tools/PTCLM/test/testing_dir/std_file_creation/1x1pt_BE-Vie/surfdata_1x1pt_BE-Vie140204_simyr2000_140204.nc'
- hist_nhtfrq = 0
- hist_mfilt  = 1200

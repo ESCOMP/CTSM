@@ -1,7 +1,0 @@
-#!/bin/bash
-cd ..
-. /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/sh
-module load ncl
-./buildtools
-cd test
-./run_PTCLM_tests

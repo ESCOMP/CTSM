@@ -1,7 +1,0 @@
-$NCLPATH
-lat=45.2041
-mapfile = $CTSMROOTDIR/tools/mkmapdata/map_1x1pt_US-Ho1_noocean_to_1x1pt_US-Ho1_nomask_aave_da_140204.nc
-scripgridfile = $CTSMROOTDIR/tools/mkmapgrids/SCRIPgrid_1x1pt_US-Ho1_nomask_c140204.nc
-domainfile = domain.lnd.1x1pt_US-Ho1_navy.140204.nc
-surface file = $CTSMROOTDIR/tools/PTCLM/test/testing_dir/stdquiet_file_creation/1x1pt_US-Ho1/surfdata_1x1pt_US-Ho1140204_simyr2000_140204.nc
-surface log file = $CTSMROOTDIR/tools/PTCLM/test/testing_dir/stdquiet_file_creation/1x1pt_US-Ho1/surfdata_1x1pt_US-Ho1140204_simyr2000_140204.log

@@ -1,1 +1,0 @@
-../PTCLMmkdata --verbose --pftgrid --clmnmlusecase=20thC_transient --ctsm_root $CTSMROOTDIR -s US-Ha1 -d $DIN_LOC_ROOT --debug --sdate 140204 --map_gdate 140204 --mydatadir testing_dir/grd_trans_pft 
