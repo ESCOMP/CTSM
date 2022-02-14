@@ -179,7 +179,7 @@ contains
   subroutine InitAllocate(this, bounds)
     ! !USES:
     !
-    use clm_varpar, only : mxgrowseas, mxharvests
+    use clm_varpar, only : mxsowings, mxharvests
     !
     ! !ARGUMENTS:
     class(crop_type) , intent(inout) :: this
@@ -202,7 +202,7 @@ contains
     allocate(this%vf_patch       (begp:endp)) ; this%vf_patch       (:) = 0.0_r8
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
-    allocate(this%sdates_thisyr(begp:endp,1:mxgrowseas)) ; this%sdates_thisyr(:,:) = spval
+    allocate(this%sdates_thisyr(begp:endp,1:mxsowings)) ; this%sdates_thisyr(:,:) = spval
     allocate(this%hdates_thisyr(begp:endp,1:mxharvests)) ; this%hdates_thisyr(:,:) = spval
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
@@ -255,7 +255,7 @@ contains
     end if
 
     this%sdates_thisyr(begp:endp,:) = spval
-    call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxgrowseas', &
+    call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxsowings', &
          avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
          ptr_patch=this%sdates_thisyr, default='inactive')
 
@@ -421,7 +421,7 @@ contains
     ! Used in Restart(). Even though restartvar() can safely be called for a
     ! non-existent variable, it gives an error for a non-existent dimension, so
     ! check whether the dimension exists before trying to read. The need for this
-    ! function arose because we recently added the mxgrowseas and mxharvests
+    ! function arose because we recently added the mxsowings and mxharvests
     ! dimensions to the restart file.
     !
     ! !USES:
@@ -451,7 +451,7 @@ contains
     use ncdio_pio
     use PatchType, only : patch
     use pftconMod, only : npcropmin, npcropmax
-    use clm_varpar, only : mxgrowseas, mxharvests
+    use clm_varpar, only : mxsowings, mxharvests
     !
     ! !ARGUMENTS:
     class(crop_type), intent(inout)  :: this
@@ -538,11 +538,11 @@ contains
                                    ! the crop phases
        end if
 
-       ! Read or write variable(s) with mxgrowseas dimension
+       ! Read or write variable(s) with mxsowings dimension
        ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02) See note in CallRestartvarDimOK()
-       if (CallRestartvarDimOK(ncid, flag, 'mxgrowseas')) then
+       if (CallRestartvarDimOK(ncid, flag, 'mxsowings')) then
            call restartvar(ncid=ncid, flag=flag, varname='sdates_thisyr', xtype=ncd_double,  &
-                dim1name='pft', dim2name='mxgrowseas', switchdim=.true., &
+                dim1name='pft', dim2name='mxsowings', switchdim=.true., &
                 long_name='crop sowing dates for this patch this year', units='day of year', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%sdates_thisyr)
@@ -550,7 +550,7 @@ contains
            if (flag == 'read' .and. readvar) then
              do p = bounds%begp,bounds%endp
                 seasons_found = 0
-                do seasons_loopvar = 1,mxgrowseas
+                do seasons_loopvar = 1,mxsowings
                    if (this%sdates_thisyr(p,seasons_loopvar) >= 1 .and. this%sdates_thisyr(p,seasons_loopvar) <= 366) then
                       seasons_found = seasons_loopvar
                    else
