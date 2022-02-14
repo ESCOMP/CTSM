@@ -86,10 +86,10 @@ module TemperatureType
      ! being: that way one parameterization is free to change the exact meaning of its
      ! accumulator without affecting the other).
      !
-     real(r8), pointer :: t_ref2m_24_patch        (:)   ! patch daily average 2 m height surface air temperature (K) ! Marius
-     real(r8), pointer :: t_mean_5yr_patch        (:)   ! patch 5 year mean of minimum yearly 2 m height surface air temperature (K) ! 
-     real(r8), pointer :: t_min_yr_patch          (:)   ! 
-     real(r8), pointer :: t_min_yr_inst_patch     (:)   ! marius
+     !real(r8), pointer :: t_ref2m_24_patch        (:)   ! patch daily average 2 m height surface air temperature (K) ! Marius
+     !real(r8), pointer :: t_mean_5yr_patch        (:)   ! patch 5 year mean of minimum yearly 2 m height surface air temperature (K) ! 
+     !real(r8), pointer :: t_min_yr_patch          (:)   ! 
+     !real(r8), pointer :: t_min_yr_inst_patch     (:)   ! marius
      real(r8), pointer :: t_veg24_patch           (:)   ! patch 24hr average vegetation temperature (K)
      real(r8), pointer :: t_veg240_patch          (:)   ! patch 240hr average vegetation temperature (Kelvin)
      real(r8), pointer :: gdd0_patch              (:)   ! patch growing degree-days base  0C from planting  (ddays)
@@ -258,10 +258,10 @@ contains
     allocate(this%t_ref2m_min_inst_u_patch (begp:endp))                      ; this%t_ref2m_min_inst_u_patch (:)   = nan
 
     ! Accumulated fields
-    allocate(this%t_ref2m_24_patch         (begp:endp))                      ; this%t_ref2m_24_patch         (:)   = nan !Marius
-    allocate(this%t_min_yr_patch           (begp:endp))                      ; this%t_min_yr_patch           (:)   = nan 
-    allocate(this%t_min_yr_inst_patch      (begp:endp))                      ; this%t_min_yr_inst_patch      (:)   = nan 
-    allocate(this%t_mean_5yr_patch         (begp:endp))                      ; this%t_mean_5yr_patch         (:)   = nan !Marius 
+    !allocate(this%t_ref2m_24_patch         (begp:endp))                      ; this%t_ref2m_24_patch         (:)   = nan !Marius
+    !allocate(this%t_min_yr_patch           (begp:endp))                      ; this%t_min_yr_patch           (:)   = nan 
+    !allocate(this%t_min_yr_inst_patch      (begp:endp))                      ; this%t_min_yr_inst_patch      (:)   = nan 
+    !allocate(this%t_mean_5yr_patch         (begp:endp))                      ; this%t_mean_5yr_patch         (:)   = nan !Marius 
     allocate(this%t_veg24_patch            (begp:endp))                      ; this%t_veg24_patch            (:)   = nan
     allocate(this%t_veg240_patch           (begp:endp))                      ; this%t_veg240_patch           (:)   = nan
     allocate(this%gdd0_patch               (begp:endp))                      ; this%gdd0_patch               (:)   = spval
@@ -589,20 +589,20 @@ contains
     end if
 
     ! Accumulated quantities
-    if (use_fates_hydrohard .or. use_fates_frosthard) then !Marius
-      this%t_ref2m_24_patch(begp:endp)  = spval
-      call hist_addfld1d (fname='T2m_24', units='K',  &
-           avgflag='A', long_name='average temperature 2m (24hrs)', &
-           ptr_patch=this%t_ref2m_24_patch, default='active')  
-      call hist_addfld1d (fname='Tmin_24', units='K',  &
-           avgflag='A', long_name='minimum temperature 2m (24hrs)', &
-           ptr_patch=this%t_ref2m_min_patch, default='active') 
-      !this%t_mean_5yr_patch(begp:endp)  = spval 
-      !call hist_addfld1d (fname='T_HARD5', units='K',  &
-      !     avgflag='A', long_name='5 year mean of minimum yearly 2-m temperature for hardening', &
-      !     ptr_patch=this%t_mean_5yr_patch, default='active')
-      !this%t_min_yr_patch(begp:endp)  = spval 
-    end if
+    !if (use_fates_hydrohard .or. use_fates_frosthard) then !Marius
+    !  this%t_ref2m_24_patch(begp:endp)  = spval
+    !  call hist_addfld1d (fname='T2m_24_prev', units='K',  &
+    !       avgflag='A', long_name='average temperature 2m (24hrs)', &
+    !       ptr_patch=this%t_ref2m_24_patch, default='active')  
+    !  call hist_addfld1d (fname='Tmin_24_prev', units='K',  &
+    !       avgflag='A', long_name='minimum temperature 2m (24hrs)', &
+    !       ptr_patch=this%t_ref2m_min_patch, default='active') 
+    !  this%t_mean_5yr_patch(begp:endp)  = spval 
+    !  call hist_addfld1d (fname='T_HARD5', units='K',  &
+    !       avgflag='A', long_name='5 year mean of minimum yearly 2-m temperature for hardening', &
+    !       ptr_patch=this%t_mean_5yr_patch, default='active')
+    !  this%t_min_yr_patch(begp:endp)  = spval 
+    !end if
 
     this%t_veg24_patch(begp:endp) = spval
     call hist_addfld1d (fname='TV24', units='K',  &
@@ -918,16 +918,16 @@ contains
     logical :: readvar   ! determine if variable is on initial file
     !-----------------------------------------------------------------------
 
-    if (use_fates_hydrohard .or. use_fates_frosthard) then !marius
-      call restartvar(ncid=ncid, flag=flag, varname='T_HARD5', xtype=ncd_double,  &
-           dim1name='pft', &
-           long_name='5 year average of min yearly 2-m temperature for hardening', units='K', &
-           interpinic_flag='interp', readvar=readvar, data=this%t_mean_5yr_patch)
-      call restartvar(ncid=ncid, flag=flag, varname='T_1yrinst', xtype=ncd_double,  &
-           dim1name='pft', &
-           long_name='1 year instanteneous hardening', units='K', &
-           interpinic_flag='interp', readvar=readvar, data=this%t_min_yr_inst_patch)
-    end if 
+    !if (use_fates_hydrohard .or. use_fates_frosthard) then !marius
+    !  call restartvar(ncid=ncid, flag=flag, varname='T_HARD5', xtype=ncd_double,  &
+    !       dim1name='pft', &
+    !       long_name='5 year average of min yearly 2-m temperature for hardening', units='K', &
+    !       interpinic_flag='interp', readvar=readvar, data=this%t_mean_5yr_patch)
+    !  call restartvar(ncid=ncid, flag=flag, varname='T_1yrinst', xtype=ncd_double,  &
+    !       dim1name='pft', &
+    !       long_name='1 year instanteneous hardening', units='K', &
+    !       interpinic_flag='interp', readvar=readvar, data=this%t_min_yr_inst_patch)
+    !end if 
     
     call restartvar(ncid=ncid, flag=flag, varname='T_SOISNO', xtype=ncd_double,   &
          dim1name='column', dim2name='levtot', switchdim=.true., &
@@ -1204,17 +1204,17 @@ contains
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
     !Marius
-    if (use_fates_hydrohard .or. use_fates_frosthard) then 
-      this%t_ref2m_24_patch(bounds%begp:bounds%endp) = spval
-      call init_accum_field (name='T_REF24', units='K', &    
-         desc='24 hour average of 2-m temperature', accum_type='timeavg', accum_period=-1, &
-         subgrid_type='pft', numlev=1, init_value=0.0_r8)
+    !if (use_fates_hydrohard .or. use_fates_frosthard) then 
+    !  this%t_ref2m_24_patch(bounds%begp:bounds%endp) = spval
+    !  call init_accum_field (name='T_REF24', units='K', &    
+    !     desc='24 hour average of 2-m temperature', accum_type='timeavg', accum_period=-1, &
+    !     subgrid_type='pft', numlev=1, init_value=0.0_r8)!
 
-      this%t_mean_5yr_patch(bounds%begp:bounds%endp) = spval
-      call init_accum_field (name='T_HARD5', units='K', &    
-           desc='5 year average of yearly min 2-m temperature for hardening', accum_type='runmean', accum_period=-20, &
-           subgrid_type='pft', numlev=1, init_value=0.0_r8)
-    end if
+    !  this%t_mean_5yr_patch(bounds%begp:bounds%endp) = spval
+    !  call init_accum_field (name='T_HARD5', units='K', &    
+    !       desc='5 year average of yearly min 2-m temperature for hardening', accum_type='runmean', accum_period=-20, &
+    !       subgrid_type='pft', numlev=1, init_value=0.0_r8)
+    !end if
 
     call init_accum_field(name='TREFAV', units='K', &
          desc='average over an hour of 2-m temperature', accum_type='timeavg', accum_period=nint(3600._r8/dtime), &
@@ -1327,16 +1327,16 @@ contains
     call extract_accum_field ('T_VEG240', rbufslp, nstep)
     this%t_veg240_patch(begp:endp) = rbufslp(begp:endp)
 
-    if (use_fates_hydrohard .or. use_fates_frosthard) then
-      call extract_accum_field ('T_REF24', rbufslp, nstep) !marius
-      this%t_ref2m_24_patch(begp:endp) = rbufslp(begp:endp)
-      call extract_accum_field ('T_HARD5', rbufslp, nstep) !marius
-      this%t_mean_5yr_patch(begp:endp) = rbufslp(begp:endp)
-      if (nsrest == nsrStartup) then
-         this%t_min_yr_patch(begp:endp)        =  spval
-         this%t_min_yr_inst_patch(begp:endp)   =  spval
-      end if
-    end if
+    !if (use_fates_hydrohard .or. use_fates_frosthard) then
+    !  call extract_accum_field ('T_REF24', rbufslp, nstep) !marius
+    !  this%t_ref2m_24_patch(begp:endp) = rbufslp(begp:endp)
+    !  call extract_accum_field ('T_HARD5', rbufslp, nstep) !marius
+    !  this%t_mean_5yr_patch(begp:endp) = rbufslp(begp:endp)
+    !  if (nsrest == nsrStartup) then
+    !     this%t_min_yr_patch(begp:endp)        =  spval
+    !     this%t_min_yr_inst_patch(begp:endp)   =  spval
+    !  end if
+    !end if
 
     call extract_accum_field ('T10', rbufslp, nstep)
     this%t_a10_patch(begp:endp) = rbufslp(begp:endp)
@@ -1457,32 +1457,32 @@ contains
     call extract_accum_field ('T_VEG240', this%t_veg240_patch , nstep)
 
     !----------------------------------------------------------------------------marius
-    if (use_fates_hydrohard .or. use_fates_frosthard) then
-      ! Accumulate and extract T_REF24 
-      call update_accum_field  ('T_REF24' , this%t_ref2m_patch , nstep)
-      call extract_accum_field ('T_REF24' , rbufslp , nstep)
-      do p = begp,endp
-         this%t_ref2m_24_patch(p) = rbufslp(p)
-      end do
-      ! Start 1 year minimum temperature loop for hardening
-      end_yr = is_end_curr_year()
-      do p = begp,endp   
-        if (rbufslp(p) /= spval) then           
-           this%t_min_yr_inst_patch(p) = min(rbufslp(p), this%t_min_yr_inst_patch(p))
-        endif
-        if (end_yr) then
-           this%t_min_yr_patch(p) = this%t_min_yr_inst_patch(p)
-           rbufslp(p)=this%t_min_yr_inst_patch(p)
-           this%t_min_yr_inst_patch(p) = spval
-        else if (secs == dtime) then
-           this%t_min_yr_patch(p) = spval
-        endif
-      end do
-      if (end_yr) then 
-        call update_accum_field ('T_HARD5', rbufslp, nstep)
-        call extract_accum_field ('T_HARD5', this%t_mean_5yr_patch, nstep)
-      end if
-    end if
+    !if (use_fates_hydrohard .or. use_fates_frosthard) then
+    !  ! Accumulate and extract T_REF24 
+    !  call update_accum_field  ('T_REF24' , this%t_ref2m_patch , nstep)
+    !  call extract_accum_field ('T_REF24' , rbufslp , nstep)
+    !  do p = begp,endp
+    !     this%t_ref2m_24_patch(p) = rbufslp(p)
+    !  end do
+    !  ! Start 1 year minimum temperature loop for hardening
+    !  end_yr = is_end_curr_year()
+    !  do p = begp,endp   
+    !    if (rbufslp(p) /= spval) then           
+    !       this%t_min_yr_inst_patch(p) = min(rbufslp(p), this%t_min_yr_inst_patch(p))
+    !    endif
+    !    if (end_yr) then
+    !       this%t_min_yr_patch(p) = this%t_min_yr_inst_patch(p)
+    !       rbufslp(p)=this%t_min_yr_inst_patch(p)
+    !       this%t_min_yr_inst_patch(p) = spval
+    !    else if (secs == dtime) then
+    !       this%t_min_yr_patch(p) = spval
+    !    endif
+    !  end do
+    !  if (end_yr) then 
+    !    call update_accum_field ('T_HARD5', rbufslp, nstep)
+    !    call extract_accum_field ('T_HARD5', this%t_mean_5yr_patch, nstep)
+    !  end if
+    !end if
     !-------------------------------------------------------------------------------------------------
 
     ! Accumulate and extract TREFAV - hourly average 2m air temperature

@@ -848,23 +848,22 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in(s)%t_veg24_pa = &
                temperature_inst%t_veg24_patch(col%patchi(c)) 
 
-         this%fates(nc)%bc_in(s)%t_ref2m_24_si = &
-               temperature_inst%t_ref2m_24_patch(col%patchi(c))  ! ! Marius
+         if (use_fates_hydrohard .or. use_fates_frosthard) then !Marius
+            this%fates(nc)%bc_in(s)%temp24_si = &
+               atm2lnd_inst%temp24_patch(col%patchi(c))  
 
-         this%fates(nc)%bc_in(s)%t_mean_5yr_si = &
-               temperature_inst%t_mean_5yr_patch(col%patchi(c))  ! ! Marius
+            this%fates(nc)%bc_in(s)%t_mean_5yr_si = &
+               atm2lnd_inst%t_mean_5yr_patch(col%patchi(c))  
 
-         this%fates(nc)%bc_in(s)%t_min_yr_inst_si = &
-               temperature_inst%t_min_yr_inst_patch(col%patchi(c))  ! ! Marius
+            this%fates(nc)%bc_in(s)%t_min_yr_inst_si = &
+               atm2lnd_inst%t_min_yr_inst_patch(col%patchi(c))  ! ! Marius
 
-         this%fates(nc)%bc_in(s)%t_ref2m_min_si = &
-               temperature_inst%t_ref2m_min_patch(col%patchi(c)) ! ! Marius
+            this%fates(nc)%bc_in(s)%tmin24_si = &
+               atm2lnd_inst%tmin24_patch(col%patchi(c))
 
-         this%fates(nc)%bc_in(s)%t_ref2m_max_si = &
-               temperature_inst%t_ref2m_max_patch(col%patchi(c)) ! ! Marius
-
-         this%fates(nc)%bc_in(s)%dayl_si = grc%dayl(col%gridcell(c))  ! ! Marius 
-         this%fates(nc)%bc_in(s)%prev_dayl_si = grc%prev_dayl(col%gridcell(c))  ! ! Marius 
+            this%fates(nc)%bc_in(s)%dayl_si = grc%dayl(col%gridcell(c)) 
+            this%fates(nc)%bc_in(s)%prev_dayl_si = grc%prev_dayl(col%gridcell(c))  
+         endif
 
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
               min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
