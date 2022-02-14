@@ -1,0 +1,1 @@
+../PTCLMmkdata --pftgrid --soilgrid --verbose --donot_use_tower_yrs --clmnmlusecase=20thC_transient --crop --ctsm_root $CTSMROOTDIR -s US-UMB -d $DIN_LOC_ROOT --debug --sdate 140204 --map_gdate 140204 --mydatadir testing_dir/global_surfdata_create 

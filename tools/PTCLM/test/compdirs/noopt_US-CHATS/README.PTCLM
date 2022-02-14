@@ -1,0 +1,1 @@
+../PTCLMmkdata --ctsm_root $CTSMROOTDIR -s US-CHATS -d $DIN_LOC_ROOT --debug --sdate 140204 --map_gdate 140204 --mydatadir testing_dir/noopt_file_creation 
