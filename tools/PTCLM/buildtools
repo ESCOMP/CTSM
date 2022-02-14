@@ -1,0 +1,149 @@
+#!/bin/bash
+#
+# buildtools
+#
+# Build the clm tools that PTCLM will need to run when creating files.
+#
+# Environment variables to set:
+#
+# CTSM_ROOT:        To build with a separate root to CTSM component set the
+#                   env variable CTSM_ROOT to the root directory to use.
+#
+# CIME_ROOT:        To build with a separate root to CIME scripts set the
+#                   env variable CIME_ROOT to the root directory to use.
+#
+
+pwd=`pwd`
+host=`hostname`
+echo "Build clm tools for PTCLM on "$host""
+
+#
+# Get path to root
+#
+if [ -z "$CTSM_ROOT" ]; then
+   cd "../.."
+   CTSM_ROOT=`pwd`
+   cd -
+fi
+if [ ! -d "$CTSM_ROOT" ];then
+   echo "Directory $CTSM_ROOT does not exist"
+   echo "Set env variable CTSM_ROOT"
+   exit -1
+fi
+if [ ! -d "$CTSM_ROOT/src/biogeophys" ];then
+   echo "Directory $CTSM_ROOT/src/biogeophys does not exist as expected"
+   echo "Set env variable CTSM_ROOT to directory at head of CTSM code"
+   exit -1
+fi
+if [ -z "$CIME_ROOT" ]; then
+   if [ ! -d "$CTSM_ROOT/cime" ]; then
+      cd "$CTSM_ROOT/../../cime"
+      CIME_ROOT=`pwd`
+      cd -
+   else
+      cd "$CTSM_ROOT/cime"
+      CIME_ROOT=`pwd`
+      cd -
+   fi
+fi
+if [ ! -d "$CIME_ROOT" ];then
+   echo "Directory $CIME_ROOT does not exist"
+   echo "Set env variable CIME_ROOT"
+   exit -1
+fi
+#
+# Machine dependent stuff
+#
+CIME_MODEL="cesm"
+export CIME_MODEL
+toolsmake=""
+if [[ "$host" =~ cheyenne ]] || [[ "$host" =~ r[0-9]+i[0-9]+n[0-9]+ ]]|| [[ "$host" =~ caldera ]] || [[ "$host" =~ geyser ]] || [[ "$host" =~ pronghorn ]]; then
+  echo "Setup for cheyenne"
+  . /glade/u/apps/ch/opt/lmod/8.1.7/lmod/lmod/init/sh
+
+  gmake="gmake"
+  parcmp=36
+  machine="cheyenne"
+  compiler="intel"
+  netcdf=$NETCDF
+  module load $compiler
+  module load mkl
+  module load netcdf
+  module load ncl
+elif [[ "$host" =~ hobart ]] || [[ "$host" =~ h[0-9]+.cgd.ucar.edu ]]; then
+  echo "Setup for hobart"
+  . /usr/share/Modules/init/sh
+  gmake="gmake"
+  parcmp=2
+  machine="hobart"
+  compiler="intel"
+  module load compiler/intel
+  netcdf=$NETCDF_PATH
+  export PATH="${PATH}:/usr/bin"
+elif [[ "$host" =~ izumi ]] || [[ "$host" =~ i[0-9]+.unified ]]; then
+  echo "Setup for izumi"
+  . /usr/share/Modules/init/sh
+  gmake="gmake"
+  parcmp=2
+  machine="izumi"
+  compiler="intel"
+  module load compiler/intel
+  netcdf=$NETCDF_PATH
+  export PATH="${PATH}:/usr/bin"
+elif [[ "$host" =~ eureka ]] || [[ "$host" =~ vpn ]]; then
+  echo "Setup for eureka"
+  gmake="make"
+  parcmp=12
+  machine="homebrew"
+  compiler="gnu"
+  netcdf="/opt/local"
+  toolsmake="USER_FC=gfortran-mp-4.8 USER_LINKER=gfortran-mp-4.8 USER_CC=gcc "
+  case='$CASE'
+  export NETCDF_PATH=$netcdf
+else
+  echo "Bad host to run on: know about cheyenne, hobart, izumi or eureka"
+  exit -3
+fi
+export INC_NETCDF=${netcdf}/include
+export LIB_NETCDF=${netcdf}/lib
+#
+# Build the tools
+#
+echo "Build the tools"
+dirs=( \
+       $CTSM_ROOT/tools/mksurfdata_map/src \
+       $CIME_ROOT/tools/mapping/gen_domain_files/src \
+     )
+for dir in ${dirs[*]}; do
+   echo "Build in $dir"
+   cd $dir
+   if [[ "$dir" =~ gen_domain ]]; then
+      rm env_mach_specific.xml
+      cmd="$CIME_ROOT/tools/configure --machine $machine --macros-format Makefile"
+      echo "$cmd"
+      $cmd
+      if [ $? != 0 ]; then
+         echo "Problem with configure: $?"
+         exit -1
+      fi
+      #. ./.env_mach_specific.sh  # don't use this as it currently doesn't work for mpi-serial
+      #cmd="ln -s $dirs/Macros.make $dirs/Macros"
+      #echo "$cmd"
+      #$cmd
+   fi
+   $gmake clean
+   cmd="$gmake OPT=TRUE SMP=TRUE -j $parcmp COMPILER=$compiler OS=LINUX MPILIB=mpi-serial $toolsmake"
+   echo "$cmd"
+   $cmd
+   if [ $? != 0 ]; then
+      echo "Problem with build: $?"
+      exit -1
+   fi
+   if [[ "$dir" =~ gen_domain ]]; then
+      /bin/rm *.o
+   else
+      $gmake clean
+   fi
+done
+
+echo -e "\n\nSuccessfully built CLM tools needed to create datasets for PTCLM\n"
