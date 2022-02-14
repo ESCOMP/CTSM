@@ -440,7 +440,7 @@ contains
    ! seconds_per_year is the number of seconds in a year.
    !
    ! !USES:
-   use clm_time_manager     , only: get_step_size_real,get_days_per_year,get_curr_date
+   use clm_time_manager     , only: get_step_size_real,get_curr_days_per_year,get_curr_date
    use clm_varctl           , only: use_cndv
    use clm_varcon           , only: secspday
    use pftconMod            , only: nc3crop
@@ -683,7 +683,7 @@ contains
      ! calculate burned area fraction per sec
      dt = get_step_size_real()
 
-     dayspyr = get_days_per_year()
+     dayspyr = get_curr_days_per_year()
      !
      ! patch loop
      !

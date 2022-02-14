@@ -116,6 +116,14 @@ This means that computations will be run even over these 0-weight points.
 THIS IS ONLY FOR TESTING PURPOSES - IT HAS NOT BEEN CHECKED FOR SCIENTIFIC VALIDITY.
 </entry>
 
+<entry id="force_send_to_atm"
+       type="logical"
+       category="drv_physics"
+       group="ctsm_nuopc_cap"
+       valid_values="" >
+If TRUE (which is the default), send the expcrt state for the nuopc driver to the ATM even if running with a data ATM
+</entry>
+
 <entry id="organic_frac_squared" type="logical" category="clm_physics"
        group="clm_soilstate_inparm" valid_values="" >
 If TRUE, square the organic fraction when it's used (as was done in CLM4.5)
@@ -641,7 +649,7 @@ Switch deciding which nutrient model to use in FATES.
 </entry>
 
 <entry id="fates_spitfire_mode" type="integer" category="physics"
-        group="clm_inparm" valid_values="0,1,2,3,4" value=".false.">
+        group="clm_inparm" valid_values="0,1,2,3,4,5" value=".false.">
 Turn on spitfire module to simulate fire by setting fates_spitfire_mode > 0.
 Allowed values are:
  0 : Simulations of fire are off
@@ -649,6 +657,7 @@ Allowed values are:
  2 : use an external lightning dataset. 
  3 : use an external confirmed ignitions dataset (not available through standard CSEM dataset collection).
  4 : use external lightning and population datasets to simulate both natural and anthropogenic
+ 5 : use gross domestic production and population datasets to simulate anthropogenic fire supression
 ignitions.
 (Only relevant if FATES is on)
 </entry>
@@ -2124,12 +2133,6 @@ Base advective flux (downwards) for SOM.
 Maximum depth to mix soils to by croturbation, in permafrost soils.
 </entry>
 
-<!-- turnover time modifications    -->
-<entry id="decomp_depth_efolding" type="real" category="clm_vertcn"
-       group="bgc_shared" valid_values="" >
-E-folding depth over which decomposition is slowed with depth in all soils.
-</entry>
-
 <entry id="anoxia" type="logical" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 If TRUE, reduce heterotrophic respiration according to available oxygen predicted by CH4 submodel.
@@ -2166,10 +2169,11 @@ Number of days over which to use exponential relaxation of NPP in N fixation cal
 
 <!-- Soil decomposition options  -->
 <entry id="soil_decomp_method" type="char*20" category="clm_physics"
-       group="soilbgc_decomp" valid_values="None,CENTURYKoven2013" >
+       group="soilbgc_decomp" valid_values="None,CENTURYKoven2013,MIMICSWieder2015" >
 Soil decomposition method
   None --  No soil decomposition is done
   CENTURYKoven2013 -- CENTURY model in CTSM from Koven et. al. 2013
+  MIMICSWieder2015 -- MIMICS model in CTSM from Wieder et. al. 2015
 
 An active soil decomposition method requires the BGC or FATES model to work 
 And both BGC and FATES models require an active soil decomposition model
@@ -2478,6 +2482,12 @@ If TRUE, apply transient crops from flanduse_timeseries file.
 <entry id="do_transient_lakes" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
 If TRUE, apply transient lakes from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+</entry>
+
+<entry id="do_transient_urban" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply transient urban from flanduse_timeseries file.
 (Only valid for transient runs, where there is a flanduse_timeseries file.)
 </entry>
 
