@@ -2109,6 +2109,12 @@ contains
                   onset_counter(p) = dt
                     fert_counter(p)  = ndays_on * secspday
                     if (ndays_on .gt. 0) then
+                       
+                       ! SSR troubleshooting
+                       if (fert_counter(p)==0) then
+                          call endrun(msg=errMsg(sourcefile, __LINE__))
+                       end if
+
                        fert(p) = (manunitro(ivt(p)) * 1000._r8 + fertnitro(p))/ fert_counter(p)
                     else
                        fert(p) = 0._r8
@@ -2151,6 +2157,12 @@ contains
                   crop_seedc_to_leaf(p) = crop_seedc_to_leaf(p) - leafc_xfer(p)/dt
                   crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
                   leafc_xfer(p) = 0._r8
+
+                  ! SSR troubleshooting
+                  if (leafcn(ivt(p)) == 0.0) then
+                     call endrun(msg=errMsg(sourcefile, __LINE__))
+                  end if
+
                   leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
                   if (use_c13) then
                      c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
@@ -2169,6 +2181,12 @@ contains
 
             else if (hui(p) >= huigrain(p)) then
                cphase(p) = 3._r8
+
+               ! SSR troubleshooting
+               if (leaf_long(ivt(p))*dayspyr*secspday == 0.0) then
+                  call endrun(msg=errMsg(sourcefile, __LINE__))
+               end if
+
                bglfr(p) = 1._r8/(leaf_long(ivt(p))*dayspyr*secspday)
             end if
 
@@ -2191,6 +2209,12 @@ contains
             crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
             onset_counter(p) = 0._r8
             leafc_xfer(p) = 0._r8
+            
+            ! SSR troubleshooting
+            if (leafcn(ivt(p)) == 0.0) then
+               call endrun(msg=errMsg(sourcefile, __LINE__))
+            end if
+
             leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
             if (use_c13) then
                c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
@@ -2361,10 +2385,20 @@ contains
       endif
       crop_inst%sdates_thisyr(p,s) = real(jday, r8)
 
+      ! SSR troubleshooting
+      if (leafcn_in == 0.0) then
+         call endrun(msg=errMsg(sourcefile, __LINE__))
+      end if
+
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
       crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
       crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
+
+      ! SSR troubleshooting
+      if (cnveg_carbonstate_inst%totvegc_patch(p) == 0.0) then
+         call endrun(msg=errMsg(sourcefile, __LINE__))
+      end if
 
       ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
       ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
