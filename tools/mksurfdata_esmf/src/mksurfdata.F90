@@ -98,7 +98,7 @@ program mksurfdata
   use mktopostatsMod     , only : mktopostats
   use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
   use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
-  use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
+  use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft, num_natpft
   use mkdomainMod        , only : mkdomain
   use mkharvestMod       , only : mkharvest, mkharvest_parse_oride
   use mkgdpMod           , only : mkgdp
@@ -126,143 +126,151 @@ program mksurfdata
 
   implicit none
 
-  ! local variables
-  type(ESMF_Mesh)               :: mesh_model
-  type(ESMF_Field)              :: field_model
-  integer                       :: nsoilcol                ! number of model color classes
-  integer                       :: k,m,n                   ! indices
-  integer                       :: ni,nj,ns_o              ! indices
-  integer                       :: lsize_o
-  integer                       :: ier                     ! error status
-  integer                       :: nfdyn                   ! unit numbers
-  integer                       :: omode                   ! netCDF output mode
-  integer                       :: ret                     ! netCDF return status
-  integer                       :: ntim                    ! time sample for dynamic land use
-  integer                       :: year                    ! year for dynamic land use
-  integer                       :: year2                   ! year for dynamic land use for harvest file
-  real(r8)                      :: suma                    ! sum for error check
-  character(len=256)            :: string                  ! string read in
-  integer                       :: rcode
+  ! indices
+  integer                         :: k,n                     ! indices
+  integer                         :: lsize_o
 
-  ! pio variables
-  type(file_desc_t)             :: pioid
-  type(var_desc_t)              :: pio_varid
-  type(io_desc_t)               :: pio_iodesc
+  ! error status
+  integer                         :: ier,rcode               ! error status
+
+  ! dynamic land use
+  integer                         :: nfdyn                   ! unit numbers
+  integer                         :: ntim                    ! time sample for dynamic land use
+  integer                         :: year                    ! year for dynamic land use
+  integer                         :: year2                   ! year for dynamic land use for harvest file
+  real(r8)                        :: suma                    ! sum for error check
 
   ! model grid
-  real(r8), allocatable             :: lon(:)
-  real(r8), allocatable             :: lat(:)
+  real(r8), allocatable           :: lon(:)
+  real(r8), allocatable           :: lat(:)
 
   ! pct vegetation data
-  real(r8), allocatable             :: landfrac_pft(:)         ! PFT data: % land per gridcell
-  real(r8), allocatable             :: pctlnd_pft(:)           ! PFT data: % of gridcell for PFTs
-  real(r8), allocatable             :: pctlnd_pft_dyn(:)       ! PFT data: % of gridcell for dyn landuse PFTs
-  integer , allocatable             :: pftdata_mask(:)         ! mask indicating real or fake land type
-  type(pct_pft_type), allocatable   :: pctnatpft(:)            ! % of grid cell that is nat veg, and breakdown into PFTs
-  type(pct_pft_type), allocatable   :: pctnatpft_max(:)        ! % of grid cell maximum PFTs of the time series
-  type(pct_pft_type), allocatable   :: pctcft(:)               ! % of grid cell that is crop, and breakdown into CFTs
-  type(pct_pft_type), allocatable   :: pctcft_max(:)           ! % of grid cell maximum CFTs of the time series
+  real(r8), allocatable           :: landfrac_pft(:)         ! PFT data: % land per gridcell
+  real(r8), allocatable           :: pctlnd_pft(:)           ! PFT data: % of gridcell for PFTs
+  real(r8), allocatable           :: pctlnd_pft_dyn(:)       ! PFT data: % of gridcell for dyn landuse PFTs
+  integer , allocatable           :: pftdata_mask(:)         ! mask indicating real or fake land type
+  type(pct_pft_type), allocatable :: pctnatpft(:)            ! % of grid cell that is nat veg, and breakdown into PFTs
+  type(pct_pft_type), allocatable :: pctnatpft_max(:)        ! % of grid cell maximum PFTs of the time series
+  type(pct_pft_type), allocatable :: pctcft(:)               ! % of grid cell that is crop, and breakdown into CFTs
+  type(pct_pft_type), allocatable :: pctcft_max(:)           ! % of grid cell maximum CFTs of the time series
 
   ! harvest initial value
-  real(r8)                          :: harvest_initval         ! initial value for harvest variables
+  real(r8)                        :: harvest_initval         ! initial value for harvest variables
 
   ! soil fracation saturated area data
-  real(r8), allocatable             :: fmaxsoil(:)             ! soil_fractional saturated area
+  real(r8), allocatable           :: fmaxsoil(:)             ! soil_fractional saturated area
 
   ! oranic matter density data
-  real(r8), allocatable             :: organic(:,:)            ! organic matter density (kg/m3)
+  real(r8), allocatable           :: organic(:,:)            ! organic matter density (kg/m3)
 
   ! gdp data
-  real(r8), allocatable             :: gdp(:)                  ! GDP (x1000 1995 US$/capita)
+  real(r8), allocatable           :: gdp(:)                  ! GDP (x1000 1995 US$/capita)
 
   ! peatland data
-  real(r8), allocatable             :: fpeat(:)                ! peatland fraction of gridcell
+  real(r8), allocatable           :: fpeat(:)                ! peatland fraction of gridcell
 
   ! topography statistics data
-  real(r4), allocatable             :: topo_stddev(:)          ! standard deviation of elevation (m)
-  real(r4), allocatable             :: slope(:)                ! topographic slope (degrees)
+  real(r4), allocatable           :: topo_stddev(:)          ! standard deviation of elevation (m)
+  real(r4), allocatable           :: slope(:)                ! topographic slope (degrees)
 
   ! agricultural peak month data
-  integer , allocatable             :: agfirepkmon(:)          ! agricultural fire peak month
+  integer , allocatable           :: agfirepkmon(:)          ! agricultural fire peak month
 
   ! inland water data
-  real(r8), allocatable             :: pctlak(:)               ! percent of grid cell that is lake
-  real(r8), allocatable             :: pctwet(:)               ! percent of grid cell that is wetland
-  real(r8), allocatable             :: lakedepth(:)            ! lake depth (m)
+  real(r8), allocatable           :: pctlak(:)               ! percent of grid cell that is lake
+  real(r8), allocatable           :: pctwet(:)               ! percent of grid cell that is wetland
+  real(r8), allocatable           :: lakedepth(:)            ! lake depth (m)
 
   ! glacier data
-  integer,  allocatable             :: glacier_region(:)       ! glacier region ID
-  real(r8), allocatable             :: pctgla(:)               ! percent of grid cell that is glacier
-  real(r8), allocatable             :: pctglc_gic(:)           ! percent of grid cell that is gic (% of glc landunit)
-  real(r8), allocatable             :: pctglc_icesheet(:)      ! percent of grid cell that is ice sheet (% of glc landunit)
-  real(r8), allocatable             :: pctglcmec(:,:)          ! glacier_mec pct coverage in each class (% of landunit)
-  real(r8), allocatable             :: pctglcmec_gic(:,:)      ! GIC pct coverage in each class (% of landunit)
-  real(r8), allocatable             :: pctglcmec_icesheet(:,:) ! icesheet pct coverage in each class (% of landunit)
-  real(r8), allocatable             :: elevclass(:)            ! glacier_mec elevation classes
-  real(r8), allocatable             :: topoglcmec(:,:)         ! glacier_mec sfc elevation in each gridcell and class
+  integer,  allocatable           :: glacier_region(:)       ! glacier region ID
+  real(r8), allocatable           :: pctgla(:)               ! percent of grid cell that is glacier
+  real(r8), allocatable           :: pctglc_gic(:)           ! percent of grid cell that is gic (% of glc landunit)
+  real(r8), allocatable           :: pctglc_icesheet(:)      ! percent of grid cell that is ice sheet (% of glc landunit)
+  real(r8), allocatable           :: pctglcmec(:,:)          ! glacier_mec pct coverage in each class (% of landunit)
+  real(r8), allocatable           :: pctglcmec_gic(:,:)      ! GIC pct coverage in each class (% of landunit)
+  real(r8), allocatable           :: pctglcmec_icesheet(:,:) ! icesheet pct coverage in each class (% of landunit)
+  real(r8), allocatable           :: elevclass(:)            ! glacier_mec elevation classes
+  real(r8), allocatable           :: topoglcmec(:,:)         ! glacier_mec sfc elevation in each gridcell and class
 
   ! urban data
-  integer , allocatable             :: urban_region(:)         ! urban region ID
-  real(r8), allocatable             :: pcturb(:)               ! percent of grid cell that is urbanized (total across all urban classes)
-  real(r8), allocatable             :: urban_classes(:,:)      ! percent cover of each urban class, as % of total urban area
-  real(r8), allocatable             :: urban_classes_g(:,:)    ! percent cover of each urban class, as % of grid cell
-  real(r8), allocatable             :: elev(:)                 ! glc elevation (m)
+  integer , allocatable           :: urban_region(:)         ! urban region ID
+  real(r8), allocatable           :: pcturb(:)               ! percent of grid cell that is urbanized (total across all urban classes)
+  real(r8), allocatable           :: urban_classes(:,:)      ! percent cover of each urban class, as % of total urban area
+  real(r8), allocatable           :: urban_classes_g(:,:)    ! percent cover of each urban class, as % of grid cell
+  real(r8), allocatable           :: elev(:)                 ! glc elevation (m)
 
   ! soil color data
-  integer , allocatable             :: soil_color(:)           ! soil color
+  integer                         :: nsoilcol                ! number of model color classes
+  integer , allocatable           :: soil_color(:)           ! soil color
 
   ! soil texture data
-  real(r8), allocatable             :: pctsand(:,:)            ! soil texture: percent sand
-  real(r8), allocatable             :: pctclay(:,:)            ! soil texture: percent clay
-  integer , allocatable             :: mapunits(:)             ! input grid: igbp soil mapunits
+  real(r8), allocatable           :: pctsand(:,:)            ! soil texture: percent sand
+  real(r8), allocatable           :: pctclay(:,:)            ! soil texture: percent clay
+  integer , allocatable           :: mapunits(:)             ! input grid: igbp soil mapunits
 
   ! soil depth data
-  real(r8), allocatable             :: soildepth(:)            ! soil depth (m)
+  real(r8), allocatable           :: soildepth(:)            ! soil depth (m)
 
   ! VOC data
-  real(r8), allocatable             :: ef1_btr(:)              ! Isoprene emission factor for broadleaf
-  real(r8), allocatable             :: ef1_fet(:)              ! Isoprene emission factor for fine/everg
-  real(r8), allocatable             :: ef1_fdt(:)              ! Isoprene emission factor for fine/dec
-  real(r8), allocatable             :: ef1_shr(:)              ! Isoprene emission factor for shrubs
-  real(r8), allocatable             :: ef1_grs(:)              ! Isoprene emission factor for grasses
-  real(r8), allocatable             :: ef1_crp(:)              ! Isoprene emission factor for crops
+  real(r8), allocatable           :: ef1_btr(:)              ! Isoprene emission factor for broadleaf
+  real(r8), allocatable           :: ef1_fet(:)              ! Isoprene emission factor for fine/everg
+  real(r8), allocatable           :: ef1_fdt(:)              ! Isoprene emission factor for fine/dec
+  real(r8), allocatable           :: ef1_shr(:)              ! Isoprene emission factor for shrubs
+  real(r8), allocatable           :: ef1_grs(:)              ! Isoprene emission factor for grasses
+  real(r8), allocatable           :: ef1_crp(:)              ! Isoprene emission factor for crops
 
   ! VIC data
-  real(r8), allocatable             :: vic_binfl(:)            ! VIC b
-  real(r8), allocatable             :: vic_ws(:)               ! VIC Ws parameter (unitless)
-  real(r8), allocatable             :: vic_dsmax(:)            ! VIC Dsmax parameter (mm/day)
-  real(r8), allocatable             :: vic_ds(:)               ! VIC Ds parameter (unitless)
+  real(r8), allocatable           :: vic_binfl(:)            ! VIC b
+  real(r8), allocatable           :: vic_ws(:)               ! VIC Ws parameter (unitless)
+  real(r8), allocatable           :: vic_dsmax(:)            ! VIC Dsmax parameter (mm/day)
+  real(r8), allocatable           :: vic_ds(:)               ! VIC Ds parameter (unitless)
 
   ! logicals
-  logical                           :: zero_out_lake           ! if should zero glacier out
-  logical                           :: zero_out_wetland        ! if should zero glacier out
-  logical                           :: zero_out
-  character(len=cs)                 :: fname
+  logical                         :: zero_out_lake           ! if should zero glacier out
+  logical                         :: zero_out_wetland        ! if should zero glacier out
+  logical                         :: zero_out
+
+  ! pio/esmf variables
+  type(file_desc_t)               :: pioid
+  type(var_desc_t)                :: pio_varid
+  type(io_desc_t)                 :: pio_iodesc
+  integer                         :: petcount
+  integer                         :: stride
 
   ! esmf variables
-  integer                       :: rc
-  type(ESMF_LogKind_Flag)       :: logkindflag
-  type(ESMF_VM)                 :: vm
-  integer                       :: petcount
-  integer                       :: stride
-  character(len=CS)             :: varname
-  logical                       :: create_esmf_pet_files = .true.
-  character(len=32)             :: subname = 'mksrfdata'    ! program name
+  type(ESMF_Mesh)                 :: mesh_model
+  type(ESMF_Field)                :: field_model
+  type(ESMF_LogKind_Flag)         :: logkindflag
+  type(ESMF_VM)                   :: vm
+  integer                         :: rc
+  logical                         :: create_esmf_pet_files = .true.
+
+  ! character variables
+  character(len=CS)               :: string                  ! string read in
+  character(len=CS)               :: fname
+  character(len=CS)               :: varname
+  character(len=32)               :: subname = 'mksrfdata'   ! program name
+
+  real(r8), allocatable :: pctnatveg(:)
+  real(r8), allocatable :: pctcrop(:)
+  real(r8), allocatable :: pct_nat_pft(:,:)
+  real(r8), allocatable :: pct_cft(:,:)
+  integer :: bounds(2)
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
   ! ------------------------------------------------------------
 
-  ! ------------------
+  ! ======================================================================
   ! Initialize MPI
-  ! ------------------
+  ! ======================================================================
 
   call MPI_init(rc)
   mpicom = mpi_comm_world
 
-  ! ------------------
+  ! ======================================================================
   ! Initialize ESMF and get mpicom from ESMF
-  ! ------------------
+  ! ======================================================================
 
   if (create_esmf_pet_files) then
      logkindflag = ESMF_LOGKIND_MULTI
@@ -279,9 +287,12 @@ program mksurfdata
   call ESMF_LogSet(flush=.true.)
   call ESMF_LogWrite("mksurfdata starting", ESMF_LOGMSG_INFO)
 
-  ! ------------------
-  ! Initialize PIO - first phase
-  ! ------------------
+  ! Determine root task
+  root_task = (iam == 0)
+
+  ! ======================================================================
+  ! Initialize PIO
+  ! ======================================================================
 
   ! the following returns pio_iosystem
   call pio_init(iam, mpicom, max(1,petcount/stride), 0, stride, PIO_REARR_SUBSET, pio_iosystem)
@@ -291,18 +302,16 @@ program mksurfdata
 
   call ESMF_LogWrite("finished initializing PIO", ESMF_LOGMSG_INFO)
 
-  ! ------------------
+  ! ======================================================================
+  ! Read in namelist
+  ! ======================================================================
+
   ! Read input namelist on root_task and broadcast to all pes
-  ! ------------------
-
   ! root_task is a module variable in mkvarctl
-  root_task = (iam == 0)
-  call read_namelist_input()
+  ! Assumne that input namelist file is 'mksurfdata_in'
+  call read_namelist_input(filename='mksurfdata_in')
 
-  ! ------------------
   ! open output ndiag file
-  ! ------------------
-
   if (fsurlog == ' ') then
      call shr_sys_abort(' ERROR: must specify fsurlog in namelist')
   end if
@@ -317,16 +326,13 @@ program mksurfdata
      ndiag = 6
   end if
 
-  ! ------------------
   ! Write out namelist input to ndiag
-  ! ------------------
-
   call check_namelist_input()
   call write_namelist_input()
 
-  ! ----------------------------------------------------------------------
-  ! Read in model mesh
-  ! ----------------------------------------------------------------------
+  ! ======================================================================
+  ! Create fsurdat
+  ! ======================================================================
 
   ! Read in model mesh to determine the number of local points
   mesh_model = ESMF_MeshCreate(filename=trim(mksrf_fgrid_mesh), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
@@ -335,10 +341,6 @@ program mksurfdata
   ! Get the number of local destination points on my processor (lsize_o)
   call ESMF_MeshGet(mesh_model, numOwnedElements=lsize_o, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-
-  ! ======================================================================
-  ! Create fsurdat
-  ! ======================================================================
 
   ! Initialize urban dimensions (needed to initialize the dimensions in fsurdat)
   call mkurbanInit (mksrf_furban)
@@ -383,6 +385,8 @@ program mksurfdata
      rcode = pio_enddef(pioid)
   end if
 
+  ! NOTE: do not deallocate pctlak, pctwet, pctglacier and pcturban
+
   ! -----------------------------------
   ! Write out coordinate variables
   ! -----------------------------------
@@ -414,24 +418,21 @@ program mksurfdata
   ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
   ! -----------------------------------
   ! Determine fractional land from pft dataset
-  allocate ( pctlnd_pft(lsize_o))    ; pctlnd_pft(:)       = spval
-  allocate ( pctnatpft(lsize_o))     ;
-  allocate ( pctcft(lsize_o))        ;
+  allocate(pctlnd_pft(lsize_o)); pctlnd_pft(:) = spval
+  allocate(pctnatpft(lsize_o)) ;
+  allocate(pctcft(lsize_o))    ;
   call mkpft( mksrf_fvegtyp_mesh, mksrf_fvegtyp, mesh_model, &
        pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
-  if (fsurdat /= ' ') then
-     ! rcode = pio_inq_varid(pio_ 'PCT_NATVEG', pio_varid)
-     ! call mkfile_output(pioid, mesh_model, pio_varid, get_pct_l2g_array(pctnatpft), rc=rc)
-     ! rcode = pio_inq_varid(ncid, 'PCT_CROP', pio_varid)
-     ! call mkfile_output(pioid, mesh_model, pio_varid, get_pct_l2g_array(pctcft), rc=rc)
-     ! rcode = pio_inq_varid(ncid, 'PCT_NAT_PFT', pio_varid)
-     ! call mkfile_output(pioid, mesh_model, pio_varid, get_pct_p2l_array(pctnatpft), rc=rc)
-     ! if (num_cft > 0) then
-     !    rcode = pio_inq_varid(ncid, 'PCT_CFT', varid)
-     !    call mkfile_output(pioid, mesh_model, pio_varid, get_pct_p2l_array(pctcft), rc=rc)
-     ! end if
-  end if
+
+  ! If have pole points on grid - set south pole to glacier
+  ! north pole is assumed as non-land
+  do n = 1,lsize_o
+     if (abs((lat(n) - 90._r8)) < 1.e-6_r8) then
+        call pctnatpft(n)%set_pct_l2g(0._r8)
+        call pctcft(n)%set_pct_l2g(0._r8)
+     end if
+  end do
 
   ! -----------------------------------
   ! Make landfrac_pft and pftdata_mask
@@ -446,8 +447,8 @@ program mksurfdata
         pftdata_mask(n) = 1
      end if
      if (pctlnd_pft(n) < 1.e-6_r8) then
-        !call pctnatpft(n)%set_pct_l2g(0._r8)
-        !call pctcft(n)%set_pct_l2g(0._r8)
+        call pctnatpft(n)%set_pct_l2g(0._r8)
+        call pctcft(n)%set_pct_l2g(0._r8)
      end if
   end do
   if (fsurdat /= ' ') then
@@ -631,7 +632,7 @@ program mksurfdata
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      call pio_syncfile(pioid)
   end if
-  deallocate (soildepth )
+  deallocate (soildepth)
 
   ! -----------------------------------
   ! Make agricultural fire peak month data [abm] from [abm]
@@ -740,6 +741,10 @@ program mksurfdata
      if (pctlnd_pft(n) < 1.e-6_r8) then
         organic(n,:) = 0._r8
      end if
+     ! If have pole points on grid - set south pole to glacier and north pole is not land
+     if (abs((lat(n) - 90._r8)) < 1.e-6_r8) then
+        organic(n,:) = 0._r8
+     end if
   end do
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil organic matter density"
@@ -762,6 +767,19 @@ program mksurfdata
           ef_btr_o=ef1_btr, ef_fet_o=ef1_fet, ef_fdt_o=ef1_fdt,  &
           ef_shr_o=ef1_shr, ef_grs_o=ef1_grs, ef_crp_o=ef1_crp, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkvocef')
+
+     ! If have pole points on grid - set south pole to glacier
+     ! north pole is assumed as non-land
+     do n = 1,lsize_o
+        if (abs((lat(n) - 90._r8)) < 1.e-6_r8) then
+           ef1_btr(n) = 0._r8
+           ef1_fet(n) = 0._r8
+           ef1_fdt(n) = 0._r8
+           ef1_shr(n) = 0._r8
+           ef1_grs(n) = 0._r8
+           ef1_crp(n) = 0._r8
+        end if
+     end do
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out voc emission factors"
      call mkfile_output(pioid,  mesh_model,  'EF1_BTR', ef1_btr, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
@@ -778,15 +796,22 @@ program mksurfdata
   end if
   deallocate (ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
 
-  ! TODO:
-  ! Do landuse changes such as for the poles, etc.
-  ! call change_landuse(dynpft=.false., lat_o=lat_o)
-
   ! -----------------------------------
-  ! Modify pctlak, pctwet, pctgla and pcturb where needed
+  !
   ! -----------------------------------
 
   do n = 1,lsize_o
+
+     ! Do landuse changes such as for the poles, etc.
+     ! If have pole points on grid - set south pole to glacier
+     ! north pole is assumed as non-land
+     if (abs((lat(n) - 90._r8)) < 1.e-6_r8) then
+        pctlak(n) = 0._r8
+        pctwet(n) = 0._r8
+        pcturb(n) = 0._r8
+        pctgla(n) = 100._r8
+     end if
+
      ! Truncate all percentage fields on output grid. This is needed to insure that
      ! wt is zero (not a very small number such as 1e-16) where it should be zero
      pctlak(n) = float(nint(pctlak(n)))
@@ -821,68 +846,87 @@ program mksurfdata
      end if
   end do
 
-  if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glacier"
-     call mkfile_output(pioid, mesh_model, 'PCT_GLACIER', pctgla, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in mkfile_output for pctgla')
+  ! Normalize land use and make sure things add up to 100% as well as
+  ! checking that things are as they should be.
+  call normalize_and_check_landuse(lsize_o)
 
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_lake"
-     call mkfile_output(pioid,  mesh_model,  'PCT_LAKE', pctlak, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in mkfile_output for pctlak')
-
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_wetland"
-     call mkfile_output(pioid, mesh_model,  'PCT_WETLAND', pctwet, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in in mkfile_output for pctwet')
-  end if
-  ! NOTE: do not deallocate pctlak, pctwet, pctglacier and pcturban
-
-  ! ----------------------------------------------------------------------
-  ! TODO:
-  ! call normalizencheck_landuse()
-  ! ----------------------------------------------------------------------
-
-  ! ----------------------------------------------------------------------
-  ! TODO:
   ! Write out sum of PFT's
-  ! ----------------------------------------------------------------------
-  ! do k = natpft_lb,natpft_ub
-  !    suma = 0._r8
-  !    do n = 1,lsize_o
-  !       suma = suma + pctnatpft(n)%get_one_pct_p2g(k)
-  !    enddo
-  !    write(6,*) 'sum over domain of pft ',k,suma
-  ! enddo
-  ! if (root_task) write(ndiag,*)
-  !
-  ! do k = cft_lb,cft_ub
-  !    suma = 0._r8
-  !    do n = 1,lsize_o
-  !       suma = suma + pctcft(n)%get_one_pct_p2g(k)
-  !    enddo
-  !    write(6,*) 'sum over domain of cft ',k,suma
-  ! enddo
-  ! if (root_task) write(ndiag,*)
+  do k = natpft_lb,natpft_ub
+     suma = 0._r8
+     do n = 1,lsize_o
+        suma = suma + pctnatpft(n)%get_one_pct_p2g(k)
+     enddo
+     write(6,*) 'sum over domain of pft ',k,suma
+  enddo
+  if (root_task) write(ndiag,*)
+  do k = cft_lb,cft_ub
+     suma = 0._r8
+     do n = 1,lsize_o
+        suma = suma + pctcft(n)%get_one_pct_p2g(k)
+     enddo
+     write(6,*) 'sum over domain of cft ',k,suma
+  enddo
+  if (root_task) write(ndiag,*)
 
-
-  ! -----------------------------------
   ! Make final values of percent urban by class and compute urban parameters
-  ! -----------------------------------
-
   ! This call needs to occur after all corrections are made to pcturb
   allocate (urban_classes_g(lsize_o,numurbl)); urban_classes_g(:,:) = spval
   call normalize_classes_by_gcell(urban_classes, pcturb, urban_classes_g)
   if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out percnt urban"
-  call mkfile_output(pioid,  mesh_model,  'PCT_URBAN', urban_classes_g, lev1name='numurbl', rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
 
-  ! Now Make Urban Parameters from raw input data and write to surface dataset
+  ! Make Urban Parameters from raw input data and write to surface dataset
   ! Write to netcdf file is done inside mkurbanpar routine
   call mkurbanpar(mksrf_furban, pioid, mesh_model, urban_region, urban_classes_g, &
        urban_skip_abort_on_invalid_data_check)
-
-  deallocate(pcturb)
   deallocate(urban_classes)
   deallocate(urban_region)
+
+  ! Write out PCT_URBAN, PCT_GLACIER, PCT_LAKE and PCT_WETLAND and
+  ! PCT_NATVEG, PCT_NAT_PFT, PCT_CROP and PCT_CFT
+  if (fsurdat /= ' ') then
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out PCT_URBAN"
+     call mkfile_output(pioid,  mesh_model,  'PCT_URBAN', urban_classes_g, lev1name='numurbl', rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out PCT_GLACIER"
+     call mkfile_output(pioid, mesh_model, 'PCT_GLACIER', pctgla, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in mkfile_output for pctgla')
+
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out PCT_LAKE"
+     call mkfile_output(pioid,  mesh_model,  'PCT_LAKE', pctlak, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in mkfile_output for pctlak')
+
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out PCT_WETLAND"
+     call mkfile_output(pioid, mesh_model,  'PCT_WETLAND', pctwet, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in in mkfile_output for pctwet')
+
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_NATVEG"
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_NATVEG"
+     allocate(pctnatveg(lsize_o))
+     call get_pct_l2g_array(pctnatpft, pctnatveg)
+     call mkfile_output(pioid, mesh_model, 'PCT_NATVEG', pctnatveg, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_NATVEG')
+
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_CROP"
+     allocate(pctcrop(lsize_o))
+     call get_pct_l2g_array(pctcft, pctcrop)
+     call mkfile_output(pioid, mesh_model, 'PCT_CROP', pctcrop, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP')
+
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_NAT_PFT"
+     allocate(pct_nat_pft(lsize_o, 0:num_natpft))
+     call get_pct_p2l_array(pctnatpft, ndim1=lsize_o, ndim2=num_natpft+1, pct_p2l=pct_nat_pft)
+     call mkfile_output(pioid, mesh_model, 'PCT_NAT_PFT', pct_nat_pft, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_NAT_PFT')
+
+     if (num_cft > 0) then
+        if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_CFT"
+        allocate(pct_cft(lsize_o, num_cft))
+        call get_pct_p2l_array(pctcft, ndim1=lsize_o, ndim2=num_cft, pct_p2l=pct_cft)
+        call mkfile_output(pioid, mesh_model, 'PCT_CFT', pct_cft, rc=rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CFT')
+     end if
+  end if
 
   ! ----------------------------------------------------------------------
   ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier] dataset
@@ -974,7 +1018,7 @@ program mksurfdata
 
      allocate(pctcft_max(lsize_o))    ;
      allocate(pctnatpft_max(lsize_o)) ;
-     allocate(pctlnd_pft_dyn(ns_o))
+     allocate(pctlnd_pft_dyn(lsize_o))
 
      ! open output file
      call mkpio_wopen(trim(fdyndat), clobber=.true., pioid=pioid)
@@ -987,6 +1031,16 @@ program mksurfdata
 
      ! End define model
      rcode = pio_enddef(pioid)
+
+     ! Write out natpft
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out natpft"
+     rcode = pio_inq_varid(pioid, 'natpft', pio_varid)
+     rcode = pio_put_var(pioid, pio_varid, (/(n,n=natpft_lb,natpft_ub)/))
+
+     ! Write out cft
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out cft"
+     rcode = pio_inq_varid(pioid, 'cft', pio_varid)
+     rcode = pio_put_var(pioid, pio_varid, (/(n,n=cft_lb,cft_ub)/))
 
      ! Write out model grid
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LONGXY"
@@ -1006,10 +1060,12 @@ program mksurfdata
      rcode = pio_inq_varid(pioid, 'cft', pio_varid)
      rcode = pio_put_var(pioid, pio_varid, (/(n,n=cft_lb,cft_ub)/))
 
+     ! Write out PFTDATA_MASK
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land mask from pft dataset"
      call mkfile_output(pioid,  mesh_model, 'PFTDATA_MASK', pftdata_mask, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
 
+     ! Write out LANDFRAC_PFT
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land fraction  from pft dataset"
      call mkfile_output(pioid,  mesh_model, 'LANDFRAC_PFT', landfrac_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
@@ -1083,11 +1139,22 @@ program mksurfdata
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest')
 
         ! Do landuse changes such as for the poles, etc.
-        call change_landuse( dynpft=.true.)
+        ! If have pole points on grid - set south pole to glacier
+        ! north pole is assumed as non-land
+        do n = 1,lsize_o
+           if (abs(lat(n) - 90._r8) < 1.e-6_r8) then
+              pctlak(n) = 0._r8
+              pctwet(n) = 0._r8
+              pcturb(n) = 0._r8
+              pctgla(n) = 100._r8
+              call pctnatpft(n)%set_pct_l2g(0._r8)
+              call pctcft(n)%set_pct_l2g(0._r8)
+           end if
+        end do
 
         ! Normalize land use and make sure things add up to 100% as well as
         ! checking that things are as they should be.
-        call normalizencheck_landuse(ns_o)
+        call normalize_and_check_landuse(lsize_o)
 
         ! Given an array of pct_pft_type variables, update all the max_p2l variables.
         call update_max_array(pctnatpft_max,pctnatpft)
@@ -1113,26 +1180,26 @@ program mksurfdata
 
      end do   ! end of read loop
 
-     rcode = pio_inq_varid(pioid, 'PCT_NAT_PFT_MAX', pio_varid)
-     rcode = pio_put_var(pioid, pio_varid, get_pct_p2l_array(pctnatpft_max))
+     ! TODO: need to use pio here with io descriptors
+     ! rcode = pio_inq_varid(pioid, 'PCT_NAT_PFT_MAX', pio_varid)
+     ! rcode = pio_put_var(pioid, pio_varid, get_pct_p2l_array(pctnatpft_max))
 
-     rcode = pio_inq_varid(pioid, 'PCT_CROP_MAX', pio_varid)
-     rcode = pio_put_var(pioid, pio_varid, get_pct_l2g_array(pctcft_max))
+     ! rcode = pio_inq_varid(pioid, 'PCT_CROP_MAX', pio_varid)
+     ! rcode = pio_put_var(pioid, pio_varid, get_pct_l2g_array(pctcft_max))
 
-     if (num_cft > 0) then
-        rcode = pio_inq_varid(pioid, 'PCT_CFT_MAX', pio_varid)
-        rcode = pio_put_var(pioid, pio_varid, get_pct_p2l_array(pctcft_max))
-     end if
+     ! if (num_cft > 0) then
+     !    rcode = pio_inq_varid(pioid, 'PCT_CFT_MAX', pio_varid)
+     !    rcode = pio_put_var(pioid, pio_varid, get_pct_p2l_array(pctcft_max))
+     ! end if
 
      ! Close the file
      call pio_closefile(pioid)
 
   end if   ! end of if-create dynamic landust dataset
 
-  ! ======================================================================
+  ! -----------------------------------
   ! Wrap things up
-  ! ======================================================================
-
+  ! -----------------------------------
   if (root_task) then
      write (ndiag,'(a)')
      write (ndiag,'(a)') 'Surface data output file = '//trim(fsurdat)
@@ -1151,43 +1218,7 @@ program mksurfdata
   contains
   !-----------------------------------------------------------------------
 
-    subroutine change_landuse(dynpft)
-
-      ! Do landuse changes such as for the poles, etc.
-      ! If have pole points on grid - set south pole to glacier
-      ! north pole is assumed as non-land
-
-      ! input/output variables
-      logical, intent(in)  :: dynpft   ! if part of the dynpft section of code
-
-      ! local variables:
-      integer  :: n  ! indices
-      character(len=*), parameter :: subname = 'change_landuse'  ! subroutine name
-      !-----------------------------------------------------------------------
-
-      do n = 1,lsize_o
-         if (abs(lat(n) - 90._r8) < 1.e-6_r8) then
-            pctlak(n) = 0._r8
-            pctwet(n) = 0._r8
-            pcturb(n) = 0._r8
-            pctgla(n) = 100._r8
-            call pctnatpft(n)%set_pct_l2g(0._r8)
-            call pctcft(n)%set_pct_l2g(0._r8)
-            if ( .not. dynpft )then
-               organic(n,:) = 0._r8
-               ef1_btr(n)   = 0._r8
-               ef1_fet(n)   = 0._r8
-               ef1_fdt(n)   = 0._r8
-               ef1_shr(n)   = 0._r8
-               ef1_grs(n)   = 0._r8
-               ef1_crp(n)   = 0._r8
-            end if
-         end if
-      end do
-    end subroutine change_landuse
-
-    !-----------------------------------------------------------------------
-    subroutine normalizencheck_landuse(ns_o)
+    subroutine normalize_and_check_landuse(ns_o)
       !
       ! Normalize land use and make sure things add up to 100% as well as
       ! checking that things are as they should be.
@@ -1201,7 +1232,7 @@ program mksurfdata
       integer, intent(in) :: ns_o
 
       ! local variables:
-      integer  :: m,k,n                       ! indices
+      integer  :: k,n                         ! indices
       integer  :: nsmall                      ! number of small PFT values for a single check
       integer  :: nsmall_tot                  ! total number of small PFT values in all grid cells
       real(r8) :: suma                        ! sum for error check
@@ -1472,6 +1503,6 @@ program mksurfdata
          write (6,*)'number of small pft = ', nsmall_tot
       end if
 
-    end subroutine normalizencheck_landuse
+    end subroutine normalize_and_check_landuse
 
 end program mksurfdata

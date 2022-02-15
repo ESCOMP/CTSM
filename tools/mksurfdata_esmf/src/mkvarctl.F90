@@ -155,12 +155,18 @@ module mkvarctl
 contains
 !===============================================================
 
-  subroutine read_namelist_input()
+  subroutine read_namelist_input(filename)
+
+    ! Read in input namelist
+
+    ! input/output variables
+    character(len=*), intent(in) :: filename
 
     ! local variables
     integer :: ier
     integer :: fileunit
     logical :: lexist
+    character(len=*), parameter :: subname = 'read_namelist_input'
     ! ------------------------------------------------------------
 
     namelist /mksurfdata_input/      &
@@ -254,14 +260,14 @@ contains
     end if
 
     if (root_task) then
-       inquire (file='mksurfdata_in', exist=lexist)
+       inquire (file=trim(filename), exist=lexist)
        if (.not. lexist) then
-          call shr_sys_abort('mksurfdata_in does not exist')
+          call shr_sys_abort(subname//trim(filename)//' does not exist')
        end if
-       open(newunit=fileunit, status="old", file="mksurfdata_in")
+       open(newunit=fileunit, status="old", file=trim(filename))
        read(fileunit, nml=mksurfdata_input, iostat=ier)
        if (ier > 0) then
-          call shr_sys_abort('error reading in mksurfdata_input namelist from mksurfdata_in')
+          call shr_sys_abort(subname//' error reading in mksurfdata_input namelist from '//trim(filename))
        end if
        close(fileunit)
     end if

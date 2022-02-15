@@ -788,9 +788,9 @@ contains
     type(file_desc_t) , intent(inout) :: pioid
     type(ESMF_Mesh)   , intent(in)    :: mesh
     character(len=*)  , intent(in)    :: varname
-    character(len=*)  , intent(in)    :: lev1name
     real(r8)          , intent(in)    :: data(:,:)
     integer           , intent(out)   :: rc
+    character(len=*)  , optional, intent(in) :: lev1name
 
     ! local variables
     type(io_desc_t)      :: pio_iodesc
@@ -841,9 +841,9 @@ contains
     type(file_desc_t) , intent(inout) :: pioid
     type(ESMF_Mesh)   , intent(in)    :: mesh
     character(len=*)  , intent(in)    :: varname
-    character(len=*)  , intent(in)    :: lev1name
     real(r4)          , intent(in)    :: data(:,:)
     integer           , intent(out)   :: rc
+    character(len=*)  , optional, intent(in) :: lev1name
 
     ! local variables
     type(io_desc_t)      :: pio_iodesc

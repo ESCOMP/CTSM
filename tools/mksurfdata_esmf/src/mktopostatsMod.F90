@@ -186,7 +186,7 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     slope_o(:) = dataptr(:)
 
-    !call output_diagnostics_continuous(data_i, slope_o, tgridmap,
+    ! call output_diagnostics_continuous(data_i, slope_o, tgridmap,
     !"Slope", "degrees", ndiag, tdomain%mask, tgridmap%frac_dst)
 
     ! Check validity of output data
@@ -196,6 +196,15 @@ contains
     !end if
 
     ! Close files and deallocate dynamic memory
+    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_FieldDestroy(field_o, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made Topography statistics'

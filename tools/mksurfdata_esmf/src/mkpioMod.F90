@@ -1021,10 +1021,10 @@ contains
     integer           , intent(out) :: dimlengths(:)  ! lengths of dimensions of variable
     !
     ! local variables
-    type(var_desc_t) :: pio_varid
-    integer          :: dimids(size(dimlengths))
-    integer          :: i
-    integer          :: rcode
+    type(var_desc_t)     :: pio_varid
+    integer, allocatable :: dimids(:)
+    integer              :: i
+    integer              :: rcode
     character(len=*), parameter :: subname = 'mkpio_get_dimlengths'
     !------------------------------------------------------------------------------
 
@@ -1035,11 +1035,13 @@ contains
        call shr_sys_abort(trim(subname)//' ERROR: dimlengths too small')
     end if
 
+    allocate(dimids(ndims))
     rcode = pio_inq_vardimid(pioid, pio_varid, dimids(1:ndims))
     dimlengths(:) = 0  ! pre-fill with 0 so we won't have garbage in elements past ndims
     do i = 1, ndims
        rcode = pio_inq_dimlen(pioid, dimids(i), dimlengths(i))
     end do
+    deallocate(dimids)
 
   end subroutine mkpio_get_dimlengths
 

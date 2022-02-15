@@ -1,26 +1,15 @@
 module mkpftConstantsMod
+
   !-----------------------------------------------------------------------
-  !BOP
-  !
-  ! !MODULE: mkpftConstants
-  !
-  ! !DESCRIPTION:
   ! Constants used by mkpft and related code
-  !
-  ! !REVISION HISTORY:
-  ! Author: Bill Sacks
-  !
   !-----------------------------------------------------------------------
-  !!USES:
+
   use shr_kind_mod, only : r8 => shr_kind_r8
 
   implicit none
   private
 
-  !
-  ! !PUBLIC DATA MEMBERS: 
-  !
-  
+  ! public data members: 
   integer, parameter, public :: maxpft = 78   ! maximum # of PFT
 
   integer, public    :: num_natpft = -1       ! number of PFTs on the natural vegetation

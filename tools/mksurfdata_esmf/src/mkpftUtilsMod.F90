@@ -27,7 +27,6 @@ module mkpftUtilsMod
 contains
 !===============================================================
 
-  !-----------------------------------------------------------------------
   subroutine convert_from_p2g_default(pct_p2g, pctnatpft, pctcft)
     !
     ! !DESCRIPTION:

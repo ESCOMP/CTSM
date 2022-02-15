@@ -35,7 +35,7 @@ module mkpctPftTypeMod
      procedure, private :: check_vals         ! perform a sanity check after setting values
   end type pct_pft_type
 
-  public :: update_max_array ! given an array of pct_pft_type variables update the max_p2l values from pct_p2l
+  public :: update_max_array  ! given an array of pct_pft_type variables update the max_p2l values from pct_p2l
   public :: get_pct_p2l_array ! given an array of pct_pft_type variables, return a 2-d array of pct_p2l
   public :: get_pct_l2g_array ! given an array of pct_pft_type variables, return an array of pct_l2g
 
@@ -491,7 +491,7 @@ contains
 
     do arr_index = 1, size(pct_pft_arr)
        if (lbound(pct_pft_arr(arr_index)%pct_p2l, 1) /= pft_lbound .or. &
-            ubound(pct_pft_arr(arr_index)%pct_p2l, 1) /= pft_ubound) then
+           ubound(pct_pft_arr(arr_index)%pct_p2l, 1) /= pft_ubound) then
           write(6,*) subname//' ERROR: all elements of pct_pft_arr must have'
           write(6,*) 'the same size and lower bound for their pct_p2l array'
           call shr_sys_abort()
@@ -511,7 +511,7 @@ contains
   end subroutine update_max_array
 
   !-----------------------------------------------------------------------
-  function get_pct_p2l_array(pct_pft_arr) result(pct_p2l)
+  subroutine get_pct_p2l_array(pct_pft_arr, ndim1, ndim2, pct_p2l)
     !
     ! Given an array of pct_pft_type variables, return a 2-d array of pct_p2l.
     !
@@ -519,9 +519,11 @@ contains
     ! their pct_p2l array.
     !
     ! input/output variables
-    real(r8), allocatable :: pct_p2l(:,:)  ! function result (n_elements, n_pfts)
     ! workaround for gfortran bug (58043): declare this 'type' rather than 'class':
-    type(pct_pft_type), intent(in) :: pct_pft_arr(:)
+    type(pct_pft_type) , intent(in)    :: pct_pft_arr(:)
+    integer            , intent(in)    :: ndim1
+    integer            , intent(in)    :: ndim2
+    real(r8)           , intent(inout) :: pct_p2l(ndim1,ndim2)  ! result (n_elements, n_pfts)
     !
     ! local variables:
     integer :: pft_lbound
@@ -534,41 +536,48 @@ contains
     pft_lbound = lbound(pct_pft_arr(1)%pct_p2l, 1)
     pft_ubound = ubound(pct_pft_arr(1)%pct_p2l, 1)
 
-    allocate(pct_p2l(size(pct_pft_arr), pft_lbound:pft_ubound))
-
+    ! error checks
+    if (ndim1 /= size(pct_pft_arr)) then
+       write(6,*) 'ndim1, size(pct_pft_arr) = ',ndim1,size(pct_pft_arr)
+       call shr_sys_abort(subname//' ndim1 and size(pct_pft_arr) must be equal')
+    end if
+    if (ndim2 /= pft_ubound-pft_lbound+1) then
+       write(6,*) 'ndim1,pft_ubound-pft_lbound+1 = ',ndim1,pft_ubound-pft_lbound+1
+       call shr_sys_abort(subname//' ndim1 and pft_ubound-pft_lbound+1 must be equal')
+    end if
     do arr_index = 1, size(pct_pft_arr)
        if (lbound(pct_pft_arr(arr_index)%pct_p2l, 1) /= pft_lbound .or. &
-            ubound(pct_pft_arr(arr_index)%pct_p2l, 1) /= pft_ubound) then
+           ubound(pct_pft_arr(arr_index)%pct_p2l, 1) /= pft_ubound) then
           write(6,*) subname//' ERROR: all elements of pct_pft_arr must have'
           write(6,*) 'the same size and lower bound for their pct_p2l array'
           call shr_sys_abort()
        end if
+    end do
 
+    do arr_index = 1, size(pct_pft_arr)
        do pft_index = pft_lbound, pft_ubound
-          pct_p2l(arr_index, pft_index) = pct_pft_arr(arr_index)%pct_p2l(pft_index)
+          pct_p2l(arr_index, pft_index - pft_lbound + 1) = pct_pft_arr(arr_index)%pct_p2l(pft_index)
        end do
     end do
 
-  end function get_pct_p2l_array
+  end subroutine get_pct_p2l_array
 
   !-----------------------------------------------------------------------
-  function get_pct_l2g_array(pct_pft_arr) result(pct_l2g)
+  subroutine get_pct_l2g_array(pct_pft_arr, pct_l2g)
     !
     ! Given an array of pct_pft_type variables, return an array of pct_l2g.
     !
     ! input/output variables
-    real(r8), allocatable :: pct_l2g(:)  ! function result
-    class(pct_pft_type), intent(in) :: pct_pft_arr(:)
+    class(pct_pft_type) , intent(in)    :: pct_pft_arr(:)
+    real(r8)            , intent(inout) :: pct_l2g(:)  !  result
     !
     ! local variables:
     integer :: arr_index
     character(len=*), parameter :: subname = 'get_pct_l2g_array'
     !-----------------------------------------------------------------------
 
-    allocate(pct_l2g(size(pct_pft_arr)))
     pct_l2g = pct_pft_arr(:)%pct_l2g
 
-  end function get_pct_l2g_array
-
+  end subroutine get_pct_l2g_array
 
 end module mkpctPftTypeMod
