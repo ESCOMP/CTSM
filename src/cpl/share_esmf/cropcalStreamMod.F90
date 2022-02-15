@@ -218,9 +218,10 @@ contains
     integer :: sec     ! seconds into current date for nstep+1
     integer :: mcdate  ! Current model date (yyyymmdd)
     integer :: rc
+    logical           :: verbose = .false.
     !-----------------------------------------------------------------------
 
-    write(iulog,*) 'cropcal_advance(): Beginning'
+    if (verbose) write(iulog,*) 'cropcal_advance(): Beginning'
 
     call get_curr_date(year, mon, day, sec)
     mcdate = year*10000 + mon*100 + day
@@ -244,7 +245,7 @@ contains
        end do
     end if
 
-    write(iulog,*) 'cropcal_advance(): Ending'
+    if (verbose) write(iulog,*) 'cropcal_advance(): Ending'
 
   end subroutine cropcal_advance
 
@@ -278,9 +279,10 @@ contains
     real(r8), pointer :: dataptr2d_sdate(:,:)
     real(r8), pointer :: dataptr1d_cultivar_gdds(:)
     real(r8), pointer :: dataptr2d_cultivar_gdds(:,:)
+    logical           :: verbose = .false.
     !-----------------------------------------------------------------------
 
-    write(iulog,*) 'cropcal_interp(): Beginning'
+    if (verbose) write(iulog,*) 'cropcal_interp(): Beginning'
 
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
@@ -295,7 +297,7 @@ contains
     allocate(dataptr2d_sdate(lsize, ncft))
     dataptr2d_sdate(:,:) = -5
     ! Starting with npcropmin will skip generic crops
-    write(iulog,*) 'cropcal_interp(): Reading sdate file'
+    if (verbose) write(iulog,*) 'cropcal_interp(): Reading sdate file'
     do n = 1, ncft
        ivt = n + npcropmin - 1
        call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
@@ -318,7 +320,7 @@ contains
     end do
 
     ! Set rx_sdate for each gridcell/patch combination
-    write(iulog,*) 'cropcal_interp(): Set rx_sdate for each gridcell/patch combination'
+    if (verbose) write(iulog,*) 'cropcal_interp(): Set rx_sdate for each gridcell/patch combination'
     do fp = 1, num_pcropp
        p = filter_pcropp(fp)
        ivt = patch%itype(p)
@@ -345,11 +347,11 @@ contains
     deallocate(dataptr1d_sdate)
     deallocate(dataptr2d_sdate)
 
-    write(iulog,*) 'cropcal_interp(): Allocating dataptrs for cultivar_gdds'
+    if (verbose) write(iulog,*) 'cropcal_interp(): Allocating dataptrs for cultivar_gdds'
     allocate(dataptr1d_cultivar_gdds(lsize))
     allocate(dataptr2d_cultivar_gdds(lsize, ncft))
     if (.not. generate_crop_gdds) then
-       write(iulog,*) 'cropcal_interp(): Reading cultivar_gdds file'
+       if (verbose) write(iulog,*) 'cropcal_interp(): Reading cultivar_gdds file'
        ! Read prescribed cultivar GDDs from input files
        dataptr1d_cultivar_gdds(:) = -4
        dataptr2d_cultivar_gdds(:,:) = -5
@@ -376,7 +378,7 @@ contains
        end do
    
        ! Set rx_cultivar_gdd for each gridcell/patch combination
-       write(iulog,*) 'cropcal_interp(): Set rx_cultivar_gdd for each gridcell/patch combination'
+       if (verbose) write(iulog,*) 'cropcal_interp(): Set rx_cultivar_gdd for each gridcell/patch combination'
        do fp = 1, num_pcropp
           p = filter_pcropp(fp)
 
@@ -443,7 +445,7 @@ contains
    deallocate(dataptr1d_cultivar_gdds)
    deallocate(dataptr2d_cultivar_gdds)
 
-   write(iulog,*) 'cropcal_interp(): All done!'
+   if (verbose) write(iulog,*) 'cropcal_interp(): All done!'
 
 
   end subroutine cropcal_interp

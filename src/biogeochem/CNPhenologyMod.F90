@@ -1817,6 +1817,12 @@ contains
 
          s = sowing_count(p)
 
+         ! SSR troubleshooting
+         if (s<0) then
+             write(iulog,*) 'CropPhenology(): s < 0'
+             call endrun(msg=errMsg(sourcefile, __LINE__))
+         end if
+
          ! SSR: I don't know why this is necessary. next_rx_sdate should get properly set in PlantCrop()
          ! or above, but sometimes (NOT in first year after restart) I'm seeing crops planted Jan. 1 that
          ! are harvested the same day. This (specifically, the second condition) fixes that.
@@ -2338,6 +2344,15 @@ contains
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
       s = sowing_count(p) + 1
+
+      ! SSR troubleshooting
+      if (s < 1) then
+         write(iulog,*) 'PlantCrop(): s < 1'
+         call endrun(msg=errMsg(sourcefile, __LINE__))
+      else if (s > mxgrowseas) then
+         write(iulog,*) 'PlantCrop(): s > mxgrowseas'
+      end if
+
       sowing_count(p) = s
       if (s < mxgrowseas) then
          next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, s+1)

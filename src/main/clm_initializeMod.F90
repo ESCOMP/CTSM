@@ -569,7 +569,7 @@ contains
       do nc = 1,nclumps
          call get_clump_bounds(nc, bounds_clump)
          call cropcal_interp(bounds_clump, filter(nc)%num_pcropp, filter(nc)%pcropp, crop_inst)
-         write(iulog,*) 'Exited cropcal_interp() in initialize2()'
+!         write(iulog,*) 'Exited cropcal_interp() in initialize2()'
       end do
       !$OMP END PARALLEL DO
 !      call cropcal_interp(bounds_clump, crop_inst)
