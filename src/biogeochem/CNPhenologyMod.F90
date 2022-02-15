@@ -2395,11 +2395,6 @@ contains
       crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
       crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
 
-      ! SSR troubleshooting
-      if (cnveg_carbonstate_inst%totvegc_patch(p) == 0.0) then
-         call endrun(msg=errMsg(sourcefile, __LINE__))
-      end if
-
       ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
       ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
       if (use_c13) then
