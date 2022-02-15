@@ -1,1 +1,1 @@
---verbose point --lon 250.45804 --lat 44.95597 --site YELL --dompft 1 --crop --create-domain --create-datm --datm-syr 2000 --create-surface --datm-eyr 2000 --outdir EXEDIR/YELL_user-mod_and_data --user-mods-dir EXEDIR/YELL_user-mod_and_data
+point --lon 250.45804 --lat 44.95597 --site YELL --dompft 1 --crop --create-domain --create-surface --outdir EXEDIR/YELL_user-mod_and_data --user-mods-dir EXEDIR/YELL_user-mod_and_data --verbose
