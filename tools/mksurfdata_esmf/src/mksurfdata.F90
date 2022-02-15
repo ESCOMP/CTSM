@@ -462,6 +462,17 @@ program mksurfdata
   end if
 
   ! -----------------------------------
+  ! Make LAI and SAI from 1/2 degree data and write to surface dataset
+  ! Write to netcdf file is done inside mklai routine
+  ! -----------------------------------
+  if (root_task) then
+     write(ndiag,'(a)')'calling mklai'
+  end if
+  call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
+  call pio_syncfile(pioid)
+
+  ! -----------------------------------
   ! Make constant harvesting data at model resolution
   ! -----------------------------------
   ! Note that this call must come after call to mkpftInit - since num_cft is set there
@@ -681,17 +692,6 @@ program mksurfdata
      end where
      deallocate(elev)
   end if
-
-  ! -----------------------------------
-  ! Make LAI and SAI from 1/2 degree data and write to surface dataset
-  ! Write to netcdf file is done inside mklai routine
-  ! -----------------------------------
-  if (root_task) then
-     write(ndiag,'(a)')'calling mklai'
-  end if
-  call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
-  call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! Compute topography statistics [topo_stddev, slope] from [ftopostats]

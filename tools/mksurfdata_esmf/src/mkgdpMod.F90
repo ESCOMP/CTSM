@@ -68,6 +68,8 @@ contains
 
     if (root_task) then
        write(ndiag,*)
+       write(ndiag,'(1x,80a1)') ('=',k=1,80)
+       write(ndiag,*)
        write(ndiag,'(a)') 'Attempting to make GDP.....'
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
        write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
@@ -150,7 +152,6 @@ contains
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made GDP'
-       write (ndiag,'(a)')
     end if
 
   end subroutine mkgdp

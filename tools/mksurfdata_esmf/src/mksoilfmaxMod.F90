@@ -78,7 +78,9 @@ contains
           write(6,*)'soil_fmax is out of range = ', soil_fmax_override
           call shr_sys_abort()
        end if
-       write(6,*) 'Replace soil fmax for all points with: ', soil_fmax_override
+       if (root_task) then
+          write(ndiag,'(a,d13.5)') 'Replacing soil fmax for all points with: ', soil_fmax_override
+       end if
     end if
 
     ! Open input data file
@@ -219,7 +221,6 @@ contains
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made %fmax'
-       write (ndiag,*)
     end if
 
   end subroutine mksoilfmax

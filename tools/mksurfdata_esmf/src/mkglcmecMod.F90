@@ -140,7 +140,7 @@ contains
     integer                :: pio_vartype
     integer                :: ni,no,lev
     integer                :: ns_i, ns_o
-    integer                :: n,m                      ! indices
+    integer                :: n,m,k                    ! indices
     integer                :: dimid                    ! dimension ids
     integer                :: ndims                    ! number of dimensions in input variables
     integer                :: nlev                     ! number of levels in input file
@@ -173,7 +173,9 @@ contains
 
     if (root_task) then
        write(ndiag,*)
-       write (ndiag,'(a)') 'Attempting to make percent elevation class ',&
+       write(ndiag,'(1x,80a1)') ('=',k=1,80)
+       write(ndiag,*)
+       write(ndiag,'(a)') 'Attempting to make percent elevation class ',&
             'and mean elevation for glaciers .....'
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
        write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
@@ -437,7 +439,6 @@ contains
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made percent elevation class and mean elevation for glaciers'
-       write (ndiag,'(a)')
     end if
 
   end subroutine mkglcmec
@@ -489,6 +490,8 @@ contains
     !-----------------------------------------------------------------------
 
     if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(1x,80a1)') ('=',k=1,80)
        write(ndiag,*)
        write(ndiag,'(a)') 'Attempting to make %glacier .....'
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
@@ -601,7 +604,6 @@ contains
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made %glacier'
-       write (ndiag,*)
     end if
 
   end subroutine mkglacier
