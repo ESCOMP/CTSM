@@ -962,6 +962,8 @@ contains
    character(len=*), parameter :: subname = 'DynamicColumnAdjustments'
    !-----------------------------------------------------------------------
 
+   write(iulog,*)'Entering DynamicColumnAdjustments()'
+
    begc = bounds%begc
    endc = bounds%endc
 
@@ -1028,6 +1030,8 @@ contains
       end do
 
    end if
+
+   write(iulog,*)'Exiting DynamicColumnAdjustments()'
 
  end subroutine DynamicColumnAdjustments
 

@@ -22,6 +22,7 @@ module CNRootDynMod
    use SoilStateType                   , only : soilstate_type
    use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
    use CropType                        , only : crop_type
+   use clm_varctl     , only : iulog
 
 ! !PUBLIC TYPES:
   implicit none
@@ -101,6 +102,8 @@ subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
     croplive               => crop_inst%croplive_patch                          , & ! Input:  [logical (:)]  flag, true if planted, not harvested
     huigrain               => cnveg_state_inst%huigrain_patch                     & ! Input: [real(r8) (:)]  same to reach vegetative maturity
     )
+
+    write(iulog,*)'Entering CNRootDyn()'
    
 ! set time steps
    dt = get_step_size_real()
@@ -263,6 +266,8 @@ subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
      deallocate(w_limit)
 
      end associate
+
+     write(iulog,*)'Exiting CNRootDyn()'
 
  end subroutine CNRootDyn
 

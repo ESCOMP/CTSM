@@ -240,6 +240,8 @@ contains
     ! !LOCAL VARIABLES:
     integer :: fc,c,p  ! indices
     !-----------------------------------------------------------------------
+    
+    write(iulog,*)'Entering p2c_1d_filter()'
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(patcharr) == (/bounds%endp/)), sourcefile, __LINE__)
@@ -252,6 +254,8 @@ contains
           if (patch%active(p)) colarr(c) = colarr(c) + patcharr(p) * patch%wtcol(p)
        end do
     end do
+
+    write(iulog,*)'Exiting p2c_1d_filter()'
 
   end subroutine p2c_1d_filter
 
@@ -272,6 +276,8 @@ contains
     integer :: fc,c,p,j    ! indices
     !-----------------------------------------------------------------------
 
+    write(iulog,*)'Entering p2c_2d_filter()'
+
     do j = 1,lev
        do fc = 1,numfc
           c = filterc(fc)
@@ -281,6 +287,8 @@ contains
           end do
        end do
     end do
+
+    write(iulog,*)'Exiting p2c_2d_filter()'
 
   end subroutine p2c_2d_filter
 

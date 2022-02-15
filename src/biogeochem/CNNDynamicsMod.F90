@@ -28,6 +28,7 @@ module CNNDynamicsMod
   ! SSR troubleshooting
   use abortutils                      , only : endrun
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
+  use clm_varctl     , only : iulog
   !
   implicit none
   private
@@ -337,6 +338,8 @@ contains
     real(r8):: GDDfracthreshold3, GDDfracthreshold4
     !-----------------------------------------------------------------------
 
+    write(iulog,*) 'Entering CNSoyfix()'
+
     associate(                                                                      & 
          wf               =>  waterdiagnosticbulk_inst%wf_col                      ,         & ! Input:  [real(r8) (:) ]  soil water as frac. of whc for top 0.5 m          
 
@@ -447,6 +450,8 @@ contains
            soyfixn_to_sminn(bounds%begc:bounds%endc))
 
     end associate
+
+    write(iulog,*) 'Exiting CNSoyfix()'
 
   end subroutine CNSoyfix
 

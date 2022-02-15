@@ -300,6 +300,8 @@ contains
 
     ! -----------------------------------------------------------------------
 
+    write(iulog,*) 'Entering calc_plant_cn_alloc() (NutrientCompetitionFlexibleCNMod.F90)'
+
     SHR_ASSERT_ALL_FL((ubound(aroot)   == (/bounds%endp/)) , sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(arepr)   == (/bounds%endp/)) , sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(fpg_col) == (/bounds%endc/)) , sourcefile, __LINE__)
@@ -1119,6 +1121,8 @@ contains
 
     end associate
 
+    write(iulog,*) 'Exiting calc_plant_cn_alloc() (NutrientCompetitionFlexibleCNMod.F90)'
+
   end subroutine calc_plant_cn_alloc
 
 ! -----------------------------------------------------------------------
@@ -1258,6 +1262,8 @@ contains
     real(r8) :: allocation_froot (bounds%begp:bounds%endp)
 
     ! -----------------------------------------------------------------------
+
+    write(iulog,*) 'Entering calc_plant_nitrogen_demand() (NutrientCompetitionFlexibleCNMod.F90)'
 
     SHR_ASSERT_ALL_FL((ubound(aroot) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(arepr) == (/bounds%endp/)), sourcefile, __LINE__)
@@ -1549,7 +1555,7 @@ contains
                   if (gddmaturity(p) == 0.0) then
                      call endrun(msg=errMsg(sourcefile, __LINE__))
                   end if
-                  
+
                   aroot(p) = max(0._r8, min(1._r8, arooti(ivt(p)) - &
                        (arooti(ivt(p)) - arootf(ivt(p))) * min(1._r8, hui(p)/gddmaturity(p))))
                   if (astemi(p) > astemf(ivt(p))) then
@@ -1781,6 +1787,8 @@ contains
       end do ! end patch loop
 
     end associate
+
+    write(iulog,*) 'Exiting calc_plant_nitrogen_demand() (NutrientCompetitionFlexibleCNMod.F90)'
 
   end subroutine calc_plant_nitrogen_demand
 
