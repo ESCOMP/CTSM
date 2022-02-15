@@ -308,6 +308,12 @@ def get_parser():
             type=str,
             default="",
         )
+        subparser.add_argument(
+            "--overwrite",
+            help="Flag to overwrite if the files already exists.",
+            action="store_true",
+            dest="overwrite",
+        )
         add_logging_args(subparser)
 
     # -- print help for both subparsers
@@ -440,6 +446,7 @@ def subset_point(args, file_dict: dict):
         uni_snow = args.uni_snow,
         cap_saturation = args.cap_saturation,
         out_dir = args.out_dir,
+        overwrite = args.overwrite,
     )
 
     logger.debug(single_point)
@@ -496,6 +503,7 @@ def subset_region(args, file_dict: dict):
         create_datm = args.create_datm,
         create_user_mods = args.create_user_mods,
         out_dir = args.out_dir,
+        overwrite = args.overwrite,
     )
 
     logger.debug(region)

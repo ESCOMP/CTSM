@@ -100,14 +100,14 @@ class TestArgsPlat(unittest.TestCase):
         ):
             _ = plat_type(91)
 
-    def test_platType_outOfBounds_90(self):
+    def test_platType_outOfBounds_pos90(self):
         """
         Test of plat_type is 90
         """
         result = plat_type(90)
         self.assertEqual(result, 90.0)
 
-    def test_platType_outOfBounds_90(self):
+    def test_platType_outOfBounds_neg90(self):
         """
         Test of plat_type is -90
         """
