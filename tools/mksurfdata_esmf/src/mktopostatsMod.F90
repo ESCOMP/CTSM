@@ -88,7 +88,9 @@ contains
     end if
 
     ! Open input data file
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    ! Read in data with PIO_IOTYPE_NETCDF rather than PIO_IOTYPE_PNETCDF since there are problems
+    ! with the pnetcdf read of this high resolution data
+    rcode = pio_openfile(pio_iosystem, pioid, PIO_IOTYPE_NETCDF, trim(file_data_i), pio_nowrite)
     call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
@@ -104,7 +106,7 @@ contains
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Read in data_i
+    ! Read in input data data_i
     allocate(data_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort(subname//' error in allocating data_i')
     call mkpio_get_rawdata(pioid, 'ELEVATION', mesh_i, data_i, rc=rc)
@@ -198,6 +200,7 @@ contains
     !end if
 
     ! Close files and deallocate dynamic memory
+    call pio_closefile(pioid)
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)

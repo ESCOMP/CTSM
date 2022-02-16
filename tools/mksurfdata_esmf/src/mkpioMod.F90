@@ -644,7 +644,6 @@ contains
           end if
        else if (ndims == 4) then
           if (unlimited_dim) then
-             write(6,*)'Creating an output pio descriptor here'
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof3d, pio_iodesc)
           else
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3),dimlens(4)/), compdof3d, pio_iodesc)

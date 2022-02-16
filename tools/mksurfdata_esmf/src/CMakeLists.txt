@@ -63,7 +63,8 @@ target_include_directories (mksurfdata PRIVATE ${ESMF_F90COMPILEPATHS})
 target_include_directories (mksurfdata PRIVATE /glade/work/jedwards/tools/pio/2.5.5/intel/19.1.1/mpt/2.22/include)
 #target_include_directories (mksurfdata PRIVATE /glade/u/apps/ch/opt/pio/2.5.5/mpt/2.22/intel/19.1.1/include) # non debug version
 target_include_directories (mksurfdata PRIVATE /glade/u/apps/ch/opt/pnetcdf/1.12.2/mpt/2.22/intel/19.1.1//include)
-target_include_directories (mksurfdata PRIVATE /glade/u/apps/ch/opt/netcdf-mpi/4.8.0/mpt/2.22/intel/19.1.1//include)
+#target_include_directories (mksurfdata PRIVATE /glade/u/apps/ch/opt/netcdf-mpi/4.8.0/mpt/2.22/intel/19.1.1//include)
+target_include_directories (mksurfdata PRIVATE /glade/u/apps/ch/opt/netcdf-mpi/4.8.1/mpt/2.22/intel/19.1.1//include)
 
 #link_directories(/glade/u/apps/ch/opt/pio/2.5.5/mpt/2.22/intel/19.1.1/lib)
 #target_link_libraries(mksurfdata piof)

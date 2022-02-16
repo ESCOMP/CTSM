@@ -42,7 +42,7 @@ contains
     integer                :: ni,no
     integer                :: ns_i, ns_o
     integer                :: nlay
-    integer                :: n, l  ! indices
+    integer                :: n,l,k  ! indices
     integer                :: rcode, ier             ! error status
     integer                :: ndims
     integer , allocatable  :: dimlengths(:)
@@ -59,6 +59,8 @@ contains
     rc = ESMF_SUCCESS
 
     if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(1x,80a1)') ('=',k=1,80)
        write(ndiag,*)
        write(ndiag,'(a)')'Attempting to make organic mater dataset .....'
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)

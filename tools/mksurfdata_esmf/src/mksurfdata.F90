@@ -297,7 +297,7 @@ program mksurfdata
   ! the following returns pio_iosystem
   call pio_init(iam, mpicom, max(1,petcount/stride), 0, stride, PIO_REARR_SUBSET, pio_iosystem)
 
-  pio_iotype = PIO_IOTYPE_NETCDF
+  pio_iotype = PIO_IOTYPE_PNETCDF
   pio_ioformat =  PIO_64BIT_DATA
 
   call ESMF_LogWrite("finished initializing PIO", ESMF_LOGMSG_INFO)
@@ -415,6 +415,17 @@ program mksurfdata
   end if
 
   ! -----------------------------------
+  ! Make LAI and SAI from 1/2 degree data and write to surface dataset
+  ! Write to netcdf file is done inside mklai routine
+  ! -----------------------------------
+  if (root_task) then
+     write(ndiag,'(a)')'calling mklai'
+  end if
+  call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
+  call pio_syncfile(pioid)
+
+  ! -----------------------------------
   ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
   ! -----------------------------------
   ! Determine fractional land from pft dataset
@@ -424,6 +435,7 @@ program mksurfdata
   call mkpft( mksrf_fvegtyp_mesh, mksrf_fvegtyp, mesh_model, &
        pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
+  call pio_syncfile(pioid)
 
   ! If have pole points on grid - set south pole to glacier
   ! north pole is assumed as non-land
@@ -462,23 +474,13 @@ program mksurfdata
   end if
 
   ! -----------------------------------
-  ! Make LAI and SAI from 1/2 degree data and write to surface dataset
-  ! Write to netcdf file is done inside mklai routine
-  ! -----------------------------------
-  if (root_task) then
-     write(ndiag,'(a)')'calling mklai'
-  end if
-  call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
-  call pio_syncfile(pioid)
-
-  ! -----------------------------------
   ! Make constant harvesting data at model resolution
   ! -----------------------------------
   ! Note that this call must come after call to mkpftInit - since num_cft is set there
   call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, &
        pioid_o=pioid, all_veg=all_veg, constant=.true., rc=rc )
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
+  call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
@@ -514,6 +516,7 @@ program mksurfdata
        pctgla(:) = 0.
     end if
  end if
+ call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! Make glacier region ID [glacier_region] from [fglacierregion] dataset
@@ -527,6 +530,7 @@ program mksurfdata
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
   end if
   deallocate (glacier_region )
+  call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! Make soil texture [pctsand, pctclay]
@@ -616,6 +620,7 @@ program mksurfdata
      call pio_syncfile(pioid)
   end if
   deallocate(gdp)
+  call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! Make peat data [fpeat] from [peatf]
@@ -630,6 +635,7 @@ program mksurfdata
      call pio_syncfile(pioid)
   end if
   deallocate(fpeat)
+  call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! Make soil depth data [soildepth] from [soildepthf]
@@ -691,6 +697,7 @@ program mksurfdata
         pcturb = 0._r8
      end where
      deallocate(elev)
+     call pio_syncfile(pioid)
   end if
 
   ! -----------------------------------
@@ -793,12 +800,9 @@ program mksurfdata
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      call mkfile_output(pioid,  mesh_model,  'EF1_CRP', ef1_crp, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+     call pio_syncfile(pioid)
   end if
   deallocate (ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
-
-  ! -----------------------------------
-  !
-  ! -----------------------------------
 
   do n = 1,lsize_o
 
@@ -856,7 +860,10 @@ program mksurfdata
      do n = 1,lsize_o
         suma = suma + pctnatpft(n)%get_one_pct_p2g(k)
      enddo
-     write(6,*) 'sum over domain of pft ',k,suma
+     ! TODO: calculate global sum here
+     if (root_task) then
+        write(ndiag,*) 'sum over domain of pft ',k,suma
+     end if
   enddo
   if (root_task) write(ndiag,*)
   do k = cft_lb,cft_ub
@@ -864,7 +871,10 @@ program mksurfdata
      do n = 1,lsize_o
         suma = suma + pctcft(n)%get_one_pct_p2g(k)
      enddo
-     write(6,*) 'sum over domain of cft ',k,suma
+     ! TODO: calculate global sum here
+     if (root_task) then
+        write(6,*) 'sum over domain of cft ',k,suma
+     end if
   enddo
   if (root_task) write(ndiag,*)
 
@@ -886,7 +896,7 @@ program mksurfdata
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out PCT_URBAN"
      call mkfile_output(pioid,  mesh_model,  'PCT_URBAN', urban_classes_g, lev1name='numurbl', rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_URBAN')
 
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out PCT_GLACIER"
      call mkfile_output(pioid, mesh_model, 'PCT_GLACIER', pctgla, rc=rc)
@@ -1299,12 +1309,12 @@ program mksurfdata
          ! correct for rounding error:
          new_total_veg_pct = max(new_total_veg_pct, 0._r8)
 
-         ! call adjust_total_veg_area(new_total_veg_pct, pctnatpft=pctnatpft(n), pctcft=pctcft(n))
+         call adjust_total_veg_area(new_total_veg_pct, pctnatpft=pctnatpft(n), pctcft=pctcft(n))
 
          ! Make sure we did the above rescaling correctly
          suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
          if (abs(suma - 100._r8) > tol_loose) then
-            write(6,*) subname, ' ERROR in rescaling veg based on (special excluding urban'
+            write(6,*) subname, ' ERROR in rescaling veg based on (special excluding urban)'
             write(6,*) 'suma = ', suma
             call shr_sys_abort()
          end if

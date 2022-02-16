@@ -266,11 +266,10 @@ contains
 
     end do  ! end loop over months
 
-    ! Close the  input file
+    ! Free the decomps and close the file
     call pio_freedecomp(pioid_o, pio_iodesc_o)
-
+    call pio_freedecomp(pioid_i, pio_iodesc_i)
     call pio_closefile(pioid_i)
-    call pio_freedecomp(pio_iosystem, pio_iodesc_i)
     call ESMF_VMLogMemInfo("After pio_closefile for input in "//trim(subname))
 
     ! Release memory

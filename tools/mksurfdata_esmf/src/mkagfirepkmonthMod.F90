@@ -55,6 +55,7 @@ contains
     type(ESMF_Field)               :: field_o
     type(ESMF_Field)               :: field_dstfrac
     type(file_desc_t)              :: pioid
+    integer                        :: k
     integer                        :: ni,no
     integer                        :: ns_i, ns_o
     integer , allocatable          :: mask_i(:)
@@ -69,6 +70,8 @@ contains
     !-----------------------------------------------------------------------
 
     if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(1x,80a1)') ('=',k=1,80)
        write(ndiag,*)
        write(ndiag,'(a)') 'Attempting to make agricultural fire peak month data .....'
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
