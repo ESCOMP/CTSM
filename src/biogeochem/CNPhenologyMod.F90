@@ -126,6 +126,7 @@ module CNPhenologyMod
 
   logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
   logical          :: ignore_rx_crop_gdds = .false. ! Troubleshooting
+  real(r8)         :: min_crop_gdd_target = 1._r8   ! Troubleshooting
 
   ! Constants for seasonal decidious leaf onset and offset
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
@@ -169,7 +170,7 @@ contains
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
                            min_critical_dayl_method, generate_crop_gdds, &
-                           ignore_rx_crop_gdds
+                           ignore_rx_crop_gdds, min_crop_gdd_target
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -195,6 +196,7 @@ contains
     call shr_mpi_bcast (min_critical_dayl_method,     mpicom)
     call shr_mpi_bcast (generate_crop_gdds,          mpicom)
     call shr_mpi_bcast (ignore_rx_crop_gdds,         mpicom)
+    call shr_mpi_bcast (min_crop_gdd_target,         mpicom)
 
     if (      min_critical_dayl_method == "DependsOnLat"       )then
        critical_daylight_method = critical_daylight_depends_on_lat
@@ -2427,7 +2429,7 @@ contains
 
          ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
          ! Just manually set a minimum of 1.0
-         gdd_target = max(gdd_target, 1._r8)
+         gdd_target = max(gdd_target, min_crop_gdd_target)
 
          gddmaturity(p) = gdd_target
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then

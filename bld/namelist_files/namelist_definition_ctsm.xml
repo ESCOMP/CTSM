@@ -1113,6 +1113,11 @@ Set to .true. in order to override crop harvesting logic and to instead harvest 
 Set to .true. in order to override prescribed crop GDD requirements and instead use default CLM values/logic. For troubleshooting purposes only.
 </entry>
 
+<entry id="min_crop_gdd_target" type="real" category="physics"
+        group="cnphenology" valid_values="" value="1.0d00">
+Set minimum crop GDD requirement. Used only with prescribed GDD inputs from file.
+</entry>
+
 <entry id="min_critical_dayl_method" type="char*25" category="physics"
        group="cnphenology" valid_values="Constant,DependsOnLat,DependsOnVeg,DependsOnLatAndVeg">
 Method for determining what the minimum critical day length for seasonal decidious leaf offset depends on
