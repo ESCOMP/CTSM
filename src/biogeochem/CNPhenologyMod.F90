@@ -2453,6 +2453,7 @@ contains
             gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
          end if
       endif
+      write (iulog,*)  'gddmaturity (ivt ',ivt(p),'): ',gddmaturity(p)
 
     end associate
 
