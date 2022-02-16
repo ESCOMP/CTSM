@@ -519,30 +519,13 @@ contains
 
        end if
 
-       if ( outnc_3dglc ) then
-          call mkpio_def_spatial_var(pioid=pioid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
-               lev1name='nglcec', &
-               long_name='percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', &
-               units='unitless')
-
-          call mkpio_def_spatial_var(pioid=pioid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
-               lev1name='nglcec', &
-               long_name='percent ice sheet for each glacier elevation class (% of landunit)', units='unitless')
-
-          call mkpio_def_spatial_var(pioid=pioid, varname='PCT_GLC_GIC', xtype=xtype, &
-               long_name='percent ice caps/glaciers (% of landunit)', units='unitless')
-
-          call mkpio_def_spatial_var(pioid=pioid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
-               long_name='percent ice sheet (% of landunit)', units='unitless')
-
-       end if
-
        call mkpio_def_spatial_var(pioid=pioid, varname='PCT_URBAN', xtype=xtype, &
             lev1name='numurbl', &
             long_name='percent urban for each density type', units='unitless')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='URBAN_REGION_ID', xtype=PIO_INT, &
             long_name='urban region ID', units='unitless')
+
     end if
 
     if (.not. dynlanduse) then

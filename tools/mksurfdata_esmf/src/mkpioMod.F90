@@ -707,7 +707,9 @@ contains
     !-------------------------------------------------------------------------------
 
     ! filename not open
-    call ESMF_LogWrite("opening output file "//trim(filename), ESMF_LOGMSG_INFO)
+    if (root_task) then
+       write(ndiag,'(a)') "opening output file "//trim(filename)
+    end if
 
     if (mkpio_file_exists(filename)) then
        if (clobber) then

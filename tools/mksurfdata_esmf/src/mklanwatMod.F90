@@ -82,9 +82,7 @@ contains
 
     ! Open raw data file
     ! ASSUME for now that have only 1 input data file
-    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
-    call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)

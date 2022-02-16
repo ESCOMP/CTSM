@@ -340,6 +340,7 @@ contains
     call mpi_bcast (mksrf_fdynuse_mesh, len(mksrf_fdynuse_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (fsurdat, len(fsurdat), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fdyndat, len(fdyndat), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (outnc_dims, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (outnc_large_files, 1, MPI_LOGICAL, 0, mpicom, ier)

@@ -90,7 +90,7 @@ program mksurfdata
   ! !USES:
   use ESMF
   use pio
-  use shr_kind_mod       , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs
+  use shr_kind_mod       , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs, cl => shr_kind_cl
   use shr_sys_mod        , only : shr_sys_abort
 #ifdef TODO
   use mkVICparamsMod     , only : mkVICparams
@@ -147,11 +147,13 @@ program mksurfdata
   ! pct vegetation data
   real(r8), allocatable           :: landfrac_pft(:)         ! PFT data: % land per gridcell
   real(r8), allocatable           :: pctlnd_pft(:)           ! PFT data: % of gridcell for PFTs
-  real(r8), allocatable           :: pctlnd_pft_dyn(:)       ! PFT data: % of gridcell for dyn landuse PFTs
   integer , allocatable           :: pftdata_mask(:)         ! mask indicating real or fake land type
   type(pct_pft_type), allocatable :: pctnatpft(:)            ! % of grid cell that is nat veg, and breakdown into PFTs
-  type(pct_pft_type), allocatable :: pctnatpft_max(:)        ! % of grid cell maximum PFTs of the time series
   type(pct_pft_type), allocatable :: pctcft(:)               ! % of grid cell that is crop, and breakdown into CFTs
+
+  ! dynamic land use
+  real(r8), allocatable           :: pctlnd_pft_dyn(:)       ! PFT data: % of gridcell for dyn landuse PFTs
+  type(pct_pft_type), allocatable :: pctnatpft_max(:)        ! % of grid cell maximum PFTs of the time series
   type(pct_pft_type), allocatable :: pctcft_max(:)           ! % of grid cell maximum CFTs of the time series
 
   ! harvest initial value
@@ -246,18 +248,17 @@ program mksurfdata
   logical                         :: create_esmf_pet_files = .true.
 
   ! character variables
-  character(len=CS)               :: string                  ! string read in
-  character(len=CS)               :: fname
-  character(len=CS)               :: varname
-  character(len=32)               :: subname = 'mksrfdata'   ! program name
+  character(len=CL)               :: string                  ! string read in
+  character(len=CL)               :: fname
+  character(len=CL)               :: varname
+  character(len=*), parameter     :: subname = 'mksrfdata'   ! program name
 
   real(r8), allocatable :: pctnatveg(:)
   real(r8), allocatable :: pctcrop(:)
   real(r8), allocatable :: pct_nat_pft(:,:)
   real(r8), allocatable :: pct_cft(:,:)
-  integer :: bounds(2)
 
-  character(len=*) , parameter :: u_FILE_u = &
+  character(len=*), parameter :: u_FILE_u = &
        __FILE__
   ! ------------------------------------------------------------
 
@@ -435,7 +436,6 @@ program mksurfdata
   call mkpft( mksrf_fvegtyp_mesh, mksrf_fvegtyp, mesh_model, &
        pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
-  call pio_syncfile(pioid)
 
   ! If have pole points on grid - set south pole to glacier
   ! north pole is assumed as non-land
@@ -1009,12 +1009,16 @@ program mksurfdata
 
   if (root_task) then
      write(ndiag,*)
-     write(ndiag,'(a)')'successfully created file '//trim(fsurdat)
+     write(ndiag,'(a)') 'Successfully created surface data output file = '//trim(fsurdat)
+     write(ndiag,'(a)') '   This file contains the land model surface data'
+     write(ndiag,*)
   end if
 
   ! ======================================================================
   ! Create fdyndat if appropriate
   ! ======================================================================
+
+1000 continue
 
   if (mksrf_fdynuse /= ' ') then
 
@@ -1023,7 +1027,12 @@ program mksurfdata
      end if
 
      if (root_task) then
-        write(ndiag,'(a)')'creating dynamic land use dataset'
+        write(ndiag,*)
+        write(ndiag,'(1x,80a1)') ('=',k=1,80)
+        write(ndiag,'(1x,80a1)') ('*',k=1,80)
+        write(ndiag,'(1x,80a1)') ('=',k=1,80)
+        write(ndiag,*)
+        write(ndiag,'(a)')'Creating dynamic land use dataset '//trim(fdyndat)
      end if
 
      allocate(pctcft_max(lsize_o))    ;
@@ -1038,6 +1047,9 @@ program mksurfdata
 
      ! Define global attributes
      call mkfile_define_atts(pioid, dynlanduse = .true.)
+
+     ! Define variables
+     call mkfile_define_vars(pioid, dynlanduse = .true.)
 
      ! End define model
      rcode = pio_enddef(pioid)
@@ -1085,9 +1097,12 @@ program mksurfdata
      ! -----------------------------------------
 
      ! Open txt file
-     open (newunit=nfdyn, file=trim(mksrf_fdynuse), form='formatted', iostat=ier)
-     if (ier /= 0) then
-        call shr_sys_abort(subname//" failed to open file "//trim(mksrf_fdynuse))
+     if (root_task) then
+        write(ndiag,'(a)')' Opening '//trim(mksrf_fdynuse)//' to read dynamic data forcing '
+        open (newunit=nfdyn, file=trim(mksrf_fdynuse), form='formatted', iostat=ier)
+        if (ier /= 0) then
+           call shr_sys_abort(subname//" failed to open file "//trim(mksrf_fdynuse))
+        end if
      end if
 
      pctnatpft_max = pctnatpft
@@ -1097,7 +1112,12 @@ program mksurfdata
      do
 
         ! Determine file name
-        read(nfdyn, '(A195,1x,I4)', iostat=ier) string, year
+        if (root_task) then
+           read(nfdyn, '(A195,1x,I4)', iostat=ier) string, year
+        end if
+        call mpi_bcast (string, len(string), MPI_CHARACTER, 0, mpicom, ier)
+        call mpi_bcast (year, 1, MPI_INTEGER, 0, mpicom, ier)
+
         if (ier /= 0) EXIT
 
         ! If pft fraction override is set, than intrepret string as PFT and harvesting override values
@@ -1110,13 +1130,18 @@ program mksurfdata
            write(6, '(a, i4, a)') 'PFT and harvesting values for year ', year, ' :'
            write(6, '(a, a)') '    ', trim(string)
         else
+           write(ndiag,'(a,i8)')' fname = '//trim(fname)//' year = ',year 
            fname = string
-           read(nfdyn, '(A195,1x,I4)', iostat=ier) fhrvname, year2
            if (root_task) then
+              read(nfdyn, '(A195,1x,I4)', iostat=ier) fhrvname, year2
               write(ndiag,'(a,i8,a)')' input pft dynamic dataset for year ', year,' is : '//trim(fname)
            end if
+           call mpi_bcast (fhrvname, len(fhrvname), MPI_CHARACTER, 0, mpicom, ier)
+           call mpi_bcast (year2, 1, MPI_INTEGER, 0, mpicom, ier)
            if ( year2 /= year ) then
-              write(6,*) subname, ' error: year for harvest not equal to year for PFT files'
+              if (root_task) then
+                 write(ndiag,*) subname, ' error: year for harvest not equal to year for PFT files'
+              end if
               call shr_sys_abort()
            end if
         end if
@@ -1170,37 +1195,53 @@ program mksurfdata
         call update_max_array(pctnatpft_max,pctnatpft)
         call update_max_array(pctcft_max,pctcft)
 
-        ! TODO: need to create an io descriptor here - need to actually put this in mkpft?
-        ! Output time-varying data for current year
-        ! rcode = pio_inq_varid(pioid, 'PCT_NAT_PFT', pio_varid)
-        ! call mkpio_put_time_slice(pioid, pio_varid, ntim, get_pct_p2l_array(pctnatpft))
-        ! rcode = pio_inq_varid(pioid, 'PCT_CROP', pio_varid)
-        ! call mkpio_put_time_slice(pioid, pio_varid, ntim, get_pct_l2g_array(pctcft))
-        ! if (num_cft > 0) then
-        !    rcode = pio_inq_varid(pioid, 'PCT_CFT', pio_varid)
-        !    call mkpio_put_time_slice(pioid, pio_varid, ntim, get_pct_p2l_array(pctcft))
-        ! end if
-        ! TODO: make sure the following is correct
-        ! rcode = pio_inq_varid(pioid, 'YEAR', pio_varid)
-        ! rcode = pio_put_var(pioid, pio_varid, ntim, 1, year)
-        ! rcode = pio_inq_varid(pioid, 'time', pio_varid)
-        ! rcode = pio_put_var(pioid, pio_varid, ntim, 1, year)
-        ! rcode = pio_inq_varid(pioid, 'input_pftdata_filename', pio_varid)
-        ! rcode = pio_put_var(pioid, pio_varid, (/ 1, ntim /), (/ len_trim(string), 1 /), trim(string))
+        if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_NAT_PFT for year ",year
+        call get_pct_p2l_array(pctnatpft, ndim1=lsize_o, ndim2=num_natpft+1, pct_p2l=pct_nat_pft)
+        call mkfile_output(pioid, mesh_model, 'PCT_NAT_PFT', pct_nat_pft, rc=rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_NAT_PFT')
+
+        if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CROP for year ",year
+        call get_pct_l2g_array(pctcft, pctcrop)
+        call mkfile_output(pioid, mesh_model, 'PCT_CROP', pctcrop, rc=rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP')
+
+        if (num_cft > 0) then
+           if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CFT for year ",year
+           call get_pct_p2l_array(pctcft, ndim1=lsize_o, ndim2=num_cft, pct_p2l=pct_cft)
+           call mkfile_output(pioid, mesh_model, 'PCT_CFT', pct_cft, rc=rc)
+           if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CFT')
+        end if
+
+        rcode = pio_inq_varid(pioid, 'YEAR', pio_varid)
+        call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
+        rcode = pio_put_var(pioid, pio_varid, year)
+
+        rcode = pio_inq_varid(pioid, 'time', pio_varid)
+        call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
+        rcode = pio_put_var(pioid, pio_varid, year)
+
+        rcode = pio_inq_varid(pioid, 'input_pftdata_filename', pio_varid)
+        call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
+        rcode = pio_put_var(pioid, pio_varid, trim(string))
 
      end do   ! end of read loop
 
-     ! TODO: need to use pio here with io descriptors
-     ! rcode = pio_inq_varid(pioid, 'PCT_NAT_PFT_MAX', pio_varid)
-     ! rcode = pio_put_var(pioid, pio_varid, get_pct_p2l_array(pctnatpft_max))
+     if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_NAT_PFT_MAX "
+     call get_pct_p2l_array(pctnatpft_max, ndim1=lsize_o, ndim2=num_natpft+1, pct_p2l=pct_nat_pft)
+     call mkfile_output(pioid, mesh_model, 'PCT_NAT_PFT', pct_nat_pft, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_NAT_PFT')
 
-     ! rcode = pio_inq_varid(pioid, 'PCT_CROP_MAX', pio_varid)
-     ! rcode = pio_put_var(pioid, pio_varid, get_pct_l2g_array(pctcft_max))
+     if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CROP_MAX"
+     call get_pct_l2g_array(pctcft_max, pctcrop)
+     call mkfile_output(pioid, mesh_model, 'PCT_CROP', pctcrop, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP')
 
-     ! if (num_cft > 0) then
-     !    rcode = pio_inq_varid(pioid, 'PCT_CFT_MAX', pio_varid)
-     !    rcode = pio_put_var(pioid, pio_varid, get_pct_p2l_array(pctcft_max))
-     ! end if
+     if (num_cft > 0) then
+        if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CFT_MAX"
+        call get_pct_p2l_array(pctcft_max, ndim1=lsize_o, ndim2=num_cft, pct_p2l=pct_cft)
+        call mkfile_output(pioid, mesh_model, 'PCT_CFT', pct_cft, rc=rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CFT')
+     end if
 
      ! Close the file
      call pio_closefile(pioid)
@@ -1210,15 +1251,6 @@ program mksurfdata
   ! -----------------------------------
   ! Wrap things up
   ! -----------------------------------
-  if (root_task) then
-     write (ndiag,'(a)')
-     write (ndiag,'(a)') 'Surface data output file = '//trim(fsurdat)
-     write (ndiag,'(a)') '   This file contains the land model surface data'
-     write (ndiag,'(a)') 'Diagnostic log file      = '//trim(fsurlog)
-     write (ndiag,'(a)') '   See this file for a summary of the dataset'
-     write (ndiag,'(a)')
-     write (ndiag,'(a)') 'Successfully created surface dataset'
-  end if
   close (ndiag)
 
   ! TODO: fix the error condition here
@@ -1308,7 +1340,6 @@ program mksurfdata
 
          ! correct for rounding error:
          new_total_veg_pct = max(new_total_veg_pct, 0._r8)
-
          call adjust_total_veg_area(new_total_veg_pct, pctnatpft=pctnatpft(n), pctcft=pctcft(n))
 
          ! Make sure we did the above rescaling correctly
@@ -1350,6 +1381,7 @@ program mksurfdata
                end if
 
                call adjust_total_veg_area(new_total_veg_pct, pctnatpft=pctnatpft(n), pctcft=pctcft(n))
+
             end if
 
          end if ! pcturb(n) > 0

@@ -229,7 +229,8 @@ contains
                    rcode = pio_inq_varid(pioid_o, trim(varname_o), pio_varid_o)
                    call mkpio_iodesc_output(pioid_o, mesh_o, trim(varname_o), pio_iodesc_o, rc)
                    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in making an iodesc for '//trim(varname_o))
-                   call mkpio_put_time_slice(pioid_o, pio_varid_o, pio_iodesc_o, ntime, data2d_o)
+                   call pio_setframe(pioid_o, pio_varid_o, int(ntime, kind=Pio_Offset_Kind))
+                   call pio_write_darray(pioid_o, pio_varid_o, pio_iodesc_o, data1d_o, rcode)
                    call pio_freedecomp(pioid_o, pio_iodesc_o)
                 else
                    if (root_task)  write(ndiag, '(a)') " writing out 1d "//trim(varname_o)
@@ -274,7 +275,8 @@ contains
                    rcode = pio_inq_varid(pioid_o, trim(varname_o), pio_varid_o)
                    call mkpio_iodesc_output(pioid_o, mesh_o, trim(varname_o), pio_iodesc_o, rc)
                    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in making an iodesc for '//trim(varname_o))
-                   call mkpio_put_time_slice(pioid_o, pio_varid_o, pio_iodesc_o, ntime, data2d_o)
+                   call pio_setframe(pioid_o, pio_varid_o, int(ntime, kind=Pio_Offset_Kind))
+                   call pio_write_darray(pioid_o, pio_varid_o, pio_iodesc_o, data2d_o, rcode)
                    call pio_freedecomp(pioid_o, pio_iodesc_o)
                 else
                    if (root_task)  write(ndiag, '(a)') " writing out 2d "//trim(varname_o)
