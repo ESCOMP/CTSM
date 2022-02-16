@@ -125,6 +125,7 @@ module CNPhenologyMod
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
 
   logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
+  logical          :: ignore_rx_crop_gdds = .false. ! Troubleshooting
 
   ! Constants for seasonal decidious leaf onset and offset
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
@@ -167,7 +168,8 @@ contains
     character(len=*), parameter :: nmlname = 'cnphenology'
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
-                           min_critical_dayl_method, generate_crop_gdds
+                           min_critical_dayl_method, generate_crop_gdds, &
+                           ignore_rx_crop_gdds
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -192,6 +194,7 @@ contains
     call shr_mpi_bcast (onset_thresh_depends_on_veg, mpicom)
     call shr_mpi_bcast (min_critical_dayl_method,     mpicom)
     call shr_mpi_bcast (generate_crop_gdds,          mpicom)
+    call shr_mpi_bcast (ignore_rx_crop_gdds,         mpicom)
 
     if (      min_critical_dayl_method == "DependsOnLat"       )then
        critical_daylight_method = critical_daylight_depends_on_lat
@@ -2415,7 +2418,7 @@ contains
       endif
 
       ! set GDD target
-      if (do_plant_prescribed .and. .not. generate_crop_gdds) then
+      if (do_plant_prescribed .and. (.not. generate_crop_gdds) .and. (.not. ignore_rx_crop_gdds)) then
          gdd_target = crop_inst%rx_cultivar_gdds_thisyr(p,s)
          if (gdd_target < 0.0) then
             write(iulog,*) 'If using prescribed sowing dates and not generate_crop_gdds, you must provide cultivar GDD targets >= 0.0.'
