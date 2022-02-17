@@ -1,4 +1,129 @@
 ===============================================================
+Tag name: ctsm5.1.dev075
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Feb 16 21:35:40 MST 2022
+One-line Summary: Small answer changes: urban ventilation, fire-emission, irrigate off when not crop, fix two SSP ndep files
+
+Purpose and description of changes
+----------------------------------
+
+The effects of ventilation (exchange of building air with canopy air) are accounted for in the 
+energy budget inside the building.  The effects on urban canopy air are not. This remedies that.
+
+This fixes an issue with how coefficients are applied to individual fire components. Allow units 
+to be in molecules/m2/sec as well as kg/m2/sec.
+
+SSP3-7.0 Nitrogen-deposition file update.  Fix SSP2-4.5 Nitrogen-deposition file.  Turn irrigation 
+off by default except for future scenarios.
+
+Add new external ccs_config_cesm which has the CESM cime configuration files.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm5_1
+
+[x] clm5_0
+
+[x] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+  Fixes #1526 -- Switch FATES methane test for methane off
+  Fixes #509 --- irrigate in 1850 is off for runs with use_crop but on for those without 
+  Fixes #1578 -- Need to replace SSP370 ndep file with new one
+  Fixes #1631 -- ndep file for SSP2-4.5 is incorrect 
+
+Known bugs introduced in this tag (include issue #):
+  #1653 -- Use secsphr in UrbBuildTempOleson2015Mod.F90
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  using older restart files will start ventilation flux at zero.
+  default fsurdat selection can also match irrigate true surface datasets
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   irrigate is now default off, except for future scenarios
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   New Nitrogen-deposition file for SSP3-7.0
+   Correct Nitrogen-deposition file for SSP2-4.5
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+   FATES methane on test switched to methane off, since methane on is the default
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (345 tests are different than baseline)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm5_0/clm5_1 urban ventilation flux, 
+                                irrigate off now, SSP3-7.0/SSP2-4.5 new ndep file, fire-emissions different
+    - what platforms/compilers: All
+    - nature of change: Similar climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: oleson/ctsm51_ctsm51d61_1deg_GSWP3V1_CON_VENT_2000
+
+   URL for LMWG diagnostics output used to validate new climate:
+   https://webext.cgd.ucar.edu/I2000/ctsm51_ctsm51d61_1deg_GSWP3V1_CON_VENT_2000/lnd/ctsm51_ctsm51d61_1deg_GSWP3V1_CON_VENT_2000.1991_2010-ctsm51_ctsm51d61_1deg_GSWP3V1_CON_2000.1991_2010/set2/set2.html
+
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+   cism  to cismwrap_2_1_95
+   cime  to cime6.0.13
+   cmeps to cmeps0.13.47
+   cdeps to cdeps0.12.35
+   cpl7  to cpl7.0.12
+   pio   to pio2_5_5
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1535 -- Ventilation flux to urban canyon
+   #1532 -- Fire emissions bug fix
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev074
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
 Date: Wed Feb  2 00:44:27 MST 2022
