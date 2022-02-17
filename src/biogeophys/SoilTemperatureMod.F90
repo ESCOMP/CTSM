@@ -115,7 +115,7 @@ contains
     use clm_time_manager         , only : get_step_size_real
     use clm_varpar               , only : nlevsno, nlevgrnd, nlevurb, nlevmaxurbgrnd
     use clm_varctl               , only : iulog
-    use clm_varcon               , only : cnfac, cpice, cpliq, denh2o, denice
+    use clm_varcon               , only : cnfac, cpice, cpliq, denh2o
     use landunit_varcon          , only : istsoil, istcrop
     use column_varcon            , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
     use BandDiagonalMod          , only : BandDiagonal
@@ -171,10 +171,6 @@ contains
     real(r8) :: hs_top_snow(bounds%begc:bounds%endc)                     ! heat flux on top snow layer [W/m2]
     real(r8) :: hs_h2osfc(bounds%begc:bounds%endc)                       ! heat flux on standing water [W/m2]
     integer  :: jbot(bounds%begc:bounds%endc)                            ! bottom level at each column
-    real(r8) :: dz_0(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)                ! original layer thickness [m] 
-    real(r8) :: z_0(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)                 ! original layer depth [m]
-    real(r8) :: zi_0(bounds%begc:bounds%endc,-nlevsno+0:nlevmaxurbgrnd)                ! original layer interface level bellow layer "z" [m]
-
     !-----------------------------------------------------------------------
 
     associate(                                                                &
@@ -198,7 +194,6 @@ contains
          frac_sno_eff            => waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
          snow_depth              => waterdiagnosticbulk_inst%snow_depth_col          , & ! Input:  [real(r8) (:)   ]  snow height (m)                         
          h2osfc                  => waterstatebulk_inst%h2osfc_col                   , & ! Input:  [real(r8) (:)   ]  surface water (mm)                      
-         excess_ice              => waterstatebulk_inst%excess_ice_col               , & ! Input:  [real(r8) (:,:) ]  excess ice lenses (kg/m2) (new) (1:nlevgrnd)
          frac_h2osfc             => waterdiagnosticbulk_inst%frac_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
 
          
@@ -275,29 +270,6 @@ contains
             jbot(c) = nlevgrnd
          endif
       end do
-
-
-      !--------------------------------------------------------------
-      ! Vertical coordinates adjustment for excess ice calculations
-      !--------------------------------------------------------------
-      ! Save original soil depth to get put them back in et the end 
-      dz_0(begc:endc,1:nlevmaxurbgrnd)=dz(begc:endc,1:nlevmaxurbgrnd)
-      zi_0(begc:endc,1:nlevmaxurbgrnd)=zi(begc:endc,1:nlevmaxurbgrnd)
-      z_0(begc:endc,1:nlevmaxurbgrnd)=z(begc:endc,1:nlevmaxurbgrnd)
-      ! Adjust column depth for excess ice thickness 
-      do fc = 1,num_nolakec
-        c = filter_nolakec(fc)
-        l = col%landunit(c)
-        if( lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-          dz(c,1:nlevmaxurbgrnd)=dz(c,1:nlevmaxurbgrnd)+excess_ice(c,1:nlevmaxurbgrnd)/denice ! add extra layer thickness
-          do j=1,nlevmaxurbgrnd ! if excess ice amount dropped to zero there will be no adjustment
-            zi(c,j) = zi(c,j) + sum(excess_ice(c,1:j)) / denice
-            z(c,j) = (zi(c,j-1) + zi(c,j)) * 0.5_r8
-          end do
-        endif
-      end do
-
-
 
       !------------------------------------------------------
       ! Compute ground surface and soil temperatures
@@ -516,23 +488,6 @@ contains
            dhsdT(bounds%begc:bounds%endc), &
            soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, energyflux_inst, temperature_inst)
 
-      !--------------------------------------------------------------
-      ! Vertical coordinates adjustment for excess ice calculations
-      !--------------------------------------------------------------
-      ! bringing back the soil depth to the original state
-           ! Adjust column depth for excess ice thickness 
-           do fc = 1,num_nolakec
-             c = filter_nolakec(fc)
-             l = col%landunit(c)
-             if( lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-               dz(c,1:nlevmaxurbgrnd)=dz_0(c,1:nlevmaxurbgrnd)
-               zi(c,1:nlevmaxurbgrnd)=zi_0(c,1:nlevmaxurbgrnd)
-               z(c,1:nlevmaxurbgrnd)=z_0(c,1:nlevmaxurbgrnd)
-             endif
-           end do
-     
-
-
       if ( IsProgBuildTemp() )then
          call BuildingTemperature(bounds, num_urbanl, filter_urbanl, num_nolakec, filter_nolakec, &
                                   tk(bounds%begc:bounds%endc, :), urbanparams_inst,               &
@@ -673,7 +628,6 @@ contains
          h2osno_no_layers => waterstatebulk_inst%h2osno_no_layers_col , & ! Input:  [real(r8) (:)   ]  snow not resolved into layers (mm H2O)
          h2osoi_liq   =>    waterstatebulk_inst%h2osoi_liq_col   , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                  
          h2osoi_ice   =>    waterstatebulk_inst%h2osoi_ice_col   , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                      
-         excess_ice   => waterstatebulk_inst%excess_ice_col               , & ! Input:  [real(r8) (:,:) ]  excess ice lenses (kg/m2) (new) (1:nlevgrnd)
          bw           =>    waterdiagnosticbulk_inst%bw_col	     , & ! Output: [real(r8) (:,:) ]  partial density of water in the snow pack (ice + liquid) [kg/m3] 
          
          tkmg         =>    soilstate_inst%tkmg_col	         , & ! Input:  [real(r8) (:,:) ]  thermal conductivity, soil minerals  [W/m-K]
@@ -700,8 +654,7 @@ contains
                   col%itype(c) /= icol_roof .and. col%itype(c) /= icol_road_imperv) .or. &
                   (col%itype(c) == icol_road_imperv .and. j > nlev_improad(l))) then
 
-                    ! TODO recalculate watsat and satw to have excess ice included
-                  satw = (h2osoi_liq(c,j)/denh2o + h2osoi_ice(c,j)/denice +excess_ice(c,j)/denice)/(dz(c,j)*watsat(c,j))
+                  satw = (h2osoi_liq(c,j)/denh2o + h2osoi_ice(c,j)/denice)/(dz(c,j)*watsat(c,j))
                   satw = min(1._r8, satw)
                   if (satw > .1e-6_r8) then
                      if (t_soisno(c,j) >= tfrz) then       ! Unfrozen soil
@@ -710,7 +663,7 @@ contains
                         dke = satw
                      end if
                      fl = (h2osoi_liq(c,j)/(denh2o*dz(c,j))) / (h2osoi_liq(c,j)/(denh2o*dz(c,j)) + &
-                          h2osoi_ice(c,j)/(denice*dz(c,j))+excess_ice(c,j)/denice)
+                          h2osoi_ice(c,j)/(denice*dz(c,j)))
                      dksat = tkmg(c,j)*tkwat**(fl*watsat(c,j))*tkice**((1._r8-fl)*watsat(c,j))
                      thk(c,j) = dke*dksat + (1._r8-dke)*tkdry(c,j)
                   else
@@ -803,7 +756,7 @@ contains
                .and. col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall .and. &
                col%itype(c) /= icol_roof .and. col%itype(c) /= icol_road_imperv) .or. &
                (col%itype(c) == icol_road_imperv .and. j > nlev_improad(l))) then
-               cv(c,j) = csol(c,j)*(1._r8-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq) + excess_ice(c,j)*cpice
+               cv(c,j) = csol(c,j)*(1._r8-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
                if (j > nbedrock(c)) cv(c,j) = csol_bedrock*dz(c,j)
             else if (lun%itype(l) == istwet) then 
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
@@ -1104,7 +1057,7 @@ contains
     use clm_time_manager , only : get_step_size_real
     use clm_varpar       , only : nlevsno, nlevgrnd, nlevurb, nlevmaxurbgrnd
     use clm_varctl       , only : iulog
-    use clm_varcon       , only : tfrz, hfus, grav, denice
+    use clm_varcon       , only : tfrz, hfus, grav
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
     use landunit_varcon  , only : istsoil, istcrop, istice
     !
@@ -1135,11 +1088,6 @@ contains
     real(r8) :: propor                             !proportionality constant (-)
     real(r8) :: tinc(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)  !t(n+1)-t(n) [K]
     real(r8) :: smp                                !frozen water potential (mm)
-    real(r8) :: xm2(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)   !xm variable [kg/m2]
-    real(r8) :: xm3(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)   !xm variable [kg/m2]
-    real(r8) :: wexice0(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)!initial mass of excess_ice at the timestep (kg/m2)
-
-
     !-----------------------------------------------------------------------
 
     call t_startf( 'PhaseChangebeta' )
@@ -1161,11 +1109,6 @@ contains
          h2osno_no_layers =>    waterstatebulk_inst%h2osno_no_layers_col     , & ! Output: [real(r8) (:)   ] snow not resolved into layers (mm H2O)
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2) (new)             
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
-         excess_ice       =>    waterstatebulk_inst%excess_ice_col      , & ! Input:  [real(r8) (:,:) ]  excess ice lenses (kg/m2) (new) (1:nlevgrnd)
-         init_exice              => waterstatebulk_inst%init_exice              , & ! Input:  [real(r8) (:)   ]  excess soil ice initial
-         exice_melt              => waterstatebulk_inst%exice_melt              , & ! Input:  [real(r8) (:)   ]  excess soil ice
-         exice_melt_lev          => waterstatebulk_inst%exice_melt_lev          , & ! Input:  [real(r8) (:,:)   ]  excess soil ice	
-
          
          qflx_snow_drain  =>    waterfluxbulk_inst%qflx_snow_drain_col  , & ! Output: [real(r8) (:)   ] drainage from snow pack                           
          qflx_snofrz_lyr  =>    waterfluxbulk_inst%qflx_snofrz_lyr_col  , & ! Output: [real(r8) (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
@@ -1209,12 +1152,9 @@ contains
                imelt(c,j) = 0
                hm(c,j) = 0._r8
                xm(c,j) = 0._r8
-               xm2(c,j)=0._r8
-               xm3(c,j)=0._r8
                wice0(c,j) = h2osoi_ice(c,j)
                wliq0(c,j) = h2osoi_liq(c,j)
                wmass0(c,j) = h2osoi_ice(c,j) + h2osoi_liq(c,j)
-               wexice0(c,j)=excess_ice(c,j)
             endif   ! end of snow layer if-block
 
             if (j <= 0) then
@@ -1269,13 +1209,6 @@ contains
                   !             tinc(c,j) = t_soisno(c,j) - tfrz 
                   tinc(c,j) = tfrz - t_soisno(c,j)
                   t_soisno(c,j) = tfrz
-               endif
-
-               ! melt excess ice after normal ice
-               if (excess_ice(c,j) > 0._r8 .AND. t_soisno(c,j) > tfrz) then
-                imelt(c,j) = 1
-                tinc(c,j) = tfrz - t_soisno(c,j)
-                t_soisno(c,j) = tfrz
                endif
 
                ! from Zhao (1997) and Koren (1999)
@@ -1392,49 +1325,9 @@ contains
                      endif
 
                      heatr = 0._r8
-                     if (xm(c,j) > 0._r8) then !if there is excess heat to melt the ice
-                      !h2osoi_ice(c,j) = max(0._r8, wice0(c,j)-xm(c,j)) ! no excess ice
-                      !heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime ! on excess ice
-                      ! excess ice modifications
-                        if (h2osoi_ice(c,j)>0._r8) then !if there is normal soil ice
-                          if (xm(c,j)> h2osoi_ice(c,j)) then ! if we can melt all normal ice first
-                            xm2(c,j) = xm(c,j) - h2osoi_ice(c,j)
-                            h2osoi_ice(c,j) = 0._r8
-                            if (excess_ice(c,j) > 0._r8) then ! if there is excess ice to melt
-                              if (xm2(c,j) > excess_ice(c,j)) then ! there is still enough heat left to melt all of the ice
-                                xm3(c,j) = xm2(c,j) - excess_ice(c,j)
-                                excess_ice(c,j) = 0._r8
-                                heatr = hfus * xm3(c,j) / dtime
-                              else ! if there is not enough heat to melt all excess ice
-                                excess_ice(c,j) = excess_ice(c,j)-xm2(c,j)
-                                heatr = 0._r8
-                                xm3(c,j) = 0._r8
-                              endif
-                            else !no excess ice to melt heat soil
-                              heatr = hfus * xm2(c,j) / dtime
-                            endif
-                          else ! not enough heat to melt all normal ice
-                            h2osoi_ice(c,j) = h2osoi_ice(c,j)-xm(c,j)
-                            heatr = 0._r8
-                            xm2(c,j) = 0._r8
-                          endif
-                        else !no normal ice present
-                          xm2(c,j) = xm(c,j)
-                          if (excess_ice(c,j) > 0._r8) then ! if there is excess ice to melt
-                            if (xm2(c,j) > excess_ice(c,j)) then ! there is still enough heat left to melt all of the ice
-                              xm3(c,j) = xm2(c,j)-excess_ice(c,j)
-                              excess_ice(c,j) = 0._r8
-                              heatr = hfus * xm3(c,j) / dtime
-                            else ! if there is not enough heat to melt all excess ice
-                              excess_ice(c,j) = excess_ice(c,j)-xm2(c,j)
-                              heatr = 0._r8
-                              xm3(c,j) = 0._r8
-                            endif
-                          else !no excess ice to melt heat soil
-                            heatr = hfus * xm2(c,j) / dtime
-                          endif
-                        endif
-
+                     if (xm(c,j) > 0._r8) then
+                        h2osoi_ice(c,j) = max(0._r8, wice0(c,j)-xm(c,j))
+                        heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      else if (xm(c,j) < 0._r8) then
                         if (j <= 0) then
                            h2osoi_ice(c,j) = min(wmass0(c,j), wice0(c,j)-xm(c,j))  ! snow
@@ -1480,8 +1373,7 @@ contains
                      endif  ! end of heatr > 0 if-block
 
                      if (j >= 1) then
-                        xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime +hfus*(wexice0(c,j)-excess_ice(c,j))/dtime
-                        exice_melt_lev(c,j)=wexice0(c,j)-excess_ice(c,j)
+                        xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      else
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      endif
@@ -1506,20 +1398,17 @@ contains
          end do   ! end of column-loop
       enddo   ! end of level-loop
 
-
       ! Needed for history file output
 
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)
          eflx_snomelt(c) = qflx_snomelt(c) * hfus
-         exice_melt(c) = 0.0_r8
          l = col%landunit(c)
          if (lun%urbpoi(l)) then
             eflx_snomelt_u(c) = eflx_snomelt(c)
          else if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
             eflx_snomelt_r(c) = eflx_snomelt(c)
          end if
-         exice_melt(c) = exice_melt(c) + SUM( exice_melt_lev(c,:) ) / denice
       end do
 
       call t_stopf( 'PhaseChangebeta' )
