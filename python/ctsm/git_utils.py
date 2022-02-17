@@ -2,6 +2,7 @@
 
 import logging
 import subprocess
+
 from ctsm.path_utils import path_to_ctsm_root
 
 logger = logging.getLogger(__name__)
@@ -64,3 +65,4 @@ def get_ctsm_git_describe():
         .decode()
     )
     return label
+

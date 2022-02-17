@@ -382,9 +382,7 @@ contains
     ! all we really need are averages for the natural veg landunit. But since this
     ! subroutine is only called in initialization, code reuse/simplicity is more important
     ! than performance.
-    !
-    ! No thought has been given to c2l_scale_type here. This may need to be fixed if we
-    ! ever start caring about urban averages in this routine.
+
     call c2l(bounds = bounds, &
          carr = vals_col(bounds%begc:bounds%endc), &
          larr = vals_lun(bounds%begl:bounds%endl), &
