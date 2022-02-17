@@ -558,35 +558,43 @@ contains
        call mkpio_def_spatial_var(pioid=pioid, varname='UNREPRESENTED_CFT_LULCC', xtype=xtype, &
             lev1name = 'cft', &
             long_name = "unrepresented crop gross LULCC transitions", units = "unitless")
+
     else
+
        call mkpio_def_spatial_var(pioid=pioid, varname='HARVEST_VH1', xtype=xtype, &
+            lev1name='time', &
             long_name = "harvest from primary forest", units = "gC/m2/yr")
 
        call mkpio_def_spatial_var(pioid=pioid, varname='HARVEST_VH2', xtype=xtype, &
+            lev1name='time', &
             long_name = "harvest from primary non-forest", units = "gC/m2/yr")
 
        call mkpio_def_spatial_var(pioid=pioid, varname='HARVEST_SH1', xtype=xtype, &
+            lev1name='time', &
             long_name = "harvest from secondary mature-forest", units = "gC/m2/yr")
 
        call mkpio_def_spatial_var(pioid=pioid, varname='HARVEST_SH2', xtype=xtype, &
+            lev1name='time', &
             long_name = "harvest from secondary young-forest", units = "gC/m2/yr")
 
        call mkpio_def_spatial_var(pioid=pioid, varname='HARVEST_SH3', xtype=xtype, &
+            lev1name='time', &
             long_name = "harvest from secondary non-forest", units = "gC/m2/yr")
 
        call mkpio_def_spatial_var(pioid=pioid, varname='GRAZING', xtype=xtype, &
+            lev1name='time', &
             long_name = "grazing of herbacous pfts", units = "gC/m2/yr")
 
        call mkpio_def_spatial_var(pioid=pioid, varname='FERTNITRO_CFT', xtype=xtype, &
-            lev1name = 'cft', &
+            lev1name = 'cft', lev2name='time', &
             long_name = "nitrogen fertilizer for each crop", units = "gN/m2/yr")
 
        call mkpio_def_spatial_var(pioid=pioid, varname='UNREPRESENTED_PFT_LULCC', xtype=xtype, &
-            lev1name = 'natpft', &
+            lev1name = 'natpft', lev2name='time', &
             long_name = "unrepresented PFT gross LULCC transitions", units = "unitless")
 
        call mkpio_def_spatial_var(pioid=pioid, varname='UNREPRESENTED_CFT_LULCC', xtype=xtype, &
-            lev1name = 'cft', &
+            lev1name = 'cft', lev2name='time', &
             long_name = "unrepresented crop gross LULCC transitions", units = "unitless")
     end if  ! .not. dynlanduse
 

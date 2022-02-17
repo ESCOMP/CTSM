@@ -226,6 +226,7 @@ contains
 
                 ! write out mapped variable
                 if (present(ntime)) then
+                   if (root_task)  write(ndiag, '(a,i8)') subname//" writing out 1d "//trim(varname_o)//' at time ',ntime
                    rcode = pio_inq_varid(pioid_o, trim(varname_o), pio_varid_o)
                    call mkpio_iodesc_output(pioid_o, mesh_o, trim(varname_o), pio_iodesc_o, rc)
                    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in making an iodesc for '//trim(varname_o))
@@ -233,11 +234,11 @@ contains
                    call pio_write_darray(pioid_o, pio_varid_o, pio_iodesc_o, data1d_o, rcode)
                    call pio_freedecomp(pioid_o, pio_iodesc_o)
                 else
-                   if (root_task)  write(ndiag, '(a)') " writing out 1d "//trim(varname_o)
+                   if (root_task)  write(ndiag, '(a)') subname//" writing out 1d "//trim(varname_o)
                    call mkfile_output(pioid_o, mesh_o, trim(varname_o), data1d_o, rc=rc)
                    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-                   call pio_syncfile(pioid_o)
                 end if
+                call pio_syncfile(pioid_o)
 
                 ! TODO: uncomment the following and validate
                 ! Compare global areas on input and output grids for 1d variables
@@ -272,6 +273,7 @@ contains
 
                 ! write out variable
                 if (present(ntime)) then
+                   if (root_task)  write(ndiag, '(a,i8)') subname//" writing out 2d "//trim(varname_o)//' at time ',ntime
                    rcode = pio_inq_varid(pioid_o, trim(varname_o), pio_varid_o)
                    call mkpio_iodesc_output(pioid_o, mesh_o, trim(varname_o), pio_iodesc_o, rc)
                    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in making an iodesc for '//trim(varname_o))
@@ -279,10 +281,11 @@ contains
                    call pio_write_darray(pioid_o, pio_varid_o, pio_iodesc_o, data2d_o, rcode)
                    call pio_freedecomp(pioid_o, pio_iodesc_o)
                 else
-                   if (root_task)  write(ndiag, '(a)') " writing out 2d "//trim(varname_o)
+                   if (root_task)  write(ndiag, '(a)') subname//" writing out 2d "//trim(varname_o)
                    call mkfile_output(pioid_o, mesh_o, trim(varname_o), data2d_o, lev1name=trim(name2nd), rc=rc)
                    if (ChkErr(rc,__LINE__,u_FILE_u)) return
                 end if
+                call pio_syncfile(pioid_o)
                 deallocate(data2d_o)
 
              end if

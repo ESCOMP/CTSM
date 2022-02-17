@@ -619,11 +619,23 @@ contains
        ! Where lev would correspond to an undistributed dimension in esmf
        if (ndims == 1)  then
           call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
+          if (root_task) then
+             write(ndiag,'(a,i20)') ' set iodesc for output data: '//trim(varname)//' with dim(1) = ',&
+                  dimlens(1)
+          end if
        else if (ndims == 2) then
           if (unlimited_dim) then
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1)/), compdof, pio_iodesc)
+             if (root_task) then
+                write(ndiag,'(a,i8)') ' set iodesc for output data with time dim: '//trim(varname)//&
+                     ' with dim(1) = ',dimlens(1)
+             end if
           else
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+             if (root_task) then
+                write(ndiag,'(a,i8,i8)') ' set iodesc for output data: '//trim(varname)//&
+                     ' with dim(1),dim(2) = ',dimlens(1),dimlens(2)
+             end if
           end if
        else if (ndims == 3) then
           if (unlimited_dim) then
@@ -631,22 +643,46 @@ contains
           else
              call shr_sys_abort('support on 2 dimensions in addition to a time dimension when outnc_1d is true')
           end if
+          if (root_task) then
+             write(ndiag,'(a,i8,i8)') ' set iodesc for output data with time dim: '//trim(varname)//&
+                  ' with dim(1),dim(2) = ',dimlens(1),dimlens(2)
+          end if
        end if
     else
        ! Assume that can have (lon,lat), (lon,lat,lev1), (lon,lat,lev1,lev2), (lon,lat,time) or (lon,lat,lev1,time)
        if (ndims == 2) then
           call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+          if (root_task) then
+             write(ndiag,'(a,i8,i8)') ' set iodesc for output data: '//trim(varname)//&
+                  ' with dim(1),dim(2)= ',dimlens(1),dimlens(2)
+          end if
        else if (ndims == 3) then
           if (unlimited_dim) then
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+             if (root_task) then
+                write(ndiag,'(a,i8,i8)') ' set iodesc for output data with time dim : '//trim(varname)//&
+                     ' with dim(1),dim(2)= ', dimlens(1),dimlens(2)
+             end if
           else
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof3d, pio_iodesc)
+             if (root_task) then
+                write(ndiag,'(a,i8,i8,i8)') ' set iodesc for output data: '//trim(varname)//&
+                     ' with dim(1),dim(2),dim3(3)= ',dimlens(1),dimlens(2),dimlens(3)
+             end if
           end if
        else if (ndims == 4) then
           if (unlimited_dim) then
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof3d, pio_iodesc)
+             if (root_task) then
+                write(ndiag,'(a,i8,i8,i8)') ' set iodesc for output data with time dim : '//trim(varname)//&
+                     ' with dim(1),dim(2),dimlens(3)= ', dimlens(1),dimlens(2),dimlens(3)
+             end if
           else
              call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3),dimlens(4)/), compdof3d, pio_iodesc)
+             if (root_task) then
+                write(ndiag,'(a,i8,i8,i8,i8)') ' set iodesc for output data: '//trim(varname)//&
+                     ' with dim(1),dim(2),dimlens(3),dimlens(4)= ', dimlens(1),dimlens(2),dimlens(3),dimlens(4)
+             end if
           end if
        end if
     end if
