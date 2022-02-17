@@ -42,6 +42,8 @@ smbb1 TSMscript_tools.sh site_and_regional subset_data subset_data_KONA
 blbb1 TBLscript_tools.sh site_and_regional subset_data subset_data_KONA
 smb81 TSMscript_tools.sh site_and_regional subset_data subset_data_US-UMB
 blb81 TBLscript_tools.sh site_and_regional subset_data subset_data_US-UMB
+smbc1 TSMscript_tools.sh site_and_regional subset_data subset_data_f09_US_pt
+blbc1 TBLscript_tools.sh site_and_regional subset_data subset_data_f09_US_pt
 
 smaa2 TSMscript_tools.sh site_and_regional modify_singlept_site_neon.py modify_data_YELL
 blaa2 TBLscript_tools.sh site_and_regional modify_singlept_site_neon.py modify_data_YELL
