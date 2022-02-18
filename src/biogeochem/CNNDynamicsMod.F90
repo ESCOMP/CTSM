@@ -338,7 +338,7 @@ contains
     real(r8):: GDDfracthreshold3, GDDfracthreshold4
     !-----------------------------------------------------------------------
 
-    write(iulog,*) 'Entering CNSoyfix()'
+!    write(iulog,*) 'Entering CNSoyfix()'
 
     associate(                                                                      & 
          wf               =>  waterdiagnosticbulk_inst%wf_col                      ,         & ! Input:  [real(r8) (:) ]  soil water as frac. of whc for top 0.5 m          
@@ -451,7 +451,7 @@ contains
 
     end associate
 
-    write(iulog,*) 'Exiting CNSoyfix()'
+!    write(iulog,*) 'Exiting CNSoyfix()'
 
   end subroutine CNSoyfix
 

@@ -48,7 +48,7 @@ contains
 
     !-----------------------------------------------------------------------
 
-    write(iulog,*)'Entering SoilBiogeochemNStateUpdate1()'
+!    write(iulog,*)'Entering SoilBiogeochemNStateUpdate1()'
 
     associate(                                                                   & 
          cascade_donor_pool    => decomp_cascade_con%cascade_donor_pool        , & ! Input:  [integer  (:)     ]  which pool is C taken from for a given decomposition step
@@ -263,7 +263,7 @@ contains
 
     end associate
 
-    write(iulog,*)'Exiting SoilBiogeochemNStateUpdate1()'
+!    write(iulog,*)'Exiting SoilBiogeochemNStateUpdate1()'
 
   end subroutine SoilBiogeochemNStateUpdate1
 

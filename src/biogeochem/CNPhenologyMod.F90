@@ -2420,14 +2420,12 @@ contains
       endif
 
       ! set GDD target
-      if (do_plant_prescribed .and. (.not. generate_crop_gdds) .and. (.not. .true.)) then
-write(iulog,*) '???'
-call endrun(msg=errMsg(sourcefile, __LINE__))
+      if (do_plant_prescribed .and. (.not. generate_crop_gdds) .and. (.not. ignore_rx_crop_gdds)) then
          gdd_target = crop_inst%rx_cultivar_gdds_thisyr(p,s)
-         if (gdd_target < 0.0) then
-            write(iulog,*) 'If using prescribed sowing dates and not generate_crop_gdds, you must provide cultivar GDD targets >= 0.0.'
-            call endrun(msg=errMsg(sourcefile, __LINE__))
-         endif
+!         if (gdd_target < 0.0) then
+!            write(iulog,*) 'If using prescribed sowing dates and not generate_crop_gdds, you must provide cultivar GDD targets >= 0.0.'
+!            call endrun(msg=errMsg(sourcefile, __LINE__))
+!         endif
 
          ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
          ! Just manually set a minimum of 1.0

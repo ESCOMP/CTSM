@@ -103,7 +103,7 @@ subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
     huigrain               => cnveg_state_inst%huigrain_patch                     & ! Input: [real(r8) (:)]  same to reach vegetative maturity
     )
 
-    write(iulog,*)'Entering CNRootDyn()'
+!    write(iulog,*)'Entering CNRootDyn()'
    
 ! set time steps
    dt = get_step_size_real()
@@ -267,7 +267,7 @@ subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
 
      end associate
 
-     write(iulog,*)'Exiting CNRootDyn()'
+!     write(iulog,*)'Exiting CNRootDyn()'
 
  end subroutine CNRootDyn
 

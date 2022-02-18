@@ -891,10 +891,8 @@ contains
        !--------------------------------
 
        call t_startf ('lc_lnd_export')
-       write(iulog,*) 'calling export_fields()'
        call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
             water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
-        write(iulog,*) 'done with export_fields()'
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call t_stopf ('lc_lnd_export')
 
