@@ -1804,7 +1804,12 @@ contains
             end do
          end if
 
-         ! When resuming from a run with old code, may need to manually set these
+         ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-18)
+         ! When resuming from a run with old code, may need to manually set these.
+         ! Will be needed until we can rely on all restart files have been generated
+         ! with CropPhenology() getting the day of the year from the START of the timestep
+         ! (i.e., jday = get_prev_calday()) instead of the END of the timestep (i.e.,
+         ! jday = get_calday()). See CTSM issue #1623.
          if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
              sowing_count(p) = 1
              crop_inst%sdates_thisyr(p,1) = 1._r8
