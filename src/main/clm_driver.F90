@@ -165,6 +165,11 @@ contains
     call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
 
+    ! -------------------------------------------------
+    ! Obtain updated values of time-evolving parameters
+    ! -------------------------------------------------
+    call canopystate_inst%time_evolv_params(bounds_proc, atm2lnd_inst)
+
     ! ========================================================================
     ! In the first time step of a startup or hybrid run, we want to update CLM's glacier
     ! areas to match those given by GLC. This is because, in initialization, we do not yet
