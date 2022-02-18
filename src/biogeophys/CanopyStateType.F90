@@ -235,8 +235,8 @@ contains
     endif !fates or CN
 
     this%leafcn_patch(begp:endp) = spval
-    call hist_addfld1d (fname='leafcn', units='gC/gN', &
-        avgflag='A', long_name='Leaf C:N', &
+    call hist_addfld1d (fname='LEAFCN_TARGET', units='gC/gN', &
+        avgflag='A', long_name='Target leaf C:N; compare against leafC/leafN', &
         ptr_patch=this%leafcn_patch)
 
     if(use_fates_sp)then
