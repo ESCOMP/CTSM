@@ -65,4 +65,3 @@ def get_ctsm_git_describe():
         .decode()
     )
     return label
-
