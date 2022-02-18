@@ -92,7 +92,7 @@ module CNPhenologyMod
 
   type(params_type) :: params_inst
 
-  real(r8) :: dt                            ! radiation time step delta t (seconds)
+  real(r8) :: dt                            ! time step delta t (seconds)
   real(r8) :: fracday                       ! dtime as a fraction of day
   real(r8) :: crit_dayl                     ! critical daylength for offset (seconds)
   real(r8) :: ndays_on                      ! number of days to complete onset
@@ -1660,7 +1660,7 @@ contains
     ! handle CN fluxes during the phenological onset                       & offset periods.
     
     ! !USES:
-    use clm_time_manager , only : get_prev_calday, get_curr_days_per_year, get_rad_step_size, is_beg_curr_year
+    use clm_time_manager , only : get_prev_calday, get_curr_days_per_year, is_beg_curr_year
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1696,7 +1696,6 @@ contains
     integer h         ! hemisphere indices
     integer s         ! growing season indices
     integer idpp      ! number of days past planting
-    real(r8) :: dtrad ! radiation time step delta t (seconds)
     real(r8) dayspyr  ! days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
@@ -1765,7 +1764,6 @@ contains
       ! get time info
       dayspyr = get_curr_days_per_year()
       jday    = get_prev_calday()
-      dtrad   = real( get_rad_step_size(), r8 )
 
       if (use_fertilizer) then
        ndays_on = 20._r8 ! number of days to fertilize
@@ -2109,7 +2107,7 @@ contains
               if (fert_counter(p) <= 0._r8) then
                  fert(p) = 0._r8
               else ! continue same fert application every timestep
-                 fert_counter(p) = fert_counter(p) - dtrad
+                 fert_counter(p) = fert_counter(p) - dt
               end if
 
          else   ! crop not live
