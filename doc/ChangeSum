@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev076   negins 02/18/2022 updating subset_data.py script and move to the Python package.
     ctsm5.1.dev075     erik 02/16/2022 Small answer changes: urban ventilation, fire-emission, irrigate off when not crop, fix two SSP ndep files
     ctsm5.1.dev074   slevis 02/02/2022 Introduce vert. resolved MIMICS as new method to solve below ground decomp.
     ctsm5.1.dev073    sacks 01/25/2022 Some fixes for Gregorian calendar

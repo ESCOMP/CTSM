@@ -1,4 +1,102 @@
 ===============================================================
+Tag name: ctsm5.1.dev076
+Originator(s): negins (Negin Sobhani,UCAR/TSS,303-497-1224)
+Date: Fri Feb 18 13:25:19 MST 2022
+One-line Summary: updating subset_data.py script and move to the Python package.
+
+Purpose and description of changes
+----------------------------------
+The purpose of this PR was to update and move the subset_data.py and other
+relevant python scripts to the CTSM python package so the other python codes
+(such as fsurdat_modifier) can re-use/import the capabilities of this script.
+
+This updated code now adds the capability to create user-mods for a generic
+singlepoint case.
+
+The subset_data.py (top script called subset_data)extracts surface dataset,
+domain file, landuse, and DATM files at a single point or a region from the
+available global dataset. Next it modifies the surface dataset based on the
+user options (command-line arguments) for example dom-pft or zero-ing non-veg
+types, etc.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+ Fixes CTSM/#935 -- Make surface dataset and landuse consistent for singlept 
+ Fixes CTSM/#1436 -- Running subset_data from any directory
+ Fixes CTSM/#1437 -- issue with modify_singlept_site_neon for finding latest file
+ Fixes CTSM/#1594 -- try/except for python download neon data
+ Fixes CTSM/#1606 -- NEON tools not handling crop weights correctly.
+ Part of development needed for #1490 -- generic single point simulation.
+ Partially Fixes CTSM/#1622 -- check if file exists and abort if not found + --overwrite
+	Fixes it for subset_data
+ Partially Fixes CTSM/#1441 -- Move critical toolchain script out of tools/contrib
+	Fixes it for subset_data
+
+CIME Issues fixed (include issue #): N/A
+
+Known bugs introduced in this tag (include issue #): N/A
+
+Known bugs found since the previous tag (include issue #): N/A
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Added python/ctsm/test/test_unit_args_utils.py (11 unit tests)
+ Added python/ctsm/test/test_unit_singlept_data.py (10 unit tests)
+ Added python/ctsm/test/test_unit_singlept_data_surfdata.py (24 unit tests) 
+ Modified tests in python/ctsm/test/test_unit_utils.py
+ Modified tests in python/ctsm/test/test_unit_modify_fsurdat.py 
+ Added 10 new tests in tests/tools/input_tests_master thanks to @ekluzek
+ Added test/tools/tests_pretag_nompi_neon 
+
+Testing summary:
+----------------
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    clm_pymods test suite on cheyenne - PASS
+	pylint -- PASS (10.00/10) (cheyenne + python/3.7.9)
+	Python unit tests -- PASS (cheyenne)
+	Python system tests -- PASS (cheyenne)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK (tests_pretag_nompi_neon + subset_data tests)
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1461
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev075
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Feb 16 21:35:40 MST 2022
