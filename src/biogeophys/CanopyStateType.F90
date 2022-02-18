@@ -173,6 +173,11 @@ contains
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
 
+    this%leafcn_patch(begp:endp) = spval
+    call hist_addfld1d (fname='LEAFCN_TARGET', units='gC/gN', &
+        avgflag='A', long_name='Target leaf C:N; compare against leafC/leafN', &
+        ptr_patch=this%leafcn_patch)
+
     this%elai_patch(begp:endp) = spval
     call hist_addfld1d (fname='ELAI', units='m^2/m^2', &
         avgflag='A', long_name='exposed one-sided leaf area index', &
@@ -233,11 +238,6 @@ contains
 
 
     endif !fates or CN
-
-    this%leafcn_patch(begp:endp) = spval
-    call hist_addfld1d (fname='LEAFCN_TARGET', units='gC/gN', &
-        avgflag='A', long_name='Target leaf C:N; compare against leafC/leafN', &
-        ptr_patch=this%leafcn_patch)
 
     if(use_fates_sp)then
       this%tlai_hist_patch(begp:endp) = spval
@@ -609,8 +609,8 @@ contains
          dim1name='pft', long_name='fraction of vegetation not covered by snow (0 or 1)', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%frac_veg_nosno_alb_patch)
 
-!   call restartvar(ncid=ncid, flag=flag, varname='LEAFCN', xtype=ncd_double,  &
-!        dim1name='pft', long_name='leaf C:N', units='gC/gN', &
+!   call restartvar(ncid=ncid, flag=flag, varname='LEAFCN_TARGET', xtype=ncd_double,  &
+!        dim1name='pft', long_name='Target leaf C:N; compare against leafC/leafN', units='gC/gN', &
 !        interpinic_flag='interp', readvar=readvar, data=this%leafcn_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='tlai', xtype=ncd_double,  &
