@@ -257,7 +257,7 @@ program mksurfdata
   real(r8), allocatable :: pctcrop(:)
   real(r8), allocatable :: pct_nat_pft(:,:)
   real(r8), allocatable :: pct_cft(:,:)
-  integer :: int_varid
+  logical               :: end_of_fdynloop
 
   character(len=*), parameter :: u_FILE_u = &
        __FILE__
@@ -478,6 +478,7 @@ program mksurfdata
   ! Make constant harvesting data at model resolution
   ! -----------------------------------
   ! Note that this call must come after call to mkpftInit - since num_cft is set there
+  ! Output data is written in mkharvest
   call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, &
        pioid_o=pioid, all_veg=all_veg, constant=.true., rc=rc )
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
@@ -1083,12 +1084,14 @@ program mksurfdata
      rcode = pio_put_var(pioid, pio_varid, (/(n,n=cft_lb,cft_ub)/))
 
      ! Write out PFTDATA_MASK
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land mask from pft dataset"
+     ! pftdata_mask was calculated ABOVE
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land mask (calculated in furdata calc)"
      call mkfile_output(pioid,  mesh_model, 'PFTDATA_MASK', pftdata_mask, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
 
      ! Write out LANDFRAC_PFT
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land fraction  from pft dataset"
+     ! landfrac_pft was calculated ABOVE
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land fraction calculated in fsurdata calc)"
      call mkfile_output(pioid,  mesh_model, 'LANDFRAC_PFT', landfrac_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
 
@@ -1108,16 +1111,22 @@ program mksurfdata
      pctnatpft_max = pctnatpft
      pctcft_max = pctcft
 
+     end_of_fdynloop = .false.
      ntim = 0
      do
 
         ! Determine file name - if there are no more files than exit before broadcasting
         if (root_task) then
            read(nfdyn, '(A195,1x,I4)', iostat=ier) string, year
-           if (ier /= 0) EXIT
+           if (ier /= 0) end_of_fdynloop = .true.
+        end if
+        call mpi_bcast(end_of_fdynloop, 1, MPI_LOGICAL, 0, mpicom, ier)
+        if (end_of_fdynloop) then
+           EXIT
         end if
         call mpi_bcast (string, len(string), MPI_CHARACTER, 0, mpicom, ier)
         call mpi_bcast (year, 1, MPI_INTEGER, 0, mpicom, ier)
+        
 
         ! If pft fraction override is set, than intrepret string as PFT and harvesting override values
         ! Otherwise intrepret string as a filename with PFT and harvesting values in it
@@ -1148,39 +1157,42 @@ program mksurfdata
            write(ndiag,'(a,i8)')subname//' ntime = ',ntim
         end if
 
-        ! TODO: the following is dying with an error that the index is out of bounds
-        ! rcode = pio_inq_varid(pioid, 'YEAR', pio_varid)
-        ! int_varid = pio_varid%varid
-        ! rcode = pio_put_var(pioid, int_varid, (/ntim/), (/1/), (/year/))
-        ! rcode = pio_inq_varid(pioid, 'time', pio_varid)
-        ! int_varid = pio_varid%varid
-        ! rcode = pio_put_var(pioid, int_varid, (/ntim/), (/1/), (/year/))
+        rcode = pio_inq_varid(pioid, 'YEAR', pio_varid)
+        rcode = pio_put_var(pioid, pio_varid, (/ntim/), year)
+        rcode = pio_inq_varid(pioid, 'time', pio_varid)
+        rcode = pio_put_var(pioid, pio_varid, (/ntim/), year)
         ! rcode = pio_inq_varid(pioid, 'input_pftdata_filename', pio_varid)
-        ! rcode = pio_put_var(pioid, pio_varid, (/ntim/), (trim(string)))
+        ! rcode = pio_put_var(pioid, pio_varid, (/1,ntim/), (/len_trim(string),1/), trim(string))
+        call pio_syncfile(pioid)
 
         ! Create pctpft data at model resolution from file fname
         ! Note that pctlnd_o below is different than the above call and returns pctlnd_pft_dyn
+        
         call mkpft( mksrf_fvegtyp_mesh, fname, mesh_model, &
              pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpft')
         call pio_syncfile(pioid)
 
         ! Consistency check on input land fraction
+        ! pctlnd_pft was calculated ABOVE
         do n = 1,lsize_o
            if (pctlnd_pft_dyn(n) /= pctlnd_pft(n)) then
-              write(6,*) subname,' error: pctlnd_pft for dynamics data = ',&
-                   pctlnd_pft_dyn(n), ' not equal to pctlnd_pft for surface data = ',&
-                   pctlnd_pft(n),' at n= ',n
-              if ( trim(fname) == ' ' )then
-                 write(6,*) ' PFT string = ', string
-              else
-                 write(6,*) ' PFT file = ', fname
+              if (root_task) then
+                 write(ndiag,*) subname,' error: pctlnd_pft for dynamics data = ',&
+                      pctlnd_pft_dyn(n), ' not equal to pctlnd_pft for surface data = ',&
+                      pctlnd_pft(n),' at n= ',n
+                 if ( trim(fname) == ' ' )then
+                    write(ndiag,*) ' PFT string = ',trim(string)
+                 else
+                    write(ndiag,*) ' PFT file = ', fname
+                 end if
               end if
               call shr_sys_abort()
            end if
         end do
 
         ! Create harvesting data at model resolution
+        ! Output data is written in mkharvest
         call mkharvest( mksrf_fhrvtyp_mesh, fhrvname, mesh_model, &
              pioid_o=pioid, all_veg=.false., constant=.false., ntime=ntim, rc=rc )
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest')
@@ -1189,6 +1201,8 @@ program mksurfdata
         ! Do landuse changes such as for the poles, etc.
         ! If have pole points on grid - set south pole to glacier
         ! north pole is assumed as non-land
+        ! pctlak, pctwet, pcturb and pctgla were calculated ABOVE
+        ! pctnatpft and pctcft were calculated ABOVE
         do n = 1,lsize_o
            if (abs(lat(n) - 90._r8) < 1.e-6_r8) then
               pctlak(n) = 0._r8
@@ -1210,16 +1224,20 @@ program mksurfdata
         call normalize_and_check_landuse(lsize_o)
 
         ! Given an array of pct_pft_type variables, update all the max_p2l variables.
-        call update_max_array(pctnatpft_max,pctnatpft)
-        call update_max_array(pctcft_max,pctcft)
+        call update_max_array(pctnatpft_max, pctnatpft)
+        call update_max_array(pctcft_max, pctcft)
 
         if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_NAT_PFT for year ",year
+        rcode = pio_inq_varid(pioid, 'PCT_NAT_PFT', pio_varid)
+        call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
         call get_pct_p2l_array(pctnatpft, ndim1=lsize_o, ndim2=num_natpft+1, pct_p2l=pct_nat_pft)
         call mkfile_output(pioid, mesh_model, 'PCT_NAT_PFT', pct_nat_pft, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_NAT_PFT')
         call pio_syncfile(pioid)
 
         if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CROP for year ",year
+        rcode = pio_inq_varid(pioid, 'PCT_CROP', pio_varid)
+        call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
         call get_pct_l2g_array(pctcft, pctcrop)
         call mkfile_output(pioid, mesh_model, 'PCT_CROP', pctcrop, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP')
@@ -1227,6 +1245,8 @@ program mksurfdata
 
         if (num_cft > 0) then
            if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CFT for year ",year
+           rcode = pio_inq_varid(pioid, 'PCT_CFT', pio_varid)
+           call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
            call get_pct_p2l_array(pctcft, ndim1=lsize_o, ndim2=num_cft, pct_p2l=pct_cft)
            call mkfile_output(pioid, mesh_model, 'PCT_CFT', pct_cft, rc=rc)
            if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CFT')
@@ -1240,23 +1260,22 @@ program mksurfdata
 
      end do   ! end of read loop
 
-     ! TODO: the following is hanging in writing out PCT_NAT_PFT_MAX
-     ! if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_NAT_PFT_MAX "
-     ! call get_pct_p2l_array(pctnatpft_max, ndim1=lsize_o, ndim2=num_natpft+1, pct_p2l=pct_nat_pft)
-     ! call mkfile_output(pioid, mesh_model, 'PCT_NAT_PFT_MAX', pct_nat_pft, rc=rc)
-     ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_NAT_PFT')
+     if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_NAT_PFT_MAX "
+     call get_pct_p2l_array(pctnatpft_max, ndim1=lsize_o, ndim2=num_natpft+1, pct_p2l=pct_nat_pft)
+     call mkfile_output(pioid, mesh_model, 'PCT_NAT_PFT_MAX', pct_nat_pft, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_NAT_PFT')
 
-     ! if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CROP_MAX"
-     ! call get_pct_l2g_array(pctcft_max, pctcrop)
-     ! call mkfile_output(pioid, mesh_model, 'PCT_CROP_MAX', pctcrop, rc=rc)
-     ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP')
+     if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CROP_MAX"
+     call get_pct_l2g_array(pctcft_max, pctcrop)
+     call mkfile_output(pioid, mesh_model, 'PCT_CROP_MAX', pctcrop, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP')
 
-     ! if (num_cft > 0) then
-     !    if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CFT_MAX"
-     !    call get_pct_p2l_array(pctcft_max, ndim1=lsize_o, ndim2=num_cft, pct_p2l=pct_cft)
-     !    call mkfile_output(pioid, mesh_model, 'PCT_CFT_MAX', pct_cft, rc=rc)
-     !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CFT')
-     ! end if
+     if (num_cft > 0) then
+        if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CFT_MAX"
+        call get_pct_p2l_array(pctcft_max, ndim1=lsize_o, ndim2=num_cft, pct_p2l=pct_cft)
+        call mkfile_output(pioid, mesh_model, 'PCT_CFT_MAX', pct_cft, rc=rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CFT')
+     end if
 
      ! Close the file
      call pio_closefile(pioid)
@@ -1524,8 +1543,8 @@ program mksurfdata
             sum8a = sum8a + pctcft(n)%get_pct_l2g()
             if ( sum8a==0._r8 .and. sum8 < (100._r8-4._r8*epsilon(sum8)) )then
                write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-                    'pcturb, pctgla is < 100% when pctnatveg+pctcrop==0 sum = ', sum8
-               write (6,*) 'Total error, error/epsilon = ',100._r8-sum8, ((100._r8-sum8)/epsilon(sum8))
+                    'pcturb, pctgla is < 100% when pctnatveg+pctcrop==0 sum = ', sum8 
+              write (6,*) 'Total error, error/epsilon = ',100._r8-sum8, ((100._r8-sum8)/epsilon(sum8))
                write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop,epsilon= ', &
                     n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                     pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(), epsilon(sum8)

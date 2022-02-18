@@ -465,7 +465,7 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  subroutine update_max_array(pct_pft_max_arr,pct_pft_arr)
+  subroutine update_max_array(pct_pft_max_arr, pct_pft_arr)
     !
     ! Given an array of pct_pft_type variables, update all the max_p2l variables.
     !

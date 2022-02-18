@@ -4,32 +4,45 @@ module mkVICparamsMod
   ! make parameters for VIC
   !-----------------------------------------------------------------------
   !
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_abort 
+  use ESMF
+  use pio
+  use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4
+  use shr_sys_mod      , only : shr_sys_abort
+  use mkpioMod         , only : mkpio_get_rawdata
+  use mkpioMod         , only : mkpio_iodesc_rawdata, pio_iotype, pio_ioformat, pio_iosystem
+  use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8, get_meshareas
+  use mkutilsMod       , only : chkerr
+  use mkvarctl         , only : root_task, ndiag, mpicom, MPI_INTEGER, MPI_MAX
+  use mkvarctl         , only : soil_color_override, unsetcol
+  use mkvarpar         , only : re
+  use mkchecksMod      , only : min_bad
+  use mkdiagnosticsMod , only : output_diagnostics_continuous
 
   implicit none
   private
 
-  public mkVICparams            ! make VIC parameters
+  public :: mkVICparams            ! make VIC parameters
+
+  character(len=*) , parameter :: u_FILE_u = &
+       __FILE__
 
 !===============================================================
 contains
 !===============================================================
 
-  subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, binfl_o, ws_o, dsmax_o, ds_o)
+  subroutine mkVICparams(file_mesh_i, file_data_i, mesh_o, binfl_o, ws_o, dsmax_o, ds_o, rc)
     !
     ! make VIC parameters
     !
-    use mkdiagnosticsMod, only : output_diagnostics_continuous
-    use mkchecksMod, only : min_bad
-    !
-    ! !ARGUMENTS:
-    character(len=*) , intent(in) :: datfname   ! input data file name
-    integer          , intent(in) :: ndiag      ! unit number for diag out
-    real(r8)         , intent(out):: binfl_o(:) ! output VIC b parameter for the Variable Infiltration Capacity Curve (unitless)
-    real(r8)         , intent(out):: ws_o(:)    ! output VIC Ws parameter for the ARNO curve (unitless)
-    real(r8)         , intent(out):: dsmax_o(:) ! output VIC Dsmax parameter for the ARNO curve (mm/day)
-    real(r8)         , intent(out):: ds_o(:)    ! output VIC Ds parameter for the ARNO curve (unitless)
+    ! input/output variables
+    character(len=*)  , intent(in)  :: file_mesh_i ! input mesh file name
+    character(len=*)  , intent(in)  :: file_data_i ! input data file name
+    type(ESMF_Mesh)   , intent(in)  :: mesh_o      ! model mesho
+    real(r8)         , intent(out)  :: binfl_o(:)  ! output VIC b parameter for the Variable Infiltration Capacity Curve (unitless)
+    real(r8)         , intent(out)  :: ws_o(:)     ! output VIC Ws parameter for the ARNO curve (unitless)
+    real(r8)         , intent(out)  :: dsmax_o(:)  ! output VIC Dsmax parameter for the ARNO curve (mm/day)
+    real(r8)         , intent(out)  :: ds_o(:)     ! output VIC Ds parameter for the ARNO curve (unitless)
+    integer           , intent(out) :: rc
     !
     ! !LOCAL VARIABLES:
     real(r8), allocatable :: data_i(:)   ! data on input grid
