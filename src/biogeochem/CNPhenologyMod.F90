@@ -2422,13 +2422,12 @@ contains
       ! set GDD target
       if (do_plant_prescribed .and. (.not. generate_crop_gdds) .and. (.not. ignore_rx_crop_gdds)) then
          gdd_target = crop_inst%rx_cultivar_gdds_thisyr(p,s)
-!         if (gdd_target < 0.0) then
-!            write(iulog,*) 'If using prescribed sowing dates and not generate_crop_gdds, you must provide cultivar GDD targets >= 0.0.'
-!            call endrun(msg=errMsg(sourcefile, __LINE__))
-!         endif
 
          ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
          ! Just manually set a minimum of 1.0
+         if (gdd_target < min_crop_gdd_target) then
+            write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gdd_target ',gdd_target,'; using min_crop_gdd_target instead (',min_crop_gdd_target,')'
+         endif
          gdd_target = max(gdd_target, min_crop_gdd_target)
 
          gddmaturity(p) = gdd_target
@@ -2455,7 +2454,7 @@ contains
             gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
          end if
       endif
-      write (iulog,'(a,i4,a,f0.0)')  'gddmaturity (ivt ',ivt(p),'): ',gddmaturity(p)
+!      write (iulog,'(a,i4,a,f0.0)')  'gddmaturity (ivt ',ivt(p),'): ',gddmaturity(p)
 
     end associate
 

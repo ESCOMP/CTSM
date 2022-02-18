@@ -275,8 +275,7 @@ contains
     integer           :: n, g
     integer           :: lsize
     integer           :: rc
-!    real(r8), pointer :: dataptr1d_sdate(:)
-    real(r8), pointer :: dataptr1d(:)
+    real(r8), pointer :: dataptr1d_sdate(:)
     real(r8), pointer :: dataptr2d_sdate(:,:)
     real(r8), pointer :: dataptr1d_cultivar_gdds(:)
     real(r8), pointer :: dataptr2d_cultivar_gdds(:,:)
@@ -293,20 +292,14 @@ contains
     lsize = bounds%endg - bounds%begg + 1
 
     ! Read prescribed sowing dates from input files
-!    allocate(dataptr1d_sdate(lsize))
-!    dataptr1d_sdate(:) = -4
-!    allocate(dataptr1d(lsize))
-!    dataptr1d(:) = -4
     allocate(dataptr2d_sdate(lsize, ncft))
     dataptr2d_sdate(:,:) = -5
     ! Starting with npcropmin will skip generic crops
     if (verbose) write(iulog,*) 'cropcal_interp(): Reading sdate file'
     do n = 1, ncft
        ivt = n + npcropmin - 1
-!       call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
-!            fldptr1=dataptr1d_sdate,  rc=rc)
        call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
-            fldptr1=dataptr1d,  rc=rc)
+            fldptr1=dataptr1d_sdate,  rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
           call ESMF_Finalize(endflag=ESMF_END_ABORT)
        end if
@@ -314,14 +307,13 @@ contains
        ! So an explicit loop is required here
        do g = 1,lsize
 
-!          ! Warn about possible bad interpolation. Not a problem unless it actually gets assigned to a patch.
-!          if ((.not. warned_about_bad_interp_sdate) .and. (dataptr1d_sdate(g) <= 0 .or. dataptr1d_sdate(g) > 365)) then
-!              write(iulog,'(a,i0,a,i0,a)') 'WARNING: cropcal_interp(): Crop ivt ',ivt,' (and maybe others) has dataptr1d prescribed sowing date ',dataptr1d_sdate(g),'. Bad interpolation?'
-!              warned_about_bad_interp_sdate = .true.
-!          end if
+          ! Warn about possible bad interpolation. Not a problem unless it actually gets assigned to a patch.
+          if ((.not. warned_about_bad_interp_sdate) .and. (dataptr1d_sdate(g) <= 0 .or. dataptr1d_sdate(g) > 365)) then
+              write(iulog,'(a,i0,a,i0,a)') 'WARNING: cropcal_interp(): Crop ivt ',ivt,' (and maybe others) has dataptr1d prescribed sowing date ',dataptr1d_sdate(g),'. Bad interpolation?'
+              warned_about_bad_interp_sdate = .true.
+          end if
 
-         !dataptr2d_sdate(g,n) = dataptr1d_sdate(g)
-         dataptr2d_sdate(g,n) = dataptr1d(g)
+         dataptr2d_sdate(g,n) = dataptr1d_sdate(g)
        end do
     end do
 
@@ -350,50 +342,30 @@ contains
           call ESMF_Finalize(endflag=ESMF_END_ABORT)
        endif
     end do
-    !deallocate(dataptr1d_sdate)
-    deallocate(dataptr1d)
     deallocate(dataptr2d_sdate)
 
-    if (verbose) write(iulog,*) 'cropcal_interp(): Allocating dataptrs for cultivar_gdds'
-!    allocate(dataptr1d_cultivar_gdds(lsize))
     allocate(dataptr2d_cultivar_gdds(lsize, ncft))
     if (.not. generate_crop_gdds) then
-    !if (.false.) then
-       !if (verbose) write(iulog,*) 'cropcal_interp(): Reading cultivar_gdds file'
-       write(iulog,*) 'cropcal_interp(): Reading cultivar_gdds file'
        ! Read prescribed cultivar GDDs from input files
-!       dataptr1d_cultivar_gdds(:) = -4
-!       dataptr2d_cultivar_gdds(:,:) = -5
        ! Starting with npcropmin will skip generic crops
        do n = 1, ncft
-!          call dshr_fldbun_getFldPtr(sdat_cropcal_cultivar_gdds%pstrm(1)%fldbun_model, trim(stream_varnames_cultivar_gdds(n)), &
-!               fldptr1=dataptr1d_cultivar_gdds,  rc=rc)
-!SO IT WORKS WHEN I USE SDATE''S DATAPTR1D
-!       call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
-!            fldptr1=dataptr1d_sdate,  rc=rc)
-!       call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
-!            fldptr1=dataptr1d_cultivar_gdds,  rc=rc)
-!       call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
-!            fldptr1=dataptr1d,  rc=rc)
-       call dshr_fldbun_getFldPtr(sdat_cropcal_cultivar_gdds%pstrm(1)%fldbun_model, trim(stream_varnames_cultivar_gdds(n)), &
-            fldptr1=dataptr1d,  rc=rc)
-
+          call dshr_fldbun_getFldPtr(sdat_cropcal_cultivar_gdds%pstrm(1)%fldbun_model, trim(stream_varnames_cultivar_gdds(n)), &
+               fldptr1=dataptr1d_cultivar_gdds,  rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
              call ESMF_Finalize(endflag=ESMF_END_ABORT)
           end if
+
           ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
           ! So an explicit loop is required here
           do g = 1,lsize
    
-!             ! Warn about possible bad interpolation. Not a problem unless it actually gets assigned to a patch.
-!             if ((.not. warned_about_bad_interp_cultivar_gdds) .and. (dataptr1d_cultivar_gdds(g) < 0 .or. dataptr1d_cultivar_gdds(g) > 1000000.0)) then
-!                 write(iulog,'(a,i0,a,f0.0,a)') 'WARNING: cropcal_interp(): Crop n ',n,' (and maybe others) has dataptr1d prescribed GDD requirement ',dataptr1d_cultivar_gdds(g),'. Bad interpolation?'
-!                 warned_about_bad_interp_cultivar_gdds = .true.
-!             end if
+             ! Warn about possible bad interpolation. Not a problem unless it actually gets assigned to a patch.
+             if ((.not. warned_about_bad_interp_cultivar_gdds) .and. (dataptr1d_cultivar_gdds(g) < 0 .or. dataptr1d_cultivar_gdds(g) > 1000000.0)) then
+                 write(iulog,'(a,i0,a,f0.0,a)') 'WARNING: cropcal_interp(): Crop n ',n,' (and maybe others) has dataptr1d prescribed GDD requirement ',dataptr1d_cultivar_gdds(g),'. Bad interpolation?'
+                 warned_about_bad_interp_cultivar_gdds = .true.
+             end if
             
-!             dataptr2d_cultivar_gdds(g,n) = dataptr1d_cultivar_gdds(g)
-             dataptr2d_cultivar_gdds(g,n) = dataptr1d(g)
-             write (iulog,'(a,i4,a,f0.0)')  'dataptr1d(g) (ivt ',ivt,'): ',dataptr1d(g)
+             dataptr2d_cultivar_gdds(g,n) = dataptr1d_cultivar_gdds(g)
           end do
        end do
    
@@ -411,59 +383,40 @@ contains
           if (ivt >= npcropmin) then
              n = ivt - npcropmin + 1
 
-!             if (n > ncft) then
-!                 write(iulog,'(a,i0,a,i0,a)') 'n (',n,') > ncft (',ncft,')'
-!                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
-!             end if
+             if (n > ncft) then
+                 write(iulog,'(a,i0,a,i0,a)') 'n (',n,') > ncft (',ncft,')'
+                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
+             end if
 
              ! vegetated pft
              ig = g_to_ig(patch%gridcell(p))
 
-!             if (ig > lsize) then
-!                 write(iulog,'(a,i0,a,i0,a)') 'ig (',ig,') > lsize (',lsize,')'
-!                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
-!             end if
-
-!             if (dataptr2d_cultivar_gdds(ig,n) < -0.001 .or. dataptr2d_cultivar_gdds(ig,n) > 1000000.0) then
-!             !if (dataptr2d_cultivar_gdds(ig,n) > 1000000.0) then
-!                 if (dataptr2d_cultivar_gdds(ig,n) == 0.0) then
-!                     write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed GDD requirement ZERO??? ',dataptr2d_cultivar_gdds(ig,n)
-!                 else if (dataptr2d_cultivar_gdds(ig,n) < -0.001) then
-!                     write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed GDD requirement NEGATIVE ',dataptr2d_cultivar_gdds(ig,n)
-!                 else
-!                     write(iulog,'(a,i0,a,f0.0)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed GDD requirement HUGE ',dataptr2d_cultivar_gdds(ig,n)
-!                 end if
-!!                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
-!                 
-!                 ! TEMPORARY!!!
-!                 dataptr2d_cultivar_gdds(ig,n) = 0.0
-!             end if
+             if (ig > lsize) then
+                 write(iulog,'(a,i0,a,i0,a)') 'ig (',ig,') > lsize (',lsize,')'
+                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
+             end if
 
              crop_inst%rx_cultivar_gdds_thisyr(p,1) = dataptr2d_cultivar_gdds(ig,n)
-             write (iulog,'(a,i4,a,f0.0)')  'crop_inst%rx_cultivar_gdds_thisyr(p,1) (ivt ',ivt,'): ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
    
-!             ! Sanity check: Should not read in negative values. Also try to catch uninitialized values
-!             if (crop_inst%rx_cultivar_gdds_thisyr(p,1) < -0.001 .or. crop_inst%rx_cultivar_gdds_thisyr(p,1) > 1000000.0) then
-!             !if (crop_inst%rx_cultivar_gdds_thisyr(p,1) > 1000000.0) then
-!                 if (crop_inst%rx_cultivar_gdds_thisyr(p,1) == 0.0) then
-!                     write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) ZERO??? ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
-!                 else if (crop_inst%rx_cultivar_gdds_thisyr(p,1) < -0.001) then
-!                     write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) NEGATIVE ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
-!                 else
-!                     write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) HUGE ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
-!                 end if
-!                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
-!             end if
-!          else
-!             write(iulog,'(a,i0)') 'cropcal_interp(), rx_cultivar_gdds: Crop patch has ivt ',ivt
-!             call ESMF_Finalize(endflag=ESMF_END_ABORT)
+             ! Sanity check: Should not read in negative values. Also try to catch uninitialized values
+             if (crop_inst%rx_cultivar_gdds_thisyr(p,1) < -0.001 .or. crop_inst%rx_cultivar_gdds_thisyr(p,1) > 1000000.0) then
+                 if (crop_inst%rx_cultivar_gdds_thisyr(p,1) == 0.0) then
+                     write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) ZERO??? ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
+                 else if (crop_inst%rx_cultivar_gdds_thisyr(p,1) < -0.001) then
+                     write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) NEGATIVE ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
+                 else
+                     write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) HUGE ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
+                 end if
+                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
+             end if
+          else
+             write(iulog,'(a,i0)') 'cropcal_interp(), rx_cultivar_gdds: Crop patch has ivt ',ivt
+             call ESMF_Finalize(endflag=ESMF_END_ABORT)
           endif
        end do
       write(iulog,*) 'cropcal_interp(): Reading cultivar_gdds file DONE'
    end if ! not generate_crop_gdds
 
-!   deallocate(dataptr1d_cultivar_gdds)
-!   deallocate(dataptr1d)
    deallocate(dataptr2d_cultivar_gdds)
 
    if (verbose) write(iulog,*) 'cropcal_interp(): All done!'
