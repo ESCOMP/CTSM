@@ -236,7 +236,7 @@ contains
     namelist /clm_inparm/ use_flexibleCN, use_luna
 
     namelist /clm_nitrogen/ MM_Nuptake_opt, &
-         plant_ndemand_opt, substrate_term_opt, nscalar_opt, temp_scalar_opt, &
+         plant_ndemand_opt, substrate_term_opt, temp_scalar_opt, &
          CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, &
          CN_evergreen_phenology_opt, carbon_resp_opt
 
@@ -717,8 +717,7 @@ contains
     call mpi_bcast (MM_Nuptake_opt, 1, MPI_LOGICAL, 0, mpicom, ier)             
     call mpi_bcast (plant_ndemand_opt, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (substrate_term_opt, 1, MPI_LOGICAL, 0, mpicom, ier)         
-    call mpi_bcast (nscalar_opt, 1, MPI_LOGICAL, 0, mpicom, ier)                
-    call mpi_bcast (temp_scalar_opt, 1, MPI_LOGICAL, 0, mpicom, ier)            
+    call mpi_bcast (temp_scalar_opt, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (CNratio_floating, 1, MPI_LOGICAL, 0, mpicom, ier)           
     call mpi_bcast (lnc_opt, 1, MPI_LOGICAL, 0, mpicom, ier)                    
     call mpi_bcast (reduce_dayl_factor, 1, MPI_LOGICAL, 0, mpicom, ier)         
@@ -1030,8 +1029,7 @@ contains
        write(iulog, *) '    MM_Nuptake_opt = ', MM_Nuptake_opt                       
        write(iulog, *) '    plant_ndemand_opt = ', plant_ndemand_opt
        write(iulog, *) '    substrate_term_opt = ', substrate_term_opt                   
-       write(iulog, *) '    nscalar_opt = ', nscalar_opt                
-       write(iulog, *) '    temp_scalar_opt = ', temp_scalar_opt                      
+       write(iulog, *) '    temp_scalar_opt = ', temp_scalar_opt
        write(iulog, *) '    CNratio_floating = ', CNratio_floating            
        write(iulog, *) '    lnc_opt = ', lnc_opt                              
        write(iulog, *) '    reduce_dayl_factor = ', reduce_dayl_factor          

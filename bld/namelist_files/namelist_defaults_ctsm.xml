@@ -511,7 +511,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <MM_Nuptake_opt             use_flexibleCN=".true." >.true.</MM_Nuptake_opt>
 <plant_ndemand_opt          use_flexibleCN=".true." >3</plant_ndemand_opt>
 <substrate_term_opt         use_flexibleCN=".true." >.true.</substrate_term_opt>
-<nscalar_opt                use_flexibleCN=".true." >.true.</nscalar_opt>
 <temp_scalar_opt            use_flexibleCN=".true." >.true.</temp_scalar_opt>
 <CNratio_floating           use_flexibleCN=".true." >.true.</CNratio_floating>
 <reduce_dayl_factor         use_flexibleCN=".true." >.false.</reduce_dayl_factor>
