@@ -257,17 +257,10 @@ module clm_varctl
   !  appropriate module.
   logical, public :: use_flexibleCN = .false.
   logical, public :: MM_Nuptake_opt = .false.
-  logical, public :: downreg_opt = .true.
-  integer, public :: plant_ndemand_opt = 0
-  logical, public :: substrate_term_opt = .true.
-  logical, public :: nscalar_opt = .true.
-  logical, public :: temp_scalar_opt = .true.
   logical, public :: CNratio_floating = .false.
   logical, public :: lnc_opt = .false.
   logical, public :: reduce_dayl_factor = .false.
   integer, public :: vcmax_opt = 0
-  integer, public :: CN_residual_opt = 0
-  integer, public :: CN_partition_opt = 0
   integer, public :: CN_evergreen_phenology_opt = 0
   integer, public :: carbon_resp_opt = 0
 
