@@ -2321,13 +2321,6 @@ Residual option for flexible-CN
 (EXPERIMENTAL and NOT tested)
 </entry>
 
-<entry id="CN_partition_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1">
-Partition option for flexible-CN
-   CN_partition_opt = 1
-(EXPERIMENTAL and NOT tested)
-</entry>
-
 <entry id="CN_evergreen_phenology_opt" type="integer" category="clm_nitrogen"
        group="clm_nitrogen" valid_values="0,1">
 Evergreen phenology option for CNPhenology

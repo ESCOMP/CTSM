@@ -8,7 +8,6 @@ Namelist items that are not regularly tested or used. Some aren't even implement
     ../bld/namelist_files/namelist_definition_ctsm.xml -- for definitions
 
     CN_evergreen_phenology_opt
-    CN_partition_opt
     CN_residual_opt
     CNratio_floating
     all_active
