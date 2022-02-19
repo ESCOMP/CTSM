@@ -935,7 +935,6 @@ contains
     use pftconMod              , only : ntrp_soybean, nirrig_trp_soybean
     use clm_varcon             , only : secspday, dzsoi_decomp
     use clm_varctl             , only : use_c13, use_c14
-    use clm_varctl             , only : plant_ndemand_opt, substrate_term_opt, temp_scalar_opt
     use clm_varpar             , only : nlevdecomp
     use clm_time_manager       , only : get_step_size_real
     use CanopyStateType        , only : canopystate_type
@@ -1408,17 +1407,13 @@ contains
          nscalar = (this%actual_leafcn(p) - leafcn_min ) / (leafcn_max - leafcn_min)  ! Nitrogen scaler factor
          nscalar = min( max(0.0_r8, nscalar), 1.0_r8 )
 
-         if (substrate_term_opt) then
-            c = patch%column(p)
-            sminn_total = 0.0_r8
-            do j = 1, nlevdecomp
-               sminn_total = sminn_total + sminn_vr(c,j) * dzsoi_decomp(j)
-            end do
-            Kmin = 1.0_r8
-            substrate_term = sminn_total / (sminn_total + Kmin)
-         else ! if (substrate_term_opt == .false) then
-            substrate_term = 1.0_r8
-         end if
+         c = patch%column(p)
+         sminn_total = 0.0_r8
+         do j = 1, nlevdecomp
+            sminn_total = sminn_total + sminn_vr(c,j) * dzsoi_decomp(j)
+         end do
+         Kmin = 1.0_r8
+         substrate_term = sminn_total / (sminn_total + Kmin)
 
          if (.not. temp_scalar_opt) then
             temp_scalar = 1.0_r8

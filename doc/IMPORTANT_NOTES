@@ -21,7 +21,6 @@ Namelist items that are not regularly tested or used. Some aren't even implement
     plant_ndemand_opt
     reduce_dayl_factor
     replenishlakec
-    substrate_term_opt
     temp_scalar_opt
     urban_traffic
     use_extralakelayers
