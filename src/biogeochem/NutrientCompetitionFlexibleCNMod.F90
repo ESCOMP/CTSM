@@ -192,7 +192,6 @@ contains
     ! !USES:
     use pftconMod             , only : pftcon, npcropmin
     use clm_varctl            , only : use_c13, use_c14, carbon_resp_opt
-    use clm_varctl            , only : CN_residual_opt
     use clm_time_manager       , only : get_step_size_real
     use CNVegStateType        , only : cnveg_state_type
     use CropType              , only : crop_type

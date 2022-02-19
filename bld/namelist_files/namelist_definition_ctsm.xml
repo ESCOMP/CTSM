@@ -2315,12 +2315,6 @@ Vcmax calculation for Photosynthesis
     vcmax_opt = 0 Based on canopy top and foilage Nitrogen limitation factor from params file (clm4.5)
 </entry>
 
-<entry id="CN_residual_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1">
-Residual option for flexible-CN
-(EXPERIMENTAL and NOT tested)
-</entry>
-
 <entry id="CN_evergreen_phenology_opt" type="integer" category="clm_nitrogen"
        group="clm_nitrogen" valid_values="0,1">
 Evergreen phenology option for CNPhenology

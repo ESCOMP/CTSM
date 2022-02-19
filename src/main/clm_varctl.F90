@@ -265,7 +265,6 @@ module clm_varctl
   logical, public :: lnc_opt = .false.
   logical, public :: reduce_dayl_factor = .false.
   integer, public :: vcmax_opt = 0
-  integer, public :: CN_residual_opt = 0
   integer, public :: CN_evergreen_phenology_opt = 0
   integer, public :: carbon_resp_opt = 0
 

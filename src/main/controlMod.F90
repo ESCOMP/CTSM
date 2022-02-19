@@ -237,7 +237,7 @@ contains
 
     namelist /clm_nitrogen/ MM_Nuptake_opt, &
          plant_ndemand_opt, substrate_term_opt, nscalar_opt, temp_scalar_opt, &
-         CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, CN_residual_opt, &
+         CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, &
          CN_evergreen_phenology_opt, carbon_resp_opt
 
     namelist /clm_inparm/ use_soil_moisture_streams
@@ -723,7 +723,6 @@ contains
     call mpi_bcast (lnc_opt, 1, MPI_LOGICAL, 0, mpicom, ier)                    
     call mpi_bcast (reduce_dayl_factor, 1, MPI_LOGICAL, 0, mpicom, ier)         
     call mpi_bcast (vcmax_opt, 1, MPI_INTEGER, 0, mpicom, ier)                  
-    call mpi_bcast (CN_residual_opt, 1, MPI_INTEGER, 0, mpicom, ier)            
     call mpi_bcast (CN_evergreen_phenology_opt, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (carbon_resp_opt, 1, MPI_INTEGER, 0, mpicom, ier) 
 
@@ -1037,7 +1036,6 @@ contains
        write(iulog, *) '    lnc_opt = ', lnc_opt                              
        write(iulog, *) '    reduce_dayl_factor = ', reduce_dayl_factor          
        write(iulog, *) '    vcmax_opt = ', vcmax_opt                            
-       write(iulog, *) '    CN_residual_opt = ', CN_residual_opt
        write(iulog, *) '    CN_evergreen_phenology_opt = ', CN_evergreen_phenology_opt
        write(iulog, *) '    carbon_resp_opt = ', carbon_resp_opt
     end if
