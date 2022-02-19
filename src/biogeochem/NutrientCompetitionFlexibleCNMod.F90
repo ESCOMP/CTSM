@@ -1422,32 +1422,16 @@ contains
          if(use_fun)then ! in FUN, plant_ndemand is just used as a maximum draw on soil N pools. 
              plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
          else !FUN
-	         if (plant_ndemand_opt == 0) then
-	            plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
-	         else if (plant_ndemand_opt == 1) then
-	            plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p)) * substrate_term
-	         else if (plant_ndemand_opt == 2) then      ! N uptake happens at day time only
+            if (laisun(p)+laisha(p) > 0.0_r8) then
+               Vmax_N = 2.7E-8_r8
+               plant_ndemand(p) =  Vmax_N  * frootc(p) * substrate_term * temp_scalar * nscalar
+            else
+               plant_ndemand(p) = 0.0_r8
+            end if
 
-	            if (gpp(p) > 0.0_r8) then
-	               Vmax_N = 2.7E-8_r8
-	               plant_ndemand(p) = Vmax_N * frootc(p) * substrate_term * temp_scalar  * nscalar
-	            else
-	               plant_ndemand(p) = 0.0_r8
-	            end if
-	         else if (plant_ndemand_opt == 3) then      ! N uptake happens at day and night time
-
-	            if (laisun(p)+laisha(p) > 0.0_r8) then
-	               Vmax_N = 2.7E-8_r8
-	               plant_ndemand(p) =  Vmax_N  * frootc(p) * substrate_term * temp_scalar * nscalar
-	            else
-	               plant_ndemand(p) = 0.0_r8
-	            end if
-
-	            if (this%actual_leafcn(p) < leafcn_min )then
-	               plant_ndemand(p) = 0.0_r8
-	            end if
-
-	         end if
+            if (this%actual_leafcn(p) < leafcn_min )then
+               plant_ndemand(p) = 0.0_r8
+            end if
          end if  !FUN
 
          !if (leafn(p) < n_min ) then

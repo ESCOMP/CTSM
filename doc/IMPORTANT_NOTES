@@ -18,7 +18,6 @@ Namelist items that are not regularly tested or used. Some aren't even implement
     no_frozen_nitrif_denitrif
     perchroot
     perchroot_alt
-    plant_ndemand_opt
     reduce_dayl_factor
     replenishlakec
     urban_traffic

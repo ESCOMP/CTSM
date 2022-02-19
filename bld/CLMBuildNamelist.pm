@@ -3129,8 +3129,6 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
       # TODO(bja, 2015-04) make this depend on > clm 5.0 and bgc mode at some point.
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'MM_Nuptake_opt',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'plant_ndemand_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CNratio_floating',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reduce_dayl_factor',
