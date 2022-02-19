@@ -16,7 +16,7 @@ module BiogeophysPreFluxCalcsMod
   use LandunitType            , only : lun
   use clm_varcon              , only : spval
   use clm_varpar              , only : nlevgrnd, nlevsno, nlevurb, nlevmaxurbgrnd
-  use clm_varctl              , only : use_fates, z0param_method
+  use clm_varctl              , only : use_fates, z0param_method, iulog
   use pftconMod               , only : pftcon, noveg
   use column_varcon           , only : icol_roof, icol_sunwall, icol_shadewall
   use landunit_varcon         , only : istsoil, istcrop, istice_mec
@@ -125,9 +125,10 @@ contains
     ! Set z0m and displa
     !
     ! !USES:
-    use clm_time_manager, only : is_first_step
+    use clm_time_manager, only : is_first_step, get_nstep
     use clm_varcon      , only : namep
     use abortutils      , only : endrun
+    use BalanceCheckMod , only : GetBalanceCheckSkipSteps
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds    
     integer                        , intent(in)    :: num_nolakep       ! number of column non-lake points in patch filter
@@ -172,8 +173,8 @@ contains
 
          case ('MeierXXXX') 
             
-            ! Don't set on first step of a simulation, since htop isn't set yet
-            if ( is_first_step() ) then
+            ! Don't set on first few steps of a simulation, since htop isn't set yet, need to wait until after first do_alb time
+            if ( is_first_step() .or. get_nstep() <= GetBalanceCheckSkipSteps() ) then
                z0m(p)    = 0._r8
                displa(p) = 0._r8 
                cycle
@@ -192,6 +193,7 @@ contains
                          / 2._r8)**(-0.5_r8) /  (pftcon%z0v_LAImax(patch%itype(p))) / pftcon%z0v_c(patch%itype(p))
 
                if ( htop(p) <= 1.e-10_r8 )then
+                   write(iulog,*) ' nstep = ', get_nstep(), ' htop = ', htop(p)
                    call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(sourcefile, __LINE__))
                else
                    z0m(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-0.4_r8 * U_ustar + &
