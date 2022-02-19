@@ -2271,12 +2271,6 @@ Allow the CN ratio to flexibly change with the simulation, rather than being fix
 How much Carbon to initialize vegetation pools (leafc/frootc and storage) to when -- Michaelis Menten nitrogen uptake kinetics is on
 </entry>
 
-<entry id="downreg_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".false.">
-   GPP downregulation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
 <entry id="plant_ndemand_opt" type="integer" category="clm_nitrogen"
        group="clm_nitrogen" valid_values="0,1,2,3">
    Plant nitrogen demand for use_flexibleCN option

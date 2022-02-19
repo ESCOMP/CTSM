@@ -192,7 +192,6 @@ contains
     ! !USES:
     use pftconMod             , only : pftcon, npcropmin
     use clm_varctl            , only : use_c13, use_c14, carbon_resp_opt
-    use clm_varctl            , only : downreg_opt
     use clm_varctl            , only : CN_residual_opt
     use clm_varctl            , only : CN_partition_opt
     use clm_time_manager       , only : get_step_size_real
@@ -329,13 +328,9 @@ contains
          aleaf                        => cnveg_state_inst%aleaf_patch                              , & ! Output: [real(r8) (:)   ]  leaf allocation coefficient
          astem                        => cnveg_state_inst%astem_patch                              , & ! Output: [real(r8) (:)   ]  stem allocation coefficient
          c_allometry                  => cnveg_state_inst%c_allometry_patch                        , & ! Output: [real(r8) (:)   ]  C allocation index (DIM)
-         n_allometry                  => cnveg_state_inst%n_allometry_patch                        , & ! Output: [real(r8) (:)   ]  N allocation index (DIM)
-         downreg                      => cnveg_state_inst%downreg_patch                            , & ! Output: [real(r8) (:)   ]  fractional reduction in GPP due to N limitation (DIM)
 
          annsum_npp                   => cnveg_carbonflux_inst%annsum_npp_patch                    , & ! Input:  [real(r8) (:)   ]  annual sum of NPP, for wood allocation
-         gpp                          => cnveg_carbonflux_inst%gpp_before_downreg_patch            , & ! Output: [real(r8) (:)   ]  GPP flux before downregulation (gC/m2/s)
          availc                       => cnveg_carbonflux_inst%availc_patch                        , & ! Output: [real(r8) (:)   ]  C flux available for allocation (gC/m2/s)
-         excess_cflux                 => cnveg_carbonflux_inst%excess_cflux_patch                  , & ! Output: [real(r8) (:)   ]  C flux not allocated due to downregulation (gC/m2/s)
          plant_calloc                 => cnveg_carbonflux_inst%plant_calloc_patch                  , & ! Output: [real(r8) (:)   ]  total allocated C flux (gC/m2/s)
          npp_growth                  => cnveg_carbonflux_inst%npp_growth_patch              , & ! Output:  [real(r8) (:) ] C for growth in FUN. g/m2/s
          cpool_to_resp                => cnveg_carbonflux_inst%cpool_to_resp_patch                 , & ! Output: [real(r8) (:)   ]
@@ -347,8 +342,6 @@ contains
          cpool_to_livecrootc_storage_resp  => cnveg_carbonflux_inst%cpool_to_livecrootc_storage_resp_patch , & ! Output: [real(r8) (:)   ]
          cpool_to_livestemc_resp      => cnveg_carbonflux_inst%cpool_to_livestemc_resp_patch          , & ! Output: [real(r8) (:)   ]
          cpool_to_livestemc_storage_resp => cnveg_carbonflux_inst%cpool_to_livestemc_storage_resp_patch  , & ! Output: [real(r8) (:)   ]
-         psnsun_to_cpool              => cnveg_carbonflux_inst%psnsun_to_cpool_patch               , & ! Output: [real(r8) (:)   ]
-         psnshade_to_cpool            => cnveg_carbonflux_inst%psnshade_to_cpool_patch             , & ! Output: [real(r8) (:)   ]
          cpool_to_leafc               => cnveg_carbonflux_inst%cpool_to_leafc_patch                , & ! Output: [real(r8) (:)   ]
          cpool_to_leafc_storage       => cnveg_carbonflux_inst%cpool_to_leafc_storage_patch        , & ! Output: [real(r8) (:)   ]
          cpool_to_frootc              => cnveg_carbonflux_inst%cpool_to_frootc_patch               , & ! Output: [real(r8) (:)   ]
@@ -435,10 +428,8 @@ contains
          cndw = deadwdcn(ivt(p))
          fcur = fcur2(ivt(p))
 
-         if (.not. downreg_opt) then
-            if (evergreen(ivt(p)) == 1._r8) then
-               fcur = 0.0_r8
-            end if
+         if (evergreen(ivt(p)) == 1._r8) then
+            fcur = 0.0_r8
          end if
 
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
@@ -469,43 +460,10 @@ contains
        
          plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
          
-         if(.not.use_fun)then
-	         if (downreg_opt) then
-	            ! calculate the associated carbon allocation, and the excess
-	            ! carbon flux that must be accounted for through downregulation
-	            plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
-	            excess_cflux(p) = availc(p) - plant_calloc(p)
-
-	            ! reduce gpp fluxes due to N limitation
-	            if (gpp(p) > 0.0_r8) then
-	               downreg(p) = excess_cflux(p)/gpp(p)
-
-	               psnsun_to_cpool(p)   = psnsun_to_cpool(p)  *(1._r8 - downreg(p))
-	               psnshade_to_cpool(p) = psnshade_to_cpool(p)*(1._r8 - downreg(p))
-
-	               if ( use_c13 ) then
-	                  c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = &
-	                       c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
-	                  c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
-	                       c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
-	               endif
-	               if ( use_c14 ) then
-	                  c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = &
-	                       c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
-	                  c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
-	                       c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
-	               endif
-	            end if
-	         end if
-         end if
-
-         
          if(use_fun)then
             plant_calloc(p) = npp_growth(p) 
          else
-            if (.not. downreg_opt) then
-               plant_calloc(p) = availc(p)
-            end if         
+            plant_calloc(p) = availc(p)
          end if
         
          ! calculate the amount of new leaf C dictated by these allocation
@@ -545,38 +503,7 @@ contains
             cpool_to_reproductive_grainc_storage(p)     = nlc * f5 * (1._r8 -fcur)
          end if
 
-         if (downreg_opt) then
-            ! corresponding N fluxes
-            npool_to_leafn(p)          = (nlc / cnl) * fcur
-            npool_to_leafn_storage(p)  = (nlc / cnl) * (1._r8 - fcur)
-            npool_to_frootn(p)         = (nlc * f1 / cnfr) * fcur
-            npool_to_frootn_storage(p) = (nlc * f1 / cnfr) * (1._r8 - fcur)
-            if (woody(ivt(p)) == 1._r8) then
-               npool_to_livestemn(p)          = (nlc * f3 * f4 / cnlw) * fcur
-               npool_to_livestemn_storage(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_deadstemn(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadstemn_storage(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_livecrootn(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
-               npool_to_livecrootn_storage(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-            end if
-            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
-               cng = graincn(ivt(p))
-               npool_to_livestemn(p)          = (nlc * f3 * f4 / cnlw) * fcur
-               npool_to_livestemn_storage(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_deadstemn(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadstemn_storage(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_livecrootn(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
-               npool_to_livecrootn_storage(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_reproductive_grainn(p)             = (nlc * f5 / cng) * fcur
-               npool_to_reproductive_grainn_storage(p)     = (nlc * f5 / cng) * (1._r8 -fcur)
-            end if
-         end if
-
-         if (downreg_opt .eqv. .false. .AND. CN_partition_opt == 0) then
+         if (CN_partition_opt == 0) then
 
             ! N transfer depends on supply and demand
             npool_to_frootn_demand(p)         = (nlc * f1 / cnfr) * fcur
@@ -764,7 +691,7 @@ contains
 
          ! computing 1.) fractional N demand and 2.) N allocation after uptake for different plant parts
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         if (downreg_opt .eqv. .false. .AND. CN_partition_opt == 1) then
+         if (CN_partition_opt == 1) then
 
             ! computing nitrogen demand for different pools based on carbon allocated and CN ratio
             npool_to_leafn_demand(p)          = (nlc / cnl) * fcur
@@ -1109,7 +1036,7 @@ contains
                !this%actual_storage_leafcn(p) = spval
             !end if
 									
-         end if    ! end of if (downreg_opt .eqv. .false. .AND. CN_partition_opt == 1) then
+         end if    ! end of if (CN_partition_opt == 1) then
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       end do ! end patch loop

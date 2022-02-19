@@ -257,7 +257,6 @@ module clm_varctl
   !  appropriate module.
   logical, public :: use_flexibleCN = .false.
   logical, public :: MM_Nuptake_opt = .false.
-  logical, public :: downreg_opt = .true.
   integer, public :: plant_ndemand_opt = 0
   logical, public :: substrate_term_opt = .true.
   logical, public :: nscalar_opt = .true.

@@ -15,7 +15,6 @@ Namelist items that are not regularly tested or used. Some aren't even implement
     allowlakeprod
     carbon_resp_opt
     ch4offline
-    downreg_opt
     fin_use_fsat
     lake_decomp_fact
     no_frozen_nitrif_denitrif
