@@ -258,7 +258,6 @@ module clm_varctl
   logical, public :: use_flexibleCN = .false.
   logical, public :: MM_Nuptake_opt = .false.
   integer, public :: plant_ndemand_opt = 0
-  logical, public :: temp_scalar_opt = .true.
   logical, public :: CNratio_floating = .false.
   logical, public :: lnc_opt = .false.
   logical, public :: reduce_dayl_factor = .false.

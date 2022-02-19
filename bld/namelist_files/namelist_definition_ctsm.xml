@@ -2277,12 +2277,6 @@ How much Carbon to initialize vegetation pools (leafc/frootc and storage) to whe
 (EXPERIMENTAL and NOT tested)
 </entry>
 
-<entry id="temp_scalar_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten temperature limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
 <entry id="CNratio_floating" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".false.">
    Flexible CN ratio used for Phenology

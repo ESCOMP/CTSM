@@ -1415,14 +1415,10 @@ contains
          Kmin = 1.0_r8
          substrate_term = sminn_total / (sminn_total + Kmin)
 
-         if (.not. temp_scalar_opt) then
-            temp_scalar = 1.0_r8
-         else !(temp_scalar_opt == .true.) then
-            c = patch%column(p)
-            temp_scalar=t_scalar(c,1)
-            temp_scalar = min( max(0.0_r8, temp_scalar), 1.0_r8 )
-         end if
-         
+         c = patch%column(p)
+         temp_scalar=t_scalar(c,1)
+         temp_scalar = min( max(0.0_r8, temp_scalar), 1.0_r8 )
+
          if(use_fun)then ! in FUN, plant_ndemand is just used as a maximum draw on soil N pools. 
              plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
          else !FUN
