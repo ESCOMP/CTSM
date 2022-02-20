@@ -6,16 +6,17 @@ module mkurbanparMod
 
   use ESMF
   use pio
-  use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs
-  use shr_sys_mod  , only : shr_sys_abort
-  use mkpioMod     , only : mkpio_get_rawdata, pio_iotype, pio_ioformat, pio_iosystem
-  use mkpioMod     , only : mkpio_iodesc_output, mkpio_get_dimlengths, mkpio_get_rawdata
-  use mkpioMod     , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8
-  use mkutilsMod   , only : chkerr
-  use mkvarctl     , only : root_task, ndiag, ispval, fsurdat, outnc_double
-  use mkvarctl     , only : mpicom, MPI_INTEGER, MPI_MAX
-  use mkvarpar
+  use shr_kind_mod     , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs
+  use shr_sys_mod      , only : shr_sys_abort
+  use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
+  use mkpioMod         , only : mkpio_iodesc_output, mkpio_get_rawdata
+  use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
+  use mkutilsMod       , only : chkerr
+  use mkvarctl         , only : root_task, ndiag, ispval, outnc_double, all_urban
+  use mkutilsMod       , only : normalize_classes_by_gcell
+  use mkdiagnosticsMod , only : output_diagnostics_index
+  use mkindexmapMod    , only : dim_slice_type, lookup_2d_netcdf
+  use mkvarpar         , only : numrad, numsolar, re
 
   implicit none
   private
@@ -103,13 +104,6 @@ contains
     ! this would also replace the use of normalize_classes_by_gcell, and maybe some other
     ! urban-specific code.
     !
-    use mkutilsMod          , only : normalize_classes_by_gcell
-    use mkvarctl            , only : all_urban
-    use mkvarpar
-#ifdef TODO
-    !use mkdiagnosticsMod    , only : output_diagnostics_index
-#endif
-
     ! input/output variables
     character(len=*) , intent(in)    :: file_mesh_i          ! input mesh file name
     character(len=*) , intent(in)    :: file_data_i          ! input data file name
@@ -448,9 +442,6 @@ contains
     ! each parameter) wherever (1) we have a nodata value for region_o, or (2) the parameter
     ! has nodata for the given region/density combination in the input lookup table.
     !
-    use mkindexmapMod, only : dim_slice_type, lookup_2d_netcdf
-    use mkvarpar
-
     ! input/output variables
     character(len=*)  , intent(in)    :: datfname_i                 ! input data file name
     type(file_desc_t) , intent(inout) :: pioid_o                    ! output file pio id
@@ -737,9 +728,7 @@ contains
       ! classes. This is why we loop over density class in this routine.
       !
       ! Note: inherits a number of variables from the parent routine
-
-      use mkindexmapMod, only : lookup_2d_netcdf
-
+      !
       ! input/output variables
       type(file_desc_t) , intent(inout) :: pioid
       character(len=*)  , intent(in)    :: varname       ! name of lookup table
@@ -812,8 +801,6 @@ contains
     ! setting urbn_o to 0 wherever it is less than a certain threshold; the rules for doing
     ! this can't always be applied inline in mkurban_pct).
     !
-    use mkvarpar
-
     ! input/output variables
     real(r8)          , intent(in) :: area_i(:)
     real(r8)          , intent(in) :: area_o(:)

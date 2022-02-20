@@ -1,15 +1,13 @@
 module mksoilcolMod
 
   use ESMF
-  use pio
-  use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4
-  use shr_sys_mod  , only : shr_sys_abort
-  use mkpioMod     , only : mkpio_get_rawdata
-  use mkpioMod     , only : mkpio_iodesc_rawdata, pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod    , only : get_meshareas
-  use mkutilsMod   , only : chkerr
-  use mkvarctl     , only : root_task, ndiag, mpicom, MPI_INTEGER, MPI_MAX
-  use mkvarctl     , only : soil_color_override, unsetcol
+  use shr_kind_mod     , only : r8 => shr_kind_r8, r4 => shr_kind_r4
+  use shr_sys_mod      , only : shr_sys_abort
+  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
+  use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
+  use mkvarctl         , only : root_task, ndiag, mpicom, unsetcol, soil_color_override
+  use mkdiagnosticsMod , only : output_diagnostics_index
+  use mkutilsMod       , only : chkerr
 
   implicit none
   private
@@ -17,9 +15,9 @@ module mksoilcolMod
 #include <mpif.h>
 
   public  :: mksoilcol      ! Set soil colors
-  private :: check_global_sums
+  private :: get_dominant_soilcol
 
-  integer :: num_soilcolors
+  integer                :: num_soilcolors
   type(ESMF_DynamicMask) :: dynamicMask
 
   character(len=*) , parameter :: u_FILE_u = &
@@ -50,7 +48,7 @@ contains
     integer                :: ns_i, ns_o
     integer , allocatable  :: mask_i(:)
     real(r4), allocatable  :: rmask_i(:)
-    real(r4), allocatable  :: frac_o(:)
+    real(r8), allocatable  :: frac_o(:)
     real(r4), allocatable  :: soil_color_i(:)
     real(r4), pointer      :: dataptr(:)
     real(r8), pointer      :: dataptr_r8(:)
@@ -135,11 +133,8 @@ contains
     end do
 
     ! Determine maximum number of soil colors across all processors
-    ! This will be used for the ungridded dimension of data_o below
     nsoilcol_local = maxval(soil_color_i)
     call mpi_allreduce(nsoilcol_local, nsoilcol, 1, MPI_INTEGER, MPI_MAX, mpicom, rcode)
-    ! TODO: MPI_SUCCESS could not be accessed from mkvarctl
-    !if (rcode /= MPI_SUCCESS) call shr_sys_abort('error for mpi_allredice in '//trim(subname))
 
     ! Set module variable (used in the get_dominant_soilcol routine)
     num_soilcolors = nsoilcol
@@ -195,8 +190,8 @@ contains
     end do
 
     ! Compare global area of each soil color on input and output grids
-    call check_global_sums(mesh_i, mesh_o, mask_i, frac_o, &
-         soil_color_i, soil_color_o, 'soil color type', nsoilcol, rc)
+    call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
+         0, nsoilcol, int(soil_color_i), soil_color_o, 'soil color type',  ndiag, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Clean up memory
@@ -321,85 +316,5 @@ contains
       end subroutine mkrank
 
   end subroutine get_dominant_soilcol
-
-  !===============================================================
-  subroutine check_global_sums(mesh_i, mesh_o, mask_i, frac_o, &
-    soil_color_i, soil_color_o, name, nsoilcol, rc)
-
-    use mkvarctl, only : mpicom, MPI_INTEGER, MPI_MAX
-
-    ! Compare global sums on input and output grids
-
-    ! input/otuput variables
-    type(ESMF_Mesh)  , intent(in)  :: mesh_i
-    type(ESMF_Mesh)  , intent(in)  :: mesh_o
-    integer          , intent(in)  :: mask_i(:)
-    real(r4)         , intent(in)  :: frac_o(:)
-    real(r4)         , intent(in)  :: soil_color_i(:)
-    integer          , intent(in)  :: soil_color_o(:)
-    character(len=*) , intent(in)  :: name
-    integer          , intent(in)  :: nsoilcol
-    integer          , intent(out) :: rc
-
-    ! local variables
-    integer               :: ns_i
-    integer               :: ns_o
-    integer               :: ni, no, l, k
-    integer               :: ier
-    real(r8), allocatable :: area_i(:)
-    real(r8), allocatable :: area_o(:)
-    real(r4)              :: local_i(0:nsoilcol)  ! local global area, by surface type
-    real(r4)              :: local_o(0:nsoilcol)  ! local global area, by surface type
-    real(r4)              :: global_i(0:nsoilcol)   ! input grid: global area pfts
-    real(r4)              :: global_o(0:nsoilcol)   ! output grid: global area pfts
-    !-----------------------------------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    ! Determine ns_i and ns_o
-    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! Get areas from mesh
-    allocate(area_i(ns_i))
-    allocate(area_o(ns_o))
-    call get_meshareas(mesh_i, area_i, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call get_meshareas(mesh_o, area_o, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    ! Input grid global area
-    local_i(:) = 0.
-    do ni = 1,ns_i
-       k = int(soil_color_i(ni))
-       ! TODO: is this change okay?
-       ! local_i(k) = local_i(k) + area_i(ni) * mask_i(ni)
-       local_i(k) = local_i(k) + area_i(ni)
-    end do
-    call mpi_reduce(local_i, global_i, nsoilcol+1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
-
-    ! Output grid global area
-    local_o(:) = 0.
-    do no = 1,ns_o
-       k = int(soil_color_o(no))
-       ! TODO: is this change okay?
-       ! local_o(k) = local_o(k) + area_o(no) * frac_o(no)
-       local_o(k) = local_o(k) + area_o(no) 
-    end do
-    call mpi_reduce(local_o, global_o, nsoilcol+1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
-
-    ! Comparison
-    if (root_task) then
-       write(ndiag,*)
-       write(ndiag,'(a)')'soil color type    input grid area   output grid area'
-       write(ndiag,'(a)')'                   10**6 km**2       10**6 km**2'
-       write(ndiag,'(1x,60a1)') ('.',k=1,60)
-       do k = 0, nsoilcol
-          write (ndiag,'(a,i3,d16.3,d17.3)') 'class ',k, global_i(k)*1.e-6, global_o(k)*1.e-6
-       end do
-    end if
-  end subroutine check_global_sums
 
 end module mksoilcolMod

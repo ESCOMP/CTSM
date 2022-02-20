@@ -9,7 +9,6 @@ module mktopostatsMod
   use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
   use shr_sys_mod    , only : shr_sys_abort
   use mkpioMod       , only : mkpio_get_rawdata, pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod      , only : get_meshareas
   use mkutilsMod     , only : chkerr
   use mkvarctl       , only : ndiag, root_task, mpicom, std_elev
 

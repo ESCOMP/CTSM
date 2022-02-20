@@ -6,18 +6,15 @@ module mkglacierregionMod
   !-----------------------------------------------------------------------
 
   use ESMF
-  use pio
-  use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
-  use shr_sys_mod    , only : shr_sys_abort
-  use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
-  use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
-  use mkutilsMod     , only : chkerr
-  use mkchecksMod    , only : min_bad
-  use mkvarctl       , only : ndiag, root_task
-#ifdef TODO
-  ! use mkdiagnosticsMod, only : output_diagnostics_index
-#endif
+  use shr_kind_mod     , only : r8 => shr_kind_r8, r4=>shr_kind_r4
+  use shr_sys_mod      , only : shr_sys_abort
+  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
+  use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
+  use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
+  use mkchecksMod      , only : min_bad
+  use mkvarctl         , only : ndiag, root_task
+  use mkdiagnosticsMod , only : output_diagnostics_index
+  use mkutilsMod       , only : chkerr
 
   implicit none
   private
@@ -53,8 +50,6 @@ contains
     integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
-    real(r8), allocatable  :: area_i(:)
-    real(r8), allocatable  :: area_o(:)
     real(r8), allocatable  :: data_i(:,:)
     real(r8), allocatable  :: data_o(:,:)
     integer , allocatable  :: glacier_region_i(:) ! glacier region on input grid
@@ -73,14 +68,12 @@ contains
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
        write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
+    call ESMF_VMLogMemInfo("At start of "//trim(subname))
 
     ! Open input data file
-    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
-    call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
-    call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
@@ -150,40 +143,24 @@ contains
        glacier_region_o(no) = max_index(1) - 1
     end do
 
-    ! Determine mesh areas
-    allocate(area_i(ns_i))
-    allocate(area_o(ns_o))
-    call get_meshareas(mesh_i, area_i, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call get_meshareas(mesh_o, area_o, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-#ifdef TODO
-    ! call output_diagnostic_index(area_i, area_o, mask_i, frac_o, &
-    !      glacier_region_i, glacier_region_o, 'Glacier Region ID', 0, max_region, ndiag)
-#endif
+    ! Determine global diagnostics
+    call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
+         0, 3, glacier_region_i, glacier_region_o, 'Glacier Region ID', ndiag, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
     ! Close the input file
     call pio_closefile(pioid)
-    call ESMF_VMLogMemInfo("After pio_closefile in "//trim(subname))
 
     ! Release memory
-    deallocate(mask_i)
-    deallocate(frac_i)
-    deallocate(frac_o)
-    deallocate(area_i)
-    deallocate(area_o)
-    deallocate(glacier_region_i)
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made glacier region'
-       write (ndiag,*)
     end if
+    call ESMF_VMLogMemInfo("At end of "//trim(subname))
 
   end subroutine mkglacierregion
 

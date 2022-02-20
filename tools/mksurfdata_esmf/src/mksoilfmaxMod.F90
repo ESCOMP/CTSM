@@ -5,15 +5,14 @@ module mksoilfmaxMod
   !-----------------------------------------------------------------------
 
   use ESMF
-  use pio
-  use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
-  use shr_sys_mod    , only : shr_sys_abort
-  use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
-  use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
-  use mkutilsMod     , only : chkerr
-  use mkvarpar
-  use mkvarctl
+  use shr_kind_mod     , only : r8 => shr_kind_r8, r4=>shr_kind_r4
+  use shr_sys_mod      , only : shr_sys_abort
+  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
+  use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
+  use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
+  use mkdiagnosticsMod , only : output_diagnostics_continuous
+  use mkvarctl         , only : ndiag, root_task, soil_fmax_override, unsetsoil
+  use mkutilsMod       , only : chkerr
 
   implicit none
   private           ! By default make data private
@@ -71,6 +70,7 @@ contains
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
        write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
+    call ESMF_VMLogMemInfo("At start of "//trim(subname))
 
     ! Error check soil_fmax if it is set
     if ( soil_fmax_override /= unsetsoil )then
@@ -84,11 +84,9 @@ contains
     end if
 
     ! Open input data file
-    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
 
     ! Read in input mesh
-    call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
@@ -156,72 +154,24 @@ contains
        end if
     enddo
 
-    ! -----------------------------------------------------------------
-    ! Error check2
     ! Compare global areas on input and output grids
-    ! -----------------------------------------------------------------
-
-!     allocate(areas_i(ns_i))
-!     call get_meshareas(mesh_i, areas_i, rc)
-!     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-!     allocate(areas_o(ns_o))
-!     call get_meshareas(mesh_o, areas_o, rc)
-!     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-!     gfmax_i = 0.
-!     garea_i = 0.
-!     do ni = 1,ns_i
-!        garea_i = garea_i + areas_i(ni)*re**2
-!        gfmax_i = gfmax_i + fmax_i(ni)*(areas_i(ni)/100.) * frac_i(ni)*re**2
-!     end do
-
-!     gfmax_o = 0.
-!     garea_o = 0.
-!     do no = 1,ns_o
-!        garea_o = garea_o + areas_o(no)*re**2
-!        gfmax_o = gfmax_o + fmax_o(no)*(areas_o(no)/100.) * frac_o(no)*re**2
-!     end do
-!     deallocate(areas_i)
-!     deallocate(areas_o)
-
-!     ! Diagnostic output
-!     if (root_task) then
-!        write (ndiag,*)
-!        write (ndiag,'(1x,70a1)') ('=',k=1,70)
-!        write (ndiag,*) 'Maximum Fractional Saturated Area Output'
-!        write (ndiag,'(1x,70a1)') ('=',k=1,70)
-
-!        write (ndiag,*)
-!        write (ndiag,'(1x,70a1)') ('.',k=1,70)
-!        write (ndiag,2001)
-!        write (ndiag,'(1x,70a1)') ('.',k=1,70)
-!        write (ndiag,*)
-!        write (ndiag,2002) gfmax_i*1.e-06,gfmax_o*1.e-06
-!        write (ndiag,2004) garea_i*1.e-06,garea_o*1.e-06
-! 2001   format (1x,'surface type   input grid area  output grid area'/&
-!             1x,'                 10**6 km**2      10**6 km**2   ')
-! 2002   format (1x,'fmax        ',f14.3,f17.3)
-! 2004   format (1x,'all surface ',f14.3,f17.3)
-!     end if
+    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+         fmax_i, fmax_o, "Maximum Fractional Sataturated output", "unitless", ndiag, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Close the input file
     call pio_closefile(pioid)
-    call ESMF_VMLogMemInfo("After pio_closefile in "//trim(subname))
 
     ! Release memory
-    deallocate (fmax_i)
-    deallocate (frac_i)
-    deallocate (frac_o)
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made %fmax'
     end if
+    call ESMF_VMLogMemInfo("At end of "//trim(subname))
 
   end subroutine mksoilfmax
 

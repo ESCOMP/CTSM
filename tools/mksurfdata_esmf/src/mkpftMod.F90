@@ -7,7 +7,7 @@ module mkpftMod
   use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
   use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
   use mkpioMod       , only : mkpio_iodesc_rawdata, mkpio_get_rawdata_level
-  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
+  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8
   use mkutilsMod     , only : chkerr
   use mkvarctl       , only : numpft, root_task, ndiag
   use mkvarpar       , only : numstdpft, numstdcft, noveg
@@ -305,7 +305,7 @@ contains
     real(r8)          , intent(inout) :: pctlnd_o(:)    ! output grid:%land/gridcell
     type(pct_pft_type), intent(inout) :: pctnatpft_o(:) ! natural PFT cover
     type(pct_pft_type), intent(inout) :: pctcft_o(:)    ! crop (CFT) cover
-    
+
     integer           , intent(out)   :: rc
     !
     ! local variables:
@@ -483,7 +483,7 @@ contains
        ! Readgrid to determine pct_nat_pft_o
        call regrid_rawdata(mesh_i, mesh_o, routehandle, pct_nat_pft_i, pct_nat_pft_o, 0, num_natpft, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
- 
+
        ! Rescale pct_nat_pft_o
        do no = 1,ns_o
           if (pctnatveg_o(no) > 0._r8) then
@@ -549,7 +549,7 @@ contains
           do n = 1,ndims
              write(ndiag,'(a,i8,i8)')'   dimid, length= ',n,dimlens(n)
           end do
-          write(ndiag,'(a,i8)')'   num_cft = ',num_cft 
+          write(ndiag,'(a,i8)')'   num_cft = ',num_cft
        end if
 
        ! Read in pct_cft_i
@@ -688,33 +688,33 @@ contains
     !        ns_i = 1
     !        numpft_i = numpft+1
     !     end if
-    
+
     !     if ( .not. presc_cover ) then
     !        ! Derived types
     !        allocate(pctnatpft_i(ns_i), stat=ier)
     !        if (ier/=0) call shr_sys_abort()
     !        allocate(pctcft_i(ns_i), stat=ier)
     !        if (ier/=0) call shr_sys_abort()
-    
+
     !        do ni = 1, ns_i
     !           pctnatpft_i(ni) = pct_pft_type( pct_nat_pft_i(ni,:), pctnatveg_i(ni), first_pft_index=natpft_lb )
     !           pctcft_i(ni)    = pct_pft_type( pct_cft_i(ni,:),     pctcrop_i(ni),   first_pft_index=cft_lb    )
     !        end do
-    
+
     !        do no = 1,ns_o
     !           pctpft_o(no,natpft_lb:natpft_ub) = pctnatpft_o(no)%get_pct_p2g()
     !           pctpft_o(no,cft_lb:cft_ub)       = pctcft_o(no)%get_pct_p2g()
     !        end do
-    
+
     !        allocate(gpft_i(0:numpft_i-1))
     !        allocate(gpft_o(0:numpft_i-1))
-    
+
     !        ! input grid
     !        allocate(pctpft_i(ns_i,0:(numpft_i-1)), stat=ier)
     !        if (ier/=0) call shr_sys_abort()
     !        allocate(pctpft_o(ns_o,0:(numpft_i-1)), stat=ier)
     !        if (ier/=0) call shr_sys_abort()
-    
+
     !        gpft_i(:) = 0.
     !        garea_i   = 0.
     !        do ni = 1,ns_i
@@ -724,7 +724,7 @@ contains
     !           end do
     !        end do
     !        if ( allocated(pctpft_i) ) deallocate (pctpft_i)
-    
+
     !        ! output grid
     !        gpft_o(:) = 0.
     !        garea_o   = 0.
@@ -734,13 +734,13 @@ contains
     !              gpft_o(m) = gpft_o(m) + pctpft_o(no,m)*area_dst(no)*frac_o(no)*re**2
     !           end do
     !        end do
-    
+
     !        ! comparison
     !        write (ndiag,*)
     !        write (ndiag,'(1x,70a1)') ('=',k=1,70)
     !        write (ndiag,*) 'PFTs Output'
     !        write (ndiag,'(1x,70a1)') ('=',k=1,70)
-    
+
     !        write (ndiag,*)
     !        write (ndiag,'(1x,70a1)') ('.',k=1,70)
     !        write (ndiag,1001)
@@ -752,11 +752,11 @@ contains
     !           write (ndiag,1002) veg(m), gpft_i(m)*1.e-06/100.,gpft_o(m)*1.e-06/100.
     !        end do
     ! 1002   format (1x,a35,f16.3,f17.3)
-    
+
     !        deallocate(gpft_i, gpft_o, frac_dst)
-    
+
     !     end if
-    
+
     ! Clean up memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()

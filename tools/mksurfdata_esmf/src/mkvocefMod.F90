@@ -9,12 +9,10 @@ module mkvocefMod
   use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_sys_mod  , only : shr_sys_abort
   use mkpioMod     , only : mkpio_get_rawdata
-  use mkpioMod     , only : mkpio_iodesc_rawdata, pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8, get_meshareas
+  use mkpioMod     , only : mkpio_iodesc_rawdata, pio_iotype, pio_iosystem
+  use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8
   use mkutilsMod   , only : chkerr
-  use mkvarctl     , only : root_task, ndiag, mpicom, MPI_INTEGER, MPI_MAX
-  use mkvarctl     , only : soil_color_override, unsetcol
-  use mkvarpar     , only : re
+  use mkvarctl     , only : root_task, ndiag, mpicom, soil_color_override, unsetcol
 
   implicit none
   private

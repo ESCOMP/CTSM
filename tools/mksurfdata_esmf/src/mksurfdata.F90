@@ -87,14 +87,11 @@ program mksurfdata
   !    urban_skip_abort_on_invalid_data_check
   ! ======================================================================
 
-  ! !USES:
   use ESMF
   use pio
   use shr_kind_mod       , only : r8 => shr_kind_r8, r4 => shr_kind_r4, cs => shr_kind_cs, cl => shr_kind_cl
   use shr_sys_mod        , only : shr_sys_abort
-#ifdef TODO
   use mkVICparamsMod     , only : mkVICparams
-#endif
   use mktopostatsMod     , only : mktopostats
   use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
   use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
@@ -122,9 +119,12 @@ program mksurfdata
   use nanMod             , only : nan, bigint
   use mkpioMod           , only : pio_iotype, pio_ioformat, pio_iosystem
   use mkpioMod           , only : mkpio_put_time_slice, mkpio_iodesc_output, mkpio_wopen
+  use mkinputMod
   use mkvarctl
 
   implicit none
+
+#include <mpif.h>
 
   ! indices
   integer                         :: k,n                     ! indices
@@ -1575,8 +1575,10 @@ program mksurfdata
          end if
       end do
 
-      if ( nsmall_tot > 0 )then
-         write (6,*)'number of small pft = ', nsmall_tot
+      if (root_task) then
+         if ( nsmall_tot > 0 )then
+            write(ndiag,*)'number of small pft = ', nsmall_tot
+         end if
       end if
 
     end subroutine normalize_and_check_landuse

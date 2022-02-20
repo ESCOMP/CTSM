@@ -12,6 +12,7 @@ module mkfileMod
   use mkpftConstantsMod , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft, num_natpft
   use mkpctPftTypeMod   , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
   use mkpioMod ! TODO: add only
+  use mkinputMod
   use mkvarctl
 
   implicit none
@@ -125,23 +126,15 @@ contains
     str = 'created on: ' // datetime
     rcode = pio_put_att (pioid, pio_global, 'History_Log', trim(str))
 
-#ifdef TODO
-    call shr_sys_getenv ('LOGNAME', str, ier)
-    rcode = pio_put_att (pioid, pio_global, 'Logname', trim(str))
-
-    call shr_sys_getenv ('HOST', str, ier)
-    rcode = pio_put_att (pioid, pio_global, 'Host', trim(str))
-#endif
+    ! TODO: this is not working
+    ! call shr_sys_getenv ('LOGNAME', str, ier)
+    ! rcode = pio_put_att (pioid, pio_global, 'Logname', trim(str))
+    ! call shr_sys_getenv ('HOST', str, ier)
+    ! rcode = pio_put_att (pioid, pio_global, 'Host', trim(str))
 
     str = 'Community Land Model: CLM5'
     rcode = pio_put_att (pioid, pio_global, 'Source', trim(str))
-    !rcode = pio_put_att (pioid, pio_global, 'Version', trim(gitdescribe), trim(gitdescribe))
-#ifdef OPT
-    str = 'TRUE'
-#else
-    str = 'FALSE'
-#endif
-    rcode = pio_put_att (pioid, pio_global, 'Compiler_Optimized', trim(str))
+   !rcode = pio_put_att (pioid, pio_global, 'Version', trim(gitdescribe), trim(gitdescribe))
 
     if ( all_urban )then
        str = 'TRUE'

@@ -5,22 +5,17 @@ module mkagfirepkmonthMod
   !-----------------------------------------------------------------------
 
   use ESMF
-  use pio
-  use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
-  use shr_sys_mod    , only : shr_sys_abort
-  use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
-  use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkpioMod       , only : mkpio_get_rawdata_level
-  use mkesmfMod      , only : get_meshareas
-  use mkutilsMod     , only : chkerr
-  use mkvarctl       , only : ndiag, root_task
-  use mkchecksMod    , only : min_bad, max_bad
-  use mkdiagnosticsMod, only : output_diagnostics_index
+  use shr_kind_mod     , only : r8 => shr_kind_r8, r4=>shr_kind_r4
+  use shr_sys_mod      , only : shr_sys_abort
+  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
+  use mkpioMod         , only : mkpio_get_rawdata,  pio_iotype, pio_iosystem
+  use mkvarctl         , only : ndiag, root_task
+  use mkchecksMod      , only : min_bad, max_bad
+  use mkdiagnosticsMod , only : output_diagnostics_index
+  use mkutilsMod       , only : chkerr
 
   implicit none
   private           ! By default make data private
-
-#include <mpif.h>
 
   public  :: mkagfirepkmon       ! Set agricultural fire peak month
 
@@ -60,7 +55,7 @@ contains
     integer                        :: ns_i, ns_o
     integer , allocatable          :: mask_i(:)
     real(r4), allocatable          :: rmask_i(:)
-    real(r4), allocatable          :: frac_o(:)
+    real(r8), allocatable          :: frac_o(:)
     integer , allocatable          :: idata_i(:)    ! input grid: agricultural fire peak month
     real(r4), pointer              :: dataptr(:)
     real(r8), pointer              :: dataptr_r8(:)
@@ -135,11 +130,11 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
 
-    ! Determin frac_o
+    ! Determine frac_o
     call ESMF_FieldGet(field_dstfrac, farrayptr=dataptr_r8, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     allocate(frac_o(ns_o))
-    frac_o(:) = real(dataptr_r8(:), kind=r4)
+    frac_o(:) = dataptr_r8(:)
 
     ! Create a dynamic mask object
     ! The dynamic mask object further holds a pointer to the routine that will be called in order to
@@ -172,18 +167,12 @@ contains
     ! Close the file 
     call pio_closefile(pioid)
 
-    ! -----------------------------------------------------------------
     ! Output diagnostics comparing global area of each peak month on input and output grids
-    ! -----------------------------------------------------------------
-
-    ! TODO: fix this
-    ! call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, idata_i, agfirepkmon_o, &
-    !      'peak fire month', ndiag)
+    call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
+         1, 13, idata_i, agfirepkmon_o, 'peak fire month', ndiag, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     
-    ! -----------------------------------------------------------------
     ! Release memory
-    ! -----------------------------------------------------------------
-
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)

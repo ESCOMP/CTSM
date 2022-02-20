@@ -5,16 +5,16 @@ module mkglcmecMod
   !-----------------------------------------------------------------------
 
   use ESMF
-  use pio
   use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
   use shr_sys_mod    , only : shr_sys_abort
-  use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
-  use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
+  use pio            , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
+  use pio            , only : var_desc_t, io_desc_t, Pio_Offset_Kind, pio_setframe
+  use pio            , only : pio_inq_dimid, pio_inq_dimlen, pio_inq_varid, pio_get_var
+  use mkpioMod       , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
   use mkpioMod       , only : mkpio_iodesc_rawdata, mkpio_get_rawdata_level
-  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
-  use mkutilsMod     , only : chkerr
+  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8
   use mkvarctl       , only : ndiag, root_task, outnc_3dglc
-  use mkvarpar
+  use mkutilsMod     , only : chkerr
 
   implicit none
   private           ! By default make data private

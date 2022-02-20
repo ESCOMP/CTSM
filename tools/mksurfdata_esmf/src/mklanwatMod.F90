@@ -6,12 +6,11 @@ module mklanwatMod
   !-----------------------------------------------------------------------
 
   use ESMF
-  use pio
   use shr_kind_mod     , only : r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_sys_mod      , only : shr_sys_abort
-  use mkvarpar         , only : re
-  use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8, get_meshareas
+  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
+  use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
+  use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
   use mkdiagnosticsMod , only : output_diagnostics_continuous
   use mkchecksMod      , only : min_bad
   use mkutilsMod       , only : chkerr
@@ -20,10 +19,7 @@ module mklanwatMod
   implicit none
   private
 
-#include <mpif.h>
-
   public :: mklakwat    ! make % lake,  % wetland and lake parameters
-  private :: check_global_sums
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -55,10 +51,8 @@ contains
     type(ESMF_Mesh)        :: mesh_i
     type(file_desc_t)      :: pioid
     integer , allocatable  :: mask_i(:) 
-    real(r8), allocatable  :: frac_i(:)
+    real(r8), allocatable  :: rmask_i(:)
     real(r8), allocatable  :: frac_o(:)
-    real(r8), allocatable  :: area_i(:)
-    real(r8), allocatable  :: area_o(:)
     real(r8), allocatable  :: lake_i(:)      ! input grid: percent lake
     real(r8), allocatable  :: swmp_i(:)      ! input grid: percent wetland
     real(r8), allocatable  :: lakedepth_i(:) ! iput grid: lake depth
@@ -98,14 +92,14 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Get the landmask from the input data file and reset the mesh mask based on that
-    allocate(frac_i(ns_i), stat=ier)
+    allocate(rmask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, rmask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
-       if (frac_i(ni) > 0._r8) then
+       if (rmask_i(ni) > 0._r8) then
           mask_i(ni) = 1
        else
           mask_i(ni) = 0
@@ -142,17 +136,13 @@ contains
        do no = 1,ns_o
           if (lake_o(no) < 1.) lake_o(no) = 0.
        enddo
-       call ESMF_VMLogMemInfo("After regrid_rawdata for PCT_LAKE in "//trim(subname))
 
        ! Check global areas
-       call check_global_sums(mesh_i, mesh_o, mask_i, frac_o, lake_i, lake_o, 'pct lake', rc)
+       call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+            lake_i, lake_o, "pct lake", "unitless", ndiag, nomask=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        deallocate (lake_i)
-    end if
-    if (root_task) then
-       write (ndiag,*) 'Successfully made %lake'
-       write (ndiag,*)
     end if
 
     ! ----------------------------------------
@@ -181,14 +171,11 @@ contains
        enddo
 
        ! Check global areas
-       call check_global_sums(mesh_i, mesh_o, mask_i, frac_o, swmp_i, swmp_o, 'pct wetland', rc)
+       call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+            swmp_i, swmp_o, "pct wetland", "unitless", ndiag, nomask=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        deallocate (swmp_i)
-    end if
-    if (root_task) then
-       write (ndiag,*) 'Successfully made %wetland'
-       write (ndiag,*)
     end if
 
     ! ----------------------------------------
@@ -214,103 +201,31 @@ contains
           lakedepth_o(no) = 10._r8
        end if
     enddo
-
-    ! Check validity of output data
     if (min_bad(lakedepth_o, min_valid_lakedepth, 'lakedepth')) then
        call shr_sys_abort()
     end if
 
-    ! Write out diagnostics
-    ! call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-    !      data_i, lakedepth_o, "Lake Depth", "m", ndiag)
+    ! Check global areas
+    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+         lakedepth_i, lakedepth_o, "lake depth", "m", ndiag, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Close the single input data file
     call pio_closefile(pioid)
 
     ! Release memory
-    call ESMF_VMLogMemInfo("Before destroy operation for lanwat ")
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    call ESMF_VMLogMemInfo("After destroy operation for lanwat ")
 
     if (root_task) then
+       write (ndiag,*) 'Successfully made %lake'
+       write (ndiag,*) 'Successfully made %wetland'
        write (ndiag,*) 'Successfully made lake parameters'
     end if
+    call ESMF_VMLogMemInfo("At end of "//trim(subname))
 
   end subroutine mklakwat
-
-  !===============================================================
-  subroutine check_global_sums(mesh_i, mesh_o, mask_i, frac_o, data_i, data_o, name, rc)
-
-    use mkvarctl, only : mpicom, MPI_INTEGER, MPI_MAX
-
-    ! Compare global areas on input and output grids
-
-    ! input/otuput variables
-    type(ESMF_Mesh)  , intent(in)  :: mesh_i
-    type(ESMF_Mesh)  , intent(in)  :: mesh_o
-    integer          , intent(in)  :: mask_i(:)
-    real(r8)         , intent(in)  :: frac_o(:)
-    real(r8)         , intent(in)  :: data_i(:)
-    real(r8)         , intent(in)  :: data_o(:)
-    character(len=*) , intent(in)  :: name
-    integer          , intent(out) :: rc
-
-    ! local variables
-    integer               :: ns_i
-    integer               :: ns_o
-    integer               :: ni, no, l, k
-    integer               :: ier
-    real(r8), allocatable :: area_i(:)
-    real(r8), allocatable :: area_o(:)
-    real(r4)              :: local_i   ! local global area, by surface type
-    real(r4)              :: local_o   ! local global area, by surface type
-    real(r4)              :: global_i  ! input grid: global area pfts
-    real(r4)              :: global_o  ! output grid: global area pfts
-    !-----------------------------------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    ! Determine ns_i and ns_o
-    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! Get areas from mesh
-    allocate(area_i(ns_i))
-    allocate(area_o(ns_o))
-    call get_meshareas(mesh_i, area_i, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call get_meshareas(mesh_o, area_o, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    ! Input grid global area
-    local_i = 0.
-    do ni = 1,ns_i
-       local_i = local_i + (data_i(ni) * area_i(ni) * mask_i(ni))
-    end do
-    call mpi_reduce(local_i, global_i, 1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
-
-    ! Output grid global area
-    local_o = 0.
-    do no = 1,ns_o
-       local_i = local_i + data_o(no) * area_i(no) * frac_o(no)
-    end do
-    call mpi_reduce(local_o, global_o, 1, MPI_REAL4, MPI_SUM, 0, mpicom, ier)
-
-    ! Comparison
-    if (root_task) then
-       write(ndiag,*)
-       write(ndiag,'(a)')'  surface type   input grid area  output grid area'
-       write(ndiag,'(a)')'                   10**6 km**2      10**6 km**2   '
-       write(ndiag,'(60a1)') ('.',k=1,60)
-       write(ndiag,'(a,f14.3,f17.3)')'  '//trim(name), global_i*1.e-06, global_o*1.e-06
-       write(ndiag,*)
-    end if
-
-  end subroutine check_global_sums
 
 end module mklanwatMod

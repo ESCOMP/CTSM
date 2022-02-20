@@ -3,18 +3,15 @@ module mkVICparamsMod
   !-----------------------------------------------------------------------
   ! make parameters for VIC
   !-----------------------------------------------------------------------
-  !
+
   use ESMF
   use pio
-  use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4
+  use shr_kind_mod     , only : r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_sys_mod      , only : shr_sys_abort
-  use mkpioMod         , only : mkpio_get_rawdata
-  use mkpioMod         , only : mkpio_iodesc_rawdata, pio_iotype, pio_ioformat, pio_iosystem
-  use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8, get_meshareas
+  use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
+  use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
   use mkutilsMod       , only : chkerr
-  use mkvarctl         , only : root_task, ndiag, mpicom, MPI_INTEGER, MPI_MAX
-  use mkvarctl         , only : soil_color_override, unsetcol
-  use mkvarpar         , only : re
+  use mkvarctl         , only : root_task, ndiag
   use mkchecksMod      , only : min_bad
   use mkdiagnosticsMod , only : output_diagnostics_continuous
 
@@ -43,125 +40,208 @@ contains
     real(r8)         , intent(out)  :: dsmax_o(:)  ! output VIC Dsmax parameter for the ARNO curve (mm/day)
     real(r8)         , intent(out)  :: ds_o(:)     ! output VIC Ds parameter for the ARNO curve (unitless)
     integer           , intent(out) :: rc
-    !
-    ! !LOCAL VARIABLES:
-    real(r8), allocatable :: data_i(:)   ! data on input grid
-    real(r8), allocatable :: frac_dst(:) ! output fractions
-    real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
-    integer               :: ncid,varid  ! input netCDF id's
-    integer               :: ier         ! error status
-    real(r8), parameter   :: min_valid_binfl = 0._r8
-    real(r8), parameter   :: min_valid_ws    = 0._r8
-    real(r8), parameter   :: min_valid_dsmax = 0._r8
-    real(r8), parameter   :: min_valid_ds    = 0._r8
+
+    ! local variables:
+    type(ESMF_RouteHandle)      :: routehandle
+    type(ESMF_Mesh)             :: mesh_i
+    type(file_desc_t)           :: pioid
+    integer                     :: ni,no
+    integer                     :: ns_i, ns_o
+    integer                     :: n,l,k
+    integer , allocatable       :: mask_i(:) 
+    real(r8), allocatable       :: rmask_i(:)
+    real(r8), allocatable       :: frac_o(:)
+    real(r8), allocatable       :: data_i(:) ! data on input grid
+    real(r8), parameter         :: min_valid_binfl = 0._r8
+    real(r8), parameter         :: min_valid_ws    = 0._r8
+    real(r8), parameter         :: min_valid_dsmax = 0._r8
+    real(r8), parameter         :: min_valid_ds    = 0._r8
+    integer                     :: ier,rcode ! error status
     character(len=*), parameter :: subname = 'mkVICparams'
     !-----------------------------------------------------------------------
 
-    write (6,*) 'Attempting to make VIC parameters.....'
+    rc = ESMF_SUCCESS
+
+    if (root_task) then
+       write(ndiag,*)
+       write(ndiag,'(1x,80a1)') ('=',k=1,80)
+       write(ndiag,*)
+       write(ndiag,'(a)')'Attempting to make VIC parameters.....'
+       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
+       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
+    end if
+    call ESMF_VMLogMemInfo("At start of "//trim(subname))
+
+    ! Open input data file
+    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+
+    ! Read in input mesh
+    mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
+
+    ! Determine ns_i
+    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Determine ns_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Get the landmask from the file and reset the mesh mask based on that
+    allocate(rmask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(mask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, rmask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do ni = 1,ns_i
+       if (rmask_i(ni) > 0._r8) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
+       end if
+    end do
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create a route handle between the input and output mesh
+    allocate(frac_o(ns_o))
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+    do n = 1, ns_o
+       if ((frac_o(n) < 0.0) .or. (frac_o(n) > 1.0001)) then
+          write(6,*) "ERROR:: frac_o out of range: ", frac_o(n),n
+       end if
+    end do
 
     ! -----------------------------------------------------------------
-    ! Read domain and mapping information, check for consistency
+    ! Determine binfl
     ! -----------------------------------------------------------------
 
-    call domain_read(tdomain,datfname)
+    ! Read in input data_i for a variety of inputs
+    allocate(data_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort('allocation error for binfl_i')
 
-    call gridmap_mapread(tgridmap, mapfname )
+    ! Read in binfl_i into data_i
+    call mkpio_get_rawdata(pioid, 'binfl', mesh_i, data_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-    ! Obtain frac_dst
-    allocate(frac_dst(ldomain%ns), stat=ier)
-    if (ier/=0) call abort()
-    call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
-
-    allocate(mask_r8(tdomain%ns), stat=ier)
-    if (ier/=0) call abort()
-    mask_r8 = tdomain%mask
-    call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
-
-    call domain_checksame( tdomain, ldomain, tgridmap )
-
-    ! -----------------------------------------------------------------
-    ! Open input file, allocate memory for input data
-    ! -----------------------------------------------------------------
-
-    write(6,*)'Open VIC parameter file: ', trim(datfname)
-    call check_ret(nf_open(datfname, 0, ncid), subname)
-
-    allocate(data_i(tdomain%ns), stat=ier)
-    if (ier/=0) call abort()
-
-    ! -----------------------------------------------------------------
-    ! Regrid binfl
-    ! -----------------------------------------------------------------
-
-    call check_ret(nf_inq_varid (ncid, 'binfl', varid), subname)
-    call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-    call gridmap_areaave_srcmask(tgridmap, data_i, binfl_o, nodata=0.1_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-
-    ! Check validity of output data
+    ! Regrid binfl_i to binfl_o and check validity of output data
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, binfl_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    do no = 1,ns_o
+       if (frac_o(ns_o) == 0._r8) then
+          ws_o(n) = 0.1_r8
+       end if
+    end do
     if (min_bad(binfl_o, min_valid_binfl, 'binfl')) then
-       call abort()
+       call shr_sys_abort()
     end if
 
-    call output_diagnostics_continuous(data_i, binfl_o, tgridmap, "VIC b parameter", "unitless", ndiag, tdomain%mask, frac_dst)
+    ! Calculate global diagnostics for binfl
+    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+         data_i, binfl_o, "VIC b parameter", "unitless", ndiag, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------------------------------------------------
-    ! Regrid Ws
+    ! Determine Ws
     ! -----------------------------------------------------------------
 
-    call check_ret(nf_inq_varid (ncid, 'Ws', varid), subname)
-    call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-    call gridmap_areaave_srcmask(tgridmap, data_i, ws_o, nodata=0.75_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+    ! Read in Ws into data_i
+    call mkpio_get_rawdata(pioid, 'Ws', mesh_i, data_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-    ! Check validity of output data
+    ! Regrid Ws_i to Ws_o and check validity of output data
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, ws_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    do no = 1,ns_o
+       if (frac_o(ns_o) == 0._r8) then
+          ws_o(n) = 0.75_r8
+       end if
+    end do
     if (min_bad(ws_o, min_valid_ws, 'Ws')) then
-       call abort()
+       call shr_sys_abort()
     end if
 
-    call output_diagnostics_continuous(data_i, ws_o, tgridmap, "VIC Ws parameter", "unitless", ndiag, tdomain%mask, frac_dst)
+    ! Calculate global diagnostics for Ws
+    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+         data_i, ws_o, "VIC Ws parameter", "unitless", ndiag, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------------------------------------------------
-    ! Regrid Dsmax
+    ! Determine DsMax
     ! -----------------------------------------------------------------
 
-    call check_ret(nf_inq_varid (ncid, 'Dsmax', varid), subname)
-    call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-    call gridmap_areaave_srcmask(tgridmap, data_i, dsmax_o, nodata=10._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+    ! Read in Dsmax into data_i
+    call mkpio_get_rawdata(pioid, 'Dsmax', mesh_i, data_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-    ! Check validity of output data
+    ! Regrid Dsmax_i to Dsmax_o and check validity of output data
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, dsmax_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    do no = 1,ns_o
+       if (frac_o(ns_o) == 0._r8) then
+          ws_o(n) = 10._r8
+       end if
+    end do
     if (min_bad(dsmax_o, min_valid_dsmax, 'Dsmax')) then
-       call abort()
+       call shr_sys_abort()
     end if
 
-    call output_diagnostics_continuous(data_i, dsmax_o, tgridmap, "VIC Dsmax parameter", "mm/day", ndiag, tdomain%mask, frac_dst)
+    ! Calculate global diagnostics for Dsmax
+    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+         data_i, ws_o, "VIC Dsmax parameter", "mm/day", ndiag, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------------------------------------------------
     ! Regrid Ds
     ! -----------------------------------------------------------------
 
-    call check_ret(nf_inq_varid (ncid, 'Ds', varid), subname)
-    call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-    call gridmap_areaave_srcmask(tgridmap, data_i, ds_o, nodata=0.1_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+    ! Read in Ds into data_i
+    call mkpio_get_rawdata(pioid, 'Dsmax', mesh_i, data_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-    ! Check validity of output data
+    ! Regrid Ds_i to Ds_o and check validity of output data
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, ds_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    do no = 1,ns_o
+       if (frac_o(ns_o) == 0._r8) then
+          ws_o(n) = 0.1_r8
+       end if
+    end do
     if (min_bad(ds_o, min_valid_ds, 'Ds')) then
-       call abort()
+       call shr_sys_abort()
     end if
 
-    call output_diagnostics_continuous(data_i, ds_o, tgridmap, "VIC Ds parameter", "unitless", ndiag, tdomain%mask, frac_dst)
+    ! Calculate global diagnostics for Ws
+    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+         data_i, ws_o, "VIC Ds parameter", "unitless", ndiag, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------------------------------------------------
-    ! Close files and deallocate dynamic memory
+    ! Wrap up
     ! -----------------------------------------------------------------
 
-    call check_ret(nf_close(ncid), subname)
-    call domain_clean(tdomain) 
-    call gridmap_clean(tgridmap)
-    deallocate (data_i)
-    deallocate (frac_dst)
-    deallocate (mask_r8)
+    ! Close the file
+    call pio_closefile(pioid)
+    call ESMF_VMLogMemInfo("After pio_closefile in "//trim(subname))
 
-    write (6,*) 'Successfully made VIC parameters'
-    write (6,*)
+    ! Release memory
+    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
+
+    if (root_task) then
+       write (ndiag,'(a)') 'Successfully made VIC parameters'
+    end if
 
   end subroutine mkVICparams
 

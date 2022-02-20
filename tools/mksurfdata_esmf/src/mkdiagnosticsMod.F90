@@ -8,6 +8,7 @@ module mkdiagnosticsMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_sys_mod  , only : shr_sys_abort
   use mkutilsMod   , only : chkerr
+  use mkesmfMod    , only : get_meshareas
   use mkvarctl     , only : mpicom, root_task
 
   implicit none
@@ -127,17 +128,15 @@ contains
   end subroutine output_diagnostics_area
 
   !===============================================================
-  subroutine output_diagnostics_continuous(area_i, area_o, mask_i, frac_o, &
-       data_i, data_o, name, units, ndiag)
+  subroutine output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+       data_i, data_o, name, units, ndiag, rc, nomask)
 
     ! Output diagnostics for a continuous field (but not area, for
     ! which there is a different routine)
 
-    use mkvarpar, only : re
-
-    ! !ARGUMENTS:
-    real(r8)         , intent(in) :: area_i(:)
-    real(r8)         , intent(in) :: area_o(:)
+    ! input/output variables
+    type(ESMF_Mesh)  , intent(in) :: mesh_i
+    type(ESMF_Mesh)  , intent(in) :: mesh_o
     integer          , intent(in) :: mask_i(:)
     real(r8)         , intent(in) :: frac_o(:)
     real(r8)         , intent(in) :: data_i(:)    ! data on input grid
@@ -145,21 +144,45 @@ contains
     character(len=*) , intent(in) :: name         ! name of field
     character(len=*) , intent(in) :: units        ! units of field
     integer          , intent(in) :: ndiag
+    logical, optional, intent(in) :: nomask
+    integer          , intent(out) :: rc
 
-    ! !LOCAL VARIABLES:
-    real(r8) :: loc_gdata_i     ! local sum of input data
-    real(r8) :: loc_gdata_o     ! local sum of output data
-    real(r8) :: gdata_i         ! global sum of input data
-    real(r8) :: gdata_o         ! global sum of output data
-    real(r8) :: loc_gwt_i       ! local global sum of input weights (area * frac)
-    real(r8) :: loc_gwt_o       ! local global sum of output weights (area * frac)
-    real(r8) :: gwt_i           ! global sum of input weights (area * frac)
-    real(r8) :: gwt_o           ! global sum of output weights (area * frac)
-    integer  :: ns_i, ns_o      ! sizes of input & output grids
-    integer  :: ni,no,k         ! indices
-    integer  :: ier             ! error code
+    ! local variables
+    real(r8), allocatable :: area_i(:)
+    real(r8), allocatable :: area_o(:)
+    real(r8)              :: loc_gdata_i ! local sum of input data
+    real(r8)              :: loc_gdata_o ! local sum of output data
+    real(r8)              :: gdata_i     ! global sum of input data
+    real(r8)              :: gdata_o     ! global sum of output data
+    real(r8)              :: loc_gwt_i   ! local global sum of input weights (area * frac)
+    real(r8)              :: loc_gwt_o   ! local global sum of output weights (area * frac)
+    real(r8)              :: gwt_i       ! global sum of input weights (area * frac)
+    real(r8)              :: gwt_o       ! global sum of output weights (area * frac)
+    integer               :: ns_i, ns_o  ! sizes of input & output grids
+    integer               :: ni,no,k     ! indices
+    integer               :: ier         ! error code
+    logical               :: lnomask
     character(len=*), parameter :: subname = "output_diagnostics_continuous"
     !------------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    lnomask = .false.
+    if (present(nomask)) lnomask = nomask
+
+    ! Determine ns_i and ns_o
+    call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Determine areas
+    allocate(area_i(ns_i))
+    allocate(area_o(ns_o))
+    call get_meshareas(mesh_i, area_i, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call get_meshareas(mesh_o, area_o, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Error check for array size consistencies
     if (size(data_i) /= ns_i .or. size(data_o) /= ns_o) then
@@ -187,19 +210,31 @@ contains
     loc_gdata_i = 0.
     loc_gwt_i = 0.
     do ni = 1,ns_i
-       loc_gdata_i = loc_gdata_i + data_i(ni) * area_i(ni) * mask_i(ni)
-       loc_gwt_i = loc_gwt_i + area_i(ni) * mask_i(ni)
+       if (lnomask) then
+          loc_gdata_i = loc_gdata_i + data_i(ni) * area_i(ni)
+          loc_gwt_i = loc_gwt_i + area_i(ni)
+       else
+          loc_gdata_i = loc_gdata_i + data_i(ni) * area_i(ni) * mask_i(ni)
+          loc_gwt_i = loc_gwt_i + area_i(ni) * mask_i(ni)
+       end if
     end do
-    call mpi_reduce(loc_gdata_i,gdata_i,1,MPI_REAL8,MPI_SUM,0,mpicom,ier)
+    call mpi_reduce(loc_gdata_i, gdata_i, 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
+    call mpi_reduce(loc_gwt_i  , gwt_i  , 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
 
     ! Sums on output grid
     loc_gdata_o = 0.
     loc_gwt_o = 0.
     do no = 1,ns_o
-       loc_gdata_o = loc_gdata_o + data_o(no) * area_o(no) * frac_o(no)
-       loc_gwt_o = loc_gwt_o + area_o(no) * frac_o(no)
+       if (lnomask) then
+          loc_gdata_o = loc_gdata_o + data_o(no) * area_o(no)
+          loc_gwt_o = loc_gwt_o + area_o(no)
+       else
+          loc_gdata_o = loc_gdata_o + data_o(no) * area_o(no) * frac_o(no)
+          loc_gwt_o = loc_gwt_o + area_o(no) * frac_o(no)
+       end if
     end do
-    call mpi_reduce(loc_gdata_o,gdata_o,1,MPI_REAL8,MPI_SUM,0,mpicom,ier)
+    call mpi_reduce(loc_gdata_o, gdata_o, 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
+    call mpi_reduce(loc_gwt_o  , gwt_o  , 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
 
     ! Correct units
     gdata_i = gdata_i / gwt_i
@@ -209,14 +244,10 @@ contains
     if (root_task) then
        write (ndiag,*)
        write (ndiag,'(1x,70a1)') ('.',k=1,70)
-       write (ndiag,2001)
-       write (ndiag,2002) units, units
-2001   format (1x,'   parameter              input grid          output grid')
-2002   format (1x,'                 ', a24, a24)
+       write (ndiag,'(1x,a)')'output diagnostics for '//trim(name)//' with units = '//trim(units)
+       write (ndiag,'(1x,a,f17.3,a,f17.3)')' global input sum= ',gdata_i,' global output sum',gdata_o
        write (ndiag,'(1x,70a1)') ('.',k=1,70)
        write (ndiag,*)
-       write (ndiag,2003) name, gdata_i, gdata_o
-2003   format (1x,a12,           f22.3,f17.3)
     end if
 
   end subroutine output_diagnostics_continuous
@@ -228,10 +259,8 @@ contains
     ! This is used when the average of the field on the input grid is not of interest (e.g.,
     ! when the output quantity is the standard deviation of the input field)
     !
-    use mkvarpar, only : re
-
     ! input/output variables
-    real(r8)          , intent(in) :: area_o(:) 
+    real(r8)          , intent(in) :: area_o(:)
     real(r8)          , intent(in) :: frac_o(:)
     real(r8)          , intent(in) :: data_o(:)    ! data on output grid
     character(len=*)  , intent(in) :: name         ! name of field
@@ -280,12 +309,12 @@ contains
        write (ndiag,2003) name,          gdata_o
 2003   format (1x,a12,           f22.3)
     end if
-       
+
   end subroutine output_diagnostics_continuous_outonly
 
   !===============================================================
   subroutine output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
-       data_i, data_o, name,  ndiag, rc)
+       min_valid, max_valid, data_i, data_o, name,  ndiag, rc)
     !
     ! Output diagnostics for an index field: area of each index in input and output
     !
@@ -294,6 +323,8 @@ contains
     type(ESMF_Mesh)    , intent(in)  :: mesh_o
     integer            , intent(in)  :: mask_i(:)
     real(r8)           , intent(in)  :: frac_o(:)
+    integer            , intent(in)  :: min_valid
+    integer            , intent(in)  :: max_valid
     integer            , intent(in)  :: data_i(:) ! data on input grid
     integer            , intent(in)  :: data_o(:) ! data on output grid
     character(len=*)   , intent(in)  :: name      ! name of field
@@ -310,9 +341,6 @@ contains
     real(r8), allocatable :: garea_i(:)     ! input grid: global area of each index
     real(r8), allocatable :: garea_o(:)     ! output grid: global area of each index
     integer               :: ier            ! error status
-    integer               :: max_valid_loc
-    integer               :: max_valid
-    integer               :: min_valid
     character(len=*), parameter :: subname = 'output_diagnostics_index'
     !-----------------------------------------------------------------------
 
@@ -339,6 +367,7 @@ contains
        write(6,*) 'ns_i         = ', ns_i
        write(6,*) 'size(data_o) = ', size(data_o)
        write(6,*) 'ns_o         = ', ns_o
+       !call shr_sys_abort(subname,file=__FILE__,line=__LINE__)
        call shr_sys_abort()
     end if
     if (size(mask_i) /= ns_i) then
@@ -348,13 +377,9 @@ contains
        call shr_sys_abort()
     end if
 
-    max_valid_loc = maxval(data_i)
-    call mpi_reduce(max_valid_loc, (/max_valid/), 1, MPI_INT, MPI_SUM, 0, mpicom, ier)
-
     ! Sum areas on input grid
-    ! For now hard-wire min_valid to 1
-    min_valid = 1
     allocate(loc_garea_i(min_valid:max_valid), stat=ier)
+    if (ier/=0) call shr_sys_abort()
     allocate(garea_i(min_valid:max_valid), stat=ier)
     if (ier/=0) call shr_sys_abort()
     loc_garea_i(:) = 0.
@@ -364,20 +389,21 @@ contains
           loc_garea_i(k) = loc_garea_i(k) + area_i(ni) * mask_i(ni)
        end if
     end do
-    call mpi_reduce(loc_garea_i, garea_i, size(garea_i), size(garea_i), MPI_REAL8, MPI_SUM, 0, mpicom, ier)
+    call mpi_reduce(loc_garea_i, garea_i, size(garea_i), MPI_REAL8, MPI_SUM, 0, mpicom, ier)
 
     ! Sum areas on output grid
     allocate(loc_garea_o(min_valid:max_valid), stat=ier)
+    if (ier/=0) call shr_sys_abort()
     allocate(garea_o(min_valid:max_valid), stat=ier)
     if (ier/=0) call shr_sys_abort()
     loc_garea_o(:) = 0.
     do no = 1, ns_o
        k = data_o(no)
        if (k >= min_valid .and. k <= max_valid) then
-          loc_garea_o(k) = garea_o(k) + area_o(no) * frac_o(no)
+          loc_garea_o(k) = loc_garea_o(k) + area_o(no) * frac_o(no)
        end if
     end do
-    call mpi_reduce(loc_garea_o, garea_o, size(garea_o), size(garea_o), MPI_REAL8, MPI_SUM, 0, mpicom, ier)
+    call mpi_reduce(loc_garea_o, garea_o, size(garea_o), MPI_REAL8, MPI_SUM, 0, mpicom, ier)
 
     ! Write results
     if (root_task) then

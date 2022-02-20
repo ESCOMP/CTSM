@@ -27,6 +27,7 @@ set(SRCFILES mkagfirepkmonthMod.F90
              mkglcmecMod.F90
              mkharvestMod.F90
              mkindexmapMod.F90
+             mkinputMod.F90
              mklaiMod.F90
              mklanwatMod.F90
              mkorganicMod.F90
@@ -46,6 +47,7 @@ set(SRCFILES mkagfirepkmonthMod.F90
              mkvarctl.F90
              mkvarpar.F90
              mkvocefMod.F90
+             mkVICparamsMod.F90
              nanMod.F90
              shr_const_mod.F90
              shr_kind_mod.F90

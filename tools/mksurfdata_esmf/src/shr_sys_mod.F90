@@ -5,33 +5,47 @@ module shr_sys_mod
   implicit none
   private
 
+#include <mpif.h>
+
   public :: shr_sys_getenv  ! get an environment variable
   public :: shr_sys_abort   ! abort a program
-
-  integer :: s_loglev = 0
-  integer :: s_logunit = 6
 
 !===============================================================================
 CONTAINS
 !===============================================================================
 
-  subroutine shr_sys_abort(string,rc)
+  subroutine shr_sys_abort(message, file, line)
 
-    !-------------------------------------------------------------------------------
-    ! PURPOSE: consistent stopping mechanism
-    !-------------------------------------------------------------------------------
+    ! Parallel emergency stop
 
-    character(len=*) , optional :: string  ! error message string
-    integer          , optional :: rc      ! error code
+    ! input/output variables
+    character(len=*), optional, intent(in) :: message
+    character(len=*), optional, intent(in) :: file
+    integer,          optional, intent(in) :: line
 
-    ! local variables
-    character(*),parameter :: subName =   '(shr_sys_abort) '
-    character(*),parameter :: F00     = "('(shr_sys_abort) ',4a)"
+    ! Local variables
+    integer :: rc
+    integer :: ier
+    character(len=SHR_KIND_CL):: abort_msg
 
-    if (len_trim(string) > 0) write(s_logunit,F00) 'ERROR: '//trim(string)
-    write(s_logunit,F00) 'WARNING: stopping'
-    call abort()
-    stop
+    if (.not. present(message)) then
+       rc = 1001
+       call mpi_abort(MPI_COMM_WORLD, rc, ier)
+    else
+       if (present(file) .and. present(line)) then
+          write(abort_msg, '(4a,i0)') trim(message),' at ',trim(file),':',line
+       else if (present(file)) then
+          write(abort_msg, '(3a)') trim(message),' at ',trim(file)
+       else if (present(line)) then
+          write(abort_msg, '(2a,i0)') trim(message),' on line ',line
+       else
+          write(abort_msg, '(a)') trim(message)
+       end if
+
+       write(6,*) trim(message)
+       rc = 1001
+       call mpi_abort(MPI_COMM_WORLD, rc, ier)
+    end if
 
   end subroutine shr_sys_abort
 
@@ -43,9 +57,9 @@ CONTAINS
     !-------------------------------------------------------------------------------
 
     ! input/output variables
-    character(len=*) ,intent(in)    :: name    ! env var name
-    character(len=*) ,intent(inout) :: val     ! env var value
-    integer          ,intent(out)   :: rcode   ! return code
+    character(len=*) ,intent(in)     :: name    ! env var name
+    character(len=*) ,intent(inout)  :: val     ! env var value
+    integer          ,intent(inout)  :: rcode   ! return code
 
     !----- local -----
     integer                :: lenname ! length of env var name
@@ -70,7 +84,7 @@ CONTAINS
 
 #else
 
-    write(s_logunit,F00) 'ERROR: no implementation of getenv for this architecture'
+    write(6,F00) 'ERROR: no implementation of getenv for this architecture'
     call shr_sys_abort(subname//'no implementation of getenv for this machine')
 
 #endif

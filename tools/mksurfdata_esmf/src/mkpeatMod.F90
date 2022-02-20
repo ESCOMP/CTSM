@@ -5,22 +5,20 @@ module mkpeatMod
   !-----------------------------------------------------------------------
 
   use ESMF
-  use pio
-  use shr_kind_mod   , only : r8 => shr_kind_r8, r4=>shr_kind_r4
-  use shr_sys_mod    , only : shr_sys_abort
-  use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
-  use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
-  use mkpioMod       , only : mkpio_iodesc_rawdata, mkpio_get_rawdata_level
-  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
-  use mkutilsMod     , only : chkerr
-  use mkvarctl       , only : ndiag, root_task, mpicom
+  use shr_kind_mod     , only : r8 => shr_kind_r8, r4=>shr_kind_r4
+  use shr_sys_mod      , only : shr_sys_abort
+  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
+  use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
+  use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
+  use mkvarctl         , only : ndiag, root_task, mpicom
+  use mkchecksMod      , only : min_bad, max_bad
+  use mkdiagnosticsMod , only : output_diagnostics_continuous
+  use mkutilsMod       , only : chkerr
 
   implicit none
   private
 
-#include <mpif.h>
-
-  public :: mkpeat           ! regrid peat data
+  public :: mkpeat
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -30,9 +28,6 @@ contains
 !===============================================================
 
   subroutine mkpeat(file_mesh_i, file_data_i, mesh_o, peat_o, rc)
-
-    use mkdiagnosticsMod, only : output_diagnostics_area
-    use mkchecksMod     , only : min_bad, max_bad
 
     ! input/output variables
     character(len=*)  , intent(in)    :: file_mesh_i ! input mesh file name
@@ -50,18 +45,10 @@ contains
     integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
-    real(r8), allocatable  :: area_i(:)
-    real(r8), allocatable  :: area_o(:)
     real(r8), allocatable  :: peat_i(:)              ! input grid: percent peat
-    real(r8)               :: sum_fldi               ! global sum of dummy input fld
-    real(r8)               :: sum_fldo               ! global sum of dummy output fld
-    real(r8)               :: gglac_i                ! input  grid: global glac
-    real(r8)               :: garea_i                ! input  grid: global area
-    real(r8)               :: gglac_o                ! output grid: global glac
-    real(r8)               :: garea_o                ! output grid: global area
     integer                :: ier, rcode             ! error status
-    real(r8), parameter :: min_valid = 0._r8         ! minimum valid value
-    real(r8), parameter :: max_valid = 100.000001_r8 ! maximum valid value
+    real(r8), parameter    :: min_valid = 0._r8         ! minimum valid value
+    real(r8), parameter    :: max_valid = 100.000001_r8 ! maximum valid value
     character(len=*), parameter :: subname = 'mkpeat'
     !-----------------------------------------------------------------------
 
@@ -73,10 +60,10 @@ contains
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
        write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
+    call ESMF_VMLogMemInfo("At start of "//trim(subname))
 
     ! Open input data file
     rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
-    call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
@@ -129,28 +116,24 @@ contains
        call shr_sys_abort(subname//" peat_o does not fall in range of min_valid/max_valid")
     end if
 
+    ! Output diagnostic info
+    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+         peat_i, peat_o, "Peat", "unitless", ndiag, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+
     ! Close the file
     call pio_closefile(pioid)
-
-    ! Output diagnostic info
-    ! allocate(area_i(ns_i))
-    ! allocate(area_o(ns_o))
-    ! call get_meshareas(mesh_i, area_i, rc)
-    ! if (chkerr(rc,__LINE__,u_FILE_u)) return
-    ! call get_meshareas(mesh_o, area_o, rc)
-    ! if (chkerr(rc,__LINE__,u_FILE_u)) return
-    ! call output_diagnostics_area(area_i, area_o, mask_i, peat_i, peat_o, 'peat', .true., ndiag)
 
     ! Release memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-    call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made peat'
     end if
+    call ESMF_VMLogMemInfo("At end of "//trim(subname))
 
   end subroutine mkpeat
 
