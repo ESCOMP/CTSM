@@ -158,7 +158,7 @@ contains
 
        ! index out of range
        if (i1 <= 0 .or. i1 > table_n1 .or. &
-            i2 <= 0 .or. i2 > table_n2) then
+           i2 <= 0 .or. i2 > table_n2) then
           data(n) = fill_val
           if (ierr == 0) ierr = 2
           cycle

@@ -37,11 +37,11 @@
   mksrf_fvegtyp_mesh = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc' 
   mksrf_fhrvtyp = '/glade/work/mvertens/ctsm.toolchain/tools/mksurfdata_esmf/run/mksrf_landuse_histclm50_LUH2_2000.cdf5.c170629.nc' 
   mksrf_fhrvtyp_mesh = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc' 
-  mksrf_fgrid_mesh = '/glade/p/cesm/cseg/inputdata/share/meshes/ne120np4_ESMFmesh_cdf5_c20211018.nc'
-  mksrf_fgrid_mesh_nx = 777602
+  mksrf_fgrid_mesh = '/glade/p/cesm/cseg/inputdata/share/meshes/ne30np4_ESMFmesh_cdf5_c20211018.nc'
+  mksrf_fgrid_mesh_nx = 48602
   mksrf_fgrid_mesh_ny = 1
-  fsurdat = 'surfdata_ne120np4_hist_78pfts_CMIP6_2000_c220219.nc' 
-  fsurlog = 'surfdata_ne120np4_hist_78pfts_CMIP6_2000_c220219.log' 
+  fsurdat = 'surfdata_ne30np4_hist_78pfts_CMIP6_2000_c220219.nc' 
+  fsurlog = 'surfdata_ne30np4_hist_78pfts_CMIP6_2000_c220219.log' 
   outnc_double = .true. 
   all_urban = .false. 
   no_inlandwet = .true. 

@@ -754,12 +754,20 @@ contains
          ! some of which may have invalid entries. Because doing so disables some error
          ! checking, we do our own error checking after the call.
 
-         call lookup_2d_netcdf(pioid, varname, .true., &
-              'density_class', 'region', n_extra_dims, &
-              unity_dens_o(:,k), region_o, fill_val, data(:,k), ierr, &
-              extra_dims=extra_dims, nodata=index_nodata, &
-              invalid_okay=.true.)
-
+         call lookup_2d_netcdf(pioid = pioid, &
+                               tablename = varname, &
+                               lookup_has_invalid = .true., &
+                               dimname1 = 'density_class', &
+                               dimname2 = 'region', &
+                               n_extra_dims = n_extra_dims, &
+                               index1 = unity_dens_o(:,k), &
+                               index2 = region_o, &
+                               fill_val = fill_val, &
+                               data = data(:,k), &
+                               ierr = ierr, &
+                               extra_dims= extra_dims, &
+                               nodata = index_nodata, &
+                               invalid_okay = .true.)
          if (ierr /= 0) then
             write(6,*) modname//':'//subname//' ERROR in lookup_2d_netcdf for ', &
                  trim(varname), ' class', k, ': err=', ierr
@@ -791,6 +799,7 @@ contains
 
   end subroutine mkurbanpar
 
+  !===============================================================
   subroutine mkurban_pct_diagnostics(area_i, area_o, mask_i, frac_o, urbn_i, urbn_o, dens_class)
     !
     ! print diagnostics related to pct urban

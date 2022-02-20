@@ -1,7 +1,7 @@
 module mkpioMod
 
-  use ESMF ! TODO: put in only statements
-  use pio  ! TODO: put in only statements
+  use ESMF
+  use pio
   use shr_kind_mod , only : r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_kind_mod , only : i2 => shr_kind_i2, i4 => shr_kind_i4
   use shr_kind_mod , only : cl => shr_kind_cl, cs => shr_kind_cs
@@ -509,7 +509,7 @@ contains
        else
           write(6,*)' ndims = ',ndims
           write(6,*)' unlimited_dim = ',unlimited_dim
-          call shr_sys_abort('for lon/lat support up to 3 spatial dims plus a time dim')
+          call shr_sys_abort('for lon/lat support up to 3 input spatial dims plus a time dim')
        end if
     else
        call shr_sys_abort('rawdata input for variable '//trim(varname)//'  must have ndims either 1,2,3 or 4')
@@ -631,7 +631,7 @@ contains
                      ' with dim(1) = ',dimlens(1)
              end if
           else
-             call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+             call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof3d, pio_iodesc)
              if (root_task) then
                 write(ndiag,'(a,i8,i8)') ' set iodesc for output data: '//trim(varname)//&
                      ' with dim(1),dim(2) = ',dimlens(1),dimlens(2)
@@ -639,13 +639,17 @@ contains
           end if
        else if (ndims == 3) then
           if (unlimited_dim) then
-             call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof, pio_iodesc)
+             call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2)/), compdof3d, pio_iodesc)
+             if (root_task) then
+                write(ndiag,'(a,i8,i8)') ' set iodesc for output data with time dim: '//trim(varname)//&
+                     ' with dim(1),dim(2) = ',dimlens(1),dimlens(2)
+             end if
           else
-             call shr_sys_abort('support on 2 dimensions in addition to a time dimension when outnc_1d is true')
-          end if
-          if (root_task) then
-             write(ndiag,'(a,i8,i8)') ' set iodesc for output data with time dim: '//trim(varname)//&
-                  ' with dim(1),dim(2) = ',dimlens(1),dimlens(2)
+             call pio_initdecomp(pio_iosystem, pio_vartype, (/dimlens(1),dimlens(2),dimlens(3)/), compdof3d, pio_iodesc)
+             if (root_task) then
+                write(ndiag,'(a,i8,i8,i8)') ' set iodesc for output data: '//trim(varname)//&
+                     ' with dim(1),dim(2),dim(3) = ',dimlens(1),dimlens(2),dimlens(3)
+             end if
           end if
        end if
     else
