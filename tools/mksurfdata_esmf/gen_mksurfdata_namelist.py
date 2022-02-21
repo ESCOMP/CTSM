@@ -152,6 +152,18 @@ def get_parser():
         required=False,
         default="4x5",
     )
+    parser.add_argument(
+        "--merge_gis",
+        help="""
+        If you want to use the glacier dataset that merges in
+        the Greenland Ice Sheet data that CISM uses (typically
+        used only if consistency with CISM is important)
+        """,
+        action="store",
+        dest="merge_gis",
+        choices=["on","off"],
+        default="off",
+    )
     return parser
 
 def main ():
@@ -169,6 +181,7 @@ def main ():
     end_year = args.end_year
     potveg = args.potveg_flag
     glc_nec = args.glc_nec
+    merge_gis = args.merge_gis
 
     # determine pft_years - needed to parse xml file
     if start_year == 1850 and end_year == 1850:
@@ -201,9 +214,7 @@ def main ():
     attribute_list = {'hires_pft':hires_pft,
                       'pft_years':pft_years,
                       'ssp_rcp':ssp_rcp,
-                      'mergeGIS':'of'}
-
-    # TODO: add an argument for mergeGIS
+                      'mergeGIS':merge_gis}
 
     # create dictionary for raw data files names
     rawdata_files = {}
@@ -295,8 +306,7 @@ def main ():
                 landuse_input_fname = file1.replace("%y",str(start_year))
                 if not os.path.isfile(landuse_input_fname):
                     logger.warning(f"landunit_input_fname: {landuse_input_fname}")
-                # TODO: make the space/tab exactly the same as pl code:
-                landuse_line = landuse_input_fname + "\t\t\t" + str(year) + "\n"
+                landuse_line = f"{landuse_input_fname:<196}{str(year)}\n"
                 # -- Each line is written twice in the original pl code:
                 landuse_file.write(landuse_line)
                 landuse_file.write(landuse_line)
@@ -319,7 +329,12 @@ def main ():
         fsurlog = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.log"
         fdyndat = f"landuse.timeseries_{res}_{ssp_rcp}_{num_pft}_CMIP6_{start_year}-{end_year}_c{time_stamp}.log"
 
+    gitdescribe = subprocess.check_output('git describe', shell=True).strip()
+    gitdescribe = gitdescribe.decode('utf-8')
+
     with open(nlfname, "w",encoding='utf-8') as nlfile:
+
+        nlfile.write("  mksrf_gridtype = \'global\' \n")
 
         nlfile.write("&mksurfdata_input \n")
         for key,value in rawdata_files.items():
@@ -330,26 +345,34 @@ def main ():
         
         mksrf_hrvtyp = rawdata_files["mksrf_fvegtyp"]
         nlfile.write( f"  mksrf_fhrvtyp = \'{mksrf_hrvtyp}\' \n")
+
         mksrf_hrvtyp_mesh = rawdata_files["mksrf_fvegtyp_mesh"]
         nlfile.write( f"  mksrf_fhrvtyp_mesh = \'{mksrf_hrvtyp_mesh}\' \n")
 
-        nlfile.write( "  outnc_double = .true. \n")
         nlfile.write( "  all_urban = .false. \n")
         nlfile.write( "  no_inlandwet = .true. \n")
         nlfile.write(f"  numpft = {num_pft} \n")
         nlfile.write( "  fdyndat = \' \' \n")
         nlfile.write(f"  fsurdat = \'{fsurdat}\' \n")
         nlfile.write(f"  fsurlog = \'{fsurlog}\' \n")
-
-       #nlfile.write(f"  start_year = {start_year}\n") 
-       #nlfile.write(f"  end_year = {end_year}\n") 
         nlfile.write(f"  mksrf_fdynuse = \'{landuse_fname} \' \n")
-
-        mksrf_vic = rawdata_files["mksrf_fvic"]
-        nlfile.write( "  outnc_vic = .true. \n")
-       #nlfile.write(f"  use_vic = .{vic_flag}. \n")
-       #nlfile.write(f"  use_glc = .{glc_flag}. \n")
-       #nlfile.write(f"  create_esmf_pet_files = .{create_esmf_pet_files}. \n")
+        nlfile.write(f"  gitdescribe = \'{gitdescribe}\' \n")
+        nlfile.write( "  all_urban = .false. \n")
+        nlfile.write( "  all_veg = .false. \n")
+        nlfile.write( "  no_inlandwet = .true. \n")
+        nlfile.write( "  outnc_large_files = .false. \n")
+        nlfile.write( "  outnc_double = .true. \n")
+        if glc_flag:
+            nlfile.write( "  out3d_glc = .true. \n")
+        else:
+            nlfile.write( "  out3d_glc = .false. \n")
+        if vic_flag:
+            nlfile.write( "  outnc_vic = .true. \n")
+            mksrf_fvic = rawdata_files["mksrf_fvic"]
+            nlfile.write(f"  mksrf_fvic = {mksrf_fvic} \n")
+        else:
+            nlfile.write("  outnc_vic = .false. \n")
+        #nlfile.write(f"  create_esmf_pet_files = .{create_esmf_pet_files}. \n")
         nlfile.write("/ \n")
 
 if __name__ == "__main__":

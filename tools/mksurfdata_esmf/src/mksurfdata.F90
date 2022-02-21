@@ -367,7 +367,8 @@ program mksurfdata
      end if
   else
      if (root_task)then
-        write(ndiag,'(a)')"Calling fsurdat "//trim(fsurdat)
+        write(ndiag,*)
+        write(ndiag,'(1x,80a1)') ('=',k=1,80)
      end if
 
      ! Open file
