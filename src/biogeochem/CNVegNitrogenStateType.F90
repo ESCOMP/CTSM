@@ -17,6 +17,7 @@ module CNVegNitrogenStateType
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
   use dynPatchStateUpdaterMod, only : patch_state_updater_type
+  use atm2lndType    , only : atm2lnd_type
   use CNSpeciesMod   , only : CN_SPECIES_N
   use CNVegComputeSeedMod, only : ComputeSeedAmounts
   !
@@ -29,6 +30,7 @@ module CNVegNitrogenStateType
   !
   type, public :: cnveg_nitrogenstate_type
 
+     real(r8), pointer :: leafcn_patch             (:) ! patch leafcn
      real(r8), pointer :: grainn_patch             (:) ! (gN/m2) grain N (crop)
      real(r8), pointer :: grainn_storage_patch     (:) ! (gN/m2) grain N storage (crop)
      real(r8), pointer :: grainn_xfer_patch        (:) ! (gN/m2) grain N transfer (crop)
@@ -80,6 +82,7 @@ module CNVegNitrogenStateType
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
+     procedure , public  :: time_evolv_params  ! updates time-evolving params
 
   end type cnveg_nitrogenstate_type
   !------------------------------------------------------------------------
@@ -126,6 +129,7 @@ contains
     begc = bounds%begc; endc = bounds%endc
     begg = bounds%begg; endg = bounds%endg
 
+    allocate(this%leafcn_patch             (begp:endp)) ; this%leafcn_patch             (:) = nan
     allocate(this%grainn_patch             (begp:endp)) ; this%grainn_patch             (:) = nan     
     allocate(this%grainn_storage_patch     (begp:endp)) ; this%grainn_storage_patch     (:) = nan
     allocate(this%grainn_xfer_patch        (begp:endp)) ; this%grainn_xfer_patch        (:) = nan     
@@ -197,6 +201,11 @@ contains
     !-------------------------------
     ! patch state variables 
     !-------------------------------
+
+    this%leafcn_patch(begp:endp) = spval
+    call hist_addfld1d (fname='LEAFCN_TARGET', units='gC/gN', &
+        avgflag='A', long_name='Target leaf C:N; compare against leafC/leafN', &
+        ptr_patch=this%leafcn_patch)
     
     if (use_crop) then
        this%grainn_patch(begp:endp) = spval
@@ -436,8 +445,9 @@ contains
                 this%frootn_storage_patch(p) = 0._r8    
              end if 
           else
-             this%leafn_patch(p)         = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
-             this%leafn_storage_patch(p) = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+             this%leafcn_patch(p)        = pftcon%leafcn(patch%itype(p))
+             this%leafn_patch(p)         = leafc_patch(p)         / this%leafcn_patch(p)
+             this%leafn_storage_patch(p) = leafc_storage_patch(p) / this%leafcn_patch(p)
              if (MM_Nuptake_opt .eqv. .true.) then  
                 this%frootn_patch(p) = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
                 this%frootn_storage_patch(p) = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
@@ -666,6 +676,10 @@ contains
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%ntrunc_patch) 
 
+    call restartvar(ncid=ncid, flag=flag, varname='LEAFCN_TARGET', xtype=ncd_double,  &
+         dim1name='pft', long_name='Target leaf C:N; compare against leafC/leafN', units='gC/gN', &
+         interpinic_flag='interp', readvar=readvar, data=this%leafcn_patch)
+
     if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='grainn', xtype=ncd_double,  &
             dim1name='pft',    long_name='grain N', units='gN/m2', &
@@ -749,8 +763,17 @@ contains
                    this%frootn_storage_patch(p) = 0._r8    
                 end if 
              else
-                this%leafn_patch(p)         = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
-                this%leafn_storage_patch(p) = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+                ! max in next line ensures leafcn_patch equals at least the
+                ! leafcn for bare ground (noveg) to avoid div by 0 when the
+                ! initial file doesn't include leafcn_patch. In that situation
+                ! it seems, however, like a better initial condition to set
+                ! this%leafcn_patch(p) = pftcon%leafcn(patch%itype(p))
+                ! ...but leafcn_patch does get updated before anything else
+                ! in clm_driver, so either option may give the same answer.
+                this%leafcn_patch(p) = max(pftcon%leafcn(noveg), &
+                                           this%leafcn_patch(p))
+                this%leafn_patch(p)         = leafc_patch(p)         / this%leafcn_patch(p)
+                this%leafn_storage_patch(p) = leafc_storage_patch(p) / this%leafcn_patch(p)
                 if (MM_Nuptake_opt .eqv. .true.) then  
                    this%frootn_patch(p) = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
                    this%frootn_storage_patch(p) = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
@@ -863,6 +886,7 @@ contains
     do fi = 1,num_patch
        i = filter_patch(fi)
 
+       this%leafcn_patch(i)             = value_patch
        this%leafn_patch(i)              = value_patch
        this%leafn_storage_patch(i)      = value_patch
        this%leafn_xfer_patch(i)         = value_patch
@@ -1056,6 +1080,42 @@ contains
     end do
 
   end subroutine Summary_nitrogenstate
+
+  !-----------------------------------------------------------------------
+  subroutine time_evolv_params(this, bounds, atm2lnd_inst)
+    !
+    ! !DESCRIPTION:
+    ! Update time-evolving parameters
+    !
+    ! !USES:
+    use pftconMod, only : pftcon
+    !
+    ! !ARGUMENTS:
+    class(cnveg_nitrogenstate_type) :: this
+    type(bounds_type) , intent(in)  :: bounds
+    type(atm2lnd_type), intent(in)  :: atm2lnd_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g, c, p  ! indices
+    real(r8) :: co2_ppmv  ! atm co2 concentration
+    ! Could use 355 value from clm_varctl.F90 to avoid this hardwiring?
+    real(r8), parameter :: co2_base = 350._r8  ! units ppmv
+    real(r8), parameter :: cn_slope = 10._r8
+
+    character(len=*), parameter :: subname = 'time_evolv_params'
+    !-----------------------------------------------------------------------
+
+    ! Loop to get leafcn_col
+    do p = bounds%begp, bounds%endp
+       c = patch%column(p)
+       g = patch%gridcell(p)
+       co2_ppmv = 1.e6_r8 * atm2lnd_inst%forc_pco2_grc(g) / &
+                            atm2lnd_inst%forc_pbot_downscaled_col(c)
+       this%leafcn_patch(p) = pftcon%leafcn(patch%itype(p)) + &
+          max(cn_slope * log(co2_ppmv / co2_base), 0._r8)
+    end do
+
+  end subroutine time_evolv_params
 
   !-----------------------------------------------------------------------
   subroutine DynamicPatchAdjustments(this, bounds, &

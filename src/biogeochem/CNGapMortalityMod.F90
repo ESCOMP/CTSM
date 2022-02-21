@@ -133,7 +133,6 @@ contains
          greffic    =>    dgvs_inst%greffic_patch    , & ! Input:  [real(r8) (:) ]                                                    
          heatstress =>    dgvs_inst%heatstress_patch , & ! Input:  [real(r8) (:) ]    
          
-         leafcn  	=>    pftcon%leafcn               , & ! Input:  [real(r8) (:)]  leaf C:N (gC/gN)                        
          livewdcn   =>    pftcon%livewdcn             , & ! Input:  [real(r8) (:)]  live wood (phloem and ray parenchyma) C:N (gC/gN) 
          laisun     =>    canopystate_inst%laisun_patch  , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index      
          laisha     =>    canopystate_inst%laisha_patch  , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index   

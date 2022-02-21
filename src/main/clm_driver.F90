@@ -168,7 +168,8 @@ contains
     ! -------------------------------------------------
     ! Obtain updated values of time-evolving parameters
     ! -------------------------------------------------
-    call canopystate_inst%time_evolv_params(bounds_proc, atm2lnd_inst)
+    call bgc_vegetation_inst%cnveg_nitrogenstate_inst%time_evolv_params( &
+       bounds_proc, atm2lnd_inst)
 
     ! ========================================================================
     ! In the first time step of a startup or hybrid run, we want to update CLM's glacier

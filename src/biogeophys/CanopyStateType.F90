@@ -7,7 +7,6 @@ module CanopyStateType
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use abortutils      , only : endrun
   use decompMod       , only : bounds_type
-  use atm2lndType     , only : atm2lnd_type
   use landunit_varcon , only : istsoil, istcrop
   use clm_varpar      , only : nlevcan, nvegwcs
   use clm_varcon      , only : spval
@@ -24,8 +23,6 @@ module CanopyStateType
 
      integer  , pointer :: frac_veg_nosno_patch     (:)   ! patch fraction of vegetation not covered by snow (0 OR 1) [-]
      integer  , pointer :: frac_veg_nosno_alb_patch (:)   ! patch fraction of vegetation not covered by snow (0 OR 1) [-]
-
-     real(r8) , pointer :: leafcn_patch             (:)   ! patch leafcn
 
      real(r8) , pointer :: tlai_patch               (:)   ! patch canopy one-sided leaf area index, no burying by snow
      real(r8) , pointer :: tsai_patch               (:)   ! patch canopy one-sided stem area index, no burying by snow
@@ -73,7 +70,6 @@ module CanopyStateType
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
-     procedure, public  :: time_evolv_params  ! updates time-evolving params
      procedure, public  :: Restart
 
   end type CanopyState_type
@@ -124,7 +120,6 @@ contains
     allocate(this%tlai_hist_patch          (begp:endp))           ; this%tlai_hist_patch          (:)   = nan
     allocate(this%tsai_hist_patch          (begp:endp))           ; this%tsai_hist_patch          (:)   = nan
     allocate(this%htop_hist_patch          (begp:endp))           ; this%htop_hist_patch          (:)   = nan
-    allocate(this%leafcn_patch             (begp:endp))           ; this%leafcn_patch             (:)   = nan
     allocate(this%tlai_patch               (begp:endp))           ; this%tlai_patch               (:)   = nan
     allocate(this%tsai_patch               (begp:endp))           ; this%tsai_patch               (:)   = nan
     allocate(this%elai_patch               (begp:endp))           ; this%elai_patch               (:)   = nan
@@ -172,11 +167,6 @@ contains
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
-
-    this%leafcn_patch(begp:endp) = spval
-    call hist_addfld1d (fname='LEAFCN_TARGET', units='gC/gN', &
-        avgflag='A', long_name='Target leaf C:N; compare against leafC/leafN', &
-        ptr_patch=this%leafcn_patch)
 
     this%elai_patch(begp:endp) = spval
     call hist_addfld1d (fname='ELAI', units='m^2/m^2', &
@@ -521,7 +511,6 @@ contains
     do p = bounds%begp, bounds%endp
        l = patch%landunit(p)
 
-       this%leafcn_patch(p)      = 0._r8
        this%tlai_patch(p)        = 0._r8
        this%tsai_patch(p)        = 0._r8
        this%elai_patch(p)        = 0._r8
@@ -548,42 +537,6 @@ contains
 
   end subroutine InitCold
 
-  !-----------------------------------------------------------------------
-  subroutine time_evolv_params(this, bounds, atm2lnd_inst)
-    !
-    ! !DESCRIPTION:
-    ! Update time-evolving parameters
-    !
-    ! !USES:
-    use pftconMod, only : pftcon
-    !
-    ! !ARGUMENTS:
-    class(canopystate_type)        :: this
-    type(bounds_type) , intent(in) :: bounds
-    type(atm2lnd_type), intent(in) :: atm2lnd_inst
-    !
-    ! !LOCAL VARIABLES:
-    integer :: g, c, p  ! indices
-    real(r8) :: co2_ppmv  ! atm co2 concentration
-    ! Could use 355 value from clm_varctl.F90 to avoid this hardwiring?
-    real(r8), parameter :: co2_base = 350._r8  ! units ppmv
-    real(r8), parameter :: cn_slope = 10._r8
-
-    character(len=*), parameter :: subname = 'time_evolv_params'
-    !-----------------------------------------------------------------------
-
-    ! Loop to get leafcn_col
-    do p = bounds%begp, bounds%endp
-       c = patch%column(p)
-       g = patch%gridcell(p)
-       co2_ppmv = 1.e6_r8 * atm2lnd_inst%forc_pco2_grc(g) / &
-                            atm2lnd_inst%forc_pbot_downscaled_col(c)
-       this%leafcn_patch(p) = pftcon%leafcn(patch%itype(p)) + &
-          max(cn_slope * log(co2_ppmv / co2_base), 0._r8)
-    end do
-
-  end subroutine time_evolv_params
-
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
     !
@@ -608,10 +561,6 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='FRAC_VEG_NOSNO_ALB', xtype=ncd_int,  &
          dim1name='pft', long_name='fraction of vegetation not covered by snow (0 or 1)', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%frac_veg_nosno_alb_patch)
-
-    call restartvar(ncid=ncid, flag=flag, varname='LEAFCN_TARGET', xtype=ncd_double,  &
-         dim1name='pft', long_name='Target leaf C:N; compare against leafC/leafN', units='gC/gN', &
-         interpinic_flag='interp', readvar=readvar, data=this%leafcn_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='tlai', xtype=ncd_double,  &
          dim1name='pft', long_name='one-sided leaf area index, no burying by snow', units='', &

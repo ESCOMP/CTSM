@@ -313,7 +313,6 @@ module LunaMod
     associate(                                                          &
     c3psn         => pftcon%c3psn                                     , & ! photosynthetic pathway: 0.  =  c4, 1.  =  c3
     slatop        => pftcon%slatop                                    , & ! specific leaf area at top of canopy, projected area basis [m^2/gC]
-    leafcn        => pftcon%leafcn                                    , & ! leaf C:N (gC/gN)        
     forc_pbot10   => atm2lnd_inst%forc_pbot240_downscaled_patch       , & ! Input:  [real(r8) (:)   ] 10 day mean atmospheric pressure(Pa)  
     CO2_p240      => atm2lnd_inst%forc_pco2_240_patch                 , & ! Input:  [real(r8) (:)   ] 10-day mean CO2 partial pressure (Pa)
     O2_p240       => atm2lnd_inst%forc_po2_240_patch                  , & ! Input:  [real(r8) (:)   ] 10-day mean O2 partial pressure (Pa)    
