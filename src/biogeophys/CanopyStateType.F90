@@ -609,9 +609,9 @@ contains
          dim1name='pft', long_name='fraction of vegetation not covered by snow (0 or 1)', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%frac_veg_nosno_alb_patch)
 
-!   call restartvar(ncid=ncid, flag=flag, varname='LEAFCN_TARGET', xtype=ncd_double,  &
-!        dim1name='pft', long_name='Target leaf C:N; compare against leafC/leafN', units='gC/gN', &
-!        interpinic_flag='interp', readvar=readvar, data=this%leafcn_patch)
+    call restartvar(ncid=ncid, flag=flag, varname='LEAFCN_TARGET', xtype=ncd_double,  &
+         dim1name='pft', long_name='Target leaf C:N; compare against leafC/leafN', units='gC/gN', &
+         interpinic_flag='interp', readvar=readvar, data=this%leafcn_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='tlai', xtype=ncd_double,  &
          dim1name='pft', long_name='one-sided leaf area index, no burying by snow', units='', &
