@@ -469,6 +469,7 @@ contains
                long_name='VIC Ds parameter for the ARNO curve', units='unitless')
 
        end if
+
        call mkpio_def_spatial_var(pioid=pioid, varname='LAKEDEPTH', xtype=xtype, &
             long_name='lake depth', units='m')
 
