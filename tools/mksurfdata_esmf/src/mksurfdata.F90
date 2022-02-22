@@ -213,20 +213,6 @@ program mksurfdata
   ! soil depth data
   real(r8), allocatable           :: soildepth(:)            ! soil depth (m)
 
-  ! VOC data
-  real(r8), allocatable           :: ef1_btr(:)              ! Isoprene emission factor for broadleaf
-  real(r8), allocatable           :: ef1_fet(:)              ! Isoprene emission factor for fine/everg
-  real(r8), allocatable           :: ef1_fdt(:)              ! Isoprene emission factor for fine/dec
-  real(r8), allocatable           :: ef1_shr(:)              ! Isoprene emission factor for shrubs
-  real(r8), allocatable           :: ef1_grs(:)              ! Isoprene emission factor for grasses
-  real(r8), allocatable           :: ef1_crp(:)              ! Isoprene emission factor for crops
-
-  ! VIC data
-  real(r8), allocatable           :: vic_binfl(:)            ! VIC b
-  real(r8), allocatable           :: vic_ws(:)               ! VIC Ws parameter (unitless)
-  real(r8), allocatable           :: vic_dsmax(:)            ! VIC Dsmax parameter (mm/day)
-  real(r8), allocatable           :: vic_ds(:)               ! VIC Ds parameter (unitless)
-
   ! logicals
   logical                         :: zero_out_lake           ! if should zero glacier out
   logical                         :: zero_out_wetland        ! if should zero glacier out
@@ -416,6 +402,17 @@ program mksurfdata
      call mkfile_output(pioid, mesh_model, 'LATIXY', lat, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
   end if
+
+  !DEBUG
+  if (fsurdat /= ' ' .and. outnc_vic) then
+     call mkVICparams ( mksrf_fvic_mesh, mksrf_fvic, mesh_model, pioid, rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
+  end if
+  if (fsurdat /= ' ' ) then
+     call mkvocef ( mksrf_fvocef_mesh, mksrf_fvocef, mesh_model, pioid, lat, rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkvocef')
+  end if
+  !DEBUG
 
   ! -----------------------------------
   ! Make LAI and SAI from 1/2 degree data and write to surface dataset
@@ -706,8 +703,8 @@ program mksurfdata
   ! -----------------------------------
   ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
   ! -----------------------------------
-  allocate ( topo_stddev(lsize_o)) ; topo_stddev(:) = spval
-  allocate ( slope(lsize_o))       ; slope(:)       = spval
+  allocate (topo_stddev(lsize_o)) ; topo_stddev(:) = spval
+  allocate (slope(lsize_o))       ; slope(:)       = spval
   call mktopostats ( mksrf_ftopostats_mesh, mksrf_ftopostats, mesh_model, &
        topo_stddev_o=topo_stddev, slope_o=slope, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mktopostats')
@@ -720,26 +717,17 @@ program mksurfdata
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for SLOPE')
      call pio_syncfile(pioid)
   end if
-  deallocate(topo_stddev)
-  deallocate(slope)
+  deallocate(topo_stddev, slope)
 
   ! -----------------------------------
-  ! TODO:
+  ! Compute VIC parameters
   ! -----------------------------------
-  ! Make VIC parameters [binfl, ws, dsmax, ds] from [fvic]
-  ! if ( outnc_vic )then
-  !    allocate ( vic_binfl(lsize_o))              ; vic_binfl(:)        = spval
-  !    allocate ( vic_ws(lsize_o))                 ; vic_ws(:)           = spval
-  !    allocate ( vic_dsmax(lsize_o))              ; vic_dsmax(:)        = spval
-  !    allocate ( vic_ds(lsize_o))                 ; vic_ds(:)           = spval
-  !    call mkVICparams ( mapfname=map_fvic, datfname=mksrf_fvic, ndiag=ndiag, &
-  !         binfl_o=vic_binfl, ws_o=vic_ws, dsmax_o=vic_dsmax, ds_o=vic_ds)
-  !    deallocate(vic_binfl)
-  !    deallocate(vic_ws)
-  !    deallocate(vic_dsmax)
-  !    deallocate(vic_ds)
-  !    deallocate(vic_binfl, vic_ws, vic_dsmax, vic_ds )
-  ! end if
+  if (fsurdat /= ' ') then
+     if (outnc_vic) then
+        call mkVICparams ( mksrf_fvic_mesh, mksrf_fvic, mesh_model, pioid, rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
+     end if
+  end if
 
   ! -----------------------------------
   ! Make organic matter density [organic] [forganic]
@@ -766,50 +754,16 @@ program mksurfdata
   ! -----------------------------------
   ! Make VOC emission factors for isoprene [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp]
   ! -----------------------------------
-  allocate (ef1_btr(lsize_o)) ; ef1_btr(:) = 0._r8
-  allocate (ef1_fet(lsize_o)) ; ef1_fet(:) = 0._r8
-  allocate (ef1_fdt(lsize_o)) ; ef1_fdt(:) = 0._r8
-  allocate (ef1_shr(lsize_o)) ; ef1_shr(:) = 0._r8
-  allocate (ef1_grs(lsize_o)) ; ef1_grs(:) = 0._r8
-  allocate (ef1_crp(lsize_o)) ; ef1_crp(:) = 0._r8
-  if (fsurdat /= ' ') then
-     call mkvocef ( mksrf_fvocef_mesh, mksrf_fvocef, mesh_model, &
-          ef_btr_o=ef1_btr, ef_fet_o=ef1_fet, ef_fdt_o=ef1_fdt,  &
-          ef_shr_o=ef1_shr, ef_grs_o=ef1_grs, ef_crp_o=ef1_crp, rc=rc)
+  if (fsurdat /= ' ')  then
+     call mkvocef ( mksrf_fvocef_mesh, mksrf_fvocef, mesh_model, pioid, lat, rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkvocef')
-
-     ! If have pole points on grid - set south pole to glacier
-     ! north pole is assumed as non-land
-     do n = 1,lsize_o
-        if (abs((lat(n) - 90._r8)) < 1.e-6_r8) then
-           ef1_btr(n) = 0._r8
-           ef1_fet(n) = 0._r8
-           ef1_fdt(n) = 0._r8
-           ef1_shr(n) = 0._r8
-           ef1_grs(n) = 0._r8
-           ef1_crp(n) = 0._r8
-        end if
-     end do
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out voc emission factors"
-     call mkfile_output(pioid,  mesh_model,  'EF1_BTR', ef1_btr, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call mkfile_output(pioid,  mesh_model,  'EF1_FET', ef1_fet, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call mkfile_output(pioid,  mesh_model,  'EF1_FDT', ef1_fdt, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call mkfile_output(pioid,  mesh_model,  'EF1_SHR', ef1_shr, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call mkfile_output(pioid,  mesh_model,  'EF1_GRS', ef1_grs, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call mkfile_output(pioid,  mesh_model,  'EF1_CRP', ef1_crp, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call pio_syncfile(pioid)
   end if
-  deallocate (ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
 
+  ! -----------------------------------
+  ! Adjust pctlak, pctwet, pcturb and pctgla
+  ! -----------------------------------
   do n = 1,lsize_o
 
-     ! Do landuse changes such as for the poles, etc.
      ! If have pole points on grid - set south pole to glacier
      ! north pole is assumed as non-land
      if (abs((lat(n) - 90._r8)) < 1.e-6_r8) then
@@ -853,6 +807,10 @@ program mksurfdata
      end if
   end do
 
+  ! -----------------------------------
+  ! Perform other normalizations
+  ! -----------------------------------
+
   ! Normalize land use and make sure things add up to 100% as well as
   ! checking that things are as they should be.
   call normalize_and_check_landuse(lsize_o)
@@ -893,8 +851,11 @@ program mksurfdata
        urban_skip_abort_on_invalid_data_check)
   deallocate(urban_region)
 
+  ! -----------------------------------
   ! Write out PCT_URBAN, PCT_GLACIER, PCT_LAKE and PCT_WETLAND and
   ! PCT_NATVEG, PCT_NAT_PFT, PCT_CROP and PCT_CFT
+  ! -----------------------------------
+
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out PCT_URBAN"
      call mkfile_output(pioid,  mesh_model,  'PCT_URBAN', urban_classes_g, lev1name='numurbl', rc=rc)
@@ -959,8 +920,6 @@ program mksurfdata
      allocate(pctglcmec_icesheet(lsize_o,nglcec))
      allocate(pctglc_gic(lsize_o))
      allocate(pctglc_icesheet(lsize_o))
-  end if
-  if ( outnc_3dglc )then
      call mkglcmec(mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, &
           pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
           pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &

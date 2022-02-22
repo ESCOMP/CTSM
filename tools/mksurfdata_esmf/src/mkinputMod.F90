@@ -4,7 +4,6 @@ module mkinputMod
   ! Module containing input namelist settings
   !-----------------------------------------------------------------------
 
-  use ESMF
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_kind_mod , only : CS => shr_kind_CS, CL => shr_kind_CL, CX => shr_kind_CX
   use shr_sys_mod  , only : shr_sys_abort
@@ -35,11 +34,9 @@ module mkinputMod
   character(CL) , public    :: fdyndat  ! dynamic landuse data file name
   character(CL) , public    :: fhrvname ! generic harvest filename
 
-  character(CS) , public    :: mksrf_gridnm                 = ' ' ! name of grid to use on output file
-  character(CX) , public    :: mksrf_gridtype               = ' ' ! land gridtype, global or reg
   character(CX) , public    :: mksrf_fgrid_mesh             = ' ' ! land grid file name to use
-  integer       , public    :: mksrf_fgrid_mesh_nx
-  integer       , public    :: mksrf_fgrid_mesh_ny
+  integer       , public    :: mksrf_fgrid_mesh_nx          = -999
+  integer       , public    :: mksrf_fgrid_mesh_ny          = -999
 
   character(CX) , public    :: mksrf_fvegtyp                = ' ' ! vegetation data file name
   character(CX) , public    :: mksrf_fvegtyp_mesh           = ' ' ! vegetation mesh file name
@@ -126,8 +123,8 @@ contains
     character(len=*), intent(in) :: filename
 
     ! local variables
-    integer :: ier 
-    integer :: k 
+    integer :: ier
+    integer :: k
     integer :: fileunit
     logical :: lexist
     character(len=*), parameter :: subname = 'read_namelist_input'
@@ -203,7 +200,6 @@ contains
          urban_skip_abort_on_invalid_data_check
 
     ! Set default namelist values - make these the defaults in gen_mksurfdata_namelist.py
-    mksrf_gridtype    = 'global'
     outnc_large_files = .false.
     outnc_double      = .true.
     outnc_vic         = .false.
@@ -296,7 +292,7 @@ contains
     call mpi_bcast (mksrf_ftopostats_mesh, len(mksrf_ftopostats_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_fvic, len(mksrf_fvic), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (mksrf_fvic_mesh, len(mksrf_fvic), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (mksrf_fvic_mesh, len(mksrf_fvic_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_fdynuse, len(mksrf_fdynuse), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fdynuse_mesh, len(mksrf_fdynuse_mesh), MPI_CHARACTER, 0, mpicom, ier)
@@ -324,6 +320,8 @@ contains
     call mpi_bcast (numpft, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (std_elev, 1, MPI_REAL, 0, mpicom, ier)
 
+    call mpi_bcast (gitdescribe, len(gitdescribe), MPI_CHARACTER, 0, mpicom, ier)
+
   end subroutine read_namelist_input
 
   !===============================================================
@@ -334,10 +332,6 @@ contains
        fgrddat = mksrf_fgrid_mesh
     else
        call shr_sys_abort(" must specify mksrf_fgrid_mesh")
-    endif
-
-    if (trim(mksrf_gridtype) /= 'global' .and. trim(mksrf_gridtype) /= 'regional') then
-       call shr_sys_abort(" mksrf_gridtype "//trim(mksrf_gridtype)//" is not supported")
     endif
 
     if (nglcec <= 0) then
@@ -361,7 +355,7 @@ contains
     ! Note - need to call this after ndiag has been set
 
     ! local variables
-    integer :: k 
+    integer :: k
     ! ------------------------------------------------------------
 
     if (root_task) then
@@ -434,7 +428,6 @@ contains
        write(ndiag,'(a)')' mksrf_fgrid_mesh = '//trim(mksrf_fgrid_mesh)
        write(ndiag,'(a,i8)')' nlon= ',mksrf_fgrid_mesh_nx
        write(ndiag,'(a,i8)')' nlat= ',mksrf_fgrid_mesh_ny
-       write(ndiag,'(a)')' mksrf_gridtype = '//trim(mksrf_gridtype)
        write(ndiag,*)
        write(ndiag,'(1x,80a1)') ('=',k=1,80)
        write(ndiag,*)

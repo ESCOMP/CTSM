@@ -3,7 +3,7 @@
 import sys, os, shutil
 import xml.etree.ElementTree as ET
 import logging
-import argparse
+import argparse, textwrap
 import subprocess
 from datetime import datetime
 
@@ -23,28 +23,41 @@ def get_parser():
     parser.print_usage = parser.print_help
 
     parser.add_argument(
-        "--sy",
         "--start-year",
-        help="Simulation start year. [default: %(default)s] ",
+        help = textwrap.dedent('''\
+               Simulation start year. 
+               [Required]'''),
         action="store",
         dest="start_year",
         required=True,
         type=int,
     )
     parser.add_argument(
-        "--ey",
         "--end-year",
-        help="Simulation end year.  [default: start_year] ",
+        help = textwrap.dedent('''\
+               Simulation end year. 
+               [Required]'''),
         action="store",
         dest="end_year",
         required=True,
         type=int,
     )
     parser.add_argument(
+        "--res",
+        help="""
+            model resolution [default: %(default)s]
+            To see available supported resolutions, simply invoke this command
+            with a --res unknown opion
+            """,
+        action="store",
+        dest="res",
+        required=False,
+        default="4x5",
+    )
+    parser.add_argument(
         "--glc-nec",
         help="""
-            Number of glacier elevation classes to use.
-            [default: %(default)s]
+            Number of glacier elevation classes to use. [default: %(default)s]
             """,
         action="store",
         dest="glc_nec",
@@ -88,7 +101,8 @@ def get_parser():
     parser.add_argument(
         "--vic",
         help="""
-            Flag for adding the fields required for the VIC model.
+            Flag for adding the fields required for the VIC model. 
+            [default: %(default)s]
             """,
         action="store_true",
         dest="vic_flag",
@@ -98,6 +112,7 @@ def get_parser():
         "--glc",
         help="""
             Flag for adding the optional 3D glacier fields for verification of the glacier model.
+            [default: %(default)s]
             """,
         action="store_true",
         dest="glc_flag",
@@ -110,6 +125,7 @@ def get_parser():
             than the default lower resolution dataset.
             (Low resolution is at quarter-degree, high resolution at 3-minute)
             [Note: hires only available for 1850 and 2005.]
+            [default: %(default)s]
             """,
         action="store_true",
         dest="hres_flag",
@@ -119,6 +135,7 @@ def get_parser():
         "--nocrop",
         help="""
             Create datasets with the extensive list of prognostic crop types.
+            [default: %(default)s]
             """,
         action="store_false",
         dest="crop_flag",
@@ -136,21 +153,11 @@ def get_parser():
         "--potveg_flag",
         help="""
             Use Potential Vegetation for pft_years
+            [default: %(default)s]
             """,
         action="store_false",
         dest="potveg_flag",
         default=False,
-    )
-    parser.add_argument(
-        "-r",
-        "--res",
-        help="""
-            model resolution
-            """,
-        action="store",
-        dest="res",
-        required=False,
-        default="4x5",
     )
     parser.add_argument(
         "--merge_gis",
@@ -158,6 +165,7 @@ def get_parser():
         If you want to use the glacier dataset that merges in
         the Greenland Ice Sheet data that CISM uses (typically
         used only if consistency with CISM is important)
+        [default: %(default)s]
         """,
         action="store",
         dest="merge_gis",
@@ -170,15 +178,15 @@ def main ():
 
     args = get_parser().parse_args()
 
+    start_year = args.start_year
+    end_year = args.end_year
+    res = args.res
     hires_pft = args.hres_flag
     ssp_rcp = args.ssp_rcp
-    res = args.res
     input_path = args.input_path
     crop_flag = args.crop_flag
     vic_flag = args.vic_flag
     glc_flag = args.glc_flag
-    start_year = args.start_year
-    end_year = args.end_year
     potveg = args.potveg_flag
     glc_nec = args.glc_nec
     merge_gis = args.merge_gis
@@ -187,7 +195,7 @@ def main ():
     if start_year == 1850 and end_year == 1850:
         pft_years = "1850"
     elif start_year == 2000 and end_year == 2000:
-        pft_years = "2005"
+        pft_years = "2000"
     elif start_year == 2005 and end_year == 2005:
         pft_years = "2005"
     elif start_year >= 850 and end_year <= 1849:
@@ -252,13 +260,15 @@ def main ():
                     # ERROR: keep %y here and do the replacement later
                     rawdata_files[child1.tag] = rawdata_files[child1.tag].replace("%y",str(start_year))
                 if not os.path.isfile(rawdata_files[child1.tag]):
-                    raise Exception (f"file {rawdata_files[child1.tag]} does not exist")
+                    print(f"intput rawdata file {rawdata_files[child1.tag]} does not exist")
+                    os.exit(1)
 
             if item.tag == 'mesh_filename':
                 new_key = f"{child1.tag}_mesh"
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
                 if not os.path.isfile(rawdata_files[new_key]):
-                    raise Exception (f"file {rawdata_files[new_key]} does not exist")
+                    print(f"mesh file {rawdata_files[new_key]} does not exist")
+                    os.exit(1)
 
     tree2 = ET.parse('../../ccs_config/component_grids_nuopc.xml')
     root = tree2.getroot()
@@ -282,7 +292,7 @@ def main ():
             for name, value in child1.attrib.items():
                 valid_grids.append(value)
         print (f"Valid values are {valid_grids}")
-        raise Exception ("Exiting")
+        os._exit(1)
 
     # Determine num_pft
     if crop_flag:
@@ -332,11 +342,10 @@ def main ():
     gitdescribe = subprocess.check_output('git describe', shell=True).strip()
     gitdescribe = gitdescribe.decode('utf-8')
 
+    print (f"Creating input namelist file {nlfname}")
     with open(nlfname, "w",encoding='utf-8') as nlfile:
-
-        nlfile.write("  mksrf_gridtype = \'global\' \n")
-
         nlfile.write("&mksurfdata_input \n")
+
         for key,value in rawdata_files.items():
             if key == 'mksrf_fgrid_mesh_nx' or key == 'mksrf_fgrid_mesh_ny':
                 nlfile.write(f"  {key} = {value} \n")
@@ -362,17 +371,21 @@ def main ():
         nlfile.write( "  no_inlandwet = .true. \n")
         nlfile.write( "  outnc_large_files = .false. \n")
         nlfile.write( "  outnc_double = .true. \n")
+
         if glc_flag:
-            nlfile.write( "  out3d_glc = .true. \n")
+            nlfile.write( "  outnc_3dglc = .true. \n")
         else:
-            nlfile.write( "  out3d_glc = .false. \n")
+            nlfile.write( "  outnc_3dglc = .false. \n")
+
         if vic_flag:
             nlfile.write( "  outnc_vic = .true. \n")
             mksrf_fvic = rawdata_files["mksrf_fvic"]
-            nlfile.write(f"  mksrf_fvic = {mksrf_fvic} \n")
+            nlfile.write(f"  mksrf_fvic = \'{mksrf_fvic}\' \n")
+            mksrf_fvic_mesh = rawdata_files["mksrf_fvic_mesh"]
+            nlfile.write(f"  mksrf_fvic_mesh = \'{mksrf_fvic_mesh}\' \n")
         else:
             nlfile.write("  outnc_vic = .false. \n")
-        #nlfile.write(f"  create_esmf_pet_files = .{create_esmf_pet_files}. \n")
+
         nlfile.write("/ \n")
 
 if __name__ == "__main__":

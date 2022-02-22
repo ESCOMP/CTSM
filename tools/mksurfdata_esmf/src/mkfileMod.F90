@@ -11,7 +11,7 @@ module mkfileMod
   use mklaiMod          , only : mklai
   use mkpftConstantsMod , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft, num_natpft
   use mkpctPftTypeMod   , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
-  use mkpioMod ! TODO: add only
+  use mkpioMod
   use mkinputMod
   use mkvarctl
 
@@ -134,7 +134,7 @@ contains
 
     str = 'Community Land Model: CLM5'
     rcode = pio_put_att (pioid, pio_global, 'Source', trim(str))
-   !rcode = pio_put_att (pioid, pio_global, 'Version', trim(gitdescribe), trim(gitdescribe))
+    rcode = pio_put_att (pioid, pio_global, 'Version', trim(gitdescribe))
 
     if ( all_urban )then
        str = 'TRUE'
@@ -149,9 +149,6 @@ contains
     ! Raw data file names
     str = get_filename(mksrf_fgrid_mesh)
     rcode = pio_put_att(pioid, pio_global, 'Input_grid_dataset', trim(str))
-    str = trim(mksrf_gridtype)
-    rcode = pio_put_att(pioid, pio_global, 'Input_gridtype', trim(str))
-
     if (.not. dynlanduse) then
        str = get_filename(mksrf_fvocef)
        rcode = pio_put_att(pioid, pio_global, 'VOC_EF_raw_data_file_name', trim(str))

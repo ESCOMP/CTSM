@@ -159,7 +159,7 @@ contains
     call ESMF_FieldGet(field_dstfrac, farrayptr=dataptr_r8, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     allocate(frac_o(ns_o))
-    frac_o(:) = real(dataptr_r8(:), kind=r4)
+    frac_o(:) = dataptr_r8(:)
 
     ! Create a dynamic mask object
     ! The dynamic mask object further holds a pointer to the routine that will be called in order to
