@@ -1,4 +1,84 @@
 ===============================================================
+Tag name: ctsm5.1.dev077
+Originator(s): rgknox (Ryan Knox,,,)
+Date: Tue Feb 22 12:51:04 EST 2022
+One-line Summary: Updates to FATES API, including removal of patch dimensions from fates history and using soil instead of ground layers for fates history.
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes cleaned up some aspects of the FATES history diagnostics API. Patches are not used in output diagnostics, so they were removed from the history coupling. Also, FATES only "sees" the soil, not the rock layers, so it is more appropriate to only align FATES below ground history output on the soil layers, and not ground layers.  Also, the corresponding FATES side changes have some history output names changed. This is an API change as well, and is compatable with FATES: https://github.com/NGEET/fates/releases/tag/sci.1.54.0_api.22.0.0
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+[X] clm5_1-FATES-hydro
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+	FATES users should now benefit from more interpretable history output from soil dimensioned variables, where they won't have to filter out ground layers which previously contained no-data flags.  Also, note the following FATES history variable name changes:
+
+	FATES_ROOTH2O_ABS_SZPF -> FATES_ABSROOT_H2O_SZPF
+	FATES_ROOTH2O_TRANS_SZPF -> FATES_TRANSROOT_H2O_SZPF
+	FATES_STEMH2O_SZPF -> FATES_STEM_H2O_SZPF
+	FATES_LEAFH2O_SZPF -> FATES_LEAF_H2O_SZPF
+	FATES_ROOTH2O_POT_SZPF -> FATES_ABSROOT_H2OPOT_SZPF
+	FATES_ROOTH2O_TRANSPOT_SZPF -> FATES_TRANSROOT_H2OPOT_SZPF
+	FATES_STEMH2O_POT_SZPF -> FATES_STEM_H2OPOT_SZPF
+	FATES_LEAFH2O_POT_SZPF -> FATES_LEAF_H2OPOT_SZPF
+	FATES_ROOT_ABSFRAC_SZPF -> FATES_ABSROOT_CONDFRAC_SZPF
+	FATES_ROOT_TRANSFRAC_SZPF -> FATES_TRANSROOT_CONDFRAC_SZPF
+	FATES_STEMH2O_FRAC_SZPF -> FATES_STEM_CONDFRAC_SZPF
+	FATES_LEAFH2O_FRAC_SZPF -> FATES_LEAF_CONDFRAC_SZPF
+
+Caveats for users (e.g., need to interpolate initial conditions): FATES users may have scripts that assume below ground diagnostics are on the ground dimension, and will have to update scripts to use the soil dimension.
+
+Changes made to namelist defaults (e.g., changed parameter values): No changes to defaults, but some FATES plant hydraulics history variable names were changed in the corresponding FATES tag.
+
+Changes to tests or testing: An update was made to the fates-hydro tests to use updated history variable names.
+
+
+Testing summary:
+----------------
+
+    d) regular (regular tests on normal machines if CTSM source is modified)
+
+    cheyenne ---- /glade/scratch/rgknox/tests_0220-124230ch  (OK) expected FATES baseline DIFFS
+    izumi ------- /scratch/cluster/rgknox/tests_0220-125238iz (OK)
+
+  fates tests: fates test suite was run, (OK)
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: All results are B4B with base (dev076), except for two conditions: 1) FATES output that uses the soil dimension has NLCOMP and DIFFS due to the dimension change, and 2) FATES hydro simulations have different results due to bug fixes
+
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1592
+https://github.com/NGEET/fates/pull/766
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev076
 Originator(s): negins (Negin Sobhani,UCAR/TSS,303-497-1224)
 Date: Fri Feb 18 13:25:19 MST 2022
