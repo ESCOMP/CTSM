@@ -1382,7 +1382,25 @@ bioms:   do f = 1, fn
                um(p) = max(ur(p),0.1_r8)
             else                     !unstable
                zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
-               wc = beta*(-grav*ustar(p)*thvstar*zii/thv(c))**0.333_r8
+               if ( ustar(p)*thvstar > 0.0d00 )then
+                  write(iulog,*) 'ustar*thvstart is positive and has to be negative'
+                  write(iulog,*) 'p = ', p
+                  write(iulog,*) '-grav*ustar(p)*thvstar*zii/thv(c) = ', -grav*ustar(p)*thvstar*zii/thv(c)
+                  write(iulog,*) 'ustar = ', ustar(p)
+                  write(iulog,*) 'thvstar = ', thvstar
+                  write(iulog,*) 'thv = ', thv(c)
+                  write(iulog,*) 'displa= ', displa(p)
+                  write(iulog,*) 'z0mg= ', z0mg(c)
+                  write(iulog,*) 'zeta= ', zeta(p)
+                  write(iulog,*) 'temp1= ', temp1(p)
+                  write(iulog,*) 'dth= ', dth(p)
+                  write(iulog,*) 'rah(above)= ', rah(p,above_canopy)
+                  write(iulog,*) 'rah(below)= ', rah(p,below_canopy)
+                  !call endrun(decomp_index=p, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+                  wc = 0.0_r8
+               else
+                  wc = beta*(-grav*ustar(p)*thvstar*zii/thv(c))**0.333_r8
+               end if
                um(p) = sqrt(ur(p)*ur(p)+wc*wc)
             end if
             obu(p) = zldis(p)/zeta(p)
