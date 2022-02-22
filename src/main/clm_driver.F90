@@ -696,6 +696,7 @@ contains
             temperature_inst, water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst,          &
             ch4_inst, ozone_inst, photosyns_inst, &
+            bgc_vegetation_inst%cnveg_nitrogenstate_inst, &
             humanindex_inst, soil_water_retention_curve, &
             downreg_patch = downreg_patch(bounds_clump%begp:bounds_clump%endp), &
             leafn_patch = leafn_patch(bounds_clump%begp:bounds_clump%endp), &

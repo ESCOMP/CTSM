@@ -41,6 +41,7 @@ module CanopyFluxesMod
   use HumanIndexMod         , only : humanindex_type
   use ch4Mod                , only : ch4_type
   use PhotosynthesisMod     , only : photosyns_type
+  use CNVegnitrogenstateType, only : cnveg_nitrogenstate_type
   use GridcellType          , only : grc                
   use ColumnType            , only : col                
   use PatchType             , only : patch                
@@ -190,7 +191,7 @@ contains
        energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst,   &
        temperature_inst, waterfluxbulk_inst, waterstatebulk_inst,                        &
        waterdiagnosticbulk_inst, wateratm2lndbulk_inst, ch4_inst, ozone_inst,            &
-       photosyns_inst, &
+       photosyns_inst, cnveg_nitrogenstate_inst, &
        humanindex_inst, soil_water_retention_curve, &
        downreg_patch, leafn_patch, froot_carbon, croot_carbon)
     !
@@ -260,6 +261,7 @@ contains
     type(ch4_type)                         , intent(inout)         :: ch4_inst
     class(ozone_base_type)                 , intent(inout)         :: ozone_inst
     type(photosyns_type)                   , intent(inout)         :: photosyns_inst
+    type(cnveg_nitrogenstate_type)         , intent(in)            :: cnveg_nitrogenstate_inst
     type(humanindex_type)                  , intent(inout)         :: humanindex_inst
     class(soil_water_retention_curve_type) , intent(in)            :: soil_water_retention_curve
     real(r8), intent(in) :: downreg_patch(bounds%begp:) ! fractional reduction in GPP due to N limitation (dimensionless)
@@ -1066,6 +1068,7 @@ bioms:   do f = 1, fn
                     svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), bsun(begp:endp), &
                     bsha(begp:endp), btran(begp:endp), dayl_factor(begp:endp), leafn_patch(begp:endp), &
                     qsatl(begp:endp), qaf(begp:endp),     &
+                    cnveg_nitrogenstate_inst, &
                     atm2lnd_inst, temperature_inst, soilstate_inst, waterdiagnosticbulk_inst, surfalb_inst, solarabs_inst, &
                     canopystate_inst, ozone_inst, photosyns_inst, waterfluxbulk_inst, &
                     froot_carbon(begp:endp), croot_carbon(begp:endp))
@@ -1073,6 +1076,7 @@ bioms:   do f = 1, fn
                call Photosynthesis (bounds, fn, filterp, &
                     svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
                     dayl_factor(begp:endp), leafn_patch(begp:endp), &
+                    cnveg_nitrogenstate_inst, &
                     atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
                     canopystate_inst, ozone_inst, photosyns_inst, phase='sun')
             endif
@@ -1087,6 +1091,7 @@ bioms:   do f = 1, fn
                call Photosynthesis (bounds, fn, filterp, &
                     svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
                     dayl_factor(begp:endp), leafn_patch(begp:endp), &
+                    cnveg_nitrogenstate_inst, &
                     atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
                     canopystate_inst, ozone_inst, photosyns_inst, phase='sha')
             end if

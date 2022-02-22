@@ -1695,7 +1695,7 @@ contains
          ivt               =>    patch%itype                                     , & ! Input:  [integer  (:) ]  patch vegetation type                                
          
          leaf_long         =>    pftcon%leaf_long                              , & ! Input:  leaf longevity (yrs)                              
-         leafcn            =>    pftcon%leafcn                                 , & ! Input:  leaf C:N (gC/gN)                                  
+         leafcn            =>    cnveg_nitrogenstate_inst%leafcn_patch         , & ! Input:  leaf C:N (gC/gN)
          manunitro         =>    pftcon%manunitro                              , & ! Input:  max manure to be applied in total (kgN/m2)
          mxmat             =>    pftcon%mxmat                                  , & ! Input:  
          minplanttemp      =>    pftcon%minplanttemp                           , & ! Input:  
@@ -1860,7 +1860,7 @@ contains
                   hdidx(p)       = 0._r8
                   vf(p)          = 0._r8
                   
-                  call PlantCrop(p, leafcn(ivt(p)), jday, crop_inst, cnveg_state_inst, &
+                  call PlantCrop(p, leafcn(p), jday, crop_inst, cnveg_state_inst, &
                                  cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
                                  c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
@@ -1891,7 +1891,7 @@ contains
 
                if (do_plant_normal .or. do_plant_lastchance) then
 
-                  call PlantCrop(p, leafcn(ivt(p)), jday, crop_inst, cnveg_state_inst, &
+                  call PlantCrop(p, leafcn(p), jday, crop_inst, cnveg_state_inst, &
                                  cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
                                  c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
@@ -2087,7 +2087,7 @@ contains
                   crop_seedc_to_leaf(p) = crop_seedc_to_leaf(p) - leafc_xfer(p)/dt
                   crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
                   leafc_xfer(p) = 0._r8
-                  leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
+                  leafn_xfer(p) = leafc_xfer(p) / leafcn(p)
                   if (use_c13) then
                      c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
                   endif
@@ -2127,7 +2127,7 @@ contains
             crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
             onset_counter(p) = 0._r8
             leafc_xfer(p) = 0._r8
-            leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
+            leafn_xfer(p) = leafc_xfer(p) / leafcn(p)
             if (use_c13) then
                c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
             endif
@@ -2227,7 +2227,7 @@ contains
     !
     ! !ARGUMENTS:
     integer                , intent(in)    :: p         ! PATCH index running over
-    real(r8)               , intent(in)    :: leafcn_in ! leaf C:N (gC/gN) of this patch's vegetation type (pftcon%leafcn(ivt(p)))
+    real(r8)               , intent(in)    :: leafcn_in ! leaf C:N (gC/gN) of this patch
     integer                , intent(in)    :: jday      ! julian day of the year
     type(crop_type)                , intent(inout) :: crop_inst
     type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
@@ -2585,7 +2585,7 @@ contains
     associate(                                                                           & 
          ivt                   =>    patch%itype                                       , & ! Input:  [integer  (:) ]  patch vegetation type                                
 
-         leafcn                =>    pftcon%leafcn                                     , & ! Input:  leaf C:N (gC/gN) 
+         leafcn                =>    cnveg_nitrogenstate_inst%leafcn_patch             , & ! Input:  leaf C:N (gC/gN)
          
          biofuel_harvfrac      =>    pftcon%biofuel_harvfrac                           , & ! Input:  cut a fraction of leaf & stem for biofuel (-) 
                                           
@@ -2703,7 +2703,7 @@ contains
                       leafcn_offset(p)     =  leafc(p)/leafn(p)
                   end if
                else
-                  leafcn_offset(p)         =  leafcn(ivt(p))
+                  leafcn_offset(p)         =  leafcn(p)
                end if
                leafn_to_litter(p)          =  leafc_to_litter(p)/leafcn_offset(p) - leafn_to_retransn(p)
                leafn_to_litter(p)          =  max(leafn_to_litter(p),0._r8)
@@ -2723,7 +2723,7 @@ contains
                end if
                ! calculate the leaf N litterfall and retranslocation
                leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
-               leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
+               leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(p)) - leafn_to_litter(p)
 
             end if    
 
@@ -2803,7 +2803,7 @@ contains
     associate(                                                                     & 
          ivt               =>    patch%itype                                     , & ! Input:  [integer  (:) ]  patch vegetation type                                
 
-         leafcn            =>    pftcon%leafcn                                   , & ! Input:  leaf C:N (gC/gN)                                  
+         leafcn            =>    cnveg_nitrogenstate_inst%leafcn_patch           , & ! Input:  leaf C:N (gC/gN)
          lflitcn           =>    pftcon%lflitcn                                  , & ! Input:  leaf litter C:N (gC/gN)                           
          frootcn           =>    pftcon%frootcn                                  , & ! Input:  fine root C:N (gC/gN)                             
 
@@ -2845,7 +2845,7 @@ contains
                      leafcn_offset(p)     = leafc(p)/leafn(p)
                   end if
                else
-                  leafcn_offset(p)        = leafcn(ivt(p))
+                  leafcn_offset(p)        = leafcn(p)
                end if
                leafn_to_litter(p)         = leafc_to_litter(p)/leafcn_offset(p) - leafn_to_retransn(p)
                leafn_to_litter(p)         = max(leafn_to_litter(p),0._r8)
@@ -2866,7 +2866,7 @@ contains
                end if
                ! calculate the leaf N litterfall and retranslocation
                leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
-               leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
+               leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(p)) - leafn_to_litter(p)
 
             end if    
 

@@ -313,7 +313,7 @@ contains
          croot_stem                   => pftcon%croot_stem                                         , & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf                    => pftcon%stem_leaf                                          , & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd                      => pftcon%flivewd                                            , & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn                       => pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)
+         leafcn                       => cnveg_nitrogenstate_inst%leafcn_patch                     , & ! Input:  leaf C:N (gC/gN)
          frootcn                      => pftcon%frootcn                                            , & ! Input:  fine root C:N (gC/gN)
          livewdcn                     => pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn                     => pftcon%deadwdcn                                           , & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
@@ -429,7 +429,7 @@ contains
          f4   = flivewd(ivt(p))
          g1   = grperc(ivt(p))
          g2   = grpnow(ivt(p))
-         cnl  = leafcn(ivt(p))
+         cnl  = leafcn(p)
          cnfr = frootcn(ivt(p))
          cnlw = livewdcn(ivt(p))
          cndw = deadwdcn(ivt(p))
@@ -998,7 +998,7 @@ contains
                   end if          
                end if
                           
-               leafcn_max = leafcn(ivt(p)) + 15.0_r8
+               leafcn_max = leafcn(p) + 15.0_r8
                frootcn_max = frootcn(ivt(p)) + 15.0_r8
             
                ! Note that for high CN ratio stress the plant part does not retranslocate nitrogen as the plant part will need the N 
@@ -1269,7 +1269,7 @@ contains
          croot_stem            => pftcon%croot_stem                                ,  & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf             => pftcon%stem_leaf                                 ,  & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd               => pftcon%flivewd                                   ,  & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn                => pftcon%leafcn                                    ,  & ! Input:  leaf C:N (gC/gN)
+         leafcn                => cnveg_nitrogenstate_inst%leafcn_patch            ,  & ! Input:  leaf C:N (gC/gN)
          frootcn               => pftcon%frootcn                                    , & ! Input:  fine root C:N (gC/gN)
          livewdcn              => pftcon%livewdcn                                   , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn              => pftcon%deadwdcn                                   , & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
@@ -1476,7 +1476,7 @@ contains
          f4   = flivewd(ivt(p))
          g1   = grperc(ivt(p))
          g2   = grpnow(ivt(p))
-         cnl  = leafcn(ivt(p))
+         cnl  = leafcn(p)
          cnfr = frootcn(ivt(p))
          cnlw = livewdcn(ivt(p))
          cndw = deadwdcn(ivt(p))
@@ -1656,8 +1656,8 @@ contains
 
          if (nscalar_opt) then
 
-            leafcn_min = leafcn(ivt(p)) - 10.0_r8
-            leafcn_max = leafcn(ivt(p)) + 10.0_r8
+            leafcn_min = leafcn(p) - 10.0_r8
+            leafcn_max = leafcn(p) + 10.0_r8
 
             this%actual_leafcn(p) = max( this%actual_leafcn(p), leafcn_min-0.0001_r8 )
             this%actual_leafcn(p) = min( this%actual_leafcn(p), leafcn_max )
