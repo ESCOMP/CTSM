@@ -1,4 +1,6 @@
 z0param_method = 'MeierXXXX'
 use_z0m_snowmelt = .true.
 use_z0mg_2d = .false.
+calc_human_stress_indices = 'NONE'   ! Currently dies when turned on because of a negative humidity (about -31) in Wet Bulb calculation
 paramfile = '/glade/p/cesm/lmwg_dev/oleson/Z0_RonnieMeier/ctsm51_params_newz0.c211112.nc'
+
