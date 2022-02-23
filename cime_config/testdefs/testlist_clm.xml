@@ -522,6 +522,33 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="ERP_D_P36x2_Ld3" grid="f10_f10_mg37" compset="I1850Clm51BgcCrop" testmods="clm/mimics">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015'</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5_Mmpi-serial" grid="1x1_brazil" compset="IHistClm50BgcQianRs" testmods="clm/mimics">
+    <machines>
+      <machine name="izumi" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015'</option>
+    </options>
+  </test>
+  <test name="SMS_Ly5_Mmpi-serial" grid="1x1_brazil" compset="IHistClm50BgcQianRs" testmods="clm/newton_krylov_spinup">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015'</option>
+    </options>
+  </test>
   <test name="ERP_D_P36x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1255,6 +1282,16 @@
     <options>
       <option name="wallclock">02:00:00</option>
       <option name="comment"  >restart is right before increasing natural veg to &gt; 0 while also shifting PCT_CFT</option>
+      <option name="tput_tolerance">0.5</option>
+    </options>
+  </test>
+  <test name="SMS_Ly5_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/gregorian_cropMonthOutput">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:00:00</option>
+      <option name="comment"  >Multi-year Gregorian test with transient and crop to test code that might break in leap years.</option>
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
@@ -2254,7 +2291,7 @@
       <option name="comment">Short ERP debug FATES test for single site grid with serial mpi.</option>
     </options>
   </test>
-  <test name="ERS_Ld9" grid="f10_f10_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefCH4">
+  <test name="ERS_Ld9" grid="f10_f10_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefCH4Off">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2262,7 +2299,7 @@
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
-      <option name="comment">30 day exact restart test activating FATES and CH4 f10 grid.</option>
+      <option name="comment">30 day exact restart test activating FATES with CH4 off for the f10 grid.</option>
     </options>
   </test>
   <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefHydro">
