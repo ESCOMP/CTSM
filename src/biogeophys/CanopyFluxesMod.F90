@@ -1578,7 +1578,6 @@ bioms:   do f = 1, fn
          ! function that goes to zero as LAI (ELAI + ESAI) go to zero.
 
          t_skin_patch(p)  =  emv(p)*t_veg(p)  +  (1._r8 - emv(p))*sqrt(sqrt(lw_grnd))
-         !t_skin_patch(p) = (ulrad(p) / 5.670367e-8_r8)**0.25_r8
 
          ! Derivative of soil energy flux with respect to soil temperature
 
