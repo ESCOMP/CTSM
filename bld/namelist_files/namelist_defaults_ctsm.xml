@@ -181,7 +181,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_bedrock phys="clm5_0"  vichydro ="1"      >.false.</use_bedrock>
 <use_bedrock phys="clm5_0"                     >.true.</use_bedrock>
 <use_bedrock phys="clm4_5"                     >.false.</use_bedrock>
-<use_individual_pft_soil_column>.false.</use_individual_pft_soil_column>
 
 <!-- Rooting profile namelist defaults -->
 <rooting_profile_method_water  phys="clm5_1" >1</rooting_profile_method_water>

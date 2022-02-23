@@ -144,11 +144,6 @@ User-defined number of soil layers required to be set in the namelist when the u
 <default>Default: iundef</default>
 </entry>
 
-<entry id="use_individual_pft_soil_column" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" >
-If TRUE, each pft exists on a separate soil column.
-</entry>
-
 <entry id="use_bedrock" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 If TRUE, use variable soil depth.
