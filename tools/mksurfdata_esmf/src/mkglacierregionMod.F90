@@ -15,6 +15,7 @@ module mkglacierregionMod
   use mkvarctl         , only : ndiag, root_task
   use mkdiagnosticsMod , only : output_diagnostics_index
   use mkutilsMod       , only : chkerr
+  use mkfileMod        , only : mkfile_output
 
   implicit none
   private
@@ -30,21 +31,21 @@ module mkglacierregionMod
 contains
 !=================================================================================
 
-  subroutine mkglacierregion(file_mesh_i, file_data_i, mesh_o, glacier_region_o, rc)
+  subroutine mkglacierregion(file_mesh_i, file_data_i, mesh_o, pioid_o, rc)
     !
     ! Make glacier region ID
     !
     ! input/output variables
-    character(len=*)  , intent(in)  :: file_mesh_i ! input mesh file name
-    character(len=*)  , intent(in)  :: file_data_i ! input data file name
-    type(ESMF_Mesh)   , intent(in)  :: mesh_o      ! output mesh
-    integer           , intent(out) :: glacier_region_o(:) ! glacier region
-    integer           , intent(out) :: rc
+    character(len=*)  , intent(in)    :: file_mesh_i ! input mesh file name
+    character(len=*)  , intent(in)    :: file_data_i ! input data file name
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o      ! output mesh
+    type(file_desc_t) , intent(inout) :: pioid_o
+    integer           , intent(out)   :: rc
 
     ! local variables:
     type(ESMF_RouteHandle) :: routehandle ! nearest neighbor routehandle
     type(ESMF_Mesh)        :: mesh_i
-    type(file_desc_t)      :: pioid
+    type(file_desc_t)      :: pioid_i
     integer                :: ni,no,l,k
     integer                :: ns_i, ns_o
     integer , allocatable  :: mask_i(:)
@@ -53,6 +54,7 @@ contains
     real(r8), allocatable  :: data_i(:,:)
     real(r8), allocatable  :: data_o(:,:)
     integer , allocatable  :: glacier_region_i(:) ! glacier region on input grid
+    integer , allocatable  :: glacier_region_o(:) ! glacier region on output grid
     integer                :: ier, rcode          ! error status
     integer                :: max_index(1)
     character(len=*), parameter :: subname = 'mkglacierregion'
@@ -71,7 +73,7 @@ contains
     call ESMF_VMLogMemInfo("At start of "//trim(subname))
 
     ! Open input data file
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
 
     ! Read in input mesh
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
@@ -82,14 +84,15 @@ contains
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Determine ns_o
+    ! Determine ns_o and allocate output data
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate (glacier_region_o(ns_o)) ; glacier_region_o(:) = -999
 
     ! Read in input data (Confirm that no value of glacier_region is less than min_allowed)
     allocate(glacier_region_i(ns_i), stat=ier)
     if (ier/=0) call abort()
-    call mkpio_get_rawdata(pioid, 'GLACIER_REGION', mesh_i, glacier_region_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'GLACIER_REGION', mesh_i, glacier_region_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     if (min_bad(glacier_region_i, 0, 'GLACIER_REGION')) then
        call shr_sys_abort()
@@ -142,6 +145,11 @@ contains
        max_index = maxloc(data_o(:,no))
        glacier_region_o(no) = max_index(1) - 1
     end do
+    
+    ! Write output data
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out glacier_region"
+    call mkfile_output(pioid_o,  mesh_o, 'GLACIER_REGION', glacier_region_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
 
     ! Determine global diagnostics
     call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
@@ -149,7 +157,7 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
     ! Close the input file
-    call pio_closefile(pioid)
+    call pio_closefile(pioid_i)
 
     ! Release memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)

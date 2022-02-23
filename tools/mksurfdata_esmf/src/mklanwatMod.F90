@@ -6,15 +6,16 @@ module mklanwatMod
   !-----------------------------------------------------------------------
 
   use ESMF
+  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite, pio_syncfile
   use shr_kind_mod     , only : r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_sys_mod      , only : shr_sys_abort
-  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
   use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
   use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
   use mkdiagnosticsMod , only : output_diagnostics_continuous
   use mkchecksMod      , only : min_bad
   use mkutilsMod       , only : chkerr
-  use mkvarctl         , only : root_task, ndiag
+  use mkvarctl         , only : root_task, ndiag, spval
+  use mkfileMod        , only : mkfile_output
 
   implicit none
   private
@@ -28,34 +29,37 @@ module mklanwatMod
 contains
 !===============================================================
 
-  subroutine mklakwat(file_mesh_i, file_data_i, mesh_o, &
-       zero_out_lake, zero_out_wetland, lake_o, swmp_o, lakedepth_o, rc)
+  subroutine mklakwat(file_mesh_i, file_data_i, mesh_o, & 
+       zero_out_lake, zero_out_wetland, lake_o, swmp_o, &
+       pioid_o, fsurdat, rc)
 
     ! -------------------
     ! make %lake, %wetland and lake parameters
     ! -------------------
 
     ! input/output variables
-    type(ESMF_Mesh)   , intent(in)  :: mesh_o
-    character(len=*)  , intent(in)  :: file_mesh_i      ! input mesh file name
-    character(len=*)  , intent(in)  :: file_data_i      ! input data file name
-    logical           , intent(in)  :: zero_out_lake    ! if should zero glacier out
-    logical           , intent(in)  :: zero_out_wetland ! if should zero glacier out
-    real(r8)          , intent(out) :: lake_o(:)        ! output grid: %lake
-    real(r8)          , intent(out) :: swmp_o(:)        ! output grid: %lake
-    real(r8)          , intent(out) :: lakedepth_o(:)   ! output grid: lake depth (m)
-    integer           , intent(out) :: rc
+    character(len=*)  , intent(in)    :: file_mesh_i      ! input mesh file name
+    character(len=*)  , intent(in)    :: file_data_i      ! input data file name
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o
+    logical           , intent(in)    :: zero_out_lake    ! if should zero glacier out
+    logical           , intent(in)    :: zero_out_wetland ! if should zero glacier out
+    type(file_desc_t) , intent(inout) :: pioid_o
+    real(r8)          , intent(out)   :: lake_o(:)        ! output grid: %lake
+    real(r8)          , intent(out)   :: swmp_o(:)        ! output grid: %lake
+    character(len=*)  , intent(in)    :: fsurdat
+    integer           , intent(out)   :: rc
 
     ! local variables
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
-    type(file_desc_t)      :: pioid
+    type(file_desc_t)      :: pioid_i
     integer , allocatable  :: mask_i(:) 
     real(r8), allocatable  :: rmask_i(:)
     real(r8), allocatable  :: frac_o(:)
     real(r8), allocatable  :: lake_i(:)      ! input grid: percent lake
     real(r8), allocatable  :: swmp_i(:)      ! input grid: percent wetland
-    real(r8), allocatable  :: lakedepth_i(:) ! iput grid: lake depth
+    real(r8), allocatable  :: lakedepth_i(:) ! iput grid: lake depth (m)
+    real(r8), allocatable  :: lakedepth_o(:) ! output grid: lake depth (m)
     integer                :: ni,no,k        ! indices
     integer                :: ns_i,ns_o      ! local sizes
     integer                :: ier,rcode      ! error status
@@ -76,7 +80,7 @@ contains
 
     ! Open raw data file
     ! ASSUME for now that have only 1 input data file
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
 
     ! Read in input mesh
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
@@ -96,7 +100,7 @@ contains
     if (ier/=0) call shr_sys_abort()
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, rmask_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, rmask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
        if (rmask_i(ni) > 0._r8) then
@@ -127,7 +131,7 @@ contains
        ! Read in lake_i
        allocate(lake_i(ns_i), stat=rcode)
        if (rcode/=0) call shr_sys_abort()
-       call mkpio_get_rawdata(pioid, 'PCT_LAKE', mesh_i, lake_i, rc=rc)
+       call mkpio_get_rawdata(pioid_i, 'PCT_LAKE', mesh_i, lake_i, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! Regrid lake_i to lake_o
@@ -158,7 +162,7 @@ contains
        ! read in swmp_i
        allocate(swmp_i(ns_i), stat=rcode)
        if (rcode/=0) call shr_sys_abort()
-       call mkpio_get_rawdata(pioid, 'PCT_WETLAND', mesh_i, lake_i, rc=rc)
+       call mkpio_get_rawdata(pioid_i, 'PCT_WETLAND', mesh_i, lake_i, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! regrid swmp_i to swmp_o - this also returns swmp_i to be used in the global sums below
@@ -189,10 +193,11 @@ contains
     ! lakedepth
     allocate(lakedepth_i(ns_i), stat=rcode)
     if (rcode/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'LAKEDEPTH', mesh_i, lakedepth_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'LAKEDEPTH', mesh_i, lakedepth_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! regrid lakedepth_i to lakedepth_o - this also returns lakedepth_i to be used in the global sums below
+    allocate (lakedepth_o(ns_o)); lakedepth_o(:) = spval
     call regrid_rawdata(mesh_i, mesh_o, routehandle, lakedepth_i, lakedepth_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regrid_rawdata for lakedepth in "//trim(subname))
@@ -205,13 +210,20 @@ contains
        call shr_sys_abort()
     end if
 
+    if (fsurdat /= ' ') then
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out lakedepth"
+       call mkfile_output(pioid_o,  mesh_o,  'LAKEDEPTH', lakedepth_o, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+       call pio_syncfile(pioid_o)
+    end if
+
     ! Check global areas
     call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
          lakedepth_i, lakedepth_o, "lake depth", "m", ndiag, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Close the single input data file
-    call pio_closefile(pioid)
+    call pio_closefile(pioid_i)
 
     ! Release memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)

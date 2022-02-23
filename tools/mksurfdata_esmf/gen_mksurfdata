@@ -28,6 +28,6 @@ mkdir -p $TMPDIR
 # ln -s $fname mksurfdata_in
 
 # Run the model
-#mpiexec_mpt -p "%g:" -np 144 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/run/mksurfdata
- mpiexec_mpt -p "%g:" -np 288 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/run/mksurfdata
-#mpiexec_mpt -p "%g:" -np 384 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/run/mksurfdata
+#mpiexec_mpt -p "%g:" -np 144 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/mksurfdata
+ mpiexec_mpt -p "%g:" -np 288 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/mksurfdata
+#mpiexec_mpt -p "%g:" -np 384 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/mksurfdata

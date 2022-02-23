@@ -156,9 +156,6 @@ program mksurfdata
   type(pct_pft_type), allocatable :: pctnatpft_max(:)        ! % of grid cell maximum PFTs of the time series
   type(pct_pft_type), allocatable :: pctcft_max(:)           ! % of grid cell maximum CFTs of the time series
 
-  ! harvest initial value
-  real(r8)                        :: harvest_initval         ! initial value for harvest variables
-
   ! soil fracation saturated area data
   real(r8), allocatable           :: fmaxsoil(:)             ! soil_fractional saturated area
 
@@ -204,11 +201,6 @@ program mksurfdata
   ! soil color data
   integer                         :: nsoilcol                ! number of model color classes
   integer , allocatable           :: soil_color(:)           ! soil color
-
-  ! soil texture data
-  real(r8), allocatable           :: pctsand(:,:)            ! soil texture: percent sand
-  real(r8), allocatable           :: pctclay(:,:)            ! soil texture: percent clay
-  integer , allocatable           :: mapunits(:)             ! input grid: igbp soil mapunits
 
   ! soil depth data
   real(r8), allocatable           :: soildepth(:)            ! soil depth (m)
@@ -391,28 +383,10 @@ program mksurfdata
   ! -----------------------------------
   allocate (lon(lsize_o)) ; lon(:) = spval
   allocate (lat(lsize_o)) ; lat(:) = spval
-  call mkdomain(mesh_model, lon_o=lon, lat_o=lat, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out model grid"
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LONGXY"
-     call mkfile_output(pioid, mesh_model, 'LONGXY', lon, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LATIXY"
-     call mkfile_output(pioid, mesh_model, 'LATIXY', lat, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+     call mkdomain(mesh_model, lon_o=lon, lat_o=lat, pioid_o=pioid, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
   end if
-
-  !DEBUG
-  if (fsurdat /= ' ' .and. outnc_vic) then
-     call mkVICparams ( mksrf_fvic_mesh, mksrf_fvic, mesh_model, pioid, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
-  end if
-  if (fsurdat /= ' ' ) then
-     call mkvocef ( mksrf_fvocef_mesh, mksrf_fvocef, mesh_model, pioid, lat, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkvocef')
-  end if
-  !DEBUG
 
   ! -----------------------------------
   ! Make LAI and SAI from 1/2 degree data and write to surface dataset
@@ -423,7 +397,6 @@ program mksurfdata
   end if
   call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
-  call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
@@ -480,26 +453,18 @@ program mksurfdata
   call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, &
        pioid_o=pioid, all_veg=all_veg, constant=.true., rc=rc )
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
-  call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
   ! -----------------------------------
-  allocate ( pctlak(lsize_o))    ; pctlak(:)    = spval
-  allocate ( pctwet(lsize_o))    ; pctwet(:)    = spval
-  allocate ( lakedepth(lsize_o)) ; lakedepth(:) = spval
+  ! LAKEDEPTH is written out in mklakwat
+  allocate ( pctlak(lsize_o)) ; pctlak(:)    = spval
+  allocate ( pctwet(lsize_o)) ; pctwet(:)    = spval
   zero_out_lake = (all_urban .or. all_veg)
   zero_out_wetland = (all_urban .or. all_veg .or. no_inlandwet)
   call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
-       zero_out_lake, zero_out_wetland, pctlak, pctwet, lakedepth, rc=rc)
+       zero_out_lake, zero_out_wetland, pctlak, pctwet, pioid, fsurdat, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
-  if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out lakedepth"
-     call mkfile_output(pioid,  mesh_model,  'LAKEDEPTH', lakedepth, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call pio_syncfile(pioid)
-  end if
-  deallocate (lakedepth )
 
   ! -----------------------------------
   ! Make glacier fraction [pctgla] from [fglacier] dataset
@@ -516,58 +481,23 @@ program mksurfdata
        pctgla(:) = 0.
     end if
  end if
- call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! Make glacier region ID [glacier_region] from [fglacierregion] dataset
   ! -----------------------------------
-  allocate (glacier_region(lsize_o)) ; glacier_region(:) = -999
-  call mkglacierregion(mksrf_fglacierregion_mesh, mksrf_fglacierregion, mesh_model, glacier_region, rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacierregion')
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out glacier_region"
-     call mkfile_output(pioid,  mesh_model, 'GLACIER_REGION', glacier_region, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+     ! Note that GLACIER_REGION is written out in the subroutine
+     call mkglacierregion(mksrf_fglacierregion_mesh, mksrf_fglacierregion, mesh_model, pioid, rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacierregion')
   end if
-  deallocate (glacier_region )
-  call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! Make soil texture [pctsand, pctclay]
   ! -----------------------------------
-  ! Truncate all percentage fields on output grid. This is needed to insure that wt is zero
-  ! (not a very small number such as 1e-16) where it really should be zero
-  allocate(mapunits(lsize_o))        ; mapunits(:) = 0
-  allocate(pctsand(lsize_o,nlevsoi)) ; pctsand(:,:) = spval
-  allocate(pctclay(lsize_o,nlevsoi)) ; pctclay(:,:) = spval
-  call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pctsand, pctclay, mapunits, rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
-  do n = 1,lsize_o
-     do k = 1,nlevsoi
-        pctsand(n,k) = float(nint(pctsand(n,k)))
-        pctclay(n,k) = float(nint(pctclay(n,k)))
-     end do
-     if (pctlnd_pft(n) < 1.e-6_r8) then
-        pctsand(n,:) = 43._r8
-        pctclay(n,:) = 18._r8
-     end if
-  end do
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
-     call mkfile_output(pioid,  mesh_model,  'mapunits', mapunits,  rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for mapunits')
-
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
-     call mkfile_output(pioid,  mesh_model,  'PCT_SAND', pctsand, lev1name='nlevsoi', rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent clay"
-     call mkfile_output(pioid,  mesh_model,  'PCT_CLAY', pctclay, lev1name='nlevsoi', rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call pio_syncfile(pioid)
+     call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pioid, pctlnd_pft, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
   end if
-  deallocate (pctsand)
-  deallocate (pctclay )
 
   ! -----------------------------------
   ! Make soil color classes [soicol] [fsoicol]

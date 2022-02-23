@@ -265,6 +265,7 @@ contains
        end if
 
     end do  ! end loop over months
+    call pio_syncfile(pioid_o)
 
     ! Free the decomps and close the file
     call pio_freedecomp(pioid_o, pio_iodesc_o)

@@ -5,9 +5,12 @@ module mkdomainMod
   !-------------------------------
 
   use ESMF
+  use pio
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_sys_mod , only : shr_sys_abort 
   use mkutilsMod  , only : chkerr
   use mkvarctl    , only : root_task, ndiag
+  use mkfileMod   , only : mkfile_output
 
   implicit none
   private
@@ -21,13 +24,14 @@ module mkdomainMod
 contains
 !=================================================================================
 
-  subroutine mkdomain(mesh_o, lon_o, lat_o, rc)
+  subroutine mkdomain(mesh_o, lon_o, lat_o, pioid_o, rc)
     
     ! input output variables
-    type(ESMF_Mesh) , intent(in)  :: mesh_o
-    real(r8)        , intent(out) :: lon_o(:)
-    real(r8)        , intent(out) :: lat_o(:)
-    integer         , intent(out) :: rc
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o
+    real(r8)          , intent(out)   :: lon_o(:)
+    real(r8)          , intent(out)   :: lat_o(:)
+    type(file_desc_t) , intent(inout) :: pioid_o
+    integer           , intent(out)   :: rc
 
     ! local variables:
     integer               :: no
@@ -56,6 +60,15 @@ contains
        lon_o(no) = ownedElemCoords(2*no-1)
        lat_o(no) = ownedElemCoords(2*no)
     end do
+
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out model grid"
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LONGXY"
+    call mkfile_output(pioid_o, mesh_o, 'LONGXY', lon_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LATIXY"
+    call mkfile_output(pioid_o, mesh_o, 'LATIXY', lat_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+    call pio_syncfile(pioid_o)
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made model lats and lons'
