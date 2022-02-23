@@ -37,7 +37,7 @@ module FrictionVelocityMod
      real(r8), public :: zetamaxstable = -999._r8  ! Max value zeta ("height" used in Monin-Obukhov theory) can go to under stable conditions
      real(r8) :: zsno = -999._r8  ! Momentum roughness length for snow (m)
      real(r8) :: zlnd = -999._r8  ! Momentum roughness length for soil, glacier, wetland (m)
-     real(r8) :: zglc = -999._r8  ! Momentum roughness length for glacier (only used with z0param_method = 'MeierXXXX') (m)
+     real(r8) :: zglc = -999._r8  ! Momentum roughness length for glacier (only used with z0param_method = 'Meier2022') (m)
 
      ! Roughness length/resistance for friction velocity calculation
 
@@ -406,8 +406,8 @@ contains
     ! Momentum roughness length for soil, glacier, wetland (m)
     call readNcdioScalar(params_ncid, 'zlnd', subname, this%zlnd)
    
-    ! Separated roughness length for glacier if z0param_method == 'MeierXXXX'
-    if (z0param_method == 'MeierXXXX') then
+    ! Separated roughness length for glacier if z0param_method == 'Meier2022'
+    if (z0param_method == 'Meier2022') then
        call readNcdioScalar(params_ncid, 'zglc', subname, this%zglc)
     end if
       
@@ -644,7 +644,7 @@ contains
              end if
                   
           end if
-       case ('MeierXXXX')           ! Bare ground and ice have a different value
+       case ('Meier2022')           ! Bare ground and ice have a different value
           l = col%landunit(c)
           if (frac_sno(c) > 0._r8) then ! Do snow first because ice could be snow-covered
              if(use_z0m_snowmelt) then

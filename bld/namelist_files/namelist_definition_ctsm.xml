@@ -2723,10 +2723,10 @@ If .true., run with water isotopes
 <!-- ========================================================================================  -->
 
 <entry id="z0param_method" type="char*64" category="clm_physics"
-       group="clm_inparm" valid_values="ZengWang2007,MeierXXXX" >
+       group="clm_inparm" valid_values="ZengWang2007,Meier2022" >
 Parameterization/parameters to use for surface roughness
 ZengWang2007: Zeng and Wang 2007
-MeierXXXX: Meier et al. in prep.
+Meier2022: Meier et al. in prep. 2022
 </entry>
 
 <entry id="use_z0m_snowmelt" type="logical" category="clm_physics"

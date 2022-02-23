@@ -652,7 +652,7 @@ contains
        this%z0v_LAImax = 0._r8
        this%z0v_LAIoff = 0._r8
     
-    case ('MeierXXXX')
+    case ('Meier2022')
        call ncd_io('z0v_Cr', this%z0v_Cr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 

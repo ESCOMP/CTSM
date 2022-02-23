@@ -346,7 +346,7 @@ contains
             select case (z0param_method)
             case ('ZengWang2007')
                z0hg_patch(p) = z0mg_patch(p) / exp(params_inst%a_coef * (ustar(p) * z0mg_patch(p) / 1.5e-5_r8)**params_inst%a_exp)
-            case ('MeierXXXX')
+            case ('Meier2022')
 
                ! After Yang et al. (2007)
                z0hg_patch(p) = 70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8))

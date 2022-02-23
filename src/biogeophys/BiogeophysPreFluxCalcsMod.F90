@@ -171,7 +171,7 @@ contains
             z0m(p)    = pftcon%z0mr(patch%itype(p)) * htop(p)
             displa(p) = pftcon%displar(patch%itype(p)) * htop(p)
 
-         case ('MeierXXXX') 
+         case ('Meier2022') 
             
             ! Don't set on first few steps of a simulation, since htop isn't set yet, need to wait until after first do_alb time
             if ( is_first_step() .or. get_nstep() <= GetBalanceCheckSkipSteps() ) then

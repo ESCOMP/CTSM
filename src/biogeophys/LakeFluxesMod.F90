@@ -67,7 +67,7 @@ contains
     ! Momentum roughness length for snow (m)
     call readNcdioScalar(ncid, 'zsno', subname, params_inst%zsno)
     
-    if (z0param_method == 'MeierXXXX') then
+    if (z0param_method == 'Meier2022') then
        ! Momentum roughness length for ice (m)
        call readNcdioScalar(ncid, 'zglc', subname, params_inst%zglc)
     end if
@@ -337,7 +337,7 @@ contains
             z0hg(p) = max(z0hg(p), minz0lake)
          else if (snl(c) == 0) then    ! frozen lake with ice
             select case (z0param_method)
-            case ('MeierXXXX') 
+            case ('Meier2022') 
                z0mg(p) = params_inst%zglc
 
 
@@ -350,7 +350,7 @@ contains
             z0qg(p) = z0hg(p)
          else                          ! use roughness over snow as in Biogeophysics1
             select case (z0param_method)
-            case ('MeierXXXX') 
+            case ('Meier2022') 
                if(use_z0m_snowmelt) then
                   if ( snomelt_accum(c) < 1.e-5_r8 )then
                      z0mg(p) = exp(1.4_r8 * -rpi/2.0_r8 -0.31_r8) / 1000._r8 
@@ -589,7 +589,7 @@ contains
             else if (snl(c) == 0) then
                ! in case it was above freezing and now below freezing
                select case (z0param_method)
-               case ('MeierXXXX') 
+               case ('Meier2022') 
                   z0mg(p) = params_inst%zglc
                   
                   z0hg(p) = 70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes 
@@ -609,7 +609,7 @@ contains
                end if
 
                select case (z0param_method)
-               case ('MeierXXXX')
+               case ('Meier2022')
                   z0hg(p) =  70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes 
 
                case ('ZengWang2007')

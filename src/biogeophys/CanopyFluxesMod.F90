@@ -881,7 +881,7 @@ bioms:   do f = 1, fn
             displa(p) = egvf * displa(p)
             z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
 
-         case ('MeierXXXX')
+         case ('Meier2022')
             lt = max(0.00001_r8,elai(p)+esai(p))
             displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(7.5_r8 * lt)**0.5_r8)) / (7.5_r8*lt)**0.5_r8)
 
