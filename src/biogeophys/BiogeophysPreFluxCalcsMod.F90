@@ -125,7 +125,7 @@ contains
     ! Set z0m and displa
     !
     ! !USES:
-    use clm_time_manager, only : is_first_step, get_nstep
+    use clm_time_manager, only : is_first_step, get_nstep, is_beg_curr_year
     use clm_varcon      , only : namep
     use abortutils      , only : endrun
     use BalanceCheckMod , only : GetBalanceCheckSkipSteps
@@ -178,6 +178,11 @@ contains
                z0m(p)    = 0._r8
                displa(p) = 0._r8 
                cycle
+            ! If a crop type and it's the start of the year, htop gets reset to
+            ! zero...
+            else if ( is_beg_curr_year() .and. pftcon%crop(patch%itype(p)) /= 0.0_r8 )then
+               z0m(p)    = 0._r8
+               displa(p) = 0._r8 
             end if
 
             if (patch%itype(p) == noveg) then
