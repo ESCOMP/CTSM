@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(mksurfdata Fortran)
 
-#include(${CASEROOT}/Macros.cmake)
 set (ESMFMKFILE /glade/work/oehmke/ESMF/scalable_mesh_from_file/lib/libg/Linux.intel.64.mpt.default/esmf.mk)
 file(STRINGS ${ESMFMKFILE} esmf_mk_text)
 foreach(line ${esmf_mk_text})
@@ -63,16 +62,7 @@ message("PROJECT_BINARY_DIR is ${PROJECT_BINARY_DIR}")
 
 target_include_directories (mksurfdata PRIVATE ${ESMF_F90COMPILEPATHS})
 target_include_directories (mksurfdata PRIVATE /glade/work/jedwards/tools/pio/2.5.5/intel/19.1.1/mpt/2.22/include)
-#target_include_directories (mksurfdata PRIVATE /glade/u/apps/ch/opt/pio/2.5.5/mpt/2.22/intel/19.1.1/include) # non debug version
 target_include_directories (mksurfdata PRIVATE /glade/u/apps/ch/opt/pnetcdf/1.12.2/mpt/2.22/intel/19.1.1//include)
-#target_include_directories (mksurfdata PRIVATE /glade/u/apps/ch/opt/netcdf-mpi/4.8.0/mpt/2.22/intel/19.1.1//include)
 target_include_directories (mksurfdata PRIVATE /glade/u/apps/ch/opt/netcdf-mpi/4.8.1/mpt/2.22/intel/19.1.1//include)
-
-#link_directories(/glade/u/apps/ch/opt/pio/2.5.5/mpt/2.22/intel/19.1.1/lib)
-#target_link_libraries(mksurfdata piof)
-#target_link_libraries(mksurfdata /glade/u/apps/ch/opt/pio/2.5.5/mpt/2.22/intel/19.1.1/lib/libpiof.a)
-#link_directories(/glade/p/cesmdata/cseg/PROGS/esmf/8.2.0b23/mpt/2.22/intel/19.1.1/lib/libg/Linux.intel.64.mpt.default)
-#target_link_libraries(mksurfdata esmf)
-#target_link_libraries(mksurfdata /glade/p/cesmdata/cseg/PROGS/esmf/8.2.0b23/mpt/2.22/intel/19.1.1/lib/libg/Linux.intel.64.mpt.default/libesmf.a)
 
 install(TARGETS mksurfdata)
