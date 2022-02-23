@@ -7,6 +7,11 @@ from CIME.utils import get_project  # pylint: disable=import-error
 from ctsm.joblauncher.job_launcher_factory import \
     create_job_launcher, JOB_LAUNCHER_NOBATCH
 
+# Value of create_test_queue for which we don't actually add a '--queue' option to
+# create_test, but instead leave that value unspecified, allowing CIME to pick an
+# appropriate queue for each test using its standard mechanisms.
+CREATE_TEST_QUEUE_UNSPECIFIED = "unspecified"
+
 logger = logging.getLogger(__name__)
 
 # TODO(wjs, 2018-08-31) Turn this into a real class, with getter methods.
@@ -28,6 +33,7 @@ Machine = namedtuple('Machine', ['name',              # str
                                  'baseline_dir',      # str
                                  'account',           # str or None
                                  'create_test_retry', # int
+                                 'create_test_queue', # str
                                  'job_launcher'])     # subclass of JobLauncherBase
 
 def create_machine(machine_name, defaults, job_launcher_type=None,
@@ -80,6 +86,7 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
     mach_defaults = defaults.get(machine_name)
     baseline_dir = None
     create_test_retry = 0
+    create_test_queue = CREATE_TEST_QUEUE_UNSPECIFIED
     if mach_defaults is not None:
         if job_launcher_type is None:
             job_launcher_type = mach_defaults.job_launcher_type
@@ -95,10 +102,12 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
         # generation and comparison, or making a link in some temporary location that
         # points to the standard baselines).
         baseline_dir = mach_defaults.baseline_dir
-        # We also don't provide a way to override the default create_test_retry in the
-        # machine object: this will always give the default value for this machine, and
-        # other mechanisms will be given for overriding this in a particular case.
+        # We also don't provide a way to override the default create_test_retry or
+        # create_test_queue in the machine object: these will always give the default
+        # value for this machine, and other mechanisms will be given for overriding these
+        # in a particular case.
         create_test_retry = mach_defaults.create_test_retry
+        create_test_queue = mach_defaults.create_test_queue
         if account is None and mach_defaults.account_required and not allow_missing_entries:
             raise RuntimeError("Could not find an account code")
     else:
@@ -149,6 +158,7 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
                    baseline_dir=baseline_dir,
                    account=account,
                    create_test_retry=create_test_retry,
+                   create_test_queue=create_test_queue,
                    job_launcher=job_launcher)
 
 def get_possibly_overridden_mach_value(machine, varname, value=None):
