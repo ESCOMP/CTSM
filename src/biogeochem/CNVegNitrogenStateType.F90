@@ -1184,6 +1184,7 @@ contains
 
     call ComputeSeedAmounts(bounds, &
          num_soilp_with_inactive, filter_soilp_with_inactive, &
+         leafcn_patch = this%leafcn_patch(begp:endp), &
          species = CN_SPECIES_N, &
          leafc_seed = leafc_seed, &
          deadstemc_seed = deadstemc_seed, &

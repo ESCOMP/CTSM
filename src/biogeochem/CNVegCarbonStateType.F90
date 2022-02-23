@@ -2538,6 +2538,7 @@ contains
        num_soilp_with_inactive, filter_soilp_with_inactive, &
        patch_state_updater, &
        leafc_seed, deadstemc_seed, &
+       leafcn_patch, &
        conv_cflux, wood_product_cflux, crop_product_cflux, &
        dwt_frootc_to_litter, &
        dwt_livecrootc_to_litter, &
@@ -2559,6 +2560,7 @@ contains
     type(patch_state_updater_type)  , intent(in)    :: patch_state_updater
     real(r8)                        , intent(in)    :: leafc_seed  ! seed amount for leaf C
     real(r8)                        , intent(in)    :: deadstemc_seed ! seed amount for deadstem C
+    real(r8)                        , intent(in)    :: leafcn_patch( bounds%begp: )  ! current leaf C:N (gC/gN)
     real(r8)                        , intent(inout) :: conv_cflux( bounds%begp: )  ! patch-level conversion C flux to atm (expressed per unit GRIDCELL area)
     real(r8)                        , intent(inout) :: wood_product_cflux( bounds%begp: ) ! patch-level product C flux (expressed per unit GRIDCELL area)
     real(r8)                        , intent(inout) :: crop_product_cflux( bounds%begp: ) ! patch-level crop product C flux (expressed per unit GRIDCELL area)
@@ -2600,6 +2602,7 @@ contains
 
     call ComputeSeedAmounts(bounds, &
          num_soilp_with_inactive, filter_soilp_with_inactive, &
+         leafcn_patch = leafcn_patch(begp:endp), &
          species = this%species, &
          leafc_seed = leafc_seed, &
          deadstemc_seed = deadstemc_seed, &
