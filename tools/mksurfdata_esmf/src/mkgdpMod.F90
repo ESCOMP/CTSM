@@ -42,7 +42,7 @@ contains
     ! local variables:
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
-    type(file_desc_t)      :: pioid
+    type(file_desc_t)      :: pioid_i
     integer                :: ni,no,k
     integer                :: ns_i, ns_o
     integer , allocatable  :: mask_i(:)
@@ -68,7 +68,7 @@ contains
     call ESMF_VMLogMemInfo("At start of"//trim(subname))
 
     ! Open input data file
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
 
     ! Read in input mesh
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
@@ -89,7 +89,7 @@ contains
     if (ier/=0) call shr_sys_abort()
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, frac_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
        if (frac_i(ni) > 0._r4) then
@@ -104,7 +104,7 @@ contains
     ! Read in gdp_i
     allocate(gdp_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'gdp', mesh_i, gdp_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'gdp', mesh_i, gdp_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
@@ -123,11 +123,11 @@ contains
     end if
 
     ! Close the file
-    call pio_closefile(pioid)
+    call pio_closefile(pioid_i)
 
     ! Write output data
     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out gdp"
-    call mkfile_output(pioid, mesh_o, 'gdp', gdp_o, rc=rc)
+    call mkfile_output(pioid_o, mesh_o, 'gdp', gdp_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
     call pio_syncfile(pioid_o)
 
