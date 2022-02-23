@@ -12,11 +12,11 @@ module WaterStateType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_gridcell
   use clm_varctl     , only : use_bedrock, iulog
   use clm_varctl     , only : use_fates_planthydro
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevmaxurbgrnd, nlevsno   
-  use clm_varcon     , only : spval, namec
+  use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use WaterInfoBaseType, only : water_info_base_type
@@ -115,41 +115,41 @@ contains
 
     call AllocateVar1d(var = this%h2osno_no_layers_col, name = 'h2osno_no_layers_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar2d(var = this%h2osoi_vol_col, name = 'h2osoi_vol_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          dim2beg = 1, dim2end = nlevmaxurbgrnd)
     call AllocateVar2d(var = this%h2osoi_vol_prs_grc, name = 'h2osoi_vol_prs_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          dim2beg = 1, dim2end = nlevgrnd)
     call AllocateVar2d(var = this%h2osoi_ice_col, name = 'h2osoi_ice_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)
     call AllocateVar2d(var = this%h2osoi_liq_col, name = 'h2osoi_liq_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)
     call AllocateVar1d(var = this%snocan_patch, name = 'snocan_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%liqcan_patch, name = 'liqcan_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%h2osfc_col, name = 'h2osfc_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%wa_col, name = 'wa_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%dynbal_baseline_liq_col, name = 'dynbal_baseline_liq_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%dynbal_baseline_ice_col, name = 'dynbal_baseline_ice_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
 
   end subroutine InitAllocate
 
@@ -288,7 +288,7 @@ contains
     !
     ! !USES:
     use shr_const_mod   , only : SHR_CONST_TKFRZ
-    use landunit_varcon , only : istwet, istsoil, istcrop, istice_mec  
+    use landunit_varcon , only : istwet, istsoil, istcrop, istice
     use column_varcon   , only : icol_road_perv, icol_road_imperv
     use clm_varcon      , only : denice, denh2o, bdsno 
     use clm_varcon      , only : tfrz, aquifer_water_baseline
@@ -385,14 +385,14 @@ contains
                      this%h2osoi_vol_col(c,j) = 1.0_r8 * ratio
                   endif
                end do
-            else if (lun%itype(l) == istice_mec) then
+            else if (lun%itype(l) == istice) then
                nlevs = nlevgrnd 
                do j = 1, nlevs
                   this%h2osoi_vol_col(c,j) = 1.0_r8 * ratio
                end do
             else
                write(iulog,*) 'water_state_type InitCold: unhandled landunit type ', lun%itype(l)
-               call endrun(msg = 'unhandled landunit type', &
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg = 'unhandled landunit type', &
                     additional_msg = errMsg(sourcefile, __LINE__))
             endif
             do j = 1, nlevs
@@ -578,6 +578,7 @@ contains
          dim1name='column', dim2name='levtot', switchdim=.true., &
          long_name=this%info%lname('liquid water'), &
          units='kg/m2', &
+         scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%h2osoi_liq_col)
 
     call restartvar(ncid=ncid, flag=flag, &
@@ -586,6 +587,7 @@ contains
          dim1name='column', dim2name='levtot', switchdim=.true., &
          long_name=this%info%lname('ice lens'), &
          units='kg/m2', &
+         scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%h2osoi_ice_col)
          
     call restartvar(ncid=ncid, flag=flag, &
@@ -768,7 +770,7 @@ contains
              write(iulog,*) '(Called from: ', trim(caller), ')'
              write(iulog,*) 'c, snl, h2osno_no_layers = ', c, col%snl(c), &
                   this%h2osno_no_layers_col(c)
-             call endrun(decomp_index=c, clmlevel=namec, &
+             call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
                   msg = subname//' ERROR: col has snow layers but non-zero h2osno_no_layers')
           end if
        end if
@@ -781,7 +783,7 @@ contains
              write(iulog,*) '(Called from: ', trim(caller), ')'
              write(iulog,*) 'c, j, snl, h2osoi_ice, h2osoi_liq = ', c, j, col%snl(c), &
                   this%h2osoi_ice_col(c,j), this%h2osoi_liq_col(c,j)
-             call endrun(decomp_index=c, clmlevel=namec, &
+             call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
                   msg = subname//' ERROR: col has non-zero h2osoi_ice or h2osoi_liq outside resolved snow layers')
           end if
        end do

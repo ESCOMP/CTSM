@@ -14,14 +14,10 @@
 
   <!-- Descriptions of all the different valid configurations for different model versions -->
   <description modifier_mode="1">
-    <desc lnd="CLM45[%SP][%SP-VIC][%CN][%CNDV][%CN-CROP][%CNDV-CROP][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
-    <desc lnd="CLM50[%SP][%SP-VIC][%SP-NOANTHRO][%BGC-NOANTHRO][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm5.0:</desc>
+    <desc lnd="CLM45[%SP][%SP-VIC][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
+    <desc lnd="CLM50[%SP][%SP-VIC][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm5.0:</desc>
     <desc lnd="CLM51[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%NWP-SP][%NWP-BGC-CROP]">clm5.1:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
-    <desc option="CN"              >CN: Carbon Nitrogen model</desc>
-    <desc option="CNDV"            >CNDV: CN with Dynamic Vegetation (deprecated)</desc>
-    <desc option="CN-CROP"         >CN with prognostic crop:</desc>
-    <desc option="CNDV-CROP"       >CNDV with prognostic crop: (deprecated)</desc>
 
     <desc option="SP-VIC"          >Satellite phenology with VIC hydrology:</desc>
     <desc option="SP-NOANTHRO"     >Satellite phenology without anthropomorphic influences</desc>
@@ -168,34 +164,21 @@
     <type>char</type>
     <default_value></default_value>
     <values>
-      <value compset="_CLM45%[^_]*SP"		 >-bgc sp</value>
-      <value compset="_CLM45%[^_]*CN"		 >-bgc cn</value>
-      <value compset="_CLM45%[^_]*BGC"		 >-bgc bgc</value>
-      <value compset="_CLM45%[^_]*CN-CROP"	 >-bgc cn -crop</value>
-      <value compset="_CLM45%[^_]*BGC-CROP"	 >-bgc bgc -crop</value>
-      <value compset="_CLM45%[^_]*CNDV"		 >-bgc cn -dynamic_vegetation</value>
+      <!--- All versions -->
+      <value compset="_CLM[^_]*%SP"       >-bgc sp</value>
+      <value compset="_CLM[^_]*BGC"       >-bgc bgc</value>
+      <value compset="_CLM[^_]*BGC-CROP"  >-bgc bgc -crop</value>
+      <value compset="_CLM[^_]*FATES"     >-bgc fates -no-megan</value>
+
+      <!-- Options specific for CLM4.5 -->
       <value compset="_CLM45%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
-      <value compset="_CLM45%[^_]*CNDV-CROP"	 >-bgc cn -dynamic_vegetation -crop</value>
       <value compset="_CLM45%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
       <value compset="_CLM45%[^_]*SP-VIC"	 >-bgc sp -vichydro </value>
-      <value compset="_CLM45%[^_]*FATES"	 >-bgc fates -no-megan</value>
 
-      <value compset="_CLM50%[^_]*SP"		 >-bgc sp</value>
-      <value compset="_CLM50%[^_]*BGC"		 >-bgc bgc</value>
+      <!-- Options specific for CLM5.0 -->
       <value compset="_CLM50%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
-      <value compset="_CLM50%[^_]*BGC-CROP"	 >-bgc bgc -crop</value>
-      <value compset="_CLM50%[^_]*CN"		 >-bgc cn</value>
-      <value compset="_CLM50%[^_]*CN-CROP"	 >-bgc cn -crop</value>
-      <value compset="_CLM50%[^_]*CNDV"		 >-bgc cn -dynamic_vegetation</value>
-      <value compset="_CLM50%[^_]*CNDV-CROP"	 >-bgc cn -dynamic_vegetation -crop</value>
       <value compset="_CLM50%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
       <value compset="_CLM50%[^_]*SP-VIC"	 >-bgc sp -vichydro </value>
-      <value compset="_CLM50%[^_]*FATES"         >-bgc fates -no-megan</value>
-
-      <value compset="_CLM51%[^_]*SP"		 >-bgc sp</value>
-      <value compset="_CLM51%[^_]*BGC"		 >-bgc bgc</value>
-      <value compset="_CLM51%[^_]*BGC-CROP"	 >-bgc bgc -crop</value>
-      <value compset="_CLM51%[^_]*FATES"         >-bgc fates -no-megan</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -260,6 +243,18 @@
       This is an advanced flag and should only be used by expert users.</desc>
   </entry>
 
+  <entry id="CLM_USRDAT_DIR">
+    <type>char</type>
+    <default_value>UNSET</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Directory name for user-created surface, landuse, and datm datasets.
+      This is used as an argument in user_mods namelists (e.g. user_nl_clm,
+      user_nl_datm_streams) generated with the subset_data script. Users
+      should modify this variable (in shell_commands or elsewhere) to set the
+      location of user-created data. The default value is UNSET.</desc>
+  </entry>
+
   <entry id="CLM_FORCE_COLDSTART">
     <type>char</type>
     <valid_values>on,off</valid_values>
@@ -288,7 +283,20 @@
     <desc>User mods to apply to specific compset matches. </desc>
   </entry>
 
-  <help>
+  <entry id="NEONSITE">
+    <type>char</type>
+    <valid_values>
+      ABBY,BLAN,CPER,DEJU,GRSM,HEAL,KONA,LENO,NIWO,ONAQ,PUUM,SERC,SRER,TALL,TREE,WOOD,
+      BARR,BONA,DCFS,DELA,GUAN,JERC,KONZ,MLBS,NOGP,ORNL,RMNP,SJER,STEI,TEAK,UKFS,WREF,
+      BART,CLBJ,DSNY,HARV,JORN,LAJA,MOAB,OAES,OSBS,SCBI,SOAP,STER,TOOL,UNDE,YELL
+    </valid_values>
+    <default_value/>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Name of site for NEON tower data</desc>
+  </entry>
+
+<help>
     =========================================
     CLM naming conventions
     =========================================

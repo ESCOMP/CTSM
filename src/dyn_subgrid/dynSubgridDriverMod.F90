@@ -9,10 +9,11 @@ module dynSubgridDriverMod
   ! dynamic landunits).
   !
   ! !USES:
-  use decompMod                    , only : bounds_type, BOUNDS_LEVEL_PROC, BOUNDS_LEVEL_CLUMP
+  use decompMod                    , only : bounds_type, bounds_level_proc, bounds_level_clump
   use decompMod                    , only : get_proc_clumps, get_clump_bounds
   use dynSubgridControlMod         , only : get_flanduse_timeseries
-  use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops, get_do_transient_lakes
+  use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops, get_do_transient_lakes, &
+                                            get_do_transient_urban
   use dynSubgridControlMod         , only : get_do_harvest
   use dynPriorWeightsMod           , only : prior_weights_type
   use dynPatchStateUpdaterMod      , only : patch_state_updater_type
@@ -21,6 +22,7 @@ module dynSubgridDriverMod
   use dyncropFileMod               , only : dyncrop_init, dyncrop_interp
   use dynHarvestMod                , only : dynHarvest_init, dynHarvest_interp
   use dynlakeFileMod               , only : dynlake_init, dynlake_interp
+  use dynurbanFileMod              , only : dynurban_init, dynurban_interp
   use dynLandunitAreaMod           , only : update_landunit_weights
   use subgridWeightsMod            , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
   use reweightMod                  , only : reweight_wrapup
@@ -96,7 +98,7 @@ contains
     character(len=*), parameter :: subname = 'dynSubgrid_init'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds_proc%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     nclumps = get_proc_clumps()
 
@@ -128,6 +130,11 @@ contains
         call dynlake_init(bounds_proc, dynlake_filename=get_flanduse_timeseries())
     end if
     
+    ! Initialize stuff for prescribed transient urban
+    if (get_do_transient_urban()) then
+        call dynurban_init(bounds_proc, dynurban_filename=get_flanduse_timeseries())
+    end if
+
     ! ------------------------------------------------------------------------
     ! Set initial subgrid weights for aspects that are read from file. This is relevant
     ! for cold start and use_init_interp-based initialization.
@@ -145,6 +152,9 @@ contains
        call dynlake_interp(bounds_proc)
     end if
     
+    if (get_do_transient_urban()) then
+       call dynurban_interp(bounds_proc)
+    end if
     
     ! (We don't bother calling dynHarvest_interp, because the harvest information isn't
     ! needed until the run loop. Harvest has nothing to do with subgrid weights, and in
@@ -219,7 +229,7 @@ contains
     character(len=*), parameter :: subname = 'dynSubgrid_driver'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds_proc%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     nclumps = get_proc_clumps()
 
@@ -261,6 +271,10 @@ contains
 	
     if (get_do_transient_lakes()) then
        call dynlake_interp(bounds_proc)
+    end if
+
+    if (get_do_transient_urban()) then
+       call dynurban_interp(bounds_proc)
     end if
     ! ==========================================================================
     ! Do land cover change that does not require I/O
@@ -344,7 +358,7 @@ contains
     character(len=*), parameter :: subname = 'dynSubgrid_wrapup_weight_changes'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds_clump%level == BOUNDS_LEVEL_CLUMP, subname // ': argument must be CLUMP-level bounds')
+    SHR_ASSERT(bounds_clump%level == bounds_level_clump, subname // ': argument must be CLUMP-level bounds')
 
     call update_landunit_weights(bounds_clump)
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 CTSM namelist creator
@@ -32,7 +32,7 @@ def buildnml(case, caseroot, compname):
 ###############################################################################
     """Build the CTSM namelist """
 
-    # Build the component namelist 
+    # Build the component namelist
     if compname != "ctsm" and compname != "clm":
         raise AttributeError
 
@@ -50,8 +50,6 @@ def buildnml(case, caseroot, compname):
     clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
     comp_atm = case.get_value("COMP_ATM")
     lnd_grid = case.get_value("LND_GRID")
-    lnd_domain_path = case.get_value("LND_DOMAIN_PATH")
-    lnd_domain_file = case.get_value("LND_DOMAIN_FILE")
     ninst_lnd = case.get_value("NINST_LND")
     rundir = case.get_value("RUNDIR")
     run_type = case.get_value("RUN_TYPE")
@@ -60,7 +58,16 @@ def buildnml(case, caseroot, compname):
     run_refdate = case.get_value("RUN_REFDATE")
     run_reftod = case.get_value("RUN_REFTOD")
     glc_nec = case.get_value("GLC_NEC")
+    cism_use_antarctica = case.get_value("CISM_USE_ANTARCTICA")
     mask = case.get_value("MASK_GRID")
+    driver = case.get_value("COMP_INTERFACE").lower()
+
+    # -----------------------------------------------------
+    # Error checking
+    # -----------------------------------------------------
+    if ( clm_bldnml_opts.find("-namelist") >= 0 ):
+        expect(False, "The -namelist option is NOT allowed to be part of CLM_BLDNML_OPTS, " + \
+               "use the CLM_NAMELIST_OPTS option or add namelist items to user_nl_clm instead " );
 
     # -----------------------------------------------------
     # Set ctsmconf
@@ -71,10 +78,10 @@ def buildnml(case, caseroot, compname):
         os.makedirs(ctsmconf)
 
     # -----------------------------------------------------
-    # Create config_cache.xml file 
+    # Create config_cache.xml file
     # -----------------------------------------------------
 
-    # Note that build-namelist utilizes the contents of the config_cache.xml file in 
+    # Note that build-namelist utilizes the contents of the config_cache.xml file in
     # the namelist_defaults.xml file to obtain namelist variables
 
     clm_phys = case.get_value("CLM_PHYSICS_VERSION")
@@ -127,6 +134,18 @@ def buildnml(case, caseroot, compname):
     else:
         nomeg = ""
 
+    if cism_use_antarctica is None:
+        # This is the case for compsets without CISM, where the CISM_USE_ANTARCTICA xml
+        # variable isn't defined
+        glc_use_antarctica_flag = ""
+    elif isinstance(cism_use_antarctica, bool):
+        if cism_use_antarctica:
+            glc_use_antarctica_flag = "-glc_use_antarctica"
+        else:
+            glc_use_antarctica_flag = ""
+    else:
+        expect(False, "Unexpected value for CISM_USE_ANTARCTICA: {}".format(cism_use_antarctica))
+
     if clm_nml_use_case != "UNSET":
         usecase = "-use_case %s" %clm_nml_use_case
     else:
@@ -145,15 +164,21 @@ def buildnml(case, caseroot, compname):
         ignore = "-ignore_ic_date"
 
     tuning = "-lnd_tuning_mode %s "%lnd_tuning_mode
-    
+
     spinup = "-clm_accelerated_spinup %s "%clm_accelerated_spinup
-    
+
     infile = os.path.join(ctsmconf, "namelist")
-    
+
     inputdata_file = os.path.join(caseroot,"Buildconf","ctsm.input_data_list")
-    
-    lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
-    
+
+    if driver == "nuopc":
+        lndfrac_setting = " "
+    else:
+        lnd_domain_path = case.get_value("LND_DOMAIN_PATH")
+        lnd_domain_file = case.get_value("LND_DOMAIN_FILE")
+        lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
+        lndfrac_setting = "-lnd_frac "+lndfrac_file
+
     config_cache_file = os.path.join(caseroot,"Buildconf", compname+"conf","config_cache.xml")
 
     # -----------------------------------------------------
@@ -177,7 +202,7 @@ def buildnml(case, caseroot, compname):
 
         # If multi-instance case does not have restart file, use
         # single-case restart for each instance
-        rpointer = "rpointer.lnd" 
+        rpointer = "rpointer.lnd"
         if (os.path.isfile(os.path.join(rundir,rpointer)) and
             (not os.path.isfile(os.path.join(rundir,rpointer + inst_string)))):
             shutil.copy(os.path.join(rundir, rpointer),
@@ -218,12 +243,12 @@ def buildnml(case, caseroot, compname):
         command = ("%s -cimeroot %s -infile %s -csmdata %s -inputdata %s %s -namelist \"&clm_inparm  start_ymd=%s %s/ \" "
                    "%s %s -res %s %s -clm_start_type %s -envxml_dir %s "
                    "-configuration %s -structure %s "
-                   "-lnd_frac %s -glc_nec %s -co2_ppmv %s -co2_type %s -config %s "
+                   "%s -glc_nec %s %s -co2_ppmv %s -co2_type %s -config %s -driver %s "
                    "%s %s %s %s"
-                   %(cmd, _CIMEROOT, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts, 
+                   %(cmd, _CIMEROOT, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts,
                      nomeg, usecase, lnd_grid, clmusr, start_type, caseroot,
                      configuration, structure,
-                     lndfrac_file, glc_nec, ccsm_co2_ppmv, clm_co2_type, config_cache_file,
+                     lndfrac_setting, glc_nec, glc_use_antarctica_flag, ccsm_co2_ppmv, clm_co2_type, config_cache_file, driver, 
                      clm_bldnml_opts, spinup, tuning, gridmask))
 
         rc, out, err = run_cmd(command, from_dir=ctsmconf)
@@ -251,6 +276,8 @@ def _main_func():
     caseroot = parse_input(sys.argv)
     with Case(caseroot) as case:
         compname = case.get_value("COMP_LND")
+        logger.warning( "WARNING: buildnml is being called a s program rather than a subroutine " +
+                        "as it is expected to be in the CESM context" )
         buildnml(case, caseroot, compname)
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ module CNBalanceCheckMod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use shr_infnan_mod                  , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
-  use decompMod                       , only : bounds_type
+  use decompMod                       , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use abortutils                      , only : endrun
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
   use clm_time_manager                , only : get_step_size_real
@@ -306,7 +306,7 @@ contains
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 
       ! Repeat error check at the gridcell level
@@ -325,7 +325,7 @@ contains
       do g = bounds%begg, bounds%endg
          ! calculate gridcell-level carbon storage for mass conservation check
          ! Notes:
-         ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
+         ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totmicc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
          ! totc_p2c_col = totc_patch = totvegc_patch(p) + xsmrpool_patch(p) + ctrunc_patch(p) + cropseedc_deficit_patch(p)
          ! Not including seedc_grc in grc_begcb and grc_endcb because
          ! seedc_grc forms out of thin air, for now, and equals
@@ -378,7 +378,7 @@ contains
          write(iulog,*)'dwt_seedc_to_deadstem_grc =', dwt_seedc_to_deadstem_grc(g) * dt
          write(iulog,*)'--- Outputs ---'
          write(iulog,*)'-1*som_c_leached_grc    = ', som_c_leached_grc(g) * dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate
@@ -540,11 +540,8 @@ contains
          write(iulog,*)'output mass              = ',col_noutputs(c)*dt
          write(iulog,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
          write(iulog,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-         write(iulog,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
-        
-         
-         
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         write(iulog,*)'outputs,lch,roff,dnit    = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+         call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 
       ! Repeat error check at the gridcell level
@@ -618,7 +615,7 @@ contains
          write(iulog,*) 'grc_noutputs_partial     =', grc_noutputs_partial(g) * dt
          write(iulog,*) 'dwt_conv_nflux_grc       =', dwt_conv_nflux_grc(g) * dt
          write(iulog,*) 'product_loss_grc         =', product_loss_grc(g) * dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate

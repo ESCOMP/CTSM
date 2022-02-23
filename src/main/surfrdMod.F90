@@ -125,7 +125,7 @@ contains
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( msg=' ERROR: pftm NOT on surface dataset'//errMsg(sourcefile, __LINE__))
 
-    ! Check if fsurdat grid is "close" to fatmlndfrc grid, exit if lats/lon > 0.001
+    ! Cmopare surfdat_domain attributes to ldomain attributes
 
     call check_var(ncid=ncid, varname='xc', readvar=readvar)
     if (readvar) then
@@ -150,7 +150,7 @@ contains
     end if
 
     call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
-    call domain_init(surfdata_domain, isgrid2d, ni, nj, begg, endg, clmlevel=grlnd)
+    call domain_init(surfdata_domain, isgrid2d, ni, nj, begg, endg, subgrid_level=grlnd)
 
     call ncd_io(ncid=ncid, varname=lon_var, flag='read', data=surfdata_domain%lonc, &
          dim1name=grlnd, readvar=readvar)
@@ -173,7 +173,7 @@ contains
        rmaxlat = max(rmaxlat,abs(ldomain%latc(n)-surfdata_domain%latc(n)))
     enddo
     if (rmaxlon > 0.001_r8 .or. rmaxlat > 0.001_r8) then
-       write(iulog,*)' ERROR: surfdata/fatmgrid lon/lat mismatch error', rmaxlon,rmaxlat
+       write(iulog,*)' ERROR: surfdata_domain/ldomain lon/lat mismatch error', rmaxlon,rmaxlat
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
@@ -298,8 +298,8 @@ contains
     ! as soil color and percent sand and clay
     !
     ! !USES:
-    use clm_varpar      , only : maxpatch_glcmec, nlevurb
-    use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice_mec
+    use clm_varpar      , only : maxpatch_glc, nlevurb
+    use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice
     use clm_instur      , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec
     use UrbanParamsType , only : CheckUrban
     !
@@ -388,8 +388,8 @@ contains
 
     ! Read glacier info
 
-    call check_dim_size(ncid, 'nglcec',   maxpatch_glcmec   )
-    call check_dim_size(ncid, 'nglcecp1', maxpatch_glcmec+1 )
+    call check_dim_size(ncid, 'nglcec',   maxpatch_glc   )
+    call check_dim_size(ncid, 'nglcecp1', maxpatch_glc+1 )
 
     call ncd_io(ncid=ncid, varname='PCT_GLC_MEC', flag='read', data=wt_glc_mec, &
          dim1name=grlnd, readvar=readvar)
@@ -430,7 +430,7 @@ contains
 
        wt_lunit(nl,istwet)      = pctwet(nl)/100._r8
 
-       wt_lunit(nl,istice_mec)  = pctgla(nl)/100._r8
+       wt_lunit(nl,istice)  = pctgla(nl)/100._r8
 
        do n = isturb_MIN, isturb_MAX
           dens_index = n - isturb_MIN + 1

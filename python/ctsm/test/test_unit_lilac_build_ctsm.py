@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """Unit tests for lilac_build_ctsm
 """
@@ -105,7 +105,7 @@ class TestBuildCtsm(unittest.TestCase):
                                              '--os', 'linux',
                                              '--compiler', 'intel',
                                              '--netcdf-path', '/path/to/netcdf',
-                                             '--esmf-lib-path', '/path/to/esmf/lib',
+                                             '--esmf-mkfile-path', '/path/to/esmf/lib/esmf.mk',
                                              '--max-mpitasks-per-node', '16',
                                              '--no-pnetcdf'])
 
@@ -120,7 +120,7 @@ class TestBuildCtsm(unittest.TestCase):
             _ = _commandline_args(args_to_parse=['build/directory',
                                                  '--os', 'linux',
                                                  '--netcdf-path', '/path/to/netcdf',
-                                                 '--esmf-lib-path', '/path/to/esmf/lib',
+                                                 '--esmf-mkfile-path', '/path/to/esmf/lib/esmf.mk',
                                                  '--max-mpitasks-per-node', '16',
                                                  '--no-pnetcdf'])
         self.assertRegex(mock_stderr.getvalue(), expected_re)
@@ -136,7 +136,7 @@ class TestBuildCtsm(unittest.TestCase):
             _ = _commandline_args(args_to_parse=['build/directory',
                                                  '--compiler', 'intel',
                                                  '--netcdf-path', '/path/to/netcdf',
-                                                 '--esmf-lib-path', '/path/to/esmf/lib',
+                                                 '--esmf-mkfile-path', '/path/to/esmf/lib/esmf.mk',
                                                  '--max-mpitasks-per-node', '16',
                                                  '--no-pnetcdf'])
         self.assertRegex(mock_stderr.getvalue(), expected_re)
@@ -150,7 +150,7 @@ class TestBuildCtsm(unittest.TestCase):
                                                  '--os', 'linux',
                                                  '--compiler', 'intel',
                                                  '--netcdf-path', '/path/to/netcdf',
-                                                 '--esmf-lib-path', '/path/to/esmf/lib',
+                                                 '--esmf-mkfile-path', '/path/to/esmf/lib/esmf.mk',
                                                  '--max-mpitasks-per-node', '16'])
         self.assertRegex(mock_stderr.getvalue(), expected_re)
 
@@ -163,7 +163,7 @@ class TestBuildCtsm(unittest.TestCase):
                                                  '--os', 'linux',
                                                  '--compiler', 'intel',
                                                  '--netcdf-path', '/path/to/netcdf',
-                                                 '--esmf-lib-path', '/path/to/esmf/lib',
+                                                 '--esmf-mkfile-path', '/path/to/esmf/lib/esmf.mk',
                                                  '--max-mpitasks-per-node', '16',
                                                  '--no-pnetcdf',
                                                  '--pnetcdf-path', '/path/to/pnetcdf'])

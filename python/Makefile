@@ -8,7 +8,7 @@ debug = not-set
 ifneq ($(python), not-set)
     PYTHON=$(python)
 else
-    PYTHON=python
+    PYTHON=python3
 endif
 
 ifneq ($(debug), not-set)
@@ -23,7 +23,7 @@ PYLINT_ARGS=-j 4 --rcfile=ctsm/.pylintrc
 PYLINT_SRC = \
 	ctsm
 
-all: test lint
+all: test lint black
 test: utest stest
 
 .PHONY: utest
@@ -37,6 +37,12 @@ stest: FORCE
 .PHONY: lint
 lint: FORCE
 	$(PYLINT) $(PYLINT_ARGS) $(PYLINT_SRC)
+
+.PHONY: black
+# Run black on all of the python files here and undeneath.
+# Use the black configure file to explicitly set a few things and specifiy the exact files.
+black: FORCE
+	black --check --config pyproject.toml .
 
 .PHONY: clean
 clean: FORCE

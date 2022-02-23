@@ -35,6 +35,7 @@
 
 use Getopt::Std;
 use File::Basename;
+use File::Glob ':bsd_glob';
 
 # Check for usage request.
 @ARGV >= 2                          or usage();
@@ -61,7 +62,7 @@ chomp @file_paths;
 unshift(@file_paths,'.');
 foreach $dir (@file_paths) {  # (could check that directories exist here)
     $dir =~ s!/?\s*$!!;  # remove / and any whitespace at end of directory name
-    ($dir) = glob $dir;  # Expand tildes in path names.
+    ($dir) = bsd_glob $dir;  # Expand tildes in path names.
 }
 
 # Make list of files containing source code.
@@ -91,7 +92,7 @@ my ($dir);
 my ($f, $name, $path, $suffix, $mod);
 my @suffixes = ('\.mod' );
 foreach $dir (@file_paths) {
-    @filenames = (glob("$dir/*.mod"));
+    @filenames = (bsd_glob("$dir/*.mod"));
     foreach $f (@filenames) {
        ($name, $path, $suffix) = fileparse($f, @suffixes);
        ($mod = $name) =~ tr/a-z/A-Z/;

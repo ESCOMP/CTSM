@@ -12,10 +12,10 @@ module SnowSnicarMod
   use shr_sys_mod     , only : shr_sys_flush
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use clm_varctl      , only : iulog
-  use clm_varcon      , only : namec , tfrz
+  use clm_varcon      , only : tfrz
   use shr_const_mod   , only : SHR_CONST_RHOICE
   use abortutils      , only : endrun
-  use decompMod       , only : bounds_type
+  use decompMod       , only : bounds_type, subgrid_level_column
   use AerosolMod      , only : snw_rds_min
   use atm2lndType     , only : atm2lnd_type
   use WaterStateBulkType  , only : waterstatebulk_type
@@ -34,6 +34,14 @@ module SnowSnicarMod
   public :: SnowAge_grain    ! Snow effective grain size evolution
   public :: SnowAge_init     ! Initial read in of snow-aging file
   public :: SnowOptics_init  ! Initial read in of snow-optics file
+
+  type, private :: params_type
+      real(r8) :: xdrdt         ! Arbitrary factor applied to snow aging rate (-)
+      real(r8) :: snw_rds_refrz ! Effective radius of re-frozen snow (microns)
+      real(r8) :: C2_liq_Brun89 ! Constant for liquid water grain growth [m3 s-1],
+                                ! from Brun89: corrected for LWC in units of percent
+  end type params_type
+  type(params_type), private ::  params_inst
   !
   ! !PUBLIC DATA MEMBERS:
   integer,  public, parameter :: sno_nbr_aer =   8        ! number of aerosol species in snowpack
@@ -59,7 +67,6 @@ module SnowSnicarMod
   integer,  parameter :: snw_rds_min_tbl = 30            ! minimium effective radius defined in Mie lookup table [microns]
   integer,  parameter :: snw_rds_min_int = nint(snw_rds_min) ! minimum allowed snow effective radius as integer [microns]
   real(r8), parameter :: snw_rds_max     = 1500._r8      ! maximum allowed snow effective radius [microns]
-  real(r8), parameter :: snw_rds_refrz   = 1000._r8      ! effective radius of re-frozen snow [microns]
 
   real(r8), parameter :: min_snw = 1.0E-30_r8            ! minimum snow mass required for SNICAR RT calculation [kg m-2]
 
@@ -67,8 +74,6 @@ module SnowSnicarMod
                                                          ! from Brun89
   real(r8), parameter :: C1_liq_Brun89 = 0._r8           ! constant for liquid water grain growth [m3 s-1],
                                                          ! from Brun89: zeroed to accomodate dry snow aging
-  real(r8), parameter :: C2_liq_Brun89 = 4.22E-13_r8     ! constant for liquid water grain growth [m3 s-1],
-                                                         ! from Brun89: corrected for LWC in units of percent
 
   real(r8), parameter :: tim_cns_bc_rmv  = 2.2E-8_r8     ! time constant for removal of BC in snow on sea-ice
                                                          ! [s-1] (50% mass removal/year)
@@ -79,7 +84,6 @@ module SnowSnicarMod
 
   ! scaling of the snow aging rate (tuning option):
   logical :: flg_snoage_scl    = .false.                 ! flag for scaling the snow aging rate by some arbitrary factor
-  real(r8), parameter :: xdrdt = 1.0_r8                  ! arbitrary factor applied to snow aging rate
 
   ! snow and aerosol Mie parameters:
   ! (arrays declared here, but are set in iniTimeConst)
@@ -152,6 +156,30 @@ module SnowSnicarMod
   !-----------------------------------------------------------------------
 
 contains
+
+  !----------------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_SnowSnicar'
+    !--------------------------------------------------------------------
+
+    ! Arbitrary factor applied to snow aging rate (-)
+    call readNcdioScalar(ncid, 'xdrdt', subname, params_inst%xdrdt)
+    ! Effective radius of re-frozen snow (microns)
+    call readNcdioScalar(ncid, 'snw_rds_refrz', subname, params_inst%snw_rds_refrz)
+    ! constant for liquid water grain growth [m3 s-1], from Brun89: corrected for LWC in units of percent
+    call readNcdioScalar(ncid,  'C2_liq_Brun89', subname, params_inst%C2_liq_Brun89)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine SNICAR_RT (flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,  &
@@ -427,7 +455,7 @@ contains
                   write (iulog,*) "column: ", c_idx, " level: ", i, " snl(c)= ", snl_lcl
                   write (iulog,*) "lat= ", lat_coord, " lon= ", lon_coord
                   write (iulog,*) "h2osno_total(c)= ", h2osno_lcl
-                  call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=c_idx, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
                endif
             enddo
 
@@ -680,31 +708,31 @@ contains
                   ! Eddington
                   if (APRX_TYP==1) then
                      do i=snl_top,snl_btm,1
-                        gamma1(i) = (7-(omega_star(i)*(4+(3*g_star(i)))))/4
-                        gamma2(i) = -(1-(omega_star(i)*(4-(3*g_star(i)))))/4
-                        gamma3(i) = (2-(3*g_star(i)*mu_not))/4
-                        gamma4(i) = 1-gamma3(i)
-                        mu_one    = 0.5
+                        gamma1(i) = (7._r8-(omega_star(i)*(4._r8+(3._r8*g_star(i)))))/4._r8
+                        gamma2(i) = -(1._r8-(omega_star(i)*(4._r8-(3._r8*g_star(i)))))/4._r8
+                        gamma3(i) = (2._r8-(3._r8*g_star(i)*mu_not))/4._r8
+                        gamma4(i) = 1._r8-gamma3(i)
+                        mu_one    = 0.5_r8
                      enddo
 
                      ! Quadrature
                   elseif (APRX_TYP==2) then
                      do i=snl_top,snl_btm,1
-                        gamma1(i) = (3**0.5)*(2-(omega_star(i)*(1+g_star(i))))/2
-                        gamma2(i) = omega_star(i)*(3**0.5)*(1-g_star(i))/2
-                        gamma3(i) = (1-((3**0.5)*g_star(i)*mu_not))/2
-                        gamma4(i) = 1-gamma3(i)
-                        mu_one    = 1/(3**0.5)
+                        gamma1(i) = (3._r8**0.5)*(2._r8-(omega_star(i)*(1._r8+g_star(i))))/2._r8
+                        gamma2(i) = omega_star(i)*(3._r8**0.5)*(1._r8-g_star(i))/2._r8
+                        gamma3(i) = (1._r8-((3._r8**0.5)*g_star(i)*mu_not))/2._r8
+                        gamma4(i) = 1._r8-gamma3(i)
+                        mu_one    = 1._r8/(3._r8**0.5_r8)
                      enddo
 
                      ! Hemispheric Mean
                   elseif (APRX_TYP==3) then
                      do i=snl_top,snl_btm,1
-                        gamma1(i) = 2 - (omega_star(i)*(1+g_star(i)))
+                        gamma1(i) = 2._r8 - (omega_star(i)*(1._r8+g_star(i)))
                         gamma2(i) = omega_star(i)*(1-g_star(i))
-                        gamma3(i) = (1-((3**0.5)*g_star(i)*mu_not))/2
-                        gamma4(i) = 1-gamma3(i)
-                        mu_one    = 0.5
+                        gamma3(i) = (1._r8-((3._r8**0.5_r8)*g_star(i)*mu_not))/2._r8
+                        gamma4(i) = 1._r8-gamma3(i)
+                        mu_one    = 0.5_r8
                      enddo
                   endif
 
@@ -755,7 +783,7 @@ contains
 
                      !Boundary values for i=1 and i=2*snl_lcl, specifics for i=odd and i=even    
                      if (i==(2*snl_lcl+1)) then
-                        A(i) = 0
+                        A(i) = 0._r8
                         B(i) = e1(snl_top)
                         D(i) = -e2(snl_top)
                         E(i) = flx_slri_lcl(bnd_idx)-C_mns_top(snl_top)
@@ -763,7 +791,7 @@ contains
                      elseif(i==0) then
                         A(i) = e1(snl_btm)-(albsfc_lcl(bnd_idx)*e3(snl_btm))
                         B(i) = e2(snl_btm)-(albsfc_lcl(bnd_idx)*e4(snl_btm))
-                        D(i) = 0
+                        D(i) = 0._r8
                         E(i) = F_direct_btm-C_pls_btm(snl_btm)+(albsfc_lcl(bnd_idx)*C_mns_btm(snl_btm))
 
                      elseif(mod(i,2)==-1) then   ! If odd and i>=3 (n=1 for i=3)
@@ -828,7 +856,7 @@ contains
 
 
                      ! ERROR check: negative absorption
-                     if (flx_abs_lcl(i,bnd_idx) < -0.00001) then
+                     if (flx_abs_lcl(i,bnd_idx) < -0.00001_r8) then
                         trip = 1
                      endif
                   enddo
@@ -899,7 +927,7 @@ contains
                      write(iulog,*) "column index: ", c_idx
                      write(iulog,*) "landunit type", lun%itype(l_idx)
                      write(iulog,*) "frac_sno: ", frac_sno(c_idx)
-                     call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                     call endrun(subgrid_index=c_idx, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
                   else
                      flg_dover = 0
                   endif
@@ -912,7 +940,7 @@ contains
                if (abs(energy_sum) > 0.00001_r8) then
                   write (iulog,"(a,e12.6,a,i6,a,i6)") "SNICAR ERROR: Energy conservation error of : ", energy_sum, &
                        " at timestep: ", nstep, " at column: ", c_idx
-                  call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=c_idx, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
                endif
 
                albout_lcl(bnd_idx) = albedo
@@ -946,7 +974,7 @@ contains
                   write (iulog,*) "SNICAR STATS: snw_rds(-1)= ", snw_rds(c_idx,-1)
                   write (iulog,*) "SNICAR STATS: snw_rds(0)= ", snw_rds(c_idx,0)
 
-                  call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=c_idx, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
                endif
 
             enddo   ! loop over wvl bands
@@ -1191,7 +1219,8 @@ contains
 
             !dr_wet = 1E6_r8*(dtime*(C1_liq_Brun89 + C2_liq_Brun89*(frc_liq**(3))) / (4*SHR_CONST_PI*(snw_rds(c_idx,i)/1E6)**(2)))
             !simplified, units of microns:
-            dr_wet = 1E18_r8*(dtime*(C2_liq_Brun89*(frc_liq**(3))) / (4*SHR_CONST_PI*snw_rds(c_idx,i)**(2)))
+            dr_wet = 1E18_r8*(dtime*(params_inst%C2_liq_Brun89*(frc_liq**(3))) / &
+                     (4*SHR_CONST_PI*snw_rds(c_idx,i)**(2)))
 
             dr = dr + dr_wet
 
@@ -1200,7 +1229,7 @@ contains
             !
             ! Multiply rate of change of effective radius by some constant, xdrdt
             if (flg_snoage_scl) then
-               dr = dr*xdrdt
+               dr = dr*params_inst%xdrdt
             endif
 
 
@@ -1239,7 +1268,8 @@ contains
             snw_rds_fresh = FreshSnowRadius(c_idx, atm2lnd_inst)
 
             ! mass-weighted mean of fresh snow, old snow, and re-frozen snow effective radius
-            snw_rds(c_idx,i) = (snw_rds(c_idx,i)+dr)*frc_oldsnow + snw_rds_fresh*frc_newsnow + snw_rds_refrz*frc_refrz
+            snw_rds(c_idx,i) = (snw_rds(c_idx,i)+dr)*frc_oldsnow + snw_rds_fresh*frc_newsnow + &
+                               params_inst%snw_rds_refrz*frc_refrz
             !
             !**********  5. CHECK BOUNDARIES   ***********
             !

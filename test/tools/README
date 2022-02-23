@@ -13,7 +13,25 @@ To use...
 
 on cheyenne
 
-qcmd -l select=mem=109GB -l walltime=06:00:00 -- ./test_driver.sh -i >& run.out &
+qcmd -l walltime=08:00:00 -- ./test_driver.sh -i >& run.out &
+
+And to for example to compare to another baseline code (in this case ctsm5.1.dev066, which would need to be cloned at the given
+path) ...
+
+qcmd -l walltime=08:00:00 -- env BL_ROOT=/glade/scratch/erik/ctsm5.1.dev066 ./test_driver.sh -i >& run.out &
+
+on izumi
+
+nohup ./test_driver.sh -i >& run.out &
+
+release tests
+
+qcmd -l walltime=10:00:00 -- env CLM_INPUT_TESTS=`pwd`/tests_posttag_nompi_regression \
+./test_driver.sh -i >& run.out &
+
+To run neon-specific tests, please use login nodes:
+env CLM_INPUT_TESTS=`pwd`/tests_pretag_nompi_neon ./test_driver.sh -i > & run.out &
+
 
 Intended for use on NCAR machines cheyenne, geyser (DAV) and hobart.
 

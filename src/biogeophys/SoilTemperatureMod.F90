@@ -570,7 +570,7 @@ contains
     ! !USES:
     use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi, nlevmaxurbgrnd
     use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
-    use landunit_varcon , only : istice_mec, istwet
+    use landunit_varcon , only : istice, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
     use clm_varctl      , only : iulog
     !
@@ -649,7 +649,7 @@ contains
                l = col%landunit(c)
 
                ! This will include pervious road for all nlevgrnd layers and impervious road for j > nlev_improad
-               if ((lun%itype(l) /= istwet .and. lun%itype(l) /= istice_mec &
+               if ((lun%itype(l) /= istwet .and. lun%itype(l) /= istice &
                   .and. col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall .and. &
                   col%itype(c) /= icol_roof .and. col%itype(c) /= icol_road_imperv) .or. &
                   (col%itype(c) == icol_road_imperv .and. j > nlev_improad(l))) then
@@ -670,7 +670,7 @@ contains
                      thk(c,j) = tkdry(c,j)
                   endif
                   if (j > nbedrock(c)) thk(c,j) = thk_bedrock
-               else if (lun%itype(l) == istice_mec) then
+               else if (lun%itype(l) == istice) then
                   thk(c,j) = tkwat
                   if (t_soisno(c,j) < tfrz) thk(c,j) = tkice
                else if (lun%itype(l) == istwet) then                         
@@ -752,7 +752,7 @@ contains
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             l = col%landunit(c)
-            if ((lun%itype(l) /= istwet .and. lun%itype(l) /= istice_mec &
+            if ((lun%itype(l) /= istwet .and. lun%itype(l) /= istice &
                .and. col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall .and. &
                col%itype(c) /= icol_roof .and. col%itype(c) /= icol_road_imperv) .or. &
                (col%itype(c) == icol_road_imperv .and. j > nlev_improad(l))) then
@@ -761,7 +761,7 @@ contains
             else if (lun%itype(l) == istwet) then 
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
                if (j > nbedrock(c)) cv(c,j) = csol_bedrock*dz(c,j)
-            else if (lun%itype(l) == istice_mec) then
+            else if (lun%itype(l) == istice) then
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
             endif
          enddo
@@ -1059,7 +1059,7 @@ contains
     use clm_varctl       , only : iulog
     use clm_varcon       , only : tfrz, hfus, grav
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
-    use landunit_varcon  , only : istsoil, istcrop, istice_mec
+    use landunit_varcon  , only : istsoil, istcrop, istice
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                      
@@ -1436,7 +1436,7 @@ contains
     use clm_varcon     , only : sb, hvap
     use column_varcon  , only : icol_road_perv, icol_road_imperv
     use clm_varpar     , only : nlevsno, max_patch_per_col
-    use UrbanParamsType, only : IsSimpleBuildTemp
+    use UrbanParamsType, only : IsSimpleBuildTemp, IsProgBuildTemp
     !
     ! !ARGUMENTS:
     implicit none
@@ -1508,6 +1508,7 @@ contains
          dlrad                   => energyflux_inst%dlrad_patch             , & ! Input:  [real(r8) (:)   ]  downward longwave radiation blow the canopy [W/m2]
          eflx_traffic            => energyflux_inst%eflx_traffic_lun        , & ! Input:  [real(r8) (:)   ]  traffic sensible heat flux (W/m**2)     
          eflx_wasteheat          => energyflux_inst%eflx_wasteheat_lun      , & ! Input:  [real(r8) (:)   ]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+         eflx_ventilation        => energyflux_inst%eflx_ventilation_lun    , & ! Input:  [real(r8) (:)   ]  sensible heat flux from building ventilation (W/m**2)
          eflx_heat_from_ac       => energyflux_inst%eflx_heat_from_ac_lun   , & ! Input:  [real(r8) (:)   ]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
          eflx_sh_snow            => energyflux_inst%eflx_sh_snow_patch      , & ! Input:  [real(r8) (:)   ]  sensible heat flux from snow (W/m**2) [+ to atm]
          eflx_sh_soil            => energyflux_inst%eflx_sh_soil_patch      , & ! Input:  [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]
@@ -1515,6 +1516,7 @@ contains
          eflx_sh_grnd            => energyflux_inst%eflx_sh_grnd_patch      , & ! Input:  [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]
          eflx_lwrad_net          => energyflux_inst%eflx_lwrad_net_patch    , & ! Input:  [real(r8) (:)   ]  net infrared (longwave) rad (W/m**2) [+ = to atm]
          eflx_wasteheat_patch    => energyflux_inst%eflx_wasteheat_patch    , & ! Input:  [real(r8) (:)   ]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+         eflx_ventilation_patch  => energyflux_inst%eflx_ventilation_patch  , & ! Input:  [real(r8) (:)   ]  sensible heat flux from building ventilation (W/m**2)
          eflx_heat_from_ac_patch => energyflux_inst%eflx_heat_from_ac_patch , & ! Input:  [real(r8) (:)   ]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
          eflx_traffic_patch      => energyflux_inst%eflx_traffic_patch      , & ! Input:  [real(r8) (:)   ]  traffic sensible heat flux (W/m**2)     
          eflx_anthro             => energyflux_inst%eflx_anthro_patch       , & ! Input:  [real(r8) (:)   ]  total anthropogenic heat flux (W/m**2)  
@@ -1583,11 +1585,19 @@ contains
 
                      ! All wasteheat and traffic flux goes into canyon floor
                      if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
+                        ! Note that we divide the following landunit variables by 1-wtlunit_roof which 
+                        ! essentially converts the flux from W/m2 of urban area to W/m2 of canyon floor area
                         eflx_wasteheat_patch(p) = eflx_wasteheat(l)/(1._r8-lun%wtlunit_roof(l))
+                        if ( IsSimpleBuildTemp() ) then
+                           eflx_ventilation_patch(p) = 0._r8
+                        else if ( IsProgBuildTemp() ) then
+                           eflx_ventilation_patch(p) = eflx_ventilation(l)/(1._r8-lun%wtlunit_roof(l))
+                        end if
                         eflx_heat_from_ac_patch(p) = eflx_heat_from_ac(l)/(1._r8-lun%wtlunit_roof(l))
                         eflx_traffic_patch(p) = eflx_traffic(l)/(1._r8-lun%wtlunit_roof(l))
                      else
                         eflx_wasteheat_patch(p) = 0._r8
+                        eflx_ventilation_patch(p) = 0._r8
                         eflx_heat_from_ac_patch(p) = 0._r8
                         eflx_traffic_patch(p) = 0._r8
                      end if
@@ -1596,7 +1606,8 @@ contains
                      eflx_gnet(p) = sabg(p) + dlrad(p)  &
                           - eflx_lwrad_net(p) &
                           - (eflx_sh_grnd(p) + qflx_evap_soi(p)*htvp(c) + qflx_tran_veg(p)*hvap) &
-                          + eflx_wasteheat_patch(p) + eflx_heat_from_ac_patch(p) + eflx_traffic_patch(p)
+                          + eflx_wasteheat_patch(p) + eflx_heat_from_ac_patch(p) + eflx_traffic_patch(p) &
+                          + eflx_ventilation_patch(p)
 		     if ( IsSimpleBuildTemp() ) then
                         eflx_anthro(p)   = eflx_wasteheat_patch(p) + eflx_traffic_patch(p)
                      end if

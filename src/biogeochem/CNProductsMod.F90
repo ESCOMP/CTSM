@@ -493,9 +493,9 @@ contains
     ! calculate losses from product pools
     ! the following (1/s) rate constants result in ~90% loss of initial state over 1, 10 and 100 years,
     ! respectively, using a discrete-time fractional decay algorithm.
-    kprod1  = 7.2e-8
-    kprod10 = 7.2e-9
-    kprod100 = 7.2e-10
+    kprod1  = 7.2e-8_r8
+    kprod10 = 7.2e-9_r8
+    kprod100 = 7.2e-10_r8
 
     do g = bounds%begg, bounds%endg
        ! calculate fluxes out of product pools (1/sec)

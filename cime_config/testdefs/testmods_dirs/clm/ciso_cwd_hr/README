@@ -1,0 +1,8 @@
+This points to an alternate params file with
+rf_cwdl2     = 0.5
+rf_cwdl3_bgc = 0.5
+while by default these parameters equal zero.
+
+The test outputs inactive history fields that would contain zeros
+when running with the default params file and should be greater than zero
+when running with the alternate params file.

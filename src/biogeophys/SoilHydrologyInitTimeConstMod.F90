@@ -20,17 +20,45 @@ module SoilHydrologyInitTimeConstMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SoilHydrologyInitTimeConst
+  public :: readParams
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: initSoilParVIC    ! Convert default CLM soil properties to VIC parameters
   private :: initCLMVICMap     ! Initialize map from VIC to CLM layers
   private :: linear_interp     ! function for linear interperation 
+  type, private :: params_type
+     real(r8) :: pc            ! Threshold probability for surface water (unitless)
+     real(r8) :: om_frac_sf    ! Scale factor for organic matter fraction (unitless)
+  end type params_type
+  type(params_type), private ::  params_inst
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
   !
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_SoilHydrologyInitTimeConst'
+    !--------------------------------------------------------------------
+
+    ! Threshold probability for surface water (unitless)
+    call readNcdioScalar(ncid, 'pc', subname, params_inst%pc)
+    ! Scale factor for om_frac (unitless)
+    call readNcdioScalar(ncid, 'om_frac_sf', subname, params_inst%om_frac_sf)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine SoilHydrologyInitTimeConst(bounds, soilhydrology_inst, soilstate_inst)
@@ -43,9 +71,9 @@ contains
     use clm_varctl      , only : fsurdat, iulog, use_vichydro
     use clm_varpar      , only : toplev_equalspace
     use clm_varpar      , only : nlevsoi, nlevgrnd, nlayer, nlayert
-    use clm_varcon      , only : dzsoi, spval, nlvic, dzvic, pc, grlnd
+    use clm_varcon      , only : dzsoi, spval, nlvic, dzvic, grlnd
     use clm_varcon      , only : aquifer_water_baseline
-    use landunit_varcon , only : istwet, istdlak, istice_mec
+    use landunit_varcon , only : istwet, istdlak, istice
     use column_varcon   , only : icol_shadewall, icol_road_perv, icol_road_imperv, icol_roof, icol_sunwall
     use fileutils       , only : getfil
     use ncdio_pio       , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
@@ -150,7 +178,7 @@ contains
           l = col%landunit(c)
 
           if (lun%itype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
-             if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec) then
+             if (lun%itype(l)==istwet .or. lun%itype(l)==istice) then
                 ! do nothing
              else if (lun%urbpoi(l) .and. (col%itype(c) /= icol_road_perv) .and. (col%itype(c) /= icol_road_imperv) )then
                 ! do nothing
@@ -159,7 +187,7 @@ contains
                    if ( lev <= nlevsoi )then
                       claycol(c,lev)    = soilstate_inst%cellclay_col(c,lev)
                       sandcol(c,lev)    = soilstate_inst%cellsand_col(c,lev)
-                      om_fraccol(c,lev) = soilstate_inst%cellorg_col(c,lev) / organic_max
+                      om_fraccol(c,lev) = min(params_inst%om_frac_sf*soilstate_inst%cellorg_col(c,lev) / organic_max, 1._r8)
                    else
                       claycol(c,lev)    = soilstate_inst%cellclay_col(c,nlevsoi)
                       sandcol(c,lev)    = soilstate_inst%cellsand_col(c,nlevsoi)
@@ -190,14 +218,14 @@ contains
          
          soilhydrology_inst%h2osfc_thresh_col(c) = 0._r8
          if (micro_sigma(c) > 1.e-6_r8 .and. (soilhydrology_inst%h2osfcflag /= 0)) then
-            d = 0.0
+            d = 0.0_r8
             do p = 1,4
-               fd   = 0.5*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0)))) - pc
-               dfdd = exp(-d**2/(2.0*micro_sigma(c)**2))/(micro_sigma(c)*sqrt(2.0*shr_const_pi))
+               fd   = 0.5_r8*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0_r8)))) - params_inst%pc
+               dfdd = exp(-d**2/(2.0_r8*micro_sigma(c)**2))/(micro_sigma(c)*sqrt(2.0_r8*shr_const_pi))
                d    = d - fd/dfdd
             enddo
-            soilhydrology_inst%h2osfc_thresh_col(c) = 0.5*d*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0)))) + &
-                 micro_sigma(c)/sqrt(2.0*shr_const_pi)*exp(-d**2/(2.0*micro_sigma(c)**2))         
+            soilhydrology_inst%h2osfc_thresh_col(c) = 0.5_r8*d*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0_r8)))) + &
+                 micro_sigma(c)/sqrt(2.0_r8*shr_const_pi)*exp(-d**2/(2.0_r8*micro_sigma(c)**2))
             soilhydrology_inst%h2osfc_thresh_col(c) = 1.e3_r8 * soilhydrology_inst%h2osfc_thresh_col(c) !convert to mm from meters
          else
             soilhydrology_inst%h2osfc_thresh_col(c) = 0._r8
@@ -298,7 +326,7 @@ contains
        !calculate other parameters based on teh percentages
        soilhydrology_inst%porosity_col(c, i) = 0.489_r8 - 0.00126_r8*sandvic(i)
        soilhydrology_inst%expt_col(c, i)     = 3._r8+ 2._r8*(2.91_r8 + 0.159_r8*clayvic(i))
-       xksat = 0.0070556 *( 10.**(-0.884+0.0153*sandvic(i)) )
+       xksat = 0.0070556_r8 *( 10.**(-0.884_r8+0.0153_r8*sandvic(i)) )
 
        !consider organic matter, M.Huang 
        soilhydrology_inst%expt_col(c, i)    = &

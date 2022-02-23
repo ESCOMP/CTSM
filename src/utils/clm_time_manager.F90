@@ -37,13 +37,13 @@ module clm_time_manager
         get_curr_calday,          &! return calendar day at end of current timestep
         get_calday,               &! return calendar day from input date
         get_calendar,             &! return calendar
-        get_days_per_year,        &! return the days per year for current year
+        get_curr_days_per_year,   &! return the days per year for year as of the end of the current time step
+        get_prev_days_per_year,   &! return the days per year for year as of the beginning of the current time step
         get_curr_yearfrac,        &! return the fractional position in the current year, as of the end of the current timestep
         get_prev_yearfrac,        &! return the fractional position in the current year, as of the beginning of the current timestep
         get_rest_date,            &! return the date from the restart file
         get_local_timestep_time,  &! return the local time for the input longitude to the nearest time-step
         get_local_time,           &! return the local time for the input longitude
-        set_nextsw_cday,          &! set the next radiation calendar day
         is_first_step,            &! return true on first step of initial run
         is_first_restart_step,    &! return true on first step of restart or branch run
         is_first_step_of_this_run_segment, &! return true on first step of any run segment (initial, restart or branch run)
@@ -108,10 +108,6 @@ module clm_time_manager
    logical, save :: tm_first_restart_step = .false.    ! true for first step of a restart or branch run
    logical, save :: tm_perp_calendar      = .false.    ! true when using perpetual calendar
    logical, save :: timemgr_set           = .false.    ! true when timemgr initialized
-   !
-   ! Next short-wave radiation calendar day
-   ! 
-   real(r8) :: nextsw_cday = uninit_r8 ! calday from clock of next radiation computation
 
    !
    ! The time-step number of startup or last Data Assimulation (DA) restart or pause
@@ -1071,27 +1067,42 @@ contains
 
   !=========================================================================================
 
-  function get_curr_calday(offset)
+  function get_curr_calday(offset, reuse_day_365_for_day_366)
 
     ! Return calendar day at end of current timestep with optional offset.
     ! Calendar day 1.0 = 0Z on Jan 1.
 
     ! Arguments
     integer, optional, intent(in) :: offset  ! Offset from current time in seconds.
-    ! Positive for future times, negative 
+    ! Positive for future times, negative
     ! for previous times.
+
+    ! If present and true, then day 366 (i.e., the last day of the year on leap years when
+    ! using a Gregorian calendar) reuses day 365. Note that this leads to non-monotonic
+    ! values throughout the year. This is needed in situations where the calday is used
+    ! in code that assumes a 365 day year and won't work right for day 366, such as
+    ! shr_orb_decl.
+    logical, optional, intent(in) :: reuse_day_365_for_day_366
+
     ! Return value
     real(r8) :: get_curr_calday
 
     ! Local variables
     character(len=*), parameter :: sub = 'clm::get_curr_calday'
     integer :: rc
+    logical :: l_reuse_day_365_for_day_366  ! local version of reuse_day_365_for_day_366
     type(ESMF_Time) :: date
     type(ESMF_TimeInterval) :: off, diurnal
     integer :: year, month, day, tod
     !-----------------------------------------------------------------------------------------
 
     if ( .not. check_timemgr_initialized(sub) ) return
+
+    if (present(reuse_day_365_for_day_366)) then
+       l_reuse_day_365_for_day_366 = reuse_day_365_for_day_366
+    else
+       l_reuse_day_365_for_day_366 = .false.
+    end if
 
     call ESMF_ClockGet( tm_clock, currTime=date, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -1124,13 +1135,15 @@ contains
     !!!! current shr_orb_decl calculation can't handle days > 366.                      !!!!!!
     !!!!       Dani Bundy-Coleman and Erik Kluzek Aug/2008                              !!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if ( (get_curr_calday > 366.0) .and. (get_curr_calday <= 367.0) .and. &
-         (trim(calendar) == GREGORIAN_C) )then
-       get_curr_calday = get_curr_calday - 1.0_r8
+    if (l_reuse_day_365_for_day_366) then
+       if ( (get_curr_calday > 366.0) .and. (get_curr_calday <= 367.0) .and. &
+            (trim(calendar) == GREGORIAN_C) )then
+          get_curr_calday = get_curr_calday - 1.0_r8
+       end if
     end if
     !!!!!!!!!!!!!! END HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!!!!!
     !----------------------------------------------------------------------------------------!
-    if ( (get_curr_calday < 1.0) .or. (get_curr_calday > 366.0) )then
+    if ( (get_curr_calday < 1.0) .or. (get_curr_calday > 367.0) )then
        write(iulog,*) sub, ' = ', get_curr_calday
        if ( present(offset) ) write(iulog,*) 'offset = ', offset
        call shr_sys_abort( sub//': error get_curr_calday out of bounds' )
@@ -1140,15 +1153,26 @@ contains
 
   !=========================================================================================
 
-  function get_calday(ymd, tod)
+  function get_calday(ymd, tod, reuse_day_365_for_day_366)
 
     ! Return calendar day corresponding to specified time instant.
     ! Calendar day 1.0 = 0Z on Jan 1.
+
+    ! If the current run is using a Gregorian calendar, then the year is important, in
+    ! that it determines whether or not we're in a leap year for the sake of determining
+    ! the calendar day.
 
     ! Arguments
     integer, intent(in) :: &
          ymd,   &! date in yearmmdd format
          tod     ! time of day (seconds past 0Z)
+
+    ! If present and true, then day 366 (i.e., the last day of the year on leap years when
+    ! using a Gregorian calendar) reuses day 365. Note that this leads to non-monotonic
+    ! values throughout the year. This is needed in situations where the calday is used
+    ! in code that assumes a 365 day year and won't work right for day 366, such as
+    ! shr_orb_decl.
+    logical, optional, intent(in) :: reuse_day_365_for_day_366
 
     ! Return value
     real(r8) :: get_calday
@@ -1156,8 +1180,15 @@ contains
     ! Local variables
     character(len=*), parameter :: sub = 'clm::get_calday'
     integer :: rc                 ! return code
+    logical :: l_reuse_day_365_for_day_366  ! local version of reuse_day_365_for_day_366
     type(ESMF_Time) :: date
     !-----------------------------------------------------------------------------------------
+
+    if (present(reuse_day_365_for_day_366)) then
+       l_reuse_day_365_for_day_366 = reuse_day_365_for_day_366
+    else
+       l_reuse_day_365_for_day_366 = .false.
+    end if
 
     date = TimeSetymd( ymd, tod, "get_calday" )
     call ESMF_TimeGet( date, dayOfYear_r8=get_calday, rc=rc )
@@ -1168,13 +1199,15 @@ contains
 !!!! current shr_orb_decl calculation can't handle days > 366.                      !!!!!!
 !!!!       Dani Bundy-Coleman and Erik Kluzek Aug/2008                              !!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if ( (get_calday > 366.0) .and. (get_calday <= 367.0) .and. &
-         (trim(calendar) == GREGORIAN_C) )then
-       get_calday = get_calday - 1.0_r8
+    if (l_reuse_day_365_for_day_366) then
+       if ( (get_calday > 366.0) .and. (get_calday <= 367.0) .and. &
+            (trim(calendar) == GREGORIAN_C) )then
+          get_calday = get_calday - 1.0_r8
+       end if
     end if
 !!!!!!!!!!!!!! END HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!!!!!
     !----------------------------------------------------------------------------------------!
-    if ( (get_calday < 1.0) .or. (get_calday > 366.0) )then
+    if ( (get_calday < 1.0) .or. (get_calday > 367.0) )then
        write(iulog,*) sub, ' = ', get_calday
        call shr_sys_abort( sub//': error calday out of range' )
     end if
@@ -1196,10 +1229,14 @@ contains
 
   !=========================================================================================
 
-  integer function get_days_per_year( offset )
+  integer function get_curr_days_per_year( offset )
 
     !---------------------------------------------------------------------------------
-    ! Get the number of days per year for currrent year
+    ! Get the number of days per year for the year as of the end of the current time step
+    ! (or offset from the end of the current time step, if offset is provided).
+    !
+    ! For the last time step of the year, note that the this will give the number of days
+    ! per year in the about-to-start year, not in the just-finishing year.
 
     !
     ! Arguments
@@ -1207,7 +1244,7 @@ contains
     ! Positive for future times, negative 
     ! for previous times.
 
-    character(len=*), parameter :: sub = 'clm::get_days_per_year'
+    character(len=*), parameter :: sub = 'clm::get_curr_days_per_year'
     integer         :: yr, mon, day, tod ! current date year, month, day and time-of-day
     type(ESMF_Time) :: eDate             ! ESMF date
     integer         :: rc                ! ESMF return code
@@ -1221,10 +1258,28 @@ contains
        call get_curr_date(yr, mon, day, tod )
     end if
     eDate = TimeSetymd( ymd=yr*10000+1231, tod=0, desc="end of year" )
-    call ESMF_TimeGet( eDate, dayOfYear=get_days_per_year, rc=rc )
+    call ESMF_TimeGet( eDate, dayOfYear=get_curr_days_per_year, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeGet')
 
-  end function get_days_per_year
+  end function get_curr_days_per_year
+
+  !=========================================================================================
+
+  integer function get_prev_days_per_year()
+
+    !---------------------------------------------------------------------------------
+    ! Get the number of days per year for the year as of the beginning of the current time step
+    !
+    ! For the last time step of the year, note that the this will give the number of days
+    ! per year in the just-finishing year.
+
+    character(len=*), parameter :: sub = 'clm::get_prev_days_per_year'
+
+    if ( .not. check_timemgr_initialized(sub) ) return
+
+    get_prev_days_per_year = get_curr_days_per_year(offset = -dtime)
+
+  end function get_prev_days_per_year
 
   !=========================================================================================
 
@@ -1249,7 +1304,7 @@ contains
     if ( .not. check_timemgr_initialized(sub) ) return
 
     cday          = get_curr_calday(offset=offset)
-    days_per_year = get_days_per_year()
+    days_per_year = get_curr_days_per_year(offset=offset)
 
     get_curr_yearfrac = (cday - 1._r8)/days_per_year
 
@@ -1267,7 +1322,7 @@ contains
     ! Arguments
     real(r8) :: get_prev_yearfrac  ! function result
     
-    character(len=*), parameter :: sub = 'clm::get_curr_yearfrac'
+    character(len=*), parameter :: sub = 'clm::get_prev_yearfrac'
     
     if ( .not. check_timemgr_initialized(sub) ) return
     
@@ -1416,21 +1471,6 @@ contains
 
     !---------------------------------------------------------------------------------
   end function is_near_local_noon
-
-  !=========================================================================================
-
-  subroutine set_nextsw_cday( nextsw_cday_in )
-
-    ! Set the next radiation calendar day, so that radiation step can be calculated
-    !
-    ! Arguments
-    real(r8), intent(IN) :: nextsw_cday_in ! input calday of next radiation computation
-
-    character(len=*), parameter :: sub = 'clm::set_nextsw_cday'
-
-    nextsw_cday = nextsw_cday_in
-
-  end subroutine set_nextsw_cday
 
   !=========================================================================================
  
@@ -1800,8 +1840,6 @@ contains
     tm_perp_calendar      = .false.
     timemgr_set           = .false.
 
-    nextsw_cday = uninit_r8
-    
     ! ------------------------------------------------------------------------
     ! Reset other module-level variables to some reasonable default, to ensure that they
     ! don't carry over any state from one unit test to the next.

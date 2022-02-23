@@ -5,33 +5,33 @@ module GetGlobalValuesMod
 
   implicit none
   
-  public :: GetGlobalWrite
-  public :: GetGlobalIndex
+  public :: write_point_context
+  public :: get_global_index
 
 contains
 
-  subroutine GetGlobalWrite(decomp_index, clmlevel)
-    integer, intent(in) :: decomp_index
-    character(len=*), intent(in) :: clmlevel
+  subroutine write_point_context(subgrid_index, subgrid_level)
+    integer, intent(in) :: subgrid_index
+    character(len=*), intent(in) :: subgrid_level
 
     ! do nothing
-  end subroutine GetGlobalWrite
+  end subroutine write_point_context
 
   !-----------------------------------------------------------------------
-  integer function GetGlobalIndex(decomp_index, clmlevel)
+  integer function get_global_index(subgrid_index, subgrid_level)
 
     !----------------------------------------------------------------
     ! Description
-    ! Determine global index space value for target point at given clmlevel
+    ! Determine global index space value for target point at given subgrid_level
     !
     ! Uses:
     !
     ! Arguments 
-    integer          , intent(in) :: decomp_index
-    character(len=*) , intent(in) :: clmlevel
+    integer          , intent(in) :: subgrid_index
+    character(len=*) , intent(in) :: subgrid_level
 
     ! De essentially nothing, just set the index to a negative value to signal it's not real
-    GetGlobalIndex = -1
-  end function GetGlobalIndex
+    get_global_index = -1
+  end function get_global_index
 
 end module GetGlobalValuesMod

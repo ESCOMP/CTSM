@@ -124,7 +124,7 @@ module CNFUNMod
   !
   ! !USES:
   use clm_varcon      , only: secspday, fun_period
-  use clm_time_manager, only: get_step_size_real,get_nstep,get_curr_date,get_days_per_year
+  use clm_time_manager, only: get_step_size_real,get_nstep,get_curr_date,get_curr_days_per_year
   !
   ! !ARGUMENTS:
   type(bounds_type)             , intent(in)    :: bounds
@@ -166,7 +166,7 @@ module CNFUNMod
   !---
   ! set time steps
   dt           = get_step_size_real()
-  dayspyr      = get_days_per_year()
+  dayspyr      = get_curr_days_per_year()
   nstep        = get_nstep()
   timestep_fun = real(secspday * fun_period)
   nstep_fun    = int(secspday * dayspyr / dt) 
@@ -210,7 +210,7 @@ module CNFUNMod
        & soilbiogeochem_nitrogenstate_inst)
 
 ! !USES:
-   use clm_time_manager, only : get_step_size_real, get_curr_date, get_days_per_year 
+   use clm_time_manager, only : get_step_size_real, get_curr_date
    use clm_varpar      , only : nlevdecomp
    use clm_varcon      , only : secspday, smallValue, fun_period, tfrz, dzsoi_decomp, spval
    use clm_varctl      , only : use_nitrif_denitrif
@@ -505,7 +505,6 @@ module CNFUNMod
   !---------------------------------
   associate(ivt                    => patch%itype                                          , & ! Input:   [integer  (:) ]  p
          leafcn                 => pftcon%leafcn                                        , & ! Input:   leaf C:N (gC/gN)
-         lflitcn                => pftcon%lflitcn                                       , & ! Input:   leaf litter C:N (gC/gN)
          season_decid           => pftcon%season_decid                                  , & ! Input:   binary flag for seasonal
          ! -deciduous leaf habit (0 or 1)
          stress_decid           => pftcon%stress_decid                                  , & ! Input:   binary flag for stress
@@ -1233,13 +1232,13 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                      ! C used for uptake is reduced if the cost of N is very high
                      frac_ideal_C_use = max(0.0_r8,1.0_r8 - (total_N_resistance-fun_cn_flex_a(ivt(p)))/fun_cn_flex_b(ivt(p)) )
                      ! then, if the plant is very much in need of N, the C used for uptake is increased accordingly.
-                     if(delta_CN.lt.0.0)then
+                     if(delta_CN.lt.0.0_r8)then
                        frac_ideal_C_use = frac_ideal_C_use + (1.0_r8-frac_ideal_C_use)*min(1.0_r8, delta_CN/fun_cn_flex_c(ivt(p)))
                      end if
                      ! If we have too much N (e.g. from free N retranslocation) then make frac_ideal_c_use even lower.
                      ! For a CN delta of fun_cn_flex_c, then we reduce C expendiure to the minimum of 0.5.
                      ! This seems a little intense?
-                     if(delta_CN .gt.0.and. frac_ideal_C_use.lt.1.0)then
+                     if(delta_CN .gt.0._r8 .and. frac_ideal_C_use.lt.1.0_r8)then
                        frac_ideal_C_use = frac_ideal_C_use + 0.5_r8*(1.0_r8*delta_CN/fun_cn_flex_c(ivt(p)))
                      end if
                      ! don't let this go above 1 or below an arbitrary minimum (to prevent zero N uptake).
@@ -1584,10 +1583,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
   real(r8), intent(in) :: tc_soisno ! soil temperature (degrees Celsius)
 
   if (fixer == 1 .and. crootfr > 1.e-6_r8) then
-     fun_cost_fix  = s_fix * (exp(a_fix + b_fix * tc_soisno * (1._r8 - 0.5_r8 * tc_soisno / c_fix)) - 2._r8)
-     
-     
-     ! New term to directly account for Ben Houlton's temperature response function. 
+     ! New term to directly account for Ben Houlton's temperature response function.
      ! Assumes s_fix is -6.  (RF, Jan 2015)  
      ! 1.25 converts from the Houlton temp response function to a 0-1 limitation factor. 
      ! The cost of N should probably be 6 gC/gN (or 9, including maintenance costs of nodules) 

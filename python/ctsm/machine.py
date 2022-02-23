@@ -3,9 +3,9 @@
 
 import logging
 from collections import namedtuple
+from CIME.utils import get_project  # pylint: disable=import-error
 from ctsm.joblauncher.job_launcher_factory import \
     create_job_launcher, JOB_LAUNCHER_NOBATCH
-from CIME.utils import get_project  # pylint: disable=import-error
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +23,12 @@ logger = logging.getLogger(__name__)
 # user of the machine object to check for that possibility if need be.
 #
 # Similar notes apply to baseline_dir.
-Machine = namedtuple('Machine', ['name',           # str
-                                 'scratch_dir',    # str
-                                 'baseline_dir',   # str
-                                 'account',        # str or None
-                                 'job_launcher'])  # subclass of JobLauncherBase
+Machine = namedtuple('Machine', ['name',              # str
+                                 'scratch_dir',       # str
+                                 'baseline_dir',      # str
+                                 'account',           # str or None
+                                 'create_test_retry', # int
+                                 'job_launcher'])     # subclass of JobLauncherBase
 
 def create_machine(machine_name, defaults, job_launcher_type=None,
                    scratch_dir=None, account=None,
@@ -78,6 +79,7 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
 
     mach_defaults = defaults.get(machine_name)
     baseline_dir = None
+    create_test_retry = 0
     if mach_defaults is not None:
         if job_launcher_type is None:
             job_launcher_type = mach_defaults.job_launcher_type
@@ -93,6 +95,10 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
         # generation and comparison, or making a link in some temporary location that
         # points to the standard baselines).
         baseline_dir = mach_defaults.baseline_dir
+        # We also don't provide a way to override the default create_test_retry in the
+        # machine object: this will always give the default value for this machine, and
+        # other mechanisms will be given for overriding this in a particular case.
+        create_test_retry = mach_defaults.create_test_retry
         if account is None and mach_defaults.account_required and not allow_missing_entries:
             raise RuntimeError("Could not find an account code")
     else:
@@ -142,21 +148,23 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
                    scratch_dir=scratch_dir,
                    baseline_dir=baseline_dir,
                    account=account,
+                   create_test_retry=create_test_retry,
                    job_launcher=job_launcher)
 
-def get_possibly_overridden_baseline_dir(machine, baseline_dir=None):
-    """Get the baseline directory to use here, or None
+def get_possibly_overridden_mach_value(machine, varname, value=None):
+    """Get the value to use for the given machine variable
 
-    If baseline_dir is provided (not None), use that. Otherwise use the baseline directory
-    from machine (which may be None).
+    If value is provided (not None), use that. Otherwise use the value of the given
+    variable from the provided machine object.
 
     Args:
     machine (Machine)
-    baseline_dir (str or None): gives the overriding baseline directory to use
+    varname (str): name of variable to get from the machine object
+    value: if not None, use this instead of fetching from the machine object
     """
-    if baseline_dir is not None:
-        return baseline_dir
-    return machine.baseline_dir
+    if value is not None:
+        return value
+    return getattr(machine, varname)
 
 def _get_account():
     account = get_project()

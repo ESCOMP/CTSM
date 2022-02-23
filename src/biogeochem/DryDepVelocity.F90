@@ -64,8 +64,7 @@ Module DryDepVelocity
   use seq_drydep_mod       , only : index_o3=>o3_ndx, index_o3a=>o3a_ndx, index_so2=>so2_ndx, index_h2=>h2_ndx
   use seq_drydep_mod       , only : index_co=>co_ndx, index_ch4=>ch4_ndx, index_pan=>pan_ndx
   use seq_drydep_mod       , only : index_xpan=>xpan_ndx
-  use decompMod            , only : bounds_type
-  use clm_varcon           , only : namep
+  use decompMod            , only : bounds_type, subgrid_level_patch
   use atm2lndType          , only : atm2lnd_type
   use CanopyStateType      , only : canopystate_type
   use FrictionVelocityMod  , only : frictionvel_type
@@ -192,7 +191,7 @@ CONTAINS
     use shr_const_mod  , only : tmelt => shr_const_tkfrz
     use seq_drydep_mod , only : seq_drydep_setHCoeff, mapping, drat, foxd
     use seq_drydep_mod , only : rcls, h2_a, h2_b, h2_c, ri, rac, rclo, rlu, rgss, rgso
-    use landunit_varcon, only : istsoil, istice_mec, istdlak, istwet
+    use landunit_varcon, only : istsoil, istice, istdlak, istwet
     use clm_varctl     , only : iulog
     use pftconMod      , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree
     use pftconMod      , only : ndllf_dcd_brl_tree, nbrdlf_evr_trp_tree
@@ -350,7 +349,7 @@ CONTAINS
             if (clmveg >= npcropmin .and. clmveg <= npcropmax ) wesveg = 2 
             if (wesveg == wveg_unset )then
                write(iulog,*) 'clmveg = ', clmveg, 'lun%itype = ', lun%itype(l)
-               call endrun(decomp_index=pi, clmlevel=namep, &
+               call endrun(subgrid_index=pi, subgrid_level=subgrid_level_patch, &
                     msg='ERROR: Not able to determine Wesley vegetation type'//&
                     errMsg(sourcefile, __LINE__))
             end if
@@ -380,7 +379,7 @@ CONTAINS
             index_season = -1
 
             if ( lun%itype(l) /= istsoil )then
-               if ( lun%itype(l) == istice_mec ) then
+               if ( lun%itype(l) == istice ) then
                   wesveg       = 8
                   index_season = 4
                elseif ( lun%itype(l) == istdlak ) then
@@ -400,7 +399,7 @@ CONTAINS
             endif
 
             if (index_season<0) then 
-               if (elai(pi) < (minlai+0.05*(maxlai-minlai))) then  
+               if (elai(pi) < (minlai+0.05_r8*(maxlai-minlai))) then  
                   index_season = 3 
                endif
             endif

@@ -1083,6 +1083,10 @@ contains
          soilbiogeochem_carbonflux_inst, &
          c13_soilbiogeochem_carbonflux_inst, &
          c14_soilbiogeochem_carbonflux_inst, &
+         soilbiogeochem_carbonstate_inst, &
+         c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst)
 
     ! On the radiation time step, use C state variables to calculate
@@ -1127,7 +1131,9 @@ contains
     DA_nstep = get_nstep_since_startup_or_lastDA_restart_or_pause()
     if (DA_nstep <= skip_steps )then
        if (masterproc) then
+!$OMP MASTER
           write(iulog,*) '--WARNING-- skipping CN balance check for first timesteps after startup or data assimilation'
+!$OMP END MASTER
        end if
     else
 

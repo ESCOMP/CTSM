@@ -665,6 +665,7 @@ contains
 
     call this%waterfluxbulk_inst%InitAccBuffer(bounds)
     call this%wateratm2lndbulk_inst%InitAccBuffer(bounds)
+    call this%waterdiagnosticbulk_inst%InitAccBuffer(bounds)
 
   end subroutine InitAccBuffer
 
@@ -685,6 +686,7 @@ contains
 
     call this%waterfluxbulk_inst%initAccVars(bounds)
     call this%wateratm2lndbulk_inst%initAccVars(bounds)
+    call this%waterdiagnosticbulk_inst%initAccVars(bounds)
 
   end subroutine InitAccVars
 
@@ -707,6 +709,7 @@ contains
 
     call this%waterfluxbulk_inst%UpdateAccVars(bounds)
     call this%wateratm2lndbulk_inst%UpdateAccVars(bounds)
+    call this%waterdiagnosticbulk_inst%UpdateAccVars(bounds)
 
   end subroutine UpdateAccVars
 
@@ -933,7 +936,10 @@ contains
              call bulk_vars%get_data(var_num, bulk)
              call tracer_vars%get_data(var_num, tracer)
 
-             call CompareBulkToTracer(begi, endi, &
+             call CompareBulkToTracer( &
+                  subgrid_level = tracer_vars%get_subgrid_level(var_num), &
+                  bounds_beg = begi, &
+                  bounds_end = endi, &
                   bulk   = bulk(begi:endi), &
                   tracer = tracer(begi:endi), &
                   ratio = tracer_info%get_ratio(), &

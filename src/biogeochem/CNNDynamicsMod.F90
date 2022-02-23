@@ -9,7 +9,7 @@ module CNNDynamicsMod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use decompMod                       , only : bounds_type
   use clm_varcon                      , only : dzsoi_decomp, zisoi
-  use clm_varctl                      , only : use_nitrif_denitrif, use_vertsoilc, nfix_timeconst
+  use clm_varctl                      , only : use_nitrif_denitrif, nfix_timeconst
   use subgridAveMod                   , only : p2c
   use atm2lndType                     , only : atm2lnd_type
   use CNVegStateType                  , only : cnveg_state_type
@@ -125,7 +125,7 @@ contains
     ! directly into the canopy and mineral N entering the soil pool.
     !
     ! !USES:
-    use CNSharedParamsMod    , only: use_fun
+    !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds  
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
@@ -156,7 +156,7 @@ contains
        waterfluxbulk_inst, soilbiogeochem_nitrogenflux_inst)
 
 
-    use clm_time_manager , only : get_days_per_year
+    use clm_time_manager , only : get_curr_days_per_year
     use shr_sys_mod      , only : shr_sys_flush
     use clm_varcon       , only : secspday, spval
  
@@ -178,7 +178,7 @@ contains
                   ffix_to_sminn    => soilbiogeochem_nitrogenflux_inst%ffix_to_sminn_col & ! Output: [real(:)  ] : free living N fixation to soil mineral N (gN/m2/s)
                 ) 
        
-       dayspyr = get_days_per_year()
+       dayspyr = get_curr_days_per_year()
        secs_per_year = dayspyr*24_r8*3600_r8
 
        do fc = 1,num_soilc
@@ -200,7 +200,7 @@ contains
     ! All N fixation goes to the soil mineral N pool.
     !
     ! !USES:
-    use clm_time_manager , only : get_days_per_year
+    use clm_time_manager , only : get_curr_days_per_year
     use shr_sys_mod      , only : shr_sys_flush
     use clm_varcon       , only : secspday, spval
     use CNSharedParamsMod    , only: use_fun
@@ -218,13 +218,13 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                & 
-         cannsum_npp    => cnveg_carbonflux_inst%annsum_npp_col ,             & ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)                
+         cannsum_npp    => cnveg_carbonflux_inst%annsum_npp_col ,             & ! Input: [real(r8) (:)]  (gC/m2/yr) annual sum of NPP, averaged from patch-level
          col_lag_npp    => cnveg_carbonflux_inst%lag_npp_col    ,             & ! Input: [real(r8) (:)]  (gC/m2/s) lagged net primary production           
 
          nfix_to_sminn  => soilbiogeochem_nitrogenflux_inst%nfix_to_sminn_col & ! Output: [real(r8) (:)]  symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s)
          )
 
-      dayspyr = get_days_per_year()
+      dayspyr = get_curr_days_per_year()
 
       if ( nfix_timeconst > 0._r8 .and. nfix_timeconst < 500._r8 ) then
          ! use exponential relaxation with time constant nfix_timeconst for NPP - NFIX relation

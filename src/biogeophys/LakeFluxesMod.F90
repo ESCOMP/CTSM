@@ -190,8 +190,8 @@ contains
     real(r8) :: kva0temp                           ! (K) temperature for kva0; will be set below
     real(r8), parameter :: kva0pres = 1.013e5_r8   ! (Pa) pressure for kva0
     real(r8) :: kva                                ! kinematic viscosity of air at ground temperature and forcing pressure
-    real(r8), parameter :: prn = 0.713             ! Prandtl # for air at neutral stability
-    real(r8), parameter :: sch = 0.66              ! Schmidt # for water in air at neutral stability
+    real(r8), parameter :: prn = 0.713_r8          ! Prandtl # for air at neutral stability
+    real(r8), parameter :: sch = 0.66_r8           ! Schmidt # for water in air at neutral stability
 
     !-----------------------------------------------------------------------
 

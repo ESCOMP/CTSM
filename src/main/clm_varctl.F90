@@ -89,12 +89,13 @@ module clm_varctl
 
   character(len=fname_len), public :: finidat    = ' '        ! initial conditions file name
   character(len=fname_len), public :: fsurdat    = ' '        ! surface data file name
-  character(len=fname_len), public :: fatmgrid   = ' '        ! atm grid file name
-  character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
   character(len=fname_len), public :: paramfile  = ' '        ! ASCII data file with PFT physiological constants
   character(len=fname_len), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=fname_len), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
+
+  character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
+                                                              ! only needed for LILAC and MCT drivers
 
   !----------------------------------------------------------
   ! Flag to read ndep rather than obtain it from coupler
@@ -196,11 +197,13 @@ module clm_varctl
   ! which snow cover fraction parameterization to use
   character(len=64), public :: snow_cover_fraction_method
 
-  ! true => write global average diagnostics to std out
-  logical,  public :: wrtdia       = .false.            
-
   ! atmospheric CO2 molar ratio (by volume) (umol/mol)
   real(r8), public :: co2_ppmv     = 355._r8            !
+
+  ! ozone vegitation stress method, valid values: unset, stress_lombardozzi2015, stress_falk
+  character(len=64), public    :: o3_veg_stress_method = 'unset'
+
+  real(r8), public  :: o3_ppbv = 100._r8
 
   !----------------------------------------------------------
   ! C isotopes
@@ -246,6 +249,8 @@ module clm_varctl
   logical, public            :: use_fates_ed_prescribed_phys = .false. ! true => prescribed physiology
   logical, public            :: use_fates_inventory_init = .false.     ! true => initialize fates from inventory
   logical, public            :: use_fates_fixed_biogeog = .false.           ! true => use fixed biogeography mode
+  logical, public            :: use_fates_nocomp = .false.           ! true => use no comopetition mode
+  logical, public            :: use_fates_sp = .false.           ! true => use FATES satellite phenology mode
   character(len=256), public :: fates_inventory_ctrl_filename = ''     ! filename for inventory control
 
   !----------------------------------------------------------
@@ -378,17 +383,14 @@ module clm_varctl
   ! Migration of CPP variables
   !----------------------------------------------------------
 
-  logical, public :: use_lch4            = .false.
-  logical, public :: use_nitrif_denitrif = .false.
-  logical, public :: use_vertsoilc       = .false.
+  logical, public :: use_lch4            = .true.
+  logical, public :: use_nitrif_denitrif = .true.
   logical, public :: use_extralakelayers = .false.
   logical, public :: use_vichydro        = .false.
-  logical, public :: use_century_decomp  = .false.
   logical, public :: use_cn              = .false.
   logical, public :: use_cndv            = .false.
   logical, public :: use_grainproduct    = .false.
   logical, public :: use_fertilizer      = .false.
-  logical, public :: use_ozone           = .false.
   logical, public :: use_snicar_frc      = .false.
   logical, public :: use_vancouver       = .false.
   logical, public :: use_mexicocity      = .false.

@@ -234,12 +234,11 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
   use mkvarctl    
   use mkncdio
   use mkpctPftTypeMod,   only : pct_pft_type
-  use mkpftUtilsMod,     only : convert_from_p2g
   use mkpftConstantsMod, only : natpft_lb, natpft_ub, num_cft, cft_lb, cft_ub
 !
 ! !ARGUMENTS:
   implicit none
-  type(domain_type), intent(inout) :: ldomain
+  type(domain_type), intent(in) :: ldomain
   character(len=*)  , intent(in) :: mapfname              ! input mapping file name
   character(len=*)  , intent(in) :: fpft                  ! input pft dataset file name
   integer           , intent(in) :: ndiag                 ! unit number for diag out
@@ -266,6 +265,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
   real(r8), allocatable :: pctnatveg_o(:)     ! output grid: natural veg percent (% of grid cell)
   real(r8), allocatable :: pctcrop_i(:)       ! input grid: all crop percent (% of grid cell)
   real(r8), allocatable :: pctcrop_o(:)       ! output grid: all crop percent (% of grid cell)
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
   real(r8), allocatable :: pct_cft_i(:,:)     ! input grid: CFT (Crop Functional Type) percent (% of landunit cell)
   real(r8), allocatable :: temp_i(:,:)        ! input grid: temporary 2D variable to read in
   real(r8), allocatable :: pct_cft_o(:,:)     ! output grid: CFT (Crop Functional Type) percent (% of landunit cell)
@@ -447,6 +447,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
               pctnatveg_o(ns_o), &
               pctcrop_i(ns_i),   &
               pctcrop_o(ns_o),   &
+              frac_dst(ns_o),    &
               pct_cft_i(ns_i,1:num_cft), &
               pct_cft_o(ns_o,1:num_cft), &
               pct_nat_pft_i(ns_i,0:num_natpft), &
@@ -541,26 +542,26 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
 
      call domain_checksame( tdomain, ldomain, tgridmap )
 
+     ! Obtain frac_dst
+     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
      ! Area-average percent cover on input grid [pctpft_i] to output grid 
      ! [pctpft_o] and correct [pctpft_o] according to land landmask
      ! Note that percent cover is in terms of total grid area.
-  
-     do no = 1,ns_o
-        pctlnd_o(no)     = tgridmap%frac_dst(no) * 100._r8
-        ldomain%frac(no) = tgridmap%frac_dst(no) 
-     end do
+     pctlnd_o(:) = frac_dst(:) * 100._r8
 
      ! New format with extra variables on input
-     call gridmap_areaave(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8)
-     call gridmap_areaave(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8)
+     call gridmap_areaave_srcmask(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+     call gridmap_areaave_srcmask(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
      !
      ! If specific PFT/CFT's are NOT prescribed set them from the input file
      !
      if ( .not. use_input_pft )then
         do m = 0, num_natpft
-           call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), pct_nat_pft_o(:,m), &
-                nodata=0._r8,src_wt=pctnatveg_i*0.01_r8,dst_wt=pctnatveg_o*0.01_r8)
+           call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), &
+              pct_nat_pft_o(:,m), nodata=0._r8, &
+              src_wt=pctnatveg_i*0.01_r8*tdomain%mask, &
+              dst_wt=pctnatveg_o*0.01_r8, frac_dst=frac_dst)
            do no = 1,ns_o
               if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
                  if (m == 0) then
@@ -573,7 +574,8 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         end do
         do m = 1, num_cft
            call gridmap_areaave_scs(tgridmap, pct_cft_i(:,m), pct_cft_o(:,m), &
-                nodata=0._r8,src_wt=pctcrop_i*0.01_r8,dst_wt=pctcrop_o*0.01_r8)
+              nodata=0._r8, src_wt=pctcrop_i*0.01_r8*tdomain%mask, &
+              dst_wt=pctcrop_o*0.01_r8, frac_dst=frac_dst)
            do no = 1,ns_o
               if (pctlnd_o(no) < 1.0e-6 .or. pctcrop_o(no) < 1.0e-6) then
                  if (m == 1) then
@@ -642,7 +644,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         write (6,*) subname//'error: nat pft = ', &
              (pct_nat_pft_o(no,m), m = 0, num_natpft), &
              ' do not sum to 100. at no = ',no,' but to ', wst_sum
-        stop
+        call abort()
      end if
 
      ! Correct sum so that if it differs slightly from 100, it is corrected to equal
@@ -659,7 +661,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         write (6,*) subname//'error: crop cft = ', &
              (pct_cft_o(no,m), m = 1, num_cft), &
              ' do not sum to 100. at no = ',no,' but to ', wst_sum
-        stop
+        call abort()
      end if
 
      ! Correct sum so that if it differs slightly from 100, it is corrected to equal
@@ -709,7 +711,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         garea_i = garea_i + tgridmap%area_src(ni)*re**2
         do m = 0, numpft_i - 1
            gpft_i(m) = gpft_i(m) + pctpft_i(ni,m)*tgridmap%area_src(ni)*&
-                                                  tgridmap%frac_src(ni)*re**2
+                                                  tdomain%mask(ni)*re**2
         end do
      end do
      if ( allocated(pctpft_i) ) deallocate (pctpft_i)
@@ -722,7 +724,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         garea_o = garea_o + tgridmap%area_dst(no)*re**2
         do m = 0, numpft_i - 1
            gpft_o(m) = gpft_o(m) + pctpft_o(no,m)*tgridmap%area_dst(no)*&
-                                                  tgridmap%frac_dst(no)*re**2
+                                                  frac_dst(no)*re**2
         end do
      end do
 
@@ -746,7 +748,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
 1002 format (1x,a35,f16.3,f17.3)
      call shr_sys_flush(ndiag)
 
-     deallocate(gpft_i, gpft_o)
+     deallocate(gpft_i, gpft_o, frac_dst)
 
   end if
   deallocate( pctnatpft_i )

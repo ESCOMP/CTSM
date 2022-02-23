@@ -9,13 +9,13 @@ module lnd_comp_mct
   ! !uses:
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use shr_sys_mod      , only : shr_sys_flush
+  use shr_log_mod      , only : errMsg => shr_log_errMsg
   use mct_mod          , only : mct_avect, mct_gsmap, mct_gGrid
-  use decompmod        , only : bounds_type, ldecomp
+  use decompmod        , only : bounds_type
   use lnd_import_export, only : lnd_import, lnd_export
   !
   ! !public member functions:
   implicit none
-  save
   private                     ! by default make data private
   !
   ! !public member functions:
@@ -24,9 +24,11 @@ module lnd_comp_mct
   public :: lnd_final_mct     ! clm finalization/cleanup
   !
   ! !private member functions:
-  private :: lnd_setgsmap_mct  ! set the land model mct gs map
   private :: lnd_domain_mct    ! set the land model domain information
   private :: lnd_handle_resume ! handle pause/resume signals from the coupler
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
 
 !====================================================================================
 contains
@@ -41,10 +43,10 @@ contains
     ! !USES:
     use shr_kind_mod     , only : shr_kind_cl
     use abortutils       , only : endrun
-    use clm_time_manager , only : get_nstep, set_timemgr_init, set_nextsw_cday
+    use clm_time_manager , only : get_nstep, set_timemgr_init
     use clm_initializeMod, only : initialize1, initialize2
     use clm_instMod      , only : water_inst, lnd2atm_inst, lnd2glc_inst
-    use clm_varctl       , only : finidat,single_column, clm_varctl_set, iulog
+    use clm_varctl       , only : finidat, single_column, clm_varctl_set, iulog
     use clm_varctl       , only : inst_index, inst_suffix, inst_name
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
     use controlMod       , only : control_setNL
@@ -63,8 +65,9 @@ contains
     use spmdMod          , only : masterproc, spmd_init
     use clm_varctl       , only : nsrStartup, nsrContinue, nsrBranch
     use clm_cpl_indices  , only : clm_cpl_indices_set
-    use mct_mod          , only : mct_aVect_init, mct_aVect_zero, mct_gsMap_lsize
-    use lnd_set_decomp_and_domain, only : lnd_set_decomp_and_domain_from_surfrd         
+    use mct_mod          , only : mct_aVect_init, mct_aVect_zero, mct_gsMap, mct_gsMap_init
+    use decompMod        , only : gindex_global
+    use lnd_set_decomp_and_domain, only : lnd_set_decomp_and_domain_from_surfrd, gsmap_global
     use ESMF
     !
     ! !ARGUMENTS:
@@ -80,13 +83,13 @@ contains
     type(mct_gGrid),         pointer :: dom_l        ! Land model domain
     type(seq_infodata_type), pointer :: infodata     ! CESM driver level info data
     integer  :: lsize                                ! size of attribute vector
+    integer  :: gsize                                ! global size 
     integer  :: g,i,j                                ! indices
     integer  :: dtime_sync                           ! coupling time-step from the input synchronization clock
     logical  :: exists                               ! true if file exists
     logical  :: atm_aero                             ! Flag if aerosol data sent from atm model
     real(r8) :: scmlat                               ! single-column latitude
     real(r8) :: scmlon                               ! single-column longitude
-    real(r8) :: nextsw_cday                          ! calday from clock of next radiation computation
     character(len=SHR_KIND_CL) :: caseid             ! case identifier name
     character(len=SHR_KIND_CL) :: ctitle             ! case description title
     character(len=SHR_KIND_CL) :: starttype          ! start-type (startup, continue, branch, hybrid)
@@ -105,6 +108,7 @@ contains
     type(bounds_type) :: bounds                      ! bounds
     logical :: noland
     integer :: ni,nj
+    real(r8)         , parameter :: rundef = -9999999._r8
     character(len=32), parameter :: sub = 'lnd_init_mct'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
     !-----------------------------------------------------------------------
@@ -173,6 +177,12 @@ contains
                               start_type=starttype, model_version=version,      &
                               hostname=hostname, username=username )
 
+    ! Single Column
+    if ( single_column .and. (scmlat == rundef  .or. scmlon == rundef ) ) then
+       call endrun(msg=' ERROR:: single column mode on -- but scmlat and scmlon are NOT set'//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
     ! Note that we assume that CTSM's internal dtime matches the coupling time step.
     ! i.e., we currently do NOT allow sub-cycling within a coupling time step.
     call set_timemgr_init( calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
@@ -198,7 +208,7 @@ contains
     ! Read namelists
     call initialize1(dtime=dtime_sync)
 
-    ! Initialize decomposition (ldecomp) and domain (ldomain) types
+    ! Initialize decomposition and domain (ldomain) type
     call lnd_set_decomp_and_domain_from_surfrd(noland, ni, nj)
 
     ! If no land then exit out of initialization
@@ -217,8 +227,10 @@ contains
 
        ! Initialize clm gsMap, clm domain and clm attribute vectors
        call get_proc_bounds( bounds )
-       call lnd_SetgsMap_mct( bounds, mpicom_lnd, LNDID, gsMap_lnd )
-       lsize = mct_gsMap_lsize(gsMap_lnd, mpicom_lnd)
+       lsize = bounds%endg - bounds%begg + 1
+       gsize = ldomain%ni * ldomain%nj
+       call mct_gsMap_init( gsMap_lnd, gindex_global, mpicom_lnd, LNDID, lsize, gsize )
+       gsmap_global => gsmap_lnd ! module variable in lnd_set_decomp_and_domain
        call lnd_domain_mct( bounds, lsize, gsMap_lnd, dom_l )
        call mct_aVect_init(x2l_l, rList=seq_flds_x2l_fields, lsize=lsize)
        call mct_aVect_zero(x2l_l)
@@ -234,10 +246,6 @@ contains
        ! Fill in infodata settings
        call seq_infodata_PutData(infodata, lnd_prognostic=.true.)
        call seq_infodata_PutData(infodata, lnd_nx=ldomain%ni, lnd_ny=ldomain%nj)
-
-       ! Get infodata info
-       call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
-       call set_nextsw_cday(nextsw_cday)
        call lnd_handle_resume( cdata_l )
 
        ! Reset shr logging to original values
@@ -267,7 +275,7 @@ contains
     use clm_instMod     ,  only : water_inst, lnd2atm_inst, atm2lnd_inst, lnd2glc_inst, glc2lnd_inst
     use clm_driver      ,  only : clm_drv
     use clm_time_manager,  only : get_curr_date, get_nstep, get_curr_calday, get_step_size
-    use clm_time_manager,  only : advance_timestep, set_nextsw_cday,update_rad_dtime
+    use clm_time_manager,  only : advance_timestep, update_rad_dtime
     use decompMod       ,  only : get_proc_bounds
     use abortutils      ,  only : endrun
     use clm_varctl      ,  only : iulog
@@ -351,7 +359,6 @@ contains
          curr_yr=yr_sync, curr_mon=mon_sync, curr_day=day_sync)
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
 
-    call set_nextsw_cday( nextsw_cday )
     dtime = get_step_size()
 
     ! Handle pause/resume signals from coupler
@@ -415,7 +422,7 @@ contains
        ! Determine doalb based on nextsw_cday sent from atm model
 
        nstep = get_nstep()
-       caldayp1 = get_curr_calday(offset=dtime)
+       caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
        if (nstep == 0) then
           doalb = .false.
        else if (nstep == 1) then
@@ -437,7 +444,7 @@ contains
        call t_barrierf('sync_clm_run1', mpicom)
        call t_startf ('clm_run')
        call t_startf ('shr_orb_decl')
-       calday = get_curr_calday()
+       calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
        call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
        call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
        call t_stopf ('shr_orb_decl')
@@ -507,49 +514,6 @@ contains
 
     ! fill this in
   end subroutine lnd_final_mct
-
-  !====================================================================================
-  subroutine lnd_setgsmap_mct( bounds, mpicom_lnd, LNDID, gsMap_lnd )
-    !
-    ! !DESCRIPTION:
-    ! Set the MCT GS map for the land model
-    !
-    ! !USES:
-    use shr_kind_mod , only : r8 => shr_kind_r8
-    use domainMod    , only : ldomain
-    use mct_mod      , only : mct_gsMap, mct_gsMap_init
-    implicit none
-    !
-    ! !ARGUMENTS:
-    type(bounds_type) , intent(in)  :: bounds     ! bounds
-    integer           , intent(in)  :: mpicom_lnd ! MPI communicator for the clm land model
-    integer           , intent(in)  :: LNDID      ! Land model identifyer number
-    type(mct_gsMap)   , intent(out) :: gsMap_lnd  ! Resulting MCT GS map for the land model
-    !
-    ! !LOCAL VARIABLES:
-    integer,allocatable :: gindex(:)  ! Number the local grid points
-    integer :: i, j, n, gi            ! Indices
-    integer :: lsize,gsize            ! GS Map size
-    integer :: ier                    ! Error code
-    !---------------------------------------------------------------------------
-
-    ! Build the land grid numbering for MCT
-    ! NOTE:  Numbering scheme is: West to East and South to North
-    ! starting at south pole.  Should be the same as what's used in SCRIP
-    allocate(gindex(bounds%begg:bounds%endg),stat=ier)
-
-    ! number the local grid
-    do n = bounds%begg, bounds%endg
-       gindex(n) = ldecomp%gdc2glo(n)
-    end do
-    lsize = bounds%endg - bounds%begg + 1
-    gsize = ldomain%ni * ldomain%nj
-
-    call mct_gsMap_init( gsMap_lnd, gindex, mpicom_lnd, LNDID, lsize, gsize )
-
-    deallocate(gindex)
-
-  end subroutine lnd_SetgsMap_mct
 
   !====================================================================================
   subroutine lnd_domain_mct( bounds, lsize, gsMap_l, dom_l )

@@ -24,7 +24,7 @@ module lnd_comp_esmf
 
   ! ctsm code
   use spmdMod           , only : masterproc, spmd_init, mpicom
-  use decompMod         , only : bounds_type, ldecomp, get_proc_bounds
+  use decompMod         , only : bounds_type, get_proc_bounds
   use domainMod         , only : ldomain
   use controlMod        , only : control_setNL
   use clm_varorb        , only : eccen, obliqr, lambm0, mvelpp
@@ -32,13 +32,14 @@ module lnd_comp_esmf
   use clm_varctl        , only : nsrStartup, nsrContinue
   use clm_varctl        , only : inst_index, inst_suffix, inst_name
   use clm_time_manager  , only : set_timemgr_init, advance_timestep
-  use clm_time_manager  , only : set_nextsw_cday, update_rad_dtime
+  use clm_time_manager  , only : update_rad_dtime
   use clm_time_manager  , only : get_nstep, get_step_size
   use clm_time_manager  , only : get_curr_date, get_curr_calday
   use clm_initializeMod , only : initialize1, initialize2
   use clm_driver        , only : clm_drv
   use lnd_import_export , only : import_fields, export_fields
   use lnd_shr_methods   , only : chkerr, state_diagnose
+  use lnd_comp_shr      , only : mesh, model_meshfile, model_clock
   use lnd_set_decomp_and_domain, only :lnd_set_decomp_and_domain_from_readmesh
 
   implicit none
@@ -110,7 +111,6 @@ contains
     logical                    :: exists                     ! true if file exists
     character(len=CL)          :: caseid                     ! case identifier name
     character(len=CL)          :: starttype                  ! start-type (startup, continue, branch, hybrid)
-    real(r8)                   :: nextsw_cday                ! calday next radiation computation
     integer                    :: nsrest                     ! clm restart type
     integer                    :: lbnum                      ! input to memory diagnostic
     integer                    :: shrlogunit                 ! old values for log unit and log level
@@ -128,7 +128,6 @@ contains
     type(ESMF_Field)           :: lfield
 
     ! mesh generation
-    type(ESMF_Mesh)            :: lnd_mesh
     character(ESMF_MAXSTR)     :: lnd_mesh_filename          ! full filepath of land mesh file
     integer, pointer           :: gindex(:)                  ! global index space for land and ocean points
     type(ESMF_DistGrid)        :: distgrid
@@ -252,6 +251,9 @@ contains
     end if
     call shr_mpi_bcast(lnd_mesh_filename, mpicom)
 
+    ! Fill in the value for model_meshfile in lnd_comp_shr used by the stream routines in share_esmf/
+    model_meshfile = trim(lnd_mesh_filename)
+
     !----------------------
     ! Obtain caseid and start type from attributes in import state
     !----------------------
@@ -321,6 +323,9 @@ contains
          ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, dtime_in=dtime_lilac)
     call ESMF_LogWrite(subname//"ctsm time manager initialized....", ESMF_LOGMSG_INFO)
 
+    ! Set model clock in lnd_comp_shr
+    model_clock = clock
+
     !----------------------
     ! Read namelist, grid and surface data
     !----------------------
@@ -337,13 +342,13 @@ contains
     call ESMF_LogWrite(subname//"ctsm initialize1 done...", ESMF_LOGMSG_INFO)
 
     !----------------------
-    ! Initialize decomposition (ldecomp) and domain (ldomain) types and generate land mesh
+    ! Initialize decomposition and domain (ldomain) types and generate land mesh
     !----------------------
     ! TODO: generalize this so that a mask mesh is read in like for nuopc/cmeps
     ! For now set the meshfile_mask equal to the model_meshfile
     call lnd_set_decomp_and_domain_from_readmesh(driver='lilac', vm=vm, &
          meshfile_lnd=lnd_mesh_filename, meshfile_mask=lnd_mesh_filename, &
-         mesh_ctsm=lnd_mesh, ni=ni, nj=nj, rc=rc)
+         mesh_ctsm=mesh, ni=ni, nj=nj, rc=rc)
 
     !--------------------------------
     ! Finish initializing ctsm
@@ -358,9 +363,9 @@ contains
     c2l_fb_atm = ESMF_FieldBundleCreate (name='c2l_fb_atm', rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! now add atm import fields on lnd_mesh to this field bundle
+    ! now add atm import fields on mesh to this field bundle
     do n = 1, a2l_fields%num_fields()
-       lfield = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 , meshloc=ESMF_MESHLOC_ELEMENT, &
+       lfield = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8 , meshloc=ESMF_MESHLOC_ELEMENT, &
             name=a2l_fields%get_fieldname(n), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_FieldBundleAdd(c2l_fb_atm, (/lfield/), rc=rc)
@@ -394,9 +399,9 @@ contains
     l2c_fb_atm = ESMF_FieldBundleCreate(name='l2c_fb_atm', rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! now add atm export fields on lnd_mesh to this field bundle
+    ! now add atm export fields on mesh to this field bundle
     do n = 1, l2a_fields%num_fields()
-       lfield = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 , meshloc=ESMF_MESHLOC_ELEMENT, &
+       lfield = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8 , meshloc=ESMF_MESHLOC_ELEMENT, &
             name=l2a_fields%get_fieldname(n), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_FieldBundleAdd(l2c_fb_atm, (/lfield/), rc=rc)
@@ -411,7 +416,7 @@ contains
     l2c_fb_rof = ESMF_FieldBundleCreate(name='l2c_fb_rof', rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! now add rof export fields on lnd_mesh to this field bundle
+    ! now add rof export fields on mesh to this field bundle
     call fldbundle_add('Flrl_rofsur', l2c_fb_rof, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call fldbundle_add('Flrl_rofgwl', l2c_fb_rof, rc=rc)
@@ -446,31 +451,6 @@ contains
     call ESMF_LogWrite(subname//"set attribute lnd_ny to "//trim(cvalue), ESMF_LOGMSG_INFO)
 
     call ESMF_LogWrite(subname//"Created land export state", ESMF_LOGMSG_INFO)
-
-    !--------------------------------
-    ! Get calendar day of next sw (shortwave) calculation (nextsw_cday)
-    !--------------------------------
-
-    if (nsrest == nsrStartup) then
-       call ESMF_ClockGet( clock, currTime=currTime, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call ESMF_TimeGet( currTime, dayOfYear_r8=nextsw_cday, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    else
-       ! TODO: get this from the import state nextsw_cday attribute
-       !
-       ! See also https://github.com/ESCOMP/CTSM/issues/860
-    end if
-
-    ! Set nextsw_cday
-    call set_nextsw_cday(nextsw_cday_in=nextsw_cday)
-
-    write(cvalue,*) nextsw_cday
-    call ESMF_LogWrite(subname//"Calendar Day of nextsw calculation is "//trim(cvalue), ESMF_LOGMSG_INFO)
-    if (masterproc) then
-       write(iulog,*) 'TimeGet ... nextsw_cday is : ', nextsw_cday
-    end if
 
     !--------------------------------
     ! diagnostics
@@ -514,7 +494,7 @@ contains
       type(ESMF_Field) :: field
       !-------------------------------------------------------------------------------
       rc = ESMF_SUCCESS
-      field = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 , meshloc=ESMF_MESHLOC_ELEMENT , name=trim(stdname), rc=rc)
+      field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8 , meshloc=ESMF_MESHLOC_ELEMENT , name=trim(stdname), rc=rc)
       if (ChkErr(rc,__LINE__,u_FILE_u)) return
       call ESMF_FieldBundleAdd(fieldbundle, (/field/), rc=rc)
       if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -641,8 +621,8 @@ contains
        ! Determine calendar day info
        !--------------------------------
 
-       calday = get_curr_calday()
-       caldayp1 = get_curr_calday(offset=dtime)
+       calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
+       caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
 
        !--------------------------------
        ! Get time of next atmospheric shortwave calculation

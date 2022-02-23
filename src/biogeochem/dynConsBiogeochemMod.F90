@@ -58,7 +58,7 @@ contains
     ! !USES:
     use shr_const_mod      , only : SHR_CONST_PDB
     use landunit_varcon    , only : istsoil, istcrop
-    use clm_varpar         , only : nlevdecomp
+    use clm_varpar         , only : nlevdecomp, i_litr_min, i_litr_max
     use clm_varcon         , only : c13ratio, c14ratio, c3_r2, c4_r2
     use clm_time_manager   , only : get_step_size_real
     use dynPriorWeightsMod , only : prior_weights_type
@@ -85,7 +85,7 @@ contains
     type(soilbiogeochem_state_type)      , intent(in)    :: soilbiogeochem_state_inst
     !
     ! !LOCAL VARIABLES:
-    integer                       :: p,c,l,g,j                     ! indices
+    integer                       :: p,c,l,g,j,i                   ! indices
     integer                       :: begp, endp
     integer                       :: ier                           ! error code
     real(r8)                      :: dt                            ! land model time step (sec)
@@ -593,36 +593,20 @@ contains
           c = patch%column(p)
 
           ! fine root litter carbon fluxes
-          cnveg_carbonflux_inst%dwt_frootc_to_litr_met_c_col(c,j) = &
-               cnveg_carbonflux_inst%dwt_frootc_to_litr_met_c_col(c,j) + &
-               (dwt_frootc_to_litter(p)*pftcon%fr_flab(patch%itype(p)))/dt &
-               * soilbiogeochem_state_inst%froot_prof_patch(p,j)
-
-          cnveg_carbonflux_inst%dwt_frootc_to_litr_cel_c_col(c,j) = &
-               cnveg_carbonflux_inst%dwt_frootc_to_litr_cel_c_col(c,j) + &
-               (dwt_frootc_to_litter(p)*pftcon%fr_fcel(patch%itype(p)))/dt &
-               * soilbiogeochem_state_inst%froot_prof_patch(p,j)
-
-          cnveg_carbonflux_inst%dwt_frootc_to_litr_lig_c_col(c,j) = &
-               cnveg_carbonflux_inst%dwt_frootc_to_litr_lig_c_col(c,j) + &
-               (dwt_frootc_to_litter(p)*pftcon%fr_flig(patch%itype(p)))/dt &
-               * soilbiogeochem_state_inst%froot_prof_patch(p,j)
-
+          do i = i_litr_min, i_litr_max
+             cnveg_carbonflux_inst%dwt_frootc_to_litr_c_col(c,j,i) = &
+                  cnveg_carbonflux_inst%dwt_frootc_to_litr_c_col(c,j,i) + &
+                  (dwt_frootc_to_litter(p)*pftcon%fr_f(patch%itype(p),i)) / dt &
+                  * soilbiogeochem_state_inst%froot_prof_patch(p,j)
+          end do
 
           ! fine root litter nitrogen fluxes
-          cnveg_nitrogenflux_inst%dwt_frootn_to_litr_met_n_col(c,j) = &
-               cnveg_nitrogenflux_inst%dwt_frootn_to_litr_met_n_col(c,j) + &
-               (dwt_frootn_to_litter(p)*pftcon%fr_flab(patch%itype(p)))/dt &
-               * soilbiogeochem_state_inst%froot_prof_patch(p,j)
-          cnveg_nitrogenflux_inst%dwt_frootn_to_litr_cel_n_col(c,j) = &
-               cnveg_nitrogenflux_inst%dwt_frootn_to_litr_cel_n_col(c,j) + &
-               (dwt_frootn_to_litter(p)*pftcon%fr_fcel(patch%itype(p)))/dt &
-               * soilbiogeochem_state_inst%froot_prof_patch(p,j)
-
-          cnveg_nitrogenflux_inst%dwt_frootn_to_litr_lig_n_col(c,j) = &
-               cnveg_nitrogenflux_inst%dwt_frootn_to_litr_lig_n_col(c,j) + &
-               (dwt_frootn_to_litter(p)*pftcon%fr_flig(patch%itype(p)))/dt &
-               * soilbiogeochem_state_inst%froot_prof_patch(p,j)
+          do i = i_litr_min, i_litr_max
+             cnveg_nitrogenflux_inst%dwt_frootn_to_litr_n_col(c,j,i) = &
+                cnveg_nitrogenflux_inst%dwt_frootn_to_litr_n_col(c,j,i) + &
+                (dwt_frootn_to_litter(p) * pftcon%fr_f(patch%itype(p),i)) / dt &
+                * soilbiogeochem_state_inst%froot_prof_patch(p,j)
+          end do
 
           ! livecroot fluxes to cwd
           cnveg_carbonflux_inst%dwt_livecrootc_to_cwdc_col(c,j) = &
@@ -644,20 +628,12 @@ contains
 
           if ( use_c13 ) then
              ! C13 fine root litter fluxes
-             c13_cnveg_carbonflux_inst%dwt_frootc_to_litr_met_c_col(c,j) = &
-                  c13_cnveg_carbonflux_inst%dwt_frootc_to_litr_met_c_col(c,j) + &
-                  (dwt_frootc13_to_litter(p)*pftcon%fr_flab(patch%itype(p)))/dt &
-                  * soilbiogeochem_state_inst%froot_prof_patch(p,j)
-
-             c13_cnveg_carbonflux_inst%dwt_frootc_to_litr_cel_c_col(c,j) = &
-                  c13_cnveg_carbonflux_inst%dwt_frootc_to_litr_cel_c_col(c,j) + &
-                  (dwt_frootc13_to_litter(p)*pftcon%fr_fcel(patch%itype(p)))/dt &
-                  * soilbiogeochem_state_inst%froot_prof_patch(p,j)
-
-             c13_cnveg_carbonflux_inst%dwt_frootc_to_litr_lig_c_col(c,j) = &
-                  c13_cnveg_carbonflux_inst%dwt_frootc_to_litr_lig_c_col(c,j) + &
-                  (dwt_frootc13_to_litter(p)*pftcon%fr_flig(patch%itype(p)))/dt &
-                  * soilbiogeochem_state_inst%froot_prof_patch(p,j)
+             do i = i_litr_min, i_litr_max
+                c13_cnveg_carbonflux_inst%dwt_frootc_to_litr_c_col(c,j,i) = &
+                     c13_cnveg_carbonflux_inst%dwt_frootc_to_litr_c_col(c,j,i) + &
+                     (dwt_frootc13_to_litter(p)*pftcon%fr_f(patch%itype(p),i)) / dt &
+                     * soilbiogeochem_state_inst%froot_prof_patch(p,j)
+             end do
 
              ! livecroot fluxes to cwd
              c13_cnveg_carbonflux_inst%dwt_livecrootc_to_cwdc_col(c,j) = &
@@ -673,20 +649,12 @@ contains
 
           if ( use_c14 ) then                   
              ! C14 fine root litter fluxes
-             c14_cnveg_carbonflux_inst%dwt_frootc_to_litr_met_c_col(c,j) = &
-                  c14_cnveg_carbonflux_inst%dwt_frootc_to_litr_met_c_col(c,j) + &
-                  (dwt_frootc14_to_litter(p)*pftcon%fr_flab(patch%itype(p)))/dt &
-                  * soilbiogeochem_state_inst%froot_prof_patch(p,j)
-
-             c14_cnveg_carbonflux_inst%dwt_frootc_to_litr_cel_c_col(c,j) = &
-                  c14_cnveg_carbonflux_inst%dwt_frootc_to_litr_cel_c_col(c,j) + &
-                  (dwt_frootc14_to_litter(p)*pftcon%fr_fcel(patch%itype(p)))/dt &
-                  * soilbiogeochem_state_inst%froot_prof_patch(p,j)
-
-             c14_cnveg_carbonflux_inst%dwt_frootc_to_litr_lig_c_col(c,j) = &
-                  c14_cnveg_carbonflux_inst%dwt_frootc_to_litr_lig_c_col(c,j) + &
-                  (dwt_frootc14_to_litter(p)*pftcon%fr_flig(patch%itype(p)))/dt &
-                  * soilbiogeochem_state_inst%froot_prof_patch(p,j)
+             do i = i_litr_min, i_litr_max
+                c14_cnveg_carbonflux_inst%dwt_frootc_to_litr_c_col(c,j,i) = &
+                     c14_cnveg_carbonflux_inst%dwt_frootc_to_litr_c_col(c,j,i) + &
+                     (dwt_frootc14_to_litter(p)*pftcon%fr_f(patch%itype(p),i)) / dt &
+                     * soilbiogeochem_state_inst%froot_prof_patch(p,j)
+             end do
 
              ! livecroot fluxes to cwd
              c14_cnveg_carbonflux_inst%dwt_livecrootc_to_cwdc_col(c,j) = &

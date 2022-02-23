@@ -26,7 +26,7 @@ module lnd_comp_nuopc
   use clm_varctl             , only : single_column, clm_varctl_set, iulog
   use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
   use clm_time_manager       , only : set_timemgr_init, advance_timestep
-  use clm_time_manager       , only : set_nextsw_cday, update_rad_dtime
+  use clm_time_manager       , only : update_rad_dtime
   use clm_time_manager       , only : get_nstep, get_step_size
   use clm_time_manager       , only : get_curr_date, get_curr_calday
   use clm_initializeMod      , only : initialize1, initialize2
@@ -40,18 +40,18 @@ module lnd_comp_nuopc
   private ! except
 
   ! Module public routines
-  public  :: SetServices
-  public  :: SetVM
+  public  :: SetServices         ! Setup the pointers to the function calls for the different models phases (initialize, run, finalize)
+  public  :: SetVM               ! Set the virtual machine description of the paralell model (both MPI and OpenMP)
 
   ! Module private routines
-  private :: InitializeP0
-  private :: InitializeAdvertise
-  private :: InitializeRealize
-  private :: ModelSetRunClock
-  private :: ModelAdvance
-  private :: ModelFinalize
-  private :: clm_orbital_init
-  private :: clm_orbital_update
+  private :: InitializeP0        ! Phase zero of initialization
+  private :: InitializeAdvertise ! Advertise the fields that can be passed
+  private :: InitializeRealize   ! Realize the list of fields that will be exchanged
+  private :: ModelSetRunClock    ! Set the run clock
+  private :: ModelAdvance        ! Advance the model
+  private :: ModelFinalize       ! Finalize the model
+  private :: clm_orbital_init    ! Initialize the orbital information
+  private :: clm_orbital_update  ! Update the orbital information
 
   !--------------------------------------------------------------------------
   ! Private module data
@@ -76,6 +76,10 @@ module lnd_comp_nuopc
   real(R8)               :: orb_mvelp       ! attribute - moving vernal equinox longitude
   real(R8)               :: orb_eccen       ! attribute and update-  orbital eccentricity
 
+  logical                :: scol_valid      ! if single_column, does point have a mask of zero
+
+  integer                :: nthrds          ! Number of threads per task in this component
+
   character(len=*) , parameter :: orb_fixed_year       = 'fixed_year'
   character(len=*) , parameter :: orb_variable_year    = 'variable_year'
   character(len=*) , parameter :: orb_fixed_parameters = 'fixed_parameters'
@@ -83,6 +87,8 @@ module lnd_comp_nuopc
   character(len=*) , parameter :: startup_run  = 'startup'
   character(len=*) , parameter :: continue_run = 'continue'
   character(len=*) , parameter :: branch_run   = 'branch'
+
+  logical :: write_restart_at_endofrun = .false.
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -92,6 +98,7 @@ contains
 !===============================================================================
 
   subroutine SetServices(gcomp, rc)
+    ! Setup the pointers to the function calls for the different models phases (initialize, run, finalize)
     type(ESMF_GridComp)  :: gcomp
     integer, intent(out) :: rc
 
@@ -140,6 +147,7 @@ contains
   !===============================================================================
   subroutine InitializeP0(gcomp, importState, exportState, clock, rc)
 
+    ! Phase zero initialization
     ! input/output variables
     type(ESMF_GridComp)   :: gcomp
     type(ESMF_State)      :: importState, exportState
@@ -158,6 +166,7 @@ contains
   !===============================================================================
   subroutine InitializeAdvertise(gcomp, importState, exportState, clock, rc)
 
+    ! Advertise the fields that can be exchanged
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
     type(ESMF_State)     :: importState, exportState
@@ -169,7 +178,7 @@ contains
     integer           :: lmpicom
     integer           :: ierr
     integer           :: n
-    integer           :: localpet
+    integer           :: localPet    ! local PET (Persistent Execution Threads) (both MPI tasks and OpenMP threads)
     integer           :: compid      ! component id
     integer           :: shrlogunit  ! original log unit
     character(len=CL) :: cvalue
@@ -281,11 +290,11 @@ contains
        write(iulog,'(a   )')' atm component                 = '//trim(atm_model)
        write(iulog,'(a   )')' rof component                 = '//trim(rof_model)
        write(iulog,'(a   )')' glc component                 = '//trim(glc_model)
-       write(iulog,'(a,L1 )')' atm_prognostic                = ',atm_prognostic
-       write(iulog,'(a,L1 )')' rof_prognostic                = ',rof_prognostic
-       write(iulog,'(a,L1 )')' glc_present                   = ',glc_present
+       write(iulog,'(a,L2)')' atm_prognostic                = ',atm_prognostic
+       write(iulog,'(a,L2)')' rof_prognostic                = ',rof_prognostic
+       write(iulog,'(a,L2)')' glc_present                   = ',glc_present
        if (glc_present) then
-          write(iulog,'(a,L1)')' cism_evolve                    = ',cism_evolve
+          write(iulog,'(a,L2)')' cism_evolve                  = ',cism_evolve
        end if
        write(iulog,'(a   )')' flds_scalar_name              = '//trim(flds_scalar_name)
        write(iulog,'(a,i8)')' flds_scalar_num               = ',flds_scalar_num
@@ -293,6 +302,12 @@ contains
        write(iulog,'(a,i8)')' flds_scalar_index_ny          = ',flds_scalar_index_ny
        write(iulog,'(a,i8)')' flds_scalar_index_nextsw_cday = ',flds_scalar_index_nextsw_cday
     end if
+
+    !----------------------
+    ! Set the namelist filename
+    !----------------------
+    call control_setNL("lnd_in"//trim(inst_suffix))
+
 
     call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, atm_prognostic, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -309,13 +324,15 @@ contains
   !===============================================================================
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
 
+    ! Realize the list of fields that will be exchanged
     !$  use omp_lib, only : omp_set_num_threads
     use ESMF                      , only : ESMF_VM, ESMF_VMGet
     use clm_instMod               , only : lnd2atm_inst, lnd2glc_inst, water_inst
     use domainMod                 , only : ldomain
-    use decompMod                 , only : ldecomp, bounds_type, get_proc_bounds
-    use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_createmesh
+    use decompMod                 , only : bounds_type, get_proc_bounds
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_readmesh
+    use lnd_set_decomp_and_domain , only : lnd_set_mesh_for_single_column
+    use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_for_single_column
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -325,7 +342,7 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    type(ESMF_VM)           :: vm
+    type(ESMF_VM)           :: vm                    ! Virtual machine, description of parallel procesors being used (both MPI and OpenMP)
     type(ESMF_Time)         :: currTime              ! Current time
     type(ESMF_Time)         :: startTime             ! Start time
     type(ESMF_Time)         :: refTime               ! Ref time
@@ -339,32 +356,124 @@ contains
     integer                 :: curr_ymd              ! Start date (YYYYMMDD)
     integer                 :: curr_tod              ! Start time of day (sec)
     integer                 :: dtime_sync            ! coupling time-step from the input synchronization clock
-    integer                 :: localPet
-    integer                 :: localpecount
-    real(r8)                :: nextsw_cday           ! calday from clock of next radiation computation
+    integer                 :: localPet              ! local PET (Persistent Execution Threads) (both MPI tasks and OpenMP threads)
+    integer                 :: localPeCount          ! Number of local Processors
     character(len=CL)       :: starttype             ! start-type (startup, continue, branch, hybrid)
     character(len=CL)       :: calendar              ! calendar type name
     logical                 :: brnch_retain_casename ! flag if should retain the case name on a branch start type
     integer                 :: nsrest                ! ctsm restart type
     integer                 :: lbnum                 ! input to memory diagnostic
     integer                 :: shrlogunit            ! original log unit
-    type(bounds_type)       :: bounds                ! bounds
-    integer                 :: ni, nj
+    integer                 :: n, ni, nj             ! Indices
     character(len=CL)       :: cvalue                ! config data
-    character(len=CL)       :: meshfile_mask
-    character(len=CL)       :: domain_file
+    character(len=CL)       :: meshfile_mask         ! filename of mesh file with land mask
     character(len=CL)       :: ctitle                ! case description title
     character(len=CL)       :: caseid                ! case identifier name
-    real(r8)                :: scmlat                ! single-column latitude
-    real(r8)                :: scmlon                ! single-column longitude
-    character(len=CL)       :: model_version         ! Model version
-    character(len=CL)       :: hostname              ! hostname of machine running on
-    character(len=CL)       :: username              ! user running the model
+    real(r8)                :: scol_lat              ! single-column latitude
+    real(r8)                :: scol_lon              ! single-column longitude
+    real(r8)                :: scol_area             ! single-column area
+    real(r8)                :: scol_frac             ! single-column frac
+    integer                 :: scol_mask             ! single-column mask
+    real(r8)                :: scol_spval            ! single-column special value to indicate it isn't set
+    character(len=CL)       :: single_column_lnd_domainfile   ! domain filename to use for single-column mode (i.e. SCAM)
+    type(bounds_type)      :: bounds                          ! bounds
+    type(ESMF_Field)        :: lfield                         ! Land field read in
+    character(CL) ,pointer  :: lfieldnamelist(:) => null()    ! Land field namelist item sent with land field
+    integer                 :: fieldCount                     ! Number of fields on export state
+    integer                 :: rank                           ! Rank of field (1D or 2D)
+    real(r8), pointer       :: fldptr1d(:)                    ! 1D field pointer
+    real(r8), pointer       :: fldptr2d(:,:)                  ! 2D field pointer
+    logical                 :: isPresent                      ! If attribute is present
+    logical                 :: isSet                          ! If attribute is present and also set
+    character(len=CL)       :: model_version                  ! Model version
+    character(len=CL)       :: hostname                       ! hostname of machine running on
+    character(len=CL)       :: username                       ! user running the model
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    !----------------------------------------------------------------------------
+    ! Single column logic - if mask is zero for nearest neighbor search then
+    ! set all export state fields to zero and return
+    !----------------------------------------------------------------------------
+
+    ! If single_column is true - used single_column_domainfile to
+    ! obtain nearest neighbor values for scol_lon and scol_lat
+    ! If single_column is false and scol_lon and scol_lat are not equal to scol_spval then
+    ! use scol_lon and scol_lat directly
+
+    call NUOPC_CompAttributeGet(gcomp, name='scol_lon', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) scol_lon
+    call NUOPC_CompAttributeGet(gcomp, name='scol_lat', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) scol_lat
+    call NUOPC_CompAttributeGet(gcomp, name='single_column_lnd_domainfile', value=single_column_lnd_domainfile, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! TODO: there is a problem retrieving scol_spval from the driver - for now
+    ! hard-wire scol_spval - this needs to be fixed
+    scol_spval = -999._r8
+    ! call NUOPC_CompAttributeGet(gcomp, name='scol_spval', value=cvalue, rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! read(cvalue,*) scol_spval
+
+    if (scol_lon > scol_spval .and. scol_lat > scol_spval) then
+       single_column = (trim(single_column_lnd_domainfile) /= 'UNSET')
+
+       call NUOPC_CompAttributeGet(gcomp, name='scol_lndmask', value=cvalue, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) scol_mask
+
+       call NUOPC_CompAttributeGet(gcomp, name='scol_lndfrac', value=cvalue, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) scol_frac
+
+       call lnd_set_mesh_for_single_column(scol_lon, scol_lat, mesh, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       scol_valid = (scol_mask == 1)
+       if (.not. scol_valid) then
+          write(iulog,'(a)')' single column mode point does not contain any land - will set all export data to 0'
+          ! if single column is not valid - set all export state fields to zero and return
+          call realize_fields(importState, exportState, mesh, flds_scalar_name, flds_scalar_num, rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call ESMF_StateGet(exportState, itemCount=fieldCount, rc=rc)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
+          allocate(lfieldnamelist(fieldCount))
+          call ESMF_StateGet(exportState, itemNameList=lfieldnamelist, rc=rc)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
+          do n = 1, fieldCount
+             if (trim(lfieldnamelist(n)) /= flds_scalar_name) then
+                call ESMF_StateGet(exportState, itemName=trim(lfieldnamelist(n)), field=lfield, rc=rc)
+                if (chkerr(rc,__LINE__,u_FILE_u)) return
+                call ESMF_FieldGet(lfield, rank=rank, rc=rc)
+                if (chkerr(rc,__LINE__,u_FILE_u)) return
+                if (rank == 2) then
+                   call ESMF_FieldGet(lfield, farrayPtr=fldptr2d, rc=rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                   fldptr2d(:,:) = 0._r8
+                else
+                   call ESMF_FieldGet(lfield, farrayPtr=fldptr1d, rc=rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                   fldptr1d(:) = 0._r8
+                end if
+             end if
+          enddo
+          deallocate(lfieldnamelist)
+          ! *******************
+          ! *** RETURN HERE ***
+          ! *******************
+          RETURN
+       else
+          write(iulog,'(a,3(f10.5,2x))')' single column mode scol_lon/scol_lat/scol_frac is ',&
+               scol_lon,scol_lat,scol_frac
+       end if
+    else
+       single_column = .false.
+    end if
 
     !----------------------------------------------------------------------------
     ! Reset shr logging to my log file
@@ -378,18 +487,24 @@ contains
        call memmon_dump_fort('memmon.out','lnd_comp_nuopc_InitializeRealize:start::',lbnum)
     endif
 #endif
+    !----------------------------------------------------------------------------
+    ! Initialize component threading
+    !----------------------------------------------------------------------------
 
     call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    !$  call omp_set_num_threads(localPeCount)
+    if(localPeCount == 1) then
+       call NUOPC_CompAttributeGet(gcomp, "nthreads", value=cvalue, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
+       read(cvalue,*) nthrds
+    else
+       nthrds = localPeCount
+    endif
 
-    !----------------------
-    ! Consistency check on namelist filename
-    !----------------------
-    call control_setNL("lnd_in"//trim(inst_suffix))
+    !$  call omp_set_num_threads(nthrds)
 
     !----------------------
     ! Get properties from clock
@@ -439,25 +554,6 @@ contains
     call NUOPC_CompAttributeGet(gcomp, name='model_version', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) model_version
-    call NUOPC_CompAttributeGet(gcomp, name='username', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) username
-    call NUOPC_CompAttributeGet(gcomp, name='hostname', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) hostname
-    call NUOPC_CompAttributeGet(gcomp, name='scmlon', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) scmlon
-    call NUOPC_CompAttributeGet(gcomp, name='scmlat', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) scmlat
-    call NUOPC_CompAttributeGet(gcomp, name='single_column', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) single_column
-    call NUOPC_CompAttributeGet(gcomp, name='start_type', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) starttype
-
 
     ! Note that we assume that CTSM's internal dtime matches the coupling time step.
     ! i.e., we currently do NOT allow sub-cycling within a coupling time step.
@@ -472,9 +568,20 @@ contains
     ! Set model clock in lnd_comp_shr
     model_clock = clock
 
+    call NUOPC_CompAttributeGet(gcomp, name="write_restart_at_endofrun", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       if (trim(cvalue) .eq. '.true.') write_restart_at_endofrun = .true.
+    end if
     ! ---------------------
     ! Initialize first phase of ctsm
     ! ---------------------
+    call NUOPC_CompAttributeGet(gcomp, name='hostname', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) hostname
+    call NUOPC_CompAttributeGet(gcomp, name='username', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) username
     call NUOPC_CompAttributeGet(gcomp, name='brnch_retain_casename', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) brnch_retain_casename
@@ -496,7 +603,7 @@ contains
     call clm_varctl_set(&
          caseid_in=caseid, ctitle_in=ctitle,                     &
          brnch_retain_casename_in=brnch_retain_casename,         &
-         single_column_in=single_column, scmlat_in=scmlat, scmlon_in=scmlon, &
+         single_column_in=single_column, scmlat_in=scol_lat, scmlon_in=scol_lon, &
          nsrest_in=nsrest, &
          version_in=model_version, &
          hostname_in=hostname, &
@@ -507,17 +614,12 @@ contains
     ! ---------------------
     ! Create ctsm decomp and domain info
     ! ---------------------
-    call NUOPC_CompAttributeGet(gcomp, name='mesh_lnd', value=model_meshfile, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (single_column) model_meshfile = 'create_mesh'
-
-    if (trim(model_meshfile) == 'create_mesh') then
-       call NUOPC_CompAttributeGet(gcomp, name='domain_lnd', value=domain_file, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call lnd_set_decomp_and_domain_from_createmesh(domain_file=domain_file, vm=vm, &
-            mesh_ctsm=mesh, ni=ni, nj=nj, rc=rc)
+    if (scol_lon > scol_spval .and. scol_lat > scol_spval) then
+       call lnd_set_decomp_and_domain_for_single_column(scol_lon, scol_lat, scol_mask, scol_frac)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
+       call NUOPC_CompAttributeGet(gcomp, name='mesh_lnd', value=model_meshfile, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call NUOPC_CompAttributeGet(gcomp, name='mesh_mask', value=meshfile_mask, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
@@ -530,17 +632,12 @@ contains
     ! ---------------------
     ! Realize the actively coupled fields
     ! ---------------------
-    call realize_fields(gcomp, mesh, flds_scalar_name, flds_scalar_num, rc)
+    call realize_fields(importState, exportState, mesh, flds_scalar_name, flds_scalar_num, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ---------------------
     ! Finish initializing ctsm
     ! ---------------------
-    ! If no land then abort for now
-    ! TODO: need to handle the case of noland with CMEPS
-    ! if ( noland ) then
-    !    call shr_sys_abort(trim(subname)//"ERROR: Currently cannot handle case of single column with non-land")
-    ! end if
     call initialize2(ni, nj)
 
     !--------------------------------
@@ -551,22 +648,10 @@ contains
          water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Get calendar day of nextsw calculation
-    if (nsrest == nsrStartup) then
-       call ESMF_ClockGet( clock, currTime=currTime, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call ESMF_TimeGet( currTime, dayOfYear_r8=nextsw_cday, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
-
-    call set_nextsw_cday(nextsw_cday)
-
     ! Set scalars in export state
     call State_SetScalar(dble(ldomain%ni), flds_scalar_index_nx, exportState, &
          flds_scalar_name, flds_scalar_num, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     call State_SetScalar(dble(ldomain%nj), flds_scalar_index_ny, exportState, &
          flds_scalar_name, flds_scalar_num, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -596,6 +681,7 @@ contains
   end subroutine InitializeRealize
 
   !===============================================================================
+
   subroutine ModelAdvance(gcomp, rc)
 
     !------------------------
@@ -633,8 +719,8 @@ contains
     integer                :: tod_sync       ! Sync current time of day (sec)
     integer                :: dtime          ! time step increment (sec)
     integer                :: nstep          ! time step index
-    integer                :: localPet
-    integer                :: localpecount
+    integer                :: localPet       ! local PET (Persistent Execution Threads) (both MPI tasks and OpenMP threads)
+    integer                :: localPeCount   ! Number of local Processors
     logical                :: rstwr          ! .true. ==> write restart file before returning
     logical                :: nlend          ! .true. ==> last time-step
     logical                :: dosend         ! true => send data back to driver
@@ -656,12 +742,19 @@ contains
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
-    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    !--------------------------------
+    ! Single column logic if nearest neighbor point has a mask of zero
+    !--------------------------------
 
-    !$  call omp_set_num_threads(localPeCount)
+    if (single_column .and. .not. scol_valid) then
+       RETURN
+    end if
+
+    !$  call omp_set_num_threads(nthrds)
+
+    !--------------------------------
+    ! Reset share log units
+    !--------------------------------
 
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_setLogUnit (iulog)
@@ -674,7 +767,7 @@ contains
 #endif
 
     !--------------------------------
-    ! Query the Component for its clock, importState and exportState
+    ! Query the Component for its clock, importState and exportState and vm
     !--------------------------------
 
     call NUOPC_ModelGet(gcomp, modelClock=clock, importState=importState, exportState=exportState, rc=rc)
@@ -687,7 +780,6 @@ contains
     call State_GetScalar(importState, &
          flds_scalar_index_nextsw_cday, nextsw_cday, &
          flds_scalar_name, flds_scalar_num, rc)
-    call set_nextsw_cday( nextsw_cday )
 
     ! Get proc bounds
     call get_proc_bounds(bounds)
@@ -721,7 +813,7 @@ contains
        ! Determine doalb based on nextsw_cday sent from atm model
        !--------------------------------
 
-       caldayp1 = get_curr_calday(offset=dtime)
+       caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
 
        if (nstep == 0) then
           doalb = .false.
@@ -731,22 +823,6 @@ contains
           doalb = (nextsw_cday >= -0.5_r8)
        end if
        call update_rad_dtime(doalb)
-
-       !--------------------------------
-       ! Determine if time to write restart
-       !--------------------------------
-
-       call ESMF_ClockGetAlarm(clock, alarmname='alarm_restart', alarm=alarm, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          rstwr = .true.
-          call ESMF_AlarmRingerOff( alarm, rc=rc )
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       else
-          rstwr = .false.
-       endif
 
        !--------------------------------
        ! Determine if time to stop
@@ -765,6 +841,25 @@ contains
        endif
 
        !--------------------------------
+       ! Determine if time to write restart
+       !--------------------------------
+       rstwr = .false.
+       if (nlend .and. write_restart_at_endofrun) then
+          rstwr = .true.
+       else 
+          call ESMF_ClockGetAlarm(clock, alarmname='alarm_restart', alarm=alarm, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          if (ESMF_AlarmIsCreated(alarm, rc=rc)) then
+             if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
+                if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                rstwr = .true.
+                call ESMF_AlarmRingerOff( alarm, rc=rc )
+                if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             endif
+          endif
+       end if
+
+       !--------------------------------
        ! Run CTSM
        !--------------------------------
 
@@ -775,7 +870,7 @@ contains
        ! Note - the orbital inquiries set the values in clm_varorb via the module use statements
        call  clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       calday = get_curr_calday()
+       calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
        call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
        call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
        call t_stopf ('shr_orb_decl')
@@ -922,7 +1017,7 @@ contains
 
        call ESMF_GridCompGet(gcomp, name=name, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_LogWrite(subname//'setting alarms for' // trim(name), ESMF_LOGMSG_INFO)
+       call ESMF_LogWrite(subname//'setting alarms for ' // trim(name), ESMF_LOGMSG_INFO)
 
        !----------------
        ! Restart alarm

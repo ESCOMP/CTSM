@@ -11,7 +11,8 @@ module SoilBiogeochemNitrogenStateType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
+  use clm_varctl                         , only : use_nitrif_denitrif
+  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
   use landunit_varcon                    , only : istcrop, istsoil 
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
@@ -45,6 +46,7 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: ntrunc_col                   (:)     ! col (gN/m2) column-level sink for N truncation
      real(r8), pointer :: cwdn_col                     (:)     ! col (gN/m2) Diagnostic: coarse woody debris N
      real(r8), pointer :: totlitn_col                  (:)     ! col (gN/m2) total litter nitrogen
+     real(r8), pointer :: totmicn_col                  (:)     ! col (gN/m2) total microbial nitrogen
      real(r8), pointer :: totsomn_col                  (:)     ! col (gN/m2) total soil organic matter nitrogen
      real(r8), pointer :: totlitn_1m_col               (:)     ! col (gN/m2) total litter nitrogen to 1 meter
      real(r8), pointer :: totsomn_1m_col               (:)     ! col (gN/m2) total soil organic matter nitrogen to 1 meter
@@ -119,6 +121,7 @@ contains
     allocate(this%sminn_col            (begc:endc))                   ; this%sminn_col            (:)   = nan
     allocate(this%ntrunc_col           (begc:endc))                   ; this%ntrunc_col           (:)   = nan
     allocate(this%totlitn_col          (begc:endc))                   ; this%totlitn_col          (:)   = nan
+    allocate(this%totmicn_col          (begc:endc))                   ; this%totmicn_col          (:)   = nan
     allocate(this%totsomn_col          (begc:endc))                   ; this%totsomn_col          (:)   = nan
     allocate(this%totlitn_1m_col       (begc:endc))                   ; this%totlitn_1m_col       (:)   = nan
     allocate(this%totsomn_1m_col       (begc:endc))                   ; this%totsomn_1m_col       (:)   = nan
@@ -276,6 +279,11 @@ contains
          avgflag='A', long_name='total litter N', &
          ptr_col=this%totlitn_col)
 
+    this%totmicn_col(begc:endc) = spval
+    call hist_addfld1d (fname='TOTMICN', units='gN/m^2', &
+         avgflag='A', long_name='total microbial N', &
+         ptr_col=this%totmicn_col)
+
     this%totsomn_col(begc:endc) = spval
     call hist_addfld1d (fname='TOTSOMN', units='gN/m^2', &
          avgflag='A', long_name='total soil organic matter N', &
@@ -367,6 +375,7 @@ contains
              this%smin_no3_col(c) = 0._r8
           end if
           this%totlitn_col(c)    = 0._r8
+          this%totmicn_col(c)    = 0._r8
           this%totsomn_col(c)    = 0._r8
           this%totlitn_1m_col(c) = 0._r8
           this%totsomn_1m_col(c) = 0._r8
@@ -429,19 +438,12 @@ contains
     !------------------------------------------------------------------------
 
     ! sminn
-    if (use_vertsoilc) then
-       ptr2d => this%sminn_vr_col
-       call restartvar(ncid=ncid, flag=flag, varname="sminn_vr", xtype=ncd_double,  &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='',  units='', fill_value=spval, &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d)
-    else
-       ptr1d => this%sminn_vr_col(:,1)
-       call restartvar(ncid=ncid, flag=flag, varname="sminn", xtype=ncd_double,  &
-            dim1name='column', &
-            long_name='',  units='', fill_value=spval, &
-            interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-    end if
+    ptr2d => this%sminn_vr_col
+    call restartvar(ncid=ncid, flag=flag, varname="sminn_vr", xtype=ncd_double,  &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='',  units='gN/m3', fill_value=spval, &
+         scale_by_thickness=.false., &
+         interpinic_flag='interp', readvar=readvar, data=ptr2d)
     if (flag=='read' .and. .not. readvar) then
        call endrun(msg='ERROR::'//trim(varname)//' is required on an initialization dataset'//&
             errMsg(sourcefile, __LINE__))
@@ -450,54 +452,33 @@ contains
     ! decomposing N pools
     do k = 1, ndecomp_pools
        varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'n'
-       if (use_vertsoilc) then
-          ptr2d => this%decomp_npools_vr_col(:,:,k)
-          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double, &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d) 
-       else
-          ptr1d => this%decomp_npools_vr_col(:,1,k)
-          call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double,  &
-               dim1name='column', &
-               long_name='',  units='', fill_value=spval, &
-               interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-       end if
+       ptr2d => this%decomp_npools_vr_col(:,:,k)
+       call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double, &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., &
+            long_name='', units='gN/m3', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d) 
        if (flag=='read' .and. .not. readvar) then
           call endrun(msg='ERROR:: '//trim(varname)//' is required on an initialization dataset'//&
                errMsg(sourcefile, __LINE__))
        end if
     end do
 
-    if (use_vertsoilc) then
-       ptr2d => this%ntrunc_vr_col
-       call restartvar(ncid=ncid, flag=flag, varname="col_ntrunc_vr", xtype=ncd_double,  &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='',  units='', fill_value=spval, &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d)
-    else
-       ptr1d => this%ntrunc_vr_col(:,1)
-       call restartvar(ncid=ncid, flag=flag, varname="col_ntrunc", xtype=ncd_double,  &
-            dim1name='column', &
-            long_name='',  units='', fill_value=spval, &
-            interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-    end if
+    ptr2d => this%ntrunc_vr_col
+    call restartvar(ncid=ncid, flag=flag, varname="col_ntrunc_vr", xtype=ncd_double,  &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='',  units='gN/m3', fill_value=spval, &
+         scale_by_thickness=.false., &
+         interpinic_flag='interp', readvar=readvar, data=ptr2d)
 
     if (use_nitrif_denitrif) then
        ! smin_no3_vr
-       if (use_vertsoilc) then
-          ptr2d => this%smin_no3_vr_col(:,:)
-          call restartvar(ncid=ncid, flag=flag, varname='smin_no3_vr', xtype=ncd_double, &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d)
-       else
-          ptr1d => this%smin_no3_vr_col(:,1)
-          call restartvar(ncid=ncid, flag=flag, varname='smin_no3', xtype=ncd_double, &
-               dim1name='column', &
-               long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=ptr1d)
-       end if
+       ptr2d => this%smin_no3_vr_col(:,:)
+       call restartvar(ncid=ncid, flag=flag, varname='smin_no3_vr', xtype=ncd_double, &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., &
+            long_name='', units='gN/m3', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d)
        if (flag=='read' .and. .not. readvar) then
           call endrun(msg= 'ERROR:: smin_no3_vr'//' is required on an initialization dataset' )
        end if
@@ -505,19 +486,12 @@ contains
 
     if (use_nitrif_denitrif) then
        ! smin_nh4
-       if (use_vertsoilc) then
-          ptr2d => this%smin_nh4_vr_col(:,:)
-          call restartvar(ncid=ncid, flag=flag, varname='smin_nh4_vr', xtype=ncd_double, &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d) 
-       else
-          ptr1d => this%smin_nh4_vr_col(:,1)
-          call restartvar(ncid=ncid, flag=flag, varname='smin_nh4', xtype=ncd_double, &
-               dim1name='column', &
-               long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=ptr1d)
-       end if
+       ptr2d => this%smin_nh4_vr_col(:,:)
+       call restartvar(ncid=ncid, flag=flag, varname='smin_nh4_vr', xtype=ncd_double, &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., &
+            long_name='', units='gN/m3', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d) 
        if (flag=='read' .and. .not. readvar) then
           call endrun(msg= 'ERROR:: smin_nh4_vr'//' is required on an initialization dataset' )
        end if
@@ -527,8 +501,10 @@ contains
     ! matches what the restart file was generated with.  
     ! add info about the SOM decomposition cascade
 
-    if (use_century_decomp) then
+    if (decomp_method == century_decomp ) then
        decomp_cascade_state = 1
+    else if (decomp_method == mimics_decomp ) then
+       decomp_cascade_state = 2
     else
        decomp_cascade_state = 0
     end if
@@ -690,6 +666,7 @@ contains
           this%smin_nh4_col(i) = value_column
        end if
        this%totlitn_col(i)     = value_column
+       this%totmicn_col(i)     = value_column
        this%totsomn_col(i)     = value_column
        this%totsomn_1m_col(i)  = value_column
        this%totlitn_1m_col(i)  = value_column
@@ -883,6 +860,22 @@ contains
       end if
    end do
    
+   ! total microbial nitrogen (TOTMICN)
+   do fc = 1,num_allc
+      c = filter_allc(fc)
+      this%totmicn_col(c) = 0._r8
+   end do
+   do l = 1, ndecomp_pools
+      if ( decomp_cascade_con%is_microbe(l) ) then
+         do fc = 1,num_allc
+            c = filter_allc(fc)
+            this%totmicn_col(c) = &
+                 this%totmicn_col(c) + &
+                 this%decomp_npools_col(c,l)
+         end do
+      end if
+   end do
+
    ! total soil organic matter nitrogen (TOTSOMN)
    do fc = 1,num_allc
       c = filter_allc(fc)
