@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(mksurfdata Fortran)
 
 set (ESMFMKFILE /glade/work/oehmke/ESMF/scalable_mesh_from_file/lib/libg/Linux.intel.64.mpt.default/esmf.mk)
+
 file(STRINGS ${ESMFMKFILE} esmf_mk_text)
 foreach(line ${esmf_mk_text})
   string(REGEX REPLACE "^[ ]+" "" line ${line}) # strip leading spaces

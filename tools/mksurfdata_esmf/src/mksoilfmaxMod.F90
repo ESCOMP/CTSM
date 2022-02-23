@@ -7,12 +7,13 @@ module mksoilfmaxMod
   use ESMF
   use shr_kind_mod     , only : r8 => shr_kind_r8, r4=>shr_kind_r4
   use shr_sys_mod      , only : shr_sys_abort
-  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
+  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite, pio_syncfile
   use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
   use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
   use mkdiagnosticsMod , only : output_diagnostics_continuous
-  use mkvarctl         , only : ndiag, root_task, soil_fmax_override, unsetsoil
+  use mkvarctl         , only : ndiag, root_task, soil_fmax_override, unsetsoil, spval
   use mkutilsMod       , only : chkerr
+  use mkfileMod        , only : mkfile_output
 
   implicit none
   private           ! By default make data private
@@ -26,7 +27,7 @@ module mksoilfmaxMod
 contains
 !=================================================================================
 
-  subroutine mksoilfmax(file_mesh_i, file_data_i, mesh_o, fmax_o, rc)
+  subroutine mksoilfmax(file_mesh_i, file_data_i, mesh_o, pioid_o, rc)
     !
     ! make percent fmax
     !
@@ -34,29 +35,22 @@ contains
     character(len=*)  , intent(in)    :: file_mesh_i ! input mesh file name
     character(len=*)  , intent(in)    :: file_data_i ! input data file name
     type(ESMF_Mesh)   , intent(in)    :: mesh_o      ! output mesh
-    real(r8)          , intent(inout) :: fmax_o(:)   ! output grid: %fmax
+    type(file_desc_t) , intent(inout) :: pioid_o
     integer           , intent(out)   :: rc
 
     ! local variables:
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
-    type(file_desc_t)      :: pioid
+    type(file_desc_t)      :: pioid_i
     integer                :: ni,no
     integer                :: ns_i, ns_o
     integer                :: n,l,k
-    integer , allocatable  :: mask_i(:) 
+    integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
-    real(r8), allocatable  :: fmax_i(:)             ! input grid: percent fmax
-    real(r8), allocatable  :: areas_i(:)            ! input mesh areas
-    real(r8), allocatable  :: areas_o(:)            ! output mesh areas
-    real(r8)               :: sum_fldi              ! global sum of dummy input fld
-    real(r8)               :: sum_fldo              ! global sum of dummy output fld
-    real(r8)               :: gfmax_i               ! input  grid: global fmax
-    real(r8)               :: garea_i               ! input  grid: global area
-    real(r8)               :: gfmax_o               ! output grid: global fmax
-    real(r8)               :: garea_o               ! output grid: global area
-    integer                :: ier, rcode            ! error status
+    real(r8), allocatable  :: fmax_i(:)  ! input grid: percent fmax
+    real(r8), allocatable  :: fmax_o(:)  ! output grid: %fmax
+    integer                :: ier, rcode ! error status
     character(len=32)      :: subname = 'mksoilfmax'
     !-----------------------------------------------------------------------
 
@@ -84,7 +78,7 @@ contains
     end if
 
     ! Open input data file
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
 
     ! Read in input mesh
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
@@ -95,16 +89,17 @@ contains
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Determine ns_o
+    ! Determine ns_o and allocate output data
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate(fmax_o(ns_o)); fmax_o(:) = spval
 
     ! Get the landmask from the file and reset the mesh mask based on that
     allocate(frac_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, frac_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
        if (frac_i(ni) > 0._r8) then
@@ -130,7 +125,7 @@ contains
     ! Read in input data
     allocate(fmax_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'FMAX', mesh_i, fmax_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'FMAX', mesh_i, fmax_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
@@ -159,8 +154,14 @@ contains
          fmax_i, fmax_o, "Maximum Fractional Sataturated output", "unitless", ndiag, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    ! Write output data
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil fmax (maximum fraction saturated area)"
+    call mkfile_output (pioid_o,  mesh_o,  'FMAX', fmax_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+    call pio_syncfile(pioid_o)
+
     ! Close the input file
-    call pio_closefile(pioid)
+    call pio_closefile(pioid_i)
 
     ! Release memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)

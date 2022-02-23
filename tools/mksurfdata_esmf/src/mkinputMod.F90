@@ -7,7 +7,6 @@ module mkinputMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_kind_mod , only : CS => shr_kind_CS, CL => shr_kind_CL, CX => shr_kind_CX
   use shr_sys_mod  , only : shr_sys_abort
-  use mkglcmecMod  , only : nglcec
   use mkpftMod     , only : pft_idx, pft_frc
   use mkvarctl
 

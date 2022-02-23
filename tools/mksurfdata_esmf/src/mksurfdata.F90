@@ -103,7 +103,7 @@ program mksurfdata
   use mklaiMod           , only : mklai
   use mkpeatMod          , only : mkpeat
   use mkvocefMod         , only : mkvocef
-  use mkglcmecMod        , only : mkglcmecInit, mkglcmec, mkglacier, nglcec
+  use mkglcmecMod        , only : mkglcmecInit, mkglcmec, mkglacier
   use mkglacierregionMod , only : mkglacierregion
   use mksoiltexMod       , only : mksoiltex
   use mksoilfmaxMod      , only : mksoilfmax
@@ -152,38 +152,19 @@ program mksurfdata
   type(pct_pft_type), allocatable :: pctcft(:)               ! % of grid cell that is crop, and breakdown into CFTs
 
   ! dynamic land use
-  real(r8), allocatable           :: pctlnd_pft_dyn(:)       ! PFT data: % of gridcell for dyn landuse PFTs
-  type(pct_pft_type), allocatable :: pctnatpft_max(:)        ! % of grid cell maximum PFTs of the time series
-  type(pct_pft_type), allocatable :: pctcft_max(:)           ! % of grid cell maximum CFTs of the time series
+  real(r8)           , allocatable :: pctlnd_pft_dyn(:)       ! PFT data: % of gridcell for dyn landuse PFTs
+  type(pct_pft_type) , allocatable :: pctnatpft_max(:)        ! % of grid cell maximum PFTs of the time series
+  type(pct_pft_type) , allocatable :: pctcft_max(:)           ! % of grid cell maximum CFTs of the time series
+  real(r8)           , allocatable :: pctnatveg(:)
+  real(r8)           , allocatable :: pctcrop(:)
+  real(r8)           , allocatable :: pct_nat_pft(:,:)
+  real(r8)           , allocatable :: pct_cft(:,:)
+  logical                          :: end_of_fdynloop
 
-  ! soil fracation saturated area data
-  real(r8), allocatable           :: fmaxsoil(:)             ! soil_fractional saturated area
-
-  ! oranic matter density data
-  real(r8), allocatable           :: organic(:,:)            ! organic matter density (kg/m3)
-
-  ! gdp data
-  real(r8), allocatable           :: gdp(:)                  ! GDP (x1000 1995 US$/capita)
-
-  ! topography statistics data
-  real(r4), allocatable           :: topo_stddev(:)          ! standard deviation of elevation (m)
-  real(r4), allocatable           :: slope(:)                ! topographic slope (degrees)
-
-  ! inland water data
+  ! inland water data, glacier data and urban data
   real(r8), allocatable           :: pctlak(:)               ! percent of grid cell that is lake
   real(r8), allocatable           :: pctwet(:)               ! percent of grid cell that is wetland
-
-  ! glacier data
   real(r8), allocatable           :: pctgla(:)               ! percent of grid cell that is glacier
-  real(r8), allocatable           :: pctglc_gic(:)           ! percent of grid cell that is gic (% of glc landunit)
-  real(r8), allocatable           :: pctglc_icesheet(:)      ! percent of grid cell that is ice sheet (% of glc landunit)
-  real(r8), allocatable           :: pctglcmec(:,:)          ! glacier_mec pct coverage in each class (% of landunit)
-  real(r8), allocatable           :: pctglcmec_gic(:,:)      ! GIC pct coverage in each class (% of landunit)
-  real(r8), allocatable           :: pctglcmec_icesheet(:,:) ! icesheet pct coverage in each class (% of landunit)
-  real(r8), allocatable           :: elevclass(:)            ! glacier_mec elevation classes
-  real(r8), allocatable           :: topoglcmec(:,:)         ! glacier_mec sfc elevation in each gridcell and class
-
-  ! urban data
   integer , allocatable           :: urban_region(:)         ! urban region ID
   real(r8), allocatable           :: pcturb(:)               ! percent of grid cell that is urbanized (total across all urban classes)
   real(r8), allocatable           :: urban_classes(:,:)      ! percent cover of each urban class, as % of total urban area
@@ -201,8 +182,6 @@ program mksurfdata
   type(io_desc_t)                 :: pio_iodesc
   integer                         :: petcount
   integer                         :: stride
-
-  ! esmf variables
   type(ESMF_Mesh)                 :: mesh_model
   type(ESMF_Field)                :: field_model
   type(ESMF_LogKind_Flag)         :: logkindflag
@@ -213,14 +192,7 @@ program mksurfdata
   ! character variables
   character(len=CL)               :: string                  ! string read in
   character(len=CL)               :: fname
-  character(len=CL)               :: varname
   character(len=*), parameter     :: subname = 'mksrfdata'   ! program name
-
-  real(r8), allocatable :: pctnatveg(:)
-  real(r8), allocatable :: pctcrop(:)
-  real(r8), allocatable :: pct_nat_pft(:,:)
-  real(r8), allocatable :: pct_cft(:,:)
-  logical               :: end_of_fdynloop
 
   character(len=*), parameter :: u_FILE_u = &
        __FILE__
@@ -385,11 +357,14 @@ program mksurfdata
 
   ! -----------------------------------
   ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
+  ! Make landfrac_pft and pftdata_mask
   ! -----------------------------------
   ! Determine fractional land from pft dataset
   allocate(pctlnd_pft(lsize_o)); pctlnd_pft(:) = spval
   allocate(pctnatpft(lsize_o)) ;
   allocate(pctcft(lsize_o))    ;
+  allocate(pftdata_mask(lsize_o))  ; pftdata_mask(:) = -999
+  allocate(landfrac_pft(lsize_o))  ; landfrac_pft(:) = spval
   call mkpft( mksrf_fvegtyp_mesh, mksrf_fvegtyp, mesh_model, &
        pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
@@ -401,23 +376,15 @@ program mksurfdata
         call pctnatpft(n)%set_pct_l2g(0._r8)
         call pctcft(n)%set_pct_l2g(0._r8)
      end if
-  end do
-
-  ! -----------------------------------
-  ! Make landfrac_pft and pftdata_mask
-  ! -----------------------------------
-  allocate ( pftdata_mask(lsize_o))  ; pftdata_mask(:) = -999
-  allocate ( landfrac_pft(lsize_o))  ; landfrac_pft(:) = spval
-  do n = 1,lsize_o
+     if (pctlnd_pft(n) < 1.e-6_r8) then
+        call pctnatpft(n)%set_pct_l2g(0._r8)
+        call pctcft(n)%set_pct_l2g(0._r8)
+     end if
      landfrac_pft(n) = pctlnd_pft(n)/100._r8
      if (pctlnd_pft(n) < 1.e-6_r8) then
         pftdata_mask(n) = 0
      else
         pftdata_mask(n) = 1
-     end if
-     if (pctlnd_pft(n) < 1.e-6_r8) then
-        call pctnatpft(n)%set_pct_l2g(0._r8)
-        call pctcft(n)%set_pct_l2g(0._r8)
      end if
   end do
   if (fsurdat /= ' ') then
@@ -442,10 +409,11 @@ program mksurfdata
   ! -----------------------------------
   ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
   ! -----------------------------------
-  ! LAKEDEPTH is written out in mklakwat
-  allocate ( pctlak(lsize_o)) ; pctlak(:)    = spval
-  allocate ( pctwet(lsize_o)) ; pctwet(:)    = spval
-  zero_out_lake = (all_urban .or. all_veg)
+  ! LAKEDEPTH is written out in the subroutine
+  ! Need to keep pctlak and pctwet external for use below
+  allocate ( pctlak(lsize_o)) ; pctlak(:) = spval
+  allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
+  zero_out_lake    = (all_urban .or. all_veg)
   zero_out_wetland = (all_urban .or. all_veg .or. no_inlandwet)
   call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
        zero_out_lake, zero_out_wetland, pctlak, pctwet, pioid, fsurdat, rc=rc)
@@ -471,7 +439,7 @@ program mksurfdata
   ! Make glacier region ID [glacier_region] from [fglacierregion] dataset
   ! -----------------------------------
   if (fsurdat /= ' ') then
-     ! Note that GLACIER_REGION is written out in the subroutine
+     ! GLACIER_REGION is written out in the subroutine
      call mkglacierregion(mksrf_fglacierregion_mesh, mksrf_fglacierregion, mesh_model, pioid, rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacierregion')
   end if
@@ -480,6 +448,7 @@ program mksurfdata
   ! Make soil texture [pctsand, pctclay]
   ! -----------------------------------
   if (fsurdat /= ' ') then
+     ! mapunits, PCT_SAND and PCT_CLAY are written out in the subroutine
      call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pioid, pctlnd_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
   end if
@@ -488,6 +457,7 @@ program mksurfdata
   ! Make soil color classes [soicol] [fsoicol]
   ! -----------------------------------
   if (fsurdat /= ' ') then
+     ! SOIL_COLOR and mxsoil_color is written out in the subroutine
      call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, pctlnd_pft, pioid, rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilcol')
   end if
@@ -495,31 +465,20 @@ program mksurfdata
   ! -----------------------------------
   ! Make soil fmax [fmaxsoil]
   ! -----------------------------------
-  allocate(fmaxsoil(lsize_o)); fmaxsoil(:) = spval
-  call mksoilfmax( mksrf_fmax_mesh, mksrf_fmax, mesh_model, fmaxsoil, rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilfmax')
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil fmax (maximum fraction saturated area)"
-     call mkfile_output (pioid,  mesh_model,  'FMAX', fmaxsoil, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call pio_syncfile(pioid)
+     ! FMAX is written out in the subroutine
+     call mksoilfmax( mksrf_fmax_mesh, mksrf_fmax, mesh_model, pioid, rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilfmax')
   end if
-  deallocate (fmaxsoil )
 
   ! -----------------------------------
   ! Make GDP data [gdp] from [gdp]
   ! -----------------------------------
-  allocate (gdp(lsize_o)); gdp(:) = spval
-  call mkgdp (mksrf_fgdp_mesh, mksrf_fgdp, mesh_model, gdp_o=gdp, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out gdp"
-     call mkfile_output(pioid, mesh_model, 'gdp', gdp, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call pio_syncfile(pioid)
+     ! gdp is written out in the subroutine
+     call mkgdp (mksrf_fgdp_mesh, mksrf_fgdp, mesh_model, pioid, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
   end if
-  deallocate(gdp)
-  call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! Make peat data [fpeat] from [peatf]
@@ -600,24 +559,10 @@ program mksurfdata
   ! -----------------------------------
   ! Make organic matter density [organic] [forganic]
   ! -----------------------------------
-  allocate ( organic(lsize_o,nlevsoi)); organic(:,:) = spval
-  call mkorganic( mksrf_forganic_mesh, mksrf_forganic, mesh_model, organic, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
-  do n = 1,lsize_o
-     if (pctlnd_pft(n) < 1.e-6_r8) then
-        organic(n,:) = 0._r8
-     end if
-     ! If have pole points on grid - set south pole to glacier and north pole is not land
-     if (abs((lat(n) - 90._r8)) < 1.e-6_r8) then
-        organic(n,:) = 0._r8
-     end if
-  end do
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil organic matter density"
-     call mkfile_output(pioid,  mesh_model,  'ORGANIC', organic, lev1name='nlevsoi', rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+     call mkorganic( mksrf_forganic_mesh, mksrf_forganic, mesh_model, pctlnd_pft, lat, pioid, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
   end if
-  deallocate (organic )
 
   ! -----------------------------------
   ! Make VOC emission factors for isoprene [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp]
@@ -772,62 +717,11 @@ program mksurfdata
   ! ----------------------------------------------------------------------
   ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier] dataset
   ! ----------------------------------------------------------------------
-
   ! This call needs to occur after pctgla has been adjusted for the final time
-  allocate ( elevclass(nglcec+1) )
-  call mkglcmecInit (elevclass)
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out GLC_MEC"
-     rcode = pio_inq_varid(pioid, 'GLC_MEC', pio_varid)
-     rcode = pio_put_var(pioid, pio_varid, elevclass)
-  end if
-  allocate ( pctglcmec(lsize_o,nglcec))  ; pctglcmec(:,:) = spval
-  allocate ( topoglcmec(lsize_o,nglcec)) ; topoglcmec(:,:)= spval
-  if ( outnc_3dglc )then
-     allocate(pctglcmec_gic(lsize_o,nglcec))
-     allocate(pctglcmec_icesheet(lsize_o,nglcec))
-     allocate(pctglc_gic(lsize_o))
-     allocate(pctglc_icesheet(lsize_o))
-     call mkglcmec(mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, &
-          pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
-          pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &
-          pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet, rc=rc)
+     call mkglcmecInit (pioid)
+     call mkglcmec(mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, pioid, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglcmec')
-  else
-     call mkglcmec(mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, &
-          pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, rc=rc )
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglcmec')
-  end if
-  if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_mec"
-     call mkfile_output(pioid,  mesh_model,  'PCT_GLC_MEC', pctglcmec, lev1name='nglcec', rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out topo_glc_mec"
-     call mkfile_output(pioid,  mesh_model,  'TOPO_GLC_MEC', topoglcmec, lev1name='nglcec', rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     if (outnc_3dglc ) then
-        if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_mec_gic"
-        call mkfile_output(pioid,  mesh_model,  'PCT_GLC_MEC_GIC', pctglcmec_gic, lev1name='nglcec', rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-        if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_mec_icesheet"
-        call mkfile_output(pioid,  mesh_model,  'PCT_GLC_MEC_ICESHEET', pctglcmec_icesheet, lev1name='nglcec', rc=rc)
-        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-        if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_gic"
-        call mkfile_output(pioid,  mesh_model,  'PCT_GLC_GIC', pctglc_gic, rc=rc)
-        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-        if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_icesheet"
-        call mkfile_output(pioid,  mesh_model,  'PCT_GLC_ICESHEET', pctglc_icesheet, rc=rc)
-        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     end if
-  end if
-  deallocate(pctglcmec)
-  deallocate(topoglcmec)
-  deallocate(elevclass )
-  if (outnc_3dglc) then
-     deallocate(pctglcmec_gic)
-     deallocate(pctglcmec_icesheet)
-     deallocate (pctglc_gic)
-     deallocate (pctglc_icesheet)
   end if
 
   ! ----------------------------------------------------------------------

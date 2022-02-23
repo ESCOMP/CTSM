@@ -5,15 +5,16 @@ module mkgdpMod
   !-----------------------------------------------------------------------
 
   use ESMF
+  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite, pio_syncfile
   use shr_kind_mod     , only : r8 => shr_kind_r8, r4=>shr_kind_r4
   use shr_sys_mod      , only : shr_sys_abort
-  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
   use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
   use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
-  use mkvarctl         , only : ndiag, root_task, mpicom
+  use mkvarctl         , only : ndiag, root_task, mpicom, spval
   use mkdiagnosticsMod , only : output_diagnostics_continuous
   use mkchecksMod      , only : min_bad
   use mkutilsMod       , only : chkerr
+  use mkfileMod        , only : mkfile_output 
 
   implicit none
   private
@@ -27,7 +28,7 @@ module mkgdpMod
 contains
 !===============================================================
 
-  subroutine mkgdp(file_mesh_i, file_data_i, mesh_o, gdp_o, rc)
+  subroutine mkgdp(file_mesh_i, file_data_i, mesh_o, pioid_o, rc)
     !
     ! make GDP from input GDP data
     !
@@ -35,7 +36,7 @@ contains
     character(len=*)  , intent(in)    :: file_mesh_i ! input mesh file name
     character(len=*)  , intent(in)    :: file_data_i ! input data file name
     type(ESMF_Mesh)   , intent(in)    :: mesh_o      ! input model mesh
-    real(r8)          , intent(inout) :: gdp_o(:)    ! output grid: GDP (x1000 1995 US$ per capita)
+    type(file_desc_t) , intent(inout) :: pioid_o
     integer           , intent(out)   :: rc
 
     ! local variables:
@@ -47,9 +48,10 @@ contains
     integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
-    real(r8), allocatable  :: gdp_i(:)             ! input grid: percent gdp
-    real(r8), parameter    :: min_valid = 0._r8    ! minimum valid value
-    integer                :: ier, rcode           ! error status
+    real(r8), allocatable  :: gdp_i(:)          ! input grid: percent gdp
+    real(r8), allocatable  :: gdp_o(:)          ! output grid: GDP (x1000 1995 US$ per capita)
+    real(r8), parameter    :: min_valid = 0._r8 ! minimum valid value
+    integer                :: ier, rcode        ! error status
     character(len=*), parameter :: subname = 'mkgdp'
     !-----------------------------------------------------------------------
 
@@ -77,9 +79,10 @@ contains
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Determine ns_o
+    ! Determine ns_o and allocate output data
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate (gdp_o(ns_o)); gdp_o(:) = spval
 
     ! Get the landmask from the file and reset the mesh mask based on that
     allocate(frac_i(ns_i), stat=ier)
@@ -98,7 +101,7 @@ contains
     call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    ! Read in peat_i
+    ! Read in gdp_i
     allocate(gdp_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
     call mkpio_get_rawdata(pioid, 'gdp', mesh_i, gdp_i, rc=rc)
@@ -121,6 +124,12 @@ contains
 
     ! Close the file
     call pio_closefile(pioid)
+
+    ! Write output data
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out gdp"
+    call mkfile_output(pioid, mesh_o, 'gdp', gdp_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+    call pio_syncfile(pioid_o)
 
     ! Output diagnostic info
     call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &

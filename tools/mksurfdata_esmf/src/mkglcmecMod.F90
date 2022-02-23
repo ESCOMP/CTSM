@@ -9,12 +9,15 @@ module mkglcmecMod
   use shr_sys_mod    , only : shr_sys_abort
   use pio            , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
   use pio            , only : var_desc_t, io_desc_t, Pio_Offset_Kind, pio_setframe
-  use pio            , only : pio_inq_dimid, pio_inq_dimlen, pio_inq_varid, pio_get_var
+  use pio            , only : pio_inq_dimid, pio_inq_dimlen, pio_inq_varid
+  use pio            , only : pio_put_var, pio_get_var
   use mkpioMod       , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
   use mkpioMod       , only : mkpio_iodesc_rawdata, mkpio_get_rawdata_level
   use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8
-  use mkvarctl       , only : ndiag, root_task, outnc_3dglc
+  use mkvarctl       , only : ndiag, root_task, outnc_3dglc, spval, nglcec
   use mkutilsMod     , only : chkerr
+  use mkutilsMod     , only : slightly_below, slightly_above
+  use mkfileMod      , only : mkfile_output
 
   implicit none
   private           ! By default make data private
@@ -26,7 +29,6 @@ module mkglcmecMod
   private :: get_elevclass     ! get elevation class index
   private :: mean_elevation_vc ! get the elevation of a virtual column
 
-  integer, public       :: nglcec = 10   ! number of elevation classes for glaciers
   real(r8), allocatable :: elevclass(:)          ! elevation classes
 
   character(len=*) , parameter :: u_FILE_u = &
@@ -36,14 +38,18 @@ module mkglcmecMod
 contains
 !=================================================================================
 
-  subroutine mkglcmecInit( elevclass_o )
+  subroutine mkglcmecInit( pioid_o )
     !
     ! Initialize of Make glacier multi-elevation class data
     !
     ! input/output variables
-    real(r8), intent(out) :: elevclass_o(:)          ! elevation classes
+    type(file_desc_t) , intent(inout) :: pioid_o
 
     ! local variables:
+    type(var_desc_t)      :: pio_varid
+    type(io_desc_t)       :: pio_iodesc
+    real(r8), allocatable :: elevclass_o(:)          ! elevation classes
+    integer               :: rcode
     character(len=*), parameter :: subname = 'mkglcmecInit'
     !-----------------------------------------------------------------------
 
@@ -95,12 +101,14 @@ contains
 
     elevclass_o(:) = elevclass(:)
 
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out GLC_MEC"
+    rcode = pio_inq_varid(pioid_o, 'GLC_MEC', pio_varid)
+    rcode = pio_put_var(pioid_o, pio_varid, elevclass)
+
   end subroutine mkglcmecInit
 
   !=================================================================================
-  subroutine mkglcmec(file_mesh_i, file_data_i, mesh_o,  &
-       pctglcmec_o, topoglcmec_o, pctglcmec_gic_o, pctglcmec_icesheet_o, &
-       pctglc_gic_o, pctglc_icesheet_o, rc)
+  subroutine mkglcmec(file_mesh_i, file_data_i, mesh_o,  pioid_o, rc)
     !
     ! make percent glacier on multiple elevation classes, mean elevation for each
     ! elevation class, and associated fields
@@ -117,33 +125,26 @@ contains
     ! If the input glacier area is 0 for a given grid cell, this requires setting these %
     ! variables in an arbitrary way.
     !
-    use mkutilsMod, only : slightly_below, slightly_above
-    !
     ! input/output variables
-    character(len=*)   , intent(in)  :: file_mesh_i ! input mesh file name
-    character(len=*)   , intent(in)  :: file_data_i ! input data file name
-    type(ESMF_Mesh)    , intent(in)  :: mesh_o      ! output mesh
-    real(r8)           , intent(out) :: pctglcmec_o (:,:) ! % for each elevation class on output glacier grid (% of landunit)
-    real(r8)           , intent(out) :: topoglcmec_o(:,:)         ! mean elevation for each elevation classs on output glacier grid
-    real(r8), optional , intent(out) :: pctglcmec_gic_o(:,:)      ! % glc gic on output grid, by elevation class (% of landunit)
-    real(r8), optional , intent(out) :: pctglcmec_icesheet_o(:,:) ! % glc ice sheet on output grid, by elevation class (% of landunit)
-    real(r8), optional , intent(out) :: pctglc_gic_o(:)           ! % glc gic on output grid, summed across elevation classes (% of landunit)
-    real(r8), optional , intent(out) :: pctglc_icesheet_o(:)      ! % glc ice sheet on output grid, summed across elevation classes (% of landunit)
-    integer            , intent(out) :: rc
+    character(len=*)  , intent(in)    :: file_mesh_i ! input mesh file name
+    character(len=*)  , intent(in)    :: file_data_i ! input data file name
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o      ! output mesh
+    type(file_desc_t) , intent(inout) :: pioid_o
+    integer           , intent(out)   :: rc
 
     ! local variables:
-    type(ESMF_RouteHandle) :: routehandle              ! nearest neighbor routehandle
+    type(ESMF_RouteHandle) :: routehandle               ! nearest neighbor routehandle
     type(ESMF_Mesh)        :: mesh_i
-    type(file_desc_t)      :: pioid
+    type(file_desc_t)      :: pioid_i
     type(var_desc_t)       :: pio_varid
     type(io_desc_t)        :: pio_iodesc
     integer                :: pio_vartype
     integer                :: ni,no,lev
     integer                :: ns_i, ns_o
-    integer                :: n,m,k                    ! indices
-    integer                :: dimid                    ! dimension ids
-    integer                :: ndims                    ! number of dimensions in input variables
-    integer                :: nlev                     ! number of levels in input file
+    integer                :: n,m,k                     ! indices
+    integer                :: dimid                     ! dimension ids
+    integer                :: ndims                     ! number of dimensions in input variables
+    integer                :: nlev                      ! number of levels in input file
     integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
@@ -155,14 +156,19 @@ contains
     real(r8), allocatable  :: data_pctglc_icesheet_o(:) ! input icesheet percentage
     real(r8), allocatable  :: data_pctglc_gic_i(:)
     real(r8), allocatable  :: data_pctglc_gic_o(:)
-    real(r8), allocatable  :: topoglcmec_unnorm_o(:,:) ! same as topoglcmec_o, but unnormalized
-    real(r8), allocatable  :: pctglc_tot_o(:)          ! total glacier cover for the grid cell
-    real(r4), allocatable  :: topoice_i(:)             ! topographic height of this level
-    integer                :: unlimited_index          ! z level
-    real(r8)               :: glc_sum                  ! temporary
-    integer                :: ier, rcode               ! error status
-    logical                :: errors                   ! error status
-
+    real(r8), allocatable  :: topoglcmec_unnorm_o(:,:)  ! same as topoglcmec_o, but unnormalized
+    real(r8), allocatable  :: pctglc_tot_o(:)           ! total glacier cover for the grid cell
+    real(r4), allocatable  :: topoice_i(:)              ! topographic height of this level
+    real(r8), allocatable  :: pctglcmec_o (:,:)         ! % for each elevation class on output glacier grid (% of landunit)
+    real(r8), allocatable  :: topoglcmec_o(:,:)         ! mean elevation for each elevation classs on output glacier grid
+    real(r8), allocatable  :: pctglcmec_gic_o(:,:)      ! % glc gic on output grid, by elevation class (% of landunit)
+    real(r8), allocatable  :: pctglcmec_icesheet_o(:,:) ! % glc ice sheet on output grid, by elevation class (% of landunit)
+    real(r8), allocatable  :: pctglc_gic_o(:)           ! % glc gic on output grid, summed across elevation classes (% of landunit)
+    real(r8), allocatable  :: pctglc_icesheet_o(:)      ! % glc ice sheet on output grid, summed across elevation classes (% of landunit)
+    integer                :: unlimited_index           ! z level
+    real(r8)               :: glc_sum                   ! temporary
+    integer                :: ier, rcode                ! error status
+    logical                :: errors                    ! error status
     real(r8), parameter :: eps = 2.e-5_r8              ! epsilon for error checks (note that we use a large-ish value
                                                        ! because data are stored as single-precision floats in the raw dataset)
     real(r8), parameter :: eps_small = 1.e-12_r8       ! epsilon for error checks that expect close match
@@ -181,23 +187,9 @@ contains
        write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
 
-    ! Initialize all output fields to zero
-    pctglcmec_o(:,:) = 0.
-    topoglcmec_o(:,:) = 0.
-    if ( outnc_3dglc )then
-       if ( (.not. present(pctglcmec_gic_o)) .or. (.not. present(pctglcmec_icesheet_o)) .or. &
-            (.not. present(pctglc_gic_o)   ) .or. (.not. present(pctglc_icesheet_o)   ) )then
-          call shr_sys_abort( subname//' error: 3D glacier fields were NOT sent in and they are required' )
-       end if
-       pctglcmec_gic_o(:,:) = 0.
-       pctglcmec_icesheet_o(:,:) = 0.
-       pctglc_gic_o(:) = 0.
-       pctglc_icesheet_o(:) = 0.
-    end if
-
     ! Open input data file
     call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
     call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
@@ -210,16 +202,34 @@ contains
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Determine ns_o
+    ! Determine ns_o and allocate output data
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate(pctglcmec_o(ns_o,nglcec))
+    pctglcmec_o(:,:) = 0.
+
+    allocate(topoglcmec_o(ns_o,nglcec))
+    topoglcmec_o(:,:) = 0.
+    if ( outnc_3dglc )then
+       allocate(pctglcmec_gic_o(ns_o,nglcec))
+       pctglcmec_gic_o(:,:) = 0.
+
+       allocate(pctglcmec_icesheet_o(ns_o,nglcec))
+       pctglcmec_icesheet_o(:,:) = 0.
+
+       allocate(pctglc_gic_o(ns_o))
+       pctglc_gic_o(:) = 0.
+
+       allocate(pctglc_icesheet_o(ns_o))
+       pctglc_icesheet_o(:) = 0.
+    end if
 
     ! Get the landmask from the file and reset the mesh mask based on that
     allocate(frac_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort(subname//" error in allocating frac_i")
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort(subname//" error in allocating mask_i")
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, frac_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
        if (frac_i(ni) > 0._r8) then
@@ -232,13 +242,13 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Read in BIN_CENTERS on all tasks and check validity
-    rcode = pio_inq_dimid (pioid, 'z', dimid)
-    rcode = pio_inq_dimlen(pioid, dimid, nlev)
+    rcode = pio_inq_dimid (pioid_i, 'z', dimid)
+    rcode = pio_inq_dimlen(pioid_i, dimid, nlev)
     ! TODO: hard-wiring topoice to be r4 - this needs to be generalized to query the variable type
     ! on the netcdf file
     allocate(topoice_i(nlev))
-    rcode = pio_inq_varid (pioid, 'BIN_CENTERS', pio_varid)
-    rcode = pio_get_var(pioid, pio_varid, topoice_i)
+    rcode = pio_inq_varid (pioid_i, 'BIN_CENTERS', pio_varid)
+    rcode = pio_get_var(pioid_i, pio_varid, topoice_i)
     do lev = 1,nlev
        m = get_elevclass(topoice_i(lev))
        if (m < 1 .or. m > nglcec) then
@@ -267,7 +277,7 @@ contains
     topoglcmec_unnorm_o(:,:) = 0.
 
     ! Create iodescriptor for a single level of the input data
-    call mkpio_iodesc_rawdata(mesh_i, 'PCT_GLC_GIC', pioid, pio_varid, pio_vartype, pio_iodesc, rc)
+    call mkpio_iodesc_rawdata(mesh_i, 'PCT_GLC_GIC', pioid_i, pio_varid, pio_vartype, pio_iodesc, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Create a route handle between the input and output mesh and get frac_o
@@ -284,13 +294,13 @@ contains
        write(6,'(i4)',advance='no') lev
 
        ! Read in one level of data
-       rcode = pio_inq_varid(pioid, 'PCT_GLC_GIC', pio_varid)
-       call pio_setframe(pioid, pio_varid, int(lev,kind=Pio_Offset_Kind))
-       call mkpio_get_rawdata_level(pioid, pio_iodesc, lev, 'PCT_GLC_GIC', data_pctglc_gic_i)
+       rcode = pio_inq_varid(pioid_i, 'PCT_GLC_GIC', pio_varid)
+       call pio_setframe(pioid_i, pio_varid, int(lev,kind=Pio_Offset_Kind))
+       call mkpio_get_rawdata_level(pioid_i, pio_iodesc, lev, 'PCT_GLC_GIC', data_pctglc_gic_i)
 
-       rcode = pio_inq_varid(pioid, 'PCT_GLC_ICESHEET', pio_varid)
-       call pio_setframe(pioid, pio_varid, int(lev,kind=Pio_Offset_Kind))
-       call mkpio_get_rawdata_level(pioid, pio_iodesc, lev, 'PCT_GLC_ICESHEET', data_pctglc_icesheet_i)
+       rcode = pio_inq_varid(pioid_i, 'PCT_GLC_ICESHEET', pio_varid)
+       call pio_setframe(pioid_i, pio_varid, int(lev,kind=Pio_Offset_Kind))
+       call mkpio_get_rawdata_level(pioid_i, pio_iodesc, lev, 'PCT_GLC_ICESHEET', data_pctglc_icesheet_i)
 
        ! Compute derived input data
        data_pctglc_i(:) = data_pctglc_gic_i(:) + data_pctglc_icesheet_i(:)
@@ -316,7 +326,7 @@ contains
     end do
 
     ! Close glacier input file
-    call pio_closefile(pioid)
+    call pio_closefile(pioid_i)
     call ESMF_VMLogMemInfo("After pio_closefile in "//trim(subname))
 
     ! At this point, the various percentages are given as % of grid cell.
@@ -428,6 +438,33 @@ contains
 
     if (errors) then
        call shr_sys_abort(subname//" error in error checks")
+    end if
+
+    ! Output data tp fo;e
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_mec"
+    call mkfile_output(pioid_o, mesh_o, 'PCT_GLC_MEC', pctglcmec_o, lev1name='nglcec', rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out topo_glc_mec"
+    call mkfile_output(pioid_o, mesh_o, 'TOPO_GLC_MEC', topoglcmec_o, lev1name='nglcec', rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+
+    if (outnc_3dglc ) then
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_mec_gic"
+       call mkfile_output(pioid_o, mesh_o, 'PCT_GLC_MEC_GIC', pctglcmec_gic_o, lev1name='nglcec', rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_mec_icesheet"
+       call mkfile_output(pioid_o, mesh_o, 'PCT_GLC_MEC_ICESHEET', pctglcmec_icesheet_o, lev1name='nglcec', rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_glc_gic"
+       call mkfile_output(pioid_o, mesh_o, 'PCT_GLC_GIC', pctglc_gic_o, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out pct_icesheet"
+       call mkfile_output(pioid_o, mesh_o, 'PCT_GLC_ICESHEET', pctglc_icesheet_o, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
     end if
 
     ! Deallocate dynamic memory

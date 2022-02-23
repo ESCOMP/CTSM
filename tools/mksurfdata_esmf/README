@@ -1,18 +1,22 @@
 ============================
-building the executable (this will be built in src/ for now)
+building the executable
 ============================
+> rm -rf bld
 > mkdir ./bld
 > cd bld
 > module load cmake
 > CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src/
-> make
-> cd ../
+> make VERBOSE=1
+
+> cd ../src
 > make clean
-> make
+> MKSURDATA_BLD=../bld make VERBOSE=1
 
 ============================
 running the code (you could add mksurfdata_in)
 ============================
 > cd ../
-./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc | cut -d' ' -f5
-> qsub run_mksurfdata
+> rm mksurfdata_in
+> temp=`./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc | cut -d' ' -f5`
+> ln -s $temp mksurfdata_in
+> qsub gen_mksurfdata
