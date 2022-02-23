@@ -1296,6 +1296,10 @@
   <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm51Bgc" testmods="clm/Meier2022_surf_rough">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="gnu"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="izumi"    compiler="intel" category="aux_clm"/>
+      <machine name="izumi"    compiler="gnu"   category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
