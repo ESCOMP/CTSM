@@ -1274,7 +1274,7 @@
       <option name="comment"  >Exact restart short DEBUG SP test with Meier surface roughness</option>
     </options>
   </test>
-  <test name="ERP_D_Ly2" grid="f09_f09_mg17" compset="I2000Clm51Bgc" testmods="clm/Meier2022_surf_rough_all_f09NonCrop">
+  <test name="ERP_D_Ly3" grid="f09_f09_mg17" compset="I2000Clm51Bgc" testmods="clm/Meier2022_surf_rough_all_f09NonCrop">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
