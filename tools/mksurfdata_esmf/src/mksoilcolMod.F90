@@ -1,13 +1,15 @@
 module mksoilcolMod
 
   use ESMF
+  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
+  use pio              , only : pio_syncfile, pio_inq_varid, pio_put_var, var_desc_t
   use shr_kind_mod     , only : r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_sys_mod      , only : shr_sys_abort
-  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
   use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
   use mkvarctl         , only : root_task, ndiag, mpicom, unsetcol, soil_color_override
   use mkdiagnosticsMod , only : output_diagnostics_index
   use mkutilsMod       , only : chkerr
+  use mkfileMod        , only : mkfile_output
 
   implicit none
   private
@@ -27,14 +29,14 @@ module mksoilcolMod
 contains
 !=================================================================================
 
-  subroutine mksoilcol(file_data_i, file_mesh_i, mesh_o, soil_color_o, nsoilcol, rc)
+  subroutine mksoilcol(file_data_i, file_mesh_i, mesh_o, pctlnd_pft_o, pioid_o, rc)
 
     ! input/output variables
     character(len=*)  , intent(in)    :: file_mesh_i     ! input mesh file name
     character(len=*)  , intent(in)    :: file_data_i     ! input data file name
     type(ESMF_Mesh)   , intent(in)    :: mesh_o          ! model mesho
-    integer           , intent(inout) :: soil_color_o(:) ! soil color classes
-    integer           , intent(out)   :: nsoilcol        ! number of soil colors
+    real(r8)          , intent(in)    :: pctlnd_pft_o(:)
+    type(file_desc_t) , intent(inout) :: pioid_o
     integer           , intent(out)   :: rc
 
     ! local variables:
@@ -43,13 +45,16 @@ contains
     type(ESMF_Field)       :: field_i
     type(ESMF_Field)       :: field_o
     type(ESMF_Field)       :: field_dstfrac
-    type(file_desc_t)      :: pioid
+    type(file_desc_t)      :: pioid_i
+    type(var_desc_t)       :: pio_varid
     integer                :: ni,no, k
     integer                :: ns_i, ns_o
     integer , allocatable  :: mask_i(:)
     real(r4), allocatable  :: rmask_i(:)
     real(r8), allocatable  :: frac_o(:)
     real(r4), allocatable  :: soil_color_i(:)
+    integer , allocatable  :: soil_color_o(:) ! soil color classes
+    integer                :: nsoilcol        ! number of soil colors
     real(r4), pointer      :: dataptr(:)
     real(r8), pointer      :: dataptr_r8(:)
     integer                :: nsoilcol_local
@@ -84,7 +89,7 @@ contains
 
     ! Open soil color data file
     call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
 
     ! Read in input mesh
     call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
@@ -96,16 +101,17 @@ contains
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Determine ns_o
+    ! Determine ns_o and allocate output data
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate (soil_color_o(ns_o)); soil_color_o(:) = -999
 
     ! Get the landmask from the file and reset the mesh mask based on that
     allocate(rmask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, rmask_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, rmask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
        if (rmask_i(ni) > 0._r4) then
@@ -121,7 +127,7 @@ contains
     ! Read in input soil color data
     allocate(soil_color_i(ns_i),stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'SOIL_COLOR', mesh_i, soil_color_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'SOIL_COLOR', mesh_i, soil_color_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
@@ -155,7 +161,7 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
 
-    ! Determin frac_o
+    ! Determine frac_o
     call ESMF_FieldGet(field_dstfrac, farrayptr=dataptr_r8, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     allocate(frac_o(ns_o))
@@ -189,10 +195,29 @@ contains
        end if
     end do
 
+    ! assume medium soil color (15) and loamy texture if pct_lndpft is small
+    do no = 1,ns_o
+       if (pctlnd_pft_o(no) < 1.e-6_r8) then
+          soil_color_o(no) = 15
+       end if
+    end do
+
+    ! Write output data
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil color"
+    call mkfile_output(pioid_o,  mesh_o, 'SOIL_COLOR', soil_color_o,  rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out mksoil_color"
+    rcode = pio_inq_varid(pioid_o, 'mxsoil_color', pio_varid)
+    rcode = pio_put_var(pioid_o, pio_varid, nsoilcol)
+    call pio_syncfile(pioid_o)
+
     ! Compare global area of each soil color on input and output grids
     call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
          0, nsoilcol, int(soil_color_i), soil_color_o, 'soil color type',  ndiag, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Close the input file 
+    call pio_closefile(pioid_i)
 
     ! Clean up memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)

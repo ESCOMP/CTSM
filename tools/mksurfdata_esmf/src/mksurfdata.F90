@@ -165,23 +165,15 @@ program mksurfdata
   ! gdp data
   real(r8), allocatable           :: gdp(:)                  ! GDP (x1000 1995 US$/capita)
 
-  ! peatland data
-  real(r8), allocatable           :: fpeat(:)                ! peatland fraction of gridcell
-
   ! topography statistics data
   real(r4), allocatable           :: topo_stddev(:)          ! standard deviation of elevation (m)
   real(r4), allocatable           :: slope(:)                ! topographic slope (degrees)
 
-  ! agricultural peak month data
-  integer , allocatable           :: agfirepkmon(:)          ! agricultural fire peak month
-
   ! inland water data
   real(r8), allocatable           :: pctlak(:)               ! percent of grid cell that is lake
   real(r8), allocatable           :: pctwet(:)               ! percent of grid cell that is wetland
-  real(r8), allocatable           :: lakedepth(:)            ! lake depth (m)
 
   ! glacier data
-  integer,  allocatable           :: glacier_region(:)       ! glacier region ID
   real(r8), allocatable           :: pctgla(:)               ! percent of grid cell that is glacier
   real(r8), allocatable           :: pctglc_gic(:)           ! percent of grid cell that is gic (% of glc landunit)
   real(r8), allocatable           :: pctglc_icesheet(:)      ! percent of grid cell that is ice sheet (% of glc landunit)
@@ -197,13 +189,6 @@ program mksurfdata
   real(r8), allocatable           :: urban_classes(:,:)      ! percent cover of each urban class, as % of total urban area
   real(r8), allocatable           :: urban_classes_g(:,:)    ! percent cover of each urban class, as % of grid cell
   real(r8), allocatable           :: elev(:)                 ! glc elevation (m)
-
-  ! soil color data
-  integer                         :: nsoilcol                ! number of model color classes
-  integer , allocatable           :: soil_color(:)           ! soil color
-
-  ! soil depth data
-  real(r8), allocatable           :: soildepth(:)            ! soil depth (m)
 
   ! logicals
   logical                         :: zero_out_lake           ! if should zero glacier out
@@ -502,26 +487,10 @@ program mksurfdata
   ! -----------------------------------
   ! Make soil color classes [soicol] [fsoicol]
   ! -----------------------------------
-  allocate (soil_color(lsize_o)); soil_color(:) = -999
-  call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, soil_color, nsoilcol, rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilcol')
-  do n = 1,lsize_o
-     if (pctlnd_pft(n) < 1.e-6_r8) then
-        ! assume medium soil color (15) and loamy texture
-        soil_color(n) = 15
-     end if
-  end do
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil color"
-     call mkfile_output(pioid,  mesh_model, 'SOIL_COLOR', soil_color,  rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out mksoil_color"
-     rcode = pio_inq_varid(pioid, 'mxsoil_color', pio_varid)
-     rcode = pio_put_var(pioid, pio_varid, nsoilcol)
-     call pio_syncfile(pioid)
+     call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, pctlnd_pft, pioid, rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilcol')
   end if
-  deallocate (soil_color )
 
   ! -----------------------------------
   ! Make soil fmax [fmaxsoil]
@@ -555,45 +524,26 @@ program mksurfdata
   ! -----------------------------------
   ! Make peat data [fpeat] from [peatf]
   ! -----------------------------------
-  allocate (fpeat(lsize_o)) ; fpeat(:) = spval
-  call mkpeat (mksrf_fpeat_mesh, mksrf_fpeat, mesh_model, peat_o=fpeat, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpeat')
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out peatland fraction"
-     call mkfile_output(pioid, mesh_model, 'peatf', fpeat, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call pio_syncfile(pioid)
+     call mkpeat (mksrf_fpeat_mesh, mksrf_fpeat, mesh_model, pioid, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpeat')
   end if
-  deallocate(fpeat)
-  call pio_syncfile(pioid)
 
   ! -----------------------------------
   ! Make soil depth data [soildepth] from [soildepthf]
   ! -----------------------------------
-  allocate ( soildepth(lsize_o)); soildepth(:) = spval
-  call mksoildepth( mksrf_fsoildepth_mesh, mksrf_fsoildepth, mesh_model, soildepth, rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoildepth')
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil depth"
-     call mkfile_output(pioid,  mesh_model,  'zbedrock', soildepth, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call pio_syncfile(pioid)
+     call mksoildepth( mksrf_fsoildepth_mesh, mksrf_fsoildepth, mesh_model, pioid, rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoildepth')
   end if
-  deallocate (soildepth)
 
   ! -----------------------------------
   ! Make agricultural fire peak month data [abm] from [abm]
   ! -----------------------------------
-  allocate (agfirepkmon(lsize_o)); agfirepkmon(:) = -999
-  call mkagfirepkmon (mksrf_fabm_mesh, mksrf_fabm, mesh_model, agfirepkmon_o=agfirepkmon, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkagfirepkmon')
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing abm (agricultural fire peak month)"
-     call mkfile_output(pioid,  mesh_model, 'abm', agfirepkmon, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-     call pio_syncfile(pioid)
+     call mkagfirepkmon (mksrf_fabm_mesh, mksrf_fabm, mesh_model, pioid, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkagfirepkmon')
   end if
-  deallocate(agfirepkmon)
 
   ! -----------------------------------
   ! Make urban fraction [pcturb] from [furban] dataset and
@@ -627,27 +577,15 @@ program mksurfdata
         pcturb = 0._r8
      end where
      deallocate(elev)
-     call pio_syncfile(pioid)
   end if
 
   ! -----------------------------------
   ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
   ! -----------------------------------
-  allocate (topo_stddev(lsize_o)) ; topo_stddev(:) = spval
-  allocate (slope(lsize_o))       ; slope(:)       = spval
-  call mktopostats ( mksrf_ftopostats_mesh, mksrf_ftopostats, mesh_model, &
-       topo_stddev_o=topo_stddev, slope_o=slope, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mktopostats')
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing topo_stddev "
-     call mkfile_output(pioid,  mesh_model, 'STD_ELEV', topo_stddev, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for STD_ELEV')
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing slope"
-     call mkfile_output(pioid,  mesh_model, 'SLOPE', slope, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for SLOPE')
-     call pio_syncfile(pioid)
+     call mktopostats ( mksrf_ftopostats_mesh, mksrf_ftopostats, mesh_model, pioid, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mktopostats')
   end if
-  deallocate(topo_stddev, slope)
 
   ! -----------------------------------
   ! Compute VIC parameters

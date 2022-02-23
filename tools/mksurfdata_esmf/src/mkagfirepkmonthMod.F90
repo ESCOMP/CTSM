@@ -5,14 +5,15 @@ module mkagfirepkmonthMod
   !-----------------------------------------------------------------------
 
   use ESMF
+  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite, pio_syncfile
   use shr_kind_mod     , only : r8 => shr_kind_r8, r4=>shr_kind_r4
   use shr_sys_mod      , only : shr_sys_abort
-  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
   use mkpioMod         , only : mkpio_get_rawdata,  pio_iotype, pio_iosystem
   use mkvarctl         , only : ndiag, root_task
   use mkchecksMod      , only : min_bad, max_bad
   use mkdiagnosticsMod , only : output_diagnostics_index
   use mkutilsMod       , only : chkerr
+  use mkfileMod        , only : mkfile_output
 
   implicit none
   private           ! By default make data private
@@ -32,16 +33,16 @@ module mkagfirepkmonthMod
 contains
 !===============================================================
 
-  subroutine mkagfirepkmon(file_mesh_i, file_data_i, mesh_o, agfirepkmon_o, rc)
+  subroutine mkagfirepkmon(file_mesh_i, file_data_i, mesh_o, pioid_o, rc)
     !
     ! Make agricultural fire peak month data from higher resolution data
     !
     ! input/output variables
-    character(len=*) , intent(in)    :: file_mesh_i      ! input mesh file name
-    character(len=*) , intent(in)    :: file_data_i      ! input data file name
-    type(ESMF_Mesh)  , intent(in)    :: mesh_o           ! output mesh
-    integer          , intent(inout) :: agfirepkmon_o(:) ! agricultural fire peak month
-    integer          , intent(out)   :: rc
+    character(len=*)  , intent(in)    :: file_mesh_i      ! input mesh file name
+    character(len=*)  , intent(in)    :: file_data_i      ! input data file name
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o           ! output mesh
+    type(file_desc_t) , intent(inout) :: pioid_o
+    integer           , intent(out)   :: rc
     !
     ! local variables:
     type(ESMF_RouteHandle)         :: routehandle
@@ -49,7 +50,7 @@ contains
     type(ESMF_Field)               :: field_i
     type(ESMF_Field)               :: field_o
     type(ESMF_Field)               :: field_dstfrac
-    type(file_desc_t)              :: pioid
+    type(file_desc_t)              :: pioid_i
     integer                        :: k
     integer                        :: ni,no
     integer                        :: ns_i, ns_o
@@ -57,6 +58,7 @@ contains
     real(r4), allocatable          :: rmask_i(:)
     real(r8), allocatable          :: frac_o(:)
     integer , allocatable          :: idata_i(:)    ! input grid: agricultural fire peak month
+    integer , allocatable          :: agfirepkmon_o(:) ! agricultural fire peak month
     real(r4), pointer              :: dataptr(:)
     real(r8), pointer              :: dataptr_r8(:)
     integer                        :: rcode, ier    ! error status
@@ -74,7 +76,7 @@ contains
     end if
 
     ! Open input data file
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
     call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
@@ -86,16 +88,17 @@ contains
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Determine ns_o
+    ! Determine ns_o and allocate output data
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate (agfirepkmon_o(ns_o)); agfirepkmon_o(:) = -999
 
     ! Get the landmask from the file and reset the mesh mask based on that
     allocate(rmask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort(subname//" ERROR in allocating rmask_i")
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort(subname//" ERROR in allocating mask_i")
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, rmask_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, rmask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
        if (rmask_i(ni) > 0.) then
@@ -110,7 +113,7 @@ contains
     ! Read in agfirepkmon_i
     allocate(idata_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort(subname//" error in allocating idata_i")
-    call mkpio_get_rawdata(pioid, 'abm', mesh_i, idata_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'abm', mesh_i, idata_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
@@ -165,7 +168,13 @@ contains
      end if
 
     ! Close the file 
-    call pio_closefile(pioid)
+    call pio_closefile(pioid_i)
+
+    ! Write out data
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing abm (agricultural fire peak month)"
+    call mkfile_output(pioid_o,  mesh_o, 'abm', agfirepkmon_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+    call pio_syncfile(pioid_o)
 
     ! Output diagnostics comparing global area of each peak month on input and output grids
     call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &

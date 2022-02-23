@@ -7,13 +7,14 @@ module mkpeatMod
   use ESMF
   use shr_kind_mod     , only : r8 => shr_kind_r8, r4=>shr_kind_r4
   use shr_sys_mod      , only : shr_sys_abort
-  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite
+  use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite, pio_syncfile
   use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
   use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
-  use mkvarctl         , only : ndiag, root_task, mpicom
+  use mkvarctl         , only : ndiag, root_task, mpicom, spval
   use mkchecksMod      , only : min_bad, max_bad
   use mkdiagnosticsMod , only : output_diagnostics_continuous
   use mkutilsMod       , only : chkerr
+  use mkfileMod        , only : mkfile_output
 
   implicit none
   private
@@ -27,25 +28,26 @@ module mkpeatMod
 contains
 !===============================================================
 
-  subroutine mkpeat(file_mesh_i, file_data_i, mesh_o, peat_o, rc)
+  subroutine mkpeat(file_mesh_i, file_data_i, mesh_o, pioid_o, rc)
 
     ! input/output variables
     character(len=*)  , intent(in)    :: file_mesh_i ! input mesh file name
     character(len=*)  , intent(in)    :: file_data_i ! input data file name
     type(ESMF_Mesh)   , intent(in)    :: mesh_o      ! input model mesh
-    real(r8)          , intent(inout) :: peat_o(:)   ! output grid: fraction peat
+    type(file_desc_t) , intent(inout) :: pioid_o
     integer           , intent(out)   :: rc
 
     ! local variables:
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
-    type(file_desc_t)      :: pioid
+    type(file_desc_t)      :: pioid_i
     integer                :: ni,no,k
     integer                :: ns_i, ns_o
     integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
     real(r8), allocatable  :: frac_o(:)
     real(r8), allocatable  :: peat_i(:)              ! input grid: percent peat
+    real(r8), allocatable  :: peat_o(:)   ! output grid: fraction peat
     integer                :: ier, rcode             ! error status
     real(r8), parameter    :: min_valid = 0._r8         ! minimum valid value
     real(r8), parameter    :: max_valid = 100.000001_r8 ! maximum valid value
@@ -63,7 +65,7 @@ contains
     call ESMF_VMLogMemInfo("At start of "//trim(subname))
 
     ! Open input data file
-    rcode = pio_openfile(pio_iosystem, pioid, pio_iotype, trim(file_data_i), pio_nowrite)
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
 
     ! Read in input mesh
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
@@ -74,16 +76,17 @@ contains
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Determine ns_o
+    ! Determine ns_o and allocate output data
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate (peat_o(ns_o)) ; peat_o(:) = spval
 
     ! Get the landmask from the file and reset the mesh mask based on that
     allocate(frac_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'LANDMASK', mesh_i, frac_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, frac_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
        if (frac_i(ni) > 0._r8) then
@@ -98,7 +101,7 @@ contains
     ! Read in peat_i
     allocate(peat_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid, 'peatf', mesh_i, peat_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'peatf', mesh_i, peat_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
@@ -116,13 +119,19 @@ contains
        call shr_sys_abort(subname//" peat_o does not fall in range of min_valid/max_valid")
     end if
 
+    ! Write out data to output file
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out peatland fraction"
+    call mkfile_output(pioid_o, mesh_o, 'peatf', peat_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+    call pio_syncfile(pioid_o)
+
     ! Output diagnostic info
     call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
          peat_i, peat_o, "Peat", "unitless", ndiag, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
     ! Close the file
-    call pio_closefile(pioid)
+    call pio_closefile(pioid_i)
 
     ! Release memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)

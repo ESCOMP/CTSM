@@ -10,12 +10,11 @@ module mktopostatsMod
   use shr_sys_mod    , only : shr_sys_abort
   use mkpioMod       , only : mkpio_get_rawdata, pio_iotype, pio_ioformat, pio_iosystem
   use mkutilsMod     , only : chkerr
-  use mkvarctl       , only : ndiag, root_task, mpicom, std_elev
+  use mkvarctl       , only : ndiag, root_task, mpicom, std_elev, spval
+  use mkfileMod      , only : mkfile_output  
 
   implicit none
   private
-
-#include <mpif.h>
 
   public :: mktopostats            ! make topo stddev & mean slope
 
@@ -30,7 +29,7 @@ module mktopostatsMod
 contains
 !===============================================================
 
-  subroutine mktopostats(file_mesh_i, file_data_i, mesh_o, topo_stddev_o, slope_o, rc)
+  subroutine mktopostats(file_mesh_i, file_data_i, mesh_o, pioid_o, rc)
 
     ! make various topography statistics
     !
@@ -38,23 +37,24 @@ contains
     use mkchecksMod     , only : min_bad, max_bad
     !
     ! input/output variables
-    character(len=*)  , intent(in)  :: file_mesh_i      ! input mesh file name
-    character(len=*)  , intent(in)  :: file_data_i      ! input data file name
-    type(ESMF_Mesh)   , intent(in)  :: mesh_o           ! input model mesh
-    real(r4)          , intent(out) :: topo_stddev_o(:) ! output grid: standard deviation of elevation (m)
-    real(r4)          , intent(out) :: slope_o(:)       ! output grid: slope (degrees)
-    integer           , intent(out) :: rc
+    character(len=*)  , intent(in)    :: file_mesh_i      ! input mesh file name
+    character(len=*)  , intent(in)    :: file_data_i      ! input data file name
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o           ! input model mesh
+    type(file_desc_t) , intent(inout) :: pioid_o
+    integer           , intent(out)   :: rc
     !
     ! local variables:
     type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
     type(ESMF_Field)       :: field_i
     type(ESMF_Field)       :: field_o
-    type(file_desc_t)      :: pioid
+    type(file_desc_t)      :: pioid_i
     integer                :: ni,no,k
     integer                :: ns_i, ns_o
     real(r4), allocatable  :: data_i(:)
     real(r4), pointer      :: dataptr(:)
+    real(r4), allocatable  :: topo_stddev_o(:) ! output grid: standard deviation of elevation (m)
+    real(r4), allocatable  :: slope_o(:)       ! output grid: slope (degrees)
     real(r8), allocatable  :: area_i(:)
     real(r8), allocatable  :: area_o(:)
     integer                :: ier, rcode        ! error status
@@ -89,7 +89,7 @@ contains
     ! Open input data file
     ! Read in data with PIO_IOTYPE_NETCDF rather than PIO_IOTYPE_PNETCDF since there are problems
     ! with the pnetcdf read of this high resolution data
-    rcode = pio_openfile(pio_iosystem, pioid, PIO_IOTYPE_NETCDF, trim(file_data_i), pio_nowrite)
+    rcode = pio_openfile(pio_iosystem, pioid_i, PIO_IOTYPE_NETCDF, trim(file_data_i), pio_nowrite)
     call ESMF_VMLogMemInfo("After pio_openfile "//trim(file_data_i))
 
     ! Read in input mesh
@@ -101,14 +101,16 @@ contains
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Determine ns_o
+    ! Determine ns_o and allocate output data
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate (topo_stddev_o(ns_o)) ; topo_stddev_o(:) = spval
+    allocate (slope_o(ns_o))       ; slope_o(:)       = spval
 
     ! Read in input data data_i
     allocate(data_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort(subname//' error in allocating data_i')
-    call mkpio_get_rawdata(pioid, 'ELEVATION', mesh_i, data_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'ELEVATION', mesh_i, data_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
@@ -150,8 +152,6 @@ contains
 
     call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, dynamicMask=dynamicMask, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    ! call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, rc=rc)
-    ! if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
@@ -172,7 +172,7 @@ contains
     ! Obtain the slope
     ! -----------------------------
 
-    call mkpio_get_rawdata(pioid, 'SLOPE', mesh_i, data_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'SLOPE', mesh_i, data_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
@@ -198,8 +198,18 @@ contains
        !call shr_sys_abort()
     !end if
 
+    ! Write out output data
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing topo_stddev "
+    call mkfile_output(pioid_o,  mesh_o, 'STD_ELEV', topo_stddev_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for STD_ELEV')
+
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing slope"
+    call mkfile_output(pioid_o,  mesh_o, 'SLOPE', slope_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for SLOPE')
+    call pio_syncfile(pioid_o)
+
     ! Close files and deallocate dynamic memory
-    call pio_closefile(pioid)
+    call pio_closefile(pioid_i)
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
