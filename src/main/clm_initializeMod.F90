@@ -16,7 +16,7 @@ module clm_initializeMod
   use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
   use clm_varctl            , only : use_soil_moisture_streams
   use clm_instur            , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft
-  use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake, hasurban
+  use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake, pct_urban_max
   use perf_mod              , only : t_startf, t_stopf
   use readParamsMod         , only : readParameters
   use ncdio_pio             , only : file_desc_t
@@ -214,7 +214,7 @@ contains
     allocate (wt_glc_mec   (begg:endg, maxpatch_glc     ))
     allocate (topo_glc_mec (begg:endg, maxpatch_glc     ))
     allocate (haslake      (begg:endg                      ))
-    allocate (hasurban     (begg:endg, numurbl             ))
+    allocate (pct_urban_max(begg:endg, numurbl             ))
 
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
@@ -289,7 +289,7 @@ contains
     ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere.
     ! Some things are kept until the end of initialize2; urban_valid is kept through the
     ! end of the run for error checking.
-    deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake, hasurban)
+    deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake, pct_urban_max)
 
     ! Determine processor bounds and clumps for this processor
     call get_proc_bounds(bounds_proc)

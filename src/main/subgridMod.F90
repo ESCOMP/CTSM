@@ -350,9 +350,9 @@ contains
     ! In either case, for simplicity, we always allocate space for all columns on any
     ! allocated urban landunits.
     
-    ! For dynamic urban: to improve efficiency, 'hasurban' is added in landuse.timeseries
+    ! For dynamic urban: to improve efficiency, 'PCT_URBAN_MAX' is added in landuse.timeseries
     ! that tells if any urban landunit ever grows in a given grid cell in a transient
-    ! run. The urban landunit is allocated only if hasurban is true. (#1572)
+    ! run. The urban landunit is allocated only if PCT_URBAN_MAX is above 0. (#1572)
 
     if (run_zero_weight_urban) then
        if (urban_valid(gi)) then
@@ -615,11 +615,11 @@ contains
     !
     ! !DESCRIPTION:
     ! Returns true if a landunit for urban should be created in memory
-    ! which is defined for gridcells which will grow urban, given by hasurban
+    ! which is defined for gridcells which will grow urban, given by pct_urban_max
     ! 
     ! !USES:
     use dynSubgridControlMod , only : get_do_transient_urban
-    use clm_instur           , only : hasurban
+    use clm_instur           , only : pct_urban_max
     use clm_varcon           , only : isturb_MIN
     !
     ! !ARGUMENTS:
@@ -628,15 +628,17 @@ contains
     integer, intent(in) :: ltype   !landunit type (isturb_tbd, etc.)
     !
     ! !LOCAL VARIABLES:
+    integer :: dens_index  ! urban density type index
 
     character(len=*), parameter :: subname = 'urban_landunit_exists'
     !-----------------------------------------------------------------------
 
     if (get_do_transient_urban()) then
        ! To support dynamic landunits, we initialize an urban land unit in each grid cell 
-       ! in which there are urban. This is defined by the hasurban variable.
+       ! in which there are urban. This is defined by the pct_urban_max variable.
        
-       if (hasurban(gi,ltype-isturb_MIN)) then
+       dens_index = ltype - isturb_MIN + 1
+       if (pct_urban_max(gi,dens_index) > 0.0_r8) then
             exists = .true.
        else
             exists = .false.

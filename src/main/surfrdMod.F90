@@ -808,7 +808,7 @@ contains
     ! All urban density types will intialize if any type exists or will grow.
     !
     ! !USES:
-     use clm_instur           , only : hasurban
+     use clm_instur           , only : pct_urban_max
      use dynSubgridControlMod , only : get_flanduse_timeseries
      use clm_varctl           , only : fname_len
      use fileutils            , only : getfil
@@ -843,8 +843,8 @@ contains
    ! open landuse_timeseries file
     call ncd_pio_openfile (ncid_dynuse, trim(locfn), 0)
 
-    ! read the lakemask
-    call ncd_io(ncid=ncid_dynuse, varname='PCT_URBAN_MAX', flag='read', data=hasurban, &
+    ! read the urbanmask
+    call ncd_io(ncid=ncid_dynuse, varname='PCT_URBAN_MAX', flag='read', data=pct_urban_max, &
            dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( msg=' ERROR: PCT_URBAN_MAX is not on landuse.timeseries file'//errMsg(sourcefile, __LINE__))
 
