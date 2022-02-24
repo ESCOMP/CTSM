@@ -229,6 +229,10 @@
     <alias>I2000Clm50FatesRs</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
+  <compset>
+    <alias>I2000Clm51FatesRs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM51%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
 
   <compset>
      <alias>I1850Clm50Bgc</alias>
