@@ -35,6 +35,7 @@ module clm_time_manager
         get_curr_time,            &! return components of elapsed time since reference date at end of current timestep
         get_prev_time,            &! return components of elapsed time since reference date at beg of current timestep
         get_curr_calday,          &! return calendar day at end of current timestep
+        get_prev_calday,          &! return calendar day at beginning of current timestep
         get_calday,               &! return calendar day from input date
         get_calendar,             &! return calendar
         get_average_days_per_year,&! return the average number of days per year for the given calendar
@@ -1154,6 +1155,34 @@ contains
     end if
 
   end function get_curr_calday
+
+  !=========================================================================================
+
+  function get_prev_calday(reuse_day_365_for_day_366)
+
+    ! Return calendar day at beginning of current timestep.
+    ! Calendar day 1.0 = 0Z on Jan 1.
+
+    ! If present and true, then day 366 (i.e., the last day of the year on leap years when
+    ! using a Gregorian calendar) reuses day 365. Note that this leads to non-monotonic
+    ! values throughout the year. This is needed in situations where the calday is used
+    ! in code that assumes a 365 day year and won't work right for day 366, such as
+    ! shr_orb_decl.
+    logical, optional, intent(in) :: reuse_day_365_for_day_366
+
+    ! Return value
+    real(r8) :: get_prev_calday
+
+    character(len=*), parameter :: sub = 'clm::get_prev_calday'
+    !-----------------------------------------------------------------------------------------
+
+    if ( .not. check_timemgr_initialized(sub) ) return
+
+    get_prev_calday = get_curr_calday( &
+         offset = -dtime, &
+         reuse_day_365_for_day_366 = reuse_day_365_for_day_366)
+
+  end function get_prev_calday
 
   !=========================================================================================
 
