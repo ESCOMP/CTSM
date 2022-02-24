@@ -198,35 +198,32 @@ contains
          avgflag='A', long_name='Aboveground leaf biomass', &
          ptr_patch=this%leaf_biomass_patch, default='inactive')
 
-       this%fsun_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FSUN', units='proportion', &
-            avgflag='A', long_name='sunlit fraction of canopy', &
-            ptr_patch=this%fsun_patch, default='inactive')
+    this%fsun_patch(begp:endp) = spval
+    call hist_addfld1d (fname='FSUN', units='proportion', &
+         avgflag='A', long_name='sunlit fraction of canopy', &
+         ptr_patch=this%fsun_patch, default='inactive')
 
-       this%hbot_patch(begp:endp) = spval
-       call hist_addfld1d (fname='HBOT', units='m', &
-            avgflag='A', long_name='canopy bottom', &
-            ptr_patch=this%hbot_patch, default='inactive')
+    this%hbot_patch(begp:endp) = spval
+    call hist_addfld1d (fname='HBOT', units='m', &
+         avgflag='A', long_name='canopy bottom', &
+         ptr_patch=this%hbot_patch, default='inactive')
 
-       this%displa_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DISPLA', units='m', &
-            avgflag='A', long_name='displacement height', &
-            ptr_patch=this%displa_patch, default='inactive')
+    this%displa_patch(begp:endp) = spval
+    call hist_addfld1d (fname='DISPLA', units='m', &
+         avgflag='A', long_name='displacement height', &
+         ptr_patch=this%displa_patch, default='inactive')
 
-       if(use_fates_sp)then
-          this%htop_hist_patch(begp:endp) = spval
-          call hist_addfld1d (fname='HTOP', units='m', &
-              avgflag='A', long_name='HTOP weights for SP mode', &
-              ptr_patch=this%htop_hist_patch)
-       else
-          this%htop_patch(begp:endp) = spval
-          call hist_addfld1d (fname='HTOP', units='m', &
-              avgflag='A', long_name='canopy top', &
-              ptr_patch=this%htop_patch)
-       endif
-
-
-    endif !fates or CN
+    if(use_fates_sp)then
+       this%htop_hist_patch(begp:endp) = spval
+       call hist_addfld1d (fname='HTOP', units='m', &
+           avgflag='A', long_name='HTOP weights for SP mode', &
+           ptr_patch=this%htop_hist_patch)
+    else
+       this%htop_patch(begp:endp) = spval
+       call hist_addfld1d (fname='HTOP', units='m', &
+           avgflag='A', long_name='canopy top', &
+           ptr_patch=this%htop_patch)
+    endif
 
     if(use_fates_sp)then
       this%tlai_hist_patch(begp:endp) = spval

@@ -658,7 +658,7 @@ contains
 
 
              end if                    
-          else if (lun%itype(l) == istice_mec) then
+          else if (lun%itype(l) == istice) then
              z0mg(c) = this%zglc
 
              

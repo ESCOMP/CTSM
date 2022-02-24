@@ -10,6 +10,7 @@ module BiogeophysPreFluxCalcsMod
 #include "shr_assert.h"
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use shr_log_mod             , only : errMsg => shr_log_errMsg
+  use abortutils              , only : endrun
   use decompMod               , only : bounds_type
   use PatchType               , only : patch
   use ColumnType              , only : col
@@ -126,8 +127,7 @@ contains
     !
     ! !USES:
     use clm_time_manager, only : is_first_step, get_nstep, is_beg_curr_year
-    use clm_varcon      , only : namep
-    use abortutils      , only : endrun
+    use decompMod       , only : subgrid_level_patch
     use BalanceCheckMod , only : GetBalanceCheckSkipSteps
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds    
@@ -199,7 +199,7 @@ contains
 
                if ( htop(p) <= 1.e-10_r8 )then
                    write(iulog,*) ' nstep = ', get_nstep(), ' htop = ', htop(p)
-                   call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(sourcefile, __LINE__))
+                   call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
                else
                    z0m(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-0.4_r8 * U_ustar + &
                                log(pftcon%z0v_cw(patch%itype(p))) - 1._r8 + pftcon%z0v_cw(patch%itype(p))**(-1._r8))
