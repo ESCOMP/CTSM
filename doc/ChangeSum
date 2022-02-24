@@ -1,5 +1,11 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev080    sacks 02/24/2022 Use avg days per year when converting param units
+    ctsm5.1.dev079    sacks 02/24/2022 Changes to CropPhenology timing
+    ctsm5.1.dev078    sacks 02/24/2022 Rework single-point testing
+    ctsm5.1.dev077   rgknox 02/22/2022 Updates to FATES API, including removal of patch dimensions from fates history and using soil instead of ground layers for fates history
+    ctsm5.1.dev076   negins 02/18/2022 updating subset_data.py script and move to the Python package.
+    ctsm5.1.dev075     erik 02/16/2022 Small answer changes: urban ventilation, fire-emission, irrigate off when not crop, fix two SSP ndep files
     ctsm5.1.dev074   slevis 02/02/2022 Introduce vert. resolved MIMICS as new method to solve below ground decomp.
     ctsm5.1.dev073    sacks 01/25/2022 Some fixes for Gregorian calendar
     ctsm5.1.dev072   negins 01/17/2022 mksurfdat toolchain part 1: gen_mksurf_namelist

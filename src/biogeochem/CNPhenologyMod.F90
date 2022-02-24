@@ -92,7 +92,7 @@ module CNPhenologyMod
 
   type(params_type) :: params_inst
 
-  real(r8) :: dt                            ! radiation time step delta t (seconds)
+  real(r8) :: dt                            ! time step delta t (seconds)
   real(r8) :: fracday                       ! dtime as a fraction of day
   real(r8) :: crit_dayl                     ! critical daylength for offset (seconds)
   real(r8) :: ndays_on                      ! number of days to complete onset
@@ -291,13 +291,14 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
        filter_soilp, num_pcropp, filter_pcropp, &
-       doalb, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, crop_inst, &
+       waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, crop_inst, &
        canopystate_inst, soilstate_inst, dgvs_inst, &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,    &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
        c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
        leaf_prof_patch, froot_prof_patch, phase)
     ! !USES:
+    use clm_time_manager , only: is_first_step
     use CNSharedParamsMod, only: use_fun
     !
     ! !DESCRIPTION:
@@ -312,7 +313,6 @@ contains
     integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
     integer                        , intent(in)    :: num_pcropp      ! number of prog. crop patches in filter
     integer                        , intent(in)    :: filter_pcropp(:)! filter for prognostic crop patches
-    logical                        , intent(in)    :: doalb           ! true if time for sfc albedo calc
     type(waterdiagnosticbulk_type)          , intent(in)    :: waterdiagnosticbulk_inst
     type(wateratm2lndbulk_type)          , intent(in)    :: wateratm2lndbulk_inst
     type(temperature_type)         , intent(inout) :: temperature_inst
@@ -355,7 +355,19 @@ contains
             soilstate_inst, temperature_inst, atm2lnd_inst, wateratm2lndbulk_inst, cnveg_state_inst, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
-       if (doalb .and. num_pcropp > 0 ) then
+       ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-03) Old restart files generated at the end
+       ! of the year can indicate that a crop was panted on Jan 1, because that used to be
+       ! the time given to the last time step of the year. This would cause problems if we
+       ! ran CropPhenology in time step 0, because now time step 0 is labeled as Dec 31,
+       ! so CropPhenology would see the crop as having been planted 364 days ago, and so
+       ! would want to harvest this newly-planted crop. To avoid this situation, we avoid
+       ! calling CropPhenology on time step 0.
+       !
+       ! This .not. is_first_step() condition can be removed either when we can rely on
+       ! all restart files having been generated with
+       ! https://github.com/ESCOMP/CTSM/issues/1623 resolved, or we stop having a time
+       ! step 0 (https://github.com/ESCOMP/CTSM/issues/925).
+       if (num_pcropp > 0 .and. .not. is_first_step()) then
           call CropPhenology(num_pcropp, filter_pcropp, &
                waterdiagnosticbulk_inst, temperature_inst, crop_inst, canopystate_inst, cnveg_state_inst, &
                cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
@@ -548,6 +560,10 @@ contains
       ! The following crop related steps are done here rather than CropPhenology
       ! so that they will be completed each time-step rather than with doalb.
       !
+      ! NOTE(wjs, 2022-02-03) The above comment about doalb no longer applies, because
+      ! there is no longer a doalb conditional around the CropPhenology call. Therefore,
+      ! we could move these calculations into CropPhenology if it made sense to do so.
+      !
       ! The following lines come from ibis's climate.f + stats.f
       ! gdd SUMMATIONS ARE RELATIVE TO THE PLANTING DATE (see subr. updateAccFlds)
 
@@ -589,7 +605,7 @@ contains
     !
     ! !USES:
     use clm_varcon       , only : secspday
-    use clm_time_manager , only : get_curr_days_per_year
+    use clm_time_manager , only : get_average_days_per_year
     use clm_varctl       , only : CN_evergreen_phenology_opt   
     !
     ! !ARGUMENTS:
@@ -602,7 +618,7 @@ contains
     type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst   
     !
     ! !LOCAL VARIABLES:
-    real(r8):: dayspyr                    ! Days per year
+    real(r8):: avg_dayspyr                ! Average days per year
     integer :: p                          ! indices
     integer :: fp                         ! lake filter patch index
     
@@ -677,12 +693,12 @@ contains
          lgsf       => cnveg_state_inst%lgsf_patch    & ! Output: [real(r8) (:) ]  long growing season factor [0-1]                  
          )
 
-      dayspyr   = get_curr_days_per_year()
+      avg_dayspyr = get_average_days_per_year()
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          if (evergreen(ivt(p)) == 1._r8) then
-            bglfr(p) = 1._r8/(leaf_long(ivt(p)) * dayspyr * secspday)
+            bglfr(p) = 1._r8/(leaf_long(ivt(p)) * avg_dayspyr * secspday)
             bgtr(p)  = 0._r8
             lgsf(p)  = 0._r8
          end if
@@ -1204,7 +1220,7 @@ contains
     ! per year.
     !
     ! !USES:
-    use clm_time_manager , only : get_curr_days_per_year
+    use clm_time_manager , only : get_average_days_per_year
     use CNSharedParamsMod, only : use_fun
     use clm_varcon       , only : secspday
     use shr_const_mod    , only : SHR_CONST_TKFRZ, SHR_CONST_PI
@@ -1227,7 +1243,7 @@ contains
     real(r8),parameter :: secspqtrday = secspday / 4  ! seconds per quarter day
     integer :: g,c,p           ! indices
     integer :: fp              ! lake filter patch index
-    real(r8):: dayspyr         ! days per year
+    real(r8):: avg_dayspyr     ! average days per year
     real(r8):: crit_onset_gdd  ! degree days for onset trigger
     real(r8):: soilt           ! temperature of top soil layer
     real(r8):: psi             ! water stress of top soil layer
@@ -1322,8 +1338,7 @@ contains
          deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch      & ! Output:  [real(r8) (:)   ]                                                    
          )
 
-      ! set time steps
-      dayspyr = get_curr_days_per_year()
+      avg_dayspyr = get_average_days_per_year()
 
       ! specify rain threshold for leaf onset
       rain_threshold = 20._r8
@@ -1572,7 +1587,7 @@ contains
             ! calculate long growing season factor (lgsf)
             ! only begin to calculate a lgsf greater than 0.0 once the number
             ! of days active exceeds days/year.
-            lgsf(p) = max(min(3.0_r8*(days_active(p)-leaf_long(ivt(p))*dayspyr )/dayspyr, 1._r8),0._r8)
+            lgsf(p) = max(min(3.0_r8*(days_active(p)-leaf_long(ivt(p))*avg_dayspyr )/avg_dayspyr, 1._r8),0._r8)
             ! RosieF. 5 Nov 2015.  Changed this such that the increase in leaf turnover is faster after
             ! trees enter the 'fake evergreen' state. Otherwise, they have a whole year of 
             ! cheating, with less litterfall than they should have, resulting in very high LAI. 
@@ -1587,7 +1602,7 @@ contains
                ! calculate the background litterfall rate (bglfr)
                ! in units 1/s, based on leaf longevity (yrs) and correction for long growing season
 
-               bglfr(p) = (1._r8/(leaf_long(ivt(p))*dayspyr*secspday))*lgsf(p)
+               bglfr(p) = (1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday))*lgsf(p)
             end if
 
             ! set background transfer rate when active but not in the phenological onset period
@@ -1598,7 +1613,7 @@ contains
                ! in complete turnover of the storage pools in one year at steady state,
                ! once lgsf has reached 1.0 (after 730 days active).
 
-               bgtr(p) = (1._r8/(dayspyr*secspday))*lgsf(p)
+               bgtr(p) = (1._r8/(avg_dayspyr*secspday))*lgsf(p)
 
                ! set carbon fluxes for shifting storage pools to transfer pools
 
@@ -1644,7 +1659,8 @@ contains
     ! handle CN fluxes during the phenological onset                       & offset periods.
     
     ! !USES:
-    use clm_time_manager , only : get_curr_date, get_curr_calday, get_curr_days_per_year, get_rad_step_size
+    use clm_time_manager , only : get_prev_date, get_prev_calday, get_curr_days_per_year
+    use clm_time_manager , only : get_average_days_per_year
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1683,8 +1699,8 @@ contains
     integer g         ! gridcell indices
     integer h         ! hemisphere indices
     integer idpp      ! number of days past planting
-    real(r8) :: dtrad ! radiation time step delta t (seconds)
-    real(r8) dayspyr  ! days per year
+    real(r8) dayspyr  ! days per year in this year
+    real(r8) avg_dayspyr ! average number of days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
     logical do_plant_normal ! are the normal planting rules defined and satisfied?
@@ -1750,9 +1766,9 @@ contains
 
       ! get time info
       dayspyr = get_curr_days_per_year()
-      jday    = get_curr_calday()
-      call get_curr_date(kyr, kmo, kda, mcsec)
-      dtrad   = real( get_rad_step_size(), r8 )
+      avg_dayspyr = get_average_days_per_year()
+      jday    = get_prev_calday()
+      call get_prev_date(kyr, kmo, kda, mcsec)
 
       if (use_fertilizer) then
        ndays_on = 20._r8 ! number of days to fertilize
@@ -2105,7 +2121,7 @@ contains
 
             else if (hui(p) >= huigrain(p)) then
                cphase(p) = 3._r8
-               bglfr(p) = 1._r8/(leaf_long(ivt(p))*dayspyr*secspday)
+               bglfr(p) = 1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)
             end if
 
             ! continue fertilizer application while in phase 2;
@@ -2114,7 +2130,7 @@ contains
               if (fert_counter(p) <= 0._r8) then
                  fert(p) = 0._r8
               else ! continue same fert application every timestep
-                 fert_counter(p) = fert_counter(p) - dtrad
+                 fert_counter(p) = fert_counter(p) - dt
               end if
 
          else   ! crop not live

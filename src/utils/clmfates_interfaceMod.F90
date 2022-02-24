@@ -70,9 +70,9 @@ module CLMFatesInterfaceMod
    use clm_varpar        , only : numrad
    use clm_varpar        , only : ivis
    use clm_varpar        , only : inir
-   use clm_varpar        , only : nlevgrnd
    use clm_varpar        , only : nlevdecomp
    use clm_varpar        , only : nlevdecomp_full
+   use clm_varpar        , only : nlevsoi
    use PhotosynthesisMod , only : photosyns_type
    use atm2lndType       , only : atm2lnd_type
    use SurfaceAlbedoType , only : surfalb_type
@@ -122,7 +122,6 @@ module CLMFatesInterfaceMod
 
    use EDTypesMod            , only : ed_patch_type
    use PRTGenericMod         , only : num_elements
-   use FatesInterfaceTypesMod, only : hlm_numlevgrnd
    use FatesInterfaceTypesMod, only : hlm_stepsize
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
@@ -286,7 +285,7 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('vis_sw_index',ival=ivis)
         call set_fates_ctrlparms('nir_sw_index',ival=inir)
 
-        call set_fates_ctrlparms('num_lev_ground',ival=nlevgrnd)
+        call set_fates_ctrlparms('num_lev_soil',ival=nlevsoi)
         call set_fates_ctrlparms('hlm_name',cval='CLM')
         call set_fates_ctrlparms('hio_ignore_val',rval=spval)
         call set_fates_ctrlparms('soilwater_ipedof',ival=get_ipedof(0))
@@ -2571,8 +2570,7 @@ module CLMFatesInterfaceMod
    use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp
 
    use FatesConstantsMod, only : fates_short_string_length, fates_long_string_length
-   use FatesIOVariableKindMod, only : patch_r8, patch_ground_r8, patch_size_pft_r8
-   use FatesIOVariableKindMod, only : site_r8, site_ground_r8, site_size_pft_r8
+   use FatesIOVariableKindMod, only : site_r8, site_soil_r8, site_size_pft_r8
    use FatesIOVariableKindMod, only : site_size_r8, site_pft_r8, site_age_r8
    use FatesIOVariableKindMod, only : site_coage_r8, site_coage_pft_r8
    use FatesIOVariableKindMod, only : site_fuel_r8, site_cwdsc_r8, site_scag_r8
@@ -2669,13 +2667,6 @@ module CLMFatesInterfaceMod
         ioname = trim(fates_hist%dim_kinds(dk_index)%name)
 
         select case(trim(ioname))
-        case(patch_r8)
-           call hist_addfld1d(fname=trim(vname),units=trim(vunits),         &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_patch=fates_hist%hvars(ivar)%r81d,    &
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-
         case(site_r8)
            call hist_addfld1d(fname=trim(vname),units=trim(vunits),         &
                               avgflag=trim(vavgflag),long_name=trim(vlong), &
@@ -2683,18 +2674,7 @@ module CLMFatesInterfaceMod
                               default=trim(vdefault),                       &
                               set_lake=0._r8,set_urb=0._r8)
 
-        case(patch_ground_r8, patch_size_pft_r8)
-
-           d_index = fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         & ! <--- addfld2d
-                              type2d=trim(dim2name),                        & ! <--- type2d
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_patch=fates_hist%hvars(ivar)%r82d,    &
-                              default=trim(vdefault))
-
-
-        case(site_ground_r8, site_size_pft_r8, site_size_r8, site_pft_r8, &
+        case(site_soil_r8, site_size_pft_r8, site_size_r8, site_pft_r8, &
              site_age_r8, site_height_r8, site_coage_r8,site_coage_pft_r8, &
              site_fuel_r8, site_cwdsc_r8, &
              site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, &
@@ -2991,7 +2971,7 @@ module CLMFatesInterfaceMod
    use FatesLitterMod,    only : ncwd
    use EDtypesMod,        only : nlevleaf, nclmax
    use FatesInterfaceTypesMod, only : numpft_fates => numpft
-   use clm_varpar,        only : nlevgrnd
+   
 
    implicit none
 
@@ -3003,14 +2983,11 @@ module CLMFatesInterfaceMod
    fates%cohort_begin = hlm%begcohort
    fates%cohort_end = hlm%endcohort
 
-   fates%patch_begin = hlm%begp
-   fates%patch_end = hlm%endp
-
    fates%column_begin = hlm%begc
    fates%column_end = hlm%endc
-
-   fates%ground_begin = 1
-   fates%ground_end = nlevgrnd
+   
+   fates%soil_begin = 1
+   fates%soil_end = nlevsoi
 
    fates%sizepft_class_begin = 1
    fates%sizepft_class_end = nlevsclass * numpft_fates
