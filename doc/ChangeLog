@@ -1,4 +1,92 @@
 ===============================================================
+Tag name: ctsm5.1.dev078
+Originator(s): sacks (Bill Sacks)
+Date: Thu Feb 24 14:15:46 MST 2022
+One-line Summary: Rework single-point testing
+
+Purpose and description of changes
+----------------------------------
+
+Two changes to make the single-point tests in our test suite run more
+smoothly. The main motivation for this is that single-point tests have
+been failing frequently on cheyenne, presumably due to issues with nodes
+in the share queue.
+
+(1) Rework the test list to remove redundant single-point tests and move
+    many of our single-point tests from cheyenne to izumi. (With (2) in
+    place, this isn't really necessary, but given that we're going to be
+    using full nodes for single-point tests, it seems better to do this
+    on izumi rather than wasting all of these processors on the
+    generally more heavily-loaded cheyenne. Also, this helps accomplish
+    the goal of providing better balance between our different
+    machine-compiler permutations, helping to reduce overall testing
+    time.)
+
+(2) Change run_sys_tests so that, for the remaining single-point tests
+    on cheyenne, we use the regular queue rather than the share queue.
+    This means that single-point tests use a full node, which is
+    wasteful but makes the tests more reliable. (You can override this
+    behavior with the --queue option to run_sys_tests: To revert to the
+    earlier behavior, where the queue is determined automatically for
+    each test, add '--queue unspecified' to your run_sys_tests
+    invocation. (As before --queue can also be used to specify some
+    other queue to use for all tests.))
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Partially addresses ESCOMP/CTSM#275
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Overhauls single-point tests. See
+  https://github.com/ESCOMP/CTSM/pull/1660#issuecomment-1049489430 for details.
+
+
+Testing summary:
+----------------
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1660
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev077
 Originator(s): rgknox (Ryan Knox,,,)
 Date: Tue Feb 22 12:51:04 EST 2022
