@@ -605,7 +605,7 @@ contains
     !
     ! !USES:
     use clm_varcon       , only : secspday
-    use clm_time_manager , only : get_curr_days_per_year
+    use clm_time_manager , only : get_average_days_per_year
     use clm_varctl       , only : CN_evergreen_phenology_opt   
     !
     ! !ARGUMENTS:
@@ -618,7 +618,7 @@ contains
     type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst   
     !
     ! !LOCAL VARIABLES:
-    real(r8):: dayspyr                    ! Days per year
+    real(r8):: avg_dayspyr                ! Average days per year
     integer :: p                          ! indices
     integer :: fp                         ! lake filter patch index
     
@@ -693,12 +693,12 @@ contains
          lgsf       => cnveg_state_inst%lgsf_patch    & ! Output: [real(r8) (:) ]  long growing season factor [0-1]                  
          )
 
-      dayspyr   = get_curr_days_per_year()
+      avg_dayspyr = get_average_days_per_year()
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          if (evergreen(ivt(p)) == 1._r8) then
-            bglfr(p) = 1._r8/(leaf_long(ivt(p)) * dayspyr * secspday)
+            bglfr(p) = 1._r8/(leaf_long(ivt(p)) * avg_dayspyr * secspday)
             bgtr(p)  = 0._r8
             lgsf(p)  = 0._r8
          end if
@@ -1220,7 +1220,7 @@ contains
     ! per year.
     !
     ! !USES:
-    use clm_time_manager , only : get_curr_days_per_year
+    use clm_time_manager , only : get_average_days_per_year
     use CNSharedParamsMod, only : use_fun
     use clm_varcon       , only : secspday
     use shr_const_mod    , only : SHR_CONST_TKFRZ, SHR_CONST_PI
@@ -1243,7 +1243,7 @@ contains
     real(r8),parameter :: secspqtrday = secspday / 4  ! seconds per quarter day
     integer :: g,c,p           ! indices
     integer :: fp              ! lake filter patch index
-    real(r8):: dayspyr         ! days per year
+    real(r8):: avg_dayspyr     ! average days per year
     real(r8):: crit_onset_gdd  ! degree days for onset trigger
     real(r8):: soilt           ! temperature of top soil layer
     real(r8):: psi             ! water stress of top soil layer
@@ -1338,8 +1338,7 @@ contains
          deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch      & ! Output:  [real(r8) (:)   ]                                                    
          )
 
-      ! set time steps
-      dayspyr = get_curr_days_per_year()
+      avg_dayspyr = get_average_days_per_year()
 
       ! specify rain threshold for leaf onset
       rain_threshold = 20._r8
@@ -1588,7 +1587,7 @@ contains
             ! calculate long growing season factor (lgsf)
             ! only begin to calculate a lgsf greater than 0.0 once the number
             ! of days active exceeds days/year.
-            lgsf(p) = max(min(3.0_r8*(days_active(p)-leaf_long(ivt(p))*dayspyr )/dayspyr, 1._r8),0._r8)
+            lgsf(p) = max(min(3.0_r8*(days_active(p)-leaf_long(ivt(p))*avg_dayspyr )/avg_dayspyr, 1._r8),0._r8)
             ! RosieF. 5 Nov 2015.  Changed this such that the increase in leaf turnover is faster after
             ! trees enter the 'fake evergreen' state. Otherwise, they have a whole year of 
             ! cheating, with less litterfall than they should have, resulting in very high LAI. 
@@ -1603,7 +1602,7 @@ contains
                ! calculate the background litterfall rate (bglfr)
                ! in units 1/s, based on leaf longevity (yrs) and correction for long growing season
 
-               bglfr(p) = (1._r8/(leaf_long(ivt(p))*dayspyr*secspday))*lgsf(p)
+               bglfr(p) = (1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday))*lgsf(p)
             end if
 
             ! set background transfer rate when active but not in the phenological onset period
@@ -1614,7 +1613,7 @@ contains
                ! in complete turnover of the storage pools in one year at steady state,
                ! once lgsf has reached 1.0 (after 730 days active).
 
-               bgtr(p) = (1._r8/(dayspyr*secspday))*lgsf(p)
+               bgtr(p) = (1._r8/(avg_dayspyr*secspday))*lgsf(p)
 
                ! set carbon fluxes for shifting storage pools to transfer pools
 
@@ -1661,6 +1660,7 @@ contains
     
     ! !USES:
     use clm_time_manager , only : get_prev_date, get_prev_calday, get_curr_days_per_year
+    use clm_time_manager , only : get_average_days_per_year
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1699,7 +1699,8 @@ contains
     integer g         ! gridcell indices
     integer h         ! hemisphere indices
     integer idpp      ! number of days past planting
-    real(r8) dayspyr  ! days per year
+    real(r8) dayspyr  ! days per year in this year
+    real(r8) avg_dayspyr ! average number of days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
     logical do_plant_normal ! are the normal planting rules defined and satisfied?
@@ -1765,6 +1766,7 @@ contains
 
       ! get time info
       dayspyr = get_curr_days_per_year()
+      avg_dayspyr = get_average_days_per_year()
       jday    = get_prev_calday()
       call get_prev_date(kyr, kmo, kda, mcsec)
 
@@ -2119,7 +2121,7 @@ contains
 
             else if (hui(p) >= huigrain(p)) then
                cphase(p) = 3._r8
-               bglfr(p) = 1._r8/(leaf_long(ivt(p))*dayspyr*secspday)
+               bglfr(p) = 1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)
             end if
 
             ! continue fertilizer application while in phase 2;
