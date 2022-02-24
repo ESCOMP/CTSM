@@ -1,4 +1,93 @@
 ===============================================================
+Tag name: ctsm5.1.dev080
+Originator(s): sacks (Bill Sacks)
+Date: Thu Feb 24 15:26:02 MST 2022
+One-line Summary: Use avg days per year when converting param units
+
+Purpose and description of changes
+----------------------------------
+
+When converting parameter units from per-year to per-second, use average
+days per year instead of current number of days per year. This is
+relevant when running with a Gregorian calendar.
+
+See https://github.com/ESCOMP/CTSM/issues/1612 for details.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1612 (Some uses of get_days_per_year should use
+  the average number of days in a year, not the number of days in the
+  current year)
+
+Known bugs introduced in this tag (include issue #):
+- ESCOMP/CTSM#1624 (Change get_average_days_per_year to use
+  ESMF_CalendarGet)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Once ESMF supports it, we should change get_average_days_per_year to
+  use ESMF_CalendarGet (see ESCOMP/CTSM#1624)
+
+Testing summary:
+----------------
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Test
+ERS_Ly3_P72x2_Vmct.f10_f10_mg37.IHistClm50BgcCropG.cheyenne_intel.clm-cropMonthOutput
+initially failed COMPARE_base_rest and BASELINE comparisons; rerunning
+solved the issue.
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Gregorian cases with BGC
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      larger than roundoff / same climate
+
+      Changes a few BGC-related parameters by a small amount (< 1/365 in
+      a relative sense) for Gregorian cases
+
+      Changes answers for these tests:
+      - SMS_Ly5_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropQianRs.izumi_gnu.clm-gregorian_cropMonthOutput
+      - DAE_C2_D_Lh12.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_intel.clm-DA_multidrv
+      - DAE_N2_D_Lh12_Vmct.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_intel.clm-DA_multidrv      
+
+      In principle, might change answers by roundoff for NOLEAP BGC
+      tests on some machines / compilers, but that wasn't seen in any
+      aux_clm testing.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1625
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev079
 Originator(s): sacks (Bill Sacks)
 Date: Thu Feb 24 14:40:58 MST 2022
