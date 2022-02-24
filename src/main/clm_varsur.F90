@@ -51,7 +51,7 @@ module clm_instur
   
   ! whether we have urban to initialize in each grid cell
   ! (second dimension goes 1:numurbl)
-  double  , pointer :: pct_urban_max(:,:)
+  real(r8), pointer :: pct_urban_max(:,:)
   !-----------------------------------------------------------------------
 
 end module clm_instur

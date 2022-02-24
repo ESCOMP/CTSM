@@ -288,8 +288,9 @@ contains
 
     ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere.
     ! Some things are kept until the end of initialize2; urban_valid is kept through the
-    ! end of the run for error checking.
-    deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake, pct_urban_max)
+    ! end of the run for error checking, pct_urban_max is kept through the end of the run
+    ! for reweighting in subgridWeights.
+    deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake)
 
     ! Determine processor bounds and clumps for this processor
     call get_proc_bounds(bounds_proc)

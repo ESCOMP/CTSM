@@ -352,7 +352,7 @@ contains
     
     ! For dynamic urban: to improve efficiency, 'PCT_URBAN_MAX' is added in landuse.timeseries
     ! that tells if any urban landunit ever grows in a given grid cell in a transient
-    ! run. The urban landunit is allocated only if PCT_URBAN_MAX is above 0. (#1572)
+    ! run. The urban landunit is allocated only if PCT_URBAN_MAX is greater than 0. (#1572)
 
     if (run_zero_weight_urban) then
        if (urban_valid(gi)) then
@@ -360,12 +360,6 @@ contains
        else
           this_landunit_exists = .false.
        end if
-!    else
-!       if (wt_lunit(gi, ltype) > 0.0_r8) then
-!          this_landunit_exists = .true.
-!       else
-!          this_landunit_exists = .false.
-!       end if
     else
       if (urban_landunit_exists(gi, ltype)) then
          this_landunit_exists = .true.
@@ -620,7 +614,7 @@ contains
     ! !USES:
     use dynSubgridControlMod , only : get_do_transient_urban
     use clm_instur           , only : pct_urban_max
-    use clm_varcon           , only : isturb_MIN
+    use landunit_varcon      , only : isturb_MIN
     !
     ! !ARGUMENTS:
     logical :: exists  ! function result
@@ -628,7 +622,7 @@ contains
     integer, intent(in) :: ltype   !landunit type (isturb_tbd, etc.)
     !
     ! !LOCAL VARIABLES:
-    integer :: dens_index  ! urban density type index
+    integer :: dens_index ! urban density type index
 
     character(len=*), parameter :: subname = 'urban_landunit_exists'
     !-----------------------------------------------------------------------
