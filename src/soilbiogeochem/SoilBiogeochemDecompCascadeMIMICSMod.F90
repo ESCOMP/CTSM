@@ -767,19 +767,7 @@ contains
     use clm_varcon       , only : g_to_mg, cm3_to_m3
     use subgridAveMod    , only : p2c
     use PatchType        , only : patch
-    use pftconMod        , only : nmillet, nirrig_millet, &
-                                  nsorghum, nirrig_sorghum, &
-                                  nsugarcane, nirrig_sugarcane, &
-                                  ntmp_corn, nirrig_tmp_corn, &
-                                  ntrp_corn, nirrig_trp_corn, &
-                                  nswitchgrass, nirrig_switchgrass, &
-                                  nmiscanthus, nirrig_miscanthus, &
-                                  ndllf_evr_brl_tree, ndllf_dcd_brl_tree, &
-                                  nbrdlf_dcd_brl_tree, nbrdlf_dcd_brl_shrub, &
-                                  nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, &
-                                  nbrdlf_dcd_tmp_tree, nbrdlf_dcd_tmp_shrub, &
-                                  nbrdlf_evr_tmp_tree, nbrdlf_evr_shrub, &
-                                  ndllf_evr_tmp_tree, nc4_grass, noveg
+    use pftconMod        , only : pftname
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds          
@@ -1154,30 +1142,37 @@ contains
             ! Not moving to the params files at this time: Hardwiring will
             ! become unnecessary when we calc. ligninNratioAvg the same way for
             ! FATES and non FATES cases.
-            select case (patch%itype(p))
-            case (noveg)
-               ligninNratio(p) = 0._r8
-            case (nbrdlf_evr_trp_tree)
-               ligninNratio(p) = 18.7_r8  ! 17.8 / 0.95
-            case (nbrdlf_dcd_trp_tree)
-               ligninNratio(p) = 8.9_r8  ! 14.5 / 1.63
-            case (ndllf_evr_tmp_tree)
-               ligninNratio(p) = 33.4_r8  ! 24.4 / 0.73
-            case (nbrdlf_evr_tmp_tree, nbrdlf_evr_shrub)
-               ligninNratio(p) = 24.4_r8  ! 21.0 / 0.86
-            case (nbrdlf_dcd_tmp_tree, nbrdlf_dcd_tmp_shrub)
-               ligninNratio(p) = 16.6_r8  ! 16.9 / 1.02
-            case (ndllf_evr_brl_tree, ndllf_dcd_brl_tree)
-               ligninNratio(p) = 26.7_r8  ! 25.6 / 0.96
-            case (nbrdlf_dcd_brl_tree, nbrdlf_dcd_brl_shrub)
-               ligninNratio(p) = 25.1_r8  ! 22.3 / 0.89
-            case (nc4_grass, nmiscanthus, nirrig_miscanthus, nswitchgrass, &
-                  nirrig_switchgrass, ntrp_corn, nirrig_trp_corn, ntmp_corn, &
-                  nirrig_tmp_corn, nsugarcane, nirrig_sugarcane, nsorghum, &
-                  nirrig_sorghum, nmillet, nirrig_millet)  ! all c4 plants
-               ligninNratio(p) = 24.1_r8  ! 23.4 / 0.97
-            case default  ! all pfts/cfts that do not fit above categories
-               ligninNratio(p) = 12.1_r8  ! 16.6 / 1.37
+            select case (pftname(patch%itype(p)))
+               case ('not_vegetated')
+                  ligninNratio(p) = 0._r8
+               case ('broadleaf_evergreen_tropical_tree')
+                  ligninNratio(p) = 18.7_r8  ! 17.8 / 0.95
+               case ('broadleaf_deciduous_tropical_tree')
+                  ligninNratio(p) = 8.9_r8  ! 14.5 / 1.63
+               case ('needleleaf_evergreen_temperate_tree')
+                  ligninNratio(p) = 33.4_r8  ! 24.4 / 0.73
+               case ('broadleaf_evergreen_temperate_tree', &
+                     'broadleaf_evergreen_shrub')
+                  ligninNratio(p) = 24.4_r8  ! 21.0 / 0.86
+               case ('broadleaf_deciduous_temperate_tree', &
+                     'broadleaf_deciduous_temperate_shrub')
+                  ligninNratio(p) = 16.6_r8  ! 16.9 / 1.02
+               case ('needleleaf_evergreen_boreal_tree', &
+                     'needleleaf_deciduous_boreal_tree')
+                  ligninNratio(p) = 26.7_r8  ! 25.6 / 0.96
+               case ('broadleaf_deciduous_boreal_tree', &
+                     'broadleaf_deciduous_boreal_shrub')
+                  ligninNratio(p) = 25.1_r8  ! 22.3 / 0.89
+               case ('c4_grass', 'miscanthus', 'irrigated_miscanthus', &
+                     'switchgrass', 'irrigated_switchgrass', &
+                     'tropical_corn', 'irrigated_tropical_corn', &
+                     'temperate_corn', 'irrigated_temperate_corn', &
+                     'sugarcane', 'irrigated_sugarcane', &
+                     'sorghum', 'irrigated_sorghum', &
+                     'millet', 'irrigated_millet')  ! all c4
+                  ligninNratio(p) = 24.1_r8  ! 23.4 / 0.97
+               case default  ! all pfts/cfts that do not fit above categories
+                  ligninNratio(p) = 12.1_r8  ! 16.6 / 1.37
             end select
 
          end do  ! p loop
