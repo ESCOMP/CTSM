@@ -1151,48 +1151,34 @@ contains
 
             ! Values by pft from Table 1 in Brovkin et al. (2012):
             ! https://bg.copernicus.org/articles/9/565/2012/bg-9-565-2012.pdf
-            ! TODO Move to the params files? Though this hardwiring will become
-            ! unnecessary when we calc. ligninNratioAvg the same way for FATES
-            ! and non FATES cases.
-            if (patch%itype(p) == noveg) then
+            ! Not moving to the params files at this time: Hardwiring will
+            ! become unnecessary when we calc. ligninNratioAvg the same way for
+            ! FATES and non FATES cases.
+            select case (patch%itype(p))
+            case (noveg)
                ligninNratio(p) = 0._r8
-            else if (patch%itype(p) == nbrdlf_evr_trp_tree) then
+            case (nbrdlf_evr_trp_tree)
                ligninNratio(p) = 18.7_r8  ! 17.8 / 0.95
-            else if (patch%itype(p) == nbrdlf_dcd_trp_tree) then
+            case (nbrdlf_dcd_trp_tree)
                ligninNratio(p) = 8.9_r8  ! 14.5 / 1.63
-            else if (patch%itype(p) == ndllf_evr_tmp_tree) then
+            case (ndllf_evr_tmp_tree)
                ligninNratio(p) = 33.4_r8  ! 24.4 / 0.73
-            else if (patch%itype(p) == nbrdlf_evr_tmp_tree .or. &
-                     patch%itype(p) == nbrdlf_evr_shrub) then
+            case (nbrdlf_evr_tmp_tree, nbrdlf_evr_shrub)
                ligninNratio(p) = 24.4_r8  ! 21.0 / 0.86
-            else if (patch%itype(p) == nbrdlf_dcd_tmp_tree .or. &
-                     patch%itype(p) == nbrdlf_dcd_tmp_shrub) then
+            case (nbrdlf_dcd_tmp_tree, nbrdlf_dcd_tmp_shrub)
                ligninNratio(p) = 16.6_r8  ! 16.9 / 1.02
-            else if (patch%itype(p) == ndllf_evr_brl_tree .or. &
-                     patch%itype(p) == ndllf_dcd_brl_tree) then
+            case (ndllf_evr_brl_tree, ndllf_dcd_brl_tree)
                ligninNratio(p) = 26.7_r8  ! 25.6 / 0.96
-            else if (patch%itype(p) == nbrdlf_dcd_brl_tree .or. &
-                     patch%itype(p) == nbrdlf_dcd_brl_shrub) then
+            case (nbrdlf_dcd_brl_tree, nbrdlf_dcd_brl_shrub)
                ligninNratio(p) = 25.1_r8  ! 22.3 / 0.89
-            else if (patch%itype(p) == nc4_grass .or. &  ! all c4 grasses/crops
-                     patch%itype(p) == nmiscanthus .or. &
-                     patch%itype(p) == nirrig_miscanthus .or. &
-                     patch%itype(p) == nswitchgrass .or. &
-                     patch%itype(p) == nirrig_switchgrass .or. &
-                     patch%itype(p) == ntrp_corn .or. &
-                     patch%itype(p) == nirrig_trp_corn .or. &
-                     patch%itype(p) == ntmp_corn .or. &
-                     patch%itype(p) == nirrig_tmp_corn .or. &
-                     patch%itype(p) == nsugarcane .or. &
-                     patch%itype(p) == nirrig_sugarcane .or. &
-                     patch%itype(p) == nsorghum .or. &
-                     patch%itype(p) == nirrig_sorghum .or. &
-                     patch%itype(p) == nmillet .or. &
-                     patch%itype(p) == nirrig_millet) then
+            case (nc4_grass, nmiscanthus, nirrig_miscanthus, nswitchgrass, &
+                  nirrig_switchgrass, ntrp_corn, nirrig_trp_corn, ntmp_corn, &
+                  nirrig_tmp_corn, nsugarcane, nirrig_sugarcane, nsorghum, &
+                  nirrig_sorghum, nmillet, nirrig_millet)  ! all c4 plants
                ligninNratio(p) = 24.1_r8  ! 23.4 / 0.97
-            else  ! all c3 grasses/crops + pfts that do not fit above categories
+            case default  ! all pfts/cfts that do not fit above categories
                ligninNratio(p) = 12.1_r8  ! 16.6 / 1.37
-            end if
+            end select
 
          end do  ! p loop
 
