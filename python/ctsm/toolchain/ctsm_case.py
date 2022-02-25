@@ -13,7 +13,7 @@ import logging
 
 from datetime import datetime
 
-from ctsm.git_utils import tag_describe
+from ctsm.git_utils import get_ctsm_git_describe
 
 # -- import local classes for this script
 logger = logging.getLogger(__name__)
@@ -267,7 +267,7 @@ class CtsmCase:
         self.build_namelist_filename()
         with open(self.namelist_fname, "w", encoding='utf-8') as namelist_file:
 
-            label = tag_describe()
+            label = get_ctsm_git_describe()
 
             dst_mesh = which_mesh(self.res)
 
