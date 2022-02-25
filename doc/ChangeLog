@@ -1,4 +1,62 @@
 ===============================================================
+Tag name: ctsm5.1.dev081
+Originator(s): swensosc (Sean Swenson)
+Date: Thu Feb 24 21:33:35 MST 2022
+One-line Summary: Do not subtract irrigation from QRUNOFF diagnostic
+
+Purpose and description of changes
+----------------------------------
+
+Remove code that subtracts surface irrigation flux from qflx_runoff_col.
+This is a diagnostic change only.
+
+This subtraction no longer makes sense now that irrigation is passed as
+a separate flux to the ROF model.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just in a few diagnostic fields
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Crop cases with irrigation
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Larger than roundoff, but only impacts a few diagnostic fields:
+      QRUNOFF, QRUNOFF_R, QRUNOFF_TO_COUPLER
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1641
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev080
 Originator(s): sacks (Bill Sacks)
 Date: Thu Feb 24 15:26:02 MST 2022
