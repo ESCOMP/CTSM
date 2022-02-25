@@ -25,6 +25,15 @@ class TestSysFsurdatModifier(unittest.TestCase):
     """System tests for fsurdat_modifier"""
 
     def setUp(self):
+        """
+        Obtain path to the existing:
+        - modify_template.cfg file
+        - /testinputs directory and fsurdat_in, located in /testinputs
+        Make /_tempdir for use by these tests.
+        Obtain path and names for the files being created in /_tempdir:
+        - modify_fsurdat.cfg
+        - fsurdat_out.nc
+        """
         self._cfg_template_path = os.path.join(path_to_ctsm_root(),
             'tools/modify_fsurdat/modify_template.cfg')
         testinputs_path = os.path.join(path_to_ctsm_root(),
@@ -44,6 +53,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
     def test_minimalInfo(self):
         """
         This test specifies a minimal amount of information
+        Create .cfg file, run the tool, compare fsurdat_in to fsurdat_out
         """
 
         self._create_config_file_minimal()
@@ -61,7 +71,8 @@ class TestSysFsurdatModifier(unittest.TestCase):
 
     def test_crop(self):
         """
-        This version replances the vegetation with a crop
+        This version replaces the vegetation with a crop
+        Create .cfg file, run the tool, compare fsurdat_in to fsurdat_out
         """
 
         self._create_config_file_crop()
@@ -77,7 +88,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         # assert that fsurdat_out does not equal fsurdat_in
         self.assertFalse(fsurdat_out_data.equals(fsurdat_in_data))
 
-        # compare fsurdat_out to fsurdat_out_baseline
+        # compare fsurdat_out to fsurdat_out_baseline located in /testinputs
         fsurdat_out_baseline = self._fsurdat_in[:-3] + '_modified_with_crop' + \
                                self._fsurdat_in[-3:]
         fsurdat_out_base_data = xr.open_dataset(fsurdat_out_baseline)
@@ -88,6 +99,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
     def test_allInfo(self):
         """
         This version specifies all possible information
+        Create .cfg file, run the tool, compare fsurdat_in to fsurdat_out
         """
 
         self._create_config_file_complete()
@@ -103,7 +115,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         # assert that fsurdat_out does not equal fsurdat_in
         self.assertFalse(fsurdat_out_data.equals(fsurdat_in_data))
 
-        # compare fsurdat_out to fsurdat_out_baseline
+        # compare fsurdat_out to fsurdat_out_baseline located in /testinputs
         fsurdat_out_baseline = self._fsurdat_in[:-3] + '_modified' + \
                                self._fsurdat_in[-3:]
         fsurdat_out_base_data = xr.open_dataset(fsurdat_out_baseline)
@@ -112,7 +124,11 @@ class TestSysFsurdatModifier(unittest.TestCase):
 
 
     def _create_config_file_minimal(self):
-
+        """
+        Open the new and the template .cfg files
+        Loop line by line through the template .cfg file
+        When string matches, replace that line's content
+        """
         with open (self._cfg_file_path, 'w', encoding='utf-8') as cfg_out:
             with open (self._cfg_template_path, 'r', encoding='utf-8') as cfg_in:
                 for line in cfg_in:
@@ -124,7 +140,11 @@ class TestSysFsurdatModifier(unittest.TestCase):
 
 
     def _create_config_file_crop(self):
-
+        """
+        Open the new and the template .cfg files
+        Loop line by line through the template .cfg file
+        When string matches, replace that line's content
+        """
         with open (self._cfg_file_path, 'w', encoding='utf-8') as cfg_out:
             with open (self._cfg_template_path, 'r', encoding='utf-8') as cfg_in:
                 for line in cfg_in:
@@ -154,7 +174,11 @@ class TestSysFsurdatModifier(unittest.TestCase):
 
 
     def _create_config_file_complete(self):
-
+        """
+        Open the new and the template .cfg files
+        Loop line by line through the template .cfg file
+        When string matches, replace that line's content
+        """
         with open (self._cfg_file_path, 'w', encoding='utf-8') as cfg_out:
             with open (self._cfg_template_path, 'r', encoding='utf-8') as cfg_in:
                 for line in cfg_in:
