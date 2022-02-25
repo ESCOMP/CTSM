@@ -11,6 +11,7 @@ module CNVegNitrogenFluxType
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use CropPoolsMod                       , only : ngrain
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
@@ -116,7 +117,7 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: fire_mortality_n_to_cwdn_col              (:,:)   ! col N fluxes associated with fire mortality to CWD pool (gN/m3/s)
 
      ! phenology fluxes from transfer pool
-     real(r8), pointer :: reproductive_grainn_xfer_to_reproductive_grainn_patch               (:)     ! patch grain N growth from storage for prognostic crop model (gN/m2/s)
+     real(r8), pointer :: reproductive_grainn_xfer_to_reproductive_grainn_patch(:,:)     ! patch grain N growth from storage for prognostic crop model (gN/m2/s)
      real(r8), pointer :: leafn_xfer_to_leafn_patch                 (:)     ! patch leaf N growth from storage (gN/m2/s)
      real(r8), pointer :: frootn_xfer_to_frootn_patch               (:)     ! patch fine root N growth from storage (gN/m2/s)
      real(r8), pointer :: livestemn_xfer_to_livestemn_patch         (:)     ! patch live stem N growth from storage (gN/m2/s)
@@ -126,10 +127,10 @@ module CNVegNitrogenFluxType
 
      ! litterfall fluxes
      real(r8), pointer :: livestemn_to_litter_patch                 (:)     ! patch livestem N to litter (gN/m2/s)
-     real(r8), pointer :: reproductive_grainn_to_food_patch                      (:)     ! patch grain N to food for prognostic crop (gN/m2/s)
+     real(r8), pointer :: reproductive_grainn_to_food_patch       (:,:)     ! patch grain N to food for prognostic crop (gN/m2/s)
      real(r8), pointer :: leafn_to_biofueln_patch                   (:)     ! patch leaf N to biofuel N (gN/m2/s)
      real(r8), pointer :: livestemn_to_biofueln_patch               (:)     ! patch livestem N to biofuel N (gN/m2/s)
-     real(r8), pointer :: reproductive_grainn_to_seed_patch                      (:)     ! patch grain N to seed for prognostic crop (gN/m2/s)
+     real(r8), pointer :: reproductive_grainn_to_seed_patch       (:,:)     ! patch grain N to seed for prognostic crop (gN/m2/s)
      real(r8), pointer :: leafn_to_litter_patch                     (:)     ! patch leaf N litterfall (gN/m2/s)
      real(r8), pointer :: leafn_to_retransn_patch                   (:)     ! patch leaf N to retranslocated N pool (gN/m2/s)
      real(r8), pointer :: frootn_to_retransn_patch                  (:)     ! patch fine root N to retranslocated N pool (gN/m2/s)
@@ -139,8 +140,8 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: retransn_to_npool_patch                   (:)     ! patch deployment of retranslocated N (gN/m2/s)  
      real(r8), pointer :: free_retransn_to_npool_patch              (:)     ! patch deployment of free retranslocated N (gN/m2/s)           
      real(r8), pointer :: sminn_to_npool_patch                      (:)     ! patch deployment of soil mineral N uptake (gN/m2/s)
-     real(r8), pointer :: npool_to_reproductive_grainn_patch                     (:)     ! patch allocation to grain N for prognostic crop (gN/m2/s)
-     real(r8), pointer :: npool_to_reproductive_grainn_storage_patch             (:)     ! patch allocation to grain N storage for prognostic crop (gN/m2/s)
+     real(r8), pointer :: npool_to_reproductive_grainn_patch      (:,:)     ! patch allocation to grain N for prognostic crop (gN/m2/s)
+     real(r8), pointer :: npool_to_reproductive_grainn_storage_patch(:,:)   ! patch allocation to grain N storage for prognostic crop (gN/m2/s)
      real(r8), pointer :: npool_to_leafn_patch                      (:)     ! patch allocation to leaf N (gN/m2/s)
      real(r8), pointer :: npool_to_leafn_storage_patch              (:)     ! patch allocation to leaf N storage (gN/m2/s)
      real(r8), pointer :: npool_to_frootn_patch                     (:)     ! patch allocation to fine root N (gN/m2/s)
@@ -155,7 +156,7 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: npool_to_deadcrootn_storage_patch         (:)     ! patch allocation to dead coarse root N storage (gN/m2/s)
 
      ! annual turnover of storage to transfer pools           
-     real(r8), pointer :: reproductive_grainn_storage_to_xfer_patch              (:)     ! patch grain N shift storage to transfer for prognostic crop (gN/m2/s)
+     real(r8), pointer :: reproductive_grainn_storage_to_xfer_patch(:,:)    ! patch grain N shift storage to transfer for prognostic crop (gN/m2/s)
      real(r8), pointer :: leafn_storage_to_xfer_patch               (:)     ! patch leaf N shift storage to transfer (gN/m2/s)
      real(r8), pointer :: frootn_storage_to_xfer_patch              (:)     ! patch fine root N shift storage to transfer (gN/m2/s)
      real(r8), pointer :: livestemn_storage_to_xfer_patch           (:)     ! patch live stem N shift storage to transfer (gN/m2/s)
@@ -401,15 +402,18 @@ contains
     allocate(this%ndeploy_patch                             (begp:endp)) ; this%ndeploy_patch                             (:) = nan
     allocate(this%wood_harvestn_patch                       (begp:endp)) ; this%wood_harvestn_patch                       (:) = nan
     allocate(this%fire_nloss_patch                          (begp:endp)) ; this%fire_nloss_patch                          (:) = nan
-    allocate(this%npool_to_reproductive_grainn_patch                     (begp:endp)) ; this%npool_to_reproductive_grainn_patch                     (:) = nan
-    allocate(this%npool_to_reproductive_grainn_storage_patch             (begp:endp)) ; this%npool_to_reproductive_grainn_storage_patch             (:) = nan
+    allocate(this%npool_to_reproductive_grainn_patch(begp:endp, ngrain)) ; this%npool_to_reproductive_grainn_patch      (:,:) = nan
+    allocate(this%npool_to_reproductive_grainn_storage_patch(begp:endp, ngrain))
+    this%npool_to_reproductive_grainn_storage_patch(:,:) = nan
     allocate(this%livestemn_to_litter_patch                 (begp:endp)) ; this%livestemn_to_litter_patch                 (:) = nan
-    allocate(this%reproductive_grainn_to_food_patch                      (begp:endp)) ; this%reproductive_grainn_to_food_patch                      (:) = nan
+    allocate(this%reproductive_grainn_to_food_patch (begp:endp, ngrain)) ; this%reproductive_grainn_to_food_patch       (:,:) = nan
     allocate(this%leafn_to_biofueln_patch                   (begp:endp)) ; this%leafn_to_biofueln_patch                   (:) = nan
     allocate(this%livestemn_to_biofueln_patch               (begp:endp)) ; this%livestemn_to_biofueln_patch               (:) = nan
-    allocate(this%reproductive_grainn_to_seed_patch                      (begp:endp)) ; this%reproductive_grainn_to_seed_patch                      (:) = nan
-    allocate(this%reproductive_grainn_xfer_to_reproductive_grainn_patch               (begp:endp)) ; this%reproductive_grainn_xfer_to_reproductive_grainn_patch               (:) = nan
-    allocate(this%reproductive_grainn_storage_to_xfer_patch              (begp:endp)) ; this%reproductive_grainn_storage_to_xfer_patch              (:) = nan
+    allocate(this%reproductive_grainn_to_seed_patch (begp:endp, ngrain)) ; this%reproductive_grainn_to_seed_patch       (:,:) = nan
+    allocate(this%reproductive_grainn_xfer_to_reproductive_grainn_patch(begp:endp, ngrain))
+    this%reproductive_grainn_xfer_to_reproductive_grainn_patch(:,:) = nan
+    allocate(this%reproductive_grainn_storage_to_xfer_patch(begp:endp, ngrain))
+    this%reproductive_grainn_storage_to_xfer_patch(:,:) = nan
     allocate(this%fert_patch                                (begp:endp)) ; this%fert_patch                                (:) = nan
     allocate(this%fert_counter_patch                        (begp:endp)) ; this%fert_counter_patch                        (:) = nan
     allocate(this%soyfixn_patch                             (begp:endp)) ; this%soyfixn_patch                             (:) = nan
@@ -1305,10 +1309,9 @@ contains
     character(len=*)  , intent(in)    :: flag   !'read' or 'write'
     !
     ! !LOCAL VARIABLES:
-    integer :: j,c ! indices
+    integer :: j,k,c ! indices
     logical :: readvar      ! determine if variable is on initial file
-    real(r8), pointer :: ptr2d(:,:) ! temp. pointers for slicing larger arrays
-    real(r8), pointer :: ptr1d(:)   ! temp. pointers for slicing larger arrays
+    real(r8), pointer :: data1dptr(:)   ! temp. pointer for slicing larger arrays
     !------------------------------------------------------------------------
 
     if (use_crop) then
@@ -1324,10 +1327,15 @@ contains
     end if
 
     if (use_crop) then
-       call restartvar(ncid=ncid, flag=flag,  varname='reproductive_grainn_xfer_to_reproductive_grainn:grainn_xfer_to_grainn', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='grain N growth from storage', units='gN/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%reproductive_grainn_xfer_to_reproductive_grainn_patch)
+       do k = 1, ngrain
+          ! FIXME(wjs, 2022-02-15) name this restart variable correctly (varname and long_name)
+          data1dptr => this%reproductive_grainn_xfer_to_reproductive_grainn_patch(:,k)
+          call restartvar(ncid=ncid, flag=flag,  varname='reproductive_grainn_xfer_to_reproductive_grainn:grainn_xfer_to_grainn', &
+               xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name='grain N growth from storage', units='gN/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
     end if
 
     if (use_crop) then
@@ -1338,31 +1346,49 @@ contains
     end if
 
     if (use_crop) then
-       call restartvar(ncid=ncid, flag=flag,  varname='reproductive_grainn_to_food:grainn_to_food', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='grain N to food', units='gN/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%reproductive_grainn_to_food_patch)
+       do k = 1, ngrain
+          ! FIXME(wjs, 2022-02-15) name this restart variable correctly (varname and long_name)
+          data1dptr => this%reproductive_grainn_to_food_patch(:,k)
+          call restartvar(ncid=ncid, flag=flag,  varname='reproductive_grainn_to_food:grainn_to_food', xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name='grain N to food', units='gN/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
     end if
     
     if (use_crop) then
-       call restartvar(ncid=ncid, flag=flag,  varname='npool_to_reproductive_grainn:npool_to_grainn', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='allocation to grain N', units='gN/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%npool_to_reproductive_grainn_patch)
+       do k = 1, ngrain
+          ! FIXME(wjs, 2022-02-15) name this restart variable correctly (varname and long_name)
+          data1dptr => this%npool_to_reproductive_grainn_patch(:,k)
+          call restartvar(ncid=ncid, flag=flag,  varname='npool_to_reproductive_grainn:npool_to_grainn', xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name='allocation to grain N', units='gN/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
     end if
 
     if (use_crop) then
-       call restartvar(ncid=ncid, flag=flag,  varname='npool_to_reproductive_grainn_storage:npool_to_grainn_storage', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='allocation to grain N storage', units='gN/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%npool_to_reproductive_grainn_storage_patch)
+       do k = 1, ngrain
+          ! FIXME(wjs, 2022-02-15) name this restart variable correctly (varname and long_name)
+          data1dptr => this%npool_to_reproductive_grainn_storage_patch(:,k)
+          call restartvar(ncid=ncid, flag=flag,  varname='npool_to_reproductive_grainn_storage:npool_to_grainn_storage', &
+               xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name='allocation to grain N storage', units='gN/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
     end if
 
     if (use_crop) then
-       call restartvar(ncid=ncid, flag=flag, varname='reproductive_grainn_storage_to_xfer:grainn_storage_to_xfer', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='grain N shift storage to transfer', units='gN/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%reproductive_grainn_storage_to_xfer_patch)
+       do k = 1, ngrain
+          ! FIXME(wjs, 2022-02-15) name this restart variable correctly (varname and long_name)
+          data1dptr => this%reproductive_grainn_storage_to_xfer_patch(:,k)
+          call restartvar(ncid=ncid, flag=flag, varname='reproductive_grainn_storage_to_xfer:grainn_storage_to_xfer', &
+               xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name='grain N shift storage to transfer', units='gN/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
     end if
 
     call restartvar(ncid=ncid, flag=flag, varname='plant_ndemand', xtype=ncd_double,  &
@@ -1651,16 +1677,22 @@ contains
        do fi = 1,num_patch
           i = filter_patch(fi)
           this%livestemn_to_litter_patch(i)              = value_patch
-          this%reproductive_grainn_to_food_patch(i)                   = value_patch
           this%leafn_to_biofueln_patch(i)                = value_patch
           this%livestemn_to_biofueln_patch(i)            = value_patch
-          this%reproductive_grainn_to_seed_patch(i)                   = value_patch
-          this%reproductive_grainn_xfer_to_reproductive_grainn_patch(i)            = value_patch
-          this%npool_to_reproductive_grainn_patch(i)                  = value_patch
-          this%npool_to_reproductive_grainn_storage_patch(i)          = value_patch
-          this%reproductive_grainn_storage_to_xfer_patch(i)           = value_patch
           this%soyfixn_patch(i)                          = value_patch
           this%frootn_to_retransn_patch(i)               = value_patch
+       end do
+
+       do k = 1, ngrain
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%reproductive_grainn_to_food_patch(i,k)                     = value_patch
+             this%reproductive_grainn_to_seed_patch(i,k)                     = value_patch
+             this%reproductive_grainn_xfer_to_reproductive_grainn_patch(i,k) = value_patch
+             this%npool_to_reproductive_grainn_patch(i,k)                    = value_patch
+             this%npool_to_reproductive_grainn_storage_patch(i,k)            = value_patch
+             this%reproductive_grainn_storage_to_xfer_patch(i,k)             = value_patch
+          end do
        end do
     end if
 

@@ -4,6 +4,7 @@ module CNCIsoFluxMod
   ! Module for carbon isotopic flux variable update, non-mortality fluxes.
   !
   ! !USES:
+#include "shr_assert.h"
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
@@ -13,6 +14,7 @@ module CNCIsoFluxMod
   use pftconMod                          , only : pftcon
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
+  use CropPoolsMod                       , only : ngrain
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
@@ -35,7 +37,15 @@ module CNCIsoFluxMod
   private :: CNCIsoLitterToColumn
   private :: CNCIsoGapPftToColumn
   private :: CNCIsoHarvestPftToColumn
-  private :: CIsoFluxCalc
+  private :: CIsoFluxCalc1d
+  private :: CIsoFluxCalc2dFlux
+  private :: CIsoFluxCalc2dBoth
+
+  interface CIsoFluxCalc
+     module procedure CIsoFluxCalc1d
+     module procedure CIsoFluxCalc2dFlux
+     module procedure CIsoFluxCalc2dBoth
+  end interface CIsoFluxCalc
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -73,7 +83,7 @@ contains
     character(len=*)                      , intent(in)    :: isotope         ! 'c13' or 'c14'
     !
     ! !LOCAL VARIABLES:
-    integer :: fp,pi,l,fc,cc,j,p
+    integer :: fp,pi,l,fc,cc,j,k,p
     integer :: cdp 
     !-----------------------------------------------------------------------
 
@@ -396,13 +406,14 @@ contains
 
       if ( use_crop )then
          call CIsoFluxCalc(&
-              iso_cnveg_cf%reproductive_grainc_xfer_to_reproductive_grainc_patch         , cnveg_cf%reproductive_grainc_xfer_to_reproductive_grainc_patch, &
-              iso_cnveg_cs%reproductive_grainc_xfer_patch                   , cnveg_cs%reproductive_grainc_xfer_patch, &
+              iso_cnveg_cf%reproductive_grainc_xfer_to_reproductive_grainc_patch, &
+              cnveg_cf%reproductive_grainc_xfer_to_reproductive_grainc_patch, &
+              iso_cnveg_cs%reproductive_grainc_xfer_patch      , cnveg_cs%reproductive_grainc_xfer_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
-              iso_cnveg_cf%reproductive_grainc_to_food_patch                , cnveg_cf%reproductive_grainc_to_food_patch, &
-              iso_cnveg_cs%reproductive_grainc_patch                        , cnveg_cs%reproductive_grainc_patch, &
+              iso_cnveg_cf%reproductive_grainc_to_food_patch   , cnveg_cf%reproductive_grainc_to_food_patch, &
+              iso_cnveg_cs%reproductive_grainc_patch           , cnveg_cs%reproductive_grainc_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
@@ -416,8 +427,8 @@ contains
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope) 
 
          call CIsoFluxCalc(&
-              iso_cnveg_cf%reproductive_grainc_to_seed_patch                , cnveg_cf%reproductive_grainc_to_seed_patch, &
-              iso_cnveg_cs%reproductive_grainc_patch                        , cnveg_cs%reproductive_grainc_patch, &
+              iso_cnveg_cf%reproductive_grainc_to_seed_patch   , cnveg_cf%reproductive_grainc_to_seed_patch, &
+              iso_cnveg_cs%reproductive_grainc_patch           , cnveg_cs%reproductive_grainc_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
@@ -426,43 +437,43 @@ contains
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
-              iso_cnveg_cf%reproductive_grain_curmr_patch                   , cnveg_cf%reproductive_grain_curmr_patch, &
+              iso_cnveg_cf%reproductive_grain_curmr_patch      , cnveg_cf%reproductive_grain_curmr_patch, &
               iso_cnveg_cs%cpool_patch                         , cnveg_cs%cpool_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
-              iso_cnveg_cf%reproductive_grain_xsmr_patch                    , cnveg_cf%reproductive_grain_xsmr_patch, &
+              iso_cnveg_cf%reproductive_grain_xsmr_patch       , cnveg_cf%reproductive_grain_xsmr_patch, &
               iso_cnveg_cs%totvegc_patch                       , cnveg_cs%totvegc_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
-              iso_cnveg_cf%cpool_reproductive_grain_gr_patch                , cnveg_cf%cpool_reproductive_grain_gr_patch, &
+              iso_cnveg_cf%cpool_reproductive_grain_gr_patch   , cnveg_cf%cpool_reproductive_grain_gr_patch, &
               iso_cnveg_cs%cpool_patch                         , cnveg_cs%cpool_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
-              iso_cnveg_cf%cpool_to_reproductive_grainc_patch               , cnveg_cf%cpool_to_reproductive_grainc_patch, &
+              iso_cnveg_cf%cpool_to_reproductive_grainc_patch  , cnveg_cf%cpool_to_reproductive_grainc_patch, &
               iso_cnveg_cs%cpool_patch                         , cnveg_cs%cpool_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
-              iso_cnveg_cf%cpool_to_reproductive_grainc_storage_patch       , cnveg_cf%cpool_to_reproductive_grainc_storage_patch, &
+              iso_cnveg_cf%cpool_to_reproductive_grainc_storage_patch, cnveg_cf%cpool_to_reproductive_grainc_storage_patch, &
               iso_cnveg_cs%cpool_patch                         , cnveg_cs%cpool_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
-              iso_cnveg_cf%transfer_reproductive_grain_gr_patch             , cnveg_cf%transfer_reproductive_grain_gr_patch, &
+              iso_cnveg_cf%transfer_reproductive_grain_gr_patch, cnveg_cf%transfer_reproductive_grain_gr_patch, &
               iso_cnveg_cs%gresp_xfer_patch                    , cnveg_cs%gresp_xfer_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
-              iso_cnveg_cf%cpool_reproductive_grain_storage_gr_patch        , cnveg_cf%cpool_reproductive_grain_storage_gr_patch, &
+              iso_cnveg_cf%cpool_reproductive_grain_storage_gr_patch, cnveg_cf%cpool_reproductive_grain_storage_gr_patch, &
               iso_cnveg_cs%cpool_patch                         , cnveg_cs%cpool_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
-              iso_cnveg_cf%reproductive_grainc_storage_to_xfer_patch        , cnveg_cf%reproductive_grainc_storage_to_xfer_patch, &
-              iso_cnveg_cs%reproductive_grainc_storage_patch                , cnveg_cs%reproductive_grainc_storage_patch, &
+              iso_cnveg_cf%reproductive_grainc_storage_to_xfer_patch, cnveg_cf%reproductive_grainc_storage_to_xfer_patch, &
+              iso_cnveg_cs%reproductive_grainc_storage_patch        , cnveg_cs%reproductive_grainc_storage_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
@@ -472,17 +483,22 @@ contains
 
          do fp = 1,num_soilp
             p = filter_soilp(fp)
-            iso_cnveg_cf%crop_harvestc_to_cropprodc_patch(p) = iso_cnveg_cf%leafc_to_biofuelc_patch(p) + &
+            iso_cnveg_cf%crop_harvestc_to_cropprodc_patch(p) = &
+                 iso_cnveg_cf%leafc_to_biofuelc_patch(p) + &
                  iso_cnveg_cf%livestemc_to_biofuelc_patch(p)
          end do
 
          if (use_grainproduct) then
-            do fp = 1,num_soilp
-               p = filter_soilp(fp)
-               iso_cnveg_cf%crop_harvestc_to_cropprodc_patch(p) = &
-                    iso_cnveg_cf%crop_harvestc_to_cropprodc_patch(p) + &
-                    iso_cnveg_cf%reproductive_grainc_to_food_patch(p)
-               iso_cnveg_cf%reproductive_grain_mr_patch(p) = iso_cnveg_cf%reproductive_grain_xsmr_patch(p) + iso_cnveg_cf%reproductive_grain_curmr_patch(p)
+            do k = 1, ngrain
+               do fp = 1,num_soilp
+                  p = filter_soilp(fp)
+                  iso_cnveg_cf%crop_harvestc_to_cropprodc_patch(p) = &
+                       iso_cnveg_cf%crop_harvestc_to_cropprodc_patch(p) + &
+                       iso_cnveg_cf%reproductive_grainc_to_food_patch(p,k)
+                  iso_cnveg_cf%reproductive_grain_mr_patch(p,k) = &
+                       iso_cnveg_cf%reproductive_grain_xsmr_patch(p,k) + &
+                       iso_cnveg_cf%reproductive_grain_curmr_patch(p,k)
+               end do
             end do
          endif
       end if
@@ -1189,7 +1205,7 @@ contains
     type(cnveg_carbonflux_type)     , intent(inout) :: iso_cnveg_carbonflux_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: fc,c,pi,p,j,i
+    integer :: fc,c,pi,p,k,j,i
     !-----------------------------------------------------------------------
 
     associate(                                                                                     & 
@@ -1206,7 +1222,7 @@ contains
          frootc_to_litter          => iso_cnveg_carbonflux_inst%frootc_to_litter_patch        , & ! Input:  [real(r8) (:)   ] 
 !DML
          livestemc_to_litter       => iso_cnveg_carbonflux_inst%livestemc_to_litter_patch     , & ! Input:  [real(r8) (:)   ]
-         reproductive_grainc_to_food            => iso_cnveg_carbonflux_inst%reproductive_grainc_to_food_patch          , & ! Input:  [real(r8) (:)   ]
+         reproductive_grainc_to_food            => iso_cnveg_carbonflux_inst%reproductive_grainc_to_food_patch          , & ! Input:  [real(r8) (:,:)   ]
 !DML
          phenology_c_to_litr_c     => iso_cnveg_carbonflux_inst%phenology_c_to_litr_c_col       & ! InOut:  [real(r8) (:,:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter pools (gC/m3/s)
          )
@@ -1240,9 +1256,11 @@ contains
                         if (.not. use_grainproduct) then
                            ! grain litter carbon fluxes
                            do i = i_litr_min, i_litr_max
-                              phenology_c_to_litr_c(c,j,i) = &
-                                 phenology_c_to_litr_c(c,j,i) + &
-                                 reproductive_grainc_to_food(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                              do k = 1, ngrain
+                                 phenology_c_to_litr_c(c,j,i) = &
+                                      phenology_c_to_litr_c(c,j,i) + &
+                                      reproductive_grainc_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                              end do
                            end do
                         end if
 
@@ -1513,7 +1531,7 @@ contains
    end subroutine CNCIsoHarvestPftToColumn
 
    !-----------------------------------------------------------------------
-   subroutine CIsoFluxCalc(&
+   subroutine CIsoFluxCalc1d(&
         ciso_flux, ctot_flux, &
         ciso_state, ctot_state, &
         num, filter, frax_c13, diag, isotope)
@@ -1563,6 +1581,115 @@ contains
         end if
      end do
 
-   end subroutine CIsoFluxCalc
+   end subroutine CIsoFluxCalc1d
+
+   !-----------------------------------------------------------------------
+   subroutine CIsoFluxCalc2dFlux(&
+        ciso_flux, ctot_flux, &
+        ciso_state, ctot_state, &
+        num, filter, frax_c13, diag, isotope)
+     !
+     ! !DESCRIPTION:
+     ! Wrapper to CIsoFluxCalc1d for just the flux being a 2-d variable
+     !
+     ! Loops over the second dimension of each flux variable to do a C Iso flux calc on each level
+     !
+     ! !ARGUMENTS:
+     real(r8)         , intent(inout), pointer :: ciso_flux(:,:)  ! isoC flux
+     real(r8)         , intent(in)   , pointer :: ctot_flux(:,:)  ! totC flux
+     real(r8)         , intent(in)   , pointer :: ciso_state(:)   ! isoC state, upstream pool
+     real(r8)         , intent(in)   , pointer :: ctot_state(:)   ! totC state, upstream pool
+     real(r8)         , intent(in)             :: frax_c13        ! fractionation factor (1 = no fractionation) for C13
+     integer          , intent(in)             :: num             ! number of filter members
+     integer          , intent(in)             :: filter(:)       ! filter indices
+     integer          , intent(in)             :: diag            ! 0=no diagnostics, 1=print diagnostics
+     character(len=*) , intent(in)             :: isotope         ! 'c13' or 'c14'
+     !
+     ! !LOCAL VARIABLES:
+     integer :: num2d
+     integer :: i
+     real(r8), pointer :: ciso_flux_1d(:)
+     real(r8), pointer :: ctot_flux_1d(:)
+
+     character(len=*), parameter :: subname = 'CIsoFluxCalc2d'
+     !-----------------------------------------------------------------------
+
+     num2d = size(ciso_flux, 2)
+     SHR_ASSERT_FL((size(ctot_flux, 2) == num2d), sourcefile, __LINE__)
+
+     do i = 1, num2d
+        ciso_flux_1d => ciso_flux(:,i)
+        ctot_flux_1d => ctot_flux(:,i)
+        call CIsoFluxCalc1d(&
+             ciso_flux  = ciso_flux_1d, &
+             ctot_flux  = ctot_flux_1d, &
+             ciso_state = ciso_state, &
+             ctot_state = ctot_state, &
+             num        = num, &
+             filter     = filter, &
+             frax_c13   = frax_c13, &
+             diag       = diag, &
+             isotope    = isotope)
+     end do
+
+   end subroutine CIsoFluxCalc2dFlux
+
+
+   !-----------------------------------------------------------------------
+   subroutine CIsoFluxCalc2dBoth(&
+        ciso_flux, ctot_flux, &
+        ciso_state, ctot_state, &
+        num, filter, frax_c13, diag, isotope)
+     !
+     ! !DESCRIPTION:
+     ! Wrapper to CIsoFluxCalc1d for both the flux and state being 2-d variables
+     !
+     ! Loops over the second dimension of each variable to do a C Iso flux calc on each level
+     !
+     ! !ARGUMENTS:
+     real(r8)         , intent(inout), pointer :: ciso_flux(:,:)  ! isoC flux
+     real(r8)         , intent(in)   , pointer :: ctot_flux(:,:)  ! totC flux
+     real(r8)         , intent(in)   , pointer :: ciso_state(:,:) ! isoC state, upstream pool
+     real(r8)         , intent(in)   , pointer :: ctot_state(:,:) ! totC state, upstream pool
+     real(r8)         , intent(in)             :: frax_c13        ! fractionation factor (1 = no fractionation) for C13
+     integer          , intent(in)             :: num             ! number of filter members
+     integer          , intent(in)             :: filter(:)       ! filter indices
+     integer          , intent(in)             :: diag            ! 0=no diagnostics, 1=print diagnostics
+     character(len=*) , intent(in)             :: isotope         ! 'c13' or 'c14'
+     !
+     ! !LOCAL VARIABLES:
+     integer :: num2d
+     integer :: i
+     real(r8), pointer :: ciso_flux_1d(:)
+     real(r8), pointer :: ctot_flux_1d(:)
+     real(r8), pointer :: ciso_state_1d(:)
+     real(r8), pointer :: ctot_state_1d(:)
+
+     character(len=*), parameter :: subname = 'CIsoFluxCalc2d'
+     !-----------------------------------------------------------------------
+
+     num2d = size(ciso_flux, 2)
+     SHR_ASSERT_FL((size(ctot_flux, 2) == num2d), sourcefile, __LINE__)
+     SHR_ASSERT_FL((size(ciso_state, 2) == num2d), sourcefile, __LINE__)
+     SHR_ASSERT_FL((size(ctot_state, 2) == num2d), sourcefile, __LINE__)
+
+     do i = 1, num2d
+        ciso_flux_1d => ciso_flux(:,i)
+        ctot_flux_1d => ctot_flux(:,i)
+        ciso_state_1d => ciso_state(:,i)
+        ctot_state_1d => ctot_state(:,i)
+        call CIsoFluxCalc1d(&
+             ciso_flux  = ciso_flux_1d, &
+             ctot_flux  = ctot_flux_1d, &
+             ciso_state = ciso_state_1d, &
+             ctot_state = ctot_state_1d, &
+             num        = num, &
+             filter     = filter, &
+             frax_c13   = frax_c13, &
+             diag       = diag, &
+             isotope    = isotope)
+     end do
+
+   end subroutine CIsoFluxCalc2dBoth
 
 end module CNCIsoFluxMod

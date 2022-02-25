@@ -15,6 +15,7 @@ module CNCStateUpdate1Mod
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use CropType                           , only : crop_type
+  use CropPoolsMod                       , only : ngrain
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
@@ -262,8 +263,12 @@ contains
               ! lines here for consistency; the transfer terms are zero
               cs_veg%livestemc_patch(p)       = cs_veg%livestemc_patch(p)      + cf_veg%livestemc_xfer_to_livestemc_patch(p)*dt
               cs_veg%livestemc_xfer_patch(p)  = cs_veg%livestemc_xfer_patch(p) - cf_veg%livestemc_xfer_to_livestemc_patch(p)*dt
-              cs_veg%reproductive_grainc_patch(p)          = cs_veg%reproductive_grainc_patch(p)         + cf_veg%reproductive_grainc_xfer_to_reproductive_grainc_patch(p)*dt
-              cs_veg%reproductive_grainc_xfer_patch(p)     = cs_veg%reproductive_grainc_xfer_patch(p)    - cf_veg%reproductive_grainc_xfer_to_reproductive_grainc_patch(p)*dt
+              do k = 1, ngrain
+                 cs_veg%reproductive_grainc_patch(p,k) = cs_veg%reproductive_grainc_patch(p,k) &
+                      + cf_veg%reproductive_grainc_xfer_to_reproductive_grainc_patch(p,k)*dt
+                 cs_veg%reproductive_grainc_xfer_patch(p,k) = cs_veg%reproductive_grainc_xfer_patch(p,k) &
+                      - cf_veg%reproductive_grainc_xfer_to_reproductive_grainc_patch(p,k)*dt
+              end do
            end if
 
            ! phenology: litterfall fluxes
@@ -281,11 +286,14 @@ contains
               cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_litter_patch(p)*dt
               cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_biofuelc_patch(p)*dt
               cs_veg%leafc_patch(p)      = cs_veg%leafc_patch(p)      - cf_veg%leafc_to_biofuelc_patch(p)*dt
-              cs_veg%reproductive_grainc_patch(p)     = cs_veg%reproductive_grainc_patch(p) &
-                   - (cf_veg%reproductive_grainc_to_food_patch(p) + cf_veg%reproductive_grainc_to_seed_patch(p))*dt
               cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
-                   - cf_veg%crop_seedc_to_leaf_patch(p) * dt &
-                   + cf_veg%reproductive_grainc_to_seed_patch(p) * dt
+                   - cf_veg%crop_seedc_to_leaf_patch(p) * dt
+              do k = 1, ngrain
+                 cs_veg%reproductive_grainc_patch(p,k)     = cs_veg%reproductive_grainc_patch(p,k) &
+                      - (cf_veg%reproductive_grainc_to_food_patch(p,k) + cf_veg%reproductive_grainc_to_seed_patch(p,k))*dt
+                 cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
+                      + cf_veg%reproductive_grainc_to_seed_patch(p,k) * dt
+              end do
            end if
          
            check_cpool = cs_veg%cpool_patch(p)- cf_veg%psnsun_to_cpool_patch(p)*dt-cf_veg%psnshade_to_cpool_patch(p)*dt
@@ -302,7 +310,9 @@ contains
            end if
            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
               cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livestem_curmr_patch(p)*dt
-              cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%reproductive_grain_curmr_patch(p)*dt
+              do k = 1, ngrain
+                 cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%reproductive_grain_curmr_patch(p,k)*dt
+              end do
            end if
          
          
@@ -374,10 +384,14 @@ contains
               cs_veg%livestemc_patch(p)          = cs_veg%livestemc_patch(p)          + cf_veg%cpool_to_livestemc_patch(p)*dt
               cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_storage_patch(p)*dt
               cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p)  + cf_veg%cpool_to_livestemc_storage_patch(p)*dt
-              cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_reproductive_grainc_patch(p)*dt
-              cs_veg%reproductive_grainc_patch(p)             = cs_veg%reproductive_grainc_patch(p)             + cf_veg%cpool_to_reproductive_grainc_patch(p)*dt
-              cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_reproductive_grainc_storage_patch(p)*dt
-              cs_veg%reproductive_grainc_storage_patch(p)     = cs_veg%reproductive_grainc_storage_patch(p)     + cf_veg%cpool_to_reproductive_grainc_storage_patch(p)*dt
+              do k = 1, ngrain
+                 cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_to_reproductive_grainc_patch(p,k)*dt
+                 cs_veg%reproductive_grainc_patch(p,k) = cs_veg%reproductive_grainc_patch(p,k) &
+                      + cf_veg%cpool_to_reproductive_grainc_patch(p,k)*dt
+                 cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_to_reproductive_grainc_storage_patch(p,k)*dt
+                 cs_veg%reproductive_grainc_storage_patch(p,k) = cs_veg%reproductive_grainc_storage_patch(p,k) &
+                      + cf_veg%cpool_to_reproductive_grainc_storage_patch(p,k)*dt
+              end do
            end if
 
            ! growth respiration fluxes for current growth
@@ -392,7 +406,9 @@ contains
            end if
            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
               cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_livestem_gr_patch(p)*dt
-              cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_reproductive_grain_gr_patch(p)*dt
+              do k = 1, ngrain
+                 cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_reproductive_grain_gr_patch(p,k)*dt
+              end do
            end if
 
            ! growth respiration for transfer growth
@@ -406,7 +422,9 @@ contains
            end if
            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
               cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) - cf_veg%transfer_livestem_gr_patch(p)*dt
-              cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) - cf_veg%transfer_reproductive_grain_gr_patch(p)*dt
+              do k = 1, ngrain
+                 cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) - cf_veg%transfer_reproductive_grain_gr_patch(p,k)*dt
+              end do
            end if
 
            ! growth respiration at time of storage
@@ -422,7 +440,9 @@ contains
            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
               cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_livestem_storage_gr_patch(p)*dt
    
-              cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_reproductive_grain_storage_gr_patch(p)*dt
+              do k = 1, ngrain
+                 cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_reproductive_grain_storage_gr_patch(p,k)*dt
+              end do
 
            end if
 
@@ -451,13 +471,19 @@ contains
               ! lines here for consistency; the transfer terms are zero
               cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p) - cf_veg%livestemc_storage_to_xfer_patch(p)*dt
               cs_veg%livestemc_xfer_patch(p)     = cs_veg%livestemc_xfer_patch(p)    + cf_veg%livestemc_storage_to_xfer_patch(p)*dt
-              cs_veg%reproductive_grainc_storage_patch(p)     = cs_veg%reproductive_grainc_storage_patch(p)    - cf_veg%reproductive_grainc_storage_to_xfer_patch(p)*dt
-              cs_veg%reproductive_grainc_xfer_patch(p)        = cs_veg%reproductive_grainc_xfer_patch(p)       + cf_veg%reproductive_grainc_storage_to_xfer_patch(p)*dt
+              do k = 1, ngrain
+                 cs_veg%reproductive_grainc_storage_patch(p,k) = cs_veg%reproductive_grainc_storage_patch(p,k) &
+                      - cf_veg%reproductive_grainc_storage_to_xfer_patch(p,k)*dt
+                 cs_veg%reproductive_grainc_xfer_patch(p,k) = cs_veg%reproductive_grainc_xfer_patch(p,k) &
+                      + cf_veg%reproductive_grainc_storage_to_xfer_patch(p,k)*dt
+              end do
            end if
 
            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
               cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livestem_xsmr_patch(p)*dt
-              cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%reproductive_grain_xsmr_patch(p)*dt
+              do k = 1, ngrain
+                 cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%reproductive_grain_xsmr_patch(p,k)*dt
+              end do
               if (harvdate(p) < 999) then ! beginning at harvest, send to atm
                  ! TODO (mv, 11-02-2014) the following lines are why the cf_veg is
                  ! an intent(inout)

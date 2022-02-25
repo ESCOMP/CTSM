@@ -17,6 +17,7 @@ module CNNStateUpdate1Mod
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use CropPoolsMod                    , only : ngrain
   use PatchType                       , only : patch                
   !
   implicit none
@@ -165,8 +166,12 @@ contains
             ! lines here for consistency; the transfer terms are zero
             ns_veg%livestemn_patch(p)       = ns_veg%livestemn_patch(p)      + nf_veg%livestemn_xfer_to_livestemn_patch(p)*dt
             ns_veg%livestemn_xfer_patch(p)  = ns_veg%livestemn_xfer_patch(p) - nf_veg%livestemn_xfer_to_livestemn_patch(p)*dt
-            ns_veg%reproductive_grainn_patch(p)          = ns_veg%reproductive_grainn_patch(p)         + nf_veg%reproductive_grainn_xfer_to_reproductive_grainn_patch(p)*dt
-            ns_veg%reproductive_grainn_xfer_patch(p)     = ns_veg%reproductive_grainn_xfer_patch(p)    - nf_veg%reproductive_grainn_xfer_to_reproductive_grainn_patch(p)*dt
+            do k = 1, ngrain
+               ns_veg%reproductive_grainn_patch(p,k) = ns_veg%reproductive_grainn_patch(p,k) &
+                    + nf_veg%reproductive_grainn_xfer_to_reproductive_grainn_patch(p,k)*dt
+               ns_veg%reproductive_grainn_xfer_patch(p,k) = ns_veg%reproductive_grainn_xfer_patch(p,k) &
+                    - nf_veg%reproductive_grainn_xfer_to_reproductive_grainn_patch(p,k)*dt
+            end do
          end if
 
          ! phenology: litterfall and retranslocation fluxes
@@ -201,11 +206,14 @@ contains
             ns_veg%leafn_patch(p)        = ns_veg%leafn_patch(p)      - nf_veg%leafn_to_biofueln_patch(p)*dt
             ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_retransn_patch(p)*dt
             ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
-            ns_veg%reproductive_grainn_patch(p)       = ns_veg%reproductive_grainn_patch(p) &
-                 - (nf_veg%reproductive_grainn_to_food_patch(p) + nf_veg%reproductive_grainn_to_seed_patch(p))*dt
             ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
-                 - nf_veg%crop_seedn_to_leaf_patch(p) * dt &
-                 + nf_veg%reproductive_grainn_to_seed_patch(p) * dt
+                 - nf_veg%crop_seedn_to_leaf_patch(p) * dt
+            do k = 1, ngrain
+               ns_veg%reproductive_grainn_patch(p,k)       = ns_veg%reproductive_grainn_patch(p,k) &
+                    - (nf_veg%reproductive_grainn_to_food_patch(p,k) + nf_veg%reproductive_grainn_to_seed_patch(p,k))*dt
+               ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
+                    + nf_veg%reproductive_grainn_to_seed_patch(p,k) * dt
+            end do
          end if
 
          ! uptake from soil mineral N pool
@@ -252,10 +260,14 @@ contains
             ns_veg%livestemn_patch(p)          = ns_veg%livestemn_patch(p)          + nf_veg%npool_to_livestemn_patch(p)*dt
             ns_veg%npool_patch(p)              = ns_veg%npool_patch(p)              - nf_veg%npool_to_livestemn_storage_patch(p)*dt
             ns_veg%livestemn_storage_patch(p)  = ns_veg%livestemn_storage_patch(p)  + nf_veg%npool_to_livestemn_storage_patch(p)*dt
-            ns_veg%npool_patch(p)              = ns_veg%npool_patch(p)              - nf_veg%npool_to_reproductive_grainn_patch(p)*dt
-            ns_veg%reproductive_grainn_patch(p)             = ns_veg%reproductive_grainn_patch(p)             + nf_veg%npool_to_reproductive_grainn_patch(p)*dt
-            ns_veg%npool_patch(p)              = ns_veg%npool_patch(p)              - nf_veg%npool_to_reproductive_grainn_storage_patch(p)*dt
-            ns_veg%reproductive_grainn_storage_patch(p)     = ns_veg%reproductive_grainn_storage_patch(p)     + nf_veg%npool_to_reproductive_grainn_storage_patch(p)*dt
+            do k = 1, ngrain
+               ns_veg%npool_patch(p) = ns_veg%npool_patch(p) - nf_veg%npool_to_reproductive_grainn_patch(p,k)*dt
+               ns_veg%reproductive_grainn_patch(p,k) = ns_veg%reproductive_grainn_patch(p,k) &
+                    + nf_veg%npool_to_reproductive_grainn_patch(p,k)*dt
+               ns_veg%npool_patch(p) = ns_veg%npool_patch(p) - nf_veg%npool_to_reproductive_grainn_storage_patch(p,k)*dt
+               ns_veg%reproductive_grainn_storage_patch(p,k) = ns_veg%reproductive_grainn_storage_patch(p,k) &
+                    + nf_veg%npool_to_reproductive_grainn_storage_patch(p,k)*dt
+            end do
          end if
 
          ! move storage pools into transfer pools
@@ -279,8 +291,12 @@ contains
             ! lines here for consistency; the transfer terms are zero
             ns_veg%livestemn_storage_patch(p)  = ns_veg%livestemn_storage_patch(p) - nf_veg%livestemn_storage_to_xfer_patch(p)*dt
             ns_veg%livestemn_xfer_patch(p)     = ns_veg%livestemn_xfer_patch(p)    + nf_veg%livestemn_storage_to_xfer_patch(p)*dt
-            ns_veg%reproductive_grainn_storage_patch(p)     = ns_veg%reproductive_grainn_storage_patch(p)    - nf_veg%reproductive_grainn_storage_to_xfer_patch(p)*dt
-            ns_veg%reproductive_grainn_xfer_patch(p)        = ns_veg%reproductive_grainn_xfer_patch(p)       + nf_veg%reproductive_grainn_storage_to_xfer_patch(p)*dt
+            do k = 1, ngrain
+               ns_veg%reproductive_grainn_storage_patch(p,k) = ns_veg%reproductive_grainn_storage_patch(p,k) &
+                    - nf_veg%reproductive_grainn_storage_to_xfer_patch(p,k)*dt
+               ns_veg%reproductive_grainn_xfer_patch(p,k) = ns_veg%reproductive_grainn_xfer_patch(p,k) &
+                    + nf_veg%reproductive_grainn_storage_to_xfer_patch(p,k)*dt
+            end do
          end if
 
       end do

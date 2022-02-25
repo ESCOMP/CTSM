@@ -62,6 +62,7 @@ contains
     use UrbanParamsType      , only: IsSimpleBuildTemp
     use dynSubgridControlMod , only: dynSubgridControl_init
     use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
+    use CropPoolsMod         , only: crop_pools_init
     !
     ! !ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -102,6 +103,7 @@ contains
     call landunit_varcon_init()
     if (masterproc) call control_print()
     call dynSubgridControl_init(NLFilename)
+    call crop_pools_init()
 
     call t_stopf('clm_init1')
 
