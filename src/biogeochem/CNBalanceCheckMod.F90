@@ -325,7 +325,7 @@ contains
       do g = bounds%begg, bounds%endg
          ! calculate gridcell-level carbon storage for mass conservation check
          ! Notes:
-         ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
+         ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totmicc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
          ! totc_p2c_col = totc_patch = totvegc_patch(p) + xsmrpool_patch(p) + ctrunc_patch(p) + cropseedc_deficit_patch(p)
          ! Not including seedc_grc in grc_begcb and grc_endcb because
          ! seedc_grc forms out of thin air, for now, and equals
@@ -540,7 +540,7 @@ contains
          write(iulog,*)'output mass              = ',col_noutputs(c)*dt
          write(iulog,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
          write(iulog,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-         write(iulog,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+         write(iulog,*)'outputs,lch,roff,dnit    = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 

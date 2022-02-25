@@ -124,6 +124,9 @@ class TestRunSysTests(unittest.TestCase):
         assertNotRegex(self, command, r'--compare\s')
         assertNotRegex(self, command, r'--generate\s')
         assertNotRegex(self, command, r'--baseline-root\s')
+        # In the machine object for this test, create_test_queue will be 'unspecified';
+        # verify that this results in there being no '--queue' argument:
+        assertNotRegex(self, command, r'--queue\s')
 
         expected_cs_status = os.path.join(self._scratch,
                                           self._expected_testroot(),

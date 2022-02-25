@@ -123,14 +123,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="SSP5-8.5" >lnd/clm2/isotopes/atm_delta_C14_CMIP6_SSP5B_3x1_global_1850-2100_yearly_c181209.nc</atm_c14_filename>
 
 <!-- Irrigation default -->
-<irrigate use_crop=".true." phys="clm5_1"  use_cndv=".false." sim_year_range="1850-2100">.true.</irrigate>
-<irrigate use_crop=".true." phys="clm5_1"  use_cndv=".true."  sim_year_range="1850-2100">.false.</irrigate>
-<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false."  sim_year_range="1850-2100">.true.</irrigate>
-<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true."   sim_year_range="1850-2100">.false.</irrigate>
-<irrigate use_crop=".true." phys="clm4_5"                     sim_year_range="1850-2100">.false.</irrigate>
+<irrigate phys="clm5_1"  use_cndv=".false." sim_year_range="1850-2100">.true.</irrigate>
+<irrigate phys="clm5_1"  use_cndv=".true."  sim_year_range="1850-2100">.false.</irrigate>
+<irrigate phys="clm5_0" use_cndv=".false."  sim_year_range="1850-2100">.true.</irrigate>
+<irrigate phys="clm5_0" use_cndv=".true."   sim_year_range="1850-2100">.false.</irrigate>
+<irrigate phys="clm4_5"                     sim_year_range="1850-2100">.false.</irrigate>
 
-<irrigate use_crop=".true." >.false.</irrigate>
-<irrigate use_crop=".false.">.true.</irrigate>
+<irrigate >.false.</irrigate>
 
 
 <!-- Saturation excess runoff for crops  -->
@@ -481,9 +480,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c210923.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c210803.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c210803.nc</paramfile>
+<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c211112.nc</paramfile>
+<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c211112.nc</paramfile>
+<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c211112.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
@@ -565,11 +564,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <min_critical_dayl_method         use_cn=".true." phys="clm5_1" >DependsOnLat</min_critical_dayl_method>
 <onset_thresh_depends_on_veg                                    >.false.</onset_thresh_depends_on_veg>
 <min_critical_dayl_method                                       >Constant</min_critical_dayl_method>
-
-<!-- turnover time modifications    -->
-<decomp_depth_efolding phys="clm4_5" >0.5</decomp_depth_efolding>
-<decomp_depth_efolding phys="clm5_0" >10.0</decomp_depth_efolding>
-<decomp_depth_efolding phys="clm5_1" >10.0</decomp_depth_efolding>
 
 <!-- use additional stress deciduous onset trigger    -->
 <constrain_stress_deciduous_onset phys="clm4_5" >.false.</constrain_stress_deciduous_onset>
@@ -1492,7 +1486,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_fldfilename_ndep phys="clm5_1"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm5_1"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc</stream_fldfilename_ndep>
 
 <stream_fldfilename_ndep phys="clm5_0"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
@@ -1501,16 +1495,16 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_fldfilename_ndep phys="clm5_0"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm5_0"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc</stream_fldfilename_ndep>
 
 <stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP1-2.6-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc</stream_fldfilename_ndep>
 
 <ndep_taxmode            phys="clm5_1"  use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm5_1"  use_cn=".true.">NDEP_month</ndep_varlist>
@@ -2535,7 +2529,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 >lnd/clm2/paramdata/finundated_inversiondata_0.9x1_ESMFmesh_cdf5_130621.nc</stream_meshfile_ch4finundated>
 
 <!-- =========================================  -->
-<!-- Defaults for different BGC modes           -->
+<!-- Defaults for different BGC/decomp modes    -->
 <!-- =========================================  -->
 
 <soil_decomp_method use_cn=".true."    >CENTURYKoven2013</soil_decomp_method>

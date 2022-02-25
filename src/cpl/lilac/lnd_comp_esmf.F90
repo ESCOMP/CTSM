@@ -621,8 +621,8 @@ contains
        ! Determine calendar day info
        !--------------------------------
 
-       calday = get_curr_calday()
-       caldayp1 = get_curr_calday(offset=dtime)
+       calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
+       caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
 
        !--------------------------------
        ! Get time of next atmospheric shortwave calculation

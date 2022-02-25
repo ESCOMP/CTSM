@@ -8,7 +8,7 @@ The wrapper script includes a full description and instructions.
 import logging
 import argparse
 from configparser import ConfigParser
-from ctsm.utils import get_config_value
+from ctsm.config_utils import get_config_value
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
 
