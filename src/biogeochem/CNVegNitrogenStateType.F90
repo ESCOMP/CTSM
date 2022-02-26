@@ -19,7 +19,7 @@ module CNVegNitrogenStateType
   use dynPatchStateUpdaterMod, only : patch_state_updater_type
   use CNSpeciesMod   , only : CN_SPECIES_N
   use CNVegComputeSeedMod, only : ComputeSeedAmounts
-  use CropPoolsMod                       , only : ngrain
+  use CropPoolsMod                       , only : ngrain, get_grain_hist_fname, get_grain_rest_fname, get_grain_longname
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -206,9 +206,12 @@ contains
        this%reproductive_grainn_patch(begp:endp,:) = spval
        do k = 1, ngrain
           data1dptr => this%reproductive_grainn_patch(:,k)
-          ! FIXME(wjs, 2022-02-14) name this history variable correctly (fname and long_name)
-          call hist_addfld1d (fname='GRAINN', units='gN/m^2', &
-               avgflag='A', long_name='grain N', &
+          call hist_addfld1d ( &
+               ! e.g., GRAINN
+               fname=get_grain_hist_fname(k)//'N', &
+               units='gN/m^2', &
+               avgflag='A', &
+               long_name=get_grain_longname(k)//' N', &
                ptr_patch=data1dptr)
        end do
 
@@ -566,7 +569,7 @@ contains
     integer            :: i, p, l, k
     logical            :: readvar
     real(r8), pointer  :: data1dptr(:)   ! temp. pointers for slicing larger arrays
-    character(len=128) :: varname    ! temporary
+    character(len=256) :: varname    ! temporary
     logical            :: exit_spinup  = .false.
     logical            :: enter_spinup = .false.
     integer            :: idata
@@ -677,26 +680,53 @@ contains
 
     if (use_crop) then
        do k = 1, ngrain
-          ! FIXME(wjs, 2022-02-15) name this restart variable correctly (varname and long_name)
           data1dptr => this%reproductive_grainn_patch(:,k)
-          call restartvar(ncid=ncid, flag=flag,  varname='reproductive_grainn:grainn', xtype=ncd_double,  &
-               dim1name='pft',    long_name='grain N', units='gN/m2', &
+          ! e.g., reproductive_grainn
+          varname = get_grain_rest_fname(k)//'n'
+          if (k == 1) then
+             ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
+             ! before renaming 'grain' to 'reproductive_grain'
+             varname = trim(varname)//':grainn'
+          end if
+          call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+               xtype=ncd_double,  &
+               dim1name='pft',    &
+               long_name=get_grain_longname(k)//' N', &
+               units='gN/m2', &
                interpinic_flag='interp', readvar=readvar, data=data1dptr)
        end do
 
        do k = 1, ngrain
-          ! FIXME(wjs, 2022-02-15) name this restart variable correctly (varname and long_name)
           data1dptr => this%reproductive_grainn_storage_patch(:,k)
-          call restartvar(ncid=ncid, flag=flag,  varname='reproductive_grainn_storage:grainn_storage', xtype=ncd_double,  &
-               dim1name='pft',    long_name='grain N storage', units='gN/m2', &
+          ! e.g., reproductive_grainn_storage
+          varname = get_grain_rest_fname(k)//'n_storage'
+          if (k == 1) then
+             ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
+             ! before renaming 'grain' to 'reproductive_grain'
+             varname = trim(varname)//':grainn_storage'
+          end if
+          call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+               xtype=ncd_double,  &
+               dim1name='pft',    &
+               long_name=get_grain_longname(k)//' N storage', &
+               units='gN/m2', &
                interpinic_flag='interp', readvar=readvar, data=data1dptr)
        end do
 
        do k = 1, ngrain
-          ! FIXME(wjs, 2022-02-15) name this restart variable correctly (varname and long_name)
           data1dptr => this%reproductive_grainn_xfer_patch(:,k)
-          call restartvar(ncid=ncid, flag=flag,  varname='reproductive_grainn_xfer:grainn_xfer', xtype=ncd_double,  &
-               dim1name='pft',    long_name='grain N transfer', units='gN/m2', &
+          ! e.g., reproductive_grainn_xfer
+          varname = get_grain_rest_fname(k)//'n_xfer'
+          if (k == 1) then
+             ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
+             ! before renaming 'grain' to 'reproductive_grain'
+             varname = trim(varname)//':grainn_xfer'
+          end if
+          call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+               xtype=ncd_double,  &
+               dim1name='pft',    &
+               long_name=get_grain_longname(k)//' N transfer', &
+               units='gN/m2', &
                interpinic_flag='interp', readvar=readvar, data=data1dptr)
        end do
 
