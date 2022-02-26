@@ -82,7 +82,7 @@ module CNVegNitrogenStateType
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
-     procedure , public  :: time_evolv_params  ! updates time-evolving params
+     procedure , public  :: time_evolv_leafcn  ! updates time-evolving leafcn
 
   end type cnveg_nitrogenstate_type
   !------------------------------------------------------------------------
@@ -1082,7 +1082,7 @@ contains
   end subroutine Summary_nitrogenstate
 
   !-----------------------------------------------------------------------
-  subroutine time_evolv_params(this, bounds, atm2lnd_inst)
+  subroutine time_evolv_leafcn(this, bounds, atm2lnd_inst)
     !
     ! !DESCRIPTION:
     ! Update time-evolving parameters
@@ -1102,7 +1102,7 @@ contains
     real(r8), parameter :: co2_base = 350._r8  ! units ppmv
     real(r8), parameter :: cn_slope = 10._r8
 
-    character(len=*), parameter :: subname = 'time_evolv_params'
+    character(len=*), parameter :: subname = 'time_evolv_leafcn'
     !-----------------------------------------------------------------------
 
     ! Loop to get leafcn_col
@@ -1115,7 +1115,7 @@ contains
           max(cn_slope * log(co2_ppmv / co2_base), 0._r8)
     end do
 
-  end subroutine time_evolv_params
+  end subroutine time_evolv_leafcn
 
   !-----------------------------------------------------------------------
   subroutine DynamicPatchAdjustments(this, bounds, &

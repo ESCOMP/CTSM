@@ -168,7 +168,7 @@ contains
     ! -------------------------------------------------
     ! Obtain updated values of time-evolving parameters
     ! -------------------------------------------------
-    call bgc_vegetation_inst%cnveg_nitrogenstate_inst%time_evolv_params( &
+    call bgc_vegetation_inst%cnveg_nitrogenstate_inst%time_evolv_leafcn( &
        bounds_proc, atm2lnd_inst)
 
     ! ========================================================================
