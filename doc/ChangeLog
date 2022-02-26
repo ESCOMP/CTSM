@@ -1,4 +1,84 @@
 ===============================================================
+Tag name: ctsm5.1.dev083
+Originator(s): slevis (Samuel Levis)
+Date: Fri Feb 25 17:23:32 MST 2022
+One-line Summary: Get FATES-MIMICS to work
+
+Purpose and description of changes
+----------------------------------
+
+ 1) FATES didn't have access to the ligninNratioAvg calculated for MIMICS.
+ I updated MIMICS to assign hardwired values of ligninNratioAvg from Table 1 in
+ Brovkin et al. (2012) when running with FATES:
+ https://bg.copernicus.org/articles/9/565/2012/bg-9-565-2012.pdf
+ This is a temporary solution until FATES gets updated to have access to
+ the same ligninNratioAvg calculation as non FATES cases.
+
+ 2) FATES has it's own calculation of annsum_npp_col, also needed in MIMICS.
+ I updated MIMICS to use the FATES variable when running with FATES.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #): #1636
+
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ MIMICS-FATES now do work together, but only as long as use_lch4 = .true.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ To avoid adding a new test to confirm that MIMICS-FATES works, I modified the
+ existing testmod FatesColdDefSizeAgeMort to mimicsFatesColdDefSizeAgeMort.
+ I picked this one because it seems to be used in one test (maybe two?), while
+ other Fates testmods are used in many more tests.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ----
+    izumi -------
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1643
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev081
 Originator(s): swensosc (Sean Swenson)
 Date: Thu Feb 24 21:33:35 MST 2022
