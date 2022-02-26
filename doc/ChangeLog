@@ -62,8 +62,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ----
-    izumi -------
+    cheyenne ---- PASS
+    izumi ------- OK
 
 
 Answer changes
