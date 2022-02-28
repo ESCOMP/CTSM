@@ -143,8 +143,8 @@ contains
     call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, binfl_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do no = 1,ns_o
-       if (frac_o(ns_o) == 0._r8) then
-          ws_o(n) = 0.1_r8
+       if (frac_o(no) == 0._r8) then
+          ws_o(no) = 0.1_r8
        end if
     end do
     if (min_bad(binfl_o, min_valid_binfl, 'binfl')) then
@@ -169,8 +169,8 @@ contains
     call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, ws_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do no = 1,ns_o
-       if (frac_o(ns_o) == 0._r8) then
-          ws_o(n) = 0.75_r8
+       if (frac_o(no) == 0._r8) then
+          ws_o(no) = 0.75_r8
        end if
     end do
     if (min_bad(ws_o, min_valid_ws, 'Ws')) then
@@ -195,8 +195,8 @@ contains
     call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, dsmax_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do no = 1,ns_o
-       if (frac_o(ns_o) == 0._r8) then
-          dsmax_o(n) = 10._r8
+       if (frac_o(no) == 0._r8) then
+          dsmax_o(no) = 10._r8
        end if
     end do
     if (min_bad(dsmax_o, min_valid_dsmax, 'Dsmax')) then
@@ -213,7 +213,7 @@ contains
     ! -----------------------------------------------------------------
 
     ! Read in Ds into data_i
-    call mkpio_get_rawdata(pioid_i, 'Dsmax', mesh_i, data_i, rc=rc)
+    call mkpio_get_rawdata(pioid_i, 'Ds', mesh_i, data_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
@@ -221,8 +221,8 @@ contains
     call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, ds_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do no = 1,ns_o
-       if (frac_o(ns_o) == 0._r8) then
-          ws_o(n) = 0.1_r8
+       if (frac_o(no) == 0._r8) then
+          ws_o(no) = 0.1_r8
        end if
     end do
     if (min_bad(ds_o, min_valid_ds, 'Ds')) then
