@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev082
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date: Fri Feb 25 10:42:41 MST 2022
+Date: Mon Feb 28 10:12:16 MST 2022
 One-line Summary: Replace dom_nat_pft with dom_plant to enable crop in fsurdat_modifier tool
 
 Purpose and description of changes
