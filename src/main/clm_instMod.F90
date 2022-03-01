@@ -186,7 +186,6 @@ contains
     !
     ! !USES: 
     use clm_varpar                         , only : nlevsno
-    use abortutils                         , only : endrun
     use controlMod                         , only : nlfilename, fsurdat
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
@@ -382,9 +381,6 @@ contains
 
        call init_decomp_cascade_constants( )
        if (decomp_method == century_decomp ) then
-          if ( use_fates )then
-             call endrun( "ERROR: Currently century soil decomposition can NOT be used with FATES" )
-          end if
           call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, &
                                       soilstate_inst )
        end if
