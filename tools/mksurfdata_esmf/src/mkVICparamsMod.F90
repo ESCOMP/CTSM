@@ -144,7 +144,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do no = 1,ns_o
        if (frac_o(no) == 0._r8) then
-          ws_o(no) = 0.1_r8
+          binfl_o(no) = 0.1_r8
        end if
     end do
     if (min_bad(binfl_o, min_valid_binfl, 'binfl')) then
@@ -222,7 +222,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do no = 1,ns_o
        if (frac_o(no) == 0._r8) then
-          ws_o(no) = 0.1_r8
+          ds_o(no) = 0.1_r8
        end if
     end do
     if (min_bad(ds_o, min_valid_ds, 'Ds')) then
