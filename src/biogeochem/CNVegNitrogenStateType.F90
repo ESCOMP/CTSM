@@ -19,7 +19,7 @@ module CNVegNitrogenStateType
   use dynPatchStateUpdaterMod, only : patch_state_updater_type
   use CNSpeciesMod   , only : CN_SPECIES_N
   use CNVegComputeSeedMod, only : ComputeSeedAmounts
-  use CropPoolsMod                       , only : ngrain, get_grain_hist_fname, get_grain_rest_fname, get_grain_longname
+  use CropReprPoolsMod                       , only : nrepr, get_repr_hist_fname, get_repr_rest_fname, get_repr_longname
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -30,9 +30,9 @@ module CNVegNitrogenStateType
   !
   type, public :: cnveg_nitrogenstate_type
 
-     real(r8), pointer :: reproductive_grainn_patch        (:,:) ! (gN/m2) grain N (crop)
-     real(r8), pointer :: reproductive_grainn_storage_patch(:,:) ! (gN/m2) grain N storage (crop)
-     real(r8), pointer :: reproductive_grainn_xfer_patch   (:,:) ! (gN/m2) grain N transfer (crop)
+     real(r8), pointer :: reproductiven_patch        (:,:) ! (gN/m2) reproductive (e.g., grain) N (crop)
+     real(r8), pointer :: reproductiven_storage_patch(:,:) ! (gN/m2) reproductive (e.g., grain) N storage (crop)
+     real(r8), pointer :: reproductiven_xfer_patch   (:,:) ! (gN/m2) reproductive (e.g., grain) N transfer (crop)
      real(r8), pointer :: leafn_patch              (:) ! (gN/m2) leaf N 
      real(r8), pointer :: leafn_storage_patch      (:) ! (gN/m2) leaf N storage
      real(r8), pointer :: leafn_xfer_patch         (:) ! (gN/m2) leaf N transfer
@@ -127,12 +127,9 @@ contains
     begc = bounds%begc; endc = bounds%endc
     begg = bounds%begg; endg = bounds%endg
 
-    allocate(this%reproductive_grainn_patch(begp:endp, ngrain))
-    this%reproductive_grainn_patch(:,:) = nan
-    allocate(this%reproductive_grainn_storage_patch(begp:endp, ngrain))
-    this%reproductive_grainn_storage_patch(:,:) = nan
-    allocate(this%reproductive_grainn_xfer_patch(begp:endp, ngrain))
-    this%reproductive_grainn_xfer_patch(:,:) = nan
+    allocate(this%reproductiven_patch(begp:endp, nrepr)) ; this%reproductiven_patch(:,:) = nan
+    allocate(this%reproductiven_storage_patch(begp:endp, nrepr)) ; this%reproductiven_storage_patch(:,:) = nan
+    allocate(this%reproductiven_xfer_patch(begp:endp, nrepr)) ; this%reproductiven_xfer_patch(:,:) = nan
     allocate(this%leafn_patch              (begp:endp)) ; this%leafn_patch              (:) = nan
     allocate(this%leafn_storage_patch      (begp:endp)) ; this%leafn_storage_patch      (:) = nan     
     allocate(this%leafn_xfer_patch         (begp:endp)) ; this%leafn_xfer_patch         (:) = nan     
@@ -203,15 +200,15 @@ contains
     !-------------------------------
     
     if (use_crop) then
-       this%reproductive_grainn_patch(begp:endp,:) = spval
-       do k = 1, ngrain
-          data1dptr => this%reproductive_grainn_patch(:,k)
+       this%reproductiven_patch(begp:endp,:) = spval
+       do k = 1, nrepr
+          data1dptr => this%reproductiven_patch(:,k)
           call hist_addfld1d ( &
                ! e.g., GRAINN
-               fname=get_grain_hist_fname(k)//'N', &
+               fname=get_repr_hist_fname(k)//'N', &
                units='gN/m^2', &
                avgflag='A', &
-               long_name=get_grain_longname(k)//' N', &
+               long_name=get_repr_longname(k)//' N', &
                ptr_patch=data1dptr)
        end do
 
@@ -462,9 +459,9 @@ contains
           this%storage_ndemand_patch(p)   = 0._r8
 
           if ( use_crop )then
-             this%reproductive_grainn_patch(p,:)         = 0._r8
-             this%reproductive_grainn_storage_patch(p,:) = 0._r8
-             this%reproductive_grainn_xfer_patch(p,:)    = 0._r8
+             this%reproductiven_patch(p,:)         = 0._r8
+             this%reproductiven_storage_patch(p,:) = 0._r8
+             this%reproductiven_xfer_patch(p,:)    = 0._r8
              this%cropseedn_deficit_patch(p)  = 0._r8
           end if
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
@@ -679,53 +676,38 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%ntrunc_patch) 
 
     if (use_crop) then
-       do k = 1, ngrain
-          data1dptr => this%reproductive_grainn_patch(:,k)
-          ! e.g., reproductive_grainn
-          varname = get_grain_rest_fname(k)//'n'
-          if (k == 1) then
-             ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
-             ! before renaming 'grain' to 'reproductive_grain'
-             varname = trim(varname)//':grainn'
-          end if
+       do k = 1, nrepr
+          data1dptr => this%reproductiven_patch(:,k)
+          ! e.g., grainn
+          varname = get_repr_rest_fname(k)//'n'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
                dim1name='pft',    &
-               long_name=get_grain_longname(k)//' N', &
+               long_name=get_repr_longname(k)//' N', &
                units='gN/m2', &
                interpinic_flag='interp', readvar=readvar, data=data1dptr)
        end do
 
-       do k = 1, ngrain
-          data1dptr => this%reproductive_grainn_storage_patch(:,k)
-          ! e.g., reproductive_grainn_storage
-          varname = get_grain_rest_fname(k)//'n_storage'
-          if (k == 1) then
-             ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
-             ! before renaming 'grain' to 'reproductive_grain'
-             varname = trim(varname)//':grainn_storage'
-          end if
+       do k = 1, nrepr
+          data1dptr => this%reproductiven_storage_patch(:,k)
+          ! e.g., grainn_storage
+          varname = get_repr_rest_fname(k)//'n_storage'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
                dim1name='pft',    &
-               long_name=get_grain_longname(k)//' N storage', &
+               long_name=get_repr_longname(k)//' N storage', &
                units='gN/m2', &
                interpinic_flag='interp', readvar=readvar, data=data1dptr)
        end do
 
-       do k = 1, ngrain
-          data1dptr => this%reproductive_grainn_xfer_patch(:,k)
-          ! e.g., reproductive_grainn_xfer
-          varname = get_grain_rest_fname(k)//'n_xfer'
-          if (k == 1) then
-             ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
-             ! before renaming 'grain' to 'reproductive_grain'
-             varname = trim(varname)//':grainn_xfer'
-          end if
+       do k = 1, nrepr
+          data1dptr => this%reproductiven_xfer_patch(:,k)
+          ! e.g., grainn_xfer
+          varname = get_repr_rest_fname(k)//'n_xfer'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
                dim1name='pft',    &
-               long_name=get_grain_longname(k)//' N transfer', &
+               long_name=get_repr_longname(k)//' N transfer', &
                units='gN/m2', &
                interpinic_flag='interp', readvar=readvar, data=data1dptr)
        end do
@@ -814,9 +796,9 @@ contains
              this%storage_ndemand_patch(p)   = 0._r8
    
              if ( use_crop )then
-                this%reproductive_grainn_patch(p,:)         = 0._r8
-                this%reproductive_grainn_storage_patch(p,:) = 0._r8
-                this%reproductive_grainn_xfer_patch(p,:)    = 0._r8
+                this%reproductiven_patch(p,:)         = 0._r8
+                this%reproductiven_storage_patch(p,:) = 0._r8
+                this%reproductiven_xfer_patch(p,:)    = 0._r8
                 this%cropseedn_deficit_patch(p)  = 0._r8
              end if
              if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
@@ -878,12 +860,12 @@ contains
                            this%npool_patch(p)
 
              if ( use_crop )then
-                do k = 1, ngrain
+                do k = 1, nrepr
                    this%totvegn_patch(p) =         &
                         this%totvegn_patch(p)    + &
-                        this%reproductive_grainn_patch(p,k)         + &
-                        this%reproductive_grainn_storage_patch(p,k) + &
-                        this%reproductive_grainn_xfer_patch(p,k)
+                        this%reproductiven_patch(p,k)         + &
+                        this%reproductiven_storage_patch(p,k) + &
+                        this%reproductiven_xfer_patch(p,k)
                 end do
              end if
        end do
@@ -950,12 +932,12 @@ contains
           this%cropseedn_deficit_patch(i)  = value_patch
        end do
 
-       do k = 1, ngrain
+       do k = 1, nrepr
           do fi = 1,num_patch
              i = filter_patch(fi)
-             this%reproductive_grainn_patch(i,k)          = value_patch
-             this%reproductive_grainn_storage_patch(i,k)  = value_patch
-             this%reproductive_grainn_xfer_patch(i,k)     = value_patch
+             this%reproductiven_patch(i,k)          = value_patch
+             this%reproductiven_storage_patch(i,k)  = value_patch
+             this%reproductiven_xfer_patch(i,k)     = value_patch
           end do
        end do
     end if
@@ -1055,15 +1037,15 @@ contains
             this%retransn_patch(p)
 
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
-          do k = 1, ngrain
+          do k = 1, nrepr
              this%dispvegn_patch(p) = &
                   this%dispvegn_patch(p) + &
-                  this%reproductive_grainn_patch(p,k)
+                  this%reproductiven_patch(p,k)
 
              this%storvegn_patch(p) = &
                   this%storvegn_patch(p) + &
-                  this%reproductive_grainn_storage_patch(p,k)     + &
-                  this%reproductive_grainn_xfer_patch(p,k)
+                  this%reproductiven_storage_patch(p,k)     + &
+                  this%reproductiven_xfer_patch(p,k)
           end do
 
           this%storvegn_patch(p) = &
@@ -1304,21 +1286,21 @@ contains
          flux_out_grc_area = conv_nflux(begp:endp))
 
     if (use_crop) then
-       do k = 1, ngrain
+       do k = 1, nrepr
           call update_patch_state( &
-               var = this%reproductive_grainn_patch(begp:endp, k), &
+               var = this%reproductiven_patch(begp:endp, k), &
                flux_out_grc_area = crop_product_nflux(begp:endp))
        end do
 
-       do k = 1, ngrain
+       do k = 1, nrepr
           call update_patch_state( &
-               var = this%reproductive_grainn_storage_patch(begp:endp, k), &
+               var = this%reproductiven_storage_patch(begp:endp, k), &
                flux_out_grc_area = conv_nflux(begp:endp))
        end do
 
-       do k = 1, ngrain
+       do k = 1, nrepr
           call update_patch_state( &
-               var = this%reproductive_grainn_xfer_patch(begp:endp, k), &
+               var = this%reproductiven_xfer_patch(begp:endp, k), &
                flux_out_grc_area = conv_nflux(begp:endp))
        end do
 

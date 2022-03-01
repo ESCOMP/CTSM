@@ -21,7 +21,7 @@ module CNMRespMod
   use CNVegcarbonfluxType    , only : cnveg_carbonflux_type
   use CNVegnitrogenstateType , only : cnveg_nitrogenstate_type
   use CNSharedParamsMod      , only : CNParamsShareInst
-  use CropPoolsMod           , only : ngrain
+  use CropReprPoolsMod           , only : nrepr
   use PatchType              , only : patch                
   !
   implicit none
@@ -196,13 +196,13 @@ contains
          frootn         =>    cnveg_nitrogenstate_inst%frootn_patch     , & ! Input:  [real(r8) (:)   ]  (gN/m2) fine root N                               
          livestemn      =>    cnveg_nitrogenstate_inst%livestemn_patch  , & ! Input:  [real(r8) (:)   ]  (gN/m2) live stem N                               
          livecrootn     =>    cnveg_nitrogenstate_inst%livecrootn_patch , & ! Input:  [real(r8) (:)   ]  (gN/m2) live coarse root N                        
-         reproductive_grainn         =>    cnveg_nitrogenstate_inst%reproductive_grainn_patch     , & ! Input:  [real(r8) (:,:)   ]  (kgN/m2) grain N
+         reproductiven         =>    cnveg_nitrogenstate_inst%reproductiven_patch     , & ! Input:  [real(r8) (:,:)   ]  (kgN/m2) grain N
 
          leaf_mr        =>    cnveg_carbonflux_inst%leaf_mr_patch       , & ! Output: [real(r8) (:)   ]                                                    
          froot_mr       =>    cnveg_carbonflux_inst%froot_mr_patch      , & ! Output: [real(r8) (:)   ]                                                    
          livestem_mr    =>    cnveg_carbonflux_inst%livestem_mr_patch   , & ! Output: [real(r8) (:)   ]                                                    
          livecroot_mr   =>    cnveg_carbonflux_inst%livecroot_mr_patch  , & ! Output: [real(r8) (:)   ]                                                    
-         reproductive_grain_mr       =>    cnveg_carbonflux_inst%reproductive_grain_mr_patch        & ! Output: [real(r8) (:,:)   ]
+         reproductive_mr       =>    cnveg_carbonflux_inst%reproductive_mr_patch        & ! Output: [real(r8) (:,:)   ]
 
          )
 
@@ -267,8 +267,8 @@ contains
             livecroot_mr(p) = livecrootn(p)*br_root*tc
          else if (ivt(p) >= npcropmin) then
             livestem_mr(p) = livestemn(p)*br*tc
-            do k = 1, ngrain
-               reproductive_grain_mr(p,k) = reproductive_grainn(p,k)*br*tc
+            do k = 1, nrepr
+               reproductive_mr(p,k) = reproductiven(p,k)*br*tc
             end do
          end if
       end do

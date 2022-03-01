@@ -21,7 +21,7 @@ module CNVegCarbonStateType
   use CNSpeciesMod   , only : species_from_string, CN_SPECIES_C12
   use dynPatchStateUpdaterMod, only : patch_state_updater_type
   use CNVegComputeSeedMod, only : ComputeSeedAmounts
-  use CropPoolsMod   , only : ngrain, get_grain_hist_fname, get_grain_rest_fname, get_grain_longname
+  use CropReprPoolsMod   , only : nrepr, get_repr_hist_fname, get_repr_rest_fname, get_repr_longname
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -32,9 +32,9 @@ module CNVegCarbonStateType
 
      integer :: species  ! c12, c13, c14
 
-     real(r8), pointer :: reproductive_grainc_patch             (:,:) ! (gC/m2) grain C (crop model)
-     real(r8), pointer :: reproductive_grainc_storage_patch     (:,:) ! (gC/m2) grain C storage (crop model)
-     real(r8), pointer :: reproductive_grainc_xfer_patch        (:,:) ! (gC/m2) grain C transfer (crop model)
+     real(r8), pointer :: reproductivec_patch             (:,:) ! (gC/m2) reproductive (e.g., grain) C (crop model)
+     real(r8), pointer :: reproductivec_storage_patch     (:,:) ! (gC/m2) reproductive (e.g., grain) C storage (crop model)
+     real(r8), pointer :: reproductivec_xfer_patch        (:,:) ! (gC/m2) reproductive (e.g., grain) C transfer (crop model)
      real(r8), pointer :: leafc_patch              (:) ! (gC/m2) leaf C
      real(r8), pointer :: leafc_storage_patch      (:) ! (gC/m2) leaf C storage
      real(r8), pointer :: leafc_xfer_patch         (:) ! (gC/m2) leaf C transfer
@@ -254,13 +254,10 @@ contains
     allocate(this%dispvegc_patch           (begp:endp)) ; this%dispvegc_patch           (:) = nan
     allocate(this%storvegc_patch           (begp:endp)) ; this%storvegc_patch           (:) = nan
     allocate(this%leafcmax_patch           (begp:endp)) ; this%leafcmax_patch           (:) = nan
-    allocate(this%totc_patch               (begp:endp))  ; this%totc_patch               (:) = nan
-    allocate(this%reproductive_grainc_patch(begp:endp, ngrain))
-    this%reproductive_grainc_patch(:,:) = nan
-    allocate(this%reproductive_grainc_storage_patch(begp:endp, ngrain))
-    this%reproductive_grainc_storage_patch(:,:) = nan
-    allocate(this%reproductive_grainc_xfer_patch(begp:endp, ngrain))
-    this%reproductive_grainc_xfer_patch(:,:) = nan
+    allocate(this%totc_patch               (begp:endp)) ; this%totc_patch               (:) = nan
+    allocate(this%reproductivec_patch(begp:endp, nrepr)) ; this%reproductivec_patch   (:,:) = nan
+    allocate(this%reproductivec_storage_patch(begp:endp, nrepr)) ; this%reproductivec_storage_patch(:,:) = nan
+    allocate(this%reproductivec_xfer_patch(begp:endp, nrepr)) ; this%reproductivec_xfer_patch(:,:) = nan
     allocate(this%woodc_patch              (begp:endp)) ; this%woodc_patch              (:) = nan     
 
     allocate(this%cropseedc_deficit_patch  (begp:endp)) ; this%cropseedc_deficit_patch  (:) = nan
@@ -319,15 +316,15 @@ contains
     if (carbon_type == 'c12') then
 
        if (use_crop) then
-          this%reproductive_grainc_patch(begp:endp,:) = spval
-          do k = 1, ngrain
-             data1dptr => this%reproductive_grainc_patch(:,k)
+          this%reproductivec_patch(begp:endp,:) = spval
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
              call hist_addfld1d ( &
                   ! e.g., GRAINC
-                  fname=get_grain_hist_fname(k)//'C', &
+                  fname=get_repr_hist_fname(k)//'C', &
                   units='gC/m^2', &
                   avgflag='A', &
-                  long_name=get_grain_longname(k)//' C (does not equal yield)', &
+                  long_name=get_repr_longname(k)//' C (does not equal yield)', &
                   ptr_patch=data1dptr)
           end do
 
@@ -676,15 +673,15 @@ contains
             ptr_col=this%totecosysc_col)
 
        if (use_crop) then
-          this%reproductive_grainc_patch(begp:endp,:) = spval
-          do k = 1, ngrain
-             data1dptr => this%reproductive_grainc_patch(:,k)
+          this%reproductivec_patch(begp:endp,:) = spval
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
              call hist_addfld1d ( &
                   ! e.g., C13_GRAINC
-                  fname='C13_'//get_grain_hist_fname(k)//'C', &
+                  fname='C13_'//get_repr_hist_fname(k)//'C', &
                   units='gC/m^2', &
                   avgflag='A', &
-                  long_name='C13 '//get_grain_longname(k)//' C (does not equal yield)', &
+                  long_name='C13 '//get_repr_longname(k)//' C (does not equal yield)', &
                   ptr_patch=data1dptr, default='inactive')
           end do
 
@@ -864,14 +861,14 @@ contains
             ptr_col=this%totecosysc_col)
 
        if (use_crop) then
-          this%reproductive_grainc_patch(begp:endp,:) = spval
-          do k = 1, ngrain
-             data1dptr => this%reproductive_grainc_patch(:,k)
+          this%reproductivec_patch(begp:endp,:) = spval
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
              call hist_addfld1d ( &
                   ! e.g., C14_GRAINC
-                  fname='C14_'//get_grain_hist_fname(k)//'C', units='gC/m^2', &
+                  fname='C14_'//get_repr_hist_fname(k)//'C', units='gC/m^2', &
                   avgflag='A', &
-                  long_name='C14 '//get_grain_longname(k)//' C (does not equal yield)', &
+                  long_name='C14 '//get_repr_longname(k)//' C (does not equal yield)', &
                   ptr_patch=data1dptr, default='inactive')
           end do
 
@@ -1024,9 +1021,9 @@ contains
           this%totc_patch(p)               = 0._r8 
 
           if ( use_crop )then
-             this%reproductive_grainc_patch(p,:)         = 0._r8
-             this%reproductive_grainc_storage_patch(p,:) = 0._r8
-             this%reproductive_grainc_xfer_patch(p,:)    = 0._r8
+             this%reproductivec_patch(p,:)         = 0._r8
+             this%reproductivec_storage_patch(p,:) = 0._r8
+             this%reproductivec_xfer_patch(p,:)    = 0._r8
              this%cropseedc_deficit_patch(p)  = 0._r8
              this%xsmrpool_loss_patch(p)  = 0._r8 
           end if
@@ -1458,9 +1455,9 @@ contains
                       this%totc_patch(i)               = 0._r8 
 
                       if ( use_crop )then
-                         this%reproductive_grainc_patch(i,:)         = 0._r8
-                         this%reproductive_grainc_storage_patch(i,:) = 0._r8
-                         this%reproductive_grainc_xfer_patch(i,:)    = 0._r8
+                         this%reproductivec_patch(i,:)         = 0._r8
+                         this%reproductivec_storage_patch(i,:) = 0._r8
+                         this%reproductivec_xfer_patch(i,:)    = 0._r8
                          this%cropseedc_deficit_patch(i)  = 0._r8
                          this%xsmrpool_loss_patch(i)  = 0._r8 
                       end if
@@ -1492,12 +1489,12 @@ contains
                            this%cpool_patch(i)
 
                       if ( use_crop )then
-                         do k = 1, ngrain
+                         do k = 1, nrepr
                             this%totvegc_patch(i) =         &
                                  this%totvegc_patch(i)    + &
-                                 this%reproductive_grainc_patch(i,k)         + &
-                                 this%reproductive_grainc_storage_patch(i,k) + &
-                                 this%reproductive_grainc_xfer_patch(i,k)
+                                 this%reproductivec_patch(i,k)         + &
+                                 this%reproductivec_storage_patch(i,k) + &
+                                 this%reproductivec_xfer_patch(i,k)
                          end do
                       end if
 
@@ -2165,53 +2162,38 @@ contains
 
     if (use_crop) then
        if (carbon_type == 'c12') then
-          do k = 1, ngrain
-             data1dptr => this%reproductive_grainc_patch(:,k)
-             ! e.g., reproductive_grainc
-             varname = get_grain_rest_fname(k)//'c'
-             if (k == 1) then
-                ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
-                ! before renaming 'grain' to 'reproductive_grain'
-                varname = trim(varname)//':grainc'
-             end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             ! e.g., grainc
+             varname = get_repr_rest_fname(k)//'c'
              call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_grain_longname(k)//' C', &
+                  long_name=get_repr_longname(k)//' C', &
                   units='gC/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
           end do
 
-          do k = 1, ngrain
-             data1dptr => this%reproductive_grainc_storage_patch(:,k)
-             ! e.g., reproductive_grainc_storage
-             varname = get_grain_rest_fname(k)//'c_storage'
-             if (k == 1) then
-                ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
-                ! before renaming 'grain' to 'reproductive_grain'
-                varname = trim(varname)//':grainc_storage'
-             end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_storage_patch(:,k)
+             ! e.g., grainc_storage
+             varname = get_repr_rest_fname(k)//'c_storage'
              call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_grain_longname(k)//' C storage', &
+                  long_name=get_repr_longname(k)//' C storage', &
                   units='gC/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
           end do
 
-          do k = 1, ngrain
-             data1dptr => this%reproductive_grainc_xfer_patch(:,k)
-             ! e.g., reproductive_grainc_xfer
-             varname = get_grain_rest_fname(k)//'c_xfer'
-             if (k == 1) then
-                ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
-                ! before renaming 'grain' to 'reproductive_grain'
-                varname = trim(varname)//':grainc_xfer'
-             end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_xfer_patch(:,k)
+             ! e.g., grainc_xfer
+             varname = get_repr_rest_fname(k)//'c_xfer'
              call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_grain_longname(k)//' C transfer', &
+                  long_name=get_repr_longname(k)//' C transfer', &
                   units='gC/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
           end do
@@ -2222,71 +2204,56 @@ contains
        end if
 
        if (carbon_type == 'c13') then
-          do k = 1, ngrain
-             data1dptr => this%reproductive_grainc_patch(:,k)
-             ! e.g., reproductive_grainc_13
-             varname = get_grain_rest_fname(k)//'c_13'
-             if (k == 1) then
-                ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
-                ! before renaming 'grain' to 'reproductive_grain'
-                varname = trim(varname)//':grainc_13'
-             end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             ! e.g., grainc_13
+             varname = get_repr_rest_fname(k)//'c_13'
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_grain_longname(k)//' grain C', &
+                  long_name=get_repr_longname(k)//' grain C', &
                   units='gC13/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
              if (flag=='read' .and. .not. readvar) then
                 call set_missing_from_template( &
                      my_var = data1dptr, &
-                     template_var = c12_cnveg_carbonstate_inst%reproductive_grainc_patch(:,k), &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_patch(:,k), &
                      multiplier = c3_r2)
              end if
           end do
 
-          do k = 1, ngrain
-             data1dptr => this%reproductive_grainc_storage_patch(:,k)
-             ! e.g., reproductive_grainc_13_storage
-             varname = get_grain_rest_fname(k)//'c_13_storage'
-             if (k == 1) then
-                ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
-                ! before renaming 'grain' to 'reproductive_grain'
-                varname = trim(varname)//':grainc_13_storage'
-             end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_storage_patch(:,k)
+             ! e.g., grainc_13_storage
+             varname = get_repr_rest_fname(k)//'c_13_storage'
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_grain_longname(k)//' grain C storage', &
+                  long_name=get_repr_longname(k)//' grain C storage', &
                   units='gC13/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
              if (flag=='read' .and. .not. readvar) then
                 call set_missing_from_template( &
                      my_var = data1dptr, &
-                     template_var = c12_cnveg_carbonstate_inst%reproductive_grainc_storage_patch(:,k), &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_storage_patch(:,k), &
                      multiplier = c3_r2)
              end if
           end do
 
-          do k = 1, ngrain
-             data1dptr => this%reproductive_grainc_xfer_patch(:,k)
-             ! e.g., reproductive_grainc_13_xfer
-             varname = get_grain_rest_fname(k)//'c_13_xfer'
-             if (k == 1) then
-                ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
-                ! before renaming 'grain' to 'reproductive_grain'
-                varname = trim(varname)//':grainc_13_xfer'
-             end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_xfer_patch(:,k)
+             ! e.g., grainc_13_xfer
+             varname = get_repr_rest_fname(k)//'c_13_xfer'
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_grain_longname(k)//' grain C transfer', &
+                  long_name=get_repr_longname(k)//' grain C transfer', &
                   units='gC13/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
              if (flag=='read' .and. .not. readvar) then
                 call set_missing_from_template( &
                      my_var = data1dptr, &
-                     template_var = c12_cnveg_carbonstate_inst%reproductive_grainc_xfer_patch(:,k), &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_xfer_patch(:,k), &
                      multiplier = c3_r2)
              end if
           end do
@@ -2304,71 +2271,56 @@ contains
 
        if ( carbon_type == 'c14' ) then
 
-          do k = 1, ngrain
-             data1dptr => this%reproductive_grainc_patch(:,k)
-             ! e.g., reproductive_grainc_14
-             varname = get_grain_rest_fname(k)//'c_14'
-             if (k == 1) then
-                ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
-                ! before renaming 'grain' to 'reproductive_grain'
-                varname = trim(varname)//':grainc_14'
-             end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             ! e.g., grainc_14
+             varname = get_repr_rest_fname(k)//'c_14'
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_grain_longname(k)//' grain C', &
+                  long_name=get_repr_longname(k)//' grain C', &
                   units='gC14/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
              if (flag=='read' .and. .not. readvar) then
                 call set_missing_from_template( &
                      my_var = data1dptr, &
-                     template_var = c12_cnveg_carbonstate_inst%reproductive_grainc_patch(:,k), &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_patch(:,k), &
                      multiplier = c3_r2)
              end if
           end do
 
-          do k = 1, ngrain
-             data1dptr => this%reproductive_grainc_storage_patch(:,k)
-             ! e.g., reproductive_grainc_14_storage
-             varname = get_grain_rest_fname(k)//'c_14_storage'
-             if (k == 1) then
-                ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
-                ! before renaming 'grain' to 'reproductive_grain'
-                varname = trim(varname)//':grainc_14_storage'
-             end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_storage_patch(:,k)
+             ! e.g., grainc_14_storage
+             varname = get_repr_rest_fname(k)//'c_14_storage'
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_grain_longname(k)//' grain C storage', &
+                  long_name=get_repr_longname(k)//' grain C storage', &
                   units='gC14/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
              if (flag=='read' .and. .not. readvar) then
                 call set_missing_from_template( &
                      my_var = data1dptr, &
-                     template_var = c12_cnveg_carbonstate_inst%reproductive_grainc_storage_patch(:,k), &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_storage_patch(:,k), &
                      multiplier = c3_r2)
              end if
           end do
 
-          do k = 1, ngrain
-             data1dptr => this%reproductive_grainc_xfer_patch(:,k)
-             ! e.g., reproductive_grainc_14_xfer
-             varname = get_grain_rest_fname(k)//'c_14_xfer'
-             if (k == 1) then
-                ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-25) Handle old restart variable name
-                ! before renaming 'grain' to 'reproductive_grain'
-                varname = trim(varname)//':grainc_14_xfer'
-             end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_xfer_patch(:,k)
+             ! e.g., grainc_14_xfer
+             varname = get_repr_rest_fname(k)//'c_14_xfer'
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_grain_longname(k)//' grain C transfer', &
+                  long_name=get_repr_longname(k)//' grain C transfer', &
                   units='gC14/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
              if (flag=='read' .and. .not. readvar) then
                 call set_missing_from_template( &
                      my_var = data1dptr, &
-                     template_var = c12_cnveg_carbonstate_inst%reproductive_grainc_xfer_patch(:,k), &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_xfer_patch(:,k), &
                      multiplier = c3_r2)
              end if
           end do
@@ -2497,12 +2449,12 @@ contains
     end do
 
     if (use_crop) then
-       do k = 1, ngrain
+       do k = 1, nrepr
           do fi = 1,num_patch
              i  = filter_patch(fi)
-             this%reproductive_grainc_patch(i,k)          = value_patch
-             this%reproductive_grainc_storage_patch(i,k)  = value_patch
-             this%reproductive_grainc_xfer_patch(i,k)     = value_patch
+             this%reproductivec_patch(i,k)          = value_patch
+             this%reproductivec_storage_patch(i,k)  = value_patch
+             this%reproductivec_xfer_patch(i,k)     = value_patch
           end do
        end do
     end if
@@ -2618,15 +2570,15 @@ contains
             this%gresp_xfer_patch(p)
 
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
-          do k = 1, ngrain
+          do k = 1, nrepr
              this%storvegc_patch(p) =            &
                   this%storvegc_patch(p)       + &
-                  this%reproductive_grainc_storage_patch(p,k) + &
-                  this%reproductive_grainc_xfer_patch(p,k)
+                  this%reproductivec_storage_patch(p,k) + &
+                  this%reproductivec_xfer_patch(p,k)
 
              this%dispvegc_patch(p) =            &
                   this%dispvegc_patch(p)       + &
-                  this%reproductive_grainc_patch(p,k)
+                  this%reproductivec_patch(p,k)
           end do
        end if
 
@@ -2881,21 +2833,21 @@ contains
          flux_out_grc_area = conv_cflux(begp:endp))
 
     if (use_crop) then
-       do k = 1, ngrain
+       do k = 1, nrepr
           call update_patch_state( &
-               var = this%reproductive_grainc_patch(begp:endp, k), &
+               var = this%reproductivec_patch(begp:endp, k), &
                flux_out_grc_area = crop_product_cflux(begp:endp))
        end do
 
-       do k = 1, ngrain
+       do k = 1, nrepr
           call update_patch_state( &
-               var = this%reproductive_grainc_storage_patch(begp:endp, k), &
+               var = this%reproductivec_storage_patch(begp:endp, k), &
                flux_out_grc_area = conv_cflux(begp:endp))
        end do
 
-       do k = 1, ngrain
+       do k = 1, nrepr
           call update_patch_state( &
-               var = this%reproductive_grainc_xfer_patch(begp:endp, k), &
+               var = this%reproductivec_xfer_patch(begp:endp, k), &
                flux_out_grc_area = conv_cflux(begp:endp))
        end do
 
