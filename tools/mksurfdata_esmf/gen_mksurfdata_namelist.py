@@ -181,7 +181,6 @@ def main ():
     start_year = args.start_year
     end_year = args.end_year
     res = args.res
-    hires_pft = args.hres_flag
     ssp_rcp = args.ssp_rcp
     input_path = args.input_path
     crop_flag = args.crop_flag
@@ -190,26 +189,30 @@ def main ():
     potveg = args.potveg_flag
     glc_nec = args.glc_nec
     merge_gis = args.merge_gis
+    if args.hres_flag:
+        hires_pft = 'on'
+    else: 
+        hires_pft = 'off'
 
     # determine pft_years - needed to parse xml file
-    if start_year == 1850 and end_year == 1850:
+    if int(start_year) == 1850 and int(end_year) == 1850:
         pft_years = "1850"
-    elif start_year == 2000 and end_year == 2000:
+    elif int(start_year) == 2000 and int(end_year) == 2000:
         pft_years = "2000"
-    elif start_year == 2005 and end_year == 2005:
+    elif int(start_year) == 2005 and int(end_year) == 2005:
         pft_years = "2005"
-    elif start_year >= 850 and end_year <= 1849:
+    elif int(start_year) >= 850 and int(end_year) <= 1849:
         pft_years = "0850-1849"
-    elif start_year >= 1850 and end_year <= 2005:
+    elif int(start_year) >= 1850 and int(start_year) <= 2100 and int(end_year) <= 2005:
         pft_years = "1850-2015"
-    elif start_year >= 2016 and end_year <=2100:
+    elif int(start_year) >= 2016 and int(start_year) <= 2100 and int(end_year) <=2100:
         pft_years = "2016-2100"
     elif potveg:
         pft_years = "PtVg"
     else:
-        raise argparse.ArgumentTypeError(
-            "ERROR: Simulation start and end years should be between 850 and 2105 or potential vegetation flag needs to be true "
-        )
+        print (f"start_year is {start_year} and end_year is {end_year}")
+        print (f"ERROR: start and end years should be between 850 and 2105 or pot_veg flag needs to be set")
+        sys.exit()
 
     # error check on glc_nec
     if (glc_nec <= 0) or (glc_nec >= 100):
@@ -260,15 +263,15 @@ def main ():
                     # ERROR: keep %y here and do the replacement later
                     rawdata_files[child1.tag] = rawdata_files[child1.tag].replace("%y",str(start_year))
                 if not os.path.isfile(rawdata_files[child1.tag]):
-                    print(f"intput rawdata file {rawdata_files[child1.tag]} does not exist")
-                    os.exit(1)
+                    print(f"ERROR: intput rawdata file {rawdata_files[child1.tag]} does not exist")
+                    sys.exit()
 
             if item.tag == 'mesh_filename':
                 new_key = f"{child1.tag}_mesh"
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
                 if not os.path.isfile(rawdata_files[new_key]):
-                    print(f"mesh file {rawdata_files[new_key]} does not exist")
-                    os.exit(1)
+                    print(f"ERROR: mesh file {rawdata_files[new_key]} does not exist")
+                    sys.exit()
 
     tree2 = ET.parse('../../ccs_config/component_grids_nuopc.xml')
     root = tree2.getroot()
@@ -291,8 +294,8 @@ def main ():
         for child1 in root:  # this is domain tag
             for name, value in child1.attrib.items():
                 valid_grids.append(value)
-        print (f"Valid values are {valid_grids}")
-        os._exit(1)
+        print (f"valid grid values are {valid_grids}")
+        sys.exit()
 
     # Determine num_pft
     if crop_flag:
