@@ -12,7 +12,7 @@ module mkurbanparMod
   use mkpioMod         , only : mkpio_iodesc_output, mkpio_get_rawdata
   use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
   use mkutilsMod       , only : chkerr
-  use mkvarctl         , only : root_task, ndiag, ispval, outnc_double, all_urban
+  use mkvarctl         , only : root_task, ndiag, ispval, outnc_double
   use mkutilsMod       , only : normalize_classes_by_gcell
   use mkdiagnosticsMod , only : output_diagnostics_index
   use mkindexmapMod    , only : dim_slice_type, lookup_2d_netcdf
@@ -80,8 +80,7 @@ contains
   end subroutine mkurbanInit
 
   !===============================================================
-  subroutine mkurban(file_mesh_i, file_data_i, mesh_o, &
-       zero_out, pcturb_o, urban_classes_o, region_o, rc)
+  subroutine mkurban(file_mesh_i, file_data_i, mesh_o, pcturb_o, urban_classes_o, region_o, rc)
     !
     ! make total percent urban, breakdown into urban classes, and region ID on the output grid
     !
@@ -108,7 +107,6 @@ contains
     character(len=*) , intent(in)    :: file_mesh_i          ! input mesh file name
     character(len=*) , intent(in)    :: file_data_i          ! input data file name
     type(ESMF_Mesh)  , intent(in)    :: mesh_o               ! model mesh
-    logical          , intent(in)    :: zero_out             ! if should zero urban out
     real(r8)         , intent(inout) :: pcturb_o(:)            ! output grid: total % urban
     real(r8)         , intent(inout) :: urban_classes_o(:,:) ! output grid: breakdown of total urban into each class
     integer          , intent(inout) :: region_o(:)          ! output grid: region ID
@@ -226,7 +224,6 @@ contains
 
     ! Determine urban_classes_o
     ! Make percent urban on output grid, given percent urban on input grid
-    ! This assumes that we're neither using all_urban or zero_out
     ! Determine pcturb_o on ouput grid:
     call normalize_urbn_by_tot(urban_classes_gcell_o, pcturb_o, urban_classes_o)
     call ESMF_LogWrite("After normalize_urbn", ESMF_LOGMSG_INFO)
@@ -235,18 +232,12 @@ contains
     ! Note that, for all these adjustments of total urban %, we do not change the breakdown
     ! into the different urban classes. In particular: when pcturb_o is set to 0 for a point,
     ! the breakdown into the different urban classes is maintained as it was before.
-    if (all_urban) then
-       pcturb_o(:) = 100._r8
-    else if (zero_out) then
-       pcturb_o(:) = 0._r8
-    else
-       ! Set points to 0% if they fall below a given threshold
-       do no = 1, ns_o
-          if (pcturb_o(no) < MIN_DENS) then
-             pcturb_o(no) = 0._r8
-          end if
-       end do
-    end if
+    ! Set points to 0% if they fall below a given threshold
+    do no = 1, ns_o
+       if (pcturb_o(no) < MIN_DENS) then
+          pcturb_o(no) = 0._r8
+       end if
+    end do
 
     ! Print diagnostics
     ! TODO: call to mkurban_pct_diagnostics has to be rewritten

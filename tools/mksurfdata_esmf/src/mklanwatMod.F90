@@ -29,9 +29,7 @@ module mklanwatMod
 contains
 !===============================================================
 
-  subroutine mklakwat(file_mesh_i, file_data_i, mesh_o, & 
-       zero_out_lake, zero_out_wetland, lake_o, swmp_o, &
-       pioid_o, fsurdat, rc)
+  subroutine mklakwat(file_mesh_i, file_data_i, mesh_o, lake_o, swmp_o, pioid_o, fsurdat, rc)
 
     ! -------------------
     ! make %lake, %wetland and lake parameters
@@ -41,8 +39,6 @@ contains
     character(len=*)  , intent(in)    :: file_mesh_i      ! input mesh file name
     character(len=*)  , intent(in)    :: file_data_i      ! input data file name
     type(ESMF_Mesh)   , intent(in)    :: mesh_o
-    logical           , intent(in)    :: zero_out_lake    ! if should zero glacier out
-    logical           , intent(in)    :: zero_out_wetland ! if should zero glacier out
     type(file_desc_t) , intent(inout) :: pioid_o
     real(r8)          , intent(out)   :: lake_o(:)        ! output grid: %lake
     real(r8)          , intent(out)   :: swmp_o(:)        ! output grid: %lake
@@ -123,64 +119,60 @@ contains
     ! ----------------------------------------
 
     lake_o(:) = 0._r8
-    if (.not. zero_out_lake) then
-       if (root_task) then
-          write (ndiag,*) 'Attempting to make %lake .....'
-       end if
-
-       ! Read in lake_i
-       allocate(lake_i(ns_i), stat=rcode)
-       if (rcode/=0) call shr_sys_abort()
-       call mkpio_get_rawdata(pioid_i, 'PCT_LAKE', mesh_i, lake_i, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       ! Regrid lake_i to lake_o
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, lake_i, lake_o, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do no = 1,ns_o
-          if (lake_o(no) < 1.) lake_o(no) = 0.
-       enddo
-
-       ! Check global areas
-       call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-            lake_i, lake_o, "pct lake", "unitless", ndiag, nomask=.true., rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       deallocate (lake_i)
+    if (root_task) then
+       write (ndiag,*) 'Attempting to make %lake .....'
     end if
+
+    ! Read in lake_i
+    allocate(lake_i(ns_i), stat=rcode)
+    if (rcode/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid_i, 'PCT_LAKE', mesh_i, lake_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Regrid lake_i to lake_o
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, lake_i, lake_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    do no = 1,ns_o
+       if (lake_o(no) < 1.) lake_o(no) = 0.
+    enddo
+
+    ! Check global areas
+    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+         lake_i, lake_o, "pct lake", "unitless", ndiag, nomask=.true., rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    deallocate (lake_i)
 
     ! ----------------------------------------
     ! Create %wetland
     ! ----------------------------------------
 
     swmp_o(:) = 0._r8
-    if (.not. zero_out_wetland) then
-       if (root_task) then
-          write (ndiag,*) 'Attempting to make %wetland .....'
-       end if
-
-       ! read in swmp_i
-       allocate(swmp_i(ns_i), stat=rcode)
-       if (rcode/=0) call shr_sys_abort()
-       call mkpio_get_rawdata(pioid_i, 'PCT_WETLAND', mesh_i, lake_i, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       ! regrid swmp_i to swmp_o - this also returns swmp_i to be used in the global sums below
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, swmp_i, swmp_o, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_VMLogMemInfo("After regrid_data for wetland")
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do no = 1,ns_o
-          if (swmp_o(no) < 1.) swmp_o(no) = 0.
-       enddo
-
-       ! Check global areas
-       call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-            swmp_i, swmp_o, "pct wetland", "unitless", ndiag, nomask=.true., rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       deallocate (swmp_i)
+    if (root_task) then
+       write (ndiag,*) 'Attempting to make %wetland .....'
     end if
+
+    ! read in swmp_i
+    allocate(swmp_i(ns_i), stat=rcode)
+    if (rcode/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid_i, 'PCT_WETLAND', mesh_i, lake_i, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! regrid swmp_i to swmp_o - this also returns swmp_i to be used in the global sums below
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, swmp_i, swmp_o, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After regrid_data for wetland")
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    do no = 1,ns_o
+       if (swmp_o(no) < 1.) swmp_o(no) = 0.
+    enddo
+
+    ! Check global areas
+    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+         swmp_i, swmp_o, "pct wetland", "unitless", ndiag, nomask=.true., rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    deallocate (swmp_i)
 
     ! ----------------------------------------
     ! Create lake parameter (lakedepth)

@@ -24,7 +24,6 @@ module mkharvestMod
 
   ! public member functions
   public :: mkharvest                 ! Calculate the harvest values on output grid
-  public :: mkharvest_parse_oride     ! Parse the over-ride string
 
   ! private data members:
   integer, parameter :: numharv =  9  ! number of harvest and grazing fields
@@ -54,7 +53,6 @@ module mkharvestMod
 
   character(len=CL), parameter :: string_undef = 'UNSET'
   real(r8),          parameter :: real_undef   = -999.99
-  real(r8),  pointer           :: oride_harv(:)        ! array that can override harvesting
 
   type(ESMF_Mesh)        :: mesh_i
   type(ESMF_RouteHandle) :: routehandle_r8
@@ -68,7 +66,7 @@ module mkharvestMod
 contains
 !=================================================================================
 
-  subroutine mkharvest(file_mesh_i, file_data_i, mesh_o, pioid_o, all_veg, constant, ntime, rc)
+  subroutine mkharvest(file_mesh_i, file_data_i, mesh_o, pioid_o, constant, ntime, rc)
     !
     ! Make harvest data for the dynamic PFT dataset.
     ! This dataset consists of the normalized harvest or grazing fraction (0-1) of
@@ -79,7 +77,6 @@ contains
     character(len=*)      , intent(in)    :: file_data_i ! input data file name
     type(ESMF_Mesh)       , intent(in)    :: mesh_o      ! model mesh
     type(file_desc_t)     , intent(inout) :: pioid_o
-    logical               , intent(in)    :: all_veg
     logical               , intent(in)    :: constant
     integer, optional     , intent(in)    :: ntime
     integer               , intent(out)   :: rc          ! return code
@@ -130,34 +127,6 @@ contains
     ! Normally read in the harvesting file, and then regrid to output grid
     rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
 
-    ! If all veg then write out output data with values set to harvest_initval and return
-    if (all_veg) then
-       varname_i = trim(harvest_fieldnames(ifld))
-       if (constant) then
-          varname_o = trim(harvest_const_fieldnames(ifld))
-       else
-          varname_o = varname_i
-       end if
-       call mkharvest_check_input_var(pioid_i, trim(varname_i), varexists, dims2nd, name2nd)
-       if (varexists) then
-          if (dims2nd == 0) then
-             allocate(data1d_o(ns_o))
-             data1d_o(:) = 0._r8
-             call mkfile_output(pioid_o, mesh_o, trim(varname_o), data1d_o, rc=rc)
-             if (ChkErr(rc,__LINE__,u_FILE_u)) return
-             deallocate(data1d_o)
-          else
-             allocate(data2d_o(ns_o,dims2nd))
-             data2d_o(:,:) = 0._r8
-             call mkfile_output(pioid_o, mesh_o, trim(varname_o), data2d_o, lev1name=name2nd, rc=rc)
-             if (ChkErr(rc,__LINE__,u_FILE_u)) return
-             deallocate(data2d_o)
-          end if
-       end if
-       call pio_closefile(pioid_i)
-       RETURN
-    end if
-
     ! Read in input mesh
     if (.not. ESMF_MeshIsCreated(mesh_i)) then
        mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
@@ -168,155 +137,123 @@ contains
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! TODO: imlement oride_harv funcitionality - this is hard-wired for now
-    allocate( oride_harv(numharv) )
-    oride_harv(:) = real_undef
-
-    if ( all(oride_harv == real_undef ) )then
-
-       ! Get the landmask from the file and reset the mesh mask based on that
-       allocate(rmask_i(ns_i), stat=ier)
-       if (ier/=0) call shr_sys_abort()
-       allocate(mask_i(ns_i), stat=ier)
-       if (ier/=0) call shr_sys_abort()
-       call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, rmask_i, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
-       do ni = 1,ns_i
-          if (rmask_i(ni) > 0._r4) then
-             mask_i(ni) = 1
-          else
-             mask_i(ni) = 0
-          end if
-       end do
-       deallocate(rmask_i)
-       call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-       ! Create a route handle between the input and output mesh
-       ! NOTE: this must be done after mask_i is set in mesh_i
-       if (.not. ESMF_RouteHandleIsCreated(routehandle_r8)) then
-          allocate(frac_o(ns_o))
-          call create_routehandle_r8(mesh_i, mesh_o, routehandle_r8, frac_o=frac_o, rc=rc)
-          call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+    ! Get the landmask from the file and reset the mesh mask based on that
+    allocate(rmask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(mask_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, rmask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do ni = 1,ns_i
+       if (rmask_i(ni) > 0._r4) then
+          mask_i(ni) = 1
+       else
+          mask_i(ni) = 0
        end if
+    end do
+    deallocate(rmask_i)
+    call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-       ! Read in input 1d fields if they exists and map to output grid
-       do ifld = 1,numharv
-          varname_i = trim(harvest_fieldnames(ifld))
-          if (constant) then
-             varname_o = trim(harvest_const_fieldnames(ifld))
-          else
-             varname_o = varname_i
-          end if
-          call mkharvest_check_input_var(pioid_i, trim(varname_i), varexists, dims2nd, name2nd)
-          if (varexists) then
-             if (dims2nd == 0) then
-
-                ! 1d output
-                allocate(data1d_i(ns_i))
-                allocate(data1d_o(ns_o))
-
-                ! read in input 1d variable
-                call mkpio_get_rawdata(pioid_i, varname_i, mesh_i, data1d_i, rc=rc)
-                if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-                ! regrid input variable
-                call regrid_rawdata(mesh_i, mesh_o, routehandle_r8, data1d_i, data1d_o, rc=rc)
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-                ! write out mapped variable
-                if (present(ntime)) then
-                   if (root_task)  write(ndiag, '(a,i8)') subname//" writing out 1d "//trim(varname_o)//' at time ',ntime
-                   rcode = pio_inq_varid(pioid_o, trim(varname_o), pio_varid_o)
-                   call mkpio_iodesc_output(pioid_o, mesh_o, trim(varname_o), pio_iodesc_o, rc)
-                   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in making an iodesc for '//trim(varname_o))
-                   call pio_setframe(pioid_o, pio_varid_o, int(ntime, kind=Pio_Offset_Kind))
-                   call pio_write_darray(pioid_o, pio_varid_o, pio_iodesc_o, data1d_o, rcode)
-                   call pio_freedecomp(pioid_o, pio_iodesc_o)
-                else
-                   if (root_task)  write(ndiag, '(a)') subname//" writing out 1d "//trim(varname_o)
-                   call mkfile_output(pioid_o, mesh_o, trim(varname_o), data1d_o, rc=rc)
-                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
-                end if
-                call pio_syncfile(pioid_o)
-
-                ! TODO: uncomment the following and validate
-                ! Compare global areas on input and output grids for 1d variables
-                ! call mkharvest check_global_sums('harvest type '//trim(varname_o), ns_i, ns_o, &
-                !      mesh_i, mesh_o, mask_i, frac_o, data1d_i, data1d_o, rc)
-                ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-                deallocate(data1d_i)
-                deallocate(data1d_o)
-
-             else ! 2d output
-                
-                ! Read in input data 
-                allocate(read_data2d_i(dims2nd, ns_i))
-                allocate(read_data2d_o(dims2nd, ns_o))
-                call mkpio_get_rawdata(pioid_i, trim(varname_i), mesh_i, read_data2d_i, rc=rc)
-                if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-                ! Regrid input input data
-                call regrid_rawdata(mesh_i, mesh_o, routehandle_r8, read_data2d_i, read_data2d_o, 1, dims2nd, rc)
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-                deallocate(read_data2d_i)
-
-                ! Fill in output 2d array
-                allocate(data2d_o(ns_o,dims2nd))
-                do l = 1,dims2nd 
-                   do no = 1,ns_o
-                      data2d_o(no,l) = read_data2d_o(l,no)
-                   end do
-                end do
-                deallocate(read_data2d_o)
-
-                ! write out variable
-                if (present(ntime)) then
-                   if (root_task)  write(ndiag, '(a,i8)') subname//" writing out 2d "//trim(varname_o)//' at time ',ntime
-                   rcode = pio_inq_varid(pioid_o, trim(varname_o), pio_varid_o)
-                   call mkpio_iodesc_output(pioid_o, mesh_o, trim(varname_o), pio_iodesc_o, rc)
-                   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in making an iodesc for '//trim(varname_o))
-                   call pio_setframe(pioid_o, pio_varid_o, int(ntime, kind=Pio_Offset_Kind))
-                   call pio_write_darray(pioid_o, pio_varid_o, pio_iodesc_o, data2d_o, rcode)
-                   call pio_freedecomp(pioid_o, pio_iodesc_o)
-                else
-                   if (root_task)  write(ndiag, '(a)') subname//" writing out 2d "//trim(varname_o)
-                   call mkfile_output(pioid_o, mesh_o, trim(varname_o), data2d_o, lev1name=trim(name2nd), rc=rc)
-                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
-                end if
-                call pio_syncfile(pioid_o)
-                deallocate(data2d_o)
-
-             end if
-          end if
-
-       end do
-
-    else
-
-       ! Otherwise override the harvesting with the input harvest values
-       ! TODO: implement this
-       ! if ( any(oride_harv == real_undef ) )then
-       !    write(6,*) subname, ' error some override harvesting fields set and others are not = ', oride_harv
-       !    call shr_sys_abort()
-       ! end if
-       ! do k = 1, harvdata%num1Dfields()
-       !    m = ind1D(k)
-       !    if ( oride_harv(m) < 0.0_r8 .or. oride_harv(m) > 100.0_r8 )then
-       !       write(6,*) subname, ' error override harvesting field out of range', &
-       !            oride_harv(m), ' field = ', mkharvest_fieldname(m)
-       !       call shr_sys_abort()
-       !    end if
-       ! end do
-       ! do no = 1,ns_o
-       !    do k = 1, harvdata%num1Dfields()
-       !       m = ind1D(k)
-       !       data1D_o(no) = oride_harv(m)
-       !    end do
-       ! end do
-
+    ! Create a route handle between the input and output mesh
+    ! NOTE: this must be done after mask_i is set in mesh_i
+    if (.not. ESMF_RouteHandleIsCreated(routehandle_r8)) then
+       allocate(frac_o(ns_o))
+       call create_routehandle_r8(mesh_i, mesh_o, routehandle_r8, frac_o=frac_o, rc=rc)
+       call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
     end if
+
+    ! Read in input 1d fields if they exists and map to output grid
+    do ifld = 1,numharv
+       varname_i = trim(harvest_fieldnames(ifld))
+       if (constant) then
+          varname_o = trim(harvest_const_fieldnames(ifld))
+       else
+          varname_o = varname_i
+       end if
+       call mkharvest_check_input_var(pioid_i, trim(varname_i), varexists, dims2nd, name2nd)
+       if (varexists) then
+          if (dims2nd == 0) then
+
+             ! 1d output
+             allocate(data1d_i(ns_i))
+             allocate(data1d_o(ns_o))
+
+             ! read in input 1d variable
+             call mkpio_get_rawdata(pioid_i, varname_i, mesh_i, data1d_i, rc=rc)
+             if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+             ! regrid input variable
+             call regrid_rawdata(mesh_i, mesh_o, routehandle_r8, data1d_i, data1d_o, rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+             ! write out mapped variable
+             if (present(ntime)) then
+                if (root_task)  write(ndiag, '(a,i8)') subname//" writing out 1d "//trim(varname_o)//' at time ',ntime
+                rcode = pio_inq_varid(pioid_o, trim(varname_o), pio_varid_o)
+                call mkpio_iodesc_output(pioid_o, mesh_o, trim(varname_o), pio_iodesc_o, rc)
+                if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in making an iodesc for '//trim(varname_o))
+                call pio_setframe(pioid_o, pio_varid_o, int(ntime, kind=Pio_Offset_Kind))
+                call pio_write_darray(pioid_o, pio_varid_o, pio_iodesc_o, data1d_o, rcode)
+                call pio_freedecomp(pioid_o, pio_iodesc_o)
+             else
+                if (root_task)  write(ndiag, '(a)') subname//" writing out 1d "//trim(varname_o)
+                call mkfile_output(pioid_o, mesh_o, trim(varname_o), data1d_o, rc=rc)
+                if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             end if
+             call pio_syncfile(pioid_o)
+
+             ! TODO: uncomment the following and validate
+             ! Compare global areas on input and output grids for 1d variables
+             ! call mkharvest check_global_sums('harvest type '//trim(varname_o), ns_i, ns_o, &
+             !      mesh_i, mesh_o, mask_i, frac_o, data1d_i, data1d_o, rc)
+             ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+             deallocate(data1d_i)
+             deallocate(data1d_o)
+
+          else ! 2d output
+
+             ! Read in input data 
+             allocate(read_data2d_i(dims2nd, ns_i))
+             allocate(read_data2d_o(dims2nd, ns_o))
+             call mkpio_get_rawdata(pioid_i, trim(varname_i), mesh_i, read_data2d_i, rc=rc)
+             if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+             ! Regrid input input data
+             call regrid_rawdata(mesh_i, mesh_o, routehandle_r8, read_data2d_i, read_data2d_o, 1, dims2nd, rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             deallocate(read_data2d_i)
+
+             ! Fill in output 2d array
+             allocate(data2d_o(ns_o,dims2nd))
+             do l = 1,dims2nd 
+                do no = 1,ns_o
+                   data2d_o(no,l) = read_data2d_o(l,no)
+                end do
+             end do
+             deallocate(read_data2d_o)
+
+             ! write out variable
+             if (present(ntime)) then
+                if (root_task)  write(ndiag, '(a,i8)') subname//" writing out 2d "//trim(varname_o)//' at time ',ntime
+                rcode = pio_inq_varid(pioid_o, trim(varname_o), pio_varid_o)
+                call mkpio_iodesc_output(pioid_o, mesh_o, trim(varname_o), pio_iodesc_o, rc)
+                if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in making an iodesc for '//trim(varname_o))
+                call pio_setframe(pioid_o, pio_varid_o, int(ntime, kind=Pio_Offset_Kind))
+                call pio_write_darray(pioid_o, pio_varid_o, pio_iodesc_o, data2d_o, rcode)
+                call pio_freedecomp(pioid_o, pio_iodesc_o)
+             else
+                if (root_task)  write(ndiag, '(a)') subname//" writing out 2d "//trim(varname_o)
+                call mkfile_output(pioid_o, mesh_o, trim(varname_o), data2d_o, lev1name=trim(name2nd), rc=rc)
+                if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             end if
+             call pio_syncfile(pioid_o)
+             deallocate(data2d_o)
+
+          end if
+       end if
+    end do
 
     ! If constant model, clean up the mapping
     if (constant) then
@@ -332,46 +269,6 @@ contains
     end if
 
   end subroutine mkharvest
-
-  !=================================================================================
-  subroutine mkharvest_parse_oride( string )
-    !
-    ! Parse the string with harvest and grazing information on it, to override
-    ! the file with this information rather than reading from a file.
-    !
-    use shr_string_mod, only: shr_string_betweenTags
-
-    ! input/output variables:
-    character(len=CS), intent(in) :: string  ! String to parse with harvest and grazing data
-
-    ! local variables:
-    character(len=CS) :: substring       ! substring between tags
-    integer           :: rc              ! error return code
-    character(len=*), parameter :: harv_start = "<harv>"
-    character(len=*), parameter :: harv_end   = "</harv>"
-    character(len=*), parameter :: graz_start = "<graz>"
-    character(len=*), parameter :: graz_end   = "</graz>"
-    character(len=*), parameter :: subname = 'mkharvest_parse_oride'
-    !-----------------------------------------------------------------------
-
-    call shr_string_betweenTags( string, harv_start, harv_end, substring, rc )
-    if ( rc /= 0 )then
-       write(6,*) subname//'Trouble finding harvest start end tags'
-       call shr_sys_abort()
-    end if
-    read(substring,*) oride_harv(1:numharv-1)
-    call shr_string_betweenTags( string, graz_start, graz_end, substring, rc )
-    if ( rc /= 0 )then
-       write(6,*) subname//'Trouble finding grazing start end tags'
-       call shr_sys_abort()
-    end if
-    read(substring,*) oride_harv(numharv)
-    if ( harvest_fieldnames(numharv) /= 'GRAZING' )then
-       write(6,*) subname, ' grazing is NOT last field as was expected'
-       call shr_sys_abort()
-    end if
-
-  end subroutine mkharvest_parse_oride
 
   !=================================================================================
   subroutine mkharvest_check_global_sums(name, ns_i, ns_o, mesh_i, mesh_o, mask_i, frac_o, &

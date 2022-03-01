@@ -135,14 +135,6 @@ contains
     rcode = pio_put_att (pioid, pio_global, 'Source', trim(str))
     rcode = pio_put_att (pioid, pio_global, 'Version', trim(gitdescribe))
 
-    if ( all_urban )then
-       str = 'TRUE'
-       rcode = pio_put_att(pioid, pio_global, 'all_urban', trim(str))
-    end if
-    if ( no_inlandwet )then
-       str = 'TRUE'
-       rcode = pio_put_att(pioid, pio_global, 'no_inlandwet', trim(str))
-    end if
     !rcode = pio_put_att_int(pioid, pio_global, 'nglcec', nglcec)
 
     ! Raw data file names
@@ -230,24 +222,12 @@ contains
     end if
 
     if (.not. dynlanduse) then
-       if ( soil_color_override /= unsetcol )then
-          rcode = pio_put_att(pioid, pio_global, 'soil_color_override', 'TRUE')
-       else
-          str = get_filename(mksrf_fsoicol)
-          rcode = pio_put_att(pioid, pio_global, 'soil_color_raw_data_file_name', trim(str))
-       end if
-       if ( soil_clay_override /= unsetsoil .and. soil_sand_override /= unsetsoil) then
-          rcode = pio_put_att(pioid, pio_global, 'soil_clay_override', 'TRUE')
-       else
-          str = get_filename(mksrf_fsoitex)
-          rcode = pio_put_att(pioid, pio_global, 'soil_texture_raw_data_file_name', trim(str))
-       end if
-       if ( soil_fmax_override /= unsetsoil )then
-          rcode = pio_put_att(pioid, pio_global, 'soil_fmax_override', 'TRUE')
-       else
-          str = get_filename(mksrf_fmax)
-          rcode = pio_put_att(pioid, pio_global, 'fmax_raw_data_file_name', trim(str))
-       end if
+       str = get_filename(mksrf_fsoicol)
+       rcode = pio_put_att(pioid, pio_global, 'soil_color_raw_data_file_name', trim(str))
+       str = get_filename(mksrf_fsoitex)
+       rcode = pio_put_att(pioid, pio_global, 'soil_texture_raw_data_file_name', trim(str))
+       str = get_filename(mksrf_fmax)
+       rcode = pio_put_att(pioid, pio_global, 'fmax_raw_data_file_name', trim(str))
        str = get_filename(mksrf_forganic)
        rcode = pio_put_att(pioid, pio_global, 'organic_matter_raw_data_file_name', trim(str))
     end if

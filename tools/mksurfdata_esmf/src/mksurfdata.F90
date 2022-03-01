@@ -67,24 +67,20 @@ program mksurfdata
   !    outnc_3dglc ------- Output 3D glacier fields (normally only needed for comparasion)
   !    nglcec ------------ If you want to change the number of Glacier elevation classes
   !    gitdescribe ------- Description of this version from git
+  !    numpft ------------ Iif different than default of 16
+  !    urban_skip_abort_on_invalid_data_check--- work around urban bug
   ! ======================================
-  ! Optional settings to change values for entire area
+  ! Note: the folloiwng Optional settings have been REMOVED -
+  !  instead should now use tools subset_data and modify_fsurdat
   ! ======================================
-  !    all_urban --------- If entire area is urban
   !    all_veg ----------- If entire area is to be vegetated (pft_idx and pft_frc then required)
+  !    all_urban --------- If entire area is urban
   !    no_inlandwet ------ If wetland should be set to 0% over land
-  !    soil_color_override -------- If you want to change the soil_color to this value everywhere
   !    soil_clay --------- If you want to change the soil_clay % to this value everywhere
   !    soil_fmax --------- If you want to change the soil_fmax  to this value everywhere
   !    soil_sand --------- If you want to change the soil_sand % to this value everywhere
   !    pft_idx ----------- If you want to change to 100% veg covered with given PFT indices
   !    pft_frc ----------- Fractions that correspond to the pft_idx above
-  ! ==================
-  !    numpft            (if different than default of 16)
-  ! ======================================
-  ! Optional settings to work around urban bug?
-  ! ======================================
-  !    urban_skip_abort_on_invalid_data_check
   ! ======================================================================
 
   use ESMF
@@ -93,11 +89,11 @@ program mksurfdata
   use shr_sys_mod        , only : shr_sys_abort
   use mkVICparamsMod     , only : mkVICparams
   use mktopostatsMod     , only : mktopostats
-  use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
+  use mkpftMod           , only : mkpft, mkpftInit
   use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
   use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft, num_natpft
   use mkdomainMod        , only : mkdomain
-  use mkharvestMod       , only : mkharvest, mkharvest_parse_oride
+  use mkharvestMod       , only : mkharvest
   use mkgdpMod           , only : mkgdp
   use mkagfirepkmonthMod , only : mkagfirepkmon
   use mklaiMod           , only : mklai
@@ -170,11 +166,6 @@ program mksurfdata
   real(r8), allocatable           :: urban_classes(:,:)      ! percent cover of each urban class, as % of total urban area
   real(r8), allocatable           :: urban_classes_g(:,:)    ! percent cover of each urban class, as % of grid cell
   real(r8), allocatable           :: elev(:)                 ! glc elevation (m)
-
-  ! logicals
-  logical                         :: zero_out_lake           ! if should zero glacier out
-  logical                         :: zero_out_wetland        ! if should zero glacier out
-  logical                         :: zero_out
 
   ! pio/esmf variables
   type(file_desc_t)               :: pioid
@@ -280,10 +271,10 @@ program mksurfdata
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
   ! Initialize urban dimensions (needed to initialize the dimensions in fsurdat)
-  call mkurbanInit (mksrf_furban)
+  call mkurbanInit(mksrf_furban)
 
   ! Initialize pft/cft dimensions (needed to initialize the dimensions in fsurdat)
-  call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
+  call mkpftInit( )
 
   ! If fsurdat is blank, then we do not write a surface dataset - but we may still
   ! write a dynamic landuse file. This is useful if we are creating many datasets at
@@ -402,8 +393,7 @@ program mksurfdata
   ! -----------------------------------
   ! Note that this call must come after call to mkpftInit - since num_cft is set there
   ! Output data is written in mkharvest
-  call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, &
-       pioid_o=pioid, all_veg=all_veg, constant=.true., rc=rc )
+  call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, pioid_o=pioid, constant=.true., rc=rc )
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
 
   ! -----------------------------------
@@ -413,27 +403,15 @@ program mksurfdata
   ! Need to keep pctlak and pctwet external for use below
   allocate ( pctlak(lsize_o)) ; pctlak(:) = spval
   allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
-  zero_out_lake    = (all_urban .or. all_veg)
-  zero_out_wetland = (all_urban .or. all_veg .or. no_inlandwet)
-  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, &
-       zero_out_lake, zero_out_wetland, pctlak, pctwet, pioid, fsurdat, rc=rc)
+  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pctwet, pioid, fsurdat, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
 
   ! -----------------------------------
   ! Make glacier fraction [pctgla] from [fglacier] dataset
   ! -----------------------------------
   allocate (pctgla(lsize_o)) ; pctgla(:) = spval
-  zero_out = (all_urban .or. all_veg)
-  if (.not. zero_out) then
-     call mkglacier (mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, glac_o=pctgla, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacier')
-  else
-     if (root_task) then
-       write (ndiag,'(a)') 'Attempting to make %glacier .....'
-       write(ndiag, '(a)') ' zeroing out all pct glacier data'
-       pctgla(:) = 0.
-    end if
- end if
+  call mkglacier (mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, glac_o=pctgla, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacier')
 
   ! -----------------------------------
   ! Make glacier region ID [glacier_region] from [fglacierregion] dataset
@@ -510,7 +488,7 @@ program mksurfdata
   allocate (pcturb(lsize_o))                 ; pcturb(:)            = spval
   allocate (urban_classes(lsize_o,numurbl))  ; urban_classes(:,:)   = spval
   allocate (urban_region(lsize_o))           ; urban_region(:)      = -999
-  call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, all_veg, pcturb, urban_classes, urban_region, rc=rc)
+  call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, pcturb, urban_classes, urban_region, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out urban region id"
@@ -523,20 +501,18 @@ program mksurfdata
   ! Adjust pcturb
   ! Make elevation [elev] from [ftopo, ffrac] dataset
   ! Used only to screen pcturb, screen pcturb by elevation threshold from elev dataset
-  if ( .not. all_urban .and. .not. all_veg )then
-     allocate(elev(lsize_o))
-     elev(:) = spval
-     ! NOTE(wjs, 2016-01-15) This uses the 'TOPO_ICE' variable for historical reasons
-     ! (this same dataset used to be used for glacier-related purposes as well).
-     ! TODO(wjs, 2016-01-15) A better solution for this urban screening would probably
-     ! be to modify the raw urban data; in that case, I believe we could remove furbtopo.
-     call mkurban_topo ( mksrf_furbtopo_mesh, mksrf_furbtopo, mesh_model, varname='TOPO_ICE', elev_o=elev, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban_topo')
-     where (elev > elev_thresh)
-        pcturb = 0._r8
-     end where
-     deallocate(elev)
-  end if
+  allocate(elev(lsize_o))
+  elev(:) = spval
+  ! NOTE(wjs, 2016-01-15) This uses the 'TOPO_ICE' variable for historical reasons
+  ! (this same dataset used to be used for glacier-related purposes as well).
+  ! TODO(wjs, 2016-01-15) A better solution for this urban screening would probably
+  ! be to modify the raw urban data; in that case, I believe we could remove furbtopo.
+  call mkurban_topo ( mksrf_furbtopo_mesh, mksrf_furbtopo, mesh_model, varname='TOPO_ICE', elev_o=elev, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban_topo')
+  where (elev > elev_thresh)
+     pcturb = 0._r8
+  end where
+  deallocate(elev)
 
   ! -----------------------------------
   ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
@@ -848,31 +824,21 @@ program mksurfdata
         end if
         call mpi_bcast (string, len(string), MPI_CHARACTER, 0, mpicom, ier)
         call mpi_bcast (year, 1, MPI_INTEGER, 0, mpicom, ier)
-        
 
-        ! If pft fraction override is set, than intrepret string as PFT and harvesting override values
-        ! Otherwise intrepret string as a filename with PFT and harvesting values in it
-        if ( all_veg )then
-           fname = ' '
-           fhrvname  = ' '
-           call mkpft_parse_oride(string)
-           call mkharvest_parse_oride(string)
-           write(6, '(a, i4, a)') 'PFT and harvesting values for year ', year, ' :'
-           write(6, '(a, a)') '    ', trim(string)
-        else
-           fname = string
+        ! Intrepret string as a filename with PFT and harvesting values in it
+
+        fname = string
+        if (root_task) then
+           read(nfdyn, '(A195,1x,I4)', iostat=ier) fhrvname, year2
+           write(ndiag,'(a,i8,a)')' input pft dynamic dataset for year ', year,' is : '//trim(fname)
+        end if
+        call mpi_bcast (fhrvname, len(fhrvname), MPI_CHARACTER, 0, mpicom, ier)
+        call mpi_bcast (year2, 1, MPI_INTEGER, 0, mpicom, ier)
+        if ( year2 /= year ) then
            if (root_task) then
-              read(nfdyn, '(A195,1x,I4)', iostat=ier) fhrvname, year2
-              write(ndiag,'(a,i8,a)')' input pft dynamic dataset for year ', year,' is : '//trim(fname)
+              write(ndiag,*) subname, ' error: year for harvest not equal to year for PFT files'
            end if
-           call mpi_bcast (fhrvname, len(fhrvname), MPI_CHARACTER, 0, mpicom, ier)
-           call mpi_bcast (year2, 1, MPI_INTEGER, 0, mpicom, ier)
-           if ( year2 /= year ) then
-              if (root_task) then
-                 write(ndiag,*) subname, ' error: year for harvest not equal to year for PFT files'
-              end if
-              call shr_sys_abort()
-           end if
+           call shr_sys_abort()
         end if
         ntim = ntim + 1
         if (root_task) then
@@ -889,7 +855,7 @@ program mksurfdata
 
         ! Create pctpft data at model resolution from file fname
         ! Note that pctlnd_o below is different than the above call and returns pctlnd_pft_dyn
-        
+
         call mkpft( mksrf_fvegtyp_mesh, fname, mesh_model, &
              pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpft')
@@ -916,7 +882,7 @@ program mksurfdata
         ! Create harvesting data at model resolution
         ! Output data is written in mkharvest
         call mkharvest( mksrf_fhrvtyp_mesh, fhrvname, mesh_model, &
-             pioid_o=pioid, all_veg=.false., constant=.false., ntime=ntim, rc=rc )
+             pioid_o=pioid, constant=.false., ntime=ntim, rc=rc )
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest')
         call pio_syncfile(pioid)
 
@@ -1265,7 +1231,7 @@ program mksurfdata
             sum8a = sum8a + pctcft(n)%get_pct_l2g()
             if ( sum8a==0._r8 .and. sum8 < (100._r8-4._r8*epsilon(sum8)) )then
                write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-                    'pcturb, pctgla is < 100% when pctnatveg+pctcrop==0 sum = ', sum8 
+                    'pcturb, pctgla is < 100% when pctnatveg+pctcrop==0 sum = ', sum8
               write (6,*) 'Total error, error/epsilon = ',100._r8-sum8, ((100._r8-sum8)/epsilon(sum8))
                write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop,epsilon= ', &
                     n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&

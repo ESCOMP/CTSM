@@ -12,7 +12,7 @@ module mkvocefMod
   use mkpioMod     , only : mkpio_iodesc_rawdata, pio_iotype, pio_iosystem
   use mkesmfMod    , only : regrid_rawdata, create_routehandle_r8
   use mkutilsMod   , only : chkerr
-  use mkvarctl     , only : root_task, ndiag, mpicom, soil_color_override, unsetcol
+  use mkvarctl     , only : root_task, ndiag, mpicom
   use mkfileMod    , only : mkfile_output
 
   implicit none

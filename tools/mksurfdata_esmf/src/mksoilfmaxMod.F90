@@ -11,7 +11,7 @@ module mksoilfmaxMod
   use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
   use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
   use mkdiagnosticsMod , only : output_diagnostics_continuous
-  use mkvarctl         , only : ndiag, root_task, soil_fmax_override, unsetsoil, spval
+  use mkvarctl         , only : ndiag, root_task, spval
   use mkutilsMod       , only : chkerr
   use mkfileMod        , only : mkfile_output
 
@@ -66,16 +66,8 @@ contains
     end if
     call ESMF_VMLogMemInfo("At start of "//trim(subname))
 
-    ! Error check soil_fmax if it is set
-    if ( soil_fmax_override /= unsetsoil )then
-       if ( soil_fmax_override < 0.0 .or. soil_fmax_override > 1.0 )then
-          write(6,*)'soil_fmax is out of range = ', soil_fmax_override
-          call shr_sys_abort()
-       end if
-       if (root_task) then
-          write(ndiag,'(a,d13.5)') 'Replacing soil fmax for all points with: ', soil_fmax_override
-       end if
-    end if
+    ! Note soil_fmax_override has been removed - instead should now use tools
+    ! subset_data and modify_fsurdat
 
     ! Open input data file
     rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)

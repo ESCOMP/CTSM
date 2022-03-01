@@ -18,50 +18,12 @@ module mkpftMod
 
 #include <mpif.h>
 
-  public :: mkpftInit          ! Initialization
-  public :: mkpft              ! Set PFT
-  public :: mkpft_parse_oride  ! Parse the string with PFT fraction/index info to override
+  public :: mkpftInit ! Initialization
+  public :: mkpft     ! Set PFT
 
-  private :: mkpft_check_oride ! Check the pft_frc and pft_idx values for correctness
-
-  ! When pft_idx and pft_frc are set, they must be set together, and they will cause the
-  ! entire area to be covered with vegetation and zero out other landunits.
-  ! The sum of pft_frc must = 100%, and each pft_idx point in the array corresponds to
-  ! the fraction in pft_frc. Only the first few points are used until pft_frc = 0.0.
-
-  integer :: m                 ! index
-
-  ! PFT vegetation index to override with
-  integer, public :: pft_idx(0:maxpft) = (/ ( -1,  m = 0, maxpft ) /)
-
-  ! PFT vegetation fraction to override with
-  real(r8), public :: pft_frc(0:maxpft) = (/ ( 0.0_r8, m = 0, maxpft ) /)
-
-  ! private data members:
-  logical, public, protected :: use_input_pft = .false. ! Flag to override PFT with input values
-  logical, public, protected :: presc_cover   = .false. ! Flag to prescribe vegetation coverage
-  integer, private           :: nzero                   ! index of first zero fraction
-
-  type, public :: pft_oride              ! Public only for unit testing
-     real(r8) :: crop                    ! Percent covered by crops
-     real(r8) :: natveg                  ! Percent covered by natural vegetation
-     real(r8), allocatable :: natpft(:)  ! Percent of each natural PFT within the natural veg landunit
-     real(r8), allocatable :: cft(:)     ! Percent of each crop CFT within the crop landunit
-   contains
-     procedure, public :: InitZeroOut      ! Initialize the PFT override object to zero out all vegetation
-     procedure, public :: InitAllPFTIndex  ! Initialize the PFT override object with PFT indeces for all veg and crop types
-     procedure, public :: Clean            ! Clean up a PFT Override object
-  end type pft_oride
-
-  interface pft_oride
-     module procedure :: constructor  ! PFT Overide object constructor
-  end interface pft_oride
+  integer :: m ! index
 
   character(len=35) :: veg(0:maxpft) ! vegetation types
-
-  ! Module instance of PFT override object
-  ! Used for both zeroing out PFT's as well as setting specified PFT's over the gridcell
-  type(pft_oride), private :: pft_override
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -70,54 +32,16 @@ module mkpftMod
 contains
 !===============================================================
 
-  subroutine mkpftInit( zero_out_l, all_veg_l )
+  subroutine mkpftInit( )
     !
-    ! Initialize of Make PFT data
+    ! Initialize of PFT data
     !
-    ! input/output variables
-    logical, intent(in) :: zero_out_l ! If veg should be zero'ed out
-    logical, intent(in) :: all_veg_l  ! If should zero out other fractions so that all land-cover is vegetation
-
     ! local variables:
-    logical             :: error_happened    ! If an error was triggered so should return
-    real(r8), parameter :: hndrd = 100.0_r8  ! A hundred percent
     character(len=*), parameter :: subname = ' (mkpftInit) '
     !-----------------------------------------------------------------------
 
     if ( maxpft < numpft ) then
        write(6,*) subname//'number PFT is > max allowed!'
-       call shr_sys_abort()
-    end if
-    nzero = -1
-    call mkpft_check_oride( error_happened )
-    if ( error_happened )then
-       write(6,*) subname//'Problem setting pft override settings'
-    end if
-    if ( zero_out_l .and. use_input_pft )then
-       write(6,*) subname//"trying to both zero out all PFT's as well as set them to specific values"
-       call shr_sys_abort()
-    end if
-
-    ! If zeroing out, set use_input_pft to true so the pft_override will be used
-    if( zero_out_l )then
-       nzero = 0
-       pft_frc(0) = 0.0_r8
-       pft_idx(0) = noveg
-       use_input_pft = .true.
-    end if
-    if ( use_input_pft ) then
-       if (root_task) then
-          write(ndiag,*) subname // ' Set PFT fraction to : ', pft_frc(0:nzero)
-          write(ndiag,*) subname // ' With PFT index      : ', pft_idx(0:nzero)
-       end if
-    end if
-    if ( all_veg_l .and. .not. use_input_pft )then
-       write(6,*) subname//'if all_veg is set to true then specified PFT indices must be provided (i.e. pft_frc and pft_idx)'
-       call shr_sys_abort()
-    end if
-
-    if ( zero_out_l .and. all_veg_l )then
-       write(6,*) subname//'zeroing out vegetation and setting vegetation to 100% is a contradiction!'
        call shr_sys_abort()
     end if
 
@@ -156,27 +80,6 @@ contains
     if (cft_ub /= numpft) then
        write(6,*) 'CFT_UB set up incorrectly: cft_ub, numpft = ', cft_ub, numpft
        call shr_sys_abort()
-    end if
-
-    ! Set the PFT override values if applicable
-    pft_override = pft_oride()
-    presc_cover = .false.
-    if( zero_out_l )then
-       call pft_override%InitZeroOut()
-       presc_cover = .true.
-    else if ( use_input_pft ) then
-       call pft_override%InitAllPFTIndex()
-       if ( .not. all_veg_l )then
-          if ( pft_override%crop <= 0.0 )then
-             write(6,*) "Warning: PFT/CFT's are being overridden, but no crop type is being asked for"
-          end if
-          if ( pft_override%natveg <= 0.0 )then
-             write(6,*) "Warning: PFT/CFT's are being overridden, but no natural vegetation type is being asked for"
-          end if
-          presc_cover = .false.
-       else
-          presc_cover = .true.
-       end if
     end if
 
     ! -----------------------------------------------------------------
@@ -396,50 +299,37 @@ contains
     call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    ! Create Error checks if presc_cover is false
-    if ( .not. presc_cover ) then
-       rcode = pio_inq_dimid(pioid, 'natpft', dimid)
-       rcode = pio_inq_dimlen(pioid, dimid, natpft_i)
-       rcode = pio_inq_dimid(pioid, 'cft', dimid)
-       rcode = pio_inq_dimlen(pioid, dimid, ncft_i)
-       numpft_i = natpft_i + ncft_i
+    ! Create error checks
+    rcode = pio_inq_dimid(pioid, 'natpft', dimid)
+    rcode = pio_inq_dimlen(pioid, dimid, natpft_i)
+    rcode = pio_inq_dimid(pioid, 'cft', dimid)
+    rcode = pio_inq_dimlen(pioid, dimid, ncft_i)
+    numpft_i = natpft_i + ncft_i
 
-       ! Check if the number of pfts on the input matches the expected number. A mismatch
-       ! is okay if the input raw dataset has prognostic crops and the output does not.
-       if (numpft_i /= numpft+1) then
-          if (numpft_i == numstdpft+1) then
-             write(6,*) subname//' ERROR: trying to use non-crop input file'
-             write(6,*) 'for a surface dataset with crops.'
-             call shr_sys_abort()
-          else if (numpft_i > numstdpft+1 .and. numpft_i == maxpft+1) then
-             write(6,*) subname//' WARNING: using a crop input raw dataset for a non-crop output surface dataset'
-          else
-             write(6,*) subname//': parameter numpft+1= ',numpft+1, &
-                  'does not equal input dataset numpft= ',numpft_i
-             call shr_sys_abort()
-          end if
-       endif
-    end if
+    ! Check if the number of pfts on the input matches the expected number. A mismatch
+    ! is okay if the input raw dataset has prognostic crops and the output does not.
+    if (numpft_i /= numpft+1) then
+       if (numpft_i == numstdpft+1) then
+          write(6,*) subname//' ERROR: trying to use non-crop input file'
+          write(6,*) 'for a surface dataset with crops.'
+          call shr_sys_abort()
+       else if (numpft_i > numstdpft+1 .and. numpft_i == maxpft+1) then
+          write(6,*) subname//' WARNING: using a crop input raw dataset for a non-crop output surface dataset'
+       else
+          write(6,*) subname//': parameter numpft+1= ',numpft+1, &
+               'does not equal input dataset numpft= ',numpft_i
+          call shr_sys_abort()
+       end if
+    endif
 
     ! ----------------------------------------
     ! Create a route handle between the input and output mesh and get frac_o
     ! ----------------------------------------
-    if (.not. presc_cover) then
-       allocate(frac_o(ns_o),stat=ier)
-       if (ier/=0) call shr_sys_abort()
-       call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-    end if
-
-    ! ----------------------------------------
-    ! Determine pctlnd_o(:) (output argument)
-    ! ----------------------------------------
-    if ( use_input_pft .and. presc_cover ) then
-       pctlnd_o(:) = 100._r8
-    else
-       pctlnd_o(:) = frac_o(:) * 100._r8
-    end if
+    allocate(frac_o(ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
     ! ----------------------------------------
     ! Determine pct_nat_pft_o(:,:)
@@ -448,73 +338,65 @@ contains
     if (ier/=0) call shr_sys_abort('error in allocating pctnatveg_o')
 
     ! First determine pctnatveg_o(:)
-    if ( use_input_pft .and. presc_cover ) then
-       do no = 1,ns_o
-          pctnatveg_o(no) = pft_override%natveg
-       end do
-    else
-       ! Read in pctnatveg_i
-       allocate(pctnatveg_i(ns_i), stat=ier)
-       if (ier/=0) call shr_sys_abort('error allocating pctnatveg_i')
+    ! Read in pctnatveg_i
+    allocate(pctnatveg_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort('error allocating pctnatveg_i')
 
-       call mkpio_get_rawdata(pioid, 'PCT_NATVEG', mesh_i, pctnatveg_i, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call mkpio_get_rawdata(pioid, 'PCT_NATVEG', mesh_i, pctnatveg_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-       ! Regrid to determine pctnatveg_o
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, pctnatveg_i, pctnatveg_o, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
+    ! Regrid to determine pctnatveg_o
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, pctnatveg_i, pctnatveg_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     allocate(pct_nat_pft_i(0:num_natpft,ns_i))
     if (ier/=0) call shr_sys_abort()
     allocate(pct_nat_pft_o(0:num_natpft,ns_o))
     if (ier/=0) call shr_sys_abort()
 
-    if ( .not. use_input_pft )then
-       ! Read in pct_nat_pft_i
-       call mkpio_get_rawdata(pioid, 'PCT_NAT_PFT', mesh_i, pct_nat_pft_i, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
-       do ni = 1,ns_i
+    ! Read in pct_nat_pft_i
+    call mkpio_get_rawdata(pioid, 'PCT_NAT_PFT', mesh_i, pct_nat_pft_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do ni = 1,ns_i
+       do m = 0,num_natpft
+          pct_nat_pft_i(m,ni) = pct_nat_pft_i(m,ni) * (pctnatveg_i(ni) * 0.01_r8 * mask_i(ni))
+       end do
+    end do
+
+    ! Readgrid to determine pct_nat_pft_o
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, pct_nat_pft_i, pct_nat_pft_o, 0, num_natpft, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Rescale pct_nat_pft_o
+    do no = 1,ns_o
+       if (pctnatveg_o(no) > 0._r8) then
           do m = 0,num_natpft
-             pct_nat_pft_i(m,ni) = pct_nat_pft_i(m,ni) * (pctnatveg_i(ni) * 0.01_r8 * mask_i(ni))
+             pct_nat_pft_o(m,no) = pct_nat_pft_o(m,no) / (pctnatveg_o(no) * 0.01_r8)
           end do
+       else
+          pct_nat_pft_o(0:num_natpft,no) = 0._r8
+       end if
+       if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
+          pct_nat_pft_o(0,no) = 100._r8
+          pct_nat_pft_o(1:num_natpft,no) = 0._r8
+       end if
+
+       ! Correct sums so that if they differ slightly from 100, they are
+       ! corrected to equal 100 more exactly.
+       ! Error check: percents should sum to 100 for land grid cells, within roundoff
+       wst_sum = 0.
+       do m = 0, num_natpft
+          wst_sum = wst_sum + pct_nat_pft_o(m,no)
+       enddo
+       if (abs(wst_sum - 100._r8) > relerr) then
+          write (6,*) subname//'error: nat pft = ', (pct_nat_pft_o(m,no), m = 0, num_natpft), &
+               ' do not sum to 100. at no = ',no,' but to ', wst_sum
+          call shr_sys_abort()
+       end if
+       do m = 1, num_natpft
+          pct_nat_pft_o(m,no) = pct_nat_pft_o(m,no) * 100._r8 / wst_sum
        end do
-
-       ! Readgrid to determine pct_nat_pft_o
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, pct_nat_pft_i, pct_nat_pft_o, 0, num_natpft, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       ! Rescale pct_nat_pft_o
-       do no = 1,ns_o
-          if (pctnatveg_o(no) > 0._r8) then
-             do m = 0,num_natpft
-                pct_nat_pft_o(m,no) = pct_nat_pft_o(m,no) / (pctnatveg_o(no) * 0.01_r8)
-             end do
-          else
-             pct_nat_pft_o(0:num_natpft,no) = 0._r8
-          end if
-          if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
-             pct_nat_pft_o(0,no) = 100._r8
-             pct_nat_pft_o(1:num_natpft,no) = 0._r8
-          end if
-
-          ! Correct sums so that if they differ slightly from 100, they are
-          ! corrected to equal 100 more exactly.
-          ! Error check: percents should sum to 100 for land grid cells, within roundoff
-          wst_sum = 0.
-          do m = 0, num_natpft
-             wst_sum = wst_sum + pct_nat_pft_o(m,no)
-          enddo
-          if (abs(wst_sum - 100._r8) > relerr) then
-             write (6,*) subname//'error: nat pft = ', (pct_nat_pft_o(m,no), m = 0, num_natpft), &
-                  ' do not sum to 100. at no = ',no,' but to ', wst_sum
-             call shr_sys_abort()
-          end if
-          do m = 1, num_natpft
-             pct_nat_pft_o(m,no) = pct_nat_pft_o(m,no) * 100._r8 / wst_sum
-          end do
-       end do
-    end if
+    end do
 
     ! ----------------------------------------
     ! Determine pct_cft_o(:,:)
@@ -523,139 +405,87 @@ contains
     ! First Determine pctcrop_o(:)
     allocate(pctcrop_o(ns_o), stat=ier)
     if (ier/=0) call shr_sys_abort('error allocating pctcrop_o_o')
-    if ( use_input_pft .and. presc_cover ) then
-       do no = 1,ns_o
-          pctcrop_o(no) = pft_override%crop
-       end do
-    else
-       allocate(pctcrop_i(ns_i), stat=ier)
-       if (ier/=0) call shr_sys_abort()
-       call mkpio_get_rawdata(pioid, 'PCT_CROP', mesh_i, pctcrop_i, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, pctcrop_i, pctcrop_o, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
+    allocate(pctcrop_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid, 'PCT_CROP', mesh_i, pctcrop_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, pctcrop_i, pctcrop_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     allocate(pct_cft_i(1:num_cft,ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
     allocate(pct_cft_o(1:num_cft,ns_o), stat=ier)
     if (ier/=0) call shr_sys_abort()
 
-    if ( .not. use_input_pft )then
-       ! Get dimensions for PCT_CFT
-       allocate(dimlens(3))
-       call mkpio_get_dimlengths(pioid, 'PCT_CFT', ndims, dimlens(:))
-       if (root_task) then
-          do n = 1,ndims
-             write(ndiag,'(a,i8,i8)')'   dimid, length= ',n,dimlens(n)
-          end do
-          write(ndiag,'(a,i8)')'   num_cft = ',num_cft
-       end if
+    ! Get dimensions for PCT_CFT
+    allocate(dimlens(3))
+    call mkpio_get_dimlengths(pioid, 'PCT_CFT', ndims, dimlens(:))
+    if (root_task) then
+       do n = 1,ndims
+          write(ndiag,'(a,i8,i8)')'   dimid, length= ',n,dimlens(n)
+       end do
+       write(ndiag,'(a,i8)')'   num_cft = ',num_cft
+    end if
 
-       ! Read in pct_cft_i
-       if (dimlens(ndims) == num_cft )then
-          call mkpio_get_rawdata(pioid, 'PCT_CFT', mesh_i, pct_cft_i, rc=rc)
-          if (chkerr(rc,__LINE__,u_FILE_u)) return
-       else if (dimlens(ndims) > num_cft )then
-          ! Read in the whole array: then sum the rainfed and irrigated seperately
-          allocate(temp_i(dimlens(3),ns_i))
-          call mkpio_get_rawdata(pioid, 'PCT_CFT', mesh_i, temp_i, rc=rc)
-          if (chkerr(rc,__LINE__,u_FILE_u)) return
-          do n = 1, num_cft
-             pct_cft_i(n,:) = 0.0_r8
-             do m = n, dimlens(3), 2
-                pct_cft_i(n,:) = pct_cft_i(n,:) + temp_i(m,:)
-             end do
+    ! Read in pct_cft_i
+    if (dimlens(ndims) == num_cft )then
+       call mkpio_get_rawdata(pioid, 'PCT_CFT', mesh_i, pct_cft_i, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+    else if (dimlens(ndims) > num_cft )then
+       ! Read in the whole array: then sum the rainfed and irrigated seperately
+       allocate(temp_i(dimlens(3),ns_i))
+       call mkpio_get_rawdata(pioid, 'PCT_CFT', mesh_i, temp_i, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       do n = 1, num_cft
+          pct_cft_i(n,:) = 0.0_r8
+          do m = n, dimlens(3), 2
+             pct_cft_i(n,:) = pct_cft_i(n,:) + temp_i(m,:)
           end do
-          deallocate(temp_i)
-       else
-          call shr_sys_abort(subname//' error: dimensions for PCT_CROP are NOT what is expected')
-       end if
-       do ni = 1,ns_i
+       end do
+       deallocate(temp_i)
+    else
+       call shr_sys_abort(subname//' error: dimensions for PCT_CROP are NOT what is expected')
+    end if
+    do ni = 1,ns_i
+       do m = 1,num_cft
+          pct_cft_i(m,ni) = pct_cft_i(m,ni) * (pctcrop_i(ni) * 0.01_r8 * mask_i(ni))
+       end do
+    end do
+
+    ! Readgrid pct_cft_i to determine pct_cft_o
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, pct_cft_i, pct_cft_o, 1, num_cft, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Rescale pct_nat_pft_o
+    do no = 1,ns_o
+       if (pctcrop_o(no) > 0._r8) then
           do m = 1,num_cft
-             pct_cft_i(m,ni) = pct_cft_i(m,ni) * (pctcrop_i(ni) * 0.01_r8 * mask_i(ni))
+             pct_cft_o(m,no) = pct_cft_o(m,no) / (pctcrop_o(no) * 0.01_r8)
           end do
-       end do
+       else
+          pct_cft_o(1:num_cft,no) = 0._r8
+       end if
+       if (pctlnd_o(no) < 1.0e-6 .or. pctcrop_o(no) < 1.0e-6) then
+          pct_cft_o(1,no) = 100._r8
+          pct_cft_o(2:num_cft,no) = 0._r8
+       end if
 
-       ! Readgrid pct_cft_i to determine pct_cft_o
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, pct_cft_i, pct_cft_o, 1, num_cft, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       ! Rescale pct_nat_pft_o
-       do no = 1,ns_o
-          if (pctcrop_o(no) > 0._r8) then
-             do m = 1,num_cft
-                pct_cft_o(m,no) = pct_cft_o(m,no) / (pctcrop_o(no) * 0.01_r8)
-             end do
-          else
-             pct_cft_o(1:num_cft,no) = 0._r8
-          end if
-          if (pctlnd_o(no) < 1.0e-6 .or. pctcrop_o(no) < 1.0e-6) then
-             pct_cft_o(1,no) = 100._r8
-             pct_cft_o(2:num_cft,no) = 0._r8
-          end if
-
-          ! Correct sums so that if they differ slightly from 100, they are
-          ! corrected to equal 100 more exactly.
-          ! Error check: percents should sum to 100 for land grid cells, within roundoff
-          wst_sum = 0.
-          do m = 1, num_cft
-             wst_sum = wst_sum + pct_cft_o(m,no)
-          enddo
-          if (abs(wst_sum-100._r8) > relerr) then
-             write (6,*) subname//'error: crop cft = ',(pct_cft_o(no,m), m = 1, num_cft), &
-                  ' do not sum to 100. at no = ',no,' but to ', wst_sum
-             call shr_sys_abort()
-          end if
-          do m = 1, num_cft
-             pct_cft_o(m,no) = pct_cft_o(m,no) * 100._r8 / wst_sum
-          end do
+       ! Correct sums so that if they differ slightly from 100, they are
+       ! corrected to equal 100 more exactly.
+       ! Error check: percents should sum to 100 for land grid cells, within roundoff
+       wst_sum = 0.
+       do m = 1, num_cft
+          wst_sum = wst_sum + pct_cft_o(m,no)
        enddo
-
-    end if
-
-    ! ----------------------------------------
-    ! If specific PFT/CFT's are prescribed set them directly
-    ! But first do error checking to make sure specific veg
-    ! types are given where nat-veg and crop is assigned
-    ! ----------------------------------------
-
-    if (use_input_pft) then
-       do no = 1,ns_o
-          if (pctlnd_o(no) > 1.0e-6 .and. pctnatveg_o(no) > 1.0e-6) then
-             if ( pft_override%natveg <= 0.0_r8 )then
-                write(6,*) subname//': ERROR: no natural vegetation PFTs are being prescribed '//&
-                     ' but there are natural vegetation areas: provide at least one natural veg PFT'
-                call shr_sys_abort()
-             end if
-          end if
-          if (pctlnd_o(no) > 1.0e-6 .and. pctcrop_o(no) > 1.0e-6) then
-             if ( pft_override%crop <= 0.0_r8 )then
-                write(6,*) subname//': ERROR: no crop CFTs are being prescribed '&
-                     //' but there are crop areas: provide at least one CFT'
-                call shr_sys_abort()
-             end if
-          end if
+       if (abs(wst_sum-100._r8) > relerr) then
+          write (6,*) subname//'error: crop cft = ',(pct_cft_o(no,m), m = 1, num_cft), &
+               ' do not sum to 100. at no = ',no,' but to ', wst_sum
+          call shr_sys_abort()
+       end if
+       do m = 1, num_cft
+          pct_cft_o(m,no) = pct_cft_o(m,no) * 100._r8 / wst_sum
        end do
-
-       do no = 1,ns_o
-          if (pctlnd_o(no) > 1.0e-6 .and. pctnatveg_o(no) > 1.0e-6) then
-             pct_nat_pft_o(noveg:num_natpft,no) = pft_override%natpft(noveg:num_natpft)
-          else
-             pct_nat_pft_o(noveg,no)    = 100._r8
-             pct_nat_pft_o(noveg+1:,no) = 0._r8
-          end if
-          if (pctlnd_o(no) > 1.0e-6 .and. pctcrop_o(no) > 1.0e-6) then
-             pct_cft_o(1:num_cft,no) = pft_override%cft(1:num_cft)
-          else
-             pct_cft_o(1,no)  = 100._r8
-             pct_cft_o(2:,no) = 0._r8
-          end if
-          pctpft_o(natpft_lb:natpft_ub,no) = pct_nat_pft_o(0:num_natpft,no)
-          pctpft_o(cft_lb:cft_ub,no)       = pct_cft_o(1:num_cft,no)
-       end do
-    end if
-
+    enddo
     ! ----------------------------------------
     ! Convert % pft as % of grid cell to % pft on the landunit and % of landunit on the grid cell
     ! *** NOTE*** pctnatpft_o and pctcft_o are output arguments
@@ -679,17 +509,8 @@ contains
     ! -----------------------------------------------------------------
     ! Error check
     ! Compare global areas on input and output grids
-    ! Only when you aren't prescribing the vegetation coverage everywhere
-    ! If use_input_pft is set this will compare the global coverage of
-    ! the prescribed vegetation to the coverage of PFT/CFT's on the input datasets.
     ! -----------------------------------------------------------------
 
-    !     if (presc_cover) then
-    !        ns_i = 1
-    !        numpft_i = numpft+1
-    !     end if
-
-    !     if ( .not. presc_cover ) then
     !        ! Derived types
     !        allocate(pctnatpft_i(ns_i), stat=ier)
     !        if (ier/=0) call shr_sys_abort()
@@ -752,10 +573,7 @@ contains
     !           write (ndiag,1002) veg(m), gpft_i(m)*1.e-06/100.,gpft_o(m)*1.e-06/100.
     !        end do
     ! 1002   format (1x,a35,f16.3,f17.3)
-
     !        deallocate(gpft_i, gpft_o, frac_dst)
-
-    !     end if
 
     ! Clean up memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
@@ -769,240 +587,5 @@ contains
     end if
 
   end subroutine mkpft
-
-  !-----------------------------------------------------------------------
-  subroutine mkpft_parse_oride( string )
-    !
-    ! Parse the string with pft fraction and index information on it, to override
-    ! the file with this information rather than reading from a file.
-    !
-    use shr_string_mod, only: shr_string_betweenTags, shr_string_countChar
-
-    ! input/output variables
-    character(len=*), intent(in) :: string  ! String to parse with PFT fraction  and index data
-
-    ! local variables:
-    integer :: rc                         ! error return code
-    integer :: num_elms                   ! number of elements
-    character(len=256) :: substring       ! string between tags
-    character(len=*), parameter :: frc_start = "<pft_f>"
-    character(len=*), parameter :: frc_end   = "</pft_f>"
-    character(len=*), parameter :: idx_start = "<pft_i>"
-    character(len=*), parameter :: idx_end   = "</pft_i>"
-    character(len=*), parameter :: subname = 'mkpft_parse_oride'
-    !-----------------------------------------------------------------------
-
-    ! NOTE(bja, 2015-02) pft_frc and pft_index can be reset multiple
-    ! times by calls to this function. If the number of elements being
-    ! set is different each time, then we are working with out of date
-    ! information, and the sums may not sum to 100%.
-    pft_frc = 0.0_r8
-    pft_idx = -1
-
-    call shr_string_betweenTags( string, frc_start, frc_end, substring, rc )
-    if ( rc /= 0 )then
-       write(6,*) subname//'Trouble finding pft_frac start end tags'
-       call shr_sys_abort()
-       return
-    end if
-    num_elms = shr_string_countChar( substring, ",", rc )
-    read(substring,*) pft_frc(0:num_elms)
-    call shr_string_betweenTags( string, idx_start, idx_end, substring, rc )
-    if ( rc /= 0 )then
-       write(6,*) subname//'Trouble finding pft_index start end tags'
-       call shr_sys_abort()
-       return
-    end if
-    if ( num_elms /= shr_string_countChar( substring, ",", rc ) )then
-       write(6,*) subname//'number of elements different between frc and idx fields'
-       call shr_sys_abort()
-       return
-    end if
-    read(substring,*) pft_idx(0:num_elms)
-
-  end subroutine mkpft_parse_oride
-
-  !-----------------------------------------------------------------------
-  subroutine  mkpft_check_oride( error_happened )
-    !
-    ! Check that the pft override values are valid
-    !
-    ! input/output variables
-    logical, intent(out) :: error_happened ! Result, true if there was a problem
-    !
-    ! local variables:
-    integer  :: i, j                         ! indices
-    real(r8) :: sumpft                       ! Sum of pft_frc
-    real(r8), parameter :: hndrd = 100.0_r8  ! A hundred percent
-    character(len=*), parameter :: subname = 'mkpftMod::mkpft_check_oride() '
-    !-----------------------------------------------------------------------
-
-    error_happened = .false.
-    sumpft = sum(pft_frc)
-    if (          sumpft == 0.0 )then
-       ! PFT fraction is NOT used
-       use_input_pft = .false.
-    else if ( abs(sumpft - hndrd) > 1.e-6 )then
-       write(6, '(a, a, f15.12)') subname, 'Sum of PFT fraction is NOT equal to 100% =', sumpft
-       write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero)
-       write(6,*) 'With PFT index      : ', pft_idx(0:nzero)
-       error_happened = .true.
-       call shr_sys_abort()
-    else
-       use_input_pft = .true.
-       nzero = numpft
-       do i = 0, numpft
-          if ( pft_frc(i) == 0.0_r8 )then
-             nzero = i-1
-             exit
-          end if
-       end do
-       ! PFT fraction IS used, and sum is OK, now check details
-       do i = 0, nzero
-          if ( pft_frc(i) < 0.0_r8 .or. pft_frc(i) > hndrd )then
-             write(6,*) subname//'PFT fraction is out of range: pft_frc=', pft_frc(i)
-             error_happened = .true.
-             call shr_sys_abort()
-          else if ( pft_frc(i) > 0.0_r8 .and. pft_idx(i) == -1 )then
-             write(6,*) subname//'PFT fraction > zero, but index NOT set: pft_idx=', pft_idx(i)
-             error_happened = .true.
-             call shr_sys_abort()
-          end if
-          ! PFT index out of range
-          if ( pft_idx(i) < 0 .or. pft_idx(i) > numpft )then
-             write(6,*) subname//'PFT index is out of range: ', pft_idx(i)
-             error_happened = .true.
-             call shr_sys_abort()
-          end if
-          ! Make sure index values NOT used twice
-          do j = 0, i-1
-             if ( pft_idx(i) == pft_idx(j) )then
-                write(6,*) subname//'Same PFT index is used twice: ', pft_idx(i)
-                error_happened = .true.
-                call shr_sys_abort()
-             end if
-          end do
-       end do
-       ! Make sure the rest of the fraction is zero and index are not set as well
-       do i = nzero+1, numpft
-          if ( pft_frc(i) /= 0.0_r8 .or. pft_idx(i) /= -1 )then
-             write(6,*) subname//'After PFT fraction is zeroed out, fraction is non zero, or index set'
-             error_happened = .true.
-             call shr_sys_abort()
-          end if
-       end do
-    end if
-
-  end subroutine mkpft_check_oride
-
-  !-----------------------------------------------------------------------
-  function constructor( ) result(this)
-    !
-    ! Construct a new PFT override object
-    !
-    ! input/output variables
-    type(pft_oride) :: this
-    character(len=*), parameter :: subname = 'mkpftMod::constructor() '
-
-    this%crop   = -1.0_r8
-    this%natveg = -1.0_r8
-    if ( num_natpft < 0 )then
-       write(6,*) subname//'num_natpft is NOT set = ', num_natpft
-       call shr_sys_abort()
-       return
-    end if
-    if ( num_cft < 0 )then
-       write(6,*) subname//'num_cft is NOT set = ', num_cft
-       call shr_sys_abort()
-       return
-    end if
-    allocate( this%natpft(noveg:num_natpft) )
-    allocate( this%cft(1:num_cft) )
-    this%natpft(:) = -1.0_r8
-    this%cft(:)    = -1.0_r8
-    call this%InitZeroOut()
-
-  end function constructor
-
-  !-----------------------------------------------------------------------
-  subroutine InitZeroOut( this )
-    !
-    ! Initialize a pft_oride object with vegetation that's zeroed out
-    !
-    ! input/output variables
-    class(pft_oride), intent(inout) :: this
-
-    this%crop          = 0.0_r8
-    this%natveg        = 0.0_r8
-
-    this%natpft        = 0.0_r8
-    this%natpft(noveg) = 100.0_r8
-    this%cft           = 0.0_r8
-    this%cft(1)        = 100.0_r8
-
-  end subroutine InitZeroOut
-
-  !-----------------------------------------------------------------------
-  subroutine InitAllPFTIndex( this )
-    !
-    ! Initialize a pft_oride object with vegetation that's zeroed out
-    !
-    ! input/otuput variables
-    class(pft_oride), intent(inout) :: this
-
-    ! local variables
-    integer :: m, i                  ! Indices
-    real(r8) :: croptot              ! Total of crop
-    real(r8) :: natvegtot            ! Total of natural vegetation
-    character(len=*), parameter :: subname = 'mkpftMod::coInitAllPFTIndex() '
-
-    croptot     = 0.0_r8
-    natvegtot   = 0.0_r8
-    this%natpft = 0.0_r8
-    this%cft    = 0.0_r8
-    do m = noveg, nzero
-       i = pft_idx(m)
-       if ( (i < noveg) .or. (i > numpft) )then
-          write(6,*)  subname//'PFT index is out of valid range'
-          call shr_sys_abort()
-          return
-       else if ( i <= num_natpft )then
-          this%natpft(i) = pft_frc(m)
-          natvegtot = natvegtot + pft_frc(m)
-       else
-          this%cft(i-num_natpft) = pft_frc(m)
-          croptot = croptot + pft_frc(m)
-       end if
-    end do
-    this%crop   = croptot
-    this%natveg = natvegtot
-    ! Renormalize
-    if ( natvegtot > 0.0_r8 )then
-       this%natpft = 100.0_r8 * this%natpft / natvegtot
-    else
-       this%natpft(noveg) = 100.0_r8
-    end if
-    if (croptot > 0.0_r8 )then
-       this%cft = 100.0_r8 * this%cft / croptot
-    else
-       this%cft(1) = 100.0_r8
-    end if
-
-  end subroutine InitAllPFTIndex
-
-  !-----------------------------------------------------------------------
-  subroutine Clean( this )
-    !
-    ! Clean up a PFT Oride object
-    !
-    ! !ARGUMENTS:
-    class(pft_oride), intent(inout) :: this
-
-    this%crop   = -1.0_r8
-    this%natveg = -1.0_r8
-    deallocate( this%natpft )
-    deallocate( this%cft    )
-
-  end subroutine Clean
 
 end module mkpftMod

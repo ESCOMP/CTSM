@@ -14,7 +14,7 @@ module mksoiltexMod
   use mkdiagnosticsMod , only : output_diagnostics_index
   use mkfileMod        , only : mkfile_output  
   use mkvarctl         , only : root_task, ndiag, spval
-  use mkvarctl         , only : unsetsoil, soil_clay_override, soil_sand_override
+  use mkvarctl         , only : unsetsoil
   use mkvarpar         , only : nlevsoi
 
   implicit none
@@ -92,43 +92,12 @@ contains
        write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
 
-    if ( soil_clay_override /= unsetsoil )then
-       write(6,*) 'Replace soil clay % for all points with: ', soil_clay_override
-       if ( soil_sand_override == unsetsoil )then
-          write (6,*) subname//':error: soil_clay set, but NOT soil_sand'
-          call shr_sys_abort()
-       end if
-    end if
-    if ( soil_sand_override /= unsetsoil )then
-       write(6,*) 'Replace soil sand % for all points with: ', soil_sand_override
-       if ( soil_clay_override == unsetsoil )then
-          write (6,*) subname//':error: soil_sand set, but NOT soil_clay'
-          call shr_sys_abort()
-       end if
-       sumtex = soil_sand_override + soil_clay_override
-       if ( sumtex < 0.0_r4 .or. sumtex > 100.0_r4 )then
-          write (6,*) subname//':error: soil_sand and soil_clay out of bounds: sand, clay = ', &
-               soil_sand_override, soil_clay_override
-          call shr_sys_abort()
-       end if
-    end if
-
     ! Determine ns_o and allocate output data
     call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     allocate(mapunit_o(ns_o))      ; mapunit_o(:) = 0
     allocate(sand_o(ns_o,nlevsoi)) ; sand_o(:,:) = spval
     allocate(clay_o(ns_o,nlevsoi)) ; clay_o(:,:) = spval
-
-    if (soil_sand_override /= unsetsoil .and. soil_clay_override /= unsetsoil) then
-       if (root_task) then
-          write(ndiag,'(a,i8)') ' Overriding soil sand for all points with: ', soil_sand_override
-          write(ndiag,'(a,i8)') ' Overriding soil clay for all points with: ', soil_clay_override
-       end if
-       sand_o(:,:) = soil_sand_override
-       clay_o(:,:) = soil_clay_override
-       RETURN
-    end if
 
     ! Open input data file
     call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))

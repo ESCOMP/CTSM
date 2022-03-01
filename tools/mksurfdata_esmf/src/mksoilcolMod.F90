@@ -6,7 +6,7 @@ module mksoilcolMod
   use shr_kind_mod     , only : r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_sys_mod      , only : shr_sys_abort
   use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
-  use mkvarctl         , only : root_task, ndiag, mpicom, unsetcol, soil_color_override
+  use mkvarctl         , only : root_task, ndiag, mpicom, unsetcol
   use mkdiagnosticsMod , only : output_diagnostics_index
   use mkutilsMod       , only : chkerr
   use mkfileMod        , only : mkfile_output
@@ -65,18 +65,8 @@ contains
 
     rc = ESMF_SUCCESS
 
-    ! Error check soil_color if it is set
-    if ( soil_color_override /= unsetcol )then
-       if ( soil_color_override < 0 .or. soil_color_override > 20 )then
-          write(6,*)'soil_color is out of range = ', soil_color_override
-          call shr_sys_abort()
-       end if
-       write(6,*) 'Replace soil color for all points with: ', soil_color_override
-       do no = 1,size(soil_color_o)
-          soil_color_o(no) = soil_color_override
-       end do
-       RETURN
-    end if
+    ! Note soil_color_override has been removed - instead should now use tools
+    ! subset_data and modify_fsurdat
 
     if (root_task) then
        write(ndiag,*)

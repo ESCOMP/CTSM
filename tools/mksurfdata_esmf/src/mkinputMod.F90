@@ -7,7 +7,6 @@ module mkinputMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_kind_mod , only : CS => shr_kind_CS, CL => shr_kind_CL, CX => shr_kind_CX
   use shr_sys_mod  , only : shr_sys_abort
-  use mkpftMod     , only : pft_idx, pft_frc
   use mkvarctl
 
   implicit none
@@ -176,16 +175,7 @@ contains
          mksrf_fgrid_mesh_nx,       &
          mksrf_fgrid_mesh_ny,       &
          numpft,                    &
-         all_veg,                   &
-         all_urban,                 &
-         no_inlandwet,              &
-         soil_color_override,       &
-         soil_sand_override,        &
-         soil_clay_override,        &
-         soil_fmax_override,        &
          nglcec,                    &
-         pft_idx,                   &
-         pft_frc,                   &
          gitdescribe,               &
          outnc_large_files,         &
          outnc_double,              &
@@ -203,13 +193,6 @@ contains
     outnc_double      = .true.
     outnc_vic         = .false.
     outnc_3dglc       = .false.
-    all_urban         = .false.
-    all_veg           = .false.
-    no_inlandwet      = .true.
-    soil_color_override = unsetcol
-    soil_sand_override = unsetsoil
-    soil_clay_override = unsetsoil
-    soil_fmax_override = unsetsoil
     urban_skip_abort_on_invalid_data_check = .false.   ! default value for bug work around
 
     if (root_task) then
@@ -306,16 +289,7 @@ contains
     call mpi_bcast (outnc_vic, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (outnc_3dglc, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (all_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (all_veg, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (no_inlandwet, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (soil_color_override, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (soil_sand_override, 1, MPI_REAL, 0, mpicom, ier)
-    call mpi_bcast (soil_clay_override, 1, MPI_REAL, 0, mpicom, ier)
-    call mpi_bcast (soil_fmax_override, 1, MPI_REAL, 0, mpicom, ier)
-
     call mpi_bcast (urban_skip_abort_on_invalid_data_check, 1, MPI_LOGICAL, 0, mpicom, ier)
-
     call mpi_bcast (numpft, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (std_elev, 1, MPI_REAL, 0, mpicom, ier)
 
@@ -449,21 +423,6 @@ contains
        end if
        if ( outnc_3dglc )then
           write(ndiag,'(a)')' Output optional 3D glacier fields (mostly used for verification of the glacier model)'
-       end if
-       if ( all_urban )then
-          write(ndiag,'(a)') ' all_urban is true => Output ALL data in file as 100% urban'
-       else
-          write(ndiag,'(a)') ' all_urban is false '
-       end if
-       if ( no_inlandwet )then
-          write(ndiag,'(a)') ' no_inlandwet is true => Set wetland to 0% over land'
-       else
-          write(ndiag,'(a)') ' no_inlandwet is false'
-       end if
-       if (all_veg) then
-          write(ndiag,'(a)') ' all_veg is true => Output ALL data in file as 100% vegetated'
-       else
-          write(ndiag,'(a)') ' all_veg is false '
        end if
        if (urban_skip_abort_on_invalid_data_check) then
           write(ndiag, '(a)') " WARNING: aborting on invalid data check in urban has been disabled!"
