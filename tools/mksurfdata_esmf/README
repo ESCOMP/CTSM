@@ -1,22 +1,97 @@
-============================
+Updated on, by:
+2/28/2022 slevis
+2/23/2022 mvertens
+
+================
+Getting the code
+================
+> cd <user/work/area>
+> git clone https://github.com/ESCOMP/CTSM.git <dir_name>
+> cd <dir_name>
+> git checkout feature/new_toolchain
+
+# Save time by checking out ccs_config only
+> ./manage_externals/checkout_externals ccs_config
+
+> cd tools/mksurfdata_esmf
+
+=======================
 building the executable
-============================
-> rm -rf bld
-> mkdir ./bld
+=======================
+> rm -rf bld  # (or the contents of /bld) before rerunning CC=...
+> mkdir ./bld  # IF YOU MODIFY .F90 files, start over from "rm -rf bld"
 > cd bld
+> module load intel  # in case need latest version of intel
+> module load python  # in case need latest version of python
 > module load cmake
+> bash
 > CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src/
 > make VERBOSE=1
+> export MKSURFDATA_BLD=`pwd`  # needed once; execute in /bld
 
 > cd ../src
 > make clean
-> MKSURDATA_BLD=../bld make VERBOSE=1
+> make VERBOSE=1
 
-============================
-running the code (you could add mksurfdata_in)
-============================
 > cd ../
+
+=======
+running
+=======
 > rm mksurfdata_in
+> bash  # need if not going through "building the executable"
 > temp=`./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc | cut -d' ' -f5`
 > ln -s $temp mksurfdata_in
 > qsub gen_mksurfdata
+
+-----
+NOTES
+------------------------------------------------------------
+slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
+------------------------------------------------------------
+1) > temp=`./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc | cut -d' ' -f5`
+
+.nc file issues:
+- URBAN vars have bigger diffs likely bc using newer raw datasets
+- abm, std elev, organic have some bigger diffs
+- glacier region MV confirmed w BillS that Greenland diff is ok
+
+.log file issues:
+- Successfully made PFTs, harvest and grazing, glacier, urban,
+topo stats, and organic don't show input/output for comparison
+- soil texture category 3 and soil color category 15 inputs/outputs
+problematic or just that we set ocean to loam?
+- agricultural fire peak month: output areas increase for all categories
+- voc emission factors all zero
+
+2) repeat for 0.9x
+
+3) > temp=`./gen_mksurfdata_namelist.py --start-year 1850 --end-year 1850 --res 4x5 --vic --glc | cut -d' ' -f5`
+
+No issues specific to this resolution.
+
+------------------------------------------------------
+DYNAMIC LU: NOT ALL FILES HAVE BEEN TRANSLATED to cdf5
+------------------------------------------------------
+Coordinate with Peter Lawrence. Use this command to translate:
+> nccopy -k cdf5 oldfile newfile
+
+--------------------------------------------------------
+Python script for generating namelists has NOT ADDRESSED:
+--------------------------------------------------------
+* Regional/1x1: handled by subset.py
+* High res
+* Potveg: needs file(s) converted to cdf5 first?
+* Merge_gis
+* Nocrop: does this work now?
+* Ssp_rcp: needs files converted to cdf5 first?
+* Override options:
+-- all_veg = .true. handled by fsurdat_modifier zero_nonveg = .true.
+-- all_urban = .true. handle w fsurdat_modifier new option (see subset.py)
+-- no_inlandwet = .false. same
+-- fsurdat_modify should focus on modifying and subset on subsetting
+
+Sam to run
+> make all
+to see that new code works for all the grids. How to automate and how
+few nodes could be used?
