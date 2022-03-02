@@ -134,7 +134,8 @@ program mksurfdata
   integer                         :: ntim                    ! time sample for dynamic land use
   integer                         :: year                    ! year for dynamic land use
   integer                         :: year2                   ! year for dynamic land use for harvest file
-  real(r8)                        :: suma                    ! sum for error check
+  real(r8)                        :: suma                    ! local sum for error check   
+  real(r8)                        :: loc_suma, glob_suma     ! local and global sum for error check with mpi_allreduce
 
   ! model grid
   real(r8), allocatable           :: lon(:)
@@ -187,7 +188,6 @@ program mksurfdata
 
   character(len=*), parameter :: u_FILE_u = &
        __FILE__
-  ! ------------------------------------------------------------
 
   ! ======================================================================
   ! Initialize MPI
@@ -609,24 +609,24 @@ program mksurfdata
 
   ! Write out sum of PFT's
   do k = natpft_lb,natpft_ub
-     suma = 0._r8
+     loc_suma = 0._r8
      do n = 1,lsize_o
-        suma = suma + pctnatpft(n)%get_one_pct_p2g(k)
+        loc_suma = loc_suma + pctnatpft(n)%get_one_pct_p2g(k)
      enddo
-     ! TODO: calculate global sum here
+     call mpi_reduce(loc_suma, glob_suma, 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
      if (root_task) then
-        write(ndiag,*) 'sum over domain of pft ',k,suma
+        write(ndiag,*) 'sum over domain of pft ',k,glob_suma
      end if
   enddo
   if (root_task) write(ndiag,*)
   do k = cft_lb,cft_ub
-     suma = 0._r8
+     loc_suma = 0._r8
      do n = 1,lsize_o
-        suma = suma + pctcft(n)%get_one_pct_p2g(k)
+        loc_suma = loc_suma + pctcft(n)%get_one_pct_p2g(k)
      enddo
-     ! TODO: calculate global sum here
+     call mpi_reduce(loc_suma, glob_suma, 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
      if (root_task) then
-        write(6,*) 'sum over domain of cft ',k,suma
+        write(6,*) 'sum over domain of cft ',k,glob_suma
      end if
   enddo
   if (root_task) write(ndiag,*)

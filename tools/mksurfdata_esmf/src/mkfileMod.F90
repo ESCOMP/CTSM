@@ -3,7 +3,7 @@ module mkfileMod
   use ESMF
   use pio
   use shr_kind_mod      , only : r8 => shr_kind_r8, r4=> shr_kind_r4
-  use shr_sys_mod       , only : shr_sys_getenv, shr_sys_abort
+  use shr_sys_mod       , only : shr_sys_abort
   use mkutilsMod        , only : get_filename, chkerr
   use mkvarpar          , only : nlevsoi, numrad, numstdpft
   use mkurbanparMod     , only : numurbl, nlevurb, mkurbanpar
@@ -116,7 +116,7 @@ contains
 
     call ESMF_LogWrite(subname//'setting global attributes', ESMF_LOGMSG_INFO)
 
-    str = 'NCAR-CSM'
+    str = 'NCAR-CESM'
     rcode = pio_put_att(pioid, pio_global, "Conventions", trim(str))
 
     call date_and_time (date, time, zone, values)
@@ -124,17 +124,14 @@ contains
     datetime(9:)  = ' ' // time(1:2) // ':' // time(3:4) // ':' // time(5:6) // ' '
     str = 'created on: ' // datetime
     rcode = pio_put_att (pioid, pio_global, 'History_Log', trim(str))
-
-    ! TODO: this is not working
-    ! call shr_sys_getenv ('LOGNAME', str, ier)
-    ! rcode = pio_put_att (pioid, pio_global, 'Logname', trim(str))
-    ! call shr_sys_getenv ('HOST', str, ier)
-    ! rcode = pio_put_att (pioid, pio_global, 'Host', trim(str))
-
+    
     str = 'Community Land Model: CLM5'
     rcode = pio_put_att (pioid, pio_global, 'Source', trim(str))
     rcode = pio_put_att (pioid, pio_global, 'Version', trim(gitdescribe))
+    rcode = pio_put_att (pioid, pio_global, 'Logname', trim(logname))
+    rcode = pio_put_att (pioid, pio_global, 'Host', trim(hostname))
 
+    ! TODO: check that this works
     !rcode = pio_put_att_int(pioid, pio_global, 'nglcec', nglcec)
 
     ! Raw data file names

@@ -194,6 +194,11 @@ def main ():
     else: 
         hires_pft = 'off'
 
+    hostname = subprocess.check_output('hostname').strip().decode(encoding='UTF-8')
+    print (f"hostname is {hostname}")
+    logname = subprocess.check_output('logname').strip().decode(encoding='UTF-8')
+    print (f"logname is {logname}")
+
     # determine pft_years - needed to parse xml file
     if int(start_year) == 1850 and int(end_year) == 1850:
         pft_years = "1850"
@@ -384,6 +389,9 @@ def main ():
             nlfile.write(f"  mksrf_fvic_mesh = \'{mksrf_fvic_mesh}\' \n")
         else:
             nlfile.write("  outnc_vic = .false. \n")
+
+        nlfile.write(f"  logname = \'{logname}\' \n")
+        nlfile.write(f"  hostname = \'{hostname}\' \n")
 
         nlfile.write("/ \n")
 

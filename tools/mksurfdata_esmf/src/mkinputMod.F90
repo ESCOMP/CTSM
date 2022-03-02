@@ -103,6 +103,8 @@ module mkinputMod
   character(CX) , public    :: mksrf_irrig_mesh             = ' ' ! TODO: should this namelist be here?
 
   character(CS) , public    :: gitdescribe                  = ' ' ! Description of model version from git
+  character(CS) , public    :: logname                      = ' ' ! user name
+  character(CS) , public    :: hostname                     = ' ' ! machine name
 
   logical       , public    :: urban_skip_abort_on_invalid_data_check
 
@@ -178,6 +180,8 @@ contains
          no_inlandwet,              &
          nglcec,                    &
          gitdescribe,               &
+         logname,                   &
+         hostname,                  &
          outnc_large_files,         &
          outnc_double,              &
          outnc_dims,                &
@@ -297,6 +301,8 @@ contains
     call mpi_bcast (std_elev, 1, MPI_REAL, 0, mpicom, ier)
 
     call mpi_bcast (gitdescribe, len(gitdescribe), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (logname, len(logname), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hostname, len(hostname), MPI_CHARACTER, 0, mpicom, ier)
 
   end subroutine read_namelist_input
 
