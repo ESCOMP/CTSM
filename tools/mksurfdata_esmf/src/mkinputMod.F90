@@ -175,6 +175,7 @@ contains
          mksrf_fgrid_mesh_nx,       &
          mksrf_fgrid_mesh_ny,       &
          numpft,                    &
+         no_inlandwet,              &
          nglcec,                    &
          gitdescribe,               &
          outnc_large_files,         &
@@ -193,6 +194,7 @@ contains
     outnc_double      = .true.
     outnc_vic         = .false.
     outnc_3dglc       = .false.
+    no_inlandwet      = .true.
     urban_skip_abort_on_invalid_data_check = .false.   ! default value for bug work around
 
     if (root_task) then
@@ -291,6 +293,7 @@ contains
 
     call mpi_bcast (urban_skip_abort_on_invalid_data_check, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (numpft, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (no_inlandwet, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (std_elev, 1, MPI_REAL, 0, mpicom, ier)
 
     call mpi_bcast (gitdescribe, len(gitdescribe), MPI_CHARACTER, 0, mpicom, ier)

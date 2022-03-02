@@ -7,9 +7,9 @@ module mkpftMod
   use mkpioMod       , only : mkpio_get_rawdata, mkpio_get_dimlengths
   use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
   use mkpioMod       , only : mkpio_iodesc_rawdata, mkpio_get_rawdata_level
-  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8
+  use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8, get_meshareas
   use mkutilsMod     , only : chkerr
-  use mkvarctl       , only : numpft, root_task, ndiag
+  use mkvarctl       , only : numpft, root_task, ndiag, mpicom
   use mkvarpar       , only : numstdpft, numstdcft, noveg
   use mkpftConstantsMod
 
@@ -232,8 +232,6 @@ contains
     integer , allocatable           :: mask_i(:)
     real(r8), allocatable           :: frac_i(:)
     real(r8), allocatable           :: frac_o(:)
-    real(r8), allocatable           :: area_i(:)
-    real(r8), allocatable           :: area_o(:)
     real(r8), allocatable           :: pctnatveg_i(:)     ! input  natural veg percent (% of grid cell)
     real(r8), allocatable           :: pctnatveg_o(:)     ! output natural veg percent (% of grid cell)
     real(r8), allocatable           :: pctcrop_i(:)       ! input  all crop percent (% of grid cell)
@@ -244,13 +242,10 @@ contains
     integer                         :: numpft_i           ! num of plant types input data
     integer                         :: natpft_i           ! num of natural plant types input data
     integer                         :: ncft_i             ! num of crop types input data
-    real(r8)                        :: sum_fldo           ! global sum of dummy output fld
-    real(r8)                        :: sum_fldi           ! global sum of dummy input fld
     real(r8)                        :: wst_sum            ! sum of %pft
-    real(r8), allocatable           :: gpft_o(:)          ! output global area pfts
-    real(r8)                        :: garea_o            ! output global area
-    real(r8), allocatable           :: gpft_i(:)          ! input global area pfts
-    real(r8)                        :: garea_i            ! input  global area
+    real(r8), allocatable           :: area_o(:)
+    real(r8), allocatable           :: loc_gpft_o(:)     ! output global area pfts
+    real(r8), allocatable           :: glob_gpft_o(:)     ! output global area pfts
     integer                         :: ier, rcode         ! error status
     real(r8)                        :: relerr = 0.0001_r8 ! max error: sum overlap wts ne 1
     character(len=*), parameter :: subname = 'mkpf'
@@ -330,6 +325,11 @@ contains
     call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+
+    ! ----------------------------------------
+    ! Determine pctlnd_o(:) (output argument)
+    ! ----------------------------------------
+    pctlnd_o(:) = frac_o(:) * 100._r8
 
     ! ----------------------------------------
     ! Determine pct_nat_pft_o(:,:)
@@ -508,72 +508,45 @@ contains
 
     ! -----------------------------------------------------------------
     ! Error check
-    ! Compare global areas on input and output grids
+    ! Output global sums on output grid
     ! -----------------------------------------------------------------
 
-    !        ! Derived types
-    !        allocate(pctnatpft_i(ns_i), stat=ier)
-    !        if (ier/=0) call shr_sys_abort()
-    !        allocate(pctcft_i(ns_i), stat=ier)
-    !        if (ier/=0) call shr_sys_abort()
+    allocate(area_o(ns_o))
+    call get_meshareas(mesh_o, area_o, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    !        do ni = 1, ns_i
-    !           pctnatpft_i(ni) = pct_pft_type( pct_nat_pft_i(ni,:), pctnatveg_i(ni), first_pft_index=natpft_lb )
-    !           pctcft_i(ni)    = pct_pft_type( pct_cft_i(ni,:),     pctcrop_i(ni),   first_pft_index=cft_lb    )
-    !        end do
+    allocate(pctpft_o(ns_o,0:(numpft_i-1)), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    do no = 1,ns_o
+       pctpft_o(no,natpft_lb:natpft_ub) = pctnatpft_o(no)%get_pct_p2g()
+       pctpft_o(no,cft_lb:cft_ub)       = pctcft_o(no)%get_pct_p2g()
+    end do
 
-    !        do no = 1,ns_o
-    !           pctpft_o(no,natpft_lb:natpft_ub) = pctnatpft_o(no)%get_pct_p2g()
-    !           pctpft_o(no,cft_lb:cft_ub)       = pctcft_o(no)%get_pct_p2g()
-    !        end do
+    allocate(loc_gpft_o(0:numpft_i-1))
+    allocate(glob_gpft_o(0:numpft_i-1))
+    loc_gpft_o(:) = 0.
+    do no = 1,ns_o
+       do m = 0, numpft_i-1
+          loc_gpft_o(m) = loc_gpft_o(m) + pctpft_o(no,m) * area_o(no) * frac_o(no)
+          write(6,*)'DEBUG: m,pctpft_o(no,m) = ',m,pctpft_o(no,m)
+       end do
+    end do
+    call mpi_reduce(loc_gpft_o, glob_gpft_o, 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
 
-    !        allocate(gpft_i(0:numpft_i-1))
-    !        allocate(gpft_o(0:numpft_i-1))
-
-    !        ! input grid
-    !        allocate(pctpft_i(ns_i,0:(numpft_i-1)), stat=ier)
-    !        if (ier/=0) call shr_sys_abort()
-    !        allocate(pctpft_o(ns_o,0:(numpft_i-1)), stat=ier)
-    !        if (ier/=0) call shr_sys_abort()
-
-    !        gpft_i(:) = 0.
-    !        garea_i   = 0.
-    !        do ni = 1,ns_i
-    !           garea_i = garea_i + area_src(ni)*re**2
-    !           do m = 0, numpft_i - 1
-    !              gpft_i(m) = gpft_i(m) + pctpft_i(ni,m) * area_src(ni) * mask(ni)*re**2
-    !           end do
-    !        end do
-    !        if ( allocated(pctpft_i) ) deallocate (pctpft_i)
-
-    !        ! output grid
-    !        gpft_o(:) = 0.
-    !        garea_o   = 0.
-    !        do no = 1,ns_o
-    !           garea_o = garea_o + area_dst(no)*re**2
-    !           do m = 0, numpft_i - 1
-    !              gpft_o(m) = gpft_o(m) + pctpft_o(no,m)*area_dst(no)*frac_o(no)*re**2
-    !           end do
-    !        end do
-
-    !        ! comparison
-    !        write (ndiag,*)
-    !        write (ndiag,'(1x,70a1)') ('=',k=1,70)
-    !        write (ndiag,*) 'PFTs Output'
-    !        write (ndiag,'(1x,70a1)') ('=',k=1,70)
-
-    !        write (ndiag,*)
-    !        write (ndiag,'(1x,70a1)') ('.',k=1,70)
-    !        write (ndiag,1001)
-    ! 1001   format (1x,'plant type     ',20x,' input grid area',' output grid area',/ &
-    !             1x,33x,'     10**6 km**2','      10**6 km**2')
-    !        write (ndiag,'(1x,70a1)') ('.',k=1,70)
-    !        write (ndiag,*)
-    !        do m = 0, numpft_i - 1
-    !           write (ndiag,1002) veg(m), gpft_i(m)*1.e-06/100.,gpft_o(m)*1.e-06/100.
-    !        end do
-    ! 1002   format (1x,a35,f16.3,f17.3)
-    !        deallocate(gpft_i, gpft_o, frac_dst)
+    if (root_task) then
+       write (ndiag,*)
+       write (ndiag,'(1x,70a1)') ('.',k=1,70)
+       write (ndiag,*) 'PFTs Output'
+       write (ndiag,101)
+101    format (1x,'plant type     ',20x,' output grid area',/ &
+               1x,33x,'      10**6 km**2')
+       write (ndiag,'(1x,70a1)') ('.',k=1,70)
+       write (ndiag,*)
+       do m = 0, numpft_i - 1
+          write (ndiag,102) veg(m), glob_gpft_o(m)*1.e-06/100.
+       end do
+102    format (1x,a35,f17.3)
+    end if
 
     ! Clean up memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)

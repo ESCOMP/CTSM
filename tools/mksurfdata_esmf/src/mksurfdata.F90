@@ -106,7 +106,7 @@ program mksurfdata
   use mksoildepthMod     , only : mksoildepth
   use mksoilcolMod       , only : mksoilcol
   use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, mkurban_topo, numurbl
-  use mklanwatMod        , only : mklakwat
+  use mklanwatMod        , only : mklakwat, mkwetlnd
   use mkorganicMod       , only : mkorganic
   use mkutilsMod         , only : normalize_classes_by_gcell, chkerr
   use mkfileMod          , only : mkfile_define_dims, mkfile_define_atts, mkfile_define_vars
@@ -402,9 +402,12 @@ program mksurfdata
   ! LAKEDEPTH is written out in the subroutine
   ! Need to keep pctlak and pctwet external for use below
   allocate ( pctlak(lsize_o)) ; pctlak(:) = spval
-  allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
-  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pctwet, pioid, fsurdat, rc=rc)
+  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pioid, fsurdat, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
+
+  allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
+  call mkwetlnd(mksrf_fwetlnd_mesh, mksrf_fwetlnd, mesh_model, pctwet, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkwetlnd')
 
   ! -----------------------------------
   ! Make glacier fraction [pctgla] from [fglacier] dataset
@@ -662,7 +665,6 @@ program mksurfdata
      call mkfile_output(pioid, mesh_model,  'PCT_WETLAND', pctwet, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in in mkfile_output for pctwet')
 
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_NATVEG"
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_NATVEG"
      allocate(pctnatveg(lsize_o))
      call get_pct_l2g_array(pctnatpft, pctnatveg)

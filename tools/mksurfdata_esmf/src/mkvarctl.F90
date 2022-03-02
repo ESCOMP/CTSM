@@ -22,6 +22,8 @@ module mkvarctl
   logical, public  :: outnc_vic         ! true => output VIC fields
   logical, public  :: outnc_3dglc       ! true => output 3D glacier fields
 
+  logical, public :: no_inlandwet       ! set wetland to 0% over land; wetland will only be used for ocean points
+
   integer, public  :: numpft  = 16      ! number of plant types
   integer, public  :: nglcec = 10       ! number of elevation classes for glaciers
 

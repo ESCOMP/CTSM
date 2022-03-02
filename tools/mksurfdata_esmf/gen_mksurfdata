@@ -6,8 +6,8 @@
 #PBS -l walltime=30:00
 ##PBS -l select=16:ncpus=36:mpiprocs=9
 ##PBS -l select=24:ncpus=36:mpiprocs=12
-##PBS -l select=32:ncpus=36:mpiprocs=12
-#PBS -l select=200:ncpus=36:mpiprocs=12
+#PBS -l select=32:ncpus=36:mpiprocs=12
+##PBS -l select=200:ncpus=36:mpiprocs=12
 
 export TMPDIR=/glade/scratch/$USER/temp
 mkdir -p $TMPDIR
@@ -17,8 +17,10 @@ mkdir -p $TMPDIR
 # note for mpiexec below
 # -np {total_tasks}
 
+
 # Run the model
-#mpiexec_mpt -p "%g:" -np 144 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/mksurfdata
-#mpiexec_mpt -p "%g:" -np 288 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/mksurfdata
-#mpiexec_mpt -p "%g:" -np 384 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/mksurfdata
-mpiexec_mpt -p "%g:" -np 2400 /glade/u/home/mvertens/src/ctsm.toolchain/tools/mksurfdata_esmf/src/mksurfdata
+#mpiexec_mpt -p "%g:" -np 144  /glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/src/mksurfdata
+#mpiexec_mpt -p "%g:" -np 288  /glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/src/mksurfdata
+ mpiexec_mpt -p "%g:" -np 384  /glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/src/mksurfdata
+#mpiexec_mpt -p "%g:" -np 2400 /glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/src/mksurfdata
+

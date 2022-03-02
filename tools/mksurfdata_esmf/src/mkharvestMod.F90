@@ -16,11 +16,10 @@ module mkharvestMod
   use mkesmfMod         , only : regrid_rawdata, create_routehandle_r8, get_meshareas
   use mkutilsMod        , only : chkerr
   use mkvarctl          , only : root_task, ndiag, mpicom
+  use mkdiagnosticsMod  , only : output_diagnostics_continuous
 
   implicit none
   private
-
-#include <mpif.h>
 
   ! public member functions
   public :: mkharvest                 ! Calculate the harvest values on output grid
@@ -187,6 +186,8 @@ contains
              call regrid_rawdata(mesh_i, mesh_o, routehandle_r8, data1d_i, data1d_o, rc=rc)
              if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+             if (root_task) write(ndiag,*)'DEBUG: i am here in mkharvest'
+
              ! write out mapped variable
              if (present(ntime)) then
                 if (root_task)  write(ndiag, '(a,i8)') subname//" writing out 1d "//trim(varname_o)//' at time ',ntime
@@ -203,12 +204,11 @@ contains
              end if
              call pio_syncfile(pioid_o)
 
-             ! TODO: uncomment the following and validate
              ! Compare global areas on input and output grids for 1d variables
-             ! call mkharvest check_global_sums('harvest type '//trim(varname_o), ns_i, ns_o, &
-             !      mesh_i, mesh_o, mask_i, frac_o, data1d_i, data1d_o, rc)
-             ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
+             call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+                  data1d_i, data1d_o, trim(varname_o), "gC/m2/yr", ndiag, rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                  
              deallocate(data1d_i)
              deallocate(data1d_o)
 
@@ -269,75 +269,6 @@ contains
     end if
 
   end subroutine mkharvest
-
-  !=================================================================================
-  subroutine mkharvest_check_global_sums(name, ns_i, ns_o, mesh_i, mesh_o, mask_i, frac_o, &
-       data_i, data_o, rc)
-
-    ! input/otuput variables
-    character(len=*) , intent(in)  :: name
-    integer          , intent(in)  :: ns_i
-    integer          , intent(in)  :: ns_o
-    type(ESMF_Mesh)  , intent(in)  :: mesh_i
-    type(ESMF_Mesh)  , intent(in)  :: mesh_o
-    integer          , intent(in)  :: mask_i(:)
-    real(r8)         , intent(in)  :: frac_o(:)
-    real(r8)         , intent(in)  :: data_i(:) ! 1D input data
-    real(r8)         , intent(in)  :: data_o(:) ! 1D output data
-    integer          , intent(out) :: rc
-
-    ! local variables
-    integer               :: ni, no, k, m
-    integer               :: ier
-    real(r8), allocatable :: area_i(:)
-    real(r8), allocatable :: area_o(:)
-    real(r8)              :: local_i(numharv)  ! input  grid: global area harvesting
-    real(r8)              :: local_o(numharv)  ! output grid: global area harvesting
-    real(r8)              :: global_i(numharv) ! input  grid: global area harvesting
-    real(r8)              :: global_o(numharv) ! output grid: global area harvesting
-    real(r8), parameter   :: fac = 1.e-06_r8   ! Output factor
-    real(r8), parameter   :: rat = fac/100._r8 ! Output factor divided by 100%
-    character(len=*) , parameter :: unit = '10**6 km**2' ! Output units
-    !-----------------------------------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    allocate(area_i(ns_i), stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    allocate(area_o(ns_o), stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    call get_meshareas(mesh_i, area_i, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call get_meshareas(mesh_o, area_o, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    ! Input grid global area
-    local_i(:) = 0.
-    do ni = 1, ns_i
-       local_i(m) = local_i(m) + data_i(ni)  *area_i(ni) * mask_i(ni)
-    end do
-    call mpi_reduce(local_i, global_i, numharv, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
-
-    ! Output grid global area
-    local_o(:) = 0.
-    do no = 1,ns_o
-       local_o(m) = local_o(m) + data_o(no) * area_o(no) * frac_o(no)
-    end do
-    call mpi_reduce(local_o, global_o, numharv, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
-
-    ! Comparison
-    write (ndiag,*)
-    write (ndiag,*)
-    write (ndiag,'(1x,70a1)') ('.',k=1,70)
-    write (ndiag,101) unit, unit
-101 format (1x,'harvest type' ,20x,' input grid area',' output grid area',/ &
-            1x,33x,'     ',A,'      ',A)
-    write (ndiag,'(1x,70a1)') ('.',k=1,70)
-    write (ndiag,*)
-    write (ndiag,102) trim(name), global_i*rat, global_o*rat
-102 format (1x,a35,f16.3,f17.3)
-
-  end subroutine mkharvest_check_global_sums
 
   !=================================================================================
   subroutine mkharvest_check_input_var(pioid, varname, varexists, dims2nd, name2nd)

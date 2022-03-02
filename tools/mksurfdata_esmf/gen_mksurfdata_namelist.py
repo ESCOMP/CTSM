@@ -361,17 +361,13 @@ def main ():
         mksrf_hrvtyp_mesh = rawdata_files["mksrf_fvegtyp_mesh"]
         nlfile.write( f"  mksrf_fhrvtyp_mesh = \'{mksrf_hrvtyp_mesh}\' \n")
 
-        nlfile.write( "  all_urban = .false. \n")
-        nlfile.write( "  no_inlandwet = .true. \n")
         nlfile.write(f"  numpft = {num_pft} \n")
+        nlfile.write( "  no_inlandwet = .true. \n")
         nlfile.write( "  fdyndat = \' \' \n")
         nlfile.write(f"  fsurdat = \'{fsurdat}\' \n")
         nlfile.write(f"  fsurlog = \'{fsurlog}\' \n")
         nlfile.write(f"  mksrf_fdynuse = \'{landuse_fname} \' \n")
         nlfile.write(f"  gitdescribe = \'{gitdescribe}\' \n")
-        nlfile.write( "  all_urban = .false. \n")
-        nlfile.write( "  all_veg = .false. \n")
-        nlfile.write( "  no_inlandwet = .true. \n")
         nlfile.write( "  outnc_large_files = .false. \n")
         nlfile.write( "  outnc_double = .true. \n")
 
