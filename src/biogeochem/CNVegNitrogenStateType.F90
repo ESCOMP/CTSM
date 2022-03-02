@@ -1099,8 +1099,8 @@ contains
     integer :: g, c, p  ! indices
     real(r8) :: co2_ppmv  ! atm co2 concentration
     ! Could use 355 value from clm_varctl.F90 to avoid this hardwiring?
-    real(r8), parameter :: co2_base = 350._r8  ! units ppmv
-    real(r8), parameter :: cn_slope = 10._r8
+    real(r8), parameter :: co2_base = 310._r8  ! units ppmv
+    real(r8), parameter :: cn_slope = 0._r8
 
     character(len=*), parameter :: subname = 'time_evolv_leafcn'
     !-----------------------------------------------------------------------
