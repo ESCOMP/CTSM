@@ -186,8 +186,6 @@ contains
              call regrid_rawdata(mesh_i, mesh_o, routehandle_r8, data1d_i, data1d_o, rc=rc)
              if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-             if (root_task) write(ndiag,*)'DEBUG: i am here in mkharvest'
-
              ! write out mapped variable
              if (present(ntime)) then
                 if (root_task)  write(ndiag, '(a,i8)') subname//" writing out 1d "//trim(varname_o)//' at time ',ntime

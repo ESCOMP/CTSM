@@ -528,10 +528,11 @@ contains
     do no = 1,ns_o
        do m = 0, numpft_i-1
           loc_gpft_o(m) = loc_gpft_o(m) + pctpft_o(no,m) * area_o(no) * frac_o(no)
-          write(6,*)'DEBUG: m,pctpft_o(no,m) = ',m,pctpft_o(no,m)
        end do
     end do
-    call mpi_reduce(loc_gpft_o, glob_gpft_o, 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
+    do m = 0,numpft_i-1
+       call mpi_reduce(loc_gpft_o(m), glob_gpft_o(m), 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
+    end do
 
     if (root_task) then
        write (ndiag,*)
