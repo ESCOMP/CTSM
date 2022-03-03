@@ -2211,7 +2211,7 @@ contains
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_repr_longname(k)//' grain C', &
+                  long_name='c13 '//get_repr_longname(k)//' C', &
                   units='gC13/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
              if (flag=='read' .and. .not. readvar) then
@@ -2229,7 +2229,7 @@ contains
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_repr_longname(k)//' grain C storage', &
+                  long_name='c13 '//get_repr_longname(k)//' C storage', &
                   units='gC13/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
              if (flag=='read' .and. .not. readvar) then
@@ -2247,7 +2247,7 @@ contains
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_repr_longname(k)//' grain C transfer', &
+                  long_name='c13 '//get_repr_longname(k)//' C transfer', &
                   units='gC13/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
              if (flag=='read' .and. .not. readvar) then
@@ -2278,7 +2278,7 @@ contains
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_repr_longname(k)//' grain C', &
+                  long_name='c14 '//get_repr_longname(k)//' C', &
                   units='gC14/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
              if (flag=='read' .and. .not. readvar) then
@@ -2296,7 +2296,7 @@ contains
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_repr_longname(k)//' grain C storage', &
+                  long_name='c14 '//get_repr_longname(k)//' C storage', &
                   units='gC14/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
              if (flag=='read' .and. .not. readvar) then
@@ -2314,7 +2314,7 @@ contains
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
                   dim1name='pft', &
-                  long_name=get_repr_longname(k)//' grain C transfer', &
+                  long_name='c14 '//get_repr_longname(k)//' C transfer', &
                   units='gC14/m2', &
                   interpinic_flag='interp', readvar=readvar, data=data1dptr)
              if (flag=='read' .and. .not. readvar) then
