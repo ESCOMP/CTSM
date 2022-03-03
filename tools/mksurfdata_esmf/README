@@ -1,5 +1,5 @@
 Updated on, by:
-2/28/2022 slevis
+3/2/2022 slevis
 2/23/2022 mvertens
 
 ================
@@ -13,15 +13,14 @@ Getting the code
 # Save time by checking out ccs_config only
 > ./manage_externals/checkout_externals ccs_config
 
-> cd tools/mksurfdata_esmf
-
 =======================
 building the executable
 =======================
+> cd tools/mksurfdata_esmf
 > rm -rf bld  # (or the contents of /bld) before rerunning CC=...
-> mkdir ./bld  # IF YOU MODIFY .F90 files, start over from "rm -rf bld"
+> mkdir ./bld
 > cd bld
-> module load intel  # in case need latest version of intel
+> module load intel  # I found I need the latest version of intel
 > module load python  # in case need latest version of python
 > module load cmake
 > bash
@@ -29,27 +28,25 @@ building the executable
 > make VERBOSE=1
 > export MKSURFDATA_BLD=`pwd`  # needed once; execute in /bld
 
+# IF YOU MODIFY .F90 files, start here first, though more than once
+# I have found it necessary to go back to the "rm -rf bld" step
 > cd ../src
-> make clean
+> make clean  # REMEMBER to be in bash
 > make VERBOSE=1
-
-> cd ../
 
 =======
 running
 =======
-> rm mksurfdata_in
-> bash  # need if not going through "building the executable"
-> temp=`./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc | cut -d' ' -f5`
-> ln -s $temp mksurfdata_in
-> qsub gen_mksurfdata
+> cd ../
+# Edit gen_mksurfdata to generate a single surface dataset that you want
+> qsub gen_mksurfdata  # OR qsub gen_mksurfdata_all ...to generate all the surface datasets
 
 -----
 NOTES
 ------------------------------------------------------------
 slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
 ------------------------------------------------------------
-1) > temp=`./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc | cut -d' ' -f5`
+1) ./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc
 
 .nc file issues:
 - URBAN vars have bigger diffs likely bc using newer raw datasets
@@ -64,12 +61,6 @@ problematic or just that we set ocean to loam?
 - agricultural fire peak month: output areas increase for all categories
 - voc emission factors all zero
 
-2) repeat for 0.9x
-
-3) > temp=`./gen_mksurfdata_namelist.py --start-year 1850 --end-year 1850 --res 4x5 --vic --glc | cut -d' ' -f5`
-
-No issues specific to this resolution.
-
 ------------------------------------------------------
 DYNAMIC LU: NOT ALL FILES HAVE BEEN TRANSLATED to cdf5
 ------------------------------------------------------
@@ -80,18 +71,16 @@ Coordinate with Peter Lawrence. Use this command to translate:
 Python script for generating namelists has NOT ADDRESSED:
 --------------------------------------------------------
 * Regional/1x1: handled by subset.py
-* High res
-* Potveg: needs file(s) converted to cdf5 first?
-* Merge_gis
-* Nocrop: does this work now?
-* Ssp_rcp: needs files converted to cdf5 first?
-* Override options:
+* nocrop: should work
+* hires_pft: should work
+* ssp_rcp: should work; needs files converted to cdf5 first?
+* potveg: needs file(s) converted to cdf5 first?
+* merge_gis
+* no_surfdat
+* Override options removed:
 -- all_veg = .true. handled by fsurdat_modifier zero_nonveg = .true.
--- all_urban = .true. handle w fsurdat_modifier new option (see subset.py)
+-- all_urban = .true. handle w fsurdat_modifier new option
 -- no_inlandwet = .false. same
--- fsurdat_modify should focus on modifying and subset on subsetting
+-- soil_...
+-- pft_...
 
-Sam to run
-> make all
-to see that new code works for all the grids. How to automate and how
-few nodes could be used?

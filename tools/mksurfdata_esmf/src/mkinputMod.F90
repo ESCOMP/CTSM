@@ -120,7 +120,7 @@ contains
     ! Read in input namelist
 
     ! input/output variables
-    character(len=*), intent(in) :: filename
+    character(len=*), intent(in) :: filename  ! now unused
 
     ! local variables
     integer :: ier
@@ -206,16 +206,10 @@ contains
     end if
 
     if (root_task) then
-       inquire (file=trim(filename), exist=lexist)
-       if (.not. lexist) then
-          call shr_sys_abort(subname//trim(filename)//' does not exist')
-       end if
-       open(newunit=fileunit, status="old", file=trim(filename))
-       read(fileunit, nml=mksurfdata_input, iostat=ier)
+       read(5, nml=mksurfdata_input, iostat=ier)
        if (ier > 0) then
           call shr_sys_abort(subname//' error reading in mksurfdata_input namelist from '//trim(filename))
        end if
-       close(fileunit)
     end if
 
     call mpi_bcast (mksrf_fgrid_mesh, len(mksrf_fgrid_mesh), MPI_CHARACTER, 0, mpicom, ier)

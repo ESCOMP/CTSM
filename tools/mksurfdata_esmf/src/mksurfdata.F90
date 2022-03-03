@@ -179,7 +179,7 @@ program mksurfdata
   type(ESMF_LogKind_Flag)         :: logkindflag
   type(ESMF_VM)                   :: vm
   integer                         :: rc
-  logical                         :: create_esmf_pet_files = .true.
+  logical                         :: create_esmf_pet_files = .false.
 
   ! character variables
   character(len=CL)               :: string                  ! string read in

@@ -194,10 +194,12 @@ def main ():
     else: 
         hires_pft = 'off'
 
-    hostname = subprocess.check_output('hostname').strip().decode(encoding='UTF-8')
-    print (f"hostname is {hostname}")
-    logname = subprocess.check_output('logname').strip().decode(encoding='UTF-8')
-    print (f"logname is {logname}")
+#   hostname = subprocess.check_output('hostname').strip().decode(encoding='UTF-8')
+#   print (f"hostname is {hostname}")
+#   logname = subprocess.check_output('logname').strip().decode(encoding='UTF-8')
+#   print (f"logname is {logname}")
+    hostname = 'foo'
+    logname = 'foo'
 
     # determine pft_years - needed to parse xml file
     if int(start_year) == 1850 and int(end_year) == 1850:
