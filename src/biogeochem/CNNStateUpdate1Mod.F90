@@ -17,7 +17,7 @@ module CNNStateUpdate1Mod
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use CropReprPoolsMod                    , only : nrepr
+  use CropReprPoolsMod                , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
   use PatchType                       , only : patch                
   !
   implicit none
@@ -208,11 +208,15 @@ contains
             ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
             ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
                  - nf_veg%crop_seedn_to_leaf_patch(p) * dt
-            do k = 1, nrepr
-               ns_veg%reproductiven_patch(p,k)       = ns_veg%reproductiven_patch(p,k) &
-                    - (nf_veg%reproductiven_to_food_patch(p,k) + nf_veg%reproductiven_to_seed_patch(p,k))*dt
+            do k = repr_grain_min, repr_grain_max
+               ns_veg%reproductiven_patch(p,k)   = ns_veg%reproductiven_patch(p,k) &
+                    - (nf_veg%repr_grainn_to_food_patch(p,k) + nf_veg%repr_grainn_to_seed_patch(p,k))*dt
                ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
-                    + nf_veg%reproductiven_to_seed_patch(p,k) * dt
+                    + nf_veg%repr_grainn_to_seed_patch(p,k) * dt
+            end do
+            do k = repr_structure_min, repr_structure_max
+               ns_veg%reproductiven_patch(p,k) = ns_veg%reproductiven_patch(p,k) &
+                    - (nf_veg%repr_structuren_to_cropprod_patch(p,k) + nf_veg%repr_structuren_to_litter_patch(p,k))*dt
             end do
          end if
 

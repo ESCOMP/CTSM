@@ -15,7 +15,7 @@ module CNCStateUpdate1Mod
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use CropType                           , only : crop_type
-  use CropReprPoolsMod                       , only : nrepr
+  use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
@@ -288,11 +288,15 @@ contains
               cs_veg%leafc_patch(p)      = cs_veg%leafc_patch(p)      - cf_veg%leafc_to_biofuelc_patch(p)*dt
               cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
                    - cf_veg%crop_seedc_to_leaf_patch(p) * dt
-              do k = 1, nrepr
-                 cs_veg%reproductivec_patch(p,k)     = cs_veg%reproductivec_patch(p,k) &
-                      - (cf_veg%reproductivec_to_food_patch(p,k) + cf_veg%reproductivec_to_seed_patch(p,k))*dt
+              do k = repr_grain_min, repr_grain_max
+                 cs_veg%reproductivec_patch(p,k)   = cs_veg%reproductivec_patch(p,k) &
+                      - (cf_veg%repr_grainc_to_food_patch(p,k) + cf_veg%repr_grainc_to_seed_patch(p,k))*dt
                  cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
-                      + cf_veg%reproductivec_to_seed_patch(p,k) * dt
+                      + cf_veg%repr_grainc_to_seed_patch(p,k) * dt
+              end do
+              do k = repr_structure_min, repr_structure_max
+                 cs_veg%reproductivec_patch(p,k) = cs_veg%reproductivec_patch(p,k) &
+                      - (cf_veg%repr_structurec_to_cropprod_patch(p,k) + cf_veg%repr_structurec_to_litter_patch(p,k))*dt
               end do
            end if
          

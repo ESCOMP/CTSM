@@ -18,7 +18,8 @@ module CNVegCarbonFluxType
   use clm_varctl                         , only : iulog
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use pftconMod                          , only : npcropmin, pftcon
-  use CropReprPoolsMod                       , only : nrepr, get_repr_hist_fname, get_repr_rest_fname, get_repr_longname
+  use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
+  use CropReprPoolsMod                   , only : get_repr_hist_fname, get_repr_rest_fname, get_repr_longname
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
@@ -134,11 +135,13 @@ module CNVegCarbonFluxType
      real(r8), pointer :: leafc_to_litter_fun_patch                 (:)     ! leaf C litterfall used by FUN (gC/m2/s)
      real(r8), pointer :: frootc_to_litter_patch                    (:)     ! fine root C litterfall (gC/m2/s)
      real(r8), pointer :: livestemc_to_litter_patch                 (:)     ! live stem C litterfall (gC/m2/s)
-     real(r8), pointer :: reproductivec_to_food_patch               (:,:)   ! reproductive (e.g., grain) C to food for prognostic crop(gC/m2/s)
+     real(r8), pointer :: repr_grainc_to_food_patch               (:,:)     ! grain C to food for prognostic crop(gC/m2/s) [patch, repr_grain_min:repr_grain_max]
+     real(r8), pointer :: repr_structurec_to_cropprod_patch       (:,:)     ! reproductive structure C to crop product pool for prognostic crop (gC/m2/s) [patch, repr_structure_min:repr_structure_max]
+     real(r8), pointer :: repr_structurec_to_litter_patch         (:,:)     ! reproductive structure C to litter for prognostic crop (gC/m2/s) [patch, repr_structure_min:repr_structure_max]
      
      real(r8), pointer :: leafc_to_biofuelc_patch                   (:)     ! leaf C to biofuel C (gC/m2/s)
      real(r8), pointer :: livestemc_to_biofuelc_patch               (:)     ! livestem C to biofuel C (gC/m2/s)
-     real(r8), pointer :: reproductivec_to_seed_patch               (:,:)   ! reproductive (e.g., grain) C to seed for prognostic crop(gC/m2/s)
+     real(r8), pointer :: repr_grainc_to_seed_patch               (:,:)     ! grain C to seed for prognostic crop(gC/m2/s) [patch, repr_grain_min:repr_grain_max]
 
      ! maintenance respiration fluxes     
      real(r8), pointer :: cpool_to_resp_patch                       (:)     ! CNflex excess C maintenance respiration (gC/m2/s)
@@ -596,10 +599,14 @@ contains
     allocate(this%cpool_to_reproductivec_patch       (begp:endp, nrepr)) ; this%cpool_to_reproductivec_patch            (:,:) = nan
     allocate(this%cpool_to_reproductivec_storage_patch(begp:endp, nrepr)); this%cpool_to_reproductivec_storage_patch    (:,:) = nan
     allocate(this%livestemc_to_litter_patch                 (begp:endp)) ; this%livestemc_to_litter_patch                 (:) = nan
-    allocate(this%reproductivec_to_food_patch        (begp:endp, nrepr)) ; this%reproductivec_to_food_patch             (:,:) = nan
+    allocate(this%repr_grainc_to_food_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainc_to_food_patch (:,:) = nan
+    allocate(this%repr_structurec_to_cropprod_patch(begp:endp, repr_structure_min:repr_structure_max))
+    this%repr_structurec_to_cropprod_patch(:,:) = nan
+    allocate(this%repr_structurec_to_litter_patch(begp:endp, repr_structure_min:repr_structure_max))
+    this%repr_structurec_to_litter_patch(:,:) = nan
     allocate(this%leafc_to_biofuelc_patch                   (begp:endp)) ; this%leafc_to_biofuelc_patch                   (:) = nan
     allocate(this%livestemc_to_biofuelc_patch               (begp:endp)) ; this%livestemc_to_biofuelc_patch               (:) = nan
-    allocate(this%reproductivec_to_seed_patch        (begp:endp, nrepr)) ; this%reproductivec_to_seed_patch             (:,:) = nan
+    allocate(this%repr_grainc_to_seed_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainc_to_seed_patch (:,:) = nan
     allocate(this%reproductivec_xfer_to_reproductivec_patch(begp:endp, nrepr))
     this%reproductivec_xfer_to_reproductivec_patch(:,:) = nan
     allocate(this%cpool_reproductive_gr_patch        (begp:endp, nrepr)) ; this%cpool_reproductive_gr_patch             (:,:) = nan
@@ -817,9 +824,9 @@ contains
     if (carbon_type == 'c12') then
 
        if (use_crop) then
-          this%reproductivec_to_food_patch(begp:endp,:) = spval
-          do k = 1, nrepr
-             data1dptr => this%reproductivec_to_food_patch(:,k)
+          this%repr_grainc_to_food_patch(begp:endp,:) = spval
+          do k = repr_grain_min, repr_grain_max
+             data1dptr => this%repr_grainc_to_food_patch(:,k)
              call hist_addfld1d ( &
                   ! e.g., GRAINC_TO_FOOD
                   fname=get_repr_hist_fname(k)//'C_TO_FOOD', &
@@ -839,9 +846,9 @@ contains
                avgflag='A', long_name='livestem C to biofuel C', &
                ptr_patch=this%livestemc_to_biofuelc_patch)
 
-          this%reproductivec_to_seed_patch(begp:endp,:) = spval
-          do k = 1, nrepr
-             data1dptr => this%reproductivec_to_seed_patch(:,k)
+          this%repr_grainc_to_seed_patch(begp:endp,:) = spval
+          do k = repr_grain_min, repr_grain_max
+             data1dptr => this%repr_grainc_to_seed_patch(:,k)
              call hist_addfld1d ( &
                   ! e.g., GRAINC_TO_SEED
                   fname=get_repr_hist_fname(k)//'C_TO_SEED', &
@@ -3522,8 +3529,8 @@ contains
             long_name='live stem C litterfall', units='gC/m2/s', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_to_litter_patch)
 
-       do k = 1, nrepr
-          data1dptr => this%reproductivec_to_food_patch(:,k)
+       do k = repr_grain_min, repr_grain_max
+          data1dptr => this%repr_grainc_to_food_patch(:,k)
           ! e.g., grainc_to_food
           varname = get_repr_rest_fname(k)//'c_to_food'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
@@ -3929,8 +3936,6 @@ contains
        do k = 1, nrepr
           do fi = 1,num_patch
              i = filter_patch(fi)
-             this%reproductivec_to_food_patch(i,k)                     = value_patch
-             this%reproductivec_to_seed_patch(i,k)                     = value_patch
              this%reproductivec_xfer_to_reproductivec_patch(i,k) = value_patch
              this%cpool_to_reproductivec_patch(i,k)                    = value_patch
              this%cpool_to_reproductivec_storage_patch(i,k)            = value_patch
@@ -3938,6 +3943,22 @@ contains
              this%cpool_reproductive_storage_gr_patch(i,k)             = value_patch
              this%transfer_reproductive_gr_patch(i,k)                  = value_patch
              this%reproductivec_storage_to_xfer_patch(i,k)             = value_patch
+          end do
+       end do
+
+       do k = repr_grain_min, repr_grain_max
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%repr_grainc_to_food_patch(i,k) = value_patch
+             this%repr_grainc_to_seed_patch(i,k) = value_patch
+          end do
+       end do
+
+       do k = repr_structure_min, repr_structure_max
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%repr_structurec_to_cropprod_patch(i,k) = value_patch
+             this%repr_structurec_to_litter_patch(i,k)   = value_patch
           end do
        end do
     end if
@@ -4386,12 +4407,18 @@ contains
                this%livestemc_to_litter_patch(p)
 
           if (.not. use_grainproduct) then
-             do k = 1, nrepr
+             do k = repr_grain_min, repr_grain_max
                 this%litfall_patch(p) = &
                      this%litfall_patch(p) + &
-                     this%reproductivec_to_food_patch(p,k)
+                     this%repr_grainc_to_food_patch(p,k)
              end do
           end if
+
+          do k = repr_structure_min, repr_structure_max
+             this%litfall_patch(p) = &
+                  this%litfall_patch(p) + &
+                  this%repr_structurec_to_litter_patch(p,k)
+          end do
        end if
 
        ! update the annual litfall accumulator, for use in mortality code

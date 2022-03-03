@@ -33,7 +33,7 @@ module CNPhenologyMod
   use WaterDiagnosticBulkType         , only : waterdiagnosticbulk_type
   use Wateratm2lndBulkType            , only : wateratm2lndbulk_type
   use initVerticalMod                 , only : find_soil_layer_containing_depth
-  use CropReprPoolsMod                    , only : nrepr
+  use CropReprPoolsMod                , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
   use ColumnType                      , only : col
   use GridcellType                    , only : grc                
   use PatchType                       , only : patch   
@@ -2592,8 +2592,9 @@ contains
 
          leafcn                =>    pftcon%leafcn                                     , & ! Input:  leaf C:N (gC/gN) 
          
-         biofuel_harvfrac      =>    pftcon%biofuel_harvfrac                           , & ! Input:  cut a fraction of leaf & stem for biofuel (-) 
-                                          
+         biofuel_harvfrac      =>    pftcon%biofuel_harvfrac                           , & ! Input:  cut a fraction of leaf & stem for biofuel (-)
+         repr_structure_harvfrac =>  pftcon%repr_structure_harvfrac                    , & ! Input:  fraction of each reproductive structure component that is harvested and sent to the crop products pool
+
          lflitcn               =>    pftcon%lflitcn                                    , & ! Input:  leaf litter C:N (gC/gN)                           
          frootcn               =>    pftcon%frootcn                                    , & ! Input:  fine root C:N (gC/gN)                             
          graincn               =>    pftcon%graincn                                    , & ! Input:  grain C:N (gC/gN)                                 
@@ -2620,16 +2621,20 @@ contains
          leafc_to_litter       =>    cnveg_carbonflux_inst%leafc_to_litter_patch       , & ! Output: [real(r8) (:) ]  leaf C litterfall (gC/m2/s)                       
          frootc_to_litter      =>    cnveg_carbonflux_inst%frootc_to_litter_patch      , & ! Output: [real(r8) (:) ]  fine root C litterfall (gC/m2/s)                  
          livestemc_to_litter   =>    cnveg_carbonflux_inst%livestemc_to_litter_patch   , & ! Output: [real(r8) (:) ]  live stem C litterfall (gC/m2/s)                  
-         reproductivec_to_food        =>    cnveg_carbonflux_inst%reproductivec_to_food_patch        , & ! Output: [real(r8) (:,:) ]  grain C to food (gC/m2/s)
-         reproductivec_to_seed        =>    cnveg_carbonflux_inst%reproductivec_to_seed_patch        , & ! Output: [real(r8) (:,:) ]  grain C to seed (gC/m2/s)
+         repr_grainc_to_food   =>    cnveg_carbonflux_inst%repr_grainc_to_food_patch   , & ! Output: [real(r8) (:,:) ]  grain C to food (gC/m2/s)
+         repr_grainc_to_seed   =>    cnveg_carbonflux_inst%repr_grainc_to_seed_patch   , & ! Output: [real(r8) (:,:) ]  grain C to seed (gC/m2/s)
+         repr_structurec_to_cropprod => cnveg_carbonflux_inst%repr_structurec_to_cropprod_patch, & ! Output: [real(r8) (:,:) ] reproductive structure C to crop product pool (gC/m2/s)
+         repr_structurec_to_litter   => cnveg_carbonflux_inst%repr_structurec_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure C to litter (gC/m2/s)
          leafc_to_biofuelc     =>    cnveg_carbonflux_inst%leafc_to_biofuelc_patch     , & ! Output: [real(r8) (:) ]  leaf C to biofuel C (gC/m2/s)
          livestemc_to_biofuelc =>    cnveg_carbonflux_inst%livestemc_to_biofuelc_patch , & ! Output: [real(r8) (:) ]  livestem C to biofuel C (gC/m2/s)
          leafn                 =>    cnveg_nitrogenstate_inst%leafn_patch              , & ! Input:  [real(r8) (:) ]  (gN/m2) leaf N      
          frootn                =>    cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:) ]  (gN/m2) fine root N                        
 
          livestemn_to_litter   =>    cnveg_nitrogenflux_inst%livestemn_to_litter_patch , & ! Output: [real(r8) (:) ]  livestem N to litter (gN/m2/s)                    
-         reproductiven_to_food        =>    cnveg_nitrogenflux_inst%reproductiven_to_food_patch      , & ! Output: [real(r8) (:,:) ]  grain N to food (gN/m2/s)
-         reproductiven_to_seed        =>    cnveg_nitrogenflux_inst%reproductiven_to_seed_patch      , & ! Output: [real(r8) (:,:) ]  grain N to seed (gN/m2/s)
+         repr_grainn_to_food        =>    cnveg_nitrogenflux_inst%repr_grainn_to_food_patch      , & ! Output: [real(r8) (:,:) ]  grain N to food (gN/m2/s)
+         repr_grainn_to_seed        =>    cnveg_nitrogenflux_inst%repr_grainn_to_seed_patch      , & ! Output: [real(r8) (:,:) ]  grain N to seed (gN/m2/s)
+         repr_structuren_to_cropprod => cnveg_nitrogenflux_inst%repr_structuren_to_cropprod_patch, & ! Output: [real(r8) (:,:) ] reproductive structure N to crop product pool (gN/m2/s)
+         repr_structuren_to_litter   => cnveg_nitrogenflux_inst%repr_structuren_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure N to litter (gN/m2/s)
          leafn_to_biofueln     =>    cnveg_nitrogenflux_inst%leafn_to_biofueln_patch   , & ! Output: [real(r8) (:) ]  leaf N to biofuel N (gN/m2/s)
          livestemn_to_biofueln =>    cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch, & ! Output: [real(r8) (:) ]  livestem N to biofuel N (gN/m2/s)     
          leafn_to_litter       =>    cnveg_nitrogenflux_inst%leafn_to_litter_patch     , & ! Output: [real(r8) (:) ]  leaf N litterfall (gN/m2/s)                       
@@ -2668,20 +2673,31 @@ contains
                   ! fully replenished the seed deficit.
                   cropseedc_deficit_remaining = -cropseedc_deficit(p)
                   cropseedn_deficit_remaining = -cropseedn_deficit(p)
-                  do k = 1, nrepr
+                  do k = repr_grain_min, repr_grain_max
                      cropseedc_deficit_to_restore = min(cropseedc_deficit_remaining, reproductivec(p,k))
                      cropseedc_deficit_remaining = cropseedc_deficit_remaining - cropseedc_deficit_to_restore
-                     reproductivec_to_seed(p,k) = t1 * cropseedc_deficit_to_restore
+                     repr_grainc_to_seed(p,k) = t1 * cropseedc_deficit_to_restore
 
                      cropseedn_deficit_to_restore = min(cropseedn_deficit_remaining, reproductiven(p,k))
                      cropseedn_deficit_remaining = cropseedn_deficit_remaining - cropseedn_deficit_to_restore
-                     reproductiven_to_seed(p,k) = t1 * cropseedn_deficit_to_restore
+                     repr_grainn_to_seed(p,k) = t1 * cropseedn_deficit_to_restore
 
                      ! Send the remaining grain to the food product pool
-                     reproductivec_to_food(p,k) = t1 * reproductivec(p,k) &
-                          + cpool_to_reproductivec(p,k) - reproductivec_to_seed(p,k)
-                     reproductiven_to_food(p,k) = t1 * reproductiven(p,k) &
-                          + npool_to_reproductiven(p,k) - reproductiven_to_seed(p,k)
+                     repr_grainc_to_food(p,k) = t1 * reproductivec(p,k) &
+                          + cpool_to_reproductivec(p,k) - repr_grainc_to_seed(p,k)
+                     repr_grainn_to_food(p,k) = t1 * reproductiven(p,k) &
+                          + npool_to_reproductiven(p,k) - repr_grainn_to_seed(p,k)
+                  end do
+
+                  do k = repr_structure_min, repr_structure_max
+                     repr_structurec_to_cropprod(p,k) = (t1 * reproductivec(p,k) + cpool_to_reproductivec(p,k)) &
+                          * repr_structure_harvfrac(ivt(p), k)
+                     repr_structurec_to_litter(p,k)   = (t1 * reproductivec(p,k) + cpool_to_reproductivec(p,k)) &
+                          * (1._r8 - repr_structure_harvfrac(ivt(p), k))
+                     repr_structuren_to_cropprod(p,k) = (t1 * reproductiven(p,k) + npool_to_reproductiven(p,k)) &
+                          * repr_structure_harvfrac(ivt(p), k)
+                     repr_structuren_to_litter(p,k)   = (t1 * reproductiven(p,k) + npool_to_reproductiven(p,k)) &
+                          * (1._r8 - repr_structure_harvfrac(ivt(p), k))
                   end do
                   
                   ! Cut a certain fraction (i.e., biofuel_harvfrac(ivt(p))) (e.g., biofuel_harvfrac(ivt(p)=70% for bioenergy crops) of leaf C
@@ -3066,19 +3082,31 @@ contains
        end do
 
        if (use_grainproduct) then
-          do k = 1, nrepr
+          do k = repr_grain_min, repr_grain_max
              do fp = 1, num_soilp
                 p = filter_soilp(fp)
                 cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
                      cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) + &
-                     cnveg_carbonflux_inst%reproductivec_to_food_patch(p,k)
+                     cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,k)
                 cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
                      cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) + &
-                     cnveg_nitrogenflux_inst%reproductiven_to_food_patch(p,k)
+                     cnveg_nitrogenflux_inst%repr_grainn_to_food_patch(p,k)
              end do
           end do
        end if
-       
+
+       do k = repr_structure_min, repr_structure_max
+          do fp = 1, num_soilp
+             p = filter_soilp(fp)
+             cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
+                  cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) + &
+                  cnveg_carbonflux_inst%repr_structurec_to_cropprod_patch(p,k)
+             cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
+                  cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) + &
+                  cnveg_nitrogenflux_inst%repr_structuren_to_cropprod_patch(p,k)
+          end do
+       end do
+
        call p2c (bounds, num_soilc, filter_soilc, &
             cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(bounds%begp:bounds%endp), &
             cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_col(bounds%begc:bounds%endc))
@@ -3135,11 +3163,13 @@ contains
          leafc_to_litter           => cnveg_carbonflux_inst%leafc_to_litter_patch           , & ! Input:  [real(r8) (:)   ]  leaf C litterfall (gC/m2/s)                       
          frootc_to_litter          => cnveg_carbonflux_inst%frootc_to_litter_patch          , & ! Input:  [real(r8) (:)   ]  fine root N litterfall (gN/m2/s)                  
          livestemc_to_litter       => cnveg_carbonflux_inst%livestemc_to_litter_patch       , & ! Input:  [real(r8) (:)   ]  live stem C litterfall (gC/m2/s)                  
-         reproductivec_to_food            => cnveg_carbonflux_inst%reproductivec_to_food_patch            , & ! Input:  [real(r8) (:,:)   ]  grain C to food (gC/m2/s)
+         repr_grainc_to_food       => cnveg_carbonflux_inst%repr_grainc_to_food_patch       , & ! Input:  [real(r8) (:,:) ]  grain C to food (gC/m2/s)
+         repr_structurec_to_litter => cnveg_carbonflux_inst%repr_structurec_to_litter_patch,  & ! Input:  [real(r8) (:,:) ] reproductive structure C to litter (gC/m2/s)
          phenology_c_to_litr_c     => cnveg_carbonflux_inst%phenology_c_to_litr_c_col       , & ! Output: [real(r8) (:,:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter pools (gC/m3/s)
 
          livestemn_to_litter       => cnveg_nitrogenflux_inst%livestemn_to_litter_patch     , & ! Input:  [real(r8) (:)   ]  livestem N to litter (gN/m2/s)                    
-         reproductiven_to_food            => cnveg_nitrogenflux_inst%reproductiven_to_food_patch          , & ! Input:  [real(r8) (:,:)   ]  grain N to food (gN/m2/s)
+         repr_grainn_to_food       => cnveg_nitrogenflux_inst%repr_grainn_to_food_patch     , & ! Input:  [real(r8) (:,:) ]  grain N to food (gN/m2/s)
+         repr_structuren_to_litter => cnveg_nitrogenflux_inst%repr_structuren_to_litter_patch,& ! Input:  [real(r8) (:,:) ] reproductive structure N to litter (gN/m2/s)
          leafn_to_litter           => cnveg_nitrogenflux_inst%leafn_to_litter_patch         , & ! Input:  [real(r8) (:)   ]  leaf N litterfall (gN/m2/s)                       
          frootn_to_litter          => cnveg_nitrogenflux_inst%frootn_to_litter_patch        , & ! Input:  [real(r8) (:)   ]  fine root N litterfall (gN/m2/s)                  
          phenology_n_to_litr_n     => cnveg_nitrogenflux_inst%phenology_n_to_litr_n_col       & ! Output: [real(r8) (:,:,:) ]  N fluxes associated with phenology (litterfall and crop) to litter pools (gN/m3/s)
@@ -3196,19 +3226,33 @@ contains
 
                         if (.not. use_grainproduct) then
                            do i = i_litr_min, i_litr_max
-                              do k = 1, nrepr
+                              do k = repr_grain_min, repr_grain_max
                                  ! grain litter carbon fluxes
                                  phenology_c_to_litr_c(c,j,i) = &
                                       phenology_c_to_litr_c(c,j,i) + &
-                                      reproductivec_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                                      repr_grainc_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
 
                                  ! grain litter nitrogen fluxes
                                  phenology_n_to_litr_n(c,j,i) = &
                                       phenology_n_to_litr_n(c,j,i) + &
-                                      reproductiven_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                                      repr_grainn_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
                               end do
                            end do
                         end if
+
+                        do i = i_litr_min, i_litr_max
+                           do k = repr_structure_min, repr_structure_max
+                              ! reproductive structure litter carbon fluxes
+                              phenology_c_to_litr_c(c,j,i) = &
+                                   phenology_c_to_litr_c(c,j,i) + &
+                                   repr_structurec_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+
+                              ! reproductive structure litter nitrogen fluxes
+                              phenology_n_to_litr_n(c,j,i) = &
+                                   phenology_n_to_litr_n(c,j,i) + &
+                                   repr_structuren_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                           end do
+                        end do
                      end if
                   end if
                end if
