@@ -124,7 +124,7 @@ module CNFUNMod
   !
   ! !USES:
   use clm_varcon      , only: secspday, fun_period
-  use clm_time_manager, only: get_step_size_real,get_nstep,get_curr_date,get_days_per_year
+  use clm_time_manager, only: get_step_size_real,get_nstep,get_curr_date,get_curr_days_per_year
   !
   ! !ARGUMENTS:
   type(bounds_type)             , intent(in)    :: bounds
@@ -166,7 +166,7 @@ module CNFUNMod
   !---
   ! set time steps
   dt           = get_step_size_real()
-  dayspyr      = get_days_per_year()
+  dayspyr      = get_curr_days_per_year()
   nstep        = get_nstep()
   timestep_fun = real(secspday * fun_period)
   nstep_fun    = int(secspday * dayspyr / dt) 
@@ -210,7 +210,7 @@ module CNFUNMod
        & soilbiogeochem_nitrogenstate_inst)
 
 ! !USES:
-   use clm_time_manager, only : get_step_size_real, get_curr_date, get_days_per_year 
+   use clm_time_manager, only : get_step_size_real, get_curr_date
    use clm_varpar      , only : nlevdecomp
    use clm_varcon      , only : secspday, smallValue, fun_period, tfrz, dzsoi_decomp, spval
    use clm_varctl      , only : use_nitrif_denitrif
@@ -505,7 +505,6 @@ module CNFUNMod
   !---------------------------------
   associate(ivt                    => patch%itype                                          , & ! Input:   [integer  (:) ]  p
          leafcn                 => pftcon%leafcn                                        , & ! Input:   leaf C:N (gC/gN)
-         lflitcn                => pftcon%lflitcn                                       , & ! Input:   leaf litter C:N (gC/gN)
          season_decid           => pftcon%season_decid                                  , & ! Input:   binary flag for seasonal
          ! -deciduous leaf habit (0 or 1)
          stress_decid           => pftcon%stress_decid                                  , & ! Input:   binary flag for stress

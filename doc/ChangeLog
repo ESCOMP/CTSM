@@ -1,4 +1,1581 @@
 ===============================================================
+Tag name: ctsm5.1.dev082
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Mon Feb 28 10:12:16 MST 2022
+One-line Summary: Replace dom_nat_pft with dom_plant to enable crop in fsurdat_modifier tool
+
+Purpose and description of changes
+----------------------------------
+
+ Allow user to replace vegetation in fsurdat files with any pft/cft using the
+ fsurdat_modifier tool option dom_plant. This option replaces now obsolete
+ option dom_nat_pft which handled pfts only and not cfts.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ Instead of dom_nat_pft = UNSET, modify_template.cfg now includes the line
+ dom_plant = UNSET to allow users to set the pft/cft of their choice to replace
+ the existing vegetation.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ New system test that checks the new code compares a generated file to a
+ baseline file. I added the baseline file to this PR:
+ .../python/ctsm/test/testinputs/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified_with_crop.nc
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Added a system test to test_sys_fsurdat_modifier.py to run with the new option
+ dom_plant set to 15 (i.e. a crop).
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) - cheyenne PASS
+
+    clm_pymods test suite on cheyenne - PASS
+
+  any other testing (give details below):
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1615
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev081
+Originator(s): swensosc (Sean Swenson)
+Date: Thu Feb 24 21:33:35 MST 2022
+One-line Summary: Do not subtract irrigation from QRUNOFF diagnostic
+
+Purpose and description of changes
+----------------------------------
+
+Remove code that subtracts surface irrigation flux from qflx_runoff_col.
+This is a diagnostic change only.
+
+This subtraction no longer makes sense now that irrigation is passed as
+a separate flux to the ROF model.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just in a few diagnostic fields
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Crop cases with irrigation
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Larger than roundoff, but only impacts a few diagnostic fields:
+      QRUNOFF, QRUNOFF_R, QRUNOFF_TO_COUPLER
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1641
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev080
+Originator(s): sacks (Bill Sacks)
+Date: Thu Feb 24 15:26:02 MST 2022
+One-line Summary: Use avg days per year when converting param units
+
+Purpose and description of changes
+----------------------------------
+
+When converting parameter units from per-year to per-second, use average
+days per year instead of current number of days per year. This is
+relevant when running with a Gregorian calendar.
+
+See https://github.com/ESCOMP/CTSM/issues/1612 for details.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1612 (Some uses of get_days_per_year should use
+  the average number of days in a year, not the number of days in the
+  current year)
+
+Known bugs introduced in this tag (include issue #):
+- ESCOMP/CTSM#1624 (Change get_average_days_per_year to use
+  ESMF_CalendarGet)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Once ESMF supports it, we should change get_average_days_per_year to
+  use ESMF_CalendarGet (see ESCOMP/CTSM#1624)
+
+Testing summary:
+----------------
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Test
+ERS_Ly3_P72x2_Vmct.f10_f10_mg37.IHistClm50BgcCropG.cheyenne_intel.clm-cropMonthOutput
+initially failed COMPARE_base_rest and BASELINE comparisons; rerunning
+solved the issue.
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Gregorian cases with BGC
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      larger than roundoff / same climate
+
+      Changes a few BGC-related parameters by a small amount (< 1/365 in
+      a relative sense) for Gregorian cases
+
+      Changes answers for these tests:
+      - SMS_Ly5_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropQianRs.izumi_gnu.clm-gregorian_cropMonthOutput
+      - DAE_C2_D_Lh12.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_intel.clm-DA_multidrv
+      - DAE_N2_D_Lh12_Vmct.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_intel.clm-DA_multidrv      
+
+      In principle, might change answers by roundoff for NOLEAP BGC
+      tests on some machines / compilers, but that wasn't seen in any
+      aux_clm testing.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1625
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev079
+Originator(s): sacks (Bill Sacks)
+Date: Thu Feb 24 14:40:58 MST 2022
+One-line Summary: Changes to CropPhenology timing
+
+Purpose and description of changes
+----------------------------------
+
+Changes to CropPhenology timing to support
+https://github.com/escomp/ctsm/pull/1616 and other work being done by
+Sam Rabin:
+
+(1) Change CropPhenology to look at the time as of the START of the time
+    step. Previously, CropPhenology looked at time as of the END of the
+    time step. This was somewhat problematic, particularly because it
+    meant that the last time step of the year was considered Jan 1, and
+    so crops with a planting window beginning Jan 1 could be planted at
+    the end of the previous year rather than the start of the new year.
+    This was becoming particularly problematic in the context of Sam
+    Rabin's upcoming prescribed sowing date work (see #1623 and #1616
+    for some discussion).
+
+(2) Call CropPhenology regardless of doalb (however, still do not call
+    CropPhenology on time step 0). (See some discussion in #1626 and
+    #1623.)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1623 (Change CropPhenology to look at the day of
+  year as of the start of the time step, not the end of the time step)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Also ran
+ERS_Ld3_D.f09_g17.I1850Clm50BgcCrop.cheyenne_intel.clm-rad_hrly_light_res_half
+(a debug version of the one test in the test suite that uses hourly
+doalb)
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Crop cases
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Not investigated carefully, but expected to be larger than
+      roundoff/same climate
+
+      Based on an analysis of the code, the differences should be small,
+      but I haven't investigated this with simulations. In principle,
+      there could be larger answer changes for crops that invoke
+      vernalization in cases where doalb isn't true every time step, but
+      currently I think we don't simulate any crops that invoke
+      vernalization. It's also possible that there are other larger
+      changes in cases where doalb isn't true every time step (i.e., F
+      and B compsets), though from reading through the code, I don't see
+      any potentials for big changes.
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1628
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev078
+Originator(s): sacks (Bill Sacks)
+Date: Thu Feb 24 14:15:46 MST 2022
+One-line Summary: Rework single-point testing
+
+Purpose and description of changes
+----------------------------------
+
+Two changes to make the single-point tests in our test suite run more
+smoothly. The main motivation for this is that single-point tests have
+been failing frequently on cheyenne, presumably due to issues with nodes
+in the share queue.
+
+(1) Rework the test list to remove redundant single-point tests and move
+    many of our single-point tests from cheyenne to izumi. (With (2) in
+    place, this isn't really necessary, but given that we're going to be
+    using full nodes for single-point tests, it seems better to do this
+    on izumi rather than wasting all of these processors on the
+    generally more heavily-loaded cheyenne. Also, this helps accomplish
+    the goal of providing better balance between our different
+    machine-compiler permutations, helping to reduce overall testing
+    time.)
+
+(2) Change run_sys_tests so that, for the remaining single-point tests
+    on cheyenne, we use the regular queue rather than the share queue.
+    This means that single-point tests use a full node, which is
+    wasteful but makes the tests more reliable. (You can override this
+    behavior with the --queue option to run_sys_tests: To revert to the
+    earlier behavior, where the queue is determined automatically for
+    each test, add '--queue unspecified' to your run_sys_tests
+    invocation. (As before --queue can also be used to specify some
+    other queue to use for all tests.))
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Partially addresses ESCOMP/CTSM#275
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Overhauls single-point tests. See
+  https://github.com/ESCOMP/CTSM/pull/1660#issuecomment-1049489430 for details.
+
+
+Testing summary:
+----------------
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1660
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev077
+Originator(s): rgknox (Ryan Knox,,,)
+Date: Tue Feb 22 12:51:04 EST 2022
+One-line Summary: Updates to FATES API, including removal of patch dimensions from fates history and using soil instead of ground layers for fates history.
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes cleaned up some aspects of the FATES history diagnostics API. Patches are not used in output diagnostics, so they were removed from the history coupling. Also, FATES only "sees" the soil, not the rock layers, so it is more appropriate to only align FATES below ground history output on the soil layers, and not ground layers.  Also, the corresponding FATES side changes have some history output names changed. This is an API change as well, and is compatable with FATES: https://github.com/NGEET/fates/releases/tag/sci.1.54.0_api.22.0.0
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+[X] clm5_1-FATES-hydro
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+	FATES users should now benefit from more interpretable history output from soil dimensioned variables, where they won't have to filter out ground layers which previously contained no-data flags.  Also, note the following FATES history variable name changes:
+
+	FATES_ROOTH2O_ABS_SZPF -> FATES_ABSROOT_H2O_SZPF
+	FATES_ROOTH2O_TRANS_SZPF -> FATES_TRANSROOT_H2O_SZPF
+	FATES_STEMH2O_SZPF -> FATES_STEM_H2O_SZPF
+	FATES_LEAFH2O_SZPF -> FATES_LEAF_H2O_SZPF
+	FATES_ROOTH2O_POT_SZPF -> FATES_ABSROOT_H2OPOT_SZPF
+	FATES_ROOTH2O_TRANSPOT_SZPF -> FATES_TRANSROOT_H2OPOT_SZPF
+	FATES_STEMH2O_POT_SZPF -> FATES_STEM_H2OPOT_SZPF
+	FATES_LEAFH2O_POT_SZPF -> FATES_LEAF_H2OPOT_SZPF
+	FATES_ROOT_ABSFRAC_SZPF -> FATES_ABSROOT_CONDFRAC_SZPF
+	FATES_ROOT_TRANSFRAC_SZPF -> FATES_TRANSROOT_CONDFRAC_SZPF
+	FATES_STEMH2O_FRAC_SZPF -> FATES_STEM_CONDFRAC_SZPF
+	FATES_LEAFH2O_FRAC_SZPF -> FATES_LEAF_CONDFRAC_SZPF
+
+Caveats for users (e.g., need to interpolate initial conditions): FATES users may have scripts that assume below ground diagnostics are on the ground dimension, and will have to update scripts to use the soil dimension.
+
+Changes made to namelist defaults (e.g., changed parameter values): No changes to defaults, but some FATES plant hydraulics history variable names were changed in the corresponding FATES tag.
+
+Changes to tests or testing: An update was made to the fates-hydro tests to use updated history variable names.
+
+
+Testing summary:
+----------------
+
+    d) regular (regular tests on normal machines if CTSM source is modified)
+
+    cheyenne ---- /glade/scratch/rgknox/tests_0220-124230ch  (OK) expected FATES baseline DIFFS
+    izumi ------- /scratch/cluster/rgknox/tests_0220-125238iz (OK)
+
+  fates tests: fates test suite was run, (OK)
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: All results are B4B with base (dev076), except for two conditions: 1) FATES output that uses the soil dimension has NLCOMP and DIFFS due to the dimension change, and 2) FATES hydro simulations have different results due to bug fixes
+
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1592
+https://github.com/NGEET/fates/pull/766
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev076
+Originator(s): negins (Negin Sobhani,UCAR/TSS,303-497-1224)
+Date: Fri Feb 18 13:25:19 MST 2022
+One-line Summary: updating subset_data.py script and move to the Python package.
+
+Purpose and description of changes
+----------------------------------
+The purpose of this PR was to update and move the subset_data.py and other
+relevant python scripts to the CTSM python package so the other python codes
+(such as fsurdat_modifier) can re-use/import the capabilities of this script.
+
+This updated code now adds the capability to create user-mods for a generic
+singlepoint case.
+
+The subset_data.py (top script called subset_data)extracts surface dataset,
+domain file, landuse, and DATM files at a single point or a region from the
+available global dataset. Next it modifies the surface dataset based on the
+user options (command-line arguments) for example dom-pft or zero-ing non-veg
+types, etc.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+ Fixes CTSM/#935 -- Make surface dataset and landuse consistent for singlept 
+ Fixes CTSM/#1436 -- Running subset_data from any directory
+ Fixes CTSM/#1437 -- issue with modify_singlept_site_neon for finding latest file
+ Fixes CTSM/#1594 -- try/except for python download neon data
+ Fixes CTSM/#1606 -- NEON tools not handling crop weights correctly.
+ Part of development needed for #1490 -- generic single point simulation.
+ Partially Fixes CTSM/#1622 -- check if file exists and abort if not found + --overwrite
+	Fixes it for subset_data
+ Partially Fixes CTSM/#1441 -- Move critical toolchain script out of tools/contrib
+	Fixes it for subset_data
+
+CIME Issues fixed (include issue #): N/A
+
+Known bugs introduced in this tag (include issue #): N/A
+
+Known bugs found since the previous tag (include issue #): N/A
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Added python/ctsm/test/test_unit_args_utils.py (11 unit tests)
+ Added python/ctsm/test/test_unit_singlept_data.py (10 unit tests)
+ Added python/ctsm/test/test_unit_singlept_data_surfdata.py (24 unit tests) 
+ Modified tests in python/ctsm/test/test_unit_utils.py
+ Modified tests in python/ctsm/test/test_unit_modify_fsurdat.py 
+ Added 10 new tests in tests/tools/input_tests_master thanks to @ekluzek
+ Added test/tools/tests_pretag_nompi_neon 
+
+Testing summary:
+----------------
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    clm_pymods test suite on cheyenne - PASS
+	pylint -- PASS (10.00/10) (cheyenne + python/3.7.9)
+	Python unit tests -- PASS (cheyenne)
+	Python system tests -- PASS (cheyenne)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK (tests_pretag_nompi_neon + subset_data tests)
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1461
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev075
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Feb 16 21:35:40 MST 2022
+One-line Summary: Small answer changes: urban ventilation, fire-emission, irrigate off when not crop, fix two SSP ndep files
+
+Purpose and description of changes
+----------------------------------
+
+The effects of ventilation (exchange of building air with canopy air) are accounted for in the 
+energy budget inside the building.  The effects on urban canopy air are not. This remedies that.
+
+This fixes an issue with how coefficients are applied to individual fire components. Allow units 
+to be in molecules/m2/sec as well as kg/m2/sec.
+
+SSP3-7.0 Nitrogen-deposition file update.  Fix SSP2-4.5 Nitrogen-deposition file.  Turn irrigation 
+off by default except for future scenarios.
+
+Add new external ccs_config_cesm which has the CESM cime configuration files.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm5_1
+
+[x] clm5_0
+
+[x] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+  Fixes #1526 -- Switch FATES methane test for methane off
+  Fixes #509 --- irrigate in 1850 is off for runs with use_crop but on for those without 
+  Fixes #1578 -- Need to replace SSP370 ndep file with new one
+  Fixes #1631 -- ndep file for SSP2-4.5 is incorrect 
+
+Known bugs introduced in this tag (include issue #):
+  #1653 -- Use secsphr in UrbBuildTempOleson2015Mod.F90
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  using older restart files will start ventilation flux at zero.
+  default fsurdat selection can also match irrigate true surface datasets
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   irrigate is now default off, except for future scenarios
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   New Nitrogen-deposition file for SSP3-7.0
+   Correct Nitrogen-deposition file for SSP2-4.5
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+   FATES methane on test switched to methane off, since methane on is the default
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (345 tests are different than baseline)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm5_0/clm5_1 urban ventilation flux, 
+                                irrigate off now, SSP3-7.0/SSP2-4.5 new ndep file, fire-emissions different
+    - what platforms/compilers: All
+    - nature of change: Similar climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: oleson/ctsm51_ctsm51d61_1deg_GSWP3V1_CON_VENT_2000
+
+   URL for LMWG diagnostics output used to validate new climate:
+   https://webext.cgd.ucar.edu/I2000/ctsm51_ctsm51d61_1deg_GSWP3V1_CON_VENT_2000/lnd/ctsm51_ctsm51d61_1deg_GSWP3V1_CON_VENT_2000.1991_2010-ctsm51_ctsm51d61_1deg_GSWP3V1_CON_2000.1991_2010/set2/set2.html
+
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+   cism  to cismwrap_2_1_95
+   cime  to cime6.0.13
+   cmeps to cmeps0.13.47
+   cdeps to cdeps0.12.35
+   cpl7  to cpl7.0.12
+   pio   to pio2_5_5
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1535 -- Ventilation flux to urban canyon
+   #1532 -- Fire emissions bug fix
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev074
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Wed Feb  2 00:44:27 MST 2022
+One-line Summary: Introduce vert. resolved MIMICS as new method to solve below ground decomp.
+
+Purpose and description of changes
+----------------------------------
+
+ Introducing new option to solve below ground decomposition: MIMICSWieder2015.
+ The old option (CENTURYKoven2013) remains available. User will select one or
+ the other via the namelist variable soil_decomp_method.
+
+ Elin's MIMICS+ github issue relates: #1260.
+ MIMICS spinup issues relate and are listed in caveats for users.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+ #1473 : decomp_depth_efolding appears (with the same value) in the namelist
+         and the params files; the model ends up using the one from the namelist
+
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ MIMICS spinup method is in development
+ Issues related to spinup
+ #1451 -- MIMICS spinup
+ #1455 -- Additional history output for Newton-Krylov spinup
+ #1457 -- Adding history variables for Newton-Krylov spinup
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New option MIMICSWieder2015 for use with namelist variable soil_decomp_method
+ decomp_depth_efolding removed as values on param files was already being used
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ CLM parameter files now include new MIMICS-related parameters prefixed with
+ mimics_. Existing CENTURYKoven-specific parameters were renamed to include the
+ prefix bgc_. Parameters used by both CENTURYKoven2013 and MIMICSWieder2015 have
+ neither prefix.
+
+Substantial timing or memory changes:
+ Timing comparison between CENTURYKoven (BGC for short) and MIMICSWieder:
+ In a 1x1_brazil test writing annual output and restarts every 10 yrs,
+ BGC took ~2.8 hrs/100 yrs, MIMICS took ~3.6 hrs/100 yrs.
+
+ More timing comparisons shown here:
+ https://github.com/ESCOMP/CTSM/pull/1318#issuecomment-1008211485
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ New test-suite tests:
+ ERP_D_P36x2_Ld3.f10_f10_mg37.I1850Clm51BgcCrop.cheyenne_gnu.clm-mimics
+ SMS_Ld5_Mmpi-serial.1x1_brazil.IHistClm50BgcQianRs.izumi_gnu.clm-mimics
+ SMS_Ly5_Mmpi-serial.1x1_brazil.IHistClm50BgcQianRs.cheyenne_intel.clm-newton_krylov_spinup
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+       cheyenne - PASS (831 tests are different from baseline because of new param files)
+
+   python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne ---- OK (black test fails)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK (see one answer change below)
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO (almost)
+
+ One test in the izumi test-suite fails
+ SMS_Vmct.f10_f10_mg37.I2000Clm50BgcCrop.izumi_pgi.clm-crop
+ and this is due to diffs from baseline (dev073).
+ cprnc.out shows diffs only in one variable:
+ RMS TOTECOSYSC 1.9853E-12 NORMALIZED 6.5087E-17
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1318 -- MIMICS into vertically resolved CTSM
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev073
+Originator(s): sacks (Bill Sacks)
+Date: Tue Jan 25 16:33:06 MST 2022
+One-line Summary: Some fixes for Gregorian calendar
+
+Purpose and description of changes
+----------------------------------
+
+A few bug fixes for running with a Gregorian calendar. These primarily
+fix the AnnualFluxDribbler, preventing balance errors in transient runs
+(or in runs starting from restart files that came from transient runs).
+But these general fixes end up fixing a few other minor issues with
+Gregorian calendar runs as well.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1590 (Gridcell water balance errors for some
+  PLUMBER2 sites with branch_tags/PPE.n11_ctsm5.1.dev030)
+
+Known bugs found since the previous tag (include issue #):
+Other bugs with Gregorian calendar runs found in the course of making these fixes are:
+- https://github.com/ESCOMP/CTSM/issues/1595 (Bugs in crop phenology
+  when running with a Gregorian calendar)
+- https://github.com/ESCOMP/CTSM/issues/1612 (Some uses of
+  get_days_per_year should use the average number of days in a year, not
+  the number of days in the current year)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Added a multi-year test with Gregorian calendar
+  (SMS_Ly5_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropQianRs.cheyenne_gnu.clm-gregorian_cropMonthOutput);
+  as expected, this test fails on master but passes on this branch
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but very limited
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Some runs with a Gregorian calendar
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Larger than roundoff, same climate -- only very small changes
+
+   The only test with answer changes is
+   SMS_C2_D_Lh12.f09_g17.I2000Clm50Sp.cheyenne_intel.clm-pauseResume;
+   that test just has answer changes in the time-0 history file because
+   of the fix to the AnnualFluxDribbler's flux in the last time step of
+   the year (which is the time step used for time 0). There were answer
+   changes in only 6 fields, which are the fields impacted by changes in
+   the land use change correction fluxes dribbled to the atmosphere and
+   river:
+   - EFLX_DYNBAL
+   - FSH_TO_COUPLER
+   - QFLX_ICE_DYNBAL
+   - QFLX_LIQ_DYNBAL
+   - QRUNOFF_ICE_TO_COUPLER
+   - QRUNOFF_TO_COUPLER
+
+   I can get bit-for-bit with master if I make the following minimal
+   diff to master:
+       diff --git a/src/utils/AnnualFluxDribbler.F90 b/src/utils/AnnualFluxDribbler.F90
+       index c66e4fdc8..1ef2fb77f 100644
+       --- a/src/utils/AnnualFluxDribbler.F90
+       +++ b/src/utils/AnnualFluxDribbler.F90
+       @@ -306,6 +306,7 @@ contains
+            integer :: i
+            real(r8) :: secs_per_year
+            real(r8) :: dtime
+       +    integer :: dtime_int
+            real(r8) :: flux_from_dribbling
+            real(r8) :: flux_from_this_timestep
+        
+       @@ -316,8 +317,9 @@ contains
+            end_index = get_end(bounds, this%bounds_subgrid_level)
+            SHR_ASSERT_ALL_FL((ubound(flux) == (/end_index/)), sourcefile, __LINE__)
+        
+       -    secs_per_year = get_days_per_year() * secspday
+            dtime = get_step_size_real()
+       +    dtime_int = int(dtime)
+       +    secs_per_year = get_days_per_year(offset=-dtime_int) * secspday
+        
+            do i = beg_index, end_index
+               flux_from_dribbling = this%amount_to_dribble(i) / secs_per_year   
+
+
+   Other answer changes that might be seen in runs with Gregorian
+   calendar are:
+   - Possible answer changes for crop runs (these changes impact some
+     crop phenology code)
+   - Possible answer changes for C iso runs (due to use of
+     get_curr_yearfrac in C14BombSpike and C13TimeSeries), though that
+     may not be impacted
+   - Possible answer changes for CNDV runs (due to use of
+     get_curr_yearfrac)
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/1593
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev072
+Originator(s): negins (Negin Sobhani,UCAR/TSS,303-497-1224)
+Date: Mon Jan 17 10:50:25 MST 2022
+One-line Summary: mksurfdat toolchain part 1: gen_mksurf_namelist
+
+Purpose and description of changes
+----------------------------------
+
+ This tag introduces ./gen_mksurf_namelist python script, which generates
+ a user-modifiable control file (namelist) for use with #1430 (mkmap_data.py)
+ within the context of #644 (wrapper tool for generating fsurdat files).
+
+ The new namelist (control file) format does not have mapping
+ files listed since the mapping file information are stored as part of the
+ metadata for input data.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ This tag introduces the ./gen_mksurf_namelist script for generating a
+ user-modifiable control file (namelist) for use with the in-development
+ pythonized mkmapdata (#1430).
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ Currently resolution options and corresponding destination mesh files are
+ hardwired in this code. This information should be obtained from existing
+ .xml file(s).
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) cheyenne make all - PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1419
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev071
+Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Sun Jan 16 20:26:47 MST 2022
+One-line Summary: Small changes to enable new fates dimension and update fates tag
+
+Purpose and description of changes
+----------------------------------
+
+This tag uncomments the fates_levleaf dimension which was added in PR #1540
+and rolled into PR #1542, but commented out to avoid junk DIFFs during integration
+of PR #1542.  This variable is necessary to accomodate FATES PR #752, which
+allows for an exponential spacing to bin widths in the VAI (LAI+SAI) calculations.
+This latest fates tag also includes a fix to the fates satellite phenology mode
+exact restart issue.  
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+  Fixes #1485 Forthcoming FATES satellite phenology ERS test fails
+  Fixes #1561 Uncomment fates_levleaf fields
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+  The ERS FatesColdDefReducedComplexSatPhen testmod has been removed from expected test failure
+  list as it now passes due to fates tag sci.1.52.1_api.20.0.0.
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi -------OK
+
+  fates tests: (baseline: sci.1.52.1_api.20.0.0-ctsm5.1.dev070)
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Expected DIFFs for a subset of fates testmods
+
+  Summarize any changes to answers, i.e.,
+    - CBALANCE_ERROR_FATES and FATES_ERRH2O_SCPF have round-off level errors that
+      eventually propagate to downstream calculations for some some fates test mods
+    - Differences are due to changing of the bin widths
+    - Fates PR #752 author reviewed the differences with a separate comparison
+      of the PR branch against fates master branch and determined that the science
+      resulting is as expected.
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.52.0_api.20.0.0 -> fates-sci.1.53.0_api.21.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  FATES #752 -- Variable VAI bin widths
+  #1562 -- Uncomment fates_hdim_levleaf dimension
+ 
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev070
+Originator(s): sacks (Bill Sacks), mvertens (Mariana Vertenstein), slevis (Samuel Levis)
+Date: Mon Jan 10 16:52:50 MST 2022
+One-line Summary: Update externals, remove need for LND_DOMAIN_FILE and LND_DOMAIN_PATH, etc.
+
+Purpose and description of changes
+----------------------------------
+
+(1) Update cime and cdeps externals
+
+(2) Remove the need for LND_DOMAIN_FILE and LND_DOMAIN_PATH XML
+    variables in NUOPC / LILAC cases
+
+(3) Update doc builder to fix issue with git lfs pull command
+
+(4) Fix mksurfdata unit tests
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1575 (Build problem for mksurfdata tools testers)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Running unit tests currently requires setting CIME_NO_CMAKE_MACRO=ON in your environment
+- LILACSMOKE test now has a hard-coded resolution and domain file
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- pass
+    izumi ------- pass
+
+    Note:
+    SMS_Ld5.f10_f10_mg37.ISSP370Clm50BgcCrop.cheyenne_gnu.clm-ciso_dec2050Start
+    failed with baseline diffs when first run, but passed upon rerun:
+    system glitch?
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/1581
+- https://github.com/ESCOMP/CTSM/pull/1591
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev069
+Originator(s): fang-bowen (Bowen Fang) / oleson (Keith Oleson,UCAR/TSS,303-497-1332)
+               / Face2sea (Lei Zhao) / keerzhang1 (Keer Zhang) / sacks (Bill Sacks)
+Date: Wed Dec 15 13:01:19 MST 2021
+One-line Summary: Implement dynamic (transient) urban capability
+
+Purpose and description of changes
+----------------------------------
+
+This implements the capability to run transient simulations with changes
+in urban density types. However, see Caveats for users section below.
+If transient urban is activated (do_transient_urban=.true.) and an
+appropriate landuse dataset is provided, the model will read in 
+yearly PCT_URBAN for three density types from the landuse dataset and
+adjust other landunits accordingly.
+Water and energy are conserved for these transitions. Urban landunits
+do not account for carbon and nitrogen, however, see the dynamic urban
+design document (doc/design/dynamic_urban.rst) for a discussion of this.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #1445 (partially, work on mksurfdata and reducing
+computational cost is in progress)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+Note that this capability is off by default because landuse datasets
+with transient urban on them are still being developed.
+Note also that if this capability is activated (e.g., for testing) then
+run_zero_weight_urban must be set to .true.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+Added do_transient_urban namelist variable
+
+Changes to the datasets (e.g., parameter, surface or initial files): 
+None.
+New datasets that include transient urban data will be provided in a future tag.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+Added ERS_Lm25.1x1_smallvilleIA.IHistClm50BgcCropQianRs.cheyenne_gnu.clm-smallville_dynurban_monthly to aux_clm
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1546
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev068
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310), sacks (Bill Sacks)
+Date: Mon Dec 13 15:42:07 MST 2021
+One-line Summary: Adding fsurdat_modifier tool
+
+Purpose and description of changes
+----------------------------------
+
+ I copied the next four paragraphs from /tools/modify_fsurdat/fsurdat_modifier:
+ fsurdat_modifier is a tool that modifies fsurdat files. It reads a surface
+ dataset (fsurdat file) and outputs a modified copy of the same file.
+
+ Current applications are limited to the simplest CTSM(SP) mode, so bgc, fire,
+ urban, vic, lake, transient, and crop-related variables in the fsurdat file
+ remain unchanged.
+
+ It differs from modify_singlept_site_neon.py in that the latter specifically
+ modifies soil properties of single-point surface datasets. Some functions
+ could/should become shared for use by fsurdat_modifier.
+
+ It also differs from the subset_data tool in that the latter subsets fsurdat
+ files to regional or single-point domains. Though subset_data includes some
+ "modify" functionality when subsetting to single-point, we intend for similar
+ functionality to be more extensive and more object oriented in
+ fsurdat_modifier. Again, some functions could/should become shared among
+ these tools.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+ Added python/ctsm/test/test_sys_fsurdat_modifier.py
+ Added python/ctsm/test/test_unit_fsurdat_modifier.py
+ Added new unit tests to python/ctsm/test/test_unit_utils.py
+ Added FSURDATMODIFYCTSM test to cime_config/config_tests.xml
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne ---- PASS
+    Bill's Mac -- PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1448
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev067
+Originator(s): jedwards4b/negin513/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Dec 13 00:50:01 MST 2021
+One-line Summary: NEON UI update, externals updates, small miscellanouse fixes
+
+Purpose and description of changes
+----------------------------------
+
+Redo options list to remove positional arguments that were difficult to input correctly.
+Transient runs now use run_type startup and get finidat from s3 server unless --run-from-postad option is used (or finidat is not
+available). Use mpi instead of mpi-serial, this mod was recommended for container use. Add a new script neon_finidat_upload which
+allows authorized users to upload finidat files to the s3 server.
+
+This includes the following changes to the script for updating the surface dataset at neon sites using available neon data (i.e.
+modify_singlept_site_neon.py) to address ctsm/issues #1353, #1429, and neon/issue #44:
+
+Update Organic calculation to use the following equation based on discussions in
+https://github.com/ESCOMP/CTSM/pull/1375/files#r669590971 :
+ORGANIC = estimatedOC * bulkDensity / 0.58
+
+Because estimatedOC is rounded to the nearest integer in neon data, it is sometimes bigger than carbonTot. Therefore, in cases where
+estimatedOC > carbonTot, we use carbonTot instead of estimatedOC in the above equation.
+
+Previously, we had missing data on neon files for some neon soil layers (see Modified NEON surface datasets have errors  #1429
+(comment)). Therefore, it caused some missing values in the updated dataset. Here, we interpolate to fill in the missing data using
+different interpolation techniques. Finally, we chose to use linear interpolation to fill in missing data.
+
+This includes the scripts for modification of the surface dataset for neon sites to address #1429.
+Specifically, the following has been addressed in this PR:
+
+Update the calculation of ORGANIC to use the new field (CaCO3) from NEON data.
+For this calculation if CaCO3 data is available, we first calculate inorganic carbon by:
+inorganic carbon = (caco3 /100.0869)*12.0107
+Next, we calculate organic carbon by subtracting inorganic carbon from the total carbon:
+[organic carbon = carbon_tot - inorganic carbon]
+If the CaCO3 is not available then the code uses carbonTot and estimatedOC by NEON.
+
+Discussed here (Modified NEON surface datasets have errors  #1429 (comment))
+For the Ag sites (KONA and STER), it changes the PCT_NATVEG, PCT_CROP, and PCT_NAT_PFT to avoid the error that we previously had in
+spin-up: surfrd_veg_all ERROR: sum of wt_nat_patch not 1.00000000000000 at nl= 1 sum is: 0.000000000000000E+000
+
+Discussed here (Modified NEON surface datasets have errors  #1429 (comment))
+There was a typo previously in the NEON data for ABBY sites caused by mix of sample measurements. Please note that this was updated
+by hand once data was downloaded from NEON site.
+
+With recent versions of CIME, the LILAC build with a user-defined machine was broken for a couple of reasons. This fixes it.
+
+Fix mksurfdata_map for 1x1_brazil. Get tools testing working again. Increase skip_steps by 1, which is needed for a change in CAM
+where balance checks need to occur after the radiation update now rather than before. glob changed for bsd_glob in perl MkDepends
+for mksurfdata_map.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+  Fixes #1563 increase skip_steps for balance checks by one to permit new CAM physics re-ordering
+  Fixes #1550 In perl code replace glob with bsd_glob
+  Fixes #1574 Trouble with 1x1_brazil for mksurfdata_map because of negative longitude in SCRIP grid file
+  Fixes #1429 Modified NEON surface datasets have errors
+  Fixes #1353 Modify NEON surface data
+  Fixes #1492 Need to update LILAC build process to use cmake macros instead of config_compilers.xml
+
+Known bugs found since the previous tag (include issue #):
+  #1575 -- Build problem for mksurfdata tools testers
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values): New 1x1_brazil SCRIP grid file and maps
+   Some NEON namelist settings changed. Last year is now 2020
+
+Changes to the datasets (e.g., parameter, surface or initial files): New NEON surface datasets
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   pyproject.toml file added to configure for black python formatter in python directory
+
+Changes to tests or testing:
+   Got tools testing working again.
+
+
+Testing summary:   regular tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (47 compare tests fail because of changes to NEON sites)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK (1x1_brazil mksurfdata changes, run_neon and modify_subset fail as expected)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - OK (new black checks do NOT pass as expected)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit (other than NEON tests because of updated namelists and surface dataset)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only NEON sites
+    - what platforms/compilers: all
+    - nature of change: new surface datasets and settings
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+    Update most externals to version in cesm2_3_alpha07c
+    cmeps to cmeps0.13.43 (version with channel depths)
+    cpl7  to cpl7.0.7
+    share to share1.0.10
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   PR #1467 -- Improve UI for NEON script
+   PR #1474 -- Script for modifying neon surface dataset -- updated  (negin513)
+   PR #1539 -- Neon modify surfurface dataset (negin513)
+   PR #1571 -- Fix LILAC build with user-defined machine with latest CIME (billsacks)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev066
+Originator(s): rgknox (Ryan Knox,,,)
+Date: Sat Dec  4 01:58:42 MST 2021
+One-line Summary: API change with FATES to enable running means inside fates, includes passing in of model timestep
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes synchronizes CTSM with API 20 of FATES.  API 20 of FATES requires a modification to timing boundary conditions so that FATES can maintain its own internal running means.  FATES also no-longer asks CTSM for the 24hour vegetation temperature, since this is a patch(pft) level variable, and FATES has more suitable averaging mechanisms.  These changes are synchronized with FATES Pull Request: https://github.com/NGEET/fates/pull/724, which subsequently created tag: https://github.com/NGEET/fates/releases/tag/sci.1.52.0_api.20.0.0
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+[x] clm_fates
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Developers should be aware that FATES does require information on the model timestep, which was not necessarily available in initialize1. Efforts were made to circumvent needing the model timetep at this phase of initialization, so impact on non-fates code was minimal.
+
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ----  PASS (fates had expectedly different results compared to base) 
+    izumi -------  PASS (fates had expectedly different results compared to base)
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- PASS (fates had expectedly different results compared to base) 
+    izumi -------
+
+
+   Additional tests:
+	Multi-decadal simulations were also run to evaluate fates side sensitivity to slightly different averaging scheme. The differences were not so subtle, attributed mostly to fixing an initialization bug (the previous 24hour temperature had initialized at 0K) and a 1-hour phase change in the 24-hour start-stop cycle.
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:  all FATES active simulations have different results.
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev065
 Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Thu Dec  2 00:13:37 MST 2021

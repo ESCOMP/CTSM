@@ -505,7 +505,7 @@ contains
           write (6,*) subname//' ERROR from '//trim(caller)//': mapping areas not conserved'
           write (6,'(a30,e20.10)') 'global sum output field = ',sum_area_o
           write (6,'(a30,e20.10)') 'global sum input  field = ',sum_area_i
-          stop
+          call abort()
        end if
     end if
 

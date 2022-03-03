@@ -146,7 +146,7 @@ subroutine mksoildepth(ldomain, mapfname, datfname, ndiag, soildepth_o)
   ! Check validity of output data
   if (min_bad(soildepth_o, min_valid, 'soildepth') .or. &
       max_bad(soildepth_o, max_valid, 'soildepth')) then
-     stop
+     call abort()
   end if
   
   call output_diagnostics_area(data_i, soildepth_o, tgridmap, "Soildepth", percent=.false., ndiag=ndiag, mask_src=tdomain%mask, frac_dst=frac_dst)

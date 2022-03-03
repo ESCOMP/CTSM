@@ -27,6 +27,7 @@ module clm_initializeMod
   use reweightMod           , only : reweight_wrapup
   use filterMod             , only : allocFilters, filter, filter_inactive_and_active
   use CLMFatesInterfaceMod  , only : CLMFatesGlobals
+  use CLMFatesInterfaceMod  , only : CLMFatesTimesteps
   use dynSubgridControlMod  , only : dynSubgridControl_init, get_reset_dynbal_baselines
   use SelfTestDriver        , only : self_test_driver
   use SoilMoistureStreamMod , only : PrescribedSoilMoistureInit
@@ -235,7 +236,7 @@ contains
     ! to allocate space)
     ! This also sets up various global constants in FATES
     ! ------------------------------------------------------------------------
-
+    
     call CLMFatesGlobals()
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
@@ -313,12 +314,15 @@ contains
        call timemgr_restart()
     end if
 
+    ! Pass model timestep info to FATES
+    call CLMFatesTimesteps()
+    
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
     call t_startf('init_orbd')
-    calday = get_curr_calday()
+    calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
     dtime = get_step_size_real()
-    caldaym1 = get_curr_calday(offset=-int(dtime))
+    caldaym1 = get_curr_calday(offset=-int(dtime), reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
     call t_stopf('init_orbd')
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
