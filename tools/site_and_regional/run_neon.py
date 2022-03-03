@@ -628,7 +628,7 @@ def check_neon_listing(valid_neon_sites):
     A function to download and parse neon listing file.
     """
     listing_file = "listing.csv"
-    url = "https://neon-ncar.s3.data.neonscience.org/listing.csv"
+    url = "https://storage.neonscience.org/neon-ncar/listing.csv"
 
     download_file(url, listing_file)
     available_list = parse_neon_listing(listing_file, valid_neon_sites)
