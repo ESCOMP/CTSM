@@ -339,14 +339,12 @@ contains
        ! Set urban land units to active, as long as memory has been allocated for such land units, either
        ! through the run_zero_weight_urban setting which runs all urban landunits in each grid cell or
        ! through pct_urban_max which is the maximum percent urban for each density type in a transient run.
+       ! (See subgridMod.F90 for this logic).
        ! By doing this, urban land units are also run virtually in grid cells which will grow
        ! urban during the transient run.
 
-       if ( lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX ) then 
-          dens_index = lun%itype(l) - isturb_MIN + 1
-          if (run_zero_weight_urban .or. pct_urban_max(g,dens_index) > 0._r8) then
-             is_active_l = .true.
-          end if
+       if ( (lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX) ) then
+          is_active_l = .true.
        end if
 
        ! In general, include a virtual natural vegetation landunit. This aids
