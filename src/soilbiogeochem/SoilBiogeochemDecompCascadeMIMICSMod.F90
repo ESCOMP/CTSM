@@ -760,7 +760,7 @@ contains
     ! decomposition cascade model
     !
     ! !USES:
-    use clm_time_manager , only : get_curr_days_per_year
+    use clm_time_manager , only : get_average_days_per_year
     use clm_varcon       , only : secspday, secsphr, tfrz
     use clm_varcon       , only : g_to_mg, cm3_to_m3
     !
@@ -873,7 +873,7 @@ contains
 
       mino2lim = CNParamsShareInst%mino2lim
 
-      days_per_year = get_curr_days_per_year()
+      days_per_year = get_average_days_per_year()
 
 !     ! Set "decomp_depth_efolding" parameter
 !     decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
