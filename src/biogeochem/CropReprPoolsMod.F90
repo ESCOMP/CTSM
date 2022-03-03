@@ -11,7 +11,12 @@ module CropReprPoolsMod
   ! structural reproductive components, and there are some parts of the code where you
   ! just want to work with one or the other of these sets (i.e., just the grain components
   ! or just the structural reproductive components). For these situations you can loop
-  ! over repr_grain_min:repr_grain_max, or repr_structure_min:repr_structure_max.
+  ! over repr_grain_min:repr_grain_max, or repr_structure_min:repr_structure_max. The
+  ! naming convention of science (state/flux) variables is: Variables that spell out the
+  ! full "reproductive" in their names (e.g., reproductivec_patch) are allocated from
+  ! 1:nrepr; variables with names containing "repr_grain" are allocated from
+  ! repr_grain_min:repr_grain_max; variables with names containing "repr_structure" are
+  ! allocated from repr_structure_min:repr_structure_max.
   !
   ! !USES:
 #include "shr_assert.h"
