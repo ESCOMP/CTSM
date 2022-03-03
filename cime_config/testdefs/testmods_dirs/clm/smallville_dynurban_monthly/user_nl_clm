@@ -10,4 +10,4 @@ do_transient_urban = .true.
 ! Note that the use of this file means that this testmod can only be used with the 1x1_smallvilleIA grid.
 ! Feb 23, 2022: Use updated file with HASURBAN replaced by PCT_URBAN_MAX
 !flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynUrban_c220223.nc'
-flanduse_timeseries = '/glade/p/cgd/tss/people/oleson/modify_surfdata/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynUrban_c220223.nc'
+flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynUrban_c220223.nc'
