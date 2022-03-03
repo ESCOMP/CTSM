@@ -903,11 +903,14 @@ contains
                   end if
 
                   ! For AgroIBIS-based crop model, all repr allocation is assumed to go
-                  ! into the first grain pool (there are no other grain pools).
-                  arepr(p,1) = 1._r8 - aroot(p) - astem(p) - aleaf(p)
-                  do k = 2, nrepr
+                  ! into the last reproductive pool. In practice there is only a single
+                  ! reproductive pool with the AgroIBIS-based crop model, but for
+                  ! software testing we can have multiple, in which situation we want the
+                  ! active pool to be the last one.
+                  do k = 1, nrepr-1
                      arepr(p,k) = 0._r8
                   end do
+                  arepr(p,nrepr) = 1._r8 - aroot(p) - astem(p) - aleaf(p)
 
                else  ! pre emergence
                   ! allocation coefficients should be irrelevant because crops have no
