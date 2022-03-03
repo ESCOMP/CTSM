@@ -675,10 +675,17 @@ def parse_neon_listing(listing_file, valid_neon_sites):
 
             # -- filter files only ending with YYYY-MM.nc
             tmp_df = tmp_df[tmp_df[9].str.contains("\d\d\d\d-\d\d.nc")]
+
+            # -- find all the data versions
+            versions = tmp_df[7].unique()
+            print ("all versions available for ", site_name,":", *versions)
             latest_version = tmp_df[7].iloc[-1]
+            print ("latests version available for ", site_name,":", latest_version)
+
             tmp_df = tmp_df[tmp_df[7].str.contains(latest_version)]
             # -- remove .nc from the file names
             tmp_df[9] = tmp_df[9].str.replace(".nc", "")
+
 
             tmp_df2 = tmp_df[9].str.split("-", expand=True)
 
