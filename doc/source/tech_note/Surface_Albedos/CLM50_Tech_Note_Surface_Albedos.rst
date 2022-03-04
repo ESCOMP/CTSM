@@ -183,7 +183,7 @@ where the single scattering albedo is
 .. math::
    :label: 3.16
 
-   \begin{array}{rcl} {a_{s} \left(\mu \right)_{\Lambda } } & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \int _{0}^{1}\frac{\mu 'G\left(\mu \right)}{\mu G\left(\mu '\right)+\mu 'G\left(\mu \right)}  d\mu '} \\ {} & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \frac{G\left(\mu \right)}{\min (\mu \phi _{2} +G\left(\mu \right),1e-6)} \left[1-\frac{\mu \phi _{1} }{\min (\mu \phi _{2} +G\left(\mu \right),1e-6)} \ln \left(\frac{\mu \phi _{1} +\min (\mu \phi _{2} +G\left(\mu \right),1e-6)}{\mu \phi _{1} } \right)\right].} \end{array}
+   \begin{array}{rcl} {a_{s} \left(\mu \right)_{\Lambda } } & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \int _{0}^{1}\frac{\mu 'G\left(\mu \right)}{\mu G\left(\mu '\right)+\mu 'G\left(\mu \right)}  d\mu '} \\ {} & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \frac{G\left(\mu \right)}{\max (\mu \phi _{2} +G\left(\mu \right),1e-6)} \left[1-\frac{\mu \phi _{1} }{\max (\mu \phi _{2} +G\left(\mu \right),1e-6)} \ln \left(\frac{\mu \phi _{1} +\max (\mu \phi _{2} +G\left(\mu \right),1e-6)}{\mu \phi _{1} } \right)\right].} \end{array}
 
 Note here the restriction on :math:`\mu \phi _{2} +G\left(\mu \right)`.  We have seen cases where small values
 can cause unrealistic single scattering albedo associated with the log calculation, 
