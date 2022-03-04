@@ -29,7 +29,7 @@ module mktopostatsMod
 contains
 !===============================================================
 
-  subroutine mktopostats(file_mesh_i, file_data_i, mesh_o, pioid_o, rc)
+  subroutine mktopostats(file_mesh_i, file_data_i, file_data_i_override, mesh_o, pioid_o, rc)
 
     ! make various topography statistics
     !
@@ -37,9 +37,10 @@ contains
     use mkchecksMod     , only : min_bad, max_bad
     !
     ! input/output variables
-    character(len=*)  , intent(in)    :: file_mesh_i      ! input mesh file name
-    character(len=*)  , intent(in)    :: file_data_i      ! input data file name
-    type(ESMF_Mesh)   , intent(in)    :: mesh_o           ! input model mesh
+    character(len=*)  , intent(in)    :: file_mesh_i          ! input mesh file name
+    character(len=*)  , intent(in)    :: file_data_i          ! input data file name
+    character(len=*)  , intent(in)    :: file_data_i_override ! input data file name
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o               ! input model mesh
     type(file_desc_t) , intent(inout) :: pioid_o
     integer           , intent(out)   :: rc
     !
@@ -86,6 +87,30 @@ contains
        RETURN
     end if
 
+    ! Determine ns_o and allocate output data
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate (topo_stddev_o(ns_o)) ; topo_stddev_o(:) = spval
+    allocate (slope_o(ns_o))       ; slope_o(:)       = spval
+
+    ! Read file_data_i_override for data that is assumed to already be on the output grid
+    if (file_data_i_override /= ' ' ) then
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" reading STD_ELEV and SLOPE from "//trim(file_data_i_override)
+       ! TODO: get dimensions and make sure that they match the dimensions of mesh_o
+       rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i_override), pio_nowrite)
+       call mkpio_get_rawdata(pioid_i, 'STD_ELEV', mesh_o, topo_stddev_o, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call mkpio_get_rawdata(pioid_i, 'SLOPE', mesh_o, slope_o, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing topo_stddev "
+       call mkfile_output(pioid_o,  mesh_o, 'STD_ELEV', topo_stddev_o, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for STD_ELEV')
+       call mkfile_output(pioid_o,  mesh_o, 'SLOPE', slope_o, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for SLOPE')
+       call pio_syncfile(pioid_o)
+       RETURN
+    end if
+
     ! Open input data file
     ! Read in data with PIO_IOTYPE_NETCDF rather than PIO_IOTYPE_PNETCDF since there are problems
     ! with the pnetcdf read of this high resolution data
@@ -100,12 +125,6 @@ contains
     ! Determine ns_i
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! Determine ns_o and allocate output data
-    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    allocate (topo_stddev_o(ns_o)) ; topo_stddev_o(:) = spval
-    allocate (slope_o(ns_o))       ; slope_o(:)       = spval
 
     ! Read in input data data_i
     allocate(data_i(ns_i), stat=ier)

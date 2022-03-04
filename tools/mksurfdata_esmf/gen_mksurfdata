@@ -17,12 +17,9 @@ mkdir -p $TMPDIR
 # note for mpiexec below
 # -np {total_tasks}
 
-rundir=/glade/work/$USER/git_mvertens/ctsm_1663/tools/mksurfdata_esmf
-cd $rundir
-
 # Run the model
-input=`./gen_mksurfdata_namelist.py --nocrop --start-year 2000 --end-year 2000 --res 1.9x2.5 | cut -d' ' -f5`
-mpiexec_mpt -p "%g:" -np 144 ./src/mksurfdata < $input
-#mpiexec_mpt -p "%g:" -np 288 ./src/mksurfdata < $input
-#mpiexec_mpt -p "%g:" -np 384 ./src/mksurfdata < $input
-#mpiexec_mpt -p "%g:" -np 2400 ./src/mksurfdata < $input
+#mpiexec_mpt -p "%g:" -np 144  /glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/src/mksurfdata
+#mpiexec_mpt -p "%g:" -np 288  /glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/src/mksurfdata
+ mpiexec_mpt -p "%g:" -np 384  /glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/src/mksurfdata
+#mpiexec_mpt -p "%g:" -np 2400 /glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/src/mksurfdata
+

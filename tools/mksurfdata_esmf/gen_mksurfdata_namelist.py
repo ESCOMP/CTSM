@@ -132,14 +132,25 @@ def get_parser():
         default=False,
     )
     parser.add_argument(
-        "--nocrop",
+        "--nosurfdata",
         help="""
-            Create datasets with the extensive list of prognostic crop types.
+            Do not output a surface datase
+            This is useful if you only want a landuse_timeseries file
             [default: %(default)s]
             """,
-        action="store_false",
+        action="store_true",
+        dest="surfdata_flag",
+        default=False,
+    )
+    parser.add_argument(
+        "--nocrop",
+        help="""
+            Do not create datasets with the extensive list of prognostic crop types.
+            [default: %(default)s]
+            """,
+        action="store_true",
         dest="crop_flag",
-        default=True,
+        default=False,
     )
     parser.add_argument(
         "-f",
@@ -183,7 +194,8 @@ def main ():
     res = args.res
     ssp_rcp = args.ssp_rcp
     input_path = args.input_path
-    crop_flag = args.crop_flag
+    nocrop_flag = args.crop_flag
+    nosurfdata_flag = args.surfdata_flag
     vic_flag = args.vic_flag
     glc_flag = args.glc_flag
     potveg = args.potveg_flag
@@ -194,12 +206,10 @@ def main ():
     else: 
         hires_pft = 'off'
 
-#   hostname = subprocess.check_output('hostname').strip().decode(encoding='UTF-8')
-#   print (f"hostname is {hostname}")
-#   logname = subprocess.check_output('logname').strip().decode(encoding='UTF-8')
-#   print (f"logname is {logname}")
-    hostname = 'foo'
-    logname = 'foo'
+    hostname = os.getenv("HOSTNAME")
+    print (f"hostname is {hostname}")
+    logname = os.getenv("LOGNAME")
+    print (f"logname is {logname}")
 
     # determine pft_years - needed to parse xml file
     if int(start_year) == 1850 and int(end_year) == 1850:
@@ -232,11 +242,13 @@ def main ():
     attribute_list = {'hires_pft':hires_pft,
                       'pft_years':pft_years,
                       'ssp_rcp':ssp_rcp,
-                      'mergeGIS':merge_gis}
+                      'mergeGIS':merge_gis,
+                      'res':res}
 
     # create dictionary for raw data files names
     rawdata_files = {}
 
+    # determine input rawdata
     tree1 = ET.parse('./gen_mksurfdata_namelist.xml')
     root = tree1.getroot()
     root.tag
@@ -280,6 +292,7 @@ def main ():
                     print(f"ERROR: mesh file {rawdata_files[new_key]} does not exist")
                     sys.exit()
 
+    # determine output mesh
     tree2 = ET.parse('../../ccs_config/component_grids_nuopc.xml')
     root = tree2.getroot()
     model_mesh = ""
@@ -305,11 +318,17 @@ def main ():
         sys.exit()
 
     # Determine num_pft
-    if crop_flag:
-        num_pft = "78"
-    else:
+    if nocrop_flag:
         num_pft = "16"
-    logger.debug(f" crop_flag = {str(crop_flag)} => num_pft = {num_pft}")
+    else:
+        num_pft = "78"
+    print(f"num_pft is {num_pft}")
+
+    # Write out if surface dataset will be created
+    if nosurfdata_flag:
+        print(f"surface dataset will not be created")
+    else:
+        print(f"surface dataset will be created")
 
     # Create land-use txt file for a transient case.
     # Determine the run type and if a transient run create output landuse txt file
@@ -317,7 +336,7 @@ def main ():
         run_type = "transient"
     else:
         run_type = "timeslice"
-    logger.info(f" run_type  = {run_type}")
+    print(f"run_type  = {run_type}")
     if run_type == 'transient':
         landuse_fname = f"transient_timeseries_hist_{num_pft}pfts_simyr{start_year}-{end_year}.txt"
         with open(landuse_fname, "w", encoding='utf-8') as landuse_file:
@@ -338,7 +357,7 @@ def main ():
         landuse_fname = ""
 
     time_stamp = datetime.today().strftime("%y%m%d")
-    if end_year == start_year:
+    if int(end_year) == int(start_year):
         nlfname = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.namelist"
         fsurdat = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.nc"
         fsurlog = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.log"
@@ -347,53 +366,75 @@ def main ():
         nlfname = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.namelist"
         fsurdat = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.nc"
         fsurlog = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.log"
-        fdyndat = f"landuse.timeseries_{res}_{ssp_rcp}_{num_pft}_CMIP6_{start_year}-{end_year}_c{time_stamp}.log"
+        fdyndat = f"landuse.timeseries_{res}_{ssp_rcp}_{num_pft}_CMIP6_{start_year}-{end_year}_c{time_stamp}.nc"
 
     gitdescribe = subprocess.check_output('git describe', shell=True).strip()
     gitdescribe = gitdescribe.decode('utf-8')
+
+    # The below two overrides are only used for testing an validation
+    # it takes a long time to generate the mapping files
+    # from 1km to the following two resolutions since the output mesh has so few points
+    if res == "10x15":
+        mksrf_ftopostats_override = os.path.join(input_path,"lnd","clm2","rawdata","surfdata_topo_10x15_c220303.nc")
+        print (f"will override mksrf_ftopostats with = {mksrf_ftopostats_override}")
+    else:
+        mksrf_ftopostats_override = ""
+
+    # ----------------------------------------
+    # Write output namelist file
+    # ----------------------------------------
 
     print (f"Creating input namelist file {nlfname}")
     with open(nlfname, "w",encoding='utf-8') as nlfile:
         nlfile.write("&mksurfdata_input \n")
 
+        # raw input data
         for key,value in rawdata_files.items():
             if key == 'mksrf_fgrid_mesh_nx' or key == 'mksrf_fgrid_mesh_ny':
                 nlfile.write(f"  {key} = {value} \n")
             elif key != "mksrf_fvic" and key != "mksrf_fvic_mesh":
                 nlfile.write(f"  {key} = \'{value}\' \n")
-        
+            if key == 'mksrf_ftopostats' and mksrf_ftopostats_override != '':
+                nlfile.write(f"  mksrf_ftopostats_override = \'{mksrf_ftopostats_override}\' \n")
+
         mksrf_hrvtyp = rawdata_files["mksrf_fvegtyp"]
         nlfile.write( f"  mksrf_fhrvtyp = \'{mksrf_hrvtyp}\' \n")
 
         mksrf_hrvtyp_mesh = rawdata_files["mksrf_fvegtyp_mesh"]
         nlfile.write( f"  mksrf_fhrvtyp_mesh = \'{mksrf_hrvtyp_mesh}\' \n")
 
-        nlfile.write(f"  numpft = {num_pft} \n")
-        nlfile.write( "  no_inlandwet = .true. \n")
-        nlfile.write( "  fdyndat = \' \' \n")
-        nlfile.write(f"  fsurdat = \'{fsurdat}\' \n")
-        nlfile.write(f"  fsurlog = \'{fsurlog}\' \n")
-        nlfile.write(f"  mksrf_fdynuse = \'{landuse_fname} \' \n")
-        nlfile.write(f"  gitdescribe = \'{gitdescribe}\' \n")
-        nlfile.write( "  outnc_large_files = .false. \n")
-        nlfile.write( "  outnc_double = .true. \n")
-
-        if glc_flag:
-            nlfile.write( "  outnc_3dglc = .true. \n")
-        else:
-            nlfile.write( "  outnc_3dglc = .false. \n")
-
         if vic_flag:
-            nlfile.write( "  outnc_vic = .true. \n")
             mksrf_fvic = rawdata_files["mksrf_fvic"]
             nlfile.write(f"  mksrf_fvic = \'{mksrf_fvic}\' \n")
             mksrf_fvic_mesh = rawdata_files["mksrf_fvic_mesh"]
             nlfile.write(f"  mksrf_fvic_mesh = \'{mksrf_fvic_mesh}\' \n")
+
+        nlfile.write( f"  mksrf_fdynuse = \'{landuse_fname} \' \n")
+
+        # output data files
+        if nosurfdata_flag:
+            nlfile.write(f"  fsurdat = \' \' \n")
+        else:
+            nlfile.write(f"  fsurdat = \'{fsurdat}'\n")
+        nlfile.write(f"  fsurlog = \'{fsurlog}\' \n")
+        nlfile.write(f"  fdyndat = \'{fdyndat}\' \n")
+
+        # output data logicals
+        nlfile.write(f"  numpft = {num_pft} \n")
+        nlfile.write( "  no_inlandwet = .true. \n")
+        if glc_flag:
+            nlfile.write( "  outnc_3dglc = .true. \n")
+        else:
+            nlfile.write( "  outnc_3dglc = .false. \n")
+        if vic_flag:
+            nlfile.write( "  outnc_vic = .true. \n")
         else:
             nlfile.write("  outnc_vic = .false. \n")
-
+        nlfile.write( "  outnc_large_files = .false. \n")
+        nlfile.write( "  outnc_double = .true. \n")
         nlfile.write(f"  logname = \'{logname}\' \n")
         nlfile.write(f"  hostname = \'{hostname}\' \n")
+        nlfile.write(f"  gitdescribe = \'{gitdescribe}\' \n")
 
         nlfile.write("/ \n")
 

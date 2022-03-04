@@ -95,6 +95,7 @@ module mkinputMod
 
   character(CX) , public    :: mksrf_ftopostats             = ' ' ! topography statistics data file name
   character(CX) , public    :: mksrf_ftopostats_mesh        = ' ' ! topography statistics mesh file name
+  character(CX) , public    :: mksrf_ftopostats_override    = ' ' ! read STD_ELEV and SLOPE from this file
 
   character(CX) , public    :: mksrf_fvic                   = ' ' ! VIC parameters data file name
   character(CX) , public    :: mksrf_fvic_mesh              = ' ' ! VIC parameters mesh file name
@@ -171,6 +172,7 @@ contains
          mksrf_fabm_mesh,           &
          mksrf_ftopostats,          &
          mksrf_ftopostats_mesh,     &
+         mksrf_ftopostats_override, &
          mksrf_fvic,                &
          mksrf_fvic_mesh,           &
          mksrf_fgrid_mesh,          &
@@ -272,6 +274,7 @@ contains
 
     call mpi_bcast (mksrf_ftopostats, len(mksrf_ftopostats), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_ftopostats_mesh, len(mksrf_ftopostats_mesh), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (mksrf_ftopostats_override, len(mksrf_ftopostats_override), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_fvic, len(mksrf_fvic), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fvic_mesh, len(mksrf_fvic_mesh), MPI_CHARACTER, 0, mpicom, ier)
