@@ -25,6 +25,16 @@ This defines various CTSM-specific system tests
     <HIST_N>$STOP_N</HIST_N>
   </test>
 
+  <test NAME="LGRAIN2">
+    <DESC>CTSM Land model test to ensure that we can allocate and use a second grain pool</DESC>
+    <INFO_DBUG>1</INFO_DBUG>
+    <DOUT_S>FALSE</DOUT_S>
+    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
+    <REST_OPTION>never</REST_OPTION>
+    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
+    <HIST_N>$STOP_N</HIST_N>
+  </test>
+
   <test NAME="LII">
     <DESC>CLM initial condition interpolation test (requires configuration with non-blank finidat)</DESC>
     <INFO_DBUG>1</INFO_DBUG>

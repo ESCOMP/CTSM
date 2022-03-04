@@ -2498,6 +2498,27 @@
     </machines>
   </test>
 
+  <test name="LGRAIN2_Ly1_P72x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+        <options>
+          <option name="wallclock">02:00:00</option>
+          <option name="comment">Ensure that it works to have a second grain pool, and that we can get bit-for-bit identical answers with a standard run with just one grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code).</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+  <test name="LGRAIN2_Ly1_P72x1" grid="f10_f10_mg37" compset="I2000Clm45BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+        <options>
+          <option name="wallclock">02:00:00</option>
+          <option name="comment">Ensure that it works to have a second grain pool, and that we can get bit-for-bit identical answers with a standard run with just one grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code). Compared to the Clm50 test, this Clm45 test exercises code in NutrientCompetitionCLM45defaultMod and use_grainproduct false.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+
   <test name="FUNITCTSM_P1x1" grid="f10_f10_mg37" compset="I2000Clm50Sp">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
