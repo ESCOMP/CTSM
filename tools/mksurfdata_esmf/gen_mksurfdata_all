@@ -33,40 +33,54 @@ cd $rundir
 standard_res_no_crop=( '0.9x1.25' '1.9x2.5' '4x5' )
 for res in "${standard_res_no_crop[@]}"; do
   input=$(echo `./gen_mksurfdata_namelist.py --nocrop --vic --start-year 2000 --end-year 2000 --res $res` | cut -d' ' -f 22)
+  echo $input ATTEMPT
   mpiexec_mpt -p "%g:" -np 768 ./src/mksurfdata < $input
+  echo $input DONE?
 done
 
 # -------------
 
 # TODO DIDN'T WORK?
 input=$(echo `./gen_mksurfdata_namelist.py --nocrop --start-year 2000 --end-year 2000 --res 64x128` | cut -d' ' -f 22)
+echo $input ATTEMPT
 mpiexec_mpt -p "%g:" -np 768 ./src/mksurfdata < $input
+echo $input DONE?
 
 # -------------
 
 input=$(echo `./gen_mksurfdata_namelist.py --nocrop --hires_pft --start-year 2005 --end-year 2005 --res 0.125nldas2` | cut -d' ' -f 22)
+echo $input ATTEMPT
 mpiexec_mpt -p "%g:" -np 768 ./src/mksurfdata < $input
+echo $input DONE?
 
 # -------------
 
-standard_res=( '0.9x1.25' '1.9x2.5' '10x15' '4x5' 'ne30np4' 'C96' 'ne30pg2' 'ne30pg3' 'ne30pg4' 'ne120np4pg3' 'ne0np4ARCTICGRISne30x8' 'ne0np4ARCTICne30x4' 'ne0np4CONUSne30x8' )
+standard_res=( '0.9x1.25' '1.9x2.5' '10x15' '4x5' 'ne30np4' 'C96' 'ne30pg2' 'ne30pg3' 'ne30pg4' 'ne120np4pg3' 'ne0np4.ARCTICGRIS.ne30x8' 'ne0np4ARCTICne30x4' 'ne0np4CONUSne30x8' )
 for res in "${standard_res[@]}"; do
   input=$(echo `./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res $res` | cut -d' ' -f 22)
+  echo $input ATTEMPT
   mpiexec_mpt -p "%g:" -np 768 ./src/mksurfdata < $input
+  echo $input DONE?
 
   input=$(echo `./gen_mksurfdata_namelist.py --start-year 1850 --end-year 1850 --ssp-rcp SSP5-8.5 --res $res` | cut -d' ' -f 22)
+  echo $input ATTEMPT
   mpiexec_mpt -p "%g:" -np 768 ./src/mksurfdata < $input
+  echo $input DONE?
 done
 
 # -------------
 
 input=$(echo `./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res ne16np4` | cut -d' ' -f 22)
+echo $input ATTEMPT
 mpiexec_mpt -p "%g:" -np 768 ./src/mksurfdata < $input
+echo $input DONE?
 
 # -------------
 
 input=$(echo `./gen_mksurfdata_namelist.py --hires_pft --start-year 2000 --end-year 2000 --res 0.125x0.125` | cut -d' ' -f 22)
+echo $input ATTEMPT
 mpiexec_mpt -p "%g:" -np 768 ./src/mksurfdata < $input
+echo $input DONE?
 
 # -------------
 
@@ -75,7 +89,9 @@ years=( 1850 2000 )
 for y in "${years[@]}"; do
   for res in "${resolutions[@]}"; do
     input=$(echo `./gen_mksurfdata_namelist.py --start-year $y --end-year $y --res $res` | cut -d' ' -f 22)
+    echo $input ATTEMPT
     mpiexec_mpt -p "%g:" -np 768 ./src/mksurfdata < $input
+    echo $input DONE?
   done
 done
 
@@ -85,11 +101,13 @@ done
 # TODO Currently have access to files 1850-1855 and 2000-2007. When remaining
 # files become available, uncomment the commented-out line and delete the one
 # after it.
-trans_res=( '0.9x1.25' '1.9x2.5' '10x15' 'ne30np4' 'ne0np4ARCTICGRISne30x8' 'ne0np4ARCTICne30x4' 'ne0np4CONUSne30x8' 'ne120np4' '0.47x0.63' )
+trans_res=( '0.9x1.25' '1.9x2.5' '10x15' 'ne30np4' 'ne0np4.ARCTICGRIS.ne30x8' 'ne0np4ARCTICne30x4' 'ne0np4CONUSne30x8' 'ne120np4' '0.47x0.63' )
 for res in "${trans_res[@]}"; do
 # input=$(echo `./gen_mksurfdata_namelist.py --nosurfdata --start-year 1850 --end-year 2000 --res $res` | cut -d' ' -f 22)
   input=$(echo `./gen_mksurfdata_namelist.py --nosurfdata --start-year 1850 --end-year 1855 --res $res` | cut -d' ' -f 22)
+  echo $input ATTEMPT
   mpiexec_mpt -p "%g:" -np 768 ./src/mksurfdata < $input
+  echo $input DONE?
 done
 
 # -------------
@@ -104,7 +122,9 @@ for res in "${future_res[@]}"; do
   for ssp in "${ssp_list[@]}"; do
 #   input=$(echo `./gen_mksurfdata_namelist.py --nosurfdata --start-year 1850 --end-year 2100 --ssp-rcp $ssp --res $res` | cut -d' ' -f 22)
     input=$(echo `./gen_mksurfdata_namelist.py --nosurfdata --start-year 2000 --end-year 2007 --ssp-rcp $ssp --res $res` | cut -d' ' -f 22)
+    echo $input ATTEMPT
     mpiexec_mpt -p "%g:" -np 768 ./src/mksurfdata < $input
+    echo $input DONE?
   done
 done
 
