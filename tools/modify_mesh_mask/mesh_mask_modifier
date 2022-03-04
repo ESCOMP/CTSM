@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+"""
+Description
+-----------
+mesh_mask_modifier is a tool that modifies mesh_mask files. It reads the
+mesh_mask files and outputs modified copies of the same files.
+
+Files accessed
+--------------
+This wrapper script accesses
+../../python/ctsm/mesh_mask_modifier.py
+../../python/ctsm/modify_mesh_mask.py
+
+Instructions
+------------
+To run on Cheyenne/Casper
+1) Load the following to your local environment:
+module load python
+ncar_pylib
+(Use "deactivate" to reverse the latter.)
+2) Copy, then modify the configure file named modify_template.cfg, which
+contains all the arguments needed by the script.
+3) Run the script ./mesh_mask_modifier pointing to the copied/modified
+.cfg file, e.g. modify_users_copy.cfg
+
+Example
+-------
+>>> ./mesh_mask_modifier modify_users_copy.cfg
+
+Inputs
+------
+/glade/p/cesmdata/cseg/inputdata/share/meshes/gx3v7_120309_ESMFmesh.nc
+
+Outputs
+-------
+./mesh_mask_out.nc  # as named by user in the .cfg file
+"""
+
+import os
+import sys
+
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            os.pardir,
+                            os.pardir,
+                            'python')
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.modify_mesh_mask.mesh_mask_modifier import main
+
+if __name__ == "__main__":
+    main()
