@@ -53,6 +53,12 @@ module clm_varctl
   ! true => run tests of ncdio_pio
   logical, public :: for_testing_run_ncdiopio_tests = .false.
 
+  ! true => allocate memory for and use a second grain pool
+  ! This is meant only for software testing of infrastructure to support the AgSys crop
+  ! model integration. This option can be dropped once AgSys is integrated and we have
+  ! tests of it.
+  logical, public :: for_testing_use_second_grain_pool = .false.
+
   ! Hostname of machine running on
   character(len=256), public :: hostname = ' '                           
 

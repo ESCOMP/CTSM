@@ -987,6 +987,14 @@ Whether to run some tests of ncdio_pio as part of the model run. This is
 typically only used in automated tests.
 </entry>
 
+<entry id="for_testing_use_second_grain_pool" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, allocate memory for and use a second crop grain pool. This is
+meant only for software testing of infrastructure to support the AgSys
+crop model integration. This option can be dropped once AgSys is
+integrated and we have tests of it.
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Former CPP tokens -->
 <!-- ========================================================================================  -->

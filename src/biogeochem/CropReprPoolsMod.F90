@@ -20,6 +20,7 @@ module CropReprPoolsMod
   !
   ! !USES:
 #include "shr_assert.h"
+  use clm_varctl, only : for_testing_use_second_grain_pool
   !
   implicit none
   private
@@ -74,7 +75,11 @@ contains
     ! TODO(wjs, 2022-02-14) This will eventually depend on whether we're using AgSys:
     ! AgSys will use nrepr = 4, nrepr_grain = 2, nrepr_struture = 2,
     ! repr_hist_fnames(1) = 'GRAIN_MEAL', grain_hist_fnames(2) = 'GRAIN_OIL', etc.
-    nrepr_grain = 1
+    if (for_testing_use_second_grain_pool) then
+       nrepr_grain = 2
+    else
+       nrepr_grain = 1
+    end if
     nrepr_structure = 0
     nrepr = nrepr_grain + nrepr_structure
     allocate(repr_hist_fnames(nrepr))

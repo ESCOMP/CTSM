@@ -62,6 +62,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <reseed_dead_plants                                            >.false.</reseed_dead_plants>
 
 <for_testing_run_ncdiopio_tests>.false.</for_testing_run_ncdiopio_tests>
+<for_testing_use_second_grain_pool>.false.</for_testing_use_second_grain_pool>
 
 <!-- Set to .true. in namelist to write hist fields master list file -->
 <hist_master_list_file>.false.</hist_master_list_file>
