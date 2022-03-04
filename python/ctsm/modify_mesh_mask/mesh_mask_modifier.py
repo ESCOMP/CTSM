@@ -70,9 +70,13 @@ def mesh_mask_modifier(cfg_path):
     # ----------------
 
     # Modify mesh mask in a rectangle that could be global (default)
-    # TODO Use one of these as a template. Look for mesh_mask files
-    # that are gridded rather than gx1/gx3/etc.
-    modify_mesh_mask.set_idealized()  # set 2D variables
+    # TODO Use this function as a template. Start w gridded mesh_mask
+    # files that are gridded rather than gx1/gx3/etc.
+    # NB. The mask needs to first be mapped to the 2D that we're used
+    #     to. If so, then the same could be done with the gx1/etc masks
+    #     followed by looking for nearest neighbors.
+    # If mask is all 1s, landmask_file becomes required, bc the
+    # lat/lons won't change anything.
     modify_mesh_mask.setvar_lev0('FMAX', max_sat_area)
 
     # ----------------------------------------------
