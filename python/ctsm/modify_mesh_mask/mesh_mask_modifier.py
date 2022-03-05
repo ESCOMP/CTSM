@@ -8,7 +8,7 @@ The wrapper script includes a full description and instructions.
 import logging
 import argparse
 from configparser import ConfigParser
-from ctsm.utils import get_config_value
+from ctsm.config_utils import get_config_value
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.modify_mesh_mask.modify_mesh_mask import ModifyMeshMask
 
@@ -77,7 +77,7 @@ def mesh_mask_modifier(cfg_path):
     #     followed by looking for nearest neighbors.
     # If mask is all 1s, landmask_file becomes required, bc the
     # lat/lons won't change anything.
-    modify_mesh_mask.setvar_lev0('FMAX', max_sat_area)
+    modify_mesh_mask.set_mesh_mask('elementMask')
 
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
