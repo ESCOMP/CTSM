@@ -363,7 +363,7 @@ def main ():
                 if '%y' in rawdata_files[child1.tag] and run_type == 'timeslice':
                     rawdata_files[child1.tag] = rawdata_files[child1.tag].replace("%y",str(start_year))
                     if not os.path.isfile(rawdata_files[child1.tag]):
-                        print(f"ERROR: intput rawdata file {rawdata_files[child1.tag]} does not exist")
+                        print(f"ERROR: intput rawdata file {rawdata_files[child1.tag]} for {child1.tag} does not exist")
                         sys.exit(20)
 
             if item.tag == 'mesh_filename':
@@ -481,24 +481,24 @@ def main ():
         # -------------------
         # raw input data
         # -------------------
+        if force_model_mesh_file != 'none':
+            mksrf_fgrid_mesh_nx = force_model_mesh_nx
+            mksrf_fgrid_mesh_ny = force_model_mesh_ny
+            mksrf_fgrid_mesh    = force_model_mesh_file
+        else:
+            mksrf_fgrid_mesh_nx = rawdata_files["mksrf_fgrid_mesh_nx"] 
+            mksrf_fgrid_mesh_ny = rawdata_files["mksrf_fgrid_mesh_ny"] 
+            mksrf_fgrid_mesh    = rawdata_files["mksrf_fgrid_mesh"] 
+        nlfile.write( f"  mksrf_fgrid_mesh = \'{mksrf_fgrid_mesh}\' \n")
+        nlfile.write( f"  mksrf_fgrid_mesh_nx = {mksrf_fgrid_mesh_nx} \n")
+        nlfile.write( f"  mksrf_fgrid_mesh_ny = {mksrf_fgrid_mesh_ny} \n")
+
         for key,value in rawdata_files.items():
             if key == 'mksrf_ftopostats' and mksrf_ftopostats_override != '':
                 nlfile.write(f"  mksrf_ftopostats_override = \'{mksrf_ftopostats_override}\' \n")
-            elif '_fvic not in key' and 'fvegtyp' and 'fgrid_mesh' not in key:
+            elif '_fvic' not in key and 'mksrf_fvegtyp' not in key and 'mksrf_fgrid' not in key:
                 # write everything else
                 nlfile.write(f"  {key} = \'{value}\' \n")
-
-        if force_model_mesh_file != 'none':
-            mksrf_fgrid_mesh = force_model_mesh_file
-            mksrf_fgrid_nx   = force_model_mesh_nx
-            mksrf_fgrid_ny   = force_model_mesh_ny
-        else:
-            mksrf_fgrid_mesh = rawdata_files["mksrf_fgrid_mesh"] 
-            mksrf_fgrid_nx   = rawdata_files["mksrf_fgrid_mesh_nx"] 
-            mksrf_fgrid_ny   = rawdata_files["mksrf_fgrid_mesh_ny"] 
-        nlfile.write( f"  mksrf_fgrid_mesh =\'{mksrf_fgrid_mesh}\' \n")
-        nlfile.write( f"  mksrf_fgrid_nx ={mksrf_fgrid_nx} \n")
-        nlfile.write( f"  mksrf_fgrid_ny ={mksrf_fgrid_ny} \n")
 
         if start_year <= 2015:
             mksrf_fvegtyp       = rawdata_files["mksrf_fvegtyp"]
