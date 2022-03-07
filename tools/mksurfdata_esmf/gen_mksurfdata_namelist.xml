@@ -255,38 +255,44 @@ version of the raw dataset will probably go away.
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</mesh_filename>
     </entry>
 
-    <!-- Future scenarios  (up to 2100)-->
-    <!-- SSP1-RCP 2.6 -->
-    <entry  ssp_rcp="SSP1-2.6" pft_years="2016-2100" >
+  </mksrf_fvegtyp>
+
+
+  <!-- Future scenarios  (up to 2100)-->
+  <!-- SSP1-RCP 2.6 -->
+  <mksrf_fvegtyp_ssp>
+
+    <entry  ssp_rcp="SSP1-2.6" pft_years_ssp="2016-2100" >
       <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP1-2.6.simyr2016-2100.c181217/mksrf_landuse_SSP1RCP26_clm5_%y.c181217.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</mesh_filename>
     </entry>
     <!-- SSP2-RCP 4.5 -->
-    <entry  ssp_rcp="SSP2-4.5" pft_years="2016-2100" >
+    <entry  ssp_rcp="SSP2-4.5" pft_years_ssp="2016-2100" >
       <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP2-4.5.simyr2016-2100.c181217/mksrf_landuse_SSP2RCP45_clm5_%y.c181217.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</mesh_filename>
     </entry>
     <!-- SSP1-RCP 1.9 -->
-    <entry  ssp_rcp="SSP1-1.9" pft_years="2016-2100" >
+    <entry  ssp_rcp="SSP1-1.9" pft_years_ssp="2016-2100" >
       <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP1-1.9.simyr2016-2100.c181217/mksrf_landuse_SSP1RCP19_clm5_%y.c181217.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</mesh_filename>
     </entry>
     <!-- SSP4-RCP 3.4 -->
-    <entry  ssp_rcp="SSP4-3.4" pft_years="201-2100" >
+    <entry  ssp_rcp="SSP4-3.4" pft_years_ssp="2016-2100" >
       <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP4-3.4.simyr2016-2100.c181217/mksrf_landuse_SSP4RCP34_clm5_%y.c181217.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</mesh_filename>
     </entry>
     <!-- SSP4-RCP 6.0 -->
-    <entry  ssp_rcp="SSP4-6.0" pft_years="2016-2100" >
+    <entry  ssp_rcp="SSP4-6.0" pft_years_ssp="2016-2100" >
       <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP4-6.0.simyr2016-2100.c181217/mksrf_landuse_SSP4RCP60_clm5_%y.c181217.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</mesh_filename>
     </entry>
     <!-- SSP5-RCP 8.5 -->
-    <entry  ssp_rcp="SSP5-8.5" pft_years="2016-2100" >
+    <entry  ssp_rcp="SSP5-8.5" pft_years_ssp="2016-2100" >
       <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_%y.c171005.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</mesh_filename>
     </entry>
-  </mksrf_fvegtyp>
+
+  </mksrf_fvegtyp_ssp>
 
 </rawdata_files>
 
