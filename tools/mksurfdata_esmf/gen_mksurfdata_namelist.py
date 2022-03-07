@@ -60,6 +60,39 @@ def get_parser():
         default="4x5",
     )
     parser.add_argument(
+        "--model-mesh",
+        help="""
+            model mesh [default: %(default)s]
+            Ignore the --res option and force the model mesh file to be this input
+            """,
+        action="store",
+        dest="force_model_mesh_file",
+        required=False,
+        default="none",
+    )
+    parser.add_argument(
+        "--model-mesh-nx",
+        help="""
+            model mesh [default: %(default)s]
+            Ignore the --res option and force the model mesh to have this nx 
+            """,
+        action="store",
+        dest="force_model_mesh_nx",
+        required=False,
+        default="-999",
+    )
+    parser.add_argument(
+        "--model-mesh-ny",
+        help="""
+            model mesh [default: %(default)s]
+            Ignore the --res option and force the model mesh to have this ny 
+            """,
+        action="store",
+        dest="force_model_mesh_ny",
+        required=False,
+        default="-999",
+    )
+    parser.add_argument(
         "--glc-nec",
         help="""
             Number of glacier elevation classes to use. [default: %(default)s]
@@ -196,8 +229,11 @@ def main ():
 
     start_year = args.start_year
     end_year = args.end_year
-    res = args.res
     ssp_rcp = args.ssp_rcp
+    res = args.res
+    force_model_mesh_file = args.force_model_mesh_file
+    force_model_mesh_nx = args.force_model_mesh_nx
+    force_model_mesh_ny = args.force_model_mesh_ny
     input_path = args.input_path
     nocrop_flag = args.crop_flag
     nosurfdata_flag = args.surfdata_flag
@@ -211,6 +247,9 @@ def main ():
     else:
         hires_pft = 'off'
     verbose = args.verbose
+
+    if force_model_mesh_file != 'none':
+        res = force_model_mesh_nx + 'x' + force_model_mesh_ny
 
     hostname = os.getenv("HOSTNAME")
     logname = os.getenv("LOGNAME")
@@ -350,7 +389,7 @@ def main ():
                     if child2.tag == 'ny':
                         rawdata_files["mksrf_fgrid_mesh_ny"] = child2.text
 
-    if len(model_mesh) == 0:
+    if force_model_mesh_file == 'none' and len(model_mesh) == 0:
         print (f"ERROR: input res {res} is invalid")
         valid_grids = []
         for child1 in root:  # this is domain tag
@@ -405,16 +444,18 @@ def main ():
         landuse_fname = ""
 
     time_stamp = datetime.today().strftime("%y%m%d")
+    if ssp_rcp == 'none':
+        ssp_rcp_name = 'hist'
     if int(end_year) == int(start_year):
-        nlfname = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.namelist"
-        fsurdat = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.nc"
-        fsurlog = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.log"
+        nlfname = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.namelist"
+        fsurdat = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.nc"
+        fsurlog = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.log"
         fdyndat = ""
     else:
-        nlfname = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.namelist"
-        fsurdat = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.nc"
-        fsurlog = f"surfdata_{res}_{ssp_rcp}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.log"
-        fdyndat = f"landuse.timeseries_{res}_{ssp_rcp}_{num_pft}_CMIP6_{start_year}-{end_year}_c{time_stamp}.nc"
+        nlfname = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.namelist"
+        fsurdat = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.nc"
+        fsurlog = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.log"
+        fdyndat = f"landuse.timeseries_{res}_{ssp_rcp_name}_{num_pft}_CMIP6_{start_year}-{end_year}_c{time_stamp}.nc"
 
     gitdescribe = subprocess.check_output('git describe', shell=True).strip()
     gitdescribe = gitdescribe.decode('utf-8')
@@ -443,21 +484,32 @@ def main ():
         for key,value in rawdata_files.items():
             if key == 'mksrf_ftopostats' and mksrf_ftopostats_override != '':
                 nlfile.write(f"  mksrf_ftopostats_override = \'{mksrf_ftopostats_override}\' \n")
-            elif '_fvic not in key' and 'fvegtyp' not in key:
+            elif '_fvic not in key' and 'fvegtyp' and 'fgrid_mesh' not in key:
                 # write everything else
                 nlfile.write(f"  {key} = \'{value}\' \n")
 
+        if force_model_mesh_file != 'none':
+            mksrf_fgrid_mesh = force_model_mesh_file
+            mksrf_fgrid_nx   = force_model_mesh_nx
+            mksrf_fgrid_ny   = force_model_mesh_ny
+        else:
+            mksrf_fgrid_mesh = rawdata_files["mksrf_fgrid_mesh"] 
+            mksrf_fgrid_nx   = rawdata_files["mksrf_fgrid_mesh_nx"] 
+            mksrf_fgrid_ny   = rawdata_files["mksrf_fgrid_mesh_ny"] 
+        nlfile.write( f"  mksrf_fgrid_mesh =\'{mksrf_fgrid_mesh}\' \n")
+        nlfile.write( f"  mksrf_fgrid_nx ={mksrf_fgrid_nx} \n")
+        nlfile.write( f"  mksrf_fgrid_ny ={mksrf_fgrid_ny} \n")
+
         if start_year <= 2015:
-            mksrf_fvegtyp      = rawdata_files["mksrf_fvegtyp"]
-            mksrf_fvegtyp_mesh = rawdata_files["mksrf_fvegtyp_mesh"]
+            mksrf_fvegtyp       = rawdata_files["mksrf_fvegtyp"]
+            mksrf_fvegtyp_mesh  = rawdata_files["mksrf_fvegtyp_mesh"]
             mksrf_fhrvtyp       = rawdata_files["mksrf_fvegtyp"]
             mksrf_fhrvtyp_mesh  = rawdata_files["mksrf_fvegtyp_mesh"]
         else:
-            mksrf_fvegtyp      = rawdata_files["mksrf_fvegtyp_ssp"]
-            mksrf_fvegtyp_mesh = rawdata_files["mksrf_fvegtyp_ssp_mesh"]
+            mksrf_fvegtyp       = rawdata_files["mksrf_fvegtyp_ssp"]
+            mksrf_fvegtyp_mesh  = rawdata_files["mksrf_fvegtyp_ssp_mesh"]
             mksrf_fhrvtyp       = rawdata_files["mksrf_fvegtyp_ssp"]
             mksrf_fhrvtyp_mesh  = rawdata_files["mksrf_fvegtyp_ssp_mesh"]
-
         nlfile.write( f"  mksrf_fvegtyp = \'{mksrf_fvegtyp}\' \n")
         nlfile.write( f"  mksrf_fvegtyp_mesh = \'{mksrf_fvegtyp_mesh}\' \n")
         nlfile.write( f"  mksrf_fhrvtyp = \'{mksrf_fhrvtyp}\' \n")

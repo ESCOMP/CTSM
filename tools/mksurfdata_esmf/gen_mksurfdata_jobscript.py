@@ -124,8 +124,6 @@ def main ():
     else:
         target_list = [scenario]
 
-    print (f"DEBUG: target_list is {target_list}")
-
     # --------------------------
     # Determine resolution sets that are referenced in commands
     # --------------------------
@@ -159,14 +157,14 @@ def main ():
                   "crop-global-historical-ne120np4" : ("--start-year 1850 --end-year 1850 --ssp-rcp SSP5-8.5              --res", "ne120np4_res"),
                   "crop-global-transient"           : ("--start-year 1850 --end-year 2000 --nosurfdata                    --res", "trans_res"),
                   "crop-global-transient-ne120np4"  : ("--start-year 1850 --end-year 2000 --nosurfdata                    --res", "ne120np4_res"),
-                  "crop-global-SSP1-2.6"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-2.6 --res", "future_res"),
-                  "crop-global-SSP3-7.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-7.0 --res", "future_res"),
-                  "crop-global-SSP5-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-3.4 --res", "future_res"),
-                  "crop-global-SSP2-4.5"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-4.5 --res", "future_res"),
                   "crop-global-SSP1-1.9"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-1.9 --res", "future_res"),
-                  "crop-global-SSP4-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-3.4 --res", "future_res"),
-                  "crop-global-SSP4-6.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-6.0 --res", "future_res"),
-                  "crop-global-SSP5-8.5"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-8.5 --res", "future_res")
+                  "crop-global-SSP1-2.6"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-2.6 --res", "future_res"),
+                  "crop-global-SSP2-4.5"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res", "future_res"),
+                  "crop-global-SSP3-7.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP3-7.0 --res", "future_res"),
+                  "crop-global-SSP4-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-3.4 --res", "future_res"),
+                  "crop-global-SSP4-6.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-6.0 --res", "future_res"),
+                  "crop-global-SSP5-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-3.4 --res", "future_res"),
+                  "crop-global-SSP5-8.5"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-8.5 --res", "future_res")
                   }
 
     # --------------------------
@@ -177,8 +175,6 @@ def main ():
         np = int(mpi_tasks)
         tasks_per_node = 12
         nodes = int(np / tasks_per_node) 
-        print (f"DEBUG: number of nodes is {nodes}")
-        print (f"DEBUG: number of tasks is {np}")
 
         runfile.write('#!/bin/bash')
         runfile.write('#PBS -A P93300606 \n')
