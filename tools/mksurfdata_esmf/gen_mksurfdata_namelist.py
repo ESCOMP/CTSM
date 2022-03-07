@@ -259,10 +259,12 @@ def main ():
 
     if ssp_rcp == 'none':
         if int(start_year) > 2015:
-            print(f"ERROR: if start-year is > 2015 must specify and SSP_RCP argument that is not 'none")
+            print(f"ERROR: if start-year is > 2015 must add an --ssp_rcp argument that is not 'none")
+            print(f"  valid opts for ssp-rcp are {valid_opts}")
             sys.exit(10)
         elif int(end_year) > 2015:
-            print(f"ERROR: if end-year is > 2015 must specify and SSP_RCP argument that is not 'none")
+            print(f"ERROR: if end-year is > 2015 must add an --ssp-rcp argument that is not 'none")
+            print(f"  valid opts for ssp-rcp are {valid_opts}")
             sys.exit(10)
 
     pft_years_ssp = "-999"
@@ -360,17 +362,16 @@ def main ():
         for item in max_match_child:
             if item.tag == 'data_filename':
                 rawdata_files[child1.tag] = os.path.join(input_path, item.text)
-                if '%y' in rawdata_files[child1.tag] and run_type == 'timeslice':
-                    rawdata_files[child1.tag] = rawdata_files[child1.tag].replace("%y",str(start_year))
+                if '%y' not in rawdata_files[child1.tag]:
                     if not os.path.isfile(rawdata_files[child1.tag]):
-                        print(f"ERROR: intput rawdata file {rawdata_files[child1.tag]} for {child1.tag} does not exist")
+                        print(f"ERROR: input data file {rawdata_files[child1.tag]} for {child1.tag} does not exist")
                         sys.exit(20)
 
             if item.tag == 'mesh_filename':
                 new_key = f"{child1.tag}_mesh"
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
                 if not os.path.isfile(rawdata_files[new_key]):
-                    print(f"ERROR: mesh file {rawdata_files[new_key]} does not exist")
+                    print(f"ERROR: input mesh file {rawdata_files[new_key]} does not exist")
                     sys.exit(30)
 
     # determine output mesh
@@ -438,14 +439,15 @@ def main ():
                 landuse_file.write(landuse_line)
                 logger.debug(f"year : {year}")
                 logger.debug(landuse_line)
-        logger.info("Successfully created land use file : {landuse_fname}.")
-        logger.info("-------------------------------------------------------")
+        print(f"Successfully created input landuse file {landuse_fname}")
     else:
         landuse_fname = ""
 
     time_stamp = datetime.today().strftime("%y%m%d")
     if ssp_rcp == 'none':
         ssp_rcp_name = 'hist'
+    else:
+        ssp_rcp_name = ssp_rcp
     if int(end_year) == int(start_year):
         nlfname = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.namelist"
         fsurdat = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.nc"
@@ -474,7 +476,6 @@ def main ():
     # Write output namelist file
     # ----------------------------------------
 
-    print (f"Creating input namelist file {nlfname}")
     with open(nlfname, "w",encoding='utf-8') as nlfile:
         nlfile.write("&mksurfdata_input \n")
 
@@ -510,6 +511,16 @@ def main ():
             mksrf_fvegtyp_mesh  = rawdata_files["mksrf_fvegtyp_ssp_mesh"]
             mksrf_fhrvtyp       = rawdata_files["mksrf_fvegtyp_ssp"]
             mksrf_fhrvtyp_mesh  = rawdata_files["mksrf_fvegtyp_ssp_mesh"]
+        if '%y' in mksrf_fvegtyp:
+            mksrf_fvegtyp = mksrf_fvegtyp.replace("%y",str(start_year))
+        if '%y' in mksrf_fhrvtyp:
+            mksrf_fhrvtyp = mksrf_fhrvtyp.replace("%y",str(start_year))
+        if not os.path.isfile(mksrf_fvegtyp):
+            print(f"ERROR: input mksrf_fvegtyp file {mksrf_fvegtyp} does not exist")
+            sys.exit(20)
+        if not os.path.isfile(mksrf_fhrvtyp):
+            print(f"ERROR: input mksrf_fhrvtyp file {mksrf_fhrvtyp} does not exist")
+            sys.exit(20)
         nlfile.write( f"  mksrf_fvegtyp = \'{mksrf_fvegtyp}\' \n")
         nlfile.write( f"  mksrf_fvegtyp_mesh = \'{mksrf_fvegtyp_mesh}\' \n")
         nlfile.write( f"  mksrf_fhrvtyp = \'{mksrf_fhrvtyp}\' \n")
@@ -553,7 +564,9 @@ def main ():
         nlfile.write(f"  gitdescribe = \'{gitdescribe}\' \n")
 
         nlfile.write("/ \n")
-        sys.exit(0)
+
+    print (f"Successfully created input namelist file {nlfname}")
+    sys.exit(0)
 
 if __name__ == "__main__":
     main()
