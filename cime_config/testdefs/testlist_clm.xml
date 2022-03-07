@@ -2498,7 +2498,7 @@
     </machines>
   </test>
 
-  <test name="LGRAIN2_Ly1_P72x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
+  <test name="LGRAIN2_Ly1_P72x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm">
         <options>
@@ -2508,7 +2508,7 @@
       </machine>
     </machines>
   </test>
-  <test name="LGRAIN2_Ly1_P72x1" grid="f10_f10_mg37" compset="I2000Clm45BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
+  <test name="LGRAIN2_Ly1_P72x1" grid="f10_f10_mg37" compset="I1850Clm45BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm">
         <options>
