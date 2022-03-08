@@ -1,4 +1,71 @@
 ===============================================================
+Tag name: ctsm5.1.dev083
+Originator(s): fang-bowen (Bowen Fang) / oleson (Keith Oleson,UCAR/TSS,303-497-1332)
+               / Face2sea (Lei Zhao) / keerzhang1 (Keer Zhang) / sacks (Bill Sacks)
+Date: Tue Mar  8 14:12:00 MST 2022
+One-line Summary: Implement PCT_URBAN_MAX to minimize dynamic urban memory
+
+Purpose and description of changes
+----------------------------------
+
+Read in 'PCT_URBAN_MAX' from the landuse timeseries file (maximum urban percentage throughout 
+timeseries) and initialize urban landunits in memory only where PCT_URBAN_MAX is greater than zero.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #1572
+
+Notes of particular relevance for users
+---------------------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+ERS_Lm25.1x1_smallvilleIA.IHistClm50BgcCropQianRs.cheyenne_gnu.clm-smallville_dynurban_monthly has
+been updated to accomodate PCT_URBAN_MAX
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/1661
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev082
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
 Date: Mon Feb 28 10:12:16 MST 2022
