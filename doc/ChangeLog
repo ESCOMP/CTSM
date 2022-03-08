@@ -31,11 +31,9 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed or introduced
 ------------------------
 
-Issues fixed (include CTSM Issue #): #1572
-
-Notes of particular relevance for users
----------------------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1572 (Improve mechanism for determining where to
+  allocate memory for urban when running with dynamic urban)
 
 Notes of particular relevance for developers:
 ---------------------------------------------
