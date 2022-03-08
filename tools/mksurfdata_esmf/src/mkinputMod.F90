@@ -116,12 +116,9 @@ module mkinputMod
 contains
 !===============================================================
 
-  subroutine read_namelist_input(filename)
+  subroutine read_namelist_input()
 
     ! Read in input namelist
-
-    ! input/output variables
-    character(len=*), intent(in) :: filename  ! now unused
 
     ! local variables
     integer :: ier
@@ -210,7 +207,7 @@ contains
     if (root_task) then
        read(5, nml=mksurfdata_input, iostat=ier)
        if (ier > 0) then
-          call shr_sys_abort(subname//' error reading in mksurfdata_input namelist from '//trim(filename))
+          call shr_sys_abort(subname//' error reading in mksurfdata_input namelist from standard input')
        end if
     end if
 

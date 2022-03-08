@@ -53,11 +53,27 @@ def get_parser():
         action="store_true",
     )
     parser.add_argument(
+        "--account",
+        help="""account number (default P93300606)""",
+        action="store",
+        dest="account",
+        required=False,
+        default="P93300606"
+    )
+    parser.add_argument(
         "--mpi_tasks",
         help="number of mpi tasks requested",
         action="store",
         dest="mpi_tasks",
         required=True,
+    )
+    parser.add_argument(
+        "--tasks-per-node",
+        help="""number of mpi tasks per node for cheyenne requested (default is 12)""",
+        action="store",
+        dest="tasks_per_node",
+        required=False,
+        default="12",
     )
     parser.add_argument(
         "--scenario",
@@ -66,6 +82,14 @@ def get_parser():
         action="store",
         dest="scenario",
         required=True,
+    )
+    parser.add_argument(
+        "--jobscript-file",
+        help="""output jobscript file to be submitted on cheyenne (default is mksurfdata_jobscript_multi)]""",
+        action="store",
+        dest="jobscript_file",
+        required=False,
+        default="mksurfdata_jobscript_multi"
     )
     return parser
 
@@ -76,7 +100,10 @@ def main ():
     # --------------------------
     args = get_parser().parse_args()
     scenario = args.scenario
+    jobscript_file = args.jobscript_file
     mpi_tasks = args.mpi_tasks
+    tasks_per_node = args.tasks_per_node
+    account = args.account
 
     # --------------------------
     # Determine target list 
@@ -170,23 +197,22 @@ def main ():
     # --------------------------
     # Write run script
     # --------------------------
-    with open("./runfile", "w",encoding='utf-8') as runfile:
+    with open(jobscript_file, "w",encoding='utf-8') as runfile:
 
         np = int(mpi_tasks)
-        tasks_per_node = 12
-        nodes = int(np / tasks_per_node) 
+        nodes = int(np / int(tasks_per_node))
 
-        runfile.write('#!/bin/bash')
-        runfile.write('#PBS -A P93300606 \n')
+        runfile.write('#!/bin/bash \n')
+        runfile.write(f"#PBS -A {account} \n")
         runfile.write('#PBS -N mksurfdata \n')
         runfile.write('#PBS -j oe \n')
         runfile.write('#PBS -q regular \n')
         runfile.write('#PBS -l walltime=30:00 \n')
-        runfile.write(f"#PBS -l select={nodes}:ncpus=36:mpiprocs=12 \n")
+        runfile.write(f"#PBS -l select={nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
 
         runfile.write("\n")
-        runfile.write("export TMPDIR=/glade/scratch/\$USER/temp \n")
-        runfile.write("mkdir -p \$TMPDIR \n")
+        runfile.write("export TMPDIR=/glade/scratch/$USER/temp \n")
+        runfile.write("mkdir -p $TMPDIR \n")
         runfile.write("\n")
 
         for target in target_list:
@@ -205,6 +231,9 @@ def main ():
                 print (f"generated namelist {namelist}")
                 output = f"mpiexec_mpt -p \"%g:\" -np {np} ./src/mksurfdata < {namelist}"
                 runfile.write(f"{output} \n")
+
+    print (f"Successfully created jobscript {jobscript_file}")
+    sys.exit(0)
 
 if __name__ == "__main__":
     main()

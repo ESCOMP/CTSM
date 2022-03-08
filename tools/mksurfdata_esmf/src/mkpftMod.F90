@@ -305,14 +305,20 @@ contains
     ! is okay if the input raw dataset has prognostic crops and the output does not.
     if (numpft_i /= numpft+1) then
        if (numpft_i == numstdpft+1) then
-          write(6,*) subname//' ERROR: trying to use non-crop input file'
-          write(6,*) 'for a surface dataset with crops.'
+          if (root_task) then
+             write(ndiag,*) subname//' ERROR: trying to use non-crop input file'
+             write(ndiag,*) 'for a surface dataset with crops.'
+          end if
           call shr_sys_abort()
        else if (numpft_i > numstdpft+1 .and. numpft_i == maxpft+1) then
-          write(6,*) subname//' WARNING: using a crop input raw dataset for a non-crop output surface dataset'
+          if (root_task) then
+             write(ndiag,*) subname//' WARNING: using a crop input raw dataset for a non-crop output surface dataset'
+          end if
        else
-          write(6,*) subname//': parameter numpft+1= ',numpft+1, &
-               'does not equal input dataset numpft= ',numpft_i
+          if (root_task) then
+             write(ndiag,*) subname//': parameter numpft+1= ',numpft+1, &
+                  'does not equal input dataset numpft= ',numpft_i
+          end if
           call shr_sys_abort()
        end if
     endif

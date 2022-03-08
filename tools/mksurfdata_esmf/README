@@ -34,15 +34,29 @@ building the executable
 > make clean  # REMEMBER to be in bash
 > make VERBOSE=1
 
-=======
-running
-=======
+=======================
+running for a single submission: 
+=======================
 > cd ../
-# Edit gen_mksurfdata to generate a single surface dataset that you want
-> qsub gen_mksurfdata  # OR qsub gen_mksurfdata_all ...to generate all the surface datasets
+> run ./gen_mksurfdata_namelist.py to generate your target namelist (call it foo.namelist here)
+> run ./gen_mksurfdata_jobscript_single.py --help to see commands - as an example
+> run ./gen_mksurfdata_jobscript_single.py --mpi-tasks 768 --namelist-file foo.namelist
+> qsub mksurfdata_jobscript
 
------
+=======================
+running for the generation of multiple datasets
+=======================
+> cd ../
+Note that gen_mksurfdata_jobscript_multi.py runs ./gen_mksurfdata_namelist.py
+> run ./gen_mksurfdata_jobscript_multi.py --help to see commands - as an example
+> run ./gen_mksurfdata_jobscript_multi.py --mpi-tasks 768 --namelist-file foo.namelist
+> run ./gen_mksurfdata_jobscript_multi.py --mpi-tasks 768 --scenario all
+> qsub mksurfdata_jobscript
+
+================
 NOTES
+================
+
 ------------------------------------------------------------
 slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
 ------------------------------------------------------------
@@ -55,9 +69,9 @@ slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
 
 .log file issues:
 - Successfully made PFTs, harvest and grazing, glacier, urban,
-topo stats, and organic don't show input/output for comparison
+  topo stats, and organic don't show input/output for comparison
 - soil texture category 3 and soil color category 15 inputs/outputs
-problematic or just that we set ocean to loam?
+  problematic or just that we set ocean to loam?
 - agricultural fire peak month: output areas increase for all categories
 - voc emission factors all zero
 
@@ -71,13 +85,14 @@ Coordinate with Peter Lawrence. Use this command to translate:
 Python script for generating namelists has NOT ADDRESSED:
 --------------------------------------------------------
 * Regional/1x1: handled by subset.py
-* nocrop: should work
 * hires_pft: should work
 * ssp_rcp: should work; needs files converted to cdf5 first?
 * potveg: needs file(s) converted to cdf5 first?
 * merge_gis
-* no_surfdat
-* Override options removed:
+
+--------------------------------------------------------
+Override options removed:
+--------------------------------------------------------
 -- all_veg = .true. handled by fsurdat_modifier zero_nonveg = .true.
 -- all_urban = .true. handle w fsurdat_modifier new option
 -- no_inlandwet = .false. same

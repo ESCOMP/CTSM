@@ -428,10 +428,9 @@ def main ():
                     file1 = rawdata_files["mksrf_fvegtyp_ssp"]
 
                 landuse_input_fname = file1.replace("%y",str(year))
-                # if not os.path.isfile(landuse_input_fname):
-                    # TODO: turn on this error once the new cdf5 data is available
-                    # print(f"ERROR: landunit_input_fname: {landuse_input_fname} does not exit")
-                    # sys.exit(60)
+                if not os.path.isfile(landuse_input_fname):
+                     print(f"ERROR: landunit_input_fname: {landuse_input_fname} does not exit")
+                     sys.exit(60)
 
                 # -- Each line is written twice in the original perl code:
                 landuse_line = f"{landuse_input_fname:<196}{str(year)}\n"

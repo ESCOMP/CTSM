@@ -137,10 +137,6 @@ contains
     ! Raw data file names
     str = get_filename(mksrf_fgrid_mesh)
     rcode = pio_put_att(pioid, pio_global, 'Input_grid_dataset', trim(str))
-    if (.not. dynlanduse) then
-       str = get_filename(mksrf_fvocef)
-       rcode = pio_put_att(pioid, pio_global, 'VOC_EF_raw_data_file_name', trim(str))
-    end if
     str = get_filename(mksrf_flakwat)
     rcode = pio_put_att(pioid, pio_global, 'Inland_lake_raw_data_file_name', trim(str))
     str = get_filename(mksrf_fwetlnd)
@@ -153,10 +149,8 @@ contains
     rcode = pio_put_att(pioid, pio_global, 'Urban_Topography_raw_data_file_name', trim(str))
     str = get_filename(mksrf_furban)
     rcode = pio_put_att(pioid, pio_global, 'Urban_raw_data_file_name', trim(str))
-    if (.not. dynlanduse .and. (numpft == numstdpft) ) then
-       str = get_filename(mksrf_flai)
-       rcode = pio_put_att(pioid, pio_global, 'Lai_raw_data_file_name', trim(str))
-    end if
+    str = get_filename(mksrf_fvegtyp)
+    rcode = pio_put_att(pioid, pio_global, 'Vegetation_type_raw_data_filename', trim(str))
     str = get_filename(mksrf_fabm)
     rcode = pio_put_att(pioid, pio_global, 'agfirepkmon_raw_data_file_name', trim(str))
     str = get_filename(mksrf_fgdp)
@@ -219,6 +213,8 @@ contains
     end if
 
     if (.not. dynlanduse) then
+       str = get_filename(mksrf_flai)
+       rcode = pio_put_att(pioid, pio_global, 'lai_raw_data_file_name', trim(str))
        str = get_filename(mksrf_fsoicol)
        rcode = pio_put_att(pioid, pio_global, 'soil_color_raw_data_file_name', trim(str))
        str = get_filename(mksrf_fsoitex)
@@ -227,6 +223,8 @@ contains
        rcode = pio_put_att(pioid, pio_global, 'fmax_raw_data_file_name', trim(str))
        str = get_filename(mksrf_forganic)
        rcode = pio_put_att(pioid, pio_global, 'organic_matter_raw_data_file_name', trim(str))
+       str = get_filename(mksrf_fvocef)
+       rcode = pio_put_att(pioid, pio_global, 'VOC_EF_raw_data_file_name', trim(str))
     end if
 
   end subroutine mkfile_define_atts

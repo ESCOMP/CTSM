@@ -227,7 +227,7 @@ program mksurfdata
   call pio_init(iam, mpicom, max(1,petcount/stride), 0, stride, PIO_REARR_SUBSET, pio_iosystem)
 
   pio_iotype = PIO_IOTYPE_PNETCDF
-  pio_ioformat =  PIO_64BIT_DATA
+  pio_ioformat = PIO_64BIT_DATA
 
   call ESMF_LogWrite("finished initializing PIO", ESMF_LOGMSG_INFO)
 
@@ -237,8 +237,7 @@ program mksurfdata
 
   ! Read input namelist on root_task and broadcast to all pes
   ! root_task is a module variable in mkvarctl
-  ! Assumne that input namelist file is 'mksurfdata_in'
-  call read_namelist_input(filename='mksurfdata_in')
+  call read_namelist_input()
 
   ! open output ndiag file
   if (fsurlog == ' ') then
