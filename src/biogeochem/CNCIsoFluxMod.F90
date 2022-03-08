@@ -1642,7 +1642,7 @@ contains
      character(len=*) , intent(in)             :: isotope         ! 'c13' or 'c14'
      !
      ! !LOCAL VARIABLES:
-     integer :: beg1d, beg2d, end2d
+     integer :: beg2d, end2d
      integer :: i
      real(r8), pointer :: ciso_flux_1d(:)
      real(r8), pointer :: ctot_flux_1d(:)
@@ -1653,13 +1653,12 @@ contains
      SHR_ASSERT_ALL_FL((lbound(ctot_flux) == lbound(ciso_flux)), sourcefile, __LINE__)
      SHR_ASSERT_ALL_FL((ubound(ctot_flux) == ubound(ciso_flux)), sourcefile, __LINE__)
 
-     beg1d = lbound(ciso_flux, 1)
      beg2d = lbound(ciso_flux, 2)
      end2d = ubound(ciso_flux, 2)
 
      do i = beg2d, end2d
-        ciso_flux_1d(beg1d:) => ciso_flux(:,i)
-        ctot_flux_1d(beg1d:) => ctot_flux(:,i)
+        ciso_flux_1d => ciso_flux(:,i)
+        ctot_flux_1d => ctot_flux(:,i)
         call CIsoFluxCalc1d(&
              ciso_flux  = ciso_flux_1d, &
              ctot_flux  = ctot_flux_1d, &
@@ -1698,7 +1697,7 @@ contains
      character(len=*) , intent(in)             :: isotope         ! 'c13' or 'c14'
      !
      ! !LOCAL VARIABLES:
-     integer :: beg1d, beg2d, end2d
+     integer :: beg2d, end2d
      integer :: i
      real(r8), pointer :: ciso_flux_1d(:)
      real(r8), pointer :: ctot_flux_1d(:)
@@ -1717,15 +1716,14 @@ contains
      SHR_ASSERT_ALL_FL((lbound(ctot_state) == lbound(ciso_state)), sourcefile, __LINE__)
      SHR_ASSERT_ALL_FL((ubound(ctot_state) == ubound(ciso_state)), sourcefile, __LINE__)
 
-     beg1d = lbound(ciso_flux, 1)
      beg2d = lbound(ciso_flux, 2)
      end2d = ubound(ciso_flux, 2)
 
      do i = beg2d, end2d
-        ciso_flux_1d(beg1d:) => ciso_flux(:,i)
-        ctot_flux_1d(beg1d:) => ctot_flux(:,i)
-        ciso_state_1d(beg1d:) => ciso_state(:,i)
-        ctot_state_1d(beg1d:) => ctot_state(:,i)
+        ciso_flux_1d => ciso_flux(:,i)
+        ctot_flux_1d => ctot_flux(:,i)
+        ciso_state_1d => ciso_state(:,i)
+        ctot_state_1d => ctot_state(:,i)
         call CIsoFluxCalc1d(&
              ciso_flux  = ciso_flux_1d, &
              ctot_flux  = ctot_flux_1d, &
