@@ -528,7 +528,12 @@ contains
          soilbeta               => soilstate_inst%soilbeta_col                  , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               
 
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
-         forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Input:  [real(r8) (:)   ]  observational height of wind at patch level [m]                          
+         forc_hgt_t             => atm2lnd_inst%forc_hgt_t_grc                  , & ! Input:  [real(r8) (:)   ] observational height of temperature [m]
+         forc_hgt_u             => atm2lnd_inst%forc_hgt_u_grc                  , & ! Input:  [real(r8) (:)   ] observational height of wind [m]
+         forc_hgt_q             => atm2lnd_inst%forc_hgt_q_grc                  , & ! Input:  [real(r8) (:)   ] observational height of specific humidity [m]
+         forc_hgt_t_patch       => frictionvel_inst%forc_hgt_t_patch            , & ! Output: [real(r8) (:)   ] observational height of temperature at patch level [m]
+         forc_hgt_q_patch       => frictionvel_inst%forc_hgt_q_patch            , & ! Output: [real(r8) (:)   ] observational height of specific humidity at patch level [m]
+         forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Output:  [real(r8) (:)   ]  observational height of wind at patch level [m]                          
          z0mg                   => frictionvel_inst%z0mg_col                    , & ! Input:  [real(r8) (:)   ]  roughness length of ground, momentum [m]                              
          zetamax                => frictionvel_inst%zetamaxstable               , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                                        
@@ -877,7 +882,7 @@ bioms:   do f = 1, fn
       do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
-
+         g = patch%gridcell(p)
 
          select case (z0param_method)
          case ('ZengWang2007')
@@ -912,6 +917,11 @@ bioms:   do f = 1, fn
             write(iulog,*) 'ERROR: unknown z0para_method: ', z0param_method
             call endrun(msg = 'unknown z0param_method', additional_msg = errMsg(sourcefile, __LINE__))
           end select
+
+          ! Update the forcing heights
+          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
+          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c) + displa(p)
+          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c) + displa(p)
 
           z0hv(p)   = z0mv(p)
           z0qv(p)   = z0mv(p)

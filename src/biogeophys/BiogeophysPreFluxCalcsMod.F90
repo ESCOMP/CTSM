@@ -174,7 +174,7 @@ contains
          case ('Meier2022') 
             
             ! Don't set on first few steps of a simulation, since htop isn't set yet, need to wait until after first do_alb time
-            if ( is_first_step() .or. get_nstep() <= GetBalanceCheckSkipSteps() ) then
+            if ( is_first_step() .or. get_nstep() <= GetBalanceCheckSkipSteps()-1 ) then
                z0m(p)    = 0._r8
                displa(p) = 0._r8 
                cycle
@@ -190,7 +190,7 @@ contains
                displa(p) = 0._r8 
 
             else
-               ! Compute as if elai+esai = LAImax - LAIoff in CanopyFluxes
+               ! Compute as if elai+esai = LAImax in CanopyFluxes
                displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(7.5_r8 * (pftcon%z0v_LAImax(patch%itype(p))))**0.5_r8)) &
                            / (7.5_r8*(pftcon%z0v_LAImax(patch%itype(p)) ))**0.5_r8)
 
