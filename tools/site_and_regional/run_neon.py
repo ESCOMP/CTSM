@@ -244,6 +244,19 @@ def get_parser(args, description, valid_neon_sites):
         required=False,
         default=False,
     )
+    parser.add_argument(
+        "--neon-version",
+        help="""
+                Neon data version to use for this simulation.
+                [default: use the latest data available]
+                """,
+        action="store",
+        dest="user_version",
+        required = False,
+        type = str,
+        choices= ['v1','v2'],
+    )
+
 
     args = CIME.utils.parse_args_and_handle_standard_logging_options(args, parser)
 
@@ -289,6 +302,7 @@ def get_parser(args, description, valid_neon_sites):
         args.setup_only,
         args.no_batch,
         args.rerun,
+        args.user_version,
     )
 
 
@@ -432,6 +446,7 @@ class NeonSite:
         base_case_root,
         run_type,
         run_length,
+        user_version,
         overwrite=False,
         setup_only=False,
         no_batch=False,
@@ -446,6 +461,14 @@ class NeonSite:
             os.path.isdir(base_case_root),
             "Error base case does not exist in {}".format(base_case_root),
         )
+        # -- if user gives a version:
+        if user_version:
+            version = user_version
+        else:
+            version = 'latest'
+
+        print ("using this version:", version)
+
         case_root = os.path.abspath(
             os.path.join(base_case_root, "..", self.name + "." + run_type)
         )
@@ -495,6 +518,7 @@ class NeonSite:
             case.set_value("STOP_N", run_length)
             case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
+            case.set_value("NEONVERSION", version)
 
             if run_type == "ad":
                 case.set_value("CLM_FORCE_COLDSTART", "on")
@@ -739,6 +763,7 @@ def main(description):
         setup_only,
         no_batch,
         rerun,
+        user_version
     ) = get_parser(sys.argv, description, valid_neon_sites)
 
     if output_root:
@@ -772,6 +797,7 @@ def main(description):
                 base_case_root,
                 run_type,
                 run_length,
+                user_version,
                 overwrite,
                 setup_only,
                 no_batch,
