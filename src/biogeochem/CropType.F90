@@ -33,7 +33,7 @@ module CropType
      logical , pointer :: cropplant_patch         (:)   ! patch Flag, true if planted
      integer , pointer :: harvdate_patch          (:)   ! patch harvest date
      real(r8), pointer :: fertnitro_patch         (:)   ! patch fertilizer nitrogen
-     real(r8), pointer :: hui_patch               (:)   ! patch accum hui past planting date for crop       (ddays)
+     real(r8), pointer :: hui_patch               (:)   ! crop patch heat unit index (ddays)
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
      real(r8), pointer :: vf_patch                (:)   ! patch vernalization factor for cereal
      real(r8), pointer :: cphase_patch            (:)   ! phenology phase
@@ -227,7 +227,7 @@ contains
 
     this%hui_patch(begp:endp) = spval
     call hist_addfld1d (fname='HUI', units='ddays', &
-         avgflag='A', long_name='Accumulated heat unit index since planting for crop', &
+         avgflag='A', long_name='Crop patch heat unit index', &
          ptr_patch=this%hui_patch, default='inactive')
 
     this%gddtsoi_patch(begp:endp) = spval
