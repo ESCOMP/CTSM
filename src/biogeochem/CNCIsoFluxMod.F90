@@ -507,19 +507,16 @@ contains
                        iso_cnveg_cf%repr_grainc_to_food_patch(p,k)
                end do
             end do
+         end if
 
-            ! BUG(wjs, 2022-03-02, ESCOMP/CTSM#1666) I don't think it's right for the
-            ! following to be in a use_grainproduct conditional, but I'm keeping it as is
-            ! for now to avoid changing behavior.
-            do k = 1, nrepr
-               do fp = 1,num_soilp
-                  p = filter_soilp(fp)
-                  iso_cnveg_cf%reproductive_mr_patch(p,k) = &
-                       iso_cnveg_cf%reproductive_xsmr_patch(p,k) + &
-                       iso_cnveg_cf%reproductive_curmr_patch(p,k)
-               end do
+         do k = 1, nrepr
+            do fp = 1,num_soilp
+               p = filter_soilp(fp)
+               iso_cnveg_cf%reproductive_mr_patch(p,k) = &
+                    iso_cnveg_cf%reproductive_xsmr_patch(p,k) + &
+                    iso_cnveg_cf%reproductive_curmr_patch(p,k)
             end do
-         endif
+         end do
 
          do k = repr_structure_min, repr_structure_max
             do fp = 1,num_soilp
