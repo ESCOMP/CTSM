@@ -84,10 +84,6 @@ def main ():
         runfile.write('#PBS -q regular \n')
         runfile.write('#PBS -l walltime=30:00 \n')
         runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
-
-        runfile.write("\n")
-        runfile.write("export TMPDIR=/glade/scratch/$USER/temp \n")
-        runfile.write("mkdir -p $TMPDIR \n")
         runfile.write("\n")
 
         np = int(tasks_per_node) * int(number_of_nodes)
