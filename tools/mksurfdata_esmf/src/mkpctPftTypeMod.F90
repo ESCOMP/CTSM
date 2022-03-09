@@ -542,8 +542,8 @@ contains
        call shr_sys_abort(subname//' ndim1 and size(pct_pft_arr) must be equal')
     end if
     if (ndim2 /= pft_ubound-pft_lbound+1) then
-       write(6,*) 'ndim1,pft_ubound-pft_lbound+1 = ',ndim1,pft_ubound-pft_lbound+1
-       call shr_sys_abort(subname//' ndim1 and pft_ubound-pft_lbound+1 must be equal')
+       write(6,*) 'ndim2,pft_ubound-pft_lbound+1 = ',ndim2,pft_ubound-pft_lbound+1
+       call shr_sys_abort(subname//' ndim2 and pft_ubound-pft_lbound+1 must be equal')
     end if
     do arr_index = 1, size(pct_pft_arr)
        if (lbound(pct_pft_arr(arr_index)%pct_p2l, 1) /= pft_lbound .or. &

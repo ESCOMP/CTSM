@@ -40,17 +40,16 @@ running for a single submission:
 > cd ../
 > run ./gen_mksurfdata_namelist.py to generate your target namelist (call it foo.namelist here)
 > run ./gen_mksurfdata_jobscript_single.py --help to see commands - as an example
-> run ./gen_mksurfdata_jobscript_single.py --mpi-tasks 768 --namelist-file foo.namelist
+> run ./gen_mksurfdata_jobscript_single.py --number-of-nodes 24 --tasks-per-node 12 --namelist-file foo.namelist
 > qsub mksurfdata_jobscript
 
 =======================
 running for the generation of multiple datasets
 =======================
-> cd ../
 Note that gen_mksurfdata_jobscript_multi.py runs ./gen_mksurfdata_namelist.py
+> cd ../
 > run ./gen_mksurfdata_jobscript_multi.py --help to see commands - as an example
-> run ./gen_mksurfdata_jobscript_multi.py --mpi-tasks 768 --namelist-file foo.namelist
-> run ./gen_mksurfdata_jobscript_multi.py --mpi-tasks 768 --scenario all
+> run ./gen_mksurfdata_jobscript_multi.py --number-of-nodes 24 --tasks-per-node 12 --scenario all
 > qsub mksurfdata_jobscript
 
 ================
@@ -76,9 +75,8 @@ slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
 - voc emission factors all zero
 
 ------------------------------------------------------
-DYNAMIC LU: NOT ALL FILES HAVE BEEN TRANSLATED to cdf5
+NOT ALL FILES HAVE BEEN TRANSLATED to cdf5 - need to check last millenium
 ------------------------------------------------------
-Coordinate with Peter Lawrence. Use this command to translate:
 > nccopy -k cdf5 oldfile newfile
 
 --------------------------------------------------------
@@ -86,7 +84,6 @@ Python script for generating namelists has NOT ADDRESSED:
 --------------------------------------------------------
 * Regional/1x1: handled by subset.py
 * hires_pft: should work
-* ssp_rcp: should work; needs files converted to cdf5 first?
 * potveg: needs file(s) converted to cdf5 first?
 * merge_gis
 

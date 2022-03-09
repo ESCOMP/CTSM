@@ -61,10 +61,10 @@ def get_parser():
         default="P93300606"
     )
     parser.add_argument(
-        "--mpi_tasks",
-        help="number of mpi tasks requested",
+        "--number-of-nodes",
+        help="""number of cheyenne nodes requested (required)""",
         action="store",
-        dest="mpi_tasks",
+        dest="number_of_nodes",
         required=True,
     )
     parser.add_argument(
@@ -101,7 +101,7 @@ def main ():
     args = get_parser().parse_args()
     scenario = args.scenario
     jobscript_file = args.jobscript_file
-    mpi_tasks = args.mpi_tasks
+    number_of_nodes = args.number_of_nodes
     tasks_per_node = args.tasks_per_node
     account = args.account
 
@@ -208,12 +208,14 @@ def main ():
         runfile.write('#PBS -j oe \n')
         runfile.write('#PBS -q regular \n')
         runfile.write('#PBS -l walltime=30:00 \n')
-        runfile.write(f"#PBS -l select={nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
+        runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
 
         runfile.write("\n")
         runfile.write("export TMPDIR=/glade/scratch/$USER/temp \n")
         runfile.write("mkdir -p $TMPDIR \n")
         runfile.write("\n")
+
+        np = int(tasks_per_node) * int(number_of_nodes)
 
         for target in target_list:
             res_set = dataset_dict[target][1]

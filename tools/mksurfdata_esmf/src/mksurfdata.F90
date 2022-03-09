@@ -697,13 +697,21 @@ program mksurfdata
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP')
 
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_NAT_PFT"
-     call get_pct_p2l_array(pctnatpft, ndim1=lsize_o, ndim2=num_natpft+1, pct_p2l=pct_nat_pft)
+     if (lsize_o /= 0) then
+        call get_pct_p2l_array(pctnatpft, ndim1=lsize_o, ndim2=num_natpft+1, pct_p2l=pct_nat_pft)
+     else
+        pct_nat_pft(:,:) = 0.
+     end if
      call mkfile_output(pioid, mesh_model, 'PCT_NAT_PFT', pct_nat_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_NAT_PFT')
-
+        
      if (num_cft > 0) then
         if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_CFT"
-        call get_pct_p2l_array(pctcft, ndim1=lsize_o, ndim2=num_cft, pct_p2l=pct_cft)
+        if (lsize_o /= 0) then
+           call get_pct_p2l_array(pctcft, ndim1=lsize_o, ndim2=num_cft, pct_p2l=pct_cft)
+        else
+           pct_cft(:,:) = 0.
+        end if
         call mkfile_output(pioid, mesh_model, 'PCT_CFT', pct_cft, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CFT')
      end if
@@ -1058,10 +1066,17 @@ program mksurfdata
 
          suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
          if (suma > (100._r8 + tol_loose)) then
-            write(6,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla must be'
-            write(6,*) '<= 100% before calling this subroutine'
-            write(6,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
-                 n, pctlak(n), pctwet(n), pcturb(n), pctgla(n)
+            if (root_task) then
+               write(ndiag,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla must be'
+               write(ndiag,*) '<= 100% before calling this subroutine'
+               write(ndiag,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
+                    n, pctlak(n), pctwet(n), pcturb(n), pctgla(n)
+            else
+               write(6,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla must be'
+               write(6,*) '<= 100% before calling this subroutine'
+               write(6,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
+                    n, pctlak(n), pctwet(n), pcturb(n), pctgla(n)
+            end if
             call shr_sys_abort()
          end if
 
