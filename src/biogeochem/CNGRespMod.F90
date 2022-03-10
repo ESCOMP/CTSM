@@ -59,7 +59,6 @@ contains
          woody                         =>    pftcon%woody                                              , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          grperc                        =>    pftcon%grperc                                             , & ! Input:  growth respiration parameter
          grpnow                        =>    pftcon%grpnow                                             , & ! Input:  growth respiration parameter
-         leafcn                        =>    pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)                         
          livewdcn                      =>    pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)  
          
          laisun                        =>    canopystate_inst%laisun_patch                             , & ! Input:  [real(r8) (:)]  sunlit projected leaf area index      

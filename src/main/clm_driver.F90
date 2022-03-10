@@ -165,6 +165,12 @@ contains
     call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
 
+    ! -------------------------------------------------
+    ! Obtain updated values of time-evolving parameters
+    ! -------------------------------------------------
+    call bgc_vegetation_inst%cnveg_nitrogenstate_inst%time_evolv_leafcn( &
+       bounds_proc, atm2lnd_inst)
+
     ! ========================================================================
     ! In the first time step of a startup or hybrid run, we want to update CLM's glacier
     ! areas to match those given by GLC. This is because, in initialization, we do not yet
@@ -690,6 +696,7 @@ contains
             temperature_inst, water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst,          &
             ch4_inst, ozone_inst, photosyns_inst, &
+            bgc_vegetation_inst%cnveg_nitrogenstate_inst, &
             humanindex_inst, soil_water_retention_curve, &
             downreg_patch = downreg_patch(bounds_clump%begp:bounds_clump%endp), &
             leafn_patch = leafn_patch(bounds_clump%begp:bounds_clump%endp), &
