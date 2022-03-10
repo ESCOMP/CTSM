@@ -22,7 +22,7 @@ from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
 
 class TestModifyFsurdat(unittest.TestCase):
     """Tests the setvar_lev functions and the
-                 _get_rectangle function
+    _get_rectangle function
     """
 
     def test_setvarLev(self):
@@ -122,10 +122,15 @@ class TestModifyFsurdat(unittest.TestCase):
         lat_1 = 6
         lat_2 = 8  # lat_1 < lat_2
         rectangle = ModifyFsurdat._get_rectangle(
-            lon_1=lon_1, lon_2=lon_2, lat_1=lat_1, lat_2=lat_2,
-            longxy=longxy, latixy=latixy)
+            lon_1=lon_1,
+            lon_2=lon_2,
+            lat_1=lat_1,
+            lat_2=lat_2,
+            longxy=longxy,
+            latixy=latixy,
+        )
         not_rectangle = np.logical_not(rectangle)
-        compare = np.ones((rows,cols))
+        compare = np.ones((rows, cols))
         # assert this to confirm intuitive understanding of these matrices
         self.assertEqual(np.size(not_rectangle), np.size(compare))
 
@@ -163,10 +168,15 @@ class TestModifyFsurdat(unittest.TestCase):
         lat_1 = 4
         lat_2 = 0  # lat_1 > lat_2
         rectangle = ModifyFsurdat._get_rectangle(
-            lon_1=lon_1, lon_2=lon_2, lat_1=lat_1, lat_2=lat_2,
-            longxy=longxy, latixy=latixy)
+            lon_1=lon_1,
+            lon_2=lon_2,
+            lat_1=lat_1,
+            lat_2=lat_2,
+            longxy=longxy,
+            latixy=latixy,
+        )
         not_rectangle = np.logical_not(rectangle)
-        compare = np.ones((rows,cols))
+        compare = np.ones((rows, cols))
         # assert this to confirm intuitive understanding of these matrices
         self.assertEqual(np.size(not_rectangle), np.size(compare))
 
@@ -203,10 +213,15 @@ class TestModifyFsurdat(unittest.TestCase):
         lat_1 = 2
         lat_2 = 3  # lat_1 < lat_2
         rectangle = ModifyFsurdat._get_rectangle(
-            lon_1=lon_1, lon_2=lon_2, lat_1=lat_1, lat_2=lat_2,
-            longxy=longxy, latixy=latixy)
+            lon_1=lon_1,
+            lon_2=lon_2,
+            lat_1=lat_1,
+            lat_2=lat_2,
+            longxy=longxy,
+            latixy=latixy,
+        )
         not_rectangle = np.logical_not(rectangle)
-        compare = np.ones((rows,cols))
+        compare = np.ones((rows, cols))
         # assert this to confirm intuitive understanding of these matrices
         self.assertEqual(np.size(not_rectangle), np.size(compare))
 
@@ -243,10 +258,15 @@ class TestModifyFsurdat(unittest.TestCase):
         lat_1 = 0
         lat_2 = -3  # lat_1 > lat_2
         rectangle = ModifyFsurdat._get_rectangle(
-            lon_1=lon_1, lon_2=lon_2, lat_1=lat_1, lat_2=lat_2,
-            longxy=longxy, latixy=latixy)
+            lon_1=lon_1,
+            lon_2=lon_2,
+            lat_1=lat_1,
+            lat_2=lat_2,
+            longxy=longxy,
+            latixy=latixy,
+        )
         not_rectangle = np.logical_not(rectangle)
-        compare = np.ones((rows,cols))
+        compare = np.ones((rows, cols))
         # assert this to confirm intuitive understanding of these matrices
         self.assertEqual(np.size(not_rectangle), np.size(compare))
 
@@ -285,10 +305,15 @@ class TestModifyFsurdat(unittest.TestCase):
         lat_1 = -4
         lat_2 = -6  # lat_1 > lat_2
         rectangle = ModifyFsurdat._get_rectangle(
-            lon_1=lon_1, lon_2=lon_2, lat_1=lat_1, lat_2=lat_2,
-            longxy=longxy, latixy=latixy)
+            lon_1=lon_1,
+            lon_2=lon_2,
+            lat_1=lat_1,
+            lat_2=lat_2,
+            longxy=longxy,
+            latixy=latixy,
+        )
         not_rectangle = np.logical_not(rectangle)
-        compare = np.ones((rows,cols))
+        compare = np.ones((rows, cols))
         # assert this to confirm intuitive understanding of these matrices
         self.assertEqual(np.size(not_rectangle), np.size(compare))
 
@@ -322,11 +347,17 @@ class TestModifyFsurdat(unittest.TestCase):
         lon_2 = 5
         lat_1 = -91
         lat_2 = 91
-        with self.assertRaisesRegex(SystemExit,
-            "lat_1 and lat_2 need to be in the range -90 to 90"):
+        with self.assertRaisesRegex(
+            SystemExit, "lat_1 and lat_2 need to be in the range -90 to 90"
+        ):
             _ = ModifyFsurdat._get_rectangle(
-                lon_1=lon_1, lon_2=lon_2, lat_1=lat_1, lat_2=lat_2,
-                longxy=longxy, latixy=latixy)
+                lon_1=lon_1,
+                lon_2=lon_2,
+                lat_1=lat_1,
+                lat_2=lat_2,
+                longxy=longxy,
+                latixy=latixy,
+            )
 
     def _get_longxy_latixy(self, _min_lon, _max_lon, _min_lat, _max_lat):
         """

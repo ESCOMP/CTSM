@@ -18,6 +18,7 @@ from ctsm.git_utils import get_ctsm_git_describe
 # -- import local classes for this script
 logger = logging.getLogger(__name__)
 
+
 class CtsmCase:
     """
     A class to encapsulate different ctsm cases.
@@ -69,8 +70,8 @@ class CtsmCase:
         Build the namelist/control file for a ctsm
         case.
     """
-    # pylint: disable=too-many-instance-attributes
 
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(
         self,
@@ -83,7 +84,7 @@ class CtsmCase:
         glc_flag,
         start_year,
         end_year,
-        hres_flag
+        hres_flag,
     ):
         self.res = res
         self.glc_nec = glc_nec
@@ -96,10 +97,9 @@ class CtsmCase:
         self.end_year = end_year
         self.hres_flag = hres_flag
         self.lu_fname = None
-        self.namelist_fname =None
-        self.ssp_val=None
-        self.rcp_val=None
-
+        self.namelist_fname = None
+        self.ssp_val = None
+        self.rcp_val = None
 
         # -- check if end year value is a valid value
         self.check_endyear()
@@ -152,8 +152,9 @@ class CtsmCase:
             self.num_pft = "78"
         else:
             self.num_pft = "16"
-        logger.debug(" crop_flag = %s => num_pft = %i",
-                     self.crop_flag.__str__(), self.num_pft)
+        logger.debug(
+            " crop_flag = %s => num_pft = %i", self.crop_flag.__str__(), self.num_pft
+        )
 
     def build_landuse_filename(self):
         """
@@ -179,7 +180,7 @@ class CtsmCase:
         Create land-use txt file for a transient case.
         """
         self.build_landuse_filename()
-        with open(self.lu_fname, "w", encoding='utf-8') as lu_file:
+        with open(self.lu_fname, "w", encoding="utf-8") as lu_file:
 
             for year in range(self.start_year, self.end_year + 1):
 
@@ -217,7 +218,9 @@ class CtsmCase:
                 # -- Check if the land-use input file exist:
                 if not os.path.isfile(lu_input_fname):
                     logger.debug("lu_input_fname: %s", lu_input_fname)
-                    logger.warning("land-use input file does not exist for year: %i.", year)
+                    logger.warning(
+                        "land-use input file does not exist for year: %i.", year
+                    )
 
                 # TODO: make the space/tab exactly the same as pl code:
                 lu_line = lu_input_fname + "\t\t\t" + str(year) + "\n"
@@ -229,7 +232,7 @@ class CtsmCase:
                 logger.debug("year : %s", year)
                 logger.debug(lu_line)
 
-        print ("Successfully created land use file : ", self.lu_fname, ".")
+        print("Successfully created land use file : ", self.lu_fname, ".")
         print("-------------------------------------------------------")
 
     def build_namelist_filename(self):
@@ -265,7 +268,7 @@ class CtsmCase:
             self.create_landuse_file()
 
         self.build_namelist_filename()
-        with open(self.namelist_fname, "w", encoding='utf-8') as namelist_file:
+        with open(self.namelist_fname, "w", encoding="utf-8") as namelist_file:
 
             label = get_ctsm_git_describe()
 
@@ -295,7 +298,10 @@ class CtsmCase:
                 + self.input_path
                 + "mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc"
                 + "\n"
-                "mksrf_fwetlnd    = " + self.input_path + "mksrf_lanwat.050425.nc" + "\n"
+                "mksrf_fwetlnd    = "
+                + self.input_path
+                + "mksrf_lanwat.050425.nc"
+                + "\n"
                 "mksrf_fmax       = "
                 + self.input_path
                 + "mksrf_fmax_3x3min_USGS_c120911.nc"

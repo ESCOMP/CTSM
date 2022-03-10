@@ -738,7 +738,6 @@ if PY3:
             value = None
             tb = None
 
-
 else:
 
     def exec_(_code_, _globs_=None, _locs_=None):
@@ -876,7 +875,6 @@ if sys.version_info[0:2] < (3, 4):
             return f
 
         return wrapper
-
 
 else:
     wraps = functools.wraps

@@ -40,6 +40,7 @@ def fill_template_file(path_to_template, path_to_final, substitutions):
     with open(path_to_final, "w") as final_file:
         final_file.write(final_file_contents)
 
+
 def add_tag_to_filename(filename, tag):
     """
     Add a tag and replace timetag of a filename

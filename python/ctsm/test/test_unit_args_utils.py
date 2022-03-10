@@ -13,14 +13,16 @@ import argparse
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
 _CTSM_PYTHON = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir
+)
 sys.path.insert(1, _CTSM_PYTHON)
 
-#pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-position
 from ctsm.args_utils import plon_type, plat_type
 from ctsm import unit_testing
 
 # pylint: disable=invalid-name
+
 
 class TestArgsPlon(unittest.TestCase):
     """
@@ -87,10 +89,12 @@ class TestArgsPlon(unittest.TestCase):
         result = plon_type(360)
         self.assertEqual(result, 360.0)
 
+
 class TestArgsPlat(unittest.TestCase):
     """
     Tests for plat_type in args_util.py
     """
+
     def test_platType_outOfBounds_positive(self):
         """
         Test of plat_type bigger than 90
@@ -122,6 +126,7 @@ class TestArgsPlat(unittest.TestCase):
             argparse.ArgumentTypeError, "Latitude.*should be between"
         ):
             _ = plat_type(-91)
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

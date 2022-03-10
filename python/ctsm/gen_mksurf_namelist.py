@@ -363,7 +363,7 @@ def main():
         glc_flag,
         start_year,
         end_year,
-        hres_flag
+        hres_flag,
     )
 
     logger.info("--------------------------")

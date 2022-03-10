@@ -11,6 +11,7 @@ from ctsm.config_utils import lon_range_0_to_360
 
 logger = logging.getLogger(__name__)
 
+
 def plat_type(plat):
     """
     Function to define lat type for the parser
@@ -30,6 +31,7 @@ def plat_type(plat):
             "ERROR: Latitude should be between -90 and 90."
         )
     return plat_out
+
 
 def plon_type(plon):
     """
