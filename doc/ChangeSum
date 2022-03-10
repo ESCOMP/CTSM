@@ -1,5 +1,21 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev083 multiple 03/08/2022 Implement PCT_URBAN_MAX to minimize dynamic urban memory
+    ctsm5.1.dev082   slevis 02/28/2022 Replace dom_nat_pft with dom_plant to enable crop in fsurdat_modifier tool
+    ctsm5.1.dev081 swensosc 02/24/2022 Do not subtract irrigation from QRUNOFF diagnostic
+    ctsm5.1.dev080    sacks 02/24/2022 Use avg days per year when converting param units
+    ctsm5.1.dev079    sacks 02/24/2022 Changes to CropPhenology timing
+    ctsm5.1.dev078    sacks 02/24/2022 Rework single-point testing
+    ctsm5.1.dev077   rgknox 02/22/2022 Updates to FATES API, including removal of patch dimensions from fates history and using soil instead of ground layers for fates history
+    ctsm5.1.dev076   negins 02/18/2022 updating subset_data.py script and move to the Python package.
+    ctsm5.1.dev075     erik 02/16/2022 Small answer changes: urban ventilation, fire-emission, irrigate off when not crop, fix two SSP ndep files
+    ctsm5.1.dev074   slevis 02/02/2022 Introduce vert. resolved MIMICS as new method to solve below ground decomp.
+    ctsm5.1.dev073    sacks 01/25/2022 Some fixes for Gregorian calendar
+    ctsm5.1.dev072   negins 01/17/2022 mksurfdat toolchain part 1: gen_mksurf_namelist
+    ctsm5.1.dev071 glemieux 01/16/2022 Small changes to enable new fates dimension and update fates tag
+    ctsm5.1.dev070 multiple 01/10/2022 Update externals, remove need for LND_DOMAIN_FILE and LND_DOMAIN_PATH, etc.
+    ctsm5.1.dev069 multiple 12/15/2021 Implement dynamic (transient) urban capability
+    ctsm5.1.dev068 multiple 12/13/2021 Adding fsurdat_modifier tool
     ctsm5.1.dev067 jedwards 12/13/2021 NEON UI update, externals updates, small miscellanouse fixes
     ctsm5.1.dev066   rgknox 12/04/2021 API change with FATES to enable running means inside fates, includes passing in of model timestep
     ctsm5.1.dev065 glemieux 12/02/2021 Refactor static fire data input by moving variables into fire_base_type from cnveg_state_type

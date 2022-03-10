@@ -29,9 +29,15 @@ singlept
         extracting data from global datasets
 	v1 - Sean Swenson 8/2015
 
-SpinupStability.ncl
-        This script assesses the equilibrium state of a spinup run
-        works on either monthly or annual mean history files - Keith Oleson 7/2016
+SpinupStability_SP_v9.ncl
+        This script assesses the equilibrium state of a Satellite Phenology (SP) 
+        spinup run, works on either monthly or annual mean history files - Keith
+        Oleson 12/2021
+
+SpinupStability_BGC_v10.ncl
+        This script assesses the equilibrium state of a Biogeochemistry (BGC) 
+        spinup run, works on either monthly or annual mean history files - Keith
+        Oleson 12/2021
 
 run_clmtowers
         This script will run any number of flux tower sites.

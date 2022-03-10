@@ -90,7 +90,7 @@ OPTIONS
                                 sp    = Satellite Phenology (SP)
                                     This toggles off the namelist variable: use_cn
                                 bgc   = Carbon Nitrogen with methane, nitrification, vertical soil C,
-                                        CENTURY decomposition
+                                        CENTURY or MIMICS decomposition
                                     This toggles on the namelist variables:
                                           use_cn, use_lch4, use_nitrif_denitrif
                                 fates = FATES/Ecosystem Demography with below ground BGC
@@ -852,7 +852,6 @@ sub setup_cmdl_bgc {
      $log->fatal_error("The namelist variable use_fates is inconsistent with the -bgc option");
   }
 
-
   # Now set use_cn and use_fates
   foreach $var ( "use_cn", "use_fates" ) {
      $val = $nl_flags->{$var};
@@ -876,7 +875,7 @@ sub setup_cmdl_bgc {
         $log->fatal_error("$var must NOT be None if use_cn or use_fates are on");
      }
   } elsif ( $soil_decomp_method ne "None" ) {
-     $log->fatal_error("$var must be None if use_cn or use_fates are not");
+     $log->fatal_error("$var must be None if use_cn and use_fates are off");
   }
   #
   # Soil decomposition control variables, methane and Nitrification-Denitrification
@@ -2270,7 +2269,14 @@ sub setup_logic_surface_dataset {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
                  'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
-                 'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
+                 'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'}, 'nofail'=>1 );
+     if ( ! defined($nl->get_value($var) ) ) {
+        $log->verbose_message( "Exact match of $var NOT found, searching for version with irrigate true" );
+     }
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
+                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.",
+                 'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'} );
   }
 }
 
@@ -2455,6 +2461,7 @@ sub setup_logic_dynamic_subgrid {
    setup_logic_do_transient_pfts($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_transient_crops($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_transient_lakes($opts, $nl_flags, $definition, $defaults, $nl);
+   setup_logic_do_transient_urban($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_harvest($opts, $nl_flags, $definition, $defaults, $nl);
 
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_dynbal_baselines');
@@ -2683,6 +2690,69 @@ sub setup_logic_do_transient_lakes {
    }
 }
 
+sub setup_logic_do_transient_urban {
+   #
+   # Set do_transient_urban default value, and perform error checking on do_transient_urban
+   #
+   # Assumes the following are already set in the namelist (although it's okay
+   # for them to be unset if that will be their final state):
+   # - flanduse_timeseries
+   #
+   # NOTE(kwo, 2021-08-11) I based this function on setup_logic_do_transient_lakes. 
+   # As in NOTE(wjs, 2020-08-23) I'm not sure if all of the checks here are truly important 
+   # for transient urban (in particular, my guess is that collapse_urban could probably be done with transient
+   # urban - as well as transient pfts and transient crops for that matter), but some of
+   # the checks probably are needed, and it seems best to keep transient urban consistent
+   # with other transient areas in this respect.
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   my $var = 'do_transient_urban';
+
+   # cannot_be_true will be set to a non-empty string in any case where
+   # do_transient_urban should not be true; if it turns out that
+   # do_transient_urban IS true in any of these cases, a fatal error will be
+   # generated
+   my $cannot_be_true = "";
+
+   my $n_dom_pfts = $nl->get_value( 'n_dom_pfts' );
+   my $n_dom_landunits = $nl->get_value( 'n_dom_landunits' );
+   my $toosmall_soil = $nl->get_value( 'toosmall_soil' );
+   my $toosmall_crop = $nl->get_value( 'toosmall_crop' );
+   my $toosmall_glacier = $nl->get_value( 'toosmall_glacier' );
+   my $toosmall_lake = $nl->get_value( 'toosmall_lake' );
+   my $toosmall_wetland = $nl->get_value( 'toosmall_wetland' );
+   my $toosmall_urban = $nl->get_value( 'toosmall_urban' );
+
+   if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
+      $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
+   }
+
+   if (!$cannot_be_true) {
+      # Note that, if the variable cannot be true, we don't call add_default
+      # - so that we don't clutter up the namelist with variables that don't
+      # matter for this case
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+   }
+
+   # Make sure the value is false when it needs to be false - i.e., that the
+   # user hasn't tried to set a true value at an inappropriate time.
+
+   if (&value_is_true($nl->get_value($var)) && $cannot_be_true) {
+      $log->fatal_error($cannot_be_true);
+   }
+
+   # if do_transient_urban is .true. and any of these (n_dom_* or toosmall_*)
+   # are > 0 or collapse_urban = .true., then give fatal error
+   if (&value_is_true($nl->get_value($var))) {
+      if (&value_is_true($nl->get_value('collapse_urban'))) {
+         $log->fatal_error("$var cannot be combined with collapse_urban");
+      }
+      if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
+         $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
+   }
+}
+
 sub setup_logic_do_harvest {
    #
    # Set do_harvest default value, and perform error checking on do_harvest
@@ -2761,7 +2831,6 @@ sub setup_logic_bgc_shared {
   if ( $nl_flags->{'bgc_mode'} ne "sp" ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'constrain_stress_deciduous_onset', 'phys'=>$physv->as_string() );
   }
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'decomp_depth_efolding', 'phys'=>$physv->as_string() );
 }
 
 #-------------------------------------------------------------------------------

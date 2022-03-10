@@ -1,5 +1,4 @@
-"""
-Implementation of the CIME LILACSMOKE (LILAC smoke) test.
+"""Implementation of the CIME LILACSMOKE (LILAC smoke) test.
 
 This is a CTSM-specific test. It tests the building and running of CTSM via LILAC. Compset
 is ignored, but grid is important. Also, it's important that this test use the nuopc
@@ -15,6 +14,10 @@ Important directories under CASEROOT are:
 Note that namelists for this test are generated in the build phase; they are NOT
 regenerated when the test is submitted / run. This means that, if you have made any
 changes that will impact namelists, you will need to rebuild this test.
+
+Note that this test is tied to a specific resolution (10x15) and has a hard-coded domain
+file for this resolution: see the setting of lnd_domain_file below.
+
 """
 
 import glob
@@ -130,8 +133,13 @@ class LILACSMOKE(SystemTestsCommon):
     def _create_runtime_inputs(self):
         caseroot = self._case.get_value('CASEROOT')
         runtime_inputs = self._runtime_inputs_dir()
-        lnd_domain_file = os.path.join(self._case.get_value('LND_DOMAIN_PATH'),
-                                       self._case.get_value('LND_DOMAIN_FILE'))
+
+        # NOTE: *** this test is currently tied to this single 10x15 grid resolution ***
+        lnd_grid = self._case.get_value('LND_GRID') 
+        expect(lnd_grid == '10x15',
+               "this test is currently tied to this single 10x15 grid resolution")
+        lnd_domain_file = os.path.join(self._case.get_value('DIN_LOC_ROOT'),"share","domains",
+                                       "domain.lnd.fv10x15_gx3v7.180321.nc")
 
         # Cheat a bit here: Get the fsurdat file from the already-generated lnd_in file in
         # the host test case - i.e., from the standard cime-based preview_namelists. But
