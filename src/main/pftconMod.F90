@@ -696,18 +696,6 @@ contains
     call ncd_io('biofuel_harvfrac', this%biofuel_harvfrac, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
-    ! BUG(wjs, 2022-03-02, ESCOMP/CTSM#1667) Add this to the param file
-    do k = repr_structure_min, repr_structure_max
-       do i = 0, npcropmin-1
-          this%repr_structure_harvfrac(i,k) = 0._r8
-       end do
-       do i = npcropmin, mxpft
-          ! For now, until we read this from the param file, assume all of the
-          ! reproductive structure is harvested
-          this%repr_structure_harvfrac(i,k) = 1._r8
-       end do
-    end do
-
     call ncd_io('flnr', this%flnr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
@@ -1236,6 +1224,21 @@ contains
          this%mergetoclmpft(i) = nc3irrig
        end do
     end if
+
+    ! BUG(wjs, 2022-03-02, ESCOMP/CTSM#1667) Add this to the param file and read it along
+    ! with the other parameters. Until then, this block of code needs to be done after
+    ! npcropmin is set so that we have the correct value of npcropmin below.
+    do k = repr_structure_min, repr_structure_max
+       do i = 0, npcropmin-1
+          this%repr_structure_harvfrac(i,k) = 0._r8
+       end do
+       do i = npcropmin, mxpft
+          ! For now, until we read this from the param file, assume all of the
+          ! reproductive structure is harvested
+          this%repr_structure_harvfrac(i,k) = 1._r8
+       end do
+    end do
+
     !
     ! Do some error checking, but not if fates is on.
     !
