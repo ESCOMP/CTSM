@@ -1162,6 +1162,7 @@ sub setup_cmdl_spinup {
                          " but the BGC mode is Satellite Phenology, change one or the other");
     }
   }
+  $nl_flags->{$var} = $val;
   if ( &value_is_true($nl_flags->{'use_soil_matrixcn'}) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "isspinup",
                  , 'use_fates'=>$nl_flags->{'use_fates'}, 'bgc_mode'=>$nl_flags->{'bgc_mode'}
