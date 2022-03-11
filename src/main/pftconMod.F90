@@ -9,7 +9,7 @@ module pftconMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
   use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub, ndecomp_pools
-  use clm_varctl  , only : iulog, use_cndv, use_crop
+  use clm_varctl  , only : iulog, use_cndv, use_crop, use_grainproduct
   use CropReprPoolsMod, only : repr_structure_min, repr_structure_max
   !
   ! !PUBLIC TYPES:
@@ -1233,9 +1233,15 @@ contains
           this%repr_structure_harvfrac(i,k) = 0._r8
        end do
        do i = npcropmin, mxpft
-          ! For now, until we read this from the param file, assume all of the
-          ! reproductive structure is harvested
-          this%repr_structure_harvfrac(i,k) = 1._r8
+          ! For now, until we read this from the param file, set it based on
+          ! use_grainproduct. This will facilitate software testing: this keeps the
+          ! operation of the structure pools similar to that of the grain pools for a
+          ! given setup.
+          if (use_grainproduct) then
+             this%repr_structure_harvfrac(i,k) = 1._r8
+          else
+             this%repr_structure_harvfrac(i,k) = 0._r8
+          end if
        end do
     end do
 
