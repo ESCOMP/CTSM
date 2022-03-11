@@ -53,11 +53,26 @@ module clm_varctl
   ! true => run tests of ncdio_pio
   logical, public :: for_testing_run_ncdiopio_tests = .false.
 
-  ! true => allocate memory for and use a second grain pool
-  ! This is meant only for software testing of infrastructure to support the AgSys crop
-  ! model integration. This option can be dropped once AgSys is integrated and we have
-  ! tests of it.
+  ! true => allocate memory for and use a second grain pool. This is meant only for
+  ! software testing of infrastructure to support the AgSys crop model integration. This
+  ! option can be dropped once AgSys is integrated and we have tests of it.
   logical, public :: for_testing_use_second_grain_pool = .false.
+
+  ! true => allocate memory for two reproductive structure pools and send all reproductive
+  ! C and N to the second reproductive structure pool instead of the grain pool. This is
+  ! meant only for software testing of infrastructure to support the AgSys crop model
+  ! integration. This option can be dropped once AgSys is integrated and we have tests of
+  ! it.
+  logical, public :: for_testing_use_repr_structure_pool = .false.
+
+  ! true => do NOT use grain C/N to replenish the crop seed deficits. This is needed when
+  ! doing software testing to verify that we can get bit-for-bit identical answers when
+  ! using a reproductive structure pool as when using a grain pool (in conjunction with
+  ! for_testing_use_repr_structure_pool). We do this testing to have some tests of the
+  ! infrastructure to support the AgSys crop model integration. This option can be dropped
+  ! if/when we stop doing this software testing, e.g., because we have integrated AgSys
+  ! and have tests of it that make these software infrastructure tests obsolete.
+  logical, public :: for_testing_no_crop_seed_replenishment = .false.
 
   ! Hostname of machine running on
   character(len=256), public :: hostname = ' '                           

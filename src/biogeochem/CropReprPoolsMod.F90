@@ -20,7 +20,7 @@ module CropReprPoolsMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use clm_varctl, only : for_testing_use_second_grain_pool
+  use clm_varctl, only : for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool
   !
   implicit none
   private
@@ -80,7 +80,12 @@ contains
     else
        nrepr_grain = 1
     end if
-    nrepr_structure = 0
+    if (for_testing_use_repr_structure_pool) then
+       nrepr_structure = 2
+    else
+       nrepr_structure = 0
+    end if
+
     nrepr = nrepr_grain + nrepr_structure
     allocate(repr_hist_fnames(nrepr))
     allocate(repr_rest_fnames(nrepr))

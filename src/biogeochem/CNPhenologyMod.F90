@@ -17,6 +17,7 @@ module CNPhenologyMod
   use clm_varpar                      , only : maxveg, nlevdecomp_full
   use clm_varpar                      , only : i_litr_min, i_litr_max
   use clm_varctl                      , only : iulog, use_cndv
+  use clm_varctl                      , only : for_testing_no_crop_seed_replenishment
   use clm_varcon                      , only : tfrz
   use abortutils                      , only : endrun
   use CanopyStateType                 , only : canopystate_type
@@ -2687,8 +2688,13 @@ contains
                   ! Note that, if there are multiple grain pools, we arbitrarily pull
                   ! first from grain pool 1, then from grain pool 2, etc., until we have
                   ! fully replenished the seed deficit.
-                  cropseedc_deficit_remaining = -cropseedc_deficit(p)
-                  cropseedn_deficit_remaining = -cropseedn_deficit(p)
+                  if (for_testing_no_crop_seed_replenishment) then
+                     cropseedc_deficit_remaining = 0._r8
+                     cropseedn_deficit_remaining = 0._r8
+                  else
+                     cropseedc_deficit_remaining = -cropseedc_deficit(p)
+                     cropseedn_deficit_remaining = -cropseedn_deficit(p)
+                  end if
                   do k = repr_grain_min, repr_grain_max
                      cropseedc_deficit_to_restore = min(cropseedc_deficit_remaining, reproductivec(p,k))
                      cropseedc_deficit_remaining = cropseedc_deficit_remaining - cropseedc_deficit_to_restore

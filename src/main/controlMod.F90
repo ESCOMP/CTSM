@@ -201,8 +201,10 @@ contains
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
-         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, for_testing_use_second_grain_pool
-    
+         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
+         for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool, &
+         for_testing_no_crop_seed_replenishment
+
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
          som_adv_flux, max_depth_cryoturb
@@ -655,8 +657,10 @@ contains
     ! Whether to run tests of ncdio_pio
     call mpi_bcast(for_testing_run_ncdiopio_tests, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    ! Whether to enable a second grain pool for testing
+    ! Various flags used for testing infrastructure for having multiple crop reproductive pools
     call mpi_bcast(for_testing_use_second_grain_pool, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast(for_testing_use_repr_structure_pool, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast(for_testing_no_crop_seed_replenishment, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! Landunit generation
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
