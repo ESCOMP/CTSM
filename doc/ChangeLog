@@ -49,10 +49,7 @@ Caveats for users (e.g., need to interpolate initial conditions):
 Notes of particular relevance for developers:
 ---------------------------------------------
 Changes to tests or testing:
- To avoid adding a new test to confirm that MIMICS-FATES works, I modified the
- existing testmod FatesColdDefSizeAgeMort to mimicsFatesColdDefSizeAgeMort.
- I picked this one because it seems to be used in one test (maybe two?), while
- other Fates testmods are used in many more tests.
+ To confirm that MIMICS-FATES works, I added the testmod mimicsFatesColdDef.
 
 
 Testing summary:
