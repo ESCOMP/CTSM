@@ -1116,8 +1116,9 @@ contains
 
       ! Local column-level ligninNratioAvg because
       ! not available when use_fates = .true.
-      ! Also get FATES copy of annsum_npp for FATES cases
-      if (use_fates) then
+      ! Also get FATES copy of annsum_npp for FATES cases, which is available
+      ! only when use_lch4 = .true. at the same time.
+      if (use_fates .and. use_lch4) then
          ! Initialize
          do fc = 1,num_soilc
             c = filter_soilc(fc)
@@ -1184,6 +1185,10 @@ contains
          call p2c(bounds, num_soilc, filter_soilc, &
               annsum_npp(bounds%begp:bounds%endp), &
               annsum_npp_col_local(bounds%begc:bounds%endc))
+      else
+         call endrun(msg='ERROR: soil_decomp_method = "MIMICSWieder2015 '// &
+              'will work with use_fates = .true. only if use_lch4 = .true. ' &
+              errMsg(sourcefile, __LINE__))
       end if  ! use_fates
 
       ! calculate rates for all litter and som pools
