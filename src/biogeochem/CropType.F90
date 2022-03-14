@@ -228,7 +228,7 @@ contains
          ptr_patch=this%fertnitro_patch, default='inactive')
 
     this%hui_patch(begp:endp) = spval
-    call hist_addfld1d (fname='GDDPLANT', units='ddays', &
+    call hist_addfld1d (fname='HUI', units='ddays', &
          avgflag='A', long_name='Accumulated heat unit index since planting for crop', &
          ptr_patch=this%hui_patch, default='inactive')
 
@@ -342,7 +342,7 @@ contains
 
     !---------------------------------------------------------------------
 
-    call init_accum_field (name='GDDPLANT', units='K', &
+    call init_accum_field (name='HUI', units='K', &
          desc='heat unit index accumulated since planting', accum_type='runaccum', accum_period=not_used,  &
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
@@ -394,7 +394,7 @@ contains
 
     nstep = get_nstep()
 
-    call extract_accum_field ('GDDPLANT', rbufslp, nstep) 
+    call extract_accum_field ('HUI', rbufslp, nstep) 
     this%hui_patch(begp:endp) = rbufslp(begp:endp)
 
     call extract_accum_field ('GDDACCUM', rbufslp, nstep) 
@@ -590,15 +590,15 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
-    ! Accumulate and extract GDDPLANT and GDDACCUM
+    ! Accumulate and extract HUI and GDDACCUM
     
-    call extract_accum_field ('GDDPLANT', rbufslp, nstep)
+    call extract_accum_field ('HUI', rbufslp, nstep)
     call extract_accum_field ('GDDACCUM', rbufslp2, nstep)
     do p = begp,endp
       rbufslp(p) = max(0.0_r8,this%hui_patch(p)-rbufslp(p))
       rbufslp2(p) = max(0.0_r8,this%gddaccum_patch(p)-rbufslp2(p))
     end do
-    call update_accum_field  ('GDDPLANT', rbufslp, nstep)
+    call update_accum_field  ('HUI', rbufslp, nstep)
     call update_accum_field  ('GDDACCUM', rbufslp2, nstep)
     do p = begp,endp
        if (this%croplive_patch(p)) then ! relative to planting date
@@ -622,8 +622,8 @@ contains
        end if
        rbufslp2(p) = rbufslp(p)
     end do
-    call update_accum_field  ('GDDPLANT', rbufslp, nstep)
-    call extract_accum_field ('GDDPLANT', this%hui_patch, nstep)
+    call update_accum_field  ('HUI', rbufslp, nstep)
+    call extract_accum_field ('HUI', this%hui_patch, nstep)
     call update_accum_field  ('GDDACCUM', rbufslp2, nstep)
     call extract_accum_field ('GDDACCUM', this%gddaccum_patch, nstep)
     deallocate(rbufslp2)
