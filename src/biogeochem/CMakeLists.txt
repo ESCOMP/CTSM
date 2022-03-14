@@ -10,6 +10,7 @@ list(APPEND clm_sources
   CNVegStateType.F90
   CNVegCarbonStateType.F90
   CNVegCarbonFluxType.F90
+  CNVegMatrixMod.F90
   CNVegNitrogenStateType.F90
   CNVegNitrogenFluxType.F90
   CNCIsoAtmTimeSeriesReadMod.F90
