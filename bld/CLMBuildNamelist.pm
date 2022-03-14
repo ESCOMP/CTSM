@@ -921,11 +921,21 @@ sub setup_cmdl_bgc {
   if ( (! &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) && &value_is_true($nl->get_value('use_fun')) ) {
      $log->fatal_error("When FUN is on, use_nitrif_denitrif MUST also be on!");
   }
+  #
+  # Make sure clm_accelerate_spinup is set correctly
+  #
+  $var = "clm_accelerated_spinup";
+  if ( $opts->{$var} ne "default" ) {
+    $val = $opts->{$var};
+  } else {
+    $val = $defaults->get_value($var);
+  }
+  $nl_flags->{$var} = $val;
   # Set soil matrix (which is needed later for spinup)
   $var = "use_soil_matrixcn";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
               , 'use_fates'=>$nl_flags->{'use_fates'}, 'bgc_mode'=>$nl_flags->{'bgc_mode'}
-              , 'phys'=>$nl_flags->{'phys'}, clm_accelerated_spinup=>$opts->{'clm_accelerated_spinup'} );
+              , 'phys'=>$nl_flags->{'phys'}, clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
   if ( &value_is_true($nl->get_value($var)) ) {
      $nl_flags->{$var} = ".true.";
   } else {
@@ -1110,13 +1120,9 @@ sub setup_cmdl_spinup {
   my $val;
   my $var;
   $nl_flags->{'spinup'} = undef;
+  # clm_accelerated_spinup will already have been set in setup_cmdl_bgc
   $var = "clm_accelerated_spinup";
-  if ( $opts->{$var} ne "default" ) {
-    $val = $opts->{$var};
-  } else {
-    $val = $defaults->get_value($var);
-  }
-  $nl_flags->{$var} = $val;
+  $val = $nl_flags->{'clm_accelerated_spinup'};
   my $group = $definition->get_group_name($var);
   $nl->set_variable_value($group, $var, quote_string($val) );
   if (  ! $definition->is_valid_value( $var, $val , 'noquotes' => 1) ) {
@@ -1148,7 +1154,6 @@ sub setup_cmdl_spinup {
        }
     } else {
        $nl_flags->{'bgc_spinup'} = "off";
-       $val = $defaults->get_value($var);
     }
     # For AD spinup mode by default reseed dead plants
     if ( $nl_flags->{$var} ne "off" ) {
