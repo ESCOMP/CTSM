@@ -13,10 +13,10 @@ module filterMod
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
-  use decompMod      , only : bounds_type  
+  use decompMod      , only : bounds_type
   use GridcellType   , only : grc
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
+  use LandunitType   , only : lun
+  use ColumnType     , only : col
   use PatchType      , only : patch
   use glcBehaviorMod , only : glc_behavior_type
   !
@@ -37,6 +37,9 @@ module filterMod
      integer, pointer :: soilnopcropp(:) ! soil w/o prog. crops (pfts)
      integer :: num_soilnopcropp         ! number of pfts in soil w/o prog crops
 
+     integer, pointer :: all_soil_patches(:) ! all soil or crop patches. Used for updating FATES SP drivers
+     integer :: num_all_soil_patches         ! number of pfts in all_soil_patches filter
+
      integer, pointer :: lakep(:)        ! lake filter (pfts)
      integer :: num_lakep                ! number of pfts in lake filter
      integer, pointer :: nolakep(:)      ! non-lake filter (pfts)
@@ -47,19 +50,19 @@ module filterMod
      integer :: num_nolakec              ! number of columns in non-lake filter
 
      integer, pointer :: soilc(:)        ! soil filter (columns)
-     integer :: num_soilc                ! number of columns in soil filter 
+     integer :: num_soilc                ! number of columns in soil filter
      integer, pointer :: soilp(:)        ! soil filter (pfts)
-     integer :: num_soilp                ! number of pfts in soil filter 
+     integer :: num_soilp                ! number of pfts in soil filter
 
-     integer, pointer :: snowc(:)        ! snow filter (columns) 
-     integer :: num_snowc                ! number of columns in snow filter 
-     integer, pointer :: nosnowc(:)      ! non-snow filter (columns) 
-     integer :: num_nosnowc              ! number of columns in non-snow filter 
+     integer, pointer :: snowc(:)        ! snow filter (columns)
+     integer :: num_snowc                ! number of columns in snow filter
+     integer, pointer :: nosnowc(:)      ! non-snow filter (columns)
+     integer :: num_nosnowc              ! number of columns in non-snow filter
 
-     integer, pointer :: lakesnowc(:)    ! snow filter (columns) 
-     integer :: num_lakesnowc            ! number of columns in snow filter 
-     integer, pointer :: lakenosnowc(:)  ! non-snow filter (columns) 
-     integer :: num_lakenosnowc          ! number of columns in non-snow filter 
+     integer, pointer :: lakesnowc(:)    ! snow filter (columns)
+     integer :: num_lakesnowc            ! number of columns in snow filter
+     integer, pointer :: lakenosnowc(:)  ! non-snow filter (columns)
+     integer :: num_lakenosnowc          ! number of columns in non-snow filter
 
      integer, pointer :: exposedvegp(:)  ! patches where frac_veg_nosno is non-zero
      integer :: num_exposedvegp          ! number of patches in exposedvegp filter
@@ -67,12 +70,12 @@ module filterMod
      integer :: num_noexposedvegp        ! number of patches in noexposedvegp filter
 
      integer, pointer :: hydrologyc(:)   ! hydrology filter (columns)
-     integer :: num_hydrologyc           ! number of columns in hydrology filter 
+     integer :: num_hydrologyc           ! number of columns in hydrology filter
 
      integer, pointer :: urbanl(:)       ! urban filter (landunits)
-     integer :: num_urbanl               ! number of landunits in urban filter 
+     integer :: num_urbanl               ! number of landunits in urban filter
      integer, pointer :: nourbanl(:)     ! non-urban filter (landunits)
-     integer :: num_nourbanl             ! number of landunits in non-urban filter 
+     integer :: num_nourbanl             ! number of landunits in non-urban filter
 
      integer, pointer :: urbanc(:)       ! urban filter (columns)
      integer :: num_urbanc               ! number of columns in urban filter
@@ -89,9 +92,9 @@ module filterMod
 
      integer, pointer :: icec(:)         ! glacier filter (cols)
      integer :: num_icec                 ! number of columns in glacier filter
-     
+
      integer, pointer :: do_smb_c(:)     ! glacier+bareland SMB calculations-on filter (cols)
-     integer :: num_do_smb_c             ! number of columns in glacier+bareland SMB mec filter         
+     integer :: num_do_smb_c             ! number of columns in glacier+bareland SMB mec filter
 
      integer, pointer :: actfirec(:)     ! glacier+bareland SMB calculations-on filter (cols)
      integer :: num_actfirec             ! number of columns in glacier+bareland SMB mec filter         
@@ -105,7 +108,7 @@ module filterMod
   ! This is the standard set of filters, which should be used in most places in the code.
   ! These filters only include 'active' points.
   type(clumpfilter), allocatable, public :: filter(:)
-  
+
   ! --- DO NOT USING THE FOLLOWING VARIABLE UNLESS YOU KNOW WHAT YOU'RE DOING! ---
   !
   ! This is a separate set of filters that contains both inactive and active points. It is
@@ -126,7 +129,7 @@ module filterMod
   public allocFilters         ! allocate memory for filters
   public setFilters           ! set filters
   public setExposedvegpFilter ! set the exposedvegp and noexposedvegp filters
-  
+
   private allocFiltersOneGroup  ! allocate memory for one group of filters
   private setFiltersOneGroup    ! set one group of filters
 
@@ -137,7 +140,7 @@ module filterMod
   ! Created by Mariana Vertenstein
   ! 11/13/03, Peter Thornton: Added soilp and num_soilp
   ! Jan/08, S. Levis: Added crop-related filters
-  ! June/13, Bill Sacks: Change main filters to just work over 'active' points; 
+  ! June/13, Bill Sacks: Change main filters to just work over 'active' points;
   ! add filter_inactive_and_active
   !-----------------------------------------------------------------------
 
@@ -174,7 +177,7 @@ contains
     integer :: nc          ! clump index
     integer :: nclumps     ! total number of clumps on this processor
     integer :: ier         ! error status
-    type(bounds_type) :: bounds  
+    type(bounds_type) :: bounds
     !------------------------------------------------------------------------
 
     ! Determine clump variables for this processor
@@ -201,6 +204,7 @@ contains
        allocate(this_filter(nc)%lakep(bounds%endp-bounds%begp+1))
        allocate(this_filter(nc)%nolakep(bounds%endp-bounds%begp+1))
        allocate(this_filter(nc)%nolakeurbanp(bounds%endp-bounds%begp+1))
+       allocate(this_filter(nc)%all_soil_patches(bounds%endp-bounds%begp+1))
 
        allocate(this_filter(nc)%lakec(bounds%endc-bounds%begc+1))
        allocate(this_filter(nc)%nolakec(bounds%endc-bounds%begc+1))
@@ -234,9 +238,9 @@ contains
        allocate(this_filter(nc)%soilnopcropp(bounds%endp-bounds%begp+1))
 
        allocate(this_filter(nc)%icec(bounds%endc-bounds%begc+1))
-       allocate(this_filter(nc)%do_smb_c(bounds%endc-bounds%begc+1))       
-       
-       allocate(this_filter(nc)%actfirec(bounds%endc-bounds%begc+1))      
+       allocate(this_filter(nc)%do_smb_c(bounds%endc-bounds%begc+1))
+
+       allocate(this_filter(nc)%actfirec(bounds%endc-bounds%begc+1))
        allocate(this_filter(nc)%actfirep(bounds%endp-bounds%begp+1))
 
        this_filter(nc)%num_actfirep = 1
@@ -275,11 +279,11 @@ contains
     ! filters are updated. But if this proves to be a performance problem, we could
     ! introduce an argument saying whether we're in initialization, and if so, skip this
     ! call.
-    
+
     call setFiltersOneGroup(bounds, &
          filter_inactive_and_active, include_inactive = .true., &
          glc_behavior = glc_behavior)
-    
+
   end subroutine setFilters
 
 
@@ -304,7 +308,7 @@ contains
     use landunit_varcon , only : istsoil, istcrop, istice
     !
     ! !ARGUMENTS:
-    type(bounds_type)       , intent(in)    :: bounds  
+    type(bounds_type)       , intent(in)    :: bounds
     type(clumpfilter)       , intent(inout) :: this_filter(:)   ! the group of filters to set
     logical                 , intent(in)    :: include_inactive ! whether inactive points should be included in the filters
     type(glc_behavior_type) , intent(in)    :: glc_behavior
@@ -316,6 +320,7 @@ contains
     integer :: fnl,fnlu    ! non-lake filter index
     integer :: fs          ! soil filter index
     integer :: f, fn       ! general indices
+    integer :: f_asp       ! all soil patches index
     integer :: g           !gridcell index
     !------------------------------------------------------------------------
 
@@ -333,7 +338,7 @@ contains
     end do
     this_filter(nc)%num_allc = fl
 
-    ! Create lake and non-lake filters at column-level 
+    ! Create lake and non-lake filters at column-level
 
     fl = 0
     fnl = 0
@@ -352,7 +357,7 @@ contains
     this_filter(nc)%num_lakec = fl
     this_filter(nc)%num_nolakec = fnl
 
-    ! Create lake and non-lake filters at patch-level 
+    ! Create lake and non-lake filters at patch-level
 
     fl = 0
     fnl = 0
@@ -404,7 +409,7 @@ contains
     end do
     this_filter(nc)%num_soilp = fs
 
-    ! Create column-level hydrology filter (soil and Urban pervious road cols) 
+    ! Create column-level hydrology filter (soil and Urban pervious road cols)
 
     f = 0
     do c = bounds%begc,bounds%endc
@@ -436,6 +441,25 @@ contains
           end if
        end if
     end do
+
+    ! thise filter will include all soil P's irrespective of whether or not they are active.
+    ! its purpose is to allow the TLAI, TSAI and HTOP drivers to be interpolated when in
+    ! FATES-SP mode.
+    ! e.g. in FATES, an active PFT vector of 1, 0, 0, 0, 1, 0, 1, 0
+    ! would be mapped inot the host land model as
+    ! 1, 1, 1, 0, 0, 0, 0
+    ! thus the 'active' filter will only use the first three points.
+    ! this filter will stay on for all the
+    f_asp = 0
+    do p = bounds%begp,bounds%endp
+       l =patch%landunit(p)
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+          f_asp = f_asp +1
+          this_filter(nc)%all_soil_patches(f_asp) = p
+       end if
+    enddo
+    this_filter(nc)%num_all_soil_patches = f_asp
+
     this_filter(nc)%num_pcropp   = fl
     this_filter(nc)%num_soilnopcropp = fnl   ! This wasn't being set before...
 
@@ -488,7 +512,7 @@ contains
              this_filter(nc)%urbanp(f) = p
           else
              fn = fn + 1
-             this_filter(nc)%nourbanp(fn) = p 
+             this_filter(nc)%nourbanp(fn) = p
           end if
        end if
     end do
@@ -527,7 +551,7 @@ contains
           end if
        end if
     end do
-    this_filter(nc)%num_do_smb_c = f    
+    this_filter(nc)%num_do_smb_c = f
 
     ! Note: snow filters are reconstructed each time step in
     ! LakeHydrology and SnowHydrology
@@ -549,15 +573,15 @@ contains
     !
     ! Only sets this filter in the main 'filter' variable, NOT in
     ! filter_inactive_and_active.
-    ! 
+    !
     ! Note that this is done separately from the main setFilters routine, because it may
-    ! need to be called at a different time in the driver loop. 
+    ! need to be called at a different time in the driver loop.
     !
     ! !USES:
     use decompMod , only : bounds_level_clump
     !
     ! !ARGUMENTS:
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
     integer           , intent(in) :: frac_veg_nosno( bounds%begp: ) ! fraction of vegetation not covered by snow [patch]
     !
     ! !LOCAL VARIABLES:
@@ -565,7 +589,7 @@ contains
     integer :: fp     ! filter index
     integer :: p      ! patch index
     integer :: fe, fn ! filter counts
-    
+
     character(len=*), parameter :: subname = 'setExposedvegpFilter'
     !-----------------------------------------------------------------------
 

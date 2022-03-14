@@ -303,6 +303,12 @@ contains
        write(iulog,'(a,i8)')' flds_scalar_index_nextsw_cday = ',flds_scalar_index_nextsw_cday
     end if
 
+    !----------------------
+    ! Set the namelist filename
+    !----------------------
+    call control_setNL("lnd_in"//trim(inst_suffix))
+
+
     call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, atm_prognostic, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -499,11 +505,6 @@ contains
     endif
 
     !$  call omp_set_num_threads(nthrds)
-
-    !----------------------
-    ! Consistency check on namelist filename
-    !----------------------
-    call control_setNL("lnd_in"//trim(inst_suffix))
 
     !----------------------
     ! Get properties from clock

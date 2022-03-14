@@ -1898,17 +1898,13 @@ contains
                end if
 
                !
-               ! Turn this off right now as it causes an apparant change in
-               ! answers (See ESCOMP/#CTSM/1446) for history variables 
                ! This sets the  variables GSSUN and GSSHA
                !
-               if ( .false. )then
-                   ! Write stomatal conductance to the appropriate phase
-                   if (phase=='sun') then
-                      gs_mol_sun(p,iv) = gs_mol(p,iv)
-                   else if (phase=='sha') then
-                      gs_mol_sha(p,iv) = gs_mol(p,iv)
-                   end if
+               ! Write stomatal conductance to the appropriate phase
+               if (phase=='sun') then
+                  gs_mol_sun(p,iv) = gs_mol(p,iv)
+               else if (phase=='sha') then
+                  gs_mol_sha(p,iv) = gs_mol(p,iv)
                end if
 
                ! Use time period 1 hour before and 1 hour after local noon inclusive (11AM-1PM)
@@ -4245,7 +4241,6 @@ contains
     real(r8) :: aquad, bquad, cquad  ! terms for quadratic equations
     real(r8) :: r1, r2               ! roots of quadratic equation
     real(r8) :: term                 ! intermediate in Medlyn stomatal model
-    real(r8), parameter :: max_cs = 10.e-06_r8  ! Max CO2 partial pressure at leaf surface (Pa) for PHS
     !
     !------------------------------------------------------------------------------
     
