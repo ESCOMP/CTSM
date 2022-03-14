@@ -1,9 +1,8 @@
 smi79             bli79
 smc#4             blc#4
 smg54             blg54
-sm0a1             bl0a1
-smaa2             blaa2
 smba1             blba1
+smbd1             blbd1
 smi04             bli04
 smi24             bli24
 smi53             bli53
@@ -11,7 +10,6 @@ smi64             bli64
 smi54             bli54
 smi57             bli57
 smi58             bli58
-smiS4             bliS4
 smi74             bli74
 smiT4             bliT4
 smiT2             bliT2
