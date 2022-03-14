@@ -1658,6 +1658,13 @@ contains
          h = inhemi(p)
          
          if (perennial(ivt(p)) == 1._r8) then ! flags for perennial crop phenology (added by O.Dombrowski)
+                 
+                 ! prepare planting if .not. croplive
+                 if (.not. croplive(p)) then
+                    cropplant(p) = .false.
+                    idop(p) = NOT_PLANTED
+                 end if
+
                  ! background litterfall and transfer rates; long growing season factor
                  bglfr(p) = 0._r8 
                  bgtr(p)  = 0._r8
@@ -3059,7 +3066,7 @@ contains
     use pftconMod        , only : npcropmin
     use CNSharedParamsMod, only : use_fun
     use clm_varctl       , only : CNratio_floating
-    use clm_time_manager , only : get_curr_date, get_curr_calday, get_days_per_year    
+    use clm_time_manager , only : get_curr_date, get_curr_calday, get_days_per_year, is_beg_curr_year    
     !
     ! !ARGUMENTS:
     integer                       , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -3101,7 +3108,7 @@ contains
 
          idop                  =>    cnveg_state_inst%idop_patch                       , & ! Output: [integer (:)]  date of planting
          yrop                  =>    crop_inst%yrop_patch                              , & ! Output: [integer (:)]  year of planting (added by O.Dombrowski)
-         
+         croplive              =>    crop_inst%croplive_patch                          , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested 
          offset_flag           =>    cnveg_state_inst%offset_flag_patch                , & ! Input:  [real(r8) (:) ]  offset flag                                       
          offset2_flag          =>    cnveg_state_inst%offset2_flag_patch               , & ! Input:  [real(r8) (:) ]  orchard rotation flag
          offset_counter        =>    cnveg_state_inst%offset_counter_patch             , & ! Input:  [real(r8) (:) ]  offset days counter                               
@@ -3404,8 +3411,17 @@ contains
          ! lifespan is reached (may vary between 25-40 yrs)
          ! (O.Dombrowski)   
          if (offset2_flag(p) == 1._r8 .and. perennial(ivt(p)) == 1._r8) then
-            t1 = 1.0_r8 / dt
-            
+
+            ! Apply all harvest at the start of the year, otherwise will get
+            ! error because of non zero delta mid-year for dribbler
+            ! hrv_xsmrpool_to_atm_c
+            if (is_beg_curr_year()) then
+               croplive = .false.
+               t1 = 1.0_r8 / dt
+            else
+               croplive = .true.
+               t1 = 0._r8
+            end if 
             ! clear-cut carbon fluxes, remove all displayed/storage/transfer pools
 
 
