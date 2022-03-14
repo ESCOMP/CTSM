@@ -918,6 +918,11 @@ bioms:   do f = 1, fn
             call endrun(msg = 'unknown z0param_method', additional_msg = errMsg(sourcefile, __LINE__))
           end select
 
+          ! Update the forcing heights
+          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
+          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c) + displa(p)
+          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c) + displa(p)
+
           z0hv(p)   = z0mv(p)
           z0qv(p)   = z0mv(p)
 
