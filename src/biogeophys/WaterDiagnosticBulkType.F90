@@ -42,7 +42,7 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: snowdp_col             (:)   ! col area-averaged snow height (m)
      real(r8), pointer :: snow_layer_unity_col   (:,:) ! value 1 for each snow layer, used for history diagnostics
      real(r8), pointer :: bw_col                 (:,:) ! col partial density of water in the snow pack (ice + liquid) [kg/m3] 
-
+     real(r8), pointer :: snomelt_accum_col      (:)   ! accumulated col snow melt for z0m calculation (m H2O)
      real(r8), pointer :: h2osoi_liq_tot_col     (:)   ! vertically summed col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_tot_col     (:)   ! vertically summed col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: air_vol_col            (:,:) ! col air filled porosity
@@ -187,6 +187,7 @@ contains
     allocate(this%snow_depth_col         (begc:endc))                     ; this%snow_depth_col         (:)   = nan
     allocate(this%snow_5day_col          (begc:endc))                     ; this%snow_5day_col          (:)   = nan
     allocate(this%snowdp_col             (begc:endc))                     ; this%snowdp_col             (:)   = nan
+    allocate(this%snomelt_accum_col      (begc:endc))                     ; this%snomelt_accum_col     (:)   = nan
     allocate(this%snow_layer_unity_col   (begc:endc,-nlevsno+1:0))        ; this%snow_layer_unity_col   (:,:) = nan
     allocate(this%bw_col                 (begc:endc,-nlevsno+1:0))        ; this%bw_col                 (:,:) = nan   
     allocate(this%air_vol_col            (begc:endc, 1:nlevgrnd))         ; this%air_vol_col            (:,:) = nan
@@ -451,6 +452,14 @@ contains
          avgflag='A', &
          long_name=this%info%lname('gridcell mean snow height'), &
          ptr_col=this%snowdp_col, c2l_scale_type='urbanf')
+
+    this%snomelt_accum_col(begc:endc) = 0._r8
+    call hist_addfld1d ( &                         ! Have this as an output variable for now to check
+         fname=this%info%fname('SNOMELT_ACCUM'),  &
+         units='m',  &
+         avgflag='A', &
+         long_name=this%info%lname('accumulated snow melt for z0'), &
+         ptr_col=this%snomelt_accum_col, c2l_scale_type='urbanf')
 
     if (use_cn) then
        this%wf_col(begc:endc) = spval
@@ -785,6 +794,18 @@ contains
          long_name=this%info%lname('snow depth'), &
          units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%snow_depth_col) 
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('SNOMELT_ACCUM'), &
+         xtype=ncd_double,  &
+         dim1name='column', &
+         long_name=this%info%lname('accumulated snow melt for z0'), &
+         units='m', &
+         interpinic_flag='interp', readvar=readvar, data=this%snomelt_accum_col)
+    if (flag == 'read' .and. .not. readvar) then
+       ! initial run, not restart: initialize snomelt_accum_col to zero
+       this%snomelt_accum_col(bounds%begc:bounds%endc) = 0._r8
+    endif
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('frac_sno_eff'), &

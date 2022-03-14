@@ -528,7 +528,12 @@ contains
          soilbeta               => soilstate_inst%soilbeta_col                  , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               
 
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
-         forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Input:  [real(r8) (:)   ]  observational height of wind at patch level [m]                          
+         forc_hgt_t             => atm2lnd_inst%forc_hgt_t_grc                  , & ! Input:  [real(r8) (:)   ] observational height of temperature [m]
+         forc_hgt_u             => atm2lnd_inst%forc_hgt_u_grc                  , & ! Input:  [real(r8) (:)   ] observational height of wind [m]
+         forc_hgt_q             => atm2lnd_inst%forc_hgt_q_grc                  , & ! Input:  [real(r8) (:)   ] observational height of specific humidity [m]
+         forc_hgt_t_patch       => frictionvel_inst%forc_hgt_t_patch            , & ! Output: [real(r8) (:)   ] observational height of temperature at patch level [m]
+         forc_hgt_q_patch       => frictionvel_inst%forc_hgt_q_patch            , & ! Output: [real(r8) (:)   ] observational height of specific humidity at patch level [m]
+         forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Output:  [real(r8) (:)   ]  observational height of wind at patch level [m]                          
          z0mg                   => frictionvel_inst%z0mg_col                    , & ! Input:  [real(r8) (:)   ]  roughness length of ground, momentum [m]                              
          zetamax                => frictionvel_inst%zetamaxstable               , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                                        
@@ -877,7 +882,7 @@ bioms:   do f = 1, fn
       do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
-
+         g = patch%gridcell(p)
 
          select case (z0param_method)
          case ('ZengWang2007')
@@ -915,6 +920,11 @@ bioms:   do f = 1, fn
 
           z0hv(p)   = z0mv(p)
           z0qv(p)   = z0mv(p)
+
+          ! Update the forcing heights
+          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mv(p) + displa(p)
+          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hv(p) + displa(p)
+          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qv(p) + displa(p)
 
       end do
 
@@ -1388,7 +1398,7 @@ bioms:   do f = 1, fn
             else                     !unstable
                zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
                if ( ustar(p)*thvstar > 0.0d00 )then
-                  write(iulog,*) 'ustar*thvstart is positive and has to be negative'
+                  write(iulog,*) 'ustar*thvstar is positive and has to be negative'
                   write(iulog,*) 'p = ', p
                   write(iulog,*) '-grav*ustar(p)*thvstar*zii/thv(c) = ', -grav*ustar(p)*thvstar*zii/thv(c)
                   write(iulog,*) 'ustar = ', ustar(p)
