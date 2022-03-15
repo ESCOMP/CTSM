@@ -342,9 +342,11 @@ contains
 
     !---------------------------------------------------------------------
 
+    ! BACKWARDS_COMPATIBILITY (ssr/wjs, 2022-03-16): old_name specification
+    ! allows correct restarting from files that used GDDPLANT.
     call init_accum_field (name='HUI', units='K', &
          desc='heat unit index accumulated since planting', accum_type='runaccum', accum_period=not_used,  &
-         subgrid_type='pft', numlev=1, init_value=0._r8)
+         subgrid_type='pft', numlev=1, init_value=0._r8, old_name='GDDPLANT')
 
     call init_accum_field (name='GDDACCUM', units='K', &
          desc='growing degree-days from planting', accum_type='runaccum', accum_period=not_used,  &
