@@ -1,4 +1,154 @@
 ===============================================================
+Tag name: ctsm5.1.dev084
+Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Thu 15 Mar 2022 10:05:00 MDT
+One-line Summary: FATES parameter file updated to align with clm pft optical parameters
+
+Purpose and description of changes
+----------------------------------
+
+This tag incorporates updates to the FATES parameter file which now align the FATES
+PFT optical parameters with the CLM PFT optical parameters.  These parameters are
+sourced from the recommended parameters in Majasalmi & Bright 2019.  
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+  Given that the FATES PFT optical parameters have been updated, FATES users updating to this 
+  tag will differences results in FATES cases.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+    ILAMB benchmarking was conduct to help evaluate the differences resulting from the parameter
+    file updates.  See FATES #831 for details.
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+  
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: FATES
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+      See FATES #831 for discussion
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.54.0_api.22.0.0 -> fates-sci.1.55.4_api.22.1.0
+
+Pull Requests that document the changes (include PR ids):
+  https://github.com/ESCOMP/CTSM/pull/1681
+  https://github.com/NGEET/fates/pull/831
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev083
+Originator(s): fang-bowen (Bowen Fang) / oleson (Keith Oleson,UCAR/TSS,303-497-1332)
+               / Face2sea (Lei Zhao) / keerzhang1 (Keer Zhang) / sacks (Bill Sacks)
+Date: Tue Mar  8 14:12:00 MST 2022
+One-line Summary: Implement PCT_URBAN_MAX to minimize dynamic urban memory
+
+Purpose and description of changes
+----------------------------------
+
+Read in 'PCT_URBAN_MAX' from the landuse timeseries file (maximum urban percentage throughout 
+timeseries) and initialize urban landunits in memory only where PCT_URBAN_MAX is greater than zero.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1572 (Improve mechanism for determining where to
+  allocate memory for urban when running with dynamic urban)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+ERS_Lm25.1x1_smallvilleIA.IHistClm50BgcCropQianRs.cheyenne_gnu.clm-smallville_dynurban_monthly has
+been updated to accomodate PCT_URBAN_MAX
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/1661
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev082
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
 Date: Mon Feb 28 10:12:16 MST 2022
