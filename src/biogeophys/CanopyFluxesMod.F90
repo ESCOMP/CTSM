@@ -922,9 +922,12 @@ bioms:   do f = 1, fn
           z0qv(p)   = z0mv(p)
 
           ! Update the forcing heights
-          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mv(p) + displa(p)
-          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hv(p) + displa(p)
-          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qv(p) + displa(p)
+          ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+          if (z0param_method == 'Meier2022') then
+             forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mv(p) + displa(p)
+             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hv(p) + displa(p)
+             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qv(p) + displa(p)
+          end if
 
       end do
 

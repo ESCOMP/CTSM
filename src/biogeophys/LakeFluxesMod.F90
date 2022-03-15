@@ -365,7 +365,11 @@ contains
 
             case ('ZengWang2007')
                if(use_z0m_snowmelt) then
-                  z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8 
+                  if ( snomelt_accum(c) < 1.e-5_r8 ) then
+                     z0mg(p) = exp(1.4_r8 * -rpi/2.0_r8 -0.31_r8) / 1000._r8
+                  else
+                     z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8 
+                  end if
                else
                   z0mg(p) = params_inst%zsno
                end if                      
