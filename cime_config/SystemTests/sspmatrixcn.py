@@ -63,8 +63,8 @@ class SSPMATRIXCN(SystemTestsCommon):
 
         if __name__ != '__main__':
            SystemTestsCommon.__init__(self, case)
-           ystart = self._case.get_value("DATM_CLMNCEP_YR_START")
-           yend   = self._case.get_value("DATM_CLMNCEP_YR_END")
+           ystart = int(self._case.get_value("DATM_YR_START"))
+           yend   = int(self._case.get_value("DATM_YR_END"))
            self.comp = self._case.get_value("COMP_LND") 
         else:
            self._case = None
