@@ -199,9 +199,6 @@ def main ():
     # --------------------------
     with open(jobscript_file, "w",encoding='utf-8') as runfile:
 
-        np = int(mpi_tasks)
-        nodes = int(np / int(tasks_per_node))
-
         runfile.write('#!/bin/bash \n')
         runfile.write(f"#PBS -A {account} \n")
         runfile.write('#PBS -N mksurfdata \n')

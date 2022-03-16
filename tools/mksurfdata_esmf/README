@@ -1,6 +1,6 @@
 Updated on, by:
-3/2/2022 slevis
-2/23/2022 mvertens
+3/16/2022 slevis
+3/11/2022 mvertens
 
 ================
 Getting the code
@@ -8,7 +8,7 @@ Getting the code
 > cd <user/work/area>
 > git clone https://github.com/ESCOMP/CTSM.git <dir_name>
 > cd <dir_name>
-> git checkout feature/new_toolchain
+> git checkout feature/new_mksurfdata
 
 # Save time by checking out ccs_config only
 > ./manage_externals/checkout_externals ccs_config
@@ -38,19 +38,21 @@ building the executable
 running for a single submission: 
 =======================
 > cd ../
-> run ./gen_mksurfdata_namelist.py to generate your target namelist (call it foo.namelist here)
-> run ./gen_mksurfdata_jobscript_single.py --help to see commands - as an example
-> run ./gen_mksurfdata_jobscript_single.py --number-of-nodes 24 --tasks-per-node 12 --namelist-file foo.namelist
-> qsub mksurfdata_jobscript
+# to generate your target namelist:
+> ./gen_mksurfdata_namelist.py --help
+# for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
+> ./gen_mksurfdata_namelist.py --res <resolution> --start-year <year1> --end-year <year2>
+# to generate your target jobscript (again --help for instructions):
+> ./gen_mksurfdata_jobscript_single.py --number-of-nodes 24 --tasks-per-node 12 --namelist-file target.namelist
+> qsub mksurfdata_jobscript_single
 
 =======================
 running for the generation of multiple datasets
 =======================
-Note that gen_mksurfdata_jobscript_multi.py runs ./gen_mksurfdata_namelist.py
-> cd ../
-> run ./gen_mksurfdata_jobscript_multi.py --help to see commands - as an example
-> run ./gen_mksurfdata_jobscript_multi.py --number-of-nodes 24 --tasks-per-node 12 --scenario all
-> qsub mksurfdata_jobscript
+# Note that gen_mksurfdata_jobscript_multi.py runs ./gen_mksurfdata_namelist.py
+> ./gen_mksurfdata_jobscript_multi.py --help
+> ./gen_mksurfdata_jobscript_multi.py --number-of-nodes 24 --tasks-per-node 12 --scenario all
+> qsub mksurfdata_jobscript_multi
 
 ================
 NOTES
