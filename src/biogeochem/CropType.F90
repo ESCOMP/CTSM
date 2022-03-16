@@ -33,8 +33,6 @@ module CropType
      logical , pointer :: cropplant_patch         (:)   ! patch Flag, true if planted
      integer , pointer :: harvdate_patch          (:)   ! patch harvest date
      real(r8), pointer :: fertnitro_patch         (:)   ! patch fertilizer nitrogen
-     real(r8), pointer :: hui_patch               (:)   ! crop patch heat unit index (ddays)
-     real(r8), pointer :: gddaccum_patch          (:)   ! patch growing degree-days from planting (air) (ddays)
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
      real(r8), pointer :: vf_patch                (:)   ! patch vernalization factor for cereal
      real(r8), pointer :: cphase_patch            (:)   ! phenology phase
@@ -42,6 +40,11 @@ module CropType
      character(len=20) :: baset_mapping
      real(r8) :: baset_latvary_intercept
      real(r8) :: baset_latvary_slope
+     ! gddaccum tracks the actual growing degree-days accumulated over the growing season.
+     ! hui also accumulates growing degree-days, but can be boosted if full leafout is
+     ! achieved before the GDD threshold for grain fill has been reached; see CropPhenology().
+     real(r8), pointer :: hui_patch               (:)   ! crop patch heat unit index (ddays)
+     real(r8), pointer :: gddaccum_patch          (:)   ! patch growing degree-days from planting (air) (ddays)
 
    contains
      ! Public routines
