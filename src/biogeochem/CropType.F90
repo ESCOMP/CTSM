@@ -568,7 +568,6 @@ contains
     integer :: begp, endp
     integer :: begc, endc
     real(r8), pointer :: rbufslp(:)      ! temporary single level - patch level
-    real(r8), pointer :: rbufslp2(:)     ! temporary single level - patch level
     character(len=*), parameter :: subname = 'CropUpdateAccVars'
     !-----------------------------------------------------------------------
     
@@ -589,7 +588,6 @@ contains
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
-    allocate(rbufslp2(begp:endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp (2)'
        call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -598,13 +596,10 @@ contains
     ! Accumulate and extract HUI and GDDACCUM
     
     call extract_accum_field ('HUI', rbufslp, nstep)
-    call extract_accum_field ('GDDACCUM', rbufslp2, nstep)
     do p = begp,endp
       rbufslp(p) = max(0.0_r8,this%hui_patch(p)-rbufslp(p))
-      rbufslp2(p) = max(0.0_r8,this%gddaccum_patch(p)-rbufslp2(p))
     end do
     call update_accum_field  ('HUI', rbufslp, nstep)
-    call update_accum_field  ('GDDACCUM', rbufslp2, nstep)
     do p = begp,endp
        if (this%croplive_patch(p)) then ! relative to planting date
           ivt = patch%itype(p)
@@ -625,13 +620,11 @@ contains
        else
           rbufslp(p) = accumResetVal
        end if
-       rbufslp2(p) = rbufslp(p)
     end do
     call update_accum_field  ('HUI', rbufslp, nstep)
     call extract_accum_field ('HUI', this%hui_patch, nstep)
-    call update_accum_field  ('GDDACCUM', rbufslp2, nstep)
+    call update_accum_field  ('GDDACCUM', rbufslp, nstep)
     call extract_accum_field ('GDDACCUM', this%gddaccum_patch, nstep)
-    deallocate(rbufslp2)
 
     ! Accumulate and extract GDDTSOI
     ! In agroibis this variable is calculated
