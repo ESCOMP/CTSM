@@ -2455,7 +2455,7 @@
       </machine>
     </machines>
   </test>
-  <test name="PFS_Ld20" grid="f09_g17" compset="I2000Clm50BgcCrop">
+  <test name="PFS_Ld10_PS" grid="f19_g17" compset="I2000Clm50BgcCrop">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>
