@@ -27,6 +27,7 @@ module FATESFireBase
     contains
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure(GetLight24_interface),    public, deferred :: GetLight24     ! Return the 24-hour averaged lightning data
+      procedure(GetGDP_interface),        public, deferred :: GetGDP         ! Return the global gdp data
       procedure(InitAccBuffer_interface), public, deferred :: InitAccBuffer  ! Initialize accumulation processes
       procedure(InitAccVars_interface),   public, deferred :: InitAccVars    ! Initialize accumulation variables
       procedure(UpdateAccVars_interface), public, deferred :: UpdateAccVars  ! Update/extract accumulations vars
@@ -57,6 +58,21 @@ module FATESFireBase
     !---------------------------------------------------------------------
     !---------------------------------------------------------------------
   end function GetLight24_interface
+  
+  !------------------------------------------------------------------------
+  function GetGDP_interface( this ) result(gdp)
+    !
+    ! !DESCRIPTION: Get the global gross domestic product data
+    ! !USES
+    use shr_kind_mod   , only: r8 => shr_kind_r8
+    import :: fates_fire_base_type
+    !
+    ! !ARGUMENTS:
+    class(fates_fire_base_type) :: this
+    real(r8), pointer :: gdp(:)
+    !---------------------------------------------------------------------
+    !---------------------------------------------------------------------
+  end function GetGDP_interface
 
   !-----------------------------------------------------------------------
   subroutine InitAccBuffer_interface (this, bounds)

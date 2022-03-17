@@ -1,4 +1,87 @@
 ===============================================================
+Tag name: ctsm5.1.dev065
+Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Thu Dec  2 00:13:37 MST 2021
+One-line Summary: Refactor static fire data input by moving variables into fire_base_type from cnveg_state_type
+
+Purpose and description of changes
+----------------------------------
+
+This tag refactors the static fire data input methodology to enable a future anthropogenic fire suppression 
+methodology to FATES as described NGEET/fates#673. This future method requires that FATES have access to 
+GDP data that was previously defined in CNVegStateType.F90 as part of cnveg_state_type.  As such, the GDP
+variable has been moved into fire_base_type in FireDataBaseType.F90 to provide the data to the extended 
+fates_fire_base_type for eventual use in FATES.  Similarly, the surface dataset read subroutine has been
+moved along with the peat and ag-fire variables, which utilize the same read subroutine and where also
+originally part of the cnveg_state_type.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+    Fixes #1104 -- Move static fire data into Fire class
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    The ncd_io calls for the gdp, peat, and ag-fire data has been moved from the 
+    cnveg_state_type InitCold procedure into a new subroutine called surfdataread
+    which is a new fire_base_type procedure.
+    
+    The function GetGDP has been introduced to get the pointer to the GDP data.  This has
+    been implemented in clmfates_interfaceMod.F90, but the assignment of this pointer
+    to a FATES-side bc_in variable has been commented out pending a future update to 
+    define the necessary FATES GDP variable.
+    
+    A new namelist option has been added to the fates_spitfire_mode series.  This option
+    is intended as a simple placeholder for a future FATES fire supression mode.  The 
+    option is currently being included as a check in clmfates_interfaceMod.F90 to allow
+    for the exercise of the GetGDP function.
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- N/A
+    izumi ------- N/A
+
+  any other testing (give details below):
+    A simple fates branch was created to test the potential handoff of the GDP data to FATES, which successfully
+    output the global gdp data.  The branch is located here: https://github.com/glemieux/fates/tree/fire-gdp-simpletest
+    Note that this branch was not used in the standard regression tests above.
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    #1536 -- Refactor static fire data to enable future use of GDP data in SPITFIRE
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev064
 Originator(s):  afoster (Adrianna Foster)
 Date: Mon Nov 29 09:50:50 MST 2021
