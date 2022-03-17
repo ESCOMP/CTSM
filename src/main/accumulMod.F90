@@ -738,7 +738,11 @@ contains
                data=accum(nf)%val, readvar=readvar)
        end if
 
-       varname = trim(accum(nf)%name) // '_NSTEPS'
+       if (accum(nf)%old_name /= "") then
+          varname = trim(accum(nf)%name) // '_NSTEPS:' // trim(accum(nf)%old_name) // '_NSTEPS'
+       else
+          varname = trim(accum(nf)%name) // '_NSTEPS'
+       end if
        if (accum(nf)%numlev == 1) then
           call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_int, &
                dim1name=accum(nf)%type1d, &
@@ -760,7 +764,11 @@ contains
                data=accum(nf)%nsteps, readvar=readvar)
        end if
 
-       varname = trim(accum(nf)%name) // '_PERIOD'
+       if (accum(nf)%old_name /= "") then
+          varname = trim(accum(nf)%name) // '_PERIOD:' // trim(accum(nf)%old_name) // '_PERIOD'
+       else
+          varname = trim(accum(nf)%name) // '_PERIOD'
+       end if
        call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_int, &
             long_name='', units='time steps', &
             imissing_value=ispval, ifill_value=huge(1), &
