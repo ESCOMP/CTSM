@@ -1118,7 +1118,7 @@ contains
       ! not available when use_fates = .true.
       ! Also get FATES copy of annsum_npp for FATES cases, which is available
       ! only when use_lch4 = .true. at the same time.
-      if (use_fates .and. use_lch4) then
+      fates_and_lch4_if: if (use_fates .and. use_lch4) then
          ! Initialize
          do fc = 1,num_soilc
             c = filter_soilc(fc)
@@ -1189,7 +1189,7 @@ contains
          call endrun(msg='ERROR: soil_decomp_method = "MIMICSWieder2015 '// &
               'will work with use_fates = .true. only if use_lch4 = .true. ' &
               errMsg(sourcefile, __LINE__))
-      end if  ! use_fates
+      end if fates_and_lch4_if
 
       ! calculate rates for all litter and som pools
       do fc = 1,num_soilc
