@@ -48,11 +48,18 @@ def buildnml(case, caseroot, compname):
     clm_force_coldstart = case.get_value("CLM_FORCE_COLDSTART")
     lnd_tuning_mode = case.get_value("LND_TUNING_MODE")
     clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
-    yr_start = int(case.get_value("DATM_YR_START"))
-    yr_end   = int(case.get_value("DATM_YR_END"))
+    comp_interface = case.get_value("COMP_INTERFACE")
+    if ( comp_interface == "nuopc" ):
+       yr_start = int(case.get_value("DATM_YR_START"))
+       yr_end   = int(case.get_value("DATM_YR_END"))
+    else:
+       yr_start = int(case.get_value("DATM_CLMNCEP_YR_START"))
+       yr_end   = int(case.get_value("DATM_CLMNCEP_YR_END"))
+
     if ( yr_start != None and yr_start < 0 ):
        yr_start = int(case.get_value("DATM_CPLHIST_YR_START"))
        yr_end   = int(case.get_value("DATM_CPLHIST_YR_END"))
+
     comp_atm = case.get_value("COMP_ATM")
     lnd_grid = case.get_value("LND_GRID")
     lnd_domain_path = case.get_value("LND_DOMAIN_PATH")
