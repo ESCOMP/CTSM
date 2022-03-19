@@ -9,7 +9,6 @@ module test_mkindexmapMod
    private
 
    public :: test_get_dominant_indices
-   public :: test_filter_same
    public :: test_lookup_2d
    public :: test_lookup_2d_netcdf
    public :: test_which_max   
@@ -29,6 +28,7 @@ contains
       character(len=128) :: testname
 
       integer, allocatable :: src_array(:)
+      integer, allocatable :: mask_src(:)
       integer, allocatable :: dst_array(:)
       integer, allocatable :: dst_array_t(:)
       logical, allocatable :: filter(:)
@@ -63,18 +63,20 @@ contains
                            0.1,0.1,0.1,0.3,0.2,0.2,0.2, &  ! weights of sources 2:8 on dest 2
                            0.25,0.75/)   ! weights of sources 8:9 on test 3
       allocate(src_array  (gridmap%na), &
+               mask_src   (gridmap%na), &
                dst_array  (gridmap%nb), &
                dst_array_t(gridmap%nb), &
                filter     (gridmap%ns))
 
       testname = 'basic test, all unique'
       src_array = (/1, 2, 3, 4, 5, 6, 7, 8, 9/)
+      mask_src(:) = 1  ! same for all the tests
       minval = 1
       maxval = 9
       nodata = -1
       ! dst 2 takes its value from src 5 because it has the largest weight:
       dst_array_t = (/1, 5, 9/)
-      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata)
+      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, mask_src=mask_src)
       call test_is(dst_array, dst_array_t, modname//' -- '//subname//' -- '//trim(testname))
       
       testname = 'basic test, some duplicates'
@@ -83,7 +85,7 @@ contains
       maxval = 4
       nodata = -1
       dst_array_t = (/1, 2, 1/)
-      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata)
+      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, mask_src=mask_src)
       call test_is(dst_array, dst_array_t, modname//' -- '//subname//' -- '//trim(testname))
 
       testname = 'minval not 1'
@@ -92,7 +94,7 @@ contains
       maxval = 6
       nodata = -1
       dst_array_t = (/3, 4, 3/)
-      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata)
+      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, mask_src=mask_src)
       call test_is(dst_array, dst_array_t, modname//' -- '//subname//' -- '//trim(testname))
 
       testname = 'single non-zero source value'
@@ -101,7 +103,7 @@ contains
       maxval = 2
       nodata = -1
       dst_array_t = (/1, 2, 1/)
-      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata)
+      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, mask_src=mask_src)
       call test_is(dst_array, dst_array_t, modname//' -- '//subname//' -- '//trim(testname))
 
       testname = 'single value within given min-max range'
@@ -110,7 +112,7 @@ contains
       maxval = 2
       nodata = -1
       dst_array_t = (/1, 2, 1/)
-      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata)
+      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, mask_src=mask_src)
       call test_is(dst_array, dst_array_t, modname//' -- '//subname//' -- '//trim(testname))
       
       testname = 'no valid values'
@@ -119,7 +121,7 @@ contains
       maxval = 2
       nodata = -1
       dst_array_t = (/1, nodata, 1/)
-      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata)
+      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, mask_src=mask_src)
       call test_is(dst_array, dst_array_t, modname//' -- '//subname//' -- '//trim(testname))
 
       testname = 'some filters false'
@@ -131,7 +133,7 @@ contains
                  .false., .true., .true., .true., .false., .true., .true., &
                  .true., .true./)
       dst_array_t = (/1, 4, 1/)
-      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, filter=filter)
+      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, filter=filter, mask_src=mask_src)
       call test_is(dst_array, dst_array_t, modname//' -- '//subname//' -- '//trim(testname))
       
       testname = 'all filters false'
@@ -143,7 +145,7 @@ contains
                  .false., .false., .false., .false., .false., .false., .false., &
                  .true., .true./)      
       dst_array_t = (/1, nodata, 1/)
-      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, filter=filter)
+      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, filter=filter, mask_src=mask_src)
       call test_is(dst_array, dst_array_t, modname//' -- '//subname//' -- '//trim(testname))
 
       ! Modify gridmap weights for the following test
@@ -156,7 +158,7 @@ contains
       maxval = 2
       nodata = -1
       dst_array_t = (/1, nodata, 1/)
-      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata)
+      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, mask_src=mask_src)
       call test_is(dst_array, dst_array_t, modname//' -- '//subname//' -- '//trim(testname))
       
       ! Make a new gridmap for the following test;
@@ -191,118 +193,13 @@ contains
       maxval = 9
       nodata = -1
       dst_array_t = (/1, 6, 1, nodata, 5/)
-      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata)
+      call get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, mask_src=mask_src)
       call test_is(dst_array, dst_array_t, modname//' -- '//subname//' -- '//trim(testname))
 
       deallocate(gridmap%src_indx, gridmap%dst_indx, gridmap%wovr, & 
                  src_array, dst_array_t, filter)
 
    end subroutine test_get_dominant_indices
-!------------------------------------------------------------------------------
-
-!------------------------------------------------------------------------------
-   subroutine test_filter_same
-      
-      use mkgridmapMod, only : gridmap_type
-
-      implicit none
-
-      type(gridmap_type) :: gridmap
-      character(len=128) :: testname
-      
-      integer, allocatable :: src_array(:)
-      integer, allocatable :: dst_array(:)
-      logical, allocatable :: filter(:)
-      logical, allocatable :: filter_t(:)
-      integer :: nodata
-
-      character(len=*), parameter :: subname = 'test_filter_same'
-      
-      ! Set up a gridmap that will be used for most tests, and allocate corresponding
-      ! arrays:
-      ! Note that, for most tests here, the test arrays are: (1) simple case, (2) the main
-      ! case to test, (3) simple case. Thus, the main case in question is #2 of 3, and
-      ! we're always basically just testing one scenario in each call to the subroutine
-      ! (rather than doing a bunch of tests at once, which could make setting up the test
-      ! arrays more error-prone).
-
-      ! This gridmap will have 3 src cells, 9 dest cells, and:
-      ! src 1: just overlaps with dst 1
-      ! src 2: overlaps with dst 1 & dst 2
-      ! src 3..7: just overlaps with dst 2
-      ! src 8: overlaps with dst 2 & dst 3
-      ! src 9: just overlaps with dst 3
-      ! Note: I'm not setting some things that aren't used in filter_same
-      gridmap%na = 9
-      gridmap%nb = 3
-      gridmap%ns = 11
-      allocate(gridmap%src_indx(gridmap%ns), &
-               gridmap%dst_indx(gridmap%ns))
-      gridmap%src_indx = (/1,2,2,3,4,5,6,7,8,8,9/)
-      gridmap%dst_indx = (/1,1,2,2,2,2,2,2,2,3,3/)
-      allocate(src_array  (gridmap%na), &
-               dst_array  (gridmap%nb), &
-               filter     (gridmap%ns), &
-               filter_t   (gridmap%ns))
-
-      testname = 'maintain false values in filter'
-      src_array(:) = 1
-      dst_array(:) = 1
-      filter(:) = .true.
-      filter(3) = .false.
-      filter(5) = .false.
-      filter_t(:) = .true.
-      filter_t(3) = .false.
-      filter_t(5) = .false.
-      call filter_same(gridmap, filter, src_array, dst_array)
-      call test_is(filter, filter_t, modname//' -- '//subname//' -- '//trim(testname))
-      
-      testname = 'dst_array = nodata in some places'
-      nodata = -1
-      src_array(:) = 1
-      src_array(5) = nodata  ! make sure that even when src_array = dst_array = nodata,
-                             ! we still end up with filter = false
-      dst_array = (/1, nodata, 1/)
-      filter(:) = .true.
-      filter_t(:) = .true.
-      filter_t(3:9) = .false.  ! false for all overlaps with dst #2
-      call filter_same(gridmap, filter, src_array, dst_array, nodata=nodata)
-      call test_is(filter, filter_t, modname//' -- '//subname//' -- '//trim(testname))
-
-      testname = 'src_array not equal to dst_array in some places, no nodata argument'
-      src_array(:) = (/1, 1, 1, 1, 2, 3, 1, 3, 1/)
-      dst_array(:) = (/1, 1, 1/)
-      filter(:) = .true.
-      ! src_array index: 1      2      2      3      4       5       6      7       8       8      9
-      filter_t(:) = (/.true.,.true.,.true.,.true.,.true.,.false.,.false.,.true.,.false.,.false.,.true./)
-      call filter_same(gridmap, filter, src_array, dst_array)
-      call test_is(filter, filter_t, modname//' -- '//subname//' -- '//trim(testname))
-
-      testname = 'src_array not equal to dst_array in some places, nodata never applies'
-      nodata = -1
-      src_array(:) = (/1, 1, 1, 1, 2, 3, 1, 3, 1/)
-      dst_array(:) = (/1, 1, 1/)
-      filter(:) = .true.
-      ! src_array index: 1      2      2      3      4       5       6      7       8       8      9
-      filter_t(:) = (/.true.,.true.,.true.,.true.,.true.,.false.,.false.,.true.,.false.,.false.,.true./)
-      call filter_same(gridmap, filter, src_array, dst_array, nodata=nodata)
-      call test_is(filter, filter_t, modname//' -- '//subname//' -- '//trim(testname))
-      
-      testname = 'combination of false filter, src_array not equal to dst_array, and nodata'
-      nodata = -1
-      src_array(:) = (/1, 2, 1, 2, 1, 2, 1, 2, 1/)
-      dst_array(:) = (/nodata, 1, 1/)
-      filter(:) = .true.
-      filter(4) = .false.
-      filter_t(:) = (/.false.,.false.,.false.,.false.,.false.,.true.,.false.,.true.,.false.,.false.,.true./)
-      call filter_same(gridmap, filter, src_array, dst_array, nodata=nodata)
-      call test_is(filter, filter_t, modname//' -- '//subname//' -- '//trim(testname))
-
-
-      deallocate(gridmap%src_indx, gridmap%dst_indx, & 
-                 src_array, dst_array, filter, filter_t)
-
-   end subroutine test_filter_same
 !------------------------------------------------------------------------------
 
 !------------------------------------------------------------------------------

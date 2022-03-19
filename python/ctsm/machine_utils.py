@@ -17,7 +17,10 @@ def get_user():
 
 def get_machine_name():
     """Return the current machine name (string)"""
-    full_hostname = socket.gethostname()
+    # NOTE(wjs, 2021-12-13) The following line needs a "disable=no-member" to workaround a
+    # problem on my Mac (probably similar to
+    # https://stackoverflow.com/questions/68719442/why-do-i-get-the-pylint-error-module-socket-has-no-gethostname-member-no-m)
+    full_hostname = socket.gethostname() # pylint: disable=no-member
     hostname = full_hostname.split('.')[0]
     return _machine_from_hostname(hostname)
 

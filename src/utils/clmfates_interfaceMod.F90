@@ -83,7 +83,7 @@ module CLMFatesInterfaceMod
    use clm_time_manager  , only : is_restart
    use ncdio_pio         , only : file_desc_t, ncd_int, ncd_double
    use restUtilMod,        only : restartvar
-   use clm_time_manager  , only : get_days_per_year, &
+   use clm_time_manager  , only : get_curr_days_per_year, &
                                   get_curr_date,     &
                                   get_ref_date,      &
                                   timemgr_datediff,  &
@@ -115,14 +115,15 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : zero_bcs
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
-
-
+   use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
+   use FatesInterfaceMod     , only : InitTimeAveragingGlobals
    use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
    use EDTypesMod            , only : ed_patch_type
    use PRTGenericMod         , only : num_elements
-   use FatesInterfaceTypesMod     , only : hlm_numlevgrnd
+   use FatesInterfaceTypesMod, only : hlm_numlevgrnd
+   use FatesInterfaceTypesMod, only : hlm_stepsize
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
    use EDInitMod             , only : zero_site
@@ -216,7 +217,8 @@ module CLMFatesInterfaceMod
       procedure, private :: init_soil_depths
       procedure, public  :: ComputeRootSoilFlux
       procedure, public  :: wrap_hydraulics_drive
-
+      procedure, public  :: WrapUpdateFatesRmean
+      
    end type hlm_fates_interface_type
 
    ! hlm_bounds_to_fates_bounds is not currently called outside the interface.
@@ -456,7 +458,19 @@ module CLMFatesInterfaceMod
    end subroutine CLMFatesGlobals
 
 
-  ! ====================================================================================
+   ! ===================================================================================
+  
+   subroutine CLMFatesTimesteps()
+     
+     hlm_stepsize = get_step_size_real()
+
+     call InitTimeAveragingGlobals()
+
+     return
+   end subroutine CLMFatesTimesteps
+   
+   
+   ! ====================================================================================
 
    subroutine init(this, bounds_proc )
 
@@ -853,9 +867,6 @@ module CLMFatesInterfaceMod
          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno !for vegetated patches
             ! Mapping between  IFP space (1,2,3) and HLM P space (looping by IFP)
             p = ifp+col%patchi(c)
-
-            this%fates(nc)%bc_in(s)%t_veg24_pa(ifp) = &
-                 temperature_inst%t_veg24_patch(p)
 
             this%fates(nc)%bc_in(s)%precip24_pa(ifp) = &
                   wateratm2lndbulk_inst%prec24_patch(p)
@@ -1673,6 +1684,7 @@ module CLMFatesInterfaceMod
               call HydrSiteColdStart(this%fates(nc)%sites,this%fates(nc)%bc_in)
            end if
 
+           ! Newly initialized patches need a starting temperature
            call init_patches(this%fates(nc)%nsites, this%fates(nc)%sites, &
                              this%fates(nc)%bc_in)
 
@@ -2505,7 +2517,9 @@ module CLMFatesInterfaceMod
   end subroutine InitAccVars
 
   !-----------------------------------------------------------------------
-  subroutine UpdateAccVars(this, bounds)
+
+    subroutine UpdateAccVars(this, bounds_proc)
+   
     !
     ! !DESCRIPTION:
     ! Update any accumulation variables needed for FATES
@@ -2514,23 +2528,44 @@ module CLMFatesInterfaceMod
     !
     ! !ARGUMENTS:
     class(hlm_fates_interface_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds
+    type(bounds_type), intent(in)                  :: bounds_proc
     !
-    ! !LOCAL VARIABLES:
-
+  
     character(len=*), parameter :: subname = 'UpdateAccVars'
     !-----------------------------------------------------------------------
 
     call t_startf('fates_updateaccvars')
 
-    call this%fates_fire_data_method%UpdateAccVars( bounds )
-
+    call this%fates_fire_data_method%UpdateAccVars( bounds_proc )
+    
     call t_stopf('fates_updateaccvars')
 
   end subroutine UpdateAccVars
-
+  
  ! ======================================================================================
 
+  subroutine WrapUpdateFatesRmean(this, nc, temperature_inst)
+
+    class(hlm_fates_interface_type), intent(inout) :: this
+    type(temperature_type), intent(in)             :: temperature_inst
+
+    ! !LOCAL VARIABLES:
+    integer                     :: nc,s,c,p,ifp  ! indices and loop counters
+
+    do s = 1, this%fates(nc)%nsites
+       c = this%f2hmap(nc)%fcolumn(s)
+       do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
+          p = ifp+col%patchi(c)
+          this%fates(nc)%bc_in(s)%t_veg_pa(ifp) = temperature_inst%t_veg_patch(p)
+       end do
+    end do
+
+    call UpdateFatesRMeansTStep(this%fates(nc)%sites,this%fates(nc)%bc_in)
+    
+  end subroutine WrapUpdateFatesRmean
+  
+ ! ======================================================================================
+  
  subroutine init_history_io(this,bounds_proc)
 
    use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp
@@ -3047,7 +3082,7 @@ module CLMFatesInterfaceMod
  subroutine GetAndSetTime()
 
    ! CLM MODULES
-   use clm_time_manager  , only : get_days_per_year, &
+   use clm_time_manager  , only : get_curr_days_per_year, &
                                   get_curr_date,     &
                                   get_ref_date,      &
                                   timemgr_datediff
@@ -3083,7 +3118,7 @@ module CLMFatesInterfaceMod
    reference_date = yr*10000 + mon*100 + day
 
    ! Get the defined number of days per year
-   days_per_year = get_days_per_year()
+   days_per_year = get_curr_days_per_year()
 
    ! Determine the model day
    call timemgr_datediff(reference_date, sec, current_date, current_tod, model_day)

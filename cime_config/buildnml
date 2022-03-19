@@ -71,8 +71,6 @@ def buildnml(case, caseroot, compname):
 
     comp_atm = case.get_value("COMP_ATM")
     lnd_grid = case.get_value("LND_GRID")
-    lnd_domain_path = case.get_value("LND_DOMAIN_PATH")
-    lnd_domain_file = case.get_value("LND_DOMAIN_FILE")
     ninst_lnd = case.get_value("NINST_LND")
     rundir = case.get_value("RUNDIR")
     run_type = case.get_value("RUN_TYPE")
@@ -209,6 +207,8 @@ def buildnml(case, caseroot, compname):
     if driver == "nuopc":
         lndfrac_setting = " "
     else:
+        lnd_domain_path = case.get_value("LND_DOMAIN_PATH")
+        lnd_domain_file = case.get_value("LND_DOMAIN_FILE")
         lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
         lndfrac_setting = "-lnd_frac "+lndfrac_file
 
