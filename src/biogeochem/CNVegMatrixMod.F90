@@ -21,7 +21,7 @@ module CNVegMatrixMod
   ! !USES:
   use shr_kind_mod                   , only : r8 => shr_kind_r8
   use clm_time_manager               , only : get_step_size,is_end_curr_year,is_first_step_of_this_run_segment,&
-                                              get_days_per_year,is_beg_curr_year,update_DA_nstep
+                                              is_beg_curr_year,update_DA_nstep
   use decompMod                      , only : bounds_type 
   use clm_varpar                     , only : nlevdecomp, nvegcpool, nvegnpool
   use clm_varpar                     , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
@@ -34,7 +34,6 @@ module CNVegMatrixMod
                                               ncphouttrans,nnphouttrans,ncgmouttrans,nngmouttrans,ncfiouttrans,nnfiouttrans
   use perf_mod                       , only : t_startf, t_stopf
   use PatchType                      , only : patch
-  use clm_varcon                     , only : secspday
   use pftconMod                      , only : pftcon,npcropmin
   use CNVegCarbonStateType           , only : cnveg_carbonstate_type
   use CNVegNitrogenStateType         , only : cnveg_nitrogenstate_type
@@ -159,7 +158,6 @@ contains
 
      
      real(r8):: dt        ! time step (seconds)
-     real(r8):: secspyear ! time step (seconds)
 #ifdef _OPENMP
      integer, external :: OMP_GET_MAX_THREADS
      integer :: nthreads  ! Number of threads
@@ -987,7 +985,6 @@ td: associate(                          &
     ! set time steps
       call t_startf('CN veg matrix-init')
       dt = real( get_step_size(), r8 )
-      secspyear = get_days_per_year() * secspday
 
     ! Initialize local variables
       call vegmatrixc_input%InitV(nvegcpool,bounds%begp,bounds%endp)
