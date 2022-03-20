@@ -12,7 +12,7 @@ module SoilBiogeochemNitrogenStateType
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
   use clm_varctl                         , only : use_nitrif_denitrif, use_soil_matrixcn
-  use SoilBiogeochemDecompCascadeConType , only : century_decomp, decomp_method
+  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
   use landunit_varcon                    , only : istcrop, istsoil 
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
@@ -50,6 +50,7 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: ntrunc_col                   (:)     ! col (gN/m2) column-level sink for N truncation
      real(r8), pointer :: cwdn_col                     (:)     ! col (gN/m2) Diagnostic: coarse woody debris N
      real(r8), pointer :: totlitn_col                  (:)     ! col (gN/m2) total litter nitrogen
+     real(r8), pointer :: totmicn_col                  (:)     ! col (gN/m2) total microbial nitrogen
      real(r8), pointer :: totsomn_col                  (:)     ! col (gN/m2) total soil organic matter nitrogen
      real(r8), pointer :: totlitn_1m_col               (:)     ! col (gN/m2) total litter nitrogen to 1 meter
      real(r8), pointer :: totsomn_1m_col               (:)     ! col (gN/m2) total soil organic matter nitrogen to 1 meter
@@ -137,6 +138,7 @@ contains
     allocate(this%sminn_col            (begc:endc))                   ; this%sminn_col            (:)   = nan
     allocate(this%ntrunc_col           (begc:endc))                   ; this%ntrunc_col           (:)   = nan
     allocate(this%totlitn_col          (begc:endc))                   ; this%totlitn_col          (:)   = nan
+    allocate(this%totmicn_col          (begc:endc))                   ; this%totmicn_col          (:)   = nan
     allocate(this%totsomn_col          (begc:endc))                   ; this%totsomn_col          (:)   = nan
     allocate(this%totlitn_1m_col       (begc:endc))                   ; this%totlitn_1m_col       (:)   = nan
     allocate(this%totsomn_1m_col       (begc:endc))                   ; this%totsomn_1m_col       (:)   = nan
@@ -347,6 +349,11 @@ contains
          avgflag='A', long_name='total litter N', &
          ptr_col=this%totlitn_col)
 
+    this%totmicn_col(begc:endc) = spval
+    call hist_addfld1d (fname='TOTMICN', units='gN/m^2', &
+         avgflag='A', long_name='total microbial N', &
+         ptr_col=this%totmicn_col)
+
     this%totsomn_col(begc:endc) = spval
     call hist_addfld1d (fname='TOTSOMN', units='gN/m^2', &
          avgflag='A', long_name='total soil organic matter N', &
@@ -482,6 +489,7 @@ contains
              this%smin_no3_col(c) = 0._r8
           end if
           this%totlitn_col(c)    = 0._r8
+          this%totmicn_col(c)    = 0._r8
           this%totsomn_col(c)    = 0._r8
           this%totlitn_1m_col(c) = 0._r8
           this%totsomn_1m_col(c) = 0._r8
@@ -738,6 +746,8 @@ contains
 
     if (decomp_method == century_decomp ) then
        decomp_cascade_state = 1
+    else if (decomp_method == mimics_decomp ) then
+       decomp_cascade_state = 2
     else
        decomp_cascade_state = 0
     end if
@@ -899,6 +909,7 @@ contains
           this%smin_nh4_col(i) = value_column
        end if
        this%totlitn_col(i)     = value_column
+       this%totmicn_col(i)     = value_column
        this%totsomn_col(i)     = value_column
        this%totsomn_1m_col(i)  = value_column
        this%totlitn_1m_col(i)  = value_column
@@ -1136,6 +1147,22 @@ contains
       end if
    end do
    
+   ! total microbial nitrogen (TOTMICN)
+   do fc = 1,num_allc
+      c = filter_allc(fc)
+      this%totmicn_col(c) = 0._r8
+   end do
+   do l = 1, ndecomp_pools
+      if ( decomp_cascade_con%is_microbe(l) ) then
+         do fc = 1,num_allc
+            c = filter_allc(fc)
+            this%totmicn_col(c) = &
+                 this%totmicn_col(c) + &
+                 this%decomp_npools_col(c,l)
+         end do
+      end if
+   end do
+
    ! total soil organic matter nitrogen (TOTSOMN)
    do fc = 1,num_allc
       c = filter_allc(fc)

@@ -73,10 +73,13 @@ module clm_varpar
   integer, public            :: i_litr3 = -9  ! TEMPORARY FOR CascadeCN TO BUILD
   ! The code currently expects i_litr_min = i_met_lit = 1 and
   !                            i_litr_max = 2 or 3
-  integer, public            :: i_litr_min = -9  ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public            :: i_litr_max = -9  ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public            :: i_met_lit = -9  ! index of metabolic litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public            :: i_cwd      = -9  ! index of cwd pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_litr_min    = -9    ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_litr_max    = -9    ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_met_lit     = -9    ! index of metabolic litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_cop_mic     = -9    ! index of copiotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_oli_mic     = -9    ! index of oligotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_cwd         = -9    ! index of cwd pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_cwdl2       = -9    ! index of cwd to l2 transition; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public, parameter :: ileaf         = 1     ! leaf pool index
   integer, public, parameter :: ileaf_st      = 2     ! leaf storage pool index
   integer, public, parameter :: ileaf_xf      = 3     ! leaf transfer pool index

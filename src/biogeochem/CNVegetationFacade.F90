@@ -1117,6 +1117,10 @@ contains
          soilbiogeochem_carbonflux_inst, &
          c13_soilbiogeochem_carbonflux_inst, &
          c14_soilbiogeochem_carbonflux_inst, &
+         soilbiogeochem_carbonstate_inst, &
+         c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst)
 
     ! On the radiation time step, use C state variables to calculate

@@ -506,7 +506,6 @@ module CNFUNMod
   !---------------------------------
   associate(ivt                    => patch%itype                                          , & ! Input:   [integer  (:) ]  p
          leafcn                 => pftcon%leafcn                                        , & ! Input:   leaf C:N (gC/gN)
-         lflitcn                => pftcon%lflitcn                                       , & ! Input:   leaf litter C:N (gC/gN)
          season_decid           => pftcon%season_decid                                  , & ! Input:   binary flag for seasonal
          ! -deciduous leaf habit (0 or 1)
          stress_decid           => pftcon%stress_decid                                  , & ! Input:   binary flag for stress

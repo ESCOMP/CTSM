@@ -28,12 +28,16 @@ module SoilBiogeochemCarbonFluxType
 
      ! decomposition fluxes
      real(r8), pointer :: decomp_cpools_sourcesink_col              (:,:,:) ! change in decomposing c pools. Used to update concentrations concurrently with vertical transport (gC/m3/timestep)  
+     real(r8), pointer :: c_overflow_vr                             (:,:,:) ! vertically-resolved C rejected by microbes that cannot process it (gC/m3/s)
      real(r8), pointer :: decomp_cascade_hr_vr_col                  (:,:,:) ! vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
      real(r8), pointer :: decomp_cascade_hr_col                     (:,:)   ! vertically-integrated (diagnostic) het. resp. from decomposing C pools (gC/m2/s)
      real(r8), pointer :: decomp_cascade_ctransfer_vr_col           (:,:,:) ! vertically-resolved C transferred along deomposition cascade (gC/m3/s)
      real(r8), pointer :: decomp_cascade_ctransfer_col              (:,:)   ! vertically-integrated (diagnostic) C transferred along decomposition cascade (gC/m2/s)
-     real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate constant for decomposition (1./sec)
-! for soil-matrix
+     real(r8), pointer :: cn_col                                    (:,:)   ! (gC/gN) C:N ratio by pool
+     real(r8), pointer :: rf_decomp_cascade_col                     (:,:,:) ! (frac) respired fraction in decomposition step
+     real(r8), pointer :: pathfrac_decomp_cascade_col               (:,:,:) ! (frac) what fraction of C passes from donor to receiver pool through a given transition
+     real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate coefficient for decomposition (1./sec)
+     ! for soil-matrix
      real(r8), pointer :: hr_vr_col                                 (:,:)   ! (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
      real(r8), pointer :: o_scalar_col                              (:,:)   ! fraction by which decomposition is limited by anoxia
      real(r8), pointer :: w_scalar_col                              (:,:)   ! fraction by which decomposition is limited by moisture availability
@@ -47,6 +51,7 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: fphr_col                                  (:,:)   ! fraction of potential heterotrophic respiration
 
      real(r8), pointer :: hr_col                                    (:)     ! (gC/m2/s) total heterotrophic respiration
+     real(r8), pointer :: michr_col                                 (:)     ! (gC/m2/s) microbial heterotrophic respiration
      real(r8), pointer :: cwdhr_col                                 (:)     ! (gC/m2/s) coarse woody debris heterotrophic respiration
      real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration 
      real(r8), pointer :: somhr_col                                 (:)     ! (gC/m2/s) soil organic matter heterotrophic res   
@@ -135,6 +140,9 @@ contains
      allocate(this%decomp_cpools_sourcesink_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                  
      this%decomp_cpools_sourcesink_col(:,:,:)= nan
 
+     allocate(this%c_overflow_vr(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
+     this%c_overflow_vr(:,:,:) = nan
+
      allocate(this%decomp_cascade_hr_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))        
      this%decomp_cascade_hr_vr_col(:,:,:)= spval
 
@@ -147,7 +155,16 @@ contains
      allocate(this%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions))                      
      this%decomp_cascade_ctransfer_col(:,:)= nan
 
-     allocate(this%decomp_k_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))                    
+     allocate(this%cn_col(begc:endc,1:ndecomp_pools))
+     this%cn_col(:,:)= spval
+
+     allocate(this%rf_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
+     this%rf_decomp_cascade_col(:,:,:) = nan
+
+     allocate(this%pathfrac_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
+     this%pathfrac_decomp_cascade_col(:,:,:) = nan
+
+     allocate(this%decomp_k_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
      this%decomp_k_col(:,:,:)= spval
 
      allocate(this%decomp_cpools_leached_col(begc:endc,1:ndecomp_pools))              
@@ -157,6 +174,7 @@ contains
      this%decomp_cpools_transport_tendency_col(:,:,:)= nan
 
      allocate(this%hr_col                  (begc:endc)) ; this%hr_col                  (:) = nan
+     allocate(this%michr_col               (begc:endc)) ; this%michr_col               (:) = nan
      allocate(this%cwdhr_col               (begc:endc)) ; this%cwdhr_col               (:) = nan
      allocate(this%lithr_col               (begc:endc)) ; this%lithr_col               (:) = nan
      allocate(this%somhr_col               (begc:endc)) ; this%somhr_col               (:) = nan
@@ -254,6 +272,11 @@ contains
              avgflag='A', long_name='total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
+        this%michr_col(begc:endc) = spval
+        call hist_addfld1d (fname='MICC_HR', units='gC/m^2/s', &
+             avgflag='A', long_name='microbial C heterotrophic respiration', &
+             ptr_col=this%michr_col)
+
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='CWDC_HR', units='gC/m^2/s', &
              avgflag='A', long_name='cwd C heterotrophic respiration', &
@@ -295,6 +318,8 @@ contains
         this%decomp_cascade_hr_vr_col(begc:endc,:,:)        = spval
         this%decomp_cascade_ctransfer_col(begc:endc,:)      = spval
         this%decomp_cascade_ctransfer_vr_col(begc:endc,:,:) = spval
+        this%pathfrac_decomp_cascade_col(begc:endc,:,:)     = spval
+        this%rf_decomp_cascade_col(begc:endc,:,:)           = spval
         do l = 1, ndecomp_cascade_transitions
 
            ! output the vertically integrated fluxes only as  default
@@ -371,6 +396,32 @@ contains
                  call hist_addfld_decomp (fname=fieldname, units='gC/m^3/s',  type2d='levdcmp', &
                       avgflag='A', long_name=longname, &
                       ptr_col=data2dptr, default='inactive')
+
+                 ! pathfrac_decomp_cascade_col and rf_decomp_cascade_col needed
+                 ! when using Newton-Krylov to spin up the decomposition
+                 data2dptr => this%rf_decomp_cascade_col(:,:,l)
+                 fieldname = &
+                    trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_donor_pool(l)))//'_RESP_FRAC_'//&
+                    trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))&
+                    //trim(vr_suffix)
+                 longname =  'respired from '//&
+                    trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//' to '// &
+                    trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_receiver_pool(l)))
+                 call hist_addfld_decomp (fname=fieldname, units='fraction',  type2d='levdcmp', &
+                    avgflag='A', long_name=longname, &
+                    ptr_col=data2dptr, default='inactive')
+
+                 data2dptr => this%pathfrac_decomp_cascade_col(:,:,l)
+                 fieldname = &
+                    trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_donor_pool(l)))//'_PATHFRAC_'//&
+                    trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))&
+                    //trim(vr_suffix)
+                 longname =  'PATHFRAC from '//&
+                    trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//' to '// &
+                    trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_receiver_pool(l)))
+                 call hist_addfld_decomp (fname=fieldname, units='fraction',  type2d='levdcmp', &
+                    avgflag='A', long_name=longname, &
+                    ptr_col=data2dptr, default='inactive')
               endif
            end if
 
@@ -437,6 +488,11 @@ contains
         call hist_addfld1d (fname='C13_HR', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 total heterotrophic respiration', &
              ptr_col=this%hr_col)
+
+        this%michr_col(begc:endc) = spval
+        call hist_addfld1d (fname='C13_MICC_HR', units='gC13/m^2/s', &
+             avgflag='A', long_name='C13 microbial heterotrophic respiration', &
+             ptr_col=this%michr_col, default='inactive')
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_CWDC_HR', units='gC/m^2/s', &
@@ -511,6 +567,11 @@ contains
         call hist_addfld1d (fname='C14_HR', units='gC14/m^2/s', &
              avgflag='A', long_name='C14 total heterotrophic respiration', &
              ptr_col=this%hr_col)
+
+        this%michr_col(begc:endc) = spval
+        call hist_addfld1d (fname='C14_MICC_HR', units='gC13/m^2/s', &
+             avgflag='A', long_name='C14 microbial heterotrophic respiration', &
+             ptr_col=this%michr_col, default='inactive')
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_CWDC_HR', units='gC/m^2/s', &
@@ -718,10 +779,12 @@ contains
           do fi = 1,num_column
              i = filter_column(fi)
              this%decomp_cascade_hr_col(i,l)             = value_column
+             this%c_overflow_vr(i,j,l)                   = value_column
              this%decomp_cascade_hr_vr_col(i,j,l)        = value_column
              this%decomp_cascade_ctransfer_col(i,l)      = value_column
              this%decomp_cascade_ctransfer_vr_col(i,j,l) = value_column
-             this%decomp_k_col(i,j,l)                    = value_column
+             this%pathfrac_decomp_cascade_col(i,j,l)     = value_column
+             this%rf_decomp_cascade_col(i,j,l)           = value_column
           end do
        end do
     end do
@@ -731,12 +794,14 @@ contains
        do fi = 1,num_column
           i = filter_column(fi)
           this%decomp_cpools_leached_col(i,k) = value_column
+          this%cn_col(i,k)                    = value_column
        end do
        do j = 1, nlevdecomp_full
           do fi = 1,num_column
              i = filter_column(fi)
              this%decomp_cpools_transport_tendency_col(i,j,k) = value_column
              this%decomp_cpools_sourcesink_col(i,j,k)         = value_column  
+             this%decomp_k_col(i,j,k)                         = value_column
           end do
        end do
     end do
@@ -775,6 +840,7 @@ contains
        this%somhr_col(i)         = value_column
        this%lithr_col(i)         = value_column
        this%cwdhr_col(i)         = value_column
+       this%michr_col(i)         = value_column
        this%soilc_change_col(i)  = value_column
     end do
 
@@ -894,11 +960,24 @@ contains
       end do
     end associate
 
+    ! microbial heterotrophic respiration (MICHR)
+    associate(is_microbe => decomp_cascade_con%is_microbe)  ! TRUE => pool is a microbial pool
+      do k = 1, ndecomp_cascade_transitions
+         if ( is_microbe(decomp_cascade_con%cascade_donor_pool(k)) ) then
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               this%michr_col(c) = this%michr_col(c) + this%decomp_cascade_hr_col(c,k)
+            end do
+         end if
+      end do
+    end associate
+
     ! total heterotrophic respiration (HR)
        do fc = 1,num_soilc
           c = filter_soilc(fc)
        
           this%hr_col(c) = &
+               this%michr_col(c) + &
                this%cwdhr_col(c) + &
                this%lithr_col(c) + &
                this%somhr_col(c)
