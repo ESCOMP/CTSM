@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1881;
+my $ntests = 1898;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1272;
+   $ntests += 1284;
 }
 plan( tests=>$ntests );
 
@@ -328,6 +328,8 @@ foreach my $driver ( "mct", "nuopc" ) {
                          "-res 1x1_brazil",
                          "-namelist '&a use_matrixcn=F,use_soil_matrixcn=F,is_outmatrix=F,isspinup=F/' -bgc sp",
                          "-namelist '&a use_matrixcn=T,use_soil_matrixcn=T,is_outmatrix=T,isspinup=T/' -bgc bgc -crop -clm_accelerated_spinup on",
+                         "-namelist \"&a soil_decomp_method='MIMICSWieder2015',use_matrixcn=F/\" -bgc bgc -crop",
+                         "-namelist \"&a soil_decomp_method='MIMICSWieder2015',use_matrixcn=T/\" -bgc bgc -crop",
                          "-bgc bgc -crop -clm_accelerated_spinup sasu",
                          "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                          "-envxml_dir . -infile myuser_nl_clm",
@@ -941,6 +943,11 @@ my %failtest = (
                                    },
      "soilmatrixWOBGC"           =>{ options=>"-envxml_dir . -bgc sp",
                                      namelst=>"use_soil_matrixcn=T",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
+                                   },
+     "soilmatrixWmimics"         =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"use_soil_matrixcn=T,soil_decomp_method='MIMICSWieder2015'",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      phys=>"clm5_0",
                                    },
