@@ -873,6 +873,7 @@ sub setup_cmdl_bgc {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
               'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
   my $soil_decomp_method = remove_leading_and_trailing_quotes( $nl->get_value( $var ) );
+  $nl_flags->{$var} = $soil_decomp_method;
 
   if ( &value_is_true($nl_flags->{'use_cn'}) ||  &value_is_true($nl_flags->{'use_fates'}))  {
      if ( $soil_decomp_method eq "None" ) {
@@ -934,12 +935,16 @@ sub setup_cmdl_bgc {
   # Set soil matrix (which is needed later for spinup)
   $var = "use_soil_matrixcn";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-              , 'use_fates'=>$nl_flags->{'use_fates'}, 'bgc_mode'=>$nl_flags->{'bgc_mode'}
+              , 'use_fates'=>$nl_flags->{'use_fates'}, 
+              , 'soil_decomp_method'=>$nl_flags->{'soil_decomp_method'},
               , 'phys'=>$nl_flags->{'phys'}, clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
   if ( &value_is_true($nl->get_value($var)) ) {
      $nl_flags->{$var} = ".true.";
   } else {
      $nl_flags->{$var} = ".false.";
+  }
+  if ( &value_is_true($nl->get_value($var)) && $nl_flags->{'soil_decomp_method'} ne "CENTURYKoven2013" ) {
+     $log->fatal_error("$var can only be on with CENTURYKoven2013 soil decomposition");
   }
 } # end bgc
 
