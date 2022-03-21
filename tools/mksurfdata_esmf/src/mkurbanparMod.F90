@@ -24,6 +24,7 @@ module mkurbanparMod
   public :: mkurbanInit
   public :: mkurban
   public :: mkurbanpar
+  public :: update_max_array_urban
   public :: normalize_urbn_by_tot
   public :: mkurban_topo                   ! Get elevation to reduce urban for high elevation areas
   public :: mkurban_pct_diagnostics        ! print diagnostics related to pct urban
@@ -953,5 +954,31 @@ contains
     end if
 
   end subroutine mkurban_topo
+
+  !===============================================================
+  subroutine update_max_array_urban(pct_urbmax_arr,pct_urban_arr)
+    !
+    ! !DESCRIPTION:
+    ! Update the maximum percent cover of each urban class for landuse.timeseries file
+    !
+    ! !ARGUMENTS:
+    real(r8)         , intent(inout):: pct_urbmax_arr(:,:)           ! max percent cover of each urban class
+    real(r8)         , intent(in):: pct_urban_arr(:,:)           ! percent cover of each urban class that is used to update the old pct_urbmax_arr
+    !
+    ! !LOCAL VARIABLES:
+    integer :: n,k,ns              ! indices
+
+    character(len=*), parameter :: subname = 'update_max_array_urban'
+    !-----------------------------------------------------------------------
+    ns = size(pct_urban_arr,1)
+    do n = 1, ns
+       do k =1, numurbl
+          if (pct_urban_arr(n,k) > pct_urbmax_arr(n,k)) then
+             pct_urbmax_arr(n,k) = pct_urban_arr(n,k)
+          end if
+       end do
+    end do
+
+  end subroutine update_max_array_urban
 
 end module mkurbanparMod

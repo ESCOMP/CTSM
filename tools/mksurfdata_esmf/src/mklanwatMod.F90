@@ -22,6 +22,7 @@ module mklanwatMod
 
   public :: mklakwat    ! make %lake and lake dpeth
   public :: mkwetlnd    ! make %wetland
+  public :: update_max_array_lake  ! Update the maximum lake percent
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -327,5 +328,29 @@ contains
     call ESMF_VMLogMemInfo("At end of "//trim(subname))
 
   end subroutine mkwetlnd
+
+!===============================================================
+subroutine update_max_array_lake(pct_lakmax_arr,pct_lake_arr)
+  !
+  ! !DESCRIPTION:
+  ! Update the maximum lake percent for landuse.timeseries file
+  !
+  ! !ARGUMENTS:
+  real(r8)         , intent(inout):: pct_lakmax_arr(:)       ! max lake percent
+  real(r8)         , intent(in):: pct_lake_arr(:)            ! lake percent that is used to update the old pct_lakmax_arr
+  !
+  ! !LOCAL VARIABLES:
+  integer :: n,ns              ! indices
+
+  character(len=*), parameter :: subname = 'update_max_array_lake'
+  !-----------------------------------------------------------------------
+  ns = size(pct_lake_arr,1)
+  do n = 1, ns
+     if (pct_lake_arr(n) > pct_lakmax_arr(n)) then
+        pct_lakmax_arr(n) = pct_lake_arr(n)
+     end if
+  end do
+
+end subroutine update_max_array_lake
 
 end module mklanwatMod

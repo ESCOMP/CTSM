@@ -526,6 +526,21 @@ contains
 
     else
 
+       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_URBAN', xtype=xtype, &
+            lev1name = 'numurbl', lev2name='time', &
+            long_name = "percent urban for each density type", units = "unitless")
+
+       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_URBAN_MAX', xtype=xtype, &
+            lev1name = 'numurbl', &
+            long_name = "maximum percent urban for each density type", units = "unitless")
+
+       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_LAKE', xtype=xtype, &
+            lev1name = 'time', &
+            long_name = "percent lake", units = "unitless")
+
+       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_LAKE_MAX', xtype=xtype, &
+            long_name = "maximum percent lake", units = "unitless")
+
        call mkpio_def_spatial_var(pioid=pioid, varname='HARVEST_VH1', xtype=xtype, &
             lev1name='time', &
             long_name = "harvest from primary forest", units = "gC/m2/yr")

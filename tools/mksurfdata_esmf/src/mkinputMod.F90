@@ -31,6 +31,8 @@ module mkinputMod
   character(CL) , public    :: fsurlog  ! output surface log file name
   character(CL) , public    :: fdyndat  ! dynamic landuse data file name
   character(CL) , public    :: fhrvname ! generic harvest filename
+  character(CL) , public    :: furbname ! generic transient urban land cover filename
+  character(CL) , public    :: flakname ! generic lake filename
 
   character(CX) , public    :: mksrf_fgrid_mesh             = ' ' ! land grid file name to use
   integer       , public    :: mksrf_fgrid_mesh_nx          = -999

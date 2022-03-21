@@ -60,7 +60,7 @@ program mksurfdata
   ! ======================================
   ! Optionally specify setting for:
   ! ======================================
-  !    mksrf_fdynuse ----- ASCII text file that lists each year of pft files to use
+  !    mksrf_fdynuse ----- ASCII text file that lists each year of pft, urban, and lake files to use
   !    mksrf_gridtype ---- Type of grid (default is 'global')
   !    outnc_double ------ If output should be in double precision
   !    outnc_large_files - If output should be in NetCDF large file format
@@ -106,8 +106,8 @@ program mksurfdata
   use mksoilfmaxMod      , only : mksoilfmax
   use mksoildepthMod     , only : mksoildepth
   use mksoilcolMod       , only : mksoilcol
-  use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, mkurban_topo, numurbl
-  use mklanwatMod        , only : mklakwat, mkwetlnd
+  use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, mkurban_topo, numurbl, update_max_array_urban
+  use mklanwatMod        , only : mklakwat, mkwetlnd, update_max_array_lake
   use mkorganicMod       , only : mkorganic
   use mkutilsMod         , only : normalize_classes_by_gcell, chkerr
   use mkfileMod          , only : mkfile_define_dims, mkfile_define_atts, mkfile_define_vars
@@ -161,13 +161,17 @@ program mksurfdata
 
   ! inland water data, glacier data and urban data
   real(r8), allocatable           :: pctlak(:)               ! percent of grid cell that is lake
+  real(r8), allocatable           :: pctlak_max(:)           ! maximum percent of grid cell that is lake
   real(r8), allocatable           :: pctwet(:)               ! percent of grid cell that is wetland
   real(r8), allocatable           :: pctgla(:)               ! percent of grid cell that is glacier
   integer , allocatable           :: urban_region(:)         ! urban region ID
   real(r8), allocatable           :: pcturb(:)               ! percent of grid cell that is urbanized (total across all urban classes)
+  real(r8), allocatable           :: pcturb_max(:,:)         ! maximum percent cover of each urban class, as % of grid cell
   real(r8), allocatable           :: urban_classes(:,:)      ! percent cover of each urban class, as % of total urban area
   real(r8), allocatable           :: urban_classes_g(:,:)    ! percent cover of each urban class, as % of grid cell
   real(r8), allocatable           :: elev(:)                 ! glc elevation (m)
+  real(r8), allocatable           :: pctwet_orig(:)          ! percent wetland of gridcell before dynamic land use adjustments
+  real(r8), allocatable           :: pctgla_orig(:)          ! percent glacier of gridcell before dynamic land use adjustments
 
   ! pio/esmf variables
   type(file_desc_t)               :: pioid
@@ -413,10 +417,12 @@ program mksurfdata
   ! LAKEDEPTH is written out in the subroutine
   ! Need to keep pctlak and pctwet external for use below
   allocate ( pctlak(lsize_o)) ; pctlak(:) = spval
+  allocate ( pctlak_max(lsize_o)) ; pctlak_max(:) = spval
   call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pioid, fsurdat, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
 
   allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
+  allocate ( pctwet_orig(lsize_o)) ; pctwet_orig(:) = spval
   call mkwetlnd(mksrf_fwetlnd_mesh, mksrf_fwetlnd, mesh_model, pctwet, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkwetlnd')
 
@@ -424,6 +430,7 @@ program mksurfdata
   ! Make glacier fraction [pctgla] from [fglacier] dataset
   ! -----------------------------------
   allocate (pctgla(lsize_o)) ; pctgla(:) = spval
+  allocate (pctgla_orig(lsize_o)) ; pctgla_orig(:) = spval
   call mkglacier (mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, glac_o=pctgla, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacier')
 
@@ -500,6 +507,7 @@ program mksurfdata
   ! Make urban fraction [pcturb] from [furban] dataset and
   ! -----------------------------------
   allocate (pcturb(lsize_o))                 ; pcturb(:)            = spval
+  allocate (pcturb_max(lsize_o, numurbl))    ; pcturb_max(:,:)      = spval
   allocate (urban_classes(lsize_o,numurbl))  ; urban_classes(:,:)   = spval
   allocate (urban_region(lsize_o))           ; urban_region(:)      = -999
   call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, pcturb, urban_classes, urban_region, rc=rc)
@@ -526,7 +534,6 @@ program mksurfdata
   where (elev > elev_thresh)
      pcturb = 0._r8
   end where
-  deallocate(elev)
 
   ! -----------------------------------
   ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
@@ -610,6 +617,10 @@ program mksurfdata
         pctgla(n) = pctgla(n) * 100._r8/suma
      end if
   end do
+
+  ! Save special land unit areas of surface dataset 
+  pctwet_orig(:) = pctwet(:)
+  pctgla_orig(:) = pctgla(:)
 
   ! -----------------------------------
   ! Perform other normalizations
@@ -835,6 +846,8 @@ program mksurfdata
 
      pctnatpft_max = pctnatpft
      pctcft_max = pctcft
+     pcturb_max = urban_classes_g
+     pctlak_max = pctlak
 
      end_of_fdynloop = .false.
      ntim = 0
@@ -867,6 +880,33 @@ program mksurfdata
            end if
            call shr_sys_abort()
         end if
+        ! Read input urban data
+        if (root_task) then
+           read(nfdyn, '(A195,1x,I4)', iostat=ier) furbname, year2
+           write(ndiag,*)'input urban dynamic dataset for year ', year2, ' is : ', trim(furbname)
+        end if
+        call mpi_bcast (furbname, len(furbname), MPI_CHARACTER, 0, mpicom, ier)
+        call mpi_bcast (year2, 1, MPI_INTEGER, 0, mpicom, ier)
+        if ( year2 /= year ) then
+           if (root_task) then
+              write(ndiag,*) subname, ' error: year for urban not equal to year for PFT files'
+           end if
+           call shr_sys_abort()
+        end if
+        ! Read input lake data
+        if (root_task) then
+           read(nfdyn, '(A195,1x,I4)', iostat=ier) flakname, year2
+           write(ndiag,*)'input lake dynamic dataset for year ', year2, ' is : ', trim(flakname)
+        end if
+        call mpi_bcast (flakname, len(flakname), MPI_CHARACTER, 0, mpicom, ier)
+        call mpi_bcast (year2, 1, MPI_INTEGER, 0, mpicom, ier)
+        if ( year2 /= year ) then
+           if (root_task) then
+              write(ndiag,*) subname, ' error: year for lake not equal to year for PFT files'
+           end if
+           call shr_sys_abort()
+        end if
+
         ntim = ntim + 1
         if (root_task) then
            write(ndiag,'(a,i8)')subname//' ntime = ',ntim
@@ -911,6 +951,23 @@ program mksurfdata
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest')
         call pio_syncfile(pioid)
 
+        ! Create pctlak data at model resolution (use original mapping file from lake data)
+        call mklakwat(mksrf_flakwat_mesh, flakname, mesh_model, pctlak, pioid, fsurdat, rc=rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklakwat')
+        call pio_syncfile(pioid)
+
+        call mkurban(mksrf_furban_mesh, furbname, mesh_model, pcturb, urban_classes, urban_region, rc=rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
+        call pio_syncfile(pioid)
+        ! screen pcturb using elevation
+        where (elev > elev_thresh)
+           pcturb = 0._r8
+        end where
+
+        ! For landunits NOT read each year: reset to their pre-adjustment values in preparation for redoing landunit area normalization
+        pctwet(:) = pctwet_orig(:)
+        pctgla(:) = pctgla_orig(:)
+
         ! Do landuse changes such as for the poles, etc.
         ! If have pole points on grid - set south pole to glacier
         ! north pole is assumed as non-land
@@ -935,10 +992,13 @@ program mksurfdata
            write(ndiag,'(a)')' calling normalize_and_check_landuse'
         end if
         call normalize_and_check_landuse(lsize_o)
+        call normalize_classes_by_gcell(urban_classes, pcturb, urban_classes_g)
 
         ! Given an array of pct_pft_type variables, update all the max_p2l variables.
         call update_max_array(pctnatpft_max, pctnatpft)
         call update_max_array(pctcft_max, pctcft)
+        call update_max_array_urban(pcturb_max,urban_classes_g)
+        call update_max_array_lake(pctlak_max,pctlak)
 
         if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_NAT_PFT for year ",year
         rcode = pio_inq_varid(pioid, 'PCT_NAT_PFT', pio_varid)
@@ -954,6 +1014,20 @@ program mksurfdata
         call get_pct_l2g_array(pctcft, pctcrop)
         call mkfile_output(pioid, mesh_model, 'PCT_CROP', pctcrop, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP')
+        call pio_syncfile(pioid)
+
+        if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_URBAN for year ",year
+        rcode = pio_inq_varid(pioid, 'PCT_URBAN', pio_varid)
+        call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
+        call mkfile_output(pioid, mesh_model, 'PCT_URBAN', urban_classes_g, rc=rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_URBAN')
+        call pio_syncfile(pioid)
+
+        if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_LAKE for year ",year
+        rcode = pio_inq_varid(pioid, 'PCT_LAKE', pio_varid)
+        call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
+        call mkfile_output(pioid, mesh_model, 'PCT_LAKE', pctlak, rc=rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_LAKE')
         call pio_syncfile(pioid)
 
         if (num_cft > 0) then
@@ -983,6 +1057,14 @@ program mksurfdata
      call mkfile_output(pioid, mesh_model, 'PCT_CROP_MAX', pctcrop, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP')
 
+     if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_URBAN_MAX"
+     call mkfile_output(pioid, mesh_model, 'PCT_URBAN_MAX', pcturb_max, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_URBAN_MAX')
+
+     if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_LAKE_MAX"
+     call mkfile_output(pioid, mesh_model, 'PCT_LAKE_MAX', pctlak_max, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_LAKE_MAX')
+
      if (num_cft > 0) then
         if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CFT_MAX"
         call get_pct_p2l_array(pctcft_max, ndim1=lsize_o, ndim2=num_cft, pct_p2l=pct_cft)
@@ -1010,8 +1092,6 @@ program mksurfdata
       !
       ! Normalize land use and make sure things add up to 100% as well as
       ! checking that things are as they should be.
-      !
-      ! Precondition: pctlak + pctwet + pcturb + pctgla <= 100 (within roundoff)
       !
       use mkpftConstantsMod , only : baregroundindex
       use mkpftUtilsMod     , only : adjust_total_veg_area
@@ -1068,12 +1148,12 @@ program mksurfdata
          if (suma > (100._r8 + tol_loose)) then
             if (root_task) then
                write(ndiag,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla must be'
-               write(ndiag,*) '<= 100% before calling this subroutine'
+               write(ndiag,*) '<= 100% before normalizing vegetated area'
                write(ndiag,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
                     n, pctlak(n), pctwet(n), pcturb(n), pctgla(n)
             else
                write(6,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla must be'
-               write(6,*) '<= 100% before calling this subroutine'
+               write(6,*) '<= 100% before normalizing vegetated area'
                write(6,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
                     n, pctlak(n), pctwet(n), pcturb(n), pctgla(n)
             end if
