@@ -703,17 +703,17 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           if (frac_veg_nosno(p) == 0) then
              forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
-             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c) + displa(p)
-             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c) + displa(p)
+             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg(c) + displa(p)
+             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg(c) + displa(p)
           else
-             forc_hgt_u_patch(p) = forc_hgt_u(g) + z0m(p) + displa(p)
-             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0m(p) + displa(p)
-             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0m(p) + displa(p)
+             forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mv(p) + displa(p)
+             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hv(p) + displa(p)
+             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qv(p) + displa(p)
           end if
        else if (lun%itype(l) == istwet .or. lun%itype(l) == istice) then
-          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c)
-          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c)
-          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c)
+          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
+          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg(c) + displa(p)
+          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg(c) + displa(p)
        else if (urbpoi(l)) then
           forc_hgt_u_patch(p) = forc_hgt_u(g) + z_0_town(l) + z_d_town(l)
           forc_hgt_t_patch(p) = forc_hgt_t(g) + z_0_town(l) + z_d_town(l)
@@ -893,6 +893,10 @@ contains
             zldis(n) = forc_hgt_u_patch(n)-displa(n)
          end if
          zeta(n) = zldis(n)/obu(n)
+         ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+         if (z0param_method == 'Meier2022') then
+            zeta(n) = min(20._r8,zldis(n)/obu(n))
+         end if
          if (zeta(n) < -zetam) then
             ustar(n) = vkc*um(n)/(log(-zetam*obu(n)/z0m(n))&
                  - this%StabilityFunc1(-zetam) &
@@ -992,6 +996,10 @@ contains
             zldis(n) = forc_hgt_t_patch(n)-displa(n)
          end if
          zeta(n) = zldis(n)/obu(n)
+         ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+         if (z0param_method == 'Meier2022') then
+            zeta(n) = min(20._r8,zldis(n)/obu(n))
+         end if
          if (zeta(n) < -zetat) then
             temp1(n) = vkc/(log(-zetat*obu(n)/z0h(n))&
                  - this%StabilityFunc2(-zetat) &
@@ -1016,6 +1024,10 @@ contains
             else
                zldis(n) = forc_hgt_q_patch(pfti(n))-displa(n)
                zeta(n) = zldis(n)/obu(n)
+               ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+               if (z0param_method == 'Meier2022') then
+                  zeta(n) = min(20._r8,zldis(n)/obu(n))
+               end if
                if (zeta(n) < -zetat) then
                   temp2(n) = vkc/(log(-zetat*obu(n)/z0q(n)) &
                        - this%StabilityFunc2(-zetat) &
@@ -1038,6 +1050,10 @@ contains
             else
                zldis(n) = forc_hgt_q_patch(n)-displa(n)
                zeta(n) = zldis(n)/obu(n)
+               ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+               if (z0param_method == 'Meier2022') then
+                  zeta(n) = min(20._r8,zldis(n)/obu(n))
+               end if
                if (zeta(n) < -zetat) then
                   temp2(n) = vkc/(log(-zetat*obu(n)/z0q(n)) &
                        - this%StabilityFunc2(-zetat) &
@@ -1060,6 +1076,10 @@ contains
 
          zldis(n) = 2.0_r8 + z0h(n)
          zeta(n) = zldis(n)/obu(n)
+         ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+         if (z0param_method == 'Meier2022') then
+            zeta(n) = min(20._r8,zldis(n)/obu(n))
+         end if
          if (zeta(n) < -zetat) then
             temp12m(n) = vkc/(log(-zetat*obu(n)/z0h(n))&
                  - this%StabilityFunc2(-zetat) &
@@ -1083,6 +1103,10 @@ contains
          else
             zldis(n) = 2.0_r8 + z0q(n)
             zeta(n) = zldis(n)/obu(n)
+            ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+            if (z0param_method == 'Meier2022') then
+               zeta(n) = min(20._r8,zldis(n)/obu(n))
+            end if
             if (zeta(n) < -zetat) then
                temp22m(n) = vkc/(log(-zetat*obu(n)/z0q(n)) - &
                     this%StabilityFunc2(-zetat) + this%StabilityFunc2(z0q(n)/obu(n)) &
@@ -1111,6 +1135,10 @@ contains
             zldis(n) = forc_hgt_u_patch(n)-displa(n)
          end if
          zeta(n) = zldis(n)/obu(n)
+         ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+         if (z0param_method == 'Meier2022') then
+            zeta(n) = min(20._r8,zldis(n)/obu(n))
+         end if
          if (min(zeta(n), 1._r8) < 0._r8) then
             tmp1 = (1._r8 - 16._r8*min(zeta(n),1._r8))**0.25_r8
             tmp2 = log((1._r8+tmp1*tmp1)/2._r8)

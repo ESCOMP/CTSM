@@ -380,9 +380,17 @@ contains
 
          ! Surface temperature and fluxes
 
-         forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(p)
-         forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(p)
-         forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(p)
+         ! Update forcing heights for updated roughness lengths
+         ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+         if (z0param_method == 'Meier2022') then
+            forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(p)
+            forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg(p)
+            forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg(p)
+         else
+            forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(p)
+            forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(p)
+            forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(p)
+         end if
 
          ! Find top layer
          jtop(c) = snl(c) + 1
@@ -620,6 +628,14 @@ contains
                end select
 
                z0qg(p) = z0hg(p)
+            end if
+
+            ! Update forcing heights for updated roughness lengths
+            ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+            if (z0param_method == 'Meier2022') then
+               forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(p)
+               forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg(p)
+               forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg(p)
             end if
 
          end do   ! end of filtered pft loop
