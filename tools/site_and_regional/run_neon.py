@@ -702,9 +702,9 @@ def parse_neon_listing(listing_file, valid_neon_sites):
 
             # -- find all the data versions
             versions = tmp_df[7].unique()
-            print ("all versions available for ", site_name,":", *versions)
+            #print ("all versions available for ", site_name,":", *versions)
             latest_version = tmp_df[7].iloc[-1]
-            print ("latests version available for ", site_name,":", latest_version)
+            #print ("latests version available for ", site_name,":", latest_version)
 
             tmp_df = tmp_df[tmp_df[7].str.contains(latest_version)]
             # -- remove .nc from the file names
