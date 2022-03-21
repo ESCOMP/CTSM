@@ -597,13 +597,22 @@
       <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015'</option>
     </options>
   </test>
+  <test name="SMS_D" grid="1x1_brazil" compset="I1850Clm51BgcCrop" testmods="clm/mimics_matrixcn">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Test MIMICS with CN matrix on (but soil matrixcn off)</option>
+    </options>
+  </test>
   <test name="SMS_Ld5_Mmpi-serial" grid="1x1_brazil" compset="IHistClm50BgcQianRs" testmods="clm/mimics">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015'</option>
+      <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015' for a transient case</option>
     </options>
   </test>
   <test name="SMS_Ly5_Mmpi-serial" grid="1x1_brazil" compset="IHistClm50BgcQianRs" testmods="clm/newton_krylov_spinup">
@@ -612,7 +621,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015'</option>
+      <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015' with Newton-Krylov spinup variables on</option>
     </options>
   </test>
   <test name="ERP_D_P36x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN">
