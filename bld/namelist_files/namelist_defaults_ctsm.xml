@@ -62,6 +62,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <reseed_dead_plants                                            >.false.</reseed_dead_plants>
 
 <for_testing_run_ncdiopio_tests>.false.</for_testing_run_ncdiopio_tests>
+<for_testing_use_second_grain_pool>.false.</for_testing_use_second_grain_pool>
+<for_testing_use_repr_structure_pool>.false.</for_testing_use_repr_structure_pool>
+<for_testing_no_crop_seed_replenishment>.false.</for_testing_no_crop_seed_replenishment>
 
 <!-- Set to .true. in namelist to write hist fields master list file -->
 <hist_master_list_file>.false.</hist_master_list_file>
@@ -488,7 +491,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.16.1.0_12pft_c210630.nc  </fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.22.1.0_12pft_c220307.nc</fates_paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -508,16 +511,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Flexible CN options -->
 <MM_Nuptake_opt             use_flexibleCN=".true." >.true.</MM_Nuptake_opt>
-<downreg_opt                use_flexibleCN=".true." >.false.</downreg_opt>
-<plant_ndemand_opt          use_flexibleCN=".true." >3</plant_ndemand_opt>
-<substrate_term_opt         use_flexibleCN=".true." >.true.</substrate_term_opt>
-<nscalar_opt                use_flexibleCN=".true." >.true.</nscalar_opt>
-<temp_scalar_opt            use_flexibleCN=".true." >.true.</temp_scalar_opt>
 <CNratio_floating           use_flexibleCN=".true." >.true.</CNratio_floating>
 <reduce_dayl_factor         use_flexibleCN=".true." >.false.</reduce_dayl_factor>
 <vcmax_opt                  use_flexibleCN=".true." >3</vcmax_opt>
-<CN_residual_opt            use_flexibleCN=".true." >1</CN_residual_opt>
-<CN_partition_opt           use_flexibleCN=".true." >1</CN_partition_opt>
 <CN_evergreen_phenology_opt use_flexibleCN=".true." >1</CN_evergreen_phenology_opt>
 <carbon_resp_opt            use_flexibleCN=".true." use_fun=".false.">1</carbon_resp_opt>
 <carbon_resp_opt            use_flexibleCN=".true." use_fun=".true." >0</carbon_resp_opt>
