@@ -243,6 +243,18 @@
       This is an advanced flag and should only be used by expert users.</desc>
   </entry>
 
+  <entry id="CLM_USRDAT_DIR">
+    <type>char</type>
+    <default_value>UNSET</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Directory name for user-created surface, landuse, and datm datasets.
+      This is used as an argument in user_mods namelists (e.g. user_nl_clm,
+      user_nl_datm_streams) generated with the subset_data script. Users
+      should modify this variable (in shell_commands or elsewhere) to set the
+      location of user-created data. The default value is UNSET.</desc>
+  </entry>
+
   <entry id="CLM_FORCE_COLDSTART">
     <type>char</type>
     <valid_values>on,off</valid_values>
@@ -271,19 +283,19 @@
     <desc>User mods to apply to specific compset matches. </desc>
   </entry>
 
-  <entry id="NEONSITE">                                                                                    
+  <entry id="NEONSITE">
     <type>char</type>
-    <valid_values>                                                                                      
+    <valid_values>
       ABBY,BLAN,CPER,DEJU,GRSM,HEAL,KONA,LENO,NIWO,ONAQ,PUUM,SERC,SRER,TALL,TREE,WOOD,
       BARR,BONA,DCFS,DELA,GUAN,JERC,KONZ,MLBS,NOGP,ORNL,RMNP,SJER,STEI,TEAK,UKFS,WREF,
       BART,CLBJ,DSNY,HARV,JORN,LAJA,MOAB,OAES,OSBS,SCBI,SOAP,STER,TOOL,UNDE,YELL
-    </valid_values>                                                                                        
-    <default_value/>                                                                                       
-    <group>run_component_ctsm</group>                                                                      
-    <file>env_run.xml</file>                                                                               
-    <desc>Name of site for NEON tower data</desc>                                                          
-  </entry>                                                                                                 
-                   
+    </valid_values>
+    <default_value/>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Name of site for NEON tower data</desc>
+  </entry>
+
 <help>
     =========================================
     CLM naming conventions

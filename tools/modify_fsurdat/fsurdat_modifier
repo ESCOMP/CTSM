@@ -37,6 +37,7 @@ ncar_pylib
 contains all the arguments needed by the script.
 3) Run the script ./fsurdat_modifier pointing to the copied/modified .cfg file,
 e.g. modify_users_copy.cfg
+4) Use the --verbose option to see progress output on your screen
 
 Example
 -------
