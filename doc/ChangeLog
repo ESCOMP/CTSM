@@ -1,4 +1,167 @@
 ===============================================================
+Tag name: ctsm5.1.dev086
+Originator(s): negins (Negin Sobhani,UCAR/TSS,303-497-1224)
+Date: Mon Mar 21 21:06:17 MDT 2022
+One-line Summary: Updates necessary for NEON v2 files and server updates
+
+Purpose and description of changes
+----------------------------------
+
+This tag resolves the issues that are caused by NEON moving their storage from Amazon
+S3 to GCS (Google Cloud Storage) and updated listing files, two issues need to be addressed.
+To summarize, this tag addresses these issues:
+
+1- run_neon.py is updated to handle the updated listing file and
+introduction of the new v2 data.
+
+2- CDEPS, CIME, and run_neon.py codes should be updated to point to the GCS bucket instead of the
+neon S3 bucket. Besides updating run_neon.py this tag points to the updated
+externals with this updates.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+ Fixes CTSM/#1668 -- Updating run_neon.py for v2 files
+ Fixes CTSM/#1675 -- updating externals and pointing to GCS instead of S3 for neon
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ ./run_neon.py now has a new option:
+ --neon-version {v1, v2} : 
+ Neon data version to use for this simulation. [default: use the latest data
+ available]
+
+
+Substantial timing or memory changes:
+[e.g., check PFS test in the test suite and look at timings, if you
+expect possible significant timing changes]
+
+
+Testing summary:
+----------------
+[... Remove before making master tag.
+
+Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
+However, it occasionally makes sense to do more or less system testing;
+here is guidance on different available levels of system testing:
+    a) no system testing (for use when the only changes are ones that
+                          have absolutely no impact on system runs; this
+                          includes documentation-only tags, tags that
+                          just change the tools or some python code that
+                          does not impact system runs, etc.)
+    b) minimal (for use in rare cases where only a small change with
+                known behavior is added ... eg. a minor bug fix. This
+		might be to just run the "short" test list, or to run
+		a single test. Whatever makes sense for the particular case.)
+    c) python only (for use where the only changes are in the python directory:
+                    run the python testing listed below)
+    d) regular (regular tests on normal machines if CTSM source is modified)
+    e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
+                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.)
+		would be run as well)
+
+In addition, various other tests of the tools, python and perl
+infrastructure should be run when appropriate, as described below.
+
+...]
+
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne -
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) -
+
+    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
+     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
+     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
+     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
+     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
+     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
+     separately run the clm_pymods test suite, and you can remove the following line.]
+
+    clm_pymods test suite on cheyenne - 
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ----
+    izumi -------
+
+  any other testing (give details below):
+	./run_neon.py tested on Cheyenne for all sites and check if the latest
+	option chose v2 when data was available. At the time of this test v2 was
+	only available for CPER sites and for the rest of neon sites run_neon.py
+	used v1 data. 
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename:
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+ - ccs_config : 0.0.5    --> 0.0.15
+ - cime       : 6.0.13   --> 6.0.15
+ - cdeps      : 0.12.35  --> 0.12.41
+ - pio        : pio2_5_5 --> pio2_5_6
+
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1669
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev085
 Originator(s): sacks (Bill Sacks)
 Date: Wed Mar 16 11:08:54 MDT 2022
