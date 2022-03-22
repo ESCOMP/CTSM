@@ -1,4 +1,120 @@
 ===============================================================
+Tag name: ctsm5.1.dev086
+Originator(s): negins (Negin Sobhani,UCAR/TSS,303-497-1224)
+Date: Tue Mar 22 01:22:19 MDT 2022
+One-line Summary: Updates necessary for NEON v2 files and server updates
+
+Purpose and description of changes
+----------------------------------
+
+This tag resolves the issues that are caused by NEON moving their storage from Amazon
+S3 to GCS (Google Cloud Storage) and updated listing files, two issues need to be addressed.
+To summarize, this tag addresses these issues:
+
+1- run_neon.py is updated to handle the updated listing file and
+introduction of the new v2 data.
+
+2- CDEPS, CIME, and run_neon.py codes should be updated to point to the GCS bucket instead of the
+neon S3 bucket. Besides updating run_neon.py this tag points to the updated
+externals with this updates.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+ Fixes CTSM/#1668 -- Updating run_neon.py for v2 files
+ Fixes CTSM/#1675 -- updating externals and pointing to GCS instead of S3 for neon
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ ./run_neon.py now has a new option:
+ --neon-version {v1, v2} : 
+ Neon data version to use for this simulation. [default: use the latest data
+ available]
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+
+ The following tests with PGI on Izumi used to fail in the build phase. It
+ seems like they are not failing in the "build phase" anymore but they are
+ still failing in the "run phase".
+ 
+ SMS_D.f10_f10_mg37.I2000Clm51BgcCrop.izumi_pgi.clm-crop
+ SMS.f10_f10_mg37.I2000Clm50BgcCrop.izumi_pgi.clm-crop
+
+ The ExpectedTestFails.xml is updated to reflect this change. 
+
+Testing summary:
+----------------
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne -
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) -
+
+    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
+     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
+     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
+     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
+     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
+     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
+     separately run the clm_pymods test suite, and you can remove the following line.]
+
+    clm_pymods test suite on cheyenne - 
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ----
+    izumi -------
+
+  any other testing (give details below):
+	./run_neon.py tested on Cheyenne for all sites and check if the latest
+	option chose v2 when data was available. At the time of this test v2 was
+	only available for CPER sites and for the rest of neon sites run_neon.py
+	used v1 data. 
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+ - ccs_config : 0.0.5    --> 0.0.15
+ - cime       : 6.0.13   --> 6.0.15
+ - cdeps      : 0.12.35  --> 0.12.41
+ - pio        : pio2_5_5 --> pio2_5_6
+
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1669
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev085
 Originator(s): sacks (Bill Sacks)
 Date: Wed Mar 16 11:08:54 MDT 2022
