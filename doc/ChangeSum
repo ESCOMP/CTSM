@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-    ctsm5.1.dev086   negins 03/21/2022 Updates necessary for NEON v2 files and server updates
+    ctsm5.1.dev086   negins 03/22/2022 Updates necessary for NEON v2 files and server updates
     ctsm5.1.dev085    sacks 03/16/2022 Expand crop reproductive pools; remove some unused options
     ctsm5.1.dev084 glemieux 03/15/2022 FATES parameter file updated to align with clm pft optical parameters
     ctsm5.1.dev083 multiple 03/08/2022 Implement PCT_URBAN_MAX to minimize dynamic urban memory
