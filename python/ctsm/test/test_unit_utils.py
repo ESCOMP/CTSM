@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for utils
+"""Unit tests for utils and config_utils
 """
 
 import tempfile
@@ -9,8 +9,8 @@ import unittest
 import os
 
 from ctsm import unit_testing
-from ctsm.utils import (fill_template_file, lon_range_0_to_360,
-                        _handle_config_value)
+from ctsm.utils import fill_template_file
+from ctsm.config_utils import lon_range_0_to_360, _handle_config_value
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names

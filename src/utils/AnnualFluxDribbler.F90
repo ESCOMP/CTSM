@@ -64,7 +64,7 @@ module AnnualFluxDribbler
   use decompMod        , only : bounds_type, get_beg, get_end
   use decompMod        , only : subgrid_level_gridcell, subgrid_level_patch
   use clm_varcon       , only : secspday, nameg, namep
-  use clm_time_manager , only : get_days_per_year, get_step_size_real, is_beg_curr_year
+  use clm_time_manager , only : get_prev_days_per_year, get_step_size_real, is_beg_curr_year
   use clm_time_manager , only : get_curr_yearfrac, get_prev_yearfrac, get_prev_date
   use clm_time_manager , only : is_first_step
   !
@@ -316,7 +316,7 @@ contains
     end_index = get_end(bounds, this%bounds_subgrid_level)
     SHR_ASSERT_ALL_FL((ubound(flux) == (/end_index/)), sourcefile, __LINE__)
 
-    secs_per_year = get_days_per_year() * secspday
+    secs_per_year = get_prev_days_per_year() * secspday
     dtime = get_step_size_real()
 
     do i = beg_index, end_index
