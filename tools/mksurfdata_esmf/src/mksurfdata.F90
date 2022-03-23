@@ -320,6 +320,18 @@ program mksurfdata
 
   ! NOTE: do not deallocate pctlak, pctwet, pctglacier and pcturban
 
+  ! DEBUG
+  if (fsurdat /= ' ') then
+     ! mapunits, PCT_SAND and PCT_CLAY are written out in the subroutine
+     mksrf_fsoitex = '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v2_grid.nc'
+     mksrf_fsoitex_mesh = '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v2_grid.nc'
+     call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pioid, pctlnd_pft, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
+  end if
+  call pio_closefile(pioid)
+  ! DEBUG
+  call shr_sys_abort('stopping just for soiltex output')
+
   ! -----------------------------------
   ! Write out natpft and cft
   ! -----------------------------------
@@ -446,11 +458,11 @@ program mksurfdata
   ! -----------------------------------
   ! Make soil texture [pctsand, pctclay]
   ! -----------------------------------
-  if (fsurdat /= ' ') then
-     ! mapunits, PCT_SAND and PCT_CLAY are written out in the subroutine
-     call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pioid, pctlnd_pft, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
-  end if
+  ! if (fsurdat /= ' ') then
+  !    ! mapunits, PCT_SAND and PCT_CLAY are written out in the subroutine
+  !    call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pioid, pctlnd_pft, rc=rc)
+  !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
+  ! end if
 
   ! -----------------------------------
   ! Make soil color classes [soicol] [fsoicol]
