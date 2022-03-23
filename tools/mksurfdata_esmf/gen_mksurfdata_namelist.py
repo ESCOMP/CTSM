@@ -193,7 +193,7 @@ def get_parser():
     parser.add_argument(
         "-f",
         "--fast",
-        help="Toggle fast mode which does not user the large mapping file",
+        help="Toggle fast mode which does not use the large mapping file",
         action="store_true",
         dest="fast_flag",
         default=False,
@@ -204,7 +204,7 @@ def get_parser():
             Use Potential Vegetation for pft_years
             [default: %(default)s]
             """,
-        action="store_false",
+        action="store_true",
         dest="potveg_flag",
         default=False,
     )
@@ -270,7 +270,9 @@ def main ():
     pft_years_ssp = "-999"
 
     # determine pft_years - needed to parse xml file
-    if int(start_year) == 1850 and int(end_year) == 1850:
+    if potveg:
+        pft_years = "PtVg"
+    elif int(start_year) == 1850 and int(end_year) == 1850:
         pft_years = "1850"
     elif int(start_year) == 2000 and int(end_year) == 2000:
         pft_years = "2000"
@@ -286,8 +288,6 @@ def main ():
     elif int(start_year) >= 2016 and int(start_year) <= 2100 and int(end_year) <=2100:
         pft_years = "-999"
         pft_years_ssp = "2016-2100"
-    elif potveg:
-        pft_years = "PtVg"
     else:
         print (f"start_year is {start_year} and end_year is {end_year}")
         print (f"ERROR: start and end years should be between 850 and 2105 or pot_veg flag needs to be set")
