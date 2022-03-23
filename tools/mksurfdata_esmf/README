@@ -61,33 +61,33 @@ NOTES
 ------------------------------------------------------------
 slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
 ------------------------------------------------------------
-1) ./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc
+1) 1x1_brazil good except:
+ time = -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0 ;
+ instead of
+ time = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ;
 
-.nc file issues:
-- URBAN vars have bigger diffs likely bc using newer raw datasets
-- abm, std elev, organic have some bigger diffs
-- glacier region MV confirmed w BillS that Greenland diff is ok
+2) 10x15 mostly good BUT:
+- bigger diffs than I would like for NAT_PFT, though .log file shows global PFT
+  areas same => Gridcell-level diffs due to mapping files? Confirm we have no
+  discrepancy between .log and .nc files
+- LAI in .log comes out shifted by one
+- Soil color, ag fire peak month outputs too high in .log
+- Soil txt, peat, fmax, lakes, harvest too low in .log unless raw data changed
+- Slope, stddev, soildepth, urban, glaciers not appearing in .log
+- VOC em factors from input not appearing in .log
 
-.log file issues:
-- Successfully made PFTs, harvest and grazing, glacier, urban,
-  topo stats, and organic don't show input/output for comparison
-- soil texture category 3 and soil color category 15 inputs/outputs
-  problematic or just that we set ocean to loam?
-- agricultural fire peak month: output areas increase for all categories
-- voc emission factors all zero
+3) --merge_gis, --nocrop work
+4) --hires_pft works, but must abort for years /= 2005 (and 1850?)
+5) --potveg_flag needs file(s) converted to cdf5
+6) --fast doesn't do anything as far as I can tell; do we need it?
+
+old) ./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc
+Issues: See newer testing above
 
 ------------------------------------------------------
-NOT ALL FILES HAVE BEEN TRANSLATED to cdf5 - need to check last millenium
+NOT ALL FILES HAVE BEEN TRANSLATED to cdf5 : check last millenium & PtVg
 ------------------------------------------------------
 > nccopy -k cdf5 oldfile newfile
-
---------------------------------------------------------
-Python script for generating namelists has NOT ADDRESSED:
---------------------------------------------------------
-* Regional/1x1: handled by subset.py
-* hires_pft: should work
-* potveg: needs file(s) converted to cdf5 first?
-* merge_gis
 
 --------------------------------------------------------
 Override options removed:
