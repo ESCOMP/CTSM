@@ -2318,7 +2318,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment"  >The main point of this test is simply to make sure that the CMIP6WACCMDECK modifier works for
-2-degree since that resolution turns off Carbon isotopes </option>
+2-degree since that resolution turns off Carbon isotopes. (This is in the ctsm_sci test list despite not being a scientifically-supported compset because this needs to be run at 2-degree resolution, which is higher than our standard testing. Also note that the purpose of this is to support scientifically-supported coupled configurations.)</option>
     </options>
   </test>
   <test name="SMS_Lm1_D" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/output_crop_highfreq">
