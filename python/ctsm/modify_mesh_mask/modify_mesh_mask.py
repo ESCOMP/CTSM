@@ -8,6 +8,7 @@ The wrapper script includes a full description and instructions.
 import os
 import logging
 
+from math import isclose
 import numpy as np
 import xarray as xr
 
@@ -29,8 +30,12 @@ class ModifyMeshMask:
     Other functions remain identical; point to them or repeat code here?
     """
 
-    # TODO If landmask_file ends up being required, lon_1,2 and lat_1,2 will be
-    #      removed here and elsewhere
+    # TODO Check if file already exists before starting work
+    # TODO Here landmask should show all land/ocn, not just the section
+    # being changed for modify_fsurdat. I say we include both in the
+    # file: landmask_all for modify_meshes and landmask_change for
+    # modify_fsurdat.
+    # TODO Rm lon_1,2 and lat_1,2 from this tool
     def __init__(self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file):
 
         self.file = my_data
@@ -94,24 +99,49 @@ class ModifyMeshMask:
 
     def set_mesh_mask(self, var):
         """
-        Sets 2d variable var = (1 - rectangle)
-        Find the common lat/lon values between var and rectangle and set
-        var(centerCoords) = not_rectangle(lat, lon)
+        Sets 1d mask variable "var" = 2d mask variable "not_rectangle".
+        Assumes that 1d vector is in same south-to-north west-to-east
+        order as the 2d array.
         """
-        # TODO Research faster way of finding common lat/lon values
 
-        for element_count in self.file['elementCount']:
-            for row in self.lsmlat:
-                if abs(self.file['centerCoords'][element_count, 1] - \
-                       self.lat_2d[row]) < 0.001:
-                    for col in self.lsmlon:
-                        if abs(self.file['centerCoords'][element_count, 0] - \
-                               self.lon_2d[col]) < 0.001:
-                            print(element_count)  # Keep for now
-                            print(row)  # TODO Remove
-                            print(col)  # TODO Remove
-                            print(self.file[var][element_count])
-                            print(self.not_rectangle[row, col])
-                            self.file[var][element_count] = \
-                                self.not_rectangle[row, col]
-                            break
+        ncount = 0  # initialize
+        for row in self.lsmlat:  # rows from landmask file
+            logger.info('row = %d', row)
+            for col in self.lsmlon:  # cols from landmask file
+                # Reshape landmask file's mask (not_rectangle) into the
+                # elementCount dimension of the mesh file.
+                # In the process overwrite self.file[var].
+                self.file[var][ncount] = self.not_rectangle[row, col]
+
+                # All else in this function supports error checking
+
+                # lon and lat from the landmask file
+                lat_new = float(self.lat_2d[row])
+                lon_new = float(self.lon_2d[col])
+                # ensure lon range of 0-360 rather than -180 to 180
+                lon_new = lon_range_0_to_360(lon_new)
+                # lon and lat from the mesh file
+                lat_mesh = float(self.file['centerCoords'][ncount, 1])
+                lon_mesh = float(self.file['centerCoords'][ncount, 0])
+                # ensure lon range of 0-360 rather than -180 to 180
+                lon_mesh = lon_range_0_to_360(lon_mesh)
+
+                errmsg = 'Must be equal: ' \
+                         ' lat_new = ' + str(lat_new) + \
+                         ' lat_mesh = ' + str(lat_mesh) + \
+                         ' (at ncount = ' + str(ncount) + ')'
+                assert isclose(lat_new, lat_mesh, abs_tol=1e-5), errmsg
+                errmsg = 'Must be equal: ' \
+                         ' lon_new = ' + str(lon_new) + \
+                         ' lon_mesh = ' + str(lon_mesh) + \
+                         ' (at ncount = ' + str(ncount) + ')'
+                assert isclose(lon_new, lon_mesh, abs_tol=1e-5), errmsg
+
+                # increment counter
+                ncount = ncount + 1
+
+        # Error check
+        element_count = int(max((self.file['elementCount'])) + 1)
+        errmsg = 'element_count =' + str(element_count) + \
+                 'ncount =' + str(ncount) + 'must be equal'
+        assert ncount == element_count, errmsg
