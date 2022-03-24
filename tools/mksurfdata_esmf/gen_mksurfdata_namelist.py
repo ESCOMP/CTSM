@@ -374,6 +374,14 @@ def main ():
                     print(f"ERROR: input mesh file {rawdata_files[new_key]} does not exist")
                     sys.exit(30)
 
+            if item.tag == 'lake_filename':
+                new_key = f"{child1.tag}_lake"
+                rawdata_files[new_key] = os.path.join(input_path, item.text)
+
+            if item.tag == 'urban_filename':
+                new_key = f"{child1.tag}_urban"
+                rawdata_files[new_key] = os.path.join(input_path, item.text)
+
     # determine output mesh
     tree2 = ET.parse('../../ccs_config/component_grids_nuopc.xml')
     root = tree2.getroot()
@@ -424,18 +432,34 @@ def main ():
             for year in range(start_year, end_year + 1):
                 if year <= 2015:
                     file1 = rawdata_files["mksrf_fvegtyp"]
+                    file2 = rawdata_files["mksrf_fvegtyp_urban"]
+                    file3 = rawdata_files["mksrf_fvegtyp_lake"]
                 else:
                     file1 = rawdata_files["mksrf_fvegtyp_ssp"]
+                    file2 = rawdata_files["mksrf_fvegtyp_ssp_urban"]
+                    file3 = rawdata_files["mksrf_fvegtyp_ssp_lake"]
 
                 landuse_input_fname = file1.replace("%y",str(year))
+                landuse_input_fnam2 = file2.replace("%y",str(year))
+                landuse_input_fnam3 = file3.replace("%y",str(year))
                 if not os.path.isfile(landuse_input_fname):
-                     print(f"ERROR: landunit_input_fname: {landuse_input_fname} does not exit")
+                     print(f"ERROR: landunit_input_fname: {landuse_input_fname} does not exist")
+                     sys.exit(60)
+#               if not os.path.isfile(landuse_input_fnam2):
+#                    print(f"ERROR: landunit_input_fnam2: {landuse_input_fnam2} does not exist")
+#                    sys.exit(60)
+                if not os.path.isfile(landuse_input_fnam3):
+                     print(f"ERROR: landunit_input_fnam3: {landuse_input_fnam3} does not exist")
                      sys.exit(60)
 
                 # -- Each line is written twice in the original perl code:
                 landuse_line = f"{landuse_input_fname:<196}{str(year)}\n"
+                landuse_lin2 = f"{landuse_input_fnam2:<196}{str(year)}\n"
+                landuse_lin3 = f"{landuse_input_fnam3:<196}{str(year)}\n"
                 landuse_file.write(landuse_line)
                 landuse_file.write(landuse_line)
+                landuse_file.write(landuse_lin2)
+                landuse_file.write(landuse_lin3)
                 logger.debug(f"year : {year}")
                 logger.debug(landuse_line)
         print(f"Successfully created input landuse file {landuse_fname}")
