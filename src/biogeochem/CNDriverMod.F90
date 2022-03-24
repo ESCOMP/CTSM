@@ -114,6 +114,7 @@ contains
     use clm_varpar                        , only: nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
     use subgridAveMod                     , only: p2c
     use CropType                          , only: crop_type
+    use CNAllocationMod                   , only: calc_gpp_mr_availc
     use CNNDynamicsMod                    , only: CNNDeposition,CNNFixation, CNNFert, CNSoyfix,CNFreeLivingFixation
     use CNMRespMod                        , only: CNMResp
     use CNFUNMod                          , only: CNFUNInit  !, CNFUN 
@@ -386,10 +387,18 @@ contains
 
      end if
 
+     call t_startf('cnalloc')
+     call calc_gpp_mr_availc( &
+          bounds, num_soilp, filter_soilp, &
+          crop_inst, photosyns_inst, canopystate_inst, &
+          cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst)
+     call t_stopf('cnalloc')
+
      call t_startf('calc_plant_nutrient_demand')
      call nutrient_competition_method%calc_plant_nutrient_demand ( &
          bounds, num_soilp, filter_soilp,                                 &
-         photosyns_inst, crop_inst, canopystate_inst,                     &
+         crop_inst, canopystate_inst,                                     &
          cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,            &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
