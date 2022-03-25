@@ -445,9 +445,9 @@ def main ():
                 if not os.path.isfile(landuse_input_fname):
                      print(f"ERROR: landunit_input_fname: {landuse_input_fname} does not exist")
                      sys.exit(60)
-#               if not os.path.isfile(landuse_input_fnam2):
-#                    print(f"ERROR: landunit_input_fnam2: {landuse_input_fnam2} does not exist")
-#                    sys.exit(60)
+                if not os.path.isfile(landuse_input_fnam2):
+                     print(f"ERROR: landunit_input_fnam2: {landuse_input_fnam2} does not exist")
+                     sys.exit(60)
                 if not os.path.isfile(landuse_input_fnam3):
                      print(f"ERROR: landunit_input_fnam3: {landuse_input_fnam3} does not exist")
                      sys.exit(60)
