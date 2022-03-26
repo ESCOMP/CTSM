@@ -31,7 +31,7 @@ module mklanwatMod
 contains
 !===============================================================
 
-  subroutine mklakwat(file_mesh_i, file_data_i, mesh_o, lake_o, pioid_o, fsurdat, rc)
+  subroutine mklakwat(file_mesh_i, file_data_i, mesh_o, lake_o, pioid_o, fsurdat, rc, do_depth)
 
     ! -------------------
     ! make %lake and lake depth
@@ -47,6 +47,7 @@ contains
     real(r8)          , intent(out)   :: lake_o(:)        ! output grid: %lake
     character(len=*)  , intent(in)    :: fsurdat
     integer           , intent(out)   :: rc
+    logical, optional , intent(in)    :: do_depth  ! do the depth part of the subroutine
 
     ! local variables
     type(ESMF_RouteHandle) :: routehandle
@@ -71,7 +72,7 @@ contains
        write(ndiag,*)
        write(ndiag,'(1x,80a1)') ('=',k=1,80)
        write(ndiag,*)
-       write(ndiag,'(a)')'Attempting to %lake, %wetland and lakdepth data'
+       write(ndiag,'(a)')'Attempting to make lake data'
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
        write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
@@ -154,41 +155,45 @@ contains
     ! Create lake parameter (lakedepth)
     ! ----------------------------------------
 
-    if (root_task) then
-       write (ndiag,*) 'Attempting to make lake depth .....'
-    end if
+    if (present(do_depth)) then
+       if (do_depth) then
+          if (root_task) then
+             write (ndiag,*) 'Attempting to make lake depth .....'
+          end if
 
-    ! lakedepth
-    allocate(lakedepth_i(ns_i), stat=rcode)
-    if (rcode/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid_i, 'LAKEDEPTH', mesh_i, lakedepth_i, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          ! lakedepth
+          allocate(lakedepth_i(ns_i), stat=rcode)
+          if (rcode/=0) call shr_sys_abort()
+          call mkpio_get_rawdata(pioid_i, 'LAKEDEPTH', mesh_i, lakedepth_i, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! regrid lakedepth_i to lakedepth_o - this also returns lakedepth_i to be used in the global sums below
-    allocate (lakedepth_o(ns_o)); lakedepth_o(:) = spval
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, lakedepth_i, lakedepth_o, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After regrid_rawdata for lakedepth in "//trim(subname))
-    do no = 1,ns_o
-       if (frac_o(no) == 0._r8) then
-          lakedepth_o(no) = 10._r8
+          ! regrid lakedepth_i to lakedepth_o - this also returns lakedepth_i to be used in the global sums below
+          allocate (lakedepth_o(ns_o)); lakedepth_o(:) = spval
+          call regrid_rawdata(mesh_i, mesh_o, routehandle, lakedepth_i, lakedepth_o, rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call ESMF_VMLogMemInfo("After regrid_rawdata for lakedepth in "//trim(subname))
+          do no = 1,ns_o
+             if (frac_o(no) == 0._r8) then
+                lakedepth_o(no) = 10._r8
+             end if
+          enddo
+          if (min_bad(lakedepth_o, min_valid_lakedepth, 'lakedepth')) then
+             call shr_sys_abort()
+          end if
+
+          if (fsurdat /= ' ') then
+             if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out lakedepth"
+             call mkfile_output(pioid_o,  mesh_o,  'LAKEDEPTH', lakedepth_o, rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+             call pio_syncfile(pioid_o)
+          end if
+
+          ! Check global areas for lake depth
+          call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
+               lakedepth_i, lakedepth_o, "lake depth", "m", ndiag, rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
-    enddo
-    if (min_bad(lakedepth_o, min_valid_lakedepth, 'lakedepth')) then
-       call shr_sys_abort()
     end if
-
-    if (fsurdat /= ' ') then
-       if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out lakedepth"
-       call mkfile_output(pioid_o,  mesh_o,  'LAKEDEPTH', lakedepth_o, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-       call pio_syncfile(pioid_o)
-    end if
-
-    ! Check global areas for lake depth
-    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-         lakedepth_i, lakedepth_o, "lake depth", "m", ndiag, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ----------------------------------------
     ! Wrap things up
@@ -204,8 +209,7 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
     if (root_task) then
-       write (ndiag,*) 'Successfully made %lake'
-       write (ndiag,*) 'Successfully made lake depth'
+       write (ndiag,*) 'Successfully made lake data'
     end if
     call ESMF_VMLogMemInfo("At end of "//trim(subname))
 

@@ -418,7 +418,7 @@ program mksurfdata
   ! Need to keep pctlak and pctwet external for use below
   allocate ( pctlak(lsize_o)) ; pctlak(:) = spval
   allocate ( pctlak_max(lsize_o)) ; pctlak_max(:) = spval
-  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pioid, fsurdat, rc=rc)
+  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pioid, fsurdat, rc=rc, do_depth=.true.)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
 
   allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
