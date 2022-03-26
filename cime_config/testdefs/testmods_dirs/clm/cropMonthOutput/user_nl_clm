@@ -3,3 +3,4 @@
 
  ! Add an annual output file with these crop-specific variables, which exercise some special logic:
  hist_fincl3 = 'SDATES', 'HDATES'
+ hist_dov2xy(3) = .false.
