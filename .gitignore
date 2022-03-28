@@ -1,8 +1,8 @@
 # directories checked out by manage_externals, and other files created
 # by manage_externals
 manage_externals.log
+ccs_config
 /src/fates/
-/tools/site_and_regional/PTCLM/
 /cime/
 /components/
 /libraries/
@@ -21,6 +21,7 @@ manage_externals.log
 # editor files
 *.swp
 *~
+.vscode/
 
 # vim files (from https://github.com/github/gitignore/blob/master/Global/Vim.gitignore)
 # Swap
@@ -112,6 +113,3 @@ core.*
 *.log !run.log
 *.pyc
 Depends
-
-# ssr
-.vscode/

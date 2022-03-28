@@ -507,7 +507,7 @@ contains
     use dynSubgridControlMod , only : get_flanduse_timeseries
     use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevmaxurbgrnd, nlevcan
     use clm_varpar           , only : maxpatch_glc, nvegwcs
-    use clm_varpar           , only : mxgrowseas, mxharvests
+    use clm_varpar           , only : mxsowings, mxharvests
     use decompMod            , only : get_proc_global
     !
     ! !ARGUMENTS:
@@ -546,7 +546,7 @@ contains
     call ncd_defdim(ncid , 'levtot'  , nlevsno+nlevmaxurbgrnd, dimid)
     call ncd_defdim(ncid , 'numrad'  , numrad         ,  dimid)
     call ncd_defdim(ncid , 'levcan'  , nlevcan        ,  dimid)
-    call ncd_defdim(ncid , 'mxgrowseas' , mxgrowseas  ,  dimid)
+    call ncd_defdim(ncid , 'mxsowings' , mxsowings  ,  dimid)
     call ncd_defdim(ncid , 'mxharvests' , mxharvests  ,  dimid)
     if ( use_hydrstress ) then
       call ncd_defdim(ncid , 'vegwcs'  , nvegwcs        ,  dimid)

@@ -1,0 +1,1 @@
+point --lon 263.38956 --lat 39.1082 --site KONA --dompft 17 19 23 45 --pctpft 28 12 32 28 --crop --create-domain --create-surface --outdir EXEDIR/KONA_user-mod_and_data --user-mods-dir EXEDIR/KONA_user-mod_and_data --verbose
