@@ -1,4 +1,111 @@
 ===============================================================
+Tag name: ctsm5.1.dev088
+Originator(s): samrabin (Sam Rabin)
+Date: Mon Mar 28 10:13:22 MDT 2022
+One-line Summary: Add outputs for annual crop sowing and harvest dates
+
+Purpose and description of changes
+----------------------------------
+
+Added annual outputs of sowing and harvest dates (`SDATES` and `HDATES`,
+respectively). This should simplify the determination of sowing and
+harvest date for postprocessing.
+- Sowing dates are on new dimension `mxgrowseas` (maximum number of
+  growing seasons allowed to begin in a year; currently hard-coded to 1).
+- Harvest dates are on new dimension `mxharvests` (maximum number of
+  harvests allowed in a year), which is `mxgrowseas`+1. This is needed
+  because in year Y you might harvest a field that was planted in year
+  Y-1, then plant and harvest again.
+- The lengths of these dimensions are public constants of `clm_varpar`.
+
+Additionally, removed `cropplant` as discussed here:
+<https://github.com/ESCOMP/CTSM/issues/1500#issuecomment-951404634>.
+
+The `mxharvests` concept enables the addition of more such outputs to
+further simplify crop postprocessing—for example, yield per growing
+season as a direct output rather than needing to cross-reference daily
+grain mass against the day of harvest.
+
+These changes involved some rework to the crop phenology code that
+changes answers for crop phenology in some circumstances. All answer
+changes were determined to be due to issues / oddities in the old code.
+See discussion in https://github.com/ESCOMP/CTSM/pull/1616 for details
+(especially see
+https://github.com/ESCOMP/CTSM/pull/1616#issuecomment-1049247565). To
+summarize briefly, some issues with the old code were:
+- Non-winter-cereal patches that had live crops at the beginning of the
+  year did not get planted later that year.
+- There was some odd behavior for rice patches at exactly 0 deg latitude
+- Crop root depth had unexpected values outside the growing season; now
+  root depth is set to 0 outside the growing season
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1537 (Output of sowing and harvest dates)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Added new crop outputs to the cropMonthOutput testmod in a 3rd, annual
+  history file
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, for Crop cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Crop cases
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Larger than roundoff, expected to be same climate
+
+    Changes answers for crop cases that are at least a few months long
+    and/or cross the year boundary; also SSP tests with Crop. These
+    changes arise due to fixing some issues / oddities that were present
+    in the old code.
+
+    Also changes ROOT_DEPTH outside of the crop growing season.
+
+    See description above for details, and also extensive discussion in
+    https://github.com/ESCOMP/CTSM/pull/1616 . Sam Rabin performed
+    extensive testing to demonstrate that answer changes all arise due
+    to fixing issues with the old code.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1616
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev087
 Originator(s): sacks (Bill Sacks)
 Date: Thu Mar 24 12:25:10 MDT 2022
