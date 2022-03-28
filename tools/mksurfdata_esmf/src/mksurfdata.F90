@@ -663,7 +663,6 @@ program mksurfdata
      call mkurbanpar(mksrf_furban, pioid, mesh_model, urban_region, urban_classes_g, &
           urban_skip_abort_on_invalid_data_check)
   end if
-  deallocate(urban_region)
 
   ! -----------------------------------
   ! Write out PCT_URBAN, PCT_GLACIER, PCT_LAKE and PCT_WETLAND and
