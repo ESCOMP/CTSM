@@ -114,7 +114,7 @@
 	 category="Fire_emissions"
 	 group="fire_emis_nl"
 	 valid_values="" >
-    If ture fire emissions are input into atmosphere as elevated forcings.
+    If true fire emissions are input into atmosphere as elevated forcings.
     Otherwise they are treated as surface emissions.
     Default: TRUE
   </entry>

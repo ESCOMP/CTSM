@@ -296,6 +296,15 @@
     <desc>Name of site for NEON tower data</desc>
   </entry>
 
+  <entry id="NEONVERSION">
+    <type>char</type>
+    <valid_values>v1,v2,latest</valid_values>
+    <default_value>latest</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Version id of Neon data</desc>
+  </entry>
+
 <help>
     =========================================
     CLM naming conventions
