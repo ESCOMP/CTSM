@@ -98,7 +98,7 @@ subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
     soilpsi                => soilstate_inst%soilpsi_col                        , & ! Input:  soil water potential in each soil layer (MPa)
     sminn_vr               => soilbiogeochem_nitrogenstate_inst%sminn_vr_col    , & ! Iniput:  [real(r8) (:,:)]  (gN/m3) soil mineral N
     frootc                 => cnveg_carbonstate_inst%frootc_patch               , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C
-    hui                    => crop_inst%gddplant_patch                          , & ! Input:  [real(r8) (:)]  =gdd since planting (gddplant)
+    hui                    => crop_inst%hui_patch                               , & ! Input:  [real(r8) (:)]  crop patch heat unit index (growing degree-days)
     croplive               => crop_inst%croplive_patch                          , & ! Input:  [logical (:)]  flag, true if planted, not harvested
     huigrain               => cnveg_state_inst%huigrain_patch                     & ! Input: [real(r8) (:)]  same to reach vegetative maturity
     )

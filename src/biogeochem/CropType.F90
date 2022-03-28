@@ -31,11 +31,12 @@ module CropType
      logical , pointer :: croplive_patch          (:)   ! patch Flag, true if planted, not harvested
      integer , pointer :: harvdate_patch          (:)   ! most recent patch harvest date; 999 if currently (or never) planted
      real(r8), pointer :: fertnitro_patch         (:)   ! patch fertilizer nitrogen
-     real(r8), pointer :: gddplant_patch          (:)   ! patch accum gdd past planting date for crop       (ddays)
+     real(r8), pointer :: hui_patch               (:)   ! crop patch heat unit index (ddays)
+     real(r8), pointer :: gddaccum_patch          (:)   ! patch growing degree-days from planting (air) (ddays)
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
      real(r8), pointer :: vf_patch                (:)   ! patch vernalization factor for cereal
      real(r8), pointer :: cphase_patch            (:)   ! phenology phase
-     real(r8), pointer :: latbaset_patch          (:)   ! Latitude vary baset for gddplant (degree C)
+     real(r8), pointer :: latbaset_patch          (:)   ! Latitude vary baset for hui (degree C)
      character(len=20) :: baset_mapping
      real(r8) :: baset_latvary_intercept
      real(r8) :: baset_latvary_slope
@@ -200,7 +201,8 @@ contains
     allocate(this%croplive_patch (begp:endp)) ; this%croplive_patch (:) = .false.
     allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1) 
     allocate(this%fertnitro_patch (begp:endp)) ; this%fertnitro_patch (:) = spval
-    allocate(this%gddplant_patch (begp:endp)) ; this%gddplant_patch (:) = spval
+    allocate(this%hui_patch (begp:endp))      ; this%hui_patch      (:) = spval
+    allocate(this%gddaccum_patch (begp:endp)) ; this%gddaccum_patch (:) = spval
     allocate(this%gddtsoi_patch  (begp:endp)) ; this%gddtsoi_patch  (:) = spval
     allocate(this%vf_patch       (begp:endp)) ; this%vf_patch       (:) = 0.0_r8
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
@@ -241,10 +243,15 @@ contains
          avgflag='A', long_name='Nitrogen fertilizer for each crop', &
          ptr_patch=this%fertnitro_patch, default='inactive')
 
-    this%gddplant_patch(begp:endp) = spval
-    call hist_addfld1d (fname='GDDPLANT', units='ddays', &
+    this%hui_patch(begp:endp) = spval
+    call hist_addfld1d (fname='HUI', units='ddays', &
+         avgflag='A', long_name='Crop patch heat unit index', &
+         ptr_patch=this%hui_patch, default='inactive')
+
+    this%gddaccum_patch(begp:endp) = spval
+    call hist_addfld1d (fname='GDDACCUM', units='ddays', &
          avgflag='A', long_name='Accumulated growing degree days past planting date for crop', &
-         ptr_patch=this%gddplant_patch, default='inactive')
+         ptr_patch=this%gddaccum_patch, default='inactive')
 
     this%gddtsoi_patch(begp:endp) = spval
     call hist_addfld1d (fname='GDDTSOI', units='ddays', &
@@ -259,7 +266,7 @@ contains
     if ( (trim(this%baset_mapping) == baset_map_latvary) )then
        this%latbaset_patch(begp:endp) = spval
        call hist_addfld1d (fname='LATBASET', units='degree C', &
-            avgflag='A', long_name='latitude vary base temperature for gddplant', &
+            avgflag='A', long_name='latitude vary base temperature for hui', &
             ptr_patch=this%latbaset_patch, default='inactive')
     end if
 
@@ -361,7 +368,11 @@ contains
 
     !---------------------------------------------------------------------
 
-    call init_accum_field (name='GDDPLANT', units='K', &
+    call init_accum_field (name='HUI', units='K', &
+         desc='heat unit index accumulated since planting', accum_type='runaccum', accum_period=not_used,  &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
+    call init_accum_field (name='GDDACCUM', units='K', &
          desc='growing degree-days from planting', accum_type='runaccum', accum_period=not_used,  &
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
@@ -409,8 +420,11 @@ contains
 
     nstep = get_nstep()
 
-    call extract_accum_field ('GDDPLANT', rbufslp, nstep) 
-    this%gddplant_patch(begp:endp) = rbufslp(begp:endp)
+    call extract_accum_field ('HUI', rbufslp, nstep) 
+    this%hui_patch(begp:endp) = rbufslp(begp:endp)
+
+    call extract_accum_field ('GDDACCUM', rbufslp, nstep) 
+    this%gddaccum_patch(begp:endp) = rbufslp(begp:endp)
 
     call extract_accum_field ('GDDTSOI', rbufslp, nstep) 
     this%gddtsoi_patch(begp:endp)  = rbufslp(begp:endp)
@@ -633,6 +647,7 @@ contains
     integer :: begp, endp
     integer :: begc, endc
     real(r8), pointer :: rbufslp(:)      ! temporary single level - patch level
+    real(r8), pointer :: rbufslp2(:)     ! temporary single level - patch level
     character(len=*), parameter :: subname = 'CropUpdateAccVars'
     !-----------------------------------------------------------------------
     
@@ -653,14 +668,22 @@ contains
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
+    allocate(rbufslp2(begp:endp), stat=ier)
+    if (ier/=0) then
+       write(iulog,*)'update_accum_hist allocation error for rbuf1dp (2)'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    endif
 
-    ! Accumulate and extract GDDPLANT
+    ! Accumulate and extract HUI and GDDACCUM
     
-    call extract_accum_field ('GDDPLANT', rbufslp, nstep)
+    call extract_accum_field ('HUI', rbufslp, nstep)
+    call extract_accum_field ('GDDACCUM', rbufslp2, nstep)
     do p = begp,endp
-      rbufslp(p) = max(0.0_r8,this%gddplant_patch(p)-rbufslp(p))
+      rbufslp(p) = max(0.0_r8,this%hui_patch(p)-rbufslp(p))
+      rbufslp2(p) = max(0.0_r8,this%gddaccum_patch(p)-rbufslp2(p))
     end do
-    call update_accum_field  ('GDDPLANT', rbufslp, nstep)
+    call update_accum_field  ('HUI', rbufslp, nstep)
+    call update_accum_field  ('GDDACCUM', rbufslp2, nstep)
     do p = begp,endp
        if (this%croplive_patch(p)) then ! relative to planting date
           ivt = patch%itype(p)
@@ -681,9 +704,13 @@ contains
        else
           rbufslp(p) = accumResetVal
        end if
+       rbufslp2(p) = rbufslp(p)
     end do
-    call update_accum_field  ('GDDPLANT', rbufslp, nstep)
-    call extract_accum_field ('GDDPLANT', this%gddplant_patch, nstep)
+    call update_accum_field  ('HUI', rbufslp, nstep)
+    call extract_accum_field ('HUI', this%hui_patch, nstep)
+    call update_accum_field  ('GDDACCUM', rbufslp2, nstep)
+    call extract_accum_field ('GDDACCUM', this%gddaccum_patch, nstep)
+    deallocate(rbufslp2)
 
     ! Accumulate and extract GDDTSOI
     ! In agroibis this variable is calculated

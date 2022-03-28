@@ -1741,7 +1741,7 @@ contains
          gdd020            =>    temperature_inst%gdd020_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd0                                
          gdd820            =>    temperature_inst%gdd820_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd8                                
          fertnitro         =>    crop_inst%fertnitro_patch                     , & ! Input:  [real(r8) (:) ]  fertilizer nitrogen
-         hui               =>    crop_inst%gddplant_patch                      , & ! Input:  [real(r8) (:) ]  gdd since planting (gddplant)                    
+         hui               =>    crop_inst%hui_patch                           , & ! Input:  [real(r8) (:) ]  crop patch heat unit index (growing degree-days)                    
          leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature              
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
@@ -2051,7 +2051,7 @@ contains
 
             ! call vernalization if winter temperate cereal planted, living, and the
             ! vernalization factor is not 1;
-            ! vf affects the calculation of gddtsoi & gddplant
+            ! vf affects the calculation of gddtsoi & hui
 
             if (t_ref2m_min(p) < 1.e30_r8 .and. vf(p) /= 1._r8 .and. &
                (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat)) then
@@ -2535,7 +2535,7 @@ contains
       ! vernalization factor calculation
       ! if vf(p) = 1.  then plant is fully vernalized - and thermal time
       ! accumulation in phase 1 will be unaffected
-      ! refers to gddtsoi & gddplant, defined in the accumulation routines (slevis)
+      ! refers to gddtsoi & hui, defined in the accumulation routines (slevis)
       ! reset vf, cumvd, and hdidx to 0 at planting of crop (slevis)
 
       if (t_ref2m_max(p) > tfrz) then
