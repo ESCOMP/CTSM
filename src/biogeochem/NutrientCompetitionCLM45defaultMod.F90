@@ -77,8 +77,7 @@ contains
           cnveg_carbonflux_inst,                                      &
           c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,       &
           cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,          &
-          soilbiogeochem_nitrogenstate_inst,                          &
-          aroot, arepr, fpg_col)
+          soilbiogeochem_nitrogenstate_inst, fpg_col)
     !
     ! !USES:
     use CNVegStateType        , only : cnveg_state_type
@@ -106,16 +105,12 @@ contains
     type(cnveg_nitrogenstate_type)  , intent(inout) :: cnveg_nitrogenstate_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type), intent(in)    :: soilbiogeochem_nitrogenstate_inst
-    real(r8)                        , intent(in)    :: aroot(bounds%begp:)
-    real(r8)                        , intent(in)    :: arepr(bounds%begp:,:)
     real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)
 
     call this%calc_plant_cn_alloc (bounds, num_soilp, filter_soilp,        &
          cnveg_state_inst, crop_inst, canopystate_inst, &
          cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
          c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                 &
-         aroot=aroot(bounds%begp:bounds%endp),                               &
-         arepr=arepr(bounds%begp:bounds%endp,:),                 &
          fpg_col=fpg_col(bounds%begc:bounds%endc))
 
   end subroutine calc_plant_nutrient_competition
@@ -124,8 +119,7 @@ contains
   subroutine calc_plant_cn_alloc (this, bounds, num_soilp, filter_soilp,   &
        cnveg_state_inst, crop_inst, canopystate_inst, &
        cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
-       c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                 &
-       aroot, arepr, fpg_col)
+       c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, fpg_col)
     !
     ! !USES:
     use pftconMod             , only : pftcon, npcropmin
@@ -153,8 +147,6 @@ contains
     type(cnveg_carbonflux_type)     , intent(inout) :: c13_cnveg_carbonflux_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
-    real(r8)                        , intent(in)    :: aroot(bounds%begp:)
-    real(r8)                        , intent(in)    :: arepr(bounds%begp:,:)
     real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
@@ -170,8 +162,6 @@ contains
     real(r8):: fsmn(bounds%begp:bounds%endp)  ! A emperate variable for adjusting FUN uptakes 
    !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(aroot)   == (/bounds%endp/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(arepr)   == (/bounds%endp, nrepr/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(fpg_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                                                       &
@@ -196,8 +186,10 @@ contains
          croplive                     => crop_inst%croplive_patch                                  , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
 
          peaklai                      => cnveg_state_inst%peaklai_patch                            , & ! Input:  [integer  (:)   ]  1: max allowed lai; 0: not at max        
-         aleaf                        => cnveg_state_inst%aleaf_patch                              , & ! Output: [real(r8) (:)   ]  leaf allocation coefficient             
-         astem                        => cnveg_state_inst%astem_patch                              , & ! Output: [real(r8) (:)   ]  stem allocation coefficient             
+         aleaf                        => cnveg_state_inst%aleaf_patch                              , & ! Input:  [real(r8) (:)   ]  leaf allocation coefficient
+         astem                        => cnveg_state_inst%astem_patch                              , & ! Input:  [real(r8) (:)   ]  stem allocation coefficient
+         aroot                        => cnveg_state_inst%aroot_patch                              , & ! Input:  [real(r8) (:)   ]  root allocation coefficient
+         arepr                        => cnveg_state_inst%arepr_patch                              , & ! Input:  [real(r8) (:,:) ]  reproductive allocation coefficient(s)
          c_allometry                  => cnveg_state_inst%c_allometry_patch                        , & ! Output: [real(r8) (:)   ]  C allocation index (DIM)                
          n_allometry                  => cnveg_state_inst%n_allometry_patch                        , & ! Output: [real(r8) (:)   ]  N allocation index (DIM)                
          downreg                      => cnveg_state_inst%downreg_patch                            , & ! Output: [real(r8) (:)   ]  fractional reduction in GPP due to N limitation (DIM)
@@ -447,8 +439,7 @@ contains
        c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                   &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                      &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst,      &
-       energyflux_inst,                                                        &
-       aroot, arepr)
+       energyflux_inst)
     !
     ! !USES:
     use CanopyStateType        , only : canopystate_type
@@ -480,17 +471,13 @@ contains
     type(soilbiogeochem_carbonflux_type)   , intent(in) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenstate_type), intent(in) :: soilbiogeochem_nitrogenstate_inst
     type(energyflux_type)           , intent(in)    :: energyflux_inst
-    real(r8)                        , intent(out)   :: aroot(bounds%begp:)
-    real(r8)                        , intent(out)   :: arepr(bounds%begp:,:)
     !-----------------------------------------------------------------------
 
     call this%calc_plant_nitrogen_demand(bounds,  num_soilp, filter_soilp, &
        crop_inst,                                                          &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,    &
        c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,               &
-       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                  & 
-       aroot=aroot(bounds%begp:bounds%endp),                               &
-       arepr=arepr(bounds%begp:bounds%endp,:))
+       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst)
 
   end subroutine calc_plant_nutrient_demand
 
@@ -499,8 +486,7 @@ contains
        crop_inst,                                                               &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,         &
        c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                    &
-       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                       &
-       aroot, arepr)
+       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst)
     !
     ! !USES:
     use pftconMod              , only : npcropmin, pftcon
@@ -528,8 +514,6 @@ contains
     type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
     type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
-    real(r8)                        , intent(out)   :: aroot(bounds%begp:)
-    real(r8)                        , intent(out)   :: arepr(bounds%begp:,:)
     !
     ! !LOCAL VARIABLES:
     integer :: p,l,j,k          ! indices
@@ -546,9 +530,6 @@ contains
     real(r8):: f5_n_tot           ! sum of f5 terms converted from C to N
 
     !-----------------------------------------------------------------------
-
-    SHR_ASSERT_ALL_FL((ubound(aroot) == (/bounds%endp/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(arepr) == (/bounds%endp, nrepr/)), sourcefile, __LINE__)
 
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type                                
@@ -593,6 +574,8 @@ contains
          astemi                => cnveg_state_inst%astemi_patch                     , & ! Output: [real(r8) (:)   ]  saved allocation coefficient from phase 2
          aleaf                 => cnveg_state_inst%aleaf_patch                      , & ! Output: [real(r8) (:)   ]  leaf allocation coefficient             
          astem                 => cnveg_state_inst%astem_patch                      , & ! Output: [real(r8) (:)   ]  stem allocation coefficient             
+         aroot                 => cnveg_state_inst%aroot_patch                      , & ! Output: [real(r8) (:)   ]  root allocation coefficient
+         arepr                 => cnveg_state_inst%arepr_patch                      , & ! Output: [real(r8) (:,:) ]  reproductive allocation coefficient(s)
          grain_flag            => cnveg_state_inst%grain_flag_patch                 , & ! Output: [real(r8) (:)   ]  1: grain fill stage; 0: not             
          c_allometry           => cnveg_state_inst%c_allometry_patch                , & ! Output: [real(r8) (:)   ]  C allocation index (DIM)                
          n_allometry           => cnveg_state_inst%n_allometry_patch                , & ! Output: [real(r8) (:)   ]  N allocation index (DIM)                

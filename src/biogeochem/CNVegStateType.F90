@@ -15,6 +15,7 @@ module CNVegStateType
   use PatchType      , only : patch
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_patch
   use dynSubgridControlMod, only : get_for_testing_allow_non_annual_changes
+  use CropReprPoolsMod, only : nrepr
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -40,6 +41,8 @@ module CNVegStateType
      real(r8) , pointer :: astemi_patch                (:)     ! patch saved stem allocation coefficient from phase 2
      real(r8) , pointer :: aleaf_patch                 (:)     ! patch leaf allocation coefficient
      real(r8) , pointer :: astem_patch                 (:)     ! patch stem allocation coefficient
+     real(r8) , pointer :: aroot_patch                 (:)     ! patch root allocation coefficient
+     real(r8) , pointer :: arepr_patch                 (:,:)   ! patch reproductive allocation coefficient(s)
      real(r8) , pointer :: htmx_patch                  (:)     ! patch max hgt attained by a crop during yr (m)
      integer  , pointer :: peaklai_patch               (:)     ! patch 1: max allowed lai; 0: not at max
 
@@ -201,6 +204,8 @@ contains
     allocate(this%astemi_patch        (begp:endp))                   ; this%astemi_patch        (:)   = nan
     allocate(this%aleaf_patch         (begp:endp))                   ; this%aleaf_patch         (:)   = nan
     allocate(this%astem_patch         (begp:endp))                   ; this%astem_patch         (:)   = nan
+    allocate(this%aroot_patch         (begp:endp))                   ; this%aroot_patch         (:)   = nan
+    allocate(this%arepr_patch         (begp:endp, nrepr))            ; this%arepr_patch         (:,:) = nan
     allocate(this%htmx_patch          (begp:endp))                   ; this%htmx_patch          (:)   = 0.0_r8
     allocate(this%peaklai_patch       (begp:endp))                   ; this%peaklai_patch       (:)   = 0
 

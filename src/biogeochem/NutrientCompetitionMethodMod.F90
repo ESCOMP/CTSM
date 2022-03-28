@@ -65,8 +65,7 @@ module NutrientCompetitionMethodMod
           c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                    &
           cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
           soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
-          energyflux_inst,      &
-          aroot, arepr)
+          energyflux_inst)
        !
        ! DESCRIPTION
        ! calculate nutrient yield after considering competition between different components
@@ -103,8 +102,6 @@ module NutrientCompetitionMethodMod
        type(soilbiogeochem_carbonflux_type), intent(in) :: soilbiogeochem_carbonflux_inst
        type(soilbiogeochem_nitrogenstate_type), intent(in) :: soilbiogeochem_nitrogenstate_inst
        type(energyflux_type)           , intent(in)    :: energyflux_inst   
-       real(r8)                        , intent(out)   :: aroot(bounds%begp:)
-       real(r8)                        , intent(out)   :: arepr(bounds%begp:,:)
 
      end subroutine calc_plant_nutrient_demand_interface
 
@@ -115,8 +112,7 @@ module NutrientCompetitionMethodMod
           cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
           c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
           cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
-          soilbiogeochem_nitrogenstate_inst, &
-          aroot, arepr, fpg_col)
+          soilbiogeochem_nitrogenstate_inst, fpg_col)
        !
        ! !USES:
        use shr_kind_mod          , only : r8 => shr_kind_r8
@@ -146,8 +142,6 @@ module NutrientCompetitionMethodMod
        type(cnveg_nitrogenstate_type)  , intent(inout) :: cnveg_nitrogenstate_inst
        type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
        type(soilbiogeochem_nitrogenstate_type), intent(in)    :: soilbiogeochem_nitrogenstate_inst
-       real(r8)                        , intent(in)    :: aroot(bounds%begp:)
-       real(r8)                        , intent(in)    :: arepr(bounds%begp:,:)
        real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)
 
      end subroutine calc_plant_nutrient_competition_interface
