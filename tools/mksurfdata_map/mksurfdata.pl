@@ -284,12 +284,6 @@ sub write_transient_timeseries_file {
         my $hrvtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year='$yr',ssp_rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
         chomp( $hrvtypyr );
         printf $fh_landuse_timeseries $dynpft_format, $hrvtypyr, $yr;
-        my $urbanyr = "/glade/scratch/keerzhang/archive/BNU_NoAdjust/05deg_".$yr."_new_NoAdjust.nc";
-        chomp( $urbanyr);                                            # !KZ I hard coded this part just to generate a txt file with urban raw data file locations
-        printf $fh_landuse_timeseries $dynpft_format, $urbanyr, $yr; # And note that I made no change to the "landuse_timeseries_override_$desc.txt" because I am not sure how to deal with the the 'pft_override' option
-        my $lakeyr = "/glade/work/ivanderk/inputdata/rawdata/timeseries/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_2017_c20200305.nc";
-        chomp( $lakeyr);
-        printf $fh_landuse_timeseries $dynpft_format, $lakeyr, $yr;          
         if ( $yr % 100 == 0 ) {
           print "year: $yr\n";
         }

@@ -540,20 +540,7 @@ contains
        deallocate(ind1D, ind2D)
 
     else
-       call ncd_def_spatial_var(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
-            lev1name='numurbl', lev2name='time', &
-            long_name='percent urban for each density type', units='unitless')
 
-       call ncd_def_spatial_var(ncid=ncid, varname='PCT_URBAN_MAX', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='maximum percent urban for each density type', units='unitless')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='PCT_LAKE', xtype=xtype, &
-            lev1name="time", long_name='percent lake', units='unitless') 
-
-       call ncd_def_spatial_var(ncid=ncid, varname='PCT_LAKE_MAX', xtype=xtype, &
-            long_name='maximum percent lake', units='unitless')
-                                           
        call harvdata%getFieldsIdx( ind1D, ind2D )
        do j = 1, harvdata%num1Dfields()
           call ncd_def_spatial_var(ncid=ncid, varname=mkharvest_fieldname(ind1D(j),constant=.false.), xtype=xtype, &
