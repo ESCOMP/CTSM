@@ -21,6 +21,7 @@ module CNVegCarbonStateType
   use CNSpeciesMod   , only : species_from_string, CN_SPECIES_C12
   use dynPatchStateUpdaterMod, only : patch_state_updater_type
   use CNVegComputeSeedMod, only : ComputeSeedAmounts
+  use CropReprPoolsMod   , only : nrepr, get_repr_hist_fname, get_repr_rest_fname, get_repr_longname
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -31,9 +32,9 @@ module CNVegCarbonStateType
 
      integer :: species  ! c12, c13, c14
 
-     real(r8), pointer :: grainc_patch             (:) ! (gC/m2) grain C (crop model)
-     real(r8), pointer :: grainc_storage_patch     (:) ! (gC/m2) grain C storage (crop model)
-     real(r8), pointer :: grainc_xfer_patch        (:) ! (gC/m2) grain C transfer (crop model)
+     real(r8), pointer :: reproductivec_patch             (:,:) ! (gC/m2) reproductive (e.g., grain) C (crop model)
+     real(r8), pointer :: reproductivec_storage_patch     (:,:) ! (gC/m2) reproductive (e.g., grain) C storage (crop model)
+     real(r8), pointer :: reproductivec_xfer_patch        (:,:) ! (gC/m2) reproductive (e.g., grain) C transfer (crop model)
      real(r8), pointer :: leafc_patch              (:) ! (gC/m2) leaf C
      real(r8), pointer :: leafc_storage_patch      (:) ! (gC/m2) leaf C storage
      real(r8), pointer :: leafc_xfer_patch         (:) ! (gC/m2) leaf C transfer
@@ -253,10 +254,10 @@ contains
     allocate(this%dispvegc_patch           (begp:endp)) ; this%dispvegc_patch           (:) = nan
     allocate(this%storvegc_patch           (begp:endp)) ; this%storvegc_patch           (:) = nan
     allocate(this%leafcmax_patch           (begp:endp)) ; this%leafcmax_patch           (:) = nan
-    allocate(this%totc_patch               (begp:endp))  ; this%totc_patch               (:) = nan
-    allocate(this%grainc_patch             (begp:endp)) ; this%grainc_patch             (:) = nan
-    allocate(this%grainc_storage_patch     (begp:endp)) ; this%grainc_storage_patch     (:) = nan
-    allocate(this%grainc_xfer_patch        (begp:endp)) ; this%grainc_xfer_patch        (:) = nan
+    allocate(this%totc_patch               (begp:endp)) ; this%totc_patch               (:) = nan
+    allocate(this%reproductivec_patch(begp:endp, nrepr)) ; this%reproductivec_patch   (:,:) = nan
+    allocate(this%reproductivec_storage_patch(begp:endp, nrepr)) ; this%reproductivec_storage_patch(:,:) = nan
+    allocate(this%reproductivec_xfer_patch(begp:endp, nrepr)) ; this%reproductivec_xfer_patch(:,:) = nan
     allocate(this%woodc_patch              (begp:endp)) ; this%woodc_patch              (:) = nan     
 
     allocate(this%cropseedc_deficit_patch  (begp:endp)) ; this%cropseedc_deficit_patch  (:) = nan
@@ -315,10 +316,18 @@ contains
     if (carbon_type == 'c12') then
 
        if (use_crop) then
-          this%grainc_patch(begp:endp) = spval
-          call hist_addfld1d (fname='GRAINC', units='gC/m^2', &
-               avgflag='A', long_name='grain C (does not equal yield)', &
-               ptr_patch=this%grainc_patch)
+          this%reproductivec_patch(begp:endp,:) = spval
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             call hist_addfld1d ( &
+                  ! e.g., GRAINC
+                  fname=get_repr_hist_fname(k)//'C', &
+                  units='gC/m^2', &
+                  avgflag='A', &
+                  long_name=get_repr_longname(k)//' C (does not equal yield)', &
+                  ptr_patch=data1dptr)
+          end do
+
           this%cropseedc_deficit_patch(begp:endp) = spval
           call hist_addfld1d (fname='CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C used for crop seed that needs to be repaid', &
@@ -664,10 +673,18 @@ contains
             ptr_col=this%totecosysc_col)
 
        if (use_crop) then
-          this%grainc_patch(begp:endp) = spval
-          call hist_addfld1d (fname='C13_GRAINC', units='gC/m^2', &
-               avgflag='A', long_name='C13 grain C (does not equal yield)', &
-               ptr_patch=this%grainc_patch, default='inactive')
+          this%reproductivec_patch(begp:endp,:) = spval
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             call hist_addfld1d ( &
+                  ! e.g., C13_GRAINC
+                  fname='C13_'//get_repr_hist_fname(k)//'C', &
+                  units='gC/m^2', &
+                  avgflag='A', &
+                  long_name='C13 '//get_repr_longname(k)//' C (does not equal yield)', &
+                  ptr_patch=data1dptr, default='inactive')
+          end do
+
           this%cropseedc_deficit_patch(begp:endp) = spval
           call hist_addfld1d (fname='C13_CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C13 C used for crop seed that needs to be repaid', &
@@ -844,10 +861,17 @@ contains
             ptr_col=this%totecosysc_col)
 
        if (use_crop) then
-          this%grainc_patch(begp:endp) = spval
-          call hist_addfld1d (fname='C14_GRAINC', units='gC/m^2', &
-               avgflag='A', long_name='C14 grain C (does not equal yield)', &
-               ptr_patch=this%grainc_patch, default='inactive')
+          this%reproductivec_patch(begp:endp,:) = spval
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             call hist_addfld1d ( &
+                  ! e.g., C14_GRAINC
+                  fname='C14_'//get_repr_hist_fname(k)//'C', units='gC/m^2', &
+                  avgflag='A', &
+                  long_name='C14 '//get_repr_longname(k)//' C (does not equal yield)', &
+                  ptr_patch=data1dptr, default='inactive')
+          end do
+
           this%cropseedc_deficit_patch(begp:endp) = spval
           call hist_addfld1d (fname='C14_CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C14 C used for crop seed that needs to be repaid', &
@@ -997,9 +1021,9 @@ contains
           this%totc_patch(p)               = 0._r8 
 
           if ( use_crop )then
-             this%grainc_patch(p)         = 0._r8 
-             this%grainc_storage_patch(p) = 0._r8 
-             this%grainc_xfer_patch(p)    = 0._r8 
+             this%reproductivec_patch(p,:)         = 0._r8
+             this%reproductivec_storage_patch(p,:) = 0._r8
+             this%reproductivec_xfer_patch(p,:)    = 0._r8
              this%cropseedc_deficit_patch(p)  = 0._r8
              this%xsmrpool_loss_patch(p)  = 0._r8 
           end if
@@ -1072,7 +1096,7 @@ contains
     ! !LOCAL VARIABLES:
     integer            :: i,j,k,l,c,p
     real(r8)           :: ratio
-    character(len=128) :: varname   ! temporary
+    character(len=256) :: varname   ! temporary
     logical            :: readvar
     integer            :: idata
     logical            :: exit_spinup  = .false.
@@ -1080,6 +1104,7 @@ contains
     ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
     integer            :: restart_file_spinup_state
     integer            :: total_num_reseed_patch      ! Total number of patches to reseed across all processors
+    real(r8), pointer  :: data1dptr(:)   ! temp. pointer for slicing larger arrays
     real(r8), parameter:: totvegcthresh = 1.0_r8      ! Total vegetation carbon threshold to reseed dead vegetation
 
     !------------------------------------------------------------------------
@@ -1430,9 +1455,9 @@ contains
                       this%totc_patch(i)               = 0._r8 
 
                       if ( use_crop )then
-                         this%grainc_patch(i)         = 0._r8 
-                         this%grainc_storage_patch(i) = 0._r8 
-                         this%grainc_xfer_patch(i)    = 0._r8 
+                         this%reproductivec_patch(i,:)         = 0._r8
+                         this%reproductivec_storage_patch(i,:) = 0._r8
+                         this%reproductivec_xfer_patch(i,:)    = 0._r8
                          this%cropseedc_deficit_patch(i)  = 0._r8
                          this%xsmrpool_loss_patch(i)  = 0._r8 
                       end if
@@ -1464,11 +1489,13 @@ contains
                            this%cpool_patch(i)
 
                       if ( use_crop )then
-                         this%totvegc_patch(i) =         &
-                              this%totvegc_patch(i)    + &
-                              this%grainc_patch(i)         + &
-                              this%grainc_storage_patch(i) + &
-                              this%grainc_xfer_patch(i)
+                         do k = 1, nrepr
+                            this%totvegc_patch(i) =         &
+                                 this%totvegc_patch(i)    + &
+                                 this%reproductivec_patch(i,k)         + &
+                                 this%reproductivec_storage_patch(i,k) + &
+                                 this%reproductivec_xfer_patch(i,k)
+                         end do
                       end if
 
                    endif
@@ -2135,17 +2162,41 @@ contains
 
     if (use_crop) then
        if (carbon_type == 'c12') then
-          call restartvar(ncid=ncid, flag=flag,  varname='grainc', xtype=ncd_double,  &
-               dim1name='pft', long_name='grain C', units='gC/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_patch)
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             ! e.g., grainc
+             varname = get_repr_rest_fname(k)//'c'
+             call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name=get_repr_longname(k)//' C', &
+                  units='gC/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+          end do
 
-          call restartvar(ncid=ncid, flag=flag,  varname='grainc_storage', xtype=ncd_double,  &
-               dim1name='pft', long_name='grain C storage', units='gC/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_storage_patch)
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_storage_patch(:,k)
+             ! e.g., grainc_storage
+             varname = get_repr_rest_fname(k)//'c_storage'
+             call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name=get_repr_longname(k)//' C storage', &
+                  units='gC/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+          end do
 
-          call restartvar(ncid=ncid, flag=flag,  varname='grainc_xfer', xtype=ncd_double,  &
-               dim1name='pft', long_name='grain C transfer', units='gC/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_xfer_patch)
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_xfer_patch(:,k)
+             ! e.g., grainc_xfer
+             varname = get_repr_rest_fname(k)//'c_xfer'
+             call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name=get_repr_longname(k)//' C transfer', &
+                  units='gC/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+          end do
 
           call restartvar(ncid=ncid, flag=flag, varname='cropseedc_deficit', xtype=ncd_double,  &
                dim1name='pft', long_name='pool for seeding new crop growth', units='gC/m2', &
@@ -2153,35 +2204,59 @@ contains
        end if
 
        if (carbon_type == 'c13') then
-          call restartvar(ncid=ncid, flag=flag, varname='grainc_13', xtype=ncd_double,  &
-               dim1name='pft', long_name='c13 grain C', units='gC13/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_patch)
-          if (flag=='read' .and. .not. readvar) then
-             call set_missing_from_template( &
-                  my_var = this%grainc_patch, &
-                  template_var = c12_cnveg_carbonstate_inst%grainc_patch, &
-                  multiplier = c3_r2)
-          end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             ! e.g., grainc_13
+             varname = get_repr_rest_fname(k)//'c_13'
+             call restartvar(ncid=ncid, flag=flag, varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name='c13 '//get_repr_longname(k)//' C', &
+                  units='gC13/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+             if (flag=='read' .and. .not. readvar) then
+                call set_missing_from_template( &
+                     my_var = data1dptr, &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_patch(:,k), &
+                     multiplier = c3_r2)
+             end if
+          end do
 
-          call restartvar(ncid=ncid, flag=flag, varname='grainc_13_storage', xtype=ncd_double,  &
-               dim1name='pft', long_name='c13 grain C storage', units='gC13/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_storage_patch)
-          if (flag=='read' .and. .not. readvar) then
-             call set_missing_from_template( &
-                  my_var = this%grainc_storage_patch, &
-                  template_var = c12_cnveg_carbonstate_inst%grainc_storage_patch, &
-                  multiplier = c3_r2)
-          end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_storage_patch(:,k)
+             ! e.g., grainc_13_storage
+             varname = get_repr_rest_fname(k)//'c_13_storage'
+             call restartvar(ncid=ncid, flag=flag, varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name='c13 '//get_repr_longname(k)//' C storage', &
+                  units='gC13/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+             if (flag=='read' .and. .not. readvar) then
+                call set_missing_from_template( &
+                     my_var = data1dptr, &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_storage_patch(:,k), &
+                     multiplier = c3_r2)
+             end if
+          end do
 
-          call restartvar(ncid=ncid, flag=flag, varname='grainc_13_xfer', xtype=ncd_double,  &
-               dim1name='pft', long_name='c13 grain C transfer', units='gC13/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_xfer_patch)
-          if (flag=='read' .and. .not. readvar) then
-             call set_missing_from_template( &
-                  my_var = this%grainc_xfer_patch, &
-                  template_var = c12_cnveg_carbonstate_inst%grainc_xfer_patch, &
-                  multiplier = c3_r2)
-          end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_xfer_patch(:,k)
+             ! e.g., grainc_13_xfer
+             varname = get_repr_rest_fname(k)//'c_13_xfer'
+             call restartvar(ncid=ncid, flag=flag, varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name='c13 '//get_repr_longname(k)//' C transfer', &
+                  units='gC13/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+             if (flag=='read' .and. .not. readvar) then
+                call set_missing_from_template( &
+                     my_var = data1dptr, &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_xfer_patch(:,k), &
+                     multiplier = c3_r2)
+             end if
+          end do
 
           call restartvar(ncid=ncid, flag=flag, varname='cropseedc_13_deficit', xtype=ncd_double,  &
                dim1name='pft', long_name='pool for seeding new crop growth', units='gC13/m2', &
@@ -2196,35 +2271,59 @@ contains
 
        if ( carbon_type == 'c14' ) then
 
-          call restartvar(ncid=ncid, flag=flag, varname='grainc_14', xtype=ncd_double,  &
-               dim1name='pft', long_name='c14 grain C', units='gC14/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_patch)
-          if (flag=='read' .and. .not. readvar) then
-             call set_missing_from_template( &
-                  my_var = this%grainc_patch, &
-                  template_var = c12_cnveg_carbonstate_inst%grainc_patch, &
-                  multiplier = c3_r2)
-          end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             ! e.g., grainc_14
+             varname = get_repr_rest_fname(k)//'c_14'
+             call restartvar(ncid=ncid, flag=flag, varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name='c14 '//get_repr_longname(k)//' C', &
+                  units='gC14/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+             if (flag=='read' .and. .not. readvar) then
+                call set_missing_from_template( &
+                     my_var = data1dptr, &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_patch(:,k), &
+                     multiplier = c3_r2)
+             end if
+          end do
 
-          call restartvar(ncid=ncid, flag=flag, varname='grainc_14_storage', xtype=ncd_double,  &
-               dim1name='pft', long_name='c14 grain C storage', units='gC14/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_storage_patch)
-          if (flag=='read' .and. .not. readvar) then
-             call set_missing_from_template( &
-                  my_var = this%grainc_storage_patch, &
-                  template_var = c12_cnveg_carbonstate_inst%grainc_storage_patch, &
-                  multiplier = c3_r2)
-          end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_storage_patch(:,k)
+             ! e.g., grainc_14_storage
+             varname = get_repr_rest_fname(k)//'c_14_storage'
+             call restartvar(ncid=ncid, flag=flag, varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name='c14 '//get_repr_longname(k)//' C storage', &
+                  units='gC14/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+             if (flag=='read' .and. .not. readvar) then
+                call set_missing_from_template( &
+                     my_var = data1dptr, &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_storage_patch(:,k), &
+                     multiplier = c3_r2)
+             end if
+          end do
 
-          call restartvar(ncid=ncid, flag=flag, varname='grainc_14_xfer', xtype=ncd_double,  &
-               dim1name='pft', long_name='c14 grain C transfer', units='gC14/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_xfer_patch)
-          if (flag=='read' .and. .not. readvar) then
-             call set_missing_from_template( &
-                  my_var = this%grainc_xfer_patch, &
-                  template_var = c12_cnveg_carbonstate_inst%grainc_xfer_patch, &
-                  multiplier = c3_r2)
-          end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_xfer_patch(:,k)
+             ! e.g., grainc_14_xfer
+             varname = get_repr_rest_fname(k)//'c_14_xfer'
+             call restartvar(ncid=ncid, flag=flag, varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name='c14 '//get_repr_longname(k)//' C transfer', &
+                  units='gC14/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+             if (flag=='read' .and. .not. readvar) then
+                call set_missing_from_template( &
+                     my_var = data1dptr, &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_xfer_patch(:,k), &
+                     multiplier = c3_r2)
+             end if
+          end do
 
           call restartvar(ncid=ncid, flag=flag, varname='cropseedc_14_deficit', xtype=ncd_double,  &
                dim1name='pft', long_name='pool for seeding new crop growth', units='gC14/m2', &
@@ -2344,13 +2443,21 @@ contains
        this%totvegc_patch(i)            = value_patch
        this%totc_patch(i)               = value_patch
        if ( use_crop ) then
-          this%grainc_patch(i)          = value_patch
-          this%grainc_storage_patch(i)  = value_patch
-          this%grainc_xfer_patch(i)     = value_patch
           this%cropseedc_deficit_patch(i)  = value_patch
           this%xsmrpool_loss_patch(i)   = value_patch
        end if
     end do
+
+    if (use_crop) then
+       do k = 1, nrepr
+          do fi = 1,num_patch
+             i  = filter_patch(fi)
+             this%reproductivec_patch(i,k)          = value_patch
+             this%reproductivec_storage_patch(i,k)  = value_patch
+             this%reproductivec_xfer_patch(i,k)     = value_patch
+          end do
+       end do
+    end if
 
     do fi = 1,num_column
        i  = filter_column(fi)
@@ -2463,14 +2570,16 @@ contains
             this%gresp_xfer_patch(p)
 
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
-          this%storvegc_patch(p) =            &
-               this%storvegc_patch(p)       + &
-               this%grainc_storage_patch(p) + &
-               this%grainc_xfer_patch(p)
+          do k = 1, nrepr
+             this%storvegc_patch(p) =            &
+                  this%storvegc_patch(p)       + &
+                  this%reproductivec_storage_patch(p,k) + &
+                  this%reproductivec_xfer_patch(p,k)
 
-          this%dispvegc_patch(p) =            &
-               this%dispvegc_patch(p)       + &
-               this%grainc_patch(p)
+             this%dispvegc_patch(p) =            &
+                  this%dispvegc_patch(p)       + &
+                  this%reproductivec_patch(p,k)
+          end do
        end if
 
        ! total vegetation carbon, excluding cpool (TOTVEGC)
@@ -2570,6 +2679,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
+    integer :: k
 
     logical  :: old_weight_was_zero(bounds%begp:bounds%endp)
     logical  :: patch_grew(bounds%begp:bounds%endp)
@@ -2723,17 +2833,23 @@ contains
          flux_out_grc_area = conv_cflux(begp:endp))
 
     if (use_crop) then
-       call update_patch_state( &
-            var = this%grainc_patch(begp:endp), &
-            flux_out_grc_area = crop_product_cflux(begp:endp))
+       do k = 1, nrepr
+          call update_patch_state( &
+               var = this%reproductivec_patch(begp:endp, k), &
+               flux_out_grc_area = crop_product_cflux(begp:endp))
+       end do
 
-       call update_patch_state( &
-            var = this%grainc_storage_patch(begp:endp), &
-            flux_out_grc_area = conv_cflux(begp:endp))
+       do k = 1, nrepr
+          call update_patch_state( &
+               var = this%reproductivec_storage_patch(begp:endp, k), &
+               flux_out_grc_area = conv_cflux(begp:endp))
+       end do
 
-       call update_patch_state( &
-            var = this%grainc_xfer_patch(begp:endp), &
-            flux_out_grc_area = conv_cflux(begp:endp))
+       do k = 1, nrepr
+          call update_patch_state( &
+               var = this%reproductivec_xfer_patch(begp:endp, k), &
+               flux_out_grc_area = conv_cflux(begp:endp))
+       end do
 
        ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
        ! of the atmosphere.
