@@ -101,7 +101,7 @@
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c200129.nc</mesh_filename>
     </entry>
     <entry pft_years="PtVg">
-      <data_filename>lnd/clm2/rawdata/mksrf_urban_0.05x0.05_zerourbanpct.c181014.nc</data_filename>
+      <data_filename>/glade/p/cgd/tss/people/slevis/pot_veg/mksrf_urban_0.05x0.05_zerourbanpct.cdf5.c181014.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c200129.nc</mesh_filename>
     </entry>
   </mksrf_furban>
@@ -160,7 +160,7 @@ version of the raw dataset will probably go away.
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c200129.nc</mesh_filename>
     </entry>
     <entry pft_years="PtVg">
-      <data_filename>lnd/clm2/rawdata/mksrf_gdp_0.5x0_zerogdp.c200413.nc</data_filename>
+      <data_filename>/glade/p/cgd/tss/people/slevis/pot_veg/mksrf_gdp_0.5x0_zerogdp.cdf5.c200413.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c200129.nc</mesh_filename>
     </entry>
   </mksrf_fgdp>
@@ -185,7 +185,7 @@ version of the raw dataset will probably go away.
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c200129.nc</mesh_filename>
     </entry>
     <entry pft_years="PtVg">
-      <data_filename>lnd/clm2/rawdata/mksrf_abm_0.5x0.5_missingabm.c200413.nc</data_filename>
+      <data_filename>/glade/p/cgd/tss/people/slevis/pot_veg/mksrf_abm_0.5x0.5_missingabm.cdf5.c200413.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c200129.nc</mesh_filename>
     </entry>
   </mksrf_fabm>
@@ -219,7 +219,7 @@ version of the raw dataset will probably go away.
   <mksrf_fvegtyp>
     <!-- Potential Vegetation dataset -->
     <entry pft_years="PtVg" >
-      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.simyrPtVg.c181106/mksrf_landuse_potvegclm50_LUH2.c181106.nc</data_filename>
+      <data_filename>/glade/p/cgd/tss/people/slevis/pot_veg/mksrf_landuse_potvegclm50_LUH2.cdf5.c181106.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</mesh_filename>
     </entry>
 
