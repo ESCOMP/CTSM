@@ -79,7 +79,6 @@ slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
 3) --merge_gis, --nocrop work
 4) --hires_pft works, but must abort for years /= 2005 (and 1850?)
 5) --potveg_flag needs file(s) converted to cdf5
-6) --fast doesn't do anything as far as I can tell; do we need it?
 
 old) ./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc
 Issues: See newer testing above

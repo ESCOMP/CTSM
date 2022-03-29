@@ -191,14 +191,6 @@ def get_parser():
         default=False,
     )
     parser.add_argument(
-        "-f",
-        "--fast",
-        help="Toggle fast mode which does not use the large mapping file",
-        action="store_true",
-        dest="fast_flag",
-        default=False,
-    )
-    parser.add_argument(
         "--potveg_flag",
         help="""
             Use Potential Vegetation for pft_years
