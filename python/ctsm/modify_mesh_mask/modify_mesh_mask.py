@@ -20,14 +20,6 @@ logger = logging.getLogger(__name__)
 
 class ModifyMeshMask:
     """
-    Description
-    -----------
-    Started from a copy of python/ctsm/modify_fsurdat/modify_fsurdat.py
-    Deleted unnecessary functions.
-
-    Modified __init__ and added new function set_mesh_mask.
-
-    Other functions remain identical; point to them or repeat code here?
     """
 
     # TODO landmask here needs all land/ocn, not just the section
@@ -50,14 +42,14 @@ class ModifyMeshMask:
 
 
     @classmethod
-    def init_from_file(cls, fsurdat_in, landmask_file):
-        """Initialize a ModifyFsurdat object from file fsurdat_in"""
-        logger.info('Opening fsurdat_in file to be modified: %s', fsurdat_in)
-        my_file = xr.open_dataset(fsurdat_in)
+    def init_from_file(cls, file_in, landmask_file):
+        """Initialize a ModifyMeshMask object from file_in"""
+        logger.info('Opening file to be modified: %s', file_in)
+        my_file = xr.open_dataset(file_in)
         return cls(my_file, landmask_file)
 
 
-    def write_output(self, fsurdat_in, fsurdat_out):
+    def write_output(self, file_in, file_out):
         """
         Description
         -----------
@@ -65,27 +57,27 @@ class ModifyMeshMask:
 
         Arguments
         ---------
-        fsurdat_in:
-            (str) Command line entry of input surface dataset
-        fsurdat_out:
-            (str) Command line entry of output surface dataset
+        file_in:
+            (str) Command line entry of input file
+        file_out:
+            (str) Command line entry of output file
         """
 
         # update attributes
         # TODO Better as dictionary?
-        title = 'Modified fsurdat file'
-        summary = 'Modified fsurdat file'
+        title = 'Modified mesh file'
+        summary = 'Modified mesh file'
         contact = 'N/A'
         data_script = os.path.abspath(__file__) + " -- " + get_ctsm_git_short_hash()
-        description = 'Modified this file: ' + fsurdat_in
+        description = 'Modified this file: ' + file_in
         update_metadata(self.file, title=title, summary=summary,
                         contact=contact, data_script=data_script,
                         description=description)
 
         # mode 'w' overwrites file if it exists
-        self.file.to_netcdf(path=fsurdat_out, mode='w',
+        self.file.to_netcdf(path=file_out, mode='w',
                             format="NETCDF3_64BIT")
-        logger.info('Successfully created fsurdat_out: %s', fsurdat_out)
+        logger.info('Successfully created: %s', file_out)
         self.file.close()
 
 
