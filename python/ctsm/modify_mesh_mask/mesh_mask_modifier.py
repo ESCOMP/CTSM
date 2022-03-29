@@ -48,25 +48,12 @@ def mesh_mask_modifier(cfg_path):
         item='mesh_mask_in', file_path=cfg_path)
     mesh_mask_out = get_config_value(config=config, section=section,
         item='mesh_mask_out', file_path=cfg_path)
-
-    # required but fallback values available for variables omitted
-    # entirely from the .cfg file
-    lnd_lat_1 = get_config_value(config=config, section=section,
-        item='lnd_lat_1', file_path=cfg_path, convert_to_type=float)
-    lnd_lat_2 = get_config_value(config=config, section=section,
-        item='lnd_lat_2', file_path=cfg_path, convert_to_type=float)
-    lnd_lon_1 = get_config_value(config=config, section=section,
-        item='lnd_lon_1', file_path=cfg_path, convert_to_type=float)
-    lnd_lon_2 = get_config_value(config=config, section=section,
-        item='lnd_lon_2', file_path=cfg_path, convert_to_type=float)
-
-    # not required: user may set these in the .cfg file
     landmask_file = get_config_value(config=config, section=section,
-        item='landmask_file', file_path=cfg_path, can_be_unset=True)
+        item='landmask_file', file_path=cfg_path)
 
     # Create ModifyMeshMask object
     modify_mesh_mask = ModifyMeshMask.init_from_file(mesh_mask_in,
-        lnd_lon_1, lnd_lon_2, lnd_lat_1, lnd_lat_2, landmask_file)
+                                                     landmask_file)
 
     # If output file exists, abort before starting work
     if os.path.exists(mesh_mask_out):
@@ -77,17 +64,12 @@ def mesh_mask_modifier(cfg_path):
     # modify mesh mask
     # ----------------
 
-    # Modify mesh mask in a rectangle that could be global (default)
-    # TODO Use this function as a template. Start w gridded mesh_mask
-    #      files rather than gx1/gx3/etc.
-    # NB. The mask needs to first be mapped to the 2D that we're used
-    #     to. If so, then the same could be done with the gx1/etc masks
-    #     followed by looking for nearest neighbors.
-    # If mask is all 1s, landmask_file becomes required, bc the
-    # lat/lons won't change anything.
+    # Modify mesh mask
     modify_mesh_mask.set_mesh_mask('elementMask')
 
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
+    # TODO modify_fsurdat could call same write_output function to avoid
+    #      repetition
     # ----------------------------------------------
     modify_mesh_mask.write_output(mesh_mask_in, mesh_mask_out)

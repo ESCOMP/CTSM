@@ -30,12 +30,11 @@ class ModifyMeshMask:
     Other functions remain identical; point to them or repeat code here?
     """
 
-    # TODO Here landmask should show all land/ocn, not just the section
-    # being changed for modify_fsurdat. I say we include both in the
+    # TODO landmask here needs all land/ocn, not just the section
+    # being changed for modify_fsurdat, so let's include both in the
     # file: landmask_all for modify_meshes and landmask_change for
     # modify_fsurdat.
-    # TODO Rm lon_1,2 and lat_1,2 from this tool
-    def __init__(self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file):
+    def __init__(self, my_data, landmask_file):
 
         self.file = my_data
 
@@ -51,11 +50,11 @@ class ModifyMeshMask:
 
 
     @classmethod
-    def init_from_file(cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file):
+    def init_from_file(cls, fsurdat_in, landmask_file):
         """Initialize a ModifyFsurdat object from file fsurdat_in"""
         logger.info('Opening fsurdat_in file to be modified: %s', fsurdat_in)
         my_file = xr.open_dataset(fsurdat_in)
-        return cls(my_file, lon_1, lon_2, lat_1, lat_2, landmask_file)
+        return cls(my_file, landmask_file)
 
 
     def write_output(self, fsurdat_in, fsurdat_out):
