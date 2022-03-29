@@ -1,4 +1,4 @@
-module mksoiltexMod
+module mksoiltexNewMod
 
   !-----------------------------------------------------------------------
   ! Make soil data (texture)
@@ -33,21 +33,23 @@ module mksoiltexMod
 contains
 !=================================================================================
 
-  subroutine mksoiltex(file_mesh_i, file_data_i, mesh_o, pioid_o, pctlnd_pft_o, rc)
+  subroutine mksoiltexnew(file_grid_i, file_mapunit_i, file_lookup_i, mesh_o, pioid_o, pctlnd_pft_o, rc)
     !
     ! make %sand and %clay from IGBP soil data, which includes
     ! igbp soil 'mapunits' and their corresponding textures
     !
     ! input/output variables
-    character(len=*)  , intent(in)    :: file_mesh_i ! input mesh file name
-    character(len=*)  , intent(in)    :: file_data_i ! input data file name
-    type(ESMF_Mesh)   , intent(in)    :: mesh_o      ! output mesh
+    character(len=*)  , intent(in)    :: file_grid_i     ! input grid file name
+    character(len=*)  , intent(in)    :: file_mapunit_i  ! input mapunit file name
+    character(len=*)  , intent(in)    :: file_lookup_i   ! input lookup file name
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o          ! output mesh
     type(file_desc_t) , intent(inout) :: pioid_o
     real(r8)          , intent(in)    :: pctlnd_pft_o(:) ! PFT data: % of gridcell for PFTs
     integer           , intent(out)   :: rc
 
     ! local variables
     type(ESMF_RouteHandle) :: routehandle
+    type(ESMF_Grid)        :: grid_i
     type(ESMF_Mesh)        :: mesh_i
     type(ESMF_Field)       :: field_i
     type(ESMF_Field)       :: field_o
@@ -77,6 +79,8 @@ contains
     integer, allocatable   :: soil_o(:)
     integer                :: rcode, ier   ! error status
     integer                :: srcTermProcessing_Value = 0
+    integer                :: starts(3)    ! starting indices for reading lookup table
+    integer                :: counts(3)    ! dimension counts for reading lookup table
     integer, parameter     :: nlsm=4       ! number of soil textures
     character(len=38)      :: soil(0:nlsm) ! name of each soil texture
     character(len=38)      :: typ          ! soil texture based on ...
@@ -88,8 +92,8 @@ contains
        write(ndiag,'(1x,80a1)') ('=',k=1,80)
        write(ndiag,*)
        write(ndiag,'(a)') 'Attempting to make %sand and %clay .....'
-       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
-       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
+       write(ndiag,'(a)') ' Input file is '//trim(file_mapunit_i)
+       write(ndiag,'(a)') ' Input grid file is '//trim(file_grid_i)
     end if
 
     ! Determine ns_o and allocate output data
@@ -99,82 +103,84 @@ contains
     allocate(sand_o(ns_o,nlevsoi)) ; sand_o(:,:) = spval
     allocate(clay_o(ns_o,nlevsoi)) ; clay_o(:,:) = spval
 
-    ! Open input data file
-    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
-    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
+    !---------------------------------
+    ! Determine mapunits on output grid
+    !---------------------------------
 
-    ! Read in input mesh
+    ! Open input data file
+    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_mapunit_i))
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_mapunit_i), pio_nowrite)
+
+    ! Read in input mapunit mesh
+    call ESMF_VMLogMemInfo("Before create grid_i in "//trim(subname))
+    if (root_task) write(ndiag,*)"DEBUG: before create grid_i in "//trim(subname)
+    grid_i = ESMF_GridCreate(filename=trim(file_grid_i), &
+         fileformat=ESMF_FILEFORMAT_GRIDSPEC, addCornerStagger=.true., addmask=.true., varname='MU', rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (root_task) write(ndiag,*)"DEBUG: before create mesh_i in "//trim(subname)
     call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
-    mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    mesh_i = esmf_meshcreate(grid_i, rc=rc) 
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
+    if (root_task) write(ndiag,*)"DEBUG: after create mesh_i in "//trim(subname)
 
-    ! Determine ns_i
+    ! Determine ns_i (use the distgrid to the number of elements)
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Get the landmask from the file and reset the mesh mask based on that
-    allocate(rmask_i(ns_i), stat=ier)
+    ! Read in mapunit data
+    if (root_task) write(ndiag,*)"DEBUG: before mapunit read in "//trim(subname)
+    allocate(mapunit_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid_i, 'MU', mesh_i, mapunit_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
+    if (root_task) write(ndiag,*)"DEBUG: after mapunit read in "//trim(subname)
+
+    ! Set mapunit values to zero where the input mask is 0
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, rmask_i, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
-       if (rmask_i(ni) > 0._r4) then
-          mask_i(ni) = 1
-       else
+       if (mapunit_i(ni) == 0.) then
           mask_i(ni) = 0
        end if
     end do
     call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    ! Read in mapunit data
-    allocate(mapunit_i(ns_i), stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid_i, 'MAPUNITS', mesh_i, mapunit_i, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
-
-    ! Set mapunit values to zero where the input mask is 0
-    do ni = 1,ns_i
-       mapunit_i(ni) = mapunit_i(ni) * rmask_i(ni)
-    end do
-
-    ! Determine mapunit_value_max (set it as a module variable so that it can be
-    ! accessible to gen_dominant_mapunit)
-    rcode = pio_inq_dimid  (pioid_i, 'max_value_mapunit', dimid)
-    rcode = pio_inq_dimlen (pioid_i, dimid, mapunit_value_max)
-
      ! Create ESMF fields that will be used below
+    if (root_task) write(ndiag,*)"DEBUG: before field_i creation "//trim(subname)
     field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (root_task) write(ndiag,*)"DEBUG: before field_o creation "//trim(subname)
     field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    field_dstfrac = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    ! field_dstfrac = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    ! if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Create a route handle
+    if (root_task) write(ndiag,*)"DEBUG: before route handle creation "//trim(subname)
     call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
          regridmethod=ESMF_REGRIDMETHOD_CONSERVE, srcTermProcessing=srcTermProcessing_Value, &
          ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, &
          dstFracField= field_dstfrac, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
+    if (root_task) write(ndiag,*)"DEBUG: after route handle creation "//trim(subname)
 
     ! Determin frac_o
-    call ESMF_FieldGet(field_dstfrac, farrayptr=dataptr_r8, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    allocate(frac_o(ns_o))
-    frac_o(:) = dataptr_r8(:)
+    ! call ESMF_FieldGet(field_dstfrac, farrayptr=dataptr_r8, rc=rc)
+    ! if (chkerr(rc,__LINE__,u_FILE_u)) return
+    ! allocate(frac_o(ns_o))
+    ! frac_o(:) = dataptr_r8(:)
 
     ! Create a dynamic mask object
     ! The dynamic mask object further holds a pointer to the routine that will be called in order to
     ! handle dynamically masked elements - in this case its DynMaskProc (see below)
+    if (root_task) write(ndiag,*)"DEBUG: before call to dynamic mas set creation "//trim(subname)
     call ESMF_DynamicMaskSetR4R8R4(dynamicMask, dynamicMaskRoutine=get_dominant_mapunit,  &
          handleAllElements=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (root_task) write(ndiag,*)"DEBUG: after call to dynamic mas set creation "//trim(subname)
 
     ! Determine dominant soil color in the field regrid call below
     call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
@@ -192,23 +198,51 @@ contains
        mapunit_o(no) = int(dataptr(no))
     end do
 
-    ! Get dimensions from input file and allocate memory for sand_i and clay_i
-    rcode = pio_inq_dimid  (pioid_i, 'number_of_layers', dimid)
+    call pio_closefile(pioid_i)
+
+    !---------------------------------
+    ! Determine %sand and %clay on output grid - using above mapunits
+    !---------------------------------
+
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_lookup_i), pio_nowrite)
+
+    rcode = pio_inq_dimid  (pioid_i, 'MapUnit', dimid)
+    rcode = pio_inq_dimlen (pioid_i, dimid, n_mapunits)
+
+    rcode = pio_inq_dimid  (pioid_i, 'soil_layer', dimid)
     rcode = pio_inq_dimlen (pioid_i, dimid, nlay)
+
+    ! Read In MapUnits from the input file
+    allocate(MapUnits(n_mapunits), stat=ier)
+    rcode = pio_inq_varid(pioid_i, 'MapUnit', pio_varid)
+    rcode = pio_get_var(pioid_i, pio_varid, MapUnits)
+
+    ! Determine the mapunit lookup index from the value of the MapUnit variable
+    mapunit_value_max = maxval(MapUnits)
+    allocate(mapunit_lookup(mapunit_value_max))
+    mapunit_lookup(:) = -999
+    do n = 1,size(MapUnits)
+       mapunit_lookup(MapUnits(n)) = n
+    end do
+
     allocate(sand_i(mapunit_value_max,nlay), stat=ier)
     if (ier/=0) call shr_sys_abort()
     allocate(clay_i(mapunit_value_max,nlay), stat=ier)
     if (ier/=0) call shr_sys_abort()
 
-    ! read in sand_i and clay_i (they will read in total on all processors)
-    rcode = pio_inq_varid(pioid_i, 'PCT_SAND', pio_varid)
-    rcode = pio_get_var(pioid_i, pio_varid, sand_i)
-    rcode = pio_inq_varid(pioid_i, 'PCT_CLAY', pio_varid)
-    rcode = pio_get_var(pioid_i, pio_varid, clay_i)
+    ! Get dimensions from input file and allocate memory for sand_i and clay_i
 
-    ! Set soil texture as follows:
-    ! a. Use dominant igbp soil mapunit based on area of overlap unless 'no data' is dominant
-    ! b. If this has no data, use loam for soil texture
+    rcode = pio_inq_varid(pioid, 'PCT_SAND', pio_varid_sand)
+    rcode = pio_inq_varid(pioid, 'PCT_CLAY', pio_varid_clay)
+    starts(1:3) = 1
+    counts(1) = n_mapunits
+    counts(2) = 1
+    counts(3) = nlay
+
+    allocate(sand_i(n_mapuntis,nlay))
+    allocate(caly_i(n_mapunits,nlay))
+    rcode = pio_get_var(pioid, pio_varid, starts, counts, sand_i)
+    rcode = pio_get_var(pioid, pio_varid, starts, counts, clay_i)
 
     do no = 1,ns_o
        if (mapunit_o(no) > 0) then
@@ -217,9 +251,10 @@ contains
              write(6,*)'mapunit_o is out of bounds ',mapunit_o(no)
              ! call shr_sys_abort("mapunit_o is out of bounds")
           end if
+          lookup_index = mapunit_lookup(mapunit_o(no))
           do l = 1, nlay
-             sand_o(no,l) = sand_i(mapunit_o(no),l)
-             clay_o(no,l) = clay_i(mapunit_o(no),l)
+             sand_o(no,l) = sand_i(lookup_index,l)
+             clay_o(no,l) = clay_i(lookup_index,l)
           end do
        else
           ! use loam
@@ -229,79 +264,6 @@ contains
           end do
        end if
     end do
-
-    ! Define the model surface types: 0:4
-    soil(0) = 'no soil: ocean, glacier, lake, no data'
-    soil(1) = 'clays                                 '
-    soil(2) = 'sands                                 '
-    soil(3) = 'loams                                 '
-    soil(4) = 'silts                                 '
-
-    ! input grid: determine soil_i for global area comparison
-    allocate(soil_i(ns_i))
-    do l = 1, nlay
-       do ni = 1,ns_i
-          mapunit = nint(mapunit_i(ni))
-          if (mapunit==0) then
-             typ = 'no soil: ocean, glacier, lake, no data'
-          else if (clay_i(mapunit,l) >= 40.) then
-             typ = 'clays'
-          else if (sand_i(mapunit,l) >= 50.) then
-             typ = 'sands'
-          else if (clay_i(mapunit,l)+sand_i(mapunit,l) < 50.) then
-             if (rmask_i(ni) /= 0.) then
-                typ = 'silts'
-             else
-                typ = 'no soil: ocean, glacier, lake, no data'
-             end if
-          else
-             typ = 'loams'
-          end if
-          do m = 0, nlsm
-             if (typ == soil(m)) go to 101
-          end do
-          write (6,*) 'MKSOILTEX error: sand = ',sand_i(mapunit,l), &
-               ' clay = ',clay_i(mapunit,l),' not assigned to soil type for input grid lon,lat,layer = ',ni,l
-          call shr_sys_abort()
-101       continue
-          soil_i(ni) = m  ! allocate memory for this
-       end do
-    end do
-
-    ! output grid: determine soil_o for global area comparison
-    allocate(soil_o(ns_o))
-    do l = 1, nlay
-       do no = 1,ns_o
-          if (clay_o(no,l)==0. .and. sand_o(no,l)==0.) then
-             typ = 'no soil: ocean, glacier, lake, no data'
-          else if (clay_o(no,l) >= 40.) then
-             typ = 'clays'
-          else if (sand_o(no,l) >= 50.) then
-             typ = 'sands'
-          else if (clay_o(no,l)+sand_o(no,l) < 50.) then
-             typ = 'silts'
-          else
-             typ = 'loams'
-          end if
-          do m = 0, nlsm
-             if (typ == soil(m)) go to 102
-          end do
-          write (6,*) 'MKSOILTEX error: sand = ',sand_o(no,l), &
-               ' clay = ',clay_o(no,l), ' not assigned to soil type for output grid lon,lat,layer = ',no,l
-          call shr_sys_abort()
-102       continue
-          soil_o(no) = m
-       end do
-    end do
-
-    ! Compare global areas
-    if (root_task) then
-       write (ndiag,'(a)') 'The following table of soil texture classes is for comparison only.'
-       write (ndiag,'(a)') 'The actual data is continuous %sand, %silt and %clay not textural classes'
-    end if
-    call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
-         0, nlsm, soil_i, soil_o, 'soil texture class',  ndiag, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Adjust pct sand and pct clay to be nearest integers and to be loam if pctlnd_pft is < 1.e-6
     ! Truncate all percentage fields on output grid. This is needed to insure that wt is zero
@@ -322,14 +284,14 @@ contains
     call mkfile_output(pioid_o,  mesh_o,  'mapunits', mapunit_o,  rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for mapunits')
 
-    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
-    call mkfile_output(pioid_o,  mesh_o,  'PCT_SAND', sand_o, lev1name='nlevsoi', rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+    ! if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
+    ! call mkfile_output(pioid_o,  mesh_o,  'PCT_SAND', sand_o, lev1name='nlevsoi', rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
 
-    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent clay"
-    call mkfile_output(pioid_o,  mesh_o,  'PCT_CLAY', clay_o, lev1name='nlevsoi', rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-    call pio_syncfile(pioid_o)
+    ! if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent clay"
+    ! call mkfile_output(pioid_o,  mesh_o,  'PCT_CLAY', clay_o, lev1name='nlevsoi', rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+    ! call pio_syncfile(pioid_o)
 
     ! Release memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
@@ -342,7 +304,7 @@ contains
        write (ndiag,'(a)') 'Successfully made %sand and %clay'
     end if
 
-  end subroutine mksoiltex
+  end subroutine mksoiltexnew
 
   !================================================================================================
   subroutine get_dominant_mapunit(dynamicMaskList, dynamicSrcMaskValue, dynamicDstMaskValue, rc)
@@ -398,4 +360,4 @@ contains
 
   end subroutine get_dominant_mapunit
 
-end module mksoiltexMod
+end module mksoiltexNewMod
