@@ -2109,6 +2109,17 @@ contains
                   ! If this patch has already had all its plantings for the year, don't harvest
                   ! until some time next year.
                   do_harvest = .false.
+
+                  ! ... unless first sowing next year happens Jan. 1.
+                  if (s < 1) then
+                      write(iulog,*) 'next_rx_sdate(p) < 0 but no sowings happened this year'
+                      call endrun(msg=errMsg(sourcefile, __LINE__))
+                  ! WARNING: This implementation assumes that sowing dates don't change over time!
+                  ! In order to avoid this, you'd have to read this year's AND next year's prescribed
+                  ! sowing dates.
+                  else if (crop_inst%sdates_thisyr(p,1) == 1) then
+                      do_harvest = jday == dayspyr
+                  end if
                endif
             else if (sown_today) then
                ! Do not harvest on the day this growing season began;
