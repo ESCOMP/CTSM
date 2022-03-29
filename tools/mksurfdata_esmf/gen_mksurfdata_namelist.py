@@ -235,7 +235,12 @@ def main ():
     glc_nec = args.glc_nec
     merge_gis = args.merge_gis
     if args.hres_flag:
-        hires_pft = 'on'
+        if (start_year == 1850 and end_year == 1850) or \
+           (start_year == 2005 and end_year == 2005):
+            hires_pft = 'on'
+        else:
+            print(f"ERROR: for --hires_pft you must set both start-year & end-year to 1850 or to 2005")
+            sys.exit(5)
     else:
         hires_pft = 'off'
     verbose = args.verbose
