@@ -191,20 +191,12 @@ def get_parser():
         default=False,
     )
     parser.add_argument(
-        "-f",
-        "--fast",
-        help="Toggle fast mode which does not user the large mapping file",
-        action="store_true",
-        dest="fast_flag",
-        default=False,
-    )
-    parser.add_argument(
         "--potveg_flag",
         help="""
             Use Potential Vegetation for pft_years
             [default: %(default)s]
             """,
-        action="store_false",
+        action="store_true",
         dest="potveg_flag",
         default=False,
     )
@@ -243,7 +235,12 @@ def main ():
     glc_nec = args.glc_nec
     merge_gis = args.merge_gis
     if args.hres_flag:
-        hires_pft = 'on'
+        if (start_year == 1850 and end_year == 1850) or \
+           (start_year == 2005 and end_year == 2005):
+            hires_pft = 'on'
+        else:
+            print(f"ERROR: for --hires_pft you must set both start-year & end-year to 1850 or to 2005")
+            sys.exit(5)
     else:
         hires_pft = 'off'
     verbose = args.verbose
@@ -270,7 +267,9 @@ def main ():
     pft_years_ssp = "-999"
 
     # determine pft_years - needed to parse xml file
-    if int(start_year) == 1850 and int(end_year) == 1850:
+    if potveg:
+        pft_years = "PtVg"
+    elif int(start_year) == 1850 and int(end_year) == 1850:
         pft_years = "1850"
     elif int(start_year) == 2000 and int(end_year) == 2000:
         pft_years = "2000"
@@ -286,8 +285,6 @@ def main ():
     elif int(start_year) >= 2016 and int(start_year) <= 2100 and int(end_year) <=2100:
         pft_years = "-999"
         pft_years_ssp = "2016-2100"
-    elif potveg:
-        pft_years = "PtVg"
     else:
         print (f"start_year is {start_year} and end_year is {end_year}")
         print (f"ERROR: start and end years should be between 850 and 2105 or pot_veg flag needs to be set")
@@ -374,6 +371,14 @@ def main ():
                     print(f"ERROR: input mesh file {rawdata_files[new_key]} does not exist")
                     sys.exit(30)
 
+            if item.tag == 'lake_filename':
+                new_key = f"{child1.tag}_lake"
+                rawdata_files[new_key] = os.path.join(input_path, item.text)
+
+            if item.tag == 'urban_filename':
+                new_key = f"{child1.tag}_urban"
+                rawdata_files[new_key] = os.path.join(input_path, item.text)
+
     # determine output mesh
     tree2 = ET.parse('../../ccs_config/component_grids_nuopc.xml')
     root = tree2.getroot()
@@ -424,18 +429,34 @@ def main ():
             for year in range(start_year, end_year + 1):
                 if year <= 2015:
                     file1 = rawdata_files["mksrf_fvegtyp"]
+                    file2 = rawdata_files["mksrf_fvegtyp_urban"]
+                    file3 = rawdata_files["mksrf_fvegtyp_lake"]
                 else:
                     file1 = rawdata_files["mksrf_fvegtyp_ssp"]
+                    file2 = rawdata_files["mksrf_fvegtyp_ssp_urban"]
+                    file3 = rawdata_files["mksrf_fvegtyp_ssp_lake"]
 
                 landuse_input_fname = file1.replace("%y",str(year))
+                landuse_input_fnam2 = file2.replace("%y",str(year))
+                landuse_input_fnam3 = file3.replace("%y",str(year))
                 if not os.path.isfile(landuse_input_fname):
-                     print(f"ERROR: landunit_input_fname: {landuse_input_fname} does not exit")
+                     print(f"ERROR: landunit_input_fname: {landuse_input_fname} does not exist")
+                     sys.exit(60)
+                if not os.path.isfile(landuse_input_fnam2):
+                     print(f"ERROR: landunit_input_fnam2: {landuse_input_fnam2} does not exist")
+                     sys.exit(60)
+                if not os.path.isfile(landuse_input_fnam3):
+                     print(f"ERROR: landunit_input_fnam3: {landuse_input_fnam3} does not exist")
                      sys.exit(60)
 
                 # -- Each line is written twice in the original perl code:
                 landuse_line = f"{landuse_input_fname:<196}{str(year)}\n"
+                landuse_lin2 = f"{landuse_input_fnam2:<196}{str(year)}\n"
+                landuse_lin3 = f"{landuse_input_fnam3:<196}{str(year)}\n"
                 landuse_file.write(landuse_line)
                 landuse_file.write(landuse_line)
+                landuse_file.write(landuse_lin2)
+                landuse_file.write(landuse_lin3)
                 logger.debug(f"year : {year}")
                 logger.debug(landuse_line)
         print(f"Successfully created input landuse file {landuse_fname}")

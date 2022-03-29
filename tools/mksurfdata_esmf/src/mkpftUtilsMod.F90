@@ -13,7 +13,6 @@ module mkpftUtilsMod
   private
 
   public :: convert_from_p2g      ! Convert a p2g array into pct_pft_type objects
-  public :: adjust_total_veg_area ! Adjust the total vegetated area (natural veg & crop) to a new specified total
 
   private :: get_default_natpft   ! Get the default natural pft breakdown, for a 0-area natural veg. landunit
   private :: get_default_cft      ! Get the default cft breakdown, for a 0-area crop landunit
@@ -196,43 +195,6 @@ contains
 
   end function get_default_cft
 
-
-  !-----------------------------------------------------------------------
-  subroutine adjust_total_veg_area(new_total_pct, pctnatpft, pctcft)
-    !
-    ! !DESCRIPTION:
-    ! Adjust the total vegetated area on the grid cell (natural veg & crop) to a new
-    ! specified total.
-    !
-    ! If the old areas are 0%, then all the new area goes into pctnatpft.
-    !
-    ! !USES:
-    use mkpctPftTypeMod, only : pct_pft_type
-    !
-    ! !ARGUMENTS:
-    real(r8), intent(in) :: new_total_pct ! new total % of natural veg + crop landunits
-    class(pct_pft_type), intent(inout) :: pctnatpft ! natural veg cover information
-    class(pct_pft_type), intent(inout) :: pctcft    ! crop cover information
-    !
-    ! !LOCAL VARIABLES:
-    real(r8) :: natpft_l2g ! grid cell % cover of nat. veg.
-    real(r8) :: cft_l2g    ! grid cell % cover of crop
-    real(r8) :: old_total  ! old total % cover of natural veg + crop landunits
-    
-    character(len=*), parameter :: subname = 'adjust_total_veg_area'
-    !-----------------------------------------------------------------------
-    
-    natpft_l2g = pctnatpft%get_pct_l2g()
-    cft_l2g = pctcft%get_pct_l2g()
-    old_total = natpft_l2g + cft_l2g
-    if (old_total > 0._r8) then
-       call pctnatpft%set_pct_l2g(natpft_l2g * new_total_pct / old_total)
-       call pctcft%set_pct_l2g(cft_l2g * new_total_pct / old_total)
-    else
-       call pctnatpft%set_pct_l2g(new_total_pct)
-    end if
-
-  end subroutine adjust_total_veg_area
 
 end module mkpftUtilsMod
 

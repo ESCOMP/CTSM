@@ -24,10 +24,10 @@ module mklanwatMod
   private
 
 ! !PUBLIC MEMBER FUNCTIONS:
-  public mklakwat                ! make % lake
-  public mkwetlnd                ! make % wetland
-  public mklakparams             ! make lake parameters
-  public update_max_array_lake   ! Update the maximum lake percent
+  public mklakwat           ! make % lake
+  public mkwetlnd           ! make % wetland
+  public mklakparams        ! make lake parameters
+
 !EOP
 !===============================================================
 contains
@@ -499,30 +499,5 @@ subroutine mklakparams(ldomain, mapfname, datfname, ndiag, &
   call shr_sys_flush(6)
 
 end subroutine mklakparams
-!------------------------------------------------------------------------------
-
-!-----------------------------------------------------------------------
-subroutine update_max_array_lake(pct_lakmax_arr,pct_lake_arr)
-  !
-  ! !DESCRIPTION:
-  ! Update the maximum lake percent for landuse.timeseries file
-  ! 
-  ! !ARGUMENTS:
-  real(r8)         , intent(inout):: pct_lakmax_arr(:)       ! max lake percent
-  real(r8)         , intent(in):: pct_lake_arr(:)            ! lake percent that is used to update the old pct_lakmax_arr
-  !
-  ! !LOCAL VARIABLES:
-  integer :: n,ns              ! indices
-
-  character(len=*), parameter :: subname = 'update_max_array_lake'
-  !-----------------------------------------------------------------------
-  ns = size(pct_lake_arr,1)
-  do n = 1, ns
-     if (pct_lake_arr(n) > pct_lakmax_arr(n)) then 
-        pct_lakmax_arr(n) = pct_lake_arr(n)
-     end if
-  end do
-
-end subroutine update_max_array_lake
 
 end module mklanwatMod

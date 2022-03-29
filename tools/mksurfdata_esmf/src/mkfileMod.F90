@@ -7,9 +7,7 @@ module mkfileMod
   use mkutilsMod        , only : get_filename, chkerr
   use mkvarpar          , only : nlevsoi, numrad, numstdpft
   use mkurbanparMod     , only : numurbl, nlevurb, mkurbanpar
-  use mklaiMod          , only : mklai
-  use mkpftConstantsMod , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft, num_natpft
-  use mkpctPftTypeMod   , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
+  use mkpftConstantsMod , only : num_cft, num_natpft
   use mkpioMod
   use mkinputMod
   use mkvarctl

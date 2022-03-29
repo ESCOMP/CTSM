@@ -197,6 +197,7 @@ contains
 
        ! Below - copy LAI, SAI, & heights from the C3 crop (pft15)
        ! to the irrigated (pft16) whether crop is on or off
+       ! Hence loop to numpft_i - 1 for other pfts
 
        ! Read in one time slice of data for mlai, regrid and write out
        rcode = pio_inq_varid(pioid_i, 'MONTHLY_LAI', pio_varid_i)
@@ -204,7 +205,7 @@ contains
        call mkpio_get_rawdata_level(pioid_i, pio_iodesc_i, nt, 'MONTHLY_LAI', data_i)
        call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, numpft_i, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do l = 0,numpft_i-1  ! TODO: why -1?
+       do l = 0,numpft_i-1
           do no = 1,ns_o
              mlai_o(no,l) = data_o(l,no)
           end do
@@ -221,7 +222,7 @@ contains
        call mkpio_get_rawdata_level(pioid_i, pio_iodesc_i, nt, 'MONTHLY_SAI', data_i)
        call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, numpft_i, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do l = 0,numpft_i-1  ! TODO: why -1?
+       do l = 0,numpft_i-1
           do no = 1,ns_o
              msai_o(no,l) = data_o(l,no)
           end do
@@ -236,7 +237,7 @@ contains
        call mkpio_get_rawdata_level(pioid_i, pio_iodesc_i, nt, 'MONTHLY_HEIGHT_TOP', data_i)
        call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, numpft_i, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do l = 0,numpft_i-1  ! TODO: why -1?
+       do l = 0,numpft_i-1
           do no = 1,ns_o
              mhgtt_o(no,l) = data_o(l,no)
           end do
@@ -251,7 +252,7 @@ contains
        call mkpio_get_rawdata_level(pioid_i, pio_iodesc_i, nt, 'MONTHLY_HEIGHT_BOT', data_i)
        call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 0, numpft_i, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do l = 0,numpft_i-1  ! TODO: why -1?
+       do l = 0,numpft_i-1
           do no = 1,ns_o
              mhgtb_o(no,l) = data_o(l,no)
           end do
