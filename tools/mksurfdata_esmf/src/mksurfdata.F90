@@ -173,6 +173,10 @@ program mksurfdata
   real(r8), allocatable           :: pctwet_orig(:)          ! percent wetland of gridcell before dynamic land use adjustments
   real(r8), allocatable           :: pctgla_orig(:)          ! percent glacier of gridcell before dynamic land use adjustments
 
+  ! time parameters
+  integer, parameter :: n_jan = 1
+  integer, parameter :: n_dec = 12
+
   ! pio/esmf variables
   type(file_desc_t)               :: pioid
   type(var_desc_t)                :: pio_varid
@@ -321,7 +325,7 @@ program mksurfdata
   ! NOTE: do not deallocate pctlak, pctwet, pctglacier and pcturban
 
   ! -----------------------------------
-  ! Write out natpft and cft
+  ! Write out natpft, cft, and time
   ! -----------------------------------
   if (fsurdat /= ' ') then
      rcode = pio_inq_varid(pioid, 'natpft', pio_varid)
@@ -330,6 +334,9 @@ program mksurfdata
         rcode = pio_inq_varid(pioid, 'cft', pio_varid)
         rcode = pio_put_var(pioid, pio_varid, (/(n,n=cft_lb,cft_ub)/))
      end if
+     ! time is months for LAI, SAI, and pft heights
+     rcode = pio_inq_varid(pioid, 'time', pio_varid)
+     rcode = pio_put_var(pioid, pio_varid, (/(n,n=n_jan,n_dec)/))
   end if
 
   ! -----------------------------------
@@ -786,16 +793,6 @@ program mksurfdata
 
      ! End define mode
      rcode = pio_enddef(pioid)
-
-     ! Write out natpft
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out natpft"
-     rcode = pio_inq_varid(pioid, 'natpft', pio_varid)
-     rcode = pio_put_var(pioid, pio_varid, (/(n,n=natpft_lb,natpft_ub)/))
-
-     ! Write out cft
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out cft"
-     rcode = pio_inq_varid(pioid, 'cft', pio_varid)
-     rcode = pio_put_var(pioid, pio_varid, (/(n,n=cft_lb,cft_ub)/))
 
      ! Write out model grid
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LONGXY"
