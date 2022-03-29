@@ -20,8 +20,9 @@ logger = logging.getLogger(__name__)
 
 class ModifyMeshMask:
     """
+    Description
+    -----------
     """
-
     # TODO landmask here needs all land/ocn, not just the section
     # being changed for modify_fsurdat, so let's include both in the
     # file: landmask_all for modify_meshes and landmask_change for
