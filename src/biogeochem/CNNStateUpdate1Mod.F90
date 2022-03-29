@@ -17,6 +17,7 @@ module CNNStateUpdate1Mod
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use CropReprPoolsMod                , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
   use PatchType                       , only : patch                
   !
   implicit none
@@ -176,8 +177,12 @@ contains
                ! lines here for consistency; the transfer terms are zero
                ns_veg%livestemn_patch(p)       = ns_veg%livestemn_patch(p)      + nf_veg%livestemn_xfer_to_livestemn_patch(p)*dt
                ns_veg%livestemn_xfer_patch(p)  = ns_veg%livestemn_xfer_patch(p) - nf_veg%livestemn_xfer_to_livestemn_patch(p)*dt
-               ns_veg%grainn_patch(p)          = ns_veg%grainn_patch(p)         + nf_veg%grainn_xfer_to_grainn_patch(p)*dt
-               ns_veg%grainn_xfer_patch(p)     = ns_veg%grainn_xfer_patch(p)    - nf_veg%grainn_xfer_to_grainn_patch(p)*dt
+               do k = 1, nrepr
+                  ns_veg%reproductiven_patch(p,k) = ns_veg%reproductiven_patch(p,k) &
+                       + nf_veg%reproductiven_xfer_to_reproductiven_patch(p,k)*dt
+                  ns_veg%reproductiven_xfer_patch(p,k) = ns_veg%reproductiven_xfer_patch(p,k) &
+                       - nf_veg%reproductiven_xfer_to_reproductiven_patch(p,k)*dt
+               end do
             end if
 
          ! phenology: litterfall and retranslocation fluxes
@@ -221,14 +226,21 @@ contains
                ns_veg%leafn_patch(p)        = ns_veg%leafn_patch(p)      - nf_veg%leafn_to_biofueln_patch(p)*dt
                ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_retransn_patch(p)*dt
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
-               ns_veg%grainn_patch(p)       = ns_veg%grainn_patch(p) &
-                    - (nf_veg%grainn_to_food_patch(p) + nf_veg%grainn_to_seed_patch(p))*dt
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
             ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
                     - nf_veg%crop_seedn_to_leaf_patch(p) * dt &
-                    + nf_veg%grainn_to_seed_patch(p) * dt
+            do k = repr_grain_min, repr_grain_max
+               ns_veg%reproductiven_patch(p,k)   = ns_veg%reproductiven_patch(p,k) &
+                    - (nf_veg%repr_grainn_to_food_patch(p,k) + nf_veg%repr_grainn_to_seed_patch(p,k))*dt
+               ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
+                    + nf_veg%repr_grainn_to_seed_patch(p,k) * dt
+            end do
+            do k = repr_structure_min, repr_structure_max
+               ns_veg%reproductiven_patch(p,k) = ns_veg%reproductiven_patch(p,k) &
+                    - (nf_veg%repr_structuren_to_cropprod_patch(p,k) + nf_veg%repr_structuren_to_litter_patch(p,k))*dt
+            end do
          end if
 
          ! uptake from soil mineral N pool
@@ -283,11 +295,21 @@ contains
             ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_livestemn_storage_patch(p)*dt
             ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_grainn_patch(p)*dt
             ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_grainn_storage_patch(p)*dt
+            do k = 1, nrepr
+               ns_veg%npool_patch(p) = ns_veg%npool_patch(p) - nf_veg%npool_to_reproductiven_patch(p,k)*dt
+               ns_veg%npool_patch(p) = ns_veg%npool_patch(p) - nf_veg%npool_to_reproductiven_storage_patch(p,k)*dt
+            end do
             if(.not. use_matrixcn) then
                ns_veg%livestemn_patch(p)          = ns_veg%livestemn_patch(p)          + nf_veg%npool_to_livestemn_patch(p)*dt
                ns_veg%livestemn_storage_patch(p)  = ns_veg%livestemn_storage_patch(p)  + nf_veg%npool_to_livestemn_storage_patch(p)*dt
                ns_veg%grainn_patch(p)             = ns_veg%grainn_patch(p)             + nf_veg%npool_to_grainn_patch(p)*dt
                ns_veg%grainn_storage_patch(p)     = ns_veg%grainn_storage_patch(p)     + nf_veg%npool_to_grainn_storage_patch(p)*dt
+               do k = 1, nrepr
+                  ns_veg%reproductiven_patch(p,k) = ns_veg%reproductiven_patch(p,k) &
+                       + nf_veg%npool_to_reproductiven_patch(p,k)*dt
+                  ns_veg%reproductiven_storage_patch(p,k) = ns_veg%reproductiven_storage_patch(p,k) &
+                       + nf_veg%npool_to_reproductiven_storage_patch(p,k)*dt
+               end do
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if ! not use_matrixcn
@@ -319,8 +341,12 @@ contains
             if(.not. use_matrixcn)then
                ns_veg%livestemn_storage_patch(p)  = ns_veg%livestemn_storage_patch(p) - nf_veg%livestemn_storage_to_xfer_patch(p)*dt
                ns_veg%livestemn_xfer_patch(p)     = ns_veg%livestemn_xfer_patch(p)    + nf_veg%livestemn_storage_to_xfer_patch(p)*dt
-               ns_veg%grainn_storage_patch(p)     = ns_veg%grainn_storage_patch(p)    - nf_veg%grainn_storage_to_xfer_patch(p)*dt
-               ns_veg%grainn_xfer_patch(p)        = ns_veg%grainn_xfer_patch(p)       + nf_veg%grainn_storage_to_xfer_patch(p)*dt
+               do k = 1, nrepr
+                  ns_veg%reproductiven_storage_patch(p,k) = ns_veg%reproductiven_storage_patch(p,k) &
+                       - nf_veg%reproductiven_storage_to_xfer_patch(p,k)*dt
+                  ns_veg%reproductiven_xfer_patch(p,k) = ns_veg%reproductiven_xfer_patch(p,k) &
+                       + nf_veg%reproductiven_storage_to_xfer_patch(p,k)*dt
+               end do
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if ! not use_matrixcn

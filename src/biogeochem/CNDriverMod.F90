@@ -44,6 +44,7 @@ module CNDriverMod
   use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
   use ActiveLayerMod                  , only : active_layer_type
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
+  use CropReprPoolsMod                    , only : nrepr
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -209,7 +210,7 @@ contains
     real(r8):: pmnf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential mineral N flux, from one pool to another
     real(r8):: p_decomp_npool_to_din(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions)  ! potential flux to dissolved inorganic N
     real(r8):: p_decomp_cn_gain(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)  ! C:N ratio of the flux gained by the receiver pool
-    real(r8):: arepr(bounds%begp:bounds%endp) ! reproduction allocation coefficient (only used for use_crop)
+    real(r8):: arepr(bounds%begp:bounds%endp,nrepr) ! reproductive allocation coefficient(s) (only used for use_crop)
     real(r8):: aroot(bounds%begp:bounds%endp) ! root allocation coefficient (only used for use_crop)
     integer :: begp,endp
     integer :: begc,endc
@@ -413,7 +414,7 @@ contains
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
          soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
          energyflux_inst, &
-         aroot=aroot(begp:endp), arepr=arepr(begp:endp))
+         aroot=aroot(begp:endp), arepr=arepr(begp:endp,:))
 
      ! get the column-averaged plant_ndemand (needed for following call to SoilBiogeochemCompetition)
 
@@ -448,7 +449,7 @@ contains
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
          soilbiogeochem_nitrogenstate_inst, &
          aroot=aroot(begp:endp), &
-         arepr=arepr(begp:endp), &
+         arepr=arepr(begp:endp,:), &
          fpg_col=soilbiogeochem_state_inst%fpg_col(begc:endc))
     call t_stopf('calc_plant_nutrient_competition')
 
@@ -759,7 +760,7 @@ contains
          dwt_wood_product_gain_patch = cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
          wood_harvest_patch = cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
          dwt_crop_product_gain_patch = cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
-         grain_to_cropprod_patch = cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp))
+         crop_harvest_to_cropprod_patch = cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(begp:endp))
     call t_stopf('CNWoodProducts')
 
     if (use_c13) then
@@ -768,7 +769,7 @@ contains
             dwt_wood_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
             wood_harvest_patch = c13_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
             dwt_crop_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
-            grain_to_cropprod_patch = c13_cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp))
+            crop_harvest_to_cropprod_patch = c13_cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(begp:endp))
     end if
 
     if (use_c14) then
@@ -777,7 +778,7 @@ contains
             dwt_wood_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
             wood_harvest_patch = c14_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
             dwt_crop_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
-            grain_to_cropprod_patch = c14_cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp))
+            crop_harvest_to_cropprod_patch = c14_cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(begp:endp))
     end if
 
     call n_products_inst%UpdateProducts(bounds, &
@@ -785,7 +786,7 @@ contains
          dwt_wood_product_gain_patch = cnveg_nitrogenflux_inst%dwt_wood_productn_gain_patch(begp:endp), &
          wood_harvest_patch = cnveg_nitrogenflux_inst%wood_harvestn_patch(begp:endp), &
          dwt_crop_product_gain_patch = cnveg_nitrogenflux_inst%dwt_crop_productn_gain_patch(begp:endp), &
-         grain_to_cropprod_patch = cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(begp:endp))
+         crop_harvest_to_cropprod_patch = cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(begp:endp))
 
     !--------------------------------------------
     ! Calculate fire area and fluxes

@@ -1,4 +1,149 @@
 ===============================================================
+Tag name: ctsm5.1.dev085
+Originator(s): sacks (Bill Sacks)
+Date: Wed Mar 16 11:08:54 MDT 2022
+One-line Summary: Expand crop reproductive pools; remove some unused options
+
+Purpose and description of changes
+----------------------------------
+
+The main change in this tag is adding placeholder pools (and
+corresponding fluxes) that will be needed to couple the AgSys crop
+model: Rather than a single grain pool, AgSys has two different grain
+pools (meal & oil) as well as two different reproductive structure pools
+(pod & floret). This tag adds a dynamically-allocated second dimension to
+the relevant variables to accommodate these new pools. The new
+CropReprPoolsMod controls the allocation and naming of these pools, and
+facilitates looping over the new dimension. Currently parameters in
+there are hard-coded for the current crop model, but this will become
+more dynamic with the coupling of AgSys.
+
+This tag also removes experimental / untested options in
+NutrientCompetitionFlexibleCNMod. Although this is mostly unrelated to
+the main change, doing this simplified the changes needed for the main
+change.
+
+This tag also resolves ESCOMP/CTSM#1666 (Isotopic values of grain_mr not
+set correctly when use_grainproduct is false).
+
+Finally, this tag removes or modifies some of the most expensive tests
+in the aux_clm test suite to reduce the cost of running the test suite.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1666 (Isotopic values of grain_mr not set
+  correctly when use_grainproduct is false)
+
+Known bugs introduced in this tag (include issue #):
+- ESCOMP/CTSM#1667 (Add cft and pool-specific harvested fraction
+  parameters to the param file)
+
+Known bugs found since the previous tag (include issue #):
+- ESCOMP/CTSM#1651 (Discrepancy in handling of crop seed deficit in
+  summary variables for C vs. N)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Removes experimental / untested options that are referenced in
+  NutrientCompetitionFlexibleCNMod
+    - downreg_opt: assume false
+    - CN_partition_opt: assume 1
+    - CN_residual_opt: assume 1
+    - nscalar_opt: assume true
+    - substrate_term_opt: assume true
+    - temp_scalar_opt: assume true
+    - plant_ndemand_opt: assume 3
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Adds new test types (LGRAIN2 and LREPRSTRUCT) to test the new code
+  until AgSys is integrated and tested.
+- Changes some expensive tests to be less expensive, by using coarser
+  resolution, smaller processor counts, or moving them from aux_clm to
+  ctsm_sci
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+      Ran without comparisons, because I expected all comparisons to fail.
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+  any other testing (give details below):
+
+    Ran the original versions of modified tests with baseline
+    comparisons; these all pass (ran from my branch up to date with
+    ctsm5.1.dev082; I didn't rerun with the latest version)
+
+    PASS ERI_C2_Ld9.f19_g17.I2000Clm51BgcCrop.cheyenne_intel.clm-default BASELINE ctsm5.1.dev082:
+    PASS ERP_D_Ld3.f09_g17.I2000Clm50Sp.cheyenne_intel.clm-prescribed BASELINE ctsm5.1.dev082:
+    PASS ERP_D_Ld3_Vmct.f09_g17.I2000Clm50Sp.cheyenne_intel.clm-prescribed BASELINE ctsm5.1.dev082:
+    PASS SMS_C2_D_Lh12.f09_g17.I2000Clm50Sp.cheyenne_intel.clm-pauseResume BASELINE ctsm5.1.dev082:
+    PASS SSP_D_Ld10.f19_g17.I1850Clm51Bgc.cheyenne_intel.clm-rtmColdSSP BASELINE ctsm5.1.dev082:
+    PASS SSP_D_Ld4.f09_g17.I1850Clm50BgcCrop.cheyenne_intel.clm-ciso_rtmColdSSP BASELINE ctsm5.1.dev082:
+    PASS SSP_Ld10.f19_g17.I1850Clm50Bgc.cheyenne_intel.clm-rtmColdSSP BASELINE ctsm5.1.dev082:
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but this doesn't appear in
+any standard tests
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm45 cases (or any cases with
+      use_grainproduct false) with crop and C isotopes
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      just changes a few diagnostic fields
+
+      Just changes answers for C13_AR, C13_NBP, C14_AR, C14_NBP in clm45
+      cases (or any cases with use_grainproduct false) with crop and C
+      isotopes, due to fixing ESCOMP/CTSM#1666. (We don't have any such
+      tests in the test suite.)
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1670
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev084
 Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Thu 15 Mar 2022 10:05:00 MDT
