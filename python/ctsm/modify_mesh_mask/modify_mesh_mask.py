@@ -13,7 +13,7 @@ import numpy as np
 import xarray as xr
 
 from ctsm.git_utils import get_ctsm_git_short_hash
-from ctsm.utils import abort, update_metadata
+from ctsm.utils import update_metadata
 from ctsm.config_utils import lon_range_0_to_360
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,6 @@ class ModifyMeshMask:
     Other functions remain identical; point to them or repeat code here?
     """
 
-    # TODO Check if file already exists before starting work
     # TODO Here landmask should show all land/ocn, not just the section
     # being changed for modify_fsurdat. I say we include both in the
     # file: landmask_all for modify_meshes and landmask_change for
@@ -83,12 +82,6 @@ class ModifyMeshMask:
         update_metadata(self.file, title=title, summary=summary,
                         contact=contact, data_script=data_script,
                         description=description)
-
-        # abort if output file already exists
-        file_exists = os.path.exists(fsurdat_out)
-        if file_exists:
-            errmsg = 'Output file already exists: ' + fsurdat_out
-            abort(errmsg)
 
         # mode 'w' overwrites file if it exists
         self.file.to_netcdf(path=fsurdat_out, mode='w',

@@ -5,9 +5,12 @@ tools/modify_mesh_mask/mesh_mask_modifier
 The wrapper script includes a full description and instructions.
 """
 
+import os
 import logging
 import argparse
 from configparser import ConfigParser
+
+from ctsm.utils import abort
 from ctsm.config_utils import get_config_value
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.modify_mesh_mask.modify_mesh_mask import ModifyMeshMask
@@ -65,13 +68,18 @@ def mesh_mask_modifier(cfg_path):
     modify_mesh_mask = ModifyMeshMask.init_from_file(mesh_mask_in,
         lnd_lon_1, lnd_lon_2, lnd_lat_1, lnd_lat_2, landmask_file)
 
+    # If output file exists, abort before starting work
+    if os.path.exists(mesh_mask_out):
+        errmsg = 'Output file already exists: ' + mesh_mask_out
+        abort(errmsg)
+
     # ----------------
     # modify mesh mask
     # ----------------
 
     # Modify mesh mask in a rectangle that could be global (default)
     # TODO Use this function as a template. Start w gridded mesh_mask
-    # files that are gridded rather than gx1/gx3/etc.
+    #      files rather than gx1/gx3/etc.
     # NB. The mask needs to first be mapped to the 2D that we're used
     #     to. If so, then the same could be done with the gx1/etc masks
     #     followed by looking for nearest neighbors.
