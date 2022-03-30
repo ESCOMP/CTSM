@@ -60,6 +60,7 @@ module NutrientCompetitionMethodMod
 
      !---------------------------------------------------------------------------     
      subroutine calc_plant_nutrient_demand_interface (this, bounds, num_soilp, filter_soilp, &
+          num_pcropp, filter_pcropp,                                               &
           crop_inst, canopystate_inst,                                             &
           cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,         &
           c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                    &
@@ -90,6 +91,8 @@ module NutrientCompetitionMethodMod
        type(bounds_type)               , intent(in)    :: bounds
        integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
        integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
+       integer                         , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
+       integer                         , intent(in)    :: filter_pcropp(:) ! filter for prognostic crop patches
        type(crop_type)                 , intent(in)    :: crop_inst
        type(canopystate_type)          , intent(in)    :: canopystate_inst
        type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst

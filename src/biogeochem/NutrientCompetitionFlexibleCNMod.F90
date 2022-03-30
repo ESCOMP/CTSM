@@ -18,13 +18,17 @@ module NutrientCompetitionFlexibleCNMod
   !
   ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
+  use shr_log_mod         , only : errMsg => shr_log_errMsg
   use decompMod           , only : bounds_type
   use LandunitType        , only : lun
   use ColumnType          , only : col
   use PatchType           , only : patch
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
-  use CropReprPoolsMod        , only : nrepr
+  use CropReprPoolsMod    , only : nrepr
+  use CNPhenologyMod      , only : CropPhase
+  use CropType            , only : cphase_planted, cphase_leafemerge, cphase_grainfill
   use clm_varctl          , only : iulog
+  use abortutils          , only : endrun
   !
   implicit none
   private
@@ -886,6 +890,7 @@ contains
 
 ! -----------------------------------------------------------------------
   subroutine calc_plant_nutrient_demand(this, bounds,  num_soilp, filter_soilp,&
+       num_pcropp, filter_pcropp,                                              &
        crop_inst, canopystate_inst,                                            &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,        &
        c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                   &
@@ -909,6 +914,8 @@ contains
     type(bounds_type)               , intent(in)    :: bounds
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
+    integer                         , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
+    integer                         , intent(in)    :: filter_pcropp(:) ! filter for prognostic crop patches
     type(crop_type)                 , intent(in)    :: crop_inst
     type(canopystate_type)          , intent(in)    :: canopystate_inst
     type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
@@ -924,6 +931,7 @@ contains
     !-----------------------------------------------------------------------
 
     call this%calc_plant_nitrogen_demand(bounds,  num_soilp, filter_soilp, &
+       num_pcropp, filter_pcropp,                                          &
        crop_inst, canopystate_inst,                                        &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,    &
        c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,               &
@@ -935,6 +943,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine calc_plant_nitrogen_demand(this, bounds,  num_soilp, filter_soilp, &
+       num_pcropp, filter_pcropp,                                               &
        crop_inst, canopystate_inst,                                             &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,         &
        c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                    &
@@ -967,6 +976,8 @@ contains
     type(bounds_type)               , intent(in)    :: bounds
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
+    integer                         , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
+    integer                         , intent(in)    :: filter_pcropp(:) ! filter for prognostic crop patches
     type(crop_type)                 , intent(in)    :: crop_inst
     type(canopystate_type)          , intent(in)    :: canopystate_inst
     type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
@@ -1002,10 +1013,12 @@ contains
     real(r8) :: substrate_term
     real(r8) :: temp_scalar
     real(r8) :: Vmax_N
+    real(r8) :: crop_phase       (bounds%begp:bounds%endp)
     real(r8) :: allocation_leaf  (bounds%begp:bounds%endp)
     real(r8) :: allocation_stem  (bounds%begp:bounds%endp)
     real(r8) :: allocation_froot (bounds%begp:bounds%endp)
 
+    character(len=*), parameter :: subname = "calc_plant_nitrogen_demand"
     ! -----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(this%actual_leafcn) >= (/bounds%endp/)), sourcefile, __LINE__)
@@ -1045,11 +1058,9 @@ contains
          laisha                => canopystate_inst%laisha_patch                     , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index
 
          hui                   => crop_inst%gddplant_patch                          , & ! Input:  [real(r8) (:)   ]  =gdd since planting (gddplant)
-         leafout               => crop_inst%gddtsoi_patch                           , & ! Input:  [real(r8) (:)   ]  =gdd from top soil layer temperature
          croplive              => crop_inst%croplive_patch                          , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
 
          gddmaturity           => cnveg_state_inst%gddmaturity_patch                , & ! Input:  [real(r8) (:)   ]  gdd needed to harvest
-         huileaf               => cnveg_state_inst%huileaf_patch                    , & ! Input:  [real(r8) (:)   ]  heat unit index needed from planting to leaf emergence
          huigrain              => cnveg_state_inst%huigrain_patch                   , & ! Input:  [real(r8) (:)   ]  same to reach vegetative maturity
          peaklai               => cnveg_state_inst%peaklai_patch                    , & ! Input:  [integer  (:)   ]  1: max allowed lai; 0: not at max
          aleafi                => cnveg_state_inst%aleafi_patch                     , & ! Output: [real(r8) (:)   ]  saved allocation coefficient from phase 2
@@ -1094,6 +1105,9 @@ contains
 
       ! set time steps
       dt = get_step_size_real()
+
+      call CropPhase(bounds, num_pcropp, filter_pcropp, crop_inst, cnveg_state_inst, &
+           crop_phase = crop_phase(bounds%begp:bounds%endp))
 
       ! loop over patches to assess the total plant N demand
       do fp = 1,num_soilp
@@ -1141,7 +1155,7 @@ contains
                ! and carbon assimilation
                ! Next phase: leaf emergence to start of leaf decline
 
-               if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p)) then
+               if (crop_phase(p) == cphase_leafemerge) then
 
                   ! allocation rules for crops based on maturity and linear decrease
                   ! of amount allocated to roots over course of the growing season
@@ -1178,7 +1192,7 @@ contains
                   ! shift allocation either when enough gdd are accumulated or maximum number
                   ! of days has elapsed since planting
 
-               else if (hui(p) >= huigrain(p)) then
+               else if (crop_phase(p) == cphase_grainfill) then
                   aroot(p) = max(0._r8, min(1._r8, arooti(ivt(p)) - &
                        (arooti(ivt(p)) - arootf(ivt(p))) * min(1._r8, hui(p)/gddmaturity(p))))
                   if (astemi(p) > astemf(ivt(p))) then
@@ -1218,7 +1232,7 @@ contains
 
                   if (astem(p) == astemf(ivt(p)) .or. &
                        (ivt(p) /= ntmp_soybean .and. ivt(p) /= nirrig_tmp_soybean .and.&
-                        ivt(p) /= ntrp_soybean .and. ivt(p) /= nirrig_trp_soybean)) then
+                       ivt(p) /= ntrp_soybean .and. ivt(p) /= nirrig_trp_soybean)) then
                      if (grain_flag(p) == 0._r8) then
                         t1 = 1 / dt
                         leafn_to_retransn(p) = t1 * max(leafn(p)- (leafc(p) / fleafcn(ivt(p))),0._r8)
@@ -1241,7 +1255,8 @@ contains
                   end do
                   arepr(p,nrepr) = 1._r8 - aroot(p) - astem(p) - aleaf(p)
 
-               else                   ! pre emergence
+               else if (crop_phase(p) == cphase_planted) then
+                  ! pre emergence
                   ! allocation coefficients should be irrelevant because crops have no
                   ! live carbon pools; this applies to this "else" and to the "else" a few
                   ! lines down
@@ -1251,6 +1266,10 @@ contains
                   do k = 1, nrepr
                      arepr(p,k) = 0._r8
                   end do
+
+               else
+                  write(iulog,*) "ERROR in " // subname // ": unexpected crop_phase: ", crop_phase(p)
+                  call endrun(msg="ERROR: unexpected crop_phase "//errmsg(sourcefile, __LINE__))
                end if
 
                f1 = aroot(p) / aleaf(p)

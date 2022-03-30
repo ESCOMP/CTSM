@@ -24,6 +24,14 @@ module CropType
   !
   ! !PUBLIC DATA TYPES:
   !
+
+  ! Possible values of cphase
+  real(r8), parameter, public :: cphase_not_planted = 0._r8
+  real(r8), parameter, public :: cphase_planted     = 1._r8
+  real(r8), parameter, public :: cphase_leafemerge  = 2._r8
+  real(r8), parameter, public :: cphase_grainfill   = 3._r8
+  real(r8), parameter, public :: cphase_harvest     = 4._r8
+
   ! Crop state variables structure
   type, public :: crop_type
 
@@ -34,7 +42,7 @@ module CropType
      real(r8), pointer :: gddplant_patch          (:)   ! patch accum gdd past planting date for crop       (ddays)
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
      real(r8), pointer :: vf_patch                (:)   ! patch vernalization factor for cereal
-     real(r8), pointer :: cphase_patch            (:)   ! phenology phase
+     real(r8), pointer :: cphase_patch            (:)   ! phenology phase (see cphase_* constants above for possible values)
      real(r8), pointer :: latbaset_patch          (:)   ! Latitude vary baset for gddplant (degree C)
      character(len=20) :: baset_mapping
      real(r8) :: baset_latvary_intercept
@@ -200,7 +208,7 @@ contains
     allocate(this%gddplant_patch (begp:endp)) ; this%gddplant_patch (:) = spval
     allocate(this%gddtsoi_patch  (begp:endp)) ; this%gddtsoi_patch  (:) = spval
     allocate(this%vf_patch       (begp:endp)) ; this%vf_patch       (:) = 0.0_r8
-    allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
+    allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = cphase_not_planted
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
     allocate(this%sdates_thisyr(begp:endp,1:mxsowings)) ; this%sdates_thisyr(:,:) = spval
     allocate(this%hdates_thisyr(begp:endp,1:mxharvests)) ; this%hdates_thisyr(:,:) = spval

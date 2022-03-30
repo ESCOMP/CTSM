@@ -395,6 +395,7 @@ contains
      call t_startf('calc_plant_nutrient_demand')
      call nutrient_competition_method%calc_plant_nutrient_demand ( &
          bounds, num_soilp, filter_soilp,                                 &
+         num_pcropp, filter_pcropp,                                       &
          crop_inst, canopystate_inst,                                     &
          cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,            &
