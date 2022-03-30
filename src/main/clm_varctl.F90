@@ -145,6 +145,10 @@ module clm_varctl
   ! If prognostic crops are turned on
   logical, public :: use_crop = .false.
 
+  ! Whether we're using the AgSys crop model
+  ! TODO(wjs, 2022-03-30) Add namelist control of this variable
+  logical, public :: use_crop_agsys = .false.
+
   ! true => separate crop landunit is not created by default
   logical, public :: create_crop_landunit = .false.     
   
