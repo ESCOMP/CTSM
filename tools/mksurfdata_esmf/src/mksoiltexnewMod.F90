@@ -190,98 +190,96 @@ contains
        mapunit_o(no) = int(dataptr(no))
     end do
 
-    return
+    ! Write out mapunits
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out mapunits" 
+    call mkfile_output(pioid_o,  mesh_o,  'mapunits', mapunit_o,  rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for mapunits')
 
     !---------------------------------
     ! Determine %sand and %clay on output grid - using above mapunits
     !---------------------------------
 
-    rcode = pio_inq_dimid  (pioid_i, 'MapUnit', dimid)
-    rcode = pio_inq_dimlen (pioid_i, dimid, n_mapunits)
+    ! rcode = pio_inq_dimid  (pioid_i, 'MapUnit', dimid)
+    ! rcode = pio_inq_dimlen (pioid_i, dimid, n_mapunits)
 
-    rcode = pio_inq_dimid  (pioid_i, 'soil_layer', dimid)
-    rcode = pio_inq_dimlen (pioid_i, dimid, nlay)
+    ! rcode = pio_inq_dimid  (pioid_i, 'soil_layer', dimid)
+    ! rcode = pio_inq_dimlen (pioid_i, dimid, nlay)
 
-    ! Read In MapUnits from the input file
-    allocate(MapUnits(n_mapunits), stat=ier)
-    rcode = pio_inq_varid(pioid_i, 'MapUnit', pio_varid)
-    rcode = pio_get_var(pioid_i, pio_varid, MapUnits)
+    ! ! Read In MapUnits from the input file
+    ! allocate(MapUnits(n_mapunits), stat=ier)
+    ! rcode = pio_inq_varid(pioid_i, 'MapUnit', pio_varid)
+    ! rcode = pio_get_var(pioid_i, pio_varid, MapUnits)
 
-    ! Determine the mapunit lookup index from the value of the MapUnit variable
-    mapunit_value_max = maxval(MapUnits)
-    allocate(mapunit_lookup(mapunit_value_max))
-    mapunit_lookup(:) = -999
-    do n = 1,size(MapUnits)
-       mapunit_lookup(MapUnits(n)) = n
-    end do
+    ! ! Determine the mapunit lookup index from the value of the MapUnit variable
+    ! mapunit_value_max = maxval(MapUnits)
+    ! allocate(mapunit_lookup(mapunit_value_max))
+    ! mapunit_lookup(:) = -999
+    ! do n = 1,size(MapUnits)
+    !    mapunit_lookup(MapUnits(n)) = n
+    ! end do
 
-    allocate(sand_i(mapunit_value_max,nlay), stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    allocate(clay_i(mapunit_value_max,nlay), stat=ier)
-    if (ier/=0) call shr_sys_abort()
+    ! allocate(sand_i(mapunit_value_max,nlay), stat=ier)
+    ! if (ier/=0) call shr_sys_abort()
+    ! allocate(clay_i(mapunit_value_max,nlay), stat=ier)
+    ! if (ier/=0) call shr_sys_abort()
 
-    ! Get dimensions from input file and allocate memory for sand_i and clay_i
+    ! ! Get dimensions from input file and allocate memory for sand_i and clay_i
 
-    rcode = pio_inq_varid(pioid_i, 'PCT_SAND', pio_varid_sand)
-    rcode = pio_inq_varid(pioid_i, 'PCT_CLAY', pio_varid_clay)
-    starts(1:3) = 1
-    counts(1) = n_mapunits
-    counts(2) = 1
-    counts(3) = nlay
+    ! rcode = pio_inq_varid(pioid_i, 'PCT_SAND', pio_varid_sand)
+    ! rcode = pio_inq_varid(pioid_i, 'PCT_CLAY', pio_varid_clay)
+    ! starts(1:3) = 1
+    ! counts(1) = n_mapunits
+    ! counts(2) = 1
+    ! counts(3) = nlay
 
-    allocate(sand_i(n_mapunits,nlay))
-    allocate(clay_i(n_mapunits,nlay))
-    rcode = pio_get_var(pioid_i, pio_varid_sand, starts, counts, sand_i)
-    rcode = pio_get_var(pioid_i, pio_varid_clay, starts, counts, clay_i)
+    ! allocate(sand_i(n_mapunits,nlay))
+    ! allocate(clay_i(n_mapunits,nlay))
+    ! rcode = pio_get_var(pioid_i, pio_varid_sand, starts, counts, sand_i)
+    ! rcode = pio_get_var(pioid_i, pio_varid_clay, starts, counts, clay_i)
 
-    do no = 1,ns_o
-       if (mapunit_o(no) > 0) then
-          ! valid value is obtained
-          if (mapunit_o(no) > mapunit_value_max) then
-             write(6,*)'mapunit_o is out of bounds ',mapunit_o(no)
-             ! call shr_sys_abort("mapunit_o is out of bounds")
-          end if
-          lookup_index = mapunit_lookup(mapunit_o(no))
-          do l = 1, nlay
-             sand_o(no,l) = sand_i(lookup_index,l)
-             clay_o(no,l) = clay_i(lookup_index,l)
-          end do
-       else
-          ! use loam
-          do l = 1, nlay
-             sand_o(no,l) = 43.
-             clay_o(no,l) = 18.
-          end do
-       end if
-    end do
+    ! do no = 1,ns_o
+    !    if (mapunit_o(no) > 0) then
+    !       ! valid value is obtained
+    !       if (mapunit_o(no) > mapunit_value_max) then
+    !          write(6,*)'mapunit_o is out of bounds ',mapunit_o(no)
+    !          ! call shr_sys_abort("mapunit_o is out of bounds")
+    !       end if
+    !       lookup_index = mapunit_lookup(mapunit_o(no))
+    !       do l = 1, nlay
+    !          sand_o(no,l) = sand_i(lookup_index,l)
+    !          clay_o(no,l) = clay_i(lookup_index,l)
+    !       end do
+    !    else
+    !       ! use loam
+    !       do l = 1, nlay
+    !          sand_o(no,l) = 43.
+    !          clay_o(no,l) = 18.
+    !       end do
+    !    end if
+    ! end do
 
-    ! Adjust pct sand and pct clay to be nearest integers and to be loam if pctlnd_pft is < 1.e-6
-    ! Truncate all percentage fields on output grid. This is needed to insure that wt is zero
-    ! (not a very small number such as 1e-16) where it really should be zero
-    do no = 1,ns_o
-       do k = 1,nlevsoi
-          sand_o(no,k) = float(nint(sand_o(no,k)))
-          clay_o(no,k) = float(nint(clay_o(no,k)))
-       end do
-       if (pctlnd_pft_o(no) < 1.e-6_r8) then
-          sand_o(no,:) = 43._r8
-          clay_o(no,:) = 18._r8
-       end if
-    end do
+    ! ! Adjust pct sand and pct clay to be nearest integers and to be loam if pctlnd_pft is < 1.e-6
+    ! ! Truncate all percentage fields on output grid. This is needed to insure that wt is zero
+    ! ! (not a very small number such as 1e-16) where it really should be zero
+    ! do no = 1,ns_o
+    !    do k = 1,nlevsoi
+    !       sand_o(no,k) = float(nint(sand_o(no,k)))
+    !       clay_o(no,k) = float(nint(clay_o(no,k)))
+    !    end do
+    !    if (pctlnd_pft_o(no) < 1.e-6_r8) then
+    !       sand_o(no,:) = 43._r8
+    !       clay_o(no,:) = 18._r8
+    !    end if
+    ! end do
 
-    ! Write out fields
-    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
-    call mkfile_output(pioid_o,  mesh_o,  'mapunits', mapunit_o,  rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for mapunits')
+    ! if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
+    ! call mkfile_output(pioid_o,  mesh_o,  'PCT_SAND', sand_o, lev1name='nlevsoi', rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
 
-    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
-    call mkfile_output(pioid_o,  mesh_o,  'PCT_SAND', sand_o, lev1name='nlevsoi', rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-
-    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent clay"
-    call mkfile_output(pioid_o,  mesh_o,  'PCT_CLAY', clay_o, lev1name='nlevsoi', rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-    call pio_syncfile(pioid_o)
+    ! if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent clay"
+    ! call mkfile_output(pioid_o,  mesh_o,  'PCT_CLAY', clay_o, lev1name='nlevsoi', rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+    ! call pio_syncfile(pioid_o)
 
     ! Release memory
     call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
