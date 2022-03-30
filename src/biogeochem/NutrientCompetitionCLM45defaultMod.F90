@@ -719,47 +719,6 @@ contains
                           huigrain(p)),1._r8)**allconsl(ivt(p)) )))
                   end if
 
-                  !Beth's retranslocation of leafn, stemn, rootn to organ
-                  !Filter excess plant N to retransn pool for organ N
-                  !Only do one time then hold grain_flag till onset next season
-
-                  ! slevis: Will astem ever = astemf exactly?
-                  ! Beth's response: ...looks like astem can equal astemf under the right circumstances. 
-                  !It might be worth a rewrite to capture what I was trying to do, but the retranslocation for 
-                  !corn and wheat begins at the beginning of the grain fill stage, but for soybean I was holding it 
-                  !until after the leaf and stem decline were complete. Looking at how astem is calculated, once the 
-                  !stem decline is near complete, astem should (usually) be set to astemf. The reason for holding off 
-                  !on soybean is that the retranslocation scheme begins at the beginning of the grain phase, when the 
-                  !leaf and stem are still growing, but declining. Since carbon is still getting allocated and now 
-                  !there is more nitrogen available, the nitrogen can be diverted from grain. For corn and wheat 
-                  !the impact was probably enough to boost productivity, but for soybean the nitrogen was better off 
-                  !fulfilling the grain fill. It seems that if the peak lai is reached for soybean though that this 
-                  !would be bypassed altogether, not the intended outcome. I checked several of my output files and 
-                  !they all seemed to be going through the retranslocation loop for soybean - good news.
-
-                   if (astem(p) == astemf(ivt(p)) .or. &
-                       (ivt(p) /= ntmp_soybean .and. ivt(p) /= nirrig_tmp_soybean .and.&
-                        ivt(p) /= ntrp_soybean .and. ivt(p) /= nirrig_trp_soybean)) then
-                     if (grain_flag(p) == 0._r8)then
-                     if(.not.use_fun) then
-                        t1 = 1 / dt
-                        leafn_to_retransn(p) = t1 * ((leafc(p) / leafcn(ivt(p))) - (leafc(p) / &
-                             fleafcn(ivt(p))))
-                        livestemn_to_retransn(p) = t1 * ((livestemc(p) / livewdcn(ivt(p))) - (livestemc(p) / &
-                             fstemcn(ivt(p))))
-                        frootn_to_retransn(p) = 0._r8
-                        if (ffrootcn(ivt(p)) > 0._r8) then
-                           frootn_to_retransn(p) = t1 * ((frootc(p) / frootcn(ivt(p))) - (frootc(p) / &
-                                ffrootcn(ivt(p))))
-                        end if
-                        else !leafn retrans flux is handled in phenology
-                        frootn_to_retransn(p) = 0._r8
-                        livestemn_to_retransn(p)=0.0_r8 
-                        end if !fun
-                        grain_flag(p) = 1._r8
-                     end if
-                  end if
-
                   ! For AgroIBIS-based crop model, all repr allocation is assumed to go
                   ! into the last reproductive pool. In practice there is only a single
                   ! reproductive pool with the AgroIBIS-based crop model, but for
@@ -845,6 +804,53 @@ contains
 
          ! Adding the following line to carry max retransn info to CN Annual Update
          tempmax_retransn(p) = max(tempmax_retransn(p),retransn(p))
+
+         if (ivt(p) >= npcropmin) then
+            if (croplive(p)) then
+               if (crop_phase(p) == cphase_grainfill) then
+                  !Beth's retranslocation of leafn, stemn, rootn to organ
+                  !Filter excess plant N to retransn pool for organ N
+                  !Only do one time then hold grain_flag till onset next season
+
+                  ! slevis: Will astem ever = astemf exactly?
+                  ! Beth's response: ...looks like astem can equal astemf under the right circumstances.
+                  !It might be worth a rewrite to capture what I was trying to do, but the retranslocation for
+                  !corn and wheat begins at the beginning of the grain fill stage, but for soybean I was holding it
+                  !until after the leaf and stem decline were complete. Looking at how astem is calculated, once the
+                  !stem decline is near complete, astem should (usually) be set to astemf. The reason for holding off
+                  !on soybean is that the retranslocation scheme begins at the beginning of the grain phase, when the
+                  !leaf and stem are still growing, but declining. Since carbon is still getting allocated and now
+                  !there is more nitrogen available, the nitrogen can be diverted from grain. For corn and wheat
+                  !the impact was probably enough to boost productivity, but for soybean the nitrogen was better off
+                  !fulfilling the grain fill. It seems that if the peak lai is reached for soybean though that this
+                  !would be bypassed altogether, not the intended outcome. I checked several of my output files and
+                  !they all seemed to be going through the retranslocation loop for soybean - good news.
+
+                  if (astem(p) == astemf(ivt(p)) .or. &
+                       (ivt(p) /= ntmp_soybean .and. ivt(p) /= nirrig_tmp_soybean .and.&
+                       ivt(p) /= ntrp_soybean .and. ivt(p) /= nirrig_trp_soybean)) then
+                     if (grain_flag(p) == 0._r8)then
+                        if(.not.use_fun) then
+                           t1 = 1 / dt
+                           leafn_to_retransn(p) = t1 * ((leafc(p) / leafcn(ivt(p))) - (leafc(p) / &
+                                fleafcn(ivt(p))))
+                           livestemn_to_retransn(p) = t1 * ((livestemc(p) / livewdcn(ivt(p))) - (livestemc(p) / &
+                                fstemcn(ivt(p))))
+                           frootn_to_retransn(p) = 0._r8
+                           if (ffrootcn(ivt(p)) > 0._r8) then
+                              frootn_to_retransn(p) = t1 * ((frootc(p) / frootcn(ivt(p))) - (frootc(p) / &
+                                   ffrootcn(ivt(p))))
+                           end if
+                        else !leafn retrans flux is handled in phenology
+                           frootn_to_retransn(p) = 0._r8
+                           livestemn_to_retransn(p)=0.0_r8
+                        end if !fun
+                        grain_flag(p) = 1._r8
+                     end if
+                  end if
+               end if
+            end if
+         end if
 
          ! Beth's code: crops pull from retransn pool only during grain fill;
          !              retransn pool has N from leaves, stems, and roots for
