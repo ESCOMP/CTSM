@@ -589,13 +589,17 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
-    ! Accumulate and extract HUI and GDDACCUM
-    
+    ! Update HUI. This is not standard for accumulation fields,
+    ! but HUI needs it because it can be changed outside this
+    ! accumulation routine (see CropPhenology). This requires
+    ! the accumulation buffer to be reset.
     call extract_accum_field ('HUI', rbufslp, nstep)
     do p = begp,endp
       rbufslp(p) = max(0.0_r8,this%hui_patch(p)-rbufslp(p))
     end do
     call update_accum_field  ('HUI', rbufslp, nstep)
+
+    ! Accumulate and extract HUI and GDDACCUM
     do p = begp,endp
        if (this%croplive_patch(p)) then ! relative to planting date
           ivt = patch%itype(p)
