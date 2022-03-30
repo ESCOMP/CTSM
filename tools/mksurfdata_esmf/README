@@ -70,20 +70,17 @@ slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
 - bigger diffs than I would like for NAT_PFT, though .log file shows global PFT
   areas same => Gridcell-level diffs due to mapping files? Confirm we have no
   discrepancy between .log and .nc files
-- LAI in .log comes out shifted by one
-- Soil color, ag fire peak month outputs too high in .log
+--> Soil color, ag fire peak month outputs too high in .log
+  TODO: RUNNING NEW vs OLD with write statements
 - Soil txt, peat, fmax, lakes, harvest too low in .log unless raw data changed
 - Slope, stddev, soildepth, urban, glaciers not appearing in .log
 - VOC em factors from input not appearing in .log
-
-3) --merge_gis, --nocrop work
-4) --potveg_flag needs file(s) converted to cdf5
 
 old) ./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc
 Issues: See newer testing above
 
 ------------------------------------------------------
-NOT ALL FILES HAVE BEEN TRANSLATED to cdf5 : check last millenium & PtVg
+NOT ALL FILES HAVE BEEN TRANSLATED to cdf5 : check last millenium
 ------------------------------------------------------
 > nccopy -k cdf5 oldfile newfile
 
