@@ -327,7 +327,7 @@ program mksurfdata
 
   ! DEBUG
   if (fsurdat /= ' ') then
-     mksrf_fsoitex = '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v1_merged_new7.nc'
+     mksrf_fsoitex = '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v5_grid.nc'
      mksrf_fsoitex_mesh  = trim(mksrf_fsoitex)
      call mksoiltexnew( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pioid, pctlnd_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
