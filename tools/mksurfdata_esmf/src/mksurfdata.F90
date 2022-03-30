@@ -103,6 +103,7 @@ program mksurfdata
   use mkglcmecMod        , only : mkglcmecInit, mkglcmec, mkglacier
   use mkglacierregionMod , only : mkglacierregion
   use mksoiltexMod       , only : mksoiltex
+  use mksoiltexnewMod    , only : mksoiltexnew
   use mksoilfmaxMod      , only : mksoilfmax
   use mksoildepthMod     , only : mksoildepth
   use mksoilcolMod       , only : mksoilcol
@@ -326,15 +327,14 @@ program mksurfdata
 
   ! DEBUG
   if (fsurdat /= ' ') then
-     ! mapunits, PCT_SAND and PCT_CLAY are written out in the subroutine
-     mksrf_fsoitex = '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v2_grid.nc'
-     mksrf_fsoitex_mesh = '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v2_grid.nc'
-     call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pioid, pctlnd_pft, rc=rc)
+     mksrf_fsoitex = '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v1_merged_new7.nc'
+     mksrf_fsoitex_mesh  = trim(mksrf_fsoitex)
+     call mksoiltexnew( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pioid, pctlnd_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
   end if
   call pio_closefile(pioid)
-  ! DEBUG
   call shr_sys_abort('stopping just for soiltex output')
+  ! DEBUG
 
   ! -----------------------------------
   ! Write out natpft, cft, and time
