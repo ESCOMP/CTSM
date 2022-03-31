@@ -740,5 +740,37 @@ contains
 
   end subroutine write_interpinic_flag
 
+  !-----------------------------------------------------------------------
+  logical function CallRestartvarDimOK (ncid, flag, dimname)
+    !
+    ! !DESCRIPTION:
+    ! Answer whether to call restartvar(), if necessary checking whether
+    ! a dimension exists in the restart file
+    !
+    ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02)
+    ! Used in Restart(). Even though restartvar() can safely be called for a
+    ! non-existent variable, it gives an error for a non-existent dimension, so
+    ! check whether the dimension exists before trying to read. The need for this
+    ! function arose because we recently added the mxsowings and mxharvests
+    ! dimensions to the restart file.
+    !
+    ! !USES:
+    use ncdio_pio
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
+    character(len=*) , intent(in)    :: dimname
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    if (flag == 'read') then
+       call check_dim(ncid, dimname, dimexist=CallRestartvarDimOK)
+    else
+       CallRestartvarDimOK = .true.
+    end if
+
+  end function CallRestartvarDimOK
 
 end module restUtilMod

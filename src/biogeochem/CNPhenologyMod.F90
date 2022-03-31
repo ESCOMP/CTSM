@@ -1805,6 +1805,7 @@ contains
             end do
             do s = 1, mxharvests
                crop_inst%hdates_thisyr(p,s) = -1._r8
+               cnveg_state_inst%gddmaturity_thisyr(p,s) = -1._r8
             end do
          end if
 
@@ -2075,6 +2076,7 @@ contains
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                harvest_count(p) = harvest_count(p) + 1
                crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
+               cnveg_state_inst%gddmaturity_thisyr(p,harvest_count(p)) = gddmaturity(p)
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = 4._r8
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
