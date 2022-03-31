@@ -91,6 +91,10 @@ module restUtilMod
   private :: missing_field_possibly_abort
   private :: write_interpinic_flag
 
+  ! Answer whether to call restartvar(), if necessary checking whether
+  ! a dimension exists in the restart file
+  public :: CallRestartvarDimOK
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
