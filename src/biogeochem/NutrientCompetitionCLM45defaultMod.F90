@@ -854,7 +854,11 @@ contains
                           huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
                           huigrain(p)),1._r8)**allconss(ivt(p)) )))
                   end if
-                  if (aleafi(p) > aleaff(ivt(p))) then
+
+                  ! If crops have hit peaklai, then set leaf allocation to small value
+                  if (peaklai(p) == 1) then
+                     aleaf(p) = 1.e-5_r8
+                  else if (aleafi(p) > aleaff(ivt(p))) then
                      aleaf(p) = max(1.e-5_r8, max(aleaff(ivt(p)), aleaf(p) * &
                           (1._r8 - min((hui(p)-                    &
                           huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
