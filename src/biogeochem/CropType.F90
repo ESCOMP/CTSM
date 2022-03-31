@@ -27,11 +27,9 @@ module CropType
   ! Crop state variables structure
   type, public :: crop_type
 
-     ! Note that cropplant and harvdate could be 2D to facilitate rotation
      integer , pointer :: nyrs_crop_active_patch  (:)   ! number of years this crop patch has been active (0 for non-crop patches)
      logical , pointer :: croplive_patch          (:)   ! patch Flag, true if planted, not harvested
-     logical , pointer :: cropplant_patch         (:)   ! patch Flag, true if planted
-     integer , pointer :: harvdate_patch          (:)   ! patch harvest date
+     integer , pointer :: harvdate_patch          (:)   ! most recent patch harvest date; 999 if currently (or never) planted
      real(r8), pointer :: fertnitro_patch         (:)   ! patch fertilizer nitrogen
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
      real(r8), pointer :: vf_patch                (:)   ! patch vernalization factor for cereal
@@ -40,6 +38,10 @@ module CropType
      character(len=20) :: baset_mapping
      real(r8) :: baset_latvary_intercept
      real(r8) :: baset_latvary_slope
+     real(r8), pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year
+     real(r8), pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
+     integer , pointer :: sowing_count            (:)   ! number of sowing events this year for this patch
+     integer , pointer :: harvest_count           (:)   ! number of sowing events this year for this patch
      ! gddaccum tracks the actual growing degree-days accumulated over the growing season.
      ! hui also accumulates growing degree-days, but can be boosted if full leafout is
      ! achieved before the GDD threshold for grain fill has been reached; see CropPhenology().
@@ -63,7 +65,7 @@ module CropType
      procedure, public  :: CropIncrementYear
 
      ! Private routines
-     procedure, private :: InitAllocate 
+     procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
      procedure, private, nopass :: checkDates
@@ -87,10 +89,10 @@ contains
     type(bounds_type), intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
-    
+
     character(len=*), parameter :: subname = 'Init'
     !-----------------------------------------------------------------------
-    
+
     call this%InitAllocate(bounds)
 
     if (use_crop) then
@@ -174,12 +176,14 @@ contains
     end if
 
     !-----------------------------------------------------------------------
-    
+
   end subroutine ReadNML
 
   !-----------------------------------------------------------------------
   subroutine InitAllocate(this, bounds)
     ! !USES:
+    !
+    use clm_varpar, only : mxsowings, mxharvests
     !
     ! !ARGUMENTS:
     class(crop_type) , intent(inout) :: this
@@ -187,7 +191,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
-    
+
     character(len=*), parameter :: subname = 'InitAllocate'
     !-----------------------------------------------------------------------
 
@@ -195,8 +199,7 @@ contains
 
     allocate(this%nyrs_crop_active_patch(begp:endp)) ; this%nyrs_crop_active_patch(:) = 0
     allocate(this%croplive_patch (begp:endp)) ; this%croplive_patch (:) = .false.
-    allocate(this%cropplant_patch(begp:endp)) ; this%cropplant_patch(:) = .false.
-    allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1) 
+    allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1)
     allocate(this%fertnitro_patch (begp:endp)) ; this%fertnitro_patch (:) = spval
     allocate(this%hui_patch (begp:endp))      ; this%hui_patch      (:) = spval
     allocate(this%gddaccum_patch (begp:endp)) ; this%gddaccum_patch (:) = spval
@@ -204,6 +207,10 @@ contains
     allocate(this%vf_patch       (begp:endp)) ; this%vf_patch       (:) = 0.0_r8
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
+    allocate(this%sdates_thisyr(begp:endp,1:mxsowings)) ; this%sdates_thisyr(:,:) = spval
+    allocate(this%hdates_thisyr(begp:endp,1:mxharvests)) ; this%hdates_thisyr(:,:) = spval
+    allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
+    allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
 
   end subroutine InitAllocate
 
@@ -211,7 +218,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d
+    use histFileMod    , only : hist_addfld1d, hist_addfld2d
     !
     ! !ARGUMENTS:
     class(crop_type),  intent(inout) :: this
@@ -219,10 +226,10 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
-    
+
     character(len=*), parameter :: subname = 'InitHistory'
     !-----------------------------------------------------------------------
-    
+
     begp = bounds%begp; endp = bounds%endp
 
     this%fertnitro_patch(begp:endp) = spval
@@ -257,15 +264,25 @@ contains
             ptr_patch=this%latbaset_patch, default='inactive')
     end if
 
+    this%sdates_thisyr(begp:endp,:) = spval
+    call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxsowings', &
+         avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
+         ptr_patch=this%sdates_thisyr, default='inactive')
+
+    this%hdates_thisyr(begp:endp,:) = spval
+    call hist_addfld2d (fname='HDATES', units='day of year', type2d='mxharvests', &
+         avgflag='I', long_name='actual crop harvest dates; should only be output annually', &
+         ptr_patch=this%hdates_thisyr, default='inactive')
+
   end subroutine InitHistory
 
   subroutine InitCold(this, bounds)
     ! !USES:
-    use LandunitType, only : lun                
+    use LandunitType, only : lun
     use landunit_varcon, only : istcrop
     use PatchType, only : patch
     use clm_instur, only : fert_cft
-    use pftconMod        , only : pftcon 
+    use pftconMod        , only : pftcon
     use GridcellType     , only : grc
     use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
     ! !ARGUMENTS:
@@ -324,20 +341,20 @@ contains
     ! restart file for restart or branch runs
     ! Each interval and accumulation type is unique to each field processed.
     ! Routine [initAccBuffer] defines the fields to be processed
-    ! and the type of accumulation. 
+    ! and the type of accumulation.
     ! Routine [updateAccVars] does the actual accumulation for a given field.
-    ! Fields are accumulated by calls to subroutine [update_accum_field]. 
-    ! To accumulate a field, it must first be defined in subroutine [initAccVars] 
+    ! Fields are accumulated by calls to subroutine [update_accum_field].
+    ! To accumulate a field, it must first be defined in subroutine [initAccVars]
     ! and then accumulated by calls to [updateAccVars].
     !
     ! Should only be called if use_crop is true
     !
-    ! !USES 
+    ! !USES
     use accumulMod       , only : init_accum_field
     !
     ! !ARGUMENTS:
     class(crop_type) , intent(in) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
 
     !
     ! !LOCAL VARIABLES:
@@ -367,7 +384,7 @@ contains
     ! !DESCRIPTION:
     ! Initialize module variables that are associated with
     ! time accumulated fields. This routine is called for both an initial run
-    ! and a restart run (and must therefore must be called after the restart file 
+    ! and a restart run (and must therefore must be called after the restart file
     ! is read in and the accumulation buffer is obtained)
     !
     ! !USES:
@@ -383,10 +400,10 @@ contains
     integer  :: nstep
     integer  :: ier
     real(r8), pointer :: rbufslp(:)  ! temporary
-    
+
     character(len=*), parameter :: subname = 'InitAccVars'
     !-----------------------------------------------------------------------
-    
+
     begp = bounds%begp; endp = bounds%endp
 
     ! Allocate needed dynamic memory for single level patch field
@@ -399,18 +416,51 @@ contains
 
     nstep = get_nstep()
 
-    call extract_accum_field ('HUI', rbufslp, nstep) 
+    call extract_accum_field ('HUI', rbufslp, nstep)
     this%hui_patch(begp:endp) = rbufslp(begp:endp)
 
-    call extract_accum_field ('GDDACCUM', rbufslp, nstep) 
+    call extract_accum_field ('GDDACCUM', rbufslp, nstep)
     this%gddaccum_patch(begp:endp) = rbufslp(begp:endp)
 
-    call extract_accum_field ('GDDTSOI', rbufslp, nstep) 
+    call extract_accum_field ('GDDTSOI', rbufslp, nstep)
     this%gddtsoi_patch(begp:endp)  = rbufslp(begp:endp)
 
     deallocate(rbufslp)
 
   end subroutine InitAccVars
+
+  !-----------------------------------------------------------------------
+  logical function CallRestartvarDimOK (ncid, flag, dimname)
+    !
+    ! !DESCRIPTION:
+    ! Answer whether to call restartvar(), if necessary checking whether
+    ! a dimension exists in the restart file
+    !
+    ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02)
+    ! Used in Restart(). Even though restartvar() can safely be called for a
+    ! non-existent variable, it gives an error for a non-existent dimension, so
+    ! check whether the dimension exists before trying to read. The need for this
+    ! function arose because we recently added the mxsowings and mxharvests
+    ! dimensions to the restart file.
+    !
+    ! !USES:
+    use ncdio_pio
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
+    character(len=*) , intent(in)    :: dimname
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    if (flag == 'read') then
+       call check_dim(ncid, dimname, dimexist=CallRestartvarDimOK)
+    else
+       CallRestartvarDimOK = .true.
+    end if
+
+  end function CallRestartvarDimOK
 
   !-----------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
@@ -420,18 +470,20 @@ contains
     use ncdio_pio
     use PatchType, only : patch
     use pftconMod, only : npcropmin, npcropmax
+    use clm_varpar, only : mxsowings, mxharvests
     !
     ! !ARGUMENTS:
     class(crop_type), intent(inout)  :: this
-    type(bounds_type), intent(in)    :: bounds 
-    type(file_desc_t), intent(inout) :: ncid   
-    character(len=*) , intent(in)    :: flag   
+    type(bounds_type), intent(in)    :: bounds
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
     !
     ! !LOCAL VARIABLES:
     integer, pointer :: temp1d(:) ! temporary
     integer :: restyear
     integer :: p
     logical :: readvar   ! determine if variable is on initial file
+    integer :: seasons_found, seasons_loopvar      ! getting number of sowings/harvests in patch
 
     character(len=*), parameter :: subname = 'Restart'
     !-----------------------------------------------------------------------
@@ -463,7 +515,7 @@ contains
        end if
 
        allocate(temp1d(bounds%begp:bounds%endp))
-       if (flag == 'write') then 
+       if (flag == 'write') then
           do p= bounds%begp,bounds%endp
              if (this%croplive_patch(p)) then
                 temp1d(p) = 1
@@ -476,7 +528,7 @@ contains
             dim1name='pft', &
             long_name='Flag that crop is alive, but not harvested', &
             interpinic_flag='interp', readvar=readvar, data=temp1d)
-       if (flag == 'read') then 
+       if (flag == 'read') then
           do p= bounds%begp,bounds%endp
              if (temp1d(p) == 1) then
                 this%croplive_patch(p) = .true.
@@ -487,33 +539,8 @@ contains
        end if
        deallocate(temp1d)
 
-       allocate(temp1d(bounds%begp:bounds%endp))
-       if (flag == 'write') then 
-          do p= bounds%begp,bounds%endp
-             if (this%cropplant_patch(p)) then
-                temp1d(p) = 1
-             else
-                temp1d(p) = 0
-             end if
-          end do
-       end if
-       call restartvar(ncid=ncid, flag=flag,  varname='cropplant', xtype=ncd_log,  &
-            dim1name='pft', &
-            long_name='Flag that crop is planted, but not harvested' , &
-            interpinic_flag='interp', readvar=readvar, data=temp1d)
-       if (flag == 'read') then 
-          do p= bounds%begp,bounds%endp
-             if (temp1d(p) == 1) then
-                this%cropplant_patch(p) = .true.
-             else
-                this%cropplant_patch(p) = .false.
-             end if
-          end do
-       end if
-       deallocate(temp1d)
-
        call restartvar(ncid=ncid, flag=flag,  varname='harvdate', xtype=ncd_int,  &
-            dim1name='pft', long_name='harvest date', units='jday', nvalid_range=(/1,366/), & 
+            dim1name='pft', long_name='harvest date', units='jday', nvalid_range=(/1,366/), &
             interpinic_flag='interp', readvar=readvar, data=this%harvdate_patch)
 
        call restartvar(ncid=ncid, flag=flag,  varname='vf', xtype=ncd_double,  &
@@ -528,6 +555,54 @@ contains
           call this%checkDates( )  ! Check that restart date is same calendar date (even if year is different)
                                    ! This is so that it properly goes through
                                    ! the crop phases
+       end if
+
+       ! Read or write variable(s) with mxsowings dimension
+       ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02) See note in CallRestartvarDimOK()
+       if (CallRestartvarDimOK(ncid, flag, 'mxsowings')) then
+           call restartvar(ncid=ncid, flag=flag, varname='sdates_thisyr', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxsowings', switchdim=.true., &
+                long_name='crop sowing dates for this patch this year', units='day of year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%sdates_thisyr)
+           ! Fill variable(s) derived from read-in variable(s)
+           if (flag == 'read' .and. readvar) then
+             do p = bounds%begp,bounds%endp
+                seasons_found = 0
+                do seasons_loopvar = 1,mxsowings
+                   if (this%sdates_thisyr(p,seasons_loopvar) >= 1 .and. this%sdates_thisyr(p,seasons_loopvar) <= 366) then
+                      seasons_found = seasons_loopvar
+                   else
+                      exit
+                   end if
+                end do ! loop through possible sowings
+                this%sowing_count(p) = seasons_found
+             end do ! loop through patches
+           end if
+       end if
+
+       ! Read or write variable(s) with mxharvests dimension
+       ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02) See note in CallRestartvarDimOK()
+       if (CallRestartvarDimOK(ncid, flag, 'mxharvests')) then
+           call restartvar(ncid=ncid, flag=flag, varname='hdates_thisyr', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+                long_name='crop harvest dates for this patch this year', units='day of year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%hdates_thisyr)
+           ! Fill variable(s) derived from read-in variable(s)
+           if (flag == 'read' .and. readvar) then
+             do p = bounds%begp,bounds%endp
+                seasons_found = 0
+                do seasons_loopvar = 1,mxharvests
+                   if (this%hdates_thisyr(p,seasons_loopvar) >= 1 .and. this%hdates_thisyr(p,seasons_loopvar) <= 366) then
+                      seasons_found = seasons_loopvar
+                   else
+                      exit
+                   end if
+                end do ! loop through possible harvests
+                this%harvest_count(p) = seasons_found
+             end do ! loop through patches
+           end if
        end if
     end if
 
@@ -570,7 +645,7 @@ contains
     real(r8), pointer :: rbufslp(:)      ! temporary single level - patch level
     character(len=*), parameter :: subname = 'CropUpdateAccVars'
     !-----------------------------------------------------------------------
-    
+
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
 
@@ -655,7 +730,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CropIncrementYear (this, num_pcropp, filter_pcropp)
     !
-    ! !DESCRIPTION: 
+    ! !DESCRIPTION:
     ! Increment the crop year, if appropriate
     !
     ! This routine should be called every time step
@@ -693,7 +768,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine checkDates( )
     !
-    ! !DESCRIPTION: 
+    ! !DESCRIPTION:
     ! Make sure the dates are compatible. The date given to startup the model
     ! and the date on the restart file must be the same although years can be
     ! different. The dates need to be checked when the restart file is being
@@ -745,4 +820,3 @@ contains
   end subroutine checkDates
 
 end module CropType
-
