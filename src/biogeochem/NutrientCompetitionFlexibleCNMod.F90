@@ -116,7 +116,7 @@ contains
     !
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type), intent(in) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
@@ -202,7 +202,7 @@ contains
     use CNSharedParamsMod     , only : use_fun
     use CNPrecisionControlMod , only : n_min
     use clm_varcon            , only : spval
-    
+
     !
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type), intent(inout) :: this
@@ -234,15 +234,15 @@ contains
     real(r8) :: dt                 ! model time step
     real(r8):: fsmn(bounds%begp:bounds%endp)  ! A emperate variable for adjusting FUN uptakes
 
-    real(r8):: frootcn_storage_actual       										
-    real(r8):: frootcn_actual               	
-    real(r8):: livestemcn_storage_actual    	
-    real(r8):: livestemcn_actual            	
-    real(r8):: livecrootcn_storage_actual   			
-    real(r8):: livecrootcn_actual           	
-    real(r8):: leafcn_max                   	
-    real(r8):: frootcn_max                  	
-    real(r8):: livewdcn_max  
+    real(r8):: frootcn_storage_actual
+    real(r8):: frootcn_actual
+    real(r8):: livestemcn_storage_actual
+    real(r8):: livestemcn_actual
+    real(r8):: livecrootcn_storage_actual
+    real(r8):: livecrootcn_actual
+    real(r8):: leafcn_max
+    real(r8):: frootcn_max
+    real(r8):: livewdcn_max
     real(r8):: frac_resp
     real(r8):: npool_to_reproductiven_demand_tot
     real(r8):: npool_to_reproductiven_storage_demand_tot
@@ -339,7 +339,7 @@ contains
          cpool_to_gresp_storage       => cnveg_carbonflux_inst%cpool_to_gresp_storage_patch        , & ! Output: [real(r8) (:)   ]  allocation to growth respiration storage (gC/m2/s)
          cpool_to_reproductivec              => cnveg_carbonflux_inst%cpool_to_reproductivec_patch               , & ! Output: [real(r8) (:,:)   ]  allocation to grain C (gC/m2/s)
          cpool_to_reproductivec_storage      => cnveg_carbonflux_inst%cpool_to_reproductivec_storage_patch       , & ! Output: [real(r8) (:,:)   ]  allocation to grain C storage (gC/m2/s)
-         
+
          laisun                       => canopystate_inst%laisun_patch  , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index
          laisha                       => canopystate_inst%laisha_patch  , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index
          smin_no3_vr                  => soilbiogeochem_nitrogenstate_inst%smin_no3_vr_col         , & ! Output: [real(r8) (:,:) ]  (gN/m3) soil mineral NO3
@@ -436,22 +436,22 @@ contains
          ! ndays_active = days/year.  This prevents the continued storage of C and N.
          ! turning off this correction (PET, 12/11/03), instead using bgtr in
          ! phenology algorithm.
-         
-         
+
+
          if(use_fun)then ! if we are using FUN, we get the N available from there.
            sminn_to_npool(p) = sminn_to_plant_fun(p)
-         else ! no FUN. :( we get N available from the FPG calculation in soilbiogeochemistry competition. 
-           sminn_to_npool(p) = plant_ndemand(p) * fpg(c)        
+         else ! no FUN. :( we get N available from the FPG calculation in soilbiogeochemistry competition.
+           sminn_to_npool(p) = plant_ndemand(p) * fpg(c)
          endif
-       
+
          plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
-         
+
          if(use_fun)then
-            plant_calloc(p) = npp_growth(p) 
+            plant_calloc(p) = npp_growth(p)
          else
             plant_calloc(p) = availc(p)
          end if
-        
+
          ! calculate the amount of new leaf C dictated by these allocation
          ! decisions, and calculate the daily fluxes of C and N to current
          ! growth and storage pools
@@ -1057,7 +1057,7 @@ contains
          laisun                => canopystate_inst%laisun_patch                     , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index
          laisha                => canopystate_inst%laisha_patch                     , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index
 
-         hui                   => crop_inst%gddplant_patch                          , & ! Input:  [real(r8) (:)   ]  =gdd since planting (gddplant)
+         hui                   => crop_inst%hui_patch                               , & ! Input:  [real(r8) (:)   ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
          croplive              => crop_inst%croplive_patch                          , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
 
          gddmaturity           => cnveg_state_inst%gddmaturity_patch                , & ! Input:  [real(r8) (:)   ]  gdd needed to harvest
@@ -1203,7 +1203,7 @@ contains
                   end if
 
                   ! If crops have hit peaklai, then set leaf allocation to small value
-                  if (peaklai(p) == 1) then 
+                  if (peaklai(p) == 1) then
                      aleaf(p) = 1.e-5_r8
                   else if (aleafi(p) > aleaff(ivt(p))) then
                      aleaf(p) = max(1.e-5_r8, max(aleaff(ivt(p)), aleaf(p) * &
@@ -1291,11 +1291,11 @@ contains
          if (leafn(p) < n_min ) then
             ! to avoid division by zero, and to set leafcn to missing value for history files
             this%actual_leafcn(p) = spval
-         else                        	
-            ! leaf CN ratio 
+         else
+            ! leaf CN ratio
             this%actual_leafcn(p) = leafc(p)  / leafn(p)
          end if
-            
+
 
          leafcn_min = leafcn(ivt(p)) - 10.0_r8
          leafcn_max = leafcn(ivt(p)) + 10.0_r8
@@ -1318,7 +1318,7 @@ contains
          temp_scalar=t_scalar(c,1)
          temp_scalar = min( max(0.0_r8, temp_scalar), 1.0_r8 )
 
-         if(use_fun)then ! in FUN, plant_ndemand is just used as a maximum draw on soil N pools. 
+         if(use_fun)then ! in FUN, plant_ndemand is just used as a maximum draw on soil N pools.
              plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
          else !FUN
             if (laisun(p)+laisha(p) > 0.0_r8) then

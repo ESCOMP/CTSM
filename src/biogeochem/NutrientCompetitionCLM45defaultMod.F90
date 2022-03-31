@@ -13,9 +13,9 @@ module NutrientCompetitionCLM45defaultMod
   use shr_kind_mod        , only : r8 => shr_kind_r8
   use shr_log_mod         , only : errMsg => shr_log_errMsg
   use decompMod           , only : bounds_type
-  use LandunitType        , only : lun                
-  use ColumnType          , only : col                
-  use PatchType           , only : patch                
+  use LandunitType        , only : lun
+  use ColumnType          , only : col
+  use PatchType           , only : patch
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
   use CropReprPoolsMod        , only : nrepr
   use CNPhenologyMod      , only : CropPhase
@@ -35,7 +35,7 @@ module NutrientCompetitionCLM45defaultMod
      ! public methocs
      procedure, public :: init                                ! Initialize the class
      procedure, public :: calc_plant_nutrient_competition     ! calculate nutrient yield rate from competition
-     procedure, public :: calc_plant_nutrient_demand          ! calculate plant nutrient demand 
+     procedure, public :: calc_plant_nutrient_demand          ! calculate plant nutrient demand
      !
      ! private methods
      procedure, private:: calc_plant_cn_alloc
@@ -44,14 +44,14 @@ module NutrientCompetitionCLM45defaultMod
   !
   interface nutrient_competition_clm45default_type
      ! initialize a new nutrient_competition_clm45default_type object
-     module procedure constructor  
+     module procedure constructor
   end interface nutrient_competition_clm45default_type
   !
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !------------------------------------------------------------------------
-  
+
 contains
 
   !------------------------------------------------------------------------
@@ -163,82 +163,82 @@ contains
     real(r8):: nlc                ! temporary variable for total new leaf carbon allocation
     real(r8):: f5(nrepr)          ! reproductive allocation parameters
     real(r8):: cng                ! C:N ratio for grain (= cnlw for now; slevis)
-    real(r8):: fsmn(bounds%begp:bounds%endp)  ! A emperate variable for adjusting FUN uptakes 
+    real(r8):: fsmn(bounds%begp:bounds%endp)  ! A emperate variable for adjusting FUN uptakes
    !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(fpg_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                                                       &
-         fpg                          => fpg_col                                                   , & ! Input:  [real(r8) (:)   ]  fraction of potential gpp (no units)    
+         fpg                          => fpg_col                                                   , & ! Input:  [real(r8) (:)   ]  fraction of potential gpp (no units)
 
-         ivt                          => patch%itype                                               , & ! Input:  [integer  (:) ]  patch vegetation type                                
-         
+         ivt                          => patch%itype                                               , & ! Input:  [integer  (:) ]  patch vegetation type
+
          woody                        => pftcon%woody                                              , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          froot_leaf                   => pftcon%froot_leaf                                         , & ! Input:  allocation parameter: new fine root C per new leaf C (gC/gC)
          croot_stem                   => pftcon%croot_stem                                         , & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf                    => pftcon%stem_leaf                                          , & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd                      => pftcon%flivewd                                            , & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn                       => pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)                        
-         frootcn                      => pftcon%frootcn                                            , & ! Input:  fine root C:N (gC/gN)                   
+         leafcn                       => pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)
+         frootcn                      => pftcon%frootcn                                            , & ! Input:  fine root C:N (gC/gN)
          livewdcn                     => pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn                     => pftcon%deadwdcn                                           , & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
          fcur2                        => pftcon%fcur                                               , & ! Input:  allocation parameter: fraction of allocation that goes to currently displayed growth, remainder to storage
-         graincn                      => pftcon%graincn                                            , & ! Input:  grain C:N (gC/gN)                       
+         graincn                      => pftcon%graincn                                            , & ! Input:  grain C:N (gC/gN)
          grperc                       => pftcon%grperc                                             , & ! Input:  growth respiration parameter
          grpnow                       => pftcon%grpnow                                             , & ! Input:  growth respiration parameter
 
          croplive                     => crop_inst%croplive_patch                                  , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
 
-         peaklai                      => cnveg_state_inst%peaklai_patch                            , & ! Input:  [integer  (:)   ]  1: max allowed lai; 0: not at max        
+         peaklai                      => cnveg_state_inst%peaklai_patch                            , & ! Input:  [integer  (:)   ]  1: max allowed lai; 0: not at max
          aleaf                        => cnveg_state_inst%aleaf_patch                              , & ! Input:  [real(r8) (:)   ]  leaf allocation coefficient
          astem                        => cnveg_state_inst%astem_patch                              , & ! Input:  [real(r8) (:)   ]  stem allocation coefficient
          aroot                        => cnveg_state_inst%aroot_patch                              , & ! Input:  [real(r8) (:)   ]  root allocation coefficient
          arepr                        => cnveg_state_inst%arepr_patch                              , & ! Input:  [real(r8) (:,:) ]  reproductive allocation coefficient(s)
-         c_allometry                  => cnveg_state_inst%c_allometry_patch                        , & ! Output: [real(r8) (:)   ]  C allocation index (DIM)                
-         n_allometry                  => cnveg_state_inst%n_allometry_patch                        , & ! Output: [real(r8) (:)   ]  N allocation index (DIM)                
+         c_allometry                  => cnveg_state_inst%c_allometry_patch                        , & ! Output: [real(r8) (:)   ]  C allocation index (DIM)
+         n_allometry                  => cnveg_state_inst%n_allometry_patch                        , & ! Output: [real(r8) (:)   ]  N allocation index (DIM)
          downreg                      => cnveg_state_inst%downreg_patch                            , & ! Output: [real(r8) (:)   ]  fractional reduction in GPP due to N limitation (DIM)
 
-         annsum_npp                   => cnveg_carbonflux_inst%annsum_npp_patch                    , & ! Input:  [real(r8) (:)   ]  annual sum of NPP, for wood allocation  
+         annsum_npp                   => cnveg_carbonflux_inst%annsum_npp_patch                    , & ! Input:  [real(r8) (:)   ]  annual sum of NPP, for wood allocation
          gpp                          => cnveg_carbonflux_inst%gpp_before_downreg_patch            , & ! Output: [real(r8) (:)   ]  GPP flux before downregulation (gC/m2/s)
          availc                       => cnveg_carbonflux_inst%availc_patch                        , & ! Output: [real(r8) (:)   ]  C flux available for allocation (gC/m2/s)
          excess_cflux                 => cnveg_carbonflux_inst%excess_cflux_patch                  , & ! Output: [real(r8) (:)   ]  C flux not allocated due to downregulation (gC/m2/s)
-         plant_calloc                 => cnveg_carbonflux_inst%plant_calloc_patch                  , & ! Output: [real(r8) (:)   ]  total allocated C flux (gC/m2/s)        
+         plant_calloc                 => cnveg_carbonflux_inst%plant_calloc_patch                  , & ! Output: [real(r8) (:)   ]  total allocated C flux (gC/m2/s)
          psnsun_to_cpool              => cnveg_carbonflux_inst%psnsun_to_cpool_patch               , & ! Output: [real(r8) (:)   ]
          psnshade_to_cpool            => cnveg_carbonflux_inst%psnshade_to_cpool_patch             , & ! Output: [real(r8) (:)   ]
-         cpool_to_leafc               => cnveg_carbonflux_inst%cpool_to_leafc_patch                , & ! Output: [real(r8) (:)   ]                                          
-         cpool_to_leafc_storage       => cnveg_carbonflux_inst%cpool_to_leafc_storage_patch        , & ! Output: [real(r8) (:)   ]                                          
-         cpool_to_frootc              => cnveg_carbonflux_inst%cpool_to_frootc_patch               , & ! Output: [real(r8) (:)   ]                                          
-         cpool_to_frootc_storage      => cnveg_carbonflux_inst%cpool_to_frootc_storage_patch       , & ! Output: [real(r8) (:)   ]                                          
-         cpool_to_livestemc           => cnveg_carbonflux_inst%cpool_to_livestemc_patch            , & ! Output: [real(r8) (:)   ]                                          
-         cpool_to_livestemc_storage   => cnveg_carbonflux_inst%cpool_to_livestemc_storage_patch    , & ! Output: [real(r8) (:)   ]                                          
-         cpool_to_deadstemc           => cnveg_carbonflux_inst%cpool_to_deadstemc_patch            , & ! Output: [real(r8) (:)   ]                                          
-         cpool_to_deadstemc_storage   => cnveg_carbonflux_inst%cpool_to_deadstemc_storage_patch    , & ! Output: [real(r8) (:)   ]                                          
-         cpool_to_livecrootc          => cnveg_carbonflux_inst%cpool_to_livecrootc_patch           , & ! Output: [real(r8) (:)   ]                                          
-         cpool_to_livecrootc_storage  => cnveg_carbonflux_inst%cpool_to_livecrootc_storage_patch   , & ! Output: [real(r8) (:)   ]                                          
-         cpool_to_deadcrootc          => cnveg_carbonflux_inst%cpool_to_deadcrootc_patch           , & ! Output: [real(r8) (:)   ]                                          
-         cpool_to_deadcrootc_storage  => cnveg_carbonflux_inst%cpool_to_deadcrootc_storage_patch   , & ! Output: [real(r8) (:)   ]                                          
+         cpool_to_leafc               => cnveg_carbonflux_inst%cpool_to_leafc_patch                , & ! Output: [real(r8) (:)   ]
+         cpool_to_leafc_storage       => cnveg_carbonflux_inst%cpool_to_leafc_storage_patch        , & ! Output: [real(r8) (:)   ]
+         cpool_to_frootc              => cnveg_carbonflux_inst%cpool_to_frootc_patch               , & ! Output: [real(r8) (:)   ]
+         cpool_to_frootc_storage      => cnveg_carbonflux_inst%cpool_to_frootc_storage_patch       , & ! Output: [real(r8) (:)   ]
+         cpool_to_livestemc           => cnveg_carbonflux_inst%cpool_to_livestemc_patch            , & ! Output: [real(r8) (:)   ]
+         cpool_to_livestemc_storage   => cnveg_carbonflux_inst%cpool_to_livestemc_storage_patch    , & ! Output: [real(r8) (:)   ]
+         cpool_to_deadstemc           => cnveg_carbonflux_inst%cpool_to_deadstemc_patch            , & ! Output: [real(r8) (:)   ]
+         cpool_to_deadstemc_storage   => cnveg_carbonflux_inst%cpool_to_deadstemc_storage_patch    , & ! Output: [real(r8) (:)   ]
+         cpool_to_livecrootc          => cnveg_carbonflux_inst%cpool_to_livecrootc_patch           , & ! Output: [real(r8) (:)   ]
+         cpool_to_livecrootc_storage  => cnveg_carbonflux_inst%cpool_to_livecrootc_storage_patch   , & ! Output: [real(r8) (:)   ]
+         cpool_to_deadcrootc          => cnveg_carbonflux_inst%cpool_to_deadcrootc_patch           , & ! Output: [real(r8) (:)   ]
+         cpool_to_deadcrootc_storage  => cnveg_carbonflux_inst%cpool_to_deadcrootc_storage_patch   , & ! Output: [real(r8) (:)   ]
          cpool_to_gresp_storage       => cnveg_carbonflux_inst%cpool_to_gresp_storage_patch        , & ! Output: [real(r8) (:)   ]  allocation to growth respiration storage (gC/m2/s)
          cpool_to_reproductivec              => cnveg_carbonflux_inst%cpool_to_reproductivec_patch               , & ! Output: [real(r8) (:,:)   ]  allocation to grain C (gC/m2/s)
          cpool_to_reproductivec_storage      => cnveg_carbonflux_inst%cpool_to_reproductivec_storage_patch       , & ! Output: [real(r8) (:,:)   ]  allocation to grain C storage (gC/m2/s)
-         
+
          plant_ndemand                => cnveg_nitrogenflux_inst%plant_ndemand_patch               , & ! Output: [real(r8) (:)   ]  N flux required to support initial GPP (gN/m2/s)
-         plant_nalloc                 => cnveg_nitrogenflux_inst%plant_nalloc_patch                , & ! Output: [real(r8) (:)   ]  total allocated N flux (gN/m2/s)        
+         plant_nalloc                 => cnveg_nitrogenflux_inst%plant_nalloc_patch                , & ! Output: [real(r8) (:)   ]  total allocated N flux (gN/m2/s)
          npool_to_reproductiven              => cnveg_nitrogenflux_inst%npool_to_reproductiven_patch             , & ! Output: [real(r8) (:,:)   ]  allocation to grain N (gN/m2/s)
          npool_to_reproductiven_storage      => cnveg_nitrogenflux_inst%npool_to_reproductiven_storage_patch     , & ! Output: [real(r8) (:,:)   ]  allocation to grain N storage (gN/m2/s)
          retransn_to_npool            => cnveg_nitrogenflux_inst%retransn_to_npool_patch           , & ! Output: [real(r8) (:)   ]  deployment of retranslocated N (gN/m2/s)
          sminn_to_npool               => cnveg_nitrogenflux_inst%sminn_to_npool_patch              , & ! Output: [real(r8) (:)   ]  deployment of soil mineral N uptake (gN/m2/s)
-         npool_to_leafn               => cnveg_nitrogenflux_inst%npool_to_leafn_patch              , & ! Output: [real(r8) (:)   ]  allocation to leaf N (gN/m2/s)          
-         npool_to_leafn_storage       => cnveg_nitrogenflux_inst%npool_to_leafn_storage_patch      , & ! Output: [real(r8) (:)   ]  allocation to leaf N storage (gN/m2/s)  
-         npool_to_frootn              => cnveg_nitrogenflux_inst%npool_to_frootn_patch             , & ! Output: [real(r8) (:)   ]  allocation to fine root N (gN/m2/s)     
+         npool_to_leafn               => cnveg_nitrogenflux_inst%npool_to_leafn_patch              , & ! Output: [real(r8) (:)   ]  allocation to leaf N (gN/m2/s)
+         npool_to_leafn_storage       => cnveg_nitrogenflux_inst%npool_to_leafn_storage_patch      , & ! Output: [real(r8) (:)   ]  allocation to leaf N storage (gN/m2/s)
+         npool_to_frootn              => cnveg_nitrogenflux_inst%npool_to_frootn_patch             , & ! Output: [real(r8) (:)   ]  allocation to fine root N (gN/m2/s)
          npool_to_frootn_storage      => cnveg_nitrogenflux_inst%npool_to_frootn_storage_patch     , & ! Output: [real(r8) (:)   ]  allocation to fine root N storage (gN/m2/s)
-         npool_to_livestemn           => cnveg_nitrogenflux_inst%npool_to_livestemn_patch          , & ! Output: [real(r8) (:)   ]                                          
-         npool_to_livestemn_storage   => cnveg_nitrogenflux_inst%npool_to_livestemn_storage_patch  , & ! Output: [real(r8) (:)   ]                                          
-         npool_to_deadstemn           => cnveg_nitrogenflux_inst%npool_to_deadstemn_patch          , & ! Output: [real(r8) (:)   ]                                          
-         npool_to_deadstemn_storage   => cnveg_nitrogenflux_inst%npool_to_deadstemn_storage_patch  , & ! Output: [real(r8) (:)   ]                                          
-         npool_to_livecrootn          => cnveg_nitrogenflux_inst%npool_to_livecrootn_patch         , & ! Output: [real(r8) (:)   ]                                          
-         npool_to_livecrootn_storage  => cnveg_nitrogenflux_inst%npool_to_livecrootn_storage_patch , & ! Output: [real(r8) (:)   ]                                          
-         npool_to_deadcrootn          => cnveg_nitrogenflux_inst%npool_to_deadcrootn_patch         , & ! Output: [real(r8) (:)   ]                                          
-         npool_to_deadcrootn_storage  => cnveg_nitrogenflux_inst%npool_to_deadcrootn_storage_patch , & ! Output: [real(r8) (:)   ]                                          
+         npool_to_livestemn           => cnveg_nitrogenflux_inst%npool_to_livestemn_patch          , & ! Output: [real(r8) (:)   ]
+         npool_to_livestemn_storage   => cnveg_nitrogenflux_inst%npool_to_livestemn_storage_patch  , & ! Output: [real(r8) (:)   ]
+         npool_to_deadstemn           => cnveg_nitrogenflux_inst%npool_to_deadstemn_patch          , & ! Output: [real(r8) (:)   ]
+         npool_to_deadstemn_storage   => cnveg_nitrogenflux_inst%npool_to_deadstemn_storage_patch  , & ! Output: [real(r8) (:)   ]
+         npool_to_livecrootn          => cnveg_nitrogenflux_inst%npool_to_livecrootn_patch         , & ! Output: [real(r8) (:)   ]
+         npool_to_livecrootn_storage  => cnveg_nitrogenflux_inst%npool_to_livecrootn_storage_patch , & ! Output: [real(r8) (:)   ]
+         npool_to_deadcrootn          => cnveg_nitrogenflux_inst%npool_to_deadcrootn_patch         , & ! Output: [real(r8) (:)   ]
+         npool_to_deadcrootn_storage  => cnveg_nitrogenflux_inst%npool_to_deadcrootn_storage_patch , & ! Output: [real(r8) (:)   ]
          Npassive                     => cnveg_nitrogenflux_inst%Npassive_patch                    , & ! Output:  [real(r8) (:) ]  Passive N uptake (gN/m2/s)
          Nfix                         => cnveg_nitrogenflux_inst%Nfix_patch                        , & ! Output:  [real(r8) (:) ]  Symbiotic BNF (gN/m2/s)
          Nactive                      => cnveg_nitrogenflux_inst%Nactive_patch                     , & ! Output:  [real(r8) (:) ]  Mycorrhizal N uptake (gN/m2/s)
@@ -248,7 +248,7 @@ contains
          sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch           & ! Output:  [real(r8) (:) ]  Total N uptake of FUN (gN/m2/s)
          )
 
-      ! patch loop to distribute the available N between the competing patches 
+      ! patch loop to distribute the available N between the competing patches
       ! on the basis of relative demand, and allocate C and N to new growth and storage
 
       do fp = 1,num_soilp
@@ -302,15 +302,15 @@ contains
 
          if(use_fun)then ! if we are using FUN, we get the N available from there.
             sminn_to_npool(p) = sminn_to_plant_fun(p)
-         else ! no FUN. :( we get N available from the FPG calculation in soilbiogeochemistry competition. 
-            sminn_to_npool(p) = plant_ndemand(p) * fpg(c)        
+         else ! no FUN. :( we get N available from the FPG calculation in soilbiogeochemistry competition.
+            sminn_to_npool(p) = plant_ndemand(p) * fpg(c)
          endif
-         
+
          plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
          plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
 
-          
-         if(.not.use_fun)then  !ORIGINAL CLM(CN) downregulation code. 
+
+         if(.not.use_fun)then  !ORIGINAL CLM(CN) downregulation code.
 	    excess_cflux(p) = availc(p) - plant_calloc(p)
 	    ! reduce gpp fluxes due to N limitation
 	    if (gpp(p) > 0.0_r8) then
@@ -332,9 +332,9 @@ contains
 	               c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
 	       endif
 	    end if
-	         
+
 	 end if !use_fun
-         
+
          ! calculate the amount of new leaf C dictated by these allocation
          ! decisions, and calculate the daily fluxes of C and N to current
          ! growth and storage pools
@@ -432,7 +432,7 @@ contains
 
       end do ! end patch loop
 
-    end associate 
+    end associate
 
   end subroutine calc_plant_cn_alloc
 
@@ -545,21 +545,21 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                        &
-         ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type                                
-         
+         ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type
+
          woody                 => pftcon%woody                                     ,  & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          froot_leaf            => pftcon%froot_leaf                                ,  & ! Input:  allocation parameter: new fine root C per new leaf C (gC/gC)
          croot_stem            => pftcon%croot_stem                                ,  & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf             => pftcon%stem_leaf                                 ,  & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd               => pftcon%flivewd                                   ,  & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn                => pftcon%leafcn                                    ,  & ! Input:  leaf C:N (gC/gN)                        
-         frootcn               => pftcon%frootcn                                    , & ! Input:  fine root C:N (gC/gN)                   
+         leafcn                => pftcon%leafcn                                    ,  & ! Input:  leaf C:N (gC/gN)
+         frootcn               => pftcon%frootcn                                    , & ! Input:  fine root C:N (gC/gN)
          livewdcn              => pftcon%livewdcn                                   , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn              => pftcon%deadwdcn                                   , & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
-         graincn               => pftcon%graincn                                    , & ! Input:  grain C:N (gC/gN)                       
-         fleafcn               => pftcon%fleafcn                                    , & ! Input:  leaf c:n during organ fill              
-         ffrootcn              => pftcon%ffrootcn                                   , & ! Input:  froot c:n during organ fill             
-         fstemcn               => pftcon%fstemcn                                    , & ! Input:  stem c:n during organ fill              
+         graincn               => pftcon%graincn                                    , & ! Input:  grain C:N (gC/gN)
+         fleafcn               => pftcon%fleafcn                                    , & ! Input:  leaf c:n during organ fill
+         ffrootcn              => pftcon%ffrootcn                                   , & ! Input:  froot c:n during organ fill
+         fstemcn               => pftcon%fstemcn                                    , & ! Input:  stem c:n during organ fill
          bfact                 => pftcon%bfact                                      , & ! Input:  parameter used below
          aleaff                => pftcon%aleaff                                     , & ! Input:  parameter used below
          arootf                => pftcon%arootf                                     , & ! Input:  parameter used below
@@ -575,33 +575,33 @@ contains
          stress_decid          => pftcon%stress_decid                               , & ! Input:  binary flag for stress-deciduous leaf habit (0 or 1)
 
 
-         hui                   => crop_inst%gddplant_patch                          , & ! Input:  [real(r8) (:)   ]  =gdd since planting (gddplant)          
+         hui                   => crop_inst%hui_patch                               , & ! Input:  [real(r8) (:)   ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
          croplive              => crop_inst%croplive_patch                          , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
 
-         gddmaturity           => cnveg_state_inst%gddmaturity_patch                , & ! Input:  [real(r8) (:)   ]  gdd needed to harvest                   
+         gddmaturity           => cnveg_state_inst%gddmaturity_patch                , & ! Input:  [real(r8) (:)   ]  gdd needed to harvest
          huigrain              => cnveg_state_inst%huigrain_patch                   , & ! Input:  [real(r8) (:)   ]  same to reach vegetative maturity
-         peaklai               => cnveg_state_inst%peaklai_patch                    , & ! Input:  [integer  (:)   ]  1: max allowed lai; 0: not at max        
+         peaklai               => cnveg_state_inst%peaklai_patch                    , & ! Input:  [integer  (:)   ]  1: max allowed lai; 0: not at max
          aleafi                => cnveg_state_inst%aleafi_patch                     , & ! Output: [real(r8) (:)   ]  saved allocation coefficient from phase 2
          astemi                => cnveg_state_inst%astemi_patch                     , & ! Output: [real(r8) (:)   ]  saved allocation coefficient from phase 2
-         aleaf                 => cnveg_state_inst%aleaf_patch                      , & ! Output: [real(r8) (:)   ]  leaf allocation coefficient             
-         astem                 => cnveg_state_inst%astem_patch                      , & ! Output: [real(r8) (:)   ]  stem allocation coefficient             
+         aleaf                 => cnveg_state_inst%aleaf_patch                      , & ! Output: [real(r8) (:)   ]  leaf allocation coefficient
+         astem                 => cnveg_state_inst%astem_patch                      , & ! Output: [real(r8) (:)   ]  stem allocation coefficient
          aroot                 => cnveg_state_inst%aroot_patch                      , & ! Output: [real(r8) (:)   ]  root allocation coefficient
          arepr                 => cnveg_state_inst%arepr_patch                      , & ! Output: [real(r8) (:,:) ]  reproductive allocation coefficient(s)
-         grain_flag            => cnveg_state_inst%grain_flag_patch                 , & ! Output: [real(r8) (:)   ]  1: grain fill stage; 0: not             
-         c_allometry           => cnveg_state_inst%c_allometry_patch                , & ! Output: [real(r8) (:)   ]  C allocation index (DIM)                
-         n_allometry           => cnveg_state_inst%n_allometry_patch                , & ! Output: [real(r8) (:)   ]  N allocation index (DIM)                
-         tempsum_potential_gpp => cnveg_state_inst%tempsum_potential_gpp_patch      , & ! Output: [real(r8) (:)   ]  temporary annual sum of potential GPP   
+         grain_flag            => cnveg_state_inst%grain_flag_patch                 , & ! Output: [real(r8) (:)   ]  1: grain fill stage; 0: not
+         c_allometry           => cnveg_state_inst%c_allometry_patch                , & ! Output: [real(r8) (:)   ]  C allocation index (DIM)
+         n_allometry           => cnveg_state_inst%n_allometry_patch                , & ! Output: [real(r8) (:)   ]  N allocation index (DIM)
+         tempsum_potential_gpp => cnveg_state_inst%tempsum_potential_gpp_patch      , & ! Output: [real(r8) (:)   ]  temporary annual sum of potential GPP
          tempmax_retransn      => cnveg_state_inst%tempmax_retransn_patch           , & ! Output: [real(r8) (:)   ]  temporary annual max of retranslocated N pool (gN/m2)
-         annsum_potential_gpp  => cnveg_state_inst%annsum_potential_gpp_patch       , & ! Output: [real(r8) (:)   ]  annual sum of potential GPP             
-         annmax_retransn       => cnveg_state_inst%annmax_retransn_patch            , & ! Output: [real(r8) (:)   ]  annual max of retranslocated N pool     
+         annsum_potential_gpp  => cnveg_state_inst%annsum_potential_gpp_patch       , & ! Output: [real(r8) (:)   ]  annual sum of potential GPP
+         annmax_retransn       => cnveg_state_inst%annmax_retransn_patch            , & ! Output: [real(r8) (:)   ]  annual max of retranslocated N pool
 
          leafc                 => cnveg_carbonstate_inst%leafc_patch                , & ! Input:  [real(r8) (:)   ]
-         frootc                => cnveg_carbonstate_inst%frootc_patch               , & ! Input:  [real(r8) (:)   ]                                          
-         livestemc             => cnveg_carbonstate_inst%livestemc_patch            , & ! Input:  [real(r8) (:)   ]                                          
+         frootc                => cnveg_carbonstate_inst%frootc_patch               , & ! Input:  [real(r8) (:)   ]
+         livestemc             => cnveg_carbonstate_inst%livestemc_patch            , & ! Input:  [real(r8) (:)   ]
 
-         retransn              => cnveg_nitrogenstate_inst%retransn_patch           , & ! Input:  [real(r8) (:)   ]  (gN/m2) plant pool of retranslocated N  
+         retransn              => cnveg_nitrogenstate_inst%retransn_patch           , & ! Input:  [real(r8) (:)   ]  (gN/m2) plant pool of retranslocated N
 
-         annsum_npp            => cnveg_carbonflux_inst%annsum_npp_patch            , & ! Input:  [real(r8) (:)   ]  annual sum of NPP, for wood allocation  
+         annsum_npp            => cnveg_carbonflux_inst%annsum_npp_patch            , & ! Input:  [real(r8) (:)   ]  annual sum of NPP, for wood allocation
          gpp                   => cnveg_carbonflux_inst%gpp_before_downreg_patch    , & ! Output: [real(r8) (:)   ]  GPP flux before downregulation (gC/m2/s)
          availc                => cnveg_carbonflux_inst%availc_patch                , & ! Output: [real(r8) (:)   ]  C flux available for allocation (gC/m2/s)
 
@@ -609,9 +609,9 @@ contains
          avail_retransn        => cnveg_nitrogenflux_inst%avail_retransn_patch      , & ! Output: [real(r8) (:)   ]  N flux available from retranslocation pool (gN/m2/s)
          retransn_to_npool     => cnveg_nitrogenflux_inst%retransn_to_npool_patch   , & ! Output: [real(r8) (:)   ]  deployment of retranslocated N (gN/m2/s)
          sminn_to_npool        => cnveg_nitrogenflux_inst%sminn_to_npool_patch      , & ! Output: [real(r8) (:)   ]  deployment of soil mineral N uptake (gN/m2/s)
-         leafn_to_retransn     => cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Output: [real(r8) (:)   ]                                          
-         frootn_to_retransn    => cnveg_nitrogenflux_inst%frootn_to_retransn_patch  , & ! Output: [real(r8) (:)   ]                                          
-         livestemn_to_retransn => cnveg_nitrogenflux_inst%livestemn_to_retransn_patch & ! Output: [real(r8) (:)   ]                                          
+         leafn_to_retransn     => cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Output: [real(r8) (:)   ]
+         frootn_to_retransn    => cnveg_nitrogenflux_inst%frootn_to_retransn_patch  , & ! Output: [real(r8) (:)   ]
+         livestemn_to_retransn => cnveg_nitrogenflux_inst%livestemn_to_retransn_patch & ! Output: [real(r8) (:)   ]
          )
 
       ! set time steps
@@ -688,7 +688,7 @@ contains
                      astem(p) = 1._r8 - aleaf(p) - aroot(p)
                   end if
 
-                  ! AgroIBIS included here an immediate adjustment to aleaf & astem if the 
+                  ! AgroIBIS included here an immediate adjustment to aleaf & astem if the
                   ! predicted lai from the above allocation coefficients exceeded laimx.
                   ! We have decided to live with lais slightly higher than laimx by
                   ! enforcing the cap in the following tstep through the peaklai logic above.
@@ -769,9 +769,9 @@ contains
 
          ! based on available C, use constant allometric relationships to
          ! determine N requirements
-         
-         !RF. I removed the growth respiration from this, because it is used to calculate 
-         !plantCN for N uptake AND c_allometry for allocation. If we add gresp to the 
+
+         !RF. I removed the growth respiration from this, because it is used to calculate
+         !plantCN for N uptake AND c_allometry for allocation. If we add gresp to the
          !allometry calculation then we allocate too much carbon since gresp is not allocated here.
          if (.not. use_fun) then
             g1a = g1
@@ -800,7 +800,7 @@ contains
          end if
 
          plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
- 
+
          ! retranslocated N deployment depends on seasonal cycle of potential GPP
          ! (requires one year run to accumulate demand)
 
@@ -859,7 +859,7 @@ contains
          ! Beth's code: crops pull from retransn pool only during grain fill;
          !              retransn pool has N from leaves, stems, and roots for
          !              retranslocation
-         
+
          if(.not.use_fun)then
 
 	    if (ivt(p) >= npcropmin .and. grain_flag(p) == 1._r8) then
@@ -891,13 +891,13 @@ contains
 	          plant_ndemand(p) = plant_ndemand(p) - retransn_to_npool(p)
 	       end if
 	    end if
-	         
+
          end if !use_fun
 
       end do ! end patch loop
 
-    end associate 
+    end associate
 
   end subroutine calc_plant_nitrogen_demand
-  
+
 end module NutrientCompetitionCLM45defaultMod
