@@ -146,8 +146,9 @@ module clm_varctl
   logical, public :: use_crop = .false.
 
   ! Whether we're using the AgSys crop model
-  ! TODO(wjs, 2022-03-30) Add namelist control of this variable
-  logical, public :: use_crop_agsys = .false.
+  ! TODO(wjs, 2022-03-30) Add namelist control of this variable (at which point we'll
+  ! need to remove the 'parameter' attribute)
+  logical, public, parameter :: use_crop_agsys = .false.
 
   ! true => separate crop landunit is not created by default
   logical, public :: create_crop_landunit = .false.     
