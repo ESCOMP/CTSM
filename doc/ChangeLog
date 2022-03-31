@@ -1,4 +1,78 @@
 ===============================================================
+Tag name: ctsm5.1.dev090
+Originator(s): samrabin (Sam Rabin)
+Date: Thu Mar 31 15:03:34 MDT 2022
+One-line Summary: Fix misleading name of "gddplant"
+
+Purpose and description of changes
+----------------------------------
+
+1. Rename `gddplant_patch` to `hui_patch` (and `GDDPLANT` to `HUI`).
+2. Add new variable `gddaccum_patch` (output `GDDACCUM`).
+
+Output variable `GDDPLANT` (not included by default) is now `HUI`, and
+new output `GDDACCUM` has been added to track _actual_ accumulation of
+GDDs since planting without any modifications such as occurs here:
+https://github.com/ESCOMP/CTSM/blob/d9ae4b48d9c55fe3c998019bcf76817da570db87/src/biogeochem/CNPhenologyMod.F90#L2044-L2046
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1655 (gddplant_patch (GDDPLANT) is misleadingly
+  named)
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- See above notes about changes to some output variables
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Changed variables output in crop testmod (and any testmods that inherit
+  from it)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+There are FIELDLIST diffs for cases using the crop testmod or other
+testmods inheriting from it, but otherwise bit-for-bit.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1684
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev089
 Originator(s): sacks (Bill Sacks)
 Date: Thu Mar 31 11:44:12 MDT 2022
