@@ -46,6 +46,7 @@ module ncdio_pio
   ! !PUBLIC MEMBER FUNCTIONS:
 
   public :: check_var             ! determine if variable is on netcdf file
+  public :: check_dim             ! determine if dimension is on netcdf file
   public :: check_var_or_dim      ! determine if variable or dimension is on netcdf file
   public :: ncd_io                ! do fake i/o (currently only set up to read)
   public :: ncd_inqvid            ! inquire on a variable id
@@ -295,12 +296,30 @@ contains
   end subroutine check_var
 
   !-----------------------------------------------------------------------
+  subroutine check_dim(ncid, dimname, dimexist)
+    !
+    ! Fake to check if dimension is on netcdf file
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(inout) :: ncid     ! PIO file descriptor
+    character(len=*)   , intent(in)    :: dimname  ! dimension name
+    logical            , intent(out)   :: dimexist ! if this dimension exists or not
+    !
+    ! !LOCAL VARIABLES:
+    integer :: dimid
+
+    character(len=*), parameter :: subname = 'check_dim'
+    !-----------------------------------------------------------------------
+
+    call ncd_inqdid(ncid, dimname, dimid, dimexist)
+
+  end subroutine check_dim
+
+  !-----------------------------------------------------------------------
   subroutine check_var_or_dim(ncid, name, is_dim, exists)
     !
     ! !DESCRIPTION:
     ! Fake to check if variable or dimension is on netcdf file
-    !
-    ! NOTE: dimension check currently not implemented!
     !
     ! !ARGUMENTS:
     class(file_desc_t) , intent(inout) :: ncid   ! PIO file descriptor
@@ -314,7 +333,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (is_dim) then
-       call shr_sys_abort(subname//': is_dim=.true. not yet implemented')
+       call check_dim(ncid, name, exists)
     else
        call check_var(ncid, name, exists, print_err=.false.)
     end if
