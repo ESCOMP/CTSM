@@ -1,4 +1,103 @@
 ===============================================================
+Tag name: ctsm5.1.dev089
+Originator(s): sacks (Bill Sacks)
+Date: Thu Mar 31 11:44:12 MDT 2022
+One-line Summary: For CLM45 apply peaklai to aleaf in grainfill
+
+Purpose and description of changes
+----------------------------------
+
+This tag makes the crop allocation code in
+NutrientCompetitionCLM45defaultMod consistent with that in
+NutrientCompetitionFlexibleCNMod by forcing aleaf to 1e-5 if peaklai has
+been reached during the grainfill period (in addition to the similar
+existing check that was already in both places during the vegetative
+growth period). This reconciliation will be helpful so that I can
+extract these into a shared subroutine.
+
+I thought this would potentially change answers for CLM45 cases, but
+based on the test suite and from a 5-year run of IHistClm45BgcCrop at
+f19_g17 resolution, it seems like this won't change answers in our
+typical configurations: From that 5-year f19_g17 run, whenever peaklai
+is 1 during the grainfill period, aleaf is already exactly 1e-5. I don't
+understand why this is always the case; maybe, in Clm45, if peaklai
+isn't reached before grainfill then it is never reached that growing
+season? I have come to suspect that the difference between Clm45 and
+Clm50 in this respect may actually be due to whether you're running with
+FUN, since running with FUN changes some relevant driver sequencing. So
+it's possible that this would change answers for the atypical situation
+where someone was running with FUN but not FlexibleCN; in this case, I
+think this change would be the right thing to do. In addition, from the
+test suite, I found this leads to answer changes when using CLM45
+together with old hydrology (h2osfcflag = 0 and use_subgrid_fluxes =
+.false.).
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but only in very limited cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Very limited cases with crop and without
+      FlexibleCN (see below for details)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      not investigated, but suspected to be larger than roundoff / same climate
+
+      I thought this would potentially change answers for CLM45 cases,
+      but based on the test suite and from a 5-year run of
+      IHistClm45BgcCrop at f19_g17 resolution, it seems like this won't
+      change answers in our typical configurations: From that 5-year
+      f19_g17 run, whenever peaklai is 1 during the grainfill period,
+      aleaf is already exactly 1e-5. I don't understand why this is
+      always the case; maybe, in Clm45, if peaklai isn't reached before
+      grainfill then it is never reached that growing season? I have
+      come to suspect that the difference between Clm45 and Clm50 in
+      this respect may actually be due to whether you're running with
+      FUN, since running with FUN changes some relevant driver
+      sequencing. So it's possible that this would change answers for
+      the atypical situation where someone was running with FUN but not
+      FlexibleCN; in this case, I think this change would be the right
+      thing to do. In addition, from the test suite, I found this leads
+      to answer changes when using CLM45 together with old hydrology
+      (h2osfcflag = 0 and use_subgrid_fluxes = .false.).
+
+      Tests with answer changes were:
+      ERP_D_P36x2_Ld3.f10_f10_mg37.I2000Clm45BgcCrop.cheyenne_gnu.clm-no_subgrid_fluxes
+      SMS_D_Ld1_P48x1.f10_f10_mg37.I2000Clm45BgcCrop.izumi_nag.clm-oldhyd
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1694
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev088
 Originator(s): samrabin (Sam Rabin)
 Date: Mon Mar 28 10:13:22 MDT 2022
