@@ -695,7 +695,6 @@ contains
 
                   astemi(p) = astem(p) ! save for use by equations after shift
                   aleafi(p) = aleaf(p) ! to reproductive phenology stage begins
-                  grain_flag(p) = 0._r8 ! setting to 0 while in phase 2
 
                   ! Phase 2 completed:
                   ! ==================
@@ -811,7 +810,9 @@ contains
 
          if (ivt(p) >= npcropmin) then
             if (croplive(p)) then
-               if (crop_phase(p) == cphase_grainfill) then
+               if (crop_phase(p) == cphase_leafemerge) then
+                  grain_flag(p) = 0._r8 ! setting to 0 while in phase 2
+               else if (crop_phase(p) == cphase_grainfill) then
                   !Beth's retranslocation of leafn, stemn, rootn to organ
                   !Filter excess plant N to retransn pool for organ N
                   !Only do one time then hold grain_flag till onset next season
