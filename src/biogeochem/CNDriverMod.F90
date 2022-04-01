@@ -11,7 +11,7 @@ module CNDriverMod
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_nitrif_denitrif, use_nguardrail
-  use clm_varctl                      , only : iulog, use_crop
+  use clm_varctl                      , only : iulog, use_crop, use_crop_agsys
   use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, century_decomp, decomp_method
   use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
@@ -113,7 +113,7 @@ contains
     use clm_varpar                        , only: nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
     use subgridAveMod                     , only: p2c
     use CropType                          , only: crop_type
-    use CNAllocationMod                   , only: calc_gpp_mr_availc
+    use CNAllocationMod                   , only: calc_gpp_mr_availc, calc_crop_allocation_fractions
     use CNNDynamicsMod                    , only: CNNDeposition,CNNFixation, CNNFert, CNSoyfix,CNFreeLivingFixation
     use CNMRespMod                        , only: CNMResp
     use CNFUNMod                          , only: CNFUNInit  !, CNFUN 
@@ -390,6 +390,11 @@ contains
           crop_inst, photosyns_inst, canopystate_inst, &
           cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
           c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst)
+
+     if (.not. use_crop_agsys) then
+        call calc_crop_allocation_fractions(bounds, num_pcropp, filter_pcropp, &
+             crop_inst, cnveg_state_inst)
+     end if
      call t_stopf('cnalloc')
 
      call t_startf('calc_plant_nutrient_demand')

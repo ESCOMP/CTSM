@@ -26,7 +26,7 @@ module NutrientCompetitionFlexibleCNMod
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
   use CropReprPoolsMod    , only : nrepr
   use CNPhenologyMod      , only : CropPhase
-  use CropType            , only : cphase_planted, cphase_leafemerge, cphase_grainfill
+  use CropType            , only : cphase_leafemerge, cphase_grainfill
   use clm_varctl          , only : iulog
   use abortutils          , only : endrun
   !
@@ -999,7 +999,6 @@ contains
     real(r8) :: cnl, cnfr, cnlw, cndw                      ! C:N ratios for leaf, fine root, and wood
     real(r8) :: f5(nrepr)                                  ! reproductive allocation parameters
     real(r8) :: cng                                        ! C:N ratio for grain (= cnlw for now; slevis)
-    real(r8) :: fleaf                                      ! fraction allocated to leaf
     real(r8) :: t1                                         ! temporary variable
     real(r8) :: dt                                         ! model time step
     real(r8) :: f5_tot                                     ! sum of f5 terms
@@ -1040,35 +1039,21 @@ contains
          fleafcn               => pftcon%fleafcn                                    , & ! Input:  leaf c:n during organ fill
          ffrootcn              => pftcon%ffrootcn                                   , & ! Input:  froot c:n during organ fill
          fstemcn               => pftcon%fstemcn                                    , & ! Input:  stem c:n during organ fill
-         bfact                 => pftcon%bfact                                      , & ! Input:  parameter used below
-         aleaff                => pftcon%aleaff                                     , & ! Input:  parameter used below
-         arootf                => pftcon%arootf                                     , & ! Input:  parameter used below
          astemf                => pftcon%astemf                                     , & ! Input:  parameter used below
-         arooti                => pftcon%arooti                                     , & ! Input:  parameter used below
-         fleafi                => pftcon%fleafi                                     , & ! Input:  parameter used below
-         allconsl              => pftcon%allconsl                                   , & ! Input:  parameter used below
-         allconss              => pftcon%allconss                                   , & ! Input:  parameter used below
          grperc                => pftcon%grperc                                     , & ! Input:  parameter used below
          grpnow                => pftcon%grpnow                                     , & ! Input:  parameter used below
-         declfact              => pftcon%declfact                                   , & ! Input:
          season_decid          => pftcon%season_decid                               , & ! Input:  binary flag for seasonal-deciduous leaf habit (0 or 1)
          stress_decid          => pftcon%stress_decid                               , & ! Input:  binary flag for stress-deciduous leaf habit (0 or 1)
 
          laisun                => canopystate_inst%laisun_patch                     , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index
          laisha                => canopystate_inst%laisha_patch                     , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index
 
-         hui                   => crop_inst%hui_patch                               , & ! Input:  [real(r8) (:)   ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
          croplive              => crop_inst%croplive_patch                          , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
 
-         gddmaturity           => cnveg_state_inst%gddmaturity_patch                , & ! Input:  [real(r8) (:)   ]  gdd needed to harvest
-         huigrain              => cnveg_state_inst%huigrain_patch                   , & ! Input:  [real(r8) (:)   ]  same to reach vegetative maturity
-         peaklai               => cnveg_state_inst%peaklai_patch                    , & ! Input:  [integer  (:)   ]  1: max allowed lai; 0: not at max
-         aleafi                => cnveg_state_inst%aleafi_patch                     , & ! Output: [real(r8) (:)   ]  saved allocation coefficient from phase 2
-         astemi                => cnveg_state_inst%astemi_patch                     , & ! Output: [real(r8) (:)   ]  saved allocation coefficient from phase 2
-         aleaf                 => cnveg_state_inst%aleaf_patch                      , & ! Output: [real(r8) (:)   ]  leaf allocation coefficient
-         astem                 => cnveg_state_inst%astem_patch                      , & ! Output: [real(r8) (:)   ]  stem allocation coefficient
-         aroot                 => cnveg_state_inst%aroot_patch                      , & ! Output: [real(r8) (:)   ]  root allocation coefficient
-         arepr                 => cnveg_state_inst%arepr_patch                      , & ! Output: [real(r8) (:,:) ]  reproductive allocation coefficient(s)
+         aleaf                 => cnveg_state_inst%aleaf_patch                      , & ! Input: [real(r8) (:)   ]  leaf allocation coefficient
+         astem                 => cnveg_state_inst%astem_patch                      , & ! Input: [real(r8) (:)   ]  stem allocation coefficient
+         aroot                 => cnveg_state_inst%aroot_patch                      , & ! Input: [real(r8) (:)   ]  root allocation coefficient
+         arepr                 => cnveg_state_inst%arepr_patch                      , & ! Input: [real(r8) (:,:) ]  reproductive allocation coefficient(s)
          grain_flag            => cnveg_state_inst%grain_flag_patch                 , & ! Output: [real(r8) (:)   ]  1: grain fill stage; 0: not
          c_allometry           => cnveg_state_inst%c_allometry_patch                , & ! Output: [real(r8) (:)   ]  C allocation index (DIM)
          n_allometry           => cnveg_state_inst%n_allometry_patch                , & ! Output: [real(r8) (:)   ]  N allocation index (DIM)
@@ -1129,132 +1114,16 @@ contains
          end if
 
          f4   = flivewd(ivt(p))
-         g1   = grperc(ivt(p))
+         if (ivt(p) >= npcropmin) then
+            g1 = 0.25_r8
+         else
+            g1 = grperc(ivt(p))
+         end if
          g2   = grpnow(ivt(p))
          cnl  = leafcn(ivt(p))
          cnfr = frootcn(ivt(p))
          cnlw = livewdcn(ivt(p))
          cndw = deadwdcn(ivt(p))
-
-
-         ! calculate f1 to f5 for prog crops following AgroIBIS subr phenocrop
-
-         do k = 1, nrepr
-            f5(k) = 0._r8 ! continued intializations from above
-         end do
-
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
-
-            if (croplive(p)) then
-               ! same phases appear in subroutine CropPhenology
-
-               ! Phase 1 completed:
-               ! ==================
-               ! if hui is less than the number of gdd needed for filling of grain
-               ! leaf emergence also has to have taken place for lai changes to occur
-               ! and carbon assimilation
-               ! Next phase: leaf emergence to start of leaf decline
-
-               if (crop_phase(p) == cphase_leafemerge) then
-
-                  ! allocation rules for crops based on maturity and linear decrease
-                  ! of amount allocated to roots over course of the growing season
-
-                  do k = 1, nrepr
-                     arepr(p,k) = 0._r8
-                  end do
-                  if (peaklai(p) == 1) then ! lai at maximum allowed
-                     aleaf(p) = 1.e-5_r8
-                     astem(p) = 0._r8
-                     aroot(p) = 1._r8 - aleaf(p)
-                  else
-                     aroot(p) = max(0._r8, min(1._r8, arooti(ivt(p)) -   &
-                          (arooti(ivt(p)) - arootf(ivt(p))) *  &
-                          min(1._r8, hui(p)/gddmaturity(p))))
-                     fleaf = fleafi(ivt(p)) * (exp(-bfact(ivt(p))) -         &
-                          exp(-bfact(ivt(p))*hui(p)/huigrain(p))) / &
-                          (exp(-bfact(ivt(p)))-1) ! fraction alloc to leaf (from J Norman alloc curve)
-                     aleaf(p) = max(1.e-5_r8, (1._r8 - aroot(p)) * fleaf)
-                     astem(p) = 1._r8 - aleaf(p) - aroot(p)
-                  end if
-
-                  ! AgroIBIS included here an immediate adjustment to aleaf & astem if the
-                  ! predicted lai from the above allocation coefficients exceeded laimx.
-                  ! We have decided to live with lais slightly higher than laimx by
-                  ! enforcing the cap in the following tstep through the peaklai logic above.
-
-                  astemi(p) = astem(p) ! save for use by equations after shift
-                  aleafi(p) = aleaf(p) ! to reproductive phenology stage begins
-
-                  ! Phase 2 completed:
-                  ! ==================
-                  ! shift allocation either when enough gdd are accumulated or maximum number
-                  ! of days has elapsed since planting
-
-               else if (crop_phase(p) == cphase_grainfill) then
-                  aroot(p) = max(0._r8, min(1._r8, arooti(ivt(p)) - &
-                       (arooti(ivt(p)) - arootf(ivt(p))) * min(1._r8, hui(p)/gddmaturity(p))))
-                  if (astemi(p) > astemf(ivt(p))) then
-                     astem(p) = max(0._r8, max(astemf(ivt(p)), astem(p) * &
-                          (1._r8 - min((hui(p)-                 &
-                          huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
-                          huigrain(p)),1._r8)**allconss(ivt(p)) )))
-                  end if
-
-                  ! If crops have hit peaklai, then set leaf allocation to small value
-                  if (peaklai(p) == 1) then
-                     aleaf(p) = 1.e-5_r8
-                  else if (aleafi(p) > aleaff(ivt(p))) then
-                     aleaf(p) = max(1.e-5_r8, max(aleaff(ivt(p)), aleaf(p) * &
-                          (1._r8 - min((hui(p)-                    &
-                          huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
-                          huigrain(p)),1._r8)**allconsl(ivt(p)) )))
-                  end if
-
-                  ! For AgroIBIS-based crop model, all repr allocation is assumed to go
-                  ! into the last reproductive pool. In practice there is only a single
-                  ! reproductive pool with the AgroIBIS-based crop model, but for
-                  ! software testing we can have multiple, in which situation we want the
-                  ! active pool to be the last one.
-                  do k = 1, nrepr-1
-                     arepr(p,k) = 0._r8
-                  end do
-                  arepr(p,nrepr) = 1._r8 - aroot(p) - astem(p) - aleaf(p)
-
-               else if (crop_phase(p) == cphase_planted) then
-                  ! pre emergence
-                  ! allocation coefficients should be irrelevant because crops have no
-                  ! live carbon pools; this applies to this "else" and to the "else" a few
-                  ! lines down
-                  aleaf(p) = 1.e-5_r8
-                  astem(p) = 0._r8
-                  aroot(p) = 0._r8
-                  do k = 1, nrepr
-                     arepr(p,k) = 0._r8
-                  end do
-
-               else
-                  write(iulog,*) "ERROR in " // subname // ": unexpected crop_phase: ", crop_phase(p)
-                  call endrun(msg="ERROR: unexpected crop_phase "//errmsg(sourcefile, __LINE__))
-               end if
-
-               f1 = aroot(p) / aleaf(p)
-               f3 = astem(p) / aleaf(p)
-               do k = 1, nrepr
-                  f5(k) = arepr(p,k) / aleaf(p)
-               end do
-               g1 = 0.25_r8
-
-
-            else   ! .not croplive
-               f1 = 0._r8
-               f3 = 0._r8
-               do k = 1, nrepr
-                  f5(k) = 0._r8
-               end do
-               g1 = 0.25_r8
-            end if
-         end if
 
          ! based on available C, use constant allometric relationships to
          ! determine N requirements
@@ -1269,6 +1138,11 @@ contains
                  (f3*(1._r8-f4)*(1._r8+f2))/cndw
          else if (ivt(p) >= npcropmin) then ! skip generic crops
             cng = graincn(ivt(p))
+            f1 = aroot(p) / aleaf(p)
+            f3 = astem(p) / aleaf(p)
+            do k = 1, nrepr
+               f5(k) = arepr(p,k) / aleaf(p)
+            end do
             f5_tot = 0._r8
             f5_n_tot = 0._r8
             do k = 1, nrepr
