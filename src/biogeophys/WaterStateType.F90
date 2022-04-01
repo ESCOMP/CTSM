@@ -573,15 +573,14 @@ contains
                 else
                   nbedrock = nlevsoi
                 endif
-                  do j = 1, nlevmaxurbgrnd
+                  do j = 2, nlevmaxurbgrnd ! ignore first layer
                     if (j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
                       this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exicestream%exice_bulk(g))
                     else
                       this%excess_ice_col(c,j) = 0.0_r8
                     endif
-                    this%init_exice(c,j) = 0.0_r8
-                    this%init_exice(c,j) = this%exicestream%exice_bulk(g)
                   end do
+                  this%init_exice(c,j) = this%exicestream%exice_bulk(g)
              endif
           else ! just in case zeros for lakes and other columns
             this%excess_ice_col(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
@@ -590,7 +589,6 @@ contains
         enddo
         this%exice_melt_lev(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
         this%exice_melt(bounds%begc:bounds%endc)=0.0_r8
-
       else
         this%init_exice(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
         this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
