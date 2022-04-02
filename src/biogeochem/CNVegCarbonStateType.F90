@@ -35,9 +35,9 @@ module CNVegCarbonStateType
      real(r8), pointer :: reproductivec_patch               (:,:) ! (gC/m2) reproductive (e.g., grain) C (crop model)
      real(r8), pointer :: reproductivec_storage_patch       (:,:) ! (gC/m2) reproductive (e.g., grain) C storage (crop model)
      real(r8), pointer :: reproductivec_xfer_patch          (:,:) ! (gC/m2) reproductive (e.g., grain) C transfer (crop model)
-     real(r8), pointer :: matrix_cap_reproc_patch           (:,:) ! (gC/m2) Capacity of grain C
-     real(r8), pointer :: matrix_cap_reproc_storage_patch   (:,:) ! (gC/m2) Capacity of grain storage C
-     real(r8), pointer :: matrix_cap_reproc_xfer_patch      (:,:) ! (gC/m2) Capacity of grain transfer C
+     real(r8), pointer :: matrix_cap_reproc_patch             (:) ! (gC/m2) Capacity of grain C
+     real(r8), pointer :: matrix_cap_reproc_storage_patch     (:) ! (gC/m2) Capacity of grain storage C
+     real(r8), pointer :: matrix_cap_reproc_xfer_patch        (:) ! (gC/m2) Capacity of grain transfer C
      real(r8), pointer :: leafc_patch                         (:) ! (gC/m2) leaf C
      real(r8), pointer :: leafc_storage_patch                 (:) ! (gC/m2) leaf C storage
      real(r8), pointer :: leafc_xfer_patch                    (:) ! (gC/m2) leaf C transfer
@@ -110,9 +110,9 @@ module CNVegCarbonStateType
      real(r8), pointer :: deadcrootc0_patch                   (:) ! (gC/m2) Initial value of dead coarse root C for SASU
      real(r8), pointer :: deadcrootc0_storage_patch           (:) ! (gC/m2) Initial value of dead coarse root C storage for SASU
      real(r8), pointer :: deadcrootc0_xfer_patch              (:) ! (gC/m2) Initial value of dead coarse root C transfer for SASU
-     real(r8), pointer :: reproc0_patch                     (:,:) ! (gC/m2) Initial value of fine grain C for SASU
-     real(r8), pointer :: reproc0_storage_patch             (:,:) ! (gC/m2) Initial value of fine grain C storage for SASU
-     real(r8), pointer :: reproc0_xfer_patch                (:,:) ! (gC/m2) Initial value of fine grain C transfer for SASU
+     real(r8), pointer :: reproc0_patch                       (:) ! (gC/m2) Initial value of fine grain C for SASU
+     real(r8), pointer :: reproc0_storage_patch               (:) ! (gC/m2) Initial value of fine grain C storage for SASU
+     real(r8), pointer :: reproc0_xfer_patch                  (:) ! (gC/m2) Initial value of fine grain C transfer for SASU
 
      ! pools for dynamic landcover
      real(r8), pointer :: seedc_grc                           (:) ! (gC/m2) gridcell-level pool for seeding new PFTs via dynamic landcover
@@ -408,9 +408,9 @@ contains
     allocate(this%reproductivec_storage_patch     (begp:endp, nrepr)) ; this%reproductivec_storage_patch       (:,:) = nan
     allocate(this%reproductivec_xfer_patch        (begp:endp, nrepr)) ; this%reproductivec_xfer_patch          (:,:) = nan
     if(use_matrixcn)then
-       allocate(this%matrix_cap_reprod_patch             (begp:endp)) ; this%matrix_cap_reprod_patch            (:) = nan
-       allocate(this%matrix_cap_reprod_storage_patch     (begp:endp)) ; this%matrix_cap_reprod_storage_patch    (:) = nan
-       allocate(this%matrix_cap_reprod_xfer_patch        (begp:endp)) ; this%matrix_cap_reprod_xfer_patch       (:) = nan
+       allocate(this%matrix_cap_reproc_patch             (begp:endp)) ; this%matrix_cap_reproc_patch            (:) = nan
+       allocate(this%matrix_cap_reproc_storage_patch     (begp:endp)) ; this%matrix_cap_reproc_storage_patch    (:) = nan
+       allocate(this%matrix_cap_reproc_xfer_patch        (begp:endp)) ; this%matrix_cap_reproc_xfer_patch       (:) = nan
     end if
     allocate(this%woodc_patch                            (begp:endp)) ; this%woodc_patch                        (:) = nan     
 !initial pool size of year for matrix
@@ -1678,9 +1678,9 @@ contains
              this%deadcrootc0_storage_patch(p) = 1.e-30_r8 
              this%deadcrootc0_xfer_patch(p)    = 1.e-30_r8
 
-             this%reproc0_patch(p,:)           = 1.e-30_r8
-             this%reproc0_storage_patch(p,:)   = 1.e-30_r8
-             this%reproc0_xfer_patch(p,:)      = 1.e-30_r8
+             this%reproc0_patch(p)             = 1.e-30_r8
+             this%reproc0_storage_patch(p)     = 1.e-30_r8
+             this%reproc0_xfer_patch(p)        = 1.e-30_r8
 
              this%leafc_SASUsave_patch(p)              = 0._r8
              this%leafc_storage_SASUsave_patch(p)      = 0._r8
@@ -1759,9 +1759,9 @@ contains
              this%cropseedc_deficit_patch(p)                                = 0._r8
              this%xsmrpool_loss_patch(p)                                    = 0._r8 
              if(use_matrixcn)then
-                this%matrix_cap_reprod_patch(p,:)                           = 0._r8            
-                this%matrix_cap_reprod_storage_patch(p,:)                   = 0._r8    
-                this%matrix_cap_reprod_xfer_patch(p,:)                      = 0._r8    
+                this%matrix_cap_reproc_patch(p)                             = 0._r8            
+                this%matrix_cap_reproc_storage_patch(p)                     = 0._r8    
+                this%matrix_cap_reproc_xfer_patch(p)                        = 0._r8    
                 ! I think these need to change as well...
                 this%matrix_calloc_grain_acc_patch(p)                       = 0._r8            
                 this%matrix_calloc_grainst_acc_patch(p)                     = 0._r8    
@@ -2631,12 +2631,12 @@ contains
                          this%reproductivec_storage_patch(i,:) = 0._r8
                          this%reproductivec_xfer_patch(i,:)    = 0._r8
                          if(use_matrixcn)then
-                            this%reproc0_patch(i,:)                    = 0._r8 
-                            this%reproc0_storage_patch(i,:)            = 0._r8 
-                            this%reproc0_xfer_patch(i,:)               = 0._r8 
-                            this%matrix_cap_reprod_patch(i,:)          = 0._r8 
-                            this%matrix_cap_reprod_storage_patch(i,:)  = 0._r8 
-                            this%matrix_cap_reprod_xfer_patch(i,:)     = 0._r8 
+                            this%reproc0_patch(i)                      = 0._r8 
+                            this%reproc0_storage_patch(i)              = 0._r8 
+                            this%reproc0_xfer_patch(i)                 = 0._r8 
+                            this%matrix_cap_reproc_patch(i)            = 0._r8 
+                            this%matrix_cap_reproc_storage_patch(i)    = 0._r8 
+                            this%matrix_cap_reproc_xfer_patch(i)       = 0._r8 
                          end if
                          this%cropseedc_deficit_patch(i)               = 0._r8
                          this%xsmrpool_loss_patch(i)                   = 0._r8 
@@ -4401,9 +4401,9 @@ contains
           this%deadcrootc0_patch(i)         = value_patch
           this%deadcrootc0_storage_patch(i) = value_patch
           this%deadcrootc0_xfer_patch(i)    = value_patch
-          this%reproc0_patch(i,:)           = value_patch
-          this%reproc0_storage_patch(i,:)   = value_patch
-          this%reproc0_xfer_patch(i,:)      = value_patch
+          this%reproc0_patch(i)             = value_patch
+          this%reproc0_storage_patch(i)     = value_patch
+          this%reproc0_xfer_patch(i)        = value_patch
 !!!!matrix
           this%matrix_calloc_leaf_acc_patch(i)        =  value_patch
           this%matrix_calloc_leafst_acc_patch(i)      =  value_patch
@@ -4484,11 +4484,14 @@ contains
              this%reproductivec_patch(i,k)          = value_patch
              this%reproductivec_storage_patch(i,k)  = value_patch
              this%reproductivec_xfer_patch(i,k)     = value_patch
-             this%matrix_cap_reproc_patch(i,k)         = value_patch
-             this%matrix_cap_reproc_storage_patch(i,k) = value_patch
-             this%matrix_cap_reproc_xfer_patch(i,k)    = value_patch
+             this%matrix_cap_reproc_patch(i)           = value_patch
           end do
        end do
+       do fi = 1,num_column
+          i  = filter_column(fi)
+          this%matrix_cap_reproc_storage_patch(i)   = value_patch
+          this%matrix_cap_reproc_xfer_patch(i)      = value_patch
+        end do
     end if
 
     do fi = 1,num_column

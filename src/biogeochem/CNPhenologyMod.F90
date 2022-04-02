@@ -3133,17 +3133,17 @@ contains
                   livestemn_to_biofueln(p) = t1 * livestemn(p) * biofuel_harvfrac(ivt(p))
 
                   if(use_matrixcn)then
-                     if(grainc(p) .gt. 0)then
-                        grainc_to_out = grainc(p) * matrix_update_phc(p,igrain_to_iout_phc,(grainc_to_seed(p) + grainc_to_food(p)) / grainc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     if(reproductivec(p,1) .gt. 0)then
+                        grainc_to_out = reproductivec(p,1) * matrix_update_phc(p,igrain_to_iout_phc,(repr_grainc_to_seed(p,1) + repr_grainc_to_food(p,1)) / reproductivec(p,1),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                      else
-                        grainc_to_seed(p) = 0
-                        grainc_to_food(p) = 0
+                        repr_grainc_to_seed(p,1) = 0
+                        repr_grainc_to_food(p,1) = 0
                      end if
-                     if(grainn(p) .gt. 0)then
-                        grainn_to_out = grainn(p) * matrix_update_phn(p,igrain_to_iout_phn,(grainn_to_seed(p) + grainn_to_food(p)) / grainn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     if(reproductiven(p,1) .gt. 0)then
+                        grainn_to_out = reproductiven(p,1) * matrix_update_phn(p,igrain_to_iout_phn,(repr_grainn_to_seed(p,1) + repr_grainn_to_food(p,1)) / reproductiven(p,1),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                      else
-                        grainn_to_seed(p) = 0
-                        grainn_to_food(p) = 0
+                        repr_grainn_to_seed(p,1) = 0
+                        repr_grainn_to_food(p,1) = 0
                      end if
                      if(livestemc(p) .gt. 0)then
                         livestemc_to_litter(p) = livestemc(p) * matrix_update_phc(p,ilivestem_to_iout_phc,livestemc_to_litter(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)

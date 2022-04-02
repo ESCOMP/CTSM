@@ -1208,7 +1208,7 @@ td: associate(                          &
             p = filter_soilp(fp)
             if(ivt(p) >= npcropmin)then
                ! Use one index of the grain reproductive pools to operate on
-               Xveg14c%V(p,igrain)     = cs14_veg%c_patch(p,irepr)
+               Xveg14c%V(p,igrain)     = cs14_veg%reproductivec_patch(p,irepr)
                Xveg14c%V(p,igrain_st)  = cs14_veg%reproductivec_storage_patch(p,irepr)
                Xveg14c%V(p,igrain_xf)  = cs14_veg%reproductivec_xfer_patch(p,irepr)
             end if
@@ -1314,8 +1314,8 @@ td: associate(                          &
                   if(ivt(p) >= npcropmin)then
                      ! Use one index of the grain reproductive pools to operate on
                      cs13_veg%reproc0_patch(p)               = max(cs13_veg%reproductivec_patch(p,irepr),  epsi)
-                     cs13_veg%reproc0_storage_patch(p)       = max(cs13_veg%reproductivec_storage_patch(p,irepr)  epsi)
-                     cs13_veg%reproc0_xfer_patch(p)          = max(cs13_veg%reproductivec_xfer_patch(p,irepr  epsi)
+                     cs13_veg%reproc0_storage_patch(p)       = max(cs13_veg%reproductivec_storage_patch(p,irepr), epsi)
+                     cs13_veg%reproc0_xfer_patch(p)          = max(cs13_veg%reproductivec_xfer_patch(p,irepr), epsi)
                   end if
                end do
             end if
@@ -2054,23 +2054,23 @@ td: associate(                          &
                if(ivt(p) >= npcropmin)then
                   matrix_cturnover_grain_acc(p)    = matrix_cturnover_grain_acc(p) &
                                                    + (matrix_phturnover(p,igrain)+matrix_gmturnover(p,igrain)+matrix_fiturnover(p,igrain)) &
-                                                   * reproductivec(p)
+                                                   * reproductivec(p,irepr)
                   matrix_cturnover_grainst_acc(p)  = matrix_cturnover_grainst_acc(p) &
                                                    + (matrix_phturnover(p,igrain_st)+matrix_gmturnover(p,igrain_st)+matrix_fiturnover(p,igrain_st)) &
-                                                   * reproductivec_storage(p)
+                                                   * reproductivec_storage(p,irepr)
                   matrix_cturnover_grainxf_acc(p)  = matrix_cturnover_grainxf_acc(p) &
                                                    + (matrix_phturnover(p,igrain_xf)+matrix_gmturnover(p,igrain_xf)+matrix_fiturnover(p,igrain_xf)) &
-                                                   * reproductivec_xfer(p)
+                                                   * reproductivec_xfer(p,irepr)
                   if(use_c13)then
                      cs13_veg%matrix_cturnover_grain_acc_patch(p)    = cs13_veg%matrix_cturnover_grain_acc_patch(p) &
                                                                      + (matrix_phturnover(p,igrain)+matrix_gmturnover(p,igrain)+matrix_fiturnover(p,igrain)) &
-                                                                     * cs13_veg%reproductivec_patch(p)
+                                                                     * cs13_veg%reproductivec_patch(p,irepr)
                      cs13_veg%matrix_cturnover_grainst_acc_patch(p)  = cs13_veg%matrix_cturnover_grainst_acc_patch(p) &
                                                                      + (matrix_phturnover(p,igrain_st)+matrix_gmturnover(p,igrain_st)+matrix_fiturnover(p,igrain_st)) &
-                                                                     * cs13_veg%reproductivec_storage_patch(p)
+                                                                     * cs13_veg%reproductivec_storage_patch(p,irepr)
                      cs13_veg%matrix_cturnover_grainxf_acc_patch(p)  = cs13_veg%matrix_cturnover_grainxf_acc_patch(p) &
                                                                      + (matrix_phturnover(p,igrain_xf)+matrix_gmturnover(p,igrain_xf)+matrix_fiturnover(p,igrain_xf)) &
-                                                                     * cs13_veg%reproductivec_xfer_patch(p)
+                                                                     * cs13_veg%reproductivec_xfer_patch(p,irepr)
                   end if
                   if(use_c14)then
                      associate( &
@@ -2079,13 +2079,13 @@ td: associate(                          &
                      )
                      cs14_veg%matrix_cturnover_grain_acc_patch(p)    = cs14_veg%matrix_cturnover_grain_acc_patch(p) &
                                                                + (matrix_phturnover(p,igrain)+matrix_gmturnover(p,igrain)+matrix_c14fiturnover(p,igrain)) &
-                                                               * cs14_veg%reproductivec_patch(p)
+                                                               * cs14_veg%reproductivec_patch(p,irepr)
                      cs14_veg%matrix_cturnover_grainst_acc_patch(p)  = cs14_veg%matrix_cturnover_grainst_acc_patch(p) &
                                                                + (matrix_phturnover(p,igrain_st)+matrix_gmturnover(p,igrain_st)+matrix_c14fiturnover(p,igrain_st)) &
-                                                               * cs14_veg%reproductivec_storage_patch(p)
+                                                               * cs14_veg%reproductivec_storage_patch(p,irepr)
                      cs14_veg%matrix_cturnover_grainxf_acc_patch(p)  = cs14_veg%matrix_cturnover_grainxf_acc_patch(p) &
                                                                + (matrix_phturnover(p,igrain_xf)+matrix_gmturnover(p,igrain_xf)+matrix_c14fiturnover(p,igrain_xf)) &
-                                                               * cs14_veg%reproductivec_xfer_patch(p)
+                                                               * cs14_veg%reproductivec_xfer_patch(p,irepr)
                      end associate
                   end if
                end if
@@ -2289,13 +2289,13 @@ td: associate(                          &
                if(ivt(p) >= npcropmin)then
                   matrix_nturnover_grain_acc(p)       = matrix_nturnover_grain_acc(p) &
                                                       + (matrix_nphturnover(p,igrain)+matrix_ngmturnover(p,igrain)+matrix_nfiturnover(p,igrain)) &
-                                                      * reproductiven(p)
+                                                      * reproductiven(p,irepr)
                   matrix_nturnover_grainst_acc(p)     = matrix_nturnover_grainst_acc(p) &
                                                       + (matrix_nphturnover(p,igrain_st)+matrix_ngmturnover(p,igrain_st)+matrix_nfiturnover(p,igrain_st)) &
-                                                      * reproductiven_storage(p)
+                                                      * reproductiven_storage(p,irepr)
                   matrix_nturnover_grainxf_acc(p)     = matrix_nturnover_grainxf_acc(p) &
                                                       + (matrix_nphturnover(p,igrain_xf)+matrix_ngmturnover(p,igrain_xf)+matrix_nfiturnover(p,igrain_xf)) & 
-                                                      * reproductiven_xfer(p)
+                                                      * reproductiven_xfer(p,irepr)
                end if
             end do
          end if
@@ -2366,7 +2366,7 @@ td: associate(                          &
                   ! fixed at 1)!
                   cs13_veg%reproductivec_patch(p,:)            = Xveg13c%V(p,igrain)
                   cs13_veg%reproductivec_storage_patch(p,:)    = Xveg13c%V(p,igrain_st)
-                  cs13_veg%reproductivenc_xfer_patch(p,:)      = Xveg13c%V(p,igrain_xf)
+                  cs13_veg%reproductivec_xfer_patch(p,:)       = Xveg13c%V(p,igrain_xf)
                end if
             end do
          end if   
@@ -2946,8 +2946,8 @@ td: associate(                          &
                            cs13_veg%deadcrootc_storage_SASUsave_patch(p) = cs13_veg%deadcrootc_storage_SASUsave_patch(p) + cs13_veg%deadcrootc_storage_patch(p)
                            cs13_veg%deadcrootc_xfer_SASUsave_patch(p)    = cs13_veg%deadcrootc_xfer_SASUsave_patch(p)    + cs13_veg%deadcrootc_xfer_patch(p)
                            if(ivt(p)  >= npcropmin)then
-                              cs13_veg%grainc_SASUsave_patch(p)          = cs13_veg%grainc_SASUsave_patch(p)             + cs13_veg%reproductivec_patch(p)
-                              cs13_veg%grainc_storage_SASUsave_patch(p)  = cs13_veg%grainc_storage_SASUsave_patch(p)     + cs13_veg%reproductivec_storage_patch(p)
+                              cs13_veg%grainc_SASUsave_patch(p)          = cs13_veg%grainc_SASUsave_patch(p)             + cs13_veg%reproductivec_patch(p,irepr)
+                              cs13_veg%grainc_storage_SASUsave_patch(p)  = cs13_veg%grainc_storage_SASUsave_patch(p)     + cs13_veg%reproductivec_storage_patch(p,irepr)
                            end if
                         end if
                         if(use_c14)then
@@ -2970,8 +2970,8 @@ td: associate(                          &
                            cs14_veg%deadcrootc_storage_SASUsave_patch(p) = cs14_veg%deadcrootc_storage_SASUsave_patch(p) + cs14_veg%deadcrootc_storage_patch(p)
                            cs14_veg%deadcrootc_xfer_SASUsave_patch(p)    = cs14_veg%deadcrootc_xfer_SASUsave_patch(p)    + cs14_veg%deadcrootc_xfer_patch(p)
                            if(ivt(p)  >= npcropmin)then
-                              cs14_veg%grainc_SASUsave_patch(p)          = cs14_veg%grainc_SASUsave_patch(p)             + cs14_veg%reproductivec_patch(p)
-                              cs14_veg%grainc_storage_SASUsave_patch(p)  = cs14_veg%grainc_storage_SASUsave_patch(p)     + cs14_veg%reproductivec_storage_patch(p)
+                              cs14_veg%grainc_SASUsave_patch(p)          = cs14_veg%grainc_SASUsave_patch(p)             + cs14_veg%reproductivec_patch(p,irepr)
+                              cs14_veg%grainc_storage_SASUsave_patch(p)  = cs14_veg%grainc_storage_SASUsave_patch(p)     + cs14_veg%reproductivec_storage_patch(p,irepr)
                            end if
                         end if
                         leafn_SASUsave(p)              = leafn_SASUsave(p)              + leafn(p)
@@ -2993,7 +2993,7 @@ td: associate(                          &
                         deadcrootn_storage_SASUsave(p) = deadcrootn_storage_SASUsave(p) + deadcrootn_storage(p)
                         deadcrootn_xfer_SASUsave(p)    = deadcrootn_xfer_SASUsave(p)    + deadcrootn_xfer(p)
                         if(ivt(p)  >= npcropmin)then
-                           grainn_SASUsave(p)          = grainn_SASUsave(p)             + reproductiven(p)
+                           grainn_SASUsave(p)          = grainn_SASUsave(p)             + reproductiven(p,irepr)
                         end if
                         if(iyr .eq. nyr_forcing)then
                            leafc(p)              = leafc_SASUsave(p)                    / (nyr_forcing/nyr_SASU)
@@ -3015,8 +3015,8 @@ td: associate(                          &
                            deadcrootc_storage(p) = deadcrootc_storage_SASUsave(p)       / (nyr_forcing/nyr_SASU)
                            deadcrootc_xfer(p)    = deadcrootc_xfer_SASUsave(p)          / (nyr_forcing/nyr_SASU)
                            if(ivt(p)  >= npcropmin)then
-                              reproductivec(p)          = grainc_SASUsave(p)                   / (nyr_forcing/nyr_SASU)
-                              reproductivec_storage(p)  = grainc_storage_SASUsave(p)           / (nyr_forcing/nyr_SASU)
+                              reproductivec(p,:)          = grainc_SASUsave(p)                   / (nyr_forcing/nyr_SASU)
+                              reproductivec_storage(p,:)  = grainc_storage_SASUsave(p)           / (nyr_forcing/nyr_SASU)
                            end if
                            if(use_c13)then
                               cs13_veg%leafc_patch(p)              = cs13_veg%leafc_SASUsave_patch(p)                    / (nyr_forcing/nyr_SASU)
@@ -3038,8 +3038,8 @@ td: associate(                          &
                               cs13_veg%deadcrootc_storage_patch(p) = cs13_veg%deadcrootc_storage_SASUsave_patch(p)       / (nyr_forcing/nyr_SASU)
                               cs13_veg%deadcrootc_xfer_patch(p)    = cs13_veg%deadcrootc_xfer_SASUsave_patch(p)          / (nyr_forcing/nyr_SASU)
                               if(ivt(p)  >= npcropmin)then
-                                 cs13_veg%reproductivec_patch(p)          = cs13_veg%grainc_SASUsave_patch(p)                   / (nyr_forcing/nyr_SASU)
-                                 cs13_veg%reproductivec_storage_patch(p)  = cs13_veg%grainc_storage_SASUsave_patch(p)           / (nyr_forcing/nyr_SASU)
+                                 cs13_veg%reproductivec_patch(p,:)          = cs13_veg%grainc_SASUsave_patch(p)                   / (nyr_forcing/nyr_SASU)
+                                 cs13_veg%reproductivec_storage_patch(p,:)  = cs13_veg%grainc_storage_SASUsave_patch(p)           / (nyr_forcing/nyr_SASU)
                               end if
                            end if
                            if(use_c14)then
@@ -3062,8 +3062,8 @@ td: associate(                          &
                               cs14_veg%deadcrootc_storage_patch(p) = cs14_veg%deadcrootc_storage_SASUsave_patch(p)       / (nyr_forcing/nyr_SASU)
                               cs14_veg%deadcrootc_xfer_patch(p)    = cs14_veg%deadcrootc_xfer_SASUsave_patch(p)          / (nyr_forcing/nyr_SASU)
                               if(ivt(p)  >= npcropmin)then
-                                 cs14_veg%reproductivec_patch(p)          = cs14_veg%grainc_SASUsave_patch(p)                   / (nyr_forcing/nyr_SASU)
-                                 cs14_veg%reproductivec_storage_patch(p)  = cs14_veg%reproductivec_storage_SASUsave_patch(p)           / (nyr_forcing/nyr_SASU)
+                                 cs14_veg%reproductivec_patch(p,:)          = cs14_veg%grainc_SASUsave_patch(p)                   / (nyr_forcing/nyr_SASU)
+                                 cs14_veg%reproductivec_storage_patch(p,:)  = cs14_veg%grainc_storage_SASUsave_patch(p)           / (nyr_forcing/nyr_SASU)
                               end if
                            end if
                            leafn(p)              = leafn_SASUsave(p)                    / (nyr_forcing/nyr_SASU)
@@ -3085,7 +3085,7 @@ td: associate(                          &
                            deadcrootn_storage(p) = deadcrootn_storage_SASUsave(p)       / (nyr_forcing/nyr_SASU)
                            deadcrootn_xfer(p)    = deadcrootn_xfer_SASUsave(p)          / (nyr_forcing/nyr_SASU)
                            if(ivt(p)  >= npcropmin)then
-                              reproductiven(p)          = grainn_SASUsave(p)                   / (nyr_forcing/nyr_SASU)
+                              reproductiven(p,:)         = grainn_SASUsave(p)                   / (nyr_forcing/nyr_SASU)
                            end if
                            leafc_SASUsave(p)              = 0
                            leafc_storage_SASUsave(p)      = 0

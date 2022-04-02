@@ -293,6 +293,7 @@ contains
     real(r8) :: frNdemand_npool_to_deadcrootn_storage   (bounds%begp:bounds%endp)
     real(r8) :: frNdemand_npool_to_reproductiven  (bounds%begp:bounds%endp, nrepr)
     real(r8) :: frNdemand_npool_to_reproductiven_storage(bounds%begp:bounds%endp, nrepr)
+    real(r8) :: tmp
 
     ! -----------------------------------------------------------------------
 
@@ -1003,8 +1004,10 @@ contains
 
          if(use_matrixcn)then
            associate( &
-              matrix_Ninput => cnveg_nitrogenflux_inst%matrix_Ninput_patch, & ! N input of matrix
-              matrix_nalloc => cnveg_nitrogenflux_inst%matrix_nalloc_patch  & ! B-matrix for nitrogen allocation
+              matrix_Ninput     => cnveg_nitrogenflux_inst%matrix_Ninput_patch,  & ! N input of matrix
+              matrix_nalloc     => cnveg_nitrogenflux_inst%matrix_nalloc_patch,  & ! B-matrix for nitrogen allocation
+              psnsun_to_cpool   => cnveg_carbonflux_inst%psnsun_to_cpool_patch,  & ! 
+              psnshade_to_cpool => cnveg_carbonflux_inst%psnshade_to_cpool_patch & ! 
            )
            if(use_c13 .and. psnsun_to_cpool(p)+psnshade_to_cpool(p).ne. 0.)then
                associate( &
@@ -1031,7 +1034,7 @@ contains
                          + npool_to_livecrootn(p) + npool_to_livecrootn_storage(p)  &
                          + npool_to_deadcrootn(p) + npool_to_deadcrootn_storage(p)   
            if (ivt(p) >= npcropmin)then
-               npool_to_veg = npool_to_veg + npool_to_grainn(p) + npool_to_grainn_storage(p)
+               npool_to_veg = npool_to_veg + npool_to_reproductiven(p,1) + npool_to_reproductiven_storage(p,1)
            end if
            if(npool_to_veg .ne. 0)then
                matrix_nalloc(p,ileaf         ) = npool_to_leafn(p)              / npool_to_veg
@@ -1047,8 +1050,8 @@ contains
                matrix_nalloc(p,ideadcroot    ) = npool_to_deadcrootn(p)         / npool_to_veg
                matrix_nalloc(p,ideadcroot_st ) = npool_to_deadcrootn_storage(p) / npool_to_veg
                if (ivt(p) >= npcropmin)then
-                  matrix_nalloc(p,igrain     ) = npool_to_grainn(p)             / npool_to_veg 
-                  matrix_nalloc(p,igrain_st  ) = npool_to_grainn_storage(p)     / npool_to_veg 
+                  matrix_nalloc(p,igrain     ) = npool_to_reproductiven(p,1)             / npool_to_veg 
+                  matrix_nalloc(p,igrain_st  ) = npool_to_reproductiven_storage(p,1)     / npool_to_veg 
                end if
                matrix_Ninput(p) = npool_to_veg - retransn_to_npool(p)
            else

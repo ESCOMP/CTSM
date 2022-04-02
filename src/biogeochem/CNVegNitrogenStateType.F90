@@ -33,9 +33,9 @@ module CNVegNitrogenStateType
      real(r8), pointer :: reproductiven_patch               (:,:) ! (gN/m2) reproductive (e.g., grain) N (crop)
      real(r8), pointer :: reproductiven_storage_patch       (:,:) ! (gN/m2) reproductive (e.g., grain) N storage (crop)
      real(r8), pointer :: reproductiven_xfer_patch          (:,:) ! (gN/m2) reproductive (e.g., grain) N transfer (crop)
-     real(r8), pointer :: matrix_cap_repron_patch           (:,:) ! (gN/m2) Capacity of grain N
-     real(r8), pointer :: matrix_cap_repron_storage_patch   (:,:) ! (gN/m2) Capacity of grain N storage
-     real(r8), pointer :: matrix_cap_repron_xfer_patch      (:,:) ! (gN/m2) Capacity of grain N transfer
+     real(r8), pointer :: matrix_cap_repron_patch             (:) ! (gN/m2) Capacity of grain N
+     real(r8), pointer :: matrix_cap_repron_storage_patch     (:) ! (gN/m2) Capacity of grain N storage
+     real(r8), pointer :: matrix_cap_repron_xfer_patch        (:) ! (gN/m2) Capacity of grain N transfer
      real(r8), pointer :: leafn_patch                         (:) ! (gN/m2) leaf N 
      real(r8), pointer :: leafn_storage_patch                 (:) ! (gN/m2) leaf N storage
      real(r8), pointer :: leafn_xfer_patch                    (:) ! (gN/m2) leaf N transfer
@@ -99,9 +99,9 @@ module CNVegNitrogenStateType
      real(r8), pointer :: deadcrootn0_storage_patch           (:) ! (gN/m2) Initial value of dead coarse root N storage for SASU
      real(r8), pointer :: deadcrootn0_xfer_patch              (:) ! (gN/m2) Initial value of dead coarse root N transfer for SASU
      real(r8), pointer :: retransn0_patch                     (:) ! (gN/m2) Initial value of dead coarse root N transfer for SASU
-     real(r8), pointer :: repron0_patch                     (:,:) ! (gN/m2) Initial value of grain N for SASU
-     real(r8), pointer :: repron0_storage_patch             (:,:) ! (gN/m2) Initial value of grain N storage for SASU
-     real(r8), pointer :: repron0_xfer_patch                (:,:) ! (gN/m2) Initial value of grain N transfer for SASU
+     real(r8), pointer :: repron0_patch                       (:) ! (gN/m2) Initial value of grain N for SASU
+     real(r8), pointer :: repron0_storage_patch               (:) ! (gN/m2) Initial value of grain N storage for SASU
+     real(r8), pointer :: repron0_xfer_patch                  (:) ! (gN/m2) Initial value of grain N transfer for SASU
 
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: dispvegn_patch                      (:) ! (gN/m2) displayed veg nitrogen, excluding storage
@@ -270,9 +270,9 @@ contains
     allocate(this%reproductiven_storage_patch     (begp:endp, nrepr)) ; this%reproductiven_storage_patch       (:,:) = nan
     allocate(this%reproductiven_xfer_patch        (begp:endp, nrepr)) ; this%reproductiven_xfer_patch          (:,:) = nan
     if(use_matrixcn)then
-       allocate(this%matrix_cap_repron_patch      (begp:endp, nrepr)) ; this%matrix_cap_repron_patch           (:,:) = nan
-       allocate(this%matrix_cap_repron_storage_patch(begp:endp, nrepr)) ; this%matrix_cap_repron_storage_patch (:,:) = nan     
-       allocate(this%matrix_cap_repron_xfer_patch (begp:endp, nrepr)) ; this%matrix_cap_repron_xfer_patch      (:,:) = nan     
+       allocate(this%matrix_cap_repron_patch             (begp:endp)) ; this%matrix_cap_repron_patch             (:) = nan
+       allocate(this%matrix_cap_repron_storage_patch     (begp:endp)) ; this%matrix_cap_repron_storage_patch     (:) = nan     
+       allocate(this%matrix_cap_repron_xfer_patch        (begp:endp)) ; this%matrix_cap_repron_xfer_patch        (:) = nan     
     end if
     allocate(this%leafn_patch                            (begp:endp)) ; this%leafn_patch                         (:) = nan
     allocate(this%leafn_storage_patch                    (begp:endp)) ; this%leafn_storage_patch                 (:) = nan     
@@ -353,9 +353,9 @@ contains
        allocate(this%deadcrootn0_patch                   (begp:endp)) ; this%deadcrootn0_patch                   (:) = nan
        allocate(this%deadcrootn0_storage_patch           (begp:endp)) ; this%deadcrootn0_storage_patch           (:) = nan
        allocate(this%deadcrootn0_xfer_patch              (begp:endp)) ; this%deadcrootn0_xfer_patch              (:) = nan
-       allocate(this%repron0_patch                (begp:endp, nrepr)) ; this%repron0_patch                     (:,:) = nan
-       allocate(this%repron0_storage_patch        (begp:endp, nrepr)) ; this%repron0_storage_patch             (:,:) = nan     
-       allocate(this%repron0_xfer_patch           (begp:endp, nrepr)) ; this%repron0_xfer_patch                (:,:) = nan     
+       allocate(this%repron0_patch                       (begp:endp)) ; this%repron0_patch                       (:) = nan
+       allocate(this%repron0_storage_patch               (begp:endp)) ; this%repron0_storage_patch               (:) = nan     
+       allocate(this%repron0_xfer_patch                  (begp:endp)) ; this%repron0_xfer_patch                  (:) = nan     
        allocate(this%retransn0_patch                     (begp:endp)) ; this%retransn0_patch                     (:) = nan
 
        allocate(this%leafn_SASUsave_patch                (begp:endp)) ; this%leafn_SASUsave_patch               (:) = nan
@@ -879,9 +879,9 @@ contains
              this%reproductiven_storage_patch(p,:) = 0._r8
              this%reproductiven_xfer_patch(p,:)    = 0._r8
              if(use_matrixcn)then
-                this%matrix_cap_repron_patch(p,:)          = 0._r8
-                this%matrix_cap_repron_storage_patch(p,:)  = 0._r8
-                this%matrix_cap_repron_xfer_patch(p,:)     = 0._r8
+                this%matrix_cap_repron_patch(p)            = 0._r8
+                this%matrix_cap_repron_storage_patch(p)    = 0._r8
+                this%matrix_cap_repron_xfer_patch(p)       = 0._r8
              end if
              this%cropseedn_deficit_patch(p)               = 0._r8
           end if
@@ -968,9 +968,9 @@ contains
              this%deadcrootn0_patch(p)         = 1.e-30_r8
              this%deadcrootn0_storage_patch(p) = 1.e-30_r8
              this%deadcrootn0_xfer_patch(p)    = 1.e-30_r8
-             this%grainn0_patch(p)             = 1.e-30_r8
-             this%grainn0_storage_patch(p)     = 1.e-30_r8
-             this%grainn0_xfer_patch(p)        = 1.e-30_r8
+             this%repron0_patch(p)             = 1.e-30_r8
+             this%repron0_storage_patch(p)     = 1.e-30_r8
+             this%repron0_xfer_patch(p)        = 1.e-30_r8
              this%retransn0_patch(p)           = 1.e-30_r8
 
              this%leafn_SASUsave_patch(p)              = 0._r8
@@ -1648,7 +1648,7 @@ contains
     if (use_crop) then
        do k = 1, nrepr
           data1dptr => this%reproductiven_patch(:,k)
-          ! e.g., grainn
+          ! e.g., grain-N
           varname = get_repr_rest_fname(k)//'n'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -1660,7 +1660,7 @@ contains
 
        do k = 1, nrepr
           data1dptr => this%reproductiven_storage_patch(:,k)
-          ! e.g., grainn_storage
+          ! e.g., grain-N storage
           varname = get_repr_rest_fname(k)//'n_storage'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -1672,17 +1672,17 @@ contains
 
        if(use_matrixcn)then
 !--- Modify this...
-!       call restartvar(ncid=ncid, flag=flag,  varname='grainn_cap', xtype=ncd_double,  &
+!       call restartvar(ncid=ncid, flag=flag,  varname='repron_cap', xtype=ncd_double,  &
 !            dim1name='pft',    long_name='grain N capacity', units='gN/m2', &
-!            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_grainn_patch)
+!            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_repron_patch)
 !
-!       call restartvar(ncid=ncid, flag=flag,  varname='grainn_storage_cap', xtype=ncd_double,  &
+!       call restartvar(ncid=ncid, flag=flag,  varname='repron_storage_cap', xtype=ncd_double,  &
 !            dim1name='pft',    long_name='grain N storage capacity', units='gN/m2', &
-!            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_grainn_storage_patch)
+!            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_repron_storage_patch)
 !
-!       call restartvar(ncid=ncid, flag=flag,  varname='grainn_xfer_cap', xtype=ncd_double,  &
+!       call restartvar(ncid=ncid, flag=flag,  varname='repron_xfer_cap', xtype=ncd_double,  &
 !            dim1name='pft',    long_name='grain N transfer capacity', units='gN/m2', &
-!            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_grainn_xfer_patch)
+!            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_repron_xfer_patch)
 
           call restartvar(ncid=ncid, flag=flag,  varname='repron0', xtype=ncd_double,  &
                dim1name='pft',    long_name='Reproductive N0', units='gN/m2', &
@@ -1692,7 +1692,7 @@ contains
                dim1name='pft',    long_name='Reproductive N0 storage', units='gN/m2', &
                interpinic_flag='interp', readvar=readvar, data=this%repron0_storage_patch)
 
-          call restartvar(ncid=ncid, flag=flag,  varname='grainn0_xfer', xtype=ncd_double,  &
+          call restartvar(ncid=ncid, flag=flag,  varname='repron0_xfer', xtype=ncd_double,  &
                dim1name='pft',    long_name='Reproductive N0 transfer', units='gN/m2', &
                interpinic_flag='interp', readvar=readvar, data=this%repron0_xfer_patch)
 
@@ -1850,9 +1850,9 @@ contains
                 this%reproductiven_storage_patch(p,:)         = 0._r8
                 this%reproductiven_xfer_patch(p,:)            = 0._r8
                 if(use_matrixcn)then
-                   this%matrix_cap_repron_patch(p,:)          = 0._r8
-                   this%matrix_cap_repron_storage_patch(p,:)  = 0._r8
-                   this%matrix_cap_repron_xfer_patch(p,:)     = 0._r8
+                   this%matrix_cap_repron_patch(p)            = 0._r8
+                   this%matrix_cap_repron_storage_patch(p)    = 0._r8
+                   this%matrix_cap_repron_xfer_patch(p)       = 0._r8
                 end if
                 this%cropseedn_deficit_patch(p)               = 0._r8
              end if
@@ -2040,9 +2040,9 @@ contains
           this%deadcrootn0_storage_patch(i)           = value_patch
           this%deadcrootn0_xfer_patch(i)              = value_patch
           if ( use_crop )then
-             this%grainn0_patch(i)                    = value_patch
-             this%grainn0_storage_patch(i)            = value_patch
-             this%grainn0_xfer_patch(i)               = value_patch
+             this%repron0_patch(i)                    = value_patch
+             this%repron0_storage_patch(i)            = value_patch
+             this%repron0_xfer_patch(i)               = value_patch
           end if
           this%retransn0_patch(i)                     = value_patch
 

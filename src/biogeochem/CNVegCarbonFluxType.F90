@@ -3931,7 +3931,7 @@ contains
 
        do k = 1, nrepr
           data1dptr => this%reproductivec_xfer_to_reproductivec_patch(:,k)
-          ! e.g., grainc_xfer_to_grainc
+          ! e.g., grain-C xfer to grainc
           varname = get_repr_rest_fname(k)//'c_xfer_to_'//get_repr_rest_fname(k)//'c'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -3948,7 +3948,7 @@ contains
 
        do k = repr_grain_min, repr_grain_max
           data1dptr => this%repr_grainc_to_food_patch(:,k)
-          ! e.g., grainc_to_food
+          ! e.g., grain-C to food
           varname = get_repr_rest_fname(k)//'c_to_food'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -3960,7 +3960,7 @@ contains
             
        do k = 1, nrepr
           data1dptr => this%cpool_to_reproductivec_patch(:,k)
-          ! e.g., cpool_to_grainc
+          ! e.g., -C-pool to grain-C
           varname = 'cpool_to_'//get_repr_rest_fname(k)//'c'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &

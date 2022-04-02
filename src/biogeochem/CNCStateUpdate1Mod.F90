@@ -430,8 +430,8 @@ ptch: do fp = 1,num_soilp
             end if
             cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt
             cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_storage_patch(p)*dt
-            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_grainc_patch(p)*dt
-            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_grainc_storage_patch(p)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_reproductivec_patch(p,1)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_reproductivec_storage_patch(p,1)*dt
             if(.not. use_matrixcn)then
                cs_veg%livestemc_patch(p)          = cs_veg%livestemc_patch(p)          + cf_veg%cpool_to_livestemc_patch(p)*dt
                cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p)  + cf_veg%cpool_to_livestemc_storage_patch(p)*dt
@@ -549,8 +549,7 @@ ptch: do fp = 1,num_soilp
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
             cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livestem_xsmr_patch(p)*dt
             do k = 1, nrepr
-               cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) -
-               cf_veg%reproductive_xsmr_patch(p,k)*dt
+               cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%reproductive_xsmr_patch(p,k)*dt
             end do
             if (harvdate(p) < 999) then ! beginning at harvest, send to atm
                ! TODO (mv, 11-02-2014) the following lines are why the cf_veg is

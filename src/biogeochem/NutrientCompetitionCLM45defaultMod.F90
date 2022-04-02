@@ -488,8 +488,8 @@ contains
                matrix_alloc(p,ilivecroot_st)  = (1.0_r8) / c_allometry(p) * f2 * f3 * f4 * (1._r8 - fcur)
                matrix_alloc(p,ideadcroot)     = (1.0_r8) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * fcur
                matrix_alloc(p,ideadcroot_st)  = (1.0_r8) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
-               matrix_alloc(p,igrain)         = (1.0_r8) / c_allometry(p) * f5 * fcur
-               matrix_alloc(p,igrain_st)      = (1.0_r8) / c_allometry(p) * f5 * (1._r8 - fcur)
+               matrix_alloc(p,igrain)         = (1.0_r8) / c_allometry(p) * f5(1) * fcur
+               matrix_alloc(p,igrain_st)      = (1.0_r8) / c_allometry(p) * f5(1) * (1._r8 - fcur)
  
                matrix_nalloc(p,ilivestem)     = (f3*f4/cnlw)                     / n_allometry(p) * fcur 
                matrix_nalloc(p,ilivestem_st)  = (f3*f4/cnlw)                     / n_allometry(p) * (1._r8 - fcur)
@@ -499,8 +499,8 @@ contains
                matrix_nalloc(p,ilivecroot_st) = (f2 * f3 * f4 /cnlw)             / n_allometry(p) * (1._r8 - fcur)
                matrix_nalloc(p,ideadcroot)    = (f2 * f3 * (1._r8 - f4)/cndw)    / n_allometry(p) * fcur
                matrix_nalloc(p,ideadcroot_st) = (f2 * f3 * (1._r8 - f4)/cndw)    / n_allometry(p) * (1._r8 - fcur)
-               matrix_nalloc(p,igrain)        = (f5 / cng)   / n_allometry(p)    * fcur
-               matrix_nalloc(p,igrain_st)     = (f5 / cng)   / n_allometry(p)    *(1._r8 - fcur)
+               matrix_nalloc(p,igrain)        = (f5(1) / cng)   / n_allometry(p)    * fcur
+               matrix_nalloc(p,igrain_st)     = (f5(1) / cng)   / n_allometry(p)    *(1._r8 - fcur)
             end if
             end associate
          end if !end use_matrixcn

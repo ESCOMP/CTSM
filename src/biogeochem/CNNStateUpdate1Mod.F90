@@ -230,7 +230,7 @@ contains
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
             ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
-                    - nf_veg%crop_seedn_to_leaf_patch(p) * dt &
+                    - nf_veg%crop_seedn_to_leaf_patch(p) * dt
             do k = repr_grain_min, repr_grain_max
                ns_veg%reproductiven_patch(p,k)   = ns_veg%reproductiven_patch(p,k) &
                     - (nf_veg%repr_grainn_to_food_patch(p,k) + nf_veg%repr_grainn_to_seed_patch(p,k))*dt
@@ -293,8 +293,6 @@ contains
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
             ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_livestemn_patch(p)*dt
             ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_livestemn_storage_patch(p)*dt
-            ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_grainn_patch(p)*dt
-            ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_grainn_storage_patch(p)*dt
             do k = 1, nrepr
                ns_veg%npool_patch(p) = ns_veg%npool_patch(p) - nf_veg%npool_to_reproductiven_patch(p,k)*dt
                ns_veg%npool_patch(p) = ns_veg%npool_patch(p) - nf_veg%npool_to_reproductiven_storage_patch(p,k)*dt
@@ -302,8 +300,6 @@ contains
             if(.not. use_matrixcn) then
                ns_veg%livestemn_patch(p)          = ns_veg%livestemn_patch(p)          + nf_veg%npool_to_livestemn_patch(p)*dt
                ns_veg%livestemn_storage_patch(p)  = ns_veg%livestemn_storage_patch(p)  + nf_veg%npool_to_livestemn_storage_patch(p)*dt
-               ns_veg%grainn_patch(p)             = ns_veg%grainn_patch(p)             + nf_veg%npool_to_grainn_patch(p)*dt
-               ns_veg%grainn_storage_patch(p)     = ns_veg%grainn_storage_patch(p)     + nf_veg%npool_to_grainn_storage_patch(p)*dt
                do k = 1, nrepr
                   ns_veg%reproductiven_patch(p,k) = ns_veg%reproductiven_patch(p,k) &
                        + nf_veg%npool_to_reproductiven_patch(p,k)*dt
