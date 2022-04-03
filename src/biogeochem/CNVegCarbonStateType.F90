@@ -4484,14 +4484,16 @@ contains
              this%reproductivec_patch(i,k)          = value_patch
              this%reproductivec_storage_patch(i,k)  = value_patch
              this%reproductivec_xfer_patch(i,k)     = value_patch
-             this%matrix_cap_reproc_patch(i)           = value_patch
           end do
        end do
-       do fi = 1,num_column
-          i  = filter_column(fi)
-          this%matrix_cap_reproc_storage_patch(i)   = value_patch
-          this%matrix_cap_reproc_xfer_patch(i)      = value_patch
-        end do
+       if(use_matrixcn)then
+          do fi = 1,num_column
+             i  = filter_column(fi)
+             this%matrix_cap_reproc_patch(i)           = value_patch
+             this%matrix_cap_reproc_storage_patch(i)   = value_patch
+             this%matrix_cap_reproc_xfer_patch(i)      = value_patch
+           end do
+       end if
     end if
 
     do fi = 1,num_column
