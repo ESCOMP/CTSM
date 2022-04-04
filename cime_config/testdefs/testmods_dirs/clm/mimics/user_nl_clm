@@ -1,3 +1,1 @@
 soil_decomp_method = 'MIMICSWieder2015'
-use_matrixcn = .false.
-use_soil_matrixcn = .false.

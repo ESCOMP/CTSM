@@ -48,27 +48,6 @@ def buildnml(case, caseroot, compname):
     clm_force_coldstart = case.get_value("CLM_FORCE_COLDSTART")
     lnd_tuning_mode = case.get_value("LND_TUNING_MODE")
     clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
-    comp_interface = case.get_value("COMP_INTERFACE")
-    lilac_mode = case.get_value("LILAC_MODE")
-    if ( comp_interface == "nuopc" ):
-       yr_start = case.get_value("DATM_YR_START")
-       yr_end   = case.get_value("DATM_YR_END")
-    else:
-       yr_start = case.get_value("DATM_CLMNCEP_YR_START")
-       yr_end   = case.get_value("DATM_CLMNCEP_YR_END")
-
-    if ( yr_start != None and yr_start < 0 ):
-       yr_start = case.get_value("DATM_CPLHIST_YR_START")
-       yr_end   = case.get_value("DATM_CPLHIST_YR_END")
-
-    # For LILAC
-    if ( yr_start == None or lilac_mode == "on" ):
-       yr_start = "0"
-       yr_end   = "0"
-
-    yr_start = int(yr_start)
-    yr_end   = int(yr_end)
-
     comp_atm = case.get_value("COMP_ATM")
     lnd_grid = case.get_value("LND_GRID")
     ninst_lnd = case.get_value("NINST_LND")
@@ -185,21 +164,9 @@ def buildnml(case, caseroot, compname):
         ignore = "-ignore_ic_date"
 
     tuning = "-lnd_tuning_mode %s "%lnd_tuning_mode
-    
-    #
-    # Spinup settings and specifics for SASU spinup
-    #
+
     spinup = "-clm_accelerated_spinup %s "%clm_accelerated_spinup
-    if ( clm_accelerated_spinup == "sasu" ):
-       if ( (yr_start != None) and (yr_end != None) ):
-         nyr = yr_end - yr_start + 1
-         if ( (yr_end <= 0) or (yr_start <= 0) ): 
-            logger.error( "ERROR: Year start and end are both negative and should not be" )
-         clm_namelist_opts = "nyr_forcing={} {}".format(nyr, clm_namelist_opts)
-       else:
-         logger.warning( "WARNING: It does not make sense to do a SASU spinup with a prognostic atmosphere model" )
-         logger.warning( "         as it expects regular atmosphere forcing that is cycled over" )
-    
+
     infile = os.path.join(ctsmconf, "namelist")
 
     inputdata_file = os.path.join(caseroot,"Buildconf","ctsm.input_data_list")

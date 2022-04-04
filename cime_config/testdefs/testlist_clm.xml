@@ -258,7 +258,7 @@
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
   <test name="ERS_Ld3" grid="f10_f10_mg37" compset="I2000Clm51Bgc" testmods="clm/ciso_cwd_hr">
@@ -383,72 +383,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D" grid="f10_f10_mg37" compset="I1850Clm51BgcCrop" testmods="clm/ciso_soil_matrixcn_only">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:20:00</option>
-      <option name="comment"  >Run soil matrix solution without CN matrix with debug on and the extra options that it interacts with (isotopes and crop)</option>
-    </options>
-  </test>
-  <test name="ERS_Lm13" grid="f10_f10_mg37" compset="I1850Clm51Bgc" testmods="clm/monthly_matrixcn_fast_spinup">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi"    compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:20:00</option>
-      <option name="comment"  >Run matrix solution fast spinup for restart beyond a year (to trigger next year logic) turning off extra options to make faster (so without crop or isotopes). This test would've caught a previous bug.</option>
-    </options>
-  </test>
-  <test name="SMS_Lm1" grid="f10_f10_mg37" compset="I1850Clm45Bgc" testmods="clm/clm45_monthly_matrixcn_soilCN30">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:20:00</option>
-      <option name="comment"  >Smoke test of soil CN-matrix on with soil CN ratio set to 30, since this crashes</option>
-    </options>
-  </test>
-  <test name="ERS_D_Lm3" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:20:00</option>
-      <option name="comment"  >Run in DEBUG with the matrix solution on with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
-    </options>
-  </test>
-  <test name="ERS_D" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi"    compiler="nag" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:20:00</option>
-      <option name="comment"  >Run in DEBUG with the matrix solution on for spinup with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
-    </options>
-  </test>
-  <test name="ERS_Lm54_Mmpi-serial" grid="1x1_numaIA" compset="I1850Clm50BgcCropQian" testmods="clm/ciso_monthly_matrixcn_spinup">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">02:00:00</option>
-      <option name="comment"  >Run without DEBUG for a long period for a single-point case with the matrix solution on for spinup with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
-    </options>
-  </test>
-  <test name="LCISO_Lm13" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:40:00</option>
-      <option name="comment"  >Run without DEBUG for a long period for a low resolution case with the matrix solution on for spinup with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
-    </options>
-  </test>
   <test name="ERP_D_Ld5" grid="f19_g17" compset="I2000Clm50BgcCru" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -489,7 +423,7 @@
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50Vic" testmods="clm/vrtlay">
@@ -497,7 +431,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f19_g17" compset="IHistClm50SpCru" testmods="clm/drydepnomegan">
@@ -606,22 +540,13 @@
       <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015'</option>
     </options>
   </test>
-  <test name="SMS_D" grid="1x1_brazil" compset="I1850Clm51BgcCrop" testmods="clm/mimics_matrixcn">
-    <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Test MIMICS with CN matrix on (but soil matrixcn off)</option>
-    </options>
-  </test>
   <test name="SMS_Ld5_Mmpi-serial" grid="1x1_brazil" compset="IHistClm50BgcQianRs" testmods="clm/mimics">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015' for a transient case</option>
+      <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015'</option>
     </options>
   </test>
   <test name="SMS_Ly5_Mmpi-serial" grid="1x1_brazil" compset="IHistClm50BgcQianRs" testmods="clm/newton_krylov_spinup">
@@ -630,7 +555,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015' with Newton-Krylov spinup variables on</option>
+      <option name="comment"  >Test soil_decomp_method = 'MIMICSWieder2015'</option>
     </options>
   </test>
   <test name="ERP_D_P36x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN">
@@ -778,7 +703,7 @@
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
   <test name="ERP_Ld5" grid="f10_f10_mg37" compset="I2000Clm50Vic" testmods="clm/decStart">
@@ -786,7 +711,7 @@
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/ciso">
@@ -1926,15 +1851,6 @@
       <option name="comment"  >Single point 3-year test with DV"</option>
     </options>
   </test>
-  <test name="SSPMATRIXCN_Ly5_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/ciso_monthly">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi"    compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:00:00</option>
-    </options>
-  </test>
   <test name="ERP_D_Ld10" grid="f19_g17" compset="I1850Clm51BgcCrop" testmods="clm/ADspinup">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1991,7 +1907,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:20:00</option>
       <option name="comment"  >Want one fates test on a large grid: Since FATES has cohorts, it has potential to be a massive memory consumer and netcdf array size maker, so the large grid test will help smoke out these types of issues (and it's a restart test to cover possible memory/netcdf size issues with the restart file).</option>
     </options>
   </test>
