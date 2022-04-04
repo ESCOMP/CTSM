@@ -47,17 +47,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <clm_accelerated_spinup>off</clm_accelerated_spinup>
 
 <!-- Spinup state for BGC -->
-<spinup_state clm_accelerated_spinup="on"  use_cn=".true."    phys="clm5_1" use_soil_matrixcn=".false.">2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_cn=".true."    phys="clm5_0" use_soil_matrixcn=".false.">2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_cn=".true."    phys="clm4_5" use_soil_matrixcn=".false.">1</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm5_1" use_soil_matrixcn=".false.">2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm5_1" use_soil_matrixcn=".false.">2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm5_0" use_soil_matrixcn=".false.">2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm5_0" use_soil_matrixcn=".false.">2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" use_soil_matrixcn=".false.">1</spinup_state>
-<spinup_state clm_accelerated_spinup="sasu"                                                            >0</spinup_state>
-<spinup_state                                                               use_soil_matrixcn=".true." >0</spinup_state>
-<spinup_state clm_accelerated_spinup="off"                                                             >0</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_cn=".true." phys="clm5_1" >2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_cn=".true." phys="clm5_0" >2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_cn=".true." phys="clm4_5" >1</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm5_1" >2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm5_1" >2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm5_0" >2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm5_0" >2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" >1</spinup_state>
+<spinup_state clm_accelerated_spinup="off"                               >0</spinup_state>
 
 <!-- Reseeding of dead plants normally only done for AD spinup -->
 <reseed_dead_plants clm_accelerated_spinup="on" use_cn=".true.">.true.</reseed_dead_plants>
@@ -72,8 +70,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hist_master_list_file>.false.</hist_master_list_file>
 
 <!-- In accelerated spinup mode reduce the amount of history output -->
-<hist_empty_htapes clm_accelerated_spinup="on"  >.true.</hist_empty_htapes>
-<hist_empty_htapes clm_accelerated_spinup="sasu">.true.</hist_empty_htapes>
+<hist_empty_htapes clm_accelerated_spinup="on">.true.</hist_empty_htapes>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true." use_cndv=".true."
 >'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS','TSAI','HTOP','HBOT'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true."
@@ -82,18 +79,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".false."
 >'TLAI','TWS'</hist_fincl1>
-<hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".true." use_cndv=".true."
->'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS','TSAI','HTOP','HBOT'</hist_fincl1>
-<hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".true."
->'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','CPOOL','NPP','TWS'</hist_fincl1>
-<hist_fincl1 clm_accelerated_spinup="sasu" use_fates=".true."
->'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS'</hist_fincl1>
-<hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".false."
->'TLAI','TWS'</hist_fincl1>
-<hist_nhtfrq clm_accelerated_spinup="on"  >-8760</hist_nhtfrq>
-<hist_nhtfrq clm_accelerated_spinup="sasu">-8760</hist_nhtfrq>
-<hist_mfilt  clm_accelerated_spinup="on"  >20</hist_mfilt>
-<hist_mfilt  clm_accelerated_spinup="sasu">20</hist_mfilt>
+<hist_nhtfrq clm_accelerated_spinup="on">-8760</hist_nhtfrq>
+<hist_mfilt  clm_accelerated_spinup="on">20</hist_mfilt>
 
 <!-- Root and stem acclimation -->
 <rootstem_acc phys="clm5_1" >.false.</rootstem_acc>
@@ -152,10 +139,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <crop_fsat_equals_zero>.false.</crop_fsat_equals_zero>
 
 <!-- MEGAN model -->
-<megan                              >1</megan>
-<megan clm_accelerated_spinup="on"  >0</megan>
-<megan clm_accelerated_spinup="sasu">0</megan>
-<megan configuration="nwp"          >0</megan>
+<megan                             >1</megan>
+<megan clm_accelerated_spinup="on" >0</megan>
+<megan configuration="nwp"         >0</megan>
 
 <!-- Supplmental Nitrogen mode -->
 <suplnitro use_cn=".true." >NONE</suplnitro>
@@ -586,6 +572,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- dynamic roots -->
 <use_dynroot phys="clm4_5"                  >.false.</use_dynroot>
 <use_dynroot phys="clm5_0"  bgc_mode="sp"   >.false.</use_dynroot>
+<use_dynroot phys="clm5_0"  bgc_mode="cn"   >.false.</use_dynroot>
 <use_dynroot phys="clm5_0"  bgc_mode="fates">.false.</use_dynroot>
 <use_dynroot phys="clm5_0"  bgc_mode="bgc"  >.false.</use_dynroot>
 <use_dynroot phys="clm5_1"                  >.false.</use_dynroot>
@@ -611,38 +598,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_hydrstress                                                       >.false.</use_hydrstress>
 <use_hydrstress phys="clm5_0"  use_fates=".false." configuration="clm">.true.</use_hydrstress>
 <use_hydrstress phys="clm5_1"  use_fates=".false." configuration="clm">.true.</use_hydrstress>
-
-
-<!-- CN Matrix options -->
-<use_matrixcn clm_accelerated_spinup="sasu" use_fates=".false." bgc_mode="bgc" >.true.</use_matrixcn>
-
-<use_matrixcn phys="clm5_1" use_fates=".false." bgc_mode="bgc"   >.true.</use_matrixcn>
-<use_matrixcn phys="clm5_0" use_fates=".false." bgc_mode="bgc"   >.true.</use_matrixcn>
-<use_matrixcn phys="clm4_5" use_fates=".false." bgc_mode="bgc"   >.true.</use_matrixcn>
-<use_matrixcn                                   bgc_mode="sp"    >.false.</use_matrixcn>
-<use_matrixcn                                   bgc_mode="fates" >.false.</use_matrixcn>
-
-<use_soil_matrixcn clm_accelerated_spinup="sasu" use_fates=".false." soil_decomp_method="CENTURYKoven2013" >.true.</use_soil_matrixcn>
-<use_soil_matrixcn phys="clm5_1" use_fates=".false." soil_decomp_method="CENTURYKoven2013" >.true.</use_soil_matrixcn>
-<use_soil_matrixcn phys="clm5_0" use_fates=".false." soil_decomp_method="CENTURYKoven2013" >.true.</use_soil_matrixcn>
-<use_soil_matrixcn phys="clm4_5" use_fates=".false." soil_decomp_method="CENTURYKoven2013" >.true.</use_soil_matrixcn>
-<use_soil_matrixcn               bgc_mode="sp"    >.false.</use_soil_matrixcn>
-<use_soil_matrixcn               bgc_mode="fates" >.false.</use_soil_matrixcn>
-<use_soil_matrixcn                                >.false.</use_soil_matrixcn>
-
-<is_outmatrix clm_accelerated_spinup="on"                             >.false.</is_outmatrix>
-<is_outmatrix clm_accelerated_spinup="sasu"                           >.false.</is_outmatrix>
-<is_outmatrix clm_accelerated_spinup="off"                            >.false.</is_outmatrix>
-<isspinup     clm_accelerated_spinup="on"   use_soil_matrixcn=".true.">.true.</isspinup>
-<isspinup     clm_accelerated_spinup="sasu" use_soil_matrixcn=".true.">.true.</isspinup>
-<isspinup     clm_accelerated_spinup="off"                            >.false.</isspinup>
-<nyr_forcing                                                          >1</nyr_forcing>
-<nyr_forcing  isspinup=".true."             use_soil_matrixcn=".true.">20</nyr_forcing>
-<!-- for SASU spinup nyr_sasu will normally be set to nyr_forcing (slow mode spinup) -->
-<nyr_sasu                                                             >1</nyr_sasu>
-<iloop_avg                                                            >-999</iloop_avg>
-<iloop_avg    isspinup=".true."             use_soil_matrixcn=".true.">-999</iloop_avg>
-
 
 <!-- General CN options -->
 <!-- Turn this on all of the time, eventually this namelist item should be removed -->

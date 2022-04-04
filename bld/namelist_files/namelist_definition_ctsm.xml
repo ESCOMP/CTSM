@@ -1018,50 +1018,6 @@ these software infrastructure tests obsolete.
 </entry>
 
 <!-- ========================================================================================  -->
-<!-- CN Matrix solution                                                                        -->
-<!-- ========================================================================================  -->
-<entry id="use_matrixcn" type="logical" category="bgc"
-       group="clm_inparm" valid_values="" value=".false.">
-Turn on the Matrix solution for above ground biogeochemistry, requires CN to be on
-</entry>
-
-<entry id="use_soil_matrixcn" type="logical" category="bgc"
-       group="clm_inparm" valid_values="" value=".false.">
-Turn on the Matrix solution for soil biogeochemistry
-</entry>
-
-<entry id="is_outmatrix" type="logical" category="bgc"
-       group="clm_inparm" valid_values="" value=".false.">
-Turn on extra output for the matrix solution
-</entry>
-
-<entry id="isspinup" type="logical" category="bgc"
-       group="clm_inparm" valid_values="" value=".false.">
-Turn on semi-analytic spinup solution for the CN/Soil matrix, requires soil matrix to be on
-This will drive the solution to equilibrium
-</entry>
-
-<entry id="nyr_forcing" type="integer" category="bgc"
-       group="clm_inparm" valid_values="" value="1">
-Number of years to average the storage capacitance over for the soil Matrix solution during semi-analytic spinup (isspinup=T)
-Normally should be the same as the number of years the atmospheric forcing is run over
-</entry>
-
-<entry id="nyr_sasu" type="integer" category="bgc"
-       group="clm_inparm" valid_values="" value="1">
-length of each semi-analytic solution. eg. nyr_SASU=5, analytic solutions will be calculated every five years.
-nyr_SASU=1: the fastest SASU, but inaccurate; nyr_SASU=nyr_forcing(eg. 20): the lowest SASU but accurate
-</entry>
-
-<entry id="iloop_avg" type="integer" category="bgc"
-       group="clm_inparm" valid_values="" value="-999">
-The restart file will be based on the average of all analytic solutions within the iloop_avg^th loop. 
-eg. if nyr_forcing = 20, iloop_avg = 8, the restart file in yr 160 will be based on analytic solutions from yr 141 to 160.
-The number of the analytic solutions within one loop depends on ratio between nyr_forcing and nyr_SASU.
-eg. if nyr_forcing = 20, nyr_SASU = 5, number of analytic solutions is 20/5=4
-</entry>
-
-<!-- ========================================================================================  -->
 <!-- Former CPP tokens -->
 <!-- ========================================================================================  -->
 <entry id="use_lch4" type="logical" category="bgc"
@@ -2148,21 +2104,21 @@ How close in years to use when looking for an initial condition file (finidat) i
 Simulation years you can look for in initial condition files (finidat) if interpolation is turned on (use_init_interp is .true.)
 </entry>
 
-<entry id="clm_accelerated_spinup" type="char*4" category="default_settings"
-       group="default_settings" valid_values="on,sasu,off" >
+<entry id="clm_accelerated_spinup" type="char*3" category="default_settings"
+       group="default_settings" valid_values="on,off" >
 Command line argument for setting up your simulation in a mode for faster
 throughput. By default turns off some options, and sets up for a lower level
 of output. When bgc_mode is some level of prognostic BGC (so NOT Satellite Phenology)
-it also sets up for accelerated decomposition. The "sasu" mode sets up
-for using the CN-matrix mode with Semi-Analytic Spin Up.
+it also sets up for accelerated decomposition.
 NOTE: THIS CORRESPONDS DIRECTLY TO THE env_run.xml VARIABLE OF THE SAME NAME.
       Set the env_run variable, rather than setting this directly.
 </entry>
 
 <entry id="bgc_mode" type="char*5" category="default_settings"
-       group="default_settings" valid_values="sp,bgc,fates" >
+       group="default_settings" valid_values="sp,cn,bgc,fates" >
 Command line arguement for biogeochemistry mode for CLM4.5
    sp  = Satellitte Phenology
+   cn  = Carbon Nitrogen model
    bgc = CLM4.5 BGC model with: 
         CENTURY model pools 
         Nitrification/De-nitrification
