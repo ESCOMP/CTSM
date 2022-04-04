@@ -45,6 +45,9 @@ module CropType
      integer , pointer :: rx_cultivar_gdds_thisyr (:,:) ! all cultivar GDD targets for this patch this year
      real(r8), pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year
      real(r8), pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
+     real(r8), pointer :: gddaccum_thisyr         (:,:) ! accumulated GDD at harvest for this patch this year
+     real(r8), pointer :: hui_thisyr              (:,:) ! accumulated heat unit index at harvest for this patch this year
+     real(r8), pointer :: harvest_reason_thisyr   (:,:) ! reason for each harvest for this patch this year
      integer , pointer :: sowing_count            (:)   ! number of sowing events this year for this patch
      integer , pointer :: harvest_count           (:)   ! number of sowing events this year for this patch
 
@@ -212,6 +215,9 @@ contains
     allocate(this%rx_cultivar_gdds_thisyr(begp:endp,1:mxsowings)) ; this%rx_cultivar_gdds_thisyr(:,:) = -1
     allocate(this%sdates_thisyr(begp:endp,1:mxsowings)) ; this%sdates_thisyr(:,:) = spval
     allocate(this%hdates_thisyr(begp:endp,1:mxharvests)) ; this%hdates_thisyr(:,:) = spval
+    allocate(this%gddaccum_thisyr(begp:endp,1:mxharvests)) ; this%gddaccum_thisyr(:,:) = spval
+    allocate(this%hui_thisyr(begp:endp,1:mxharvests)) ; this%hui_thisyr(:,:) = spval
+    allocate(this%harvest_reason_thisyr(begp:endp,1:mxharvests)) ; this%harvest_reason_thisyr(:,:) = spval
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
 
@@ -279,6 +285,21 @@ contains
     call hist_addfld2d (fname='HDATES', units='day of year', type2d='mxharvests', &
          avgflag='I', long_name='actual crop harvest dates; should only be output annually', &
          ptr_patch=this%hdates_thisyr, default='inactive')
+
+    this%gddaccum_thisyr(begp:endp,:) = spval
+    call hist_addfld2d (fname='GDDACCUM_PERHARV', units='ddays', type2d='mxharvests', &
+         avgflag='I', long_name='At-harvest accumulated growing degree days past planting date for crop; should only be output annually', &
+         ptr_patch=this%gddaccum_thisyr, default='inactive')
+
+    this%hui_thisyr(begp:endp,:) = spval
+    call hist_addfld2d (fname='HUI_PERHARV', units='ddays', type2d='mxharvests', &
+         avgflag='I', long_name='At-harvest accumulated heat unit index for crop; should only be output annually', &
+         ptr_patch=this%hui_thisyr, default='inactive')
+
+    this%harvest_reason_thisyr(begp:endp,:) = spval
+    call hist_addfld2d (fname='HARVEST_REASON_PERHARV', units='unitless', type2d='mxharvests', &
+         avgflag='I', long_name='Reason for each crop harvest; should only be output annually', &
+         ptr_patch=this%harvest_reason_thisyr, default='inactive')
 
   end subroutine InitHistory
 
@@ -434,39 +455,6 @@ contains
   end subroutine InitAccVars
 
   !-----------------------------------------------------------------------
-  logical function CallRestartvarDimOK (ncid, flag, dimname)
-    !
-    ! !DESCRIPTION:
-    ! Answer whether to call restartvar(), if necessary checking whether
-    ! a dimension exists in the restart file
-    !
-    ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02)
-    ! Used in Restart(). Even though restartvar() can safely be called for a
-    ! non-existent variable, it gives an error for a non-existent dimension, so
-    ! check whether the dimension exists before trying to read. The need for this
-    ! function arose because we recently added the mxsowings and mxharvests
-    ! dimensions to the restart file.
-    !
-    ! !USES:
-    use ncdio_pio
-    !
-    ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid
-    character(len=*) , intent(in)    :: flag
-    character(len=*) , intent(in)    :: dimname
-    !
-    ! !LOCAL VARIABLES:
-    !-----------------------------------------------------------------------
-
-    if (flag == 'read') then
-       call check_dim(ncid, dimname, dimexist=CallRestartvarDimOK)
-    else
-       CallRestartvarDimOK = .true.
-    end if
-
-  end function CallRestartvarDimOK
-
-  !-----------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
     !
     ! !USES:
@@ -593,6 +581,21 @@ contains
                 long_name='crop harvest dates for this patch this year', units='day of year', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%hdates_thisyr)
+           call restartvar(ncid=ncid, flag=flag, varname='gddaccum_thisyr', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+                long_name='accumulated GDD at harvest for this patch this year', units='ddays', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%gddaccum_thisyr)
+           call restartvar(ncid=ncid, flag=flag, varname='hui_thisyr', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+                long_name='accumulated heat unit index at harvest for this patch this year', units='ddays', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%hui_thisyr)
+           call restartvar(ncid=ncid, flag=flag, varname='harvest_reason_thisyr', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+                long_name='reason for each harvest for this patch this year', units='unitless', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%harvest_reason_thisyr)
            ! Fill variable(s) derived from read-in variable(s)
            if (flag == 'read' .and. readvar) then
              do p = bounds%begp,bounds%endp

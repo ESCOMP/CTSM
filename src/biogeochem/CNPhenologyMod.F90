@@ -1707,6 +1707,7 @@ contains
     integer h         ! hemisphere indices
     integer s         ! growing season indices
     integer idpp      ! number of days past planting
+    real(r8) harvest_reason
     real(r8) dayspyr  ! days per year in this year
     real(r8) avg_dayspyr ! average number of days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
@@ -1800,6 +1801,9 @@ contains
          bgtr(p)  = 0._r8
          lgsf(p)  = 0._r8
 
+         ! Should never be saved as zero, but including this so it's initialized just in case
+         harvest_reason = 0._r8
+
          ! ---------------------------------
          ! from AgroIBIS subroutine planting
          ! ---------------------------------
@@ -1818,6 +1822,10 @@ contains
             end do
             do s = 1, mxharvests
                crop_inst%hdates_thisyr(p,s) = -1._r8
+               cnveg_state_inst%gddmaturity_thisyr(p,s) = -1._r8
+               crop_inst%gddaccum_thisyr(p,s) = -1._r8
+               crop_inst%hui_thisyr(p,s) = -1._r8
+               crop_inst%harvest_reason_thisyr(p,s) = -1._r8
             end do
             next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
          end if
@@ -2094,10 +2102,12 @@ contains
                 do_harvest = .true.
                 force_harvest = .true.
                 fake_harvest = .true.
+                harvest_reason = 3._r8
             else if (do_plant_prescribed) then
                 ! Today was supposed to be the planting day, but the previous crop still hasn't been harvested.
                 do_harvest = .true.
                 force_harvest = .true.
+                harvest_reason = 4._r8
             else if (generate_crop_gdds) then
                if (.not. use_cropcal_streams) then 
                   write(iulog,*) 'If using generate_crop_gdds, you must set use_cropcal_streams to true.'
@@ -2116,6 +2126,11 @@ contains
                       (idop(p) > 1 .and. jday == idop(p) - 1) .or. \
                       (idop(p) == 1 .and. jday == dayspyr)) then
                       do_harvest = .true.
+                      if (do_harvest) then
+                          harvest_reason = 6._r8
+                      end if
+                  else if (do_harvest) then
+                      harvest_reason = 5._r8
                   end if
 
                else
@@ -2133,6 +2148,11 @@ contains
                   else if (crop_inst%sdates_thisyr(p,1) == 1) then
                       do_harvest = jday == dayspyr
                   end if
+
+                  if (do_harvest) then
+                      harvest_reason = 7._r8
+                  end if
+
                endif
             else if (sown_today) then
                ! Do not harvest on the day this growing season began;
@@ -2141,6 +2161,12 @@ contains
             else
                ! Original harvest rule
                do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))
+
+               if (hui(p) >= gddmaturity(p)) then
+                   harvest_reason = 1._r8
+               else if (idpp >= mxmat(ivt(p))) then
+                   harvest_reason = 2._r8
+               end if
             endif
             force_harvest = force_harvest .or. (generate_crop_gdds .and. do_harvest)
 
@@ -2183,6 +2209,10 @@ contains
                   if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                   harvest_count(p) = harvest_count(p) + 1
                   crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
+                  cnveg_state_inst%gddmaturity_thisyr(p,harvest_count(p)) = gddmaturity(p)
+                  crop_inst%gddaccum_thisyr(p, harvest_count(p)) = crop_inst%gddaccum_patch(p)
+                  crop_inst%hui_thisyr(p, harvest_count(p)) = hui(p)
+                  crop_inst%harvest_reason_thisyr(p, harvest_count(p)) = harvest_reason
                endif
 
                croplive(p) = .false.     ! no re-entry in greater if-block
