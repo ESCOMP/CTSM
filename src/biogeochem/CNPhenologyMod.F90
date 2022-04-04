@@ -1698,6 +1698,7 @@ contains
     integer h         ! hemisphere indices
     integer s         ! growing season indices
     integer idpp      ! number of days past planting
+    real(r8) harvest_reason
     real(r8) dayspyr  ! days per year in this year
     real(r8) avg_dayspyr ! average number of days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
@@ -1787,6 +1788,9 @@ contains
          bgtr(p)  = 0._r8
          lgsf(p)  = 0._r8
 
+         ! Should never be saved as zero, but including this so it's initialized just in case
+         harvest_reason = 0._r8
+
          ! ---------------------------------
          ! from AgroIBIS subroutine planting
          ! ---------------------------------
@@ -1808,6 +1812,7 @@ contains
                cnveg_state_inst%gddmaturity_thisyr(p,s) = -1._r8
                crop_inst%gddaccum_thisyr(p,s) = -1._r8
                crop_inst%hui_thisyr(p,s) = -1._r8
+               crop_inst%harvest_reason_thisyr(p,s) = -1._r8
             end do
          end if
 
@@ -2080,6 +2085,15 @@ contains
                crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
                crop_inst%gddaccum_thisyr(p, harvest_count(p)) = crop_inst%gddaccum_patch(p)
                crop_inst%hui_thisyr(p, harvest_count(p)) = hui(p)
+
+               ! Save harvest reason
+               if (hui(p) >= gddmaturity(p)) then
+                   harvest_reason = 1._r8
+               else if (idpp >= mxmat(ivt(p))) then
+                   harvest_reason = 2._r8
+               end if
+               crop_inst%harvest_reason_thisyr(p, harvest_count(p)) = harvest_reason
+
                cnveg_state_inst%gddmaturity_thisyr(p,harvest_count(p)) = gddmaturity(p)
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = 4._r8

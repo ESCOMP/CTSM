@@ -44,6 +44,7 @@ module CropType
      real(r8), pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
      real(r8), pointer :: gddaccum_thisyr         (:,:) ! accumulated GDD at harvest for this patch this year
      real(r8), pointer :: hui_thisyr              (:,:) ! accumulated heat unit index at harvest for this patch this year
+     real(r8), pointer :: harvest_reason_thisyr   (:,:) ! reason for each harvest for this patch this year
      integer , pointer :: sowing_count            (:)   ! number of sowing events this year for this patch
      integer , pointer :: harvest_count           (:)   ! number of sowing events this year for this patch
 
@@ -210,6 +211,7 @@ contains
     allocate(this%hdates_thisyr(begp:endp,1:mxharvests)) ; this%hdates_thisyr(:,:) = spval
     allocate(this%gddaccum_thisyr(begp:endp,1:mxharvests)) ; this%gddaccum_thisyr(:,:) = spval
     allocate(this%hui_thisyr(begp:endp,1:mxharvests)) ; this%hui_thisyr(:,:) = spval
+    allocate(this%harvest_reason_thisyr(begp:endp,1:mxharvests)) ; this%harvest_reason_thisyr(:,:) = spval
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
 
@@ -284,6 +286,11 @@ contains
     call hist_addfld2d (fname='HUI_PERHARV', units='ddays', type2d='mxharvests', &
          avgflag='I', long_name='At-harvest accumulated heat unit index for crop; should only be output annually', &
          ptr_patch=this%hui_thisyr, default='inactive')
+
+    this%harvest_reason_thisyr(begp:endp,:) = spval
+    call hist_addfld2d (fname='HARVEST_REASON_PERHARV', units='unitless', type2d='mxharvests', &
+         avgflag='I', long_name='Reason for each crop harvest; should only be output annually', &
+         ptr_patch=this%harvest_reason_thisyr, default='inactive')
 
   end subroutine InitHistory
 
@@ -575,6 +582,11 @@ contains
                 long_name='accumulated heat unit index at harvest for this patch this year', units='ddays', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%hui_thisyr)
+           call restartvar(ncid=ncid, flag=flag, varname='harvest_reason_thisyr', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+                long_name='reason for each harvest for this patch this year', units='unitless', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%harvest_reason_thisyr)
            ! Fill variable(s) derived from read-in variable(s)
            if (flag == 'read' .and. readvar) then
              do p = bounds%begp,bounds%endp
