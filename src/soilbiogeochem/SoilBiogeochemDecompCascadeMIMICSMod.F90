@@ -1118,78 +1118,80 @@ contains
       ! not available when use_fates = .true.
       ! Also get FATES copy of annsum_npp for FATES cases, which is available
       ! only when use_lch4 = .true. at the same time.
-      fates_and_lch4_if: if (use_fates .and. use_lch4) then
-         ! Initialize
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            ligninNratioAvg_local(c) = 0._r8
-            annsum_npp_col_local(c) = 0._r8
-         end do
+      fates_if: if (use_fates) then
+         lch4_if: if (use_lch4) then
+            ! Initialize
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               ligninNratioAvg_local(c) = 0._r8
+               annsum_npp_col_local(c) = 0._r8
+            end do
 
-         ! Loop over p to get FATES copy of annsum_npp and local ligninNratio,
-         ! both for use_fates = .true.
-         nc = bounds%clump_index
-         do fp = 1, num_soilp
+            ! Loop over p: get FATES copy of annsum_npp and local ligninNratio,
+            ! both for use_fates = .true.
+            nc = bounds%clump_index
+            do fp = 1, num_soilp
 
-            p = filter_soilp(fp)
-            c = patch%column(p)
+               p = filter_soilp(fp)
+               c = patch%column(p)
 
-            pf = p - col%patchi(c)
-            s  = clm_fates%f2hmap(nc)%hsites(c)
-            annsum_npp(p) = clm_fates%fates(nc)%bc_out(s)%annsum_npp_pa(pf)
+               pf = p - col%patchi(c)
+               s  = clm_fates%f2hmap(nc)%hsites(c)
+               annsum_npp(p) = clm_fates%fates(nc)%bc_out(s)%annsum_npp_pa(pf)
 
-            ! Values by pft from Table 1 in Brovkin et al. (2012):
-            ! https://bg.copernicus.org/articles/9/565/2012/bg-9-565-2012.pdf
-            ! Not moving to the params files at this time: Hardwiring will
-            ! become unnecessary when we calc. ligninNratioAvg the same way for
-            ! FATES and non FATES cases.
-            select case (pftname(patch%itype(p)))
-               case ('not_vegetated')
-                  ligninNratio(p) = 0._r8
-               case ('broadleaf_evergreen_tropical_tree')
-                  ligninNratio(p) = 18.7_r8  ! 17.8 / 0.95
-               case ('broadleaf_deciduous_tropical_tree')
-                  ligninNratio(p) = 8.9_r8  ! 14.5 / 1.63
-               case ('needleleaf_evergreen_temperate_tree')
-                  ligninNratio(p) = 33.4_r8  ! 24.4 / 0.73
-               case ('broadleaf_evergreen_temperate_tree', &
-                     'broadleaf_evergreen_shrub')
-                  ligninNratio(p) = 24.4_r8  ! 21.0 / 0.86
-               case ('broadleaf_deciduous_temperate_tree', &
-                     'broadleaf_deciduous_temperate_shrub')
-                  ligninNratio(p) = 16.6_r8  ! 16.9 / 1.02
-               case ('needleleaf_evergreen_boreal_tree', &
-                     'needleleaf_deciduous_boreal_tree')
-                  ligninNratio(p) = 26.7_r8  ! 25.6 / 0.96
-               case ('broadleaf_deciduous_boreal_tree', &
-                     'broadleaf_deciduous_boreal_shrub')
-                  ligninNratio(p) = 25.1_r8  ! 22.3 / 0.89
-               case ('c4_grass', 'miscanthus', 'irrigated_miscanthus', &
-                     'switchgrass', 'irrigated_switchgrass', &
-                     'tropical_corn', 'irrigated_tropical_corn', &
-                     'temperate_corn', 'irrigated_temperate_corn', &
-                     'sugarcane', 'irrigated_sugarcane', &
-                     'sorghum', 'irrigated_sorghum', &
-                     'millet', 'irrigated_millet')  ! all c4
-                  ligninNratio(p) = 24.1_r8  ! 23.4 / 0.97
-               case default  ! all pfts/cfts that do not fit above categories
-                  ligninNratio(p) = 12.1_r8  ! 16.6 / 1.37
-            end select
+               ! Values by pft from Table 1 in Brovkin et al. (2012):
+               ! https://bg.copernicus.org/articles/9/565/2012/bg-9-565-2012.pdf
+               ! Not moving to the params files at this time: Hardwiring will
+               ! become unnec. when we calc. ligninNratioAvg the same way for
+               ! FATES and non FATES cases.
+               select case (pftname(patch%itype(p)))
+                  case ('not_vegetated')
+                     ligninNratio(p) = 0._r8
+                  case ('broadleaf_evergreen_tropical_tree')
+                     ligninNratio(p) = 18.7_r8  ! 17.8 / 0.95
+                  case ('broadleaf_deciduous_tropical_tree')
+                     ligninNratio(p) = 8.9_r8  ! 14.5 / 1.63
+                  case ('needleleaf_evergreen_temperate_tree')
+                     ligninNratio(p) = 33.4_r8  ! 24.4 / 0.73
+                  case ('broadleaf_evergreen_temperate_tree', &
+                        'broadleaf_evergreen_shrub')
+                     ligninNratio(p) = 24.4_r8  ! 21.0 / 0.86
+                  case ('broadleaf_deciduous_temperate_tree', &
+                        'broadleaf_deciduous_temperate_shrub')
+                     ligninNratio(p) = 16.6_r8  ! 16.9 / 1.02
+                  case ('needleleaf_evergreen_boreal_tree', &
+                        'needleleaf_deciduous_boreal_tree')
+                     ligninNratio(p) = 26.7_r8  ! 25.6 / 0.96
+                  case ('broadleaf_deciduous_boreal_tree', &
+                        'broadleaf_deciduous_boreal_shrub')
+                     ligninNratio(p) = 25.1_r8  ! 22.3 / 0.89
+                  case ('c4_grass', 'miscanthus', 'irrigated_miscanthus', &
+                        'switchgrass', 'irrigated_switchgrass', &
+                        'tropical_corn', 'irrigated_tropical_corn', &
+                        'temperate_corn', 'irrigated_temperate_corn', &
+                        'sugarcane', 'irrigated_sugarcane', &
+                        'sorghum', 'irrigated_sorghum', &
+                        'millet', 'irrigated_millet')  ! all c4
+                     ligninNratio(p) = 24.1_r8  ! 23.4 / 0.97
+                  case default  ! all pfts/cfts that do not fit above categories
+                     ligninNratio(p) = 12.1_r8  ! 16.6 / 1.37
+               end select
 
-         end do  ! p loop
+            end do  ! p loop
 
-         ! Calculate the column-level averages
-         call p2c(bounds, num_soilc, filter_soilc, &
-              ligninNratio(bounds%begp:bounds%endp), &
-              ligninNratioAvg_local(bounds%begc:bounds%endc))
-         call p2c(bounds, num_soilc, filter_soilc, &
-              annsum_npp(bounds%begp:bounds%endp), &
-              annsum_npp_col_local(bounds%begc:bounds%endc))
-      else
-         call endrun(msg='ERROR: soil_decomp_method = "MIMICSWieder2015 '// &
-              'will work with use_fates = .true. only if use_lch4 = .true. ' &
+            ! Calculate the column-level averages
+            call p2c(bounds, num_soilc, filter_soilc, &
+                 ligninNratio(bounds%begp:bounds%endp), &
+                 ligninNratioAvg_local(bounds%begc:bounds%endc))
+            call p2c(bounds, num_soilc, filter_soilc, &
+                 annsum_npp(bounds%begp:bounds%endp), &
+                 annsum_npp_col_local(bounds%begc:bounds%endc))
+         else
+            call endrun(msg='ERROR: soil_decomp_method = MIMICSWieder2015 '// &
+              'will work with use_fates = .true. only if use_lch4 = .true. '// &
               errMsg(sourcefile, __LINE__))
-      end if fates_and_lch4_if
+         end if lch4_if
+      end if fates_if
 
       ! calculate rates for all litter and som pools
       do fc = 1,num_soilc
