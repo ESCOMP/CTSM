@@ -334,9 +334,6 @@ program mksurfdata
         rcode = pio_inq_varid(pioid, 'cft', pio_varid)
         rcode = pio_put_var(pioid, pio_varid, (/(n,n=cft_lb,cft_ub)/))
      end if
-     ! time is months for LAI, SAI, and pft heights
-     rcode = pio_inq_varid(pioid, 'time', pio_varid)
-     rcode = pio_put_var(pioid, pio_varid, (/(n,n=n_jan,n_dec)/))
   end if
 
   ! -----------------------------------

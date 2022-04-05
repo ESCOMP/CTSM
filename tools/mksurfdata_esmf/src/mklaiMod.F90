@@ -72,6 +72,7 @@ contains
     real(r8), allocatable  :: area_o(:)
     integer                :: ier, rcode            ! error status
     integer                :: xtype                 ! external type
+    integer                :: pio_varid
     character(len=*), parameter :: subname = 'mklai'
     !-----------------------------------------------------------------------
 
@@ -194,6 +195,9 @@ contains
     mhgtt_o(:,:) = 0.
     mhgtb_o(:,:) = 0.
     do nt = 1, ntime
+       ! time is months for LAI, SAI, and pft heights
+       rcode = pio_inq_varid(pioid_o, 'time', pio_varid)
+       rcode = pio_put_var(pioid_o, pio_varid, (/nt/), nt)
 
        ! Below - copy LAI, SAI, & heights from the C3 crop (pft15)
        ! to the irrigated (pft16) whether crop is on or off
