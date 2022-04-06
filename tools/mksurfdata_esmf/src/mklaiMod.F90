@@ -193,7 +193,12 @@ contains
     msai_o(:,:)  = 0.
     mhgtt_o(:,:) = 0.
     mhgtb_o(:,:) = 0.
+
     do nt = 1, ntime
+
+       ! time is months for LAI, SAI, and pft heights
+       rcode = pio_inq_varid(pioid_o, 'time', pio_varid_o)
+       rcode = pio_put_var(pioid_o, pio_varid_o, (/nt/), nt)
 
        ! Below - copy LAI, SAI, & heights from the C3 crop (pft15)
        ! to the irrigated (pft16) whether crop is on or off
