@@ -114,6 +114,7 @@ contains
     use subgridAveMod                     , only: p2c
     use CropType                          , only: crop_type
     use CNAllocationMod                   , only: calc_gpp_mr_availc, calc_crop_allocation_fractions
+    use CNAllocationMod                   , only: calc_allometry
     use CNNDynamicsMod                    , only: CNNDeposition,CNNFixation, CNNFert, CNSoyfix,CNFreeLivingFixation
     use CNMRespMod                        , only: CNMResp
     use CNFUNMod                          , only: CNFUNInit  !, CNFUN 
@@ -395,6 +396,9 @@ contains
         call calc_crop_allocation_fractions(bounds, num_pcropp, filter_pcropp, &
              crop_inst, cnveg_state_inst)
      end if
+
+     call calc_allometry(num_soilp, filter_soilp, &
+          cnveg_carbonflux_inst, cnveg_state_inst)
      call t_stopf('cnalloc')
 
      call t_startf('calc_plant_nutrient_demand')

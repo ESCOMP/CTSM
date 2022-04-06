@@ -25,14 +25,16 @@ module CNAllocationMod
   use CNVegStateType       , only : cnveg_state_type
   use CropReprPoolsMod     , only : nrepr
   use CNPhenologyMod       , only : CropPhase
+  use CNSharedParamsMod    , only : use_fun
   !
   implicit none
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: readParams           ! Read in parameters from file
-  public :: calc_gpp_mr_availc   ! Calculate total GPP, various maintenance respiration terms, and total available C for allocation
+  public :: readParams                     ! Read in parameters from file
+  public :: calc_gpp_mr_availc             ! Calculate total GPP, various maintenance respiration terms, and total available C for allocation
   public :: calc_crop_allocation_fractions ! Calculate crop allocation fractions to leaf, stem, root and repr
+  public :: calc_allometry                 ! Calculate c_allometry and n_allometry terms based on allocation fractions
 
   ! !PRIVATE MEMBER VARIABLES:
   type, private :: params_type
@@ -419,5 +421,122 @@ contains
     end associate
 
   end subroutine calc_crop_allocation_fractions
+
+  !-----------------------------------------------------------------------
+  subroutine calc_allometry(num_soilp, filter_soilp, &
+       cnveg_carbonflux_inst, cnveg_state_inst)
+    !
+    ! !DESCRIPTION:
+    ! Calculate c_allometry and n_allometry terms based on allocation fractions
+    !
+    ! !ARGUMENTS:
+    integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
+    integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
+    type(cnveg_carbonflux_type)     , intent(in)    :: cnveg_carbonflux_inst
+    type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p, fp, k
+    real(r8):: f1,f2,f3,f4,g1     ! allocation parameters
+    real(r8):: g1a                ! g1 included in allocation/allometry
+    real(r8):: cnl,cnfr,cnlw,cndw ! C:N ratios for leaf, fine root, and wood
+    real(r8):: f5(nrepr)          ! reproductive allocation parameters
+    real(r8):: cng                ! C:N ratio for grain (= cnlw for now; slevis)
+    real(r8):: f5_tot             ! sum of f5 terms
+    real(r8):: f5_n_tot           ! sum of f5 terms converted from C to N
+
+    character(len=*), parameter :: subname = 'calc_allometry'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         ivt         => patch%itype                            ,  & ! Input:  [integer  (:) ]  patch vegetation type
+         woody       => pftcon%woody                           ,  & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
+         froot_leaf  => pftcon%froot_leaf                      ,  & ! Input:  allocation parameter: new fine root C per new leaf C (gC/gC)
+         croot_stem  => pftcon%croot_stem                      ,  & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
+         stem_leaf   => pftcon%stem_leaf                       ,  & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
+         flivewd     => pftcon%flivewd                         ,  & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
+         leafcn      => pftcon%leafcn                          ,  & ! Input:  leaf C:N (gC/gN)
+         frootcn     => pftcon%frootcn                         ,  & ! Input:  fine root C:N (gC/gN)
+         livewdcn    => pftcon%livewdcn                        ,  & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
+         deadwdcn    => pftcon%deadwdcn                        ,  & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
+         graincn     => pftcon%graincn                         ,  & ! Input:  grain C:N (gC/gN)
+         grperc      => pftcon%grperc                          , & ! Input:  parameter used below
+         annsum_npp  => cnveg_carbonflux_inst%annsum_npp_patch ,  & ! Input:  [real(r8) (:)   ]  annual sum of NPP, for wood allocation
+         aleaf       => cnveg_state_inst%aleaf_patch           , & ! Input: [real(r8) (:)   ]  leaf allocation coefficient
+         astem       => cnveg_state_inst%astem_patch           , & ! Input: [real(r8) (:)   ]  stem allocation coefficient
+         aroot       => cnveg_state_inst%aroot_patch           , & ! Input: [real(r8) (:)   ]  root allocation coefficient
+         arepr       => cnveg_state_inst%arepr_patch           , & ! Input: [real(r8) (:,:) ]  reproductive allocation coefficient(s)
+         c_allometry => cnveg_state_inst%c_allometry_patch     ,  & ! Output: [real(r8) (:)   ]  C allocation index (DIM)
+         n_allometry => cnveg_state_inst%n_allometry_patch        & ! Output: [real(r8) (:)   ]  N allocation index (DIM)
+         )
+
+    do fp = 1                            , num_soilp
+       p = filter_soilp(fp)
+
+       f1 = froot_leaf(ivt(p))
+       f2 = croot_stem(ivt(p))
+
+       ! modified wood allocation to be 2.2 at npp=800 gC/m2/yr, 0.2 at npp=0,
+       ! constrained so that it does not go lower than 0.2 (under negative annsum_npp)
+       ! This variable allocation is only for trees. Shrubs have a constant
+       ! allocation as specified in the pft-physiology file.  The value is also used
+       ! as a trigger here: -1.0 means to use the dynamic allocation (trees).
+
+       if (stem_leaf(ivt(p)) == -1._r8) then
+          f3 = (2.7_r8/(1.0_r8+exp(-0.004_r8*(annsum_npp(p) - 300.0_r8)))) - 0.4_r8
+       else
+          f3 = stem_leaf(ivt(p))
+       end if
+
+       f4   = flivewd(ivt(p))
+       if (ivt(p) >= npcropmin) then
+          g1 = 0.25_r8
+       else
+          g1 = grperc(ivt(p))
+       end if
+       cnl  = leafcn(ivt(p))
+       cnfr = frootcn(ivt(p))
+       cnlw = livewdcn(ivt(p))
+       cndw = deadwdcn(ivt(p))
+
+       ! based on available C, use constant allometric relationships to
+       ! determine N requirements
+       if (.not. use_fun) then
+          g1a = g1
+       else
+          g1a = 0._r8
+       end if
+       if (woody(ivt(p)) == 1.0_r8) then
+          c_allometry(p) = (1._r8+g1a)*(1._r8+f1+f3*(1._r8+f2))
+          n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
+               (f3*(1._r8-f4)*(1._r8+f2))/cndw
+       else if (ivt(p) >= npcropmin) then ! skip generic crops
+          cng = graincn(ivt(p))
+          f1 = aroot(p) / aleaf(p)
+          f3 = astem(p) / aleaf(p)
+          do k = 1, nrepr
+             f5(k) = arepr(p,k) / aleaf(p)
+          end do
+          f5_tot = 0._r8
+          f5_n_tot = 0._r8
+          do k = 1, nrepr
+             f5_tot = f5_tot + f5(k)
+             ! Note that currently we use the same C/N ratio for all grain components:
+             f5_n_tot = f5_n_tot + f5(k)/cng
+          end do
+          c_allometry(p) = (1._r8+g1a)*(1._r8+f1+f5_tot+f3*(1._r8+f2))
+          n_allometry(p) = 1._r8/cnl + f1/cnfr + f5_n_tot + (f3*f4*(1._r8+f2))/cnlw + &
+               (f3*(1._r8-f4)*(1._r8+f2))/cndw
+       else
+          c_allometry(p) = 1._r8+g1a+f1+f1*g1a
+          n_allometry(p) = 1._r8/cnl + f1/cnfr
+       end if
+
+    end do
+
+    end associate
+
+  end subroutine calc_allometry
+
 
 end module CNAllocationMod
