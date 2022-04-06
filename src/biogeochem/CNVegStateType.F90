@@ -7,12 +7,13 @@ module CNVegStateType
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc
   use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoi
-  use clm_varctl     , only : use_cn, iulog, fsurdat, use_crop, use_cndv
+  use clm_varctl     , only : use_cn, iulog, fsurdat, use_crop, use_cndv, use_crop_agsys
   use clm_varcon     , only : spval, ispval, grlnd
   use landunit_varcon, only : istsoil, istcrop
   use LandunitType   , only : lun
   use ColumnType     , only : col
   use PatchType      , only : patch
+  use pftconMod      , only : pftcon, npcropmin
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_patch
   use dynSubgridControlMod, only : get_for_testing_allow_non_annual_changes
   use CropReprPoolsMod, only : nrepr
@@ -99,6 +100,11 @@ module CNVegStateType
      real(r8), pointer :: tempmax_retransn_patch       (:)     ! patch temporary annual max of retranslocated N pool (gN/m2)
      real(r8), pointer :: annmax_retransn_patch        (:)     ! patch annual max of retranslocated N pool (gN/m2)
      real(r8), pointer :: downreg_patch                (:)     ! patch fractional reduction in GPP due to N limitation (DIM)
+     real(r8), pointer :: leafcn_patch                 (:)     ! patch current leaf C:N ratio
+     real(r8), pointer :: frootcn_patch                (:)     ! patch current fine root C:N ratio
+     real(r8), pointer :: livewdcn_patch               (:)     ! patch current live wood C:N ratio
+     real(r8), pointer :: deadwdcn_patch               (:)     ! patch current dead wood C:N ratio
+     real(r8), pointer :: reproductivecn_patch         (:,:)   ! patch crop reproductive (e.g., grain) C:N ratios
      real(r8), pointer :: leafcn_offset_patch          (:)     ! patch leaf C:N used by FUN
      real(r8), pointer :: plantCN_patch                (:)     ! patch plant C:N used by FUN
 
@@ -260,6 +266,11 @@ contains
     allocate(this%tempmax_retransn_patch      (begp:endp)) ;    this%tempmax_retransn_patch      (:) = nan
     allocate(this%annmax_retransn_patch       (begp:endp)) ;    this%annmax_retransn_patch       (:) = nan
     allocate(this%downreg_patch               (begp:endp)) ;    this%downreg_patch               (:) = nan
+    allocate(this%leafcn_patch                (begp:endp)) ;    this%leafcn_patch                (:) = nan
+    allocate(this%frootcn_patch               (begp:endp)) ;    this%frootcn_patch               (:) = nan
+    allocate(this%livewdcn_patch              (begp:endp)) ;    this%livewdcn_patch              (:) = nan
+    allocate(this%deadwdcn_patch              (begp:endp)) ;    this%deadwdcn_patch              (:) = nan
+    allocate(this%reproductivecn_patch (begp:endp, nrepr)) ;    this%reproductivecn_patch      (:,:) = nan
     allocate(this%leafcn_offset_patch         (begp:endp)) ;    this%leafcn_offset_patch         (:) = nan
     allocate(this%plantCN_patch               (begp:endp)) ;    this%plantCN_patch               (:) = nan
 
@@ -476,6 +487,10 @@ contains
     integer               :: g,l,c,p            ! dices
     !-----------------------------------------------------------------------
 
+    associate( &
+         ivt => patch%itype &
+         )
+
     ! --------------------------------------------------------------------
     ! Initialize terms needed for dust model
     ! TODO - move these terms to DUSTMod module variables
@@ -576,6 +591,25 @@ contains
           this%plantCN_patch(p)               = spval
        end if
 
+       if (lun%itype(l) == istsoil .or. &
+            (lun%itype(l) == istcrop .and. .not. use_crop_agsys)) then
+          ! When using AgSys these variables will be set dynamically. Otherwise, use the
+          ! parameters in pftcon
+          !
+          ! NOTE(wjs, 2022-04-06) It may be that we still want to initialize these as
+          ! below even when running with AgSys. But until we figure this out, I'm keeping
+          ! this NOT done with AgSys as a reminder that we need to determine how we'll do
+          ! this.
+          this%leafcn_patch(p)   = pftcon%leafcn(ivt(p))
+          this%frootcn_patch(p)  = pftcon%frootcn(ivt(p))
+          this%livewdcn_patch(p) = pftcon%livewdcn(ivt(p))
+          this%deadwdcn_patch(p) = pftcon%deadwdcn(ivt(p))
+          if (ivt(p) >= npcropmin) then
+             ! Note that we use the same grain c:n ratio for all reproductive components
+             this%reproductivecn_patch(p,:) = pftcon%graincn(ivt(p))
+          end if
+       end if
+
     end do
 
     ! fire variables
@@ -584,6 +618,7 @@ contains
        this%lfc2_col(c) = 0._r8
     end do
 
+    end associate
   end subroutine initCold
 
   !------------------------------------------------------------------------
@@ -598,7 +633,6 @@ contains
     use CNVegCarbonStateType  , only: cnveg_carbonstate_type
     use restUtilMod
     use ncdio_pio
-    use pftconMod , only : pftcon
     !
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this
