@@ -94,6 +94,8 @@ module CLMFatesInterfaceMod
    use decompMod         , only : get_proc_bounds,   &
                                   get_proc_clumps,   &
                                   get_clump_bounds
+   use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, decomp_method
+   use SoilBiogeochemDecompCascadeConType , only : no_soil_decomp, century_decomp
    use GridCellType      , only : grc
    use ColumnType        , only : col
    use LandunitType      , only : lun
@@ -298,6 +300,14 @@ module CLMFatesInterfaceMod
         ! which has fewer boundary conditions (simpler)
         call set_fates_ctrlparms('nu_com',cval='RD')
 
+        if (decomp_method == mimics_decomp) then
+           call set_fates_ctrlparms('decomp_method',cval='MIMICS')
+        elseif(decomp_method == century_decomp ) then
+           call set_fates_ctrlparms('decomp_method',cval='CENTURY')
+        elseif(decomp_method == no_soil_decomp ) then
+           call set_fates_ctrlparms('decomp_method',cval='NONE')
+        end if
+        
         ! These may be in a non-limiting status (ie when supplements)
         ! are added, but they are always allocated and cycled non-the less
         ! FATES may want to interact differently with other models
