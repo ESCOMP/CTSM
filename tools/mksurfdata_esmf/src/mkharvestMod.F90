@@ -16,7 +16,7 @@ module mkharvestMod
   use mkesmfMod         , only : regrid_rawdata, create_routehandle_r8, get_meshareas
   use mkutilsMod        , only : chkerr
   use mkvarctl          , only : root_task, ndiag, mpicom
-  use mkdiagnosticsMod  , only : output_diagnostics_continuous
+  use mkdiagnosticsMod  , only : output_diagnostics_area
 
   implicit none
   private
@@ -203,8 +203,8 @@ contains
              call pio_syncfile(pioid_o)
 
              ! Compare global areas on input and output grids for 1d variables
-             call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-                  data1d_i, data1d_o, trim(varname_o), "gC/m2/yr", ndiag, rc=rc)
+             call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o, &
+                  data1d_i*0.01_r8, data1d_o*0.01_r8, trim(varname_o), percent=.false., ndiag=ndiag, rc=rc)
              if (ChkErr(rc,__LINE__,u_FILE_u)) return
                   
              deallocate(data1d_i)

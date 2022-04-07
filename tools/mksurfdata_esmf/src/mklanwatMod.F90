@@ -11,7 +11,7 @@ module mklanwatMod
   use shr_sys_mod      , only : shr_sys_abort
   use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
   use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
-  use mkdiagnosticsMod , only : output_diagnostics_continuous
+  use mkdiagnosticsMod , only : output_diagnostics_continuous, output_diagnostics_area
   use mkchecksMod      , only : min_bad
   use mkutilsMod       , only : chkerr
   use mkvarctl         , only : root_task, ndiag, spval, no_inlandwet
@@ -145,8 +145,8 @@ contains
     enddo
 
     ! Check global areas
-    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-         lake_i, lake_o, "pct lake", "unitless", ndiag, nomask=.true., rc=rc)
+    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o, &
+         lake_i, lake_o, "pct lake", percent=.true., ndiag=ndiag, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     deallocate (lake_i)
@@ -313,8 +313,8 @@ contains
     enddo
 
     ! Check global areas
-    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-         swmp_i, swmp_o, "pct wetland", "unitless", ndiag, nomask=.true., rc=rc)
+    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o, &
+         swmp_i, swmp_o, "pct wetland", percent=.true., ndiag=ndiag, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Close the single input data file

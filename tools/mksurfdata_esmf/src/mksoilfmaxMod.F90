@@ -10,7 +10,7 @@ module mksoilfmaxMod
   use pio              , only : file_desc_t, pio_openfile, pio_closefile, pio_nowrite, pio_syncfile
   use mkpioMod         , only : mkpio_get_rawdata, pio_iotype, pio_iosystem
   use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
-  use mkdiagnosticsMod , only : output_diagnostics_continuous
+  use mkdiagnosticsMod , only : output_diagnostics_area
   use mkvarctl         , only : ndiag, root_task, spval
   use mkutilsMod       , only : chkerr
   use mkfileMod        , only : mkfile_output
@@ -142,8 +142,9 @@ contains
     enddo
 
     ! Compare global areas on input and output grids
-    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-         fmax_i, fmax_o, "Maximum Fractional Sataturated output", "unitless", ndiag, rc)
+    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o, &
+         fmax_i*0.01_r8, fmax_o*0.01_r8, "Max Fractional Sataturated Area", &
+         percent=.false., ndiag=ndiag, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Write output data

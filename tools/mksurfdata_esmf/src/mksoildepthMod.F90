@@ -11,6 +11,7 @@ module mksoildepthMod
   use mkpioMod       , only : mkpio_get_rawdata
   use mkpioMod       , only : pio_iotype, pio_ioformat, pio_iosystem
   use mkesmfMod      , only : regrid_rawdata, create_routehandle_r8
+  use mkdiagnosticsMod , only : output_diagnostics_area
   use mkutilsMod     , only : chkerr
   use mkchecksMod    , only : min_bad, max_bad
   use mkfileMod      , only : mkfile_output
@@ -159,6 +160,10 @@ contains
     call mkfile_output(pioid_o,  mesh_o,  'zbedrock', soildepth_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
     call pio_syncfile(pioid_o)
+
+    ! Output diagnostic info
+    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o, &
+       soildepth_i, soildepth_o, "Soildepth", percent=.false., ndiag=ndiag, rc=rc)
 
     ! Close the input file
     call pio_closefile(pioid_i)

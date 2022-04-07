@@ -1,6 +1,5 @@
-Updated on, by:
-3/16/2022 slevis
-3/11/2022 mvertens
+Most recent update of README:
+4/6/2022 slevis
 
 ================
 Getting the code
@@ -61,20 +60,15 @@ NOTES
 ------------------------------------------------------------
 slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
 ------------------------------------------------------------
-1) 1x1_brazil good (min number-of-nodes tested: 4) except:
- time = -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0 ;
- instead of
- time = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ;
+1) 1x1_brazil good (min number-of-nodes tested: 4)
 
-2) 10x15 mostly good (min number-of-nodes tested: 3) BUT:
-- bigger diffs than I would like for NAT_PFT, though .log file shows global PFT
-  areas same => Gridcell-level diffs due to mapping files? Confirm we have no
-  discrepancy between .log and .nc files
---> Soil color, ag fire peak month outputs too high in .log
-  TODO: RUNNING NEW vs OLD with write statements
-- Soil txt, peat, fmax, lakes, harvest too low in .log unless raw data changed
-- Slope, stddev, soildepth, urban, glaciers not appearing in .log
-- VOC em factors from input not appearing in .log
+2) 10x15 mostly good (min number-of-nodes tested: 3)
+- Soil color & ag fire peak month outputs too high in .log
+  TODO: frac_o agfire always 1. Change? How?
+- Pct lake has changed in the .log; has the raw data changed?
+- Soil texture too low in .log; has the raw data changed?
+- Slope, stddev, urban not appearing in .log
+- REMEMBER TO also compare against existing fsurdat files in /glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/release-clm5.0.18
 
 old) ./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc
 Issues: See newer testing above

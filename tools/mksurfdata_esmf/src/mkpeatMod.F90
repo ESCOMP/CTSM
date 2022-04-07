@@ -12,7 +12,7 @@ module mkpeatMod
   use mkesmfMod        , only : regrid_rawdata, create_routehandle_r8
   use mkvarctl         , only : ndiag, root_task, mpicom, spval
   use mkchecksMod      , only : min_bad, max_bad
-  use mkdiagnosticsMod , only : output_diagnostics_continuous
+  use mkdiagnosticsMod , only : output_diagnostics_area
   use mkutilsMod       , only : chkerr
   use mkfileMod        , only : mkfile_output
 
@@ -126,8 +126,8 @@ contains
     call pio_syncfile(pioid_o)
 
     ! Output diagnostic info
-    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-         peat_i, peat_o, "Peat", "unitless", ndiag, rc)
+    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o, &
+         peat_i, peat_o, "Peat", percent=.false., ndiag=ndiag, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
     ! Close the file
