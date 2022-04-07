@@ -23,17 +23,18 @@ class ModifyMeshMask:
     Description
     -----------
     """
-    # TODO landmask here needs all land/ocn, not just the section
-    # being changed for modify_fsurdat, so let's include both in the
-    # file: landmask_all for modify_meshes and landmask_change for
-    # modify_fsurdat.
+    # In this (the mesh_mask_modifier) tool, landmask needs all lnd/ocn
+    # specified, not just the section being changed by the modify_fsurdat tool.
+    # Existing example landmask file
+    # /glade/work/slevis/git/mksurfdata_toolchain/tools/modify_fsurdat/fill_indian_ocean/fill_indianocean_slevis.nc
+    # names this variable landfrac, so we read that here instead of landmask.
     def __init__(self, my_data, landmask_file):
 
         self.file = my_data
 
         # landmask from user-specified .nc file in the .cfg file
         self._landmask_file = xr.open_dataset(landmask_file)
-        self.rectangle = self._landmask_file.landmask  # (lsmlat, lsmlon)
+        self.rectangle = np.ceil(self._landmask_file.landfrac)  # (lsmlat, lsmlon)
         self.lat_2d = self._landmask_file.lat  # (lsmlat)
         self.lon_2d = self._landmask_file.lon  # (lsmlon)
         self.lsmlat = self._landmask_file.lsmlat
