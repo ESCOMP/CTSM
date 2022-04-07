@@ -261,11 +261,11 @@ contains
        call mkpio_def_spatial_var(pioid=pioid, varname='SOIL_COLOR', xtype=PIO_INT, &
             long_name='soil color', units='unitless')
 
-       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_SAND', xtype=xtype, &
+       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_SAND', xtype=PIO_REAL, &
             lev1name='nlevsoi', &
             long_name='percent sand', units='unitless')
 
-       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_CLAY', xtype=xtype, &
+       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_CLAY', xtype=PIO_REAL, &
             lev1name='nlevsoi', &
             long_name='percent clay', units='unitless')
 

@@ -136,7 +136,7 @@ program mksurfdata
   integer                         :: ntim                    ! time sample for dynamic land use
   integer                         :: year                    ! year for dynamic land use
   integer                         :: year2                   ! year for dynamic land use for harvest file
-  real(r8)                        :: suma                    ! local sum for error check   
+  real(r8)                        :: suma                    ! local sum for error check
   real(r8)                        :: loc_suma, glob_suma     ! local and global sum for error check with mpi_allreduce
 
   ! model grid
@@ -195,6 +195,10 @@ program mksurfdata
   character(len=CL)               :: string                  ! string read in
   character(len=CL)               :: fname
   character(len=*), parameter     :: subname = 'mksrfdata'   ! program name
+
+  ! TODO: temporary for new soil texture data
+  character(len=CL) :: mksrf_fsoitex_mapunit
+  character(len=CL) :: mksrf_fsoitex_lookup
 
   character(len=*), parameter :: u_FILE_u = &
        __FILE__
@@ -325,17 +329,6 @@ program mksurfdata
 
   ! NOTE: do not deallocate pctlak, pctwet, pctglacier and pcturban
 
-  ! DEBUG
-  if (fsurdat /= ' ') then
-     mksrf_fsoitex = '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v5_grid.nc'
-     mksrf_fsoitex_mesh  = trim(mksrf_fsoitex)
-     call mksoiltexnew( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pioid, pctlnd_pft, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
-  end if
-  call pio_closefile(pioid)
-  call shr_sys_abort('stopping just for soiltex output')
-  ! DEBUG
-
   ! -----------------------------------
   ! Write out natpft, cft, and time
   ! -----------------------------------
@@ -367,15 +360,6 @@ program mksurfdata
      call mkfile_output(pioid, mesh_model, 'LATIXY', lat, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for LATIXY')
      call pio_syncfile(pioid)
-  end if
-
-  ! -----------------------------------
-  ! Make LAI and SAI from 1/2 degree data and write to surface dataset
-  ! Write to netcdf file is done inside mklai routine
-  ! -----------------------------------
-  if (fsurdat /= ' ') then
-     call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
   end if
 
   ! -----------------------------------
@@ -419,6 +403,37 @@ program mksurfdata
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      call pio_syncfile(pioid)
   end if
+
+  ! DEBUG
+  if (fsurdat /= ' ') then
+     ! --- for a 3 second input mapunit ---
+     ! mksrf_fsoitex_mapunit = &
+     !      '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v5_grid.nc'
+
+     ! --- for a 5min input mapunit---
+     mksrf_fsoitex_mesh = &
+          '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c200129.nc'
+     mksrf_fsoitex_mapunit = &
+          '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/soiltex_mapunits_4320x2160_c220329.nc'
+     mksrf_fsoitex_lookup = &
+          '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v5_lookup.nc'
+
+     call mksoiltexnew( mksrf_fsoitex_mesh, file_mapunit_i=mksrf_fsoitex_mapunit, file_lookup_i=mksrf_fsoitex_lookup, &
+          mesh_o=mesh_model, pioid_o=pioid, pctlnd_pft_o=pctlnd_pft, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
+  end if
+  call pio_closefile(pioid)
+  call shr_sys_abort('stopping just for soiltex output')
+  ! DEBUG
+
+  ! -----------------------------------
+  ! Make LAI and SAI from 1/2 degree data and write to surface dataset
+  ! Write to netcdf file is done inside mklai routine
+  ! -----------------------------------
+  ! if (fsurdat /= ' ') then
+  !    call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
+  !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
+  ! end if
 
   ! -----------------------------------
   ! Make constant harvesting data at model resolution
@@ -634,7 +649,7 @@ program mksurfdata
      end if
   end do
 
-  ! Save special land unit areas of surface dataset 
+  ! Save special land unit areas of surface dataset
   pctwet_orig(:) = pctwet(:)
   pctgla_orig(:) = pctgla(:)
 
@@ -730,7 +745,7 @@ program mksurfdata
      end if
      call mkfile_output(pioid, mesh_model, 'PCT_NAT_PFT', pct_nat_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_NAT_PFT')
-        
+
      if (num_cft > 0) then
         if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_CFT"
         if (lsize_o /= 0) then
