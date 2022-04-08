@@ -356,6 +356,15 @@ program mksurfdata
   end if
 
   ! -----------------------------------
+  ! Make LAI and SAI from 1/2 degree data and write to surface dataset
+  ! Write to netcdf file is done inside mklai routine
+  ! -----------------------------------
+  if (fsurdat /= ' ') then
+     call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
+  end if
+
+  ! -----------------------------------
   ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
   ! Make landfrac_pft and pftdata_mask
   ! -----------------------------------
@@ -395,15 +404,6 @@ program mksurfdata
      call mkfile_output(pioid,  mesh_model, 'LANDFRAC_PFT', landfrac_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      call pio_syncfile(pioid)
-  end if
-
-  ! -----------------------------------
-  ! Make LAI and SAI from 1/2 degree data and write to surface dataset
-  ! Write to netcdf file is done inside mklai routine
-  ! -----------------------------------
-  if (fsurdat /= ' ') then
-     call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
   end if
 
   ! -----------------------------------
