@@ -18,6 +18,7 @@ module mkglcmecMod
   use mkutilsMod     , only : chkerr
   use mkutilsMod     , only : slightly_below, slightly_above
   use mkfileMod      , only : mkfile_output
+  use mkdiagnosticsMod , only : output_diagnostics_area
 
   implicit none
   private           ! By default make data private
@@ -599,38 +600,10 @@ contains
        end if
     enddo
 
-    ! Compare global areas on input and output grids
-    ! Some error checking and writing of global values before and after the regrid
-    !     ! Input grid
-    !     gglac_i = 0.
-    !     garea_i = 0.
-    !     do ni = 1,ns_i
-    !        garea_i = garea_i + area_i(ni)
-    !        gglac_i = gglac_i + glac_i(ni)*(area_i(ni)/100.) * mask_i(ni)
-    !     end do
-
-    !     ! Output grid
-    !     gglac_o = 0.
-    !     garea_o = 0.
-    !     do no = 1,ns_o
-    !        garea_o = garea_o + area_o(no)
-    !        gglac_o = gglac_o + glac_o(no)*(area_o(no)/100.) * frac_o(no)
-    !     end do
-
-    !     ! Diagnostic output
-
-    !     write (ndiag,*)
-    !     write (ndiag,*)
-    !     write (ndiag,'(1x,70a1)') ('.',k=1,70)
-    !     write (ndiag,2001)
-    ! 2001 format (1x,'surface type   input grid area  output grid area'/ &
-    !          1x,'                 10**6 km**2      10**6 km**2   ')
-    !     write (ndiag,'(1x,70a1)') ('.',k=1,70)
-    !     write (ndiag,*)
-    !     write (ndiag,2002) gglac_i*1.e-06,gglac_o*1.e-06
-    !     write (ndiag,2004) garea_i*1.e-06,garea_o*1.e-06
-    ! 2002 format (1x,'glaciers    ',f14.3,f17.3)
-    ! 2004 format (1x,'all surface ',f14.3,f17.3)
+    ! Check global areas
+    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o, &
+         glac_i, glac_o, "pct glacier", percent=.true., ndiag=ndiag, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Deallocate dynamic memory
     deallocate (glac_i, frac_o, mask_i)

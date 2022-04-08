@@ -193,7 +193,12 @@ contains
     msai_o(:,:)  = 0.
     mhgtt_o(:,:) = 0.
     mhgtb_o(:,:) = 0.
+
     do nt = 1, ntime
+
+       ! time is months for LAI, SAI, and pft heights
+       rcode = pio_inq_varid(pioid_o, 'time', pio_varid_o)
+       rcode = pio_put_var(pioid_o, pio_varid_o, (/nt/), nt)
 
        ! Below - copy LAI, SAI, & heights from the C3 crop (pft15)
        ! to the irrigated (pft16) whether crop is on or off
@@ -288,6 +293,8 @@ contains
        data_i, data_o, area_i, area_o, mask_i, frac_o)
 
     ! Compare global areas on input and output grids
+    ! NB. data_i and data_o started at 0 outside this subroutine but start
+    ! at 1 within the subroutine, so the loops in the subroutine start at 1
 
     ! input/otuput variables
     character(len=*) , intent(in) :: name
@@ -305,15 +312,15 @@ contains
     ! local variables
     integer  :: ni, no, l, k
     integer  :: ier
-    real(r8) :: local_i(0:numpft_i)  ! local global area, by surface type
-    real(r8) :: local_o(0:numpft_i)  ! local global area, by surface type
-    real(r8) :: global_i(0:numpft_i)   ! input grid: global area pfts
-    real(r8) :: global_o(0:numpft_i)   ! output grid: global area pfts
+    real(r8) :: local_i(numpft_i)  ! local global area, by surface type
+    real(r8) :: local_o(numpft_i)  ! local global area, by surface type
+    real(r8) :: global_i(numpft_i)   ! input grid: global area pfts
+    real(r8) :: global_o(numpft_i)   ! output grid: global area pfts
     !-----------------------------------------------------------------------
 
     ! Input grid global area
     local_i(:) = 0.
-    do l = 0, numpft_i - 1
+    do l = 1, numpft_i
        do ni = 1, ns_i
           local_i(l)  = local_i(l) + data_i(l,ni) *area_i(ni)*mask_i(ni)
        end do
@@ -322,7 +329,7 @@ contains
 
     ! Output grid global area
     local_o(:) = 0.
-    do l = 0, numpft_i - 1
+    do l = 1, numpft_i
        do no = 1, ns_o
           local_o(l) = local_o(l) + data_o(l,no) *area_o(no)*frac_o(no)
        end do
@@ -339,8 +346,8 @@ contains
                1x,3x,'     10**6 km**2','      10**6 km**2')
        write (ndiag,'(1x,70a1)') ('.',k=1,70)
        write (ndiag,*)
-       do l = 0, numpft_i-1
-          write (ndiag,102) l, global_i(l)*1.e-06*1.e-02, global_o(l)*1.e-06*1.e-02
+       do l = 1, numpft_i
+          write (ndiag,102) l-1, global_i(l)*1.e-06*1.e-02, global_o(l)*1.e-06*1.e-02
 102       format (1x,i3,f16.3,f17.3)
        end do
     end if

@@ -139,7 +139,7 @@ contains
 
     ! Set mapunit values to zero where the input mask is 0
     do ni = 1,ns_i
-       mapunit_i(ni) = mapunit_i(ni) * rmask_i(ni)
+       mapunit_i(ni) = mapunit_i(ni) * mask_i(ni)
     end do
 
     ! Determine mapunit_value_max (set it as a module variable so that it can be

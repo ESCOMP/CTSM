@@ -29,7 +29,8 @@ module mkdiagnosticsMod
 contains
 !===============================================================
 
-  subroutine output_diagnostics_area(mesh_i, mesh_o, mask_i, data_i, data_o, name, percent, ndiag, rc)
+  subroutine output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o, &
+                                     data_i, data_o, name, percent, ndiag, rc)
 
     ! Output diagnostics for a field that gives either fraction or percent of grid cell area
 
@@ -37,6 +38,7 @@ contains
     type(ESMF_Mesh)  , intent(in)  :: mesh_i
     type(ESMF_Mesh)  , intent(in)  :: mesh_o
     integer          , intent(in)  :: mask_i(:)
+    real(r8)         , intent(in)  :: frac_o(:)    ! land fraction output grid
     real(r8)         , intent(in)  :: data_i(:)    ! data on input grid
     real(r8)         , intent(in)  :: data_o(:)    ! data on output grid
     character(len=*) , intent(in)  :: name         ! name of field
@@ -84,6 +86,12 @@ contains
        write(6,*) 'ns_i = ', ns_i
        call shr_sys_abort()
     end if
+    if (size(frac_o) /= ns_o) then
+       write(6,*) subname//' ERROR: incorrect size of frac_o'
+       write(6,*) 'size(frac_o) = ', size(frac_o)
+       write(6,*) 'ns_o = ', ns_o
+       call shr_sys_abort()
+    end if
 
     ! Sums on input grid
     loc_gdata_i = 0.
@@ -93,15 +101,17 @@ contains
        loc_gdata_i = loc_gdata_i + data_i(ni) * area_i(ni) * mask_i(ni)
     end do
     call mpi_reduce(loc_gdata_i,gdata_i,1,MPI_REAL8,MPI_SUM,0,mpicom,ier)
+    call mpi_reduce(loc_garea_i,garea_i,1,MPI_REAL8,MPI_SUM,0,mpicom,ier)
 
     ! Sums on output grid
     loc_gdata_o = 0.
     loc_garea_o = 0.
     do no = 1,ns_o
        loc_garea_o = loc_garea_o + area_o(no)
-       loc_gdata_o = loc_gdata_o + data_o(no) * area_o(no)
+       loc_gdata_o = loc_gdata_o + data_o(no) * area_o(no) * frac_o(no)
     end do
     call mpi_reduce(loc_gdata_o,gdata_o,1,MPI_REAL8,MPI_SUM,0,mpicom,ier)
+    call mpi_reduce(loc_garea_o,garea_o,1,MPI_REAL8,MPI_SUM,0,mpicom,ier)
 
     ! Correct units
     if (percent) then

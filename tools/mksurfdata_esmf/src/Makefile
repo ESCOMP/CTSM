@@ -45,7 +45,7 @@ include $(ESMFMKFILE)
 
 # -----------------------------------------------------------------------------
 mksurfdata: mksurfdata.o
-	 $(ESMF_F90LINKER) $(LINKPATH) $(PIO_LINKPATH) $(ESMF_F90LINKOPTS) $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) -o $@ $^ $(ESMF_F90ESMFLINKLIBS) -l mksurfdata -l piof -l pnetcdf -lnetcdf
+	 $(ESMF_F90LINKER) -g $(LINKPATH) $(PIO_LINKPATH) $(ESMF_F90LINKOPTS) $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) -o $@ $^ $(ESMF_F90ESMFLINKLIBS) -l mksurfdata -l piof -l pnetcdf -lnetcdf
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
