@@ -404,36 +404,14 @@ program mksurfdata
      call pio_syncfile(pioid)
   end if
 
-  ! DEBUG
-  if (fsurdat /= ' ') then
-     ! --- for a 3 second input mapunit ---
-     ! mksrf_fsoitex_mapunit = &
-     !      '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v5_grid.nc'
-
-     ! --- for a 5min input mapunit---
-     mksrf_fsoitex_mesh = &
-          '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c200129.nc'
-     mksrf_fsoitex_mapunit = &
-          '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/soiltex_mapunits_4320x2160_c220329.nc'
-     mksrf_fsoitex_lookup = &
-          '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v5_lookup.nc'
-
-     call mksoiltexnew( mksrf_fsoitex_mesh, file_mapunit_i=mksrf_fsoitex_mapunit, file_lookup_i=mksrf_fsoitex_lookup, &
-          mesh_o=mesh_model, pioid_o=pioid, pctlnd_pft_o=pctlnd_pft, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
-  end if
-  call pio_closefile(pioid)
-  call shr_sys_abort('stopping just for soiltex output')
-  ! DEBUG
-
   ! -----------------------------------
   ! Make LAI and SAI from 1/2 degree data and write to surface dataset
   ! Write to netcdf file is done inside mklai routine
   ! -----------------------------------
-  ! if (fsurdat /= ' ') then
-  !    call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
-  !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
-  ! end if
+  if (fsurdat /= ' ') then
+     call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
+  end if
 
   ! -----------------------------------
   ! Make constant harvesting data at model resolution
@@ -480,11 +458,26 @@ program mksurfdata
   ! -----------------------------------
   ! Make soil texture [pctsand, pctclay]
   ! -----------------------------------
-  ! if (fsurdat /= ' ') then
-  !    ! mapunits, PCT_SAND and PCT_CLAY are written out in the subroutine
-  !    call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pioid, pctlnd_pft, rc=rc)
-  !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
-  ! end if
+  if (fsurdat /= ' ') then
+     ! mapunits, PCT_SAND and PCT_CLAY are written out in the subroutine
+     !    call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pioid, pctlnd_pft, rc=rc)
+     !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
+
+     ! --- for a 3 second input mapunit ---
+     ! mksrf_fsoitex_mapunit = &
+     !      '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v5_grid.nc'
+     ! --- for a 5min input mapunit---
+     mksrf_fsoitex_mesh = &
+          '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c200129.nc'
+     mksrf_fsoitex_mapunit = &
+          '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/soiltex_mapunits_4320x2160_c220329.nc'
+     mksrf_fsoitex_lookup = &
+          '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v5_lookup.nc'
+
+     call mksoiltexnew( mksrf_fsoitex_mesh, file_mapunit_i=mksrf_fsoitex_mapunit, file_lookup_i=mksrf_fsoitex_lookup, &
+          mesh_o=mesh_model, pioid_o=pioid, pctlnd_pft_o=pctlnd_pft, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
+  end if
 
   ! -----------------------------------
   ! Make soil color classes [soicol] [fsoicol]

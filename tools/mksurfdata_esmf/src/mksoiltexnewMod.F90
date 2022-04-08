@@ -61,6 +61,7 @@ contains
     integer                :: ns_i, ns_o
     integer                :: k,l,m,n
     integer                :: nlay         ! number of soil layers
+    integer                :: n_scid
     integer , allocatable  :: mask_i(:)
     real(r4), pointer      :: dataptr(:)
     integer                :: mapunit      ! temporary igbp soil mapunit
@@ -213,15 +214,12 @@ contains
 
     rcode = pio_inq_dimid  (pioid_i, 'MapUnit', dimid)
     rcode = pio_inq_dimlen (pioid_i, dimid, n_mapunits)
-    write(6,*)'DEBUG: n_mapunits = ',n_mapunits
 
     rcode = pio_inq_dimid  (pioid_i, 'soil_layer', dimid)
     rcode = pio_inq_dimlen (pioid_i, dimid, nlay)
-    write(6,*)'DEBUG: nlay = ',nlay
 
     rcode = pio_inq_dimid  (pioid_i, 'SCID', dimid)
-    rcode = pio_inq_dimlen (pioid_i, dimid, SCID)
-    write(6,*)'DEBUG: SCID= ',SCID
+    rcode = pio_inq_dimlen (pioid_i, dimid, n_scid)
 
     ! Read In MapUnits from the input file
     allocate(MapUnits(n_mapunits), stat=ier)
@@ -236,9 +234,9 @@ contains
        mapunit_lookup(MapUnits(n)) = n
     end do
 
-    allocate(sand_i(nlay,SCID,n_mapunits))
+    allocate(sand_i(nlay,n_scid,n_mapunits))
     if (ier/=0) call shr_sys_abort()
-    allocate(clay_i(nlay,SCID,n_mapunits))
+    allocate(clay_i(nlay,n_scid,n_mapunits))
     if (ier/=0) call shr_sys_abort()
 
     ! Get dimensions from input file and allocate memory for sand_i and clay_i
@@ -248,17 +246,18 @@ contains
     rcode = pio_get_var(pioid_i, pio_varid_sand, sand_i)
     rcode = pio_get_var(pioid_i, pio_varid_clay, clay_i)
 
-    if (root_task) then
-       do i = 1,n_mapunits
-          do j = 1,SCID
-             do k = 1,nlay
-                write(6,'(a,4(i8,2x))')'DEBUG: lev,scid,mapunit,sand_i= ',k,j,i,sand_i(k,j,i)
-             end do
-          end do
-       end do
-    end if
+    ! if (root_task) then
+    !    do i = 1,n_mapunits
+    !       do j = 1,SCID
+    !          do k = 1,nlay
+    !             write(6,'(a,4(i8,2x))')'DEBUG: lev,scid,mapunit,sand_i= ',k,j,i,sand_i(k,j,i)
+    !          end do
+    !       end do
+    !    end do
+    ! end if
 
     do no = 1,ns_o
+
        if (mapunit_o(no) > 0) then
           ! valid value is obtained
           if (mapunit_o(no) > mapunit_value_max) then
@@ -266,29 +265,86 @@ contains
              ! call shr_sys_abort("mapunit_o is out of bounds")
           end if
           lookup_index = mapunit_lookup(mapunit_o(no))
-          do l = 1, nlay
+
+          !---------------------
+          ! Determine sand_o
+          !---------------------
+
+          ! Determine the top soil layer sand_o 
+          sand_o(no,1) = float(sand_i(1,1,lookup_index))
+
+          ! If its less than 0 search within the SCID array for the first index 
+          ! that gives a pct sand that is greater than or  equal to 0
+          if (sand_o(no,1) < 0.) then
+             do l = 2,n_scid
+                write(6,*)'DEBUG1: lookup_index,l,sand_i(1,l,lookup_index= ',&
+                     lookup_index,l,sand_i(1,l,lookup_index) 
+                if (float(sand_i(1,l,lookup_index)) >= 0.) then
+                   sand_o(no,1) = float(sand_i(1,l,lookup_index))
+                   exit
+                end if
+             end do
+          end if
+          if (sand_o(no,1) < 0.) then
+             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
+             call shr_sys_abort('could not find a value >= 0 for sand_i') 
+          end if
+
+          ! Now determine the other soil layers sand_o
+          do l = 2,nlay
              sand_o(no,l) = float(sand_i(l,1,lookup_index))
-             clay_o(no,l) = float(clay_i(l,1,lookup_index))
              if (sand_o(no,l) < 0. .and. l > 1) then
                 sand_o(no,l) = sand_o(no,l-1)
              end if
+          end do
+
+          !---------------------
+          ! Determine clay_o
+          !---------------------
+
+          ! Determine the top soil layer clay_o
+          clay_o(no,1) = float(clay_i(1,1,lookup_index))
+
+          ! If its less than 0 search within the SCID array for the first index 
+          ! that gives a pct clay that is greater than or  equal to 0
+          if (clay_o(no,1) < 0.) then
+             do l = 2,n_scid
+                if (float(clay_i(1,l,lookup_index)) >= 0.) then
+                   clay_o(no,1) = float(clay_i(1,l,lookup_index))
+                   exit
+                end if
+             end do
+          end if
+          if (clay_o(no,1) < 0.) then
+             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
+             call shr_sys_abort('could not find a value >= 0 for sand_i') 
+          end if
+
+          ! Now determine the other soil layers clay_o
+          do l = 2,nlay
+             clay_o(no,l) = float(clay_i(l,1,lookup_index))
              if (clay_o(no,l) < 0. .and. l > 1) then
                 clay_o(no,l) = clay_o(no,l-1)
              end if
           end do
-          write(6,'(a,3(i8,2x),3(f14.5,2x))') &
-               'DEBUG: no,mapunit_o(no),lookup_index,pctlnd_pft_o(no),sand_o(no,1),clay_o(no,1) = ',&
-               no,mapunit_o(no),lookup_index,pctlnd_pft_o(no),sand_o(no,1),clay_o(no,1) 
+
+          ! write(6,'(a,3(i8,2x),3(f14.5,2x))') &
+          !      'DEBUG: no,mapunit_o(no),lookup_index,pctlnd_pft_o(no),sand_o(no,1),clay_o(no,1) = ',&
+          !      no,mapunit_o(no),lookup_index,pctlnd_pft_o(no),sand_o(no,1),clay_o(no,1) 
        else
+
+          write(6,*)'DEBUG: i am here for no = ',no
           ! use loam
           do l = 1, nlay
              sand_o(no,l) = 43.
              clay_o(no,l) = 18.
           end do
+
        end if
+
     end do
 
-    ! Adjust pct sand and pct clay to be nearest integers and to be loam if pctlnd_pft is < 1.e-6
+    ! Adjust sand and clay be loam if pctlnd_pft is < 1.e-6
     ! Truncate all percentage fields on output grid. This is needed to insure that wt is zero
     ! (not a very small number such as 1e-16) where it really should be zero
     do no = 1,ns_o
