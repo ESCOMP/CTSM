@@ -1707,6 +1707,7 @@ contains
     integer h         ! hemisphere indices
     integer s         ! growing season indices
     integer idpp      ! number of days past planting
+    integer mxmat     ! maximum growing season length
     real(r8) harvest_reason
     real(r8) dayspyr  ! days per year in this year
     real(r8) avg_dayspyr ! average number of days per year
@@ -1720,6 +1721,7 @@ contains
     logical force_harvest ! Should we harvest today no matter what?
     logical fake_harvest  ! Dealing with incorrect Dec. 31 planting
     logical sown_today    ! Was the crop sown today?
+    logical is_day_before_next_sowing ! Is tomorrow a prescribed sowing day?
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -1728,7 +1730,6 @@ contains
          leaf_long         =>    pftcon%leaf_long                                , & ! Input:  leaf longevity (yrs)                              
          leafcn            =>    pftcon%leafcn                                 , & ! Input:  leaf C:N (gC/gN)                                  
          manunitro         =>    pftcon%manunitro                              , & ! Input:  max manure to be applied in total (kgN/m2)
-         mxmat             =>    pftcon%mxmat                                  , & ! Input:  
          minplanttemp      =>    pftcon%minplanttemp                           , & ! Input:  
          planttemp         =>    pftcon%planttemp                              , & ! Input:  
          gddmin            =>    pftcon%gddmin                                 , & ! Input:  
@@ -2097,6 +2098,12 @@ contains
                 sown_today = crop_inst%sdates_thisyr(p,s) == real(jday, r8)
             end if
 
+            ! TEMPORARY? GGCMI seasons often much longer than CLM mxmat.
+            mxmat = pftcon%mxmat(ivt(p))
+            if (use_cropcal_streams .and. .not. generate_crop_gdds) then
+                mxmat = 999
+            end if
+
             if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
                 ! Crop was incorrectly planted in last time step of Dec. 31.
                 do_harvest = .true.
@@ -2160,17 +2167,34 @@ contains
                do_harvest = .false.
             else
                ! Original harvest rule
-               do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))
+               do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat
+
+               ! Always harvest the day before the next prescribed sowing, if still alive.
+               ! WARNING: This implementation assumes that sowing dates don't change over time!
+               ! In order to avoid this, you'd have to read this year's AND next year's prescribed
+               ! sowing dates.
+               ! WARNING: This implementation assumes that all patches use prescribed sowing dates.
+               if (use_cropcal_streams) then
+                  is_day_before_next_sowing = (jday == next_rx_sdate(p) - 1) .or. \
+                                              (crop_inst%sdates_thisyr(p,1) == 1 .and. \
+                                               jday == dayspyr)
+               else
+                  is_day_before_next_sowing = .false.
+               end if
+               do_harvest = do_harvest .or. is_day_before_next_sowing
 
                if (hui(p) >= gddmaturity(p)) then
                    harvest_reason = 1._r8
-               else if (idpp >= mxmat(ivt(p))) then
+               else if (idpp >= mxmat) then
                    harvest_reason = 2._r8
+               else if (is_day_before_next_sowing) then
+                   harvest_reason = 5._r8
+                   force_harvest = .true.
                end if
             endif
             force_harvest = force_harvest .or. (generate_crop_gdds .and. do_harvest)
 
-            if ((.not. force_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
+            if ((.not. force_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat) then
                cphase(p) = 2._r8
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
