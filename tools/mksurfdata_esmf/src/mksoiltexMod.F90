@@ -195,7 +195,6 @@ contains
     ! Get dimensions from input file and allocate memory for sand_i and clay_i
     rcode = pio_inq_dimid  (pioid_i, 'number_of_layers', dimid)
     rcode = pio_inq_dimlen (pioid_i, dimid, nlay)
-
     allocate(sand_i(mapunit_value_max,nlay), stat=ier)
     if (ier/=0) call shr_sys_abort()
     allocate(clay_i(mapunit_value_max,nlay), stat=ier)
