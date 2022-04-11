@@ -1099,7 +1099,7 @@ contains
              albgri_dst_hst(c,ib) = albgri_dst(c,ib)
              if (h2osno_total(c) > 0._r8) then
                 albsnd_hst2(c,ib) = albsnd_hst(c,ib)
-                albsni_hst2(c,ib) = albsnd_hst(c,ib)
+                albsni_hst2(c,ib) = albsni_hst(c,ib)
              end if
           end if
        end do
