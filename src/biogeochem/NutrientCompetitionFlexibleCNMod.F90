@@ -230,6 +230,7 @@ contains
     real(r8) :: gresp_storage      ! temporary variable for growth resp to storage
     real(r8) :: nlc                ! temporary variable for total new leaf carbon allocation
     real(r8) :: f5(nrepr)          ! reproductive allocation parameters
+    real(r8) :: cng                ! C:N ratio for grain (= cnlw for now; slevis)
     real(r8) :: dt                 ! model time step
     real(r8):: fsmn(bounds%begp:bounds%endp)  ! A emperate variable for adjusting FUN uptakes
 
@@ -291,10 +292,12 @@ contains
          croot_stem                   => pftcon%croot_stem                                         , & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf                    => pftcon%stem_leaf                                          , & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd                      => pftcon%flivewd                                            , & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn_const                 => pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)
-         frootcn_const                => pftcon%frootcn                                            , & ! Input:  fine root C:N (gC/gN)
-         livewdcn_const               => pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
+         leafcn                       => pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)
+         frootcn                      => pftcon%frootcn                                            , & ! Input:  fine root C:N (gC/gN)
+         livewdcn                     => pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
+         deadwdcn                     => pftcon%deadwdcn                                           , & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
          fcur2                        => pftcon%fcur                                               , & ! Input:  allocation parameter: fraction of allocation that goes to currently displayed growth, remainder to storage
+         graincn                      => pftcon%graincn                                            , & ! Input:  grain C:N (gC/gN)
          grperc                       => pftcon%grperc                                             , & ! Input:  growth respiration parameter
          grpnow                       => pftcon%grpnow                                             , & ! Input:  growth respiration parameter
          evergreen                    => pftcon%evergreen                                          , & ! Input:  binary flag for evergreen leaf habit (0 or 1)
@@ -306,11 +309,6 @@ contains
          astem                        => cnveg_state_inst%astem_patch                              , & ! Input:  [real(r8) (:)   ]  stem allocation coefficient
          aroot                        => cnveg_state_inst%aroot_patch                              , & ! Input:  [real(r8) (:)   ]  root allocation coefficient
          arepr                        => cnveg_state_inst%arepr_patch                              , & ! Input:  [real(r8) (:,:) ]  reproductive allocation coefficient(s)
-         leafcn                       => cnveg_state_inst%leafcn_patch                             , & ! Input: [real(r8) (:)   ]  current leaf C:N ratio
-         frootcn                      => cnveg_state_inst%frootcn_patch                            , & ! Input: [real(r8) (:)   ]  current fine root C:N ratio
-         livewdcn                     => cnveg_state_inst%livewdcn_patch                           , & ! Input: [real(r8) (:)   ]  current live wood C:N ratio
-         deadwdcn                     => cnveg_state_inst%deadwdcn_patch                           , & ! Input: [real(r8) (:)   ]  current dead wood C:N ratio
-         reproductivecn               => cnveg_state_inst%reproductivecn_patch                     , & ! Input: [real(r8) (:,:) ]  current crop reproductive (e.g., grain) C:N ratios
          c_allometry                  => cnveg_state_inst%c_allometry_patch                        , & ! Output: [real(r8) (:)   ]  C allocation index (DIM)
 
          annsum_npp                   => cnveg_carbonflux_inst%annsum_npp_patch                    , & ! Input:  [real(r8) (:)   ]  annual sum of NPP, for wood allocation
@@ -406,10 +404,10 @@ contains
          f4   = flivewd(ivt(p))
          g1   = grperc(ivt(p))
          g2   = grpnow(ivt(p))
-         cnl  = leafcn(p)
-         cnfr = frootcn(p)
-         cnlw = livewdcn(p)
-         cndw = deadwdcn(p)
+         cnl  = leafcn(ivt(p))
+         cnfr = frootcn(ivt(p))
+         cnlw = livewdcn(ivt(p))
+         cndw = deadwdcn(ivt(p))
          fcur = fcur2(ivt(p))
 
          if (evergreen(ivt(p)) == 1._r8) then
@@ -539,6 +537,7 @@ contains
          end if
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
 
+            cng = graincn(ivt(p))
             npool_to_livestemn_demand(p)          = (nlc * f3 * f4 / cnlw) * fcur
             npool_to_livestemn_storage_demand(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
             npool_to_deadstemn_demand(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
@@ -548,8 +547,8 @@ contains
             npool_to_deadcrootn_demand(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
             npool_to_deadcrootn_storage_demand(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
             do k = 1, nrepr
-               npool_to_reproductiven_demand(p,k)         = (nlc * f5(k) / reproductivecn(p,k)) * fcur
-               npool_to_reproductiven_storage_demand(p,k) = (nlc * f5(k) / reproductivecn(p,k)) * (1._r8 -fcur)
+               npool_to_reproductiven_demand(p,k)         = (nlc * f5(k) / cng) * fcur
+               npool_to_reproductiven_storage_demand(p,k) = (nlc * f5(k) / cng) * (1._r8 -fcur)
             end do
          end if
 
@@ -771,8 +770,8 @@ contains
                end if
             end if
 
-            leafcn_max = leafcn_const(ivt(p)) + 15.0_r8
-            frootcn_max = frootcn_const(ivt(p)) + 15.0_r8
+            leafcn_max = leafcn(ivt(p)) + 15.0_r8
+            frootcn_max = frootcn(ivt(p)) + 15.0_r8
 
             ! Note that for high CN ratio stress the plant part does not retranslocate nitrogen as the plant part will need the N
             ! if high leaf CN ratio (i.e., high leaf C compared to N) then turnover extra C
@@ -805,7 +804,7 @@ contains
 
             if (woody(ivt(p)) == 1._r8) then
 
-               livewdcn_max = livewdcn_const(ivt(p)) + 15.0_r8
+               livewdcn_max = livewdcn(ivt(p)) + 15.0_r8
 
                ! if high coarse root CN ratio (i.e., high coarse root C compared to N) then turnover extra C
                if (livecrootcn_actual > livewdcn_max) then
@@ -839,7 +838,7 @@ contains
 
             if (ivt(p) >= npcropmin) then ! skip 2 generic crops
 
-               livewdcn_max = livewdcn_const(ivt(p)) + 15.0_r8
+               livewdcn_max = livewdcn(ivt(p)) + 15.0_r8
 
                ! if high coarse root CN ratio (i.e., high coarse root C compared to N) then turnover extra C
                if (livecrootcn_actual > livewdcn_max) then
@@ -1020,7 +1019,7 @@ contains
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type
 
-         leafcn_const          => pftcon%leafcn                                    ,  & ! Input:  leaf C:N (gC/gN)
+         leafcn                => pftcon%leafcn                                    ,  & ! Input:  leaf C:N (gC/gN)
          fleafcn               => pftcon%fleafcn                                    , & ! Input:  leaf c:n during organ fill
          ffrootcn              => pftcon%ffrootcn                                   , & ! Input:  froot c:n during organ fill
          fstemcn               => pftcon%fstemcn                                    , & ! Input:  stem c:n during organ fill
@@ -1089,8 +1088,8 @@ contains
          end if
 
 
-         leafcn_min = leafcn_const(ivt(p)) - 10.0_r8
-         leafcn_max = leafcn_const(ivt(p)) + 10.0_r8
+         leafcn_min = leafcn(ivt(p)) - 10.0_r8
+         leafcn_max = leafcn(ivt(p)) + 10.0_r8
 
          this%actual_leafcn(p) = max( this%actual_leafcn(p), leafcn_min-0.0001_r8 )
          this%actual_leafcn(p) = min( this%actual_leafcn(p), leafcn_max )
