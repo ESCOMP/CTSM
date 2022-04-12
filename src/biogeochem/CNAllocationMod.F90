@@ -470,7 +470,7 @@ contains
          n_allometry => cnveg_state_inst%n_allometry_patch        & ! Output: [real(r8) (:)   ]  N allocation index (DIM)
          )
 
-    do fp = 1                            , num_soilp
+    do fp = 1, num_soilp
        p = filter_soilp(fp)
 
        f1 = froot_leaf(ivt(p))
