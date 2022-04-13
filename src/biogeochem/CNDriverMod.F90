@@ -407,7 +407,6 @@ contains
          num_pcropp, filter_pcropp,                                       &
          crop_inst, canopystate_inst,                                     &
          cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
-         c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,            &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
          soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
          energyflux_inst)

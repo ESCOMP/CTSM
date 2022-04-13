@@ -440,7 +440,6 @@ contains
        num_pcropp, filter_pcropp,                                              &
        crop_inst, canopystate_inst,                                            &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,        &
-       c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                   &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                      &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst,      &
        energyflux_inst)
@@ -468,10 +467,8 @@ contains
     type(crop_type)                 , intent(in)    :: crop_inst
     type(canopystate_type)          , intent(in)    :: canopystate_inst ! unused in this version
     type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
-    type(cnveg_carbonstate_type)    , intent(inout) :: cnveg_carbonstate_inst
-    type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
-    type(cnveg_carbonflux_type)     , intent(inout) :: c13_cnveg_carbonflux_inst
-    type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
+    type(cnveg_carbonstate_type)    , intent(in)    :: cnveg_carbonstate_inst
+    type(cnveg_carbonflux_type)     , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
     type(soilbiogeochem_carbonflux_type)   , intent(in) :: soilbiogeochem_carbonflux_inst
@@ -483,7 +480,6 @@ contains
        num_pcropp, filter_pcropp,                                          &
        crop_inst,                                                          &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,    &
-       c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,               &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst)
 
   end subroutine calc_plant_nutrient_demand
@@ -493,8 +489,15 @@ contains
        num_pcropp, filter_pcropp,                                               &
        crop_inst,                                                               &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,         &
-       c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                    &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst)
+    !
+    ! !DESCRIPTION:
+    ! Sets the following output variables that are used elsewhere:
+    ! - plant_ndemand
+    ! - retransn_to_npool
+    ! - leafn_to_retransn
+    ! - frootn_to_retransn
+    ! - livestemn_to_retransn
     !
     ! !USES:
     use pftconMod              , only : npcropmin, pftcon
@@ -518,10 +521,8 @@ contains
     integer                         , intent(in)    :: filter_pcropp(:) ! filter for prognostic crop patches
     type(crop_type)                 , intent(in)    :: crop_inst
     type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
-    type(cnveg_carbonstate_type)    , intent(inout) :: cnveg_carbonstate_inst
-    type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
-    type(cnveg_carbonflux_type)     , intent(inout) :: c13_cnveg_carbonflux_inst
-    type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
+    type(cnveg_carbonstate_type)    , intent(in)    :: cnveg_carbonstate_inst
+    type(cnveg_carbonflux_type)     , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
     !
@@ -553,13 +554,13 @@ contains
          croplive              => crop_inst%croplive_patch                          , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
 
          astem                 => cnveg_state_inst%astem_patch                      , & ! Input: [real(r8) (:)   ]  stem allocation coefficient
+         c_allometry           => cnveg_state_inst%c_allometry_patch                , & ! Input:  [real(r8) (:)   ]  C allocation index (DIM)
+         n_allometry           => cnveg_state_inst%n_allometry_patch                , & ! Input:  [real(r8) (:)   ]  N allocation index (DIM)
+         annsum_potential_gpp  => cnveg_state_inst%annsum_potential_gpp_patch       , & ! Input:  [real(r8) (:)   ]  annual sum of potential GPP
+         annmax_retransn       => cnveg_state_inst%annmax_retransn_patch            , & ! Input:  [real(r8) (:)   ]  annual max of retranslocated N pool
          grain_flag            => cnveg_state_inst%grain_flag_patch                 , & ! Output: [real(r8) (:)   ]  1: grain fill stage; 0: not
-         c_allometry           => cnveg_state_inst%c_allometry_patch                , & ! Output: [real(r8) (:)   ]  C allocation index (DIM)
-         n_allometry           => cnveg_state_inst%n_allometry_patch                , & ! Output: [real(r8) (:)   ]  N allocation index (DIM)
          tempsum_potential_gpp => cnveg_state_inst%tempsum_potential_gpp_patch      , & ! Output: [real(r8) (:)   ]  temporary annual sum of potential GPP
          tempmax_retransn      => cnveg_state_inst%tempmax_retransn_patch           , & ! Output: [real(r8) (:)   ]  temporary annual max of retranslocated N pool (gN/m2)
-         annsum_potential_gpp  => cnveg_state_inst%annsum_potential_gpp_patch       , & ! Output: [real(r8) (:)   ]  annual sum of potential GPP
-         annmax_retransn       => cnveg_state_inst%annmax_retransn_patch            , & ! Output: [real(r8) (:)   ]  annual max of retranslocated N pool
 
          leafc                 => cnveg_carbonstate_inst%leafc_patch                , & ! Input:  [real(r8) (:)   ]
          frootc                => cnveg_carbonstate_inst%frootc_patch               , & ! Input:  [real(r8) (:)   ]
@@ -567,13 +568,12 @@ contains
 
          retransn              => cnveg_nitrogenstate_inst%retransn_patch           , & ! Input:  [real(r8) (:)   ]  (gN/m2) plant pool of retranslocated N
 
-         gpp                   => cnveg_carbonflux_inst%gpp_before_downreg_patch    , & ! Output: [real(r8) (:)   ]  GPP flux before downregulation (gC/m2/s)
-         availc                => cnveg_carbonflux_inst%availc_patch                , & ! Output: [real(r8) (:)   ]  C flux available for allocation (gC/m2/s)
+         gpp                   => cnveg_carbonflux_inst%gpp_before_downreg_patch    , & ! Input:  [real(r8) (:)   ]  GPP flux before downregulation (gC/m2/s)
+         availc                => cnveg_carbonflux_inst%availc_patch                , & ! Input:  [real(r8) (:)   ]  C flux available for allocation (gC/m2/s)
 
          plant_ndemand         => cnveg_nitrogenflux_inst%plant_ndemand_patch       , & ! Output: [real(r8) (:)   ]  N flux required to support initial GPP (gN/m2/s)
          avail_retransn        => cnveg_nitrogenflux_inst%avail_retransn_patch      , & ! Output: [real(r8) (:)   ]  N flux available from retranslocation pool (gN/m2/s)
          retransn_to_npool     => cnveg_nitrogenflux_inst%retransn_to_npool_patch   , & ! Output: [real(r8) (:)   ]  deployment of retranslocated N (gN/m2/s)
-         sminn_to_npool        => cnveg_nitrogenflux_inst%sminn_to_npool_patch      , & ! Output: [real(r8) (:)   ]  deployment of soil mineral N uptake (gN/m2/s)
          leafn_to_retransn     => cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Output: [real(r8) (:)   ]
          frootn_to_retransn    => cnveg_nitrogenflux_inst%frootn_to_retransn_patch  , & ! Output: [real(r8) (:)   ]
          livestemn_to_retransn => cnveg_nitrogenflux_inst%livestemn_to_retransn_patch & ! Output: [real(r8) (:)   ]

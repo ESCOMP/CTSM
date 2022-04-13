@@ -63,7 +63,6 @@ module NutrientCompetitionMethodMod
           num_pcropp, filter_pcropp,                                               &
           crop_inst, canopystate_inst,                                             &
           cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,         &
-          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                    &
           cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
           soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
           energyflux_inst)
@@ -96,10 +95,8 @@ module NutrientCompetitionMethodMod
        type(crop_type)                 , intent(in)    :: crop_inst
        type(canopystate_type)          , intent(in)    :: canopystate_inst
        type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
-       type(cnveg_carbonstate_type)    , intent(inout) :: cnveg_carbonstate_inst
-       type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
-       type(cnveg_carbonflux_type)     , intent(inout) :: c13_cnveg_carbonflux_inst
-       type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
+       type(cnveg_carbonstate_type)    , intent(in)    :: cnveg_carbonstate_inst
+       type(cnveg_carbonflux_type)     , intent(in)    :: cnveg_carbonflux_inst
        type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
        type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
        type(soilbiogeochem_carbonflux_type), intent(in) :: soilbiogeochem_carbonflux_inst
