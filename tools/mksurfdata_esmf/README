@@ -19,8 +19,8 @@ building the executable
 > rm -rf bld  # (or the contents of /bld) before rerunning CC=...
 > mkdir ./bld
 > cd bld
-> module load intel  # I found I need the latest version of intel
-> module load python  # in case need latest version of python
+> module load  intel/2021.2 # I found I need the latest version of intel
+> module load python        # in case need latest version of python
 > module load cmake
 > bash
 > CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src/

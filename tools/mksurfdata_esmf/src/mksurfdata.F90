@@ -355,14 +355,14 @@ program mksurfdata
      call pio_syncfile(pioid)
   end if
 
-  ! -----------------------------------
-  ! Make LAI and SAI from 1/2 degree data and write to surface dataset
-  ! Write to netcdf file is done inside mklai routine
-  ! -----------------------------------
-  if (fsurdat /= ' ') then
-     call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
-  end if
+  ! ! -----------------------------------
+  ! ! Make LAI and SAI from 1/2 degree data and write to surface dataset
+  ! ! Write to netcdf file is done inside mklai routine
+  ! ! -----------------------------------
+  ! if (fsurdat /= ' ') then
+  !    call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
+  !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
+  ! end if
 
   ! -----------------------------------
   ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
@@ -406,47 +406,47 @@ program mksurfdata
      call pio_syncfile(pioid)
   end if
 
-  ! -----------------------------------
-  ! Make constant harvesting data at model resolution
-  ! -----------------------------------
-  ! Note that this call must come after call to mkpftInit - since num_cft is set there
-  ! Output data is written in mkharvest
-  if (fsurdat /= ' ') then
-     call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, pioid, constant=.true., rc=rc )
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
-  end if
+  ! ! -----------------------------------
+  ! ! Make constant harvesting data at model resolution
+  ! ! -----------------------------------
+  ! ! Note that this call must come after call to mkpftInit - since num_cft is set there
+  ! ! Output data is written in mkharvest
+  ! if (fsurdat /= ' ') then
+  !    call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, pioid, constant=.true., rc=rc )
+  !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
+  ! end if
 
-  ! -----------------------------------
-  ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
-  ! -----------------------------------
-  ! LAKEDEPTH is written out in the subroutine
-  ! Need to keep pctlak and pctwet external for use below
-  allocate ( pctlak(lsize_o)) ; pctlak(:) = spval
-  allocate ( pctlak_max(lsize_o)) ; pctlak_max(:) = spval
-  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pioid, fsurdat, rc=rc, do_depth=.true.)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
+  ! ! -----------------------------------
+  ! ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
+  ! ! -----------------------------------
+  ! ! LAKEDEPTH is written out in the subroutine
+  ! ! Need to keep pctlak and pctwet external for use below
+  ! allocate ( pctlak(lsize_o)) ; pctlak(:) = spval
+  ! allocate ( pctlak_max(lsize_o)) ; pctlak_max(:) = spval
+  ! call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pioid, fsurdat, rc=rc, do_depth=.true.)
+  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
 
-  allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
-  allocate ( pctwet_orig(lsize_o)) ; pctwet_orig(:) = spval
-  call mkwetlnd(mksrf_fwetlnd_mesh, mksrf_fwetlnd, mesh_model, pctwet, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkwetlnd')
+  ! allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
+  ! allocate ( pctwet_orig(lsize_o)) ; pctwet_orig(:) = spval
+  ! call mkwetlnd(mksrf_fwetlnd_mesh, mksrf_fwetlnd, mesh_model, pctwet, rc=rc)
+  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkwetlnd')
 
-  ! -----------------------------------
-  ! Make glacier fraction [pctgla] from [fglacier] dataset
-  ! -----------------------------------
-  allocate (pctgla(lsize_o)) ; pctgla(:) = spval
-  allocate (pctgla_orig(lsize_o)) ; pctgla_orig(:) = spval
-  call mkglacier (mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, glac_o=pctgla, rc=rc)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacier')
+  ! ! -----------------------------------
+  ! ! Make glacier fraction [pctgla] from [fglacier] dataset
+  ! ! -----------------------------------
+  ! allocate (pctgla(lsize_o)) ; pctgla(:) = spval
+  ! allocate (pctgla_orig(lsize_o)) ; pctgla_orig(:) = spval
+  ! call mkglacier (mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, glac_o=pctgla, rc=rc)
+  ! if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacier')
 
-  ! -----------------------------------
-  ! Make glacier region ID [glacier_region] from [fglacierregion] dataset
-  ! -----------------------------------
-  if (fsurdat /= ' ') then
-     ! GLACIER_REGION is written out in the subroutine
-     call mkglacierregion(mksrf_fglacierregion_mesh, mksrf_fglacierregion, mesh_model, pioid, rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacierregion')
-  end if
+  ! ! -----------------------------------
+  ! ! Make glacier region ID [glacier_region] from [fglacierregion] dataset
+  ! ! -----------------------------------
+  ! if (fsurdat /= ' ') then
+  !    ! GLACIER_REGION is written out in the subroutine
+  !    call mkglacierregion(mksrf_fglacierregion_mesh, mksrf_fglacierregion, mesh_model, pioid, rc)
+  !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacierregion')
+  ! end if
 
   ! -----------------------------------
   ! Make soil texture [pctsand, pctclay]
@@ -465,11 +465,14 @@ program mksurfdata
      mksrf_fsoitex_mapunit = &
           '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/soiltex_mapunits_4320x2160_c220329.nc'
      mksrf_fsoitex_lookup = &
-          '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v5_lookup.nc'
+          '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v1_lookup2.nc'
 
      call mksoiltexnew( mksrf_fsoitex_mesh, file_mapunit_i=mksrf_fsoitex_mapunit, file_lookup_i=mksrf_fsoitex_lookup, &
           mesh_o=mesh_model, pioid_o=pioid, pctlnd_pft_o=pctlnd_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
+
+     call pio_closefile(pioid)
+     call shr_sys_abort("stopping for debugging")
   end if
 
   ! -----------------------------------

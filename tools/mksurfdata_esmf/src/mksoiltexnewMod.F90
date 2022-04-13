@@ -60,33 +60,28 @@ contains
     integer                :: ni,no
     integer                :: ns_i, ns_o
     integer                :: k,l,m,n
-    integer                :: nlay         ! number of soil layers
+    integer                :: nlay          ! number of soil layers
     integer                :: n_scid
     integer , allocatable  :: mask_i(:)
     real(r4), pointer      :: dataptr(:)
-    integer                :: mapunit      ! temporary igbp soil mapunit
-    !
-    integer,  allocatable  :: sand_i(:,:,:)  ! input grid: percent sand
-    integer,  allocatable  :: clay_i(:,:,:)  ! input grid: percent clay
-    real(r4), allocatable  :: sand_o(:,:)    ! % sand (output grid)
-    real(r4), allocatable  :: clay_o(:,:)    ! % clay (output grid)
+    integer                :: mapunit       ! temporary igbp soil mapunit
+    integer,  allocatable  :: sand_i(:,:,:) ! input grid: percent sand
+    integer,  allocatable  :: clay_i(:,:,:) ! input grid: percent clay
+    real(r4), allocatable  :: sand_o(:,:)   ! % sand (output grid)
+    real(r4), allocatable  :: clay_o(:,:)   ! % clay (output grid)
     integer                :: n_mapunits
     integer                :: lookup_index
     integer                :: SCID
-    real(r4), allocatable  :: mapunit_i(:) ! input grid: igbp soil mapunits
-    integer , allocatable  :: mapunit_o(:)
+    real(r4), allocatable  :: mapunit_i(:)  ! input grid: igbp soil mapunits
+    integer , allocatable  :: mapunit_o(:)  ! output grid: igbp soil mapunits
     integer , allocatable  :: MapUnits(:)
     integer , allocatable  :: mapunit_lookup(:)
     type(var_desc_t)       :: pio_varid_sand
     type(var_desc_t)       :: pio_varid_clay
-    integer                :: starts(3)    ! starting indices for reading lookup table
-    integer                :: counts(3)    ! dimension counts for reading lookup table
-    !
+    integer                :: starts(3)     ! starting indices for reading lookup table
+    integer                :: counts(3)     ! dimension counts for reading lookup table
     integer                :: srcTermProcessing_Value = 0
-    integer                :: rcode, ier   ! error status
-    ! DEBUG
-    integer :: i,j
-    ! DEBUG
+    integer                :: rcode, ier    ! error status
     character(len=*), parameter :: subname = 'mksoiltexnew'
     !-----------------------------------------------------------------------
 
@@ -134,17 +129,16 @@ contains
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Opne input mapunit data file
+    ! Read in mapunit data
     if (root_task) write(ndiag,*)"Reading in mapunit data in "//trim(subname)
     call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_mapunit_i))
     rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_mapunit_i), pio_nowrite)
-
-    ! Read in mapunit data
     allocate(mapunit_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
     call mkpio_get_rawdata(pioid_i, 'MU', mesh_i, mapunit_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
+    call pio_closefile(pioid_i)
 
     ! Set mesh mask to zero where the mapunit values are 0
     if (root_task) write(ndiag,*)"Setting mask in mesh where mapunit data is 0 "//trim(subname)
@@ -165,22 +159,22 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Create a route handle
-    if (root_task) write(ndiag,*)"DEBUG: before route handle creation "//trim(subname)
+    if (root_task) write(ndiag,*)" before route handle creation "//trim(subname)
     call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
          regridmethod=ESMF_REGRIDMETHOD_CONSERVE, srcTermProcessing=srcTermProcessing_Value, &
          ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
-    if (root_task) write(ndiag,*)"DEBUG: after route handle creation "//trim(subname)
+    if (root_task) write(ndiag,*)" after route handle creation "//trim(subname)
 
     ! Create a dynamic mask object
     ! The dynamic mask object further holds a pointer to the routine that will be called in order to
     ! handle dynamically masked elements - in this case its DynMaskProc (see below)
-    if (root_task) write(ndiag,*)"DEBUG: before call to dynamic mas set creation "//trim(subname)
+    if (root_task) write(ndiag,*)" before call to dynamic mask set creation "//trim(subname)
     call ESMF_DynamicMaskSetR4R8R4(dynamicMask, dynamicMaskRoutine=get_dominant_mapunit,  &
          handleAllElements=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    if (root_task) write(ndiag,*)"DEBUG: after call to dynamic mas set creation "//trim(subname)
+    if (root_task) write(ndiag,*)" after call to dynamic mask set creation "//trim(subname)
 
     ! Determine values in field_i
     call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
@@ -204,7 +198,18 @@ contains
        mapunit_o(no) = int(dataptr(no))
     end do
 
-    call pio_closefile(pioid_i)
+    do no = 1,ns_o
+       if (mapunit_o(no) > mapunit_value_max) then
+          write(6,*)'mapunit_o is out of bounds ',mapunit_o(no)
+          ! call shr_sys_abort("mapunit_o is out of bounds")
+       end if
+    end do
+
+    ! Write out mapunit_o
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out mapunits "
+    call mkfile_output(pioid_o,  mesh_o,  'mapunits', mapunit_o,  rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for mapunits')
+    call pio_syncfile(pioid_o)
 
     !---------------------------------
     ! Determine %sand and %clay on output grid - using above mapunits
@@ -246,39 +251,26 @@ contains
     rcode = pio_get_var(pioid_i, pio_varid_sand, sand_i)
     rcode = pio_get_var(pioid_i, pio_varid_clay, clay_i)
 
-    ! if (root_task) then
-    !    do i = 1,n_mapunits
-    !       do j = 1,SCID
-    !          do k = 1,nlay
-    !             write(6,'(a,4(i8,2x))')'DEBUG: lev,scid,mapunit,sand_i= ',k,j,i,sand_i(k,j,i)
-    !          end do
-    !       end do
-    !    end do
-    ! end if
-
     do no = 1,ns_o
 
-       if (mapunit_o(no) > 0) then
-          ! valid value is obtained
-          if (mapunit_o(no) > mapunit_value_max) then
-             write(6,*)'mapunit_o is out of bounds ',mapunit_o(no)
-             ! call shr_sys_abort("mapunit_o is out of bounds")
-          end if
+       if (pctlnd_pft_o(no) < 1.e-6_r8 .or. mapunit_o(no) == 0) then
+
+          ! Adjust sand and clay be loam if pctlnd_pft is < 1.e-6 or mapunit is 0
+          sand_o(no,:) = 43._r4
+          clay_o(no,:) = 18._r4
+
+       else
+
+          ! Determine lookup_index
           lookup_index = mapunit_lookup(mapunit_o(no))
 
-          !---------------------
-          ! Determine sand_o
-          !---------------------
-
-          ! Determine the top soil layer sand_o 
-          sand_o(no,1) = float(sand_i(1,1,lookup_index))
-
+          ! Determine the top soil layer sand_o and clay_o 
           ! If its less than 0 search within the SCID array for the first index 
           ! that gives a pct sand that is greater than or  equal to 0
+          ! Then determine the other soil layers sand_o
+          sand_o(no,1) = float(sand_i(1,1,lookup_index))
           if (sand_o(no,1) < 0.) then
              do l = 2,n_scid
-                write(6,*)'DEBUG1: lookup_index,l,sand_i(1,l,lookup_index= ',&
-                     lookup_index,l,sand_i(1,l,lookup_index) 
                 if (float(sand_i(1,l,lookup_index)) >= 0.) then
                    sand_o(no,1) = float(sand_i(1,l,lookup_index))
                    exit
@@ -286,11 +278,14 @@ contains
              end do
           end if
           if (sand_o(no,1) < 0.) then
-             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
-             call shr_sys_abort('could not find a value >= 0 for sand_i') 
+             if (int(sand_o(no,1)) == -4) then
+                write(6,'(a,i8)')'WARNING: changing sand_o from -4 to 99% at no = ',no
+                sand_o(no,:) = 99._r4
+             else
+                write(6,'(a,i8,a,i8)')'WARNING: changing sand_o from ',int(sand_o(no,1)),' to 43 at no = ',no
+                sand_o(no,:) = 43._r4
+             end if
           end if
-
-          ! Now determine the other soil layers sand_o
           do l = 2,nlay
              sand_o(no,l) = float(sand_i(l,1,lookup_index))
              if (sand_o(no,l) < 0. .and. l > 1) then
@@ -298,15 +293,10 @@ contains
              end if
           end do
 
-          !---------------------
-          ! Determine clay_o
-          !---------------------
-
-          ! Determine the top soil layer clay_o
-          clay_o(no,1) = float(clay_i(1,1,lookup_index))
-
           ! If its less than 0 search within the SCID array for the first index 
           ! that gives a pct clay that is greater than or  equal to 0
+          ! Now determine the other soil layers clay_o
+          clay_o(no,1) = float(clay_i(1,1,lookup_index))
           if (clay_o(no,1) < 0.) then
              do l = 2,n_scid
                 if (float(clay_i(1,l,lookup_index)) >= 0.) then
@@ -316,11 +306,18 @@ contains
              end do
           end if
           if (clay_o(no,1) < 0.) then
-             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
-             call shr_sys_abort('could not find a value >= 0 for sand_i') 
+             if (int(clay_o(no,1)) == -4) then
+                write(6,'(a,i8)')'WARNING: changing clay_o from -4 to 1% at no = ',no
+                clay_o(no,:) = 1._r4
+             else
+                write(6,'(a,i8,a,i8)')'WARNING: changing clay_o from ',int(clay_o(no,1)),' to 18 at no = ',no
+                clay_o(no,:) = 18._r4
+             end if
           end if
-
-          ! Now determine the other soil layers clay_o
+          if (clay_o(no,1) < 0.) then
+             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
+             call shr_sys_abort('could not find a value >= 0 for clay_i') 
+          end if
           do l = 2,nlay
              clay_o(no,l) = float(clay_i(l,1,lookup_index))
              if (clay_o(no,l) < 0. .and. l > 1) then
@@ -328,30 +325,8 @@ contains
              end if
           end do
 
-          ! write(6,'(a,3(i8,2x),3(f14.5,2x))') &
-          !      'DEBUG: no,mapunit_o(no),lookup_index,pctlnd_pft_o(no),sand_o(no,1),clay_o(no,1) = ',&
-          !      no,mapunit_o(no),lookup_index,pctlnd_pft_o(no),sand_o(no,1),clay_o(no,1) 
-       else
-
-          write(6,*)'DEBUG: i am here for no = ',no
-          ! use loam
-          do l = 1, nlay
-             sand_o(no,l) = 43.
-             clay_o(no,l) = 18.
-          end do
-
        end if
 
-    end do
-
-    ! Adjust sand and clay be loam if pctlnd_pft is < 1.e-6
-    ! Truncate all percentage fields on output grid. This is needed to insure that wt is zero
-    ! (not a very small number such as 1e-16) where it really should be zero
-    do no = 1,ns_o
-       if (pctlnd_pft_o(no) < 1.e-6_r8) then
-          sand_o(no,:) = 43._r4
-          clay_o(no,:) = 18._r4
-       end if
     end do
 
     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
@@ -361,20 +336,7 @@ contains
     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent clay"
     call mkfile_output(pioid_o,  mesh_o,  'PCT_CLAY', clay_o, lev1name='nlevsoi', rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-    call pio_syncfile(pioid_o)
 
-    ! Write out fields
-    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out mapunits "
-    call mkfile_output(pioid_o,  mesh_o,  'mapunits', mapunit_o,  rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for mapunits')
-
-    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
-    call mkfile_output(pioid_o,  mesh_o,  'PCT_SAND', sand_o, lev1name='nlevsoi', rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-
-    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent clay"
-    call mkfile_output(pioid_o,  mesh_o,  'PCT_CLAY', clay_o, lev1name='nlevsoi', rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
     call pio_syncfile(pioid_o)
 
     ! Release memory
