@@ -59,8 +59,8 @@ module NutrientCompetitionMethodMod
      end subroutine init_interface
 
      !---------------------------------------------------------------------------     
-     subroutine calc_plant_nutrient_demand_interface (this, bounds, num_soilp, filter_soilp, &
-          num_pcropp, filter_pcropp,                                               &
+     subroutine calc_plant_nutrient_demand_interface (this, bounds,                &
+          num_p, filter_p, call_is_for_pcrop,                                      &
           crop_inst, canopystate_inst,                                             &
           cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,         &
           cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
@@ -88,10 +88,18 @@ module NutrientCompetitionMethodMod
        ! !ARGUMENTS:
        class(nutrient_competition_method_type) , intent(inout)    :: this
        type(bounds_type)               , intent(in)    :: bounds
-       integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
-       integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
-       integer                         , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
-       integer                         , intent(in)    :: filter_pcropp(:) ! filter for prognostic crop patches
+
+       ! This subroutine is meant to be called separately for non-prognostic-crop points and
+       ! prognostic-crop points. (The reason for this is so that the call for prognostic-crop
+       ! points can be skipped when a separate crop model is calculating these variables.) In
+       ! the call for non-prognostic-crop points, this filter should be the soilnopcropp
+       ! filter and call_is_for_pcrop should be false; in the call for prognostic-crop
+       ! points, this filter should be the pcropp filter and call_is_for_pcrop should be
+       ! true.
+       integer                         , intent(in)    :: num_p        ! number of patches in filter
+       integer                         , intent(in)    :: filter_p(:)  ! patch filter
+       logical                         , intent(in)    :: call_is_for_pcrop
+
        type(crop_type)                 , intent(in)    :: crop_inst
        type(canopystate_type)          , intent(in)    :: canopystate_inst
        type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst

@@ -82,7 +82,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNDriverNoLeaching(bounds,                                                    &
-       num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp,        &
+       num_soilc, filter_soilc, num_soilp, filter_soilp,                                   &
+       num_pcropp, filter_pcropp, num_soilnopcropp, filter_soilnopcropp,                   &
        num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp,       &
        cnveg_state_inst,                                                                   &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                                      &
@@ -152,6 +153,8 @@ contains
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
+    integer                                 , intent(in)    :: num_soilnopcropp       ! number of non-prog. crop soil patches in filter
+    integer                                 , intent(in)    :: filter_soilnopcropp(:) ! filter for non-prog. crop soil patches
     integer                                 , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
     integer                                 , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
     integer                                 , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
@@ -402,14 +405,27 @@ contains
      call t_stopf('cnalloc')
 
      call t_startf('calc_plant_nutrient_demand')
+     ! We always call calc_plant_nutrient_demand for natural veg patches, but only call
+     ! it for crop patches if NOT running with AgSys (since AgSys calculates the relevant
+     ! output variables in its own way).
      call nutrient_competition_method%calc_plant_nutrient_demand ( &
-         bounds, num_soilp, filter_soilp,                                 &
-         num_pcropp, filter_pcropp,                                       &
-         crop_inst, canopystate_inst,                                     &
-         cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
-         cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
-         soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
-         energyflux_inst)
+          bounds,                                                          &
+          num_soilnopcropp, filter_soilnopcropp, .false.,                  &
+          crop_inst, canopystate_inst,                                     &
+          cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
+          soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
+          energyflux_inst)
+     if (.not. use_crop_agsys) then
+        call nutrient_competition_method%calc_plant_nutrient_demand ( &
+             bounds,                                                          &
+             num_pcropp, filter_pcropp, .true.,                               &
+             crop_inst, canopystate_inst,                                     &
+             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+             cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
+             soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
+             energyflux_inst)
+     end if
 
      ! get the column-averaged plant_ndemand (needed for following call to SoilBiogeochemCompetition)
 

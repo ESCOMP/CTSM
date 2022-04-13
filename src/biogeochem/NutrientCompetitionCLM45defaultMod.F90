@@ -436,8 +436,8 @@ contains
   end subroutine calc_plant_cn_alloc
 
   !-----------------------------------------------------------------------
-  subroutine calc_plant_nutrient_demand(this, bounds,  num_soilp, filter_soilp,&
-       num_pcropp, filter_pcropp,                                              &
+  subroutine calc_plant_nutrient_demand(this, bounds,                          &
+       num_p, filter_p, call_is_for_pcrop,                                     &
        crop_inst, canopystate_inst,                                            &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,        &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                      &
@@ -460,10 +460,18 @@ contains
     ! !ARGUMENTS:
     class(nutrient_competition_clm45default_type), intent(inout) :: this
     type(bounds_type)               , intent(in)    :: bounds
-    integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
-    integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
-    integer                         , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
-    integer                         , intent(in)    :: filter_pcropp(:) ! filter for prognostic crop patches
+
+    ! This subroutine is meant to be called separately for non-prognostic-crop points and
+    ! prognostic-crop points. (The reason for this is so that the call for prognostic-crop
+    ! points can be skipped when a separate crop model is calculating these variables.) In
+    ! the call for non-prognostic-crop points, this filter should be the soilnopcropp
+    ! filter and call_is_for_pcrop should be false; in the call for prognostic-crop
+    ! points, this filter should be the pcropp filter and call_is_for_pcrop should be
+    ! true.
+    integer                         , intent(in)    :: num_p        ! number of patches in filter
+    integer                         , intent(in)    :: filter_p(:)  ! patch filter
+    logical                         , intent(in)    :: call_is_for_pcrop
+
     type(crop_type)                 , intent(in)    :: crop_inst
     type(canopystate_type)          , intent(in)    :: canopystate_inst ! unused in this version
     type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
@@ -476,8 +484,8 @@ contains
     type(energyflux_type)           , intent(in)    :: energyflux_inst
     !-----------------------------------------------------------------------
 
-    call this%calc_plant_nitrogen_demand(bounds,  num_soilp, filter_soilp, &
-       num_pcropp, filter_pcropp,                                          &
+    call this%calc_plant_nitrogen_demand(bounds,                           &
+       num_p, filter_p, call_is_for_pcrop,                                 &
        crop_inst,                                                          &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,    &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst)
@@ -485,8 +493,8 @@ contains
   end subroutine calc_plant_nutrient_demand
 
   !-----------------------------------------------------------------------
-  subroutine calc_plant_nitrogen_demand(this, bounds,  num_soilp, filter_soilp, &
-       num_pcropp, filter_pcropp,                                               &
+  subroutine calc_plant_nitrogen_demand(this, bounds,                           &
+       num_p, filter_p, call_is_for_pcrop,                                      &
        crop_inst,                                                               &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,         &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst)
@@ -515,10 +523,18 @@ contains
     ! !ARGUMENTS:
     class(nutrient_competition_clm45default_type), intent(in) :: this
     type(bounds_type)               , intent(in)    :: bounds
-    integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
-    integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
-    integer                         , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
-    integer                         , intent(in)    :: filter_pcropp(:) ! filter for prognostic crop patches
+
+    ! This subroutine is meant to be called separately for non-prognostic-crop points and
+    ! prognostic-crop points. (The reason for this is so that the call for prognostic-crop
+    ! points can be skipped when a separate crop model is calculating these variables.) In
+    ! the call for non-prognostic-crop points, this filter should be the soilnopcropp
+    ! filter and call_is_for_pcrop should be false; in the call for prognostic-crop
+    ! points, this filter should be the pcropp filter and call_is_for_pcrop should be
+    ! true.
+    integer                         , intent(in)    :: num_p        ! number of patches in filter
+    integer                         , intent(in)    :: filter_p(:)  ! patch filter
+    logical                         , intent(in)    :: call_is_for_pcrop
+
     type(crop_type)                 , intent(in)    :: crop_inst
     type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)    , intent(in)    :: cnveg_carbonstate_inst
@@ -582,12 +598,9 @@ contains
       ! set time steps
       dt = get_step_size_real()
 
-      call CropPhase(bounds, num_pcropp, filter_pcropp, crop_inst, cnveg_state_inst, &
-           crop_phase = crop_phase(bounds%begp:bounds%endp))
-
       ! loop over patches to assess the total plant N demand
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
+      do fp = 1, num_p
+         p = filter_p(fp)
 
          plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
 
@@ -598,8 +611,15 @@ contains
 
          ! Adding the following line to carry max retransn info to CN Annual Update
          tempmax_retransn(p) = max(tempmax_retransn(p),retransn(p))
+      end do
 
-         if (ivt(p) >= npcropmin) then
+      if (call_is_for_pcrop) then
+         call CropPhase(bounds, num_p, filter_p, crop_inst, cnveg_state_inst, &
+              crop_phase = crop_phase(bounds%begp:bounds%endp))
+
+         do fp = 1, num_p
+            p = filter_p(fp)
+
             if (croplive(p)) then
                if (crop_phase(p) == cphase_leafemerge) then
                   grain_flag(p) = 0._r8 ! setting to 0 while in phase 2
@@ -646,50 +666,65 @@ contains
                   end if
                end if
             end if
+         end do
+      end if
+
+      ! Beth's code: crops pull from retransn pool only during grain fill;
+      !              retransn pool has N from leaves, stems, and roots for
+      !              retranslocation
+      if (.not. use_fun) then
+         if (call_is_for_pcrop) then
+            do fp = 1, num_p
+               p = filter_p(fp)
+
+               if (grain_flag(p) == 1._r8) then
+                  avail_retransn(p) = plant_ndemand(p)
+               else
+                  avail_retransn(p) = 0.0_r8
+               end if
+            end do
+         else
+            do fp = 1, num_p
+               p = filter_p(fp)
+
+               if (annsum_potential_gpp(p) > 0._r8) then
+                  avail_retransn(p) = (annmax_retransn(p)/2._r8)*(gpp(p)/annsum_potential_gpp(p))/dt
+               else
+                  avail_retransn(p) = 0.0_r8
+               end if
+            end do
          end if
 
-         ! Beth's code: crops pull from retransn pool only during grain fill;
-         !              retransn pool has N from leaves, stems, and roots for
-         !              retranslocation
+         do fp = 1, num_p
+            p = filter_p(fp)
 
-         if(.not.use_fun)then
+            ! make sure available retrans N doesn't exceed storage
+            avail_retransn(p) = min(avail_retransn(p), retransn(p)/dt)
 
-	    if (ivt(p) >= npcropmin .and. grain_flag(p) == 1._r8) then
-	       avail_retransn(p) = plant_ndemand(p)
-	    else if (ivt(p) < npcropmin .and. annsum_potential_gpp(p) > 0._r8) then
-	       avail_retransn(p) = (annmax_retransn(p)/2._r8)*(gpp(p)/annsum_potential_gpp(p))/dt
-	    else
-	       avail_retransn(p) = 0.0_r8
-	    end if
+            ! modify plant N demand according to the availability of
+            ! retranslocated N
+            ! take from retransn pool at most the flux required to meet
+            ! plant ndemand
 
-	    ! make sure available retrans N doesn't exceed storage
-	    avail_retransn(p) = min(avail_retransn(p), retransn(p)/dt)
+            if (plant_ndemand(p) > avail_retransn(p)) then
+               retransn_to_npool(p) = avail_retransn(p)
+            else
+               retransn_to_npool(p) = plant_ndemand(p)
+            end if
 
-	    ! modify plant N demand according to the availability of
-	    ! retranslocated N
-	    ! take from retransn pool at most the flux required to meet
-	    ! plant ndemand
+            if ( .not. use_fun ) then
+               plant_ndemand(p) = plant_ndemand(p) - retransn_to_npool(p)
+            else
+               if (season_decid(ivt(p)) == 1._r8.or.stress_decid(ivt(p))==1._r8) then
+                  plant_ndemand(p) = plant_ndemand(p) - retransn_to_npool(p)
+               end if
+            end if
+         end do
 
-	    if (plant_ndemand(p) > avail_retransn(p)) then
-	       retransn_to_npool(p) = avail_retransn(p)
-	    else
-	       retransn_to_npool(p) = plant_ndemand(p)
-	    end if
+      end if  !use_fun
 
-	    if ( .not. use_fun ) then
-	       plant_ndemand(p) = plant_ndemand(p) - retransn_to_npool(p)
-	    else
-	       if (season_decid(ivt(p)) == 1._r8.or.stress_decid(ivt(p))==1._r8) then
-	          plant_ndemand(p) = plant_ndemand(p) - retransn_to_npool(p)
-	       end if
-	    end if
+      end associate
 
-         end if !use_fun
-
-      end do ! end patch loop
-
-    end associate
-
-  end subroutine calc_plant_nitrogen_demand
+    end subroutine calc_plant_nitrogen_demand
 
 end module NutrientCompetitionCLM45defaultMod
