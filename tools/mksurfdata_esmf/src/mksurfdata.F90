@@ -1207,7 +1207,7 @@ program mksurfdata
                     pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(),suma
                call shr_sys_abort()
             end if
-            call pctcft(n)%set_pct_l2g(0._r8)
+            call pctnatpft(n)%set_pct_l2g(0._r8)
             call pctcft(n)%set_pct_l2g(0._r8)
          end if
          if ( any(pctnatpft(n)%get_pct_p2g() > 0.0_r8 .and. pctnatpft(n)%get_pct_p2g() < toosmallPFT ) .or. &
