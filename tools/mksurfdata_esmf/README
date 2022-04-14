@@ -62,13 +62,14 @@ slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
 ------------------------------------------------------------
 REMEMBER TO compare against existing fsurdat files in
 /glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/release-clm5.0.18
-0) TODO: Test --no_inlandwet = .false.
-1) OK: 1x1_brazil min number-of-nodes tested: 4
-2) OK: 10x15 min number-of-nodes tested: 3
-3) Soil color & texture and ag fire peak month outputs too high in .log
+0) 0.9x1.25 gives error about sum of PFTs...
+1) --no_inlandwet = .false. FAIL and --rundir DOESN'T DO ANYTHING
+2) Soil color & texture and ag fire peak month outputs too high in .log
    TODO: Change frac_o from always 1.
-4) Pct lake has chged in the .log bc the old diagnostic omitted mask_i frac_o
-5) Slope, stddev have chged in the .log bc the old diag. used frac_o
+3) Pct lake has chged in the .log bc the old diagnostic omitted mask_i frac_o
+4) Slope, stddev have chged in the .log bc the old diag. used frac_o
+5) OK: 1x1_brazil min number-of-nodes tested: 4
+6) OK: 10x15 min number-of-nodes tested: 3
 
 ------------------------------------------------------
 NOT ALL FILES HAVE BEEN TRANSLATED to cdf5 : check last millenium
