@@ -66,9 +66,6 @@ contains
     end if
     call ESMF_VMLogMemInfo("At start of "//trim(subname))
 
-    ! Note soil_fmax_override has been removed - instead should now use tools
-    ! subset_data and modify_fsurdat
-
     ! Open input data file
     rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
 

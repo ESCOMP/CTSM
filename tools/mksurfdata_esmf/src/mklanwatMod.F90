@@ -189,8 +189,9 @@ contains
           end if
 
           ! Check global areas for lake depth
-          call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-               lakedepth_i, lakedepth_o, "lake depth", "m", ndiag, rc)
+          call output_diagnostics_continuous(mesh_i, mesh_o, &
+               lakedepth_i, lakedepth_o, "lake depth", "m", &
+               ndiag=ndiag, rc=rc, mask_i=mask_i, frac_o=frac_o)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
     end if

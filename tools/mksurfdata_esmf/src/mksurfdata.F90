@@ -70,13 +70,13 @@ program mksurfdata
   !    gitdescribe ------- Description of this version from git
   !    numpft ------------ Iif different than default of 16
   !    urban_skip_abort_on_invalid_data_check--- work around urban bug
+  !    no_inlandwet ------ If wetland should be set to 0% over land
   ! ======================================
   ! Note: the folloiwng Optional settings have been REMOVED -
   !  instead should now use tools subset_data and modify_fsurdat
   ! ======================================
   !    all_veg ----------- If entire area is to be vegetated (pft_idx and pft_frc then required)
   !    all_urban --------- If entire area is urban
-  !    no_inlandwet ------ If wetland should be set to 0% over land
   !    soil_clay --------- If you want to change the soil_clay % to this value everywhere
   !    soil_fmax --------- If you want to change the soil_fmax  to this value everywhere
   !    soil_sand --------- If you want to change the soil_sand % to this value everywhere

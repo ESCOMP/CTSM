@@ -138,8 +138,8 @@ contains
   end subroutine output_diagnostics_area
 
   !===============================================================
-  subroutine output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-       data_i, data_o, name, units, ndiag, rc, nomask)
+  subroutine output_diagnostics_continuous(mesh_i, mesh_o, data_i, data_o, &
+     name, units, ndiag, rc, mask_i, frac_o, nomask)
 
     ! Output diagnostics for a continuous field (but not area, for
     ! which there is a different routine)
@@ -147,14 +147,14 @@ contains
     ! input/output variables
     type(ESMF_Mesh)  , intent(in) :: mesh_i
     type(ESMF_Mesh)  , intent(in) :: mesh_o
-    integer          , intent(in) :: mask_i(:)
-    real(r8)         , intent(in) :: frac_o(:)
     real(r8)         , intent(in) :: data_i(:)    ! data on input grid
     real(r8)         , intent(in) :: data_o(:)    ! data on output grid
     character(len=*) , intent(in) :: name         ! name of field
     character(len=*) , intent(in) :: units        ! units of field
     integer          , intent(in) :: ndiag
     logical, optional, intent(in) :: nomask
+    integer, optional, intent(in) :: mask_i(:)
+    real(r8),optional, intent(in) :: frac_o(:)
     integer          , intent(out) :: rc
 
     ! local variables
@@ -178,7 +178,12 @@ contains
     rc = ESMF_SUCCESS
 
     lnomask = .false.
-    if (present(nomask)) lnomask = nomask
+    if (present(nomask)) then
+       lnomask = nomask
+    else if (.not. (present(mask_i) .and. present(frac_o))) then
+       write(6,*) 'Must pass argument nomask if not passing mask_i and frac_o.'
+       call shr_sys_abort()
+    end if
 
     ! Determine ns_i and ns_o
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
@@ -203,17 +208,19 @@ contains
        write(6,*) 'ns_o         = ', ns_o
        call shr_sys_abort()
     end if
-    if (size(frac_o) /= ns_o) then
-       write(6,*) subname//' ERROR: incorrect size of frac_o'
-       write(6,*) 'size(frac_o) = ', size(frac_o)
-       write(6,*) 'ns_o = ', ns_o
-       call shr_sys_abort()
-    end if
-    if (size(mask_i) /= ns_i) then
-       write(6,*) subname//' ERROR: incorrect size of mask_i'
-       write(6,*) 'size(mask_i) = ', size(mask_i)
-       write(6,*) 'ns_i = ', ns_i
-       call shr_sys_abort()
+    if (present(mask_i) .and. present(frac_o)) then
+       if (size(frac_o) /= ns_o) then
+          write(6,*) subname//' ERROR: incorrect size of frac_o'
+          write(6,*) 'size(frac_o) = ', size(frac_o)
+          write(6,*) 'ns_o = ', ns_o
+          call shr_sys_abort()
+       end if
+       if (size(mask_i) /= ns_i) then
+          write(6,*) subname//' ERROR: incorrect size of mask_i'
+          write(6,*) 'size(mask_i) = ', size(mask_i)
+          write(6,*) 'ns_i = ', ns_i
+          call shr_sys_abort()
+       end if
     end if
 
     ! Sums on input grid
@@ -263,21 +270,23 @@ contains
   end subroutine output_diagnostics_continuous
 
   !===============================================================
-  subroutine output_diagnostics_continuous_outonly(area_o, frac_o, data_o, name, units, ndiag)
+  subroutine output_diagnostics_continuous_outonly(mesh_o, frac_o, data_o, name, units, ndiag, rc)
     !
     ! Output diagnostics for a continuous field, just on the output grid
     ! This is used when the average of the field on the input grid is not of interest (e.g.,
     ! when the output quantity is the standard deviation of the input field)
     !
     ! input/output variables
-    real(r8)          , intent(in) :: area_o(:)
+    type(ESMF_Mesh)   , intent(in) :: mesh_o
     real(r8)          , intent(in) :: frac_o(:)
     real(r8)          , intent(in) :: data_o(:)    ! data on output grid
     character(len=*)  , intent(in) :: name         ! name of field
     character(len=*)  , intent(in) :: units        ! units of field
     integer           , intent(in) :: ndiag        ! unit number for diagnostic output
+    integer           , intent(out) :: rc
 
     ! local variables:
+    real(r8), allocatable :: area_o(:)
     real(r8) :: gdata_o         ! global sum of output data
     real(r8) :: gwt_o           ! global sum of output weights (area * frac)
     integer  :: ns_o            ! size of output grid
@@ -285,7 +294,16 @@ contains
     character(len=*), parameter :: subname = "output_diagnostics_continuous_outonly"
     !------------------------------------------------------------------------------
 
-    ns_o = size(area_o)
+    rc = ESMF_SUCCESS
+
+    ! Determine ns_o
+    call ESMF_MeshGet(mesh_o, numOwnedElements=ns_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Determine area_o
+    allocate(area_o(ns_o))
+    call get_meshareas(mesh_o, area_o, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Error check for array size consistencies
     if (size(data_o) /= ns_o) then

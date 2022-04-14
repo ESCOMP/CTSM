@@ -33,7 +33,7 @@ contains
 
     ! make various topography statistics
     !
-    use mkdiagnosticsMod, only : output_diagnostics_continuous, output_diagnostics_continuous_outonly
+    use mkdiagnosticsMod, only : output_diagnostics_continuous
     use mkchecksMod     , only : min_bad, max_bad
     !
     ! input/output variables
@@ -56,8 +56,6 @@ contains
     real(r4), pointer      :: dataptr(:)
     real(r4), allocatable  :: topo_stddev_o(:) ! output grid: standard deviation of elevation (m)
     real(r4), allocatable  :: slope_o(:)       ! output grid: slope (degrees)
-    real(r8), allocatable  :: area_i(:)
-    real(r8), allocatable  :: area_o(:)
     integer                :: ier, rcode        ! error status
     integer                :: srcTermProcessing_Value = 0
     real(r4), parameter    :: min_valid = 0._r4 ! minimum valid value
@@ -177,15 +175,12 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     topo_stddev_o(:) = dataptr(:)
 
-    ! call output_diagnostics_continuous_outonly(topo_stddev_o, tgridmap, "Topo Std Dev", "m", ndiag)
     ! Check validity of output data
-    !if (min_bad(topo_stddev_o, min_valid_topo_stddev, 'topo_stddev')) then
-       !call shr_sys_abort()
-    !end if
-
-    ! TODO: get the output diagnostics working
-    ! call  output_diagnostics_continuous_outonly(area_i, area_o, mask_i, frac_o, &
-    !      data_i, topo_stddev_o, "Topo Std Dev", "m", ndiag)
+    if (min_bad(topo_stddev_o, min_valid_topo_stddev, 'topo_stddev')) then
+       call shr_sys_abort()
+    end if
+    call output_diagnostics_continuous(mesh_i, mesh_o, real(data_i,8), real(topo_stddev_o,8), &
+         "Topo Std Dev", "m", ndiag=ndiag, rc=rc, nomask=.true.)
 
     ! -----------------------------
     ! Obtain the slope
@@ -208,14 +203,13 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     slope_o(:) = dataptr(:)
 
-    ! call output_diagnostics_continuous(data_i, slope_o, tgridmap,
-    !"Slope", "degrees", ndiag, tdomain%mask, tgridmap%frac_dst)
-
     ! Check validity of output data
-    !if (min_bad(slope_o, min_valid_slope, 'slope') .or. &
-       ! max_bad(slope_o, max_valid_slope, 'slope')) then
-       !call shr_sys_abort()
-    !end if
+    if (min_bad(slope_o, min_valid_slope, 'slope') .or. &
+        max_bad(slope_o, max_valid_slope, 'slope')) then
+       call shr_sys_abort()
+    end if
+    call output_diagnostics_continuous(mesh_i, mesh_o, real(data_i,8), real(slope_o,8), &
+         "Slope", "degrees", ndiag=ndiag, rc=rc, nomask=.true.)
 
     ! Write out output data
     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing topo_stddev "
