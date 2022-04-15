@@ -37,7 +37,6 @@ contains
   !-----------------------------------------------------------------------
 
   subroutine HydrologyDrainage(bounds,               &
-       num_hillslope, filter_hillslopec, &
        num_nolakec, filter_nolakec,                  &
        num_hydrologyc, filter_hydrologyc,            &
        num_urbanc, filter_urbanc,                    &
@@ -73,8 +72,6 @@ contains
     integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
     integer                  , intent(in)    :: num_do_smb_c         ! number of bareland columns in which SMB is calculated, in column filter    
     integer                  , intent(in)    :: filter_do_smb_c(:)   ! column filter for bare land SMB columns      
-     integer               , intent(in)    :: num_hillslope       ! number of soil hill cols.
-     integer               , intent(in)    :: filter_hillslopec(:) ! column filter for designating all hill cols.
 
     type(glc2lnd_type)       , intent(in)    :: glc2lnd_inst
     type(temperature_type)   , intent(in)    :: temperature_inst
@@ -124,8 +121,7 @@ contains
          qflx_runoff        => waterfluxbulk_inst%qflx_runoff_col        , & ! total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_runoff_u      => waterfluxbulk_inst%qflx_runoff_u_col      , & ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
          qflx_runoff_r      => waterfluxbulk_inst%qflx_runoff_r_col      , & ! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-         qflx_ice_runoff_snwcp => waterfluxbulk_inst%qflx_ice_runoff_snwcp_col, &  ! solid runoff from snow capping (mm H2O /s)
-         qflx_sfc_irrig     => waterfluxbulk_inst%qflx_sfc_irrig_col       & ! surface irrigation flux (mm H2O /s)   
+         qflx_ice_runoff_snwcp => waterfluxbulk_inst%qflx_ice_runoff_snwcp_col &  ! solid runoff from snow capping (mm H2O /s)
          )
 
       ! Determine time step and step size
@@ -238,9 +234,6 @@ contains
 
          qflx_runoff(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
 
-         if ((lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) .and. col%active(c)) then
-            qflx_runoff(c) = qflx_runoff(c) - qflx_sfc_irrig(c)
-         end if
          if (lun%urbpoi(l)) then
             qflx_runoff_u(c) = qflx_runoff(c)
          else if (lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) then

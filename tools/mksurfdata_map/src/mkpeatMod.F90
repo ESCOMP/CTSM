@@ -123,7 +123,7 @@ subroutine mkpeat(ldomain, mapfname, datfname, ndiag, peat_o)
   ! Check validity of output data
   if (min_bad(peat_o, min_valid, 'peat') .or. &
       max_bad(peat_o, max_valid, 'peat')) then
-     stop
+     call abort()
   end if
   
   call output_diagnostics_area(data_i, peat_o, tgridmap, "Peat", percent=.false., ndiag=ndiag, mask_src=tdomain%mask, frac_dst=frac_dst)

@@ -116,6 +116,14 @@ This means that computations will be run even over these 0-weight points.
 THIS IS ONLY FOR TESTING PURPOSES - IT HAS NOT BEEN CHECKED FOR SCIENTIFIC VALIDITY.
 </entry>
 
+<entry id="force_send_to_atm"
+       type="logical"
+       category="drv_physics"
+       group="ctsm_nuopc_cap"
+       valid_values="" >
+If TRUE (which is the default), send the expcrt state for the nuopc driver to the ATM even if running with a data ATM
+</entry>
+
 <entry id="organic_frac_squared" type="logical" category="clm_physics"
        group="clm_soilstate_inparm" valid_values="" >
 If TRUE, square the organic fraction when it's used (as was done in CLM4.5)
@@ -641,7 +649,7 @@ Switch deciding which nutrient model to use in FATES.
 </entry>
 
 <entry id="fates_spitfire_mode" type="integer" category="physics"
-        group="clm_inparm" valid_values="0,1,2,3,4" value=".false.">
+        group="clm_inparm" valid_values="0,1,2,3,4,5" value=".false.">
 Turn on spitfire module to simulate fire by setting fates_spitfire_mode > 0.
 Allowed values are:
  0 : Simulations of fire are off
@@ -649,6 +657,7 @@ Allowed values are:
  2 : use an external lightning dataset. 
  3 : use an external confirmed ignitions dataset (not available through standard CSEM dataset collection).
  4 : use external lightning and population datasets to simulate both natural and anthropogenic
+ 5 : use gross domestic production and population datasets to simulate anthropogenic fire supression
 ignitions.
 (Only relevant if FATES is on)
 </entry>
@@ -657,6 +666,17 @@ ignitions.
         group="clm_inparm" valid_values="" value=".false."> 
 Toggle to turn on fixed biogeography mode
 (Only relevant if FATES is on)
+</entry>
+
+<entry id="use_fates_nocomp" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">                                        
+Toggle to turn on no competition mode (only relevant if FATES is being used).                  
+</entry>
+
+
+<entry id="use_fates_sp" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">                                                    
+Toggle to turn on FATES satellite phenology mode (only relevant if FATES is being used).                        
 </entry>
 
 <entry id="use_fates_logging" type="logical" category="physics"
@@ -980,6 +1000,36 @@ Whether snow on the vegetation canopy affects the radiation/albedo calculations
        group="clm_inparm" >
 Whether to run some tests of ncdio_pio as part of the model run. This is
 typically only used in automated tests.
+</entry>
+
+<entry id="for_testing_use_second_grain_pool" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, allocate memory for and use a second crop grain pool. This is
+meant only for software testing of infrastructure to support the AgSys
+crop model integration. This option can be dropped once AgSys is
+integrated and we have tests of it.
+</entry>
+
+<entry id="for_testing_use_repr_structure_pool" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, allocate memory for two crop reproductive structure pools and
+send all reproductive C and N to the second reproductive structure pool
+instead of the grain pool. This is meant only for software testing of
+infrastructure to support the AgSys crop model integration. This option
+can be dropped once AgSys is integrated and we have tests of it.
+</entry>
+
+<entry id="for_testing_no_crop_seed_replenishment" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, do NOT use grain C/N to replenish the crop seed deficits. This
+is needed when doing software testing to verify that we can get
+bit-for-bit identical answers when using a reproductive structure pool
+as when using a grain pool (in conjunction with
+for_testing_use_repr_structure_pool). We do this testing to have some
+tests of the infrastructure to support the AgSys crop model integration.
+This option can be dropped if/when we stop doing this software testing,
+e.g., because we have integrated AgSys and have tests of it that make
+these software infrastructure tests obsolete.
 </entry>
 
 <!-- ========================================================================================  -->
@@ -2122,12 +2172,6 @@ Base advective flux (downwards) for SOM.
 Maximum depth to mix soils to by croturbation, in permafrost soils.
 </entry>
 
-<!-- turnover time modifications    -->
-<entry id="decomp_depth_efolding" type="real" category="clm_vertcn"
-       group="bgc_shared" valid_values="" >
-E-folding depth over which decomposition is slowed with depth in all soils.
-</entry>
-
 <entry id="anoxia" type="logical" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 If TRUE, reduce heterotrophic respiration according to available oxygen predicted by CH4 submodel.
@@ -2164,10 +2208,11 @@ Number of days over which to use exponential relaxation of NPP in N fixation cal
 
 <!-- Soil decomposition options  -->
 <entry id="soil_decomp_method" type="char*20" category="clm_physics"
-       group="soilbgc_decomp" valid_values="None,CENTURYKoven2013" >
+       group="soilbgc_decomp" valid_values="None,CENTURYKoven2013,MIMICSWieder2015" >
 Soil decomposition method
   None --  No soil decomposition is done
   CENTURYKoven2013 -- CENTURY model in CTSM from Koven et. al. 2013
+  MIMICSWieder2015 -- MIMICS model in CTSM from Wieder et. al. 2015
 
 An active soil decomposition method requires the BGC or FATES model to work 
 And both BGC and FATES models require an active soil decomposition model
@@ -2271,36 +2316,6 @@ Allow the CN ratio to flexibly change with the simulation, rather than being fix
 How much Carbon to initialize vegetation pools (leafc/frootc and storage) to when -- Michaelis Menten nitrogen uptake kinetics is on
 </entry>
 
-<entry id="downreg_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".false.">
-   GPP downregulation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="plant_ndemand_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1,2,3">
-   Plant nitrogen demand for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="substrate_term_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten substrate limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="nscalar_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten nitrogen limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="temp_scalar_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten temperature limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
 <entry id="CNratio_floating" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".false.">
    Flexible CN ratio used for Phenology
@@ -2319,19 +2334,6 @@ Vcmax calculation for Photosynthesis
     vcmax_opt = 4 As for vcmax_opt=0, but using leafN, and exponential if tree  (EXPERIMENTAL NOT TESTED!)
     vcmax_opt = 3 Based on leafN and VCAD (used with Luna for crop and C4 vegetation)
     vcmax_opt = 0 Based on canopy top and foilage Nitrogen limitation factor from params file (clm4.5)
-</entry>
-
-<entry id="CN_residual_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1">
-Residual option for flexible-CN
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="CN_partition_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1">
-Partition option for flexible-CN
-   CN_partition_opt = 1
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="CN_evergreen_phenology_opt" type="integer" category="clm_nitrogen"
@@ -2476,6 +2478,12 @@ If TRUE, apply transient crops from flanduse_timeseries file.
 <entry id="do_transient_lakes" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
 If TRUE, apply transient lakes from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+</entry>
+
+<entry id="do_transient_urban" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply transient urban from flanduse_timeseries file.
 (Only valid for transient runs, where there is a flanduse_timeseries file.)
 </entry>
 

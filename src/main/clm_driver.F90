@@ -9,7 +9,7 @@ module clm_driver
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use clm_varctl             , only : iulog, use_fates
+  use clm_varctl             , only : iulog, use_fates, use_fates_sp
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
   use clm_varctl             , only : use_soil_moisture_streams
@@ -237,7 +237,7 @@ contains
        ! vegetation top [mhvt1,mhvt2] and vegetation bottom [mhvb1,mhvb2]. The
        ! weights obtained here are used in subroutine SatellitePhenology to obtain time
        ! interpolated values.
-       if (doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND )) then
+       if (doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND ) .or. use_fates_sp) then
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
@@ -443,7 +443,7 @@ contains
 
     ! When LAI streams are being used
     ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe)
-    if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb) .and. use_lai_streams) then 
+    if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb) .and. use_lai_streams) then
        call lai_advance( bounds_proc )
     endif
 
@@ -859,7 +859,6 @@ contains
        call t_startf('hydro_without_drainage')
 
        call HydrologyNoDrainage(bounds_clump,                                &
-            filter(nc)%num_hillslope, filter(nc)%hillslopec,                 &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                      &
             filter(nc)%num_hydrologyc, filter(nc)%hydrologyc,                &
             filter(nc)%num_urbanc, filter(nc)%urbanc,                        &
@@ -987,7 +986,6 @@ contains
                   filter(nc)%num_pcropp, filter(nc)%pcropp, &
                   filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
                   filter(nc)%num_noexposedvegp, filter(nc)%noexposedvegp, &
-                  doalb,              &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -1005,11 +1003,18 @@ contains
 
        end if
 
-                ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
+       ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
 
-       if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb)) then
+       if (((.not. use_cn) .and. (.not. use_fates) .and. (doalb))) then
           call t_startf('SatellitePhenology')
           call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+               water_inst%waterdiagnosticbulk_inst, canopystate_inst)
+          call t_stopf('SatellitePhenology')
+       end if
+
+       if (use_fates_sp.and.doalb) then
+          call t_startf('SatellitePhenology')
+          call SatellitePhenology(bounds_clump, filter(nc)%num_all_soil_patches, filter(nc)%all_soil_patches, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
        end if
@@ -1030,7 +1035,6 @@ contains
        call t_startf('hydro2_drainage')
 
        call HydrologyDrainage(bounds_clump,                    &
-            filter(nc)%num_hillslope, filter(nc)%hillslopec,    &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
             filter(nc)%num_hydrologyc, filter(nc)%hydrologyc, &
             filter(nc)%num_urbanc, filter(nc)%urbanc,         &
@@ -1062,9 +1066,15 @@ contains
        end if
 
 
-       
+
        if ( use_fates) then
 
+          ! FATES has its own running mean functions, such as 24hr
+          ! vegetation temperature and exponential moving averages
+          ! for leaf photosynthetic acclimation temperature. These
+          ! moving averages are updated here
+          call clm_fates%WrapUpdateFatesRmean(nc,temperature_inst)
+          
           call EDBGCDyn(bounds_clump,                                                              &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
                filter(nc)%num_soilp, filter(nc)%soilp,                                             &
@@ -1087,12 +1097,12 @@ contains
                 c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                 soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
                 clm_fates, nc)
-
+          
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
                soilbiogeochem_carbonstate_inst)
-
           
+
           if( is_beg_curr_day() ) then
 
              ! --------------------------------------------------------------------------
@@ -1102,19 +1112,20 @@ contains
              if ( masterproc ) then
                 write(iulog,*)  'clm: calling FATES model ', get_nstep()
              end if
-             
              call clm_fates%dynamics_driv( nc, bounds_clump,                        &
                   atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
                   water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
                   water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
                   frictionvel_inst)
-             
+
              ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
              ! call to reweight_wrapup, if it's needed at all.
              call setFilters( bounds_clump, glc_behavior )
 
           end if
-             
+          
+    
+          
        end if ! use_fates branch
 
        ! ============================================================================

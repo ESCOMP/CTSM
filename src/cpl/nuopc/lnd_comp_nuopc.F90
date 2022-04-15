@@ -303,6 +303,12 @@ contains
        write(iulog,'(a,i8)')' flds_scalar_index_nextsw_cday = ',flds_scalar_index_nextsw_cday
     end if
 
+    !----------------------
+    ! Set the namelist filename
+    !----------------------
+    call control_setNL("lnd_in"//trim(inst_suffix))
+
+
     call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, atm_prognostic, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -499,11 +505,6 @@ contains
     endif
 
     !$  call omp_set_num_threads(nthrds)
-
-    !----------------------
-    ! Consistency check on namelist filename
-    !----------------------
-    call control_setNL("lnd_in"//trim(inst_suffix))
 
     !----------------------
     ! Get properties from clock
@@ -812,7 +813,7 @@ contains
        ! Determine doalb based on nextsw_cday sent from atm model
        !--------------------------------
 
-       caldayp1 = get_curr_calday(offset=dtime)
+       caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
 
        if (nstep == 0) then
           doalb = .false.
@@ -869,7 +870,7 @@ contains
        ! Note - the orbital inquiries set the values in clm_varorb via the module use statements
        call  clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       calday = get_curr_calday()
+       calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
        call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
        call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
        call t_stopf ('shr_orb_decl')

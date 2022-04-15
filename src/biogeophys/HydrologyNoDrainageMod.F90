@@ -133,7 +133,6 @@ contains
   !-----------------------------------------------------------------------
 
   subroutine HydrologyNoDrainage(bounds, &
-       num_hillslope, filter_hillslopec, &
        num_nolakec, filter_nolakec, &
        num_hydrologyc, filter_hydrologyc, &
        num_urbanc, filter_urbanc, &
@@ -182,8 +181,6 @@ contains
     integer                  , intent(inout) :: filter_snowc(:)      ! column filter for snow points
     integer                  , intent(inout) :: num_nosnowc          ! number of column non-snow points
     integer                  , intent(inout) :: filter_nosnowc(:)    ! column filter for non-snow points
-     integer               , intent(in)    :: num_hillslope       ! number of hillslope soil cols 
-     integer               , intent(in)    :: filter_hillslopec(:) ! column filter for designating all hillslope cols.
     type(hlm_fates_interface_type), intent(inout) :: clm_fates
 
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
@@ -559,10 +556,10 @@ contains
          ! t_grnd is weighted average of exposed soil and snow
          if (snl(c) < 0) then
             t_grnd(c) = frac_sno_eff(c) * t_soisno(c,snl(c)+1) &
-                 + (1 - frac_sno_eff(c)- frac_h2osfc(c)) * t_soisno(c,1) &
+                 + (1.0_r8 - frac_sno_eff(c)- frac_h2osfc(c)) * t_soisno(c,1) &
                  + frac_h2osfc(c) * t_h2osfc(c)
          else
-            t_grnd(c) = (1 - frac_h2osfc(c)) * t_soisno(c,1) + frac_h2osfc(c) * t_h2osfc(c)
+            t_grnd(c) = (1.0_r8 - frac_h2osfc(c)) * t_soisno(c,1) + frac_h2osfc(c) * t_h2osfc(c)
          endif
 
          if (lun%urbpoi(l)) then

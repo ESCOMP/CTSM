@@ -20,14 +20,12 @@ program mksurfdata_map_unit_tester
    call test_slightly_above
 
    ! Test mkgridmapMod
-   call test_gridmap_areaave_default
+   call test_gridmap_areaave_no_srcmask
    call test_gridmap_areaave_srcmask
-   call test_gridmap_areaave_srcmask2
    call test_gridmap_areastddev
 
    ! Test mkindexmapMod
    call test_get_dominant_indices
-   call test_filter_same
    call test_lookup_2d
    call test_lookup_2d_netcdf
    call test_which_max

@@ -129,7 +129,7 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   ! Check validity of output data
   if (min_bad(binfl_o, min_valid_binfl, 'binfl')) then
-     stop
+     call abort()
   end if
 
   call output_diagnostics_continuous(data_i, binfl_o, tgridmap, "VIC b parameter", "unitless", ndiag, tdomain%mask, frac_dst)
@@ -144,7 +144,7 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   ! Check validity of output data
   if (min_bad(ws_o, min_valid_ws, 'Ws')) then
-     stop
+     call abort()
   end if
 
   call output_diagnostics_continuous(data_i, ws_o, tgridmap, "VIC Ws parameter", "unitless", ndiag, tdomain%mask, frac_dst)
@@ -159,7 +159,7 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   ! Check validity of output data
   if (min_bad(dsmax_o, min_valid_dsmax, 'Dsmax')) then
-     stop
+     call abort()
   end if
 
   call output_diagnostics_continuous(data_i, dsmax_o, tgridmap, "VIC Dsmax parameter", "mm/day", ndiag, tdomain%mask, frac_dst)
@@ -174,7 +174,7 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   ! Check validity of output data
   if (min_bad(ds_o, min_valid_ds, 'Ds')) then
-     stop
+     call abort()
   end if
 
   call output_diagnostics_continuous(data_i, ds_o, tgridmap, "VIC Ds parameter", "unitless", ndiag, tdomain%mask, frac_dst)

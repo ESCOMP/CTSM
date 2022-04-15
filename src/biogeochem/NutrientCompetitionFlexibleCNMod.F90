@@ -24,6 +24,7 @@ module NutrientCompetitionFlexibleCNMod
   use PatchType           , only : patch
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
   use NutrientCompetitionMethodMod, only : params_inst
+  use CropReprPoolsMod        , only : nrepr
   use clm_varctl          , only : iulog
   !
   implicit none
@@ -167,7 +168,7 @@ contains
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type), intent(in)    :: soilbiogeochem_nitrogenstate_inst
     real(r8), intent(in)    :: aroot   (bounds%begp:)
-    real(r8), intent(in)    :: arepr   (bounds%begp:)
+    real(r8), intent(in)    :: arepr(bounds%begp:,:)
     real(r8), intent(in)    :: fpg_col (bounds%begc:)
 
     call this%calc_plant_cn_alloc(bounds, num_soilp, filter_soilp,   &
@@ -176,7 +177,7 @@ contains
          c14_cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
          soilbiogeochem_nitrogenstate_inst, &
          aroot=aroot(bounds%begp:bounds%endp),                               &
-         arepr=arepr(bounds%begp:bounds%endp),                               &
+         arepr=arepr(bounds%begp:bounds%endp,:),                 &
          fpg_col=fpg_col(bounds%begc:bounds%endc))
 
   end subroutine calc_plant_nutrient_competition
@@ -192,9 +193,6 @@ contains
     ! !USES:
     use pftconMod             , only : pftcon, npcropmin
     use clm_varctl            , only : use_c13, use_c14, carbon_resp_opt
-    use clm_varctl            , only : downreg_opt
-    use clm_varctl            , only : CN_residual_opt
-    use clm_varctl            , only : CN_partition_opt
     use clm_time_manager       , only : get_step_size_real
     use CNVegStateType        , only : cnveg_state_type
     use CropType              , only : crop_type
@@ -225,18 +223,18 @@ contains
     type(cnveg_nitrogenstate_type)  , intent(inout) :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_nitrogenstate_type), intent(in) :: soilbiogeochem_nitrogenstate_inst
     real(r8)                        , intent(in)    :: aroot(bounds%begp:)
-    real(r8)                        , intent(in)    :: arepr(bounds%begp:)
+    real(r8)                        , intent(in)    :: arepr(bounds%begp:,:)
     real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,p            ! indices
+    integer  :: c,p,k              ! indices
     integer  :: fp                 ! lake filter patch index
     real(r8) :: f1,f2,f3,f4,g1,g2  ! allocation parameters
     real(r8) :: cnl,cnfr,cnlw,cndw ! C:N ratios for leaf, fine root, and wood
     real(r8) :: fcur               ! fraction of current psn displayed as growth
     real(r8) :: gresp_storage      ! temporary variable for growth resp to storage
     real(r8) :: nlc                ! temporary variable for total new leaf carbon allocation
-    real(r8) :: f5                 ! grain allocation parameter
+    real(r8) :: f5(nrepr)          ! reproductive allocation parameters
     real(r8) :: cng                ! C:N ratio for grain (= cnlw for now; slevis)
     real(r8) :: dt                 ! model time step
     real(r8):: fsmn(bounds%begp:bounds%endp)  ! A emperate variable for adjusting FUN uptakes
@@ -250,35 +248,23 @@ contains
     real(r8):: leafcn_max                   	
     real(r8):: frootcn_max                  	
     real(r8):: livewdcn_max  
-    real(r8):: frac_resp    
+    real(r8):: frac_resp
+    real(r8):: npool_to_reproductiven_demand_tot
+    real(r8):: npool_to_reproductiven_storage_demand_tot
     real(r8) :: npool_to_leafn_demand                           (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_leafn_supply                           (bounds%begp:bounds%endp)
     real(r8) :: npool_to_leafn_storage_demand                   (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_leafn_storage_supply                   (bounds%begp:bounds%endp)
     real(r8) :: npool_to_frootn_demand                          (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_frootn_supply                          (bounds%begp:bounds%endp)
     real(r8) :: npool_to_frootn_storage_demand                  (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_frootn_storage_supply                  (bounds%begp:bounds%endp)
     real(r8) :: npool_to_livestemn_demand                       (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_livestemn_supply                       (bounds%begp:bounds%endp)
     real(r8) :: npool_to_livestemn_storage_demand               (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_livestemn_storage_supply               (bounds%begp:bounds%endp)
     real(r8) :: npool_to_livecrootn_demand                      (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_livecrootn_supply                      (bounds%begp:bounds%endp)
     real(r8) :: npool_to_livecrootn_storage_demand              (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_livecrootn_storage_supply              (bounds%begp:bounds%endp)
     real(r8) :: npool_to_deadstemn_demand                       (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_deadstemn_supply                       (bounds%begp:bounds%endp)
     real(r8) :: npool_to_deadstemn_storage_demand               (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_deadstemn_storage_supply               (bounds%begp:bounds%endp)
     real(r8) :: npool_to_deadcrootn_demand                      (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_deadcrootn_supply                      (bounds%begp:bounds%endp)
     real(r8) :: npool_to_deadcrootn_storage_demand              (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_deadcrootn_storage_supply              (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_grainn_demand                          (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_grainn_supply                          (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_grainn_storage_demand                  (bounds%begp:bounds%endp)
-    real(r8) :: npool_to_grainn_storage_supply                  (bounds%begp:bounds%endp)
+    real(r8) :: npool_to_reproductiven_demand             (bounds%begp:bounds%endp, nrepr)
+    real(r8) :: npool_to_reproductiven_storage_demand     (bounds%begp:bounds%endp, nrepr)
     real(r8) :: total_plant_Ndemand                             (bounds%begp:bounds%endp)
     real(r8) :: frNdemand_npool_to_leafn                        (bounds%begp:bounds%endp)
     real(r8) :: frNdemand_npool_to_leafn_storage        (bounds%begp:bounds%endp)
@@ -292,13 +278,13 @@ contains
     real(r8) :: frNdemand_npool_to_livecrootn_storage   (bounds%begp:bounds%endp)
     real(r8) :: frNdemand_npool_to_deadcrootn           (bounds%begp:bounds%endp)
     real(r8) :: frNdemand_npool_to_deadcrootn_storage   (bounds%begp:bounds%endp)
-    real(r8) :: frNdemand_npool_to_grainn               (bounds%begp:bounds%endp)
-    real(r8) :: frNdemand_npool_to_grainn_storage       (bounds%begp:bounds%endp)
+    real(r8) :: frNdemand_npool_to_reproductiven  (bounds%begp:bounds%endp, nrepr)
+    real(r8) :: frNdemand_npool_to_reproductiven_storage(bounds%begp:bounds%endp, nrepr)
 
     ! -----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(aroot)   == (/bounds%endp/)) , sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(arepr)   == (/bounds%endp/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(arepr)   == (/bounds%endp, nrepr/)) , sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(fpg_col) == (/bounds%endc/)) , sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(this%actual_storage_leafcn) >= (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((lbound(this%actual_storage_leafcn) <= (/bounds%begp/)), sourcefile, __LINE__)
@@ -329,13 +315,9 @@ contains
          aleaf                        => cnveg_state_inst%aleaf_patch                              , & ! Output: [real(r8) (:)   ]  leaf allocation coefficient
          astem                        => cnveg_state_inst%astem_patch                              , & ! Output: [real(r8) (:)   ]  stem allocation coefficient
          c_allometry                  => cnveg_state_inst%c_allometry_patch                        , & ! Output: [real(r8) (:)   ]  C allocation index (DIM)
-         n_allometry                  => cnveg_state_inst%n_allometry_patch                        , & ! Output: [real(r8) (:)   ]  N allocation index (DIM)
-         downreg                      => cnveg_state_inst%downreg_patch                            , & ! Output: [real(r8) (:)   ]  fractional reduction in GPP due to N limitation (DIM)
 
          annsum_npp                   => cnveg_carbonflux_inst%annsum_npp_patch                    , & ! Input:  [real(r8) (:)   ]  annual sum of NPP, for wood allocation
-         gpp                          => cnveg_carbonflux_inst%gpp_before_downreg_patch            , & ! Output: [real(r8) (:)   ]  GPP flux before downregulation (gC/m2/s)
          availc                       => cnveg_carbonflux_inst%availc_patch                        , & ! Output: [real(r8) (:)   ]  C flux available for allocation (gC/m2/s)
-         excess_cflux                 => cnveg_carbonflux_inst%excess_cflux_patch                  , & ! Output: [real(r8) (:)   ]  C flux not allocated due to downregulation (gC/m2/s)
          plant_calloc                 => cnveg_carbonflux_inst%plant_calloc_patch                  , & ! Output: [real(r8) (:)   ]  total allocated C flux (gC/m2/s)
          npp_growth                  => cnveg_carbonflux_inst%npp_growth_patch              , & ! Output:  [real(r8) (:) ] C for growth in FUN. g/m2/s
          cpool_to_resp                => cnveg_carbonflux_inst%cpool_to_resp_patch                 , & ! Output: [real(r8) (:)   ]
@@ -347,8 +329,6 @@ contains
          cpool_to_livecrootc_storage_resp  => cnveg_carbonflux_inst%cpool_to_livecrootc_storage_resp_patch , & ! Output: [real(r8) (:)   ]
          cpool_to_livestemc_resp      => cnveg_carbonflux_inst%cpool_to_livestemc_resp_patch          , & ! Output: [real(r8) (:)   ]
          cpool_to_livestemc_storage_resp => cnveg_carbonflux_inst%cpool_to_livestemc_storage_resp_patch  , & ! Output: [real(r8) (:)   ]
-         psnsun_to_cpool              => cnveg_carbonflux_inst%psnsun_to_cpool_patch               , & ! Output: [real(r8) (:)   ]
-         psnshade_to_cpool            => cnveg_carbonflux_inst%psnshade_to_cpool_patch             , & ! Output: [real(r8) (:)   ]
          cpool_to_leafc               => cnveg_carbonflux_inst%cpool_to_leafc_patch                , & ! Output: [real(r8) (:)   ]
          cpool_to_leafc_storage       => cnveg_carbonflux_inst%cpool_to_leafc_storage_patch        , & ! Output: [real(r8) (:)   ]
          cpool_to_frootc              => cnveg_carbonflux_inst%cpool_to_frootc_patch               , & ! Output: [real(r8) (:)   ]
@@ -362,8 +342,8 @@ contains
          cpool_to_deadcrootc          => cnveg_carbonflux_inst%cpool_to_deadcrootc_patch           , & ! Output: [real(r8) (:)   ]
          cpool_to_deadcrootc_storage  => cnveg_carbonflux_inst%cpool_to_deadcrootc_storage_patch   , & ! Output: [real(r8) (:)   ]
          cpool_to_gresp_storage       => cnveg_carbonflux_inst%cpool_to_gresp_storage_patch        , & ! Output: [real(r8) (:)   ]  allocation to growth respiration storage (gC/m2/s)
-         cpool_to_grainc              => cnveg_carbonflux_inst%cpool_to_grainc_patch               , & ! Output: [real(r8) (:)   ]  allocation to grain C (gC/m2/s)
-         cpool_to_grainc_storage      => cnveg_carbonflux_inst%cpool_to_grainc_storage_patch       , & ! Output: [real(r8) (:)   ]  allocation to grain C storage (gC/m2/s)
+         cpool_to_reproductivec              => cnveg_carbonflux_inst%cpool_to_reproductivec_patch               , & ! Output: [real(r8) (:,:)   ]  allocation to grain C (gC/m2/s)
+         cpool_to_reproductivec_storage      => cnveg_carbonflux_inst%cpool_to_reproductivec_storage_patch       , & ! Output: [real(r8) (:,:)   ]  allocation to grain C storage (gC/m2/s)
          
          laisun                       => canopystate_inst%laisun_patch  , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index
          laisha                       => canopystate_inst%laisha_patch  , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index
@@ -373,8 +353,8 @@ contains
          npool                        => cnveg_nitrogenstate_inst%npool_patch                      , & ! Input:  [real(r8) (:)   ]  (gN/m2) temporary plant N pool
          plant_ndemand                => cnveg_nitrogenflux_inst%plant_ndemand_patch               , & ! Output: [real(r8) (:)   ]  N flux required to support initial GPP (gN/m2/s)
          plant_nalloc                 => cnveg_nitrogenflux_inst%plant_nalloc_patch                , & ! Output: [real(r8) (:)   ]  total allocated N flux (gN/m2/s)
-         npool_to_grainn              => cnveg_nitrogenflux_inst%npool_to_grainn_patch             , & ! Output: [real(r8) (:)   ]  allocation to grain N (gN/m2/s)
-         npool_to_grainn_storage      => cnveg_nitrogenflux_inst%npool_to_grainn_storage_patch     , & ! Output: [real(r8) (:)   ]  allocation to grain N storage (gN/m2/s)
+         npool_to_reproductiven              => cnveg_nitrogenflux_inst%npool_to_reproductiven_patch             , & ! Output: [real(r8) (:,:)   ]  allocation to grain N (gN/m2/s)
+         npool_to_reproductiven_storage      => cnveg_nitrogenflux_inst%npool_to_reproductiven_storage_patch     , & ! Output: [real(r8) (:,:)   ]  allocation to grain N storage (gN/m2/s)
          retransn_to_npool            => cnveg_nitrogenflux_inst%retransn_to_npool_patch           , & ! Output: [real(r8) (:)   ]  deployment of retranslocated N (gN/m2/s)
          sminn_to_npool               => cnveg_nitrogenflux_inst%sminn_to_npool_patch              , & ! Output: [real(r8) (:)   ]  deployment of soil mineral N uptake (gN/m2/s)
          npool_to_leafn               => cnveg_nitrogenflux_inst%npool_to_leafn_patch              , & ! Output: [real(r8) (:)   ]  allocation to leaf N (gN/m2/s)
@@ -435,22 +415,24 @@ contains
          cndw = deadwdcn(ivt(p))
          fcur = fcur2(ivt(p))
 
-         if (.not. downreg_opt) then
-            if (evergreen(ivt(p)) == 1._r8) then
-               fcur = 0.0_r8
-            end if
+         if (evergreen(ivt(p)) == 1._r8) then
+            fcur = 0.0_r8
          end if
 
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
             if (croplive(p)) then
                f1 = aroot(p) / aleaf(p)
                f3 = astem(p) / aleaf(p)
-               f5 = arepr(p) / aleaf(p)
+               do k = 1, nrepr
+                  f5(k) = arepr(p,k) / aleaf(p)
+               end do
                g1 = 0.25_r8
             else
                f1 = 0._r8
                f3 = 0._r8
-               f5 = 0._r8
+               do k = 1, nrepr
+                  f5(k) = 0._r8
+               end do
                g1 = 0.25_r8
             end if
          end if
@@ -469,43 +451,10 @@ contains
        
          plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
          
-         if(.not.use_fun)then
-	         if (downreg_opt) then
-	            ! calculate the associated carbon allocation, and the excess
-	            ! carbon flux that must be accounted for through downregulation
-	            plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
-	            excess_cflux(p) = availc(p) - plant_calloc(p)
-
-	            ! reduce gpp fluxes due to N limitation
-	            if (gpp(p) > 0.0_r8) then
-	               downreg(p) = excess_cflux(p)/gpp(p)
-
-	               psnsun_to_cpool(p)   = psnsun_to_cpool(p)  *(1._r8 - downreg(p))
-	               psnshade_to_cpool(p) = psnshade_to_cpool(p)*(1._r8 - downreg(p))
-
-	               if ( use_c13 ) then
-	                  c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = &
-	                       c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
-	                  c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
-	                       c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
-	               endif
-	               if ( use_c14 ) then
-	                  c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = &
-	                       c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
-	                  c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
-	                       c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
-	               endif
-	            end if
-	         end if
-         end if
-
-         
          if(use_fun)then
             plant_calloc(p) = npp_growth(p) 
          else
-            if (.not. downreg_opt) then
-               plant_calloc(p) = availc(p)
-            end if         
+            plant_calloc(p) = availc(p)
          end if
         
          ! calculate the amount of new leaf C dictated by these allocation
@@ -541,202 +490,11 @@ contains
             cpool_to_livecrootc_storage(p) = nlc * f2 * f3 * f4 * (1._r8 - fcur)
             cpool_to_deadcrootc(p)         = nlc * f2 * f3 * (1._r8 - f4) * fcur
             cpool_to_deadcrootc_storage(p) = nlc * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
-            cpool_to_grainc(p)             = nlc * f5 * fcur
-            cpool_to_grainc_storage(p)     = nlc * f5 * (1._r8 -fcur)
+            do k = 1, nrepr
+               cpool_to_reproductivec(p,k)         = nlc * f5(k) * fcur
+               cpool_to_reproductivec_storage(p,k) = nlc * f5(k) * (1._r8 -fcur)
+            end do
          end if
-
-         if (downreg_opt) then
-            ! corresponding N fluxes
-            npool_to_leafn(p)          = (nlc / cnl) * fcur
-            npool_to_leafn_storage(p)  = (nlc / cnl) * (1._r8 - fcur)
-            npool_to_frootn(p)         = (nlc * f1 / cnfr) * fcur
-            npool_to_frootn_storage(p) = (nlc * f1 / cnfr) * (1._r8 - fcur)
-            if (woody(ivt(p)) == 1._r8) then
-               npool_to_livestemn(p)          = (nlc * f3 * f4 / cnlw) * fcur
-               npool_to_livestemn_storage(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_deadstemn(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadstemn_storage(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_livecrootn(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
-               npool_to_livecrootn_storage(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-            end if
-            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
-               cng = graincn(ivt(p))
-               npool_to_livestemn(p)          = (nlc * f3 * f4 / cnlw) * fcur
-               npool_to_livestemn_storage(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_deadstemn(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadstemn_storage(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_livecrootn(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
-               npool_to_livecrootn_storage(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_grainn(p)             = (nlc * f5 / cng) * fcur
-               npool_to_grainn_storage(p)     = (nlc * f5 / cng) * (1._r8 -fcur)
-            end if
-         end if
-
-         if (downreg_opt .eqv. .false. .AND. CN_partition_opt == 0) then
-
-            ! N transfer depends on supply and demand
-            npool_to_frootn_demand(p)         = (nlc * f1 / cnfr) * fcur
-            npool_to_frootn_supply(p)         = npool(p)/dt * fcur
-            npool_to_frootn(p) = max(min(npool_to_frootn_supply(p),npool_to_frootn_demand(p)),0.0_r8)
-
-            npool_to_frootn_storage_demand(p) = (nlc * f1 / cnfr) * (1._r8 - fcur)
-            npool_to_frootn_storage_supply(p) = npool(p)/dt * (1._r8 - fcur)
-            npool_to_frootn_storage(p) = max(min(npool_to_frootn_storage_supply(p),npool_to_frootn_storage_demand(p)),0.0_r8)
-
-            npool_to_leafn_demand(p)          = (nlc / cnl) * fcur
-            npool_to_leafn_supply(p)   = npool(p)/dt * fcur - npool_to_frootn(p)
-            npool_to_leafn(p)   = max(min(npool_to_leafn_supply(p),npool_to_leafn_demand(p)),0.0_r8)
-
-            npool_to_leafn_storage_demand(p)  = (nlc / cnl) * (1._r8 - fcur)
-            npool_to_leafn_storage_supply(p)  = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p)
-            npool_to_leafn_storage(p)  = max(min(npool_to_leafn_storage_supply(p),npool_to_leafn_storage_demand(p)),0.0_r8)
-
-            if (CN_residual_opt == 1) then
-               npool_to_leafn(p)   = max(npool_to_leafn_supply(p),0.0_r8)
-               npool_to_leafn_storage(p)  = max(npool_to_leafn_storage_supply(p),0.0_r8)
-            end if
-
-            if (woody(ivt(p)) == 1._r8) then
-               npool_to_livestemn_demand(p) = (nlc * f3 * f4 / cnlw) * fcur
-               npool_to_livestemn_supply(p) = npool(p)/dt * fcur - npool_to_frootn(p)
-               npool_to_livestemn(p) = max(min(npool_to_livestemn_supply(p),npool_to_livestemn_demand(p)),0.0_r8)
-
-               npool_to_livestemn_storage_demand(p) = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_livestemn_storage_supply(p) = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p)
-               npool_to_livestemn_storage(p) = max(min(npool_to_livestemn_storage_supply(p), &
-                    npool_to_livestemn_storage_demand(p)),0.0_r8)
-
-               npool_to_livecrootn_demand(p) = (nlc * f2 * f3 * f4 / cnlw) * fcur
-               npool_to_livecrootn_supply(p) = npool(p)/dt * fcur - npool_to_frootn(p)  -  npool_to_livestemn(p)
-               npool_to_livecrootn(p) = max(min(npool_to_livecrootn_supply(p),npool_to_livecrootn_demand(p)),0.0_r8)
-
-               npool_to_livecrootn_storage_demand(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_livecrootn_storage_supply(p) = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p) - &
-                    npool_to_livestemn_storage(p)
-               npool_to_livecrootn_storage(p) = max(min(npool_to_livecrootn_storage_supply(p), &
-                    npool_to_livecrootn_storage_demand(p)),0.0_r8)
-
-               npool_to_deadstemn_demand(p) = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadstemn_supply(p) = npool(p)/dt * fcur - npool_to_frootn(p)  -  npool_to_livestemn(p) - &
-                    npool_to_livecrootn(p)
-               npool_to_deadstemn(p) = max(min(npool_to_deadstemn_supply(p),npool_to_deadstemn_demand(p)),0.0_r8)
-
-               npool_to_deadstemn_storage_demand(p) = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_deadstemn_storage_supply(p) = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p) - &
-                    npool_to_livestemn_storage(p) - npool_to_livecrootn_storage(p)
-               npool_to_deadstemn_storage(p) = max(min(npool_to_deadstemn_storage_supply(p), &
-                    npool_to_deadstemn_storage_demand(p)),0.0_r8)
-
-               npool_to_deadcrootn_demand(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadcrootn_supply(p) = npool(p)/dt * fcur - npool_to_frootn(p)  -  npool_to_livestemn(p) - &
-                    npool_to_livecrootn(p) -  npool_to_deadstemn(p)
-               npool_to_deadcrootn(p) = max(min(npool_to_deadcrootn_supply(p),npool_to_deadcrootn_demand(p)),0.0_r8)
-
-               npool_to_deadcrootn_storage_demand(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_deadcrootn_storage_supply(p) = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p) - &
-                    npool_to_livestemn_storage(p) - npool_to_livecrootn_storage(p)  - npool_to_deadstemn_storage(p)
-               npool_to_deadcrootn_storage(p) = max(min(npool_to_deadcrootn_storage_supply(p), &
-                    npool_to_deadcrootn_storage_demand(p)),0.0_r8)
-
-               npool_to_leafn_demand(p)          = (nlc / cnl) * fcur
-               npool_to_leafn_supply(p)   = npool(p)/dt * fcur - npool_to_frootn(p)  -  npool_to_livestemn(p) - &
-                    npool_to_livecrootn(p) -  npool_to_deadstemn(p) - npool_to_deadcrootn(p)
-               npool_to_leafn(p)   = max(min(npool_to_leafn_supply(p),npool_to_leafn_demand(p)),0.0_r8)
-
-               npool_to_leafn_storage_demand(p)  = (nlc / cnl) * (1._r8 - fcur)
-               npool_to_leafn_storage_supply(p)  = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p) - &
-                    npool_to_livestemn_storage(p) - npool_to_livecrootn_storage(p)  - npool_to_deadstemn_storage(p) - &
-                    npool_to_deadcrootn_storage(p)
-               npool_to_leafn_storage(p)  = max(min(npool_to_leafn_storage_supply(p),&
-                    npool_to_leafn_storage_demand(p)),0.0_r8)
-
-               if (CN_residual_opt == 1) then
-                  npool_to_leafn(p)   = max(npool_to_leafn_supply(p),0.0_r8)
-                  npool_to_leafn_storage(p)  = max(npool_to_leafn_storage_supply(p),0.0_r8)
-               end if
-
-            end if
-
-            if (ivt(p) >= npcropmin) then     ! skip 2 generic crops
-               cng = graincn(ivt(p))
-               npool_to_livestemn_demand(p)          = (nlc * f3 * f4 / cnlw) * fcur
-               npool_to_livestemn_supply(p) = npool(p)/dt * fcur - npool_to_frootn(p)
-               npool_to_livestemn(p) = max(min(npool_to_livestemn_supply(p),npool_to_livestemn_demand(p)),0.0_r8)
-
-               npool_to_livestemn_storage_demand(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_livestemn_storage_supply(p) = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p)
-               npool_to_livestemn_storage(p) = max(min(npool_to_livestemn_storage_supply(p), &
-                    npool_to_livestemn_storage_demand(p)),0.0_r8)
-
-               npool_to_livecrootn_demand(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
-               npool_to_livecrootn_supply(p) = npool(p)/dt * fcur - npool_to_frootn(p)  -  npool_to_livestemn(p)
-               npool_to_livecrootn(p) = max(min(npool_to_livecrootn_supply(p),npool_to_livecrootn_demand(p)),0.0_r8)
-
-               npool_to_livecrootn_storage_demand(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_livecrootn_storage_supply(p) = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p) - &
-                    npool_to_livestemn_storage(p)
-               npool_to_livecrootn_storage(p) = max(min(npool_to_livecrootn_storage_supply(p), &
-                    npool_to_livecrootn_storage_demand(p)),0.0_r8)
-
-               npool_to_deadstemn_demand(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadstemn_supply(p) = npool(p)/dt * fcur - npool_to_frootn(p)  -  npool_to_livestemn(p) - &
-                    npool_to_livecrootn(p)
-               npool_to_deadstemn(p) = max(min(npool_to_deadstemn_supply(p), npool_to_deadstemn_demand(p)), 0.0_r8)
-
-               npool_to_deadstemn_storage_demand(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_deadstemn_storage_supply(p) = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p) - &
-                    npool_to_livestemn_storage(p) - npool_to_livecrootn_storage(p)
-               npool_to_deadstemn_storage(p) = max(min(npool_to_deadstemn_storage_supply(p), &
-                    npool_to_deadstemn_storage_demand(p)),0.0_r8)
-
-               npool_to_deadcrootn_demand(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadcrootn_supply(p) = npool(p)/dt * fcur - npool_to_frootn(p)  -  npool_to_livestemn(p) - &
-                    npool_to_livecrootn(p) -  npool_to_deadstemn(p)
-               npool_to_deadcrootn(p) = max(min(npool_to_deadcrootn_supply(p), npool_to_deadcrootn_demand(p)), 0.0_r8)
-
-               npool_to_deadcrootn_storage_demand(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_deadcrootn_storage_supply(p) = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p) - &
-                    npool_to_livestemn_storage(p) - npool_to_livecrootn_storage(p)  - npool_to_deadstemn_storage(p)
-               npool_to_deadcrootn_storage(p) = max(min(npool_to_deadcrootn_storage_supply(p), &
-                    npool_to_deadcrootn_storage_demand(p)),0.0_r8)
-
-               npool_to_grainn_demand(p)             = (nlc * f5 / cng) * fcur
-               npool_to_grainn_supply(p) = npool(p)/dt * fcur - npool_to_frootn(p)  -  npool_to_livestemn(p) - &
-                    npool_to_livecrootn(p) -  npool_to_deadstemn(p) - npool_to_deadcrootn(p)
-               npool_to_grainn(p) = max(min(npool_to_grainn_supply(p), npool_to_grainn_demand(p)), 0.0_r8)
-
-               npool_to_grainn_storage_demand(p)     = (nlc * f5 / cng) * (1._r8 -fcur)
-               npool_to_grainn_storage_supply(p) = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p) - &
-                    npool_to_livestemn_storage(p) - npool_to_livecrootn_storage(p)  - npool_to_deadstemn_storage(p) - &
-                    npool_to_deadcrootn_storage(p)
-               npool_to_grainn_storage(p) = max(min(npool_to_grainn_storage_supply(p), npool_to_grainn_storage_demand(p)), &
-                    0.0_r8)
-
-               npool_to_leafn_demand(p)          = (nlc / cnl) * fcur
-               npool_to_leafn_supply(p)   = npool(p)/dt * fcur - npool_to_frootn(p)  -  npool_to_livestemn(p) - &
-                    npool_to_livecrootn(p) -  npool_to_deadstemn(p) - npool_to_deadcrootn(p) - npool_to_grainn(p)
-               npool_to_leafn(p)   = max(min(npool_to_leafn_supply(p), npool_to_leafn_demand(p)), 0.0_r8)
-
-               npool_to_leafn_storage_demand(p)  = (nlc / cnl) * (1._r8 - fcur)
-               npool_to_leafn_storage_supply(p)  = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p) - &
-                    npool_to_livestemn_storage(p) - npool_to_livecrootn_storage(p)  &
-                    - npool_to_deadstemn_storage(p) - npool_to_deadcrootn_storage(p) - npool_to_grainn_storage(p)
-               npool_to_leafn_storage(p)  = max(min(npool_to_leafn_storage_supply(p), npool_to_leafn_storage_demand(p)), &
-                    0.0_r8)
-
-               if (CN_residual_opt == 1) then
-                  npool_to_leafn(p)   = max(npool_to_leafn_supply(p),0.0_r8)
-                  npool_to_leafn_storage(p)  = max(npool_to_leafn_storage_supply(p),0.0_r8)
-               end if
-
-            end if
-
-         end if
-         
 
          ! Calculate the amount of carbon that needs to go into growth
          ! respiration storage to satisfy all of the storage growth demands.
@@ -757,359 +515,376 @@ contains
          end if
          if (ivt(p) >= npcropmin) then     ! skip 2 generic crops
             gresp_storage = gresp_storage + cpool_to_livestemc_storage(p)
-            gresp_storage = gresp_storage + cpool_to_grainc_storage(p)
+            do k = 1, nrepr
+               gresp_storage = gresp_storage + cpool_to_reproductivec_storage(p,k)
+            end do
          end if
          cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
 
 
          ! computing 1.) fractional N demand and 2.) N allocation after uptake for different plant parts
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         if (downreg_opt .eqv. .false. .AND. CN_partition_opt == 1) then
+         ! computing nitrogen demand for different pools based on carbon allocated and CN ratio
+         npool_to_leafn_demand(p)          = (nlc / cnl) * fcur
+         npool_to_leafn_storage_demand(p)  = (nlc / cnl) * (1._r8 - fcur)
+         npool_to_frootn_demand(p)         = (nlc * f1 / cnfr) * fcur
+         npool_to_frootn_storage_demand(p) = (nlc * f1 / cnfr) * (1._r8 - fcur)
+         if (woody(ivt(p)) == 1._r8) then
 
-            ! computing nitrogen demand for different pools based on carbon allocated and CN ratio
-            npool_to_leafn_demand(p)          = (nlc / cnl) * fcur
-            npool_to_leafn_storage_demand(p)  = (nlc / cnl) * (1._r8 - fcur)
-            npool_to_frootn_demand(p)         = (nlc * f1 / cnfr) * fcur
-            npool_to_frootn_storage_demand(p) = (nlc * f1 / cnfr) * (1._r8 - fcur)
-            if (woody(ivt(p)) == 1._r8) then
+            npool_to_livestemn_demand(p)          = (nlc * f3 * f4 / cnlw) * fcur
+            npool_to_livestemn_storage_demand(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
+            npool_to_deadstemn_demand(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
+            npool_to_deadstemn_storage_demand(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
+            npool_to_livecrootn_demand(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
+            npool_to_livecrootn_storage_demand(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
+            npool_to_deadcrootn_demand(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
+            npool_to_deadcrootn_storage_demand(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
+         end if
+         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
 
-               npool_to_livestemn_demand(p)          = (nlc * f3 * f4 / cnlw) * fcur
-               npool_to_livestemn_storage_demand(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_deadstemn_demand(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadstemn_storage_demand(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_livecrootn_demand(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
-               npool_to_livecrootn_storage_demand(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_deadcrootn_demand(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadcrootn_storage_demand(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-            end if
-            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
-
-               cng = graincn(ivt(p))
-               npool_to_livestemn_demand(p)          = (nlc * f3 * f4 / cnlw) * fcur
-               npool_to_livestemn_storage_demand(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_deadstemn_demand(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadstemn_storage_demand(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_livecrootn_demand(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
-               npool_to_livecrootn_storage_demand(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
-               npool_to_deadcrootn_demand(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
-               npool_to_deadcrootn_storage_demand(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-               npool_to_grainn_demand(p)             = (nlc * f5 / cng) * fcur
-               npool_to_grainn_storage_demand(p)     = (nlc * f5 / cng) * (1._r8 -fcur)
-            end if
+            cng = graincn(ivt(p))
+            npool_to_livestemn_demand(p)          = (nlc * f3 * f4 / cnlw) * fcur
+            npool_to_livestemn_storage_demand(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
+            npool_to_deadstemn_demand(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
+            npool_to_deadstemn_storage_demand(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
+            npool_to_livecrootn_demand(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
+            npool_to_livecrootn_storage_demand(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
+            npool_to_deadcrootn_demand(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
+            npool_to_deadcrootn_storage_demand(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
+            do k = 1, nrepr
+               npool_to_reproductiven_demand(p,k)         = (nlc * f5(k) / cng) * fcur
+               npool_to_reproductiven_storage_demand(p,k) = (nlc * f5(k) / cng) * (1._r8 -fcur)
+            end do
+         end if
 
 
-            ! computing 1.) fractional N demand for different plant parts
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! computing 1.) fractional N demand for different plant parts
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         total_plant_Ndemand(p) = npool_to_leafn_demand(p) + npool_to_leafn_storage_demand(p) + &
+              npool_to_frootn_demand(p) + npool_to_frootn_storage_demand(p)
+
+         if (woody(ivt(p)) == 1._r8) then
+
             total_plant_Ndemand(p) = npool_to_leafn_demand(p) + npool_to_leafn_storage_demand(p) + &
-                 npool_to_frootn_demand(p) + npool_to_frootn_storage_demand(p)
+                 npool_to_frootn_demand(p) + npool_to_frootn_storage_demand(p) + &
+                 npool_to_livestemn_demand(p) + npool_to_livestemn_storage_demand(p) + npool_to_deadstemn_demand(p) + &
+                 npool_to_deadstemn_storage_demand(p)  + &
+                 npool_to_livecrootn_demand(p) + npool_to_livecrootn_storage_demand(p) + npool_to_deadcrootn_demand(p) + &
+                 npool_to_deadcrootn_storage_demand(p)
 
+         end if
+         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+
+            npool_to_reproductiven_demand_tot = 0._r8
+            npool_to_reproductiven_storage_demand_tot = 0._r8
+            do k = 1, nrepr
+               npool_to_reproductiven_demand_tot = npool_to_reproductiven_demand_tot + &
+                    npool_to_reproductiven_demand(p,k)
+               npool_to_reproductiven_storage_demand_tot = npool_to_reproductiven_storage_demand_tot + &
+                    npool_to_reproductiven_storage_demand(p,k)
+            end do
+
+            total_plant_Ndemand(p) = npool_to_leafn_demand(p) + npool_to_leafn_storage_demand(p) + &
+                 npool_to_frootn_demand(p) + npool_to_frootn_storage_demand(p) + &
+                 npool_to_livestemn_demand(p) + npool_to_livestemn_storage_demand(p) + npool_to_deadstemn_demand(p) + &
+                 npool_to_deadstemn_storage_demand(p)  + &
+                 npool_to_livecrootn_demand(p) + npool_to_livecrootn_storage_demand(p) + npool_to_deadcrootn_demand(p) + &
+                 npool_to_deadcrootn_storage_demand(p) + &
+                 npool_to_reproductiven_demand_tot + npool_to_reproductiven_storage_demand_tot
+
+         end if
+
+         if (total_plant_Ndemand(p) == 0.0_r8) then    ! removing division by zero
+
+            frNdemand_npool_to_leafn(p) = 0.0_r8
+            frNdemand_npool_to_leafn_storage(p) = 0.0_r8
+            frNdemand_npool_to_frootn(p) = 0.0_r8
+            frNdemand_npool_to_frootn_storage(p) = 0.0_r8
             if (woody(ivt(p)) == 1._r8) then
 
-               total_plant_Ndemand(p) = npool_to_leafn_demand(p) + npool_to_leafn_storage_demand(p) + &
-                    npool_to_frootn_demand(p) + npool_to_frootn_storage_demand(p) + &
-                    npool_to_livestemn_demand(p) + npool_to_livestemn_storage_demand(p) + npool_to_deadstemn_demand(p) + &
-                    npool_to_deadstemn_storage_demand(p)  + &
-                    npool_to_livecrootn_demand(p) + npool_to_livecrootn_storage_demand(p) + npool_to_deadcrootn_demand(p) + &
-                    npool_to_deadcrootn_storage_demand(p)
-
+               frNdemand_npool_to_livestemn(p) = 0.0_r8
+               frNdemand_npool_to_livestemn_storage(p)  = 0.0_r8
+               frNdemand_npool_to_deadstemn(p) = 0.0_r8
+               frNdemand_npool_to_deadstemn_storage(p) = 0.0_r8
+               frNdemand_npool_to_livecrootn(p) = 0.0_r8
+               frNdemand_npool_to_livecrootn_storage(p) = 0.0_r8
+               frNdemand_npool_to_deadcrootn(p) = 0.0_r8
+               frNdemand_npool_to_deadcrootn_storage(p) = 0.0_r8
             end if
             if (ivt(p) >= npcropmin) then ! skip 2 generic crops
 
-               total_plant_Ndemand(p) = npool_to_leafn_demand(p) + npool_to_leafn_storage_demand(p) + &
-                    npool_to_frootn_demand(p) + npool_to_frootn_storage_demand(p) + &
-                    npool_to_livestemn_demand(p) + npool_to_livestemn_storage_demand(p) + npool_to_deadstemn_demand(p) + &
-                    npool_to_deadstemn_storage_demand(p)  + &
-                    npool_to_livecrootn_demand(p) + npool_to_livecrootn_storage_demand(p) + npool_to_deadcrootn_demand(p) + &
-                    npool_to_deadcrootn_storage_demand(p) + &
-                 npool_to_grainn_demand(p) + npool_to_grainn_storage_demand(p)
-
+               frNdemand_npool_to_livestemn(p) = 0.0_r8
+               frNdemand_npool_to_livestemn_storage(p) = 0.0_r8
+               frNdemand_npool_to_deadstemn(p) = 0.0_r8
+               frNdemand_npool_to_deadstemn_storage(p) = 0.0_r8
+               frNdemand_npool_to_livecrootn(p) = 0.0_r8
+               frNdemand_npool_to_livecrootn_storage(p) = 0.0_r8
+               frNdemand_npool_to_deadcrootn(p) = 0.0_r8
+               frNdemand_npool_to_deadcrootn_storage(p) = 0.0_r8
+               do k = 1, nrepr
+                  frNdemand_npool_to_reproductiven(p,k) = 0.0_r8
+                  frNdemand_npool_to_reproductiven_storage(p,k) = 0.0_r8
+               end do
             end if
 
-            if (total_plant_Ndemand(p) == 0.0_r8) then    ! removing division by zero
+         else
 
-                frNdemand_npool_to_leafn(p) = 0.0_r8
-                frNdemand_npool_to_leafn_storage(p) = 0.0_r8
-                frNdemand_npool_to_frootn(p) = 0.0_r8
-                frNdemand_npool_to_frootn_storage(p) = 0.0_r8
-                if (woody(ivt(p)) == 1._r8) then
+            frNdemand_npool_to_leafn(p) = npool_to_leafn_demand(p) / total_plant_Ndemand(p)
+            frNdemand_npool_to_leafn_storage(p) = npool_to_leafn_storage_demand(p) / total_plant_Ndemand(p)
+            frNdemand_npool_to_frootn(p) = npool_to_frootn_demand(p) / total_plant_Ndemand(p)
+            frNdemand_npool_to_frootn_storage(p) = npool_to_frootn_storage_demand(p) / total_plant_Ndemand(p)
+            if (woody(ivt(p)) == 1._r8) then
 
-                   frNdemand_npool_to_livestemn(p) = 0.0_r8
-                   frNdemand_npool_to_livestemn_storage(p)  = 0.0_r8
-                   frNdemand_npool_to_deadstemn(p) = 0.0_r8
-                   frNdemand_npool_to_deadstemn_storage(p) = 0.0_r8
-                   frNdemand_npool_to_livecrootn(p) = 0.0_r8
-                   frNdemand_npool_to_livecrootn_storage(p) = 0.0_r8
-                   frNdemand_npool_to_deadcrootn(p) = 0.0_r8
-                   frNdemand_npool_to_deadcrootn_storage(p) = 0.0_r8
-                end if
-                if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+               frNdemand_npool_to_livestemn(p) = npool_to_livestemn_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_livestemn_storage(p)  = npool_to_livestemn_storage_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_deadstemn(p) = npool_to_deadstemn_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_deadstemn_storage(p) = npool_to_deadstemn_storage_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_livecrootn(p) = npool_to_livecrootn_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_livecrootn_storage(p) = npool_to_livecrootn_storage_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_deadcrootn(p) = npool_to_deadcrootn_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_deadcrootn_storage(p) = npool_to_deadcrootn_storage_demand(p) / total_plant_Ndemand(p)
+            end if
+            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
 
-                   frNdemand_npool_to_livestemn(p) = 0.0_r8
-                   frNdemand_npool_to_livestemn_storage(p) = 0.0_r8
-                   frNdemand_npool_to_deadstemn(p) = 0.0_r8
-                   frNdemand_npool_to_deadstemn_storage(p) = 0.0_r8
-                   frNdemand_npool_to_livecrootn(p) = 0.0_r8
-                   frNdemand_npool_to_livecrootn_storage(p) = 0.0_r8
-                   frNdemand_npool_to_deadcrootn(p) = 0.0_r8
-                   frNdemand_npool_to_deadcrootn_storage(p) = 0.0_r8
-                   frNdemand_npool_to_grainn(p) = 0.0_r8
-                   frNdemand_npool_to_grainn_storage(p) = 0.0_r8
-                end if
+               frNdemand_npool_to_livestemn(p) = npool_to_livestemn_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_livestemn_storage(p) = npool_to_livestemn_storage_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_deadstemn(p) = npool_to_deadstemn_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_deadstemn_storage(p) = npool_to_deadstemn_storage_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_livecrootn(p) = npool_to_livecrootn_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_livecrootn_storage(p) = npool_to_livecrootn_storage_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_deadcrootn(p) = npool_to_deadcrootn_demand(p) / total_plant_Ndemand(p)
+               frNdemand_npool_to_deadcrootn_storage(p) = npool_to_deadcrootn_storage_demand(p) / total_plant_Ndemand(p)
+               do k = 1, nrepr
+                  frNdemand_npool_to_reproductiven(p,k) = &
+                       npool_to_reproductiven_demand(p,k) / total_plant_Ndemand(p)
+                  frNdemand_npool_to_reproductiven_storage(p,k) = &
+                       npool_to_reproductiven_storage_demand(p,k) / total_plant_Ndemand(p)
+               end do
+            end if
 
+         end if
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+         ! computing N allocation for different plant parts
+         ! allocating allocation to different plant parts in proportion to the fractional demand
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         npool_to_leafn(p) = frNdemand_npool_to_leafn(p) * npool(p) / dt
+         npool_to_leafn_storage(p)  = frNdemand_npool_to_leafn_storage(p) * npool(p) / dt
+         npool_to_frootn(p) = frNdemand_npool_to_frootn(p) * npool(p) / dt
+         npool_to_frootn_storage(p) = frNdemand_npool_to_frootn_storage(p) * npool(p) / dt
+         if (woody(ivt(p)) == 1._r8) then
+            npool_to_livestemn(p) = frNdemand_npool_to_livestemn(p) * npool(p) / dt
+            npool_to_livestemn_storage(p) = frNdemand_npool_to_livestemn_storage(p) * npool(p) / dt
+            npool_to_deadstemn(p) = frNdemand_npool_to_deadstemn(p) * npool(p) / dt
+            npool_to_deadstemn_storage(p) = frNdemand_npool_to_deadstemn_storage(p) * npool(p) / dt
+            npool_to_livecrootn(p) = frNdemand_npool_to_livecrootn(p) * npool(p) / dt
+            npool_to_livecrootn_storage(p) = frNdemand_npool_to_livecrootn_storage(p) * npool(p) / dt
+            npool_to_deadcrootn(p) = frNdemand_npool_to_deadcrootn(p) * npool(p) / dt
+            npool_to_deadcrootn_storage(p) = frNdemand_npool_to_deadcrootn_storage(p) * npool(p) / dt
+         end if
+         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+            npool_to_livestemn(p) = frNdemand_npool_to_livestemn(p) * npool(p) / dt
+            npool_to_livestemn_storage(p) = frNdemand_npool_to_livestemn_storage(p) * npool(p) / dt
+            npool_to_deadstemn(p) = frNdemand_npool_to_deadstemn(p) * npool(p) / dt
+            npool_to_deadstemn_storage(p) = frNdemand_npool_to_deadstemn_storage(p) * npool(p) / dt
+            npool_to_livecrootn(p) = frNdemand_npool_to_livecrootn(p) * npool(p) / dt
+            npool_to_livecrootn_storage(p) = frNdemand_npool_to_livecrootn_storage(p) * npool(p) / dt
+            npool_to_deadcrootn(p) = frNdemand_npool_to_deadcrootn(p) * npool(p) / dt
+            npool_to_deadcrootn_storage(p) = frNdemand_npool_to_deadcrootn_storage(p) * npool(p) / dt
+            do k = 1, nrepr
+               npool_to_reproductiven(p,k) = frNdemand_npool_to_reproductiven(p,k) * npool(p) / dt
+               npool_to_reproductiven_storage(p,k) = frNdemand_npool_to_reproductiven_storage(p,k) * npool(p) / dt
+            end do
+         end if
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+         cpool_to_resp(p) = 0.0_r8
+         cpool_to_leafc_resp(p) = 0.0_r8
+         cpool_to_leafc_storage_resp(p) = 0.0_r8
+         cpool_to_frootc_resp(p) = 0.0_r8
+         cpool_to_frootc_storage_resp(p) = 0.0_r8
+         cpool_to_livecrootc_resp(p) = 0.0_r8
+         cpool_to_livecrootc_storage_resp(p) = 0.0_r8
+         cpool_to_livestemc_resp(p) = 0.0_r8
+         cpool_to_livestemc_storage_resp(p) = 0.0_r8
+
+         if ( laisun(p)+laisha(p) > 0.0_r8 ) then
+            if (cnveg_nitrogenstate_inst%leafn_storage_patch(p) == 0.0_r8 ) then
+               ! to avoid division by zero, and also to make actual_leafncn(p) a very large number if leafn(p) is zero
+               this%actual_storage_leafcn(p) = spval
             else
-
-               frNdemand_npool_to_leafn(p) = npool_to_leafn_demand(p) / total_plant_Ndemand(p)
-               frNdemand_npool_to_leafn_storage(p) = npool_to_leafn_storage_demand(p) / total_plant_Ndemand(p)
-               frNdemand_npool_to_frootn(p) = npool_to_frootn_demand(p) / total_plant_Ndemand(p)
-               frNdemand_npool_to_frootn_storage(p) = npool_to_frootn_storage_demand(p) / total_plant_Ndemand(p)
-               if (woody(ivt(p)) == 1._r8) then
-
-                  frNdemand_npool_to_livestemn(p) = npool_to_livestemn_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_livestemn_storage(p)  = npool_to_livestemn_storage_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_deadstemn(p) = npool_to_deadstemn_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_deadstemn_storage(p) = npool_to_deadstemn_storage_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_livecrootn(p) = npool_to_livecrootn_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_livecrootn_storage(p) = npool_to_livecrootn_storage_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_deadcrootn(p) = npool_to_deadcrootn_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_deadcrootn_storage(p) = npool_to_deadcrootn_storage_demand(p) / total_plant_Ndemand(p)
-               end if
-               if (ivt(p) >= npcropmin) then ! skip 2 generic crops
-
-                  frNdemand_npool_to_livestemn(p) = npool_to_livestemn_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_livestemn_storage(p) = npool_to_livestemn_storage_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_deadstemn(p) = npool_to_deadstemn_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_deadstemn_storage(p) = npool_to_deadstemn_storage_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_livecrootn(p) = npool_to_livecrootn_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_livecrootn_storage(p) = npool_to_livecrootn_storage_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_deadcrootn(p) = npool_to_deadcrootn_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_deadcrootn_storage(p) = npool_to_deadcrootn_storage_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_grainn(p) = npool_to_grainn_demand(p) / total_plant_Ndemand(p)
-                  frNdemand_npool_to_grainn_storage(p) = npool_to_grainn_storage_demand(p) / total_plant_Ndemand(p)
-               end if
-
+               ! leaf CN ratio
+               this%actual_storage_leafcn(p) = cnveg_carbonstate_inst%leafc_storage_patch(p)  &
+                    / cnveg_nitrogenstate_inst%leafn_storage_patch(p)
             end if
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         end if
+
+         if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then
+            ! computing carbon to nitrogen ratio of different plant parts
 
 
-            ! computing N allocation for different plant parts
-            ! allocating allocation to different plant parts in proportion to the fractional demand
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            npool_to_leafn(p) = frNdemand_npool_to_leafn(p) * npool(p) / dt
-            npool_to_leafn_storage(p)  = frNdemand_npool_to_leafn_storage(p) * npool(p) / dt
-            npool_to_frootn(p) = frNdemand_npool_to_frootn(p) * npool(p) / dt
-            npool_to_frootn_storage(p) = frNdemand_npool_to_frootn_storage(p) * npool(p) / dt
+            if (cnveg_nitrogenstate_inst%frootn_storage_patch(p) == 0.0_r8) then
+               ! to avoid division by zero, and also to make frootcn_actual(p) a very large number if frootc(p) is zero
+               frootcn_actual = cnveg_carbonstate_inst%frootc_storage_patch(p) / n_min
+            else
+               ! fine root CN ratio
+               frootcn_actual = cnveg_carbonstate_inst%frootc_storage_patch(p) / cnveg_nitrogenstate_inst%frootn_storage_patch(p)
+            end if
+
             if (woody(ivt(p)) == 1._r8) then
-               npool_to_livestemn(p) = frNdemand_npool_to_livestemn(p) * npool(p) / dt
-               npool_to_livestemn_storage(p) = frNdemand_npool_to_livestemn_storage(p) * npool(p) / dt
-               npool_to_deadstemn(p) = frNdemand_npool_to_deadstemn(p) * npool(p) / dt
-               npool_to_deadstemn_storage(p) = frNdemand_npool_to_deadstemn_storage(p) * npool(p) / dt
-               npool_to_livecrootn(p) = frNdemand_npool_to_livecrootn(p) * npool(p) / dt
-               npool_to_livecrootn_storage(p) = frNdemand_npool_to_livecrootn_storage(p) * npool(p) / dt
-               npool_to_deadcrootn(p) = frNdemand_npool_to_deadcrootn(p) * npool(p) / dt
-               npool_to_deadcrootn_storage(p) = frNdemand_npool_to_deadcrootn_storage(p) * npool(p) / dt
-            end if
-            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
-               npool_to_livestemn(p) = frNdemand_npool_to_livestemn(p) * npool(p) / dt
-               npool_to_livestemn_storage(p) = frNdemand_npool_to_livestemn_storage(p) * npool(p) / dt
-               npool_to_deadstemn(p) = frNdemand_npool_to_deadstemn(p) * npool(p) / dt
-               npool_to_deadstemn_storage(p) = frNdemand_npool_to_deadstemn_storage(p) * npool(p) / dt
-               npool_to_livecrootn(p) = frNdemand_npool_to_livecrootn(p) * npool(p) / dt
-               npool_to_livecrootn_storage(p) = frNdemand_npool_to_livecrootn_storage(p) * npool(p) / dt
-               npool_to_deadcrootn(p) = frNdemand_npool_to_deadcrootn(p) * npool(p) / dt
-               npool_to_deadcrootn_storage(p) = frNdemand_npool_to_deadcrootn_storage(p) * npool(p) / dt
-               npool_to_grainn(p) = frNdemand_npool_to_grainn(p) * npool(p) / dt
-               npool_to_grainn_storage(p) = frNdemand_npool_to_grainn_storage(p) * npool(p) / dt
-            end if
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            
 
-            cpool_to_resp(p) = 0.0_r8
-            cpool_to_leafc_resp(p) = 0.0_r8
-            cpool_to_leafc_storage_resp(p) = 0.0_r8
-            cpool_to_frootc_resp(p) = 0.0_r8
-            cpool_to_frootc_storage_resp(p) = 0.0_r8
-            cpool_to_livecrootc_resp(p) = 0.0_r8
-            cpool_to_livecrootc_storage_resp(p) = 0.0_r8
-            cpool_to_livestemc_resp(p) = 0.0_r8
-            cpool_to_livestemc_storage_resp(p) = 0.0_r8
-
-            if ( laisun(p)+laisha(p) > 0.0_r8 ) then
-               if (cnveg_nitrogenstate_inst%leafn_storage_patch(p) == 0.0_r8 ) then
-                  ! to avoid division by zero, and also to make actual_leafncn(p) a very large number if leafn(p) is zero 
-                  this%actual_storage_leafcn(p) = spval
-               else                        	
-                  ! leaf CN ratio 
-                  this%actual_storage_leafcn(p) = cnveg_carbonstate_inst%leafc_storage_patch(p)  &
-                  / cnveg_nitrogenstate_inst%leafn_storage_patch(p)
-               end if
-            end if
-            
-            if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then   
-               ! computing carbon to nitrogen ratio of different plant parts 
-
-          
-               if (cnveg_nitrogenstate_inst%frootn_storage_patch(p) == 0.0_r8) then
-                  ! to avoid division by zero, and also to make frootcn_actual(p) a very large number if frootc(p) is zero 
-                  frootcn_actual = cnveg_carbonstate_inst%frootc_storage_patch(p) / n_min
+               if (cnveg_nitrogenstate_inst%livestemn_storage_patch(p) == 0.0_r8) then
+                  ! to avoid division by zero, and also to make livestemcn_actual(p) a very large number if livestemc(p) is zero
+                  livestemcn_actual = cnveg_carbonstate_inst%livestemc_storage_patch(p) / n_min
                else
-                  ! fine root CN ratio 
-                  frootcn_actual = cnveg_carbonstate_inst%frootc_storage_patch(p) / cnveg_nitrogenstate_inst%frootn_storage_patch(p)
+                  ! live stem CN ratio
+                  livestemcn_actual =  cnveg_carbonstate_inst%livestemc_storage_patch(p) / &
+                       cnveg_nitrogenstate_inst%livestemn_storage_patch(p)
                end if
-      
-               if (woody(ivt(p)) == 1._r8) then  
 
-                  if (cnveg_nitrogenstate_inst%livestemn_storage_patch(p) == 0.0_r8) then
-                     ! to avoid division by zero, and also to make livestemcn_actual(p) a very large number if livestemc(p) is zero 
-                     livestemcn_actual = cnveg_carbonstate_inst%livestemc_storage_patch(p) / n_min
-                  else                        										
-                     ! live stem CN ratio 
-                     livestemcn_actual =  cnveg_carbonstate_inst%livestemc_storage_patch(p) / &
-                          cnveg_nitrogenstate_inst%livestemn_storage_patch(p)
-                  end if 														 														
-              
-                  if (cnveg_nitrogenstate_inst%livecrootn_storage_patch(p) == 0.0_r8) then
-                     ! to avoid division by zero, and also to make livecrootcn_actual(p) a very large number if livecrootc(p) is zero 
-                     livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / n_min
-                  else
-                     ! live coarse root CN ratio
-                     livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / &
+               if (cnveg_nitrogenstate_inst%livecrootn_storage_patch(p) == 0.0_r8) then
+                  ! to avoid division by zero, and also to make livecrootcn_actual(p) a very large number if livecrootc(p) is zero
+                  livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / n_min
+               else
+                  ! live coarse root CN ratio
+                  livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / &
                        cnveg_nitrogenstate_inst%livecrootn_storage_patch(p)
-                  end if              
-               end if   
-          
-               if (ivt(p) >= npcropmin) then ! skip 2 generic crops    
-														              
-                  if (cnveg_nitrogenstate_inst%livestemn_storage_patch(p) == 0.0_r8) then
-                     ! to avoid division by zero, and also to make livestemcn_actual(p) a very large number if livestemc(p) is zero 
-                     livestemcn_actual = cnveg_carbonstate_inst%livestemc_storage_patch(p) / n_min
-                  else                        										
-                     ! live stem CN ratio 
-                     livestemcn_actual =  cnveg_carbonstate_inst%livestemc_storage_patch(p) / &
-                          cnveg_nitrogenstate_inst%livestemn_storage_patch(p)
-                  end if
-              
-                  if (cnveg_nitrogenstate_inst%livecrootn_storage_patch(p) == 0.0_r8) then
-                     ! to avoid division by zero, and also to make livecrootcn_actual(p) a very large number if livecrootc(p) is zero 
-                     livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / n_min
-                  else
-                     ! live coarse root CN ratio
-                     livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / &
-                       cnveg_nitrogenstate_inst%livecrootn_storage_patch(p)
-                  end if          
                end if
-                          
-               leafcn_max = leafcn(ivt(p)) + 15.0_r8
-               frootcn_max = frootcn(ivt(p)) + 15.0_r8
-            
-               ! Note that for high CN ratio stress the plant part does not retranslocate nitrogen as the plant part will need the N 
-               ! if high leaf CN ratio (i.e., high leaf C compared to N) then turnover extra C           
-               if (this%actual_storage_leafcn(p) > leafcn_max) then   
-               
-                  frac_resp =  (this%actual_storage_leafcn(p) - leafcn_max) / 10.0_r8
+            end if
+
+            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+
+               if (cnveg_nitrogenstate_inst%livestemn_storage_patch(p) == 0.0_r8) then
+                  ! to avoid division by zero, and also to make livestemcn_actual(p) a very large number if livestemc(p) is zero
+                  livestemcn_actual = cnveg_carbonstate_inst%livestemc_storage_patch(p) / n_min
+               else
+                  ! live stem CN ratio
+                  livestemcn_actual =  cnveg_carbonstate_inst%livestemc_storage_patch(p) / &
+                       cnveg_nitrogenstate_inst%livestemn_storage_patch(p)
+               end if
+
+               if (cnveg_nitrogenstate_inst%livecrootn_storage_patch(p) == 0.0_r8) then
+                  ! to avoid division by zero, and also to make livecrootcn_actual(p) a very large number if livecrootc(p) is zero
+                  livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / n_min
+               else
+                  ! live coarse root CN ratio
+                  livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / &
+                       cnveg_nitrogenstate_inst%livecrootn_storage_patch(p)
+               end if
+            end if
+
+            leafcn_max = leafcn(ivt(p)) + 15.0_r8
+            frootcn_max = frootcn(ivt(p)) + 15.0_r8
+
+            ! Note that for high CN ratio stress the plant part does not retranslocate nitrogen as the plant part will need the N
+            ! if high leaf CN ratio (i.e., high leaf C compared to N) then turnover extra C
+            if (this%actual_storage_leafcn(p) > leafcn_max) then
+
+               frac_resp =  (this%actual_storage_leafcn(p) - leafcn_max) / 10.0_r8
+               frac_resp = min(1.0_r8, max(0.0_r8, frac_resp))
+
+               cpool_to_leafc_resp(p)          = frac_resp * cpool_to_leafc(p)
+               cpool_to_leafc_storage_resp(p)  = frac_resp * cpool_to_leafc_storage(p)
+
+               !cpool_to_leafc(p) = cpool_to_leafc(p) - cpool_to_leafc_resp(p)
+               !cpool_to_leafc_storage(p) = cpool_to_leafc_storage(p) - cpool_to_leafc_storage_resp(p)
+
+            end if
+
+            ! if high fine root CN ratio (i.e., high fine root C compared to N) then turnover extra C
+            if (frootcn_actual > frootcn_max) then
+
+               frac_resp =  (frootcn_actual - frootcn_max) / 10.0_r8
+               frac_resp = min(1.0_r8, max(0.0_r8, frac_resp))
+
+               cpool_to_frootc_resp(p)         = frac_resp * cpool_to_frootc(p)
+               cpool_to_frootc_storage_resp(p) = frac_resp * cpool_to_frootc_storage(p)
+
+               !cpool_to_frootc(p) = cpool_to_frootc(p) - cpool_to_frootc_resp(p)
+               !cpool_to_frootc_storage(p) = cpool_to_frootc_storage(p) - cpool_to_frootc_storage_resp(p)
+
+            end if
+
+            if (woody(ivt(p)) == 1._r8) then
+
+               livewdcn_max = livewdcn(ivt(p)) + 15.0_r8
+
+               ! if high coarse root CN ratio (i.e., high coarse root C compared to N) then turnover extra C
+               if (livecrootcn_actual > livewdcn_max) then
+
+                  frac_resp =  (livecrootcn_actual - livewdcn_max) / 10.0_r8
                   frac_resp = min(1.0_r8, max(0.0_r8, frac_resp))
-               
-                  cpool_to_leafc_resp(p)          = frac_resp * cpool_to_leafc(p) 
-                  cpool_to_leafc_storage_resp(p)  = frac_resp * cpool_to_leafc_storage(p)
-                  
-                  !cpool_to_leafc(p) = cpool_to_leafc(p) - cpool_to_leafc_resp(p) 
-                  !cpool_to_leafc_storage(p) = cpool_to_leafc_storage(p) - cpool_to_leafc_storage_resp(p)
-                  
-               end if    
 
-               ! if high fine root CN ratio (i.e., high fine root C compared to N) then turnover extra C 
-               if (frootcn_actual > frootcn_max) then     
-               
-                  frac_resp =  (frootcn_actual - frootcn_max) / 10.0_r8
+                  cpool_to_livecrootc_resp(p)         = frac_resp * cpool_to_livecrootc(p)
+                  cpool_to_livecrootc_storage_resp(p) = frac_resp * cpool_to_livecrootc_storage(p)
+
+                  !cpool_to_livecrootc(p) = cpool_to_livecrootc(p) - cpool_to_livecrootc_resp(p)
+                  !cpool_to_livecrootc_storage(p) = cpool_to_livecrootc_storage(p) - cpool_to_livecrootc_storage_resp(p)
+
+               end if
+
+               ! if high stem CN ratio (i.e., high stem C compared to N) then turnover extra C
+               if (livestemcn_actual > livewdcn_max) then
+
+                  frac_resp =  (livestemcn_actual - livewdcn_max) / 10.0_r8
                   frac_resp = min(1.0_r8, max(0.0_r8, frac_resp))
-                
-                  cpool_to_frootc_resp(p)         = frac_resp * cpool_to_frootc(p) 
-                  cpool_to_frootc_storage_resp(p) = frac_resp * cpool_to_frootc_storage(p)
-                  
-                  !cpool_to_frootc(p) = cpool_to_frootc(p) - cpool_to_frootc_resp(p)    
-                  !cpool_to_frootc_storage(p) = cpool_to_frootc_storage(p) - cpool_to_frootc_storage_resp(p)
-                 
-               end if    
-					
-		       if (woody(ivt(p)) == 1._r8) then  
-		  
-		          livewdcn_max = livewdcn(ivt(p)) + 15.0_r8
 
-                  ! if high coarse root CN ratio (i.e., high coarse root C compared to N) then turnover extra C 
-                  if (livecrootcn_actual > livewdcn_max) then   
-                  
-                     frac_resp =  (livecrootcn_actual - livewdcn_max) / 10.0_r8
-                     frac_resp = min(1.0_r8, max(0.0_r8, frac_resp))  
-                  
-                     cpool_to_livecrootc_resp(p)         = frac_resp * cpool_to_livecrootc(p) 
-                     cpool_to_livecrootc_storage_resp(p) = frac_resp * cpool_to_livecrootc_storage(p)
-                     
-                     !cpool_to_livecrootc(p) = cpool_to_livecrootc(p) - cpool_to_livecrootc_resp(p)     
-                     !cpool_to_livecrootc_storage(p) = cpool_to_livecrootc_storage(p) - cpool_to_livecrootc_storage_resp(p) 
-                  
-                  end if    
-          
-                  ! if high stem CN ratio (i.e., high stem C compared to N) then turnover extra C 
-                  if (livestemcn_actual > livewdcn_max) then  
-                  
-                     frac_resp =  (livestemcn_actual - livewdcn_max) / 10.0_r8
-                     frac_resp = min(1.0_r8, max(0.0_r8, frac_resp))     
-                   
-                     cpool_to_livestemc_resp(p)          = frac_resp * cpool_to_livestemc(p) 
-                     cpool_to_livestemc_storage_resp(p)  = frac_resp * cpool_to_livestemc_storage(p)
-                     
-                     !cpool_to_livestemc(p) = cpool_to_livestemc(p) - cpool_to_livestemc_resp(p)    
-                     !cpool_to_livestemc_storage(p) = cpool_to_livestemc_storage(p) - cpool_to_livestemc_storage_resp(p)
-                     
-                  end if    
-              
-               end if  
-          
-               if (ivt(p) >= npcropmin) then ! skip 2 generic crops    
+                  cpool_to_livestemc_resp(p)          = frac_resp * cpool_to_livestemc(p)
+                  cpool_to_livestemc_storage_resp(p)  = frac_resp * cpool_to_livestemc_storage(p)
 
-                  livewdcn_max = livewdcn(ivt(p)) + 15.0_r8
+                  !cpool_to_livestemc(p) = cpool_to_livestemc(p) - cpool_to_livestemc_resp(p)
+                  !cpool_to_livestemc_storage(p) = cpool_to_livestemc_storage(p) - cpool_to_livestemc_storage_resp(p)
 
-                  ! if high coarse root CN ratio (i.e., high coarse root C compared to N) then turnover extra C 
-                  if (livecrootcn_actual > livewdcn_max) then     
-                  
-                     frac_resp =  (livecrootcn_actual - livewdcn_max) / 10.0_r8
-                     frac_resp = min(1.0_r8, max(0.0_r8, frac_resp))  
-                  
-                     cpool_to_livecrootc_resp(p)         = frac_resp * cpool_to_livecrootc(p) 
-                     cpool_to_livecrootc_storage_resp(p) = frac_resp * cpool_to_livecrootc_storage(p)
-                     
-                     !cpool_to_livecrootc(p) = cpool_to_livecrootc(p) - cpool_to_livecrootc_resp(p)     
-                     !cpool_to_livecrootc_storage(p) = cpool_to_livecrootc_storage(p) - cpool_to_livecrootc_storage_resp(p) 
-                     
-                  end if    
-          
-                  ! if high stem CN ratio (i.e., high stem C compared to N) then turnover extra C 
-                  if (livestemcn_actual > livewdcn_max) then       
+               end if
 
-                     frac_resp =  (livestemcn_actual - livewdcn_max) / 10.0_r8
-                     frac_resp = min(1.0_r8, max(0.0_r8, frac_resp))     
-                   
-                     cpool_to_livestemc_resp(p)          = frac_resp * cpool_to_livestemc(p) 
-                     cpool_to_livestemc_storage_resp(p)  = frac_resp * cpool_to_livestemc_storage(p)
-                     
-                     !cpool_to_livestemc(p) = cpool_to_livestemc(p) - cpool_to_livestemc_resp(p)    
-                     !cpool_to_livestemc_storage(p) = cpool_to_livestemc_storage(p) - cpool_to_livestemc_storage_resp(p)
+            end if
 
-                  end if    
-              
-               end if  
-               
-               cpool_to_resp(p) = cpool_to_leafc_resp(p) + cpool_to_leafc_storage_resp(p)  + cpool_to_frootc_resp(p) + &
-                    cpool_to_frootc_storage_resp(p) + cpool_to_livecrootc_resp(p) + cpool_to_livecrootc_storage_resp(p) + &
-                    cpool_to_livestemc_resp(p) + cpool_to_livestemc_storage_resp(p)
+            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
 
-            end if   ! end of if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then   
+               livewdcn_max = livewdcn(ivt(p)) + 15.0_r8
 
-            !if (cnveg_nitrogenstate_inst%leafn_storage_patch(p) < n_min .or. laisun(p)+laisha(p) <= 0.0_r8) then
-               !! to make output on history missing value
-               !this%actual_storage_leafcn(p) = spval
-            !end if
-									
-         end if    ! end of if (downreg_opt .eqv. .false. .AND. CN_partition_opt == 1) then
+               ! if high coarse root CN ratio (i.e., high coarse root C compared to N) then turnover extra C
+               if (livecrootcn_actual > livewdcn_max) then
+
+                  frac_resp =  (livecrootcn_actual - livewdcn_max) / 10.0_r8
+                  frac_resp = min(1.0_r8, max(0.0_r8, frac_resp))
+
+                  cpool_to_livecrootc_resp(p)         = frac_resp * cpool_to_livecrootc(p)
+                  cpool_to_livecrootc_storage_resp(p) = frac_resp * cpool_to_livecrootc_storage(p)
+
+                  !cpool_to_livecrootc(p) = cpool_to_livecrootc(p) - cpool_to_livecrootc_resp(p)
+                  !cpool_to_livecrootc_storage(p) = cpool_to_livecrootc_storage(p) - cpool_to_livecrootc_storage_resp(p)
+
+               end if
+
+               ! if high stem CN ratio (i.e., high stem C compared to N) then turnover extra C
+               if (livestemcn_actual > livewdcn_max) then
+
+                  frac_resp =  (livestemcn_actual - livewdcn_max) / 10.0_r8
+                  frac_resp = min(1.0_r8, max(0.0_r8, frac_resp))
+
+                  cpool_to_livestemc_resp(p)          = frac_resp * cpool_to_livestemc(p)
+                  cpool_to_livestemc_storage_resp(p)  = frac_resp * cpool_to_livestemc_storage(p)
+
+                  !cpool_to_livestemc(p) = cpool_to_livestemc(p) - cpool_to_livestemc_resp(p)
+                  !cpool_to_livestemc_storage(p) = cpool_to_livestemc_storage(p) - cpool_to_livestemc_storage_resp(p)
+
+               end if
+
+            end if
+
+            cpool_to_resp(p) = cpool_to_leafc_resp(p) + cpool_to_leafc_storage_resp(p)  + cpool_to_frootc_resp(p) + &
+                 cpool_to_frootc_storage_resp(p) + cpool_to_livecrootc_resp(p) + cpool_to_livecrootc_storage_resp(p) + &
+                 cpool_to_livestemc_resp(p) + cpool_to_livestemc_storage_resp(p)
+
+         end if   ! end of if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then
+
+         !if (cnveg_nitrogenstate_inst%leafn_storage_patch(p) < n_min .or. laisun(p)+laisha(p) <= 0.0_r8) then
+         !! to make output on history missing value
+         !this%actual_storage_leafcn(p) = spval
+         !end if
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       end do ! end patch loop
@@ -1159,7 +934,7 @@ contains
     type(soilbiogeochem_nitrogenstate_type), intent(in)    :: soilbiogeochem_nitrogenstate_inst
     type(energyflux_type)           , intent(in)    :: energyflux_inst
     real(r8)                        , intent(out)   :: aroot(bounds%begp:)
-    real(r8)                        , intent(out)   :: arepr(bounds%begp:)
+    real(r8)                        , intent(out)   :: arepr(bounds%begp:,:)
     !-----------------------------------------------------------------------
 
     call this%calc_plant_nitrogen_demand(bounds,  num_soilp, filter_soilp, &
@@ -1170,7 +945,7 @@ contains
        soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
        energyflux_inst, &
        aroot=aroot(bounds%begp:bounds%endp),                               &
-       arepr=arepr(bounds%begp:bounds%endp))
+       arepr=arepr(bounds%begp:bounds%endp,:))
 
   end subroutine calc_plant_nutrient_demand
 
@@ -1190,7 +965,6 @@ contains
     use pftconMod              , only : ntrp_soybean, nirrig_trp_soybean
     use clm_varcon             , only : secspday, dzsoi_decomp
     use clm_varctl             , only : use_c13, use_c14
-    use clm_varctl             , only : nscalar_opt, plant_ndemand_opt, substrate_term_opt, temp_scalar_opt
     use clm_varpar             , only : nlevdecomp
     use clm_time_manager       , only : get_step_size_real
     use CanopyStateType        , only : canopystate_type
@@ -1226,21 +1000,25 @@ contains
     type(soilbiogeochem_nitrogenstate_type), intent(in) :: soilbiogeochem_nitrogenstate_inst
     type(energyflux_type)           , intent(in)    :: energyflux_inst
     real(r8)                        , intent(out)   :: aroot(bounds%begp:)
-    real(r8)                        , intent(out)   :: arepr(bounds%begp:)
+    real(r8)                        , intent(out)   :: arepr(bounds%begp:,:)
     !
     ! !LOCAL VARIABLES:
-    integer  :: c, p, j                                 ! indices
+    integer  :: c, p, j, k                                 ! indices
     integer  :: fp                                         ! lake filter patch index
     real(r8) :: mr                                         ! maintenance respiration (gC/m2/s)
+    real(r8) :: reproductive_mr_tot                  ! total maintenance respiration from grain components (gC/m2/s)
     real(r8) :: f1, f2, f3, f4, g1, g2                     ! allocation parameters
+    real(r8) :: g1a                                        ! g1 included in allocation/allometry
     real(r8) :: cnl, cnfr, cnlw, cndw                      ! C:N ratios for leaf, fine root, and wood
     real(r8) :: curmr, curmr_ratio                         ! xsmrpool temporary variables
-    real(r8) :: f5                                         ! grain allocation                   parameter
+    real(r8) :: f5(nrepr)                                  ! reproductive allocation parameters
     real(r8) :: cng                                        ! C:N ratio for grain (= cnlw for now; slevis)
     real(r8) :: fleaf                                      ! fraction allocated to leaf
     real(r8) :: t1                                         ! temporary variable
     real(r8) :: dt                                         ! model time step
     real(r8) :: dayscrecover                               ! number of days to recover negative cpool
+    real(r8) :: f5_tot                                     ! sum of f5 terms
+    real(r8) :: f5_n_tot                                   ! sum of f5 terms converted from C to N
     real(r8) :: f_N              (bounds%begp:bounds%endp)
     real(r8) :: Kmin
     real(r8) :: leafcn_max
@@ -1257,7 +1035,7 @@ contains
     ! -----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(aroot) == (/bounds%endp/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(arepr) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(arepr) == (/bounds%endp, nrepr/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(this%actual_leafcn) >= (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((lbound(this%actual_leafcn) <= (/bounds%begp/)), sourcefile, __LINE__)
 
@@ -1300,7 +1078,7 @@ contains
          laisun                => canopystate_inst%laisun_patch                     , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index
          laisha                => canopystate_inst%laisha_patch                     , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index
 
-         hui                   => crop_inst%gddplant_patch                          , & ! Input:  [real(r8) (:)   ]  =gdd since planting (gddplant)
+         hui                   => crop_inst%hui_patch                               , & ! Input:  [real(r8) (:)   ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
          leafout               => crop_inst%gddtsoi_patch                           , & ! Input:  [real(r8) (:)   ]  =gdd from top soil layer temperature
          croplive              => crop_inst%croplive_patch                          , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
 
@@ -1332,7 +1110,7 @@ contains
          froot_mr              => cnveg_carbonflux_inst%froot_mr_patch              , & ! Input:  [real(r8) (:)   ]
          livestem_mr           => cnveg_carbonflux_inst%livestem_mr_patch           , & ! Input:  [real(r8) (:)   ]
          livecroot_mr          => cnveg_carbonflux_inst%livecroot_mr_patch          , & ! Input:  [real(r8) (:)   ]
-         grain_mr              => cnveg_carbonflux_inst%grain_mr_patch              , & ! Input:  [real(r8) (:)   ]
+         reproductive_mr              => cnveg_carbonflux_inst%reproductive_mr_patch              , & ! Input:  [real(r8) (:,:)   ]
          gpp                   => cnveg_carbonflux_inst%gpp_before_downreg_patch    , & ! Output: [real(r8) (:)   ]  GPP flux before downregulation (gC/m2/s)
          availc                => cnveg_carbonflux_inst%availc_patch                , & ! Output: [real(r8) (:)   ]  C flux available for allocation (gC/m2/s)
          xsmrpool_recover      => cnveg_carbonflux_inst%xsmrpool_recover_patch      , & ! Output: [real(r8) (:)   ]  C flux assigned to recovery of negative cpool (gC/m2/s)
@@ -1342,12 +1120,12 @@ contains
          froot_curmr           => cnveg_carbonflux_inst%froot_curmr_patch           , & ! Output: [real(r8) (:)   ]
          livestem_curmr        => cnveg_carbonflux_inst%livestem_curmr_patch        , & ! Output: [real(r8) (:)   ]
          livecroot_curmr       => cnveg_carbonflux_inst%livecroot_curmr_patch       , & ! Output: [real(r8) (:)   ]
-         grain_curmr           => cnveg_carbonflux_inst%grain_curmr_patch           , & ! Output: [real(r8) (:)   ]
+         reproductive_curmr           => cnveg_carbonflux_inst%reproductive_curmr_patch           , & ! Output: [real(r8) (:,:)   ]
          leaf_xsmr             => cnveg_carbonflux_inst%leaf_xsmr_patch             , & ! Output: [real(r8) (:)   ]
          froot_xsmr            => cnveg_carbonflux_inst%froot_xsmr_patch            , & ! Output: [real(r8) (:)   ]
          livestem_xsmr         => cnveg_carbonflux_inst%livestem_xsmr_patch         , & ! Output: [real(r8) (:)   ]
          livecroot_xsmr        => cnveg_carbonflux_inst%livecroot_xsmr_patch        , & ! Output: [real(r8) (:)   ]
-         grain_xsmr            => cnveg_carbonflux_inst%grain_xsmr_patch            , & ! Output: [real(r8) (:)   ]
+         reproductive_xsmr            => cnveg_carbonflux_inst%reproductive_xsmr_patch            , & ! Output: [real(r8) (:,:)   ]
          cpool_to_xsmrpool     => cnveg_carbonflux_inst%cpool_to_xsmrpool_patch     , & ! Output: [real(r8) (:)   ]
 
          leafn                 => cnveg_nitrogenstate_inst%leafn_patch              , & ! Input:  [real(r8) (:)   ]  (gN/m2) leaf N
@@ -1413,8 +1191,16 @@ contains
          if (woody(ivt(p)) == 1.0_r8) then
             mr = mr + livestem_mr(p) + livecroot_mr(p)
          else if (ivt(p) >= npcropmin) then
-            if (croplive(p)) mr = mr + livestem_mr(p) + grain_mr(p)
-         end if     ! carbon flux available for allocation
+            if (croplive(p)) then
+               reproductive_mr_tot = 0._r8
+               do k = 1, nrepr
+                  reproductive_mr_tot = reproductive_mr_tot + reproductive_mr(p,k)
+               end do
+               mr = mr + livestem_mr(p) + reproductive_mr_tot
+            end if
+         end if
+
+         ! carbon flux available for allocation
          availc(p) = gpp(p) - mr
 
          ! new code added for isotope calculations, 7/1/05, PET
@@ -1434,8 +1220,10 @@ contains
          livestem_xsmr(p)   = livestem_mr(p) - livestem_curmr(p)
          livecroot_curmr(p) = livecroot_mr(p) * curmr_ratio
          livecroot_xsmr(p)  = livecroot_mr(p) - livecroot_curmr(p)
-         grain_curmr(p)     = grain_mr(p) * curmr_ratio
-         grain_xsmr(p)      = grain_mr(p) - grain_curmr(p)
+         do k = 1, nrepr
+            reproductive_curmr(p,k) = reproductive_mr(p,k) * curmr_ratio
+            reproductive_xsmr(p,k)  = reproductive_mr(p,k) - reproductive_curmr(p,k)
+         end do
 
          ! no allocation when available c is negative
          availc(p) = max(availc(p),0.0_r8)
@@ -1484,7 +1272,9 @@ contains
 
          ! calculate f1 to f5 for prog crops following AgroIBIS subr phenocrop
 
-         f5 = 0._r8 ! continued intializations from above
+         do k = 1, nrepr
+            f5(k) = 0._r8 ! continued intializations from above
+         end do
 
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
 
@@ -1503,13 +1293,14 @@ contains
                   ! allocation rules for crops based on maturity and linear decrease
                   ! of amount allocated to roots over course of the growing season
 
+                  do k = 1, nrepr
+                     arepr(p,k) = 0._r8
+                  end do
                   if (peaklai(p) == 1) then ! lai at maximum allowed
-                     arepr(p) = 0._r8
                      aleaf(p) = 1.e-5_r8
                      astem(p) = 0._r8
-                     aroot(p) = 1._r8 - arepr(p) - aleaf(p) - astem(p)
+                     aroot(p) = 1._r8 - aleaf(p)
                   else
-                     arepr(p) = 0._r8
                      aroot(p) = max(0._r8, min(1._r8, arooti(ivt(p)) -   &
                           (arooti(ivt(p)) - arootf(ivt(p))) *  &
                           min(1._r8, hui(p)/gddmaturity(p))))
@@ -1517,7 +1308,7 @@ contains
                           exp(-bfact(ivt(p))*hui(p)/huigrain(p))) / &
                           (exp(-bfact(ivt(p)))-1) ! fraction alloc to leaf (from J Norman alloc curve)
                      aleaf(p) = max(1.e-5_r8, (1._r8 - aroot(p)) * fleaf)
-                     astem(p) = 1._r8 - arepr(p) - aleaf(p) - aroot(p)
+                     astem(p) = 1._r8 - aleaf(p) - aroot(p)
                   end if
 
                   ! AgroIBIS included here an immediate adjustment to aleaf & astem if the
@@ -1587,60 +1378,73 @@ contains
                      end if
                   end if
 
-                  arepr(p) = 1._r8 - aroot(p) - astem(p) - aleaf(p)
+                  ! For AgroIBIS-based crop model, all repr allocation is assumed to go
+                  ! into the last reproductive pool. In practice there is only a single
+                  ! reproductive pool with the AgroIBIS-based crop model, but for
+                  ! software testing we can have multiple, in which situation we want the
+                  ! active pool to be the last one.
+                  do k = 1, nrepr-1
+                     arepr(p,k) = 0._r8
+                  end do
+                  arepr(p,nrepr) = 1._r8 - aroot(p) - astem(p) - aleaf(p)
 
                else                   ! pre emergence
-                  aleaf(p) = 1.e-5_r8 ! allocation coefficients should be irrelevant
-                  astem(p) = 0._r8    ! because crops have no live carbon pools;
-                  aroot(p) = 0._r8    ! this applies to this "else" and to the "else"
-                  arepr(p) = 0._r8    ! a few lines down
+                  ! allocation coefficients should be irrelevant because crops have no
+                  ! live carbon pools; this applies to this "else" and to the "else" a few
+                  ! lines down
+                  aleaf(p) = 1.e-5_r8
+                  astem(p) = 0._r8
+                  aroot(p) = 0._r8
+                  do k = 1, nrepr
+                     arepr(p,k) = 0._r8
+                  end do
                end if
 
                f1 = aroot(p) / aleaf(p)
                f3 = astem(p) / aleaf(p)
-               f5 = arepr(p) / aleaf(p)
+               do k = 1, nrepr
+                  f5(k) = arepr(p,k) / aleaf(p)
+               end do
                g1 = 0.25_r8
 
 
             else   ! .not croplive
                f1 = 0._r8
                f3 = 0._r8
-               f5 = 0._r8
+               do k = 1, nrepr
+                  f5(k) = 0._r8
+               end do
                g1 = 0.25_r8
             end if
          end if
 
          ! based on available C, use constant allometric relationships to
          ! determine N requirements
-         if(use_fun)then ! In FUN, growth respiration is not part of the allometry calculation. 
-	         if (woody(ivt(p)) == 1.0_r8) then
-	            c_allometry(p) = (1._r8)*(1._r8+f1+f3*(1._r8+f2))
-	            n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
-	                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
-	         else if (ivt(p) >= npcropmin) then ! skip generic crops
-	            cng = graincn(ivt(p))
-	            c_allometry(p) = (1._r8)*(1._r8+f1+f5+f3*(1._r8+f2))
-	            n_allometry(p) = 1._r8/cnl + f1/cnfr + f5/cng + (f3*f4*(1._r8+f2))/cnlw + &
-	                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
-	         else
-	            c_allometry(p) = 1._r8+f1
-	            n_allometry(p) = 1._r8/cnl + f1/cnfr
-	         end if           
-        else !no FUN.
-	         if (woody(ivt(p)) == 1.0_r8) then
-	            c_allometry(p) = (1._r8+g1)*(1._r8+f1+f3*(1._r8+f2))
-	            n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
-	                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
-	         else if (ivt(p) >= npcropmin) then ! skip generic crops
-	            cng = graincn(ivt(p))
-	            c_allometry(p) = (1._r8+g1)*(1._r8+f1+f5+f3*(1._r8+f2))
-	            n_allometry(p) = 1._r8/cnl + f1/cnfr + f5/cng + (f3*f4*(1._r8+f2))/cnlw + &
-	                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
-	         else
-	            c_allometry(p) = 1._r8+g1+f1+f1*g1
-	            n_allometry(p) = 1._r8/cnl + f1/cnfr
-	         end if
-         end if !FUN
+         if (.not. use_fun) then
+            g1a = g1
+         else
+            g1a = 0._r8
+         end if
+         if (woody(ivt(p)) == 1.0_r8) then
+            c_allometry(p) = (1._r8+g1a)*(1._r8+f1+f3*(1._r8+f2))
+            n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
+                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
+         else if (ivt(p) >= npcropmin) then ! skip generic crops
+            cng = graincn(ivt(p))
+            f5_tot = 0._r8
+            f5_n_tot = 0._r8
+            do k = 1, nrepr
+               f5_tot = f5_tot + f5(k)
+               ! Note that currently we use the same C/N ratio for all grain components:
+               f5_n_tot = f5_n_tot + f5(k)/cng
+            end do
+            c_allometry(p) = (1._r8+g1a)*(1._r8+f1+f5_tot+f3*(1._r8+f2))
+            n_allometry(p) = 1._r8/cnl + f1/cnfr + f5_n_tot + (f3*f4*(1._r8+f2))/cnlw + &
+                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
+         else
+            c_allometry(p) = 1._r8+g1a+f1+f1*g1a
+            n_allometry(p) = 1._r8/cnl + f1/cnfr
+         end if
 
          ! when we have "if (leafn(p) == 0.0_r8)" below then we
          ! have floating overflow (out of floating point range)
@@ -1654,70 +1458,40 @@ contains
          end if
             
 
-         if (nscalar_opt) then
+         leafcn_min = leafcn(ivt(p)) - 10.0_r8
+         leafcn_max = leafcn(ivt(p)) + 10.0_r8
 
-            leafcn_min = leafcn(ivt(p)) - 10.0_r8
-            leafcn_max = leafcn(ivt(p)) + 10.0_r8
+         this%actual_leafcn(p) = max( this%actual_leafcn(p), leafcn_min-0.0001_r8 )
+         this%actual_leafcn(p) = min( this%actual_leafcn(p), leafcn_max )
 
-            this%actual_leafcn(p) = max( this%actual_leafcn(p), leafcn_min-0.0001_r8 )
-            this%actual_leafcn(p) = min( this%actual_leafcn(p), leafcn_max )
+         nscalar = (this%actual_leafcn(p) - leafcn_min ) / (leafcn_max - leafcn_min)  ! Nitrogen scaler factor
+         nscalar = min( max(0.0_r8, nscalar), 1.0_r8 )
 
-            nscalar = (this%actual_leafcn(p) - leafcn_min ) / (leafcn_max - leafcn_min)  ! Nitrogen scaler factor
-            nscalar = min( max(0.0_r8, nscalar), 1.0_r8 )
-         else ! if (nscalar_opt == .false.) then
-            nscalar = 1.0_r8
-         end if
+         c = patch%column(p)
+         sminn_total = 0.0_r8
+         do j = 1, nlevdecomp
+            sminn_total = sminn_total + sminn_vr(c,j) * dzsoi_decomp(j)
+         end do
+         Kmin = 1.0_r8
+         substrate_term = sminn_total / (sminn_total + Kmin)
 
+         c = patch%column(p)
+         temp_scalar=t_scalar(c,1)
+         temp_scalar = min( max(0.0_r8, temp_scalar), 1.0_r8 )
 
-         if (substrate_term_opt) then
-            c = patch%column(p)
-            sminn_total = 0.0_r8
-            do j = 1, nlevdecomp
-               sminn_total = sminn_total + sminn_vr(c,j) * dzsoi_decomp(j)
-            end do
-            Kmin = 1.0_r8
-            substrate_term = sminn_total / (sminn_total + Kmin)
-         else ! if (substrate_term_opt == .false) then
-            substrate_term = 1.0_r8
-         end if
-
-         if (.not. temp_scalar_opt) then
-            temp_scalar = 1.0_r8
-         else !(temp_scalar_opt == .true.) then
-            c = patch%column(p)
-            temp_scalar=t_scalar(c,1)
-            temp_scalar = min( max(0.0_r8, temp_scalar), 1.0_r8 )
-         end if
-         
          if(use_fun)then ! in FUN, plant_ndemand is just used as a maximum draw on soil N pools. 
              plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
          else !FUN
-	         if (plant_ndemand_opt == 0) then
-	            plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
-	         else if (plant_ndemand_opt == 1) then
-	            plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p)) * substrate_term
-	         else if (plant_ndemand_opt == 2) then      ! N uptake happens at day time only
+            if (laisun(p)+laisha(p) > 0.0_r8) then
+               Vmax_N = 2.7E-8_r8
+               plant_ndemand(p) =  Vmax_N  * frootc(p) * substrate_term * temp_scalar * nscalar
+            else
+               plant_ndemand(p) = 0.0_r8
+            end if
 
-	            if (gpp(p) > 0.0_r8) then
-	               Vmax_N = 2.7E-8_r8
-	               plant_ndemand(p) = Vmax_N * frootc(p) * substrate_term * temp_scalar  * nscalar
-	            else
-	               plant_ndemand(p) = 0.0_r8
-	            end if
-	         else if (plant_ndemand_opt == 3) then      ! N uptake happens at day and night time
-
-	            if (laisun(p)+laisha(p) > 0.0_r8) then
-	               Vmax_N = 2.7E-8_r8
-	               plant_ndemand(p) =  Vmax_N  * frootc(p) * substrate_term * temp_scalar * nscalar
-	            else
-	               plant_ndemand(p) = 0.0_r8
-	            end if
-
-	            if (this%actual_leafcn(p) < leafcn_min )then
-	               plant_ndemand(p) = 0.0_r8
-	            end if
-
-	         end if
+            if (this%actual_leafcn(p) < leafcn_min )then
+               plant_ndemand(p) = 0.0_r8
+            end if
          end if  !FUN
 
          !if (leafn(p) < n_min ) then

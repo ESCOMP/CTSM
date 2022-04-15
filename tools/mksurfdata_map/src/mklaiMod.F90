@@ -140,7 +140,7 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
         ! invalid, all the loop bounds over output data in this
         ! routine will need to be double checked!
         write(6, *) "ERROR:" // trim(subname) // "(): input numpft must be less than or equal to output numpft+1."
-        stop
+        call abort()
      end if
   endif
   if (ntim /= 12) then
@@ -434,7 +434,7 @@ subroutine pft_laicheck( ni_s, pctpft_i, laimask )
         write (6,*) subName//' :: pft/LAI+SAI inconsistency over more than 25% land-cover'
         write (6,*) '# inconsistent points, total PFT pts, total LAI+SAI pts = ', &
                      n, nc, sum(laimask(:,l))
-        stop
+        call abort()
      end if
   end do
 

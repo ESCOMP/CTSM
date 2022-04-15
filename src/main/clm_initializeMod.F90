@@ -10,14 +10,14 @@ module clm_initializeMod
   use spmdMod               , only : masterproc
   use decompMod             , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
   use abortutils            , only : endrun
-  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch, use_fates_sp
   use clm_varctl            , only : is_cold_start, is_interpolated_start
   use clm_varctl            , only : iulog
   use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
   use clm_varctl            , only : nhillslope
   use clm_varctl            , only : use_soil_moisture_streams
   use clm_instur            , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft
-  use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake, ncolumns_hillslope
+  use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake, ncolumns_hillslope, pct_urban_max
   use perf_mod              , only : t_startf, t_stopf
   use readParamsMod         , only : readParameters
   use ncdio_pio             , only : file_desc_t
@@ -28,6 +28,7 @@ module clm_initializeMod
   use reweightMod           , only : reweight_wrapup
   use filterMod             , only : allocFilters, filter, filter_inactive_and_active
   use CLMFatesInterfaceMod  , only : CLMFatesGlobals
+  use CLMFatesInterfaceMod  , only : CLMFatesTimesteps
   use dynSubgridControlMod  , only : dynSubgridControl_init, get_reset_dynbal_baselines
   use SelfTestDriver        , only : self_test_driver
   use SoilMoistureStreamMod , only : PrescribedSoilMoistureInit
@@ -62,6 +63,7 @@ contains
     use UrbanParamsType      , only: IsSimpleBuildTemp
     use dynSubgridControlMod , only: dynSubgridControl_init
     use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
+    use CropReprPoolsMod         , only: crop_repr_pools_init
 
     !
     ! !ARGUMENTS
@@ -103,6 +105,7 @@ contains
     call landunit_varcon_init()
     if (masterproc) call control_print()
     call dynSubgridControl_init(NLFilename)
+    call crop_repr_pools_init()
 
     call t_stopf('clm_init1')
 
@@ -124,7 +127,7 @@ contains
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varctl                    , only: use_hillslope
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
-    use landunit_varcon               , only : landunit_varcon_init, max_lunit
+    use landunit_varcon               , only : landunit_varcon_init, max_lunit, numurbl
     use pftconMod                     , only : pftcon
     use decompInitMod                 , only : decompInit_clumps, decompInit_glcp
     use domainMod                     , only : domain_check, ldomain, domain_init
@@ -152,7 +155,7 @@ contains
     use restFileMod                   , only : restFile_read, restFile_write
     use ndepStreamMod                 , only : ndep_init, ndep_interp
     use LakeCon                       , only : LakeConInit
-    use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
+    use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg, SatellitePhenology
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
     use lnd2atmMod                    , only : lnd2atm_minimal
     use controlMod                    , only : NLFilename
@@ -220,6 +223,7 @@ contains
     if(use_hillslope) then 
        allocate (ncolumns_hillslope  (begg:endg            ))
     endif
+    allocate (pct_urban_max(begg:endg, numurbl             ))
 
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
@@ -240,7 +244,7 @@ contains
     ! to allocate space)
     ! This also sets up various global constants in FATES
     ! ------------------------------------------------------------------------
-
+    
     call CLMFatesGlobals()
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
@@ -293,7 +297,8 @@ contains
 
     ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere.
     ! Some things are kept until the end of initialize2; urban_valid is kept through the
-    ! end of the run for error checking.
+    ! end of the run for error checking, pct_urban_max is kept through the end of the run
+    ! for reweighting in subgridWeights.
     deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake)
     if(use_hillslope)  deallocate (ncolumns_hillslope)
 
@@ -318,12 +323,15 @@ contains
        call timemgr_restart()
     end if
 
+    ! Pass model timestep info to FATES
+    call CLMFatesTimesteps()
+    
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
     call t_startf('init_orbd')
-    calday = get_curr_calday()
+    calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
     dtime = get_step_size_real()
-    caldaym1 = get_curr_calday(offset=-int(dtime))
+    caldaym1 = get_curr_calday(offset=-int(dtime), reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
     call t_stopf('init_orbd')
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
@@ -597,6 +605,10 @@ contains
           ! This needs to be done even if CN or CNDV is on!
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
        end if
+    ! If fates has satellite phenology enabled, get the monthly veg values
+    ! prior to the first call to SatellitePhenology()
+    elseif ( use_fates_sp ) then
+          call interpMonthlyVeg(bounds_proc, canopystate_inst)
     end if
 
     ! Determine gridcell averaged properties to send to atm
@@ -628,6 +640,17 @@ contains
 
     ! Initialise the fates model state structure
     if ( use_fates .and. .not.is_restart() .and. finidat == ' ') then
+       ! If fates is using satellite phenology mode, make sure to call the SatellitePhenology
+       ! procedure prior to init_coldstart which will eventually call leaf_area_profile
+       if ( use_fates_sp ) then
+          !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+          do nc = 1,nclumps
+             call get_clump_bounds(nc, bounds_clump)
+             call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+                  water_inst%waterdiagnosticbulk_inst, canopystate_inst)
+          end do
+          !$OMP END PARALLEL DO
+       end if
        call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
             soilstate_inst)
