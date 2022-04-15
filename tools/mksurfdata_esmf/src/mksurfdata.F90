@@ -1201,14 +1201,13 @@ program mksurfdata
             else if (pctcft(n)%get_pct_l2g() >= 1.0_r8) then
                call pctcft(n)%set_pct_l2g(100._r8 - (pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)))
             else
-               write (6,*) subname, 'Error: sum of special land units nearly 100% but none is >= 25% at ', &
+               write (6,*) subname, 'Error: sum of special land units nearly 100% but none is >= 1% at ', &
                     'n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n),suma = ', &
                     n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                     pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(),suma
                call shr_sys_abort()
             end if
             call pctnatpft(n)%set_pct_l2g(0._r8)
-            call pctcft(n)%set_pct_l2g(0._r8)
          end if
          if ( any(pctnatpft(n)%get_pct_p2g() > 0.0_r8 .and. pctnatpft(n)%get_pct_p2g() < toosmallPFT ) .or. &
               any(pctcft(n)%get_pct_p2g()    > 0.0_r8 .and. pctcft(n)%get_pct_p2g()    < toosmallPFT )) then
