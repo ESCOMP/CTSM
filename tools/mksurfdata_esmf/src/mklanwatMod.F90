@@ -262,6 +262,9 @@ contains
        write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
 
+    ! Open input data file
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
+
     ! Read in input mesh
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
