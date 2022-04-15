@@ -15,7 +15,7 @@ module TopoMod
   use glcBehaviorMod , only : glc_behavior_type
   use landunit_varcon, only : istice, istsoil
   use filterColMod   , only : filter_col_type, col_filter_from_logical_array_active_only
-  use clm_varctl     , only : use_hillslope,downscale_hillslope_meteorology
+  use clm_varctl     , only : use_hillslope, downscale_hillslope_meteorology
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -140,7 +140,7 @@ contains
           ! For other landunits, arbitrarily initialize topo_col to 0 m; for landunits
           ! where this matters, this will get overwritten in the run loop by values sent
           ! from CISM
-          if (lun%itype(l) == istsoil .and. use_hillslope .and. downscale_hillslope_meteorology) then
+          if (col%is_hillslope_column(c) .and. downscale_hillslope_meteorology) then
              this%topo_col(c) = col%hill_elev(c)
              this%needs_downscaling_col(c) = .true.
           else
@@ -254,16 +254,16 @@ contains
        allocate(mean_hillslope_elevation(bounds%begl:bounds%endl))
        mean_hillslope_elevation(:) = 0._r8
        do l = bounds%begl, bounds%endl
-          if (lun%itype(l) == istsoil) then
-             mhe_norm = 0._r8
-             do c = lun%coli(l), lun%colf(l)
+          mhe_norm = 0._r8
+          do c = lun%coli(l), lun%colf(l)
+             if (col%is_hillslope_column(c)) then
                 mean_hillslope_elevation(l) = mean_hillslope_elevation(l) &
                      + col%hill_elev(c)*col%hill_area(c)
                 mhe_norm = mhe_norm + col%hill_area(c)
-             enddo
-             if (mhe_norm > 0) then
-                mean_hillslope_elevation(l) = mean_hillslope_elevation(l)/mhe_norm
              endif
+          enddo
+          if (mhe_norm > 0) then
+             mean_hillslope_elevation(l) = mean_hillslope_elevation(l)/mhe_norm
           endif
        enddo
     endif
@@ -279,7 +279,7 @@ contains
        if (.not. this%needs_downscaling_col(c)) then
           g = col%gridcell(c)
           l = col%landunit(c)
-          if (lun%itype(l) == istsoil .and. use_hillslope .and. downscale_hillslope_meteorology) then
+          if (col%is_hillslope_column(c) .and. downscale_hillslope_meteorology) then
              this%topo_col(c) = atm_topo(g) &
                   + (col%hill_elev(c) - mean_hillslope_elevation(l))
              this%needs_downscaling_col(c) = .true.

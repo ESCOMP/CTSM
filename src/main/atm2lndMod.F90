@@ -781,8 +781,7 @@ contains
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
          forc_solad_col(c,1:numrad)  = forc_solad_grc(g,1:numrad)
-!         if (col%active(c)) then
-         if (lun%itype(col%landunit(c)) == istsoil) then
+         if (col%is_hillslope_column(c)) then
             if (coszen_grc(g) > 0._r8) then
                forc_solad_col(c,1:numrad)  = forc_solad_grc(g,1:numrad)*(coszen_col(c)/coszen_grc(g))
             endif
@@ -791,10 +790,10 @@ contains
             sum_wtlunit(g) = sum_wtlunit(g) + col%wtlunit(c)
          end if
       end do
+
       ! Normalize column level solar
       do c = bounds%begc,bounds%endc
-!         if (col%active(c)) then
-         if (lun%itype(col%landunit(c)) == istsoil) then
+         if (col%is_hillslope_column(c)) then
             g = col%gridcell(c)
             do n = 1,numrad
                ! absorbed energy is solar flux x area landunit (sum_wtlunit)
@@ -827,7 +826,6 @@ contains
     !
     ! !USES:
     use clm_varcon      , only : rair, cpair, grav
-    use clm_varctl      , only : use_hillslope
     !
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in)    :: bounds  
@@ -880,7 +878,7 @@ contains
 
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
-         if (lun%itype(col%landunit(c)) == istsoil) then
+         if (col%is_hillslope_column(c)) then
 
             ! spatially uniform normalization, but separate rain/snow
             rain_scalar = 1.2e-3
@@ -904,7 +902,7 @@ contains
       ! Calculate normalization (area-weighted average precipitation)
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
-         if (lun%itype(col%landunit(c)) == istsoil) then
+         if (col%is_hillslope_column(c)) then
             norm_rain(g) = norm_rain(g) + col%wtlunit(c)*forc_rain_c(c)
             norm_snow(g) = norm_snow(g) + col%wtlunit(c)*forc_snow_c(c)
             sum_wt(g)    = sum_wt(g) + col%wtlunit(c)
@@ -920,7 +918,7 @@ contains
       ! Normalize column precipitation to conserve gridcell average 
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
-         if (lun%itype(col%landunit(c)) == istsoil) then
+         if (col%is_hillslope_column(c)) then
             if (norm_rain(g) > 0._r8) then 
                forc_rain_c(c) = forc_rain_c(c) * forc_rain_g(g) / norm_rain(g)
             endif
@@ -938,7 +936,7 @@ contains
          ! Calculate normalization (area-weighted average precipitation)
          do c = bounds%begc,bounds%endc
             g = col%gridcell(c)
-            if (lun%itype(col%landunit(c)) == istsoil) then
+            if (col%is_hillslope_column(c)) then
                norm_rain(g) = norm_rain(g) + col%wtlunit(c)*forc_rain_c(c)
                norm_snow(g) = norm_snow(g) + col%wtlunit(c)*forc_snow_c(c)
                sum_wt(g)    = sum_wt(g) + col%wtlunit(c)

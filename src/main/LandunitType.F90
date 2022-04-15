@@ -58,6 +58,7 @@ module LandunitType
      real(r8), pointer :: stream_channel_width   (:) ! stream channel bankfull width (m)
      real(r8), pointer :: stream_channel_length  (:) ! stream channel length (m)
      real(r8), pointer :: stream_channel_slope   (:) ! stream channel slope (m/m)
+     real(r8), pointer :: stream_channel_number  (:) ! number of channels in landunit
 
    contains
 
@@ -115,6 +116,7 @@ contains
     allocate(this%stream_channel_width(begl:endl));  this%stream_channel_width   (:) = nan
     allocate(this%stream_channel_length(begl:endl)); this%stream_channel_length  (:) = nan
     allocate(this%stream_channel_slope(begl:endl));  this%stream_channel_slope   (:) = nan
+    allocate(this%stream_channel_number(begl:endl)); this%stream_channel_number  (:) = nan
 
   end subroutine Init
 
@@ -153,6 +155,7 @@ contains
     deallocate(this%stream_channel_width)
     deallocate(this%stream_channel_length)
     deallocate(this%stream_channel_slope)
+    deallocate(this%stream_channel_number)
   end subroutine Clean
 
 end module LandunitType

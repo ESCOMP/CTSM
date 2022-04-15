@@ -9,7 +9,7 @@ module lnd_import_export
   use NUOPC_Model             , only : NUOPC_ModelGet
   use shr_kind_mod            , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
   use shr_sys_mod             , only : shr_sys_abort
-  use clm_varctl              , only : iulog
+  use clm_varctl              , only : iulog, use_hillslope_routing
   use clm_time_manager        , only : get_nstep
   use decompmod               , only : bounds_type, get_proc_bounds
   use lnd2atmType             , only : lnd2atm_type
@@ -864,6 +864,10 @@ contains
        do g = begg, endg
           data1d(g) = waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(g) + &
                waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
+          if(use_hillslope_routing) then
+             data1d(g) = data1d(g) + &
+                  waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g)
+          endif
        end do
        call state_setexport_1d(exportState, Flrl_rofsub, data1d(begg:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return

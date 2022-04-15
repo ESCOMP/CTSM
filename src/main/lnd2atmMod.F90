@@ -180,7 +180,7 @@ contains
     real(r8)                    , intent(in)    :: net_carbon_exchange_grc( bounds%begg: )  ! net carbon exchange between land and atmosphere, positive for source (gC/m2/s)
     !
     ! !LOCAL VARIABLES:
-    integer  :: c, g  ! indices
+    integer  :: c, l, g  ! indices
     real(r8) :: eflx_sh_ice_to_liq_grc(bounds%begg:bounds%endg) ! sensible heat flux generated from the ice to liquid conversion, averaged to gridcell
     real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
     real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen
@@ -337,15 +337,51 @@ contains
     ! lnd -> rof
     !----------------------------------------------------
 
-    call c2g( bounds, &
-         water_inst%waterfluxbulk_inst%qflx_surf_col (bounds%begc:bounds%endc), &
-         water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc   (bounds%begg:bounds%endg), &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+    if(use_hillslope_routing) then
+       ! streamflow is volume/time, so sum over landunits (do not weight)
+       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(bounds%begg:bounds%endg) = 0._r8
+       do l = bounds%begl, bounds%endl
+          g = lun%gridcell(l)
+          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) = &
+               water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) &
+               +  water_inst%waterfluxbulk_inst%qstreamflow_lun(l) &
+               *1e3_r8/(grc%area(g)*1.e6_r8)
+       enddo
+
+       ! If hillslope routing is used, exclude inputs to stream channel from gridcell averages to avoid double counting
+       call c2g( bounds, &
+            water_inst%waterfluxbulk_inst%qflx_surf_col (bounds%begc:bounds%endc), &
+            water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc   (bounds%begg:bounds%endg), &
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity',c2l_scale_type2= 'exclude_hillslope')
+       
+       call c2g( bounds, &
+            water_inst%waterfluxbulk_inst%qflx_drain_col (bounds%begc:bounds%endc), &
+            water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc   (bounds%begg:bounds%endg), &
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity',c2l_scale_type2= 'exclude_hillslope')
+       
+       call c2g( bounds, &
+            water_inst%waterfluxbulk_inst%qflx_drain_perched_col (bounds%begc:bounds%endc), &
+            water_inst%waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity',c2l_scale_type2= 'exclude_hillslope')
+       
+    else
     
-    call c2g( bounds, &
-         water_inst%waterfluxbulk_inst%qflx_drain_col (bounds%begc:bounds%endc), &
-         water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc   (bounds%begg:bounds%endg), &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+       call c2g( bounds, &
+            water_inst%waterfluxbulk_inst%qflx_surf_col (bounds%begc:bounds%endc), &
+            water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc   (bounds%begg:bounds%endg), &
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+       
+       call c2g( bounds, &
+            water_inst%waterfluxbulk_inst%qflx_drain_col (bounds%begc:bounds%endc), &
+            water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc   (bounds%begg:bounds%endg), &
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+       
+       call c2g( bounds, &
+            water_inst%waterfluxbulk_inst%qflx_drain_perched_col (bounds%begc:bounds%endc), &
+            water_inst%waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+
+    endif
 
     do c = bounds%begc, bounds%endc
        if (col%active(c)) then
@@ -383,34 +419,6 @@ contains
          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_grc(g) - &
          water_inst%waterfluxbulk_inst%qflx_liq_dynbal_grc(g)
     enddo
-
-    call c2g( bounds, &
-         water_inst%waterfluxbulk_inst%qflx_drain_perched_col (bounds%begc:bounds%endc), &
-         water_inst%waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-
-
-    if(use_hillslope_routing) then
-
-       call l2g( bounds, &
-            water_inst%waterfluxbulk_inst%qstreamflow_lun (bounds%begl:bounds%endl), &
-            water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc   (bounds%begg:bounds%endg), &
-            l2g_scale_type='unity' )
-       
-       ! convert streamflow from m3/s to mm/s (discharge to flux)
-       do g = bounds%begg, bounds%endg
-          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) = &
-               water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) &
-               * 1.e3_r8 / (1.e6_r8 * grc%area(g)) 
-       enddo
-    
-       ! for now, set surface runoff and perched drainage to zero, and
-       ! set subsurface runoff to streamflow (which accounts for all three fluxes)
-       ! instead of modifying src/cpl/*/lnd_import_export.F90
-       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg) = 0._r8
-       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg) = 0._r8
-       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(bounds%begg:bounds%endg)
-    endif
     
     call c2g( bounds, &
          water_inst%waterfluxbulk_inst%qflx_sfc_irrig_col (bounds%begc:bounds%endc), &

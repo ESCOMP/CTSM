@@ -295,6 +295,10 @@ contains
              g = lun%gridcell(l)
              lun%stream_channel_depth(l) = fstream_in(g)
           enddo
+       else
+          if (masterproc) then
+             call endrun( 'ERROR:: h_stream_depth not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          end if
        endif
        call ncd_io(ncid=ncid, varname='h_stream_width', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
        if (readvar) then
@@ -305,6 +309,10 @@ contains
              g = lun%gridcell(l)
              lun%stream_channel_width(l) = fstream_in(g)
           enddo
+       else
+          if (masterproc) then
+             call endrun( 'ERROR:: h_stream_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          end if
        end if
        call ncd_io(ncid=ncid, varname='h_stream_slope', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
        if (readvar) then
@@ -315,6 +323,10 @@ contains
              g = lun%gridcell(l)
              lun%stream_channel_slope(l) = fstream_in(g)
           enddo
+       else
+          if (masterproc) then
+             call endrun( 'ERROR:: h_stream_slope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          end if
        end if
 
        deallocate(fstream_in)
@@ -408,11 +420,15 @@ contains
              ! grc%area(g)*1.e6*lun%wtgcell(l)*pct_hillslope(l,nh)*0.01
              ! Number of representative hillslopes per landunit
              ! is the total area divided by individual area
-             
+
+             lun%stream_channel_number(l) = 0._r8
              do nh = 1, nhillslope
                 if(hillslope_area(nh) > 0._r8) then
                    nhill_per_landunit(nh) = grc%area(g)*1.e6_r8*lun%wtgcell(l) &
                         *pct_hillslope(l,nh)*0.01/hillslope_area(nh)
+
+                   lun%stream_channel_number(l) = lun%stream_channel_number(l) &
+                        + nhill_per_landunit(nh)
                 endif
              enddo
              
@@ -566,10 +582,10 @@ contains
     endif
 
     do l = bounds%begl,bounds%endl
-       if(lun%itype(l) == istsoil) then
-          ! Specify lowland/upland soil thicknesses separately
-          if(soil_profile_method == soil_profile_set_lowland_upland) then
-             do c =  lun%coli(l), lun%colf(l)
+       ! Specify lowland/upland soil thicknesses separately
+       if(soil_profile_method == soil_profile_set_lowland_upland) then
+          do c =  lun%coli(l), lun%colf(l)
+             if (col%is_hillslope_column(c)) then
                 if(col%cold(c) /= ispval) then 
                    do j = 1,nlevsoi
                       if(zisoi(j-1) > zmin_bedrock) then
@@ -587,19 +603,21 @@ contains
                       end if
                    enddo
                 endif
-             end do
-          endif
+             endif
+          end do
+       endif
           
-          ! Linear soil thickness profile
-          if(soil_profile_method == soil_profile_linear) then
-
-             min_hill_dist = minval(col%hill_distance(lun%coli(l):lun%colf(l)))
-             max_hill_dist = maxval(col%hill_distance(lun%coli(l):lun%colf(l)))
-             m = (soil_depth_lowland - soil_depth_upland)/ &
-                  (max_hill_dist - min_hill_dist)
-             b = soil_depth_upland
-             
-             do c =  lun%coli(l), lun%colf(l)
+       ! Linear soil thickness profile
+       if(soil_profile_method == soil_profile_linear) then
+          
+          min_hill_dist = minval(col%hill_distance(lun%coli(l):lun%colf(l)))
+          max_hill_dist = maxval(col%hill_distance(lun%coli(l):lun%colf(l)))
+          m = (soil_depth_lowland - soil_depth_upland)/ &
+               (max_hill_dist - min_hill_dist)
+          b = soil_depth_upland
+          
+          do c =  lun%coli(l), lun%colf(l)
+             if (col%is_hillslope_column(c)) then
                 soil_depth_col = m*(max_hill_dist - col%hill_distance(c)) + b
 
                 do j = 1,nlevsoi
@@ -607,10 +625,9 @@ contains
                       col%nbedrock(c) = j
                    end if
                 enddo
-             enddo
-          endif
-
-       endif ! end of istsoil
+             endif
+          enddo
+       endif
     enddo    ! end of loop over landunits
        
   end subroutine HillslopeSoilThicknessProfile
@@ -635,7 +652,7 @@ contains
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
-    integer :: n,nc,p,pu,pl,l,c    ! indices
+    integer :: nc,p,pu,pl,l,c    ! indices
     integer :: nclumps             ! number of clumps on this processor
     
     integer, intent(in) :: upland_ivt
@@ -648,16 +665,14 @@ contains
 
     nclumps = get_proc_clumps()
 
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, l, nh, n, c)
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, l, c)
     do nc = 1, nclumps
 
        call get_clump_bounds(nc, bounds_clump)
 
        do l = bounds_clump%begl, bounds_clump%endl
-
-          if (lun%itype(l) == istsoil) then
-             do c = lun%coli(l), lun%colf(l)
-
+          do c = lun%coli(l), lun%colf(l)
+             if (col%is_hillslope_column(c)) then
                 sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
                 sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
                 sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
@@ -685,8 +700,8 @@ contains
                       patch%wtgcell(pu) = sum_wtgrc
                    endif
                 endif
-             enddo    ! end loop c
-          endif
+             endif
+          enddo    ! end loop c
        enddo ! end loop l
     enddo    ! end loop nc
     !$OMP END PARALLEL DO
@@ -712,7 +727,7 @@ contains
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
-    integer :: n,nc,p,pu,pl,l,c    ! indices
+    integer :: nc,p,pu,pl,l,c    ! indices
     integer :: nclumps             ! number of clumps on this processor
     integer :: pdom(1)
     real(r8) :: sum_wtcol, sum_wtlun, sum_wtgrc
@@ -723,16 +738,14 @@ contains
 
     nclumps = get_proc_clumps()
 
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, l, nh, n, c)
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, l, c)
     do nc = 1, nclumps
 
        call get_clump_bounds(nc, bounds_clump)
 
        do l = bounds_clump%begl, bounds_clump%endl
-
-          if (lun%itype(l) == istsoil) then
-             do c = lun%coli(l), lun%colf(l)
-
+          do c = lun%coli(l), lun%colf(l)
+             if (col%is_hillslope_column(c)) then
                 pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
                 pdom = pdom + (col%patchi(c) - 1)
 
@@ -747,8 +760,8 @@ contains
                 patch%wtcol(pdom(1)) = sum_wtcol
                 patch%wtlunit(pdom(1)) = sum_wtlun
                 patch%wtgcell(pdom(1)) = sum_wtgrc
-             enddo    ! end loop c
-          endif
+             endif
+          enddo    ! end loop c
        enddo ! end loop l
     enddo    ! end loop nc
     !$OMP END PARALLEL DO
@@ -775,7 +788,7 @@ contains
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
-    integer :: n,nc,p,pu,pl,l,c    ! indices
+    integer :: nc,p,pu,pl,l,c    ! indices
     integer :: nclumps             ! number of clumps on this processor
     integer :: pdom(1),psubdom(1)
     integer :: plow, phigh
@@ -788,16 +801,14 @@ contains
 
     nclumps = get_proc_clumps()
 
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, l, nh, n, c)
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, l, c)
     do nc = 1, nclumps
 
        call get_clump_bounds(nc, bounds_clump)
 
        do l = bounds_clump%begl, bounds_clump%endl
-
-          if (lun%itype(l) == istsoil) then
-             do c = lun%coli(l), lun%colf(l)
-
+          do c = lun%coli(l), lun%colf(l)
+             if (col%is_hillslope_column(c)) then
                 pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
                 ! create mask to exclude pdom
                 allocate(mask(col%npatches(c)))
@@ -858,8 +869,8 @@ contains
                    patch%wtlunit(phigh) = sum_wtlun
                    patch%wtgcell(phigh) = sum_wtgrc
                 endif
-             enddo    ! end loop c
-          endif
+             endif
+          enddo    ! end loop c
        enddo ! end loop l
     enddo    ! end loop nc
     !$OMP END PARALLEL DO
@@ -885,7 +896,7 @@ contains
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
-    integer :: n,nc,p,pc,l,c    ! indices
+    integer :: nc,p,pc,l,c    ! indices
     integer :: nclumps             ! number of clumps on this processor
     real(r8) :: sum_wtcol, sum_wtlun, sum_wtgrc
     type(bounds_type) :: bounds_proc
@@ -895,15 +906,14 @@ contains
 
     nclumps = get_proc_clumps()
 
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, l, nh, n, c)
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, l, c)
     do nc = 1, nclumps
 
        call get_clump_bounds(nc, bounds_clump)
 
        do l = bounds_clump%begl, bounds_clump%endl
-
-          if (lun%itype(l) == istsoil) then
-             do c = lun%coli(l), lun%colf(l)
+          do c = lun%coli(l), lun%colf(l)
+             if (col%is_hillslope_column(c)) then
                 ! this may require modifying
                 ! subgridMod/natveg_patch_exists to ensure that
                 ! a patch exists on each column
@@ -912,7 +922,6 @@ contains
                 pc = ispval
                 do p = col%patchi(c), col%patchf(c)
                    if(patch%itype(p) == col%hill_pftndx(c)) pc = p
-!scs                   if(patch%itype(p) == 1) pc = p
                 enddo
                 
                 ! only reweight if pft exist within column
@@ -936,8 +945,8 @@ contains
                    write(iulog,*) 'location ',c,grc%londeg(col%gridcell(c)),grc%latdeg(col%gridcell(c))
                    
                 endif
-             enddo    ! end loop c
-          endif
+             endif
+          enddo    ! end loop c
        enddo ! end loop l
     enddo    ! end loop nc
     !$OMP END PARALLEL DO
@@ -994,7 +1003,8 @@ contains
       dtime = get_step_size_real()
 
       do l = bounds%begl,bounds%endl
-         if(lun%itype(l) == istsoil) then          
+         qstreamflow(l) = 0._r8
+         if(lun%itype(l) == istsoil) then
             ! Streamflow calculated from Manning equation
             if(streamflow_method == streamflow_manning) then
                cross_sectional_area = stream_water_volume(l) &
@@ -1027,11 +1037,15 @@ contains
                   else
                      qstreamflow(l) = cross_sectional_area * flow_velocity
                   endif
+
+                  ! scale streamflow by number of channel 'branches'
+                  qstreamflow(l) = qstreamflow(l) * lun%stream_channel_number(l) * 1e3
+
                   qstreamflow(l) = max(0._r8,min(qstreamflow(l),stream_water_volume(l)/dtime))
-               end if
-          endif
-       endif ! end of istsoil
-    enddo    ! end of loop over landunits
+               endif
+            endif
+         endif ! end of istsoil
+      enddo    ! end of loop over landunits
 
   end associate
 
@@ -1066,6 +1080,7 @@ contains
     integer               :: c, l, g, i, j
     real(r8) :: qflx_surf_vol                           ! volumetric surface runoff (m3/s)
     real(r8) :: qflx_drain_perched_vol                  ! volumetric perched water table runoff (m3/s)
+    real(r8) :: qflx_rsub_sat_vol                       ! volumetric correction runoff (m3/s)
     real(r8) :: dtime                                   ! land model time step (sec)
 
     character(len=*), parameter :: subname = 'HillslopeUpdateStreamWater'
@@ -1075,7 +1090,8 @@ contains
          stream_water_volume     =>    waterstatebulk_inst%stream_water_lun    , & ! Input/Output:  [real(r8) (:)   ] stream water volume (m3)
          qstreamflow             =>    waterfluxbulk_inst%qstreamflow_lun      , & ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
          qdischarge              =>    waterfluxbulk_inst%qdischarge_col       , & ! Input: [real(r8) (:)   ]  discharge from columns (m3/s)
-         qflx_drain_perched      =>    waterfluxbulk_inst%qflx_drain_perched_col, & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
+         qflx_drain_perched      =>    waterfluxbulk_inst%qflx_drain_perched_col, &! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
+         qflx_rsub_sat           =>    waterfluxbulk_inst%qflx_rsub_sat_col    , & ! Input:  [real(r8) (:)   ]  column level correction runoff (mm H2O /s)
          qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col        , & ! Input: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
          stream_water_depth      =>    waterstatebulk_inst%stream_water_depth_lun & ! Output:  [real(r8) (:)   ] stream water depth (m)
          )
@@ -1084,21 +1100,32 @@ contains
        dtime = get_step_size_real()
 
        do l = bounds%begl,bounds%endl
-          g = lun%gridcell(l)
-          
-          if(lun%itype(l) == istsoil) then            
+          if(lun%itype(l) == istsoil) then
+             g = lun%gridcell(l)
+             
              do c = lun%coli(l), lun%colf(l)
-                qflx_surf_vol = qflx_surf(c)*1.e-3_r8 &
-                     *(grc%area(g)*1.e6_r8*col%wtgcell(c))
-                qflx_drain_perched_vol = qflx_drain_perched(c)*1.e-3_r8 &
-                     *(grc%area(g)*1.e6_r8*col%wtgcell(c))
-                stream_water_volume(l) = stream_water_volume(l) &
-                     + (qdischarge(c) + qflx_drain_perched_vol &
-                     + qflx_surf_vol) * dtime
+                if (col%is_hillslope_column(c)) then            
+                   qflx_surf_vol = qflx_surf(c)*1.e-3_r8 &
+                        *(grc%area(g)*1.e6_r8*col%wtgcell(c))
+                   qflx_drain_perched_vol = qflx_drain_perched(c)*1.e-3_r8 &
+                        *(grc%area(g)*1.e6_r8*col%wtgcell(c))
+                   ! rsub_sat is not included in qdischarge, so add explicitly
+                   qflx_rsub_sat_vol = qflx_rsub_sat(c)*1.e-3_r8 &
+                        *(grc%area(g)*1.e6_r8*col%wtgcell(c))
+                   stream_water_volume(l) = stream_water_volume(l) &
+                        + (qdischarge(c) + qflx_drain_perched_vol &
+                         + qflx_rsub_sat_vol + qflx_surf_vol) * dtime
+                endif
              enddo
              stream_water_volume(l) = stream_water_volume(l) &
                   - qstreamflow(l) * dtime
              
+             ! account for negative drainage (via searchforwater in soilhydrology)
+             if(stream_water_volume(l) < 0._r8) then
+                qstreamflow(l) = qstreamflow(l) + stream_water_volume(l)/dtime
+                stream_water_volume(l) = 0._r8
+             endif
+
              stream_water_depth(l) = stream_water_volume(l) &
                   /lun%stream_channel_length(l) &
                   /lun%stream_channel_width(l)

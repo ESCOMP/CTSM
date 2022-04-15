@@ -262,7 +262,7 @@ contains
     use clm_varctl         , only : use_subgrid_fluxes, use_snicar_frc, use_fates
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
     use landunit_varcon     , only : istsoil
-    use clm_varctl          , only : use_hillslope,downscale_hillslope_meteorology
+    use clm_varctl          , only : downscale_hillslope_meteorology
 
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)            :: bounds             ! bounds
@@ -420,12 +420,12 @@ contains
     
     do c = bounds%begc,bounds%endc
        g = col%gridcell(c)
-       if (use_hillslope .and. downscale_hillslope_meteorology .and. lun%itype(col%landunit(c)) == istsoil) then
-! calculate local incidence angle based on column slope and aspect
+       if (col%is_hillslope_column(c) .and. downscale_hillslope_meteorology) then
+          ! calculate local incidence angle based on column slope and aspect
           zenith_angle = acos(coszen_grc(g))
           
           azsun_grc(g) = shr_orb_azimuth(nextsw_cday, grc%lat(g), grc%lon(g), declinp1, zenith_angle)
-! hill_slope is [m/m], convert to radians
+          ! hill_slope is [m/m], convert to radians
           coszen_col(c) = shr_orb_cosinc(zenith_angle,azsun_grc(g),atan(col%hill_slope(c)),col%hill_aspect(c))
 
        if(coszen_grc(g) > 0._r8 .and. coszen_col(c) < 0._r8) coszen_col(c) = 0._r8

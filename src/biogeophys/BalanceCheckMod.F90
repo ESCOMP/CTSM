@@ -559,6 +559,7 @@ contains
           qflx_qrgwl_grc          =>    waterlnd2atm_inst%qflx_rofliq_qgwl_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level qflx_surf at glaciers, wetlands, lakes
           qflx_drain_col          =>    waterflux_inst%qflx_drain_col           , & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
           qflx_drain_grc          =>    waterlnd2atm_inst%qflx_rofliq_qsub_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level drainage (mm H20 /s)
+          qflx_streamflow_grc     =>    waterlnd2atm_inst%qflx_rofliq_stream_grc, & ! Input: [real(r8) (:)   ] streamflow [mm H2O/s]             
           qflx_ice_runoff_col     =>    waterlnd2atm_inst%qflx_ice_runoff_col   , & ! Input:  [real(r8) (:)   ] column level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
           qflx_ice_runoff_grc     =>    waterlnd2atm_inst%qflx_rofice_grc       , & ! Input:  [real(r8) (:)   ] grid cell-level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
           qflx_sl_top_soil        =>    waterflux_inst%qflx_sl_top_soil_col     , & ! Input:  [real(r8) (:)   ]  liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
@@ -738,18 +739,10 @@ contains
 
        ! add landunit level flux variable, convert from (m3/s) to (kg m-2 s-1)
        if (use_hillslope_routing) then
-          do l = bounds%begl, bounds%endl
-             g = lun%gridcell(l)
-             ! input water flux to stream channel (-)
+          ! output water flux from streamflow (+)
+          do g = bounds%begg, bounds%endg
              errh2o_grc(g) = errh2o_grc(g) &
-               - (qflx_surf_grc(g)  &
-               + qflx_drain_grc(g)  &
-               + qflx_drain_perched_grc(g)) * dtime
-
-             ! output water flux from streamflow (+)
-             errh2o_grc(g) = errh2o_grc(g) &
-                  +  waterflux_inst%qstreamflow_lun(l) &
-                  *1e3_r8/(grc%area(g)*1.e6_r8) * dtime
+                  +  qflx_streamflow_grc(g) * dtime
           enddo
        endif
 
@@ -912,8 +905,7 @@ contains
              ! in the urban radiation module
              if (.not. lun%urbpoi(l)) then
                 ! patch radiation will no longer balance gridcell values 
-!scs: should add a check that columns add to gridcell
-                if(use_hillslope .and. lun%itype(l) == istsoil) then
+                if(col%is_hillslope_column(c)) then
                    errsol(p) = fsa(p) + fsr(p) &
                         - (forc_solad_col(c,1) + forc_solad_col(c,2) + forc_solai(g,1) + forc_solai(g,2))
                 else

@@ -1551,6 +1551,7 @@ contains
      associate(                                                            & 
           dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
           z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
+          zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
           t_soisno           =>    temperature_inst%t_soisno_col         , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
 
           h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
@@ -1569,34 +1570,35 @@ contains
 
           ! define frost table as first frozen layer with unfrozen layer above it
           if(t_soisno(c,1) > tfrz) then 
-             k_frz=nlevsoi
+             k_frz = nlevsoi
           else
-             k_frz=1
+             k_frz = 1
           endif
 
-          do k=2, nlevsoi
+          do k=2,nlevsoi
              if (t_soisno(c,k-1) > tfrz .and. t_soisno(c,k) <= tfrz) then
-                k_frz=k
+                k_frz = k
                 exit
              endif
           enddo
 
-          frost_table(c)=z(c,k_frz)
+          ! frost table is top of frozen layer
+          frost_table(c)=z(c,k_frz-1)
 
-          ! initialize perched water table to frost table, and qflx_drain_perched(c) to zero
-          zwt_perched(c)=frost_table(c)
+          ! initialize perched water table to frost table
+          zwt_perched(c) = frost_table(c)
 
           !=======  water table above frost table  ===================
           ! if water table is above frost table, do nothing 
           if (zwt(c) < frost_table(c) .and. t_soisno(c,k_frz) <= tfrz &
                .and. origflag == 0) then
-          else 
+          else if (k_frz > 1) then
              !==========  water table below frost table  ============
              ! locate perched water table from bottom up starting at 
              ! frost table sat_lev is an arbitrary saturation level 
              ! used to determine perched water table
 
-             sat_lev=0.9
+             sat_lev = 0.9
 
              k_perch=1
              do k=k_frz,1,-1
@@ -1604,15 +1606,16 @@ contains
                      + h2osoi_ice(c,k)/(dz(c,k)*denice)
 
                 if (h2osoi_vol(c,k)/watsat(c,k) <= sat_lev) then 
-                   k_perch=k
+                   k_perch = k
                    exit
                 endif
              enddo
 
-             ! if frost_table = nlevsoi, only compute perched water table if frozen
-             if (t_soisno(c,k_frz) > tfrz) k_perch=k_frz
+             ! if frost_table = nlevsoi, check temperature of layer, 
+             ! and only compute perched water table if frozen
+             if (t_soisno(c,k_frz) > tfrz) k_perch = k_frz
 
-             ! if perched water table exists
+             ! if perched water table exists above frost table, 
              ! interpolate between k_perch and k_perch+1 to find 
              ! perched water table height
              if (k_frz > k_perch) then
@@ -1621,11 +1624,14 @@ contains
                 s2 = (h2osoi_liq(c,k_perch+1)/(dz(c,k_perch+1)*denh2o) &
                      + h2osoi_ice(c,k_perch+1)/(dz(c,k_perch+1)*denice))/watsat(c,k_perch+1)
 
-                m=(z(c,k_perch+1)-z(c,k_perch))/(s2-s1)
-                b=z(c,k_perch+1)-m*s2
-                zwt_perched(c)=max(0._r8,m*sat_lev+b)
-
-             endif !k_frz > k_perch 
+                if (s1 > s2) then 
+                   zwt_perched(c) = zi(c,k_perch-1)
+                else
+                   m=(z(c,k_perch+1)-z(c,k_perch))/(s2-s1)
+                   b=z(c,k_perch+1)-m*s2
+                   zwt_perched(c)=max(0._r8,m*sat_lev+b)
+                endif
+             endif
           endif
        end do
 
@@ -1716,16 +1722,16 @@ contains
        ! locate frost table and perched water table   
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
-          k_frost(c)=nbedrock(c)
-          k_perch(c)=nbedrock(c)
-          do k=1, nbedrock(c)
+          k_frost(c) = nbedrock(c)
+          k_perch(c) = nbedrock(c)
+          do k=1,nbedrock(c)
              if (frost_table(c) >= zi(c,k-1) .and. frost_table(c) <= zi(c,k)) then
                 k_frost(c)=k
                 exit
              endif
           enddo
           
-          do k=1, nbedrock(c)
+          do k=1,nbedrock(c)
              if (zwt_perched(c) >= zi(c,k-1) .and. zwt_perched(c) <= zi(c,k)) then
                 k_perch(c)=k
                 exit
@@ -1794,31 +1800,52 @@ contains
 
                 ! Calculate transmissivity of source column
                 transmis = 0._r8
-                if(c_src /= ispval) then 
-                   ! sum of layer transmissivities
-                   if (transmissivity_method == 'layersum') then
-                      do k = k_perch(c_src), k_frost(c_src)
-                         if(k == k_perch(c_src)) then
-                            transmis = transmis + 1.e-3_r8*hksat(c_src,k)*(zi(c_src,k) - zwt_perched(c_src))
-                         else
-                            transmis = transmis + 1.e-3_r8*hksat(c_src,k)*dz(c_src,k)
-                         endif
-                      end do
-                      ! adjust by 'anisotropy factor'
-                      transmis = k_anisotropic*transmis
-                   endif
-                   ! constant conductivity based on shallowest saturated layer hk
-                   if (transmissivity_method == 'constant') then
-                      transmis = k_anisotropic*(1.e-3_r8*hksat(c_src,k_perch(c_src))) &
-                           *(zi(c_src,k_frost(c_src)) - zwt_perched(c_src) )
-                   endif
-                   ! power law profile based on shallowest saturated layer hk
-                   if (transmissivity_method == 'power') then
-                   endif
-                else
+                if(c_src == ispval) then
+                   ! lowland, losing stream
+
                    ! transmissivity of losing stream (c_src == ispval)
-                   transmis = k_anisotropic*(1.e-3_r8*hksat(c,k_perch(c_dst)))*stream_water_depth
+                   transmis = (1.e-3_r8*hksat(c,k_perch(c_dst)))*stream_water_depth
+                else
+                   ! if k_perch equals k_frost, no perched saturated zone exists
+                   if(k_perch(c_src) < k_frost(c_src)) then
+                      if (transmissivity_method == 'layersum') then
+                         do k = k_perch(c_src), k_frost(c_src)-1
+                            if(k == k_perch(c_src)) then
+                               transmis = transmis + 1.e-3_r8*hksat(c_src,k)*(zi(c_src,k) - zwt_perched(c_src))
+                            else
+                               if(c_dst == ispval) then 
+                                  ! lowland, gaining stream
+                                  ! only include layers above stream channel bottom
+                                  if ((col%hill_elev(c_src)-z(c_src,k)) > (-stream_channel_depth)) then
+                                     
+                                     transmis = transmis + 1.e-3_r8*hksat(c_src,k)*dz(c_src,k)
+                                  endif
+                               else
+                                  ! uplands
+                                  ! only include layers above dst water table elevation
+                                  if ((col%hill_elev(c_src)-z(c_src,k)) > (col%hill_elev(c_dst) - zwt_perched(c_dst))) then
+
+                                     transmis = transmis + 1.e-3_r8*hksat(c_src,k)*dz(c_src,k)
+                                  endif
+                               endif
+                            endif
+                         enddo
+                      endif
+
+                      
+                      ! constant conductivity based on shallowest saturated layer hk
+                      if (transmissivity_method == 'constant') then
+                         transmis = (1.e-3_r8*hksat(c_src,k_perch(c_src))) &
+                              *(zi(c_src,k_frost(c_src)) - zwt_perched(c_src) )
+                      endif
+                      ! power law profile based on shallowest saturated layer hk
+                      if (transmissivity_method == 'power') then
+                      endif
+                   endif
                 endif
+
+                ! adjust by 'anisotropy factor'
+                transmis = k_anisotropic*transmis
 
                 qflx_drain_perched_vol(c) = transmis*col%hill_width(c)*dgrad
                 qflx_drain_perched_out(c) = 1.e3_r8*(qflx_drain_perched_vol(c)/col%hill_area(c))
@@ -1831,7 +1858,8 @@ contains
 
                 wtsub = 0._r8
                 q_perch = 0._r8
-                do k = k_perch(c), k_frost(c)
+! this should be consistent with hillslope and k_perch=k_frost means no saturated zone; should probably change q_perch to tranmis and change units and q_perch_max
+                do k = k_perch(c), k_frost(c)-1
                    q_perch = q_perch + hksat(c,k)*dz(c,k)
                    wtsub = wtsub + dz(c,k)
                 end do
@@ -1865,7 +1893,8 @@ contains
           
           ! remove drainage from perched saturated layers
           drainage_tot = qflx_drain_perched(c) * dtime
-          do k = k_perch(c), k_frost(c)
+          ! ignore frozen layer (k_frost)
+          do k = k_perch(c), k_frost(c)-1
 
              s_y = watsat(c,k) &
                   * ( 1. - (1.+1.e3*zwt_perched(c)/sucsat(c,k))**(-1./bsw(c,k)))
@@ -1949,7 +1978,7 @@ contains
 
           ! locate water table from bottom up starting at bottom of soil column
           ! sat_lev is an arbitrary saturation level used to determine water table
-          sat_lev=0.9
+          sat_lev = 0.9
           
           k_zwt=nbedrock(c)
           sat_flag=1 !will remain unchanged if all layers at saturation
@@ -2229,6 +2258,12 @@ contains
                endif
             end if
 
+
+            !scs: in cases of bad data, where hand differences in 
+            ! adjacent bins are very large, cap maximum dgrad
+            ! should a warning be used instead?
+            dgrad = min(max(dgrad,-2._r8),2._r8)
+            
             ! Calculate transmissivity of source column
             if (dgrad >= 0._r8) then
                c_src = c
@@ -2246,7 +2281,19 @@ contains
                         if(j == jwt(c_src)+1) then
                            transmis = transmis + 1.e-3_r8*ice_imped(c_src,j)*hksat(c_src,j)*(zi(c_src,j) - zwt(c_src))
                         else
-                           transmis = transmis + 1.e-3_r8*ice_imped(c_src,j)*hksat(c_src,j)*dz(c_src,j)
+                           if(c_dst == ispval) then 
+                              ! lowland, gaining stream
+                              ! only include layers above stream channel bottom
+                              if ((col%hill_elev(c_src)-z(c_src,j)) > (-stream_channel_depth)) then
+                                 
+                                 transmis = transmis + 1.e-3_r8*ice_imped(c_src,j)*hksat(c_src,j)*dz(c_src,j)
+                              endif
+                           else
+                              ! uplands
+                              if ((col%hill_elev(c_src)-z(c_src,j)) > (col%hill_elev(c_dst) - zwt(c_dst))) then
+                                 transmis = transmis + 1.e-3_r8*ice_imped(c_src,j)*hksat(c_src,j)*dz(c_src,j)
+                              endif
+                           endif
                         endif
                      end do
                   endif
@@ -2495,8 +2542,8 @@ contains
           ! Instead of removing water from aquifer where it eventually
           ! shows up as excess drainage to the ocean, take it back out of 
           ! drainage
-          qflx_rsub_sat(c) = qflx_rsub_sat(c) - xs(c)/dtime
 
+          qflx_rsub_sat(c) = qflx_rsub_sat(c) - xs(c)/dtime
        end do
 
 

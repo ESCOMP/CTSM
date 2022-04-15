@@ -101,6 +101,104 @@ module subgridAveMod
 contains
 
   !-----------------------------------------------------------------------
+  subroutine set_c2l_scale (bounds, c2l_scale_type, scale_c2l)
+    !
+    ! !DESCRIPTION:
+    ! Set scale_c2l for different c2l_scale_type values
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds        
+    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging (see note at top of module)
+    real(r8), intent(out) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor for column->landunit mapping
+
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: c,l                       ! indices
+    !------------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    SHR_ASSERT_ALL_FL((ubound(scale_c2l) == (/bounds%endc/)), sourcefile, __LINE__)
+
+    if (c2l_scale_type == 'unity') then
+       do c = bounds%begc,bounds%endc
+          scale_c2l(c) = 1.0_r8
+       end do
+    else if (c2l_scale_type == 'urbanf') then
+       do c = bounds%begc,bounds%endc
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0_r8
+             else if (col%itype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
+    else if (c2l_scale_type == 'urbans') then
+       do c = bounds%begc,bounds%endc
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
+    else
+       write(iulog,*)'set_c2l_scale: scale type ',c2l_scale_type,' not supported'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+
+  end subroutine set_c2l_scale
+    
+  subroutine set_c2l_scale_hillslope (bounds, c2l_scale_type, scale_c2l)
+    !
+    ! !DESCRIPTION:
+    ! Set scale_c2l for hillslope c2l_scale_type values 
+    ! set_c2l_scale must be called before set_c2l_scale_hillslope
+    ! Only hillslope column values are changed
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds        
+    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging (see note at top of module)
+    real(r8), intent(inout) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor for column->landunit mapping
+
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: c,l                       ! indices
+    !------------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    SHR_ASSERT_ALL_FL((ubound(scale_c2l) == (/bounds%endc/)), sourcefile, __LINE__)
+
+    if (c2l_scale_type == 'exclude_hillslope') then
+       do c = bounds%begc,bounds%endc
+          ! Only modify values of hillslope columns
+          if (col%is_hillslope_column(c)) then
+             scale_c2l(c) = 0.0_r8
+          endif
+       enddo
+    else
+       write(iulog,*)'set_c2l_scale: scale type ',c2l_scale_type,' not supported'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+
+  end subroutine set_c2l_scale_hillslope
+    
+  !-----------------------------------------------------------------------
   subroutine p2c_1d (bounds, parr, carr, p2c_scale_type)
     !
     ! !DESCRIPTION:
@@ -770,48 +868,7 @@ contains
        l_include_inactive = .false.
     end if
 
-    if (c2l_scale_type == 'unity') then
-       do c = bounds%begc,bounds%endc
-          scale_c2l(c) = 1.0_r8
-       end do
-    else if (c2l_scale_type == 'urbanf') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0_r8
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else if (c2l_scale_type == 'urbans') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else
-       write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
+    call set_c2l_scale (bounds, c2l_scale_type, scale_c2l)    
 
     larr(bounds%begl : bounds%endl) = spval
     sumwt(bounds%begl : bounds%endl) = 0._r8
@@ -866,48 +923,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(carr) == (/bounds%endc, num2d/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(larr) == (/bounds%endl, num2d/)), sourcefile, __LINE__)
 
-    if (c2l_scale_type == 'unity') then
-       do c = bounds%begc,bounds%endc
-          scale_c2l(c) = 1.0_r8
-       end do
-    else if (c2l_scale_type == 'urbanf') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0_r8
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else if (c2l_scale_type == 'urbans') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else
-       write(iulog,*)'c2l_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
+    call set_c2l_scale (bounds, c2l_scale_type, scale_c2l)    
 
     larr(bounds%begl : bounds%endl, :) = spval
     do j = 1,num2d
@@ -940,7 +956,7 @@ contains
   end subroutine c2l_2d
 
   !-----------------------------------------------------------------------
-  subroutine c2g_1d(bounds, carr, garr, c2l_scale_type, l2g_scale_type)
+  subroutine c2g_1d(bounds, carr, garr, c2l_scale_type, l2g_scale_type, c2l_scale_type2)
     !
     ! !DESCRIPTION:
     ! Perfrom subgrid-average from columns to gridcells.
@@ -952,6 +968,7 @@ contains
     real(r8), intent(out) :: garr( bounds%begg: )  ! output gridcell array
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging (see note at top of module)
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
+    character(len=*), intent(in), optional :: c2l_scale_type2 ! second scale factor type 
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,g,index                     ! indices
@@ -968,49 +985,13 @@ contains
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
 
-    if (c2l_scale_type == 'unity') then
-       do c = bounds%begc,bounds%endc
-          scale_c2l(c) = 1.0_r8
-       end do
-    else if (c2l_scale_type == 'urbanf') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0_r8
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else if (c2l_scale_type == 'urbans') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else
-       write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
+    call set_c2l_scale (bounds, c2l_scale_type, scale_c2l)
 
+    ! Adjust scale_c2l for hillslope columns only
+    if (present(c2l_scale_type2)) then
+       call set_c2l_scale_hillslope (bounds, c2l_scale_type2, scale_c2l)    
+    endif
+    
     garr(bounds%begg : bounds%endg) = spval
     sumwt(bounds%begg : bounds%endg) = 0._r8
     do c = bounds%begc,bounds%endc
@@ -1041,7 +1022,7 @@ contains
   end subroutine c2g_1d
 
   !-----------------------------------------------------------------------
-  subroutine c2g_2d(bounds, num2d, carr, garr, c2l_scale_type, l2g_scale_type)
+  subroutine c2g_2d(bounds, num2d, carr, garr, c2l_scale_type, l2g_scale_type, c2l_scale_type2)
     !
     ! !DESCRIPTION:
     ! Perfrom subgrid-average from columns to gridcells.
@@ -1054,6 +1035,7 @@ contains
     real(r8), intent(out) :: garr( bounds%begg: , 1: ) ! output gridcell array
     character(len=*), intent(in) :: c2l_scale_type     ! scale factor type for averaging (see note at top of module)
     character(len=*), intent(in) :: l2g_scale_type     ! scale factor type for averaging
+    character(len=*), intent(in), optional :: c2l_scale_type2 ! second scale factor type 
     !
     ! !LOCAL VARIABLES:
     integer  :: j,c,g,l,index                       ! indices
@@ -1070,48 +1052,12 @@ contains
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
 
-    if (c2l_scale_type == 'unity') then
-       do c = bounds%begc,bounds%endc
-          scale_c2l(c) = 1.0_r8
-       end do
-    else if (c2l_scale_type == 'urbanf') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0_r8
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else if (c2l_scale_type == 'urbans') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else
-       write(iulog,*)'c2g_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
+    call set_c2l_scale (bounds, c2l_scale_type, scale_c2l)
+
+    ! Adjust scale_c2l for hillslope columns only
+    if (present(c2l_scale_type2)) then
+       call set_c2l_scale_hillslope (bounds, c2l_scale_type2, scale_c2l)    
+    endif
 
     garr(bounds%begg : bounds%endg,:) = spval
     do j = 1,num2d
