@@ -50,8 +50,8 @@ def fsurdat_modifier(cfg_path):
     # entirely from the .cfg file
     idealized = get_config_value(config=config, section=section,
         item='idealized', file_path=cfg_path, convert_to_type=bool)
-    zero_nonveg = get_config_value(config=config, section=section,
-        item='zero_nonveg', file_path=cfg_path, convert_to_type=bool)
+    include_nonveg = get_config_value(config=config, section=section,
+        item='include_nonveg', file_path=cfg_path, convert_to_type=bool)
 
     lnd_lat_1 = get_config_value(config=config, section=section,
         item='lnd_lat_1', file_path=cfg_path, convert_to_type=float)
@@ -130,11 +130,11 @@ def fsurdat_modifier(cfg_path):
         modify_fsurdat.setvar_lev0('SOIL_COLOR', soil_color)
         logger.info('soil_color complete')
 
-    if zero_nonveg:
+    if not include_nonveg:
         modify_fsurdat.zero_nonveg()
         logger.info('zero_nonveg complete')
 
-    # The set_dom_plant call follows zero_nonveg because it modifies PCT_NATVEG
+    # set_dom_plant follows zero_nonveg because it modifies PCT_NATVEG
     # and PCT_CROP in the user-defined rectangle
     if dom_plant is not None:
         modify_fsurdat.set_dom_plant(dom_plant=dom_plant,
