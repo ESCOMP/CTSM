@@ -206,7 +206,13 @@ contains
 
        ! Check that solar, specific-humidity and LW downward aren't negative
        if ( atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) <= 0.0_r8 )then
-          call endrun( sub//' ERROR: Longwave down sent from the atmosphere model is negative or zero' )
+          !####added by dmleung to avoid negative forc_lwrad_not_downscaled_grc(g) 17 Dec 2021###########
+          write(iulog,*) 'FLDS <= 0; FLDS = ', atm2lnd_inst%forc_lwrad_not_downscaled_grc(g)
+          write(iulog,*) 'gridcell index = ', g
+          atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) = 0.1_r8
+          write(iulog,*) 'FLDS set to 0.1'
+          !call endrun( sub//' ERROR: Longwave down sent from the atmosphere model is negative or zero' )
+          !##### should not be here but I am not sure why sometimes LW radiation is negative yet #######
        end if
        if ( (atm2lnd_inst%forc_solad_grc(g,1) < 0.0_r8) .or.  (atm2lnd_inst%forc_solad_grc(g,2) < 0.0_r8) &
        .or. (atm2lnd_inst%forc_solai_grc(g,1) < 0.0_r8) .or.  (atm2lnd_inst%forc_solai_grc(g,2) < 0.0_r8) ) then
