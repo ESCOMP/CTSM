@@ -960,14 +960,48 @@ program mksurfdata
         ! north pole is assumed as non-land
         ! pctlak, pctwet, pcturb and pctgla were calculated ABOVE
         ! pctnatpft and pctcft were calculated ABOVE
+        ! TODO slevis: Same loop as when not transient, so use a subroutine as
+        ! in the old mksurfdata_map BUT should normalization be done differently
+        ! here to accept the changes in transient terms at that expense of
+        ! non transient terms?
         do n = 1,lsize_o
            if (abs(lat(n) - 90._r8) < 1.e-6_r8) then
               pctlak(n) = 0._r8
               pctwet(n) = 0._r8
               pcturb(n) = 0._r8
               pctgla(n) = 100._r8
-              call pctnatpft(n)%set_pct_l2g(0._r8)
-              call pctcft(n)%set_pct_l2g(0._r8)
+              call pctnatpft(n)%set_pct_l2g(0._r8)  ! TODO slevis: add these...
+              call pctcft(n)%set_pct_l2g(0._r8)  ! ...to non transient?
+           end if
+
+           ! Truncate all percentage fields on output grid to ensure wt = 0
+           ! (not a very small number such as 1e-16) where it should be zero
+           pctlak(n) = float(nint(pctlak(n)))
+           pctwet(n) = float(nint(pctwet(n)))
+           pctgla(n) = float(nint(pctgla(n)))
+
+           ! Assume wetland, glacier and/or lake when dataset landmask implies ocean
+           if (pctlnd_pft(n) < 1.e-6_r8) then
+              if (pctgla(n) < 1.e-6_r8) then
+                 pctwet(n) = 100._r8 - pctlak(n)
+                 pctgla(n) = 0._r8
+              else
+                 pctwet(n)  = max(100._r8 - pctgla(n) - pctlak(n), 0.0_r8)
+              end if
+              pcturb(n) = 0._r8
+           end if
+
+           ! Make sure sum of all land cover types except natural vegetation
+           ! does not exceed 100. If it does, subtract excess from these land
+           ! cover types proportionally.
+
+           suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
+           if (suma > 100._r4) then
+              pctlak(n) = pctlak(n) * 100._r8 / suma
+              pctwet(n) = pctwet(n) * 100._r8 / suma
+              pcturb(n) = pcturb(n) * 100._r8 / suma
+              pctgla(n) = pctgla(n) * 100._r8 / suma
+              call pctcft(n)%set_pct_l2g(pctcft(n)%get_pct_l2g() * 100._r8 / suma)
            end if
         end do
 
