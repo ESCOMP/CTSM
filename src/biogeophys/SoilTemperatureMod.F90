@@ -1215,7 +1215,7 @@ contains
                supercool(c,j) = 0.0_r8
                if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop .or. col%itype(c) == icol_road_perv) then
                   if(t_soisno(c,j) < tfrz) then
-                     smp = hfus*(tfrz-t_soisno(c,j))/(grav*t_soisno(c,j)) * 1000._r8  !(mm)
+                     smp = hfus*(tfrz-max(t_soisno(c,j),263._r8))/(grav*max(t_soisno(c,j),263._r8)) * 1000._r8  !(mm)
                      supercool(c,j) = watsat(c,j)*(smp/sucsat(c,j))**(-1._r8/bsw(c,j))
                      supercool(c,j) = supercool(c,j)*dz(c,j)*1000._r8       ! (mm)
                   endif

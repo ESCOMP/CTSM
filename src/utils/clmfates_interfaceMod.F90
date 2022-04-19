@@ -50,6 +50,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
    use clm_varctl        , only : use_fates_planthydro
+   use clm_varctl        , only : use_fates_frosthard
    use clm_varctl        , only : use_fates_cohort_age_tracking
    use clm_varctl        , only : use_fates_ed_st3
    use clm_varctl        , only : use_fates_ed_prescribed_phys
@@ -263,6 +264,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_logging
      integer                                        :: pass_ed_prescribed_phys
      integer                                        :: pass_planthydro
+     integer                                        :: pass_frosthard 
      integer                                        :: pass_inventory_init
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
@@ -390,6 +392,13 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('use_planthydro',ival=pass_planthydro)
 
+        if(use_fates_frosthard) then
+           pass_frosthard = 1
+        else
+           pass_frosthard = 0
+        end if
+        call set_fates_ctrlparms('use_frosthard',ival=pass_frosthard)
+        
         if(use_fates_cohort_age_tracking) then
            pass_cohort_age_tracking = 1
         else
@@ -851,6 +860,7 @@ module CLMFatesInterfaceMod
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 
+
          ! Decomposition fluxes
          this%fates(nc)%bc_in(s)%w_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%w_scalar_col(c,1:nlevsoil)
          this%fates(nc)%bc_in(s)%t_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%t_scalar_col(c,1:nlevsoil)
@@ -858,6 +868,26 @@ module CLMFatesInterfaceMod
          ! Soil water
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
                waterstatebulk_inst%h2osoi_vol_col(c,1:nlevsoil)
+
+         this%fates(nc)%bc_in(s)%t_veg24_pa = &
+               temperature_inst%t_veg24_patch(col%patchi(c)) 
+
+         if (use_fates_frosthard) then 
+            this%fates(nc)%bc_in(s)%temp24_si = &
+               atm2lnd_inst%temp24_patch(col%patchi(c))  
+
+            this%fates(nc)%bc_in(s)%t_mean_5yr_si = &
+               atm2lnd_inst%t_mean_5yr_patch(col%patchi(c))  
+
+            this%fates(nc)%bc_in(s)%t_min_yr_inst_si = &
+               atm2lnd_inst%t_min_yr_inst_patch(col%patchi(c))  
+
+            this%fates(nc)%bc_in(s)%tmin24_si = &
+               atm2lnd_inst%tmin24_patch(col%patchi(c))
+
+            this%fates(nc)%bc_in(s)%dayl_si = grc%dayl(col%gridcell(c)) 
+            this%fates(nc)%bc_in(s)%prev_dayl_si = grc%prev_dayl(col%gridcell(c))  
+         endif
 
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
               min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
@@ -2850,6 +2880,7 @@ module CLMFatesInterfaceMod
  subroutine wrap_hydraulics_drive(this, bounds_clump, nc, &
                                  soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, &
                                  fn, filterp, solarabs_inst, energyflux_inst)
+
 
 
    implicit none
