@@ -63,6 +63,7 @@ module NutrientCompetitionFlexibleCNMod
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: calc_npool_to_components_flexiblecn  ! Calculate npool_to_* terms for a single patch using the FlexibleCN approach
+  private :: calc_npool_to_components_agsys       ! Calculate npool_to_* terms for a single crop patch when using AgSys
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -275,6 +276,9 @@ contains
          astem                        => cnveg_state_inst%astem_patch                              , & ! Input:  [real(r8) (:)   ]  stem allocation coefficient
          aroot                        => cnveg_state_inst%aroot_patch                              , & ! Input:  [real(r8) (:)   ]  root allocation coefficient
          arepr                        => cnveg_state_inst%arepr_patch                              , & ! Input:  [real(r8) (:,:) ]  reproductive allocation coefficient(s)
+         ! aleaf_n, astem_n, aroot_n and arepr_n are also inputs when running with AgSys,
+         ! but they cannot be associated here because these pointers may be unallocated
+         ! if not running with AgSys
          c_allometry                  => cnveg_state_inst%c_allometry_patch                        , & ! Output: [real(r8) (:)   ]  C allocation index (DIM)
 
          annsum_npp                   => cnveg_carbonflux_inst%annsum_npp_patch                    , & ! Input:  [real(r8) (:)   ]  annual sum of NPP, for wood allocation
@@ -476,8 +480,34 @@ contains
          cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
 
          if (use_crop_agsys .and. ivt(p) >= npcropmin) then
-            ! FIXME(wjs, 2022-04-13) use AgSys-based method
+            call calc_npool_to_components_agsys( &
+                 ! Inputs
+                 npool = npool(p), &
+                 fcur = fcur, &
+                 f4 = f4, &
+                 ! The following inputs cannot appear in the associate statement at the
+                 ! top of the subroutine because these pointers may be unallocated if not
+                 ! running with AgSys:
+                 aleaf_n = cnveg_state_inst%aleaf_n_patch(p), &
+                 astem_n = cnveg_state_inst%astem_n_patch(p), &
+                 aroot_n = cnveg_state_inst%aroot_n_patch(p), &
+                 arepr_n = cnveg_state_inst%arepr_n_patch(p,:), &
 
+                 ! Outputs
+                 npool_to_leafn = npool_to_leafn(p), &
+                 npool_to_leafn_storage = npool_to_leafn_storage(p), &
+                 npool_to_frootn = npool_to_frootn(p), &
+                 npool_to_frootn_storage = npool_to_frootn_storage(p), &
+                 npool_to_livestemn = npool_to_livestemn(p), &
+                 npool_to_livestemn_storage = npool_to_livestemn_storage(p), &
+                 npool_to_deadstemn = npool_to_deadstemn(p), &
+                 npool_to_deadstemn_storage = npool_to_deadstemn_storage(p), &
+                 npool_to_livecrootn = npool_to_livecrootn(p), &
+                 npool_to_livecrootn_storage = npool_to_livecrootn_storage(p), &
+                 npool_to_deadcrootn = npool_to_deadcrootn(p), &
+                 npool_to_deadcrootn_storage = npool_to_deadcrootn_storage(p), &
+                 npool_to_reproductiven = npool_to_reproductiven(p,:), &
+                 npool_to_reproductiven_storage = npool_to_reproductiven_storage(p,:))
          else
             call calc_npool_to_components_flexiblecn( &
                  ! Inputs
@@ -742,6 +772,7 @@ contains
     real(r8), intent(inout) :: npool_to_deadcrootn_storage
     real(r8), intent(inout) :: npool_to_reproductiven(:)
     real(r8), intent(inout) :: npool_to_reproductiven_storage(:)
+
     !
     ! !LOCAL VARIABLES:
     real(r8) :: cnl,cnfr,cnlw,cndw ! C:N ratios for leaf, fine root, and wood
@@ -797,7 +828,6 @@ contains
          graincn  => pftcon%graincn    & ! Input:  grain C:N (gC/gN)
          )
 
-    ! set time steps
     dt = get_step_size_real()
 
     cnl  = leafcn(ivt)
@@ -985,6 +1015,94 @@ contains
     end associate
   end subroutine calc_npool_to_components_flexiblecn
 
+  !-----------------------------------------------------------------------
+  subroutine calc_npool_to_components_agsys( &
+       npool, fcur, f4, aleaf_n, astem_n, aroot_n, arepr_n, &
+       npool_to_leafn, npool_to_leafn_storage, &
+       npool_to_frootn, npool_to_frootn_storage, &
+       npool_to_livestemn, npool_to_livestemn_storage, &
+       npool_to_deadstemn, npool_to_deadstemn_storage, &
+       npool_to_livecrootn, npool_to_livecrootn_storage, &
+       npool_to_deadcrootn, npool_to_deadcrootn_storage, &
+       npool_to_reproductiven, npool_to_reproductiven_storage)
+    !
+    ! !DESCRIPTION:
+    ! Calculate npool_to_* terms for a single crop patch when using AgSys
+    !
+    ! Note that this assumes that there is no allocation to coarse roots
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(in) :: npool      ! temporary plant N pool (gN/m2)
+    real(r8), intent(in) :: fcur       ! fraction of current psn displayed as growth
+    real(r8), intent(in) :: f4         ! C allocation parameter - fraction of new wood that is live
+    real(r8), intent(in) :: aleaf_n    ! leaf allocation coefficient for N
+    real(r8), intent(in) :: astem_n    ! stem allocation coefficient for N
+    real(r8), intent(in) :: aroot_n    ! root allocation coefficient for N
+    real(r8), intent(in) :: arepr_n(:) ! reproductive allocation coefficient(s) for N
+
+    ! Each of the following output variables is in units of gN/m2/s
+    real(r8), intent(out) :: npool_to_leafn
+    real(r8), intent(out) :: npool_to_leafn_storage
+    real(r8), intent(out) :: npool_to_frootn
+    real(r8), intent(out) :: npool_to_frootn_storage
+    real(r8), intent(out) :: npool_to_livestemn
+    real(r8), intent(out) :: npool_to_livestemn_storage
+    real(r8), intent(out) :: npool_to_deadstemn
+    real(r8), intent(out) :: npool_to_deadstemn_storage
+    real(r8), intent(out) :: npool_to_livecrootn
+    real(r8), intent(out) :: npool_to_livecrootn_storage
+    real(r8), intent(out) :: npool_to_deadcrootn
+    real(r8), intent(out) :: npool_to_deadcrootn_storage
+    real(r8), intent(out) :: npool_to_reproductiven(:)
+    real(r8), intent(out) :: npool_to_reproductiven_storage(:)
+
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: dt                 ! model time step
+    integer  :: k
+
+    character(len=*), parameter :: subname = 'calc_npool_to_components_agsys'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL_FL((ubound(arepr_n) == [nrepr]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(npool_to_reproductiven) == [nrepr]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(npool_to_reproductiven_storage) == [nrepr]), sourcefile, __LINE__)
+
+    dt = get_step_size_real()
+
+    npool_to_leafn         = aleaf_n * fcur           * npool / dt
+    npool_to_leafn_storage = aleaf_n * (1._r8 - fcur) * npool / dt
+
+    npool_to_frootn         = aroot_n * fcur           * npool / dt
+    npool_to_frootn_storage = aroot_n * (1._r8 - fcur) * npool / dt
+
+    npool_to_livestemn         = astem_n * f4           * fcur           * npool / dt
+    npool_to_livestemn_storage = astem_n * f4           * (1._r8 - fcur) * npool / dt
+    npool_to_deadstemn         = astem_n * (1._r8 - f4) * fcur           * npool / dt
+    npool_to_deadstemn_storage = astem_n * (1._r8 - f4) * (1._r8 - fcur) * npool / dt
+
+    ! Assume no allocation to coarse roots for crops. If there *were* allocation to coarse
+    ! roots (via a non-zero croot_stem), we would have bigger issues with consistency
+    ! between AgSys's desired allocation and the actual C/N allocation: the way this
+    ! allocation is currently formulated, non-zero allocation to coarse roots implies that
+    ! things like aleaf and arepr aren't truly the fractional allocation to leaves and
+    ! reproductive organs: the actual allocation fractions end up being reduced somewhat
+    ! via a normalizing factor that differs from 1.
+    !
+    ! It's not really necessary to explicitly set these to 0 every time step, but we do
+    ! it to try make it obvious that this will need to change if we ever want to have
+    ! non-zero allocation to coarse roots for crops.
+    npool_to_livecrootn         = 0._r8
+    npool_to_livecrootn_storage = 0._r8
+    npool_to_deadcrootn         = 0._r8
+    npool_to_deadcrootn_storage = 0._r8
+
+    do k = 1, nrepr
+       npool_to_reproductiven(k)         = arepr_n(k) * fcur           * npool / dt
+       npool_to_reproductiven_storage(k) = arepr_n(k) * (1._r8 - fcur) * npool / dt
+    end do
+
+  end subroutine calc_npool_to_components_agsys
 
 ! -----------------------------------------------------------------------
   subroutine calc_plant_nutrient_demand(this, bounds,                          &
