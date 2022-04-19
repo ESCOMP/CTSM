@@ -4261,7 +4261,7 @@ contains
     ! !DESCRIPTION: Annual mean fields.
     !
     ! !USES:
-    use clm_time_manager, only: get_step_size_real, get_days_per_year, get_nstep
+    use clm_time_manager, only: get_step_size_real, get_curr_days_per_year, get_nstep
     use clm_varcon      , only: secspday
     !
     ! !ARGUMENTS:
@@ -4303,7 +4303,7 @@ contains
 
       ! set time steps
       dt = get_step_size_real()
-      secsperyear = real( get_days_per_year() * secspday, r8)
+      secsperyear = real( get_curr_days_per_year() * secspday, r8)
 
       do fc = 1,num_methc
          c = filter_methc(fc)
