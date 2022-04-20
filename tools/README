@@ -6,7 +6,7 @@ modification of CTSM input files.
 I.  General directory structure:
 
     $CTSMROOT/tools
-	mksurfdata_map --- Create surface datasets.
+	mksurfdata_esmf -- Create surface datasets.
 
         mkmapgrids ------- Create regular lat/lon SCRIP grid files needed by mkmapdata 
         mkmapdata -------- Create SCRIP mapping data from SCRIP grid files (uses ESMF)
