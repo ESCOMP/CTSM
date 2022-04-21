@@ -103,7 +103,6 @@ program mksurfdata
   use mkglcmecMod        , only : mkglcmecInit, mkglcmec, mkglacier
   use mkglacierregionMod , only : mkglacierregion
   use mksoiltexMod       , only : mksoiltex
-  use mksoiltexnewMod    , only : mksoiltexnew
   use mksoilfmaxMod      , only : mksoilfmax
   use mksoildepthMod     , only : mksoildepth
   use mksoilcolMod       , only : mksoilcol
@@ -192,7 +191,6 @@ program mksurfdata
   character(len=CL)               :: fname
   character(len=*), parameter     :: subname = 'mksrfdata'   ! program name
 
-  ! TODO: temporary for new soil texture data
   character(len=CL) :: mksrf_fsoitex_mapunit
   character(len=CL) :: mksrf_fsoitex_lookup
 
@@ -452,10 +450,6 @@ program mksurfdata
   ! Make soil texture [pctsand, pctclay]
   ! -----------------------------------
   if (fsurdat /= ' ') then
-     ! mapunits, PCT_SAND and PCT_CLAY are written out in the subroutine
-     !    call mksoiltex( mksrf_fsoitex_mesh, mksrf_fsoitex, mesh_model, pioid, pctlnd_pft, rc=rc)
-     !    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
-
      ! --- for a 3 second input mapunit ---
      ! mksrf_fsoitex_mapunit = &
      !      '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v5_grid.nc'
@@ -467,7 +461,7 @@ program mksurfdata
      mksrf_fsoitex_lookup = &
           '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v1_lookup2.nc'
 
-     call mksoiltexnew( mksrf_fsoitex_mesh, file_mapunit_i=mksrf_fsoitex_mapunit, file_lookup_i=mksrf_fsoitex_lookup, &
+     call mksoiltex( mksrf_fsoitex_mesh, file_mapunit_i=mksrf_fsoitex_mapunit, file_lookup_i=mksrf_fsoitex_lookup, &
           mesh_o=mesh_model, pioid_o=pioid, pctlnd_pft_o=pctlnd_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
   end if
