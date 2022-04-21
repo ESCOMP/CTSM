@@ -10,7 +10,7 @@ import logging
 import argparse
 from configparser import ConfigParser
 
-from ctsm.utils import abort
+from ctsm.utils import abort, write_output
 from ctsm.config_utils import get_config_value
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.modify_mesh_mask.modify_mesh_mask import ModifyMeshMask
@@ -72,4 +72,4 @@ def mesh_mask_modifier(cfg_path):
     # TODO modify_fsurdat could call same write_output function to avoid
     #      repetition
     # ----------------------------------------------
-    modify_mesh_mask.write_output(mesh_mask_in, mesh_mask_out)
+    write_output(modify_mesh_mask.file, mesh_mask_in, mesh_mask_out, 'mesh')

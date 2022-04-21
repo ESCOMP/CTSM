@@ -12,7 +12,6 @@ from math import isclose
 import numpy as np
 import xarray as xr
 
-from ctsm.git_utils import get_ctsm_git_short_hash
 from ctsm.utils import update_metadata
 from ctsm.config_utils import lon_range_0_to_360
 
@@ -49,38 +48,6 @@ class ModifyMeshMask:
         logger.info('Opening file to be modified: %s', file_in)
         my_file = xr.open_dataset(file_in)
         return cls(my_file, landmask_file)
-
-
-    def write_output(self, file_in, file_out):
-        """
-        Description
-        -----------
-        Write output file
-
-        Arguments
-        ---------
-        file_in:
-            (str) Command line entry of input file
-        file_out:
-            (str) Command line entry of output file
-        """
-
-        # update attributes
-        # TODO Better as dictionary?
-        title = 'Modified mesh file'
-        summary = 'Modified mesh file'
-        contact = 'N/A'
-        data_script = os.path.abspath(__file__) + " -- " + get_ctsm_git_short_hash()
-        description = 'Modified this file: ' + file_in
-        update_metadata(self.file, title=title, summary=summary,
-                        contact=contact, data_script=data_script,
-                        description=description)
-
-        # mode 'w' overwrites file if it exists
-        self.file.to_netcdf(path=file_out, mode='w',
-                            format="NETCDF3_64BIT")
-        logger.info('Successfully created: %s', file_out)
-        self.file.close()
 
 
     def set_mesh_mask(self, var):

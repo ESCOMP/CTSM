@@ -9,6 +9,8 @@ import pdb
 from datetime import date
 from getpass import getuser
 
+from ctsm.git_utils import get_ctsm_git_short_hash
+
 logger = logging.getLogger(__name__)
 
 def abort(errmsg):
@@ -123,3 +125,35 @@ def update_metadata(file, title, summary, contact, data_script, description):
     for attr in del_attrs:
         if attr in attr_list:
             del file.attrs[attr]
+
+
+def write_output(file, file_in, file_out, file_type):
+        """
+        Description
+        -----------
+        Write output file
+
+        Arguments
+        ---------
+        file_in:
+            (str) User-defined entry of input file
+        file_out:
+            (str) User-defined entry of output file
+        file_type:
+            (str) examples: mesh, fsurdat
+        """
+
+        # update attributes
+        title = 'Modified ' + file_type + ' file'
+        summary = 'Modified ' + file_type + ' file'
+        contact = 'N/A'
+        data_script = os.path.abspath(__file__) + " -- " + get_ctsm_git_short_hash()
+        description = 'Modified this file: ' + file_in
+        update_metadata(file, title=title, summary=summary,
+                        contact=contact, data_script=data_script,
+                        description=description)
+
+        # mode 'w' overwrites file if it exists
+        file.to_netcdf(path=file_out, mode='w', format="NETCDF3_64BIT")
+        logger.info('Successfully created: %s', file_out)
+        file.close()

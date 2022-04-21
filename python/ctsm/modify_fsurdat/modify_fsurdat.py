@@ -91,44 +91,6 @@ class ModifyFsurdat:
         return rectangle
 
 
-    def write_output(self, fsurdat_in, fsurdat_out):
-        """
-        Description
-        -----------
-        Write output file
-
-        Arguments
-        ---------
-        fsurdat_in:
-            (str) Command line entry of input surface dataset
-        fsurdat_out:
-            (str) Command line entry of output surface dataset
-        """
-
-        # update attributes
-        # TODO Better as dictionary?
-        title = 'Modified fsurdat file'
-        summary = 'Modified fsurdat file'
-        contact = 'N/A'
-        data_script = os.path.abspath(__file__) + " -- " + get_ctsm_git_short_hash()
-        description = 'Modified this file: ' + fsurdat_in
-        update_metadata(self.file, title=title, summary=summary,
-                        contact=contact, data_script=data_script,
-                        description=description)
-
-        # abort if output file already exists
-        file_exists = os.path.exists(fsurdat_out)
-        if file_exists:
-            errmsg = 'Output file already exists: ' + fsurdat_out
-            abort(errmsg)
-
-        # mode 'w' overwrites file if it exists
-        self.file.to_netcdf(path=fsurdat_out, mode='w',
-                            format="NETCDF3_64BIT")
-        logger.info('Successfully created fsurdat_out: %s', fsurdat_out)
-        self.file.close()
-
-
     def set_dom_plant(self, dom_plant, lai, sai, hgt_top, hgt_bot):
         """
         Description
