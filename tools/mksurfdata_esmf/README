@@ -1,0 +1,86 @@
+Most recent update of README:
+4/6/2022 slevis
+
+================
+Getting the code
+================
+> cd <user/work/area>
+> git clone https://github.com/ESCOMP/CTSM.git <dir_name>
+> cd <dir_name>
+> git checkout feature/new_mksurfdata
+
+# Save time by checking out ccs_config only
+> ./manage_externals/checkout_externals ccs_config
+
+=======================
+building the executable
+=======================
+> cd tools/mksurfdata_esmf
+> rm -rf bld  # (or the contents of /bld) before rerunning CC=...
+> mkdir ./bld
+> cd bld
+> module load intel  # I found I need the latest version of intel
+> module load python  # in case need latest version of python
+> module load cmake
+> bash
+> CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src/
+> make VERBOSE=1
+> export MKSURFDATA_BLD=`pwd`  # needed once; execute in /bld
+
+# IF YOU MODIFY .F90 files, start here first, though more than once
+# I have found it necessary to go back to the "rm -rf bld" step
+> cd ../src
+> make clean  # REMEMBER to be in bash
+> make VERBOSE=1
+
+=======================
+running for a single submission: 
+=======================
+> cd ../
+# to generate your target namelist:
+> ./gen_mksurfdata_namelist.py --help
+# for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
+> ./gen_mksurfdata_namelist.py --res <resolution> --start-year <year1> --end-year <year2>
+# to generate your target jobscript (again --help for instructions):
+> ./gen_mksurfdata_jobscript_single.py --number-of-nodes 24 --tasks-per-node 12 --namelist-file target.namelist
+> qsub mksurfdata_jobscript_single
+
+=======================
+running for the generation of multiple datasets
+=======================
+# Note that gen_mksurfdata_jobscript_multi.py runs ./gen_mksurfdata_namelist.py
+> ./gen_mksurfdata_jobscript_multi.py --help
+> ./gen_mksurfdata_jobscript_multi.py --number-of-nodes 24 --tasks-per-node 12 --scenario all
+> qsub mksurfdata_jobscript_multi
+
+================
+NOTES
+================
+
+------------------------------------------------------------
+slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
+------------------------------------------------------------
+REMEMBER TO compare against existing fsurdat files in
+/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/release-clm5.0.18
+1) Soil color & texture and ag fire peak month outputs too high in .log
+   TODO? Change frac_o from always 1.
+2) Pct lake has chged in the .log bc the old diagnostic omitted mask_i frac_o
+3) Slope, stddev have chged in the .log bc the old diag. used frac_o
+4) 1x1_brazil min number-of-nodes tested: 4; 10x15 min tested: 3
+
+------------------------------------------------------
+NOT ALL FILES HAVE BEEN TRANSLATED to cdf5 : check last millenium
+------------------------------------------------------
+> nccopy -k cdf5 oldfile newfile
+
+--------------------------------------------------------
+Override options removed that need to be placed in fsurdat_modifier
+and/or subset_data:
+--------------------------------------------------------
+--soil_clay --soil_sand for setting to these values everywhere
+--all_urban = .true.
+Normalize so that sum(urban_classes_o(n,:)) = 100 for all n, even for grid
+cells where pcturb_o(n) = 0 (in the case where pcturb_o(n) = 0, come up with an
+arbitrary assignment of urban into the different classes).
+See comments in the normalize_urbn_by_tot subroutine for how urban_classes_o is
+determined when the total % urban is 0, according to the input data.
