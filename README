@@ -52,6 +52,7 @@ Directory structure only for a CTSM checkout:
 components -------- Other active sub-components needed for CTSM to run (river routing and land-ice models)
 libraries --------- CESM libraries: MCT (Model Coupling Toolkit) and PIO
 share ------------- CESM shared code
+ccs_config -------- CIME configure files (for grids, compsets, and machines) for CESM
 
 cime/scripts --------------- cesm/cime driver scripts
 
@@ -132,13 +133,12 @@ cime_config/usermods_dirs -------- Directories of sets of user-modification subd
 test/tools/test_driver.sh -- Script for general software testing of 
                              CTSM's offline tools.
 
-tools/mksurfdata_map ---------- Directory to build program to create surface dataset 
+tools/mksurfdata_esmf --------- Directory to build program to create surface dataset 
                                 at any resolution.
-tools/mkdatadomain ------------ Directory to build program to create datm7 or docn7 
-                                domain files from clm files.
 tools/mkprocdata_map ---------- Process history data from unstructed grids to a gridded 
                                 format.
 tools/mkmapgrids -------------- NCL script to create a SCRIP grid file for a regular lat/lon grid
+tools/modify_fsurdat ---------- Script to modify existing surface datasets in standard ways
 tools/ncl_scripts  ------------ Directory of NCL and perl scripts to do various
                                 tasks. Most notably to plot perturbation error growth
                                 testing and to extract regional information from
