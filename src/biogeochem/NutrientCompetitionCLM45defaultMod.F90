@@ -17,6 +17,7 @@ module NutrientCompetitionCLM45defaultMod
   use PatchType           , only : patch                
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
   use NutrientCompetitionMethodMod, only : params_inst
+  use CropReprPoolsMod        , only : nrepr
   !use clm_varctl          , only : iulog  
   !
   implicit none
@@ -107,7 +108,7 @@ contains
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type), intent(in)    :: soilbiogeochem_nitrogenstate_inst
     real(r8)                        , intent(in)    :: aroot(bounds%begp:)
-    real(r8)                        , intent(in)    :: arepr(bounds%begp:)
+    real(r8)                        , intent(in)    :: arepr(bounds%begp:,:)
     real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)
 
     call this%calc_plant_cn_alloc (bounds, num_soilp, filter_soilp,        &
@@ -115,7 +116,7 @@ contains
          cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
          c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                 &
          aroot=aroot(bounds%begp:bounds%endp),                               &
-         arepr=arepr(bounds%begp:bounds%endp),                               &
+         arepr=arepr(bounds%begp:bounds%endp,:),                 &
          fpg_col=fpg_col(bounds%begc:bounds%endc))
 
   end subroutine calc_plant_nutrient_competition
@@ -125,7 +126,7 @@ contains
        cnveg_state_inst, crop_inst, canopystate_inst, &
        cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
        c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                 &
-       aroot, arepr, fpg_col)                                              
+       aroot, arepr, fpg_col)
     !
     ! !USES:
     use pftconMod             , only : pftcon, npcropmin
@@ -154,24 +155,24 @@ contains
     type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
     real(r8)                        , intent(in)    :: aroot(bounds%begp:)
-    real(r8)                        , intent(in)    :: arepr(bounds%begp:)
+    real(r8)                        , intent(in)    :: arepr(bounds%begp:,:)
     real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
-    integer :: c,p,l,j            ! indices
+    integer :: c,p,l,j,k          ! indices
     integer :: fp                 ! lake filter patch index
     real(r8):: f1,f2,f3,f4,g1,g2  ! allocation parameters
     real(r8):: cnl,cnfr,cnlw,cndw ! C:N ratios for leaf, fine root, and wood
     real(r8):: fcur               ! fraction of current psn displayed as growth
     real(r8):: gresp_storage      ! temporary variable for growth resp to storage
     real(r8):: nlc                ! temporary variable for total new leaf carbon allocation
-    real(r8):: f5                 ! grain allocation parameter
+    real(r8):: f5(nrepr)          ! reproductive allocation parameters
     real(r8):: cng                ! C:N ratio for grain (= cnlw for now; slevis)
     real(r8):: fsmn(bounds%begp:bounds%endp)  ! A emperate variable for adjusting FUN uptakes 
    !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(aroot)   == (/bounds%endp/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(arepr)   == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(arepr)   == (/bounds%endp, nrepr/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(fpg_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                                                       &
@@ -222,13 +223,13 @@ contains
          cpool_to_deadcrootc          => cnveg_carbonflux_inst%cpool_to_deadcrootc_patch           , & ! Output: [real(r8) (:)   ]                                          
          cpool_to_deadcrootc_storage  => cnveg_carbonflux_inst%cpool_to_deadcrootc_storage_patch   , & ! Output: [real(r8) (:)   ]                                          
          cpool_to_gresp_storage       => cnveg_carbonflux_inst%cpool_to_gresp_storage_patch        , & ! Output: [real(r8) (:)   ]  allocation to growth respiration storage (gC/m2/s)
-         cpool_to_grainc              => cnveg_carbonflux_inst%cpool_to_grainc_patch               , & ! Output: [real(r8) (:)   ]  allocation to grain C (gC/m2/s)         
-         cpool_to_grainc_storage      => cnveg_carbonflux_inst%cpool_to_grainc_storage_patch       , & ! Output: [real(r8) (:)   ]  allocation to grain C storage (gC/m2/s) 
+         cpool_to_reproductivec              => cnveg_carbonflux_inst%cpool_to_reproductivec_patch               , & ! Output: [real(r8) (:,:)   ]  allocation to grain C (gC/m2/s)
+         cpool_to_reproductivec_storage      => cnveg_carbonflux_inst%cpool_to_reproductivec_storage_patch       , & ! Output: [real(r8) (:,:)   ]  allocation to grain C storage (gC/m2/s)
          
          plant_ndemand                => cnveg_nitrogenflux_inst%plant_ndemand_patch               , & ! Output: [real(r8) (:)   ]  N flux required to support initial GPP (gN/m2/s)
          plant_nalloc                 => cnveg_nitrogenflux_inst%plant_nalloc_patch                , & ! Output: [real(r8) (:)   ]  total allocated N flux (gN/m2/s)        
-         npool_to_grainn              => cnveg_nitrogenflux_inst%npool_to_grainn_patch             , & ! Output: [real(r8) (:)   ]  allocation to grain N (gN/m2/s)         
-         npool_to_grainn_storage      => cnveg_nitrogenflux_inst%npool_to_grainn_storage_patch     , & ! Output: [real(r8) (:)   ]  allocation to grain N storage (gN/m2/s) 
+         npool_to_reproductiven              => cnveg_nitrogenflux_inst%npool_to_reproductiven_patch             , & ! Output: [real(r8) (:,:)   ]  allocation to grain N (gN/m2/s)
+         npool_to_reproductiven_storage      => cnveg_nitrogenflux_inst%npool_to_reproductiven_storage_patch     , & ! Output: [real(r8) (:,:)   ]  allocation to grain N storage (gN/m2/s)
          retransn_to_npool            => cnveg_nitrogenflux_inst%retransn_to_npool_patch           , & ! Output: [real(r8) (:)   ]  deployment of retranslocated N (gN/m2/s)
          sminn_to_npool               => cnveg_nitrogenflux_inst%sminn_to_npool_patch              , & ! Output: [real(r8) (:)   ]  deployment of soil mineral N uptake (gN/m2/s)
          npool_to_leafn               => cnveg_nitrogenflux_inst%npool_to_leafn_patch              , & ! Output: [real(r8) (:)   ]  allocation to leaf N (gN/m2/s)          
@@ -290,12 +291,16 @@ contains
            if (croplive(p).and.(.not.shr_infnan_isnan(aleaf(p)))) then
                f1 = aroot(p) / aleaf(p)
                f3 = astem(p) / aleaf(p)
-               f5 = arepr(p) / aleaf(p)
+               do k = 1, nrepr
+                  f5(k) = arepr(p,k) / aleaf(p)
+               end do
                g1 = 0.25_r8
             else
                f1 = 0._r8
                f3 = 0._r8
-               f5 = 0._r8
+               do k = 1, nrepr
+                  f5(k) = 0._r8
+               end do
                g1 = 0.25_r8
             end if
          end if
@@ -368,8 +373,10 @@ contains
             cpool_to_livecrootc_storage(p) = nlc * f2 * f3 * f4 * (1._r8 - fcur)
             cpool_to_deadcrootc(p)         = nlc * f2 * f3 * (1._r8 - f4) * fcur
             cpool_to_deadcrootc_storage(p) = nlc * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
-            cpool_to_grainc(p)             = nlc * f5 * fcur
-            cpool_to_grainc_storage(p)     = nlc * f5 * (1._r8 -fcur)
+            do k = 1, nrepr
+               cpool_to_reproductivec(p,k)         = nlc * f5(k) * fcur
+               cpool_to_reproductivec_storage(p,k) = nlc * f5(k) * (1._r8 -fcur)
+            end do
          end if
 
          ! corresponding N fluxes
@@ -397,8 +404,10 @@ contains
             npool_to_livecrootn_storage(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
             npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
             npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-            npool_to_grainn(p)             = (nlc * f5 / cng) * fcur
-            npool_to_grainn_storage(p)     = (nlc * f5 / cng) * (1._r8 -fcur)
+            do k = 1, nrepr
+               npool_to_reproductiven(p,k)         = (nlc * f5(k) / cng) * fcur
+               npool_to_reproductiven_storage(p,k) = (nlc * f5(k) / cng) * (1._r8 -fcur)
+            end do
          end if
 
          ! Calculate the amount of carbon that needs to go into growth
@@ -420,7 +429,9 @@ contains
          end if
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
             gresp_storage = gresp_storage + cpool_to_livestemc_storage(p)
-            gresp_storage = gresp_storage + cpool_to_grainc_storage(p)
+            do k = 1, nrepr
+               gresp_storage = gresp_storage + cpool_to_reproductivec_storage(p,k)
+            end do
          end if
          cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
 
@@ -473,7 +484,7 @@ contains
     type(soilbiogeochem_nitrogenstate_type), intent(in) :: soilbiogeochem_nitrogenstate_inst
     type(energyflux_type)           , intent(in)    :: energyflux_inst
     real(r8)                        , intent(out)   :: aroot(bounds%begp:)
-    real(r8)                        , intent(out)   :: arepr(bounds%begp:)
+    real(r8)                        , intent(out)   :: arepr(bounds%begp:,:)
     !-----------------------------------------------------------------------
 
     call this%calc_plant_nitrogen_demand(bounds,  num_soilp, filter_soilp, &
@@ -482,7 +493,7 @@ contains
        c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,               &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                  & 
        aroot=aroot(bounds%begp:bounds%endp),                               &
-       arepr=arepr(bounds%begp:bounds%endp))
+       arepr=arepr(bounds%begp:bounds%endp,:))
 
   end subroutine calc_plant_nutrient_demand
 
@@ -527,26 +538,30 @@ contains
     type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
     real(r8)                        , intent(out)   :: aroot(bounds%begp:)
-    real(r8)                        , intent(out)   :: arepr(bounds%begp:)
+    real(r8)                        , intent(out)   :: arepr(bounds%begp:,:)
     !
     ! !LOCAL VARIABLES:
-    integer :: c,p,l,j            ! indices
+    integer :: c,p,l,j,k          ! indices
     integer :: fp                 ! lake filter patch index
     real(r8):: mr                 ! maintenance respiration (gC/m2/s)
+    real(r8):: reproductive_mr_tot ! total maintenance respiration from grain components (gC/m2/s)
     real(r8):: f1,f2,f3,f4,g1,g2  ! allocation parameters
+    real(r8):: g1a                ! g1 included in allocation/allometry
     real(r8):: cnl,cnfr,cnlw,cndw ! C:N ratios for leaf, fine root, and wood
     real(r8):: curmr, curmr_ratio ! xsmrpool temporary variables
-    real(r8):: f5                 ! grain allocation parameter
+    real(r8):: f5(nrepr)          ! reproductive allocation parameters
     real(r8):: cng                ! C:N ratio for grain (= cnlw for now; slevis)
     real(r8):: fleaf              ! fraction allocated to leaf
     real(r8):: t1                 ! temporary variable
     real(r8):: dt                 ! model time step
     real(r8):: dayscrecover       ! number of days to recover negative cpool
+    real(r8):: f5_tot             ! sum of f5 terms
+    real(r8):: f5_n_tot           ! sum of f5 terms converted from C to N
 
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(aroot) == (/bounds%endp/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(arepr) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(arepr) == (/bounds%endp, nrepr/)), sourcefile, __LINE__)
 
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type                                
@@ -587,7 +602,7 @@ contains
          laisun                => canopystate_inst%laisun_patch                     , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index        
          laisha                => canopystate_inst%laisha_patch                     , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index        
 
-         hui                   => crop_inst%gddplant_patch                          , & ! Input:  [real(r8) (:)   ]  =gdd since planting (gddplant)          
+         hui                   => crop_inst%hui_patch                               , & ! Input:  [real(r8) (:)   ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
          leafout               => crop_inst%gddtsoi_patch                           , & ! Input:  [real(r8) (:)   ]  =gdd from top soil layer temperature    
          croplive              => crop_inst%croplive_patch                          , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested     
 
@@ -619,7 +634,7 @@ contains
          froot_mr              => cnveg_carbonflux_inst%froot_mr_patch              , & ! Input:  [real(r8) (:)   ]                                          
          livestem_mr           => cnveg_carbonflux_inst%livestem_mr_patch           , & ! Input:  [real(r8) (:)   ]                                          
          livecroot_mr          => cnveg_carbonflux_inst%livecroot_mr_patch          , & ! Input:  [real(r8) (:)   ]                                          
-         grain_mr              => cnveg_carbonflux_inst%grain_mr_patch              , & ! Input:  [real(r8) (:)   ]                                          
+         reproductive_mr              => cnveg_carbonflux_inst%reproductive_mr_patch              , & ! Input:  [real(r8) (:,:)   ]
          gpp                   => cnveg_carbonflux_inst%gpp_before_downreg_patch    , & ! Output: [real(r8) (:)   ]  GPP flux before downregulation (gC/m2/s)
          availc                => cnveg_carbonflux_inst%availc_patch                , & ! Output: [real(r8) (:)   ]  C flux available for allocation (gC/m2/s)
          xsmrpool_recover      => cnveg_carbonflux_inst%xsmrpool_recover_patch      , & ! Output: [real(r8) (:)   ]  C flux assigned to recovery of negative cpool (gC/m2/s)
@@ -629,12 +644,12 @@ contains
          froot_curmr           => cnveg_carbonflux_inst%froot_curmr_patch           , & ! Output: [real(r8) (:)   ]                                          
          livestem_curmr        => cnveg_carbonflux_inst%livestem_curmr_patch        , & ! Output: [real(r8) (:)   ]                                          
          livecroot_curmr       => cnveg_carbonflux_inst%livecroot_curmr_patch       , & ! Output: [real(r8) (:)   ]                                          
-         grain_curmr           => cnveg_carbonflux_inst%grain_curmr_patch           , & ! Output: [real(r8) (:)   ]                                          
+         reproductive_curmr           => cnveg_carbonflux_inst%reproductive_curmr_patch           , & ! Output: [real(r8) (:,:)   ]
          leaf_xsmr             => cnveg_carbonflux_inst%leaf_xsmr_patch             , & ! Output: [real(r8) (:)   ]                                          
          froot_xsmr            => cnveg_carbonflux_inst%froot_xsmr_patch            , & ! Output: [real(r8) (:)   ]                                          
          livestem_xsmr         => cnveg_carbonflux_inst%livestem_xsmr_patch         , & ! Output: [real(r8) (:)   ]                                          
          livecroot_xsmr        => cnveg_carbonflux_inst%livecroot_xsmr_patch        , & ! Output: [real(r8) (:)   ]                                          
-         grain_xsmr            => cnveg_carbonflux_inst%grain_xsmr_patch            , & ! Output: [real(r8) (:)   ]                                          
+         reproductive_xsmr            => cnveg_carbonflux_inst%reproductive_xsmr_patch            , & ! Output: [real(r8) (:,:)   ]
          cpool_to_xsmrpool     => cnveg_carbonflux_inst%cpool_to_xsmrpool_patch     , & ! Output: [real(r8) (:)   ]                                          
          
          plant_ndemand         => cnveg_nitrogenflux_inst%plant_ndemand_patch       , & ! Output: [real(r8) (:)   ]  N flux required to support initial GPP (gN/m2/s)
@@ -696,7 +711,13 @@ contains
          if (woody(ivt(p)) == 1.0_r8) then
             mr = mr + livestem_mr(p) + livecroot_mr(p)
          else if (ivt(p) >= npcropmin) then
-            if (croplive(p)) mr = mr + livestem_mr(p) + grain_mr(p)
+            if (croplive(p)) then
+               reproductive_mr_tot = 0._r8
+               do k = 1, nrepr
+                  reproductive_mr_tot = reproductive_mr_tot + reproductive_mr(p,k)
+               end do
+               mr = mr + livestem_mr(p) + reproductive_mr_tot
+            end if
          end if
 
          ! carbon flux available for allocation
@@ -719,8 +740,10 @@ contains
          livestem_xsmr(p)   = livestem_mr(p) - livestem_curmr(p)
          livecroot_curmr(p) = livecroot_mr(p) * curmr_ratio
          livecroot_xsmr(p)  = livecroot_mr(p) - livecroot_curmr(p)
-         grain_curmr(p)     = grain_mr(p) * curmr_ratio
-         grain_xsmr(p)      = grain_mr(p) - grain_curmr(p)
+         do k = 1, nrepr
+            reproductive_curmr(p,k) = reproductive_mr(p,k) * curmr_ratio
+            reproductive_xsmr(p,k)  = reproductive_mr(p,k) - reproductive_curmr(p,k)
+         end do
 
          ! no allocation when available c is negative
          availc(p) = max(availc(p),0.0_r8)
@@ -768,7 +791,9 @@ contains
 
          ! calculate f1 to f5 for prog crops following AgroIBIS subr phenocrop
 
-         f5 = 0._r8 ! continued intializations from above
+         do k = 1, nrepr
+            f5(k) = 0._r8 ! continued intializations from above
+         end do
 
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
 
@@ -787,13 +812,14 @@ contains
                   ! allocation rules for crops based on maturity and linear decrease
                   ! of amount allocated to roots over course of the growing season
 
+                  do k = 1, nrepr
+                     arepr(p,k) = 0._r8
+                  end do
                   if (peaklai(p) == 1) then ! lai at maximum allowed
-                     arepr(p) = 0._r8
                      aleaf(p) = 1.e-5_r8
                      astem(p) = 0._r8
-                     aroot(p) = 1._r8 - arepr(p) - aleaf(p) - astem(p)
+                     aroot(p) = 1._r8 - aleaf(p)
                   else
-                     arepr(p) = 0._r8
                      aroot(p) = max(0._r8, min(1._r8, arooti(ivt(p)) -   &
                           (arooti(ivt(p)) - arootf(ivt(p))) *  &
                           min(1._r8, hui(p)/gddmaturity(p))))
@@ -801,7 +827,7 @@ contains
                           exp(-bfact(ivt(p))*hui(p)/huigrain(p))) / &
                           (exp(-bfact(ivt(p)))-1) ! fraction alloc to leaf (from J Norman alloc curve)
                      aleaf(p) = max(1.e-5_r8, (1._r8 - aroot(p)) * fleaf)
-                     astem(p) = 1._r8 - arepr(p) - aleaf(p) - aroot(p)
+                     astem(p) = 1._r8 - aleaf(p) - aroot(p)
                   end if
 
                   ! AgroIBIS included here an immediate adjustment to aleaf & astem if the 
@@ -828,7 +854,11 @@ contains
                           huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
                           huigrain(p)),1._r8)**allconss(ivt(p)) )))
                   end if
-                  if (aleafi(p) > aleaff(ivt(p))) then
+
+                  ! If crops have hit peaklai, then set leaf allocation to small value
+                  if (peaklai(p) == 1) then
+                     aleaf(p) = 1.e-5_r8
+                  else if (aleafi(p) > aleaff(ivt(p))) then
                      aleaf(p) = max(1.e-5_r8, max(aleaff(ivt(p)), aleaf(p) * &
                           (1._r8 - min((hui(p)-                    &
                           huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
@@ -876,24 +906,41 @@ contains
                      end if
                   end if
 
-                  arepr(p) = 1._r8 - aroot(p) - astem(p) - aleaf(p)
+                  ! For AgroIBIS-based crop model, all repr allocation is assumed to go
+                  ! into the last reproductive pool. In practice there is only a single
+                  ! reproductive pool with the AgroIBIS-based crop model, but for
+                  ! software testing we can have multiple, in which situation we want the
+                  ! active pool to be the last one.
+                  do k = 1, nrepr-1
+                     arepr(p,k) = 0._r8
+                  end do
+                  arepr(p,nrepr) = 1._r8 - aroot(p) - astem(p) - aleaf(p)
 
-               else                   ! pre emergence
-                  aleaf(p) = 1.e-5_r8 ! allocation coefficients should be irrelevant
-                  astem(p) = 0._r8    ! because crops have no live carbon pools;
-                  aroot(p) = 0._r8    ! this applies to this "else" and to the "else"
-                  arepr(p) = 0._r8    ! a few lines down
+               else  ! pre emergence
+                  ! allocation coefficients should be irrelevant because crops have no
+                  ! live carbon pools; this applies to this "else" and to the "else" a few
+                  ! lines down
+                  aleaf(p) = 1.e-5_r8
+                  astem(p) = 0._r8
+                  aroot(p) = 0._r8
+                  do k = 1, nrepr
+                     arepr(p,k) = 0._r8
+                  end do
                end if
 
                f1 = aroot(p) / aleaf(p)
                f3 = astem(p) / aleaf(p)
-               f5 = arepr(p) / aleaf(p)
+               do k = 1, nrepr
+                  f5(k) = arepr(p,k) / aleaf(p)
+               end do
                g1 = 0.25_r8
 
             else   ! .not croplive
                f1 = 0._r8
                f3 = 0._r8
-               f5 = 0._r8
+               do k = 1, nrepr
+                  f5(k) = 0._r8
+               end do
                g1 = 0.25_r8
             end if
          end if
@@ -903,37 +950,33 @@ contains
          
          !RF. I removed the growth respiration from this, because it is used to calculate 
          !plantCN for N uptake AND c_allometry for allocation. If we add gresp to the 
-         !allometry calculation then we allocate too much carbon since gresp is not allocated here. 
-         if(.not.use_fun)then
-	    if (woody(ivt(p)) == 1.0_r8) then
-	       c_allometry(p) = (1._r8+g1)*(1._r8+f1+f3*(1._r8+f2))
-	       n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
-	             (f3*(1._r8-f4)*(1._r8+f2))/cndw
-	    else if (ivt(p) >= npcropmin) then ! skip generic crops
-	       cng = graincn(ivt(p))
-	       c_allometry(p) = (1._r8+g1)*(1._r8+f1+f5+f3*(1._r8+f2))
-	       n_allometry(p) = 1._r8/cnl + f1/cnfr + f5/cng + (f3*f4*(1._r8+f2))/cnlw + &
-	            (f3*(1._r8-f4)*(1._r8+f2))/cndw
-	    else
-	       c_allometry(p) = 1._r8+g1+f1+f1*g1
-	       n_allometry(p) = 1._r8/cnl + f1/cnfr
-	    end if           
-         else !no FUN. 
-	    if (woody(ivt(p)) == 1.0_r8) then
-	       c_allometry(p) = (1._r8)*(1._r8+f1+f3*(1._r8+f2))
-	       n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
-	            (f3*(1._r8-f4)*(1._r8+f2))/cndw
-	    else if (ivt(p) >= npcropmin) then ! skip generic crops
-	       cng = graincn(ivt(p))
-	       c_allometry(p) = (1._r8)*(1._r8+f1+f5+f3*(1._r8+f2))
-	       n_allometry(p) = 1._r8/cnl + f1/cnfr + f5/cng + (f3*f4*(1._r8+f2))/cnlw + &
-	            (f3*(1._r8-f4)*(1._r8+f2))/cndw
-	    else
-	       c_allometry(p) = 1._r8+f1
-	       n_allometry(p) = 1._r8/cnl + f1/cnfr
-	    end if
-         end if !use_fun
-         
+         !allometry calculation then we allocate too much carbon since gresp is not allocated here.
+         if (.not. use_fun) then
+            g1a = g1
+         else
+            g1a = 0._r8
+         end if
+         if (woody(ivt(p)) == 1.0_r8) then
+            c_allometry(p) = (1._r8+g1a)*(1._r8+f1+f3*(1._r8+f2))
+            n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
+                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
+         else if (ivt(p) >= npcropmin) then ! skip generic crops
+            cng = graincn(ivt(p))
+            f5_tot = 0._r8
+            f5_n_tot = 0._r8
+            do k = 1, nrepr
+               f5_tot = f5_tot + f5(k)
+               ! Note that currently we use the same C/N ratio for all grain components:
+               f5_n_tot = f5_n_tot + f5(k)/cng
+            end do
+            c_allometry(p) = (1._r8+g1a)*(1._r8+f1+f5_tot+f3*(1._r8+f2))
+            n_allometry(p) = 1._r8/cnl + f1/cnfr + f5_n_tot + (f3*f4*(1._r8+f2))/cnlw + &
+                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
+         else
+            c_allometry(p) = 1._r8+g1a+f1+f1*g1a
+            n_allometry(p) = 1._r8/cnl + f1/cnfr
+         end if
+
          plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
  
          ! retranslocated N deployment depends on seasonal cycle of potential GPP

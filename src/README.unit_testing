@@ -5,7 +5,7 @@
 # time you ran them from this directory.
 
 # From a standalone CTSM checkout:
-CIME_NO_CMAKE_MACRO=ON ../cime/scripts/fortran_unit_testing/run_tests.py --build-dir unit_tests.temp
+../cime/scripts/fortran_unit_testing/run_tests.py --build-dir unit_tests.temp
 
 # If you are within a full CESM checkout, you would instead do:
 # ../../../cime/scripts/fortran_unit_testing/run_tests.py --build-dir unit_tests.temp

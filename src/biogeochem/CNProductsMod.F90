@@ -47,8 +47,8 @@ module CNProductsMod
      real(r8), pointer :: hrv_deadstem_to_prod10_grc(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
      real(r8), pointer :: hrv_deadstem_to_prod100_patch(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
      real(r8), pointer :: hrv_deadstem_to_prod100_grc(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
-     real(r8), pointer :: grain_to_cropprod1_patch(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
-     real(r8), pointer :: grain_to_cropprod1_grc(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
+     real(r8), pointer :: crop_harvest_to_cropprod1_patch(:) ! (g[C or N]/m2/s) crop harvest to 1-year crop product pool
+     real(r8), pointer :: crop_harvest_to_cropprod1_grc(:) ! (g[C or N]/m2/s) crop harvest to 1-year crop product pool
 
      ! Fluxes: losses
      real(r8), pointer :: cropprod1_loss_grc(:)    ! (g[C or N]/m2/s) decomposition loss from 1-yr crop product pool
@@ -68,7 +68,7 @@ module CNProductsMod
      ! Science routines
      procedure, public  :: UpdateProducts
      procedure, private :: PartitionWoodFluxes
-     procedure, private :: PartitionGrainFluxes
+     procedure, private :: PartitionCropFluxes
      procedure, private :: ComputeSummaryVars
 
   end type cn_products_type
@@ -139,8 +139,8 @@ contains
     allocate(this%hrv_deadstem_to_prod100_patch(begp:endp)) ; this%hrv_deadstem_to_prod100_patch(:) = nan
     allocate(this%hrv_deadstem_to_prod100_grc(begg:endg)) ; this%hrv_deadstem_to_prod100_grc(:) = nan
 
-    allocate(this%grain_to_cropprod1_patch(begp:endp)) ; this%grain_to_cropprod1_patch(:) = nan
-    allocate(this%grain_to_cropprod1_grc(begg:endg)) ; this%grain_to_cropprod1_grc(:) = nan
+    allocate(this%crop_harvest_to_cropprod1_patch(begp:endp)) ; this%crop_harvest_to_cropprod1_patch(:) = nan
+    allocate(this%crop_harvest_to_cropprod1_grc(begg:endg)) ; this%crop_harvest_to_cropprod1_grc(:) = nan
 
     allocate(this%cropprod1_loss_grc(begg:endg)) ; this%cropprod1_loss_grc(:) = nan
     allocate(this%prod10_loss_grc(begg:endg)) ; this%prod10_loss_grc(:) = nan
@@ -298,7 +298,7 @@ contains
     do p = bounds%begp, bounds%endp
        this%hrv_deadstem_to_prod10_patch(p) = 0._r8
        this%hrv_deadstem_to_prod100_patch(p) = 0._r8
-       this%grain_to_cropprod1_patch(p) = 0._r8
+       this%crop_harvest_to_cropprod1_patch(p) = 0._r8
     end do
 
   end subroutine InitCold
@@ -441,10 +441,10 @@ contains
        dwt_wood_product_gain_patch, &
        wood_harvest_patch, &
        dwt_crop_product_gain_patch, &
-       grain_to_cropprod_patch)
+       crop_harvest_to_cropprod_patch)
     !
     ! !DESCRIPTION:
-    ! Update all loss fluxes from wood and grain product pools, and update product pool
+    ! Update all loss fluxes from wood and crop product pools, and update product pool
     ! state variables for both loss and gain terms
     !
     ! !ARGUMENTS:
@@ -464,8 +464,8 @@ contains
     ! a patch-level flux, it is expressed per unit GRIDCELL area
     real(r8), intent(in) :: dwt_crop_product_gain_patch( bounds%begp: )
 
-    ! grain to crop product pool (g/m2/s) [patch]
-    real(r8), intent(in) :: grain_to_cropprod_patch( bounds%begp: )
+    ! crop harvest to crop product pool (g/m2/s) [patch]
+    real(r8), intent(in) :: crop_harvest_to_cropprod_patch( bounds%begp: )
     !
     ! !LOCAL VARIABLES:
     integer  :: g        ! indices
@@ -478,17 +478,17 @@ contains
     SHR_ASSERT_ALL_FL((ubound(dwt_wood_product_gain_patch) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(wood_harvest_patch) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(dwt_crop_product_gain_patch) == (/bounds%endp/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(grain_to_cropprod_patch) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(crop_harvest_to_cropprod_patch) == (/bounds%endp/)), sourcefile, __LINE__)
 
     call this%PartitionWoodFluxes(bounds, &
          num_soilp, filter_soilp, &
          dwt_wood_product_gain_patch(bounds%begp:bounds%endp), &
          wood_harvest_patch(bounds%begp:bounds%endp))
 
-    call this%PartitionGrainFluxes(bounds, &
+    call this%PartitionCropFluxes(bounds, &
          num_soilp, filter_soilp, &
          dwt_crop_product_gain_patch(bounds%begp:bounds%endp), &
-         grain_to_cropprod_patch(bounds%begp:bounds%endp))
+         crop_harvest_to_cropprod_patch(bounds%begp:bounds%endp))
 
     ! calculate losses from product pools
     ! the following (1/s) rate constants result in ~90% loss of initial state over 1, 10 and 100 years,
@@ -516,7 +516,7 @@ contains
        this%prod100_grc(g)   = this%prod100_grc(g)   + this%dwt_prod100_gain_grc(g)*dt
 
        ! fluxes into wood & crop product pools, from harvest
-       this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%grain_to_cropprod1_grc(g)*dt
+       this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%crop_harvest_to_cropprod1_grc(g)*dt
        this%prod10_grc(g)    = this%prod10_grc(g)    + this%hrv_deadstem_to_prod10_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   + this%hrv_deadstem_to_prod100_grc(g)*dt
 
@@ -633,13 +633,13 @@ contains
   end subroutine PartitionWoodFluxes
 
   !-----------------------------------------------------------------------
-  subroutine PartitionGrainFluxes(this, bounds, &
+  subroutine PartitionCropFluxes(this, bounds, &
        num_soilp, filter_soilp, &
        dwt_crop_product_gain_patch, &
-       grain_to_cropprod_patch)
+       crop_harvest_to_cropprod_patch)
     !
     ! !DESCRIPTION:
-    ! Partition input grain fluxes into crop product pools
+    ! Partition input crop fluxes into crop product pools
     !
     ! For now this doesn't do much, since there is just a single (1-year) crop product
     ! pool. But this provides the capability to add different crop product pools in the
@@ -659,15 +659,15 @@ contains
     ! a patch-level flux, it is expressed per unit GRIDCELL area
     real(r8), intent(in) :: dwt_crop_product_gain_patch( bounds%begp: )
 
-    ! grain to crop product pool(s) (g/m2/s) [patch]
-    real(r8)                , intent(in)    :: grain_to_cropprod_patch( bounds%begp: )
+    ! crop harvest to crop product pool(s) (g/m2/s) [patch]
+    real(r8)                , intent(in)    :: crop_harvest_to_cropprod_patch( bounds%begp: )
     !
     ! !LOCAL VARIABLES:
     integer :: fp
     integer :: p
     integer :: g
 
-    character(len=*), parameter :: subname = 'PartitionGrainFluxes'
+    character(len=*), parameter :: subname = 'PartitionCropFluxes'
     !-----------------------------------------------------------------------
 
     ! Determine gains from crop harvest
@@ -676,12 +676,12 @@ contains
        p = filter_soilp(fp)
 
        ! For now all crop product is put in the 1-year crop product pool
-       this%grain_to_cropprod1_patch(p) = grain_to_cropprod_patch(p)
+       this%crop_harvest_to_cropprod1_patch(p) = crop_harvest_to_cropprod_patch(p)
     end do
 
     call p2g(bounds, &
-         this%grain_to_cropprod1_patch(bounds%begp:bounds%endp), &
-         this%grain_to_cropprod1_grc(bounds%begg:bounds%endg), &
+         this%crop_harvest_to_cropprod1_patch(bounds%begp:bounds%endp), &
+         this%crop_harvest_to_cropprod1_grc(bounds%begg:bounds%endg), &
          p2c_scale_type = 'unity', &
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
@@ -702,7 +702,7 @@ contains
             dwt_crop_product_gain_patch(p)
     end do
 
-  end subroutine PartitionGrainFluxes
+  end subroutine PartitionCropFluxes
 
 
   !-----------------------------------------------------------------------

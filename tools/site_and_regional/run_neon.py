@@ -244,6 +244,19 @@ def get_parser(args, description, valid_neon_sites):
         required=False,
         default=False,
     )
+    parser.add_argument(
+        "--neon-version",
+        help="""
+                Neon data version to use for this simulation.
+                [default: use the latest data available]
+                """,
+        action="store",
+        dest="user_version",
+        required = False,
+        type = str,
+        choices= ['v1','v2'],
+    )
+
 
     args = CIME.utils.parse_args_and_handle_standard_logging_options(args, parser)
 
@@ -289,6 +302,7 @@ def get_parser(args, description, valid_neon_sites):
         args.setup_only,
         args.no_batch,
         args.rerun,
+        args.user_version,
     )
 
 
@@ -432,6 +446,7 @@ class NeonSite:
         base_case_root,
         run_type,
         run_length,
+        user_version,
         overwrite=False,
         setup_only=False,
         no_batch=False,
@@ -446,6 +461,14 @@ class NeonSite:
             os.path.isdir(base_case_root),
             "Error base case does not exist in {}".format(base_case_root),
         )
+        # -- if user gives a version:
+        if user_version:
+            version = user_version
+        else:
+            version = 'latest'
+
+        print ("using this version:", version)
+
         case_root = os.path.abspath(
             os.path.join(base_case_root, "..", self.name + "." + run_type)
         )
@@ -495,6 +518,7 @@ class NeonSite:
             case.set_value("STOP_N", run_length)
             case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
+            case.set_value("NEONVERSION", version)
 
             if run_type == "ad":
                 case.set_value("CLM_FORCE_COLDSTART", "on")
@@ -628,7 +652,7 @@ def check_neon_listing(valid_neon_sites):
     A function to download and parse neon listing file.
     """
     listing_file = "listing.csv"
-    url = "https://neon-ncar.s3.data.neonscience.org/listing.csv"
+    url = "https://storage.neonscience.org/neon-ncar/listing.csv"
 
     download_file(url, listing_file)
     available_list = parse_neon_listing(listing_file, valid_neon_sites)
@@ -666,31 +690,39 @@ def parse_neon_listing(listing_file, valid_neon_sites):
     df = df["object"].str.split("/", expand=True)
 
     # -- groupby site name
-    grouped_df = df.groupby(7)
+    grouped_df = df.groupby(8)
     for key, item in grouped_df:
         # -- check if it is a valid neon site
         if any(key in x for x in valid_neon_sites):
             site_name = key
-
             tmp_df = grouped_df.get_group(key)
 
             # -- filter files only ending with YYYY-MM.nc
-            tmp_df = tmp_df[tmp_df[8].str.contains("\d\d\d\d-\d\d.nc")]
-            latest_version = tmp_df[6].iloc[-1]
-            tmp_df = tmp_df[tmp_df[6].str.contains(latest_version)]
-            # -- remove .nc from the file names
-            tmp_df[8] = tmp_df[8].str.replace(".nc", "")
+            tmp_df = tmp_df[tmp_df[9].str.contains("\d\d\d\d-\d\d.nc")]
 
-            tmp_df2 = tmp_df[8].str.split("-", expand=True)
+            # -- find all the data versions
+            versions = tmp_df[7].unique()
+            #print ("all versions available for ", site_name,":", *versions)
+            latest_version = tmp_df[7].iloc[-1]
+            #print ("latests version available for ", site_name,":", latest_version)
+
+            tmp_df = tmp_df[tmp_df[7].str.contains(latest_version)]
+            # -- remove .nc from the file names
+            tmp_df[9] = tmp_df[9].str.replace(".nc", "")
+
+
+            tmp_df2 = tmp_df[9].str.split("-", expand=True)
+
             # ignore any prefix in file name and just get year
             tmp_df2[0] = tmp_df2[0].str.slice(-4)
+
             # -- figure out start_year and end_year
-            start_year = int(tmp_df2[0].iloc[0])
-            end_year = int(tmp_df2[0].iloc[-1])
+            start_year = tmp_df2[0].iloc[0]
+            end_year = tmp_df2[0].iloc[-1]
 
             # -- figure out start_month and end_month
-            start_month = int(tmp_df2[1].iloc[0])
-            end_month = int(tmp_df2[1].iloc[-1])
+            start_month = tmp_df2[1].iloc[0]
+            end_month = tmp_df2[1].iloc[-1]
 
             logger.debug("Valid neon site " + site_name + " found!")
             logger.debug("File version {}".format(latest_version))
@@ -731,6 +763,7 @@ def main(description):
         setup_only,
         no_batch,
         rerun,
+        user_version
     ) = get_parser(sys.argv, description, valid_neon_sites)
 
     if output_root:
@@ -764,6 +797,7 @@ def main(description):
                 base_case_root,
                 run_type,
                 run_length,
+                user_version,
                 overwrite,
                 setup_only,
                 no_batch,
