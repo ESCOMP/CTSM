@@ -31,8 +31,6 @@ module CropType
      logical , pointer :: croplive_patch          (:)   ! patch Flag, true if planted, not harvested
      integer , pointer :: harvdate_patch          (:)   ! most recent patch harvest date; 999 if currently (or never) planted
      real(r8), pointer :: fertnitro_patch         (:)   ! patch fertilizer nitrogen
-     real(r8), pointer :: hui_patch               (:)   ! crop patch heat unit index (ddays)
-     real(r8), pointer :: gddaccum_patch          (:)   ! patch growing degree-days from planting (air) (ddays)
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
      real(r8), pointer :: vf_patch                (:)   ! patch vernalization factor for cereal
      real(r8), pointer :: cphase_patch            (:)   ! phenology phase
@@ -50,6 +48,11 @@ module CropType
      real(r8), pointer :: harvest_reason_thisyr   (:,:) ! reason for each harvest for this patch this year
      integer , pointer :: sowing_count            (:)   ! number of sowing events this year for this patch
      integer , pointer :: harvest_count           (:)   ! number of sowing events this year for this patch
+     ! gddaccum tracks the actual growing degree-days accumulated over the growing season.
+     ! hui also accumulates growing degree-days, but can be boosted if full leafout is
+     ! achieved before the GDD threshold for grain fill has been reached; see CropPhenology().
+     real(r8), pointer :: hui_patch               (:)   ! crop patch heat unit index (ddays)
+     real(r8), pointer :: gddaccum_patch          (:)   ! patch growing degree-days from planting (air) (ddays)
 
    contains
      ! Public routines
@@ -68,7 +71,7 @@ module CropType
      procedure, public  :: CropIncrementYear
 
      ! Private routines
-     procedure, private :: InitAllocate 
+     procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
      procedure, private, nopass :: checkDates
@@ -92,10 +95,10 @@ contains
     type(bounds_type), intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
-    
+
     character(len=*), parameter :: subname = 'Init'
     !-----------------------------------------------------------------------
-    
+
     call this%InitAllocate(bounds)
 
     if (use_crop) then
@@ -179,7 +182,7 @@ contains
     end if
 
     !-----------------------------------------------------------------------
-    
+
   end subroutine ReadNML
 
   !-----------------------------------------------------------------------
@@ -194,7 +197,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
-    
+
     character(len=*), parameter :: subname = 'InitAllocate'
     !-----------------------------------------------------------------------
 
@@ -202,7 +205,7 @@ contains
 
     allocate(this%nyrs_crop_active_patch(begp:endp)) ; this%nyrs_crop_active_patch(:) = 0
     allocate(this%croplive_patch (begp:endp)) ; this%croplive_patch (:) = .false.
-    allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1) 
+    allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1)
     allocate(this%fertnitro_patch (begp:endp)) ; this%fertnitro_patch (:) = spval
     allocate(this%hui_patch (begp:endp))      ; this%hui_patch      (:) = spval
     allocate(this%gddaccum_patch (begp:endp)) ; this%gddaccum_patch (:) = spval
@@ -238,10 +241,10 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
-    
+
     character(len=*), parameter :: subname = 'InitHistory'
     !-----------------------------------------------------------------------
-    
+
     begp = bounds%begp; endp = bounds%endp
 
     this%fertnitro_patch(begp:endp) = spval
@@ -305,11 +308,11 @@ contains
 
   subroutine InitCold(this, bounds)
     ! !USES:
-    use LandunitType, only : lun                
+    use LandunitType, only : lun
     use landunit_varcon, only : istcrop
     use PatchType, only : patch
     use clm_instur, only : fert_cft
-    use pftconMod        , only : pftcon 
+    use pftconMod        , only : pftcon
     use GridcellType     , only : grc
     use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
     ! !ARGUMENTS:
@@ -368,20 +371,20 @@ contains
     ! restart file for restart or branch runs
     ! Each interval and accumulation type is unique to each field processed.
     ! Routine [initAccBuffer] defines the fields to be processed
-    ! and the type of accumulation. 
+    ! and the type of accumulation.
     ! Routine [updateAccVars] does the actual accumulation for a given field.
-    ! Fields are accumulated by calls to subroutine [update_accum_field]. 
-    ! To accumulate a field, it must first be defined in subroutine [initAccVars] 
+    ! Fields are accumulated by calls to subroutine [update_accum_field].
+    ! To accumulate a field, it must first be defined in subroutine [initAccVars]
     ! and then accumulated by calls to [updateAccVars].
     !
     ! Should only be called if use_crop is true
     !
-    ! !USES 
+    ! !USES
     use accumulMod       , only : init_accum_field
     !
     ! !ARGUMENTS:
     class(crop_type) , intent(in) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
 
     !
     ! !LOCAL VARIABLES:
@@ -389,9 +392,11 @@ contains
 
     !---------------------------------------------------------------------
 
+    ! BACKWARDS_COMPATIBILITY (ssr/wjs, 2022-03-16): old_name specification
+    ! allows correct restarting from files that used GDDPLANT.
     call init_accum_field (name='HUI', units='K', &
          desc='heat unit index accumulated since planting', accum_type='runaccum', accum_period=not_used,  &
-         subgrid_type='pft', numlev=1, init_value=0._r8)
+         subgrid_type='pft', numlev=1, init_value=0._r8, old_name='GDDPLANT')
 
     call init_accum_field (name='GDDACCUM', units='K', &
          desc='growing degree-days from planting', accum_type='runaccum', accum_period=not_used,  &
@@ -409,7 +414,7 @@ contains
     ! !DESCRIPTION:
     ! Initialize module variables that are associated with
     ! time accumulated fields. This routine is called for both an initial run
-    ! and a restart run (and must therefore must be called after the restart file 
+    ! and a restart run (and must therefore must be called after the restart file
     ! is read in and the accumulation buffer is obtained)
     !
     ! !USES:
@@ -425,10 +430,10 @@ contains
     integer  :: nstep
     integer  :: ier
     real(r8), pointer :: rbufslp(:)  ! temporary
-    
+
     character(len=*), parameter :: subname = 'InitAccVars'
     !-----------------------------------------------------------------------
-    
+
     begp = bounds%begp; endp = bounds%endp
 
     ! Allocate needed dynamic memory for single level patch field
@@ -441,13 +446,13 @@ contains
 
     nstep = get_nstep()
 
-    call extract_accum_field ('HUI', rbufslp, nstep) 
+    call extract_accum_field ('HUI', rbufslp, nstep)
     this%hui_patch(begp:endp) = rbufslp(begp:endp)
 
-    call extract_accum_field ('GDDACCUM', rbufslp, nstep) 
+    call extract_accum_field ('GDDACCUM', rbufslp, nstep)
     this%gddaccum_patch(begp:endp) = rbufslp(begp:endp)
 
-    call extract_accum_field ('GDDTSOI', rbufslp, nstep) 
+    call extract_accum_field ('GDDTSOI', rbufslp, nstep)
     this%gddtsoi_patch(begp:endp)  = rbufslp(begp:endp)
 
     deallocate(rbufslp)
@@ -466,9 +471,9 @@ contains
     !
     ! !ARGUMENTS:
     class(crop_type), intent(inout)  :: this
-    type(bounds_type), intent(in)    :: bounds 
-    type(file_desc_t), intent(inout) :: ncid   
-    character(len=*) , intent(in)    :: flag   
+    type(bounds_type), intent(in)    :: bounds
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
     !
     ! !LOCAL VARIABLES:
     integer, pointer :: temp1d(:) ! temporary
@@ -507,7 +512,7 @@ contains
        end if
 
        allocate(temp1d(bounds%begp:bounds%endp))
-       if (flag == 'write') then 
+       if (flag == 'write') then
           do p= bounds%begp,bounds%endp
              if (this%croplive_patch(p)) then
                 temp1d(p) = 1
@@ -520,7 +525,7 @@ contains
             dim1name='pft', &
             long_name='Flag that crop is alive, but not harvested', &
             interpinic_flag='interp', readvar=readvar, data=temp1d)
-       if (flag == 'read') then 
+       if (flag == 'read') then
           do p= bounds%begp,bounds%endp
              if (temp1d(p) == 1) then
                 this%croplive_patch(p) = .true.
@@ -532,7 +537,7 @@ contains
        deallocate(temp1d)
 
        call restartvar(ncid=ncid, flag=flag,  varname='harvdate', xtype=ncd_int,  &
-            dim1name='pft', long_name='harvest date', units='jday', nvalid_range=(/1,366/), & 
+            dim1name='pft', long_name='harvest date', units='jday', nvalid_range=(/1,366/), &
             interpinic_flag='interp', readvar=readvar, data=this%harvdate_patch)
 
        call restartvar(ncid=ncid, flag=flag,  varname='vf', xtype=ncd_double,  &
@@ -653,7 +658,7 @@ contains
     real(r8), pointer :: rbufslp2(:)     ! temporary single level - patch level
     character(len=*), parameter :: subname = 'CropUpdateAccVars'
     !-----------------------------------------------------------------------
-    
+
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
 
@@ -677,16 +682,17 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
-    ! Accumulate and extract HUI and GDDACCUM
-    
+    ! Update HUI. This is not standard for accumulation fields,
+    ! but HUI needs it because it can be changed outside this
+    ! accumulation routine (see CropPhenology). This requires
+    ! the accumulation buffer to be reset.
     call extract_accum_field ('HUI', rbufslp, nstep)
-    call extract_accum_field ('GDDACCUM', rbufslp2, nstep)
     do p = begp,endp
       rbufslp(p) = max(0.0_r8,this%hui_patch(p)-rbufslp(p))
-      rbufslp2(p) = max(0.0_r8,this%gddaccum_patch(p)-rbufslp2(p))
     end do
     call update_accum_field  ('HUI', rbufslp, nstep)
-    call update_accum_field  ('GDDACCUM', rbufslp2, nstep)
+
+    ! Accumulate and extract HUI and GDDACCUM
     do p = begp,endp
        if (this%croplive_patch(p)) then ! relative to planting date
           ivt = patch%itype(p)
@@ -711,9 +717,8 @@ contains
     end do
     call update_accum_field  ('HUI', rbufslp, nstep)
     call extract_accum_field ('HUI', this%hui_patch, nstep)
-    call update_accum_field  ('GDDACCUM', rbufslp2, nstep)
+    call update_accum_field  ('GDDACCUM', rbufslp, nstep)
     call extract_accum_field ('GDDACCUM', this%gddaccum_patch, nstep)
-    deallocate(rbufslp2)
 
     ! Accumulate and extract GDDTSOI
     ! In agroibis this variable is calculated
@@ -744,7 +749,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CropIncrementYear (this, num_pcropp, filter_pcropp)
     !
-    ! !DESCRIPTION: 
+    ! !DESCRIPTION:
     ! Increment the crop year, if appropriate
     !
     ! This routine should be called every time step
@@ -782,7 +787,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine checkDates( )
     !
-    ! !DESCRIPTION: 
+    ! !DESCRIPTION:
     ! Make sure the dates are compatible. The date given to startup the model
     ! and the date on the restart file must be the same although years can be
     ! different. The dates need to be checked when the restart file is being
@@ -834,4 +839,3 @@ contains
   end subroutine checkDates
 
 end module CropType
-

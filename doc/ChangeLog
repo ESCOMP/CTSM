@@ -1,4 +1,240 @@
 ===============================================================
+Tag name: ctsm5.1.dev091
+Originator(s): rgknox (Ryan Knox,rgknox@lbl.gov)
+Date: Fri Apr 22 14:11:50 EDT 2022
+One-line Summary: clm decomp method is now passed to fates to enabled mimics coupling
+
+Purpose and description of changes
+----------------------------------
+
+This is a small changeset, which only adds the passing of a text based flag to FATES, that defines which soil decomposition method is active. This setting is needed by FATES, so that it can pass specific boundary conditions to CLM (and potentially ELM in the future). This change was necessitated because MIMICS requires a Nitrogen to lignin-carbon ratio in the litter flux, yet other decomposition schemes do not. Moreover, the generation of this boundary condition is not trivial, so it is worth it to avoid its computation if mimics is not on.  This change should have NO impact on any tests.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+None
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+None, this does not currently have an affect on any functionality, it simply lays groundwork for FATES-MIMICS coupling.  There are no changes to memory usage or run-time.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+No changes in testing. These changes will enable completion (or progress) on CTSM #1643
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- aux_clm, PASS, b4b against ctsm5.1.dev090
+    izumi ------- aux_clm, PASS, b4b against ctsm5.1.dev090
+
+
+Answer changes
+--------------
+None
+
+Pull Requests that document the changes (include PR ids): #1700
+(https://github.com/ESCOMP/ctsm/pull/1700)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev090
+Originator(s): samrabin (Sam Rabin)
+Date: Thu Mar 31 15:03:34 MDT 2022
+One-line Summary: Fix misleading name of "gddplant"
+
+Purpose and description of changes
+----------------------------------
+
+1. Rename `gddplant_patch` to `hui_patch` (and `GDDPLANT` to `HUI`).
+2. Add new variable `gddaccum_patch` (output `GDDACCUM`).
+
+Output variable `GDDPLANT` (not included by default) is now `HUI`, and
+new output `GDDACCUM` has been added to track _actual_ accumulation of
+GDDs since planting without any modifications such as occurs here:
+https://github.com/ESCOMP/CTSM/blob/d9ae4b48d9c55fe3c998019bcf76817da570db87/src/biogeochem/CNPhenologyMod.F90#L2044-L2046
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1655 (gddplant_patch (GDDPLANT) is misleadingly
+  named)
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- See above notes about changes to some output variables
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Changed variables output in crop testmod (and any testmods that inherit
+  from it)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+There are FIELDLIST diffs for cases using the crop testmod or other
+testmods inheriting from it, but otherwise bit-for-bit.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1684
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev089
+Originator(s): sacks (Bill Sacks)
+Date: Thu Mar 31 11:44:12 MDT 2022
+One-line Summary: For CLM45 apply peaklai to aleaf in grainfill
+
+Purpose and description of changes
+----------------------------------
+
+This tag makes the crop allocation code in
+NutrientCompetitionCLM45defaultMod consistent with that in
+NutrientCompetitionFlexibleCNMod by forcing aleaf to 1e-5 if peaklai has
+been reached during the grainfill period (in addition to the similar
+existing check that was already in both places during the vegetative
+growth period). This reconciliation will be helpful so that I can
+extract these into a shared subroutine.
+
+I thought this would potentially change answers for CLM45 cases, but
+based on the test suite and from a 5-year run of IHistClm45BgcCrop at
+f19_g17 resolution, it seems like this won't change answers in our
+typical configurations: From that 5-year f19_g17 run, whenever peaklai
+is 1 during the grainfill period, aleaf is already exactly 1e-5. I don't
+understand why this is always the case; maybe, in Clm45, if peaklai
+isn't reached before grainfill then it is never reached that growing
+season? I have come to suspect that the difference between Clm45 and
+Clm50 in this respect may actually be due to whether you're running with
+FUN, since running with FUN changes some relevant driver sequencing. So
+it's possible that this would change answers for the atypical situation
+where someone was running with FUN but not FlexibleCN; in this case, I
+think this change would be the right thing to do. In addition, from the
+test suite, I found this leads to answer changes when using CLM45
+together with old hydrology (h2osfcflag = 0 and use_subgrid_fluxes =
+.false.).
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but only in very limited cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Very limited cases with crop and without
+      FlexibleCN (see below for details)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      not investigated, but suspected to be larger than roundoff / same climate
+
+      I thought this would potentially change answers for CLM45 cases,
+      but based on the test suite and from a 5-year run of
+      IHistClm45BgcCrop at f19_g17 resolution, it seems like this won't
+      change answers in our typical configurations: From that 5-year
+      f19_g17 run, whenever peaklai is 1 during the grainfill period,
+      aleaf is already exactly 1e-5. I don't understand why this is
+      always the case; maybe, in Clm45, if peaklai isn't reached before
+      grainfill then it is never reached that growing season? I have
+      come to suspect that the difference between Clm45 and Clm50 in
+      this respect may actually be due to whether you're running with
+      FUN, since running with FUN changes some relevant driver
+      sequencing. So it's possible that this would change answers for
+      the atypical situation where someone was running with FUN but not
+      FlexibleCN; in this case, I think this change would be the right
+      thing to do. In addition, from the test suite, I found this leads
+      to answer changes when using CLM45 together with old hydrology
+      (h2osfcflag = 0 and use_subgrid_fluxes = .false.).
+
+      Tests with answer changes were:
+      ERP_D_P36x2_Ld3.f10_f10_mg37.I2000Clm45BgcCrop.cheyenne_gnu.clm-no_subgrid_fluxes
+      SMS_D_Ld1_P48x1.f10_f10_mg37.I2000Clm45BgcCrop.izumi_nag.clm-oldhyd
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1694
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev088
 Originator(s): samrabin (Sam Rabin)
 Date: Mon Mar 28 10:13:22 MDT 2022
