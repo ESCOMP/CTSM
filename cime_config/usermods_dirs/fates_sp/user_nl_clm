@@ -1,7 +1,7 @@
 use_fates_sp = .true.
 soil_decomp_method = 'None'
 use_lch4 = .false.
-!use_lai_streams = .true.
+fates_spitfire_mode = 0
 hist_fexcl1 = 'FATES_TRIMMING', 'FATES_COLD_STATUS', 'FATES_DROUGHT_STATUS', 'FATES_GDD', 'FATES_NCHILLDAYS',
               'FATES_NCOLDDAYS', 'FATES_DAYSINCE_COLDLEAFOFF', 'FATES_DAYSINCE_COLDLEAFON', 'FATES_DAYSINCE_DROUGHTLEAFOFF',
               'FATES_DAYSINCE_DROUGHTLEAFON', 'FATES_MEANLIQVOL_DROUGHTPHEN', 'FATES_CANOPY_SPREAD', 'FATES_VEGC_PF',
