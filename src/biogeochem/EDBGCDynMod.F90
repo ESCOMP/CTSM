@@ -28,6 +28,7 @@ module EDBGCDynMod
   use SoilStateType                   , only : soilstate_type
   use ch4Mod                          , only : ch4_type
 
+  implicit none
 
   ! public :: EDBGCDynInit         ! BGC dynamics: initialization
   public :: EDBGCDyn             ! BGC Dynamics
@@ -139,7 +140,7 @@ contains
     ! zero the column-level C and N fluxes
     ! --------------------------------------------------
     
-    if ( soil_decomp_method /= no_soil_decomp )then
+    if ( decomp_method /= no_soil_decomp )then
        call t_startf('SoilBGCZero')
 
        call soilbiogeochem_carbonflux_inst%SetValues( &
@@ -188,7 +189,7 @@ contains
             soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
     end if
 
-    if ( soil_decomp_method /= no_soil_decomp )then
+    if ( decomp_method /= no_soil_decomp )then
        ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)
        call SoilBiogeochemPotential (bounds, num_soilc, filter_soilc,                                                    &
             soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,                  &
@@ -214,7 +215,7 @@ contains
     ! Calculation of actual immobilization and decomp rates, following
     ! resolution of plant/heterotroph  competition for mineral N (previously inlined in CNDecompAllocation in CNDecompMod)
 
-    if ( soil_decomp_method /= no_soil_decomp )then
+    if ( decomp_method /= no_soil_decomp )then
        call t_startf('SoilBiogeochemDecomp')
 
        call SoilBiogeochemDecomp (bounds, num_soilc, filter_soilc,                                                       &
