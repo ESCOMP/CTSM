@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(mksurfdata Fortran)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
-find_package(NetCDF 4.8.1 REQUIRED Fortran)
-find_package(ESMF 8.3.0 REQUIRED )
+find_package(NetCDF 4.7.4 REQUIRED Fortran)
+find_package(ESMF 8.2.0 REQUIRED )
 
 set(SRCFILES mkagfirepkmonthMod.F90
              mkchecksMod.F90
@@ -54,9 +54,9 @@ add_library(piof STATIC IMPORTED)
 set_property(TARGET pioc PROPERTY IMPORTED_LOCATION $ENV{PIO}/lib/libpioc.a)
 set_property(TARGET piof PROPERTY IMPORTED_LOCATION $ENV{PIO}/lib/libpiof.a)
 add_executable(mksurfdata ${SRCFILES})
-target_link_libraries(mksurfdata PRIVATE esmf pioc piof)
+target_link_libraries(mksurfdata PRIVATE esmf piof pioc)
 target_include_directories (mksurfdata PRIVATE ${ESMF_F90COMPILEPATHS})
-target_include_directories (mksurfdata PRIVATE ${PIO}/include)
+target_include_directories (mksurfdata PRIVATE $ENV{PIO}/include)
 target_include_directories (mksurfdata PRIVATE ${PNETCDF}/include)
 target_include_directories (mksurfdata PRIVATE ${NETCDF}/include)
 
