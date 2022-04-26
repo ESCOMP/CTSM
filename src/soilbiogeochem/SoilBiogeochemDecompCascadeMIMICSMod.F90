@@ -856,9 +856,7 @@ contains
     real(r8):: spinup_geogterm_s3(bounds%begc:bounds%endc) ! geographically-varying spinup term for s3
     real(r8):: spinup_geogterm_m1(bounds%begc:bounds%endc)  ! geographically-varying spinup term for m1
     real(r8):: spinup_geogterm_m2(bounds%begc:bounds%endc)  ! geographically-varying spinup term for m2
-    real(r8):: ligninNratioAvg_local(bounds%begc:bounds%endc)  ! local column-level lignin to nitrogen ratio
     real(r8):: annsum_npp_col_local(bounds%begc:bounds%endc)  ! local annual sum of NPP at the column level
-    real(r8):: ligninNratio(bounds%begp:bounds%endp)  ! local patch-level lignin to nitrogen ratio
     real(r8):: annsum_npp(bounds%begp:bounds%endp)  ! local annual sum of NPP at the patch level
     real(r8):: ligninNratioAvg_scalar  ! lignin to nitrogen ratio, scalar in column-level loop
     real(r8):: annsum_npp_col_scalar  ! annual sum of NPP, scalar in column-level loop
@@ -1114,19 +1112,17 @@ contains
       mimics_cn_r = params_inst%mimics_cn_r
       mimics_cn_k = params_inst%mimics_cn_k
 
-      ! Local column-level annsum_npp and ligninNratioAvg.
-      ! Use FATES copies of both variables for FATES-MIMICS cases.
-      ! The FATES copy of annsum_npp is available when also use_lch4 = .true.
+      ! If FATES-MIMICS, then use FATES copies of annsum_npp & ligninNratio.
+      ! The FATES copy of annsum_npp is available when use_lch4 = .true., so
+      ! we limit FATES-MIMICS to if (use_lch4).
+      ! The FATES copy of annsum_npp is calculated at the patch level, so we
+      ! obtain it in the next patch loop.
+      ! The FATES copy of ligninNratio is calculated at the site/column level,
+      ! so we obtain it in the next column loop.
       fates_if: if (use_fates) then
          lch4_if: if (use_lch4) then
-            ! Initialize
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               ligninNratioAvg_local(c) = 0._r8
-               annsum_npp_col_local(c) = 0._r8
-            end do
 
-            ! Loop over p: get FATES copies of annsum_npp & local ligninNratio
+            ! Loop over p to get FATES copy of annsum_npp
             nc = bounds%clump_index
             do fp = 1, num_soilp
 
@@ -1136,14 +1132,13 @@ contains
                pf = p - col%patchi(c)
                s  = clm_fates%f2hmap(nc)%hsites(c)
                annsum_npp(p) = clm_fates%fates(nc)%bc_out(s)%annsum_npp_pa(pf)
-               ligninNratio(p) = clm_fates%fates(nc)%bc_out(s)%litt_flux_ligc_per_n(pf)
+
+               ! Initialize local column-level annsum_npp before averaging
+               annsum_npp_col_local(c) = 0._r8
 
             end do  ! p loop
 
-            ! Calculate the column-level averages
-            call p2c(bounds, num_soilc, filter_soilc, &
-                 ligninNratio(bounds%begp:bounds%endp), &
-                 ligninNratioAvg_local(bounds%begc:bounds%endc))
+            ! Calculate the column-level average
             call p2c(bounds, num_soilc, filter_soilc, &
                  annsum_npp(bounds%begp:bounds%endp), &
                  annsum_npp_col_local(bounds%begc:bounds%endc))
@@ -1159,7 +1154,7 @@ contains
          c = filter_soilc(fc)
 
          if (use_fates) then
-            ligninNratioAvg_scalar = ligninNratioAvg_local(c)
+            ligninNratioAvg_scalar = soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col(c)
             annsum_npp_col_scalar = max(0._r8, annsum_npp_col_local(c))
          else
             ligninNratioAvg_scalar = cnveg_carbonflux_inst%ligninNratioAvg_col(c)
@@ -1173,7 +1168,8 @@ contains
          ! TODO Check for high-freq variations in ligninNratioAvg. To avoid,
          !      replace pool_to_litter terms with ann or other long term mean
          !      in CNVegCarbonFluxType.
-         fmet = mimics_fmet_p1 * (mimics_fmet_p2 - mimics_fmet_p3 * min(mimics_fmet_p4, ligninNratioAvg_scalar))
+         fmet = mimics_fmet_p1 * (mimics_fmet_p2 - mimics_fmet_p3 * &
+            min(mimics_fmet_p4, ligninNratioAvg_scalar))
          tau_mod = min(mimics_tau_mod_max, max(mimics_tau_mod_min, &
             sqrt(mimics_tau_mod_factor * annsum_npp_col_scalar)))
 

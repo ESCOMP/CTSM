@@ -31,6 +31,7 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: decomp_cascade_ctransfer_vr_col           (:,:,:) ! vertically-resolved C transferred along deomposition cascade (gC/m3/s)
      real(r8), pointer :: decomp_cascade_ctransfer_col              (:,:)   ! vertically-integrated (diagnostic) C transferred along decomposition cascade (gC/m2/s)
      real(r8), pointer :: cn_col                                    (:,:)   ! (gC/gN) C:N ratio by pool
+     real(r8), pointer :: litr_lig_c_to_n_col                       (:)     ! (gC/gN) lignin C:N ratio; FATES equivalent of cnveg_carbonflux_inst%ligninNratioAvg_col because FATES doesn't have access to cnveg_carbonflux_inst; could reduce duplication by consolidating cnveg_carbonflux_inst%ligninNratioAvg_col into this one
      real(r8), pointer :: rf_decomp_cascade_col                     (:,:,:) ! (frac) respired fraction in decomposition step
      real(r8), pointer :: pathfrac_decomp_cascade_col               (:,:,:) ! (frac) what fraction of C passes from donor to receiver pool through a given transition
      real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate coefficient for decomposition (1./sec)
@@ -131,6 +132,8 @@ contains
 
      allocate(this%cn_col(begc:endc,1:ndecomp_pools))
      this%cn_col(:,:)= spval
+     allocate(this%litr_lig_c_to_n_col(begc:endc))
+     this%litr_lig_c_to_n_col(:)= spval
 
      allocate(this%rf_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
      this%rf_decomp_cascade_col(:,:,:) = nan
@@ -774,6 +777,7 @@ contains
        this%cwdhr_col(i)         = value_column
        this%michr_col(i)         = value_column
        this%soilc_change_col(i)  = value_column
+       this%litr_lig_c_to_n_col(i) = value_column
     end do
 
     ! NOTE: do not zero the fates to BGC C flux variables since they need to persist from the daily fates timestep s to the half-hourly BGC timesteps.  I.e. FATES_c_to_litr_lab_c_col, FATES_c_to_litr_cel_c_col, FATES_c_to_litr_lig_c_col
