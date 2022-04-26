@@ -81,6 +81,7 @@ module clm_driver
   use clm_instMod
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
+  use SoilBiogeochemDecompCascadeConType , only : no_soil_decomp, decomp_method
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -1089,14 +1090,16 @@ contains
                active_layer_inst, atm2lnd_inst, water_inst%waterfluxbulk_inst,                     &
                canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst)
 
-          call EDBGCDynSummary(bounds_clump,                                             &
-                filter(nc)%num_soilc, filter(nc)%soilc,                                  &
-                filter(nc)%num_soilp, filter(nc)%soilp,                                  &
-                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
-                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
-                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-                clm_fates, nc)
+          if ( decomp_method /= no_soil_decomp )then
+             call EDBGCDynSummary(bounds_clump,                                             &
+                   filter(nc)%num_soilc, filter(nc)%soilc,                                  &
+                   filter(nc)%num_soilp, filter(nc)%soilp,                                  &
+                   soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
+                   c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
+                   c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
+                   soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
+                   clm_fates, nc)
+          end if
           
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &

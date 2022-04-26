@@ -20,7 +20,7 @@ module CNCStateUpdate1Mod
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use PatchType                          , only : patch
-  use clm_varctl                         , only : use_fates, use_cn, iulog
+  use clm_varctl                         , only : use_fates, use_cn, iulog, use_fates_sp
   !
   implicit none
   private
@@ -200,7 +200,7 @@ contains
                cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
             end do
          end do
-      else  !use_fates
+      else if ( .not. use_fates_sp ) then !use_fates
          ! here add all fates litterfall and CWD breakdown to litter fluxes
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
@@ -215,6 +215,7 @@ contains
          end do
       endif
          
+      if ( .not. use_fates_sp ) then !use_fates
       ! litter and SOM HR fluxes
       do k = 1, ndecomp_cascade_transitions
          do j = 1,nlevdecomp
@@ -238,6 +239,7 @@ contains
             end do
          end if
       end do
+      end if
 
       if (.not. use_fates) then    
         do fp = 1,num_soilp

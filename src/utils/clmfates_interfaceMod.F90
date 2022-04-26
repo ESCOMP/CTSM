@@ -862,8 +862,13 @@ module CLMFatesInterfaceMod
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 
          ! Decomposition fluxes
-         this%fates(nc)%bc_in(s)%w_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%w_scalar_col(c,1:nlevsoil)
-         this%fates(nc)%bc_in(s)%t_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%t_scalar_col(c,1:nlevsoil)
+         if ( decomp_method /= no_soil_decomp )then
+            this%fates(nc)%bc_in(s)%w_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%w_scalar_col(c,1:nlevsoil)
+            this%fates(nc)%bc_in(s)%t_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%t_scalar_col(c,1:nlevsoil)
+         else
+            this%fates(nc)%bc_in(s)%w_scalar_sisl(1:nlevsoil) = 0.0_r8
+            this%fates(nc)%bc_in(s)%t_scalar_sisl(1:nlevsoil) = 0.0_r8
+         end if
 
          ! Soil water
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
@@ -976,36 +981,38 @@ module CLMFatesInterfaceMod
       ! of the HLMs API.  (column, depth, and litter fractions)
       ! ---------------------------------------------------------------------------------
 
-      do s = 1, this%fates(nc)%nsites
-         c = this%f2hmap(nc)%fcolumn(s)
+      if ( decomp_method /= no_soil_decomp )then
+         do s = 1, this%fates(nc)%nsites
+            c = this%f2hmap(nc)%fcolumn(s)
 
-         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nlevdecomp) = 0.0_r8
-         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nlevdecomp) = 0.0_r8
-         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nlevdecomp) = 0.0_r8
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nlevdecomp) = 0.0_r8
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nlevdecomp) = 0.0_r8
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nlevdecomp) = 0.0_r8
 
-         nld_si = this%fates(nc)%bc_in(s)%nlevdecomp
+            nld_si = this%fates(nc)%bc_in(s)%nlevdecomp
 
-         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nld_si) = &
-              this%fates(nc)%bc_out(s)%litt_flux_lab_c_si(1:nld_si)
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nld_si) = &
+                 this%fates(nc)%bc_out(s)%litt_flux_lab_c_si(1:nld_si)
 
-         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nld_si) = &
-              this%fates(nc)%bc_out(s)%litt_flux_cel_c_si(1:nld_si)
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nld_si) = &
+                 this%fates(nc)%bc_out(s)%litt_flux_cel_c_si(1:nld_si)
 
-         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si) = &
-              this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nld_si)
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si) = &
+                 this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nld_si)
 
-         ! Copy last 3 variables to an array of litter pools for use in do loops
-         ! and repeat copy in soilbiogeochem/SoilBiogeochemCarbonFluxType.F90.
-         ! Keep the three originals to avoid backwards compatibility issues with
-         ! restart files.
-         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,1) = &
-            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nld_si)
-         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,2) = &
-            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nld_si)
-         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,3) = &
-            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si)
+            ! Copy last 3 variables to an array of litter pools for use in do loops
+            ! and repeat copy in soilbiogeochem/SoilBiogeochemCarbonFluxType.F90.
+            ! Keep the three originals to avoid backwards compatibility issues with
+            ! restart files.
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,1) = &
+               soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nld_si)
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,2) = &
+               soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nld_si)
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,3) = &
+               soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si)
 
-      end do
+         end do
+      end if
 
 
       ! ---------------------------------------------------------------------------------
@@ -2339,13 +2346,22 @@ module CLMFatesInterfaceMod
 
       nc = bounds_clump%clump_index
 
-      ! Summarize Net Fluxes
-      do s = 1, this%fates(nc)%nsites
-         c = this%f2hmap(nc)%fcolumn(s)
-         this%fates(nc)%bc_in(s)%tot_het_resp = hr(c)
-         this%fates(nc)%bc_in(s)%tot_somc     = totsomc(c)
-         this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
-      end do
+      if ( decomp_method /= no_soil_decomp )then
+         ! Summarize Net Fluxes
+         do s = 1, this%fates(nc)%nsites
+            c = this%f2hmap(nc)%fcolumn(s)
+            this%fates(nc)%bc_in(s)%tot_het_resp = hr(c)
+            this%fates(nc)%bc_in(s)%tot_somc     = totsomc(c)
+            this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
+         end do
+      else
+         ! Summarize Net Fluxes
+         do s = 1, this%fates(nc)%nsites
+            this%fates(nc)%bc_in(s)%tot_het_resp = 0.0_r8
+            this%fates(nc)%bc_in(s)%tot_somc     = 0.0_r8
+            this%fates(nc)%bc_in(s)%tot_litc     = 0.0_r8
+         end do
+      end if
 
       dtime = get_step_size_real()
 
