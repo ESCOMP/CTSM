@@ -2531,6 +2531,13 @@ contains
                ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
             gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
          end if
+
+         ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
+         ! Just manually set a minimum of 1.0
+         if (gddmaturity(p) < min_crop_gdd_target) then
+            write(iulog,*) 'Some patch with ivt ',ivt(p),' has calculated gddmaturity ',gddmaturity(p),'; using min_crop_gdd_target instead (',min_crop_gdd_target,')'
+         endif
+         gddmaturity(p) = max(gddmaturity(p), min_crop_gdd_target)
       endif
 !      write (iulog,'(a,i4,a,f0.0)')  'gddmaturity (ivt ',ivt(p),'): ',gddmaturity(p)
 
