@@ -35,7 +35,6 @@ module cropcalStreamMod
   character(len=CS), allocatable :: stream_varnames_sdate(:)
   character(len=CS), allocatable :: stream_varnames_cultivar_gdds(:)
   integer                     :: ncft               ! Number of crop functional types (excl. generic crops)
-  logical                     :: warned_about_bad_interp_sdate, warned_about_bad_interp_cultivar_gdds
 
   character(len=*), parameter :: sourcefile = &
        __FILE__
@@ -193,9 +192,6 @@ contains
        end if
     end if
 
-    warned_about_bad_interp_sdate = .false.
-    warned_about_bad_interp_cultivar_gdds = .false.
-
   end subroutine cropcal_init
 
   !================================================================
@@ -307,10 +303,9 @@ contains
        ! So an explicit loop is required here
        do g = 1,lsize
 
-          ! Warn about possible bad interpolation. Not a problem unless it actually gets assigned to a patch.
-          if ((.not. warned_about_bad_interp_sdate) .and. (dataptr1d_sdate(g) <= 0 .or. dataptr1d_sdate(g) > 365)) then
-              write(iulog,'(a,i0,a,i0,a)') 'WARNING: cropcal_interp(): Crop ivt ',ivt,' (and maybe others) has dataptr1d prescribed sowing date ',dataptr1d_sdate(g),'. Bad interpolation?'
-              warned_about_bad_interp_sdate = .true.
+          ! If read-in value is invalid, allow_unprescribed_planting in CropPhenology()
+          if (dataptr1d_sdate(g) <= 0 .or. dataptr1d_sdate(g) > 365) then
+             dataptr1d_sdate(g) = -1
           end if
 
          dataptr2d_sdate(g,n) = dataptr1d_sdate(g)
@@ -330,7 +325,7 @@ contains
           crop_inst%rx_sdates_thisyr(p,1) = dataptr2d_sdate(ig,n)
 
           ! Sanity check: Should only read in valid values
-          if (crop_inst%rx_sdates_thisyr(p,1) <= 0 .or. crop_inst%rx_sdates_thisyr(p,1) > 365) then
+          if (crop_inst%rx_sdates_thisyr(p,1) > 365) then
               write(iulog,'(a,i0,a,i0)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed sowing date ',crop_inst%rx_sdates_thisyr(p,1)
               call ESMF_Finalize(endflag=ESMF_END_ABORT)
           end if
@@ -359,10 +354,9 @@ contains
           ! So an explicit loop is required here
           do g = 1,lsize
    
-             ! Warn about possible bad interpolation. Not a problem unless it actually gets assigned to a patch.
-             if ((.not. warned_about_bad_interp_cultivar_gdds) .and. (dataptr1d_cultivar_gdds(g) < 0 .or. dataptr1d_cultivar_gdds(g) > 1000000.0)) then
-                 write(iulog,'(a,i0,a,f0.0,a)') 'WARNING: cropcal_interp(): Crop n ',n,' (and maybe others) has dataptr1d prescribed GDD requirement ',dataptr1d_cultivar_gdds(g),'. Bad interpolation?'
-                 warned_about_bad_interp_cultivar_gdds = .true.
+             !  If read-in value is invalid, have PlantCrop() set gddmaturity to PFT-default value.
+             if (dataptr1d_cultivar_gdds(g) < 0 .or. dataptr1d_cultivar_gdds(g) > 1000000.0) then
+                dataptr1d_cultivar_gdds(g) = -1
              end if
             
              dataptr2d_cultivar_gdds(g,n) = dataptr1d_cultivar_gdds(g)
@@ -398,12 +392,10 @@ contains
 
              crop_inst%rx_cultivar_gdds_thisyr(p,1) = dataptr2d_cultivar_gdds(ig,n)
    
-             ! Sanity check: Should not read in negative values. Also try to catch uninitialized values
-             if (crop_inst%rx_cultivar_gdds_thisyr(p,1) < -0.001 .or. crop_inst%rx_cultivar_gdds_thisyr(p,1) > 1000000.0) then
+             ! Sanity check: Try to catch uninitialized values
+             if (crop_inst%rx_cultivar_gdds_thisyr(p,1) == 0.0 .or. crop_inst%rx_cultivar_gdds_thisyr(p,1) > 1000000.0) then
                  if (crop_inst%rx_cultivar_gdds_thisyr(p,1) == 0.0) then
                      write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) ZERO??? ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
-                 else if (crop_inst%rx_cultivar_gdds_thisyr(p,1) < -0.001) then
-                     write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) NEGATIVE ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
                  else
                      write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) HUGE ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
                  end if

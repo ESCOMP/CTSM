@@ -1850,16 +1850,6 @@ contains
 
          do_plant_prescribed = next_rx_sdate(p) == jday
          
-         if (generate_crop_gdds) then
-             if (s==0 .and. next_rx_sdate(p)<=0) then
-                 write(iulog,"(A,I4)") 'If using generate_crop_gdds, all simulated patches must have rx sdate. next_rx_sdate(p) <=0. PFT ',ivt(p)
-                 call endrun(msg=errMsg(sourcefile, __LINE__))
-             else if (s==0 .and. crop_inst%rx_sdates_thisyr(p,1)<=0) then
-                 write(iulog,"(A,I4)") 'If using generate_crop_gdds, all simulated patches must have rx sdate. rx_sdates_thisyr(p,1) <=0. PFT ',ivt(p)
-                 call endrun(msg=errMsg(sourcefile, __LINE__))
-             end if
-         end if
-
          ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-18)
          ! When resuming from a run with old code, may need to manually set these.
          ! Will be needed until we can rely on all restart files have been generated
@@ -2115,7 +2105,7 @@ contains
                 do_harvest = .true.
                 force_harvest = .true.
                 harvest_reason = 4._r8
-            else if (generate_crop_gdds) then
+            else if (generate_crop_gdds .and. crop_inst%sdates_thisyr(p,1) .gt. 0) then
                if (.not. use_cropcal_streams) then 
                   write(iulog,*) 'If using generate_crop_gdds, you must set use_cropcal_streams to true.'
                   call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -2146,13 +2136,10 @@ contains
                   do_harvest = .false.
 
                   ! ... unless first sowing next year happens Jan. 1.
-                  if (s < 1) then
-                      write(iulog,*) 'next_rx_sdate(p) < 0 but no sowings happened this year'
-                      call endrun(msg=errMsg(sourcefile, __LINE__))
                   ! WARNING: This implementation assumes that sowing dates don't change over time!
                   ! In order to avoid this, you'd have to read this year's AND next year's prescribed
                   ! sowing dates.
-                  else if (crop_inst%sdates_thisyr(p,1) == 1) then
+                  if (crop_inst%sdates_thisyr(p,1) == 1) then
                       do_harvest = jday == dayspyr
                   end if
 
@@ -2511,7 +2498,7 @@ contains
       endif
 
       ! set GDD target
-      if (do_plant_prescribed .and. (.not. generate_crop_gdds) .and. (.not. ignore_rx_crop_gdds)) then
+      if (do_plant_prescribed .and. (.not. generate_crop_gdds) .and. (.not. ignore_rx_crop_gdds) .and. crop_inst%rx_cultivar_gdds_thisyr(p,s) .gt. 0._r8) then
          gdd_target = crop_inst%rx_cultivar_gdds_thisyr(p,s)
 
          ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
