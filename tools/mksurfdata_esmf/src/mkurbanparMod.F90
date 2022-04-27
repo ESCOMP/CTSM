@@ -14,7 +14,7 @@ module mkurbanparMod
   use mkutilsMod       , only : chkerr
   use mkvarctl         , only : root_task, ndiag, ispval, outnc_double
   use mkutilsMod       , only : normalize_classes_by_gcell
-  use mkdiagnosticsMod , only : output_diagnostics_index
+  use mkdiagnosticsMod , only : output_diagnostics_index, output_diagnostics_continuous
   use mkindexmapMod    , only : dim_slice_type, lookup_2d_netcdf
   use mkvarpar         , only : numrad, numsolar, re
 
@@ -91,9 +91,7 @@ contains
     ! arbitrary assignment of urban into the different classes).
     !
     ! See comments under the normalize_urbn_by_tot subroutine for how urban_classes_o is
-    ! determined when the total % urban is 0, according to the input data. Note that this
-    ! also applies when all_urban=.true., for points that have 0 urban according to the input
-    ! data.
+    ! determined when the total % urban is 0, according to the input data.
     !
     ! TODO (WJS 6-12-14): I think this could be rewritten slightly to take advantage of the
     ! new mkpctPftTypeMod (which should then be renamed to something more general; or maybe
@@ -314,7 +312,10 @@ contains
     end if
 
     ! Output diagnostics
-    ! TODO: (not currently done)
+    call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
+         1, max_regions, region_i, region_o, 'urban region', ndiag, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+
 
     ! Close the file
     call pio_closefile(pioid)
@@ -939,8 +940,8 @@ contains
     call regrid_rawdata(mesh_i, mesh_o, routehandle, elev_i, elev_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-    !    data_i, data_o, "Urban elev variable", "m", ndiag)
+    call output_diagnostics_continuous(mesh_i, mesh_o, elev_i, elev_o, &
+       "Urban elev variable", "m", ndiag=ndiag, rc=rc, nomask=.true.)
 
     ! Deallocate dynamic memory
     deallocate (elev_i)

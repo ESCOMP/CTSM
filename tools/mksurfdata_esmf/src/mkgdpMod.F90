@@ -132,8 +132,8 @@ contains
     call pio_syncfile(pioid_o)
 
     ! Output diagnostic info
-    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-         gdp_i, gdp_o, "GDP", "x1000 US$ per capita", ndiag, rc)
+    call output_diagnostics_continuous(mesh_i, mesh_o, gdp_i, gdp_o, &
+       "GDP", "x1000 US$ per capita", ndiag=ndiag, rc=rc, mask_i=mask_i, frac_o=frac_o)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
     ! Clean up memory

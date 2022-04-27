@@ -70,13 +70,13 @@ program mksurfdata
   !    gitdescribe ------- Description of this version from git
   !    numpft ------------ Iif different than default of 16
   !    urban_skip_abort_on_invalid_data_check--- work around urban bug
+  !    no_inlandwet ------ If wetland should be set to 0% over land
   ! ======================================
   ! Note: the folloiwng Optional settings have been REMOVED -
   !  instead should now use tools subset_data and modify_fsurdat
   ! ======================================
   !    all_veg ----------- If entire area is to be vegetated (pft_idx and pft_frc then required)
   !    all_urban --------- If entire area is urban
-  !    no_inlandwet ------ If wetland should be set to 0% over land
   !    soil_clay --------- If you want to change the soil_clay % to this value everywhere
   !    soil_fmax --------- If you want to change the soil_fmax  to this value everywhere
   !    soil_sand --------- If you want to change the soil_sand % to this value everywhere
@@ -598,35 +598,6 @@ program mksurfdata
         pctgla(n) = 100._r8
      end if
 
-     ! Truncate all percentage fields on output grid. This is needed to insure that
-     ! wt is zero (not a very small number such as 1e-16) where it should be zero
-     pctlak(n) = float(nint(pctlak(n)))
-     pctwet(n) = float(nint(pctwet(n)))
-     pctgla(n) = float(nint(pctgla(n)))
-
-     ! Assume wetland, glacier and/or lake when dataset landmask implies ocean
-     if (pctlnd_pft(n) < 1.e-6_r8) then
-        if (pctgla(n) < 1.e-6_r8) then
-           pctwet(n) = 100._r8 - pctlak(n)
-           pctgla(n) = 0._r8
-        else
-           pctwet(n)  = max(100._r8 - pctgla(n) - pctlak(n), 0.0_r8)
-        end if
-        pcturb(n) = 0._r8
-     end if
-
-     ! Make sure sum of all land cover types except natural vegetation
-     ! does not exceed 100. If it does, subtract excess from these land cover
-     ! types proportionally.
-
-     suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
-     if (suma > 100._r4) then
-        pctlak(n) = pctlak(n) * 100._r8/suma
-        pctwet(n) = pctwet(n) * 100._r8/suma
-        pcturb(n) = pcturb(n) * 100._r8/suma
-        pctgla(n) = pctgla(n) * 100._r8/suma
-        call pctcft(n)%set_pct_l2g(pctcft(n)%get_pct_l2g() * 100._r8/suma)
-     end if
   end do
 
   ! Save special land unit areas of surface dataset
@@ -969,7 +940,6 @@ program mksurfdata
         pctwet(:) = pctwet_orig(:)
         pctgla(:) = pctgla_orig(:)
 
-        ! Do landuse changes such as for the poles, etc.
         ! If have pole points on grid - set south pole to glacier
         ! north pole is assumed as non-land
         ! pctlak, pctwet, pcturb and pctgla were calculated ABOVE
@@ -983,6 +953,7 @@ program mksurfdata
               call pctnatpft(n)%set_pct_l2g(0._r8)
               call pctcft(n)%set_pct_l2g(0._r8)
            end if
+
         end do
 
         ! Normalize land use and make sure things add up to 100% as well as
@@ -1110,6 +1081,46 @@ program mksurfdata
 
       do n = 1,ns_o
 
+         ! Truncate all percentage fields on output grid. This is needed to
+         ! insure that wt is zero (not a very small number such as
+         ! 1e-16) where it really should be zero
+
+         pctlak(n) = float(nint(pctlak(n)))
+         pctwet(n) = float(nint(pctwet(n)))
+         pctgla(n) = float(nint(pctgla(n)))
+
+         ! Assume wetland, glacier and/or lake when dataset landmask implies ocean
+         ! (assume medium soil color (15) and loamy texture).
+         ! Also set pftdata_mask here
+
+         if (pctlnd_pft(n) < 1.e-6_r8) then
+            pftdata_mask(n)  = 0
+            if (pctgla(n) < 1.e-6_r8) then
+                pctwet(n)    = 100._r8 - pctlak(n)
+                pctgla(n)    = 0._r8
+            else
+                pctwet(n)    = max(100._r8 - pctgla(n) - pctlak(n), 0.0_r8)
+            end if
+            pcturb(n)        = 0._r8
+            call pctnatpft(n)%set_pct_l2g(0._r8)
+            call pctcft(n)%set_pct_l2g(0._r8)
+         else
+            pftdata_mask(n) = 1
+         end if
+
+         ! Make sure sum of all land cover types except natural vegetation does
+         ! not exceed 100. If it does, subtract excess from these land cover
+         ! types proportionally.
+
+         suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
+         if (suma > 100._r4) then
+            pctlak(n) = pctlak(n) * 100._r8/suma
+            pctwet(n) = pctwet(n) * 100._r8/suma
+            pcturb(n) = pcturb(n) * 100._r8/suma
+            pctgla(n) = pctgla(n) * 100._r8/suma
+            call pctcft(n)%set_pct_l2g(pctcft(n)%get_pct_l2g() * 100._r8/suma)
+         end if
+
          ! Check preconditions
          if ( pctlak(n) < 0.0_r8 )then
             write(6,*) subname, ' ERROR: pctlak is negative!'
@@ -1215,14 +1226,13 @@ program mksurfdata
             else if (pctcft(n)%get_pct_l2g() >= 1.0_r8) then
                call pctcft(n)%set_pct_l2g(100._r8 - (pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)))
             else
-               write (6,*) subname, 'Error: sum of special land units nearly 100% but none is >= 25% at ', &
+               write (6,*) subname, 'Error: sum of special land units nearly 100% but none is >= 1% at ', &
                     'n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n),suma = ', &
                     n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                     pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(),suma
                call shr_sys_abort()
             end if
-            call pctcft(n)%set_pct_l2g(0._r8)
-            call pctcft(n)%set_pct_l2g(0._r8)
+            call pctnatpft(n)%set_pct_l2g(0._r8)
          end if
          if ( any(pctnatpft(n)%get_pct_p2g() > 0.0_r8 .and. pctnatpft(n)%get_pct_p2g() < toosmallPFT ) .or. &
               any(pctcft(n)%get_pct_p2g()    > 0.0_r8 .and. pctcft(n)%get_pct_p2g()    < toosmallPFT )) then

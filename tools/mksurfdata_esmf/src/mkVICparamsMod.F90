@@ -152,8 +152,8 @@ contains
     end if
 
     ! Calculate global diagnostics for binfl
-    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-         data_i, binfl_o, "VIC b parameter", "unitless", ndiag, rc=rc)
+    call output_diagnostics_continuous(mesh_i, mesh_o, data_i, binfl_o, &
+       "VIC b parameter", "unitless", ndiag=ndiag, rc=rc, mask_i=mask_i, frac_o=frac_o)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------------------------------------------------
@@ -178,8 +178,8 @@ contains
     end if
 
     ! Calculate global diagnostics for Ws
-    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-         data_i, ws_o, "VIC Ws parameter", "unitless", ndiag, rc)
+    call output_diagnostics_continuous(mesh_i, mesh_o, data_i, ws_o, &
+       "VIC Ws parameter", "unitless", ndiag=ndiag, rc=rc, mask_i=mask_i, frac_o=frac_o)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------------------------------------------------
@@ -204,8 +204,8 @@ contains
     end if
 
     ! Calculate global diagnostics for Dsmax
-    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-         data_i, dsmax_o, "VIC Dsmax parameter", "mm/day", ndiag, rc)
+    call output_diagnostics_continuous(mesh_i, mesh_o, data_i, dsmax_o, &
+       "VIC Dsmax parameter", "mm/day", ndiag=ndiag, rc=rc, mask_i=mask_i, frac_o=frac_o)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------------------------------------------------
@@ -230,8 +230,8 @@ contains
     end if
 
     ! Calculate global diagnostics for Ws
-    call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-         data_i, ds_o, "VIC Ds parameter", "unitless", ndiag, rc)
+    call output_diagnostics_continuous(mesh_i, mesh_o, data_i, ds_o, &
+       "VIC Ds parameter", "unitless", ndiag=ndiag, rc=rc, mask_i=mask_i, frac_o=frac_o)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------------------------------------------------

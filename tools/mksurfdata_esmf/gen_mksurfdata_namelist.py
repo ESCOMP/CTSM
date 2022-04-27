@@ -24,7 +24,7 @@ def get_parser():
 
     parser.add_argument(
         '-v', '--verbose',
-        help="ncrease output verbosity",
+        help="increase output verbosity",
         action="store_true",
     )
     parser.add_argument(
@@ -147,6 +147,16 @@ def get_parser():
         default=False,
     )
     parser.add_argument(
+        "--inlandwet",
+        help="""
+            Flag for including inland wetlands.
+            [default: %(default)s]
+            """,
+        action="store_true",
+        dest="inlandwet",
+        default=False,
+    )
+    parser.add_argument(
         "--glc",
         help="""
             Flag for adding the optional 3D glacier fields for verification of the glacier model.
@@ -230,6 +240,7 @@ def main ():
     nocrop_flag = args.crop_flag
     nosurfdata_flag = args.surfdata_flag
     vic_flag = args.vic_flag
+    inlandwet = args.inlandwet
     glc_flag = args.glc_flag
     potveg = args.potveg_flag
     glc_nec = args.glc_nec
@@ -568,15 +579,9 @@ def main ():
         # output data logicals
         # -------------------
         nlfile.write(f"  numpft = {num_pft} \n")
-        nlfile.write( "  no_inlandwet = .true. \n")
-        if glc_flag:
-            nlfile.write( "  outnc_3dglc = .true. \n")
-        else:
-            nlfile.write( "  outnc_3dglc = .false. \n")
-        if vic_flag:
-            nlfile.write( "  outnc_vic = .true. \n")
-        else:
-            nlfile.write("  outnc_vic = .false. \n")
+        nlfile.write(f"  no_inlandwet = .{str(not inlandwet).lower()}. \n")
+        nlfile.write(f"  outnc_3dglc = .{str(glc_flag).lower()}. \n")
+        nlfile.write(f"  outnc_vic = .{str(vic_flag).lower()}. \n")
         nlfile.write( "  outnc_large_files = .false. \n")
         nlfile.write( "  outnc_double = .true. \n")
         nlfile.write(f"  logname = \'{logname}\' \n")

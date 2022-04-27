@@ -60,18 +60,13 @@ NOTES
 ------------------------------------------------------------
 slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
 ------------------------------------------------------------
-1) 1x1_brazil good (min number-of-nodes tested: 4)
-
-2) 10x15 mostly good (min number-of-nodes tested: 3)
-- Soil color & ag fire peak month outputs too high in .log
-  TODO: frac_o agfire always 1. Change? How?
-- Pct lake has changed in the .log; has the raw data changed?
-- Soil texture too low in .log; has the raw data changed?
-- Slope, stddev, urban not appearing in .log
-- REMEMBER TO also compare against existing fsurdat files in /glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/release-clm5.0.18
-
-old) ./gen_mksurfdata_namelist.py --start-year 2000 --end-year 2000 --res 1.9x2.5 --vic --glc
-Issues: See newer testing above
+REMEMBER TO compare against existing fsurdat files in
+/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/release-clm5.0.18
+1) Soil color & texture and ag fire peak month outputs too high in .log
+   TODO? Change frac_o from always 1.
+2) Pct lake has chged in the .log bc the old diagnostic omitted mask_i frac_o
+3) Slope, stddev have chged in the .log bc the old diag. used frac_o
+4) 1x1_brazil min number-of-nodes tested: 4; 10x15 min tested: 3
 
 ------------------------------------------------------
 NOT ALL FILES HAVE BEEN TRANSLATED to cdf5 : check last millenium
@@ -79,11 +74,13 @@ NOT ALL FILES HAVE BEEN TRANSLATED to cdf5 : check last millenium
 > nccopy -k cdf5 oldfile newfile
 
 --------------------------------------------------------
-Override options removed:
+Override options removed that need to be placed in fsurdat_modifier
+and/or subset_data:
 --------------------------------------------------------
--- all_veg = .true. handled by fsurdat_modifier zero_nonveg = .true.
--- all_urban = .true. handle w fsurdat_modifier new option
--- no_inlandwet = .false. same
--- soil_...
--- pft_...
-
+--soil_clay --soil_sand for setting to these values everywhere
+--all_urban = .true.
+Normalize so that sum(urban_classes_o(n,:)) = 100 for all n, even for grid
+cells where pcturb_o(n) = 0 (in the case where pcturb_o(n) = 0, come up with an
+arbitrary assignment of urban into the different classes).
+See comments in the normalize_urbn_by_tot subroutine for how urban_classes_o is
+determined when the total % urban is 0, according to the input data.

@@ -189,8 +189,9 @@ contains
           end if
 
           ! Check global areas for lake depth
-          call output_diagnostics_continuous(mesh_i, mesh_o, mask_i, frac_o, &
-               lakedepth_i, lakedepth_o, "lake depth", "m", ndiag, rc)
+          call output_diagnostics_continuous(mesh_i, mesh_o, &
+               lakedepth_i, lakedepth_o, "lake depth", "m", &
+               ndiag=ndiag, rc=rc, mask_i=mask_i, frac_o=frac_o)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
     end if
@@ -260,6 +261,9 @@ contains
        write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
        write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
     end if
+
+    ! Open input data file
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
 
     ! Read in input mesh
     mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)

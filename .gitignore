@@ -91,17 +91,14 @@ ctsm.input_data_list.previous
 /tools/mksurfdata_esmf/mksurfdata_in
 /tools/mksurfdata_esmf/bld
 /tools/mksurfdata_esmf/src
+/tools/mksurfdata_esmf/surfdata_*.nc
+/tools/mksurfdata_esmf/landuse.timeseries_*.nc
 
 # mksurfdata unit tests
 unit_test_build
 
 # Tools executables
-/tools/mksurfdata_map/mksurfdata_map
 /tools/mkprocdata_map/mkprocdata_map
-
-# mksurfdata output files
-/tools/mksurfdata_map/surfdata_*.nc
-/tools/mksurfdata_map/landuse.timeseries_*.nc
 
 # mkmapdata output files
 /tools/mkmapdata/PET*.RegridWeightGen.Log
