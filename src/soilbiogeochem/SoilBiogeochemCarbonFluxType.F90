@@ -50,10 +50,10 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: fphr_col                                  (:,:)   ! fraction of potential heterotrophic respiration
 
      real(r8), pointer :: hr_col                                    (:)     ! (gC/m2/s) total heterotrophic respiration
-     real(r8), pointer :: michr_col                                 (:)     ! (gC/m2/s) microbial heterotrophic respiration
-     real(r8), pointer :: cwdhr_col                                 (:)     ! (gC/m2/s) coarse woody debris heterotrophic respiration
-     real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration 
-     real(r8), pointer :: somhr_col                                 (:)     ! (gC/m2/s) soil organic matter heterotrophic res   
+     real(r8), pointer :: michr_col                                 (:)     ! (gC/m2/s) microbial heterotrophic respiration: donor-pool based definition, so expect it to be zero with MIMICS; microbial decomposition is responsible for heterotrophic respiration of donor pools (litter and soil), but in the accounting we assign it to the donor pool for consistency with CENTURY
+     real(r8), pointer :: cwdhr_col                                 (:)     ! (gC/m2/s) coarse woody debris heterotrophic respiration: donor-pool based definition
+     real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration: donor-pool based definition
+     real(r8), pointer :: somhr_col                                 (:)     ! (gC/m2/s) soil organic matter heterotrophic res: donor-pool based definition
      real(r8), pointer :: soilc_change_col                          (:)     ! (gC/m2/s) FUN used soil C
 
      ! fluxes to receive carbon inputs from FATES
@@ -231,13 +231,13 @@ contains
 
         this%michr_col(begc:endc) = spval
         call hist_addfld1d (fname='MICC_HR', units='gC/m^2/s', &
-             avgflag='A', long_name='microbial C heterotrophic respiration', &
-             ptr_col=this%michr_col)
+             avgflag='A', long_name='microbial C heterotrophic respiration: donor-pool based, so expect zero with MIMICS', &
+             ptr_col=this%michr_col, default='inactive')
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='CWDC_HR', units='gC/m^2/s', &
              avgflag='A', long_name='cwd C heterotrophic respiration', &
-             ptr_col=this%cwdhr_col, default='inactive')
+             ptr_col=this%cwdhr_col)
 
         this%lithr_col(begc:endc) = spval
         call hist_addfld1d (fname='LITTERC_HR', units='gC/m^2/s', &
