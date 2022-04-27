@@ -1096,9 +1096,7 @@ contains
                 c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                 c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                 soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-                bgc_vegetation_inst%cnveg_carbonflux_inst, &
-                bgc_vegetation_inst%c13_cnveg_carbonflux_inst, &
-                bgc_vegetation_inst%c14_cnveg_carbonflux_inst, nc)
+                nc)
           
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &

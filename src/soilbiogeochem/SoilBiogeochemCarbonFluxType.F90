@@ -793,9 +793,9 @@ contains
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, &
                      num_soilc, filter_soilc, num_soilp, filter_soilp, &
-                     leafc_to_litter_patch, frootc_to_litter_patch, &
                      soilbiogeochem_decomp_cascade_ctransfer_col, &
-                     soilbiogeochem_cwdc_col, soilbiogeochem_cwdn_col)
+                     soilbiogeochem_cwdc_col, soilbiogeochem_cwdn_col, &
+                     leafc_to_litter_patch, frootc_to_litter_patch)
     !
     ! !DESCRIPTION:
     ! On the radiation time step, carbon summary calculations
@@ -809,13 +809,13 @@ contains
     type(bounds_type)               , intent(in)    :: bounds          
     integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                         , intent(in)    :: filter_soilc(:) ! filter for soil columns
-    integer                         , intent(in)    :: num_soilp       ! number of patches in filter
-    integer                         , intent(in)    :: filter_soilp(:) ! filter for patches
-    real(r8)                        , intent(in)    :: leafc_to_litter_patch(bounds%begp:)
-    real(r8)                        , intent(in)    :: frootc_to_litter_patch(bounds%begp:)
-    real(r8)                        , intent(in)    :: soilbiogeochem_cwdc_col(bounds%begc:)
-    real(r8)                        , intent(in)    :: soilbiogeochem_cwdn_col(bounds%begc:)
-    real(r8)                        , intent(in)    :: soilbiogeochem_decomp_cascade_ctransfer_col(bounds%begc:,1:)
+    integer, intent(in), optional :: num_soilp  ! number of patches in filter
+    integer, intent(in), optional :: filter_soilp(:)  ! filter for patches
+    real(r8), intent(in), optional :: soilbiogeochem_cwdc_col(bounds%begc:)
+    real(r8), intent(in), optional :: soilbiogeochem_cwdn_col(bounds%begc:)
+    real(r8), intent(in), optional :: soilbiogeochem_decomp_cascade_ctransfer_col(bounds%begc:,1:)
+    real(r8), intent(in), optional :: leafc_to_litter_patch(bounds%begp:)
+    real(r8), intent(in), optional :: frootc_to_litter_patch(bounds%begp:)
     !
     ! !LOCAL VARIABLES:
     integer  :: c,j,k,l,p

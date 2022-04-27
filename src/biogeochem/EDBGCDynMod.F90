@@ -117,11 +117,9 @@ contains
     real(r8):: pmnf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential mineral N flux, from one pool to another
     real(r8):: p_decomp_npool_to_din(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions)  ! potential flux to dissolved inorganic N
     real(r8):: p_decomp_cn_gain(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)  ! C:N ratio of the flux gained by the receiver pool
-    integer :: begp,endp
     integer :: begc,endc
     !-----------------------------------------------------------------------
 
-    begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
 
     associate(                                                                    &
@@ -267,8 +265,7 @@ contains
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, &
-       cnveg_carbonflux_inst, &
-       c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, nc)
+       nc)
     !
     ! !DESCRIPTION:
     ! Call to all CN and SoilBiogeochem summary routines
@@ -293,18 +290,13 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
-    type(cnveg_carbonflux_type)             , intent(inout) :: cnveg_carbonflux_inst
-    type(cnveg_carbonflux_type)             , intent(inout) :: c13_cnveg_carbonflux_inst
-    type(cnveg_carbonflux_type)             , intent(inout) :: c14_cnveg_carbonflux_inst
     integer                                 , intent(in)    :: nc  ! thread index
     !
     ! !LOCAL VARIABLES:
-    integer :: begp,endp
     integer :: begc,endc
     !-----------------------------------------------------------------------
   
     begc = bounds%begc; endc= bounds%endc
-    begp = bounds%begp; endp= bounds%endp
 
     ! Call to all summary routines
 
@@ -336,30 +328,12 @@ contains
     ! soilbiogeochem carbon/nitrogen flux summary
     ! ----------------------------------------------
 
-    call soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, &
-         num_soilp, filter_soilp, &
-         cnveg_carbonflux_inst%leafc_to_litter_patch(begp:endp), &
-         cnveg_carbonflux_inst%frootc_to_litter_patch(begp:endp), &
-         soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-         soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
-         soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc))
+    call soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc)
     if ( use_c13 ) then
-       call c13_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, &
-         num_soilp, filter_soilp, &
-         c13_cnveg_carbonflux_inst%leafc_to_litter_patch(begp:endp), &
-         c13_cnveg_carbonflux_inst%frootc_to_litter_patch(begp:endp), &
-         c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-         c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
-         soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc))
+       call c13_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc)
     end if
     if ( use_c14 ) then
-       call c14_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, &
-         num_soilp, filter_soilp, &
-         c14_cnveg_carbonflux_inst%leafc_to_litter_patch(begp:endp), &
-         c14_cnveg_carbonflux_inst%frootc_to_litter_patch(begp:endp), &
-         c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-         c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
-         soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc))
+       call c14_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc)
     end if
     ! call soilbiogeochem_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc)
 
