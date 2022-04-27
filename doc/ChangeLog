@@ -1,17 +1,15 @@
 ===============================================================
 Tag name: ctsm5.1.dev092
 Originator(s): slevis (Samuel Levis)
-Date: Mon Apr 25 09:57:03 MDT 2022
+Date: Tue Apr 26 19:09:48 MDT 2022
 One-line Summary: Modifications for FATES-MIMICS to work
 
 Purpose and description of changes
 ----------------------------------
 
  1) For FATES-MIMICS cases, use ligninNratioAvg calculated by FATES.
-
- 2) FATES has it's own calculation of annsum_npp_col, also needed in MIMICS.
- I updated MIMICS to use the FATES variable when running with FATES.
-
+ 2) For FATES-MIMICS cases, use annsum_npp_col calculated by FATES.
+ 3) Small modification to allow carbon-only to work with MIMICS.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -34,18 +32,15 @@ Bugs fixed or introduced
 ------------------------
 Issues fixed (include CTSM Issue #): #1636
 
-
 Notes of particular relevance for users
 ---------------------------------------
 Caveats for users (e.g., need to interpolate initial conditions):
  MIMICS-FATES now do work together, but only as long as use_lch4 = .true.
 
-
 Notes of particular relevance for developers:
 ---------------------------------------------
 Changes to tests or testing:
  To confirm that MIMICS-FATES works, I added the testmod mimicsFatesColdDef.
-
 
 Testing summary:
 ----------------
