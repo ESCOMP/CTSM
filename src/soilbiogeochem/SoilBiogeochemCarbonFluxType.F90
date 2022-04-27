@@ -4,11 +4,13 @@ module SoilBiogeochemCarbonFluxType
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use decompMod                          , only : bounds_type
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nlevsoi
+  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nlevsoi, i_cwdl2
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
+  use pftconMod                          , only : pftcon
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use ch4varcon                          , only : allowlakeprod
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method
+  use PatchType                          , only : patch
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
   use clm_varctl                         , only : use_fates
@@ -31,7 +33,7 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: decomp_cascade_ctransfer_vr_col           (:,:,:) ! vertically-resolved C transferred along deomposition cascade (gC/m3/s)
      real(r8), pointer :: decomp_cascade_ctransfer_col              (:,:)   ! vertically-integrated (diagnostic) C transferred along decomposition cascade (gC/m2/s)
      real(r8), pointer :: cn_col                                    (:,:)   ! (gC/gN) C:N ratio by pool
-     real(r8), pointer :: litr_lig_c_to_n_col                       (:)     ! (gC/gN) lignin C:N ratio; FATES equivalent of cnveg_carbonflux_inst%ligninNratioAvg_col because FATES doesn't have access to cnveg_carbonflux_inst; could reduce duplication by consolidating cnveg_carbonflux_inst%ligninNratioAvg_col into this one
+     real(r8), pointer :: litr_lig_c_to_n_col                       (:)     ! (gC/gN) Average of leaf, fine root, and CWD lignin C:N ratio
      real(r8), pointer :: rf_decomp_cascade_col                     (:,:,:) ! (frac) respired fraction in decomposition step
      real(r8), pointer :: pathfrac_decomp_cascade_col               (:,:,:) ! (frac) what fraction of C passes from donor to receiver pool through a given transition
      real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate coefficient for decomposition (1./sec)
@@ -132,8 +134,6 @@ contains
 
      allocate(this%cn_col(begc:endc,1:ndecomp_pools))
      this%cn_col(:,:)= spval
-     allocate(this%litr_lig_c_to_n_col(begc:endc))
-     this%litr_lig_c_to_n_col(:)= spval
 
      allocate(this%rf_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
      this%rf_decomp_cascade_col(:,:,:) = nan
@@ -173,6 +173,8 @@ contains
         this%FATES_c_to_litr_lig_c_col(begc:endc,1:nlevdecomp_full) = 0._r8
 
      endif
+     allocate(this%litr_lig_c_to_n_col(begc:endc))
+     this%litr_lig_c_to_n_col(:)= 0._r8
      
    end subroutine InitAllocate 
 
@@ -709,7 +711,12 @@ contains
        this%FATES_c_to_litr_c_col(:,:,3) = this%FATES_c_to_litr_lig_c_col(:,:)
        
     end if
-    
+
+    call restartvar(ncid=ncid, flag=flag, varname='ligninNratioAvg', xtype=ncd_double,  &
+         dim1name='column', &
+         long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%litr_lig_c_to_n_col)
+
   end subroutine Restart
 
   !-----------------------------------------------------------------------
@@ -777,7 +784,6 @@ contains
        this%cwdhr_col(i)         = value_column
        this%michr_col(i)         = value_column
        this%soilc_change_col(i)  = value_column
-       this%litr_lig_c_to_n_col(i) = value_column
     end do
 
     ! NOTE: do not zero the fates to BGC C flux variables since they need to persist from the daily fates timestep s to the half-hourly BGC timesteps.  I.e. FATES_c_to_litr_lab_c_col, FATES_c_to_litr_cel_c_col, FATES_c_to_litr_lig_c_col
@@ -785,21 +791,43 @@ contains
   end subroutine SetValues
 
   !-----------------------------------------------------------------------
-  subroutine Summary(this, bounds, num_soilc, filter_soilc)
+  subroutine Summary(this, bounds, &
+                     num_soilc, filter_soilc, num_soilp, filter_soilp, &
+                     leafc_to_litter_patch, frootc_to_litter_patch, &
+                     soilbiogeochem_decomp_cascade_ctransfer_col, &
+                     soilbiogeochem_cwdc_col, soilbiogeochem_cwdn_col)
     !
     ! !DESCRIPTION:
-    ! On the radiation time step, column-level carbon summary calculations
+    ! On the radiation time step, carbon summary calculations
     !
     ! !USES:
+    use subgridAveMod, only: p2c
+    use CNSharedParamsMod, only: CNParamsShareInst
+
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonflux_type)           :: this
     type(bounds_type)               , intent(in)    :: bounds          
     integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                         , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                         , intent(in)    :: num_soilp       ! number of patches in filter
+    integer                         , intent(in)    :: filter_soilp(:) ! filter for patches
+    real(r8)                        , intent(in)    :: leafc_to_litter_patch(bounds%begp:)
+    real(r8)                        , intent(in)    :: frootc_to_litter_patch(bounds%begp:)
+    real(r8)                        , intent(in)    :: soilbiogeochem_cwdc_col(bounds%begc:)
+    real(r8)                        , intent(in)    :: soilbiogeochem_cwdn_col(bounds%begc:)
+    real(r8)                        , intent(in)    :: soilbiogeochem_decomp_cascade_ctransfer_col(bounds%begc:,1:)
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,j,k,l
-    integer  :: fc       
+    integer  :: c,j,k,l,p
+    integer  :: fc, fp
+    real(r8) :: ligninNratio_cwd  ! lignin to N ratio of CWD
+    real(r8) :: ligninNratio_leaf_patch(bounds%begp:bounds%endp)  ! lignin to N ratio of leaves, patch level
+    real(r8) :: ligninNratio_froot_patch(bounds%begp:bounds%endp)  ! lignin to N ratio of fine roots, patch level
+    real(r8) :: ligninNratio_leaf_col(bounds%begc:bounds%endc)  ! lignin to N ratio of leaves, column level
+    real(r8) :: ligninNratio_froot_col(bounds%begc:bounds%endc)  ! lignin to N ratio of fine roots, column level
+    real(r8) :: leafc_to_litter_col(bounds%begc:bounds%endc)  ! leaf C to litter C, column level
+    real(r8) :: frootc_to_litter_col(bounds%begc:bounds%endc)  ! fine root C to litter C, column level
+
     !-----------------------------------------------------------------------
 
     do fc = 1,num_soilc
@@ -919,6 +947,54 @@ contains
                this%somhr_col(c)
        
     end do
+
+    ! Calculate ligninNratio
+    ! FATES does its own calculation
+    if (.not. use_fates .and. decomp_method == mimics_decomp) then
+       do fp = 1,num_soilp
+          p = filter_soilp(fp)
+
+          associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
+            ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
+                                         pftcon%lflitcn(ivt(p)) * &
+                                         leafc_to_litter_patch(p)
+            ligninNratio_froot_patch(p) = pftcon%fr_flig(ivt(p)) * &
+                                          pftcon%frootcn(ivt(p)) * &
+                                          frootc_to_litter_patch(p)
+          end associate
+       end do
+
+       call p2c(bounds, num_soilc, filter_soilc, &
+            ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
+            ligninNratio_leaf_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            ligninNratio_froot_patch(bounds%begp:bounds%endp), &
+            ligninNratio_froot_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            leafc_to_litter_patch(bounds%begp:bounds%endp), &
+            leafc_to_litter_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            frootc_to_litter_patch(bounds%begp:bounds%endp), &
+            frootc_to_litter_col(bounds%begc:bounds%endc))
+
+       ! Calculate ligninNratioAve
+       do fc = 1,num_soilc
+          c = filter_soilc(fc)
+          if (soilbiogeochem_cwdn_col(c) > 0._r8) then
+             ligninNratio_cwd = CNParamsShareInst%cwd_flig * &
+                (soilbiogeochem_cwdc_col(c) / soilbiogeochem_cwdn_col(c)) * &
+                soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2)
+          else
+             ligninNratio_cwd = 0._r8
+          end if
+          this%litr_lig_c_to_n_col(c) = &
+             (ligninNratio_leaf_col(c) + ligninNratio_froot_col(c) + &
+              ligninNratio_cwd) / &
+              max(1.0e-3_r8, leafc_to_litter_col(c) + &
+                             frootc_to_litter_col(c) + &
+                             soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2))
+       end do
+    end if
 
   end subroutine Summary
 

@@ -1031,12 +1031,14 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
+    integer :: begp,endp
     integer :: begc,endc
     integer :: begg,endg
 
     character(len=*), parameter :: subname = 'CNDriverSummarizeFluxes'
     !-----------------------------------------------------------------------
 
+    begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg = bounds%endg
 
@@ -1046,12 +1048,30 @@ contains
     ! soilbiogeochem carbon/nitrogen flux summary
     ! ----------------------------------------------
 
-    call soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc)
+    call soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
+         cnveg_carbonflux_inst%leafc_to_litter_patch(begp:endp), &
+         cnveg_carbonflux_inst%frootc_to_litter_patch(begp:endp), &
+         soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+         soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
+         soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc))
     if ( use_c13 ) then
-       call c13_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc)
+       call c13_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
+         c13_cnveg_carbonflux_inst%leafc_to_litter_patch(begp:endp), &
+         c13_cnveg_carbonflux_inst%frootc_to_litter_patch(begp:endp), &
+         c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+         c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
+         soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc))
     end if
     if ( use_c14 ) then
-       call c14_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc)
+       call c14_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
+         c14_cnveg_carbonflux_inst%leafc_to_litter_patch(begp:endp), &
+         c14_cnveg_carbonflux_inst%frootc_to_litter_patch(begp:endp), &
+         c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+         c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
+         soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc))
     end if
     call soilbiogeochem_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc)
 
@@ -1067,8 +1087,6 @@ contains
          soilbiogeochem_lithr_col=soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
          soilbiogeochem_decomp_cascade_ctransfer_col=&
          soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-         soilbiogeochem_cwdc_col=soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
-         soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
          product_closs_grc=c_products_inst%product_loss_grc(begg:endg))
 
     if ( use_c13 ) then
@@ -1079,8 +1097,6 @@ contains
             soilbiogeochem_lithr_col=c13_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
             c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-            soilbiogeochem_cwdc_col=c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
-            soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
             product_closs_grc=c13_products_inst%product_loss_grc(begg:endg))
     end if
 
@@ -1092,8 +1108,6 @@ contains
             soilbiogeochem_lithr_col=c14_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
             c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-            soilbiogeochem_cwdc_col=c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
-            soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
             product_closs_grc=c14_products_inst%product_loss_grc(begg:endg))
     end if
     call t_stopf('CNvegCflux_summary')

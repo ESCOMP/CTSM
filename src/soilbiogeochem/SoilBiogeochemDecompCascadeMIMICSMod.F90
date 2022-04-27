@@ -879,6 +879,7 @@ contains
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
          cn_col         => soilbiogeochem_carbonflux_inst%cn_col       , & ! Output: [real(r8) (:,:)   ]  C:N ratio
+         ligninNratioAvg => soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col, &  ! Input: [real(r8) (:) ] C:N ratio of litter lignin
          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate for decomposition (1./sec)
          spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
@@ -1112,13 +1113,9 @@ contains
       mimics_cn_r = params_inst%mimics_cn_r
       mimics_cn_k = params_inst%mimics_cn_k
 
-      ! If FATES-MIMICS, then use FATES copies of annsum_npp & ligninNratio.
+      ! If FATES-MIMICS, then use FATES copy of annsum_npp.
       ! The FATES copy of annsum_npp is available when use_lch4 = .true., so
       ! we limit FATES-MIMICS to if (use_lch4).
-      ! The FATES copy of annsum_npp is calculated at the patch level, so we
-      ! obtain it in the next patch loop.
-      ! The FATES copy of ligninNratio is calculated at the site/column level,
-      ! so we obtain it in the next column loop.
       fates_if: if (use_fates) then
          lch4_if: if (use_lch4) then
 
@@ -1154,10 +1151,8 @@ contains
          c = filter_soilc(fc)
 
          if (use_fates) then
-            ligninNratioAvg_scalar = soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col(c)
             annsum_npp_col_scalar = max(0._r8, annsum_npp_col_local(c))
          else
-            ligninNratioAvg_scalar = cnveg_carbonflux_inst%ligninNratioAvg_col(c)
             annsum_npp_col_scalar = max(0._r8, cnveg_carbonflux_inst%annsum_npp_col(c))
          end if
 
@@ -1169,7 +1164,7 @@ contains
          !      replace pool_to_litter terms with ann or other long term mean
          !      in CNVegCarbonFluxType.
          fmet = mimics_fmet_p1 * (mimics_fmet_p2 - mimics_fmet_p3 * &
-            min(mimics_fmet_p4, ligninNratioAvg_scalar))
+            min(mimics_fmet_p4, ligninNratioAvg(c)))
          tau_mod = min(mimics_tau_mod_max, max(mimics_tau_mod_min, &
             sqrt(mimics_tau_mod_factor * annsum_npp_col_scalar)))
 
