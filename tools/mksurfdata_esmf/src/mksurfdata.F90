@@ -182,7 +182,7 @@ program mksurfdata
   type(ESMF_Mesh)                 :: mesh_model
   type(ESMF_Field)                :: field_model
   type(ESMF_LogKind_Flag)         :: logkindflag
-  type(ESMF_RouteHandle)          :: routehandle_pft
+  type(ESMF_RouteHandle)          :: routehandle_pft, routehandle_harv
   type(ESMF_VM)                   :: vm
   integer                         :: rc
   logical                         :: create_esmf_pet_files = .false.
@@ -409,7 +409,8 @@ program mksurfdata
   ! Note that this call must come after call to mkpftInit - since num_cft is set there
   ! Output data is written in mkharvest
   if (fsurdat /= ' ') then
-     call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, pioid, constant=.true., rc=rc )
+     call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, pioid, &
+                     routehandle_r8=routehandle_harv, rc=rc )
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
   end if
 
@@ -910,7 +911,8 @@ program mksurfdata
 
         ! Create harvesting data at model resolution
         ! Output data is written in mkharvest
-        call mkharvest( mksrf_fhrvtyp_mesh, fhrvname, mesh_model, pioid, constant=.false., ntime=ntim, rc=rc )
+        call mkharvest( mksrf_fhrvtyp_mesh, fhrvname, mesh_model, pioid, &
+                        ntime=ntim, routehandle_r8=routehandle_harv, rc=rc )
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest')
         call pio_syncfile(pioid)
 
