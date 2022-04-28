@@ -34,6 +34,7 @@ module clm_varctl
 
   ! Type of run
   integer, public :: nsrest                = iundef                         
+  logical, public :: copy_fates_var        = .false. ! True if prefer to copy var from FATES to CTSM in clmfates_interface
   logical, public :: is_cold_start         = .false.
   logical, public :: is_interpolated_start = .false. ! True if we're starting from initial conditions that have been run through init_interp
 

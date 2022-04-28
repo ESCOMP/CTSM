@@ -45,7 +45,7 @@ module CLMFatesInterfaceMod
    use TemperatureType   , only : temperature_type
    use EnergyFluxType    , only : energyflux_type
    use SoilStateType     , only : soilstate_type
-   use clm_varctl        , only : iulog
+   use clm_varctl        , only : iulog, copy_fates_var
    use clm_varctl        , only : fates_parteh_mode
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
@@ -80,7 +80,7 @@ module CLMFatesInterfaceMod
    use SoilBiogeochemCarbonFluxType, only :  soilbiogeochem_carbonflux_type
    use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
    use FrictionVelocityMod  , only : frictionvel_type
-   use clm_time_manager  , only : is_restart
+   use clm_time_manager  , only : is_restart, is_first_restart_step
    use ncdio_pio         , only : file_desc_t, ncd_int, ncd_double
    use restUtilMod,        only : restartvar
    use clm_time_manager  , only : get_curr_days_per_year, &
@@ -1111,13 +1111,26 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_out )
 
        !------------------------------------------------------------------------
-       ! Get FATES calculation of ligninNratio
+       ! FATES calculation of ligninNratio
        !------------------------------------------------------------------------
-       do s = 1, this%fates(nc)%nsites
-          c = this%f2hmap(nc)%fcolumn(s)
-          soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col(c) = &
+       ! If it's the first timestep of a restart and copy_fates_var = .false.
+       ! (this will happen in the first timestep of any restart)
+       ! then skip this variable because a more accurate value was obtained
+       ! from the restart file.
+       ! I had hoped that is_first_restart_step() alone would suffice here, but
+       ! is_first_restart_step() remained true for the whole first day in my
+       ! test. Hence I added the check for copy_fates_var which changes to
+       ! .true. the first time that we come through this code in a restart.
+       !------------------------------------------------------------------------
+       if (is_first_restart_step() .and. .not. copy_fates_var) then
+          copy_fates_var = .true.
+       else
+          do s = 1, this%fates(nc)%nsites
+             c = this%f2hmap(nc)%fcolumn(s)
+             soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col(c) = &
                this%fates(nc)%bc_out(s)%litt_flux_ligc_per_n
-       end do
+          end do
+       end if
 
        !---------------------------------------------------------------------------------
        ! CHANGING STORED WATER DURING PLANT DYNAMICS IS NOT FULLY IMPLEMENTED

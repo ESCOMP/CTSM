@@ -858,7 +858,6 @@ contains
     real(r8):: spinup_geogterm_m2(bounds%begc:bounds%endc)  ! geographically-varying spinup term for m2
     real(r8):: annsum_npp_col_local(bounds%begc:bounds%endc)  ! local annual sum of NPP at the column level
     real(r8):: annsum_npp(bounds%begp:bounds%endp)  ! local annual sum of NPP at the patch level
-    real(r8):: ligninNratioAvg_scalar  ! lignin to nitrogen ratio, scalar in column-level loop
     real(r8):: annsum_npp_col_scalar  ! annual sum of NPP, scalar in column-level loop
 
     !-----------------------------------------------------------------------
