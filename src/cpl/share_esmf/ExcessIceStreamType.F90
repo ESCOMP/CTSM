@@ -21,12 +21,13 @@ module ExcessIceStreamType
   private
 
   type, public :: excessicestream_type
-     real(r8), pointer :: exice_bulk  (:)         ! excess ice bulk value (-)
+     real(r8), pointer, private :: exice_bulk  (:)         ! excess ice bulk value (-)
   contains
 
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public :: Init            ! Initialize and read data in
       procedure, public :: UseStreams      ! If streams will be used
+      procedure, public :: CalcExcessIce   ! Calculate excess ice ammount
 
       ! !PRIVATE MEMBER FUNCTIONS:
       procedure, private :: InitAllocate   ! Allocate data
@@ -170,6 +171,42 @@ contains
     allocate(this%exice_bulk(begg:endg))            ;  this%exice_bulk(:)   = nan
 
   end subroutine InitAllocate
+
+  subroutine CalcExcessIce(this,bounds,exice_bulk_init)
+   use shr_const_mod   , only : SHR_CONST_TKFRZ
+   use landunit_varcon , only : istwet, istsoil, istcrop, istice
+   use column_varcon   , only : icol_road_perv, icol_road_imperv
+   use clm_varcon      , only : denice 
+   use clm_varcon      , only : tfrz
+   use ColumnType      , only : col
+   use LandunitType    , only : lun
+   implicit none
+   class(excessicestream_type)        :: this
+   type(bounds_type),  intent(in)     :: bounds
+   real(r8)         ,  intent(inout)  :: exice_bulk_init(bounds%begc:bounds%endc) 
+   !
+   ! !LOCAL VARIABLES:
+   integer  :: begc, endc
+   integer  :: begg, endg
+   integer  :: c, l, g  !counters
+   
+   exice_bulk_init(bounds%begc:bounds%endc)=0.0_r8
+
+   do c = bounds%begc,bounds%endc
+      g = col%gridcell(c)
+      l = col%landunit(c)
+      if ((.not. lun%lakpoi(l)) .and. (.not. lun%urbpoi(l)) .and. (.not. lun%itype(l) == istwet) .and. (.not. lun%itype(l) == istice)) then  !not lake
+         if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+            exice_bulk_init(c)=this%exice_bulk(g)
+         else 
+            exice_bulk_init(c) = 0.0_r8
+         endif
+      else
+         exice_bulk_init(c)=0.0_r8
+      endif
+   enddo
+
+  end subroutine CalcExcessIce
 
   logical function UseStreams(this)
   !

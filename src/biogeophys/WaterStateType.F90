@@ -353,6 +353,7 @@ contains
     integer            :: c,j,l,nlevs,g 
     integer            :: nbedrock
     real(r8)           :: ratio
+    real(r8)           :: exice_bulk_init(bounds%begc:bounds%endc)
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(h2osno_input_col)     == (/bounds%endc/))          , sourcefile, __LINE__)
@@ -562,7 +563,7 @@ contains
         this%exice_melt(bounds%begc:bounds%endc)=0.0_r8
 
         call this%exicestream%Init(bounds, NLFilename) ! get initial fraction of excess ice per column
-
+        call this%exicestream%CalcExcessIce(bounds, exice_bulk_init)
         do c = bounds%begc,bounds%endc
           g = col%gridcell(c)
           l = col%landunit(c)
@@ -573,19 +574,20 @@ contains
                 else
                   nbedrock = nlevsoi
                 endif
-                  do j = 2, nlevmaxurbgrnd ! ignore first layer
-                    if (j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
-                      this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exicestream%exice_bulk(g))
-                    else
-                      this%excess_ice_col(c,j) = 0.0_r8
-                    endif
-                  end do
-                  this%init_exice(c,j) = this%exicestream%exice_bulk(g)
+                do j = 2, nlevmaxurbgrnd ! ignore first layer
+                  if (j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
+                    this%excess_ice_col(c,j) = col%dz(c,j)*denice*(exice_bulk_init(c))
+                    this%init_exice(c,j) = col%dz(c,j)*denice*exice_bulk_init(c)
+                  else
+                    this%excess_ice_col(c,j) = 0.0_r8
+                    this%init_exice(c,j) = 0.0_r8
+                  endif
+                end do
              endif
           else ! just in case zeros for lakes and other columns
             this%excess_ice_col(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
             this%init_exice(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
-          end if
+          endif
         enddo
         this%exice_melt_lev(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
         this%exice_melt(bounds%begc:bounds%endc)=0.0_r8
