@@ -15,26 +15,28 @@ Getting the code
 =======================
 building the executable
 =======================
+> bash
+
+> module load intel
+> module load python
+> module load cmake
+> module use /glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/
+> module load esmf-8.3.0b13-ncdfio-mpt-O
+> module unload netcdf/4.8.1
+> module load netcdf-mpi/4.8.1
+> module load pnetcdf/1.12.2
+> module load pio/2.5.7
+> module list
+
 > cd tools/mksurfdata_esmf
 > rm -rf bld  # (or the contents of /bld) before rerunning CC=...
 > mkdir ./bld
 > cd bld
-> module load intel  # I found I need the latest version of intel
-> module load python  # in case need latest version of python
-> module load cmake
-> bash
 > CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src/
-> make VERBOSE=1
-> export MKSURFDATA_BLD=`pwd`  # needed once; execute in /bld
-
-# IF YOU MODIFY .F90 files, start here first, though more than once
-# I have found it necessary to go back to the "rm -rf bld" step
-> cd ../src
-> make clean  # REMEMBER to be in bash
 > make VERBOSE=1
 
 =======================
-running for a single submission: 
+running for a single submission:
 =======================
 > cd ../
 # to generate your target namelist:
