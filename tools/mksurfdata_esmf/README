@@ -1,5 +1,5 @@
 Most recent update of README:
-4/6/2022 slevis
+4/28/2022 slevis
 
 ================
 Getting the code
@@ -7,7 +7,7 @@ Getting the code
 > cd <user/work/area>
 > git clone https://github.com/ESCOMP/CTSM.git <dir_name>
 > cd <dir_name>
-> git checkout feature/new_mksurfdata
+> git checkout ctsm5.2.mksurfdata
 
 # Save time by checking out ccs_config only
 > ./manage_externals/checkout_externals ccs_config
@@ -15,8 +15,6 @@ Getting the code
 =======================
 building the executable
 =======================
-> bash
-
 > module load intel
 > module load python
 > module load cmake
@@ -26,12 +24,14 @@ building the executable
 > module load netcdf-mpi/4.8.1
 > module load pnetcdf/1.12.2
 > module load pio/2.5.7
+> module load mpt/2.25
 > module list
 
 > cd tools/mksurfdata_esmf
 > rm -rf bld  # (or the contents of /bld) before rerunning CC=...
 > mkdir ./bld
 > cd bld
+> bash
 > CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src/
 > make VERBOSE=1
 
