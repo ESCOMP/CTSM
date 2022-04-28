@@ -8,6 +8,8 @@ import os
 
 # -- 3rd party libraries
 import numpy as np
+import xarray as xr
+import tqdm
 
 # -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
@@ -98,6 +100,7 @@ class RegionalCase(BaseCase):
         self.reg_name = reg_name
         self.out_dir = out_dir
         self.create_tag()
+        self.create_mesh_at_reg()
 
     def create_tag(self):
         """
@@ -226,3 +229,102 @@ class RegionalCase(BaseCase):
                     os.path.join(USRDAT_DIR, fluse_out)
                 )
                 self.write_to_file(line, nl_clm)
+
+
+    def create_mesh_at_reg (self):
+        """
+        Create a mesh subsetted for the RegionalCase class.
+        """
+        print ("test")
+        mesh_in = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
+        node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
+
+
+    def subset_mesh_at_reg (self, mesh_in):
+        """
+        This function subsets the mesh based on lat and lon bounds given by RegionalCase class.
+        """
+        f_in = xr.open_dataset (mesh_in)
+        elem_count = len (f_in['elementCount'])
+        elem_conn = f_in['elementConn']
+        num_elem_conn = f_in['numElementConn']
+        center_coords = f_in['centerCoords']
+        node_count = len (f_in['nodeCount'])
+        node_coords = f_in['nodeCoords']
+
+        subset_element = []
+        cnt = 0
+
+        for n in tqdm.tqdm(range(elem_count)):
+            #print (elem_conn.shape)
+            #print (num_elem_conn.shape)
+            #print ('-----')
+            #print (numElementConn[n])
+            endx = elem_conn[n,:num_elem_conn[n].values].values
+            #print ('endx:', endx)
+            #print ('-----')
+            endx[:,] -= 1# convert to zero based index
+            endx = [int(xi) for xi in endx]
+            #print ('-----')
+
+            #endx = endx.values
+            #print ('endx:', endx)
+            #print (node_coords.shape)
+            #print (node_coords)
+            nlon = node_coords[endx,0]
+            nlat = node_coords[endx,1]
+            #print ('-----')
+
+            l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
+            l2 = np.logical_or(nlat <= self.lat1,nlat >= self.lat2)
+            if np.any(np.logical_or(l1,l2)):
+                #print(nlon,nlat)
+                pass
+            else:
+                subset_element.append(n)
+                cnt+=1
+
+        print (subset_element)
+
+        subset_node = []
+        conn_dict = {}
+        cnt = 1
+
+        for n in range(node_count):
+            nlon = node_coords[n,0]
+            nlat = node_coords[n,1]
+
+            l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
+            l2 = np.logical_or(nlat <= self.lat1,nlat >= self.lat2)
+            if np.logical_or(l1,l2):
+                conn_dict[n+1] = -9999
+            else:
+                subset_node.append(n)
+                conn_dict[n+1] = cnt
+                cnt+=1
+        return node_coords, subset_element, subset_node, conn_dict
+
+
+
+    def write_mesh (self, f_in, node_coords, subset_element, subset_node, conn_dict):
+        corner_pair_uniq = f_in.variables['nodeCoords'][subset_node,]
+
+        dimensions = f1.dimensions
+        variables  = f1.variables
+        global_attributes  = f1.ncattrs()
+        var = 'elementConn'
+        elem_conn_out = np.empty(shape=[elementCount, len(f1.dimensions['maxNodePElement'])])
+        elem_conn_index = f1.variables[var][subsetElement,]
+    
+        print (elem_conn_out.shape)
+        for n in range(elementCount):
+            print ('n:',n)
+            for m in range(len(f1.dimensions['maxNodePElement'])):
+                print ('m:',m)
+                ndx = int (elem_conn_index[n,m])
+                print ('ndx:', ndx)
+                elem_conn_out[n,m] = connDict[ndx]
+
+
+
+
