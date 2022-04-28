@@ -1,20 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 project(mksurfdata Fortran)
 
-set (ESMFMKFILE /glade/work/oehmke/ESMF/scalable_mesh_from_file/lib/libg/Linux.intel.64.mpt.default/esmf.mk)
-
-file(STRINGS ${ESMFMKFILE} esmf_mk_text)
-foreach(line ${esmf_mk_text})
-  string(REGEX REPLACE "^[ ]+" "" line ${line}) # strip leading spaces
-  if (line MATCHES "^ESMF_*")                   # process only line starting with ESMF_
-    string(REGEX MATCH "^ESMF_[^=]+" esmf_name ${line})
-    string(REPLACE "${esmf_name}=" "" emsf_value ${line})
-    set(${esmf_name} "${emsf_value}")
-  endif()
-endforeach()
-string(REPLACE "-I" "" ESMF_F90COMPILEPATHS ${ESMF_F90COMPILEPATHS})
-string(REPLACE " " ";" ESMF_F90COMPILEPATHS ${ESMF_F90COMPILEPATHS})
-message("ESMF_F90COMPILEPATHS:   ${ESMF_F90COMPILEPATHS}")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
+find_package(NetCDF 4.7.4 REQUIRED Fortran)
+find_package(ESMF 8.2.0 REQUIRED )
 
 set(SRCFILES mkagfirepkmonthMod.F90
              mkchecksMod.F90
@@ -52,18 +41,23 @@ set(SRCFILES mkagfirepkmonthMod.F90
              shr_const_mod.F90
              shr_kind_mod.F90
              shr_string_mod.F90
-             shr_sys_mod.F90)
-
-add_library(mksurfdata ${SRCFILES})
+             shr_sys_mod.F90
+             mksurfdata.F90)
 
 add_compile_definitions(PIO2)
 
-message("CMAKE_CURRENT_BINARY_DIR is ${CMAKE_CURRENT_BINARY_DIR}")
-message("PROJECT_BINARY_DIR is ${PROJECT_BINARY_DIR}")
+add_library(pnetcdf STATIC IMPORTED)
+set_property(TARGET pnetcdf PROPERTY IMPORTED_LOCATION $ENV{PNETCDF})
 
+add_library(pioc STATIC IMPORTED)
+add_library(piof STATIC IMPORTED)
+set_property(TARGET pioc PROPERTY IMPORTED_LOCATION $ENV{PIO}/lib/libpioc.a)
+set_property(TARGET piof PROPERTY IMPORTED_LOCATION $ENV{PIO}/lib/libpiof.a)
+add_executable(mksurfdata ${SRCFILES})
+target_link_libraries(mksurfdata PRIVATE esmf piof pioc)
 target_include_directories (mksurfdata PRIVATE ${ESMF_F90COMPILEPATHS})
-target_include_directories (mksurfdata PRIVATE /glade/work/jedwards/tools/pio/2.5.5/intel/19.1.1/mpt/2.22/include)
-target_include_directories (mksurfdata PRIVATE /glade/u/apps/ch/opt/pnetcdf/1.12.2/mpt/2.22/intel/19.1.1//include)
-target_include_directories (mksurfdata PRIVATE /glade/u/apps/ch/opt/netcdf-mpi/4.8.1/mpt/2.22/intel/19.1.1//include)
+target_include_directories (mksurfdata PRIVATE $ENV{PIO}/include)
+target_include_directories (mksurfdata PRIVATE ${PNETCDF}/include)
+target_include_directories (mksurfdata PRIVATE ${NETCDF}/include)
 
 install(TARGETS mksurfdata)
