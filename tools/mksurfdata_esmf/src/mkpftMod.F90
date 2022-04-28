@@ -184,7 +184,8 @@ contains
   end subroutine mkpftInit
 
   !===============================================================
-  subroutine mkpft(file_mesh_i, file_data_i, mesh_o, pctlnd_o, pctnatpft_o, pctcft_o, rc)
+  subroutine mkpft(file_mesh_i, file_data_i, mesh_o, pctlnd_o, pctnatpft_o, &
+                   pctcft_o, routehandle, rc)
     !
     ! Make PFT data
     !
@@ -200,6 +201,7 @@ contains
     !
     use mkpctPftTypeMod,   only : pct_pft_type
     use mkpftConstantsMod, only : natpft_lb, natpft_ub, num_cft, cft_lb, cft_ub
+    use mkinputMod,        only : mksrf_fdynuse
     !
     ! input/output variables
     character(len=*)  , intent(in)    :: file_mesh_i    ! input mesh file name
@@ -208,11 +210,11 @@ contains
     real(r8)          , intent(inout) :: pctlnd_o(:)    ! output grid:%land/gridcell
     type(pct_pft_type), intent(inout) :: pctnatpft_o(:) ! natural PFT cover
     type(pct_pft_type), intent(inout) :: pctcft_o(:)    ! crop (CFT) cover
+    type(ESMF_RouteHandle), intent(inout) :: routehandle
 
     integer           , intent(out)   :: rc
     !
     ! local variables:
-    type(ESMF_RouteHandle)          :: routehandle
     type(ESMF_Mesh)                 :: mesh_i
     type(file_desc_t)               :: pioid
     integer                         :: dimid
@@ -328,14 +330,21 @@ contains
     ! ----------------------------------------
     allocate(frac_o(ns_o),stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+    if (.not. ESMF_RouteHandleIsCreated(routehandle)) then
+       call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
-    ! ----------------------------------------
-    ! Determine pctlnd_o(:) (output argument)
-    ! ----------------------------------------
-    pctlnd_o(:) = frac_o(:) * 100._r8
+       ! ----------------------------------------
+       ! Determine pctlnd_o(:) (in/out argument)
+       ! ----------------------------------------
+       pctlnd_o(:) = frac_o(:) * 100._r8
+    else
+       ! ----------------------------------------
+       ! Get frac_o back from pctlnd_o when not calling create_routehandle_r8
+       ! ----------------------------------------
+       frac_o(:) = pctlnd_o(:) * 0.01_r8
+    end if
 
     ! ----------------------------------------
     ! Determine pct_nat_pft_o(:,:)
@@ -556,8 +565,10 @@ contains
     end if
 
     ! Clean up memory
-    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    if (mksrf_fdynuse == ' ') then  ! ...else we will reuse it
+       call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    end if
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
