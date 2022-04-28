@@ -442,6 +442,12 @@ class SinglePointCase(BaseCase):
                 else:
                     f_mod["PCT_NATVEG"][:, :] = 0
                     f_mod["PCT_CROP"][:, :] = 100
+            else:
+                #-- recalculate percentages after zeroing out non-veg landunits
+                #-- so they add up to 100%.
+                tot_pct = f_mod["PCT_CROP"]+f_mod['PCT_NATVEG']
+                f_mod ["PCT_CROP"] = f_mod ["PCT_CROP"]/tot_pct * 100
+                f_mod ["PCT_NATVEG"] = f_mod ["PCT_NATVEG"]/tot_pct * 100
 
         else:
             logger.info(
