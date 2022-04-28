@@ -136,7 +136,7 @@ class SinglePointCase(BaseCase):
 
         self.create_tag()
         self.check_dom_pft()
-        self.check_nonveg()
+        #self.check_nonveg()
         self.check_pct_pft()
 
     def create_tag(self):
@@ -434,13 +434,14 @@ class SinglePointCase(BaseCase):
             f_mod["PCT_URBAN"][:, :, :] = 0.0
             f_mod["PCT_GLACIER"][:, :] = 0.0
 
-            max_dom_pft = max(self.dom_pft)
-            if max_dom_pft < NAT_PFT:
-                f_mod["PCT_NATVEG"][:, :] = 100
-                f_mod["PCT_CROP"][:, :] = 0
-            else:
-                f_mod["PCT_NATVEG"][:, :] = 0
-                f_mod["PCT_CROP"][:, :] = 100
+            if self.dom_pft is not None:
+                max_dom_pft = max(self.dom_pft)
+                if max_dom_pft < NAT_PFT:
+                    f_mod["PCT_NATVEG"][:, :] = 100
+                    f_mod["PCT_CROP"][:, :] = 0
+                else:
+                    f_mod["PCT_NATVEG"][:, :] = 0
+                    f_mod["PCT_CROP"][:, :] = 100
 
         else:
             logger.info(
