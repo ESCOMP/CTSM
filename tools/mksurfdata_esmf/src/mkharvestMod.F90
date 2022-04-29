@@ -50,12 +50,8 @@ module mkharvestMod
        'UNREPRESENTED_CFT_LULCC'   &
        /)
 
-  character(len=CL), parameter :: string_undef = 'UNSET'
-  real(r8),          parameter :: real_undef   = -999.99
-
   type(ESMF_Mesh)        :: mesh_i
   real(r8), allocatable  :: frac_o(:)
-  logical                :: initialized = .false.
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -256,9 +252,9 @@ contains
        deallocate(frac_o)
        call ESMF_RouteHandleDestroy(routehandle_r8, nogarbage = .true., rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+       call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     end if
-    call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made harvest and grazing'

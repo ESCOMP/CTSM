@@ -24,6 +24,7 @@ module mkpftMod
   integer :: m ! index
 
   character(len=35) :: veg(0:maxpft) ! vegetation types
+  real(r8), allocatable :: frac_o(:)
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -233,7 +234,6 @@ contains
     real(r8), allocatable           :: output_pct_cft_o(:,:)
     integer , allocatable           :: mask_i(:)
     real(r8), allocatable           :: frac_i(:)
-    real(r8), allocatable           :: frac_o(:)
     real(r8), allocatable           :: pctnatveg_i(:)     ! input  natural veg percent (% of grid cell)
     real(r8), allocatable           :: pctnatveg_o(:)     ! output natural veg percent (% of grid cell)
     real(r8), allocatable           :: pctcrop_i(:)       ! input  all crop percent (% of grid cell)
@@ -328,23 +328,18 @@ contains
     ! ----------------------------------------
     ! Create a route handle between the input and output mesh and get frac_o
     ! ----------------------------------------
-    allocate(frac_o(ns_o),stat=ier)
-    if (ier/=0) call shr_sys_abort()
     if (.not. ESMF_RouteHandleIsCreated(routehandle)) then
+       allocate(frac_o(ns_o),stat=ier)
+       if (ier/=0) call shr_sys_abort()
        call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
        call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-
-       ! ----------------------------------------
-       ! Determine pctlnd_o(:) (in/out argument)
-       ! ----------------------------------------
-       pctlnd_o(:) = frac_o(:) * 100._r8
-    else
-       ! ----------------------------------------
-       ! Get frac_o back from pctlnd_o when not calling create_routehandle_r8
-       ! ----------------------------------------
-       frac_o(:) = pctlnd_o(:) * 0.01_r8
     end if
+
+    ! ----------------------------------------
+    ! Determine pctlnd_o(:) (in/out argument)
+    ! ----------------------------------------
+    pctlnd_o(:) = frac_o(:) * 100._r8
 
     ! ----------------------------------------
     ! Determine pct_nat_pft_o(:,:)
@@ -566,6 +561,7 @@ contains
 
     ! Clean up memory
     if (mksrf_fdynuse == ' ') then  ! ...else we will reuse it
+       deallocate(frac_o)
        call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     end if
