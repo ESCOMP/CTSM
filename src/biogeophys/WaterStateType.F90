@@ -353,7 +353,7 @@ contains
     integer            :: c,j,l,nlevs,g 
     integer            :: nbedrock
     real(r8)           :: ratio
-    real(r8)           :: exice_bulk_init(bounds%begc:bounds%endc)
+    real(r8)           :: exice_bulk_init(bounds%begc:bounds%endc) ! initial excess ice amount (m/m)
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(h2osno_input_col)     == (/bounds%endc/))          , sourcefile, __LINE__)
@@ -603,15 +603,16 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, &
-       watsat_col)
+       watsat_col, NLFilename, t_soisno_col)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varcon       , only : denice, denh2o, pondmx, watmin
-    use landunit_varcon  , only : istcrop, istdlak, istsoil  
+    use clm_varcon       , only : denice, denh2o, pondmx, watmin, tfrz
+    use landunit_varcon  , only : istcrop, istdlak, istsoil, istice  
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
+    use column_varcon    , only : icol_road_imperv, icol_road_perv 
     use clm_time_manager , only : is_first_step, is_restart
     use clm_varctl       , only : bound_h2osoi
     use ncdio_pio        , only : file_desc_t, ncd_double
@@ -623,16 +624,28 @@ contains
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
+    character(len=*) , intent(in), optional :: NLFilename ! Namelist filename
+    real(r8)         , intent(in), optional :: t_soisno_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd) ! Soil column temperature (Kelvin)
     !
     ! !LOCAL VARIABLES:
-    integer  :: p,c,l,j,nlevs
+    integer  :: p,c,l,j,nlevs,g
+    integer  :: nbedrock
     logical  :: readvar
     real(r8) :: maxwatsat    ! maximum porosity    
     real(r8) :: excess       ! excess volumetric soil water
     real(r8) :: totwat       ! total soil water (mm)
+    character(len=256) :: l_NLFilename !local namelist filename var
+    real(r8)  :: l_t_soisno_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd) !local soil column temperature (Kelvin)
+    real(r8)  :: exice_bulk_init(bounds%begc:bounds%endc) !Initial excess ice ammout (m/m)
     !------------------------------------------------------------------------
-
+    l_NLFilename = ''
+    l_t_soisno_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd) = tfrz + 1.0_r8
+    if (present(NLFilename)) then
+       l_NLFilename = NLFilename
+       l_t_soisno_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd) = t_soisno_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)
+    end if
     SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevmaxurbgrnd/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno_col) == (/bounds%endc,nlevmaxurbgrnd/)) , sourcefile, __LINE__)
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('H2OSFC'), &
@@ -730,7 +743,68 @@ contains
       this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
       this%exice_melt_lev(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
       this%exice_melt(bounds%begc:bounds%endc)=0.0_r8
+    else if (use_excess_ice .and. flag == 'read') then 
+      ! try to read the first variable
+      call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXCESS_ICE'), xtype=ncd_double,  &
+           dim1name='column', dim2name='levtot', switchdim=.true., &
+           long_name=this%info%lname('excess soil ice (vegetated landunits only)'), units='kg/m2', &
+           scale_by_thickness=.true., &
+           interpinic_flag='interp', readvar=readvar, data=this%excess_ice_col)
+      if (.not. readvar) then 
+        ! did not read the first variable
+        this%init_exice(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
+        this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
+        this%exice_melt_lev(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
+        this%exice_melt(bounds%begc:bounds%endc)=0.0_r8
 
+        call this%exicestream%Init(bounds, l_NLFilename) ! get initial fraction of excess ice per column
+        call this%exicestream%CalcExcessIce(bounds, exice_bulk_init)
+        do c = bounds%begc,bounds%endc
+          g = col%gridcell(c)
+          l = col%landunit(c)
+          if (.not. lun%lakpoi(l)) then  !not lake
+             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+                if (use_bedrock) then
+                  nbedrock = col%nbedrock(c)
+                else
+                  nbedrock = nlevsoi
+                endif
+                do j = 2, nlevmaxurbgrnd ! ignore first layer
+                  if (j<nbedrock .and. l_t_soisno_col(c,j) <= tfrz ) then
+                    this%excess_ice_col(c,j) = col%dz(c,j)*denice*(exice_bulk_init(c))
+                    this%init_exice(c,j) = col%dz(c,j)*denice*exice_bulk_init(c)
+                  else
+                    this%excess_ice_col(c,j) = 0.0_r8
+                    this%init_exice(c,j) = 0.0_r8
+                  endif
+                end do
+             endif
+          else ! just in case zeros for lakes and other columns
+            this%excess_ice_col(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
+            this%init_exice(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
+          endif
+        enddo
+        this%exice_melt_lev(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
+        this%exice_melt(bounds%begc:bounds%endc)=0.0_r8
+      else
+        ! first var read succesfully, read the rest
+        call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXICE_INIT'), xtype=ncd_double,  &
+             dim1name='column', dim2name='levtot', switchdim=.true., &
+             long_name=this%info%lname('inital excess soil ice (vegetated landunits only)'), units='m/m', &
+             scale_by_thickness=.false., &
+             interpinic_flag='interp', readvar=readvar, data=this%init_exice)
+
+         call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXCESS_MELT_LEV'), xtype=ncd_double,  &
+              dim1name='column', dim2name='levtot', switchdim=.true., &
+              long_name=this%info%lname('melt from excess ice per layer (vegetated landunits only)'), units='kg/m2', &
+              scale_by_thickness=.true., &
+              interpinic_flag='interp', readvar=readvar, data=this%exice_melt_lev)
+
+         call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXICE_MELT'), xtype=ncd_double,  &
+              dim1name='column', &
+              long_name=this%info%lname('melt from excess ice (vegetated landunits only)'), units='m', &
+              interpinic_flag='interp', readvar=readvar, data=this%exice_melt)
+      endif
     else
       ! have to at least define them 
       call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXCESS_ICE'), xtype=ncd_double,  &
