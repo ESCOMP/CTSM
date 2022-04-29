@@ -183,7 +183,7 @@ program mksurfdata
   type(ESMF_Field)                :: field_model
   type(ESMF_LogKind_Flag)         :: logkindflag
   type(ESMF_RouteHandle)          :: routehandle_pft, routehandle_harv, &
-                                     routehandle_lak
+                                     routehandle_lak, routehandle_urb
   type(ESMF_VM)                   :: vm
   integer                         :: rc
   logical                         :: create_esmf_pet_files = .false.
@@ -515,7 +515,8 @@ program mksurfdata
   allocate (pcturb_max(lsize_o, numurbl))    ; pcturb_max(:,:)      = spval
   allocate (urban_classes(lsize_o,numurbl))  ; urban_classes(:,:)   = spval
   allocate (urban_region(lsize_o))           ; urban_region(:)      = -999
-  call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, pcturb, urban_classes, urban_region, rc=rc)
+  call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, pcturb, &
+               urban_classes, urban_region, routehandle_urb, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out urban region id"
@@ -924,7 +925,8 @@ program mksurfdata
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklakwat')
         call pio_syncfile(pioid)
 
-        call mkurban(mksrf_furban_mesh, furbname, mesh_model, pcturb, urban_classes, urban_region, rc=rc)
+        call mkurban(mksrf_furban_mesh, furbname, mesh_model, pcturb, &
+                     urban_classes, urban_region, routehandle_urb, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
         call pio_syncfile(pioid)
         ! screen pcturb using elevation
