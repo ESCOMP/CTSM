@@ -24,6 +24,8 @@ module mklanwatMod
   public :: mkwetlnd    ! make %wetland
   public :: update_max_array_lake  ! Update the maximum lake percent
 
+  real(r8), allocatable  :: frac_o_mklak(:)
+
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
 
@@ -31,31 +33,34 @@ module mklanwatMod
 contains
 !===============================================================
 
-  subroutine mklakwat(file_mesh_i, file_data_i, mesh_o, lake_o, pioid_o, fsurdat, rc, do_depth)
+  subroutine mklakwat(file_mesh_i, file_data_i, mesh_o, lake_o, pioid_o, &
+                      fsurdat, routehandle, rc, do_depth)
 
     ! -------------------
     ! make %lake and lake depth
     ! PCT_LAKE is written out to fsurdat in mksurfdata after adjustments are made
-    ! LAKE_DETH is written out to fsurdat here
+    ! LAKE_DEPTH is written out to fsurdat here
     ! -------------------
+
+    ! uses
+    use mkinputMod, only: mksrf_fdynuse
 
     ! input/output variables
     character(len=*)  , intent(in)    :: file_mesh_i      ! input mesh file name
     character(len=*)  , intent(in)    :: file_data_i      ! input data file name
     type(ESMF_Mesh)   , intent(in)    :: mesh_o
     type(file_desc_t) , intent(inout) :: pioid_o
+    type(ESMF_RouteHandle), intent(inout) :: routehandle
     real(r8)          , intent(out)   :: lake_o(:)        ! output grid: %lake
     character(len=*)  , intent(in)    :: fsurdat
     integer           , intent(out)   :: rc
     logical, optional , intent(in)    :: do_depth  ! do the depth part of the subroutine
 
     ! local variables
-    type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
     type(file_desc_t)      :: pioid_i
     integer , allocatable  :: mask_i(:) 
     real(r8), allocatable  :: rmask_i(:)
-    real(r8), allocatable  :: frac_o(:)
     real(r8), allocatable  :: lake_i(:)      ! input grid: percent lake
     real(r8), allocatable  :: lakedepth_i(:) ! iput grid: lake depth (m)
     real(r8), allocatable  :: lakedepth_o(:) ! output grid: lake depth (m)
@@ -117,10 +122,12 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Create a route handle between the input and output mesh
-    allocate(frac_o(ns_o))
-    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+    if (.not. ESMF_RouteHandleIsCreated(routehandle)) then
+       allocate(frac_o_mklak(ns_o))
+       call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o_mklak, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+    end if
 
     ! ----------------------------------------
     ! Create %lake
@@ -145,7 +152,7 @@ contains
     enddo
 
     ! Check global areas
-    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o, &
+    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o_mklak, &
          lake_i, lake_o, "pct lake", percent=.true., ndiag=ndiag, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -173,7 +180,7 @@ contains
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           call ESMF_VMLogMemInfo("After regrid_rawdata for lakedepth in "//trim(subname))
           do no = 1,ns_o
-             if (frac_o(no) == 0._r8) then
+             if (frac_o_mklak(no) == 0._r8) then
                 lakedepth_o(no) = 10._r8
              end if
           enddo
@@ -191,7 +198,7 @@ contains
           ! Check global areas for lake depth
           call output_diagnostics_continuous(mesh_i, mesh_o, &
                lakedepth_i, lakedepth_o, "lake depth", "m", &
-               ndiag=ndiag, rc=rc, mask_i=mask_i, frac_o=frac_o)
+               ndiag=ndiag, rc=rc, mask_i=mask_i, frac_o=frac_o_mklak)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
     end if
@@ -204,8 +211,11 @@ contains
     call pio_closefile(pioid_i)
 
     ! Release memory
-    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    if (mksrf_fdynuse == ' ') then  ! ...else we will reuse it
+       deallocate(frac_o_mklak)
+       call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    end if
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 

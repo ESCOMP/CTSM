@@ -182,7 +182,8 @@ program mksurfdata
   type(ESMF_Mesh)                 :: mesh_model
   type(ESMF_Field)                :: field_model
   type(ESMF_LogKind_Flag)         :: logkindflag
-  type(ESMF_RouteHandle)          :: routehandle_pft, routehandle_harv
+  type(ESMF_RouteHandle)          :: routehandle_pft, routehandle_harv, &
+                                     routehandle_lak
   type(ESMF_VM)                   :: vm
   integer                         :: rc
   logical                         :: create_esmf_pet_files = .false.
@@ -421,7 +422,8 @@ program mksurfdata
   ! Need to keep pctlak and pctwet external for use below
   allocate ( pctlak(lsize_o)) ; pctlak(:) = spval
   allocate ( pctlak_max(lsize_o)) ; pctlak_max(:) = spval
-  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pioid, fsurdat, rc=rc, do_depth=.true.)
+  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pioid, &
+                fsurdat, routehandle_lak, rc=rc, do_depth=.true.)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
 
   allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
@@ -917,7 +919,8 @@ program mksurfdata
         call pio_syncfile(pioid)
 
         ! Create pctlak data at model resolution (use original mapping file from lake data)
-        call mklakwat(mksrf_flakwat_mesh, flakname, mesh_model, pctlak, pioid, fsurdat, rc=rc)
+        call mklakwat(mksrf_flakwat_mesh, flakname, mesh_model, pctlak, pioid, &
+                      fsurdat, routehandle_lak, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklakwat')
         call pio_syncfile(pioid)
 

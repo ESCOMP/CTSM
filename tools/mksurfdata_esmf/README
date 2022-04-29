@@ -23,8 +23,8 @@ building the executable
 > module unload netcdf/4.8.1
 > module load netcdf-mpi/4.8.1
 > module load pnetcdf/1.12.2
-> module load pio/2.5.7
 > module load mpt/2.25
+> module load pio/2.5.7
 > module list
 
 > cd tools/mksurfdata_esmf
