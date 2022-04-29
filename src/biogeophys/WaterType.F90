@@ -727,13 +727,11 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, writing_finidat_interp_dest_file, &
-       watsat_col, NLFilename, t_soisno_col)
+       watsat_col)
     !
     ! !DESCRIPTION:
     ! Read/write information to/from restart file for all water variables
     !
-    ! USES:
-    use controlMod, only : use_excess_ice 
     ! !ARGUMENTS:
     class(water_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
@@ -741,8 +739,6 @@ contains
     character(len=*) , intent(in)    :: flag   ! 'read', 'write' or 'define'
     logical          , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file (ignored for flag=='read')
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
-    character(len=*) , intent(in), optional :: NLFilename ! Namelist filename
-    real(r8)         , intent(in), optional :: t_soisno_col(bounds%begc:bounds%endc,:) ! Soil column temperature (Kelvin)
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -753,14 +749,9 @@ contains
     SHR_ASSERT_ALL_FL((ubound(watsat_col, 1) == bounds%endc), sourcefile, __LINE__)
 
     call this%waterfluxbulk_inst%restartBulk (bounds, ncid, flag=flag)
-    if( use_excess_ice .and. flag == 'read') then
-      call this%waterstatebulk_inst%restartBulk (bounds, ncid, flag=flag, &
-         watsat_col=watsat_col(bounds%begc:bounds%endc,:),                &
-         NLFilename=NLFilename, t_soisno_col=t_soisno_col(bounds%begc:bounds%endc,:))
-    else
-      call this%waterstatebulk_inst%restartBulk (bounds, ncid, flag=flag, &
+
+    call this%waterstatebulk_inst%restartBulk (bounds, ncid, flag=flag, &
          watsat_col=watsat_col(bounds%begc:bounds%endc,:))
-    endif
 
     call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag, &
          writing_finidat_interp_dest_file=writing_finidat_interp_dest_file, &
@@ -769,14 +760,9 @@ contains
     do i = this%tracers_beg, this%tracers_end
 
        call this%bulk_and_tracers(i)%waterflux_inst%Restart(bounds, ncid, flag=flag)
-       if (use_excess_ice .and. flag == 'read') then
-        call this%bulk_and_tracers(i)%waterstate_inst%Restart(bounds, ncid, flag=flag, &
-             watsat_col=watsat_col(bounds%begc:bounds%endc,:),                         &
-             NLFilename=NLFilename, t_soisno_col=t_soisno_col(bounds%begc:bounds%endc,:))
-       else
-         call this%bulk_and_tracers(i)%waterstate_inst%Restart(bounds, ncid, flag=flag, &
-              watsat_col=watsat_col(bounds%begc:bounds%endc,:))
-       endif
+
+       call this%bulk_and_tracers(i)%waterstate_inst%Restart(bounds, ncid, flag=flag, &
+            watsat_col=watsat_col(bounds%begc:bounds%endc,:))
 
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Restart(bounds, ncid, flag=flag)
 

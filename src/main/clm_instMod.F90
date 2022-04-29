@@ -528,16 +528,11 @@ contains
          is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp())
 
     call soilstate_inst%restart (bounds, ncid, flag=flag)
-    if(use_excess_ice .and. flag == 'read') then
-      call water_inst%restart(bounds, ncid, flag=flag, &
-           writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
-           watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:),   &
-           NLFilename = NLFilename, t_soisno_col = temperature_inst%t_soisno_col(begc:endc, -nlevsno+1:))
-    else
-      call water_inst%restart(bounds, ncid, flag=flag, &
-      writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
-      watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:))
-    endif
+
+    call water_inst%restart(bounds, ncid, flag=flag, &
+         writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+         watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:))
+
     call irrigation_inst%restart (bounds, ncid, flag=flag)
 
     call aerosol_inst%restart (bounds, ncid,  flag=flag, &

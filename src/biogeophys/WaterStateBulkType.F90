@@ -188,7 +188,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine RestartBulk(this, bounds, ncid, flag, &
-       watsat_col, NLFilename, t_soisno_col)
+       watsat_col)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
@@ -196,7 +196,6 @@ contains
     ! !USES:
     use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
-    use controlMod       , only : use_excess_ice
     !
     ! !ARGUMENTS:
     class(waterstatebulk_type), intent(in) :: this
@@ -204,8 +203,6 @@ contains
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
-    character(len=*) , intent(in), optional :: NLFilename ! Namelist filename
-    real(r8)         , intent(in), optional :: t_soisno_col(bounds%begc:bounds%endc,:) ! Soil column temperature (Kelvin)
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,j
@@ -213,15 +210,10 @@ contains
     !------------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevmaxurbgrnd/)) , sourcefile, __LINE__)
-    if(use_excess_ice .and. flag == 'read') then
-      call this%restart (bounds, ncid, flag=flag,       &
-      watsat_col=watsat_col(bounds%begc:bounds%endc,:), &
-      NLFilename= NLFilename,                           &
-      t_soisno_col=t_soisno_col(bounds%begc:bounds%endc,:)) 
-    else
-      call this%restart (bounds, ncid, flag=flag, &
-           watsat_col=watsat_col(bounds%begc:bounds%endc,:)) 
-    endif
+
+    call this%restart (bounds, ncid, flag=flag, &
+         watsat_col=watsat_col(bounds%begc:bounds%endc,:)) 
+
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('INT_SNOW'), &
