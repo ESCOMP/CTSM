@@ -45,7 +45,7 @@ module CLMFatesInterfaceMod
    use TemperatureType   , only : temperature_type
    use EnergyFluxType    , only : energyflux_type
    use SoilStateType     , only : soilstate_type
-   use clm_varctl        , only : iulog, copy_fates_var
+   use clm_varctl        , only : iulog
    use clm_varctl        , only : fates_parteh_mode
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
@@ -233,6 +233,7 @@ module CLMFatesInterfaceMod
    private :: GetAndSetTime
 
    logical :: debug  = .false.
+   logical, allocatable :: copy_fates_var(:)  ! True if prefer to copy var from FATES to CTSM in clmfates_interface
 
    character(len=*), parameter, private :: sourcefile = &
         __FILE__
@@ -541,21 +542,19 @@ module CLMFatesInterfaceMod
       allocate(this%fates(nclumps))
       allocate(this%f2hmap(nclumps))
 
-
       if(debug)then
          write(iulog,*) 'clm_fates%init():  allocating for ',nclumps,' threads'
       end if
 
 
-      nclumps = get_proc_clumps()
-
       !$OMP PARALLEL DO PRIVATE (nc,bounds_clump,nmaxcol,s,c,l,g,collist,pi,pf,ft)
       do nc = 1,nclumps
-
          call get_clump_bounds(nc, bounds_clump)
          nmaxcol = bounds_clump%endc - bounds_clump%begc + 1
 
          allocate(collist(1:nmaxcol))
+         allocate(copy_fates_var(1:nmaxcol))
+         copy_fates_var(:) = .false.  ! .false. when starting any run
 
          ! Allocate the mapping that points columns to FATES sites, 0 is NA
          allocate(this%f2hmap(nc)%hsites(bounds_clump%begc:bounds_clump%endc))
@@ -1113,24 +1112,29 @@ module CLMFatesInterfaceMod
        !------------------------------------------------------------------------
        ! FATES calculation of ligninNratio
        !------------------------------------------------------------------------
-       ! If it's the first timestep of a restart and copy_fates_var = .false.
+       ! If it's the first timestep of a restart and copy_fates_var(c) = .false.
        ! (this will happen in the first timestep of any restart)
        ! then skip this variable because a more accurate value was obtained
        ! from the restart file.
-       ! I had hoped that is_first_restart_step() alone would suffice here, but
+       ! Note 1. I had hoped is_first_restart_step() alone would suffice, but
        ! is_first_restart_step() remained true for the whole first day in my
-       ! test. Hence I added the check for copy_fates_var which changes to
+       ! test. Hence I added the check for copy_fates_var(c) which changes to
        ! .true. the first time that we come through this code in a restart.
+       ! Note 2. copy_fates_var is a column-level array to make thread-safe.
+       ! Note 3. This if statement is a workaround for restart tests to pass.
+       ! Ideally, the fates variable would have the correct value at restart,
+       ! but rgknox explains that accomplishing this is more complex given the
+       ! current FATES treatment of other litter fluxes passed to the CTSM.
        !------------------------------------------------------------------------
-       if (is_first_restart_step() .and. .not. copy_fates_var) then
-          copy_fates_var = .true.
-       else
-          do s = 1, this%fates(nc)%nsites
-             c = this%f2hmap(nc)%fcolumn(s)
+       do s = 1, this%fates(nc)%nsites
+          c = this%f2hmap(nc)%fcolumn(s)
+          if (is_first_restart_step() .and. .not. copy_fates_var(c)) then
+             copy_fates_var(c) = .true.
+          else
              soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col(c) = &
                this%fates(nc)%bc_out(s)%litt_flux_ligc_per_n
-          end do
-       end if
+          end if
+       end do
 
        !---------------------------------------------------------------------------------
        ! CHANGING STORED WATER DURING PLANT DYNAMICS IS NOT FULLY IMPLEMENTED
