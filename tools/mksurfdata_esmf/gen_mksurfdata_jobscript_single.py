@@ -88,7 +88,7 @@ def main ():
 
         np = int(tasks_per_node) * int(number_of_nodes)
 
-        output = f"mpiexec_mpt -p \"%g:\" -np {np} ./src/mksurfdata < {namelist_file}"
+        output = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
         runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")
