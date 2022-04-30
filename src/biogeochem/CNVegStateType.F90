@@ -7,7 +7,7 @@ module CNVegStateType
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc
   use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoi
-  use clm_varctl     , only : use_cn, iulog, fsurdat, use_crop, use_cndv
+  use clm_varctl     , only : use_cn, iulog, fsurdat, use_crop, use_cndv, use_crop_agsys
   use clm_varcon     , only : spval, ispval, grlnd
   use landunit_varcon, only : istsoil, istcrop
   use LandunitType   , only : lun
@@ -15,6 +15,7 @@ module CNVegStateType
   use PatchType      , only : patch
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_patch
   use dynSubgridControlMod, only : get_for_testing_allow_non_annual_changes
+  use CropReprPoolsMod, only : nrepr
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -38,8 +39,19 @@ module CNVegStateType
      real(r8) , pointer :: huigrain_patch              (:)     ! patch heat unit index needed to reach vegetative maturity
      real(r8) , pointer :: aleafi_patch                (:)     ! patch saved leaf allocation coefficient from phase 2
      real(r8) , pointer :: astemi_patch                (:)     ! patch saved stem allocation coefficient from phase 2
+
      real(r8) , pointer :: aleaf_patch                 (:)     ! patch leaf allocation coefficient
      real(r8) , pointer :: astem_patch                 (:)     ! patch stem allocation coefficient
+     real(r8) , pointer :: aroot_patch                 (:)     ! patch root allocation coefficient
+     real(r8) , pointer :: arepr_patch                 (:,:)   ! patch reproductive allocation coefficient(s)
+
+     ! The following nitrogen-based allocation fractions are just used with the AgSys
+     ! crop model (use_crop_agsys = .true.):
+     real(r8) , pointer :: aleaf_n_patch               (:)     ! patch leaf allocation coefficient for N
+     real(r8) , pointer :: astem_n_patch               (:)     ! patch stem allocation coefficient for N
+     real(r8) , pointer :: aroot_n_patch               (:)     ! patch root allocation coefficient for N
+     real(r8) , pointer :: arepr_n_patch               (:,:)   ! patch reproductive allocation coefficient(s) for N
+
      real(r8) , pointer :: htmx_patch                  (:)     ! patch max hgt attained by a crop during yr (m)
      integer  , pointer :: peaklai_patch               (:)     ! patch 1: max allowed lai; 0: not at max
 
@@ -199,8 +211,19 @@ contains
     allocate(this%huigrain_patch      (begp:endp))                   ; this%huigrain_patch      (:)   = 0.0_r8
     allocate(this%aleafi_patch        (begp:endp))                   ; this%aleafi_patch        (:)   = nan
     allocate(this%astemi_patch        (begp:endp))                   ; this%astemi_patch        (:)   = nan
+
     allocate(this%aleaf_patch         (begp:endp))                   ; this%aleaf_patch         (:)   = nan
     allocate(this%astem_patch         (begp:endp))                   ; this%astem_patch         (:)   = nan
+    allocate(this%aroot_patch         (begp:endp))                   ; this%aroot_patch         (:)   = nan
+    allocate(this%arepr_patch         (begp:endp, nrepr))            ; this%arepr_patch         (:,:) = nan
+
+    if (use_crop_agsys) then
+       allocate(this%aleaf_n_patch    (begp:endp))                   ; this%aleaf_n_patch       (:)   = nan
+       allocate(this%astem_n_patch    (begp:endp))                   ; this%astem_n_patch       (:)   = nan
+       allocate(this%aroot_n_patch    (begp:endp))                   ; this%aroot_n_patch       (:)   = nan
+       allocate(this%arepr_n_patch    (begp:endp, nrepr))            ; this%arepr_n_patch       (:,:) = nan
+    end if
+
     allocate(this%htmx_patch          (begp:endp))                   ; this%htmx_patch          (:)   = 0.0_r8
     allocate(this%peaklai_patch       (begp:endp))                   ; this%peaklai_patch       (:)   = 0
 

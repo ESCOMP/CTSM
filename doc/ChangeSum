@@ -1,6 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-    ctsm5.1.dev092   slevis 04/26/2022 Modifications for FATES-MIMICS to work
+    ctsm5.1.dev093   slevis 04/30/2022 Modifications for FATES-MIMICS to work
+    ctsm5.1.dev092    sacks 04/29/2022 Refactor NutrientCompetition / CNAllocation to provide hooks for AgSys
     ctsm5.1.dev091   rgknox 04/22/2022 clm decomp method is now passed to fates to enabled mimics coupling
     ctsm5.1.dev090 samrabin 03/31/2022 Fix misleading name of "gddplant"
     ctsm5.1.dev089    sacks 03/31/2022 For CLM45 apply peaklai to aleaf in grainfill
