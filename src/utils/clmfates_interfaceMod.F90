@@ -233,7 +233,6 @@ module CLMFatesInterfaceMod
    private :: GetAndSetTime
 
    logical :: debug  = .false.
-   logical, allocatable :: copy_fates_var(:)  ! True if prefer to copy var from FATES to CTSM in clmfates_interface
 
    character(len=*), parameter, private :: sourcefile = &
         __FILE__
@@ -546,15 +545,13 @@ module CLMFatesInterfaceMod
          write(iulog,*) 'clm_fates%init():  allocating for ',nclumps,' threads'
       end if
 
-
       !$OMP PARALLEL DO PRIVATE (nc,bounds_clump,nmaxcol,s,c,l,g,collist,pi,pf,ft)
       do nc = 1,nclumps
          call get_clump_bounds(nc, bounds_clump)
+
          nmaxcol = bounds_clump%endc - bounds_clump%begc + 1
 
          allocate(collist(1:nmaxcol))
-         allocate(copy_fates_var(1:nmaxcol))
-         copy_fates_var(:) = .false.  ! .false. when starting any run
 
          ! Allocate the mapping that points columns to FATES sites, 0 is NA
          allocate(this%f2hmap(nc)%hsites(bounds_clump%begc:bounds_clump%endc))
@@ -582,6 +579,8 @@ module CLMFatesInterfaceMod
                   write(iulog,*) 'LU type:', lun%itype(l)
                end if
             endif
+
+            col%copy_fates_var(c) = .false.
 
          enddo
 
@@ -1112,7 +1111,7 @@ module CLMFatesInterfaceMod
        !------------------------------------------------------------------------
        ! FATES calculation of ligninNratio
        !------------------------------------------------------------------------
-       ! If it's the first timestep of a restart and copy_fates_var(c) = .false.
+       ! If it's the first timestep of a restart & copy_fates_var(c) = .false.
        ! (this will happen in the first timestep of any restart)
        ! then skip this variable because a more accurate value was obtained
        ! from the restart file.
@@ -1128,8 +1127,8 @@ module CLMFatesInterfaceMod
        !------------------------------------------------------------------------
        do s = 1, this%fates(nc)%nsites
           c = this%f2hmap(nc)%fcolumn(s)
-          if (is_first_restart_step() .and. .not. copy_fates_var(c)) then
-             copy_fates_var(c) = .true.
+          if (is_first_restart_step() .and. .not. col%copy_fates_var(c)) then
+             col%copy_fates_var(c) = .true.
           else
              soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col(c) = &
                this%fates(nc)%bc_out(s)%litt_flux_ligc_per_n
