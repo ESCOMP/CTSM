@@ -1,20 +1,49 @@
 #! /bin/bash -f
 
+hostname=`hostname --short`
+
 # Define what machine to use that's been ported to cime
-export MACH="cheyenne"
-export COMPILER="intel"
-export MPILIB="mpt"
+case $hostname in
+  ##cheyenne
+  cheyenne* | r* )
+      export MACH="cheyenne"
+      ;;
+  ## Other machines
+  *)
+      export MACH="$hostname"
+      ;;
+esac
 
 # Create a build directory
+echo "cime Machine is: $MACH..."
+echo "Remove the old bld directory and create a new one..."
 cwd=`pwd`
 rm -rf bld
 mkdir bld
 cd bld
 # Run the cime configure tool to figure out what modules need to be loaded
-../../../cime/tools/configure --macros-format CMake --machine $MACH --compiler $COMPILER --mpilib $MPILIB
-source ./.env_mach_specific.sh
+echo "Run cime configure for machine $MACH..."
+# You can specify the non-default compiler and mpi-library by adding --compiler and --mpilib settings
+../../../cime/tools/configure --macros-format CMake --machine $MACH
+if [ $? != 0 ]; then
+  echo "Error doing configure for machine name: $MACH"
+  exit 1
+fi
+. .env_mach_specific.sh
+echo "COMPILER = $COMPILER, MPILIB = $MPILIB, DEBUG = $DEBUG, OS = $OS"
 # Build the cmake files
+echo "Do the cmake build..."
 CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src
+if [ $? != 0 ]; then
+  echo "Error doing cmake for $MACH $MPILIB $COMPILER"
+  exit 1
+fi
 # Build the actual executable
+echo "Build the mksurfdata_esmf build..."
 make VERBOSE=1
+if [ $? != 0 ]; then
+  echo "Error doing make for $MACH $MPILIB $COMPILER"
+  exit 1
+fi
+echo "\n\n\nSuccessfully created mksurfdata_esmf executable for: ${MACH}_${COMPILER} for $MPILIB library"
 
