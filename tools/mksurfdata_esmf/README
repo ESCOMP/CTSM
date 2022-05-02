@@ -1,38 +1,17 @@
-Most recent update of README:
-4/6/2022 slevis
+For users working on cime machines you can use the build
+script to build the tool for you. On other machines you'll need to do port to cime
+and tell how to build for that machine. That's talked about in the cime documentation.
+And you'll have to make some modifications to the build script.
 
-================
-Getting the code
-================
-> cd <user/work/area>
-> git clone https://github.com/ESCOMP/CTSM.git <dir_name>
-> cd <dir_name>
-> git checkout ctsm5.2.mksurfdata
-
-# Save time by checking out ccs_config only
-> ./manage_externals/checkout_externals ccs_config
+Machines that are already run CTSM or CESM have been ported to cime. So if you can run the model
+on your machine you will be able to build the tool there.
 
 =======================
 building the executable
 =======================
 
 > cd tools/mksurfdata_esmf
-> rm -rf bld  # (or the contents of /bld) before rerunning CC=...
-> mkdir ./bld
-> cd bld
-> module load intel  # I found I need the latest version of intel
-> module load python  # in case need latest version of python
-> module load cmake
-> module load mpt/2.25
-> module use /glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/
-> module load esmf-8.3.0b13-ncdfio-mpt-O
-> module unload netcdf/4.8.1
-> module load netcdf-mpi/4.8.1
-> module load pnetcdf/1.12.2
-> module load pio/2.5.7
-> bash   #If you are not already using the bash shell
-> CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src/
-> make VERBOSE=1
+> ./gen_mksurfdata_build.sh      # For machines with a cime build
 
 =======================
 running for a single submission:
