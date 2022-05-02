@@ -16,7 +16,10 @@ esac
 
 # Create a build directory
 echo "cime Machine is: $MACH..."
-echo "Remove the old bld directory and create a new one..."
+if [ -d "bld" ]; then
+  echo "An existing bld directory exists already remove it, if you want to do a clean build..."
+  exit 1
+fi
 cwd=`pwd`
 rm -rf bld
 mkdir bld
