@@ -182,8 +182,6 @@ program mksurfdata
   type(ESMF_Mesh)                 :: mesh_model
   type(ESMF_Field)                :: field_model
   type(ESMF_LogKind_Flag)         :: logkindflag
-  type(ESMF_RouteHandle)          :: routehandle_pft, routehandle_harv, &
-                                     routehandle_lak, routehandle_urb
   type(ESMF_VM)                   :: vm
   integer                         :: rc
   logical                         :: create_esmf_pet_files = .false.
@@ -372,8 +370,7 @@ program mksurfdata
   allocate(pftdata_mask(lsize_o))  ; pftdata_mask(:) = -999
   allocate(landfrac_pft(lsize_o))  ; landfrac_pft(:) = spval
   call mkpft( mksrf_fvegtyp_mesh, mksrf_fvegtyp, mesh_model, &
-       pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft, &
-       routehandle=routehandle_pft, rc=rc)
+       pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
 
   ! If have pole points on grid - set south pole to glacier
@@ -411,7 +408,7 @@ program mksurfdata
   ! Output data is written in mkharvest
   if (fsurdat /= ' ') then
      call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, pioid, &
-                     routehandle_r8=routehandle_harv, rc=rc )
+                     rc=rc )
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
   end if
 
@@ -423,7 +420,7 @@ program mksurfdata
   allocate ( pctlak(lsize_o)) ; pctlak(:) = spval
   allocate ( pctlak_max(lsize_o)) ; pctlak_max(:) = spval
   call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pioid, &
-                fsurdat, routehandle_lak, rc=rc, do_depth=.true.)
+                fsurdat, rc=rc, do_depth=.true.)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
 
   allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
@@ -516,7 +513,7 @@ program mksurfdata
   allocate (urban_classes(lsize_o,numurbl))  ; urban_classes(:,:)   = spval
   allocate (urban_region(lsize_o))           ; urban_region(:)      = -999
   call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, pcturb, &
-               urban_classes, urban_region, routehandle_urb, rc=rc)
+               urban_classes, urban_region, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out urban region id"
@@ -887,7 +884,7 @@ program mksurfdata
         ! Note that pctlnd_o below is different than the above call and returns pctlnd_pft_dyn
         call mkpft( mksrf_fvegtyp_mesh, fname, mesh_model, &
              pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft, &
-             routehandle=routehandle_pft, rc=rc)
+             rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpft')
         call pio_syncfile(pioid)
 
@@ -915,18 +912,18 @@ program mksurfdata
         ! Create harvesting data at model resolution
         ! Output data is written in mkharvest
         call mkharvest( mksrf_fhrvtyp_mesh, fhrvname, mesh_model, pioid, &
-                        ntime=ntim, routehandle_r8=routehandle_harv, rc=rc )
+                        ntime=ntim, rc=rc )
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest')
         call pio_syncfile(pioid)
 
         ! Create pctlak data at model resolution (use original mapping file from lake data)
         call mklakwat(mksrf_flakwat_mesh, flakname, mesh_model, pctlak, pioid, &
-                      fsurdat, routehandle_lak, rc=rc)
+                      fsurdat, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklakwat')
         call pio_syncfile(pioid)
 
         call mkurban(mksrf_furban_mesh, furbname, mesh_model, pcturb, &
-                     urban_classes, urban_region, routehandle_urb, rc=rc)
+                     urban_classes, urban_region, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
         call pio_syncfile(pioid)
         ! screen pcturb using elevation

@@ -51,6 +51,7 @@ module mkharvestMod
        /)
 
   type(ESMF_Mesh)        :: mesh_i
+  type(ESMF_RouteHandle) :: routehandle_r8
   real(r8), allocatable  :: frac_o(:)
 
   character(len=*) , parameter :: u_FILE_u = &
@@ -60,7 +61,7 @@ module mkharvestMod
 contains
 !=================================================================================
 
-  subroutine mkharvest(file_mesh_i, file_data_i, mesh_o, pioid_o, ntime, routehandle_r8, rc)
+  subroutine mkharvest(file_mesh_i, file_data_i, mesh_o, pioid_o, ntime, rc)
     !
     ! Make harvest data for the dynamic PFT dataset.
     ! This dataset consists of the normalized harvest or grazing fraction (0-1) of
@@ -71,7 +72,6 @@ contains
     character(len=*)      , intent(in)    :: file_data_i ! input data file name
     type(ESMF_Mesh)       , intent(in)    :: mesh_o      ! model mesh
     type(file_desc_t)     , intent(inout) :: pioid_o
-    type(ESMF_RouteHandle), intent(inout) :: routehandle_r8
     integer, optional     , intent(in)    :: ntime
     integer               , intent(out)   :: rc          ! return code
 

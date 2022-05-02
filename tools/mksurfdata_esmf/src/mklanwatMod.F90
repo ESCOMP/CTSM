@@ -25,6 +25,7 @@ module mklanwatMod
   public :: update_max_array_lake  ! Update the maximum lake percent
 
   real(r8), allocatable  :: frac_o_mklak(:)
+  type(ESMF_RouteHandle) :: routehandle_mklak
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -34,7 +35,7 @@ contains
 !===============================================================
 
   subroutine mklakwat(file_mesh_i, file_data_i, mesh_o, lake_o, pioid_o, &
-                      fsurdat, routehandle, rc, do_depth)
+                      fsurdat, rc, do_depth)
 
     ! -------------------
     ! make %lake and lake depth
@@ -50,7 +51,6 @@ contains
     character(len=*)  , intent(in)    :: file_data_i      ! input data file name
     type(ESMF_Mesh)   , intent(in)    :: mesh_o
     type(file_desc_t) , intent(inout) :: pioid_o
-    type(ESMF_RouteHandle), intent(inout) :: routehandle
     real(r8)          , intent(out)   :: lake_o(:)        ! output grid: %lake
     character(len=*)  , intent(in)    :: fsurdat
     integer           , intent(out)   :: rc
@@ -122,9 +122,9 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Create a route handle between the input and output mesh
-    if (.not. ESMF_RouteHandleIsCreated(routehandle)) then
+    if (.not. ESMF_RouteHandleIsCreated(routehandle_mklak)) then
        allocate(frac_o_mklak(ns_o))
-       call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o_mklak, rc=rc)
+       call create_routehandle_r8(mesh_i, mesh_o, routehandle_mklak, frac_o=frac_o_mklak, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
     end if
@@ -145,7 +145,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Regrid lake_i to lake_o
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, lake_i, lake_o, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_mklak, lake_i, lake_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do no = 1,ns_o
        if (lake_o(no) < 1.) lake_o(no) = 0.
@@ -176,7 +176,7 @@ contains
 
           ! regrid lakedepth_i to lakedepth_o - this also returns lakedepth_i to be used in the global sums below
           allocate (lakedepth_o(ns_o)); lakedepth_o(:) = spval
-          call regrid_rawdata(mesh_i, mesh_o, routehandle, lakedepth_i, lakedepth_o, rc)
+          call regrid_rawdata(mesh_i, mesh_o, routehandle_mklak, lakedepth_i, lakedepth_o, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           call ESMF_VMLogMemInfo("After regrid_rawdata for lakedepth in "//trim(subname))
           do no = 1,ns_o
@@ -213,7 +213,7 @@ contains
     ! Release memory
     if (mksrf_fdynuse == ' ') then  ! ...else we will reuse it
        deallocate(frac_o_mklak)
-       call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+       call ESMF_RouteHandleDestroy(routehandle_mklak, nogarbage = .true., rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     end if
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)

@@ -25,6 +25,7 @@ module mkpftMod
 
   character(len=35) :: veg(0:maxpft) ! vegetation types
   real(r8), allocatable :: frac_o(:)
+  type(ESMF_RouteHandle) :: routehandle
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -186,7 +187,7 @@ contains
 
   !===============================================================
   subroutine mkpft(file_mesh_i, file_data_i, mesh_o, pctlnd_o, pctnatpft_o, &
-                   pctcft_o, routehandle, rc)
+                   pctcft_o, rc)
     !
     ! Make PFT data
     !
@@ -211,7 +212,6 @@ contains
     real(r8)          , intent(inout) :: pctlnd_o(:)    ! output grid:%land/gridcell
     type(pct_pft_type), intent(inout) :: pctnatpft_o(:) ! natural PFT cover
     type(pct_pft_type), intent(inout) :: pctcft_o(:)    ! crop (CFT) cover
-    type(ESMF_RouteHandle), intent(inout) :: routehandle
 
     integer           , intent(out)   :: rc
     !

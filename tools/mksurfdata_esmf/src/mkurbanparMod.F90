@@ -43,6 +43,7 @@ module mkurbanparMod
   ! flag to indicate nodata for index variables in output file:
   integer         , parameter :: index_nodata = 0
   real(r8)        , allocatable :: frac_o_mkurban(:)
+  type(ESMF_RouteHandle) :: routehandle_mkurban
   character(len=*), parameter :: modname = 'mkurbanparMod'
 
   private :: index_nodata
@@ -83,7 +84,7 @@ contains
 
   !===============================================================
   subroutine mkurban(file_mesh_i, file_data_i, mesh_o, pcturb_o, &
-                     urban_classes_o, region_o, routehandle, rc)
+                     urban_classes_o, region_o, rc)
     !
     ! make total percent urban, breakdown into urban classes, and region ID on the output grid
     !
@@ -111,7 +112,6 @@ contains
     character(len=*) , intent(in)    :: file_mesh_i          ! input mesh file name
     character(len=*) , intent(in)    :: file_data_i          ! input data file name
     type(ESMF_Mesh)  , intent(in)    :: mesh_o               ! model mesh
-    type(ESMF_RouteHandle), intent(inout) :: routehandle
     real(r8)         , intent(inout) :: pcturb_o(:)            ! output grid: total % urban
     real(r8)         , intent(inout) :: urban_classes_o(:,:) ! output grid: breakdown of total urban into each class
     integer          , intent(inout) :: region_o(:)          ! output grid: region ID
@@ -182,9 +182,9 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Create a route handle between the input and output mesh
-    if (.not. ESMF_RouteHandleIsCreated(routehandle)) then
+    if (.not. ESMF_RouteHandleIsCreated(routehandle_mkurban)) then
        allocate(frac_o_mkurban(ns_o))
-       call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o_mkurban, rc=rc)
+       call create_routehandle_r8(mesh_i, mesh_o, routehandle_mkurban, frac_o=frac_o_mkurban, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
     end if
@@ -202,7 +202,7 @@ contains
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
     ! Regrid input data to model resolution
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 1, numurbl, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_mkurban, data_i, data_o, 1, numurbl, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regrid_data for in "//trim(subname))
 
@@ -300,7 +300,7 @@ contains
     if (allocated(data_o)) deallocate(data_o)
     allocate(data_o(max_regions, ns_o), stat=ier)
     if (ier/=0) call shr_sys_abort('error allocating data_i(max_regions, ns_o)')
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 1, nregions, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_mkurban, data_i, data_o, 1, nregions, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Now find dominant region in each output gridcell - this is identical to the maximum index
@@ -332,7 +332,7 @@ contains
     if (mksrf_fdynuse == ' ') then  ! ...else we will reuse it
        deallocate(frac_o_mkurban)
        call ESMF_VMLogMemInfo("Before destroy operation in "//trim(subname))
-       call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+       call ESMF_RouteHandleDestroy(routehandle_mkurban, nogarbage = .true., rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     end if
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
