@@ -1316,10 +1316,6 @@ contains
                         write(iulog,*) 'gddmaturity(p) == 0.0'
                         call endrun(msg=errMsg(sourcefile, __LINE__))
                      end if
-                     if (hui(p) == 0.0) then
-                        write(iulog,*) 'hui(p) == 0.0'
-                        call endrun(msg=errMsg(sourcefile, __LINE__))
-                     end if
                      if (huigrain(p) == 0.0) then
                         write(iulog,*) 'huigrain(p) == 0.0'
                         call endrun(msg=errMsg(sourcefile, __LINE__))
