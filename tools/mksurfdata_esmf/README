@@ -11,6 +11,8 @@ such libraries must be built for the following:
 3) ParallelIO
 4) ESMF
 
+In addition for the build: python, bash-shell, CMake and GNU-Make are required
+
 These libraries need to be built such that they can all work together in the same executable. Hence, the above
 order may be required in building them.
 
