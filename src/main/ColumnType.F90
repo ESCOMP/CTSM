@@ -49,8 +49,6 @@ module ColumnType
      logical , pointer :: active               (:)   ! true=>do computations on this column
      logical , pointer :: type_is_dynamic      (:)   ! true=>itype can change throughout the run
      
-     logical , pointer :: copy_fates_var       (:)   ! .true. -> copy variable from FATES to CTSM in clmfates_interface
-                                                     ! .false. -> do not copy in clmfates_interface and use value already in memory
      logical , pointer :: is_fates             (:)   ! .true. -> this is a fates column
                                                      ! .false. -> this is NOT a fates column
      
@@ -122,7 +120,6 @@ contains
     allocate(this%type_is_dynamic(begc:endc))                  ; this%type_is_dynamic(:) = .false.
 
     allocate(this%is_fates(begc:endc))                         ; this%is_fates(:) = .false.
-    allocate(this%copy_fates_var(begc:endc))                   ; this%copy_fates_var(:) = .false.
     
     ! The following is set in initVerticalMod
     allocate(this%snl         (begc:endc))                     ; this%snl         (:)   = ispval  !* cannot be averaged up
@@ -162,7 +159,6 @@ contains
     deallocate(this%itype      )
     deallocate(this%lun_itype  )
     deallocate(this%active     )
-    deallocate(this%copy_fates_var)
     deallocate(this%is_fates   )
     deallocate(this%type_is_dynamic)
     deallocate(this%snl        )

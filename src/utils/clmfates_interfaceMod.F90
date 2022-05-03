@@ -233,6 +233,8 @@ module CLMFatesInterfaceMod
    private :: GetAndSetTime
 
    logical :: debug  = .false.
+   logical, private, allocatable :: copy_fates_var(:)  ! .true. -> copy variable from FATES to CTSM in clmfates_interface
+                                                       ! .false. -> do not copy in clmfates_interface and use value already in memory
 
    character(len=*), parameter, private :: sourcefile = &
         __FILE__
@@ -545,6 +547,9 @@ module CLMFatesInterfaceMod
          write(iulog,*) 'clm_fates%init():  allocating for ',nclumps,' threads'
       end if
 
+      allocate(copy_fates_var(bounds_proc%begc:bounds_proc%endc))
+      copy_fates_var(:) = .false.
+
       !$OMP PARALLEL DO PRIVATE (nc,bounds_clump,nmaxcol,s,c,l,g,collist,pi,pf,ft)
       do nc = 1,nclumps
          call get_clump_bounds(nc, bounds_clump)
@@ -579,8 +584,6 @@ module CLMFatesInterfaceMod
                   write(iulog,*) 'LU type:', lun%itype(l)
                end if
             endif
-
-            col%copy_fates_var(c) = .false.
 
          enddo
 
@@ -1127,8 +1130,8 @@ module CLMFatesInterfaceMod
        !------------------------------------------------------------------------
        do s = 1, this%fates(nc)%nsites
           c = this%f2hmap(nc)%fcolumn(s)
-          if (is_first_restart_step() .and. .not. col%copy_fates_var(c)) then
-             col%copy_fates_var(c) = .true.
+          if (is_first_restart_step() .and. .not. copy_fates_var(c)) then
+             copy_fates_var(c) = .true.
           else
              soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col(c) = &
                this%fates(nc)%bc_out(s)%litt_flux_ligc_per_n
