@@ -9,7 +9,8 @@ import os
 # -- 3rd party libraries
 import numpy as np
 import xarray as xr
-import tqdm
+from tqdm import tqdm
+from datetime import datetime
 
 # -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
@@ -79,6 +80,7 @@ class RegionalCase(BaseCase):
         create_landuse,
         create_datm,
         create_user_mods,
+        create_mesh,
         out_dir,
         overwrite,
     ):
@@ -98,9 +100,9 @@ class RegionalCase(BaseCase):
         self.lon1 = lon1
         self.lon2 = lon2
         self.reg_name = reg_name
+        self.create_mesh = create_mesh
         self.out_dir = out_dir
         self.create_tag()
-        self.create_mesh_at_reg()
 
     def create_tag(self):
         """
@@ -157,6 +159,7 @@ class RegionalCase(BaseCase):
 
         # specify files
         fsurf_in = os.path.join(indir, file)
+        print (self.tag)
         fsurf_out = add_tag_to_filename(fsurf_in, self.tag)
         logger.info("fsurf_in:  %s", fsurf_in)
         logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
@@ -231,13 +234,18 @@ class RegionalCase(BaseCase):
                 self.write_to_file(line, nl_clm)
 
 
-    def create_mesh_at_reg (self):
+    def create_mesh_at_reg(self, mesh_dir, mesh_surf):
         """
         Create a mesh subsetted for the RegionalCase class.
         """
         print ("test")
-        mesh_in = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
+        mesh_in = os.path.join(mesh_dir, mesh_surf)
+        mesh_out = os.path.join(self.out_dir, os.path.splitext(mesh_surf)[0]+'_'+self.tag+'.nc')
+        print (mesh_out)
+        print (mesh_in)
         node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
+        f_in = xr.open_dataset (mesh_in)
+        self.write_mesh (f_in, node_coords, subset_element, subset_node, conn_dict)
 
 
     def subset_mesh_at_reg (self, mesh_in):
@@ -255,7 +263,7 @@ class RegionalCase(BaseCase):
         subset_element = []
         cnt = 0
 
-        for n in tqdm.tqdm(range(elem_count)):
+        for n in tqdm(range(elem_count)):
             #print (elem_conn.shape)
             #print (num_elem_conn.shape)
             #print ('-----')
@@ -271,8 +279,8 @@ class RegionalCase(BaseCase):
             #print ('endx:', endx)
             #print (node_coords.shape)
             #print (node_coords)
-            nlon = node_coords[endx,0]
-            nlat = node_coords[endx,1]
+            nlon = node_coords[endx,0].values
+            nlat = node_coords[endx,1].values
             #print ('-----')
 
             l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
@@ -291,8 +299,8 @@ class RegionalCase(BaseCase):
         cnt = 1
 
         for n in range(node_count):
-            nlon = node_coords[n,0]
-            nlat = node_coords[n,1]
+            nlon = node_coords[n,0].values
+            nlat = node_coords[n,1].values
 
             l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
             l2 = np.logical_or(nlat <= self.lat1,nlat >= self.lat2)
@@ -307,24 +315,87 @@ class RegionalCase(BaseCase):
 
 
     def write_mesh (self, f_in, node_coords, subset_element, subset_node, conn_dict):
-        corner_pair_uniq = f_in.variables['nodeCoords'][subset_node,]
+        corner_pairs = f_in.variables['nodeCoords'][subset_node,]
 
-        dimensions = f1.dimensions
-        variables  = f1.variables
-        global_attributes  = f1.ncattrs()
-        var = 'elementConn'
-        elem_conn_out = np.empty(shape=[elementCount, len(f1.dimensions['maxNodePElement'])])
-        elem_conn_index = f1.variables[var][subsetElement,]
-    
-        print (elem_conn_out.shape)
-        for n in range(elementCount):
-            print ('n:',n)
-            for m in range(len(f1.dimensions['maxNodePElement'])):
-                print ('m:',m)
-                ndx = int (elem_conn_index[n,m])
-                print ('ndx:', ndx)
-                elem_conn_out[n,m] = connDict[ndx]
+        dimensions = f_in.dims
+        variables  = f_in.variables
+        global_attributes  = f_in.attrs
 
 
+        max_node_dim = len(f_in['maxNodePElement'])
+
+        elem_count = len(subset_element)
+        elem_conn_out = np.empty(shape=[elem_count, max_node_dim])
+        elem_conn_index = f_in.variables['elementConn'][subset_element,]
+
+        for ni in range(elem_count):
+            for mi in range(max_node_dim):
+                ndx = int (elem_conn_index[ni,mi])
+                elem_conn_out[ni,mi] = conn_dict[ndx]
+
+
+        num_elem_conn_out = np.empty(shape=[elem_count,])
+        num_elem_conn_out[:] = f_in.variables['numElementConn'][subset_element,]
+
+        center_coords_out = np.empty(shape=[elem_count,2])
+        center_coords_out[:,:]=f_in.variables['centerCoords'][subset_element,:]
+
+        if 'elementMask' in variables:
+            elem_mask_out = np.empty(shape=[elem_count,])
+            elem_mask_out[:]=f_in.variables['elementMask'][subset_element,]
+
+        if 'elementArea' in variables:
+            elem_area_out = np.empty(shape=[elem_count,])
+            elem_area_out[:]=f_in.variables['elementArea'][subset_element,]
+
+        # -- create output dataset
+        f_out = xr.Dataset()
+
+        f_out['nodeCoords'] = xr.DataArray(corner_pairs,
+                                     dims=('nodeCount', 'coordDim'),
+                                     attrs={'units': 'degrees'})
+
+        f_out['elementConn'] = xr.DataArray(elem_conn_out,
+                                      dims=('elementCount', 'maxNodePElement'),
+                                      attrs={'long_name': 'Node indices that define the element connectivity'})
+        f_out.elementConn.encoding = {'dtype': np.int32}
+
+        f_out['numElementConn'] = xr.DataArray(num_elem_conn_out,
+                                      dims=('elementCount'),
+                                      attrs={'long_name': 'Number of nodes per element'})
+
+        f_out['centerCoords'] = xr.DataArray(center_coords_out,
+                                          dims=('elementCount', 'coordDim'),
+                                          attrs={'units': 'degrees'})
+
+
+        #-- add mask
+        f_out['elementMask'] = xr.DataArray(elem_mask_out,
+                                          dims=('elementCount'),
+                                          attrs={'units': 'unitless'})
+        f_out.elementMask.encoding = {'dtype': np.int32}
+
+        #-- setting fill values
+        for var in variables:
+            if '_FillValue' in f_in[var].encoding:
+                f_out[var].encoding['_FillValue'] = f_in[var].encoding['_FillValue']
+            else:
+                f_out[var].encoding['_FillValue'] = None
+
+        #-- add global attributes
+
+        for attr in global_attributes:
+            if attr != 'timeGenerated':
+                f_out.attrs[attr] = global_attributes[attr]
+
+        f_out.attrs['timeGenerated'] = datetime.datetime.now()
+        #out.attrs = {'title': 'ESMF unstructured grid file for rectangular grid',
+        #         'created_by': os.path.basename(__file__),
+        #         'date_created': '{}'.format(datetime.now()),
+        #         'conventions': 'ESMFMESH',
+        #        }
+
+        mesh_out = '/glade/scratch/negins/ctsm-mesh/mesh_out_test.nc'
+        out.to_netcdf(mesh_out)
 
 
