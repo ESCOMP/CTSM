@@ -2498,6 +2498,7 @@ contains
       endif
 
       ! set GDD target
+      gddmaturity(p) = min_crop_gdd_target
       if (do_plant_prescribed .and. (.not. generate_crop_gdds) .and. (.not. ignore_rx_crop_gdds) .and. crop_inst%rx_cultivar_gdds_thisyr(p,s) .gt. 0._r8) then
          gdd_target = crop_inst%rx_cultivar_gdds_thisyr(p,s)
 
