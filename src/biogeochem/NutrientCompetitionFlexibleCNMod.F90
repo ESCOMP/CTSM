@@ -1313,6 +1313,15 @@ contains
 
                      ! SSR troubleshooting
                      if (gddmaturity(p) == 0.0) then
+                        write(iulog,*) 'gddmaturity(p) == 0.0'
+                        call endrun(msg=errMsg(sourcefile, __LINE__))
+                     end if
+                     if (hui(p) == 0.0) then
+                        write(iulog,*) 'hui(p) == 0.0'
+                        call endrun(msg=errMsg(sourcefile, __LINE__))
+                     end if
+                     if (huigrain(p) == 0.0) then
+                        write(iulog,*) 'huigrain(p) == 0.0'
                         call endrun(msg=errMsg(sourcefile, __LINE__))
                      end if
 
@@ -1345,6 +1354,24 @@ contains
                   ! SSR troubleshooting
                   if (gddmaturity(p) == 0.0) then
                      write(iulog,*) 'gddmaturity(p) == 0.0'
+                     call endrun(msg=errMsg(sourcefile, __LINE__))
+                  end if
+                  if (((gddmaturity(p)*declfact(ivt(p)))-huigrain(p)) == 0.0) then
+                     write(iulog,*) '((gddmaturity(p)*declfact(ivt(p)))-huigrain(p)) == 0.0'
+                     write(iulog,*) 'gddmaturity(p) = ',gddmaturity(p)
+                     write(iulog,*) 'declfact(ivt(p)) = ',declfact(ivt(p))
+                     write(iulog,*) 'huigrain(p) = ',huigrain(p)
+                     call endrun(msg=errMsg(sourcefile, __LINE__))
+                  end if
+                  if (allconss(ivt(p)) .lt. 0.0 .and. min((hui(p)-                 &
+                  huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
+                  huigrain(p)),1._r8) == 0.0) then
+                     write(iulog,*) 'Raising 0 to negative exponent'
+                     write(iulog,*) 'hui(p) = ',hui(p)
+                     write(iulog,*) 'huigrain(p) = ',huigrain(p)
+                     write(iulog,*) 'hui(p) = ',hui(p)
+                     write(iulog,*) 'gddmaturity(p) = ',gddmaturity(p)
+                     write(iulog,*) 'declfact(ivt(p)) = ',declfact(ivt(p))
                      call endrun(msg=errMsg(sourcefile, __LINE__))
                   end if
 
