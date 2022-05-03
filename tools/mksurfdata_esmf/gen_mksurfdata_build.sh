@@ -60,4 +60,7 @@ if [ $? != 0 ]; then
   echo "Error doing make for $MACH $MPILIB $COMPILER"
   exit 1
 fi
-echo "\n\n\nSuccessfully created mksurfdata_esmf executable for: ${MACH}_${COMPILER} for $MPILIB library"
+echo ""
+echo ""
+echo ""
+echo "Successfully created mksurfdata_esmf executable for: ${MACH}_${COMPILER} for $MPILIB library"
