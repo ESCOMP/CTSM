@@ -1961,13 +1961,14 @@
       <option name="comment">30 day exact restart test activating FATES size and age mortality mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/mimicsFatesColdDef">
+  <test name="ERP_P144x2_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/mimicsFatesColdDef">
     <machines>
-      <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
-      <option name="comment">30 day exact restart test running FATES-MIMICS on an f45 grid.</option>
+      <option name="comment">30 day exact restart test with threading, running FATES-MIMICS on an f45 grid.</option>
     </options>
   </test>
   <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate">
