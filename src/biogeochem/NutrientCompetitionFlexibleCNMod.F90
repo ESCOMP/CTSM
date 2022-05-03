@@ -1344,6 +1344,7 @@ contains
 
                   ! SSR troubleshooting
                   if (gddmaturity(p) == 0.0) then
+                     write(iulog,*) 'gddmaturity(p) == 0.0'
                      call endrun(msg=errMsg(sourcefile, __LINE__))
                   end if
 
