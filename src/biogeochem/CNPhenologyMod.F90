@@ -28,6 +28,8 @@ module CNPhenologyMod
   use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
   use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
   use CropType                        , only : crop_type
+  use CropType                        , only : cphase_planted, cphase_leafemerge
+  use CropType                        , only : cphase_grainfill, cphase_harvest
   use pftconMod                       , only : pftcon
   use SoilStateType                   , only : soilstate_type
   use TemperatureType                 , only : temperature_type
@@ -48,6 +50,7 @@ module CNPhenologyMod
   public :: CNPhenologyreadNML   ! Read namelist
   public :: CNPhenologyInit      ! Initialization
   public :: CNPhenology          ! Update
+  public :: CropPhase            ! Get the current phase of each crop patch
 
   ! !PUBLIC for unit testing
   public :: CNPhenologySetNML         ! Set the namelist setttings explicitly for unit tests
@@ -2012,7 +2015,7 @@ contains
          offset_flag(p) = 0._r8 ! carbon and nitrogen transfers
 
          if (croplive(p)) then
-            cphase(p) = 1._r8
+            cphase(p) = cphase_planted
 
             ! call vernalization if winter temperate cereal planted, living, and the
             ! vernalization factor is not 1;
@@ -2045,8 +2048,14 @@ contains
                hui(p) = max(hui(p),huigrain(p))
             endif
 
+            ! The following conditionals are similar to those in CropPhase. However, they
+            ! differ slightly because here we are potentially setting a new crop phase,
+            ! whereas CropPhase is just designed to get the current, already-determined
+            ! phase. However, despite these differences: if you make changes to the
+            ! following conditionals, you should also check to see if you should make
+            ! similar changes in CropPhase.
             if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
-               cphase(p) = 2._r8
+               cphase(p) = cphase_leafemerge
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
                   onset_counter(p) = dt
@@ -2076,7 +2085,7 @@ contains
                harvest_count(p) = harvest_count(p) + 1
                crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
                croplive(p) = .false.     ! no re-entry in greater if-block
-               cphase(p) = 4._r8
+               cphase(p) = cphase_harvest
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
                   offset_flag(p) = 1._r8
                   offset_counter(p) = dt
@@ -2106,7 +2115,7 @@ contains
                ! Use CN's simple formula at least as a place holder (slevis)
 
             else if (hui(p) >= huigrain(p)) then
-               cphase(p) = 3._r8
+               cphase(p) = cphase_grainfill
                bglfr(p) = 1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)
             end if
 
@@ -2143,6 +2152,67 @@ contains
     end associate
 
   end subroutine CropPhenology
+
+  !-----------------------------------------------------------------------
+  subroutine CropPhase(bounds, num_pcropp, filter_pcropp, &
+       crop_inst, cnveg_state_inst, crop_phase)
+    !
+    ! !DESCRIPTION:
+    ! Get the current phase of each crop patch.
+    !
+    ! The returned values (in crop_phase) are from the set of cphase_* values defined in
+    ! CropType. The returned values in crop_phase are only valid for patches where
+    ! croplive is true; the values are undefined where croplive is false and should not be
+    ! used there!
+    !
+    ! This has logic similar to that in CropPhenology. If you make changes here, you
+    ! should also check if similar changes need to be made in CropPhenology.
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)      , intent(in)    :: bounds
+    integer                , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
+    integer                , intent(in)    :: filter_pcropp(:) ! filter for prognostic crop patches
+    type(crop_type)        , intent(in)    :: crop_inst
+    type(cnveg_state_type) , intent(in)    :: cnveg_state_inst
+    real(r8)               , intent(inout) :: crop_phase(bounds%begp:)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p, fp
+
+    character(len=*), parameter :: subname = 'CropPhase'
+    !-----------------------------------------------------------------------
+    SHR_ASSERT_ALL_FL((ubound(crop_phase) == [bounds%endp]), sourcefile, __LINE__)
+
+    associate( &
+         croplive =>    crop_inst%croplive_patch        , & ! Input: [logical  (:) ]  Flag, true if planted, not harvested
+         hui      =>    crop_inst%hui_patch             , & ! Input: [real(r8) (:) ]  gdd since planting (gddplant)
+         leafout  =>    crop_inst%gddtsoi_patch         , & ! Input: [real(r8) (:) ]  gdd from top soil layer temperature
+         huileaf  =>    cnveg_state_inst%huileaf_patch  , & ! Input: [real(r8) (:) ]  heat unit index needed from planting to leaf emergence
+         huigrain =>    cnveg_state_inst%huigrain_patch   & ! Input: [real(r8) (:) ]  same to reach vegetative maturity
+         )
+
+    do fp = 1, num_pcropp
+       p = filter_pcropp(fp)
+
+       if (croplive(p)) then
+          ! Start with cphase_planted, but this might get changed in the later
+          ! conditional blocks.
+          crop_phase(p) = cphase_planted
+          if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p)) then
+             crop_phase(p) = cphase_leafemerge
+          else if (hui(p) >= huigrain(p)) then
+             ! Since we know croplive is true, any hui greater than huigrain implies that
+             ! we're in the grainfill stage: if we were passt gddmaturity then croplive
+             ! would be false.
+             crop_phase(p) = cphase_grainfill
+          end if
+       end if
+    end do
+
+    end associate
+
+  end subroutine CropPhase
+
 
   !-----------------------------------------------------------------------
   subroutine CropPhenologyInit(bounds)
