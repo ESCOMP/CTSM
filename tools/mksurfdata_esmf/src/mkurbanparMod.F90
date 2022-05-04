@@ -42,6 +42,8 @@ module mkurbanparMod
   ! private data members:
   ! flag to indicate nodata for index variables in output file:
   integer         , parameter :: index_nodata = 0
+  real(r8)        , allocatable :: frac_o_mkurban(:)
+  type(ESMF_RouteHandle) :: routehandle_mkurban
   character(len=*), parameter :: modname = 'mkurbanparMod'
 
   private :: index_nodata
@@ -81,7 +83,8 @@ contains
   end subroutine mkurbanInit
 
   !===============================================================
-  subroutine mkurban(file_mesh_i, file_data_i, mesh_o, pcturb_o, urban_classes_o, region_o, rc)
+  subroutine mkurban(file_mesh_i, file_data_i, mesh_o, pcturb_o, &
+                     urban_classes_o, region_o, rc)
     !
     ! make total percent urban, breakdown into urban classes, and region ID on the output grid
     !
@@ -102,6 +105,9 @@ contains
     ! this would also replace the use of normalize_classes_by_gcell, and maybe some other
     ! urban-specific code.
     !
+    ! uses
+    use mkinputMod, only: mksrf_fdynuse
+    !
     ! input/output variables
     character(len=*) , intent(in)    :: file_mesh_i          ! input mesh file name
     character(len=*) , intent(in)    :: file_data_i          ! input data file name
@@ -112,12 +118,10 @@ contains
     integer          , intent(out)   :: rc
 
     ! local variables:
-    type(ESMF_RouteHandle) :: routehandle
     type(ESMF_Mesh)        :: mesh_i
     type(file_desc_t)      :: pioid
     integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
-    real(r8), allocatable  :: frac_o(:)
     real(r8), allocatable  :: data_i(:,:)
     real(r8), allocatable  :: data_o(:,:)
     real(r8), allocatable  :: urban_classes_gcell_o(:,:) ! % putput urban in each density class (% of total grid cell area)
@@ -178,10 +182,12 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Create a route handle between the input and output mesh
-    allocate(frac_o(ns_o))
-    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+    if (.not. ESMF_RouteHandleIsCreated(routehandle_mkurban)) then
+       allocate(frac_o_mkurban(ns_o))
+       call create_routehandle_r8(mesh_i, mesh_o, routehandle_mkurban, frac_o=frac_o_mkurban, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
+    end if
 
     ! Read in input data
     ! - levels are the outermost dimension in pio reads
@@ -196,7 +202,7 @@ contains
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
     ! Regrid input data to model resolution
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 1, numurbl, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_mkurban, data_i, data_o, 1, numurbl, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regrid_data for in "//trim(subname))
 
@@ -294,7 +300,7 @@ contains
     if (allocated(data_o)) deallocate(data_o)
     allocate(data_o(max_regions, ns_o), stat=ier)
     if (ier/=0) call shr_sys_abort('error allocating data_i(max_regions, ns_o)')
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, data_i, data_o, 1, nregions, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_mkurban, data_i, data_o, 1, nregions, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Now find dominant region in each output gridcell - this is identical to the maximum index
@@ -312,7 +318,7 @@ contains
     end if
 
     ! Output diagnostics
-    call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
+    call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o_mkurban, &
          1, max_regions, region_i, region_o, 'urban region', ndiag, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
@@ -323,10 +329,12 @@ contains
     ! Deallocate dynamic memory & other clean up
     ! TODO: determine what to deallocate
     ! deallocate (urban_classes_gcell_i, urban_classes_gcell_o, region_i)
-
-    call ESMF_VMLogMemInfo("Before destroy operation in "//trim(subname))
-    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    if (mksrf_fdynuse == ' ') then  ! ...else we will reuse it
+       deallocate(frac_o_mkurban)
+       call ESMF_VMLogMemInfo("Before destroy operation in "//trim(subname))
+       call ESMF_RouteHandleDestroy(routehandle_mkurban, nogarbage = .true., rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+    end if
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_VMLogMemInfo("after destroy operation in "//trim(subname))

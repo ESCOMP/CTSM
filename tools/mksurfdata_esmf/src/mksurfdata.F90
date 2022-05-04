@@ -407,7 +407,8 @@ program mksurfdata
   ! Note that this call must come after call to mkpftInit - since num_cft is set there
   ! Output data is written in mkharvest
   if (fsurdat /= ' ') then
-     call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, pioid, constant=.true., rc=rc )
+     call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, pioid, &
+                     rc=rc )
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
   end if
 
@@ -418,7 +419,8 @@ program mksurfdata
   ! Need to keep pctlak and pctwet external for use below
   allocate ( pctlak(lsize_o)) ; pctlak(:) = spval
   allocate ( pctlak_max(lsize_o)) ; pctlak_max(:) = spval
-  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pioid, fsurdat, rc=rc, do_depth=.true.)
+  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pioid, &
+                fsurdat, rc=rc, do_depth=.true.)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
 
   allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
@@ -510,7 +512,8 @@ program mksurfdata
   allocate (pcturb_max(lsize_o, numurbl))    ; pcturb_max(:,:)      = spval
   allocate (urban_classes(lsize_o,numurbl))  ; urban_classes(:,:)   = spval
   allocate (urban_region(lsize_o))           ; urban_region(:)      = -999
-  call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, pcturb, urban_classes, urban_region, rc=rc)
+  call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, pcturb, &
+               urban_classes, urban_region, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out urban region id"
@@ -880,40 +883,47 @@ program mksurfdata
         ! Create pctpft data at model resolution from file fname
         ! Note that pctlnd_o below is different than the above call and returns pctlnd_pft_dyn
         call mkpft( mksrf_fvegtyp_mesh, fname, mesh_model, &
-             pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
+             pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft, &
+             rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpft')
         call pio_syncfile(pioid)
 
-        ! Consistency check on input land fraction
-        ! pctlnd_pft was calculated ABOVE
-        do n = 1,lsize_o
-           if (pctlnd_pft_dyn(n) /= pctlnd_pft(n)) then
-              if (root_task) then
-                 write(ndiag,*) subname,' error: pctlnd_pft for dynamics data = ',&
-                      pctlnd_pft_dyn(n), ' not equal to pctlnd_pft for surface data = ',&
-                      pctlnd_pft(n),' at n= ',n
-                 if ( trim(fname) == ' ' )then
-                    write(ndiag,*) ' PFT string = ',trim(string)
-                 else
-                    write(ndiag,*) ' PFT file = ', fname
-                 end if
-              end if
-              call shr_sys_abort()
-           end if
-        end do
+!       ! Consistency check on input land fraction
+!       ! pctlnd_pft was calculated ABOVE
+!       ! TODO This error check serves no purpose now that mkpft calls
+!       ! create_routehandle_r8 only once and, therefore, doesn't update
+!       ! frac_o and pctlnd_o. Delete? (slevis)
+!       do n = 1,lsize_o
+!          if (pctlnd_pft_dyn(n) /= pctlnd_pft(n)) then
+!             if (root_task) then
+!                write(ndiag,*) subname,' error: pctlnd_pft for dynamics data = ',&
+!                     pctlnd_pft_dyn(n), ' not equal to pctlnd_pft for surface data = ',&
+!                     pctlnd_pft(n),' at n= ',n
+!                if ( trim(fname) == ' ' )then
+!                   write(ndiag,*) ' PFT string = ',trim(string)
+!                else
+!                   write(ndiag,*) ' PFT file = ', fname
+!                end if
+!             end if
+!             call shr_sys_abort()
+!          end if
+!       end do
 
         ! Create harvesting data at model resolution
         ! Output data is written in mkharvest
-        call mkharvest( mksrf_fhrvtyp_mesh, fhrvname, mesh_model, pioid, constant=.false., ntime=ntim, rc=rc )
+        call mkharvest( mksrf_fhrvtyp_mesh, fhrvname, mesh_model, pioid, &
+                        ntime=ntim, rc=rc )
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest')
         call pio_syncfile(pioid)
 
         ! Create pctlak data at model resolution (use original mapping file from lake data)
-        call mklakwat(mksrf_flakwat_mesh, flakname, mesh_model, pctlak, pioid, fsurdat, rc=rc)
+        call mklakwat(mksrf_flakwat_mesh, flakname, mesh_model, pctlak, pioid, &
+                      fsurdat, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklakwat')
         call pio_syncfile(pioid)
 
-        call mkurban(mksrf_furban_mesh, furbname, mesh_model, pcturb, urban_classes, urban_region, rc=rc)
+        call mkurban(mksrf_furban_mesh, furbname, mesh_model, pcturb, &
+                     urban_classes, urban_region, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
         call pio_syncfile(pioid)
         ! screen pcturb using elevation

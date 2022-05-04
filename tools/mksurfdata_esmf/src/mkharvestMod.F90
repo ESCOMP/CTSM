@@ -50,13 +50,9 @@ module mkharvestMod
        'UNREPRESENTED_CFT_LULCC'   &
        /)
 
-  character(len=CL), parameter :: string_undef = 'UNSET'
-  real(r8),          parameter :: real_undef   = -999.99
-
   type(ESMF_Mesh)        :: mesh_i
   type(ESMF_RouteHandle) :: routehandle_r8
   real(r8), allocatable  :: frac_o(:)
-  logical                :: initialized = .false.
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -65,7 +61,7 @@ module mkharvestMod
 contains
 !=================================================================================
 
-  subroutine mkharvest(file_mesh_i, file_data_i, mesh_o, pioid_o, constant, ntime, rc)
+  subroutine mkharvest(file_mesh_i, file_data_i, mesh_o, pioid_o, ntime, rc)
     !
     ! Make harvest data for the dynamic PFT dataset.
     ! This dataset consists of the normalized harvest or grazing fraction (0-1) of
@@ -76,7 +72,6 @@ contains
     character(len=*)      , intent(in)    :: file_data_i ! input data file name
     type(ESMF_Mesh)       , intent(in)    :: mesh_o      ! model mesh
     type(file_desc_t)     , intent(inout) :: pioid_o
-    logical               , intent(in)    :: constant
     integer, optional     , intent(in)    :: ntime
     integer               , intent(out)   :: rc          ! return code
 
@@ -165,7 +160,7 @@ contains
     ! Read in input 1d fields if they exists and map to output grid
     do ifld = 1,numharv
        varname_i = trim(harvest_fieldnames(ifld))
-       if (constant) then
+       if (.not. present(ntime)) then  ! not transient, i.e. constant
           varname_o = trim(harvest_const_fieldnames(ifld))
        else
           varname_o = varname_i
@@ -253,8 +248,7 @@ contains
        end if
     end do
 
-    ! If constant model, clean up the mapping
-    if (constant) then
+    if (.not. present(ntime)) then  ! ...else we will reuse it
        deallocate(frac_o)
        call ESMF_RouteHandleDestroy(routehandle_r8, nogarbage = .true., rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
