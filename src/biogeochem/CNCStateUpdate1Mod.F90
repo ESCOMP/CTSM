@@ -216,29 +216,29 @@ contains
       endif
          
       if ( .not. use_fates_sp ) then !use_fates
-      ! litter and SOM HR fluxes
-      do k = 1, ndecomp_cascade_transitions
-         do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
-                    cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
-                    - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) *dt
-            end do
-         end do
-      end do
-      do k = 1, ndecomp_cascade_transitions
-         if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
+         ! litter and SOM HR fluxes
+         do k = 1, ndecomp_cascade_transitions
             do j = 1,nlevdecomp
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
-                  cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
-                       cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) &
-                       + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)*dt
+                  cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
+                       cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
+                       - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) *dt
                end do
             end do
-         end if
-      end do
+         end do
+         do k = 1, ndecomp_cascade_transitions
+            if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
+               do j = 1,nlevdecomp
+                  do fc = 1,num_soilc
+                     c = filter_soilc(fc)
+                     cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
+                          cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) &
+                          + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)*dt
+                  end do
+               end do
+            end if
+         end do
       end if
 
       if (.not. use_fates) then    
