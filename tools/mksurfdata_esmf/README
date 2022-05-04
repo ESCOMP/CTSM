@@ -1,39 +1,51 @@
-Most recent update of README:
-4/28/2022 slevis
+===================
+Build Requirements:
+===================
 
-================
-Getting the code
-================
-> cd <user/work/area>
-> git clone https://github.com/ESCOMP/CTSM.git <dir_name>
-> cd <dir_name>
-> git checkout ctsm5.2.mksurfdata
+mksurfdata_esmf is an distributed memory parallel program (using Message Passing Interface -- MPI) that utilizes
+both ESMF (Earth System Modelling Framework) for regridding as well as PIO (Parallel I/O) and NetCDF output. As
+such libraries must be built for the following:
 
-# Save time by checking out ccs_config only
-> ./manage_externals/checkout_externals ccs_config
+1) MPI
+2) NetCDF
+3) ParallelIO
+4) ESMF
+
+In addition for the build: python, bash-shell, CMake and GNU-Make are required
+
+These libraries need to be built such that they can all work together in the same executable. Hence, the above
+order may be required in building them.
+
+=========================================
+Use cime to manage the build requirements
+=========================================
+
+For users working on cime machines you can use the build
+script to build the tool for you. On other machines you'll need to do a port to cime
+and tell how to build for that machine. That's talked about in the cime documentation.
+And you'll have to make some modifications to the build script.
+
+https://github.com/ESMCI/cime/wiki/Porting-Overview
+
+Machines that already run CTSM or CESM have been ported to cime. So if you can run the model
+on your machine you will be able to build the tool there.
+
+To get a list of the machines that have been ported to cime: 
+
+cd ../../cime/scripts
+./query_config --machines
+
+NOTE:
+In addition to having a port to cime, the machine also needs to have PIO built and able
+to be referenced with the env variable PIO which will need to be in the porting instructions
+for the machine. Currently an independent PIO library is not available on cime ported machines.
 
 =======================
 building the executable
 =======================
-> module load intel
-> module load python
-> module load cmake
-> module use /glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/
-> module load esmf-8.3.0b13-ncdfio-mpt-O
-> module unload netcdf/4.8.1
-> module load netcdf-mpi/4.8.1
-> module load pnetcdf/1.12.2
-> module load pio/2.5.7
-> module load mpt/2.25
-> module list
 
 > cd tools/mksurfdata_esmf
-> rm -rf bld  # (or the contents of /bld) before rerunning CC=...
-> mkdir ./bld
-> cd bld
-> bash
-> CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src/
-> make VERBOSE=1
+> ./gen_mksurfdata_build.sh      # For machines with a cime build
 
 =======================
 running for a single submission:
