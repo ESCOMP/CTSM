@@ -95,6 +95,7 @@ module CNVegetationFacade
   use CNPrecisionControlMod           , only: CNPrecisionControl
   use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
+  use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
   !
   implicit none
   private
@@ -887,7 +888,7 @@ contains
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_state_inst,                                               &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-       active_layer_inst, &
+       active_layer_inst, clm_fates, &
        atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
        wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
        soil_water_retention_curve, crop_inst, ch4_inst, &
@@ -943,6 +944,7 @@ contains
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     type(fireemis_type)                     , intent(inout) :: fireemis_inst
+    type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
     !
     ! !LOCAL VARIABLES:
 
@@ -970,7 +972,7 @@ contains
          c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_state_inst,                                               &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-         active_layer_inst, &
+         active_layer_inst, clm_fates, &
          atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
          wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
          soil_water_retention_curve, crop_inst, ch4_inst, &
