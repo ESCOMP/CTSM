@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev093
 Originator(s): slevis (Samuel Levis)
-Date: Sat Apr 30 09:17:33 MDT 2022
+Date: Tue May  3 21:50:20 MDT 2022
 One-line Summary: Modifications for FATES-MIMICS to work
 
 Purpose and description of changes
@@ -30,7 +30,8 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-Issues fixed (include CTSM Issue #): #1636
+Issues fixed (include CTSM Issue #): 
+   Fixes #1636 -- FATES tests fail with MIMICS active
 
 Notes of particular relevance for users
 ---------------------------------------
