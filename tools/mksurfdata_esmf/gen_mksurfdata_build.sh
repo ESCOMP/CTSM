@@ -14,20 +14,21 @@ case $hostname in
       ;;
 esac
 
-# Create a build directory
+# Create /bld directory
 echo "cime Machine is: $MACH..."
 if [ -d "bld" ]; then
-  echo "An existing bld directory exists already remove it, if you want to do a clean build..."
+  echo "A /bld directory exists; remove it to do a clean build..."
   exit 1
 fi
 cwd=`pwd`
 rm -rf bld
 mkdir bld
 cd bld
+
 # Run the cime configure tool to figure out what modules need to be loaded
 echo "Run cime configure for machine $MACH..."
 # You can specify the non-default compiler and mpi-library by adding --compiler and --mpilib settings
-if [ -z "$COMPILER" ] && [ -z "$MPILIB" ]; then
+if [ -z "$COMPILER" ] || [ -z "$MPILIB" ]; then
   echo "configure for the default MPI-library and compiler..."
   ../../../cime/tools/configure --macros-format CMake --machine $MACH
 else
@@ -46,6 +47,7 @@ if [ -z "$PIO" ]; then
   echo "Make sure a PIO build is provided for $MACH_$COMPILER with $MPILIB in config_machines"
   exit 1
 fi
+
 # Build the cmake files
 echo "Do the cmake build..."
 CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src
@@ -53,7 +55,8 @@ if [ $? != 0 ]; then
   echo "Error doing cmake for $MACH $MPILIB $COMPILER"
   exit 1
 fi
-# Build the actual executable
+
+# Build the executable
 echo "Build the mksurfdata_esmf build..."
 make VERBOSE=1
 if [ $? != 0 ]; then
