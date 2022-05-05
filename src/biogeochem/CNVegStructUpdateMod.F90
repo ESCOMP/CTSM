@@ -63,7 +63,6 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: p,c,g      ! indices
     integer  :: fp         ! lake filter indices
-    real(r8) :: taper      ! ratio of height:radius_breast_height (tree allometry)
     real(r8) :: stocking   ! #stems / ha (stocking density)
     real(r8) :: ol         ! thickness of canopy layer covered by snow (m)
     real(r8) :: fb         ! fraction of canopy layer covered by snow
@@ -98,7 +97,9 @@ contains
          dwood              =>  pftcon%dwood                            , & ! Input:  density of wood (gC/m^3)                          
          ztopmx             =>  pftcon%ztopmx                           , & ! Input:
          laimx              =>  pftcon%laimx                            , & ! Input:
-         
+         nstem              =>  pftcon%nstem                            , & ! Input:  Tree number density (#ind/m2) (introduced by E.Kluzek (2020, unreleased code) and adopted here by O.Dombrowski)
+         taper              =>  pftcon%taper                            , & ! Input:  ratio of height:radius_breast_height (tree allometry) (introduced by E.Kluzek (2020, unreleased code) and adopted here by O.Dombrowski)         
+
          allom2             =>  dgv_ecophyscon%allom2                   , & ! Input:  [real(r8) (:) ] ecophys const                                     
          allom3             =>  dgv_ecophyscon%allom3                   , & ! Input:  [real(r8) (:) ] ecophys const                                     
 
@@ -129,13 +130,6 @@ contains
          )
 
       dt = real( get_rad_step_size(), r8 )
-
-      ! constant allometric parameters
-      taper = 200._r8
-      stocking = 1000._r8
-      
-      ! convert from stems/ha -> stems/m^2
-      stocking = stocking / 10000._r8
 
       ! patch loop
       do fp = 1,num_soilp
@@ -178,34 +172,23 @@ contains
 
             if (woody(ivt(p)) == 1._r8) then
 
-               ! trees and shrubs
-
-               ! if shrubs have a squat taper 
-               if (ivt(p) >= nbrdlf_evr_shrub .and. ivt(p) <= nbrdlf_dcd_brl_shrub) then
-                  taper = 10._r8
-                  ! adapt taper and stocking to orchards (added by O.Dombrowski)
-               else if (perennial(ivt(p)) == 1._r8) then
-                  taper = 120._r8
-                  stocking = 3333._r8/10000._r8
+               if (perennial(ivt(p)) == 1._r8) then
                   if (dormant_flag(p) == 0._r8) then
                      if (tlai(p) >= laimx(ivt(p))) peaklai(p) = 1
                   else if (dormant_flag(p) == 1._r8) then
                      peaklai(p) = 0
                   end if
-                  ! otherwise have a tall taper
-               else
-                  taper = 200._r8
                end if
 
-               ! trees and shrubs for now have a very simple allometry, with hard-wired
-               ! stem taper (height:radius) and hard-wired stocking density (#individuals/area)
+               ! trees and shrubs for now have a very simple allometry, with 
+               ! stem taper (height:radius) and nstem from PFT parameter file
                if (use_cndv) then
 
                   if (fpcgrid(p) > 0._r8 .and. nind(p) > 0._r8) then
 
                      stocking = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 patch area
                      htop(p) = allom2(ivt(p)) * ( (24._r8 * deadstemc(p) / &
-                          (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
+                          (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper(ivt(p))))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
 
                   else
                      htop(p) = 0._r8
@@ -214,11 +197,11 @@ contains
                else
                   !correct height calculation if doing accelerated spinup
                   if (spinup_state == 2) then
-                    htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper * taper)/ &
-                         (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
+                    htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(ivt(p)) * taper(ivt(p)))/ &
+                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
                   else
-                    htop(p) = ((3._r8 * deadstemc(p) * taper * taper)/ &
-                         (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
+                    htop(p) = ((3._r8 * deadstemc(p) * taper(ivt(p)) * taper(ivt(p)))/ &
+                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
                   end if
 
                endif

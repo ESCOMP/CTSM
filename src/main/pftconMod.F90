@@ -217,6 +217,8 @@ module pftconMod
      real(r8), allocatable :: pprod100      (:)   ! proportion of deadstem to 100-yr product pool
      real(r8), allocatable :: pprodharv10   (:)   ! harvest mortality proportion of deadstem to 10-yr pool
      real(r8), allocatable :: prune_fr      (:)   ! fraction of deadstem that is pruned (added by O.Dombrowski)
+     real(r8), allocatable :: nstem         (:)   ! stem density (#/m2) (added by O.Dombrowski)
+     real(r8), allocatable :: taper         (:)   ! tapering ratio of height:radius_breast_height (added by O.Dombrowski)
      ! pft paraemeters for fire code
      real(r8), allocatable :: cc_leaf       (:)
      real(r8), allocatable :: cc_lstem      (:)
@@ -441,6 +443,8 @@ contains
     allocate( this%pprod100      (0:mxpft) )     
     allocate( this%pprodharv10   (0:mxpft) )  
     allocate( this%prune_fr      (0:mxpft) ) 
+    allocate( this%nstem         (0:mxpft) )
+    allocate( this%taper         (0:mxpft) )
     allocate( this%cc_leaf       (0:mxpft) )
     allocate( this%cc_lstem      (0:mxpft) )
     allocate( this%cc_dstem      (0:mxpft) )
@@ -964,6 +968,12 @@ contains
     call ncd_io('prune_fr', this%prune_fr, 'read', ncid, readvar=readv) 
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
+    call ncd_io('nstem', this%nstem, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('taper', this%taper, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
     call ncd_io('cc_leaf', this% cc_leaf, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
@@ -1375,6 +1385,8 @@ contains
     deallocate( this%crit_temp)  
     deallocate( this%ndays_stor) 
     deallocate( this%prune_fr)   
+    deallocate( this%nstem)
+    deallocate( this%taper)
     deallocate( this%mnNHplantdate)
     deallocate( this%mxNHplantdate)
     deallocate( this%mxNHharvdate) 
