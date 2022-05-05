@@ -1670,7 +1670,6 @@ contains
      character(len=32) :: subname = 'PerchedLateralFlow' ! subroutine name
      integer  :: c,j,fc,i                                ! indices
      real(r8) :: dtime                                   ! land model time step (sec)
-     real(r8) :: dzmm(bounds%begc:bounds%endc,1:nlevsoi) ! layer thickness (mm)
      real(r8) :: wtsub                                   ! summation of hk*dzmm for layers below water table (mm**2/s)
      real(r8) :: h2osoi_vol
      real(r8) :: drainage_tot
