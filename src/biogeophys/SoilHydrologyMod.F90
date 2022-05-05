@@ -1583,7 +1583,7 @@ contains
           enddo
 
           ! frost table is top of frozen layer
-          frost_table(c)=z(c,k_frz-1)
+          frost_table(c) = zi(c,k_frz-1)
 
           ! initialize perched water table to frost table
           zwt_perched(c) = frost_table(c)
