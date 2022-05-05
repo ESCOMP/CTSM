@@ -80,11 +80,9 @@ def add_cime_lib_to_path(standalone_only=False):
     path_to_cime
     """
     cime_path = path_to_cime(standalone_only=standalone_only)
+    prepend_to_python_path(cime_path)
     cime_lib_path = os.path.join(cime_path,
-                                 'scripts', 'lib')
-    prepend_to_python_path(cime_lib_path)
-    cime_lib_path = os.path.join(cime_path,
-                                 'scripts', 'Tools')
+                                 'Tools')
     prepend_to_python_path(cime_lib_path)
     return cime_path
 
