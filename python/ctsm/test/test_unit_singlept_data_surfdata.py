@@ -27,7 +27,7 @@ from ctsm import unit_testing
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 
 # pylint: disable=invalid-name
-
+# pylint: disable=too-many-lines
 
 class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
     """
@@ -1128,7 +1128,6 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
         self.assertEqual(ds_out["PCT_NATVEG"].data[:, :], 40)
-
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
