@@ -596,7 +596,8 @@ contains
             waterstatebulk_inst=water_inst%waterstatebulk_inst, &
             canopystate_inst=canopystate_inst, &
             soilstate_inst=soilstate_inst, &
-            active_layer_inst=active_layer_inst)
+            active_layer_inst=active_layer_inst, &
+            soilbiogeochem_carbonflux_inst=soilbiogeochem_carbonflux_inst)
 
     end if
 

@@ -1,4 +1,213 @@
 ===============================================================
+Tag name: ctsm5.1.dev093
+Originator(s): slevis (Samuel Levis)
+Date: Tue May  3 21:50:20 MDT 2022
+One-line Summary: Modifications for FATES-MIMICS to work
+
+Purpose and description of changes
+----------------------------------
+
+ 1) For FATES-MIMICS cases, use ligninNratioAvg calculated by FATES.
+ 2) For FATES-MIMICS cases, use annsum_npp_col calculated by FATES.
+ 3) Small modification to allow carbon-only to work with MIMICS.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #): 
+   Fixes #1636 -- FATES tests fail with MIMICS active
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ MIMICS-FATES now do work together, but only as long as use_lch4 = .true.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ To confirm that MIMICS-FATES works, I added the testmod mimicsFatesColdDef.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+ ...but made history variable CWDC_HR active.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1643
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev092
+Originator(s): sacks (Bill Sacks)
+Date: Fri Apr 29 18:31:48 MDT 2022
+One-line Summary: Refactor NutrientCompetition / CNAllocation to provide hooks for AgSys
+
+Purpose and description of changes
+----------------------------------
+
+Major refactor of NutrientCompetition / CNAllocation to provide hooks
+for AgSys crop model: separates the NutrientCompetition modules into
+pieces based on (1) consolidating duplicate code between the Clm45 and
+FlexibleCN versions, and (2) separating pieces that will vs. won't be
+used for crop patches when running with the upcoming AgSys crop model.
+
+I have restored the old CNAllocationMod, with some of the
+responsibilities that it used to have. (I'm not sure it's appropriate to
+have the calculation of gpp and maint resp in CNAllocationMod, but I
+left it there because it has always been combined with the allocation
+code, including back when we had a separate CNAllocationMod.)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO - though potential for answer
+changes in unusual cases
+
+   One change in this tag has the potential for answer changes in
+   unusual cases, even though no answer changes were observed in
+   testing: Previously, only the FlexibleCN code applied some logic that
+   changed crop allocation fractions during the grainfill period if
+   peaklai had been reached. I have changed this so that this logic is
+   applied with or without FlexibleCN (because I have moved this block
+   of code to the CNAllocation module, which is shared between the
+   FlexibleCN and non-FlexibleCN versions). I thought this would change
+   answers, but it appears not to, at least based on the tests in the
+   test suite as well as an extra 5-year test I did at f19 resolution
+   (ERS_Ly5.f19_g17.IHistClm45BgcCrop.cheyenne_intel.clm-cropMonthOutput).
+   It's possible that this changes answers in rare cases or with an
+   unusual combination of options that we don't test: specifically, it
+   might change answers for the atypical situation where you are running
+   with FUN but not FlexibleCN. (In this case, I believe this change is
+   the correct thing to do.)
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1705
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev091
+Originator(s): rgknox (Ryan Knox,rgknox@lbl.gov)
+Date: Fri Apr 22 14:11:50 EDT 2022
+One-line Summary: clm decomp method is now passed to fates to enabled mimics coupling
+
+Purpose and description of changes
+----------------------------------
+
+This is a small changeset, which only adds the passing of a text based flag to FATES, that defines which soil decomposition method is active. This setting is needed by FATES, so that it can pass specific boundary conditions to CLM (and potentially ELM in the future). This change was necessitated because MIMICS requires a Nitrogen to lignin-carbon ratio in the litter flux, yet other decomposition schemes do not. Moreover, the generation of this boundary condition is not trivial, so it is worth it to avoid its computation if mimics is not on.  This change should have NO impact on any tests.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+None
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+None, this does not currently have an affect on any functionality, it simply lays groundwork for FATES-MIMICS coupling.  There are no changes to memory usage or run-time.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+No changes in testing. These changes will enable completion (or progress) on CTSM #1643
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- aux_clm, PASS, b4b against ctsm5.1.dev090
+    izumi ------- aux_clm, PASS, b4b against ctsm5.1.dev090
+
+
+Answer changes
+--------------
+None
+
+Pull Requests that document the changes (include PR ids): #1700
+(https://github.com/ESCOMP/ctsm/pull/1700)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev090
 Originator(s): samrabin (Sam Rabin)
 Date: Thu Mar 31 15:03:34 MDT 2022

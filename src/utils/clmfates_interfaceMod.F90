@@ -80,7 +80,7 @@ module CLMFatesInterfaceMod
    use SoilBiogeochemCarbonFluxType, only :  soilbiogeochem_carbonflux_type
    use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
    use FrictionVelocityMod  , only : frictionvel_type
-   use clm_time_manager  , only : is_restart
+   use clm_time_manager  , only : is_restart, is_first_restart_step
    use ncdio_pio         , only : file_desc_t, ncd_int, ncd_double
    use restUtilMod,        only : restartvar
    use clm_time_manager  , only : get_curr_days_per_year, &
@@ -94,6 +94,8 @@ module CLMFatesInterfaceMod
    use decompMod         , only : get_proc_bounds,   &
                                   get_proc_clumps,   &
                                   get_clump_bounds
+   use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, decomp_method
+   use SoilBiogeochemDecompCascadeConType , only : no_soil_decomp, century_decomp
    use GridCellType      , only : grc
    use ColumnType        , only : col
    use LandunitType      , only : lun
@@ -231,6 +233,8 @@ module CLMFatesInterfaceMod
    private :: GetAndSetTime
 
    logical :: debug  = .false.
+   logical, private, allocatable :: copy_fates_var(:)  ! .true. -> copy variable from FATES to CTSM in clmfates_interface
+                                                       ! .false. -> do not copy in clmfates_interface and use value already in memory
 
    character(len=*), parameter, private :: sourcefile = &
         __FILE__
@@ -298,6 +302,14 @@ module CLMFatesInterfaceMod
         ! which has fewer boundary conditions (simpler)
         call set_fates_ctrlparms('nu_com',cval='RD')
 
+        if (decomp_method == mimics_decomp) then
+           call set_fates_ctrlparms('decomp_method',cval='MIMICS')
+        elseif(decomp_method == century_decomp ) then
+           call set_fates_ctrlparms('decomp_method',cval='CENTURY')
+        elseif(decomp_method == no_soil_decomp ) then
+           call set_fates_ctrlparms('decomp_method',cval='NONE')
+        end if
+        
         ! These may be in a non-limiting status (ie when supplements)
         ! are added, but they are always allocated and cycled non-the less
         ! FATES may want to interact differently with other models
@@ -531,18 +543,17 @@ module CLMFatesInterfaceMod
       allocate(this%fates(nclumps))
       allocate(this%f2hmap(nclumps))
 
-
       if(debug)then
          write(iulog,*) 'clm_fates%init():  allocating for ',nclumps,' threads'
       end if
 
-
-      nclumps = get_proc_clumps()
+      allocate(copy_fates_var(bounds_proc%begc:bounds_proc%endc))
+      copy_fates_var(:) = .false.
 
       !$OMP PARALLEL DO PRIVATE (nc,bounds_clump,nmaxcol,s,c,l,g,collist,pi,pf,ft)
       do nc = 1,nclumps
-
          call get_clump_bounds(nc, bounds_clump)
+
          nmaxcol = bounds_clump%endc - bounds_clump%begc + 1
 
          allocate(collist(1:nmaxcol))
@@ -1005,7 +1016,9 @@ module CLMFatesInterfaceMod
       call this%wrap_update_hlmfates_dyn(nc,               &
                                          bounds_clump,     &
                                          waterdiagnosticbulk_inst,  &
-                                         canopystate_inst, .false.)
+                                         canopystate_inst, &
+                                         soilbiogeochem_carbonflux_inst, &
+                                         .false.)
 
       ! ---------------------------------------------------------------------------------
       ! Part IV:
@@ -1028,7 +1041,8 @@ module CLMFatesInterfaceMod
    ! ------------------------------------------------------------------------------------
 
    subroutine wrap_update_hlmfates_dyn(this, nc, bounds_clump,      &
-        waterdiagnosticbulk_inst, canopystate_inst, is_initing_from_restart)
+        waterdiagnosticbulk_inst, canopystate_inst, &
+        soilbiogeochem_carbonflux_inst, is_initing_from_restart)
 
       ! ---------------------------------------------------------------------------------
       ! This routine handles the updating of vegetation canopy diagnostics, (such as lai)
@@ -1042,6 +1056,7 @@ module CLMFatesInterfaceMod
      integer                 , intent(in)           :: nc
      type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
+     type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
 
      ! is this being called during a read from restart sequence (if so then use the restarted fates
      ! snow depth variable rather than the CLM variable).
@@ -1095,6 +1110,33 @@ module CLMFatesInterfaceMod
             this%fates(nc)%sites,  &
             this%f2hmap(nc)%fcolumn, &
             this%fates(nc)%bc_out )
+
+       !------------------------------------------------------------------------
+       ! FATES calculation of ligninNratio
+       !------------------------------------------------------------------------
+       ! If it's the first timestep of a restart & copy_fates_var(c) = .false.
+       ! (this will happen in the first timestep of any restart)
+       ! then skip this variable because a more accurate value was obtained
+       ! from the restart file.
+       ! Note 1. I had hoped is_first_restart_step() alone would suffice, but
+       ! is_first_restart_step() remained true for the whole first day in my
+       ! test. Hence I added the check for copy_fates_var(c) which changes to
+       ! .true. the first time that we come through this code in a restart.
+       ! Note 2. copy_fates_var is a column-level array to make thread-safe.
+       ! Note 3. This if statement is a workaround for restart tests to pass.
+       ! Ideally, the fates variable would have the correct value at restart,
+       ! but rgknox explains that accomplishing this is more complex given the
+       ! current FATES treatment of other litter fluxes passed to the CTSM.
+       !------------------------------------------------------------------------
+       do s = 1, this%fates(nc)%nsites
+          c = this%f2hmap(nc)%fcolumn(s)
+          if (is_first_restart_step() .and. .not. copy_fates_var(c)) then
+             copy_fates_var(c) = .true.
+          else
+             soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col(c) = &
+               this%fates(nc)%bc_out(s)%litt_flux_ligc_per_n
+          end if
+       end do
 
        !---------------------------------------------------------------------------------
        ! CHANGING STORED WATER DURING PLANT DYNAMICS IS NOT FULLY IMPLEMENTED
@@ -1226,7 +1268,7 @@ module CLMFatesInterfaceMod
 
    subroutine restart( this, bounds_proc, ncid, flag, waterdiagnosticbulk_inst, &
         waterstatebulk_inst, canopystate_inst, soilstate_inst, &
-        active_layer_inst)
+        active_layer_inst, soilbiogeochem_carbonflux_inst)
 
       ! ---------------------------------------------------------------------------------
       ! The ability to restart the model is handled through three different types of calls
@@ -1263,6 +1305,7 @@ module CLMFatesInterfaceMod
       type(canopystate_type)         , intent(inout) :: canopystate_inst
       type(soilstate_type)           , intent(inout) :: soilstate_inst
       type(active_layer_type)        , intent(in)    :: active_layer_inst
+      type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
 
       ! Locals
       type(bounds_type) :: bounds_clump
@@ -1537,7 +1580,8 @@ module CLMFatesInterfaceMod
                ! Update diagnostics of FATES ecosystem structure used in HLM.
                ! ------------------------------------------------------------------------
                call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                     waterdiagnosticbulk_inst,canopystate_inst, .true.)
+                     waterdiagnosticbulk_inst,canopystate_inst, &
+                     soilbiogeochem_carbonflux_inst, .true.)
 
                ! ------------------------------------------------------------------------
                ! Update the 3D patch level radiation absorption fractions
@@ -1573,7 +1617,7 @@ module CLMFatesInterfaceMod
    !=====================================================================================
 
    subroutine init_coldstart(this, waterstatebulk_inst, waterdiagnosticbulk_inst, &
-        canopystate_inst, soilstate_inst)
+        canopystate_inst, soilstate_inst, soilbiogeochem_carbonflux_inst)
 
 
      ! Arguments
@@ -1582,6 +1626,7 @@ module CLMFatesInterfaceMod
      type(waterdiagnosticbulk_type)          , intent(inout) :: waterdiagnosticbulk_inst
      type(canopystate_type)         , intent(inout) :: canopystate_inst
      type(soilstate_type)           , intent(inout) :: soilstate_inst
+     type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
 
      ! locals
      integer                                        :: nclumps
@@ -1714,7 +1759,8 @@ module CLMFatesInterfaceMod
            ! Update diagnostics of FATES ecosystem structure used in HLM.
            ! ------------------------------------------------------------------------
            call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                waterdiagnosticbulk_inst,canopystate_inst, .false.)
+                waterdiagnosticbulk_inst,canopystate_inst, &
+                soilbiogeochem_carbonflux_inst, .false.)
 
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
