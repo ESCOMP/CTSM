@@ -32,7 +32,8 @@ program mksurfdata
   !    mksrf_fmax_mesh           - Mesh for mksrf_fmax
   !    mksrf_fsoicol             - Soil color dataset
   !    mksrf_fsoicol_mesh        - Mesh for mksrf_fsoicol
-  !    mksrf_fsoitex             - Soil texture dataset
+  !    mksrf_fsoitex             - Soil texture dataset in mapunits
+  !    mksrf_fsoitex_lookup      - Soil texture lookup for converting mapunits to sand/silt/clay
   !    mksrf_fsoitex_mesh        - Mesh for mksrf_fsoitex
   !    mksrf_furbtopo            - Topography dataset (for limiting urban areas)
   !    mksrf_furbtopo_mesh       - Mesh for mksrf_furbtopo
@@ -190,9 +191,6 @@ program mksurfdata
   character(len=CL)               :: string                  ! string read in
   character(len=CL)               :: fname
   character(len=*), parameter     :: subname = 'mksrfdata'   ! program name
-
-  character(len=CL) :: mksrf_fsoitex_mapunit
-  character(len=CL) :: mksrf_fsoitex_lookup
 
   character(len=*), parameter :: u_FILE_u = &
        __FILE__
@@ -452,18 +450,7 @@ program mksurfdata
   ! Make soil texture [pctsand, pctclay]
   ! -----------------------------------
   if (fsurdat /= ' ') then
-     ! --- for a 3 second input mapunit ---
-     ! mksrf_fsoitex_mapunit = &
-     !      '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v5_grid.nc'
-     ! --- for a 5min input mapunit---
-     mksrf_fsoitex_mesh = &
-          '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c200129.nc'
-     mksrf_fsoitex_mapunit = &
-          '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/soiltex_mapunits_4320x2160_c220329.nc'
-     mksrf_fsoitex_lookup = &
-          '/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v1_lookup2.nc'
-
-     call mksoiltex( mksrf_fsoitex_mesh, file_mapunit_i=mksrf_fsoitex_mapunit, file_lookup_i=mksrf_fsoitex_lookup, &
+     call mksoiltex( mksrf_fsoitex_mesh, file_mapunit_i=mksrf_fsoitex, file_lookup_i=mksrf_fsoitex_lookup, &
           mesh_o=mesh_model, pioid_o=pioid, pctlnd_pft_o=pctlnd_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
   end if

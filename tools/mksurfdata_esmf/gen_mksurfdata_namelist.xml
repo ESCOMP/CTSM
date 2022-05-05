@@ -50,8 +50,14 @@
 
   <mksrf_fsoitex>
     <entry>
-      <data_filename>lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc</data_filename>
+      <data_filename>/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/soiltex_mapunits_4320x2160_c220329.nc</data_filename>
+      <lookup_filename>/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v1_lookup2.nc</lookup_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c200129.nc</mesh_filename>
+    </entry>
+    <entry hires_soitex='on'>
+      <data_filename>/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v5_grid.nc</data_filename>
+      <lookup_filename>/glade/u/home/mvertens/src/ctsm.new_mksurfdata/tools/mksurfdata_esmf/wise_30sec_v1_lookup2.nc</lookup_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/DO_WE_HAVE_ONE?</mesh_filename>
     </entry>
   </mksrf_fsoitex>
 

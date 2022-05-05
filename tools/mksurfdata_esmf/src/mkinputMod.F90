@@ -50,7 +50,8 @@ module mkinputMod
   character(CX) , public    :: mksrf_fsoicol                = ' ' ! soil color data file name
   character(CX) , public    :: mksrf_fsoicol_mesh           = ' ' ! soil color mesh file name
 
-  character(CX) , public    :: mksrf_fsoitex                = ' ' ! soil texture data file name
+  character(CX) , public    :: mksrf_fsoitex                = ' ' ! soil texture mapunit data file name
+  character(CX) , public    :: mksrf_fsoitex_lookup         = ' ' ! soil texture lookup data file name
   character(CX) , public    :: mksrf_fsoitex_mesh           = ' ' ! soil texture mesh file name
 
   character(CX) , public    :: mksrf_fmax                   = ' ' ! fmax data file name
@@ -136,6 +137,7 @@ contains
          mksrf_fhrvtyp,             &
          mksrf_fhrvtyp_mesh,        &
          mksrf_fsoitex,             &
+         mksrf_fsoitex_lookup,      &
          mksrf_fsoitex_mesh,        &
          mksrf_forganic,            &
          mksrf_forganic_mesh,       &
@@ -224,6 +226,7 @@ contains
     call mpi_bcast (mksrf_fhrvtyp_mesh, len(mksrf_fhrvtyp_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_fsoitex, len(mksrf_fsoitex), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (mksrf_fsoitex_lookup, len(mksrf_fsoitex_lookup), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fsoitex_mesh, len(mksrf_fsoitex_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_fmax, len(mksrf_fmax), MPI_CHARACTER, 0, mpicom, ier)
@@ -347,7 +350,8 @@ contains
        write(ndiag,'(a)')' inland wetland from:        '//trim(mksrf_fwetlnd)
        write(ndiag,'(a)')' mesh for wetland            '//trim(mksrf_fwetlnd_mesh)
        write(ndiag,*)
-       write(ndiag,'(a)')' soil texture from:          '//trim(mksrf_fsoitex)
+       write(ndiag,'(a)')' soil texture mapunits from: '//trim(mksrf_fsoitex)
+       write(ndiag,'(a)')' soil texture lookup from:   '//trim(mksrf_fsoitex_lookup)
        write(ndiag,'(a)')' mesh for soil texture       '//trim(mksrf_fsoitex_mesh)
        write(ndiag,*)
        write(ndiag,'(a)')' soil organic from:          '//trim(mksrf_forganic)

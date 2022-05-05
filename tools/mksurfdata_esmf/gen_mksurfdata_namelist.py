@@ -390,6 +390,10 @@ def main ():
                 new_key = f"{child1.tag}_urban"
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
 
+            if item.tag == 'lookup_filename':
+                new_key = f"{child1.tag}_lookup"
+                rawdata_files[new_key] = os.path.join(input_path, item.text)
+
     # determine output mesh
     tree2 = ET.parse('../../ccs_config/component_grids_nuopc.xml')
     root = tree2.getroot()
