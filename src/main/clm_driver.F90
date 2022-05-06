@@ -984,6 +984,7 @@ contains
                   filter(nc)%num_soilc, filter(nc)%soilc,                       &
                   filter(nc)%num_soilp, filter(nc)%soilp,                       &
                   filter(nc)%num_pcropp, filter(nc)%pcropp, &
+                  filter(nc)%num_soilnopcropp, filter(nc)%soilnopcropp, &
                   filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
                   filter(nc)%num_noexposedvegp, filter(nc)%noexposedvegp, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
@@ -991,7 +992,7 @@ contains
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                soilbiogeochem_state_inst,                                               &
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-               active_layer_inst, &
+               active_layer_inst, clm_fates, &
                atm2lnd_inst, water_inst%waterstatebulk_inst, &
                water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst,      &
                water_inst%wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
@@ -1082,7 +1083,7 @@ contains
                bgc_vegetation_inst%cnveg_carbonflux_inst, &
                bgc_vegetation_inst%cnveg_carbonstate_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                    &
-               soilbiogeochem_state_inst,                                                          &
+               soilbiogeochem_state_inst, clm_fates,                                               &
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
                c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst,            &
                c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst,            &
@@ -1096,7 +1097,7 @@ contains
                 c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                 c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                 soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-                clm_fates, nc)
+                nc)
           
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &

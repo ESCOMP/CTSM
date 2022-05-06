@@ -27,6 +27,7 @@ module EDBGCDynMod
   use atm2lndType                     , only : atm2lnd_type
   use SoilStateType                   , only : soilstate_type
   use ch4Mod                          , only : ch4_type
+  use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
 
 
   ! public :: EDBGCDynInit         ! BGC dynamics: initialization
@@ -44,7 +45,7 @@ contains
        num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp, doalb, &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                                      &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                    &
-       soilbiogeochem_state_inst,                                                          &
+       soilbiogeochem_state_inst, clm_fates,                                               &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
        c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst,            &
        c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst,            &
@@ -108,6 +109,7 @@ contains
     type(temperature_type)                  , intent(inout) :: temperature_inst
     type(crop_type)                         , intent(in)    :: crop_inst
     type(ch4_type)                          , intent(in)    :: ch4_inst
+    type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
     !
     ! !LOCAL VARIABLES:
     real(r8):: cn_decomp_pools(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
@@ -115,11 +117,9 @@ contains
     real(r8):: pmnf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential mineral N flux, from one pool to another
     real(r8):: p_decomp_npool_to_din(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions)  ! potential flux to dissolved inorganic N
     real(r8):: p_decomp_cn_gain(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)  ! C:N ratio of the flux gained by the receiver pool
-    integer :: begp,endp
     integer :: begc,endc
     !-----------------------------------------------------------------------
 
-    begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
 
     associate(                                                                    &
@@ -182,6 +182,7 @@ contains
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     else if (decomp_method == mimics_decomp) then
        call decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
+            num_soilp, filter_soilp, clm_fates, &
             soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, &
             soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
     end if
@@ -264,7 +265,7 @@ contains
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, &
-       clm_fates, nc)
+       nc)
     !
     ! !DESCRIPTION:
     ! Call to all CN and SoilBiogeochem summary routines
@@ -274,7 +275,6 @@ contains
     use clm_varpar                        , only: ndecomp_cascade_transitions
     use CNPrecisionControlMod             , only: CNPrecisionControl
     use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
-    use CLMFatesInterfaceMod              , only: hlm_fates_interface_type
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -290,7 +290,6 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
-    type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
     integer                                 , intent(in)    :: nc  ! thread index
     !
     ! !LOCAL VARIABLES:
