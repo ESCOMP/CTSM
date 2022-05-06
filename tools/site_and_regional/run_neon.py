@@ -416,6 +416,8 @@ class NeonSite:
 
                 # --change any config for base_case:
                 # case.set_value("RUN_TYPE","startup")
+                case.set_value("PIO_TYPENAME", "netcdf")
+                case.set_value("PIO_REARRANGER_LND", 2)   # Possibly due to a PIO bug?  Unsure; will create an issue
 
                 print("---- base case setup ------")
                 case.case_setup()
@@ -519,6 +521,8 @@ class NeonSite:
             case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
             case.set_value("NEONVERSION", version)
+            case.set_value("PIO_TYPENAME", "netcdf")
+            case.set_value("PIO_REARRANGER_LND", 2)   # Possibly due to a PIO bug?  Unsure; will create an issue
 
             if run_type == "ad":
                 case.set_value("CLM_FORCE_COLDSTART", "on")
