@@ -1725,14 +1725,14 @@ contains
           k_frost(c) = nbedrock(c)
           k_perch(c) = nbedrock(c)
           do k=1,nbedrock(c)
-             if (frost_table(c) >= zi(c,k-1) .and. frost_table(c) <= zi(c,k)) then
+             if (frost_table(c) >= zi(c,k-1) .and. frost_table(c) < zi(c,k)) then
                 k_frost(c)=k
                 exit
              endif
           enddo
           
           do k=1,nbedrock(c)
-             if (zwt_perched(c) >= zi(c,k-1) .and. zwt_perched(c) <= zi(c,k)) then
+             if (zwt_perched(c) >= zi(c,k-1) .and. zwt_perched(c) < zi(c,k)) then
                 k_perch(c)=k
                 exit
              endif
