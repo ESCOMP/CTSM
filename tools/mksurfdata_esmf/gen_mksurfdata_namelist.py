@@ -176,7 +176,19 @@ def get_parser():
             [default: %(default)s]
             """,
         action="store_true",
-        dest="hres_flag",
+        dest="hres_pft",
+        default=False,
+    )
+    parser.add_argument(
+        "--hires_soitex",
+        help="""
+            If you want to use the high-resolution soil texture dataset rather
+            than the default lower resolution dataset.
+            (Low resolution is 5x5min, high resolution 30-second)
+            [default: %(default)s]
+            """,
+        action="store_true",
+        dest="hres_soitex",
         default=False,
     )
     parser.add_argument(
@@ -245,7 +257,8 @@ def main ():
     potveg = args.potveg_flag
     glc_nec = args.glc_nec
     merge_gis = args.merge_gis
-    if args.hres_flag:
+
+    if args.hres_pft:
         if (start_year == 1850 and end_year == 1850) or \
            (start_year == 2005 and end_year == 2005):
             hires_pft = 'on'
@@ -254,6 +267,12 @@ def main ():
             sys.exit(5)
     else:
         hires_pft = 'off'
+
+    if args.hres_soitex:
+        hires_soitex = 'on'
+    else:
+        hires_soitex = 'off'
+
     verbose = args.verbose
 
     if force_model_mesh_file != 'none':
@@ -319,6 +338,7 @@ def main ():
 
     # create attribute list for parsing xml file
     attribute_list = {'hires_pft':hires_pft,
+                      'hires_soitex':hires_soitex,
                       'pft_years':pft_years,
                       'pft_years_ssp':pft_years_ssp,
                       'ssp_rcp':ssp_rcp,
