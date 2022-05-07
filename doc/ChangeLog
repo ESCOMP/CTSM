@@ -1,4 +1,80 @@
 ===============================================================
+Tag name: ctsm5.1.dev094
+Originator(s): negins (Negin Sobhani,UCAR/TSS,303-497-1224)
+Date: Fri May  6 00:04:54 MDT 2022
+One-line Summary: subset_data allows zeroing out nonveg landunits without any dompft selected
+
+Purpose and description of changes
+----------------------------------
+Previously subset_data explicitly checked to make sure the user has chosen at
+least one of the following options:
+
+dominant pft(s) or
+--include-nonveg (overrides default setting non-veg units to 0%)
+
+However, Adrianna pointed out that this limits FATES users who would not
+want to set a dominant pft(s) and would also want all 100% vegetated at the
+single point. So I removed this capability. This needed recalculating
+PCT_CROP and PCT_NATVEG while zero-ing out other land unit types.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+ Fixes CTSM/#1707 -- Allowing the user to zero non-veg landunits without any
+ dominant pft given by the user.
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ Previously the user needed to choose at least one of the following options
+ for subsetting at single points:
+ --dompft
+ --include-nonveg
+ Now the user is not required to specify either options and can still zero out
+ non-veg landunits without any dominant pft given by the user.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Added 4 new tests to python/ctsm/test/test_unit_singlept_data_surfdata.py
+ to test recalculation of PCT_CROP and PCT_NATVEG while zero-ing out non-veg
+ land units. 
+
+Testing summary:
+----------------
+here is guidance on different available levels of system testing:
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    clm_pymods test suite on cheyenne - PASS
+	pylint -- PASS (10.00/10) (cheyenne + python/3.7.9)
+	Python unit tests -- PASS (cheyenne)
+	Python system tests -- FAIL (cheyenne) (CTSM/Issue #1739)
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/1727
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev093
 Originator(s): slevis (Samuel Levis)
 Date: Tue May  3 21:50:20 MDT 2022

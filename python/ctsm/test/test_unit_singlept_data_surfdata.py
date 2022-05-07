@@ -27,7 +27,7 @@ from ctsm import unit_testing
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 
 # pylint: disable=invalid-name
-
+# pylint: disable=too-many-lines
 
 class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
     """
@@ -228,6 +228,9 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
         self.assertEqual(ds_out["PCT_CROP"].data[:, :], 0)
+
+
+
 
     def test_modify_surfdata_atpoint_nocrop_1pft_glacier(self):
         """
@@ -513,6 +516,72 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
 
         self.assertNotEqual(ds_out["PCT_WETLAND"].data[:, :], 0)
 
+
+    def test_modify_surfdata_atpoint_nocrop_nopft_zero_nonveg(self):
+        """
+        Test modify_surfdata_atpoint
+        Checks PCT_CROP for no pft and zero nonveg
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.dom_pft = None
+        single_point.include_nonveg = False
+        self.ds_test['PCT_CROP'].values = [[40]]
+        self.ds_test['PCT_LAKE'].values = [[10]]
+        self.ds_test['PCT_WETLAND'].values = [[10]]
+        self.ds_test['PCT_NATVEG'].values = [[40]]
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        self.assertEqual(ds_out["PCT_CROP"].data[:, :], 50)
+
+    def test_modify_surfdata_atpoint_nocrop_nopft_include_nonveg(self):
+        """
+        Test modify_surfdata_atpoint
+        Checks PCT_CROP for no pft and include nonveg
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.dom_pft = None
+        single_point.include_nonveg = True
+        self.ds_test['PCT_CROP'].values = [[40]]
+        self.ds_test['PCT_LAKE'].values = [[10]]
+        self.ds_test['PCT_WETLAND'].values = [[10]]
+        self.ds_test['PCT_NATVEG'].values = [[40]]
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        self.assertEqual(ds_out["PCT_CROP"].data[:, :], 40)
 
 class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     """
@@ -994,6 +1063,71 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
 
         self.assertNotEqual(ds_out["PCT_LAKE"].data[:, :], 0)
 
+    def test_modify_surfdata_atpoint_crop_nopft_zero_nonveg(self):
+        """
+        Test modify_surfdata_atpoint
+        Checks PCT_NATVEG for no pft and zero nonveg
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.dom_pft = None
+        single_point.include_nonveg = False
+        self.ds_test['PCT_CROP'].values = [[40]]
+        self.ds_test['PCT_LAKE'].values = [[10]]
+        self.ds_test['PCT_WETLAND'].values = [[10]]
+        self.ds_test['PCT_NATVEG'].values = [[40]]
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        self.assertEqual(ds_out["PCT_NATVEG"].data[:, :], 50)
+
+    def test_modify_surfdata_atpoint_crop_nopft_include_nonveg(self):
+        """
+        Test modify_surfdata_atpoint
+        Checks PCT_NATVEG for no pft and include nonveg
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.dom_pft = None
+        single_point.include_nonveg = True
+        self.ds_test['PCT_CROP'].values = [[40]]
+        self.ds_test['PCT_LAKE'].values = [[10]]
+        self.ds_test['PCT_WETLAND'].values = [[10]]
+        self.ds_test['PCT_NATVEG'].values = [[40]]
+        ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
+
+        self.assertEqual(ds_out["PCT_NATVEG"].data[:, :], 40)
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
