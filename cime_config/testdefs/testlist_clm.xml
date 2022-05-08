@@ -1037,7 +1037,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi"  compiler="intel" category="prebeta"/>
-      <machine name="izumi"  compiler="pgi" category="prebeta"/>
+      <machine name="cheyenne"  compiler="nvhpc" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1282,7 +1282,7 @@
   <test name="SMS" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="pgi" category="aux_clm"/>
+      <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1297,22 +1297,13 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Vmct" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/crop">
-    <machines>
-      <machine name="izumi" compiler="pgi" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >pgi test for MCT driver since nuopc is not passing</option>
-    </options>
-  </test>
   <test name="SMS_Vmct_D_Ld1_PS" grid="f09_g17" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >pgi test for MCT driver since nuopc is not passing</option>
+      <option name="comment"  >Spinup test with MCT driver</option>
     </options>
   </test>
   <test name="SMS_D_Ld1_PS" grid="f19_f19_mg17" compset="I2010Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
@@ -1399,7 +1390,7 @@
   <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm51BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="pgi" category="aux_clm"/>
+      <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
