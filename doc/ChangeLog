@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev095
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Mon May  9 03:19:05 MDT 2022
+Date: Mon May  9 05:02:41 MDT 2022
 One-line Summary: Turn soil BGC off for FATES-SP mode, externals updates, FatesSP user-mod directory and compset
 
 Purpose and description of changes
@@ -50,6 +50,7 @@ Issues fixed (include CTSM Issue #):
    Some part of #1736 threading tests for Fates
 
    Known bugs introduced in this tag (include issue #):
+    #1744 -- DAE tests fail
     #1743 -- NEON test fails on izumi
 
 Notes of particular relevance for users
@@ -89,7 +90,7 @@ Testing summary: regular tools
 
   tools-tests (test/tools) (if tools have been changed):
 
-    cheyenne -
+    cheyenne - OK (to mksrfdt_5x5_amazon_hirespft_2005)
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
