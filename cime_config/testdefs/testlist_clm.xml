@@ -2272,7 +2272,7 @@
       <option name="comment">30 day exact restart test for FATES fixed biogeography reduced complexity mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERP_36x2_Ld30" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
+  <test name="ERP_P36x2_Ld30" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
