@@ -42,6 +42,18 @@
       <issue>#1743</issue>
     </phase>
   </test>
+  <test name="DAE_C2_D_Lh12.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_intel.clm-DA_multidrv">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#1744</issue>
+    </phase>
+  </test>
+  <test name="DAE_N2_D_Lh12_Vmct.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_intel.clm-DA_multidrv">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#1744</issue>
+    </phase>
+  </test>
 
   <!-- fates test suite failures -->
 
