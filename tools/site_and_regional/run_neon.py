@@ -416,6 +416,10 @@ class NeonSite:
 
                 # --change any config for base_case:
                 # case.set_value("RUN_TYPE","startup")
+                case.set_value("PIO_TYPENAME", "netcdf")  # BD:05/06/2022 - These single point runs should use NetCDF; this just makes it explicit.
+                case.set_value("PIO_REARRANGER_LND", 2)   # BD:05/06/2022 - And this explicitly sets the PIO_REARRANGER_LND value - for global runs, 
+                                                          # PIO_REARRANGER_LND = 1 is ideal, and a value of 2 results in slow I/O.  For point runs like
+                                                          # these, a value of 1 results in a crash (PIO bug, probably), so we explicitly set a value of 2.
 
                 print("---- base case setup ------")
                 case.case_setup()
@@ -519,6 +523,10 @@ class NeonSite:
             case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
             case.set_value("NEONVERSION", version)
+            case.set_value("PIO_TYPENAME", "netcdf")  # BD:05/06/2022 - These single point runs should use NetCDF; this just makes it explicit.
+            case.set_value("PIO_REARRANGER_LND", 2)   # BD:05/06/2022 - And this explicitly sets the PIO_REARRANGER_LND value - for global runs, 
+                                                      # PIO_REARRANGER_LND = 1 is ideal, and a value of 2 results in slow I/O.  For point runs like
+                                                      # these, a value of 1 results in a crash (PIO bug, probably), so we explicitly set a value of 2.
 
             if run_type == "ad":
                 case.set_value("CLM_FORCE_COLDSTART", "on")
