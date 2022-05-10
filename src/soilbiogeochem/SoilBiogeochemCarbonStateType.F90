@@ -11,7 +11,7 @@ module SoilBiogeochemCarbonStateType
   use landunit_varcon                    , only : istcrop, istsoil
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
@@ -185,10 +185,12 @@ contains
           endif
        end do
  
-       this%totmicc_col(begc:endc) = spval
-       call hist_addfld1d (fname='TOTMICC', units='gC/m^2', &
+       if (decomp_method == mimics_decomp) then
+          this%totmicc_col(begc:endc) = spval
+          call hist_addfld1d (fname='TOTMICC', units='gC/m^2', &
             avgflag='A', long_name='total microbial carbon', &
             ptr_col=this%totmicc_col)
+       end if
 
        this%totlitc_col(begc:endc) = spval
        call hist_addfld1d (fname='TOTLITC', units='gC/m^2', &
@@ -260,10 +262,12 @@ contains
                ptr_col=data1dptr, default='inactive')
        end do
 
-       this%totmicc_col(begc:endc) = spval
-       call hist_addfld1d (fname='C13_TOTMICC', units='gC/m^2', &
+       if (decomp_method == mimics_decomp) then
+          this%totmicc_col(begc:endc) = spval
+          call hist_addfld1d (fname='C13_TOTMICC', units='gC/m^2', &
             avgflag='A', long_name='C13 total microbial carbon', &
             ptr_col=this%totmicc_col)
+       end if
 
        this%totlitc_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_TOTLITC', units='gC13/m^2', &
@@ -340,10 +344,12 @@ contains
           endif
        end do
 
-       this%totmicc_col(begc:endc) = spval
-       call hist_addfld1d (fname='C14_TOTMICC', units='gC/m^2', &
+       if (decomp_method == mimics_decomp) then
+          this%totmicc_col(begc:endc) = spval
+          call hist_addfld1d (fname='C14_TOTMICC', units='gC/m^2', &
             avgflag='A', long_name='C14 total microbial carbon', &
             ptr_col=this%totmicc_col)
+       end if
 
        this%totlitc_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_TOTLITC', units='gC14/m^2', &
