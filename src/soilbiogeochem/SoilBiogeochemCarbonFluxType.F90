@@ -9,7 +9,7 @@ module SoilBiogeochemCarbonFluxType
   use pftconMod                          , only : pftcon
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use ch4varcon                          , only : allowlakeprod
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, century_decomp, mimics_decomp, decomp_method
   use PatchType                          , only : patch
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
@@ -387,10 +387,12 @@ contains
         end do
 
         if ( nlevdecomp_full > 1 ) then  
-           data2dptr => this%t_scalar_col(begc:endc,1:nlevsoi)
-           call hist_addfld_decomp (fname='T_SCALAR', units='unitless',  type2d='levsoi', &
+           if (decomp_method == century_decomp) then
+              data2dptr => this%t_scalar_col(begc:endc,1:nlevsoi)
+              call hist_addfld_decomp (fname='T_SCALAR', units='unitless',  type2d='levsoi', &
                 avgflag='A', long_name='temperature inhibition of decomposition', &
                 ptr_col=data2dptr)
+           end if
 
            data2dptr => this%w_scalar_col(begc:endc,1:nlevsoi)
            call hist_addfld_decomp (fname='W_SCALAR', units='unitless',  type2d='levsoi', &
