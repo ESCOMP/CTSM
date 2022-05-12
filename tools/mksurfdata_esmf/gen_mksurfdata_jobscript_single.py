@@ -45,7 +45,10 @@ def get_parser():
     )
     parser.add_argument(
         "--machine",
-        help="""currently this recognizes cheyenne and casper (default cheyenne)""",
+        help="""currently this recognizes cheyenne and casper (default
+                cheyenne); this needs to be a cime machine, i.e. a machine
+                that has been ported to cime where you can build a cime model;
+                for details see the README in this directory""",
         action="store",
         dest="machine",
         required=False,
