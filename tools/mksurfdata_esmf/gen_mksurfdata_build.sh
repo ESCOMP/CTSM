@@ -8,6 +8,10 @@ case $hostname in
   cheyenne* | r* )
       export MACH="cheyenne"
       ;;
+  ##casper
+  casper* )
+      export MACH="casper"
+      ;;
   ## Other machines
   *)
       export MACH="$hostname"

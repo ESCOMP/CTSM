@@ -44,6 +44,14 @@ def get_parser():
         required=True,
     )
     parser.add_argument(
+        "--machine",
+        help="""currently this recognizes cheyenne and casper (default cheyenne)""",
+        action="store",
+        dest="machine",
+        required=False,
+        default='cheyenne'
+    )
+    parser.add_argument(
         "--namelist-file",
         help="""input namelist file (required)""",
         action="store",
@@ -70,6 +78,7 @@ def main ():
     jobscript_file = args.jobscript_file
     number_of_nodes = args.number_of_nodes
     tasks_per_node = args.tasks_per_node
+    machine = args.machine
     account = args.account
 
     # --------------------------
@@ -81,14 +90,21 @@ def main ():
         runfile.write(f"#PBS -A {account} \n")
         runfile.write('#PBS -N mksurfdata \n')
         runfile.write('#PBS -j oe \n')
-        runfile.write('#PBS -q regular \n')
         runfile.write('#PBS -l walltime=30:00 \n')
-        runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
+        if machine == 'cheyenne':
+            runfile.write('#PBS -q regular \n')
+            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
+        elif machine == 'casper':
+            runfile.write('#PBS -q casper \n')
+            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=12:mpiprocs={tasks_per_node} \n")
         runfile.write("\n")
 
         np = int(tasks_per_node) * int(number_of_nodes)
 
-        output = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
+        if machine == 'cheyenne':
+            output = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
+        elif machine == 'casper':
+            output = f"mpiexec -np {np} ./bld/mksurfdata < {namelist_file}"
         runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")
