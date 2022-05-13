@@ -870,9 +870,14 @@ sub setup_cmdl_bgc {
               'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
   my $soil_decomp_method = remove_leading_and_trailing_quotes( $nl->get_value( $var ) );
 
-  if ( &value_is_true($nl_flags->{'use_cn'}) ||  &value_is_true($nl_flags->{'use_fates'}))  {
+  if (      &value_is_true($nl_flags->{'use_cn'}) ) {
      if ( $soil_decomp_method eq "None" ) {
-        $log->fatal_error("$var must NOT be None if use_cn or use_fates are on");
+        $log->fatal_error("$var must NOT be None if use_cn is on");
+     }
+  } elsif ( &value_is_true($nl_flags->{'use_fates'}) && (not &value_is_true($nl->get_value('use_fates_sp')))  )  {
+     print  "use_fates_sp = ", $nl_flags->{'use_fates_sp'}, "\n";
+     if ( $soil_decomp_method eq "None" ) {
+        $log->fatal_error("$var must NOT be None if use_fates is on and use_fates_sp is not TRUE");
      }
   } elsif ( $soil_decomp_method ne "None" ) {
      $log->fatal_error("$var must be None if use_cn and use_fates are off");
@@ -899,6 +904,12 @@ sub setup_cmdl_bgc {
         $var = "use_nitrif_denitrif";
         if ( ! &value_is_true($nl_flags->{$var}) ) {
            $log->warning("$var normally use_nitrif_denitrif should only be FALSE if FATES is on, it has NOT been validated for being off for BGC mode" );
+        }
+     }
+     # if MIMICS is on and use_fates = .true. then use_lch4 must = .true.
+     if ( (! &value_is_true($nl_flags->{'use_lch4'})) && &value_is_true($nl_flags->{'use_fates'}) ) {
+        if ( $soil_decomp_method eq "MIMICSWieder2015" ) {
+           $log->warning("If MIMICS is on and use_fates = .true. then use_lch4 must be .true. and currently it's not" );
         }
      }
   }
