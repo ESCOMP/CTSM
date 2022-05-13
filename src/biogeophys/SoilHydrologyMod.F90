@@ -33,7 +33,6 @@ module SoilHydrologyMod
   use LandunitType      , only : lun                
   use ColumnType        , only : column_type, col
   use PatchType         , only : patch                
-  use spmdMod           , only : masterproc, iam
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -1551,7 +1550,7 @@ contains
      associate(                                                            & 
           dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
           z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
-          zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
+          zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
           t_soisno           =>    temperature_inst%t_soisno_col         , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
 
           h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
@@ -1665,7 +1664,7 @@ contains
      type(wateratm2lndbulk_type), intent(in)    :: wateratm2lndbulk_inst
      !
      ! !LOCAL VARIABLES:
-     character(len=32) :: subname = 'PerchedLateralFlowHillslope' ! subroutine name
+     character(len=32) :: subname = 'PerchedLateralFlow' ! subroutine name
      integer  :: c,j,fc,i,l,g                              ! indices
      real(r8) :: dtime                                   ! land model time step (sec)
      real(r8) :: drainage_tot
@@ -1687,7 +1686,7 @@ contains
      real(r8) :: transmis
      real(r8) :: dgrad
      real(r8), parameter :: k_anisotropic = 1._r8
-     integer  :: c0, c_src, c_dst, nstep, nbase
+     integer  :: c0, c_src, c_dst, nbase
      real(r8) :: qflx_drain_perched_vol(bounds%begc:bounds%endc)   ! volumetric lateral subsurface flow through active layer [m3/s]
      real(r8) :: qflx_drain_perched_out(bounds%begc:bounds%endc)   ! lateral subsurface flow through active layer [mm/s]
 
@@ -1858,7 +1857,9 @@ contains
 
                 wtsub = 0._r8
                 q_perch = 0._r8
-! this should be consistent with hillslope and k_perch=k_frost means no saturated zone; should probably change q_perch to tranmis and change units and q_perch_max
+                ! this should be consistent with hillslope and k_perch=k_frost means no
+                ! saturated zone; should probably change q_perch to tranmis and change
+                ! units and q_perch_max
                 do k = k_perch(c), k_frost(c)-1
                    q_perch = q_perch + hksat(c,k)*dz(c,k)
                    wtsub = wtsub + dz(c,k)
@@ -2036,7 +2037,6 @@ contains
      use abortutils       , only : endrun
      use GridcellType     , only : grc  
      use landunit_varcon  , only : istsoil, istcrop
-     use clm_time_manager , only : get_nstep
 
      !
      ! !ARGUMENTS:
@@ -2104,7 +2104,7 @@ contains
      real(r8) :: qflx_net_latflow(bounds%begc:bounds%endc) 
      real(r8) :: qflx_latflow_avg(bounds%begc:bounds%endc) 
      real(r8) :: larea
-     integer  :: c0, c_src, c_dst, nstep
+     integer  :: c0, c_src, c_dst
      integer  :: l
      
      !-----------------------------------------------------------------------
@@ -2153,7 +2153,6 @@ contains
        ! Get time step
 
        dtime = get_step_size_real()
-       nstep = get_nstep()
 
        ! Convert layer thicknesses from m to mm
 
