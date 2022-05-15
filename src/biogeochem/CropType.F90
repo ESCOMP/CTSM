@@ -40,7 +40,7 @@ module CropType
      real(r8) :: baset_latvary_slope
      integer , pointer :: next_rx_sdate           (:)   ! prescribed sowing date for the next growing season this year
      integer , pointer :: rx_sdates_thisyr        (:,:) ! all prescribed sowing dates for this patch this year
-     integer , pointer :: rx_cultivar_gdds_thisyr (:,:) ! all cultivar GDD targets for this patch this year
+     real(r8), pointer :: rx_cultivar_gdds_thisyr (:,:) ! all cultivar GDD targets for this patch this year
      real(r8), pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year
      real(r8), pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
      real(r8), pointer :: gddaccum_thisyr         (:,:) ! accumulated GDD at harvest for this patch this year
@@ -215,7 +215,7 @@ contains
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
     allocate(this%next_rx_sdate(begp:endp)) ; this%next_rx_sdate(:) = -1
     allocate(this%rx_sdates_thisyr(begp:endp,1:mxsowings)) ; this%rx_sdates_thisyr(:,:) = -1
-    allocate(this%rx_cultivar_gdds_thisyr(begp:endp,1:mxsowings)) ; this%rx_cultivar_gdds_thisyr(:,:) = -1
+    allocate(this%rx_cultivar_gdds_thisyr(begp:endp,1:mxsowings)) ; this%rx_cultivar_gdds_thisyr(:,:) = spval
     allocate(this%sdates_thisyr(begp:endp,1:mxsowings)) ; this%sdates_thisyr(:,:) = spval
     allocate(this%hdates_thisyr(begp:endp,1:mxharvests)) ; this%hdates_thisyr(:,:) = spval
     allocate(this%gddaccum_thisyr(begp:endp,1:mxharvests)) ; this%gddaccum_thisyr(:,:) = spval
@@ -225,7 +225,7 @@ contains
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
 
     this%rx_sdates_thisyr(:,:) = -1
-    this%rx_cultivar_gdds_thisyr(:,:) = -1
+    this%rx_cultivar_gdds_thisyr(:,:) = spval
 
   end subroutine InitAllocate
 
