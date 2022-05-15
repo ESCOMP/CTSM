@@ -355,7 +355,7 @@ contains
           do g = 1,lsize
    
              !  If read-in value is invalid, have PlantCrop() set gddmaturity to PFT-default value.
-             if (dataptr1d_cultivar_gdds(g) < 0 .or. dataptr1d_cultivar_gdds(g) > 1000000.0) then
+             if (dataptr1d_cultivar_gdds(g) < 0 .or. dataptr1d_cultivar_gdds(g) > 1000000._r8) then
                 dataptr1d_cultivar_gdds(g) = -1
              end if
             
@@ -393,8 +393,8 @@ contains
              crop_inst%rx_cultivar_gdds_thisyr(p,1) = dataptr2d_cultivar_gdds(ig,n)
    
              ! Sanity check: Try to catch uninitialized values
-             if (crop_inst%rx_cultivar_gdds_thisyr(p,1) == 0.0 .or. crop_inst%rx_cultivar_gdds_thisyr(p,1) > 1000000.0) then
-                 if (crop_inst%rx_cultivar_gdds_thisyr(p,1) == 0.0) then
+             if (crop_inst%rx_cultivar_gdds_thisyr(p,1) == 0._r8 .or. crop_inst%rx_cultivar_gdds_thisyr(p,1) > 1000000._r8) then
+                 if (crop_inst%rx_cultivar_gdds_thisyr(p,1) == 0._r8) then
                      write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) ZERO??? ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
                  else
                      write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) HUGE ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
