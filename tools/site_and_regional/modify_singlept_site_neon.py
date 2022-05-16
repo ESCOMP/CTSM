@@ -436,7 +436,7 @@ def check_neon_time():
             dictionary of *_surfaceData.csv files with the last modified
     """
     listing_file = "listing.csv"
-    url = "https://neon-ncar.s3.data.neonscience.org/listing.csv"
+    url = "https://storage.neonscience.org/neon-ncar/listing.csv"
 
     download_file(url, listing_file)
 
