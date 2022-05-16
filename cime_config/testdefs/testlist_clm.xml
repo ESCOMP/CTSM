@@ -1288,6 +1288,15 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="SMS" grid="f10_f10_mg37" compset="I2000Clm51FatesSpRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
+    <machines>
+      <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Simple test to make sure the basic Fates-SP compset works"</option>
+    </options>
+  </test>
   <test name="SMS_D_Ld1_PS" grid="f09_g17" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
