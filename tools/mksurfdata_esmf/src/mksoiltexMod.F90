@@ -35,8 +35,7 @@ contains
 
   subroutine mksoiltex(file_mesh_i, file_mapunit_i, file_lookup_i, mesh_o, pioid_o, pctlnd_pft_o, rc)
     !
-    ! make %sand and %clay from IGBP soil data, which includes
-    ! igbp soil 'mapunits' and their corresponding textures
+    ! make %sand, %clay, and organic carbon content
     !
     ! input/output variables
     character(len=*)  , intent(in)    :: file_mesh_i     ! input mesh/grid file name
@@ -67,8 +66,10 @@ contains
     integer                :: mapunit       ! temporary igbp soil mapunit
     integer,  allocatable  :: sand_i(:,:,:) ! input grid: percent sand
     integer,  allocatable  :: clay_i(:,:,:) ! input grid: percent clay
+    integer,  allocatable  :: orgc_i(:,:,:) ! input grid: organic carbon content (gC kg-1)
     real(r4), allocatable  :: sand_o(:,:)   ! % sand (output grid)
     real(r4), allocatable  :: clay_o(:,:)   ! % clay (output grid)
+    real(r4), allocatable  :: orgc_o(:,:)   ! organic carbon content (gC kg-1) (output grid)
     integer                :: n_mapunits
     integer                :: lookup_index
     integer                :: SCID
@@ -78,6 +79,7 @@ contains
     integer , allocatable  :: mapunit_lookup(:)
     type(var_desc_t)       :: pio_varid_sand
     type(var_desc_t)       :: pio_varid_clay
+    type(var_desc_t)       :: pio_varid_orgc
     integer                :: starts(3)     ! starting indices for reading lookup table
     integer                :: counts(3)     ! dimension counts for reading lookup table
     integer                :: srcTermProcessing_Value = 0
@@ -89,7 +91,7 @@ contains
        write(ndiag,*)
        write(ndiag,'(1x,80a1)') ('=',k=1,80)
        write(ndiag,*)
-       write(ndiag,'(a)') 'Attempting to make %sand and %clay .....'
+       write(ndiag,'(a)') 'Attempting to make %sand, %clay, and orgc .....'
        write(ndiag,'(a)') ' Input mapunit file is '//trim(file_mapunit_i)
        write(ndiag,'(a)') ' Input lookup table file is '//trim(file_lookup_i)
        write(ndiag,'(a)') ' Input mesh/grid file is '//trim(file_mesh_i)
@@ -101,6 +103,7 @@ contains
     allocate(mapunit_o(ns_o))      ; mapunit_o(:) = 0
     allocate(sand_o(ns_o,nlevsoi)) ; sand_o(:,:) = spval
     allocate(clay_o(ns_o,nlevsoi)) ; clay_o(:,:) = spval
+    allocate(orgc_o(ns_o,nlevsoi)) ; orgc_o(:,:) = spval
 
     !---------------------------------
     ! Determine mapunits on output grid
@@ -212,7 +215,7 @@ contains
     call pio_syncfile(pioid_o)
 
     !---------------------------------
-    ! Determine %sand and %clay on output grid - using above mapunits
+    ! Determine %sand, %clay, and orgc on output grid - using above mapunits
     !---------------------------------
 
     rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_lookup_i), pio_nowrite)
@@ -243,13 +246,18 @@ contains
     if (ier/=0) call shr_sys_abort()
     allocate(clay_i(nlay,n_scid,n_mapunits))
     if (ier/=0) call shr_sys_abort()
+    allocate(orgc_i(nlay,n_scid,n_mapunits))
+    if (ier/=0) call shr_sys_abort()
 
-    ! Get dimensions from input file and allocate memory for sand_i and clay_i
+    ! Get dimensions from input file and allocate memory for sand_i, clay_i,
+    ! and organic carbon content
     rcode = pio_inq_varid(pioid_i, 'PCT_SAND', pio_varid_sand)
     rcode = pio_inq_varid(pioid_i, 'PCT_CLAY', pio_varid_clay)
+    rcode = pio_inq_varid(pioid_i, 'ORGC', pio_varid_orgc)
 
     rcode = pio_get_var(pioid_i, pio_varid_sand, sand_i)
     rcode = pio_get_var(pioid_i, pio_varid_clay, clay_i)
+    rcode = pio_get_var(pioid_i, pio_varid_orgc, orgc_i)
 
     do no = 1,ns_o
 
@@ -258,13 +266,14 @@ contains
           ! Adjust sand and clay be loam if pctlnd_pft is < 1.e-6 or mapunit is 0
           sand_o(no,:) = 43._r4
           clay_o(no,:) = 18._r4
+          orgc_o(no,:) = 18._r4  ! TODO slevis: value for loam here?
 
        else
 
           ! Determine lookup_index
           lookup_index = mapunit_lookup(mapunit_o(no))
 
-          ! Determine the top soil layer sand_o and clay_o 
+          ! Determine the top soil layer sand_o, clay_o, and orgc_o
           ! If its less than 0 search within the SCID array for the first index 
           ! that gives a pct sand that is greater than or  equal to 0
           ! Then determine the other soil layers sand_o
@@ -293,9 +302,7 @@ contains
              end if
           end do
 
-          ! If its less than 0 search within the SCID array for the first index 
-          ! that gives a pct clay that is greater than or  equal to 0
-          ! Now determine the other soil layers clay_o
+          ! Same algorithm for clay_o as for sand_o
           clay_o(no,1) = float(clay_i(1,1,lookup_index))
           if (clay_o(no,1) < 0.) then
              do l = 2,n_scid
@@ -325,6 +332,38 @@ contains
              end if
           end do
 
+          ! Same algorithm for orgc_o as for sand_o
+          ! TODO slevis: Get conversion (units etc) from Will's and Dave's
+          !              discussion in issue 1303
+          orgc_o(no,1) = float(orgc_i(1,1,lookup_index))
+          if (orgc_o(no,1) < 0.) then
+             do l = 2,n_scid
+                if (float(orgc_i(1,l,lookup_index)) >= 0.) then
+                   orgc_o(no,1) = float(orgc_i(1,l,lookup_index))
+                   exit
+                end if
+             end do
+          end if
+          if (orgc_o(no,1) < 0.) then
+             if (int(orgc_o(no,1)) == -4) then
+                write(6,'(a,i8)')'WARNING: changing orgc_o from -4 to 0 at no = ',no
+                orgc_o(no,:) = 0._r4
+             else
+                write(6,'(a,i8,a,i8)')'WARNING: changing orgc_o from ',int(orgc_o(no,1)),' to 18 at no = ',no
+                orgc_o(no,:) = 18._r4  ! TODO slevis: Value for loam here?
+             end if
+          end if
+          if (orgc_o(no,1) < 0.) then
+             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
+             call shr_sys_abort('could not find a value >= 0 for orgc_i') 
+          end if
+          do l = 2,nlay
+             orgc_o(no,l) = float(orgc_i(l,1,lookup_index))
+             if (orgc_o(no,l) < 0. .and. l > 1) then
+                orgc_o(no,l) = orgc_o(no,l-1)
+             end if
+          end do
+
        end if
 
     end do
@@ -337,6 +376,10 @@ contains
     call mkfile_output(pioid_o,  mesh_o,  'PCT_CLAY', clay_o, lev1name='nlevsoi', rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
 
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil organic carbon content"
+    call mkfile_output(pioid_o,  mesh_o,  'ORGANIC', orgc_o, lev1name='nlevsoi', rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+
     call pio_syncfile(pioid_o)
 
     ! Release memory
@@ -347,7 +390,7 @@ contains
     call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
 
     if (root_task) then
-       write (ndiag,'(a)') 'Successfully made %sand and %clay'
+       write (ndiag,'(a)') 'Successfully made %sand, %clay, and orgc'
     end if
 
   end subroutine mksoiltex

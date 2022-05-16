@@ -26,14 +26,12 @@ program mksurfdata
   !    mksrf_flakwat_mesh        - Mesh for mksrf_flakwat
   !    mksrf_fwetlnd             - Wetland water dataset
   !    mksrf_fwetlnd_mesh        - Mesh for mksrf_fwetlnd
-  !    mksrf_forganic            - Organic soil carbon dataset
-  !    mksrf_forganic_mesh       - Mesh for mksrf_forganic
   !    mksrf_fmax                - Max fractional saturated area dataset
   !    mksrf_fmax_mesh           - Mesh for mksrf_fmax
   !    mksrf_fsoicol             - Soil color dataset
   !    mksrf_fsoicol_mesh        - Mesh for mksrf_fsoicol
   !    mksrf_fsoitex             - Soil texture dataset in mapunits
-  !    mksrf_fsoitex_lookup      - Soil texture lookup for converting mapunits to sand/silt/clay
+  !    mksrf_fsoitex_lookup      - Soil texture lookup for converting mapunits to sand/silt/clay and organic carbon content
   !    mksrf_fsoitex_mesh        - Mesh for mksrf_fsoitex
   !    mksrf_furbtopo            - Topography dataset (for limiting urban areas)
   !    mksrf_furbtopo_mesh       - Mesh for mksrf_furbtopo
@@ -109,7 +107,6 @@ program mksurfdata
   use mksoilcolMod       , only : mksoilcol
   use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, mkurban_topo, numurbl, update_max_array_urban
   use mklanwatMod        , only : mklakwat, mkwetlnd, update_max_array_lake
-  use mkorganicMod       , only : mkorganic
   use mkutilsMod         , only : normalize_classes_by_gcell, chkerr
   use mkfileMod          , only : mkfile_define_dims, mkfile_define_atts, mkfile_define_vars
   use mkfileMod          , only : mkfile_output
@@ -447,7 +444,7 @@ program mksurfdata
   end if
 
   ! -----------------------------------
-  ! Make soil texture [pctsand, pctclay]
+  ! Make soil texture and organic carbon content [pctsand, pctclay, organic]
   ! -----------------------------------
   if (fsurdat /= ' ') then
      call mksoiltex( mksrf_fsoitex_mesh, file_mapunit_i=mksrf_fsoitex, file_lookup_i=mksrf_fsoitex_lookup, &
@@ -554,16 +551,8 @@ program mksurfdata
   if (fsurdat /= ' ') then
      if (outnc_vic) then
         call mkVICparams ( mksrf_fvic_mesh, mksrf_fvic, mesh_model, pioid, rc)
-        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkVICparams')
      end if
-  end if
-
-  ! -----------------------------------
-  ! Make organic matter density [organic] [forganic]
-  ! -----------------------------------
-  if (fsurdat /= ' ') then
-     call mkorganic( mksrf_forganic_mesh, mksrf_forganic, mesh_model, pctlnd_pft, lat, pioid, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkorganic')
   end if
 
   ! -----------------------------------
