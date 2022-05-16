@@ -2,6 +2,8 @@ use_fates_sp = .true.
 soil_decomp_method = 'None'
 use_lch4 = .false.
 fates_spitfire_mode = 0
+use_fates_fixed_biogeog = .true.
+use_fates_no_comp = .true.
 hist_fexcl1 = 'FATES_TRIMMING', 'FATES_COLD_STATUS', 'FATES_DROUGHT_STATUS', 'FATES_GDD', 'FATES_NCHILLDAYS',
               'FATES_NCOLDDAYS', 'FATES_DAYSINCE_COLDLEAFOFF', 'FATES_DAYSINCE_COLDLEAFON', 'FATES_DAYSINCE_DROUGHTLEAFOFF',
               'FATES_DAYSINCE_DROUGHTLEAFON', 'FATES_MEANLIQVOL_DROUGHTPHEN', 'FATES_CANOPY_SPREAD', 'FATES_VEGC_PF',
