@@ -247,7 +247,7 @@ subroutine ReadNML(this, bounds, NLFilename)
   integer            :: nml_error ! namelist i/o error flag
   character(len=CL)  :: stream_fldFileName_exice = ' '
   character(len=CL)  :: stream_meshfile_exice = ' '
-  character(len=CL)  :: exicemapalgo = 'nn'
+  character(len=CL)  :: exicemapalgo = 'bilinear'
   character(len=*), parameter :: namelist_name = 'exice_streams'    ! MUST agree with name in namelist and read
   character(len=*), parameter :: subName = "('exice_streams::ReadNML')"
   !-----------------------------------------------------------------------

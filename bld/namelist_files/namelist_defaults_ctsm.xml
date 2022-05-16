@@ -2592,7 +2592,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <use_excess_ice>.false.</use_excess_ice>
 
-<stream_fldfilename_exice hgrid="0.9x1.25">lnd/clm2/paramdata/exice_init_0.9x1.25_c20211102.nc</stream_fldfilename_exice>
-<stream_meshfile_exice hgrid="0.9x1.25">lnd/clm2/paramdata/finundated_inversiondata_0.9x1_ESMFmesh_cdf5_130621.nc</stream_meshfile_exice>
+<stream_fldfilename_exice>lnd/clm2/paramdata/exice_init_0.125x0.125_c20220516.nc</stream_fldfilename_exice>
+<stream_meshfile_exice>lnd/clm2/paramdata/exice_init_0.125x0.125_ESMFmesh_c20220516.nc</stream_meshfile_exice>
 
 </namelist_defaults>
