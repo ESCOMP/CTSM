@@ -224,8 +224,12 @@ def main ():
                 output = run_cmd.stdout.decode('utf-8').strip()
                 namelist = output.split(' ')[-1]
                 print (f"generated namelist {namelist}")
-                output = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist}"
-                runfile.write(f"{output} \n")
+                # Run env_mach_specific.sh to control the machine dependent
+                # environment including the paths to compilers and libraries
+                # external to cime such as netcdf
+                output1 = f". ./.env_mach_specific.sh"
+                output2 = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist}"
+                runfile.write(f"{output1} \n{output2} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")
     sys.exit(0)

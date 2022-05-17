@@ -44,7 +44,7 @@ if [ $? != 0 ]; then
   echo "Error doing configure for machine name: $MACH"
   exit 1
 fi
-. .env_mach_specific.sh
+. ./.env_mach_specific.sh
 echo "COMPILER = $COMPILER, MPILIB = $MPILIB, DEBUG = $DEBUG, OS = $OS"
 if [ -z "$PIO" ]; then
   echo "The PIO directory for the PIO build is required and was not set in the configure"

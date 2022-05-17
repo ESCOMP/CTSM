@@ -101,11 +101,15 @@ def main ():
 
         np = int(tasks_per_node) * int(number_of_nodes)
 
+        # Run env_mach_specific.sh to control the machine dependent environment
+        # including the paths to compilers and libraries external to cime such
+        # as netcdf
+        output1 = f". ./.env_mach_specific.sh"
         if machine == 'cheyenne':
-            output = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
+            output2 = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
         elif machine == 'casper':
-            output = f"mpiexec -np {np} ./bld/mksurfdata < {namelist_file}"
-        runfile.write(f"{output} \n")
+            output2 = f"mpiexec -np {np} ./bld/mksurfdata < {namelist_file}"
+        runfile.write(f"{output1} \n{output2} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")
     sys.exit(0)
