@@ -655,7 +655,6 @@ contains
     integer :: begp, endp
     integer :: begc, endc
     real(r8), pointer :: rbufslp(:)      ! temporary single level - patch level
-    real(r8), pointer :: rbufslp2(:)     ! temporary single level - patch level
     character(len=*), parameter :: subname = 'CropUpdateAccVars'
     !-----------------------------------------------------------------------
 
@@ -676,7 +675,6 @@ contains
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
-    allocate(rbufslp2(begp:endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp (2)'
        call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -713,7 +711,6 @@ contains
        else
           rbufslp(p) = accumResetVal
        end if
-       rbufslp2(p) = rbufslp(p)
     end do
     call update_accum_field  ('HUI', rbufslp, nstep)
     call extract_accum_field ('HUI', this%hui_patch, nstep)
