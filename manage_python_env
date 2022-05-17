@@ -20,21 +20,34 @@ ctsm_python=ctsm_py
 # Usage subroutine
 usage() {
   echo ""
-  echo "**********************"
+  echo "***********************************************************************"
   echo "usage:"
   echo "./manage_python_env"
   echo ""
   echo "valid arguments: "
   echo "[-h|--help]  "
   echo "     Displays this help message"
-  echo "**********************"
+  echo "[-v|--verbose]  "
+  echo "     Run with verbose mode for the install so you see the progress bar"
+  echo "[--option <option>]  "
+  echo "     Option(s) to pass to 'conda install' step"
+  echo "***********************************************************************"
 }
 
+verbose="No"
+option=""
 while [ $# -gt 0 ]; do
    case $1 in
        -h|--help )
            usage
            exit 0
+           ;;
+       -v|--verbose )
+           verbose="Yes"
+           ;;
+       --option )
+           option=$2
+           shift
            ;;
        * )
            echo "ERROR:: invalid argument sent in: $2"
@@ -56,7 +69,11 @@ else
    echo "$ctsm_python environment already exists"
 fi
 echo "Install $ctsm_python this can take a long time, be patient...."
-conda install --yes -q -n $ctsm_python --file python/conda_env_ctsm_py.txt
+verbosity="-q"
+if [ "$verbose" == "Yes" ]; then
+  verbosity="-v"
+fi
+conda install --yes $verbosity -n $ctsm_python --file python/conda_env_ctsm_py.txt $option
 if [ $? != 0 ]; then
    echo "Trouble installing the $ctsm_python python environment"
    exit -2
