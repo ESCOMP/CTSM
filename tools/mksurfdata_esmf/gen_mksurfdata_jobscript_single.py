@@ -88,6 +88,8 @@ def main ():
     with open(jobscript_file, "w",encoding='utf-8') as runfile:
 
         runfile.write('#!/bin/bash \n')
+        runfile.write('# Edit the batch directives for your batch system \n')
+        runfile.write('# Below are the batch directives used on cheyenne \n')
         runfile.write(f"#PBS -A {account} \n")
         runfile.write('#PBS -N mksurfdata \n')
         runfile.write('#PBS -j oe \n')
@@ -105,12 +107,13 @@ def main ():
         # Run env_mach_specific.sh to control the machine dependent environment
         # including the paths to compilers and libraries external to cime such
         # as netcdf
-        output1 = f". ./.env_mach_specific.sh"
+        runfile.write(f". ./.env_mach_specific.sh \n")
+        runfile.write('# Edit the mpirun command to use the MPI executable on your system and the arguments it requires \n')
         if machine == 'cheyenne':
-            output2 = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
+            output = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
         elif machine == 'casper':
-            output2 = f"mpiexec -np {np} ./bld/mksurfdata < {namelist_file}"
-        runfile.write(f"{output1} \n{output2} \n")
+            output = f"mpiexec -np {np} ./bld/mksurfdata < {namelist_file}"
+        runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")
     sys.exit(0)
