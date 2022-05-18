@@ -99,7 +99,7 @@ def main ():
             runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
         elif machine == 'casper':
             runfile.write('#PBS -q casper \n')
-            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=12:mpiprocs={tasks_per_node} \n")
+            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=12:mpiprocs={tasks_per_node}:mem=20GB \n")
         runfile.write("\n")
 
         np = int(tasks_per_node) * int(number_of_nodes)
