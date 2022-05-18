@@ -71,7 +71,11 @@ class MKSURFDATAESMF(SystemTestsCommon):
         """
         # Paths and command strings
         self._executable_path = os.path.join(self._tool_path, 'bld/mksurfdata')
-        self._mpiexec_mpt_cmd = f"mpiexec_mpt -np 144 {self._executable_path} < {self._fsurdat_out_prefix}namelist"
+        _machine = self._case.get_value("MACH")
+        if _machine == 'cheyenne':
+            self._mpiexec_mpt_cmd = f"mpiexec_mpt -np 144 {self._executable_path} < {self._fsurdat_out_prefix}namelist"
+        elif _machine == 'casper':
+            self._mpiexec_mpt_cmd = f"mpiexec -np 144 {self._executable_path} < {self._fsurdat_out_prefix}namelist"
 
         # Run executable to generate fsurdat
         subprocess.check_call(self._mpiexec_mpt_cmd, shell=True)
