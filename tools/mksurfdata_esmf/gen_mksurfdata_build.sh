@@ -20,14 +20,14 @@ esac
 
 # Create /bld directory
 echo "cime Machine is: $MACH..."
-if [ -d "bld" ]; then
+cwd=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+if [ -d "$cwd/bld" ]; then
   echo "A /bld directory exists; remove it to do a clean build..."
   exit 1
 fi
-cwd=`pwd`
-rm -rf bld
-mkdir bld
-cd bld
+rm -rf $cwd/bld
+mkdir $cwd/bld
+cd $cwd/bld
 
 # Run the cime configure tool to figure out what modules need to be loaded
 echo "Run cime configure for machine $MACH..."
