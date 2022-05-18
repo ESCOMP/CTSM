@@ -10,7 +10,7 @@ module EDBGCDynMod
   use perf_mod                        , only : t_startf, t_stopf
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use abortutils                      , only : endrun
-  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method
+  use SoilBiogeochemDecompCascadeConType , only : no_soil_decomp, mimics_decomp, century_decomp, decomp_method
   use CNVegCarbonStateType	      , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType	      , only : cnveg_carbonflux_type
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
@@ -29,6 +29,7 @@ module EDBGCDynMod
   use ch4Mod                          , only : ch4_type
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
 
+  implicit none
 
   ! public :: EDBGCDynInit         ! BGC dynamics: initialization
   public :: EDBGCDyn             ! BGC Dynamics
@@ -139,20 +140,22 @@ contains
     ! zero the column-level C and N fluxes
     ! --------------------------------------------------
     
-    call t_startf('BGCZero')
+    if ( decomp_method /= no_soil_decomp )then
+       call t_startf('SoilBGCZero')
 
-    call soilbiogeochem_carbonflux_inst%SetValues( &
-         num_soilc, filter_soilc, 0._r8)
-    if ( use_c13 ) then
-       call c13_soilbiogeochem_carbonflux_inst%SetValues( &
+       call soilbiogeochem_carbonflux_inst%SetValues( &
             num_soilc, filter_soilc, 0._r8)
-    end if
-    if ( use_c14 ) then
-       call c14_soilbiogeochem_carbonflux_inst%SetValues( &
-            num_soilc, filter_soilc, 0._r8)
-    end if
+       if ( use_c13 ) then
+          call c13_soilbiogeochem_carbonflux_inst%SetValues( &
+               num_soilc, filter_soilc, 0._r8)
+       end if
+       if ( use_c14 ) then
+          call c14_soilbiogeochem_carbonflux_inst%SetValues( &
+               num_soilc, filter_soilc, 0._r8)
+       end if
 
-    call t_stopf('BGCZero')
+       call t_stopf('SoilBGCZero')
+    end if
 
     ! --------------------------------------------------
     ! Nitrogen Deposition, Fixation and Respiration
@@ -187,16 +190,17 @@ contains
             soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
     end if
 
-    ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)
-    call SoilBiogeochemPotential (bounds, num_soilc, filter_soilc,                                                    &
-         soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,                  &
-         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,                                         &
-         cn_decomp_pools=cn_decomp_pools(begc:endc,1:nlevdecomp,1:ndecomp_pools), & 
-         p_decomp_cpool_loss=p_decomp_cpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
-         p_decomp_cn_gain=p_decomp_cn_gain(begc:endc,1:nlevdecomp,1:ndecomp_pools), &
-         pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
-         p_decomp_npool_to_din=p_decomp_npool_to_din(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions))
-
+    if ( decomp_method /= no_soil_decomp )then
+       ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)
+       call SoilBiogeochemPotential (bounds, num_soilc, filter_soilc,                                                    &
+            soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,                  &
+            soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,                                         &
+            cn_decomp_pools=cn_decomp_pools(begc:endc,1:nlevdecomp,1:ndecomp_pools), & 
+            p_decomp_cpool_loss=p_decomp_cpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
+            p_decomp_cn_gain=p_decomp_cn_gain(begc:endc,1:nlevdecomp,1:ndecomp_pools), &
+            pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
+            p_decomp_npool_to_din=p_decomp_npool_to_din(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions))
+    end if
 
     !--------------------------------------------
     ! Resolve the competition between plants and soil heterotrophs 
@@ -212,17 +216,18 @@ contains
     ! Calculation of actual immobilization and decomp rates, following
     ! resolution of plant/heterotroph  competition for mineral N (previously inlined in CNDecompAllocation in CNDecompMod)
 
-    call t_startf('SoilBiogeochemDecomp')
+    if ( decomp_method /= no_soil_decomp )then
+       call t_startf('SoilBiogeochemDecomp')
 
-    call SoilBiogeochemDecomp (bounds, num_soilc, filter_soilc,                                                       &
-         soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,                  &
-         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,                                         &
-         cn_decomp_pools=cn_decomp_pools(begc:endc,1:nlevdecomp,1:ndecomp_pools),                       & 
-         p_decomp_cpool_loss=p_decomp_cpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
-         pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
-         p_decomp_npool_to_din=p_decomp_npool_to_din(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions))
+       call SoilBiogeochemDecomp (bounds, num_soilc, filter_soilc,                                                       &
+            soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,                  &
+            soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,                                         &
+            cn_decomp_pools=cn_decomp_pools(begc:endc,1:nlevdecomp,1:ndecomp_pools),                       & 
+            p_decomp_cpool_loss=p_decomp_cpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
+            pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
+            p_decomp_npool_to_din=p_decomp_npool_to_din(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions))
 
-    call t_stopf('SoilBiogeochemDecomp')
+       call t_stopf('SoilBiogeochemDecomp')
 
 
     !--------------------------------------------
@@ -243,16 +248,17 @@ contains
     ! Calculate vertical mixing of soil and litter pools
     !--------------------------------------------
 
-    call t_startf('SoilBiogeochemLittVertTransp')
+       call t_startf('SoilBiogeochemLittVertTransp')
 
-    call SoilBiogeochemLittVertTransp(bounds, num_soilc, filter_soilc,            &
-         active_layer_inst, soilbiogeochem_state_inst,                            &
-         soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,         &
-         c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst, &
-         c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst, &
-         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
+       call SoilBiogeochemLittVertTransp(bounds, num_soilc, filter_soilc,            &
+            active_layer_inst, soilbiogeochem_state_inst,                            &
+            soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,         &
+            c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst, &
+            c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst, &
+            soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
 
-    call t_stopf('SoilBiogeochemLittVertTransp')
+       call t_stopf('SoilBiogeochemLittVertTransp')
+    end if
 
     end associate
 

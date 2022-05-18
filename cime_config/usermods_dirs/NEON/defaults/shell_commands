@@ -4,3 +4,9 @@
 ./xmlchange CCSM_CO2_PPMV=408.83
 ./xmlchange DATM_PRESAERO=SSP3-7.0
 ./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2020,DATM_YR_START=2018
+# Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
+./xmlchange PIO_TYPENAME=netcdf
+# BD:05/06/2022 - The PIO_REARRANGER_LND value - for global runs, PIO_REARRANGER_LND = 1 is ideal
+#                 and a value of 2 results in slow I/O.  For point runs like these, a value of 1 results in a crash (PIO bug, probably),
+#                 so we explicitly set a value of 2.
+./xmlchange PIO_REARRANGER_LND=2
