@@ -9,7 +9,7 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-# valid options for SSP scenarios and pft years:
+# valid options for SSP/RCP scenarios
 valid_opts = {"ssp-rcp": ["none","SSP1-2.6","SSP3-7.0","SSP5-3.4","SSP2-4.5","SSP1-1.9","SSP4-3.4","SSP4-6.0","SSP5-8.5"]}
 
 def get_parser():
@@ -52,7 +52,7 @@ def get_parser():
         help="""
             model resolution [default: %(default)s]
             To see available supported resolutions, simply invoke this command
-            with a --res unknown opion
+            with a --res unknown option
             """,
         action="store",
         dest="res",

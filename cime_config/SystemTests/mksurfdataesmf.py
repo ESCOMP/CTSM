@@ -5,6 +5,7 @@ and the CTSM completes a simulation with this fsurdat file.
 
 import os
 import subprocess
+from datetime import datetime
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
@@ -19,9 +20,13 @@ class MKSURFDATAESMF(SystemTestsCommon):
         """
         SystemTestsCommon.__init__(self, case)
 
-        # Paths and command strings
+        # Paths and strings
         self._ctsm_root = self._case.get_value('COMP_ROOT_DIR_LND')
         self._tool_path = os.path.join(self._ctsm_root, 'tools/mksurfdata_esmf')
+        _time_stamp = datetime.today().strftime("%y%m%d")
+        self._res = '10x15'
+        self._model_yr = '1850'
+        self._fsurdat_out_prefix = os.path.join(self._get_caseroot(), f'surfdata_{self._res}_hist_78pfts_CMIP6_{self._model_yr}_c{_time_stamp}.')
 
     def build_phase(self, sharedlib_only=False, model_only=False):
         """
@@ -36,12 +41,11 @@ class MKSURFDATAESMF(SystemTestsCommon):
             'done_MKSURFDATAESMF_setup.txt')):
             # Paths and command strings
             self._rm_bld_dir = f"rm -rf {self._tool_path}/bld"
-            self._fsurdat_out_prefix = os.path.join(self._get_caseroot(), 'surfdata_10x15_hist_78pfts_CMIP6_1850_c220517.')
             self._build_script_path = os.path.join(self._tool_path,
                 'gen_mksurfdata_build.sh')
             self._nml_script_path = os.path.join(self._tool_path,
                 'gen_mksurfdata_namelist.py')
-            self._gen_mksurfdata_namelist = f"{self._nml_script_path} --res 10x15 --start-year 1850 --end-year 1850"
+            self._gen_mksurfdata_namelist = f'{self._nml_script_path} --res {self._res} --start-year {self._model_yr} --end-year {self._model_yr}'
 
             # Build executable
             subprocess.check_call(self._rm_bld_dir, shell=True)
@@ -64,8 +68,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
         """
         # Paths and command strings
         self._executable_path = os.path.join(self._tool_path, 'bld/mksurfdata')
-        # self._mpiexec_mpt_cmd = f"mpiexec_mpt -np 144 {self._executable_path} < {self._fsurdat_out_prefix}namelist"  # TODO Rm nxt line when this is ready
-        self._mpiexec_mpt_cmd = f"mpiexec_mpt -np 144 {self._executable_path} < {self._tool_path}/surfdata_10x15_hist_78pfts_CMIP6_1850_c220517.namelist"
+        self._mpiexec_mpt_cmd = f"mpiexec_mpt -np 144 {self._executable_path} < {self._fsurdat_out_prefix}namelist"
 
         # Submit jobscript to generate fsurdat
         subprocess.check_call(self._mpiexec_mpt_cmd, shell=True)
