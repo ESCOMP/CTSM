@@ -1,12 +1,15 @@
 ===============================================================
 Tag name: ctsm5.1.dev096
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Wed May 18 10:01:44 MDT 2022
+Date: Wed May 18 12:44:01 MDT 2022
 One-line Summary: Fix a few glitches from the last tag
 
 Purpose and description of changes
 ----------------------------------
 
+Update cime to fix DAE issue
+modify_neon issue
+When FatesSp is on, make soil_decomp None by default
 
 
 Significant changes to scientifically-supported configurations
@@ -28,7 +31,6 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Issues fixed (include CTSM Issue #):
    Fixes #1744 -- DAE tests fail
@@ -39,9 +41,7 @@ Issues fixed (include CTSM Issue #):
 CIME Issues fixed (include issue #): Fix DAE tests
 
 Known bugs introduced in this tag (include issue #):
-
-Known bugs found since the previous tag (include issue #):
-
+   #1759 -- LILAC test fails
 
 Notes of particular relevance for users
 ---------------------------------------
