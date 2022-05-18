@@ -48,8 +48,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
             subprocess.check_call(self._build_script_path, shell=True)
 
             # Generate namelist self._nml_script_path
-            # TODO Error: No such file or directory: './gen_mksurfdata_namelist.xml' ...probably need explicit path for this to work
-            # subprocess.check_call(self._gen_mksurfdata_namelist, shell=True)
+            subprocess.check_call(self._gen_mksurfdata_namelist, shell=True)
 
             # Modify user_nl_clm to point to the generated fsurdat
             self._modify_user_nl()

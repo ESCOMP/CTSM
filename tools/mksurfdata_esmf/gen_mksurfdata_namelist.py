@@ -329,7 +329,9 @@ def main ():
     rawdata_files = {}
 
     # determine input rawdata
-    tree1 = ET.parse('./gen_mksurfdata_namelist.xml')
+    tool_path = os.path.dirname(os.path.abspath(__file__))
+    xml_path = os.path.join(tool_path, 'gen_mksurfdata_namelist.xml')
+    tree1 = ET.parse(xml_path)
     root = tree1.getroot()
     root.tag
     root.attrib
@@ -391,7 +393,8 @@ def main ():
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
 
     # determine output mesh
-    tree2 = ET.parse('../../ccs_config/component_grids_nuopc.xml')
+    xml_path = os.path.join(tool_path, '../../ccs_config/component_grids_nuopc.xml')
+    tree2 = ET.parse(xml_path)
     root = tree2.getroot()
     model_mesh = ""
     for child1 in root:  # this is domain tag
@@ -490,7 +493,8 @@ def main ():
         fsurlog = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.log"
         fdyndat = f"landuse.timeseries_{res}_{ssp_rcp_name}_{num_pft}_CMIP6_{start_year}-{end_year}_c{time_stamp}.nc"
 
-    gitdescribe = subprocess.check_output('git describe', shell=True).strip()
+    git_desc_cmd = f"git -C {tool_path} describe"
+    gitdescribe = subprocess.check_output(git_desc_cmd, shell=True).strip()
     gitdescribe = gitdescribe.decode('utf-8')
 
     # The below two overrides are only used for testing an validation
