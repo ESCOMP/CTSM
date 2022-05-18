@@ -23,7 +23,7 @@ def get_parser():
     )
     parser.add_argument(
         "--account",
-        help="""account number (default P93300606)""",
+        help="""account number (default: %(default)s)""",
         action="store",
         dest="account",
         required=False,
@@ -45,10 +45,11 @@ def get_parser():
     )
     parser.add_argument(
         "--machine",
-        help="""currently this recognizes cheyenne and casper (default cheyenne)""",
+        help="""default: %(default)s""",
         action="store",
         dest="machine",
         required=False,
+        choices=['cheyenne', 'casper'],  # TODO Plan on adding izumi here
         default='cheyenne'
     )
     parser.add_argument(
@@ -60,7 +61,7 @@ def get_parser():
     )
     parser.add_argument(
         "--jobscript-file",
-        help="""output jobscript file to be submitted on cheyenne (default is mksurfdata_jobscript_single)]""",
+        help="""output jobscript file to be submitted on cheyenne (default: %(default)s)""",
         action="store",
         dest="jobscript_file",
         required=False,
