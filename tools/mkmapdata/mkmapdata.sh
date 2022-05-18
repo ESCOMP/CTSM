@@ -48,6 +48,13 @@ case $hostname in
   fi
   ;;
 
+  ##casper
+  casper* | crthc* )
+  if [ -z "$CSMDATA" ]; then
+     CSMDATA=/glade/p/cesm/cseg/inputdata
+  fi
+  ;;
+
   ##hobart/izumi/thorodin
   hobart* | izumi* | thorodin* )
   if [ -z "$CSMDATA" ]; then
@@ -395,9 +402,9 @@ case $hostname in
   fi
   ;;
 
-  ## DAV
-  pronghorn* | casper* )
-  . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
+  ## Casper
+  casper* | crthc* )
+  . /glade/u/apps/dav/opt/lmod/8.1.7/lmod/8.1.7/init/bash
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=8
   fi

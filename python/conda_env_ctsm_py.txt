@@ -1,7 +1,7 @@
 # To install this on cheyenne with conda loaded in modules
 # conda create  -n ctsm_py  # Do this one time
 # conda install -n ctsm_py --file conda_env_ctsm_py.txt
-python=3.7.9
+python=3.7.0
 scipy
 netcdf4
 requests
