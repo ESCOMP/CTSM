@@ -31,6 +31,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
         # Paths and strings needed throughout
         ctsm_root = self._case.get_value('COMP_ROOT_DIR_LND')
         self._tool_path = os.path.join(ctsm_root, 'tools/mksurfdata_esmf')
+        self._rm_bld_dir = f"rm -rf {self._tool_path}/bld"
         time_stamp = datetime.today().strftime("%y%m%d")
         self._res = '10x15'  # see important comment in script's docstring
         self._model_yr = '1850'
@@ -47,7 +48,6 @@ class MKSURFDATAESMF(SystemTestsCommon):
         if not os.path.exists(os.path.join(self._get_caseroot(),
             'done_MKSURFDATAESMF_setup.txt')):
             # Paths and strings
-            rm_bld_dir = f"rm -rf {self._tool_path}/bld"
             build_script_path = os.path.join(self._tool_path,
                 'gen_mksurfdata_build.sh')
             nml_script_path = os.path.join(self._tool_path,
@@ -55,7 +55,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
             gen_mksurfdata_namelist = f'{nml_script_path} --res {self._res} --start-year {self._model_yr} --end-year {self._model_yr}'
 
             # Build executable
-            subprocess.check_call(rm_bld_dir, shell=True)
+            subprocess.check_call(self._rm_bld_dir, shell=True)
             subprocess.check_call(build_script_path, shell=True)
 
             # Generate namelist for generating fsurdat
@@ -83,6 +83,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
 
         # Run executable to generate fsurdat
         subprocess.check_call(mpiexec_mpt_cmd, shell=True)
+        subprocess.check_call(self._rm_bld_dir, shell=True)
 
         # Submit CTSM run that uses fsurdat just generated
         self.run_indv()
