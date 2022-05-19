@@ -329,6 +329,7 @@ def main ():
     rawdata_files = {}
 
     # determine input rawdata
+    _must_run_download_input_data = False
     tree1 = ET.parse('./gen_mksurfdata_namelist.xml')
     root = tree1.getroot()
     root.tag
@@ -372,15 +373,17 @@ def main ():
                 rawdata_files[child1.tag] = os.path.join(input_path, item.text)
                 if '%y' not in rawdata_files[child1.tag]:
                     if not os.path.isfile(rawdata_files[child1.tag]):
-                        print(f"ERROR: input data file {rawdata_files[child1.tag]} for {child1.tag} does not exist")
-                        sys.exit(20)
+                        print(f"WARNING: input data file {rawdata_files[child1.tag]} for {child1.tag} does not exist")
+                        print(f"WARNING: run ./download_input_data to try to obtain missing files")
+                        _must_run_download_input_data = True
 
             if item.tag == 'mesh_filename':
                 new_key = f"{child1.tag}_mesh"
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
                 if not os.path.isfile(rawdata_files[new_key]):
-                    print(f"ERROR: input mesh file {rawdata_files[new_key]} does not exist")
-                    sys.exit(30)
+                    print(f"WARNING: input mesh file {rawdata_files[new_key]} does not exist")
+                    print(f"WARNING: run ./download_input_data to try to obtain missing files")
+                    _must_run_download_input_data = True
 
             if item.tag == 'lake_filename':
                 new_key = f"{child1.tag}_lake"
@@ -451,14 +454,17 @@ def main ():
                 landuse_input_fnam2 = file2.replace("%y",str(year))
                 landuse_input_fnam3 = file3.replace("%y",str(year))
                 if not os.path.isfile(landuse_input_fname):
-                     print(f"ERROR: landunit_input_fname: {landuse_input_fname} does not exist")
-                     sys.exit(60)
+                     print(f"WARNING: landunit_input_fname: {landuse_input_fname} does not exist")
+                     print(f"WARNING: run ./download_input_data to try to obtain missing files")
+                     _must_run_download_input_data = True
                 if not os.path.isfile(landuse_input_fnam2):
-                     print(f"ERROR: landunit_input_fnam2: {landuse_input_fnam2} does not exist")
-                     sys.exit(60)
+                     print(f"WARNING: landunit_input_fnam2: {landuse_input_fnam2} does not exist")
+                     print(f"WARNING: run ./download_input_data to try to obtain missing files")
+                     _must_run_download_input_data = True
                 if not os.path.isfile(landuse_input_fnam3):
-                     print(f"ERROR: landunit_input_fnam3: {landuse_input_fnam3} does not exist")
-                     sys.exit(60)
+                     print(f"WARNING: landunit_input_fnam3: {landuse_input_fnam3} does not exist")
+                     print(f"WARNING: run ./download_input_data to try to obtain missing files")
+                     _must_run_download_input_data = True
 
                 # -- Each line is written twice in the original perl code:
                 landuse_line = f"{landuse_input_fname:<196}{str(year)}\n"
@@ -547,11 +553,13 @@ def main ():
         if '%y' in mksrf_fhrvtyp:
             mksrf_fhrvtyp = mksrf_fhrvtyp.replace("%y",str(start_year))
         if not os.path.isfile(mksrf_fvegtyp):
-            print(f"ERROR: input mksrf_fvegtyp file {mksrf_fvegtyp} does not exist")
-            sys.exit(20)
+            print(f"WARNING: input mksrf_fvegtyp file {mksrf_fvegtyp} does not exist")
+            print(f"WARNING: run ./download_input_data to try to obtain missing files")
+            _must_run_download_input_data = True
         if not os.path.isfile(mksrf_fhrvtyp):
-            print(f"ERROR: input mksrf_fhrvtyp file {mksrf_fhrvtyp} does not exist")
-            sys.exit(20)
+            print(f"WARNING: input mksrf_fhrvtyp file {mksrf_fhrvtyp} does not exist")
+            print(f"WARNING: run ./download_input_data to try to obtain missing files")
+            _must_run_download_input_data = True
         nlfile.write( f"  mksrf_fvegtyp = \'{mksrf_fvegtyp}\' \n")
         nlfile.write( f"  mksrf_fvegtyp_mesh = \'{mksrf_fvegtyp_mesh}\' \n")
         nlfile.write( f"  mksrf_fhrvtyp = \'{mksrf_fhrvtyp}\' \n")
@@ -589,6 +597,11 @@ def main ():
         nlfile.write(f"  gitdescribe = \'{gitdescribe}\' \n")
 
         nlfile.write("/ \n")
+
+    if _must_run_download_input_data:
+        temp_nlfname = 'surfdata.namelist'
+        os.rename(nlfname, temp_nlfname)
+        nlfname = temp_nlfname
 
     print (f"Successfully created input namelist file {nlfname}")
     sys.exit(0)
