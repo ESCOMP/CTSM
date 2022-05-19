@@ -12,6 +12,7 @@ system test to work.
 """
 
 import os
+import sys
 import subprocess
 from datetime import datetime
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
@@ -36,6 +37,8 @@ class MKSURFDATAESMF(SystemTestsCommon):
         self._res = '10x15'  # see important comment in script's docstring
         self._model_yr = '1850'
         self._fsurdat_out_prefix = os.path.join(self._get_caseroot(), f'surfdata_{self._res}_hist_78pfts_CMIP6_{self._model_yr}_c{time_stamp}.')
+        self._TestStatus_log_path = os.path.join(self._get_caseroot(),
+            'TestStatus.log')
 
     def build_phase(self, sharedlib_only=False, model_only=False):
         """
@@ -55,11 +58,20 @@ class MKSURFDATAESMF(SystemTestsCommon):
             gen_mksurfdata_namelist = f'{nml_script_path} --res {self._res} --start-year {self._model_yr} --end-year {self._model_yr}'
 
             # Build executable
-            subprocess.check_call(self._rm_bld_dir, shell=True)
-            subprocess.check_call(build_script_path, shell=True)
+            try:
+                subprocess.check_call(self._rm_bld_dir, shell=True)
+            except subprocess.CalledProcessError as e:
+                sys.exit(f'{e} ERROR RUNNING {self._rm_bld_dir}. DETAILS IN {self._TestStatus_log_path}')
+            try:
+                subprocess.check_call(build_script_path, shell=True)
+            except subprocess.CalledProcessError as e:
+                sys.exit(f'{e} ERROR RUNNING {build_script_path}. DETAILS IN {self._TestStatus_log_path}')
 
             # Generate namelist for generating fsurdat
-            subprocess.check_call(gen_mksurfdata_namelist, shell=True)
+            try:
+                subprocess.check_call(gen_mksurfdata_namelist, shell=True)
+            except subprocess.CalledProcessError as e:
+                sys.exit(f'{e} ERROR RUNNING {gen_mksurfdata_namelist}. DETAILS IN {self._TestStatus_log_path}')
 
             # Modify user_nl_clm to point to the generated fsurdat
             self._modify_user_nl()
@@ -82,8 +94,14 @@ class MKSURFDATAESMF(SystemTestsCommon):
             mpiexec_mpt_cmd = f"mpiexec -np 144 {executable_path} < {self._fsurdat_out_prefix}namelist"
 
         # Run executable to generate fsurdat
-        subprocess.check_call(mpiexec_mpt_cmd, shell=True)
-        subprocess.check_call(self._rm_bld_dir, shell=True)
+        try:
+            subprocess.check_call(mpiexec_mpt_cmd, shell=True)
+        except subprocess.CalledProcessError as e:
+            sys.exit(f'{e} ERROR RUNNING {mpiexec_mpt_cmd}; details in {self._TestStatus_log_path}')
+        try:
+            subprocess.check_call(self._rm_bld_dir, shell=True)
+        except subprocess.CalledProcessError as e:
+            sys.exit(f'{e} ERROR RUNNING {self._rm_bld_dir}; details in {self._TestStatus_log_path}')
 
         # Submit CTSM run that uses fsurdat just generated
         self.run_indv()
