@@ -13,6 +13,7 @@ system test to work.
 
 import os
 import sys
+import shutil
 import subprocess
 from datetime import datetime
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
@@ -35,7 +36,8 @@ class MKSURFDATAESMF(SystemTestsCommon):
         time_stamp = datetime.today().strftime("%y%m%d")
         self._res = '10x15'  # see important comment in script's docstring
         self._model_yr = '1850'
-        self._fsurdat_out_prefix = os.path.join(self._get_caseroot(), f'surfdata_{self._res}_hist_78pfts_CMIP6_{self._model_yr}_c{time_stamp}.')
+        self._fsurdat_namelist = os.path.join(self._get_caseroot(), f'surfdata_{self._res}_hist_78pfts_CMIP6_{self._model_yr}_c{time_stamp}.namelist')
+        self._fsurdat_nc = os.path.join(self._get_caseroot(), f'surfdata_{self._res}_hist_78pfts_CMIP6_{self._model_yr}_c{time_stamp}.nc')
         self._TestStatus_log_path = os.path.join(self._get_caseroot(),
             'TestStatus.log')
 
@@ -53,24 +55,26 @@ class MKSURFDATAESMF(SystemTestsCommon):
         # if the test stops and gets restarted.
         if sharedlib_only == True:
             # Paths and strings
-            rm_bld_dir = f"rm -rf {self._tool_path}/bld"
+            bld_dir = os.path.join(self._tool_path, 'bld')
             build_script_path = os.path.join(self._tool_path,
                 'gen_mksurfdata_build.sh')
             nml_script_path = os.path.join(self._tool_path,
                 'gen_mksurfdata_namelist.py')
             gen_mksurfdata_namelist = f'{nml_script_path} --res {self._res} --start-year {self._model_yr} --end-year {self._model_yr}'
 
-            # Build executable
+            # Build executable that will generate fsurdat (first rm -rf /bld)
             try:
-                subprocess.check_call(rm_bld_dir, shell=True)
-            except subprocess.CalledProcessError as e:
-                sys.exit(f'{e} ERROR RUNNING {rm_bld_dir}. DETAILS IN {self._TestStatus_log_path}')
+                shutil.rmtree(os.path.join(bld_dir))
+            except OSError as e:
+                sys.exit(f'{e} ERROR REMOVING {bld_dir}. DETAILS IN {self._TestStatus_log_path}')
             try:
                 subprocess.check_call(build_script_path, shell=True)
             except subprocess.CalledProcessError as e:
                 sys.exit(f'{e} ERROR RUNNING {build_script_path}. DETAILS IN {self._TestStatus_log_path}')
 
-            # Generate namelist for generating fsurdat
+            # Generate namelist for generating fsurdat (rm namelist if exists)
+            if os.path.exists(self._fsurdat_namelist):
+                os.remove(self._fsurdat_namelist)
             try:
                 subprocess.check_call(gen_mksurfdata_namelist, shell=True)
             except subprocess.CalledProcessError as e:
@@ -95,11 +99,13 @@ class MKSURFDATAESMF(SystemTestsCommon):
         executable_path = os.path.join(self._tool_path, 'bld/mksurfdata')
         machine = self._case.get_value("MACH")
         if machine == 'cheyenne':
-            mpi_cmd = f"mpiexec_mpt -np 144 {executable_path} < {self._fsurdat_out_prefix}namelist"
+            mpi_cmd = f'mpiexec_mpt -np 144 {executable_path} < {self._fsurdat_namelist}'
         elif machine == 'casper':
-            mpi_cmd = f"mpiexec -np 144 {executable_path} < {self._fsurdat_out_prefix}namelist"
+            mpi_cmd = f'mpiexec -np 144 {executable_path} < {self._fsurdat_namelist}'
 
-        # Run executable to generate fsurdat
+        # Run executable to generate fsurdat (rm fsurdat if exists)
+        if os.path.exists(self._fsurdat_nc):
+            os.remove(self._fsurdat_nc)
         try:
             subprocess.check_call(mpi_cmd, shell=True)
         except subprocess.CalledProcessError as e:
@@ -114,4 +120,4 @@ class MKSURFDATAESMF(SystemTestsCommon):
         """
         append_to_user_nl_files(caseroot = self._get_caseroot(),
                                 component = "clm",
-                                contents = "fsurdat = '{}nc'".format(self._fsurdat_out_prefix))
+                                contents = "fsurdat = '{}'".format(self._fsurdat_nc))
