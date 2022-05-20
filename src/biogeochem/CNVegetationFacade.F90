@@ -95,6 +95,7 @@ module CNVegetationFacade
   use CNPrecisionControlMod           , only: CNPrecisionControl
   use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
+  use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
   !
   implicit none
   private
@@ -879,15 +880,15 @@ contains
        num_soilc, filter_soilc, &
        num_soilp, filter_soilp, &
        num_pcropp, filter_pcropp, &
+       num_soilnopcropp, filter_soilnopcropp, &
        num_exposedvegp, filter_exposedvegp, &
        num_noexposedvegp, filter_noexposedvegp, &
-       doalb, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_state_inst,                                               &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-       active_layer_inst, &
+       active_layer_inst, clm_fates, &
        atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
        wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
        soil_water_retention_curve, crop_inst, ch4_inst, &
@@ -911,11 +912,12 @@ contains
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
+    integer                                 , intent(in)    :: num_soilnopcropp       ! number of non-prog. crop soil patches in filter
+    integer                                 , intent(in)    :: filter_soilnopcropp(:) ! filter for non-prog. crop soil patches
     integer                                 , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
     integer                                 , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
     integer                                 , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
     integer                                 , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
-    logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
     type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
@@ -942,6 +944,7 @@ contains
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     type(fireemis_type)                     , intent(inout) :: fireemis_inst
+    type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
     !
     ! !LOCAL VARIABLES:
 
@@ -954,9 +957,9 @@ contains
          num_soilc, filter_soilc,                       &
          num_soilp, filter_soilp,                       &
          num_pcropp, filter_pcropp,                     &
+         num_soilnopcropp, filter_soilnopcropp,         &
          num_exposedvegp, filter_exposedvegp,           &
          num_noexposedvegp, filter_noexposedvegp,       &
-         doalb,              &
          this%cnveg_state_inst,                                                        &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst,                           &
          this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst,                   &
@@ -969,7 +972,7 @@ contains
          c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_state_inst,                                               &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-         active_layer_inst, &
+         active_layer_inst, clm_fates, &
          atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
          wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
          soil_water_retention_curve, crop_inst, ch4_inst, &

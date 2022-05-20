@@ -14,9 +14,10 @@ module CNPhenologyMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use shr_sys_mod                     , only : shr_sys_flush
   use decompMod                       , only : bounds_type
-  use clm_varpar                      , only : maxveg, nlevdecomp_full
+  use clm_varpar                      , only : maxveg, nlevdecomp_full, mxsowings, mxharvests
   use clm_varpar                      , only : i_litr_min, i_litr_max
   use clm_varctl                      , only : iulog, use_cndv
+  use clm_varctl                      , only : for_testing_no_crop_seed_replenishment
   use clm_varcon                      , only : tfrz
   use abortutils                      , only : endrun
   use CanopyStateType                 , only : canopystate_type
@@ -27,12 +28,15 @@ module CNPhenologyMod
   use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
   use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
   use CropType                        , only : crop_type
+  use CropType                        , only : cphase_planted, cphase_leafemerge
+  use CropType                        , only : cphase_grainfill, cphase_harvest
   use pftconMod                       , only : pftcon
   use SoilStateType                   , only : soilstate_type
   use TemperatureType                 , only : temperature_type
   use WaterDiagnosticBulkType         , only : waterdiagnosticbulk_type
   use Wateratm2lndBulkType            , only : wateratm2lndbulk_type
   use initVerticalMod                 , only : find_soil_layer_containing_depth
+  use CropReprPoolsMod                , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
   use ColumnType                      , only : col
   use GridcellType                    , only : grc                
   use PatchType                       , only : patch   
@@ -46,6 +50,7 @@ module CNPhenologyMod
   public :: CNPhenologyreadNML   ! Read namelist
   public :: CNPhenologyInit      ! Initialization
   public :: CNPhenology          ! Update
+  public :: CropPhase            ! Get the current phase of each crop patch
 
   ! !PUBLIC for unit testing
   public :: CNPhenologySetNML         ! Set the namelist setttings explicitly for unit tests
@@ -92,7 +97,7 @@ module CNPhenologyMod
 
   type(params_type) :: params_inst
 
-  real(r8) :: dt                            ! radiation time step delta t (seconds)
+  real(r8) :: dt                            ! time step delta t (seconds)
   real(r8) :: fracday                       ! dtime as a fraction of day
   real(r8) :: crit_dayl                     ! critical daylength for offset (seconds)
   real(r8) :: ndays_on                      ! number of days to complete onset
@@ -291,13 +296,14 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
        filter_soilp, num_pcropp, filter_pcropp, &
-       doalb, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, crop_inst, &
+       waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, crop_inst, &
        canopystate_inst, soilstate_inst, dgvs_inst, &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,    &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
        c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
        leaf_prof_patch, froot_prof_patch, phase)
     ! !USES:
+    use clm_time_manager , only: is_first_step
     use CNSharedParamsMod, only: use_fun
     !
     ! !DESCRIPTION:
@@ -312,7 +318,6 @@ contains
     integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
     integer                        , intent(in)    :: num_pcropp      ! number of prog. crop patches in filter
     integer                        , intent(in)    :: filter_pcropp(:)! filter for prognostic crop patches
-    logical                        , intent(in)    :: doalb           ! true if time for sfc albedo calc
     type(waterdiagnosticbulk_type)          , intent(in)    :: waterdiagnosticbulk_inst
     type(wateratm2lndbulk_type)          , intent(in)    :: wateratm2lndbulk_inst
     type(temperature_type)         , intent(inout) :: temperature_inst
@@ -355,7 +360,19 @@ contains
             soilstate_inst, temperature_inst, atm2lnd_inst, wateratm2lndbulk_inst, cnveg_state_inst, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
-       if (doalb .and. num_pcropp > 0 ) then
+       ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-03) Old restart files generated at the end
+       ! of the year can indicate that a crop was panted on Jan 1, because that used to be
+       ! the time given to the last time step of the year. This would cause problems if we
+       ! ran CropPhenology in time step 0, because now time step 0 is labeled as Dec 31,
+       ! so CropPhenology would see the crop as having been planted 364 days ago, and so
+       ! would want to harvest this newly-planted crop. To avoid this situation, we avoid
+       ! calling CropPhenology on time step 0.
+       !
+       ! This .not. is_first_step() condition can be removed either when we can rely on
+       ! all restart files having been generated with
+       ! https://github.com/ESCOMP/CTSM/issues/1623 resolved, or we stop having a time
+       ! step 0 (https://github.com/ESCOMP/CTSM/issues/925).
+       if (num_pcropp > 0 .and. .not. is_first_step()) then
           call CropPhenology(num_pcropp, filter_pcropp, &
                waterdiagnosticbulk_inst, temperature_inst, crop_inst, canopystate_inst, cnveg_state_inst, &
                cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
@@ -548,6 +565,10 @@ contains
       ! The following crop related steps are done here rather than CropPhenology
       ! so that they will be completed each time-step rather than with doalb.
       !
+      ! NOTE(wjs, 2022-02-03) The above comment about doalb no longer applies, because
+      ! there is no longer a doalb conditional around the CropPhenology call. Therefore,
+      ! we could move these calculations into CropPhenology if it made sense to do so.
+      !
       ! The following lines come from ibis's climate.f + stats.f
       ! gdd SUMMATIONS ARE RELATIVE TO THE PLANTING DATE (see subr. updateAccFlds)
 
@@ -589,7 +610,7 @@ contains
     !
     ! !USES:
     use clm_varcon       , only : secspday
-    use clm_time_manager , only : get_curr_days_per_year
+    use clm_time_manager , only : get_average_days_per_year
     use clm_varctl       , only : CN_evergreen_phenology_opt   
     !
     ! !ARGUMENTS:
@@ -602,7 +623,7 @@ contains
     type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst   
     !
     ! !LOCAL VARIABLES:
-    real(r8):: dayspyr                    ! Days per year
+    real(r8):: avg_dayspyr                ! Average days per year
     integer :: p                          ! indices
     integer :: fp                         ! lake filter patch index
     
@@ -677,12 +698,12 @@ contains
          lgsf       => cnveg_state_inst%lgsf_patch    & ! Output: [real(r8) (:) ]  long growing season factor [0-1]                  
          )
 
-      dayspyr   = get_curr_days_per_year()
+      avg_dayspyr = get_average_days_per_year()
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          if (evergreen(ivt(p)) == 1._r8) then
-            bglfr(p) = 1._r8/(leaf_long(ivt(p)) * dayspyr * secspday)
+            bglfr(p) = 1._r8/(leaf_long(ivt(p)) * avg_dayspyr * secspday)
             bgtr(p)  = 0._r8
             lgsf(p)  = 0._r8
          end if
@@ -1204,7 +1225,7 @@ contains
     ! per year.
     !
     ! !USES:
-    use clm_time_manager , only : get_curr_days_per_year
+    use clm_time_manager , only : get_average_days_per_year
     use CNSharedParamsMod, only : use_fun
     use clm_varcon       , only : secspday
     use shr_const_mod    , only : SHR_CONST_TKFRZ, SHR_CONST_PI
@@ -1227,7 +1248,7 @@ contains
     real(r8),parameter :: secspqtrday = secspday / 4  ! seconds per quarter day
     integer :: g,c,p           ! indices
     integer :: fp              ! lake filter patch index
-    real(r8):: dayspyr         ! days per year
+    real(r8):: avg_dayspyr     ! average days per year
     real(r8):: crit_onset_gdd  ! degree days for onset trigger
     real(r8):: soilt           ! temperature of top soil layer
     real(r8):: psi             ! water stress of top soil layer
@@ -1322,8 +1343,7 @@ contains
          deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch      & ! Output:  [real(r8) (:)   ]                                                    
          )
 
-      ! set time steps
-      dayspyr = get_curr_days_per_year()
+      avg_dayspyr = get_average_days_per_year()
 
       ! specify rain threshold for leaf onset
       rain_threshold = 20._r8
@@ -1572,7 +1592,7 @@ contains
             ! calculate long growing season factor (lgsf)
             ! only begin to calculate a lgsf greater than 0.0 once the number
             ! of days active exceeds days/year.
-            lgsf(p) = max(min(3.0_r8*(days_active(p)-leaf_long(ivt(p))*dayspyr )/dayspyr, 1._r8),0._r8)
+            lgsf(p) = max(min(3.0_r8*(days_active(p)-leaf_long(ivt(p))*avg_dayspyr )/avg_dayspyr, 1._r8),0._r8)
             ! RosieF. 5 Nov 2015.  Changed this such that the increase in leaf turnover is faster after
             ! trees enter the 'fake evergreen' state. Otherwise, they have a whole year of 
             ! cheating, with less litterfall than they should have, resulting in very high LAI. 
@@ -1587,7 +1607,7 @@ contains
                ! calculate the background litterfall rate (bglfr)
                ! in units 1/s, based on leaf longevity (yrs) and correction for long growing season
 
-               bglfr(p) = (1._r8/(leaf_long(ivt(p))*dayspyr*secspday))*lgsf(p)
+               bglfr(p) = (1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday))*lgsf(p)
             end if
 
             ! set background transfer rate when active but not in the phenological onset period
@@ -1598,7 +1618,7 @@ contains
                ! in complete turnover of the storage pools in one year at steady state,
                ! once lgsf has reached 1.0 (after 730 days active).
 
-               bgtr(p) = (1._r8/(dayspyr*secspday))*lgsf(p)
+               bgtr(p) = (1._r8/(avg_dayspyr*secspday))*lgsf(p)
 
                ! set carbon fluxes for shifting storage pools to transfer pools
 
@@ -1644,7 +1664,8 @@ contains
     ! handle CN fluxes during the phenological onset                       & offset periods.
     
     ! !USES:
-    use clm_time_manager , only : get_curr_date, get_curr_calday, get_curr_days_per_year, get_rad_step_size
+    use clm_time_manager , only : get_prev_calday, get_curr_days_per_year, is_beg_curr_year
+    use clm_time_manager , only : get_average_days_per_year
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1673,18 +1694,15 @@ contains
     type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
     !
     ! LOCAL VARAIBLES:
-    integer kyr       ! current year
-    integer kmo       ! month of year  (1, ..., 12)
-    integer kda       ! day of month   (1, ..., 31)
-    integer mcsec     ! seconds of day (0, ..., seconds/day)
     integer jday      ! julian day of the year
     integer fp,p      ! patch indices
     integer c         ! column indices
     integer g         ! gridcell indices
     integer h         ! hemisphere indices
+    integer s         ! growing season indices
     integer idpp      ! number of days past planting
-    real(r8) :: dtrad ! radiation time step delta t (seconds)
-    real(r8) dayspyr  ! days per year
+    real(r8) dayspyr  ! days per year in this year
+    real(r8) avg_dayspyr ! average number of days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
     logical do_plant_normal ! are the normal planting rules defined and satisfied?
@@ -1714,12 +1732,13 @@ contains
          gdd1020           =>    temperature_inst%gdd1020_patch                , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd10                               
 
          fertnitro         =>    crop_inst%fertnitro_patch                     , & ! Input:  [real(r8) (:) ]  fertilizer nitrogen
-         hui               =>    crop_inst%gddplant_patch                      , & ! Input:  [real(r8) (:) ]  gdd since planting (gddplant)                    
+         hui               =>    crop_inst%hui_patch                           , & ! Input:  [real(r8) (:) ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
          leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature              
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
-         cropplant         =>    crop_inst%cropplant_patch                     , & ! Output: [logical  (:) ]  Flag, true if crop may be planted                  
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
+         sowing_count      =>    crop_inst%sowing_count                        , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
+         harvest_count     =>    crop_inst%harvest_count                       , & ! Inout:  [integer  (:) ]  number of harvest events this year for this patch
          peaklai           =>  cnveg_state_inst%peaklai_patch                  , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
@@ -1750,9 +1769,8 @@ contains
 
       ! get time info
       dayspyr = get_curr_days_per_year()
-      jday    = get_curr_calday()
-      call get_curr_date(kyr, kmo, kda, mcsec)
-      dtrad   = real( get_rad_step_size(), r8 )
+      avg_dayspyr = get_average_days_per_year()
+      jday    = get_prev_calday()
 
       if (use_fertilizer) then
        ndays_on = 20._r8 ! number of days to fertilize
@@ -1776,36 +1794,37 @@ contains
          ! from AgroIBIS subroutine planting
          ! ---------------------------------
 
-         ! in order to allow a crop to be planted only once each year
-         ! initialize cropplant = .false., but hold it = .true. through the end of the year
-
          ! initialize other variables that are calculated for crops
          ! on an annual basis in cropresidue subroutine
 
-         if ( jday == jdayyrstart(h) .and. mcsec == 0 )then
-
-            ! make sure variables aren't changed at beginning of the year
-            ! for a crop that is currently planted, such as
-            ! WINTER TEMPERATE CEREAL = winter (wheat + barley + rye)
-            ! represented here by the winter wheat pft
-
-            if (.not. croplive(p))  then
-               cropplant(p) = .false.
-               idop(p)      = NOT_Planted
-
-               ! keep next for continuous, annual winter temperate cereal crop;
-               ! if we removed elseif,
-               ! winter cereal grown continuously would amount to a cereal/fallow
-               ! rotation because cereal would only be planted every other year
-
-            else if (croplive(p) .and. (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat)) then
-               cropplant(p) = .false.
-               !           else ! not possible to have croplive and ivt==cornORsoy? (slevis)
-            end if
-
+         ! Second condition ensures everything is correctly set when resuming from a run with old code
+         ! OR starting a run mid-year without any restart file OR handling a new crop column that just
+         ! came into existence (and not at the year boundary for some reason).
+         if ( is_beg_curr_year() .or. crop_inst%sdates_thisyr(p,1) == spval ) then
+            sowing_count(p) = 0
+            harvest_count(p) = 0
+            do s = 1, mxsowings
+               crop_inst%sdates_thisyr(p,s) = -1._r8
+            end do
+            do s = 1, mxharvests
+               crop_inst%hdates_thisyr(p,s) = -1._r8
+            end do
          end if
 
-         if ( (.not. croplive(p)) .and. (.not. cropplant(p)) ) then
+         ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-18)
+         ! When resuming from a run with old code, may need to manually set these.
+         ! Will be needed until we can rely on all restart files have been generated
+         ! with CropPhenology() getting the day of the year from the START of the timestep
+         ! (i.e., jday = get_prev_calday()) instead of the END of the timestep (i.e.,
+         ! jday = get_calday()). See CTSM issue #1623.
+         if (croplive(p) .and. idop(p) <= jday .and. sowing_count(p) == 0) then
+             sowing_count(p) = 1
+             crop_inst%sdates_thisyr(p,1) = real(idop(p), r8)
+         end if
+
+
+         ! Once outputs can handle >1 planting per year, remove 2nd condition.
+         if ( (.not. croplive(p)) .and. sowing_count(p) == 0 ) then
 
             ! gdd needed for * chosen crop and a likely hybrid (for that region) *
             ! to reach full physiological maturity
@@ -1825,22 +1844,6 @@ contains
             ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
 
             if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
-
-               ! add check to only plant winter cereal after other crops (soybean, maize)
-               ! have been harvested
-
-               ! *** remember order of planting is crucial - in terms of which crops you want
-               ! to be grown in what order ***
-
-               ! in this case, corn or soybeans are assumed to be planted before
-               ! cereal would be in any particular year that both patches are allowed
-               ! to grow in the same grid cell (e.g., double-cropping)
-
-               ! slevis: harvdate below needs cropplant(p) above to be cropplant(p,ivt(p))
-               !         where ivt(p) has rotated to winter cereal because
-               !         cropplant through the end of the year for a harvested crop.
-               !         Also harvdate(p) should be harvdate(p,ivt(p)) and should be
-               !         updated on Jan 1st instead of at harvest (slevis)
 
                ! Are all the normal requirements for planting met?
                do_plant_normal = a5tmin(p)   /= spval                  .and. &
@@ -2012,11 +2015,11 @@ contains
          offset_flag(p) = 0._r8 ! carbon and nitrogen transfers
 
          if (croplive(p)) then
-            cphase(p) = 1._r8
+            cphase(p) = cphase_planted
 
             ! call vernalization if winter temperate cereal planted, living, and the
             ! vernalization factor is not 1;
-            ! vf affects the calculation of gddtsoi & gddplant
+            ! vf affects the calculation of gddtsoi & hui
 
             if (t_ref2m_min(p) < 1.e30_r8 .and. vf(p) /= 1._r8 .and. &
                (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat)) then
@@ -2045,8 +2048,14 @@ contains
                hui(p) = max(hui(p),huigrain(p))
             endif
 
+            ! The following conditionals are similar to those in CropPhase. However, they
+            ! differ slightly because here we are potentially setting a new crop phase,
+            ! whereas CropPhase is just designed to get the current, already-determined
+            ! phase. However, despite these differences: if you make changes to the
+            ! following conditionals, you should also check to see if you should make
+            ! similar changes in CropPhase.
             if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
-               cphase(p) = 2._r8
+               cphase(p) = cphase_leafemerge
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
                   onset_counter(p) = dt
@@ -2073,8 +2082,10 @@ contains
 
             else if (hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
+               harvest_count(p) = harvest_count(p) + 1
+               crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
                croplive(p) = .false.     ! no re-entry in greater if-block
-               cphase(p) = 4._r8
+               cphase(p) = cphase_harvest
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
                   offset_flag(p) = 1._r8
                   offset_counter(p) = dt
@@ -2104,8 +2115,8 @@ contains
                ! Use CN's simple formula at least as a place holder (slevis)
 
             else if (hui(p) >= huigrain(p)) then
-               cphase(p) = 3._r8
-               bglfr(p) = 1._r8/(leaf_long(ivt(p))*dayspyr*secspday)
+               cphase(p) = cphase_grainfill
+               bglfr(p) = 1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)
             end if
 
             ! continue fertilizer application while in phase 2;
@@ -2114,7 +2125,7 @@ contains
               if (fert_counter(p) <= 0._r8) then
                  fert(p) = 0._r8
               else ! continue same fert application every timestep
-                 fert_counter(p) = fert_counter(p) - dtrad
+                 fert_counter(p) = fert_counter(p) - dt
               end if
 
          else   ! crop not live
@@ -2141,6 +2152,67 @@ contains
     end associate
 
   end subroutine CropPhenology
+
+  !-----------------------------------------------------------------------
+  subroutine CropPhase(bounds, num_pcropp, filter_pcropp, &
+       crop_inst, cnveg_state_inst, crop_phase)
+    !
+    ! !DESCRIPTION:
+    ! Get the current phase of each crop patch.
+    !
+    ! The returned values (in crop_phase) are from the set of cphase_* values defined in
+    ! CropType. The returned values in crop_phase are only valid for patches where
+    ! croplive is true; the values are undefined where croplive is false and should not be
+    ! used there!
+    !
+    ! This has logic similar to that in CropPhenology. If you make changes here, you
+    ! should also check if similar changes need to be made in CropPhenology.
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)      , intent(in)    :: bounds
+    integer                , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
+    integer                , intent(in)    :: filter_pcropp(:) ! filter for prognostic crop patches
+    type(crop_type)        , intent(in)    :: crop_inst
+    type(cnveg_state_type) , intent(in)    :: cnveg_state_inst
+    real(r8)               , intent(inout) :: crop_phase(bounds%begp:)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p, fp
+
+    character(len=*), parameter :: subname = 'CropPhase'
+    !-----------------------------------------------------------------------
+    SHR_ASSERT_ALL_FL((ubound(crop_phase) == [bounds%endp]), sourcefile, __LINE__)
+
+    associate( &
+         croplive =>    crop_inst%croplive_patch        , & ! Input: [logical  (:) ]  Flag, true if planted, not harvested
+         hui      =>    crop_inst%hui_patch             , & ! Input: [real(r8) (:) ]  gdd since planting (gddplant)
+         leafout  =>    crop_inst%gddtsoi_patch         , & ! Input: [real(r8) (:) ]  gdd from top soil layer temperature
+         huileaf  =>    cnveg_state_inst%huileaf_patch  , & ! Input: [real(r8) (:) ]  heat unit index needed from planting to leaf emergence
+         huigrain =>    cnveg_state_inst%huigrain_patch   & ! Input: [real(r8) (:) ]  same to reach vegetative maturity
+         )
+
+    do fp = 1, num_pcropp
+       p = filter_pcropp(fp)
+
+       if (croplive(p)) then
+          ! Start with cphase_planted, but this might get changed in the later
+          ! conditional blocks.
+          crop_phase(p) = cphase_planted
+          if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p)) then
+             crop_phase(p) = cphase_leafemerge
+          else if (hui(p) >= huigrain(p)) then
+             ! Since we know croplive is true, any hui greater than huigrain implies that
+             ! we're in the grainfill stage: if we were passt gddmaturity then croplive
+             ! would be false.
+             crop_phase(p) = cphase_grainfill
+          end if
+       end if
+    end do
+
+    end associate
+
+  end subroutine CropPhase
+
 
   !-----------------------------------------------------------------------
   subroutine CropPhenologyInit(bounds)
@@ -2241,8 +2313,8 @@ contains
 
     associate(                                                                     & 
          croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
-         cropplant         =>    crop_inst%cropplant_patch                       , & ! Output: [logical  (:) ]  Flag, true if crop may be planted
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
+         sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
          idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting                                   
          leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch       , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer
@@ -2253,9 +2325,10 @@ contains
       ! impose limit on growing season length needed
       ! for crop maturity - for cold weather constraints
       croplive(p)  = .true.
-      cropplant(p) = .true.
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
+      sowing_count(p) = sowing_count(p) + 1
+      crop_inst%sdates_thisyr(p,sowing_count(p)) = jday
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
@@ -2347,7 +2420,7 @@ contains
       ! vernalization factor calculation
       ! if vf(p) = 1.  then plant is fully vernalized - and thermal time
       ! accumulation in phase 1 will be unaffected
-      ! refers to gddtsoi & gddplant, defined in the accumulation routines (slevis)
+      ! refers to gddtsoi & hui, defined in the accumulation routines (slevis)
       ! reset vf, cumvd, and hdidx to 0 at planting of crop (slevis)
 
       if (t_ref2m_max(p) > tfrz) then
@@ -2574,12 +2647,16 @@ contains
     type(cnveg_nitrogenflux_type) , intent(inout) :: cnveg_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: p, c         ! indices
+    integer :: p, c, k      ! indices
     integer :: fp           ! lake filter patch index
     real(r8):: t1           ! temporary variable
     real(r8):: denom        ! temporary variable for divisor
     real(r8) :: ntovr_leaf  
     real(r8) :: fr_leafn_to_litter ! fraction of the nitrogen turnover that goes to litter; remaining fraction is retranslocated
+    real(r8) :: cropseedc_deficit_remaining  ! remaining amount of crop seed C deficit that still needs to be restored (gC/m2) (positive, in contrast to the negative cropseedc_deficit)
+    real(r8) :: cropseedn_deficit_remaining  ! remaining amount of crop seed N deficit that still needs to be restored (gN/m2) (positive, in contrast to the negative cropseedn_deficit)
+    real(r8) :: cropseedc_deficit_to_restore ! amount of crop seed C deficit that will be restored from this grain pool (gC/m2)
+    real(r8) :: cropseedn_deficit_to_restore ! amount of crop seed N deficit that will be restored from this grain pool (gN/m2)
     !-----------------------------------------------------------------------
 
     associate(                                                                           & 
@@ -2587,8 +2664,9 @@ contains
 
          leafcn                =>    pftcon%leafcn                                     , & ! Input:  leaf C:N (gC/gN) 
          
-         biofuel_harvfrac      =>    pftcon%biofuel_harvfrac                           , & ! Input:  cut a fraction of leaf & stem for biofuel (-) 
-                                          
+         biofuel_harvfrac      =>    pftcon%biofuel_harvfrac                           , & ! Input:  cut a fraction of leaf & stem for biofuel (-)
+         repr_structure_harvfrac =>  pftcon%repr_structure_harvfrac                    , & ! Input:  fraction of each reproductive structure component that is harvested and sent to the crop products pool
+
          lflitcn               =>    pftcon%lflitcn                                    , & ! Input:  leaf litter C:N (gC/gN)                           
          frootcn               =>    pftcon%frootcn                                    , & ! Input:  fine root C:N (gC/gN)                             
          graincn               =>    pftcon%graincn                                    , & ! Input:  grain C:N (gC/gN)                                 
@@ -2598,15 +2676,15 @@ contains
 
          leafc                 =>    cnveg_carbonstate_inst%leafc_patch                , & ! Input:  [real(r8) (:) ]  (gC/m2) leaf C                                    
          frootc                =>    cnveg_carbonstate_inst%frootc_patch               , & ! Input:  [real(r8) (:) ]  (gC/m2) fine root C                               
-         grainc                =>    cnveg_carbonstate_inst%grainc_patch               , & ! Input:  [real(r8) (:) ]  (gC/m2) grain C                                   
+         reproductivec                =>    cnveg_carbonstate_inst%reproductivec_patch               , & ! Input:  [real(r8) (:,:) ]  (gC/m2) grain C
          cropseedc_deficit     =>    cnveg_carbonstate_inst%cropseedc_deficit_patch    , & ! Input:  [real(r8) (:) ]  (gC/m2) crop seed C deficit
          livestemc             =>    cnveg_carbonstate_inst%livestemc_patch            , & ! Input:  [real(r8) (:) ]  (gC/m2) livestem C                                
          cropseedn_deficit     =>    cnveg_nitrogenstate_inst%cropseedn_deficit_patch  , & ! Input:  [real(r8) (:) ]  (gC/m2) crop seed N deficit
          livestemn             =>    cnveg_nitrogenstate_inst%livestemn_patch          , & ! Input:  [real(r8) (:) ]  (gN/m2) livestem N
 
-         cpool_to_grainc       =>    cnveg_carbonflux_inst%cpool_to_grainc_patch       , & ! Input:  [real(r8) (:) ]  allocation to grain C (gC/m2/s)                   
-         npool_to_grainn       =>    cnveg_nitrogenflux_inst%npool_to_grainn_patch     , & ! Input: [real(r8) (:)  ]  allocation to grain N (gN/m2/s)
-         grainn                =>    cnveg_nitrogenstate_inst%grainn_patch             , & ! Input: [real(r8) (:)  ]  (kgN/m2) grain N
+         cpool_to_reproductivec       =>    cnveg_carbonflux_inst%cpool_to_reproductivec_patch       , & ! Input:  [real(r8) (:,:) ]  allocation to grain C (gC/m2/s)
+         npool_to_reproductiven       =>    cnveg_nitrogenflux_inst%npool_to_reproductiven_patch     , & ! Input: [real(r8) (:,:)  ]  allocation to grain N (gN/m2/s)
+         reproductiven                =>    cnveg_nitrogenstate_inst%reproductiven_patch             , & ! Input: [real(r8) (:,:)  ]  (kgN/m2) grain N
          cpool_to_livestemc    =>    cnveg_carbonflux_inst%cpool_to_livestemc_patch    , & ! Input:  [real(r8) (:) ]  allocation to live stem C (gC/m2/s)               
          cpool_to_leafc        =>    cnveg_carbonflux_inst%cpool_to_leafc_patch        , & ! Input:  [real(r8) (:) ]  allocation to leaf C (gC/m2/s)                    
          cpool_to_frootc       =>    cnveg_carbonflux_inst%cpool_to_frootc_patch       , & ! Input:  [real(r8) (:) ]  allocation to fine root C (gC/m2/s)               
@@ -2615,16 +2693,20 @@ contains
          leafc_to_litter       =>    cnveg_carbonflux_inst%leafc_to_litter_patch       , & ! Output: [real(r8) (:) ]  leaf C litterfall (gC/m2/s)                       
          frootc_to_litter      =>    cnveg_carbonflux_inst%frootc_to_litter_patch      , & ! Output: [real(r8) (:) ]  fine root C litterfall (gC/m2/s)                  
          livestemc_to_litter   =>    cnveg_carbonflux_inst%livestemc_to_litter_patch   , & ! Output: [real(r8) (:) ]  live stem C litterfall (gC/m2/s)                  
-         grainc_to_food        =>    cnveg_carbonflux_inst%grainc_to_food_patch        , & ! Output: [real(r8) (:) ]  grain C to food (gC/m2/s)             
-         grainc_to_seed        =>    cnveg_carbonflux_inst%grainc_to_seed_patch        , & ! Output: [real(r8) (:) ]  grain C to seed (gC/m2/s)
+         repr_grainc_to_food   =>    cnveg_carbonflux_inst%repr_grainc_to_food_patch   , & ! Output: [real(r8) (:,:) ]  grain C to food (gC/m2/s)
+         repr_grainc_to_seed   =>    cnveg_carbonflux_inst%repr_grainc_to_seed_patch   , & ! Output: [real(r8) (:,:) ]  grain C to seed (gC/m2/s)
+         repr_structurec_to_cropprod => cnveg_carbonflux_inst%repr_structurec_to_cropprod_patch, & ! Output: [real(r8) (:,:) ] reproductive structure C to crop product pool (gC/m2/s)
+         repr_structurec_to_litter   => cnveg_carbonflux_inst%repr_structurec_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure C to litter (gC/m2/s)
          leafc_to_biofuelc     =>    cnveg_carbonflux_inst%leafc_to_biofuelc_patch     , & ! Output: [real(r8) (:) ]  leaf C to biofuel C (gC/m2/s)
          livestemc_to_biofuelc =>    cnveg_carbonflux_inst%livestemc_to_biofuelc_patch , & ! Output: [real(r8) (:) ]  livestem C to biofuel C (gC/m2/s)
          leafn                 =>    cnveg_nitrogenstate_inst%leafn_patch              , & ! Input:  [real(r8) (:) ]  (gN/m2) leaf N      
          frootn                =>    cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:) ]  (gN/m2) fine root N                        
 
          livestemn_to_litter   =>    cnveg_nitrogenflux_inst%livestemn_to_litter_patch , & ! Output: [real(r8) (:) ]  livestem N to litter (gN/m2/s)                    
-         grainn_to_food        =>    cnveg_nitrogenflux_inst%grainn_to_food_patch      , & ! Output: [real(r8) (:) ]  grain N to food (gN/m2/s)                                   
-         grainn_to_seed        =>    cnveg_nitrogenflux_inst%grainn_to_seed_patch      , & ! Output: [real(r8) (:) ]  grain N to seed (gN/m2/s)
+         repr_grainn_to_food        =>    cnveg_nitrogenflux_inst%repr_grainn_to_food_patch      , & ! Output: [real(r8) (:,:) ]  grain N to food (gN/m2/s)
+         repr_grainn_to_seed        =>    cnveg_nitrogenflux_inst%repr_grainn_to_seed_patch      , & ! Output: [real(r8) (:,:) ]  grain N to seed (gN/m2/s)
+         repr_structuren_to_cropprod => cnveg_nitrogenflux_inst%repr_structuren_to_cropprod_patch, & ! Output: [real(r8) (:,:) ] reproductive structure N to crop product pool (gN/m2/s)
+         repr_structuren_to_litter   => cnveg_nitrogenflux_inst%repr_structuren_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure N to litter (gN/m2/s)
          leafn_to_biofueln     =>    cnveg_nitrogenflux_inst%leafn_to_biofueln_patch   , & ! Output: [real(r8) (:) ]  leaf N to biofuel N (gN/m2/s)
          livestemn_to_biofueln =>    cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch, & ! Output: [real(r8) (:) ]  livestem N to biofuel N (gN/m2/s)     
          leafn_to_litter       =>    cnveg_nitrogenflux_inst%leafn_to_litter_patch     , & ! Output: [real(r8) (:) ]  leaf N litterfall (gN/m2/s)                       
@@ -2655,15 +2737,45 @@ contains
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
                if (ivt(p) >= npcropmin) then
-                  ! Replenish the seed deficits from grain, if there is enough
-                  ! available grain. (If there is not enough available grain, the seed
-                  ! deficits will accumulate until there is eventually enough grain to
-                  ! replenish them.)
-                  grainc_to_seed(p) = t1 * min(-cropseedc_deficit(p), grainc(p))
-                  grainn_to_seed(p) = t1 * min(-cropseedn_deficit(p), grainn(p))
-                  ! Send the remaining grain to the food product pool
-                  grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) - grainc_to_seed(p)
-                  grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p) - grainn_to_seed(p)
+                  ! Replenish the seed deficits from grain, if there is enough available
+                  ! grain. (If there is not enough available grain, the seed deficits will
+                  ! accumulate until there is eventually enough grain to replenish them.)
+                  ! Note that, if there are multiple grain pools, we arbitrarily pull
+                  ! first from grain pool 1, then from grain pool 2, etc., until we have
+                  ! fully replenished the seed deficit.
+                  if (for_testing_no_crop_seed_replenishment) then
+                     cropseedc_deficit_remaining = 0._r8
+                     cropseedn_deficit_remaining = 0._r8
+                  else
+                     cropseedc_deficit_remaining = -cropseedc_deficit(p)
+                     cropseedn_deficit_remaining = -cropseedn_deficit(p)
+                  end if
+                  do k = repr_grain_min, repr_grain_max
+                     cropseedc_deficit_to_restore = min(cropseedc_deficit_remaining, reproductivec(p,k))
+                     cropseedc_deficit_remaining = cropseedc_deficit_remaining - cropseedc_deficit_to_restore
+                     repr_grainc_to_seed(p,k) = t1 * cropseedc_deficit_to_restore
+
+                     cropseedn_deficit_to_restore = min(cropseedn_deficit_remaining, reproductiven(p,k))
+                     cropseedn_deficit_remaining = cropseedn_deficit_remaining - cropseedn_deficit_to_restore
+                     repr_grainn_to_seed(p,k) = t1 * cropseedn_deficit_to_restore
+
+                     ! Send the remaining grain to the food product pool
+                     repr_grainc_to_food(p,k) = t1 * reproductivec(p,k) &
+                          + cpool_to_reproductivec(p,k) - repr_grainc_to_seed(p,k)
+                     repr_grainn_to_food(p,k) = t1 * reproductiven(p,k) &
+                          + npool_to_reproductiven(p,k) - repr_grainn_to_seed(p,k)
+                  end do
+
+                  do k = repr_structure_min, repr_structure_max
+                     repr_structurec_to_cropprod(p,k) = (t1 * reproductivec(p,k) + cpool_to_reproductivec(p,k)) &
+                          * repr_structure_harvfrac(ivt(p), k)
+                     repr_structurec_to_litter(p,k)   = (t1 * reproductivec(p,k) + cpool_to_reproductivec(p,k)) &
+                          * (1._r8 - repr_structure_harvfrac(ivt(p), k))
+                     repr_structuren_to_cropprod(p,k) = (t1 * reproductiven(p,k) + npool_to_reproductiven(p,k)) &
+                          * repr_structure_harvfrac(ivt(p), k)
+                     repr_structuren_to_litter(p,k)   = (t1 * reproductiven(p,k) + npool_to_reproductiven(p,k)) &
+                          * (1._r8 - repr_structure_harvfrac(ivt(p), k))
+                  end do
                   
                   ! Cut a certain fraction (i.e., biofuel_harvfrac(ivt(p))) (e.g., biofuel_harvfrac(ivt(p)=70% for bioenergy crops) of leaf C
                   ! and move this fration of leaf C to biofuel C, rather than move it to litter
@@ -3030,7 +3142,7 @@ contains
     type(cnveg_nitrogenflux_type) , intent(inout) :: cnveg_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: fp, p
+    integer :: fp, p, k
 
     character(len=*), parameter :: subname = 'CNCropHarvestToProductPools'
     !-----------------------------------------------------------------------
@@ -3038,29 +3150,47 @@ contains
     if (use_crop) then
        do fp = 1, num_soilp
           p = filter_soilp(fp)
-          cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p) + &
+          cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
+               cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p) + &
                cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p)
-          cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = cnveg_nitrogenflux_inst%leafn_to_biofueln_patch(p) + &
+          cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
+               cnveg_nitrogenflux_inst%leafn_to_biofueln_patch(p) + &
                cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch(p)
        end do
 
        if (use_grainproduct) then
-          do fp = 1, num_soilp
-             p = filter_soilp(fp)
-             cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) + &
-                  cnveg_carbonflux_inst%grainc_to_food_patch(p)
-             cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) + &
-                  cnveg_nitrogenflux_inst%grainn_to_food_patch(p)
+          do k = repr_grain_min, repr_grain_max
+             do fp = 1, num_soilp
+                p = filter_soilp(fp)
+                cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
+                     cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) + &
+                     cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,k)
+                cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
+                     cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) + &
+                     cnveg_nitrogenflux_inst%repr_grainn_to_food_patch(p,k)
+             end do
           end do
        end if
-       
-       call p2c (bounds, num_soilc, filter_soilc, &
-            cnveg_carbonflux_inst%grainc_to_cropprodc_patch(bounds%begp:bounds%endp), &
-            cnveg_carbonflux_inst%grainc_to_cropprodc_col(bounds%begc:bounds%endc))
+
+       do k = repr_structure_min, repr_structure_max
+          do fp = 1, num_soilp
+             p = filter_soilp(fp)
+             cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
+                  cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) + &
+                  cnveg_carbonflux_inst%repr_structurec_to_cropprod_patch(p,k)
+             cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
+                  cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) + &
+                  cnveg_nitrogenflux_inst%repr_structuren_to_cropprod_patch(p,k)
+          end do
+       end do
 
        call p2c (bounds, num_soilc, filter_soilc, &
-            cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(bounds%begp:bounds%endp), &
-            cnveg_nitrogenflux_inst%grainn_to_cropprodn_col(bounds%begc:bounds%endc))
+            cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(bounds%begp:bounds%endp), &
+            cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_col(bounds%begc:bounds%endc))
+
+       call p2c (bounds, num_soilc, filter_soilc, &
+            cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(bounds%begp:bounds%endp), &
+            cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_col(bounds%begc:bounds%endc))
 
     end if
 
@@ -3091,7 +3221,7 @@ contains
     real(r8)                        , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
     !
     ! !LOCAL VARIABLES:
-    integer :: fc,c,pi,p,j,i     ! indices
+    integer :: fc,c,pi,p,k,j,i     ! indices
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
@@ -3110,11 +3240,13 @@ contains
          leafc_to_litter           => cnveg_carbonflux_inst%leafc_to_litter_patch           , & ! Input:  [real(r8) (:)   ]  leaf C litterfall (gC/m2/s)                       
          frootc_to_litter          => cnveg_carbonflux_inst%frootc_to_litter_patch          , & ! Input:  [real(r8) (:)   ]  fine root N litterfall (gN/m2/s)                  
          livestemc_to_litter       => cnveg_carbonflux_inst%livestemc_to_litter_patch       , & ! Input:  [real(r8) (:)   ]  live stem C litterfall (gC/m2/s)                  
-         grainc_to_food            => cnveg_carbonflux_inst%grainc_to_food_patch            , & ! Input:  [real(r8) (:)   ]  grain C to food (gC/m2/s)                            
+         repr_grainc_to_food       => cnveg_carbonflux_inst%repr_grainc_to_food_patch       , & ! Input:  [real(r8) (:,:) ]  grain C to food (gC/m2/s)
+         repr_structurec_to_litter => cnveg_carbonflux_inst%repr_structurec_to_litter_patch,  & ! Input:  [real(r8) (:,:) ] reproductive structure C to litter (gC/m2/s)
          phenology_c_to_litr_c     => cnveg_carbonflux_inst%phenology_c_to_litr_c_col       , & ! Output: [real(r8) (:,:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter pools (gC/m3/s)
 
          livestemn_to_litter       => cnveg_nitrogenflux_inst%livestemn_to_litter_patch     , & ! Input:  [real(r8) (:)   ]  livestem N to litter (gN/m2/s)                    
-         grainn_to_food            => cnveg_nitrogenflux_inst%grainn_to_food_patch          , & ! Input:  [real(r8) (:)   ]  grain N to food (gN/m2/s) 
+         repr_grainn_to_food       => cnveg_nitrogenflux_inst%repr_grainn_to_food_patch     , & ! Input:  [real(r8) (:,:) ]  grain N to food (gN/m2/s)
+         repr_structuren_to_litter => cnveg_nitrogenflux_inst%repr_structuren_to_litter_patch,& ! Input:  [real(r8) (:,:) ] reproductive structure N to litter (gN/m2/s)
          leafn_to_litter           => cnveg_nitrogenflux_inst%leafn_to_litter_patch         , & ! Input:  [real(r8) (:)   ]  leaf N litterfall (gN/m2/s)                       
          frootn_to_litter          => cnveg_nitrogenflux_inst%frootn_to_litter_patch        , & ! Input:  [real(r8) (:)   ]  fine root N litterfall (gN/m2/s)                  
          phenology_n_to_litr_n     => cnveg_nitrogenflux_inst%phenology_n_to_litr_n_col       & ! Output: [real(r8) (:,:,:) ]  N fluxes associated with phenology (litterfall and crop) to litter pools (gN/m3/s)
@@ -3170,20 +3302,34 @@ contains
                         end do
 
                         if (.not. use_grainproduct) then
-                         do i = i_litr_min, i_litr_max
-                            ! grain litter carbon fluxes
-                            phenology_c_to_litr_c(c,j,i) = &
-                               phenology_c_to_litr_c(c,j,i) + &
-                               grainc_to_food(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
- 
-                            ! grain litter nitrogen fluxes
-                            phenology_n_to_litr_n(c,j,i) = &
-                               phenology_n_to_litr_n(c,j,i) + &
-                               grainn_to_food(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-                         end do
+                           do i = i_litr_min, i_litr_max
+                              do k = repr_grain_min, repr_grain_max
+                                 ! grain litter carbon fluxes
+                                 phenology_c_to_litr_c(c,j,i) = &
+                                      phenology_c_to_litr_c(c,j,i) + &
+                                      repr_grainc_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+
+                                 ! grain litter nitrogen fluxes
+                                 phenology_n_to_litr_n(c,j,i) = &
+                                      phenology_n_to_litr_n(c,j,i) + &
+                                      repr_grainn_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                              end do
+                           end do
                         end if
 
+                        do i = i_litr_min, i_litr_max
+                           do k = repr_structure_min, repr_structure_max
+                              ! reproductive structure litter carbon fluxes
+                              phenology_c_to_litr_c(c,j,i) = &
+                                   phenology_c_to_litr_c(c,j,i) + &
+                                   repr_structurec_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
 
+                              ! reproductive structure litter nitrogen fluxes
+                              phenology_n_to_litr_n(c,j,i) = &
+                                   phenology_n_to_litr_n(c,j,i) + &
+                                   repr_structuren_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                           end do
+                        end do
                      end if
                   end if
                end if

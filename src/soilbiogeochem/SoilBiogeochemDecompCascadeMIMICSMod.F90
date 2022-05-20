@@ -29,6 +29,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
+  use CLMFatesInterfaceMod               , only : hlm_fates_interface_type
 
   !
   implicit none
@@ -752,6 +753,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
+       num_soilp, filter_soilp, clm_fates, &
        soilstate_inst, temperature_inst, cnveg_carbonflux_inst, &
        ch4_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
     !
@@ -760,12 +762,17 @@ contains
     ! decomposition cascade model
     !
     ! !USES:
-    use clm_time_manager , only : get_curr_days_per_year
+    use clm_time_manager , only : get_average_days_per_year
     use clm_varcon       , only : secspday, secsphr, tfrz
     use clm_varcon       , only : g_to_mg, cm3_to_m3
+    use subgridAveMod    , only : p2c
+    use PatchType        , only : patch
+    use pftconMod        , only : pftname
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds          
+    integer                              , intent(in)    :: num_soilp       ! number of soil patches in filter
+    integer                              , intent(in)    :: filter_soilp(:) ! filter for soil patches
     integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
     type(soilstate_type)                 , intent(in)    :: soilstate_inst
@@ -774,6 +781,7 @@ contains
     type(ch4_type)                       , intent(in)    :: ch4_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type), intent(in)    :: soilbiogeochem_carbonstate_inst
+    type(hlm_fates_interface_type)       , intent(inout) :: clm_fates
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: eps = 1.e-6_r8
@@ -807,7 +815,9 @@ contains
     real(r8):: term_2  !
     real(r8):: t_soi_degC
 !   real(r8):: decomp_depth_efolding        ! (meters) e-folding depth for reduction in decomposition [
-    integer :: c, fc, j, k, l
+    integer :: p, fp, c, fc, j, k, l, s  ! indices
+    integer :: pf  ! fates patch index
+    integer :: nc  ! clump index
     real(r8):: days_per_year                ! days per year
     real(r8):: depth_scalar(bounds%begc:bounds%endc,1:nlevdecomp) 
     real(r8):: w_d_o_scalars  ! product of w_scalar * depth_scalar * o_scalar
@@ -846,12 +856,13 @@ contains
     real(r8):: spinup_geogterm_s3(bounds%begc:bounds%endc) ! geographically-varying spinup term for s3
     real(r8):: spinup_geogterm_m1(bounds%begc:bounds%endc)  ! geographically-varying spinup term for m1
     real(r8):: spinup_geogterm_m2(bounds%begc:bounds%endc)  ! geographically-varying spinup term for m2
+    real(r8):: annsum_npp_col_local(bounds%begc:bounds%endc)  ! local annual sum of NPP at the column level
+    real(r8):: annsum_npp(bounds%begp:bounds%endp)  ! local annual sum of NPP at the patch level
+    real(r8):: annsum_npp_col_scalar  ! annual sum of NPP, scalar in column-level loop
 
     !-----------------------------------------------------------------------
 
     associate(                                                           &
-         ligninNratioAvg => cnveg_carbonflux_inst%ligninNratioAvg_col  , & ! Input:  [real(r8) (:)     ]  column-level lignin to nitrogen ratio
-         annsum_npp_col => cnveg_carbonflux_inst%annsum_npp_col        , & ! Input:  [real(r8) (:)     ]  annual sum of NPP at the column level (gC/m2/yr)
 
          rf_cwdl2       => CNParamsShareInst%rf_cwdl2                  , & ! Input:  [real(r8)         ]  respiration fraction in CWD to litter2 transition (frac)
          minpsi         => CNParamsShareInst%minpsi                    , & ! Input:  [real(r8)         ]  minimum soil suction (mm)
@@ -867,13 +878,14 @@ contains
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
          cn_col         => soilbiogeochem_carbonflux_inst%cn_col       , & ! Output: [real(r8) (:,:)   ]  C:N ratio
+         ligninNratioAvg => soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col, &  ! Input: [real(r8) (:) ] C:N ratio of litter lignin
          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate for decomposition (1./sec)
          spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
 
       mino2lim = CNParamsShareInst%mino2lim
 
-      days_per_year = get_curr_days_per_year()
+      days_per_year = get_average_days_per_year()
 
 !     ! Set "decomp_depth_efolding" parameter
 !     decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
@@ -1100,9 +1112,48 @@ contains
       mimics_cn_r = params_inst%mimics_cn_r
       mimics_cn_k = params_inst%mimics_cn_k
 
+      ! If FATES-MIMICS, then use FATES copy of annsum_npp.
+      ! The FATES copy of annsum_npp is available when use_lch4 = .true., so
+      ! we limit FATES-MIMICS to if (use_lch4).
+      fates_if: if (use_fates) then
+         lch4_if: if (use_lch4) then
+
+            ! Loop over p to get FATES copy of annsum_npp
+            nc = bounds%clump_index
+            do fp = 1, num_soilp
+
+               p = filter_soilp(fp)
+               c = patch%column(p)
+
+               pf = p - col%patchi(c)
+               s  = clm_fates%f2hmap(nc)%hsites(c)
+               annsum_npp(p) = clm_fates%fates(nc)%bc_out(s)%annsum_npp_pa(pf)
+
+               ! Initialize local column-level annsum_npp before averaging
+               annsum_npp_col_local(c) = 0._r8
+
+            end do  ! p loop
+
+            ! Calculate the column-level average
+            call p2c(bounds, num_soilc, filter_soilc, &
+                 annsum_npp(bounds%begp:bounds%endp), &
+                 annsum_npp_col_local(bounds%begc:bounds%endc))
+         else
+            call endrun(msg='ERROR: soil_decomp_method = MIMICSWieder2015 '// &
+              'will work with use_fates = .true. only if use_lch4 = .true. '// &
+              errMsg(sourcefile, __LINE__))
+         end if lch4_if
+      end if fates_if
+
       ! calculate rates for all litter and som pools
       do fc = 1,num_soilc
          c = filter_soilc(fc)
+
+         if (use_fates) then
+            annsum_npp_col_scalar = max(0._r8, annsum_npp_col_local(c))
+         else
+            annsum_npp_col_scalar = max(0._r8, cnveg_carbonflux_inst%annsum_npp_col(c))
+         end if
 
          ! Time-dependent params from Wieder et al. 2015 & testbed code
 
@@ -1111,10 +1162,10 @@ contains
          ! TODO Check for high-freq variations in ligninNratioAvg. To avoid,
          !      replace pool_to_litter terms with ann or other long term mean
          !      in CNVegCarbonFluxType.
-         fmet = mimics_fmet_p1 * (mimics_fmet_p2 - mimics_fmet_p3 * min(mimics_fmet_p4, ligninNratioAvg(c)))
+         fmet = mimics_fmet_p1 * (mimics_fmet_p2 - mimics_fmet_p3 * &
+            min(mimics_fmet_p4, ligninNratioAvg(c)))
          tau_mod = min(mimics_tau_mod_max, max(mimics_tau_mod_min, &
-                                               sqrt(mimics_tau_mod_factor * &
-                                                    annsum_npp_col(c))))
+            sqrt(mimics_tau_mod_factor * annsum_npp_col_scalar)))
 
          ! tau_m1 is tauR and tau_m2 is tauK in Wieder et al. 2015
          ! tau ends up in units of per hour but is expected
