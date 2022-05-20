@@ -126,9 +126,21 @@ contains
     character(len=32) :: subname = 'clm_varpar_init'  ! subroutine name
     !------------------------------------------------------------------------------
 
-    ! actual_maxsoil_patches and actual_numcft were read directly from the
-    ! surface dataset
-    maxsoil_patches = actual_maxsoil_patches  ! # of patches with bare ground
+    
+
+    
+    if(use_fates) then
+       ! FATES dictates the number of natveg patches (not nat+crop),
+       ! and has already added 1 for bare-ground.  actual_maxsoil_patches
+       ! came from the fates parameter file and only refers to natural vegetation
+       ! patches.  actual_numcft comes from the surface dataset (as with non-fates)
+       maxsoil_patches = actual_maxsoil_patches + actual_numcft
+    else
+       ! actual_maxsoil_patches and actual_numcft were read directly from the
+       ! surface dataset
+       maxsoil_patches = actual_maxsoil_patches  ! # of patches with bare ground
+    end if
+    
     maxveg = maxsoil_patches - 1  ! # of patches without bare ground
 
     ! For arrays containing all Patches (natural veg & crop), determine lower and upper bounds
@@ -137,10 +149,10 @@ contains
     ! if create_crop_landunit=false)
 
     if (create_crop_landunit) then
-       natpft_size = maxsoil_patches - actual_numcft  ! includes bare ground
+       natpft_size = maxsoil_patches - actual_numcft  ! includes bare ground + pfts
        cft_size    = actual_numcft
     else
-       natpft_size = maxsoil_patches  ! includes bare ground
+       natpft_size = maxsoil_patches  ! includes bare ground, cfts + pfts
        cft_size    = 0
     end if
 

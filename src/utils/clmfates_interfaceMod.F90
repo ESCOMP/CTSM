@@ -109,7 +109,8 @@ module CLMFatesInterfaceMod
    ! Used FATES Modules
    use FatesInterfaceMod , only : fates_interface_type
    use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
-   use FatesInterfaceMod, only : SetFatesGlobalElements
+   use FatesInterfaceMod, only : SetFatesGlobalElements1
+   use FatesInterfaceMod, only : SetFatesGlobalElements2
    use FatesInterfaceMod     , only : allocate_bcin
    use FatesInterfaceMod     , only : allocate_bcout
    use FatesInterfaceMod     , only : allocate_bcpconst
@@ -119,12 +120,14 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : set_fates_ctrlparms
    use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
    use FatesInterfaceMod     , only : InitTimeAveragingGlobals
+   
    use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
    use EDTypesMod            , only : ed_patch_type
    use PRTGenericMod         , only : num_elements
    use FatesInterfaceTypesMod, only : hlm_stepsize
+   use FatesInterfaceTypesMod, only : fates_maxPatchesPerSite
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
    use EDInitMod             , only : zero_site
@@ -237,12 +240,90 @@ module CLMFatesInterfaceMod
    character(len=*), parameter, private :: sourcefile = &
         __FILE__
 
-   public  :: CLMFatesGlobals
+   public  :: CLMFatesGlobals1
+   public  :: CLMFatesGlobals2
 
  contains
 
+   subroutine CLMFatesGlobals1(actual_numpft)
 
-   subroutine CLMFatesGlobals()
+     ! --------------------------------------------------------------------------------
+     ! This is the first call to fates
+     ! We open the fates parameter file. And use that and some info on
+     ! namelist variables to determine how many patches need to be allocated
+     ! in CTSM
+     ! --------------------------------------------------------------------------------
+     
+     integer,intent(out)                            :: actual_numpft
+     integer                                        :: pass_biogeog
+     integer                                        :: pass_nocomp
+     integer                                        :: pass_sp
+     integer                                        :: pass_masterproc
+     logical                                        :: verbose_output
+     
+     call t_startf('fates_globals1')
+
+     if (use_fates) then
+
+        verbose_output = .false.
+        call FatesInterfaceInit(iulog, verbose_output)
+
+        ! Force FATES parameters that are recieve type, to the unset value
+        call set_fates_ctrlparms('flush_to_unset')
+
+        ! Send parameters individually
+        
+        if(use_fates_fixed_biogeog)then
+           pass_biogeog = 1
+        else
+           pass_biogeog = 0
+        end if
+        call set_fates_ctrlparms('use_fixed_biogeog',ival=pass_biogeog)
+        
+        if(use_fates_nocomp)then
+           pass_nocomp = 1
+        else
+           pass_nocomp = 0
+        end if
+        call set_fates_ctrlparms('use_nocomp',ival=pass_nocomp)
+        
+        if(use_fates_sp)then
+           pass_sp = 1
+        else
+           pass_sp = 0
+        end if
+        call set_fates_ctrlparms('use_sp',ival=pass_sp)
+        
+        if(masterproc)then
+           pass_masterproc = 1
+        else
+           pass_masterproc = 0
+        end if
+        call set_fates_ctrlparms('masterproc',ival=pass_masterproc)
+
+     end if
+
+     ! The following call reads in the parameter file
+     ! and then uses that to determine the number of patches
+     ! FATES requires. We pass that to CLM here
+     ! so that it can perform some of its allocations.
+     ! During init 2, we will perform more size checks
+     ! and allocations on the FATES side, which require
+     ! some allocations from CLM (like soil layering)
+
+     call SetFatesGlobalElements1(use_fates)
+
+     ! We add one extra patch for the bare-ground patch
+     actual_numpft = fates_maxPatchesPerSite + 1
+     
+     call t_stopf('fates_globals1')
+
+     return
+   end subroutine CLMFatesGlobals1
+
+   ! ===================================================================================
+
+   subroutine CLMFatesGlobals2()
 
      ! --------------------------------------------------------------------------------
      ! This is one of the first calls to fates
@@ -253,9 +334,7 @@ module CLMFatesInterfaceMod
      ! is used in the history file, we also transfer
      ! over the NL variables to FATES global settings.
      ! --------------------------------------------------------------------------------
-
-     logical                                        :: verbose_output
-     integer                                        :: pass_masterproc
+       
      integer                                        :: pass_vertsoilc
      integer                                        :: pass_ch4
      integer                                        :: pass_spitfire
@@ -268,21 +347,22 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_inventory_init
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
-     integer                                        :: pass_biogeog
-     integer                                        :: pass_nocomp
-     integer                                        :: pass_sp
 
-     call t_startf('fates_globals')
+     call t_startf('fates_globals2')
 
      if (use_fates) then
-
-        verbose_output = .false.
-        call FatesInterfaceInit(iulog, verbose_output)
 
         ! Force FATES parameters that are recieve type, to the unset value
         call set_fates_ctrlparms('flush_to_unset')
 
         ! Send parameters individually
+
+        print*,"numrad: ",numrad
+        print*,"nlevsoi: ",nlevsoi
+        print*,"parteh mode: ",fates_parteh_mode
+        print*,"decomp_method: ",decomp_method
+        stop
+        
         call set_fates_ctrlparms('num_sw_bbands',ival=numrad)
         call set_fates_ctrlparms('vis_sw_index',ival=ivis)
         call set_fates_ctrlparms('nir_sw_index',ival=inir)
@@ -291,7 +371,8 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('hlm_name',cval='CLM')
         call set_fates_ctrlparms('hio_ignore_val',rval=spval)
         call set_fates_ctrlparms('soilwater_ipedof',ival=get_ipedof(0))
-        call set_fates_ctrlparms('max_patch_per_site',ival=(natpft_size-1))
+        
+        !call set_fates_ctrlparms('max_patch_per_site',ival=(natpft_size-1))
 
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
 
@@ -349,28 +430,6 @@ module CLMFatesInterfaceMod
         ! use_vertsoilc: Carbon soil layer profile is assumed to be on all the time now
         pass_vertsoilc = 1
         call set_fates_ctrlparms('use_vertsoilc',ival=pass_vertsoilc)
-
-        if(use_fates_fixed_biogeog)then
-           pass_biogeog = 1
-        else
-           pass_biogeog = 0
-        end if
-        call set_fates_ctrlparms('use_fixed_biogeog',ival=pass_biogeog)
-
-        if(use_fates_nocomp)then
-           pass_nocomp = 1
-	   else
-           pass_nocomp = 0
-	   end if
-        call set_fates_ctrlparms('use_nocomp',ival=pass_nocomp)
-
-        if(use_fates_sp)then
-           pass_sp = 1
-              else
-           pass_sp = 0
-              end if
-        call set_fates_ctrlparms('use_sp',ival=pass_sp)
-
 
         if(use_fates_ed_st3) then
            pass_ed_st3 = 1
@@ -436,12 +495,6 @@ module CLMFatesInterfaceMod
 
         call set_fates_ctrlparms('inventory_ctrl_file',cval=fates_inventory_ctrl_filename)
 
-        if(masterproc)then
-           pass_masterproc = 1
-        else
-           pass_masterproc = 0
-        end if
-        call set_fates_ctrlparms('masterproc',ival=pass_masterproc)
 
         ! Check through FATES parameters to see if all have been set
         call set_fates_ctrlparms('check_allset')
@@ -459,13 +512,12 @@ module CLMFatesInterfaceMod
      ! (Note: this needs to be called when use_fates=.false. as well, becuase
      ! it will return some nominal dimension sizes of 1
 
-     call SetFatesGlobalElements(use_fates)
+     call SetFatesGlobalElements2(use_fates)
 
-     call t_stopf('fates_globals')
+     call t_stopf('fates_globals2')
 
      return
-   end subroutine CLMFatesGlobals
-
+   end subroutine CLMFatesGlobals2
 
    ! ===================================================================================
   

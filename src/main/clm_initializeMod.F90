@@ -26,7 +26,7 @@ module clm_initializeMod
   use PatchType             , only : patch         ! instance
   use reweightMod           , only : reweight_wrapup
   use filterMod             , only : allocFilters, filter, filter_inactive_and_active
-  use CLMFatesInterfaceMod  , only : CLMFatesGlobals
+  use CLMFatesInterfaceMod  , only : CLMFatesGlobals1,CLMFatesGlobals2
   use CLMFatesInterfaceMod  , only : CLMFatesTimesteps
   use dynSubgridControlMod  , only : dynSubgridControl_init, get_reset_dynbal_baselines
   use SelfTestDriver        , only : self_test_driver
@@ -97,6 +97,17 @@ contains
     call control_init(dtime)
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
+
+    if(use_fates) then
+
+       ! If fates is on, we override actual_maxsoil_patches. FATES dictates the
+       ! number of patches per column.  We still use numcft from the surface
+       ! file though...
+       
+       call CLMFatesGlobals1(actual_maxsoil_patches)
+       
+    end if
+    
     call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
     call decomp_cascade_par_init( NLFilename )
     call clm_varcon_init( IsSimpleBuildTemp() )
@@ -226,20 +237,24 @@ contains
     ! Read surface dataset and set up subgrid weight arrays
     call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
 
-    ! Ask Fates to evaluate its own dimensioning needs.
-    ! This determines the total amount of space it requires in its largest
-    ! dimension.  We are currently calling that the "cohort" dimension, but
-    ! it is really a utility dimension that captures the models largest
-    ! size need.
-    ! Sets:
-    !   fates_maxElementsPerPatch
-    !   fates_maxElementsPerSite (where a site is roughly equivalent to a column)
-    ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
-    ! to allocate space)
-    ! This also sets up various global constants in FATES
-    ! ------------------------------------------------------------------------
-    
-    call CLMFatesGlobals()
+    if(use_fates) then
+
+       ! Ask Fates to evaluate its own dimensioning needs.
+       ! This determines the total amount of space it requires in its largest
+       ! dimension.  We are currently calling that the "cohort" dimension, but
+       ! it is really a utility dimension that captures the models largest
+       ! size need.
+       ! Sets:
+       !   fates_maxElementsPerPatch
+       !   fates_maxElementsPerSite (where a site is roughly equivalent to a column)
+       ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
+       ! to allocate space)
+       ! This also sets up various global constants in FATES
+       ! ------------------------------------------------------------------------
+       
+       call CLMFatesGlobals2()
+       
+    end if
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
     call decompInit_clumps(ni, nj, glc_behavior)

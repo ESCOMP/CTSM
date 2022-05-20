@@ -14,7 +14,7 @@ module surfrdMod
   use landunit_varcon , only : numurbl
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog
-  use clm_varctl      , only : use_cndv, use_crop
+  use clm_varctl      , only : use_cndv, use_crop, use_fates
   use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types
   use surfrdUtilsMod  , only : collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
@@ -273,7 +273,11 @@ contains
     !-----------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*) 'Attempting to read maxsoil_patches and numcft from the surface data .....'
+       if(use_fates)then
+          write(iulog,*) 'Attempting to read numcft from the surface data .....'
+       else
+          write(iulog,*) 'Attempting to read maxsoil_patches and numcft from the surface data .....'
+       end if
        if (lfsurdat == ' ') then
           write(iulog,*)'lfsurdat must be specified'
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -284,8 +288,14 @@ contains
     call getfil( lfsurdat, locfn, 0 )
     call ncd_pio_openfile (ncid, trim(locfn), 0)
 
-    ! Read maxsoil_patches and numcft
-    call ncd_inqdlen(ncid, dimid, actual_maxsoil_patches, 'lsmpft')
+    ! Read maxsoil_patches
+    if(.not.use_fates)then
+       call ncd_inqdlen(ncid, dimid, actual_maxsoil_patches, 'lsmpft')
+    else
+       actual_maxsoil_patches = -9
+    end if
+
+    ! Read numcft
     call ncd_inqdid(ncid, 'cft', dimid, cft_dim_exists)
     if ( cft_dim_exists ) then
        call ncd_inqdlen(ncid, dimid, actual_numcft, 'cft')
@@ -463,7 +473,7 @@ contains
     !     crop landunit and read in as Crop Function Types.
     ! !USES:
     use clm_instur      , only : wt_nat_patch, irrig_method
-    use clm_varpar      , only : cft_size, cft_lb, natpft_lb
+    use clm_varpar      , only : cft_size, cft_lb, natpft_lb, cft_ub, natpft_ub
     use IrrigationMod   , only : irrig_method_unset
     ! !ARGUMENTS:
     implicit none
@@ -487,8 +497,12 @@ contains
     SHR_ASSERT_ALL_FL((ubound(fert_cft, dim=2) >= (/cftsize+1-cft_lb/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(wt_nat_patch)    >= (/endg,natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
+    print*,"natpft_size: ",natpft_size,natpft_lb,natpft_ub,cft_lb,cft_ub
+    
     call check_dim_size(ncid, 'cft',    cftsize)
-    call check_dim_size(ncid, 'natpft', natpft_size)
+    if(.not.use_fates)then
+       call check_dim_size(ncid, 'natpft', natpft_size)
+    end if
 
     call ncd_io(ncid=ncid, varname='PCT_CFT', flag='read', data=wt_cft, &
             dim1name=grlnd, readvar=readvar)
@@ -518,12 +532,17 @@ contains
        irrig_method = irrig_method_unset
     end if
 
-    allocate( array2D(begg:endg,1:natpft_size) )
-    call ncd_io(ncid=ncid, varname='PCT_NAT_PFT', flag='read', data=array2D, &
-         dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( msg=' ERROR: PCT_NAT_PFT NOT on surfdata file'//errMsg(sourcefile, __LINE__))
-    wt_nat_patch(begg:,natpft_lb:natpft_size-1+natpft_lb) = array2D(begg:,:)
-    deallocate( array2D )
+    ! FATES should over-write these weights later on
+    if(.not.use_fates) then
+       allocate( array2D(begg:endg,1:natpft_size) )
+       call ncd_io(ncid=ncid, varname='PCT_NAT_PFT', flag='read', data=array2D, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( msg=' ERROR: PCT_NAT_PFT NOT on surfdata file'//errMsg(sourcefile, __LINE__))
+       wt_nat_patch(begg:,natpft_lb:natpft_size-1+natpft_lb) = array2D(begg:,:)
+       deallocate( array2D )
+    else
+       wt_nat_patch(begg:,natpft_lb:natpft_size-1+natpft_lb) = 100._r8/real(natpft_size,r8)
+    end if
 
   end subroutine surfrd_cftformat
 
@@ -550,7 +569,8 @@ contains
 !-----------------------------------------------------------------------
     SHR_ASSERT_ALL_FL((ubound(wt_nat_patch) == (/endg, natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
-    call check_dim_size(ncid, 'natpft', natpft_size)
+    if(.not.use_fates) call check_dim_size(ncid, 'natpft', natpft_size)
+    
     ! If cft_size == 0, then we expect to be running with a surface dataset
     ! that does
     ! NOT have a PCT_CFT array (or CONST_FERTNITRO_CFT array), and thus does not have a 'cft' dimension.
@@ -583,10 +603,14 @@ contains
     end if
     irrig_method = irrig_method_unset
 
-    call ncd_io(ncid=ncid, varname='PCT_NAT_PFT', flag='read', data=wt_nat_patch, &
-         dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( msg=' ERROR: PCT_NAT_PFT NOT on surfdata file'//errMsg(sourcefile, __LINE__))
-
+    if(.not.use_fates)then
+       call ncd_io(ncid=ncid, varname='PCT_NAT_PFT', flag='read', data=wt_nat_patch, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( msg=' ERROR: PCT_NAT_PFT NOT on surfdata file'//errMsg(sourcefile, __LINE__))
+    else
+       wt_nat_patch(begg:,natpft_lb:natpft_size-1+natpft_lb) = 100._r8/real(natpft_size,r8)
+    end if
+       
   end subroutine surfrd_pftformat
 
 !-----------------------------------------------------------------------
@@ -601,6 +625,7 @@ contains
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
     use surfrdUtilsMod  , only : convert_cft_to_pft
+    use pftconMod       , only : nc3crop
     !
     ! !ARGUMENTS:
     implicit none
@@ -638,6 +663,7 @@ contains
 
     deallocate(arrayl)
 
+    
     ! Check the file format for CFT's and handle accordingly
     if ( actual_numcft > 0 ) then
        if ( create_crop_landunit )then
@@ -659,6 +685,8 @@ contains
              if ( masterproc ) write(iulog,*) "WARNING: When fates is on we allow new CFT based surface datasets ", &
                                               "to be used with create_crop_land FALSE"
              cftsize = 2
+             nc3crop = natpft_size-cftsize+1
+             print*,"nc3:",nc3crop
              allocate(array2DCFT (begg:endg,cft_lb:cftsize-1+cft_lb))
              allocate(array2DFERT(begg:endg,cft_lb:cftsize-1+cft_lb))
              call surfrd_cftformat( ncid, begg, endg, array2DCFT, array2DFERT, cftsize, natpft_size-cftsize ) ! Read crops in as CFT's
