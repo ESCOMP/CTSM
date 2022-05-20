@@ -32,7 +32,6 @@ class MKSURFDATAESMF(SystemTestsCommon):
         # Paths and strings needed throughout
         ctsm_root = self._case.get_value('COMP_ROOT_DIR_LND')
         self._tool_path = os.path.join(ctsm_root, 'tools/mksurfdata_esmf')
-        self._rm_bld_dir = f"rm -rf {self._tool_path}/bld"
         time_stamp = datetime.today().strftime("%y%m%d")
         self._res = '10x15'  # see important comment in script's docstring
         self._model_yr = '1850'
@@ -51,6 +50,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
         if not os.path.exists(os.path.join(self._get_caseroot(),
             'done_MKSURFDATAESMF_setup.txt')):
             # Paths and strings
+            rm_bld_dir = f"rm -rf {self._tool_path}/bld"
             build_script_path = os.path.join(self._tool_path,
                 'gen_mksurfdata_build.sh')
             nml_script_path = os.path.join(self._tool_path,
@@ -59,9 +59,9 @@ class MKSURFDATAESMF(SystemTestsCommon):
 
             # Build executable
             try:
-                subprocess.check_call(self._rm_bld_dir, shell=True)
+                subprocess.check_call(rm_bld_dir, shell=True)
             except subprocess.CalledProcessError as e:
-                sys.exit(f'{e} ERROR RUNNING {self._rm_bld_dir}. DETAILS IN {self._TestStatus_log_path}')
+                sys.exit(f'{e} ERROR RUNNING {rm_bld_dir}. DETAILS IN {self._TestStatus_log_path}')
             try:
                 subprocess.check_call(build_script_path, shell=True)
             except subprocess.CalledProcessError as e:
@@ -98,10 +98,6 @@ class MKSURFDATAESMF(SystemTestsCommon):
             subprocess.check_call(mpiexec_mpt_cmd, shell=True)
         except subprocess.CalledProcessError as e:
             sys.exit(f'{e} ERROR RUNNING {mpiexec_mpt_cmd}; details in {self._TestStatus_log_path}')
-        try:
-            subprocess.check_call(self._rm_bld_dir, shell=True)
-        except subprocess.CalledProcessError as e:
-            sys.exit(f'{e} ERROR RUNNING {self._rm_bld_dir}; details in {self._TestStatus_log_path}')
 
         # Submit CTSM run that uses fsurdat just generated
         self.run_indv()
