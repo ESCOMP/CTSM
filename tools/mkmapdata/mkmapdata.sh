@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 #----------------------------------------------------------------------
 #
 # mkmapdata.sh
@@ -502,8 +503,8 @@ if [ ! -x "$ESMF_REGRID" ]; then
     exit 1
 fi
 
-# Remove previous log files
-rm PET*.Log
+# Remove previous log files, if any
+rm PET*.Log ||:
 
 #
 # Now run the mapping for each file, checking that input files exist
