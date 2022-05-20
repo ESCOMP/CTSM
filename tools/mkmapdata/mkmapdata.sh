@@ -40,6 +40,7 @@ default_res="10x15"
 #----------------------------------------------------------------------
 # SET SOME DEFAULTS -- if not set via env variables outside
 
+hostname=`hostname`
 case $hostname in
 
   ##cheyenne
@@ -64,6 +65,14 @@ case $hostname in
   ;;
 
 esac
+
+if [[ -z ${CSMDATA} ]]; then
+    echo "CSMDATA path not known for host ${hostname}. Set manually before calling mkmapdata.sh. E.g., bash: export CSMDATA=/path/to/csmdata"
+    exit 7
+elif [[ ! -d "${CSMDATA}" ]]; then
+    echo "CSMDATA not found: ${CSMDATA}"
+    exit 8
+fi
 
 #----------------------------------------------------------------------
 # Usage subroutine
@@ -356,7 +365,6 @@ done
 # Determine supported machine specific stuff
 #----------------------------------------------------------------------
 
-hostname=`hostname`
 if [ -n "$NERSC_HOST" ]; then
    hostname=$NERSC_HOST
 fi
