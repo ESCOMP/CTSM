@@ -2082,7 +2082,7 @@ contains
              
              !--  remove residual rsub_top  --------------------------------
              ! make sure no extra water removed from soil column
-             rsub_top(c) = rsub_top(c) - rsub_top_tot/dtime
+             rsub_top(c) = rsub_top(c) + rsub_top_tot/dtime
           endif
           
           zwt(c) = max(0.0_r8,zwt(c))
