@@ -1,4 +1,67 @@
 ===============================================================
+Tag name: ctsm5.1.dev097
+Originator(s): sacks (Bill Sacks)
+Date: Fri May 20 15:30:17 MDT 2022
+One-line Summary: Update ccs_config to fix issue on izumi and maybe elsewhere
+
+Purpose and description of changes
+----------------------------------
+
+Point to latest ccs_config
+
+This fixes an issue I had on izumi where I couldn't run
+anything (https://github.com/ESMCI/ccs_config_cesm/issues/45).
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Externals issues fixed (include issue #):
+https://github.com/ESMCI/ccs_config_cesm/issues/45
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Added LILAC test to the expected fails list (this has been failing for
+  the last 2 tags)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- ccs_config: ccs_config_cesm0.0.35 -> ccs_config_cesm0.0.36
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev096
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed May 18 12:44:01 MDT 2022
