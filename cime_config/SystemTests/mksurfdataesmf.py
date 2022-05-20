@@ -46,9 +46,12 @@ class MKSURFDATAESMF(SystemTestsCommon):
         SKIP Generate jobscript that runs executable
         Modify user_nl_clm to point to the generated fsurdat
         """
-        # These steps need only happen once
-        if not os.path.exists(os.path.join(self._get_caseroot(),
-            'done_MKSURFDATAESMF_setup.txt')):
+        # build_phase gets called twice:
+        # - once with sharedlib_only = True and
+        # - once with model_only = True
+        # Call the following steps only once during the test but do not skip
+        # if the test stops and gets restarted.
+        if sharedlib_only == True:
             # Paths and strings
             rm_bld_dir = f"rm -rf {self._tool_path}/bld"
             build_script_path = os.path.join(self._tool_path,
@@ -73,6 +76,9 @@ class MKSURFDATAESMF(SystemTestsCommon):
             except subprocess.CalledProcessError as e:
                 sys.exit(f'{e} ERROR RUNNING {gen_mksurfdata_namelist}. DETAILS IN {self._TestStatus_log_path}')
 
+        # Call this step only once even if the test stops and gets restarted.
+        if not os.path.exists(os.path.join(self._get_caseroot(),
+            'done_MKSURFDATAESMF_setup.txt')):
             # Modify user_nl_clm to point to the generated fsurdat
             self._modify_user_nl()
             with open('done_MKSURFDATAESMF_setup.txt', 'w') as fp:
@@ -89,15 +95,15 @@ class MKSURFDATAESMF(SystemTestsCommon):
         executable_path = os.path.join(self._tool_path, 'bld/mksurfdata')
         machine = self._case.get_value("MACH")
         if machine == 'cheyenne':
-            mpiexec_mpt_cmd = f"mpiexec_mpt -np 144 {executable_path} < {self._fsurdat_out_prefix}namelist"
+            mpi_cmd = f"mpiexec_mpt -np 144 {executable_path} < {self._fsurdat_out_prefix}namelist"
         elif machine == 'casper':
-            mpiexec_mpt_cmd = f"mpiexec -np 144 {executable_path} < {self._fsurdat_out_prefix}namelist"
+            mpi_cmd = f"mpiexec -np 144 {executable_path} < {self._fsurdat_out_prefix}namelist"
 
         # Run executable to generate fsurdat
         try:
-            subprocess.check_call(mpiexec_mpt_cmd, shell=True)
+            subprocess.check_call(mpi_cmd, shell=True)
         except subprocess.CalledProcessError as e:
-            sys.exit(f'{e} ERROR RUNNING {mpiexec_mpt_cmd}; details in {self._TestStatus_log_path}')
+            sys.exit(f'{e} ERROR RUNNING {mpi_cmd}; details in {self._TestStatus_log_path}')
 
         # Submit CTSM run that uses fsurdat just generated
         self.run_indv()
