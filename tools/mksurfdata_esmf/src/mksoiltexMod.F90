@@ -297,7 +297,7 @@ contains
           end if
           do l = 2,nlay
              sand_o(no,l) = float(sand_i(l,1,lookup_index))
-             if (sand_o(no,l) < 0. .and. l > 1) then
+             if (sand_o(no,l) < 0.) then
                 sand_o(no,l) = sand_o(no,l-1)
              end if
           end do
@@ -327,7 +327,7 @@ contains
           end if
           do l = 2,nlay
              clay_o(no,l) = float(clay_i(l,1,lookup_index))
-             if (clay_o(no,l) < 0. .and. l > 1) then
+             if (clay_o(no,l) < 0.) then
                 clay_o(no,l) = clay_o(no,l-1)
              end if
           end do
@@ -346,8 +346,8 @@ contains
           end if
           if (orgc_o(no,1) < 0.) then
              if (int(orgc_o(no,1)) == -4) then
-                write(6,'(a,i8)')'WARNING: changing orgc_o from -4 to 0 at no = ',no
-                orgc_o(no,:) = 0._r4
+                write(6,'(a,i8)')'WARNING: changing orgc_o from -4 to 1 at no = ',no
+                orgc_o(no,:) = 1._r4
              else
                 write(6,'(a,i8,a,i8)')'WARNING: changing orgc_o from ',int(orgc_o(no,1)),' to 18 at no = ',no
                 orgc_o(no,:) = 18._r4  ! TODO slevis: Value for loam here?
@@ -355,11 +355,11 @@ contains
           end if
           if (orgc_o(no,1) < 0.) then
              write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
-             call shr_sys_abort('could not find a value >= 0 for orgc_i') 
+             call shr_sys_abort('could not find a value >= 0 for orgc_i')
           end if
           do l = 2,nlay
              orgc_o(no,l) = float(orgc_i(l,1,lookup_index))
-             if (orgc_o(no,l) < 0. .and. l > 1) then
+             if (orgc_o(no,l) < 0.) then
                 orgc_o(no,l) = orgc_o(no,l-1)
              end if
           end do

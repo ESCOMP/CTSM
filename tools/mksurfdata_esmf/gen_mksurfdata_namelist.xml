@@ -20,15 +20,8 @@
   </mksrf_flai>
 
   <!-- ======================== -->
-  <!-- soil properties: forganic, fmax, soil-texture and soil color-->
+  <!-- soil properties: fmax, soil-texture (sand/clay, orgc), and soil color-->
   <!-- ======================== -->
-
-  <mksrf_forganic>
-    <entry>
-      <data_filename>lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc</data_filename>
-      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c200129.nc</mesh_filename>
-    </entry>
-  </mksrf_forganic>
 
   <!-- <mksrf_firrig> -->
   <!--   <entry> -->

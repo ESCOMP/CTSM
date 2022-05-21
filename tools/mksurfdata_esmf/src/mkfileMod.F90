@@ -179,8 +179,6 @@ contains
     rcode = pio_put_att(pioid, pio_global, 'mesh_soil_texture_file', trim(str))
     str = get_filename(mksrf_fsoicol_mesh)
     rcode = pio_put_att(pioid, pio_global, 'mesh_soil_color_file', trim(str))
-    str = get_filename(mksrf_forganic_mesh)
-    rcode = pio_put_att(pioid, pio_global, 'mesh_soil_organic_file', trim(str))
     str = get_filename(mksrf_furban_mesh)
     rcode = pio_put_att(pioid, pio_global, 'mesh_urban_file', trim(str))
     str = get_filename(mksrf_fmax_mesh)
@@ -221,8 +219,6 @@ contains
        rcode = pio_put_att(pioid, pio_global, 'soil_texture_lookup_raw_data_file_name', trim(str))
        str = get_filename(mksrf_fmax)
        rcode = pio_put_att(pioid, pio_global, 'fmax_raw_data_file_name', trim(str))
-       str = get_filename(mksrf_forganic)
-       rcode = pio_put_att(pioid, pio_global, 'organic_matter_raw_data_file_name', trim(str))
        str = get_filename(mksrf_fvocef)
        rcode = pio_put_att(pioid, pio_global, 'VOC_EF_raw_data_file_name', trim(str))
     end if
