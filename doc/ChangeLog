@@ -1,4 +1,149 @@
 ===============================================================
+Tag name: ctsm5.1.dev098
+Originator(s): swensosc (Sean Swenson)
+Date: Fri May 20 18:15:53 MDT 2022
+One-line Summary: Correct perched water table calculation
+
+Purpose and description of changes
+----------------------------------
+
+Modifies the calculation of the frost table and perched water table
+layers.
+
+This brings in the answer-changing aspects of the Hillslope Hydrology
+branch (https://github.com/ESCOMP/CTSM/pull/1715).
+
+Specific changes are:
+
+* PerchedWaterTable
+
+1) Frost table depth
+
+a) original frost table determination looped from the top 
+of the soil column downward to the index of the first layer 
+whose temperature was <= freezing, and whose neighbor above 
+had a temperature above freezing.  The frost table depth is 
+then given by the node of that soil layer, i.e. z(k_frz).  
+
+b) in the new method, the same index is found, but the 
+depth of the frost table is given by the depth of the top 
+of the frozen layer, i.e. zi(k_frz-1).  Note zi(k_frz) would 
+be the bottom of layer k_frz.  
+
+2) Perched water table depth
+
+a) in the original formulation, a loop from k_frz to layer 1 
+was used to identify the deepest layer in 1:k_frz whose 
+volumetric soil moisture was greater than a threshold given 
+by sat_lev (e.g. sat_lev = 0.9).  
+
+b) in the new method, the search is only done if k_frz is 
+greater than 1.  The rationale is that if k_frz = 1, then 
+zwt_perched has already been initialized to the frost_table 
+depth (which is equal to the top of the uppermost soil layer), 
+and therefore no search is required.
+
+3) Determining perched water table depth within layer 
+identified by index k_perch in 2)
+
+a) in the original formulation, the perched water table 
+depth was calculated by linearly interpolating between layers 
+k_perch and k_perch+1, with no consideration of their relative 
+values.  In the case where the deeper layer was drier than the 
+layer above it, this could result in values far outside the 
+soil layer.
+
+b) in the new formulation, if the deeper layer is drier than the 
+layer above it (s1 > s2), then the perched water table depth is 
+simply given by the depth of the upper surface of layer k_perch, 
+i.e. zi(c,k_perch-1).
+
+* PerchedLateralFlow
+
+1) Removal of icefrac calculation
+
+a) in the original calculation, the frozen layer was included, 
+so an ice impedance factor was calculated using icefrac.  If 
+only unfrozen layers are used, no ice impedance factor is needed.
+
+b) in the new formulation, the icefrac variable and loop are 
+removed.
+
+2) Move loop calculating frost and perched water table depths
+
+a) in the original formulation, the frost and perched water 
+table depths were calculated in the same loop as the calculation 
+of the lateral flow from the perched saturated zone.
+
+b) in preparation for the hillslope hydrology branch, this 
+calculation is moved into its own loop.
+
+3) q_perch calculation 
+
+a)in the original formulation, q_perch was calculated by summing 
+over layers k_perch to k_frost.  However, because k_frost is now 
+identified as the frozen layer, and its depth the top of the frozen 
+layer, it should not be included in the calculation; only the 
+unfrozen layers above it should be included.
+
+b) in the new formulation, the loop is bounded by k_frost-1 instead 
+of k_frost.
+
+4) Removal of water from perched saturated zone
+
+a) the in the original method, the frozen layer (k_frost) 
+was included in the loop.  Also, the drainage was defined to be 
+negative, which was confusing.  
+
+b) in the new method, the frozen layer is not included in the 
+loop; water is only removed from the unfrozen layers above k_frost.  
+Calculate drainage as positive values, which are then subtracted 
+from the soil moisture in each layer.  
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All Clm50 and Clm51 cases
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Larger than roundoff; small changes to surface climate due to
+      differences originating in soil moisture
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1738
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev097
 Originator(s): sacks (Bill Sacks)
 Date: Fri May 20 15:30:17 MDT 2022
