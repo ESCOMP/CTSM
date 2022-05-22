@@ -1162,10 +1162,6 @@ contains
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2) (new)             
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
          excess_ice       =>    waterstatebulk_inst%excess_ice_col      , & ! Input:  [real(r8) (:,:) ]  excess ice lenses (kg/m2) (new) (1:nlevgrnd)
-         init_exice              => waterstatebulk_inst%init_exice              , & ! Input:  [real(r8) (:)   ]  excess soil ice initial
-         exice_melt              => waterstatebulk_inst%exice_melt              , & ! Input:  [real(r8) (:)   ]  excess soil ice
-         exice_melt_lev          => waterstatebulk_inst%exice_melt_lev          , & ! Input:  [real(r8) (:,:)   ]  excess soil ice	
-
          
          qflx_snow_drain  =>    waterfluxbulk_inst%qflx_snow_drain_col  , & ! Output: [real(r8) (:)   ] drainage from snow pack                           
          qflx_snofrz_lyr  =>    waterfluxbulk_inst%qflx_snofrz_lyr_col  , & ! Output: [real(r8) (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
@@ -1451,8 +1447,7 @@ contains
                      else
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      endif
-                     init_exice(c,j)=wexice0(c,j)
-                     exice_melt_lev(c,j)=wexice0(c,j)-excess_ice(c,j)
+                      ! put exice melt here
                      if (imelt(c,j) == 1 .AND. j < 1) then
                         qflx_snomelt_lyr(c,j) = max(0._r8,(wice0(c,j)-h2osoi_ice(c,j)))/dtime
                         qflx_snomelt(c)       = qflx_snomelt(c) + qflx_snomelt_lyr(c,j)
@@ -1479,13 +1474,11 @@ contains
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)
          eflx_snomelt(c) = qflx_snomelt(c) * hfus
-         exice_melt(c) = 0.0_r8
          l = col%landunit(c)
          if (lun%urbpoi(l)) then
             eflx_snomelt_u(c) = eflx_snomelt(c)
          else if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
             eflx_snomelt_r(c) = eflx_snomelt(c)
-            exice_melt(c) = exice_melt(c) + SUM( exice_melt_lev(c,:) ) / denice
          end if
       end do
 

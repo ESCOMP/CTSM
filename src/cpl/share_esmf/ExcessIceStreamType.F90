@@ -257,7 +257,7 @@ subroutine ReadNML(this, bounds, NLFilename)
 
   ! Default values for namelist
 
-  ! Read ch4finundated namelist
+  ! Read excess ice namelist
   if (masterproc) then
      open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
      call shr_nl_find_group_name(nu_nml, namelist_name, status=nml_error)

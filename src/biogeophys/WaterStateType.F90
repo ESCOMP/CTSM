@@ -53,9 +53,6 @@ module WaterStateType
      real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
 
      real(r8), pointer :: excess_ice_col         (:,:) ! col excess ice lenses (kg/m2) (new) (1:nlevgrnd)
-     real(r8), pointer :: init_exice             (:,:) ! initial value of col excess ice lens/(m/m) (new) (1:nlevgrnd)
-     real(r8), pointer :: exice_melt_lev         (:,:) ! col excess ice melting (m) (new)
-     real(r8), pointer :: exice_melt             (:)   ! column-wide excess ice melting (m) (new)
 
 
      type(excessicestream_type), private :: exicestream ! stream type for excess ice initialization NUOPC only
@@ -161,22 +158,10 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
     !excess ice vars
-    call AllocateVar2d(var = this%excess_ice_col, name = 'excess_ice_col', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = subgrid_level_column, &
-         dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)
-    call AllocateVar2d(var = this%init_exice, name = 'init_exice', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = subgrid_level_column, &
-         dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)
-    call AllocateVar2d(var = this%exice_melt_lev, name = 'exice_melt_lev', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = subgrid_level_column, &
-         dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)	
-    call AllocateVar1d(var = this%exice_melt, name = 'exice_melt', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = subgrid_level_column)	
-
+      call AllocateVar2d(var = this%excess_ice_col, name = 'excess_ice_col', &
+           container = tracer_vars, &
+           bounds = bounds, subgrid_level = subgrid_level_column, &
+           dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -294,26 +279,12 @@ contains
             ptr_col=this%wa_col, l2g_scale_type='veg')
     end if
 
-    ! Add excess ice fields to history
-    data2dptr => this%excess_ice_col(begc:endc,1:nlevsoi)
-    call hist_addfld2d (fname='EXCESS_ICE',  units='kg/m2', type2d='levsoi', &
-         avgflag='A', long_name='excess soil ice (vegetated landunits only)', &
-         ptr_col=this%excess_ice_col, l2g_scale_type='veg')
-    
-    data2dptr => this%init_exice(begc:endc,1:nlevsoi)
-    call hist_addfld2d (fname='EXICE_INIT',  units='m/m', type2d='levsoi', &
-         avgflag='A', long_name='initial excess soil ice (vegetated landunits only)', &
-         ptr_col=this%excess_ice_col, l2g_scale_type='veg')
-    
-    data2dptr => this%exice_melt_lev(begc:endc,1:nlevsoi)
-    call hist_addfld2d (fname='EXICE_MELT_LEV',  units='kg/m2', type2d='levsoi', &
-              avgflag='A', long_name='melt from excess ice per layer (vegetated landunits only)', &
-              ptr_col=this%exice_melt_lev, l2g_scale_type='veg')
-
-    this%exice_melt(begc:endc) = spval
-    call hist_addfld1d (fname='EXICE_MELT',  units='m', &
-         avgflag='A', long_name='melt from excess ice (vegetated landunits only)', &
-         ptr_col=this%exice_melt, l2g_scale_type='veg')
+      ! Add excess ice fields to history
+      data2dptr => this%excess_ice_col(begc:endc,1:nlevsoi)
+      call hist_addfld2d (fname='EXCESS_ICE',  units='kg/m2', type2d='levsoi', &
+           avgflag='A', long_name='excess soil ice (vegetated landunits only)', &
+           ptr_col=this%excess_ice_col, l2g_scale_type='veg', & 
+           default='inactive' )
 
     ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water
     !                  I think that since the value is zero in all cases except
@@ -557,10 +528,7 @@ contains
       !Initialize excess ice
       if (use_excess_ice .and. NLFilename /= '') then
         ! enforce initialization with 0 for everything
-        this%init_exice(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
         this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
-        this%exice_melt_lev(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
-        this%exice_melt(bounds%begc:bounds%endc)=0.0_r8
 
         call this%exicestream%Init(bounds, NLFilename) ! get initial fraction of excess ice per column
         call this%exicestream%CalcExcessIce(bounds, exice_bulk_init)
@@ -577,25 +545,17 @@ contains
                 do j = 2, nlevmaxurbgrnd ! ignore first layer
                   if (j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
                     this%excess_ice_col(c,j) = col%dz(c,j)*denice*(exice_bulk_init(c))
-                    this%init_exice(c,j) = col%dz(c,j)*denice*exice_bulk_init(c)
                   else
                     this%excess_ice_col(c,j) = 0.0_r8
-                    this%init_exice(c,j) = 0.0_r8
                   endif
                 end do
              endif
           else ! just in case zeros for lakes and other columns
             this%excess_ice_col(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
-            this%init_exice(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
           endif
         enddo
-        this%exice_melt_lev(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
-        this%exice_melt(bounds%begc:bounds%endc)=0.0_r8
       else
-        this%init_exice(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
         this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
-        this%exice_melt_lev(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
-        this%exice_melt(bounds%begc:bounds%endc)=0.0_r8
       end if
     end associate
 
@@ -726,35 +686,14 @@ contains
          !write(iulog,*) 'restarting excess ice wars'
     if (.not. use_excess_ice .and. flag == 'read') then
       ! no need to even define the restart vars
-      this%init_exice(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
       this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
-      this%exice_melt_lev(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
-      this%exice_melt(bounds%begc:bounds%endc)=0.0_r8
-
     else
       ! have to at least define them 
       call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXCESS_ICE'), xtype=ncd_double,  &
            dim1name='column', dim2name='levtot', switchdim=.true., &
            long_name=this%info%lname('excess soil ice (vegetated landunits only)'), units='kg/m2', &
-           scale_by_thickness=.true., &
-           interpinic_flag='interp', readvar=readvar, data=this%excess_ice_col)
-
-      call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXICE_INIT'), xtype=ncd_double,  &
-           dim1name='column', dim2name='levtot', switchdim=.true., &
-           long_name=this%info%lname('inital excess soil ice (vegetated landunits only)'), units='m/m', &
            scale_by_thickness=.false., &
-           interpinic_flag='interp', readvar=readvar, data=this%init_exice)
-
-      call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXCESS_MELT_LEV'), xtype=ncd_double,  &
-           dim1name='column', dim2name='levtot', switchdim=.true., &
-           long_name=this%info%lname('melt from excess ice per layer (vegetated landunits only)'), units='kg/m2', &
-           scale_by_thickness=.true., &
-           interpinic_flag='interp', readvar=readvar, data=this%exice_melt_lev)
-
-      call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXICE_MELT'), xtype=ncd_double,  &
-           dim1name='column', &
-           long_name=this%info%lname('melt from excess ice (vegetated landunits only)'), units='m', &
-           interpinic_flag='interp', readvar=readvar, data=this%exice_melt)
+           interpinic_flag='interp', readvar=readvar, data=this%excess_ice_col)
     endif
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then
