@@ -1530,7 +1530,7 @@ contains
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
          cropplant         =>    crop_inst%cropplant_patch                     , & ! Output: [logical  (:) ]  Flag, true if crop may be planted                  
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
-         yrop              =>    crop_inst%yrop_patch                          , & ! Output: [integer  (:) ]  year of planting (added by O.Dombrowski)
+         yrop              =>    crop_inst%yrop_patch                          , & ! Output: [integer  (:) ]  year of planting (introduced in CLM-Palm (Fan et al. 2015), and adopted here by O.Dombrowski)
          peaklai           =>    cnveg_state_inst%peaklai_patch                  , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
@@ -1551,9 +1551,9 @@ contains
          offset2_flag      =>    cnveg_state_inst%offset2_flag_patch           , & ! Output: [real(r8) (:) ]  orchard rotation flag
          onset_counter     =>    cnveg_state_inst%onset_counter_patch          , & ! Output: [real(r8) (:) ]  onset counter                                     
          offset_counter    =>    cnveg_state_inst%offset_counter_patch         , & ! Output: [real(r8) (:) ]  offset counter                                    
-         perennial         =>    pftcon%perennial                              , & ! Input:  binary flag for perennial crop phenology (1=perennial, 0=not perennial) (added by O.Dombrowski)
-         harvest_flag      =>    cnveg_state_inst%harvest_flag_patch           , & ! Output: [real(r8) (:)    ]  harvest flag (added by O.Dombrowski)       
-         prune_flag        =>    cnveg_state_inst%prune_flag_patch             , & ! Output: [real(r8) (:)    ]  pruning flag for perennials (added by O.Dombrowski)
+         perennial         =>    pftcon%perennial                              , & ! Input:  binary flag for perennial crop phenology (1=perennial, 0=not perennial) (introduced in CLM-Palm (Fan et al. 2015), and adopted here by O.Dombrowski)
+         harvest_flag      =>    cnveg_state_inst%harvest_flag_patch           , & ! Output: [real(r8) (:)    ]  harvest flag (introduced in CLM-Palm (Fan et al. 2015), and adopted here by O.Dombrowski)       
+         prune_flag        =>    cnveg_state_inst%prune_flag_patch             , & ! Output: [real(r8) (:)    ]  pruning flag for perennials (introduced in CLM-Palm (Fan et al. 2015), and adopted here by O.Dombrowski)
          storage_flag      =>    cnveg_state_inst%storage_flag_patch           , & ! Output: [real(r8) (:)    ]  flag to switch to storage growth for perennials (added by O.Dombrowski)
          onset_gddflag     =>    cnveg_state_inst%onset_gddflag_patch          , & ! Output: [real(r8)  (:)   ]  onset freeze flag                                 
          onset_gdd         =>    cnveg_state_inst%onset_gdd_patch              , & ! Output: [real(r8)  (:)   ]  onset growing degree days 
@@ -1697,7 +1697,7 @@ contains
                     if (kmo == 11 .and. kda == 1) then
                        chill_flag(p) = 1._r8
                     end if
-                    if (kmo == 5 .and. kda == 1 .and. chill_flag(p) == 1._r8) then
+                    if (kmo == 7 .and. kda == 1 .and. chill_flag(p) == 1._r8) then
                        chill_flag(p) = 0._r8
                     end if
                     
@@ -1727,10 +1727,10 @@ contains
                           yrop(p)      = kyr
                           harvdate(p)  = NOT_Harvested
                           
-                          ! Fruit trees are usually transplanted from nursery
-                          ! as small trees, similar to the initiation for
-                          ! deciduous trees, initial gC m-2 is assigned to
-                          ! leaf, fine root and deadstem
+                          ! Fruit trees are usually transplanted from nursery as small trees, code is adapted from the initiation for
+                          ! deciduous trees and the transplanting of seedlings introduced in CLM-Palm (Fan et al. 2015), 
+                          ! initial gC m-2 is assigned to leaf, fine root and deadstem 
+                          ! (added by O.Dombrowski)
                           if (transplant(ivt(p)) > 0._r8) then
                              leafc_xfer(p)  = transplant(ivt(p))
                           else
@@ -1780,8 +1780,8 @@ contains
                  
                  if (croplive(p)) then
                     cphase(p) = 1._r8
-                    ! days past planting determine orchard rotation once maximum
-                    ! lifetime is reached
+                    ! days past planting determine orchard rotation once maximum lifetime is reached
+                    ! (introduced in CLM-Palm (Fan et al. 2015), and adopted here by O.Dombrowski)
                     idpp = int(dayspyr)*(kyr-yrop(p)) + jday - idop(p)
                     if (season_decid(ivt(p)) == 1._r8) then
 
@@ -1923,7 +1923,8 @@ contains
                        ! test for switching from dormant period to growth period
                        if (dormant_flag(p) == 1._r8) then
                           ! Test if maximum orchard lifespan is reached and
-                          ! orchard rotation should be initialized:
+                          ! orchard rotation should be initialized (adapted
+                          ! based on CLM-Palm (Fan et al. 2015):
                           if (idpp >= mxmat(ivt(p))) then
                             croplive(p) = .false.
                             cphase(p) = 4._r8
@@ -2020,7 +2021,7 @@ contains
                                   deadstemc_xfer(p) = 0._r8
                                   deadstemn_xfer(p) = deadstemc_xfer(p) / deadwdcn(ivt(p))
                                end if
-                            else if (grainc(p) > 0._r8) then !only harvest when there is positive grainc accumulated during grainfill
+                            else if (grainc(p) > 0._r8) then !only harvest when there is positive grainc accumulated during grainfill, adapted based on CLM-Palm (Fan et al. 2015)
                                harvest_flag(p) = 1._r8
                                storage_flag(p) = 1._r8
                             end if
@@ -3254,7 +3255,7 @@ contains
 
          ! determine days past planting for pruning management
          idpp = int(dayspyr)*(kyr-yrop(p)) + jday - idop(p)
-         !incorporate a one-time harvest: annually for perennial crops (added by O.Dombrowski)
+         !incorporate a one-time harvest: annually for perennial crops (added by O.Dombrowski adopted based on CLM-Palm (Fan et al. 2015))
          !grain flux goes to food
          if (harvest_flag(p) == 1._r8)then
            if (perennial(ivt(p)) == 1._r8) then
@@ -3408,8 +3409,8 @@ contains
          end if ! end if offset period
          ! offset2 is newly implemented for fruit trees, it initializes orchard
          ! rotation (complete harvest of all plant organs) after maximum
-         ! lifespan is reached (may vary between 25-40 yrs)
-         ! (O.Dombrowski)   
+         ! lifespan is reached
+         ! (introduced in CLM-Palm (Fan et al. 2015), and adopted here by O.Dombrowski)   
          if (offset2_flag(p) == 1._r8 .and. perennial(ivt(p)) == 1._r8) then
 
             ! Apply all harvest at the start of the year, otherwise will get
@@ -3961,6 +3962,8 @@ contains
                               + grainn_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                         end if
 
+                        ! calculate pruning litter fluxes added by O.Dombrowski
+                        ! and adapted based on CLM-Palm (Fan et al. 2015) 
                         if ( perennial(ivt(p)) == 1._r8 .and. prune_flag(p) == 1._r8) then
                            if (mulch_pruning(ivt(p)) == 0._r8) then
                               ! export pruning material as harvest
@@ -4036,7 +4039,7 @@ contains
 
       end do
 
-      ! summarize all fuxes at orchard rotation to column level (O. Dombrowski)
+      ! summarize all fuxes at orchard rotation to column level (added by O. Dombrowski adapted based on CLM-Palm (Fan et al.(2015))
       if ( perennial(ivt(p)) == 1._r8 .and. offset2_flag(p) == 1._r8) then
          call CNHarvestPftToColumn (num_soilc, filter_soilc, &
               soilbiogeochem_state_inst, CNVeg_carbonflux_inst, cnveg_nitrogenflux_inst)
