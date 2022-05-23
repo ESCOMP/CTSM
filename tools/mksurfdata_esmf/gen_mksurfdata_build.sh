@@ -1,5 +1,8 @@
 #! /bin/bash -f
 
+# usage subroutine
+
+
 hostname=`hostname --short`
 
 # Define what machine to use that's been ported to cime
@@ -18,26 +21,32 @@ case $hostname in
       ;;
 esac
 
+cwd=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+builddir=$cwd/bld
+
+# command line code
+# -b to overwrite builddir
+# -m to overwrite MACH
+
 # Create /bld directory
 echo "cime Machine is: $MACH..."
-cwd=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-if [ -d "$cwd/bld" ]; then
+if [ -d "$builddir" ]; then
   echo "A /bld directory exists; remove it to do a clean build..."
   exit 1
 fi
-rm -rf $cwd/bld
-mkdir $cwd/bld
-cd $cwd/bld
+rm -rf $builddir
+mkdir $builddir
+cd $builddir
 
 # Run the cime configure tool to figure out what modules need to be loaded
 echo "Run cime configure for machine $MACH..."
 # You can specify the non-default compiler and mpi-library by adding --compiler and --mpilib settings
 if [ -z "$COMPILER" ] || [ -z "$MPILIB" ]; then
   echo "configure for the default MPI-library and compiler..."
-  ../../../cime/tools/configure --macros-format CMake --machine $MACH
+  $cwd/../../cime/tools/configure --macros-format CMake --machine $MACH
 else
   echo "configure for the specific MPILIB=$MPILIB and COMPILER=$COMPILER..."
-  ../../../cime/tools/configure --macros-format CMake --machine $MACH --compiler $COMPILER --mpilib $MPILIB
+  $cwd/../../cime/tools/configure --macros-format CMake --machine $MACH --compiler $COMPILER --mpilib $MPILIB
 fi
 
 if [ $? != 0 ]; then
@@ -54,7 +63,7 @@ fi
 
 # Build the cmake files
 echo "Do the cmake build..."
-CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug ../src
+CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug $cwd/src
 if [ $? != 0 ]; then
   echo "Error doing cmake for $MACH $MPILIB $COMPILER"
   exit 1
