@@ -40,7 +40,8 @@ module clm_initializeMod
   public :: initialize2  ! Phase two initialization
 
   integer :: actual_numcft  ! numcft from sfc dataset
-
+  integer :: actual_numpft  ! numpft from sfc dataset
+  
 !-----------------------------------------------------------------------
 contains
 !-----------------------------------------------------------------------
@@ -96,7 +97,7 @@ contains
 
     call control_init(dtime)
     call ncd_pio_init()
-    call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
+    call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numpft, actual_numcft)
 
     if(use_fates) then
 
@@ -104,11 +105,11 @@ contains
        ! number of patches per column.  We still use numcft from the surface
        ! file though...
        
-       call CLMFatesGlobals1(actual_maxsoil_patches)
+       call CLMFatesGlobals1(actual_numpft, actual_numcft, actual_maxsoil_patches)
        
     end if
     
-    call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
+    call clm_varpar_init(actual_maxsoil_patches, actual_numpft, actual_numcft)
     call decomp_cascade_par_init( NLFilename )
     call clm_varcon_init( IsSimpleBuildTemp() )
     call landunit_varcon_init()
@@ -130,6 +131,7 @@ contains
     use clm_varcon                    , only : spval
     use clm_varpar                    , only : natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glc
     use clm_varpar                    , only : nlevsno
+    use clm_varpar                    , only : natpft_size,cft_size
     use clm_varctl                    , only : fsurdat
     use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
     use clm_varctl                    , only : use_cn, use_fates
@@ -221,7 +223,6 @@ contains
     ! Allocate surface grid dynamic memory (just gridcell bounds dependent)
     allocate (wt_lunit     (begg:endg, max_lunit           ))
     allocate (urban_valid  (begg:endg                      ))
-    allocate (wt_nat_patch (begg:endg, natpft_lb:natpft_ub ))
     allocate (wt_cft       (begg:endg, cft_lb:cft_ub       ))
     allocate (fert_cft     (begg:endg, cft_lb:cft_ub       ))
     allocate (irrig_method (begg:endg, cft_lb:cft_ub       ))
@@ -229,7 +230,8 @@ contains
     allocate (topo_glc_mec (begg:endg, maxpatch_glc     ))
     allocate (haslake      (begg:endg                      ))
     allocate (pct_urban_max(begg:endg, numurbl             ))
-
+    allocate (wt_nat_patch (begg:endg, natpft_lb:natpft_ub ))
+    
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
     call pftcon%Init()
@@ -440,12 +442,17 @@ contains
        if ( use_c13 .and. use_c13_timeseries ) then
           call C13_init_TimeSeries()
        end if
+       
     else
-       call SatellitePhenologyInit(bounds_proc)
+       ! FATES OR Satellite phenology
+       
+       if(use_fates_sp .or. .not.use_fates)then
+          call SatellitePhenologyInit(bounds_proc)
+       end if
 
        ! fates_spitfire_mode is assigned an integer value in the namelist
        ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
-       if (fates_spitfire_mode > scalar_lightning) then
+       if(use_fates .and. (fates_spitfire_mode > scalar_lightning)) then
           call clm_fates%Init2(bounds_proc, NLFilename)
        end if
     end if
@@ -606,7 +613,7 @@ contains
     ! Read monthly vegetation
     ! Even if CN is on, and dry-deposition is active, read CLMSP annual vegetation
     ! to get estimates of monthly LAI
-    if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
+    if ( n_drydep > 0 .and. drydep_method == DD_XLND .and. .not.use_fates )then
        call readAnnualVegetation(bounds_proc, canopystate_inst)
        if (nsrest == nsrStartup .and. finidat /= ' ') then
           ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
@@ -616,9 +623,9 @@ contains
     ! If fates has satellite phenology enabled, get the monthly veg values
     ! prior to the first call to SatellitePhenology()
     elseif ( use_fates_sp ) then
-          call interpMonthlyVeg(bounds_proc, canopystate_inst)
+       call interpMonthlyVeg(bounds_proc, canopystate_inst)
     end if
-
+    
     ! Determine gridcell averaged properties to send to atm
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')

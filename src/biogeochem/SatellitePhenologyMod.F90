@@ -318,6 +318,7 @@ contains
        write(iulog,*)trim(subname), 'ldomain%ns,ns,= ',ldomain%ns,ns
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
+
     call check_dim_size(ncid, 'lsmpft', maxsoil_patches)
 
     do k=1,12   !! loop over months and read vegetated data
@@ -392,7 +393,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Determine necessary indices
-
+    
     allocate(&
          mlai(bounds%begg:bounds%endg,0:maxveg), &
          msai(bounds%begg:bounds%endg,0:maxveg), &
@@ -452,7 +453,6 @@ contains
              mhvb2t(p,k) = 0._r8
           end if
        end do   ! end of loop over patches
-
     end do   ! end of loop over months
 
     call ncd_pio_closefile(ncid)

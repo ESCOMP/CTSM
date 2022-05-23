@@ -60,7 +60,7 @@ module clm_varpar
   integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
   integer, public, parameter :: nvariants   =   2     ! number of variants of PFT constants
 
-  integer, public :: maxveg           ! # of pfts + cfts
+  integer, public :: maxveg                ! # of pfts + cfts
   integer, public :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
 
   integer, public :: maxsoil_patches  ! # of pfts + cfts + bare ground; replaces maxpatch_pft, which is obsolete
@@ -110,15 +110,16 @@ module clm_varpar
 contains
 
   !------------------------------------------------------------------------------
-  subroutine clm_varpar_init(actual_maxsoil_patches, actual_numcft)
+  subroutine clm_varpar_init(actual_maxsoil_patches, surf_numpft, surf_numcft)
     !
     ! !DESCRIPTION:
     ! Initialize module variables 
     !
     ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: actual_maxsoil_patches  ! value from surface dataset
-    integer, intent(in) :: actual_numcft  ! Actual number of crops
+    integer, intent(in) :: actual_maxsoil_patches  ! Number of soil patches to allocate
+    integer, intent(in) :: surf_numpft             ! Number of PFTs in the surf dataset
+    integer, intent(in) :: surf_numcft             ! Number of CFTs in the surf dataset
     !
     ! !LOCAL VARIABLES:
     !
@@ -126,20 +127,7 @@ contains
     character(len=32) :: subname = 'clm_varpar_init'  ! subroutine name
     !------------------------------------------------------------------------------
 
-    
-
-    
-    if(use_fates) then
-       ! FATES dictates the number of natveg patches (not nat+crop),
-       ! and has already added 1 for bare-ground.  actual_maxsoil_patches
-       ! came from the fates parameter file and only refers to natural vegetation
-       ! patches.  actual_numcft comes from the surface dataset (as with non-fates)
-       maxsoil_patches = actual_maxsoil_patches + actual_numcft
-    else
-       ! actual_maxsoil_patches and actual_numcft were read directly from the
-       ! surface dataset
-       maxsoil_patches = actual_maxsoil_patches  ! # of patches with bare ground
-    end if
+    maxsoil_patches = actual_maxsoil_patches  ! # of patches with bare ground
     
     maxveg = maxsoil_patches - 1  ! # of patches without bare ground
 
@@ -149,26 +137,49 @@ contains
     ! if create_crop_landunit=false)
 
     if (create_crop_landunit) then
-       natpft_size = maxsoil_patches - actual_numcft  ! includes bare ground + pfts
-       cft_size    = actual_numcft
+       
+       natpft_size = maxsoil_patches - surf_numcft  ! includes bare ground + pfts
+       cft_size    = surf_numcft
+       natpft_lb   = 0
+       natpft_ub   = natpft_lb + natpft_size - 1
+       cft_lb      = natpft_ub + 1
+       cft_ub      = cft_lb + cft_size - 1
+       
     else
-       natpft_size = maxsoil_patches  ! includes bare ground, cfts + pfts
-       cft_size    = 0
-    end if
 
-    natpft_lb = 0
-    natpft_ub = natpft_lb + natpft_size - 1
-    cft_lb = natpft_ub + 1
-    cft_ub = cft_lb + cft_size - 1
+       ! FATES
+       ! These values are used to create the wt_nat_patch
+       ! array that is used by fates_sp and fixed biogeog.
+       ! Also, the pft and cft vectors are concatenated into
+       ! the natpft vector (wt_nat_patch), the wt_cft array is unused (size zero)
+       ! The following values should not be used for allocating patch structures
+       ! though.  That should be handled completely by maxoil_patches and maxveg
+       
+       natpft_size = surf_numpft
+       cft_size    = surf_numcft
+       natpft_lb   = 0
+       natpft_ub   = surf_numpft+surf_numcft-1
+       cft_lb      = 0
+       cft_ub      = 0
+
+       if(use_fates_sp)then
+          if(natpft_ub .ne. maxveg) then
+             write(iulog,*) 'when fates is in SP mode, maxveg should match the upper bound'
+             write(iulog,*) 'on the surface dataset PFT+CFT indices (ie lsmft), yours: ',natpft_ub,maxveg
+             call endrun(msg='aborting')
+          end if
+       end if
+       
+    end if
 
     mxharvests = mxsowings + 1
 
-    ! TODO(wjs, 2015-10-04, bugz 2227) Using actual_numcft in this 'max' gives a significant
+    ! TODO(wjs, 2015-10-04, bugz 2227) Using surf_numcft in this 'max' gives a significant
     ! overestimate of max_patch_per_col when use_crop is true. This should be reworked -
     ! or, better, removed from the code entirely (because it is a maintenance problem, and
     ! I can't imagine that looping idioms that use it help performance that much, and
     ! likely they hurt performance.)
-    max_patch_per_col= max(maxsoil_patches, actual_numcft, maxpatch_urb)
+    max_patch_per_col= max(maxsoil_patches, surf_numcft, maxpatch_urb)
 
     nlevsoifl   =  10
     nlevurb     =  5

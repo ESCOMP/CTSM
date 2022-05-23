@@ -65,8 +65,8 @@ module CLMFatesInterfaceMod
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
    use clm_varcon        , only : ispval
-
-   use clm_varpar        , only : natpft_size, natpft_ub, natpft_lb
+   !use clm_varpar        , only : natpft_size, cft_size
+   use clm_varpar        , only : natpft_lb, natpft_ub
    use clm_varpar        , only : numrad
    use clm_varpar        , only : ivis
    use clm_varpar        , only : inir
@@ -245,7 +245,7 @@ module CLMFatesInterfaceMod
 
  contains
 
-   subroutine CLMFatesGlobals1(actual_numpft)
+   subroutine CLMFatesGlobals1(surf_numpft,surf_numcft,maxsoil_patches)
 
      ! --------------------------------------------------------------------------------
      ! This is the first call to fates
@@ -253,8 +253,10 @@ module CLMFatesInterfaceMod
      ! namelist variables to determine how many patches need to be allocated
      ! in CTSM
      ! --------------------------------------------------------------------------------
-     
-     integer,intent(out)                            :: actual_numpft
+
+     integer,intent(in)                             :: surf_numpft
+     integer,intent(in)                             :: surf_numcft
+     integer,intent(out)                            :: maxsoil_patches
      integer                                        :: pass_biogeog
      integer                                        :: pass_nocomp
      integer                                        :: pass_sp
@@ -311,10 +313,9 @@ module CLMFatesInterfaceMod
      ! and allocations on the FATES side, which require
      ! some allocations from CLM (like soil layering)
 
-     call SetFatesGlobalElements1(use_fates)
+     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft)
 
-     ! We add one extra patch for the bare-ground patch
-     actual_numpft = fates_maxPatchesPerSite + 1
+     maxsoil_patches = fates_maxPatchesPerSite
      
      call t_stopf('fates_globals1')
 
@@ -352,17 +353,9 @@ module CLMFatesInterfaceMod
 
      if (use_fates) then
 
-        ! Force FATES parameters that are recieve type, to the unset value
-        call set_fates_ctrlparms('flush_to_unset')
+        
 
         ! Send parameters individually
-
-        print*,"numrad: ",numrad
-        print*,"nlevsoi: ",nlevsoi
-        print*,"parteh mode: ",fates_parteh_mode
-        print*,"decomp_method: ",decomp_method
-        stop
-        
         call set_fates_ctrlparms('num_sw_bbands',ival=numrad)
         call set_fates_ctrlparms('vis_sw_index',ival=ivis)
         call set_fates_ctrlparms('nir_sw_index',ival=inir)
@@ -372,8 +365,6 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('hio_ignore_val',rval=spval)
         call set_fates_ctrlparms('soilwater_ipedof',ival=get_ipedof(0))
         
-        !call set_fates_ctrlparms('max_patch_per_site',ival=(natpft_size-1))
-
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
 
         ! CTSM-FATES is not fully coupled (yet)
@@ -411,7 +402,9 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('sf_scalar_lightning_def',ival=scalar_lightning)
         call set_fates_ctrlparms('sf_successful_ignitions_def',ival=successful_ignitions)
         call set_fates_ctrlparms('sf_anthro_ignitions_def',ival=anthro_ignitions)
-        call set_fates_ctrlparms('sf_anthro_suppression_def',ival=anthro_suppression)
+
+        ! This has no variable on the FATES side yet (RGK)
+        !call set_fates_ctrlparms('sf_anthro_suppression_def',ival=anthro_suppression)
 
         if(is_restart()) then
            pass_is_restart = 1
@@ -689,7 +682,7 @@ module CLMFatesInterfaceMod
 
             ndecomp = col%nbedrock(c)
 
-            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, num_harvest_inst)
+            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, num_harvest_inst,natpft_lb,natpft_ub)
             call allocate_bcout(this%fates(nc)%bc_out(s),col%nbedrock(c),ndecomp)
             call zero_bcs(this%fates(nc),s)
 
@@ -704,7 +697,7 @@ module CLMFatesInterfaceMod
             ! initialize static layers for reduced complexity FATES versions from HLM
             ! maybe make this into a subroutine of it's own later.
             do m = natpft_lb,natpft_ub
-               ft = m-natpft_lb
+               ft = m - natpft_lb
                this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,m)
             end do
 
@@ -944,7 +937,7 @@ module CLMFatesInterfaceMod
          ! in FATES.
          ! N.B. Fow now these are fixed values pending HLM updates.
          if(use_fates_sp)then
-           do ft = natpft_lb,natpft_ub !set of pfts in HLM
+           do ft = natpft_lb,natpft_ub
                ! here we are mapping from P space in the HLM to FT space in the sp_input arrays.
                p = ft + col%patchi(c) ! for an FT of 1 we want to use
                this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = canopystate_inst%tlai_patch(p)
@@ -1547,7 +1540,7 @@ module CLMFatesInterfaceMod
                if(use_fates_sp)then
                   do s = 1,this%fates(nc)%nsites
                      c = this%f2hmap(nc)%fcolumn(s)
-                     do ft = natpft_lb,natpft_ub !set of pfts in HLM
+                     do ft = natpft_lb,natpft_ub  !set of pfts in HLM
                         ! here we are mapping from P space in the HLM to FT space in the sp_input arrays.
                         p = ft + col%patchi(c) ! for an FT of 1 we want to use
                         this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = canopystate_inst%tlai_patch(p)
@@ -1692,7 +1685,7 @@ module CLMFatesInterfaceMod
             if(use_fates_sp)then
                do s = 1,this%fates(nc)%nsites
                   c = this%f2hmap(nc)%fcolumn(s)
-                  do ft = natpft_lb,natpft_ub !set of pfts in HLM
+                  do ft = natpft_lb,natpft_ub
                      ! here we are mapping from P space in the HLM to FT space in the sp_input arrays.
                      p = ft + col%patchi(c) ! for an FT of 1 we want to use
                      this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = canopystate_inst%tlai_patch(p)

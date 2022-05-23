@@ -14,6 +14,7 @@ module subgridMod
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
+  use clm_varctl     , only : use_cndv, use_fates
   use clm_instur     , only : wt_lunit, wt_nat_patch, urban_valid, wt_cft
   use landunit_varcon, only : istcrop, istdlak, istwet, isturb_tbd, isturb_hd, isturb_md
   use glcBehaviorMod , only : glc_behavior_type
@@ -131,6 +132,7 @@ contains
     !
     ! !USES
     use clm_varpar, only : natpft_lb, natpft_ub
+    use clm_varpar, only : maxveg
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -146,11 +148,19 @@ contains
 
     npatches = 0
 
-    do pft = natpft_lb, natpft_ub
-       if (natveg_patch_exists(gi, pft)) then
-          npatches = npatches + 1
-       end if
-    end do
+    if(use_fates)then
+       do pft = 0,maxveg
+          if (natveg_patch_exists(gi, pft)) then
+             npatches = npatches + 1
+          end if
+       end do
+    else
+       do pft = natpft_lb, natpft_ub
+          if (natveg_patch_exists(gi, pft)) then
+             npatches = npatches + 1
+          end if
+       end do
+    end if
 
     if (npatches > 0) then
        ! Assume that the vegetated landunit has one column
@@ -176,7 +186,6 @@ contains
     !
     ! !USES:
     use clm_varpar, only : natpft_lb, natpft_ub
-    use clm_varctl, only : use_cndv, use_fates
     use dynSubgridControlMod, only : get_do_transient_pfts
     !
     ! !ARGUMENTS:

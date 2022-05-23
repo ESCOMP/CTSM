@@ -16,7 +16,7 @@ module initGridCellsMod
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use spmdMod        , only : masterproc,iam
   use abortutils     , only : endrun
-  use clm_varctl     , only : iulog
+  use clm_varctl     , only : iulog, use_fates, use_fates_sp
   use clm_varcon     , only : namep, namec, namel, nameg
   use decompMod      , only : bounds_type
   use GridcellType   , only : grc                
@@ -206,7 +206,7 @@ contains
     ! !USES
     use clm_instur, only : wt_lunit, wt_nat_patch
     use subgridMod, only : subgrid_get_info_natveg, natveg_patch_exists
-    use clm_varpar, only : natpft_lb, natpft_ub
+    use clm_varpar, only : natpft_lb, natpft_ub, maxveg
     !
     ! !ARGUMENTS:
     integer , intent(in)    :: ltype             ! landunit type
@@ -224,6 +224,7 @@ contains
     integer  :: ncols_added                      ! number of columns actually added
     integer  :: nlunits_added                    ! number of landunits actually added
     real(r8) :: wtlunit2gcell                    ! landunit weight in gridcell
+    real(r8) :: p_wt                             ! patch weight (0-1)
     !------------------------------------------------------------------------
 
     ! Set decomposition properties
@@ -244,12 +245,25 @@ contains
        call add_column(ci=ci, li=li, ctype=1, wtlunit=1.0_r8)
        ncols_added = ncols_added + 1
 
-       do m = natpft_lb,natpft_ub
-          if (natveg_patch_exists(gi, m)) then
-             call add_patch(pi=pi, ci=ci, ptype=m, wtcol=wt_nat_patch(gi,m))
+       if(use_fates .and. .not.use_fates_sp)then
+          ! The total number of patches does not match what is in the surface
+          ! file, and the weighting can't be used either.  We use
+          ! equal weights until FATES is called, which will update the weights
+          ! based on canopy coverage
+          do m = 0,maxveg
+             ! This will be overwritten by ed_wt during fates initialization
+             p_wt = 1.0_r8/real(maxveg+1,r8) 
+             call add_patch(pi=pi, ci=ci, ptype=m, wtcol=p_wt)
              npatches_added = npatches_added + 1
-          end if
-       end do
+          end do
+       else
+          do m = natpft_lb,natpft_ub
+             if (natveg_patch_exists(gi, m)) then
+                call add_patch(pi=pi, ci=ci, ptype=m, wtcol=wt_nat_patch(gi,m))
+                npatches_added = npatches_added + 1
+             end if
+          end do
+       end if
     end if
 
     SHR_ASSERT_FL(nlunits_added == nlunits, sourcefile, __LINE__)

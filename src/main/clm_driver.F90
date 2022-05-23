@@ -230,14 +230,24 @@ contains
           call t_stopf('interpMonthlyVeg')
        endif
 
+    elseif(use_fates) then
+
+       ! FATES does not use any leaf/stem/htop data unless in satphen mode
+       if ( use_fates_sp) then
+          call t_startf('interpMonthlyVeg')
+          call interpMonthlyVeg(bounds_proc, canopystate_inst)
+          call t_stopf('interpMonthlyVeg')
+       end if
+       
     else
+       
        ! Determine weights for time interpolation of monthly vegetation data.
        ! This also determines whether it is time to read new monthly vegetation and
        ! obtain updated leaf area index [mlai1,mlai2], stem area index [msai1,msai2],
        ! vegetation top [mhvt1,mhvt2] and vegetation bottom [mhvb1,mhvb2]. The
        ! weights obtained here are used in subroutine SatellitePhenology to obtain time
        ! interpolated values.
-       if (doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND ) .or. use_fates_sp) then
+       if ( doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND ) )then
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
@@ -245,6 +255,7 @@ contains
 
     end if
 
+    
     ! ==================================================================================
     ! Determine decomp vertical profiles
     !
