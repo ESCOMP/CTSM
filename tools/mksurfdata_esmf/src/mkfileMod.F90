@@ -270,7 +270,7 @@ contains
        call mkpio_def_spatial_var(pioid=pioid, varname='mapunits', xtype=PIO_INT, &
             long_name='soil texture map units', units='unitless')
 
-       call mkpio_def_spatial_var(pioid=pioid, varname='ORGANIC', xtype=xtype, &
+       call mkpio_def_spatial_var(pioid=pioid, varname='ORGANIC', xtype=PIO_REAL, &
             lev1name='nlevsoi', &
             long_name='organic matter density at soil levels', &
             units='kg/m3 (assumed carbon content 0.58 gC per gOM)')
