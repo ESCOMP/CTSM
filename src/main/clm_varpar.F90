@@ -15,7 +15,7 @@ module clm_varpar
   use clm_varctl   , only: soil_layerstruct_predefined
   use clm_varctl   , only: soil_layerstruct_userdefined
   use clm_varctl   , only: soil_layerstruct_userdefined_nlevsoi
-  use clm_varctl   , only: use_fates, use_cn
+  use clm_varctl   , only: use_fates, use_cn, use_fates_sp
 
   !
   ! !PUBLIC TYPES:
@@ -166,7 +166,7 @@ contains
           if(natpft_ub .ne. maxveg) then
              write(iulog,*) 'when fates is in SP mode, maxveg should match the upper bound'
              write(iulog,*) 'on the surface dataset PFT+CFT indices (ie lsmft), yours: ',natpft_ub,maxveg
-             call endrun(msg='aborting')
+             ! can't endrun due to circular dependencies?
           end if
        end if
        
