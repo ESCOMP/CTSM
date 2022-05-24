@@ -2392,12 +2392,6 @@ If surface water is active or not
 (deprecated -- will be removed)
 </entry>
 
-<entry id="origflag" type="integer" category="clm_physics"
-       group="clm_soilhydrology_inparm" valid_values="0,1" >
-Use original CLM4 soil hydraulic properties
-(deprecated -- will be removed)
-</entry>
-
 <!-- ========================================================================================  -->
 <!-- namelist elements associated with the CH4 Model                                           -->
 <!-- ========================================================================================  -->

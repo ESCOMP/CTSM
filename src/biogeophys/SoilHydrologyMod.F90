@@ -191,12 +191,10 @@ contains
          watsat           =>    soilstate_inst%watsat_col           , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)
          eff_porosity     =>    soilstate_inst%eff_porosity_col     , & ! Output: [real(r8) (:,:) ]  effective porosity = porosity - vol_ice
 
-         h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
-         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)
+         h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col  , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
+         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col  , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)
 
-         origflag         =>    soilhydrology_inst%origflag         , & ! Input:  logical
-         icefrac          =>    soilhydrology_inst%icefrac_col      , & ! Output: [real(r8) (:,:) ]                                                  
-         fracice          =>    soilhydrology_inst%fracice_col        & ! Output: [real(r8) (:,:) ]  fractional impermeability (-)                    
+         icefrac          =>    soilhydrology_inst%icefrac_col        & ! Output: [real(r8) (:,:) ]                                                  
          )
 
     do j = 1,nlevsoi
@@ -209,15 +207,6 @@ contains
           eff_porosity(c,j) = max(0.01_r8,watsat(c,j)-vol_ice(c,j))
           icefrac(c,j) = min(1._r8,vol_ice(c,j)/watsat(c,j))
 
-          ! fracice is only used in code with origflag == 1. For this calculation, we use
-          ! the version of icefrac that was used in this original hydrology code.
-          if (h2osoi_ice(c,j) == 0._r8) then
-             ! Avoid possible divide by zero (in case h2osoi_liq(c,j) is also 0)
-             icefrac_orig = 0._r8
-          else
-             icefrac_orig = min(1._r8,h2osoi_ice(c,j)/(h2osoi_ice(c,j)+h2osoi_liq(c,j)))
-          end if
-          fracice(c,j) = max(0._r8,exp(-3._r8*(1._r8-icefrac_orig))- exp(-3._r8))/(1.0_r8-exp(-3._r8))
        end do
     end do
 
@@ -608,7 +597,6 @@ contains
      real(r8) :: s_node                                  ! soil wetness (-)
      real(r8) :: dzsum                                   ! summation of dzmm of layers below water table (mm)
      real(r8) :: icefracsum                              ! summation of icefrac*dzmm of layers below water table (-)
-     real(r8) :: fracice_rsub(bounds%begc:bounds%endc)   ! fractional impermeability of soil layers (-)
      real(r8) :: ka                                      ! hydraulic conductivity of the aquifer (mm/s)
      real(r8) :: available_h2osoi_liq                    ! available soil liquid water in a layer
      real(r8) :: imped
@@ -655,7 +643,6 @@ contains
           frost_table        =>    soilhydrology_inst%frost_table_col    , & ! Output: [real(r8) (:)   ]  frost table depth (m)                             
           wa                 =>    waterstatebulk_inst%wa_col             , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)              
           qcharge            =>    soilhydrology_inst%qcharge_col        , & ! Input:  [real(r8) (:)   ]  aquifer recharge rate (mm/s)                      
-          origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical  
           
           qflx_drain         =>    waterfluxbulk_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)
           qflx_drain_perched =>    waterfluxbulk_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ]  perched wt sub-surface runoff (mm H2O /s)         
@@ -790,8 +777,7 @@ contains
 
           !===================  water table above frost table  =============================
           ! if water table is above frost table, do not use topmodel baseflow formulation
-          if (zwt(c) < frost_table(c) .and. t_soisno(c,k_frz) <= tfrz &
-               .and. origflag == 0) then
+          if (zwt(c) < frost_table(c) .and. t_soisno(c,k_frz) <= tfrz) then
           else 
              !===================  water table below frost table  =============================
              !--  compute possible perched water table *and* groundwater table afterwards
@@ -877,7 +863,6 @@ contains
      real(r8) :: s_node                                  ! soil wetness (-)
      real(r8) :: dzsum                                   ! summation of dzmm of layers below water table (mm)
      real(r8) :: icefracsum                              ! summation of icefrac*dzmm of layers below water table (-)
-     real(r8) :: fracice_rsub(bounds%begc:bounds%endc)   ! fractional impermeability of soil layers (-)
      real(r8) :: ka                                      ! hydraulic conductivity of the aquifer (mm/s)
      real(r8) :: dza                                     ! fff*(zwt-z(jwt)) (-)
      real(r8) :: available_h2osoi_liq                    ! available soil liquid water in a layer
@@ -940,7 +925,6 @@ contains
           wa                 =>    waterstatebulk_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)              
           ice                =>    soilhydrology_inst%ice_col            , & ! Input:  [real(r8) (:,:) ] soil layer moisture (mm)                         
           qcharge            =>    soilhydrology_inst%qcharge_col        , & ! Input:  [real(r8) (:)   ] aquifer recharge rate (mm/s)                      
-          origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical
           h2osfcflag         =>    soilhydrology_inst%h2osfcflag         , & ! Input:  integer
           
           qflx_snwcp_liq     =>    waterfluxbulk_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]
@@ -980,8 +964,6 @@ contains
           qflx_drain(c)    = 0._r8 
           qflx_rsub_sat(c) = 0._r8
           rsub_top(c)      = 0._r8
-          fracice_rsub(c)  = 0._r8
-
        end do
 
        ! The layer index of the first unsaturated layer, i.e., the layer right above
@@ -1035,8 +1017,7 @@ contains
           !===================  water table above frost table  =============================
           ! if water table is above frost table, do not use topmodel baseflow formulation
 
-          if (zwt(c) < frost_table(c) .and. t_soisno(c,k_frz) <= tfrz &
-               .and. origflag == 0) then
+          if (zwt(c) < frost_table(c) .and. t_soisno(c,k_frz) <= tfrz) then
              ! compute drainage from perched saturated region
              wtsub = 0._r8
              q_perch = 0._r8
@@ -1126,9 +1107,6 @@ contains
                 qflx_drain_perched(c) = q_perch_max * q_perch &
                      *(frost_table(c) - zwt_perched(c))
 
-                ! no perched water table drainage if using original formulation
-                if(origflag == 1) qflx_drain_perched(c) = 0._r8
-
                 ! remove drainage from perched saturated layers
                 rsub_top_tot = -  qflx_drain_perched(c) * dtime
                 do k = k_perch+1, k_frz
@@ -1164,25 +1142,15 @@ contains
                 icefracsum = icefracsum + icefrac(c,j) * dzmm(c,j)
              end do
              ! add ice impedance factor to baseflow
-             if(origflag == 1) then 
-                if (use_vichydro) then
-                   call endrun(msg="VICHYDRO is not available for origflag=1"//errmsg(sourcefile, __LINE__))
-                else
-                   fracice_rsub(c) = max(0._r8,exp(-3._r8*(1._r8-(icefracsum/dzsum))) &
-                        - exp(-3._r8))/(1.0_r8-exp(-3._r8))
-                   imped=(1._r8 - fracice_rsub(c))
-                   rsub_top_max = 5.5e-3_r8
-                end if
+             if (use_vichydro) then
+                imped=10._r8**(-params_inst%e_ice*min(1.0_r8,ice(c,nlayer)/max_moist(c,nlayer)))
+                dsmax_tmp(c) = Dsmax(c) * dtime/ secspday !mm/day->mm/dtime
+                rsub_top_max = dsmax_tmp(c)
              else
-                if (use_vichydro) then
-                   imped=10._r8**(-params_inst%e_ice*min(1.0_r8,ice(c,nlayer)/max_moist(c,nlayer)))
-                   dsmax_tmp(c) = Dsmax(c) * dtime/ secspday !mm/day->mm/dtime
-                   rsub_top_max = dsmax_tmp(c)
-                else
-                   imped=10._r8**(-params_inst%e_ice*(icefracsum/dzsum))
-                   rsub_top_max = 10._r8 * sin((rpi/180.) * col%topo_slope(c))
-                end if
-             endif
+                imped=10._r8**(-params_inst%e_ice*(icefracsum/dzsum))
+                rsub_top_max = 10._r8 * sin((rpi/180.) * col%topo_slope(c))
+             end if
+
              if (use_vichydro) then
                 ! ARNO model for the bottom soil layer (based on bottom soil layer 
                 ! moisture from previous time step
@@ -1560,8 +1528,7 @@ contains
           watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
           zwt                =>    soilhydrology_inst%zwt_col            , & ! Output: [real(r8) (:)   ]  water table depth (m)                             
           zwt_perched        =>    soilhydrology_inst%zwt_perched_col    , & ! Output: [real(r8) (:)   ]  perched water table depth (m)                     
-          frost_table        =>    soilhydrology_inst%frost_table_col    , & ! Output: [real(r8) (:)   ]  frost table depth (m)                             
-          origflag           =>    soilhydrology_inst%origflag            & ! Input:  logical  
+          frost_table        =>    soilhydrology_inst%frost_table_col      & ! Output: [real(r8) (:)   ]  frost table depth (m)                             
           )
 
        ! calculate perched water table location 
@@ -1590,8 +1557,7 @@ contains
 
           !=======  water table above frost table  ===================
           ! if water table is above frost table, do nothing 
-          if (zwt(c) < frost_table(c) .and. t_soisno(c,k_frz) <= tfrz &
-               .and. origflag == 0) then
+          if (zwt(c) < frost_table(c) .and. t_soisno(c,k_frz) <= tfrz) then
           else if (k_frz > 1) then
              !==========  water table below frost table  ============
              ! locate perched water table from bottom up starting at 
