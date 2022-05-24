@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev097    sacks 05/20/2022 Update ccs_config to fix issue on izumi and maybe elsewhere
+    ctsm5.1.dev096     erik 05/18/2022 Fix a few glitches from the last tag
     ctsm5.1.dev095     erik 05/09/2022 Turn soil BGC off for FATES-SP mode, externals updates, FatesSP user-mod directory and compset
     ctsm5.1.dev094   negins 05/06/2022 subset_data allows zeroing out nonveg landunits without any dompft selected
     ctsm5.1.dev093   slevis 05/03/2022 Modifications for FATES-MIMICS to work

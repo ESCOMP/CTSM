@@ -1,4 +1,174 @@
 ===============================================================
+Tag name: ctsm5.1.dev097
+Originator(s): sacks (Bill Sacks)
+Date: Fri May 20 15:30:17 MDT 2022
+One-line Summary: Update ccs_config to fix issue on izumi and maybe elsewhere
+
+Purpose and description of changes
+----------------------------------
+
+Point to latest ccs_config
+
+This fixes an issue I had on izumi where I couldn't run
+anything (https://github.com/ESMCI/ccs_config_cesm/issues/45).
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Externals issues fixed (include issue #):
+https://github.com/ESMCI/ccs_config_cesm/issues/45
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Added LILAC test to the expected fails list (this has been failing for
+  the last 2 tags)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- ccs_config: ccs_config_cesm0.0.35 -> ccs_config_cesm0.0.36
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev096
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed May 18 12:44:01 MDT 2022
+One-line Summary: Fix a few glitches from the last tag
+
+Purpose and description of changes
+----------------------------------
+
+Update cime to fix DAE issue
+modify_neon issue
+When FatesSp is on, make soil_decomp None by default
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   Fixes #1744 -- DAE tests fail
+   Fixes #1743 -- NEON test failing
+   Fixes #1749 -- cime path
+   Fixes #1752 -- modify_neon script
+
+CIME Issues fixed (include issue #): Fix DAE tests
+
+Known bugs introduced in this tag (include issue #):
+   #1759 -- LILAC test fails
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   manage_python_env is at a prototype stage and not fully developed
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   When use_fates_sp is set -- by default soil_decomp_method will be None
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+   Add a simple FatesSp test to aux_clm testlist
+
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - PASS (neon tools)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+    clm_pymods test suite on cheyenne - 
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, ccs_config
+   cime       to cime6.0.27
+   ccs_config to ccs_config_cesm0.035
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #1753 -- Fix modify_singlept_site_neon.py script
+   #1750 -- Correct the path to cime python code
+   #1747 -- Fix a few glitches in last tag
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev095
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Mon May  9 05:02:41 MDT 2022

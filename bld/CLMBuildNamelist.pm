@@ -863,19 +863,32 @@ sub setup_cmdl_bgc {
      }
   }
   #
+  # Set FATES-SP mode
+  #
+  if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_sp', 'use_fates'=>$nl_flags->{'use_fates'} );
+     if ( &value_is_true($nl->get_value('use_fates_sp')) ) {
+        $nl_flags->{'use_fates_sp'} = ".true.";
+     } else {
+        $nl_flags->{'use_fates_sp'} = ".false.";
+     }
+  } else {
+     $nl_flags->{'use_fates_sp'} = ".false.";
+  }
+  #
   # Determine Soil decomposition method
   #
   my $var = "soil_decomp_method";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-              'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+              'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'},
+              'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
   my $soil_decomp_method = remove_leading_and_trailing_quotes( $nl->get_value( $var ) );
 
   if (      &value_is_true($nl_flags->{'use_cn'}) ) {
      if ( $soil_decomp_method eq "None" ) {
         $log->fatal_error("$var must NOT be None if use_cn is on");
      }
-  } elsif ( &value_is_true($nl_flags->{'use_fates'}) && (not &value_is_true($nl->get_value('use_fates_sp')))  )  {
-     print  "use_fates_sp = ", $nl_flags->{'use_fates_sp'}, "\n";
+  } elsif ( &value_is_true($nl_flags->{'use_fates'}) && (not &value_is_true($nl_flags->{'use_fates_sp'}))  )  {
      if ( $soil_decomp_method eq "None" ) {
         $log->fatal_error("$var must NOT be None if use_fates is on and use_fates_sp is not TRUE");
      }
@@ -4105,12 +4118,6 @@ sub setup_logic_fates {
 
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
-        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_sp', 'use_fates'=>$nl_flags->{'use_fates'} );
-        if ( &value_is_true($nl->get_value('use_fates_sp')) ) {
-           $nl_flags->{'use_fates_sp'} = ".true.";
-        } else {
-           $nl_flags->{'use_fates_sp'} = ".false.";
-        }
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                        "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp",
                        "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking" );
