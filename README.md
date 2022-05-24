@@ -1,6 +1,7 @@
 # CTSM
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3739617.svg)](https://doi.org/10.5281/zenodo.3739617)
+[![Documentation Status](https://img.shields.io/readthedocs/ctsm-docs)](https://escomp.github.io/ctsm-docs/versions/master/html/)
 
 ## Overview and resources
 
