@@ -24,15 +24,8 @@ jobs:
         PATH="${PATH}:${HOME}/.local/bin"
     - name: Build book TOC file 
       run: |
-        jupyter-book toc .
-    - name: Build book HTML 
-      run: |
-        jupyter-book build .
-    - name: Push _build/html to gh-pages
-      run: |
-        sudo chown -R $(whoami):$(whoami) .
-        git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
-        git config --global user.name "$GITHUB_ACTOR"
-        git remote set-url origin "https://$GITHUB_ACTOR:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY"
-        ls -lrt
-        ghp-import _build/html -f -p -n
+        docker pull escomp/base
+        mkdir ~/ctsm-repos/ctsm-docs
+        cd ~/ctsm-repos/ctsm/doc
+        ./build_docs -b ~/ctsm-docs -d
+
