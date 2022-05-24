@@ -1,5 +1,10 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev095     erik 05/09/2022 Turn soil BGC off for FATES-SP mode, externals updates, FatesSP user-mod directory and compset
+    ctsm5.1.dev094   negins 05/06/2022 subset_data allows zeroing out nonveg landunits without any dompft selected
+    ctsm5.1.dev093   slevis 05/03/2022 Modifications for FATES-MIMICS to work
+    ctsm5.1.dev092    sacks 04/29/2022 Refactor NutrientCompetition / CNAllocation to provide hooks for AgSys
+    ctsm5.1.dev091   rgknox 04/22/2022 clm decomp method is now passed to fates to enabled mimics coupling
     ctsm5.1.dev090 samrabin 03/31/2022 Fix misleading name of "gddplant"
     ctsm5.1.dev089    sacks 03/31/2022 For CLM45 apply peaklai to aleaf in grainfill
     ctsm5.1.dev088 samrabin 03/28/2022 Add outputs for annual crop sowing and harvest dates

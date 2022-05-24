@@ -11,7 +11,7 @@ module clm_instMod
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates, use_hillslope
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_crop, snow_cover_fraction_method, paramfile
-  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method
+  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, no_soil_decomp, century_decomp, decomp_method
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
   use landunit_varcon , only : istice, istsoil
   use perf_mod        , only : t_startf, t_stopf
@@ -376,7 +376,7 @@ contains
 
     call drydepvel_inst%Init(bounds)
 
-    if (use_cn .or. use_fates ) then
+    if (decomp_method /= no_soil_decomp) then
 
        ! Initialize soilbiogeochem_state_inst
 
@@ -414,10 +414,6 @@ contains
        if (use_c14) then
           call c14_soilbiogeochem_carbonflux_inst%Init(bounds, carbon_type='c14')
        end if
-
-    end if
-
-    if ( use_cn .or. use_fates) then 
 
        ! Initalize soilbiogeochem nitrogen types
 
@@ -570,7 +566,7 @@ contains
        call crop_inst%restart(bounds, ncid, flag=flag)
     end if
 
-    if (use_cn .or. use_fates) then
+    if (decomp_method /= no_soil_decomp) then
 
        call soilbiogeochem_state_inst%restart(bounds, ncid, flag=flag)
        call soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12', &
@@ -596,7 +592,8 @@ contains
             waterstatebulk_inst=water_inst%waterstatebulk_inst, &
             canopystate_inst=canopystate_inst, &
             soilstate_inst=soilstate_inst, &
-            active_layer_inst=active_layer_inst)
+            active_layer_inst=active_layer_inst, &
+            soilbiogeochem_carbonflux_inst=soilbiogeochem_carbonflux_inst)
 
     end if
 

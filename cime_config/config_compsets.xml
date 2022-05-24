@@ -221,6 +221,10 @@
     <lname>2000_DATM%CRUv7_CLM50%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
   <compset>
+    <alias>I2000Clm51FatesSpCruRsGs</alias>
+    <lname>2000_DATM%CRUv7_CLM51%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+  <compset>
     <alias>I2000Clm50FatesCru</alias>
     <lname>2000_DATM%CRUv7_CLM50%FATES_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>

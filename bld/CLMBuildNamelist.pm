@@ -870,9 +870,14 @@ sub setup_cmdl_bgc {
               'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
   my $soil_decomp_method = remove_leading_and_trailing_quotes( $nl->get_value( $var ) );
 
-  if ( &value_is_true($nl_flags->{'use_cn'}) ||  &value_is_true($nl_flags->{'use_fates'}))  {
+  if (      &value_is_true($nl_flags->{'use_cn'}) ) {
      if ( $soil_decomp_method eq "None" ) {
-        $log->fatal_error("$var must NOT be None if use_cn or use_fates are on");
+        $log->fatal_error("$var must NOT be None if use_cn is on");
+     }
+  } elsif ( &value_is_true($nl_flags->{'use_fates'}) && (not &value_is_true($nl->get_value('use_fates_sp')))  )  {
+     print  "use_fates_sp = ", $nl_flags->{'use_fates_sp'}, "\n";
+     if ( $soil_decomp_method eq "None" ) {
+        $log->fatal_error("$var must NOT be None if use_fates is on and use_fates_sp is not TRUE");
      }
   } elsif ( $soil_decomp_method ne "None" ) {
      $log->fatal_error("$var must be None if use_cn and use_fates are off");
@@ -899,6 +904,12 @@ sub setup_cmdl_bgc {
         $var = "use_nitrif_denitrif";
         if ( ! &value_is_true($nl_flags->{$var}) ) {
            $log->warning("$var normally use_nitrif_denitrif should only be FALSE if FATES is on, it has NOT been validated for being off for BGC mode" );
+        }
+     }
+     # if MIMICS is on and use_fates = .true. then use_lch4 must = .true.
+     if ( (! &value_is_true($nl_flags->{'use_lch4'})) && &value_is_true($nl_flags->{'use_fates'}) ) {
+        if ( $soil_decomp_method eq "MIMICSWieder2015" ) {
+           $log->warning("If MIMICS is on and use_fates = .true. then use_lch4 must be .true. and currently it's not" );
         }
      }
   }
@@ -3013,12 +3024,8 @@ sub setup_logic_hydrology_switches {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_subgrid_fluxes');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_cover_fraction_method');
   my $subgrid    = $nl->get_value('use_subgrid_fluxes' );
-  my $origflag   = $nl->get_value('origflag'    );
   my $h2osfcflag = $nl->get_value('h2osfcflag'  );
   my $scf_method = $nl->get_value('snow_cover_fraction_method');
-  if ( $origflag == 1 && &value_is_true($subgrid) ) {
-    $log->fatal_error("if origflag is ON, use_subgrid_fluxes can NOT also be on!");
-  }
   if ( $h2osfcflag == 1 && ! &value_is_true($subgrid) ) {
     $log->fatal_error("if h2osfcflag is ON, use_subgrid_fluxes can NOT be off!");
   }
@@ -3041,9 +3048,6 @@ sub setup_logic_hydrology_switches {
   }
   if ( defined($use_vic) && defined($lower) && (&value_is_true($use_vic)) && $lower != 3 && $lower != 4) {
      $log->fatal_error( "If use_vichydro is on -- lower_boundary_condition can only be table or aquifer" );
-  }
-  if ( defined($origflag) && defined($use_vic) && (&value_is_true($use_vic)) && $origflag == 1 ) {
-     $log->fatal_error( "If use_vichydro is on -- origflag can NOT be equal to 1" );
   }
   if ( defined($h2osfcflag) && defined($lower) && $h2osfcflag == 0 && $lower != 4 ) {
      $log->fatal_error( "If h2osfcflag is 0 lower_boundary_condition can only be aquifer" );
@@ -3228,6 +3232,8 @@ sub setup_logic_hillslope {
 
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hillslope' );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'downscale_hillslope_meteorology' );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_head_gradient_method' );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_transmissivity_method' );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hillslope_routing', 'use_hillslope'=>$nl_flags->{'use_hillslope'} );
   my $use_hillslope = $nl->get_value('use_hillslope');
   my $use_hillslope_routing = $nl->get_value('use_hillslope_routing');

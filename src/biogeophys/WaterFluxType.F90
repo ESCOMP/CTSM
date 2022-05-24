@@ -403,6 +403,7 @@ contains
     ! !USES:
     use histFileMod , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     use clm_varctl  , only : use_hillslope, use_hillslope_routing
+
     !
     ! !ARGUMENTS:
     class(waterflux_type), intent(in) :: this
@@ -858,6 +859,7 @@ contains
     ! !USES:
     use landunit_varcon, only : istsoil, istcrop
     use clm_varctl     , only : use_hillslope_routing
+
     !
     ! !ARGUMENTS:
     class(waterflux_type), intent(in) :: this
