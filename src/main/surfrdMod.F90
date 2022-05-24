@@ -296,6 +296,8 @@ contains
     else
        actual_numcft = 0
     end if
+
+
     
     ! Read maxsoil_patches
     if(.not.use_fates)then
@@ -573,15 +575,20 @@ contains
     real(r8),pointer :: array2d_pft(:,:)                 ! local array
     real(r8),pointer :: array2d_cft(:,:)                 ! local array
     integer :: g,p
+    integer :: cft_dimlen,natpft_dimlen,dimid
     
     character(len=32) :: subname = 'surfrd_fates'! subroutine name
     
+    call ncd_inqdlen(ncid, dimid, cft_dimlen, 'cft')
+    call ncd_inqdlen(ncid, dimid, natpft_dimlen, 'natpft')
 
-    call check_dim_size(ncid, 'cft',    cft_size)
-    call check_dim_size(ncid, 'natpft', natpft_size)
-
-    allocate( array2d_cft(begg:endg,1:cft_size) )
-    allocate( array2d_pft(begg:endg,1:natpft_size) )
+    ! double check that cft_dimlen+natpft_dimlen = natpft_size
+    if((cft_dimlen+natpft_dimlen).ne.natpft_size)then
+       call endrun( msg=' ERROR: PCT+CFT dimlen does not match natpft_size when fates is on'//errMsg(sourcefile, __LINE__))
+    end if
+    
+    allocate( array2d_cft(begg:endg,1:cft_dimlen) )
+    allocate( array2d_pft(begg:endg,1:natpft_dimlen) )
     
     call ncd_io(ncid=ncid, varname='PCT_CFT', flag='read', data=array2d_cft, &
          dim1name=grlnd, readvar=readvar)
@@ -594,16 +601,16 @@ contains
     ! In fates, all the weights in both the cft and pfts go into this array
     ! It is only used by SP mode, and it can choose what PFTs to align with
     
-    wt_nat_patch(begg:,0:natpft_size-1) = array2d_pft(begg:,:)
-    wt_nat_patch(begg:,natpft_size:natpft_size+cft_size-1) = array2d_cft(begg:,:)
+    wt_nat_patch(begg:,0:natpft_dimlen-1) = array2d_pft(begg:,:)
+    wt_nat_patch(begg:,natpft_dimlen:natpft_dimlen+cft_dimlen-1) = array2d_cft(begg:,:)
 
     ! Scale the weights by the lu weights from the dataset
     do g = begg, endg
 
-       do p = 0,natpft_size-1
+       do p = 0,natpft_dimlen-1
           wt_nat_patch(g,p) = wt_nat_patch(g,p) * wt_lunit(g,istsoil)/(wt_lunit(g,istsoil)+wt_lunit(g,istcrop))
        end do
-       do p = natpft_size,natpft_size+cft_size-1
+       do p = natpft_dimlen,natpft_dimlen+cft_dimlen-1
           wt_nat_patch(g,p) = wt_nat_patch(g,p) * wt_lunit(g,istcrop)/(wt_lunit(g,istsoil)+wt_lunit(g,istcrop))
        end do
     end do

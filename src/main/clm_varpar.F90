@@ -155,8 +155,8 @@ contains
        ! The following values should not be used for allocating patch structures
        ! though.  That should be handled completely by maxoil_patches and maxveg
        
-       natpft_size = surf_numpft
-       cft_size    = surf_numcft
+       natpft_size = surf_numpft+surf_numcft
+       cft_size    = 0
        natpft_lb   = 0
        natpft_ub   = surf_numpft+surf_numcft-1
        cft_lb      = 0
