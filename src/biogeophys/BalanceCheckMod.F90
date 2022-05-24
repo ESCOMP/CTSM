@@ -35,7 +35,8 @@ module BalanceCheckMod
   use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
-  use clm_varctl         , only : use_hillslope, use_hillslope_routing
+  use clm_varctl         , only : use_hillslope_routing
+
   !
   ! !PUBLIC TYPES:
   implicit none

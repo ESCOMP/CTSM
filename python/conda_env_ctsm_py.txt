@@ -1,0 +1,11 @@
+# To install this on cheyenne with conda loaded in modules
+# conda create  -n ctsm_py  # Do this one time
+# conda install -n ctsm_py --file conda_env_ctsm_py.txt
+python=3.7.9
+scipy
+netcdf4
+requests
+numpy=1.18.5
+xarray=0.16.2
+pylint=2.8.3
+black=22.3.0

@@ -18,6 +18,7 @@ module HillslopeHydrologyMod
 
   ! !PUBLIC TYPES:
   implicit none
+
   private   
   save
 
@@ -31,6 +32,16 @@ module HillslopeHydrologyMod
   public HillslopeStreamOutflow
   public HillslopeUpdateStreamWater
 
+  integer, public :: head_gradient_method    ! Method for calculating hillslope saturated head gradient
+  integer, public :: transmissivity_method   ! Method for calculating transmissivity of hillslope columns
+  
+  ! Head gradient methods
+  integer, public, parameter :: kinematic = 0
+  integer, public, parameter :: darcy     = 1
+  ! Transmissivity methods
+  integer, public, parameter :: uniform_transmissivity = 0
+  integer, public, parameter :: layersum = 1
+  ! Streamflow methods
   integer, public, parameter :: streamflow_manning = 0 
 
   ! PRIVATE 
@@ -42,6 +53,89 @@ module HillslopeHydrologyMod
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine read_hillslope_hydrology_namelist()
+    !
+    ! DESCRIPTION
+    ! read in hillslope hydrology namelist variables
+    !
+    ! !USES:
+    use abortutils      , only : endrun
+    use fileutils       , only : getavu, relavu
+    use spmdMod         , only : mpicom, masterproc
+    use shr_mpi_mod     , only : shr_mpi_bcast
+    use clm_varctl      , only : iulog
+    use controlMod      , only : NLFilename
+    use clm_nlUtilsMod  , only : find_nlgroup_name
+
+    ! !ARGUMENTS:
+    !------------------------------------------------------------------------------
+    implicit none
+    integer            :: nu_nml                     ! unit for namelist file
+    integer            :: nml_error                  ! namelist i/o error flag
+    character(len=*), parameter :: nmlname = 'hillslope_hydrology_inparm'
+    character(*), parameter    :: subName = "('read_hillslope_hydrology_namelist')"
+    character(len=50) :: hillslope_head_gradient_method  = 'Darcy'     ! head gradient method string
+    character(len=50) :: hillslope_transmissivity_method = 'LayerSum' ! transmissivity method string
+    !-----------------------------------------------------------------------
+
+! MUST agree with name in namelist and read statement
+    namelist /hillslope_hydrology_inparm/ &
+         hillslope_head_gradient_method,            &
+         hillslope_transmissivity_method
+
+    ! Default values for namelist
+    head_gradient_method  = darcy
+    transmissivity_method = layersum
+
+    ! Read hillslope hydrology namelist
+    if (masterproc) then
+       nu_nml = getavu()
+       open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
+       call find_nlgroup_name(nu_nml, 'hillslope_hydrology_inparm', status=nml_error)
+       if (nml_error == 0) then
+          read(nu_nml, nml=hillslope_hydrology_inparm,iostat=nml_error)
+          if (nml_error /= 0) then
+             call endrun(subname // ':: ERROR reading hillslope hydrology namelist')
+          end if
+       else
+          call endrun(subname // ':: ERROR reading hillslope hydrology namelist')
+       end if
+       close(nu_nml)
+       call relavu( nu_nml )
+
+       ! Convert namelist strings to numerical values
+       if (      trim(hillslope_head_gradient_method) == 'Kinematic' ) then
+          head_gradient_method = kinematic
+       else if ( trim(hillslope_head_gradient_method) == 'Darcy'     ) then
+          head_gradient_method = darcy
+       else
+          call endrun(msg="ERROR bad value for hillslope_head_gradient_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+
+       if (      trim(hillslope_transmissivity_method) == 'Uniform' ) then
+          transmissivity_method = uniform_transmissivity
+       else if ( trim(hillslope_transmissivity_method) == 'LayerSum'     ) then
+          transmissivity_method = layersum
+       else
+          call endrun(msg="ERROR bad value for hillslope_transmissivity_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+    endif
+
+    call shr_mpi_bcast(head_gradient_method, mpicom)
+    call shr_mpi_bcast(transmissivity_method, mpicom)
+
+    if (masterproc) then
+
+       write(iulog,*) ' '
+       write(iulog,*) 'hillslope_hydrology settings:'
+       write(iulog,*) '  hillslope_head_gradient_method  = ',hillslope_head_gradient_method
+       write(iulog,*) '  hillslope_transmissivity_method = ',hillslope_transmissivity_method
+
+    endif
+
+  end subroutine read_hillslope_hydrology_namelist
 
   !-----------------------------------------------------------------------
 
@@ -98,6 +192,9 @@ contains
     character(len=*), parameter :: subname = 'InitHillslope'
 
     !-----------------------------------------------------------------------
+
+    ! Read in hillslope_hydrology namelist variables
+    call read_hillslope_hydrology_namelist()
 
     ! Open surface dataset to read in data below 
 
@@ -390,10 +487,12 @@ contains
                 ! from initVertical:
                 ! integer, parameter :: LEVGRND_CLASS_STANDARD        = 1
                 ! integer, parameter :: LEVGRND_CLASS_DEEP_BEDROCK    = 2
+                ! integer, parameter :: LEVGRND_CLASS_SHALLOW_BEDROCK = 3
+
                 ! just hardcoding for now...
                 col%levgrnd_class(c, 1:col%nbedrock(c)) = 1
                 if (col%nbedrock(c) < nlevsoi) then
-                   col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = 2
+                   col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = 3
                 end if
                 
              endif
@@ -507,7 +606,7 @@ contains
     endif
     if ( allocated(hill_pftndx) ) then
        deallocate(hill_pftndx)
-       call HillslopePftFromFile()
+       call HillslopePftFromFile(bounds)
 
     else
        ! Modify pft distributions
@@ -515,14 +614,14 @@ contains
        ! to ensure patch exists in every gridcell
 
        ! Specify single dominant pft per gridcell
-       call HillslopeDominantPft()
+       call HillslopeDominantPft(bounds)
 
        ! Specify different pfts for uplands / lowlands
-       !call HillslopeDominantLowlandPft()
+       !call HillslopeDominantLowlandPft(bounds)
        
        !upland_ivt  = 13 ! c3 non-arctic grass
        !lowland_ivt = 7  ! broadleaf deciduous tree 
-       !call HillslopeSetLowlandUplandPfts(lowland_ivt=7,upland_ivt=13)
+       !call HillslopeSetLowlandUplandPfts(bounds,lowland_ivt=7,upland_ivt=13)
     endif
 
     call ncd_pio_closefile(ncid)
@@ -633,7 +732,7 @@ contains
   end subroutine HillslopeSoilThicknessProfile
 
   !------------------------------------------------------------------------
-  subroutine HillslopeSetLowlandUplandPfts(lowland_ivt,upland_ivt)
+  subroutine HillslopeSetLowlandUplandPfts(bounds,lowland_ivt,upland_ivt)
     !
     ! !DESCRIPTION: 
     ! Reassign patch weights such that each column has a single pft.
@@ -644,72 +743,60 @@ contains
     ! !USES
     use LandunitType    , only : lun                
     use ColumnType      , only : col                
-    use decompMod       , only : get_clump_bounds, get_proc_clumps
     use clm_varcon      , only : ispval
     use landunit_varcon , only : istsoil, istcrop
     use PatchType       , only : patch
     !
     ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: upland_ivt
+    integer, intent(in) :: lowland_ivt
     !
     ! !LOCAL VARIABLES:
     integer :: nc,p,pu,pl,l,c    ! indices
-    integer :: nclumps             ! number of clumps on this processor
     
-    integer, intent(in) :: upland_ivt
-    integer, intent(in) :: lowland_ivt
     real(r8) :: sum_wtcol, sum_wtlun, sum_wtgrc
-    type(bounds_type) :: bounds_proc
-    type(bounds_type) :: bounds_clump
 
     !------------------------------------------------------------------------
 
-    nclumps = get_proc_clumps()
+    do l = bounds%begl, bounds%endl
+       do c = lun%coli(l), lun%colf(l)
+          if (col%is_hillslope_column(c)) then
+             sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
+             sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
+             sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
+             pl = ispval
+             pu = ispval
+             do p = col%patchi(c), col%patchf(c)
+                if(patch%itype(p) == lowland_ivt) pl = p
+                if(patch%itype(p) == upland_ivt)  pu = p
+             enddo
 
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, l, c)
-    do nc = 1, nclumps
+             ! only reweight if pfts exist within column
+             if (pl /= ispval .and. pu /= ispval) then
+                patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
+                patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
+                patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
 
-       call get_clump_bounds(nc, bounds_clump)
-
-       do l = bounds_clump%begl, bounds_clump%endl
-          do c = lun%coli(l), lun%colf(l)
-             if (col%is_hillslope_column(c)) then
-                sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
-                sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
-                sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
-                pl = ispval
-                pu = ispval
-                do p = col%patchi(c), col%patchf(c)
-                   if(patch%itype(p) == lowland_ivt) pl = p
-                   if(patch%itype(p) == upland_ivt)  pu = p
-                enddo
-
-                ! only reweight if pfts exist within column
-                if (pl /= ispval .and. pu /= ispval) then
-                   patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
-                   patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
-                   patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
-
-                ! hillbottom
-                   if(col%cold(c) == ispval) then
-                      patch%wtcol(pl) = sum_wtcol
-                      patch%wtlunit(pl) = sum_wtlun
-                      patch%wtgcell(pl) = sum_wtgrc
-                   else
-                      patch%wtcol(pu) = sum_wtcol
-                      patch%wtlunit(pu) = sum_wtlun
-                      patch%wtgcell(pu) = sum_wtgrc
-                   endif
+             ! hillbottom
+                if(col%cold(c) == ispval) then
+                   patch%wtcol(pl) = sum_wtcol
+                   patch%wtlunit(pl) = sum_wtlun
+                   patch%wtgcell(pl) = sum_wtgrc
+                else
+                   patch%wtcol(pu) = sum_wtcol
+                   patch%wtlunit(pu) = sum_wtlun
+                   patch%wtgcell(pu) = sum_wtgrc
                 endif
              endif
-          enddo    ! end loop c
-       enddo ! end loop l
-    enddo    ! end loop nc
-    !$OMP END PARALLEL DO
+          endif
+       enddo    ! end loop c
+    enddo ! end loop l
 
   end subroutine HillslopeSetLowlandUplandPfts
 
   !------------------------------------------------------------------------
-  subroutine HillslopeDominantPft()
+  subroutine HillslopeDominantPft(bounds)
     !
     ! !DESCRIPTION: 
     ! Reassign patch weights such that each column has a single pft  
@@ -725,51 +812,40 @@ contains
     use PatchType       , only : patch
     !
     ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: nc,p,pu,pl,l,c    ! indices
-    integer :: nclumps             ! number of clumps on this processor
     integer :: pdom(1)
     real(r8) :: sum_wtcol, sum_wtlun, sum_wtgrc
-    type(bounds_type) :: bounds_proc
-    type(bounds_type) :: bounds_clump
 
     !------------------------------------------------------------------------
 
-    nclumps = get_proc_clumps()
+    do l = bounds%begl, bounds%endl
+       do c = lun%coli(l), lun%colf(l)
+          if (col%is_hillslope_column(c)) then
+             pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
+             pdom = pdom + (col%patchi(c) - 1)
 
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, l, c)
-    do nc = 1, nclumps
+             sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
+             sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
+             sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
 
-       call get_clump_bounds(nc, bounds_clump)
+             patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
+             patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
+             patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
 
-       do l = bounds_clump%begl, bounds_clump%endl
-          do c = lun%coli(l), lun%colf(l)
-             if (col%is_hillslope_column(c)) then
-                pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
-                pdom = pdom + (col%patchi(c) - 1)
-
-                sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
-                sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
-                sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
-
-                patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
-                patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
-                patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
-
-                patch%wtcol(pdom(1)) = sum_wtcol
-                patch%wtlunit(pdom(1)) = sum_wtlun
-                patch%wtgcell(pdom(1)) = sum_wtgrc
-             endif
-          enddo    ! end loop c
-       enddo ! end loop l
-    enddo    ! end loop nc
-    !$OMP END PARALLEL DO
+             patch%wtcol(pdom(1)) = sum_wtcol
+             patch%wtlunit(pdom(1)) = sum_wtlun
+             patch%wtgcell(pdom(1)) = sum_wtgrc
+          endif
+       enddo    ! end loop c
+    enddo ! end loop l
 
   end subroutine HillslopeDominantPft
 
   !------------------------------------------------------------------------
-  subroutine HillslopeDominantLowlandPft()
+  subroutine HillslopeDominantLowlandPft(bounds)
     !
     ! !DESCRIPTION: 
     ! Reassign patch weights such that each column has a single, 
@@ -786,99 +862,88 @@ contains
     use PatchType       , only : patch
     !
     ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: nc,p,pu,pl,l,c    ! indices
-    integer :: nclumps             ! number of clumps on this processor
     integer :: pdom(1),psubdom(1)
     integer :: plow, phigh
     real(r8) :: sum_wtcol, sum_wtlun, sum_wtgrc
     real(r8),allocatable :: mask(:)
-    type(bounds_type) :: bounds_proc
-    type(bounds_type) :: bounds_clump
 
     !------------------------------------------------------------------------
 
-    nclumps = get_proc_clumps()
+    do l = bounds%begl, bounds%endl
+       do c = lun%coli(l), lun%colf(l)
+          if (col%is_hillslope_column(c)) then
+             pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
+             ! create mask to exclude pdom
+             allocate(mask(col%npatches(c)))
+             mask(:) = 1.
+             mask(pdom(1)) = 0.
 
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, l, c)
-    do nc = 1, nclumps
+             pdom = pdom + (col%patchi(c) - 1)
 
-       call get_clump_bounds(nc, bounds_clump)
+             psubdom = maxloc(mask*patch%wtcol(col%patchi(c):col%patchf(c)))
+             psubdom = psubdom + (col%patchi(c) - 1)
+             deallocate(mask)
 
-       do l = bounds_clump%begl, bounds_clump%endl
-          do c = lun%coli(l), lun%colf(l)
-             if (col%is_hillslope_column(c)) then
-                pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
-                ! create mask to exclude pdom
-                allocate(mask(col%npatches(c)))
-                mask(:) = 1.
-                mask(pdom(1)) = 0.
+             sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
+             sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
+             sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
 
-                pdom = pdom + (col%patchi(c) - 1)
+             patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
+             patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
+             patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
 
-                psubdom = maxloc(mask*patch%wtcol(col%patchi(c):col%patchf(c)))
-                psubdom = psubdom + (col%patchi(c) - 1)
-                deallocate(mask)
-
-                sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
-                sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
-                sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
-
-                patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
-                patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
-                patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
-
-                ! assumes trees are 1-8, shrubs 9-11, and grasses 12-14
-                ! and puts the lowest ivt on the lowland column
-                if ((patch%itype(pdom(1)) > patch%itype(psubdom(1)) &
-                     .and. patch%itype(psubdom(1)) > 0) .or. &
-                     (patch%itype(pdom(1)) == 0)) then
-                   plow = psubdom(1)
-                   phigh = pdom(1)
-                else
-                   plow = pdom(1)
-                   phigh = psubdom(1)
-                endif
-
-                ! Special cases (subjective)
-                
-                ! if NET/BDT assign BDT to lowland
-                if ((patch%itype(pdom(1)) == 1) .and. (patch%itype(psubdom(1)) < 9)) then
-                   plow = psubdom(1)        
-                   phigh = pdom(1)
-                endif
-                ! if C3/C4 assign C4 to lowland
-                if ((patch%itype(pdom(1)) == 14) .and. (patch%itype(psubdom(1)) == 13)) then
-                   plow = pdom(1)        
-                   phigh = psubdom(1)
-                endif
-                if ((patch%itype(pdom(1)) == 13) .and. (patch%itype(psubdom(1)) == 14)) then
-                   plow = psubdom(1)        
-                   phigh = pdom(1)
-                endif
-                
-                if(col%cold(c) == ispval) then
-                   ! lowland column
-                   patch%wtcol(plow)   = sum_wtcol
-                   patch%wtlunit(plow) = sum_wtlun
-                   patch%wtgcell(plow) = sum_wtgrc
-                else
-                   ! upland columns
-                   patch%wtcol(phigh)   = sum_wtcol
-                   patch%wtlunit(phigh) = sum_wtlun
-                   patch%wtgcell(phigh) = sum_wtgrc
-                endif
+             ! assumes trees are 1-8, shrubs 9-11, and grasses 12-14
+             ! and puts the lowest ivt on the lowland column
+             if ((patch%itype(pdom(1)) > patch%itype(psubdom(1)) &
+                  .and. patch%itype(psubdom(1)) > 0) .or. &
+                  (patch%itype(pdom(1)) == 0)) then
+                plow = psubdom(1)
+                phigh = pdom(1)
+             else
+                plow = pdom(1)
+                phigh = psubdom(1)
              endif
-          enddo    ! end loop c
-       enddo ! end loop l
-    enddo    ! end loop nc
-    !$OMP END PARALLEL DO
+
+             ! Special cases (subjective)
+
+             ! if NET/BDT assign BDT to lowland
+             if ((patch%itype(pdom(1)) == 1) .and. (patch%itype(psubdom(1)) < 9)) then
+                plow = psubdom(1)        
+                phigh = pdom(1)
+             endif
+             ! if C3/C4 assign C4 to lowland
+             if ((patch%itype(pdom(1)) == 14) .and. (patch%itype(psubdom(1)) == 13)) then
+                plow = pdom(1)        
+                phigh = psubdom(1)
+             endif
+             if ((patch%itype(pdom(1)) == 13) .and. (patch%itype(psubdom(1)) == 14)) then
+                plow = psubdom(1)        
+                phigh = pdom(1)
+             endif
+
+             if(col%cold(c) == ispval) then
+                ! lowland column
+                patch%wtcol(plow)   = sum_wtcol
+                patch%wtlunit(plow) = sum_wtlun
+                patch%wtgcell(plow) = sum_wtgrc
+             else
+                ! upland columns
+                patch%wtcol(phigh)   = sum_wtcol
+                patch%wtlunit(phigh) = sum_wtlun
+                patch%wtgcell(phigh) = sum_wtgrc
+             endif
+          endif
+       enddo    ! end loop c
+    enddo ! end loop l
 
   end subroutine HillslopeDominantLowlandPft
 
   !------------------------------------------------------------------------
-  subroutine HillslopePftFromFile()
+  subroutine HillslopePftFromFile(bounds)
     !
     ! !DESCRIPTION: 
     ! Reassign patch weights using indices from surface data file
@@ -894,62 +959,51 @@ contains
     use GridcellType    , only : grc
     !
     ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: nc,p,pc,l,c    ! indices
-    integer :: nclumps             ! number of clumps on this processor
     real(r8) :: sum_wtcol, sum_wtlun, sum_wtgrc
-    type(bounds_type) :: bounds_proc
-    type(bounds_type) :: bounds_clump
 
     !------------------------------------------------------------------------
 
-    nclumps = get_proc_clumps()
+    do l = bounds%begl, bounds%endl
+       do c = lun%coli(l), lun%colf(l)
+          if (col%is_hillslope_column(c)) then
+             ! this may require modifying
+             ! subgridMod/natveg_patch_exists to ensure that
+             ! a patch exists on each column
 
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, l, c)
-    do nc = 1, nclumps
+             ! find patch index of specified vegetation type
+             pc = ispval
+             do p = col%patchi(c), col%patchf(c)
+                if(patch%itype(p) == col%hill_pftndx(c)) pc = p
+             enddo
 
-       call get_clump_bounds(nc, bounds_clump)
+             ! only reweight if pft exist within column
+             if (pc /= ispval) then
+                sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
+                sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
+                sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
 
-       do l = bounds_clump%begl, bounds_clump%endl
-          do c = lun%coli(l), lun%colf(l)
-             if (col%is_hillslope_column(c)) then
-                ! this may require modifying
-                ! subgridMod/natveg_patch_exists to ensure that
-                ! a patch exists on each column
-                
-                ! find patch index of specified vegetation type
-                pc = ispval
-                do p = col%patchi(c), col%patchf(c)
-                   if(patch%itype(p) == col%hill_pftndx(c)) pc = p
-                enddo
-                
-                ! only reweight if pft exist within column
-                if (pc /= ispval) then
-                   sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
-                   sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
-                   sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
-                   
-                   patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
-                   patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
-                   patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
+                patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
+                patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
+                patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
 
-                   patch%wtcol(pc)   = sum_wtcol
-                   patch%wtlunit(pc) = sum_wtlun
-                   patch%wtgcell(pc) = sum_wtgrc
+                patch%wtcol(pc)   = sum_wtcol
+                patch%wtlunit(pc) = sum_wtlun
+                patch%wtgcell(pc) = sum_wtgrc
 
-                else
-                   write(iulog,*) 'no pft in column ',c, col%hill_pftndx(c)
-                   write(iulog,*) 'pfts ',c,patch%itype(col%patchi(c):col%patchf(c))
-                   write(iulog,*) 'weights ',c,patch%wtcol(col%patchi(c):col%patchf(c))
-                   write(iulog,*) 'location ',c,grc%londeg(col%gridcell(c)),grc%latdeg(col%gridcell(c))
-                   
-                endif
+             else
+                write(iulog,*) 'no pft in column ',c, col%hill_pftndx(c)
+                write(iulog,*) 'pfts ',c,patch%itype(col%patchi(c):col%patchf(c))
+                write(iulog,*) 'weights ',c,patch%wtcol(col%patchi(c):col%patchf(c))
+                write(iulog,*) 'location ',c,grc%londeg(col%gridcell(c)),grc%latdeg(col%gridcell(c))
+
              endif
-          enddo    ! end loop c
-       enddo ! end loop l
-    enddo    ! end loop nc
-    !$OMP END PARALLEL DO
+          endif
+       enddo    ! end loop c
+    enddo ! end loop l
 
   end subroutine HillslopePftFromFile
 

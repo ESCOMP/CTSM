@@ -744,6 +744,16 @@ Toggle to turn on meteorological downscaling in hillslope model
 Toggle to turn on surface water routing in the hillslope hydrology model
 </entry>
 
+<entry id="hillslope_head_gradient_method" type="char*256" category="physics"
+        group="hillslope_hydrology_inparm" valid_values="Kinematic,Darcy">
+Method for calculating hillslope saturated head gradient
+</entry>
+
+<entry id="hillslope_transmissivity_method" type="char*256" category="physics"
+        group="hillslope_hydrology_inparm" valid_values="LayerSum,Uniform">
+Method for calculating transmissivity of hillslope columns
+</entry>
+
 <entry id="use_hydrstress" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the plant hydraulic stress model
