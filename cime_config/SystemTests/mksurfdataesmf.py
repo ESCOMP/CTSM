@@ -33,6 +33,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
         # Paths and strings needed throughout
         ctsm_root = self._case.get_value('COMP_ROOT_DIR_LND')
         self._tool_path = os.path.join(ctsm_root, 'tools/mksurfdata_esmf')
+        self._tool_bld = os.path.join(self._get_caseroot(), 'tool_bld')
         time_stamp = datetime.today().strftime("%y%m%d")
         self._res = '10x15'  # see important comment in script's docstring
         self._model_yr = '1850'
@@ -55,20 +56,19 @@ class MKSURFDATAESMF(SystemTestsCommon):
         # if the test stops and gets restarted.
         if sharedlib_only == True:
             # Paths and strings
-            bld_dir = os.path.join(self._tool_path, 'bld')
             build_script_path = os.path.join(self._tool_path,
                 'gen_mksurfdata_build.sh')
             nml_script_path = os.path.join(self._tool_path,
                 'gen_mksurfdata_namelist.py')
             gen_mksurfdata_namelist = f'{nml_script_path} --res {self._res} --start-year {self._model_yr} --end-year {self._model_yr}'
 
-            # Build executable that will generate fsurdat (first rm -rf /bld)
+            # Rm tool_bld and build executable that will generate fsurdat
             try:
-                shutil.rmtree(os.path.join(bld_dir))
-            except OSError as e:
-                sys.exit(f'{e} ERROR REMOVING {bld_dir}. DETAILS IN {self._TestStatus_log_path}')
+                subprocess.check_call(f'rm -rf {self._tool_bld}', shell=True)
+            except subprocess.CalledProcessError as e:
+                sys.exit(f'{e} ERROR REMOVING {self._tool_bld}. DETAILS IN {self._TestStatus_log_path}')
             try:
-                subprocess.check_call(build_script_path, shell=True)
+                subprocess.check_call(f'{build_script_path} --blddir {self._tool_bld}', shell=True)
             except subprocess.CalledProcessError as e:
                 sys.exit(f'{e} ERROR RUNNING {build_script_path}. DETAILS IN {self._TestStatus_log_path}')
 
@@ -96,7 +96,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
         Submit CTSM run that uses fsurdat just generated
         """
         # Paths and command strings
-        executable_path = os.path.join(self._tool_path, 'bld/mksurfdata')
+        executable_path = os.path.join(self._tool_bld, 'mksurfdata')
         machine = self._case.get_value("MACH")
         if machine == 'cheyenne':
             mpi_cmd = f'mpiexec_mpt -np 144 {executable_path} < {self._fsurdat_namelist}'

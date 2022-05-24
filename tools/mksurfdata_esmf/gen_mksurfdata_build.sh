@@ -1,11 +1,36 @@
 #! /bin/bash -f
 
-# usage subroutine
+#----------------------------------------------------------------------
+# Usage subroutine
+usage() {
+  echo ""
+  echo "***********************************************************************"
+  echo "usage:"
+  echo "./gen_mksurfdata_build.sh"
+  echo ""
+  echo "valid arguments: "
+  echo "[-h|--help]  "
+  echo "     Displays this help message"
+  echo "[-v|--verbose]  "
+  echo "     Run in verbose mode"
+  echo "[-b|--blddir <blddir>]  "
+  echo "     Overwrites default, which is /bld in the same directory as ./gen_mksurfdata_build.sh"
+  echo "[-m|--machine <machine>]  "
+  echo "     Overwrites default MACH"
+  echo "***********************************************************************"
+}
 
 
-hostname=`hostname --short`
+# Current working directory: the location of ./gen_mksurfdata_build.sh
+cwd=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+# Default settings
+verbose="No"
+blddir=$cwd/bld  # may overwrite this default with command-line option (below)
 
 # Define what machine to use that's been ported to cime
+# May overwrite this default with command-line option --machine
+hostname=`hostname --short`
 case $hostname in
   ##cheyenne
   cheyenne* | r* )
@@ -21,22 +46,41 @@ case $hostname in
       ;;
 esac
 
-cwd=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-builddir=$cwd/bld
-
-# command line code
-# -b to overwrite builddir
-# -m to overwrite MACH
+# Parse command-line options
+while [ $# -gt 0 ]; do
+   case $1 in
+       -h|--help )
+           usage
+           exit 0
+           ;;
+       -v|--verbose )
+           verbose="Yes"
+           ;;
+       -b|--blddir )
+           blddir=$2
+           shift
+           ;;
+       -m|--machine )
+           MACH=$2
+           shift
+           ;;
+       * )
+           echo "ERROR:: invalid argument sent in: $2"
+           usage
+           exit 1
+           ;;
+   esac
+   shift
+done
 
 # Create /bld directory
 echo "cime Machine is: $MACH..."
-if [ -d "$builddir" ]; then
+if [ -d "$blddir" ]; then
   echo "A /bld directory exists; remove it to do a clean build..."
   exit 1
 fi
-rm -rf $builddir
-mkdir $builddir
-cd $builddir
+mkdir $blddir
+cd $blddir
 
 # Run the cime configure tool to figure out what modules need to be loaded
 echo "Run cime configure for machine $MACH..."
