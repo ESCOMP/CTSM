@@ -494,7 +494,13 @@ def main ():
         fdyndat = f"landuse.timeseries_{res}_{ssp_rcp_name}_{num_pft}_CMIP6_{start_year}-{end_year}_c{time_stamp}.nc"
 
     git_desc_cmd = f"git -C {tool_path} describe"
-    gitdescribe = subprocess.check_output(git_desc_cmd, shell=True).strip()
+    try:
+        # The "git -C" option permits a system test to run this tool from
+        # elsewhere while running the git command from the tool_path
+        gitdescribe = subprocess.check_output(git_desc_cmd, shell=True).strip()
+    except subprocess.CalledProcessError as e:
+        # In case the "git -C" option is unavailable, as on casper (2022/5/24)
+        gitdescribe = subprocess.check_output('git describe', shell=True).strip()
     gitdescribe = gitdescribe.decode('utf-8')
 
     # The below two overrides are only used for testing an validation
