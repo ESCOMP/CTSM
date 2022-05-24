@@ -1067,7 +1067,7 @@ contains
 
       do l = bounds%begl,bounds%endl
          qstreamflow(l) = 0._r8
-         if(lun%itype(l) == istsoil) then
+         if(lun%itype(l) == istsoil .and. lun%active(l)) then
             ! Streamflow calculated from Manning equation
             if(streamflow_method == streamflow_manning) then
                cross_sectional_area = stream_water_volume(l) &
@@ -1106,6 +1106,10 @@ contains
 
                   qstreamflow(l) = max(0._r8,min(qstreamflow(l),stream_water_volume(l)/dtime))
                endif
+            else
+               if (masterproc) then
+                  call endrun( 'ERROR:: invalid streamflow_method'//errmsg(sourcefile, __LINE__) )
+               end if
             endif
          endif ! end of istsoil
       enddo    ! end of loop over landunits
