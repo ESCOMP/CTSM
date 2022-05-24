@@ -167,6 +167,7 @@ contains
     integer,  allocatable :: col_ndx(:,:)       ! column index
     integer,  allocatable :: col_dndx(:,:)      ! downhill column index
     integer,  allocatable :: hill_pftndx(:,:)   ! hillslope pft index []
+    integer,  allocatable :: col_pftndx(:)      ! hillslope column pft index []
     real(r8), pointer     :: fhillslope_in(:,:) ! read in - float
     real(r8), allocatable :: pct_hillslope(:,:) ! percent of landunit occupied by hillslope
     real(r8), allocatable :: hill_slope(:,:)    ! hillslope slope  [m/m]
@@ -212,6 +213,7 @@ contains
          hill_length  (bounds%begl:bounds%endl,max_columns_hillslope), &
          hill_width   (bounds%begl:bounds%endl,max_columns_hillslope), &
          hill_height  (bounds%begl:bounds%endl,max_columns_hillslope), &
+         col_pftndx   (bounds%begc:bounds%endc), &
          stat=ierr)
 
     allocate(ncolumns_hillslope_in(bounds%begg:bounds%endg))
@@ -496,8 +498,9 @@ contains
                 end if
                 
              endif
-             if ( allocated(hill_pftndx) ) &
-                  col%hill_pftndx(c) = hill_pftndx(l,ci)
+             if ( allocated(hill_pftndx) ) then
+                col_pftndx(c) = hill_pftndx(l,ci)
+             endif
              
           enddo
 
@@ -577,7 +580,7 @@ contains
                 col%wtlunit(c) = (col%hill_area(c)/hillslope_area(nh)) &
                      * (pct_hillslope(l,nh)*0.01_r8)
              else
-                ! do not reweight if no input hillslope data 
+                ! do not reweight if column is not a hillslope column
                 !col%wtlunit(c) = 0._r8
              endif
              check_weight = check_weight + col%wtlunit(c)
@@ -587,6 +590,9 @@ contains
              write(iulog,*) 'weights: ', col%wtlunit(lun%coli(l):lun%colf(l))
              write(iulog,*) 'location: ',grc%londeg(g),grc%latdeg(g)
              write(iulog,*) ' '
+             if (masterproc) then
+                call endrun( 'ERROR:: column weights do not sum to 1.'//errmsg(sourcefile, __LINE__) )
+             end if
           endif
        endif
     enddo
@@ -606,8 +612,10 @@ contains
     endif
     if ( allocated(hill_pftndx) ) then
        deallocate(hill_pftndx)
-       call HillslopePftFromFile(bounds)
+       
+       call HillslopePftFromFile(bounds,col_pftndx)
 
+       deallocate(col_pftndx)
     else
        ! Modify pft distributions
        ! this may require modifying subgridMod/natveg_patch_exists
@@ -943,7 +951,7 @@ contains
   end subroutine HillslopeDominantLowlandPft
 
   !------------------------------------------------------------------------
-  subroutine HillslopePftFromFile(bounds)
+  subroutine HillslopePftFromFile(bounds,col_pftndx)
     !
     ! !DESCRIPTION: 
     ! Reassign patch weights using indices from surface data file
@@ -960,6 +968,7 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
+    integer, intent(in)           :: col_pftndx(:)
     !
     ! !LOCAL VARIABLES:
     integer :: nc,p,pc,l,c    ! indices
@@ -977,7 +986,7 @@ contains
              ! find patch index of specified vegetation type
              pc = ispval
              do p = col%patchi(c), col%patchf(c)
-                if(patch%itype(p) == col%hill_pftndx(c)) pc = p
+                if(patch%itype(p) == col_pftndx(c)) pc = p
              enddo
 
              ! only reweight if pft exist within column
@@ -995,7 +1004,7 @@ contains
                 patch%wtgcell(pc) = sum_wtgrc
 
              else
-                write(iulog,*) 'no pft in column ',c, col%hill_pftndx(c)
+                write(iulog,*) 'no pft in column ',c, col_pftndx(c)
                 write(iulog,*) 'pfts ',c,patch%itype(col%patchi(c):col%patchf(c))
                 write(iulog,*) 'weights ',c,patch%wtcol(col%patchi(c):col%patchf(c))
                 write(iulog,*) 'location ',c,grc%londeg(col%gridcell(c)),grc%latdeg(col%gridcell(c))
