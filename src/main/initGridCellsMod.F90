@@ -240,6 +240,11 @@ contains
     if (nlunits > 0) then
        call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
        nlunits_added = nlunits_added + 1
+       ! Potentially create multiple columns (e.g., for hillslope hydrology), but each
+       ! with the same PFT breakdown.
+       !
+       ! Set column weight arbitrarily for now. If we have multiple columns because we're
+       ! using hillslope hydrology, then col%wtlunit will be modified in InitHillslope.
        wtcol2lunit = 1.0_r8/real(ncols,r8)
        do ci2 = 1,ncols
           call add_column(ci=ci, li=li, ctype=1, wtlunit=wtcol2lunit)

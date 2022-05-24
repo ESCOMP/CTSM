@@ -87,7 +87,6 @@ contains
     call subgrid_get_info_natveg(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
 
-    !scs jks HH-FATES
     ! call this after natveg call because we allocate space for
     ! FATES cohorts based on the number of naturally vegetated columns
     ! and nothing else
@@ -115,9 +114,6 @@ contains
     call subgrid_get_info_crop(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
    
-    !move up for FATES
-!scs jks !call subgrid_get_info_cohort(gi, ncols_temp, ncohorts)
-
   contains
     subroutine accumulate_counters
       ! Accumulate running sums of patches, columns and landunits.
@@ -171,6 +167,7 @@ contains
        else
           ncols = 1
        endif
+       ! Assume that each PFT present in the grid cell is present in every column
        npatches = ncols*npatches
 
     else

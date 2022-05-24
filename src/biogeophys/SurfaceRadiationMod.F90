@@ -687,7 +687,6 @@ contains
 
              ! Absorbed by canopy
 
-!             cad(p,ib) = forc_solad(g,ib)*fabd(p,ib)
              cad(p,ib) = forc_solad_col(c,ib)*fabd(p,ib)
              cai(p,ib) = forc_solai(g,ib)*fabi(p,ib)
              sabv(p) = sabv(p) + cad(p,ib) + cai(p,ib)
@@ -701,8 +700,6 @@ contains
 
              ! Transmitted = solar fluxes incident on ground
 
-!             trd(p,ib) = forc_solad(g,ib)*ftdd(p,ib)
-!             tri(p,ib) = forc_solad(g,ib)*ftid(p,ib) + forc_solai(g,ib)*ftii(p,ib)
              trd(p,ib) = forc_solad_col(c,ib)*ftdd(p,ib)
              tri(p,ib) = forc_solad_col(c,ib)*ftid(p,ib) + forc_solai(g,ib)*ftii(p,ib)
              ! Solar radiation absorbed by ground surface
@@ -899,25 +896,19 @@ contains
 
           ! NDVI and reflected solar radiation
 
-!          rvis = albd(p,1)*forc_solad(g,1) + albi(p,1)*forc_solai(g,1)
-!          rnir = albd(p,2)*forc_solad(g,2) + albi(p,2)*forc_solai(g,2)
           rvis = albd(p,1)*forc_solad_col(c,1) + albi(p,1)*forc_solai(g,1)
           rnir = albd(p,2)*forc_solad_col(c,2) + albi(p,2)*forc_solai(g,2)
           fsr(p) = rvis + rnir
-!          fsds_vis_d(p) = forc_solad(g,1)
-!          fsds_nir_d(p) = forc_solad(g,2)
-          fsds_vis_d(p) = forc_solad_col(c,1)
-          fsds_nir_d(p) = forc_solad_col(c,2)
           if (use_SSRE) then
              rvisSF = albdSF(p,1)*forc_solad(g,1) + albiSF(p,1)*forc_solai(g,1)
              rnirSF = albdSF(p,2)*forc_solad(g,2) + albiSF(p,2)*forc_solai(g,2)
              fsrSF(p) = rvisSF + rnirSF
              ssre_fsr(p) = fsr(p)-fsrSF(p)
           end if
+          fsds_vis_d(p) = forc_solad_col(c,1)
+          fsds_nir_d(p) = forc_solad_col(c,2)
           fsds_vis_i(p) = forc_solai(g,1)
           fsds_nir_i(p) = forc_solai(g,2)
-!          fsr_vis_d(p)  = albd(p,1)*forc_solad(g,1)
-!          fsr_nir_d(p)  = albd(p,2)*forc_solad(g,2)
           fsr_vis_d(p)  = albd(p,1)*forc_solad_col(c,1)
           fsr_nir_d(p)  = albd(p,2)*forc_solad_col(c,2)
           fsr_vis_i(p)  = albi(p,1)*forc_solai(g,1)
@@ -934,10 +925,6 @@ contains
              ssre_fsr_nir_i(p) = fsrSF_nir_i(p)-fsr_nir_i(p)
           end if
           if ( is_near_local_noon( grc%londeg(g), deltasec=nint(dtime)/2 ) )then
-!             fsds_vis_d_ln(p) = forc_solad(g,1)
-!             fsds_nir_d_ln(p) = forc_solad(g,2)
-!             fsr_vis_d_ln(p) = albd(p,1)*forc_solad(g,1)
-!             fsr_nir_d_ln(p) = albd(p,2)*forc_solad(g,2)
              fsds_vis_d_ln(p) = forc_solad_col(c,1)
              fsds_nir_d_ln(p) = forc_solad_col(c,2)
              fsr_vis_d_ln(p) = albd(p,1)*forc_solad_col(c,1)
@@ -965,8 +952,6 @@ contains
           ! (OPTIONAL)
           c = patch%column(p)
           if (snl(c) < 0) then
-!             fsds_sno_vd(p) = forc_solad(g,1)
-!             fsds_sno_nd(p) = forc_solad(g,2)
              fsds_sno_vd(p) = forc_solad_col(c,1)
              fsds_sno_nd(p) = forc_solad_col(c,2)
              fsds_sno_vi(p) = forc_solai(g,1)
@@ -1022,8 +1007,6 @@ contains
           ! Solar reflected
           ! per unit ground area (roof, road) and per unit wall area (sunwall, shadewall)
 
-!          fsr_vis_d(p) = albd(p,1) * forc_solad(g,1)
-!          fsr_nir_d(p) = albd(p,2) * forc_solad(g,2)
           fsr_vis_d(p) = albd(p,1) * forc_solad_col(c,1)
           fsr_nir_d(p) = albd(p,2) * forc_solad_col(c,2)
           fsr_vis_i(p) = albi(p,1) * forc_solai(g,1)

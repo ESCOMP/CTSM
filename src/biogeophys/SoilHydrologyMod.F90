@@ -33,7 +33,6 @@ module SoilHydrologyMod
   use LandunitType      , only : lun                
   use ColumnType        , only : column_type, col
   use PatchType         , only : patch                
-  use spmdMod           , only : masterproc, iam
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -1515,7 +1514,7 @@ contains
      associate(                                                            & 
           dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
           z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
-          zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
+          zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
           t_soisno           =>    temperature_inst%t_soisno_col         , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
 
           h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
@@ -1823,7 +1822,9 @@ contains
 
                 wtsub = 0._r8
                 q_perch = 0._r8
-! this should be consistent with hillslope and k_perch=k_frost means no saturated zone; should probably change q_perch to tranmis and change units and q_perch_max
+                ! this should be consistent with hillslope and k_perch=k_frost means no
+                ! saturated zone; should probably change q_perch to tranmis and change
+                ! units and q_perch_max
                 do k = k_perch(c), k_frost(c)-1
                    q_perch = q_perch + hksat(c,k)*dz(c,k)
                    wtsub = wtsub + dz(c,k)

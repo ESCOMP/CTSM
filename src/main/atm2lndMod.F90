@@ -334,10 +334,6 @@ contains
     SHR_ASSERT_ALL_FL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(&
-         ! Gridcell-level non-downscaled fields:
-         forc_rain_g  => wateratm2lndbulk_inst%forc_rain_not_downscaled_grc , & ! Input:  [real(r8) (:)]  rain rate [mm/s]
-         forc_snow_g  => wateratm2lndbulk_inst%forc_snow_not_downscaled_grc , & ! Input:  [real(r8) (:)]  snow rate [mm/s]
-         
          ! Column-level downscaled fields:
          forc_t_c                  => atm2lnd_inst%forc_t_downscaled_col                , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
          forc_rain_c               => wateratm2lndbulk_inst%forc_rain_downscaled_col    , & ! Output: [real(r8) (:)]  rain rate [mm/s]

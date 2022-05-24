@@ -774,12 +774,9 @@ contains
     integer  :: dimid,varid                    ! netCDF id's
     integer  :: ier                            ! error status	
     logical  :: readvar                        ! is variable on dataset
-    integer,pointer :: arrayl(:)              ! local array
+    integer,pointer :: arrayl(:)               ! local array (needed because ncd_io expects a pointer)
     character(len=32) :: subname = 'surfrd_hillslope'  ! subroutine name
 !-----------------------------------------------------------------------
-
-    ! This temporary array is needed because ncd_io expects a pointer, 
-    !so we can't directly pass 
 
     ! number of hillslopes per landunit
     call ncd_inqdid(ncid,'nhillslope',dimid,readvar) 

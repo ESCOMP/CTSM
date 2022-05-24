@@ -308,7 +308,6 @@ contains
     real(r8) :: ws              (bounds%begp:bounds%endp)                                 ! fraction of LAI+SAI that is SAI
     real(r8) :: blai(bounds%begp:bounds%endp)                                             ! lai buried by snow: tlai - elai
     real(r8) :: bsai(bounds%begp:bounds%endp)                                             ! sai buried by snow: tsai - esai
-    real(r8) :: coszen_gcell    (bounds%begg:bounds%endg)                                 ! cosine solar zenith angle for next time step (grc)
     real(r8) :: coszen_patch    (bounds%begp:bounds%endp)                                 ! cosine solar zenith angle for next time step (patch)
     real(r8) :: rho(bounds%begp:bounds%endp,numrad)                                       ! leaf/stem refl weighted by fraction LAI and SAI
     real(r8) :: tau(bounds%begp:bounds%endp,numrad)                                       ! leaf/stem tran weighted by fraction LAI and SAI
@@ -429,18 +428,16 @@ contains
           ! hill_slope is [m/m], convert to radians
           coszen_col(c) = shr_orb_cosinc(zenith_angle,azsun_grc(g),atan(col%hill_slope(c)),col%hill_aspect(c))
 
-       if(coszen_grc(g) > 0._r8 .and. coszen_col(c) < 0._r8) coszen_col(c) = 0._r8
+          if(coszen_grc(g) > 0._r8 .and. coszen_col(c) < 0._r8) coszen_col(c) = 0._r8
 
-
-    else
-       coszen_col(c) = coszen_grc(g)
-    endif
+       else
+          coszen_col(c) = coszen_grc(g)
+       endif
     end do
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)
-       g = patch%gridcell(p)
        c = patch%column(p)
-          coszen_patch(p) = coszen_col(c)
+       coszen_patch(p) = coszen_col(c)
     end do
 
     ! Initialize output because solar radiation only done if coszen > 0
