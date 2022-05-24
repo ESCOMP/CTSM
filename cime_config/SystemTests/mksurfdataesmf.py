@@ -10,10 +10,8 @@ Currently casper complains that `git -C` is not a valid option.
 I added -C to the `git describe` in gen_mksurfdata_namelist.py for this
 system test to work.
 """
-
 import os
 import sys
-import shutil
 import subprocess
 from datetime import datetime
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
@@ -37,8 +35,10 @@ class MKSURFDATAESMF(SystemTestsCommon):
         time_stamp = datetime.today().strftime("%y%m%d")
         self._res = '10x15'  # see important comment in script's docstring
         self._model_yr = '1850'
-        self._fsurdat_namelist = os.path.join(self._get_caseroot(), f'surfdata_{self._res}_hist_78pfts_CMIP6_{self._model_yr}_c{time_stamp}.namelist')
-        self._fsurdat_nc = os.path.join(self._get_caseroot(), f'surfdata_{self._res}_hist_78pfts_CMIP6_{self._model_yr}_c{time_stamp}.nc')
+        self._fsurdat_namelist = os.path.join(self._get_caseroot(),
+            f'surfdata_{self._res}_hist_78pfts_CMIP6_{self._model_yr}_c{time_stamp}.namelist')
+        self._fsurdat_nc = os.path.join(self._get_caseroot(),
+            f'surfdata_{self._res}_hist_78pfts_CMIP6_{self._model_yr}_c{time_stamp}.nc')
         self._TestStatus_log_path = os.path.join(self._get_caseroot(),
             'TestStatus.log')
 
@@ -54,7 +54,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
         # - once with model_only = True
         # Call the following steps only once during the test but do not skip
         # if the test stops and gets restarted.
-        if sharedlib_only == True:
+        if sharedlib_only:
             # Paths and strings
             build_script_path = os.path.join(self._tool_path,
                 'gen_mksurfdata_build.sh')

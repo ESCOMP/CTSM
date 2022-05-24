@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-
-import sys, os, shutil
-import logging
-import argparse, textwrap
-import subprocess
-from datetime import datetime
+"""
+gen_mksurfdata_jobscript_single.py generates a jobscript for running the
+mksurfdata executable to generate a single fsurdat file. For detailed
+instructions, see README.
+"""
+import sys
+import argparse
 
 def get_parser():
     """
@@ -102,17 +103,18 @@ def main ():
             runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=12:mpiprocs={tasks_per_node} \n")
         runfile.write("\n")
 
-        np = int(tasks_per_node) * int(number_of_nodes)
+        n_p = int(tasks_per_node) * int(number_of_nodes)
 
         # Run env_mach_specific.sh to control the machine dependent environment
         # including the paths to compilers and libraries external to cime such
         # as netcdf
-        runfile.write(f". ./.env_mach_specific.sh \n")
-        runfile.write('# Edit the mpirun command to use the MPI executable on your system and the arguments it requires \n')
+        runfile.write('. ./.env_mach_specific.sh \n')
+        runfile.write('# Edit the mpirun command to use the MPI executable ' \
+                      'on your system and the arguments it requires \n')
         if machine == 'cheyenne':
-            output = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
+            output = f"mpiexec_mpt -p \"%g:\" -np {n_p} ./bld/mksurfdata < {namelist_file}"
         elif machine == 'casper':
-            output = f"mpiexec -np {np} ./bld/mksurfdata < {namelist_file}"
+            output = f"mpiexec -np {n_p} ./bld/mksurfdata < {namelist_file}"
         runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")
