@@ -79,14 +79,11 @@ contains
                ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
                  ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%gap_mortality_n_to_cwdn_col(c,j)       * dt
             else
+               ! Do above for the matrix solution
                do i = i_litr_min, i_litr_max
-                  nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) = &
-                    nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) + nf_veg%gap_mortality_n_to_litr_n_col(c,j,i) * dt
                end do
                ! Currently i_cwd .ne. i_litr_max + 1 if .not. fates and
                !           i_cwd = 0 if fates, so not including in the i-loop
-               nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     = &
-                 nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     + nf_veg%gap_mortality_n_to_cwdn_col(c,j)       * dt
             end if !not use_soil_matrix
          end do
       end do
@@ -97,7 +94,7 @@ contains
          p = filter_soilp(fp)
 
          if(.not.  use_matrixcn)then
-         ! displayed pools
+            ! displayed pools
             ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p)                           &
               - nf_veg%m_leafn_to_litter_patch(p) * dt
             ns_veg%frootn_patch(p) =  ns_veg%frootn_patch(p)                         &
@@ -113,7 +110,7 @@ contains
             ns_veg%retransn_patch(p) =  ns_veg%retransn_patch(p)                     &
               - nf_veg%m_retransn_to_litter_patch(p) * dt
 
-         ! storage pools
+            ! storage pools
             ns_veg%leafn_storage_patch(p) =  ns_veg%leafn_storage_patch(p)           &
               - nf_veg%m_leafn_storage_to_litter_patch(p) * dt
             ns_veg%frootn_storage_patch(p) =  ns_veg%frootn_storage_patch(p)         &
@@ -127,7 +124,7 @@ contains
             ns_veg%deadcrootn_storage_patch(p) =  ns_veg%deadcrootn_storage_patch(p) &
               - nf_veg%m_deadcrootn_storage_to_litter_patch(p) * dt
 
-         ! transfer pools
+            ! transfer pools
             ns_veg%leafn_xfer_patch(p) =  ns_veg%leafn_xfer_patch(p)                 &
               - nf_veg%m_leafn_xfer_to_litter_patch(p) * dt
             ns_veg%frootn_xfer_patch(p) =  ns_veg%frootn_xfer_patch(p)               &
@@ -203,14 +200,11 @@ contains
                ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
                  ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%harvest_n_to_cwdn_col(c,j)       * dt
             else
+               ! Do above for the matrix solution
                do i = i_litr_min, i_litr_max
-                  nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) = &
-                    nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) + nf_veg%harvest_n_to_litr_n_col(c,j,i) * dt
                end do
                ! Currently i_cwd .ne. i_litr_max + 1 if .not. fates and
                !           i_cwd = 0 if fates, so not including in the i-loop
-               nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) = &
-                 nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) + nf_veg%harvest_n_to_cwdn_col(c,j) * dt
             end if !not use_soil_matrixcn
          end do
       end do
@@ -237,7 +231,7 @@ contains
             ns_veg%retransn_patch(p) = ns_veg%retransn_patch(p)                     &
               - nf_veg%hrv_retransn_to_litter_patch(p) * dt
 
-         ! storage pools
+            ! storage pools
             ns_veg%leafn_storage_patch(p) = ns_veg%leafn_storage_patch(p)           &
               - nf_veg%hrv_leafn_storage_to_litter_patch(p) * dt
             ns_veg%frootn_storage_patch(p) = ns_veg%frootn_storage_patch(p)         &
@@ -251,7 +245,7 @@ contains
             ns_veg%deadcrootn_storage_patch(p) = ns_veg%deadcrootn_storage_patch(p) &
               - nf_veg%hrv_deadcrootn_storage_to_litter_patch(p) * dt
 
-         ! transfer pools
+            ! transfer pools
             ns_veg%leafn_xfer_patch(p) = ns_veg%leafn_xfer_patch(p)                 &
               - nf_veg%hrv_leafn_xfer_to_litter_patch(p) *dt
             ns_veg%frootn_xfer_patch(p) = ns_veg%frootn_xfer_patch(p)               &

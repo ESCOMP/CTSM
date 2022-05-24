@@ -13,7 +13,6 @@ module CNDriverMod
   use clm_varctl                      , only : use_nitrif_denitrif, use_nguardrail
   use clm_varctl                      , only : use_crop
   use clm_varctl                      , only : iulog, use_crop
-  use clm_varctl                      , only : use_matrixcn,use_soil_matrixcn
   use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, century_decomp, decomp_method
   use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
@@ -895,9 +894,8 @@ contains
     ! !USES:
     use SoilBiogeochemNLeachingMod, only: SoilBiogeochemNLeaching
     use CNNStateUpdate3Mod        , only: NStateUpdate3
-    use CNVegMatrixMod            , only: CNVegMatrix
-    use CNSoilMatrixMod           , only: CNSoilMatrix
     use clm_time_manager          , only : is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year,get_curr_date
+    use clm_varctl                , only : use_matrixcn,use_soil_matrixcn
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -950,25 +948,16 @@ contains
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
 
     call t_stopf('NUpdate3')
-    if(use_matrixcn)then
+
+    ! Matrix cn code will go here:
+    if ( use_matrixcn ) then
        call t_startf('CNVMatrix')
-       call CNVegMatrix(bounds,num_soilp,filter_soilp(1:num_soilp),num_actfirep,filter_actfirep,cnveg_carbonstate_inst,cnveg_nitrogenstate_inst,&
-                         cnveg_carbonflux_inst,  cnveg_nitrogenflux_inst,cnveg_state_inst,soilbiogeochem_nitrogenflux_inst,&
-                         c13_cnveg_carbonstate_inst,c14_cnveg_carbonstate_inst,c13_cnveg_carbonflux_inst,&
-                         c14_cnveg_carbonflux_inst)
-       call t_stopf('CNVMatrix')
+       call t_stopf( 'CNVMatrix')
     end if
 
-    if(use_soil_matrixcn)then
+    if ( use_soil_matrixcn ) then
        call t_startf('CNSoilMatrix')
-       call CNSoilMatrix(bounds,num_soilc, filter_soilc(1:num_soilc), num_actfirec, filter_actfirec, &
-       cnveg_carbonflux_inst,soilbiogeochem_carbonstate_inst, &
-       soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
-       cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst, &
-       soilbiogeochem_nitrogenstate_inst,c13_soilbiogeochem_carbonstate_inst,&
-       c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonstate_inst,&
-       c14_soilbiogeochem_carbonflux_inst)  
-    call t_stopf('CNSoilMatrix')
+       call t_stopf( 'CNSoilMatrix')
     end if
     
   end subroutine CNDriverLeaching

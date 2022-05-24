@@ -8,7 +8,7 @@ module CNNStateUpdate1Mod
   use shr_kind_mod                    , only: r8 => shr_kind_r8
   use clm_time_manager                , only : get_step_size_real
   use clm_varpar                      , only : nlevdecomp
-  use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd, ioutn, iretransn
+  use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd
   use clm_varctl                      , only : iulog, use_nitrif_denitrif, use_matrixcn, use_soil_matrixcn
   use clm_varcon                      , only : nitrif_n2o_loss_frac
   use pftconMod                       , only : npcropmin, pftcon
@@ -144,9 +144,8 @@ contains
                nf_soil%decomp_npools_sourcesink_col(c,j,i_cwd) = 0._r8
 
             else
+               ! Do the above to the matrix solution
                do i = i_litr_min, i_litr_max
-                  nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) = &
-                       nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) + nf_veg%phenology_n_to_litr_n_col(c,j,i) *dt
                end do
             end if
          end do

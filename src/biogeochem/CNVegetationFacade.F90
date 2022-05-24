@@ -94,7 +94,6 @@ module CNVegetationFacade
   use dynCNDVMod                      , only : dynCNDV_init, dynCNDV_interp
   use CNPrecisionControlMod           , only: CNPrecisionControl
   use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
-  use GridcellType                    , only : grc
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   !
   implicit none
@@ -441,8 +440,6 @@ contains
     use ncdio_pio,       only : file_desc_t
     use clm_varcon,      only : c3_r2, c14ratio
     use clm_varctl,      only : use_soil_matrixcn, use_matrixcn
-    use CNVegMatrixMod,  only : CNVegMatrixRest
-    use CNSoilMatrixMod, only : CNSoilMatrixRest
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
@@ -516,13 +513,6 @@ contains
        end if
        call this%n_products_inst%restart(bounds, ncid, flag)
 
-       if ( use_matrixcn )then
-          call CNVegMatrixRest( ncid, flag )
-       end if
-    end if
-
-    if ( use_soil_matrixcn )then
-       call CNSoilMatrixRest( ncid, flag )
     end if
 
     if (use_cndv) then

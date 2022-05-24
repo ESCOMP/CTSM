@@ -3,8 +3,8 @@ module SoilBiogeochemCarbonFluxType
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use decompMod                          , only : bounds_type
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan, ndecomp_cascade_outtransitions
-  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nlevsoi, ndecomp_pools_vr
+  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
+  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use ch4varcon                          , only : allowlakeprod
@@ -12,7 +12,6 @@ module SoilBiogeochemCarbonFluxType
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
   use clm_varctl                         , only : use_fates, use_soil_matrixcn
-  use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
   
   ! 
   ! !PUBLIC TYPES:
@@ -37,14 +36,13 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: rf_decomp_cascade_col                     (:,:,:) ! (frac) respired fraction in decomposition step
      real(r8), pointer :: pathfrac_decomp_cascade_col               (:,:,:) ! (frac) what fraction of C passes from donor to receiver pool through a given transition
      real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate coefficient for decomposition (1./sec)
-     ! for soil-matrix
-     real(r8), pointer :: hr_vr_col                                 (:,:)   ! (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
-     real(r8), pointer :: o_scalar_col                              (:,:)   ! fraction by which decomposition is limited by anoxia
-     real(r8), pointer :: w_scalar_col                              (:,:)   ! fraction by which decomposition is limited by moisture availability
-     real(r8), pointer :: t_scalar_col                              (:,:)   ! fraction by which decomposition is limited by temperature
-     real(r8), pointer :: som_c_leached_col                         (:)     ! (gC/m^2/s) total SOM C loss from vertical transport 
-     real(r8), pointer :: decomp_cpools_leached_col                 (:,:)   ! (gC/m^2/s) C loss from vertical transport from each decomposing C pool 
-     real(r8), pointer :: decomp_cpools_transport_tendency_col      (:,:,:) ! (gC/m^3/s) C tendency due to vertical transport in decomposing C pools 
+     real(r8), pointer :: hr_vr_col                                 (:,:)   !  (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
+     real(r8), pointer :: o_scalar_col                              (:,:)   !  fraction by which decomposition is limited by anoxia
+     real(r8), pointer :: w_scalar_col                              (:,:)   !  fraction by which decomposition is limited by moisture availability
+     real(r8), pointer :: t_scalar_col                              (:,:)   !  fraction by which decomposition is limited by temperature
+     real(r8), pointer :: som_c_leached_col                         (:)     !  (gC/m^2/s) total SOM C loss from vertical transport 
+     real(r8), pointer :: decomp_cpools_leached_col                 (:,:)   !  (gC/m^2/s) C loss from vertical transport from each decomposing C pool 
+     real(r8), pointer :: decomp_cpools_transport_tendency_col      (:,:,:) !  (gC/m^3/s) C tendency due to vertical transport in decomposing C pools 
 
      ! nitrif_denitrif
      real(r8), pointer :: phr_vr_col                                (:,:)   ! (gC/m3/s) potential hr (not N-limited) 
@@ -62,26 +60,6 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: FATES_c_to_litr_lab_c_col                 (:,:)   ! total labile    litter coming from ED. gC/m3/s
      real(r8), pointer :: FATES_c_to_litr_cel_c_col                 (:,:)   ! total cellulose    litter coming from ED. gC/m3/s
      real(r8), pointer :: FATES_c_to_litr_lig_c_col                 (:,:)   ! total lignin    litter coming from ED. gC/m3/s
-
-     ! track tradiagonal matrix  
-     real(r8), pointer :: matrix_decomp_fire_k_col                  (:,:)   ! decomposition rate due to fire (gC*m3)/(gC*m3*step))
-     real(r8), pointer :: tri_ma_vr                                 (:,:)   ! vertical C transfer rate in sparse matrix format (gC*m3)/(gC*m3*step))
-
-
-     type(sparse_matrix_type)         :: AKsoilc                            ! A*K for C transfers between pools
-     type(sparse_matrix_type)         :: AVsoil                             ! V for C and N transfers between soil layers
-     type(sparse_matrix_type)         :: AKfiresoil                         ! Kfire for CN transfers from soil to atm due to fire
-     type(sparse_matrix_type)         :: AKallsoilc                         ! (A*K+V-Kfire) for soil C cycle
-     integer                          :: NE_AKallsoilc                      ! Number of entries in AKallsoilc, Automatically generated by functions SPMP_*
-     integer,pointer,dimension(:)     :: RI_AKallsoilc                      ! Row numbers of entries in AKallsoilc, Automatically generated by functions SPMP_*
-     integer,pointer,dimension(:)     :: CI_AKallsoilc                      ! Column numbers of entries in AKallsoilc, Automatically generated by functions SPMP_*
-     integer,pointer,dimension(:)     :: RI_a                               ! Row numbers of all entries from AKsoilc, Automatically generated by SetValueA
-     integer,pointer,dimension(:)     :: CI_a                               ! Column numbers of all entries from AKsoilc, Automatically generated by SetValueA
-
-     type(diag_matrix_type)           :: Ksoil                              ! CN turnover rate in different soil pools and layers
-     type(diag_matrix_type)           :: Xdiagsoil                          ! Temporary C and N state variable to calculate accumulation transfers
-     
-     type(vector_type)                :: matrix_Cinput                      ! C input to different soil compartments (pools and layers) (gC/m3/step)
 
    contains
 
@@ -121,8 +99,9 @@ contains
      type(bounds_type), intent(in)    :: bounds 
      !
      ! !LOCAL VARIABLES:
-     integer           :: begp,endp
-     integer           :: begc,endc,Ntrans,Ntrans_diag
+     integer           :: begp,endp            ! Begin and end patch
+     integer           :: begc,endc            ! Begin and end column
+     integer           :: Ntrans,Ntrans_diag   ! N trans size for matrix solution
      !------------------------------------------------------------------------
 
      begp = bounds%begp; endp = bounds%endp
@@ -181,26 +160,6 @@ contains
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
   
      if(use_soil_matrixcn)then
-        allocate(this%matrix_decomp_fire_k_col(begc:endc,1:nlevdecomp*ndecomp_pools));  this%matrix_decomp_fire_k_col(:,:)= nan
-        Ntrans = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
-        call this%AKsoilc%InitSM                (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+ndecomp_pools*nlevdecomp)
-        call this%AVsoil%InitSM                 (ndecomp_pools*nlevdecomp,begc,endc,decomp_cascade_con%Ntri_setup)
-        call this%AKfiresoil%InitSM             (ndecomp_pools*nlevdecomp,begc,endc,ndecomp_pools*nlevdecomp)
-        call this%AKallsoilc%InitSM             (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+decomp_cascade_con%Ntri_setup+nlevdecomp)
-        this%NE_AKallsoilc = Ntrans+ndecomp_pools*nlevdecomp+decomp_cascade_con%Ntri_setup+ndecomp_pools*nlevdecomp
-        allocate(this%RI_AKallsoilc(1:this%NE_AKallsoilc)); this%RI_AKallsoilc(1:this%NE_AKallsoilc)=-9999
-        allocate(this%CI_AKallsoilc(1:this%NE_AKallsoilc)); this%CI_AKallsoilc(1:this%NE_AKallsoilc)=-9999
-        Ntrans_diag = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp+ndecomp_pools_vr
-        allocate(this%RI_a(1:Ntrans_diag)); this%RI_a(1:Ntrans_diag) = -9999
-        allocate(this%CI_a(1:Ntrans_diag)); this%CI_a(1:Ntrans_diag) = -9999
-        call this%Ksoil%InitDM                  (ndecomp_pools*nlevdecomp,begc,endc)
-        call this%Xdiagsoil%InitDM              (ndecomp_pools*nlevdecomp,begc,endc)
-        call this%matrix_Cinput%InitV(ndecomp_pools*nlevdecomp,begc,endc)
-     end if
-     if(use_soil_matrixcn)then
-        allocate(this%tri_ma_vr(begc:endc,1:decomp_cascade_con%Ntri_setup))
-     else
-        allocate(this%tri_ma_vr(1,1)); this%tri_ma_vr(:,:) = nan
      end if
      if ( use_fates ) then
         ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
@@ -806,24 +765,8 @@ contains
        end do
     end do
 
-! for matrix 
+    ! for matrix 
     if(use_soil_matrixcn)then
-       do k = 1, ndecomp_pools
-          do j = 1, nlevdecomp
-             do fi = 1,num_column
-                i = filter_column(fi)
-                this%matrix_decomp_fire_k_col(i,j+nlevdecomp*(k-1)) = value_column
-             end do
-          end do
-       end do
-       call this%matrix_Cinput%SetValueV_scaler(num_column,filter_column(1:num_column),value_column)
-       !
-       do k = 1,decomp_cascade_con%Ntri_setup
-          do fi = 1,num_column
-             i = filter_column(fi)
-             this%tri_ma_vr(i,k) = value_column
-          end do
-       end do
     end if
     do j = 1, nlevdecomp_full
        do fi = 1,num_column

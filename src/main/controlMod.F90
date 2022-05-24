@@ -121,7 +121,6 @@ contains
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
-    use CNSoilMatrixMod                  , only : CNSoilMatrixInit
     !
     ! ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -186,10 +185,6 @@ contains
 
     namelist /clm_inparm / &
          deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
-
-    ! CN Matrix solution
-    namelist /clm_inparm / &
-         use_matrixcn, use_soil_matrixcn, is_outmatrix, isspinup, nyr_forcing, nyr_sasu, iloop_avg
 
     ! lake_melt_icealb is of dimension numrad
 
@@ -301,14 +296,6 @@ contains
     runtyp(nsrStartup  + 1) = 'initial'
     runtyp(nsrContinue + 1) = 'restart'
     runtyp(nsrBranch   + 1) = 'branch '
-
-    if(use_fates)then
-       use_matrixcn = .false.
-       use_soil_matrixcn = .false.
-       is_outmatrix = .false.
-       isspinup = .false.
-    end if
-    nyr_forcing = 10
 
     ! Set clumps per procoessor
 
@@ -551,9 +538,9 @@ contains
        call CNPhenologyReadNML       ( NLFilename )
     end if
 
-    ! CN soil matrix
-
-    call CNSoilMatrixInit()
+    ! ----------------------------------------------------------------------
+    ! Initialize the CN soil matrix namelist items
+    ! ----------------------------------------------------------------------
 
     ! ----------------------------------------------------------------------
     ! consistency checks
@@ -759,13 +746,6 @@ contains
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_soil_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (is_outmatrix, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (isspinup, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (nyr_forcing, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (nyr_sasu, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (iloop_avg, 1, MPI_INTEGER, 0, mpicom, ier)
 
     if (use_cn ) then
        ! vertical soil mixing variables

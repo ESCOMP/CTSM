@@ -144,7 +144,6 @@ contains
     ! variables (except for gap-phase mortality and fire fluxes)
     !
     use clm_varctl    , only : carbon_resp_opt
-    use CNVegMatrixMod, only : matrix_update_phc
     ! !ARGUMENTS:
     integer                              , intent(in)    :: num_soilc       ! number of soil columns filter
     integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
@@ -203,10 +202,6 @@ contains
                   cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
                else
                   ! phenology and dynamic land cover fluxes
-                  do i = i_litr_min, i_litr_max
-                     cf_soil%matrix_Cinput%V(c,j+(i-1)*nlevdecomp) = &
-                          cf_soil%matrix_Cinput%V(c,j+(i-1)*nlevdecomp) + cf_veg%phenology_c_to_litr_c_col(c,j,i) *dt
-                  end do
                end if
             end do
          end do
@@ -321,20 +316,6 @@ ptch: do fp = 1,num_soilp
 
            ! This part below MUST match exactly the code for the non-matrix part
            ! above!
-           if (ivt(p) >= npcropmin) then
-              cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
-                   - cf_veg%crop_seedc_to_leaf_patch(p) * dt
-              do k = repr_grain_min, repr_grain_max
-                 cs_veg%reproductivec_patch(p,k)   = cs_veg%reproductivec_patch(p,k) &
-                      - (cf_veg%repr_grainc_to_food_patch(p,k) + cf_veg%repr_grainc_to_seed_patch(p,k))*dt
-                 cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
-                      + cf_veg%repr_grainc_to_seed_patch(p,k) * dt
-              end do
-              do k = repr_structure_min, repr_structure_max
-                 cs_veg%reproductivec_patch(p,k) = cs_veg%reproductivec_patch(p,k) &
-                      - (cf_veg%repr_structurec_to_cropprod_patch(p,k) + cf_veg%repr_structurec_to_litter_patch(p,k))*dt
-              end do
-           end if
         end if !not use_matrixcn
 
         check_cpool = cs_veg%cpool_patch(p)- cf_veg%psnsun_to_cpool_patch(p)*dt-cf_veg%psnshade_to_cpool_patch(p)*dt
@@ -384,7 +365,7 @@ ptch: do fp = 1,num_soilp
          cs_veg%cpool_patch(p)             = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_leafc_storage_patch(p)*dt
          cs_veg%cpool_patch(p)             = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_frootc_patch(p)*dt
          cs_veg%cpool_patch(p)             = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_frootc_storage_patch(p)*dt 
-        if(.not. use_matrixcn) then
+         if(.not. use_matrixcn) then
            cs_veg%leafc_patch(p)           = cs_veg%leafc_patch(p)          + cf_veg%cpool_to_leafc_patch(p)*dt
            cs_veg%leafc_storage_patch(p)   = cs_veg%leafc_storage_patch(p)  + cf_veg%cpool_to_leafc_storage_patch(p)*dt
            cs_veg%frootc_patch(p)          = cs_veg%frootc_patch(p)         + cf_veg%cpool_to_frootc_patch(p)*dt
@@ -563,14 +544,12 @@ ptch: do fp = 1,num_soilp
                ! bounds. Zeroing out these small pools and putting them into the flux to the
                ! atmosphere solved many of the crop isotope problems
 
+               ! Instantly release XSMRPOOL to atmosphere
                if ( .not. dribble_crophrv_xsmrpool_2atm ) then
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%cpool_patch(p)/dt
                   if(.not. use_matrixcn)then
                      cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%frootc_patch(p)/dt
-                  else
-                     cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) &
-                       + cs_veg%frootc_patch(p) * matrix_update_phc(p,cf_veg%ifroot_to_iout_ph,1._r8/dt,dt,cnveg_carbonflux_inst,.true.,.true.)
                   end if
                   ! Save xsmrpool, cpool, frootc to loss state variable for
                   ! dribbling
@@ -583,9 +562,6 @@ ptch: do fp = 1,num_soilp
                                                   cs_veg%cpool_patch(p)
                   if(.not. use_matrixcn)then
                      cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) + cs_veg%frootc_patch(p)
-                  else
-                     cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) &
-                       + cs_veg%frootc_patch(p) * matrix_update_phc(p,cf_veg%ifroot_to_iout_ph,1._r8/dt,dt,cnveg_carbonflux_inst,.true.,.true.)
                   end if
                end if
                if (.not. use_matrixcn) then

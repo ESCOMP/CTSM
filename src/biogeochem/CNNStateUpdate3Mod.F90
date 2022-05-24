@@ -91,13 +91,10 @@ contains
                      nf_veg%m_n_to_litr_fire_col(c,j,k) * dt
                end do
             else
-               nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) + &
-                 nf_veg%fire_mortality_n_to_cwdn_col(c,j) * dt
+               ! Do above for the matrix solution
 
                ! patch-level wood to column-level litter (uncombusted wood)
                do k = i_litr_min, i_litr_max
-                  nf_soil%matrix_Ninput%V(c,j+(k-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(k-1)*nlevdecomp) + &
-                    nf_veg%m_n_to_litr_fire_col(c,j,k)* dt
                end do
             end if ! not use_soil_matrix
          end do ! end of column loop
@@ -123,7 +120,7 @@ contains
          p = filter_soilp(fp)
 
          if(.not. use_matrixcn)then 
-         !from fire displayed pools
+            !from fire displayed pools
             ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p) -                           &
               nf_veg%m_leafn_to_fire_patch(p) * dt
             ns_veg%frootn_patch(p) =  ns_veg%frootn_patch(p) -                         &
@@ -154,7 +151,7 @@ contains
                nf_veg%m_deadcrootn_to_litter_fire_patch(p) * dt +                    &
                nf_veg%m_livecrootn_to_deadcrootn_fire_patch(p) * dt 
 
-         ! storage pools
+            ! storage pools
             ns_veg%leafn_storage_patch(p) =  ns_veg%leafn_storage_patch(p) -           &
               nf_veg%m_leafn_storage_to_fire_patch(p) * dt
             ns_veg%frootn_storage_patch(p) =  ns_veg%frootn_storage_patch(p) -         &
@@ -182,7 +179,7 @@ contains
               nf_veg%m_deadcrootn_storage_to_litter_fire_patch(p) * dt
 
 
-         ! transfer pools
+            ! transfer pools
             ns_veg%leafn_xfer_patch(p) =  ns_veg%leafn_xfer_patch(p) -                 &
               nf_veg%m_leafn_xfer_to_fire_patch(p) * dt
             ns_veg%frootn_xfer_patch(p) =  ns_veg%frootn_xfer_patch(p) -               &

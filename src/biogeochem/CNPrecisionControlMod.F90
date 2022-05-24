@@ -698,8 +698,11 @@ contains
                   msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))
           else 
              if (use_matrixcn)then
+                ! The matrix code has a different check here
                 if ( (carbon_patch(p) < ccrit .and. carbon_patch(p) > -ccrit * 1.e+6) .or. &
                      (use_nguardrail .and. nitrogen_patch(p) < ncrit .and. nitrogen_patch(p) > -ncrit*1.e+6) ) then
+                   ! This part needs to be identical to the part for non-matrix
+                   ! below
                    num_truncatep = num_truncatep + 1
                    filter_truncatep(num_truncatep) = p
 
@@ -712,6 +715,7 @@ contains
                 end if
              else
                 if ( abs(carbon_patch(p)) < ccrit .or. (use_nguardrail .and. abs(nitrogen_patch(p)) < ncrit) ) then
+                   ! This part needs to be identical to above
                    num_truncatep = num_truncatep + 1
                    filter_truncatep(num_truncatep) = p
 

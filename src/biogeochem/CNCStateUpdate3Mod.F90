@@ -14,7 +14,7 @@ module CNCStateUpdate3Mod
   use CNVegCarbonFluxType            , only : cnveg_carbonflux_type
   use SoilBiogeochemCarbonStateType  , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemCarbonFluxType   , only : soilbiogeochem_carbonflux_type
-  use clm_varctl                     , only : use_matrixcn,use_soil_matrixcn
+  use clm_varctl                     , only : use_matrixcn, use_soil_matrixcn
   !
   implicit none
   private
@@ -69,21 +69,18 @@ contains
                cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
                  cf_veg%fire_mortality_c_to_cwdc_col(c,j) * dt
 
-            ! patch-level wood to column-level litter (uncombusted wood)
+               ! patch-level wood to column-level litter (uncombusted wood)
                do i = i_litr_min, i_litr_max
                   cs_soil%decomp_cpools_vr_col(c,j,i) = &
                      cs_soil%decomp_cpools_vr_col(c,j,i) + &
                      cf_veg%m_c_to_litr_fire_col(c,j,i) * dt
                end do
             else
-            ! patch-level wood to column-level CWD (uncombusted wood)
-               cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp) = cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp) + &
-                 cf_veg%fire_mortality_c_to_cwdc_col(c,j) * dt
+               ! Match above for matrix terms
+               ! patch-level wood to column-level CWD (uncombusted wood)
 
-            ! patch-level wood to column-level litter (uncombusted wood)
+               ! patch-level wood to column-level litter (uncombusted wood)
                do i = i_litr_min, i_litr_max
-                  cf_soil%matrix_Cinput%V(c,j+(i-1)*nlevdecomp) = cf_soil%matrix_Cinput%V(c,j+(i-1)*nlevdecomp) + &
-                    cf_veg%m_c_to_litr_fire_col(c,j,i)* dt
                end do
             end if
          end do

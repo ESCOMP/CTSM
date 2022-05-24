@@ -88,26 +88,7 @@ contains
          livestemc          =>    c14_cnveg_carbonstate_inst%livestemc_patch               , & ! Output:  [real(r8) (:)     ]  (gC/m2) live stem C                     
          livestemc_storage  =>    c14_cnveg_carbonstate_inst%livestemc_storage_patch       , & ! Output:  [real(r8) (:)     ]  (gC/m2) live stem C storage             
          livestemc_xfer     =>    c14_cnveg_carbonstate_inst%livestemc_xfer_patch          , & ! Output:  [real(r8) (:)     ]  (gC/m2) live stem C transfer            
-         pft_ctrunc         =>    c14_cnveg_carbonstate_inst%ctrunc_patch                  , & ! Output:  [real(r8) (:)     ]  (gC/m2) patch-level sink for C truncation 
-
-         ileaf_to_iout_fic        => c14_cnveg_carbonflux_inst%ileaf_to_iout_fi                  , & ! Input: [integer (:)] Index of fire related C transfer from leaf pool to outside of vegetation pools
-         ileafst_to_iout_fic      => c14_cnveg_carbonflux_inst%ileafst_to_iout_fi                , & ! Input: [integer (:)] Index of fire related C transfer from leaf storage pool to outside of vegetation pools
-         ileafxf_to_iout_fic      => c14_cnveg_carbonflux_inst%ileafxf_to_iout_fi                , & ! Input: [integer (:)] Index of fire related C transfer from leaf transfer pool to outside of vegetation pools
-         ifroot_to_iout_fic       => c14_cnveg_carbonflux_inst%ifroot_to_iout_fi                 , & ! Input: [integer (:)] Index of fire related C transfer from fine root pool to outside of vegetation pools
-         ifrootst_to_iout_fic     => c14_cnveg_carbonflux_inst%ifrootst_to_iout_fi               , & ! Input: [integer (:)] Index of fire related C transfer from fine root storage pool to outside of vegetation pools
-         ifrootxf_to_iout_fic     => c14_cnveg_carbonflux_inst%ifrootxf_to_iout_fi               , & ! Input: [integer (:)] Index of fire related C transfer from fine root transfer pool to outside of vegetation pools
-         ilivestem_to_iout_fic    => c14_cnveg_carbonflux_inst%ilivestem_to_iout_fi              , & ! Input: [integer (:)] Index of fire related C transfer from live stem pool to outside of vegetation pools
-         ilivestemst_to_iout_fic  => c14_cnveg_carbonflux_inst%ilivestemst_to_iout_fi            , & ! Input: [integer (:)] Index of fire related C transfer from live stem storage pool to outside of vegetation pools
-         ilivestemxf_to_iout_fic  => c14_cnveg_carbonflux_inst%ilivestemxf_to_iout_fi            , & ! Input: [integer (:)] Index of fire related C transfer from live stem transfer pool to outside of vegetation pools
-         ideadstem_to_iout_fic    => c14_cnveg_carbonflux_inst%ideadstem_to_iout_fi              , & ! Input: [integer (:)] Index of fire related C transfer from dead stem pool to outside of vegetation pools
-         ideadstemst_to_iout_fic  => c14_cnveg_carbonflux_inst%ideadstemst_to_iout_fi            , & ! Input: [integer (:)] Index of fire related C transfer from dead stem storage pool to outside of vegetation pools
-         ideadstemxf_to_iout_fic  => c14_cnveg_carbonflux_inst%ideadstemxf_to_iout_fi            , & ! Input: [integer (:)] Index of fire related C transfer from dead stem transfer pool to outside of vegetation pools
-         ilivecroot_to_iout_fic   => c14_cnveg_carbonflux_inst%ilivecroot_to_iout_fi             , & ! Input: [integer (:)] Index of fire related C transfer from live coarse root pool to outside of vegetation pools
-         ilivecrootst_to_iout_fic => c14_cnveg_carbonflux_inst%ilivecrootst_to_iout_fi           , & ! Input: [integer (:)] Index of fire related C transfer from live coarse root storage pool to outside of vegetation pools
-         ilivecrootxf_to_iout_fic => c14_cnveg_carbonflux_inst%ilivecrootxf_to_iout_fi           , & ! Input: [integer (:)] Index of fire related C transfer from live coarse root transfer pool to outside of vegetation pools
-         ideadcroot_to_iout_fic   => c14_cnveg_carbonflux_inst%ideadcroot_to_iout_fi             , & ! Input: [integer (:)] Index of fire related C transfer from dead coarse root pool to outside of vegetation pools
-         ideadcrootst_to_iout_fic => c14_cnveg_carbonflux_inst%ideadcrootst_to_iout_fi           , & ! Input: [integer (:)] Index of fire related C transfer from dead coarse root storage pool to outside of vegetation pools
-         ideadcrootxf_to_iout_fic => c14_cnveg_carbonflux_inst%ideadcrootxf_to_iout_fi             & ! Input: [integer (:)] Index of fire related C transfer from dead coarse root transfer pool to outside of vegetation pools
+         pft_ctrunc         =>    c14_cnveg_carbonstate_inst%ctrunc_patch                    & ! Output:  [real(r8) (:)     ]  (gC/m2) patch-level sink for C truncation 
          )
 
       ! set time steps
@@ -137,12 +118,6 @@ contains
                if(.not. use_soil_matrixcn)then
                   decomp_cpools_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (1._r8 - decay_const * spinup_term * dt)
                else
-                  associate( &
-                    matrix_decomp_fire_k => c14_soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col   & ! Output: [real(r8) (:,:)   ]  (gC/m3/step) VR deomp. C fire loss in matrix representation
-                  )
-                  matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) &
-                                                             - spinup_term * decay_const * dt
-                  end associate
                end if
             end do
          end do
@@ -175,30 +150,8 @@ contains
             livestemc_storage(p)  = livestemc_storage(p)   * (1._r8 - decay_const * dt)
             livestemc_xfer(p)     = livestemc_xfer(p)      * (1._r8 - decay_const * dt)
          else
-            associate( &
-              matrix_fitransfer => c14_cnveg_carbonflux_inst%matrix_fitransfer_patch & ! Output: [real(r8) (:,:)   ] (gC/m2/s) C transfer rate from fire processes
-            )
             ! Each of these MUST correspond to the code above. Any changes in
             ! code above need to apply here as well
-            matrix_fitransfer(p,ideadcroot_to_iout_fic)   = decay_const
-            matrix_fitransfer(p,ideadcrootst_to_iout_fic) = decay_const
-            matrix_fitransfer(p,ideadcrootxf_to_iout_fic) = decay_const
-            matrix_fitransfer(p,ideadstem_to_iout_fic)    = decay_const
-            matrix_fitransfer(p,ideadstemst_to_iout_fic)  = decay_const
-            matrix_fitransfer(p,ideadstemxf_to_iout_fic)  = decay_const
-            matrix_fitransfer(p,ifroot_to_iout_fic)       = decay_const
-            matrix_fitransfer(p,ifrootst_to_iout_fic)     = decay_const
-            matrix_fitransfer(p,ifrootxf_to_iout_fic)     = decay_const
-            matrix_fitransfer(p,ileaf_to_iout_fic)        = decay_const
-            matrix_fitransfer(p,ileafst_to_iout_fic)      = decay_const
-            matrix_fitransfer(p,ileafxf_to_iout_fic)      = decay_const
-            matrix_fitransfer(p,ilivecroot_to_iout_fic)   = decay_const
-            matrix_fitransfer(p,ilivecrootst_to_iout_fic) = decay_const
-            matrix_fitransfer(p,ilivecrootxf_to_iout_fic) = decay_const
-            matrix_fitransfer(p,ilivestem_to_iout_fic)    = decay_const
-            matrix_fitransfer(p,ilivestemst_to_iout_fic)  = decay_const
-            matrix_fitransfer(p,ilivestemxf_to_iout_fic)  = decay_const
-            end associate
          end if
          gresp_storage(p)      = gresp_storage(p)       * (1._r8 - decay_const * dt)
          gresp_xfer(p)         = gresp_xfer(p)          * (1._r8 - decay_const * dt)

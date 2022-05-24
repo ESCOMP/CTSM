@@ -217,7 +217,6 @@ module CNFUNMod
    use PatchType       , only : patch
    use subgridAveMod   , only : p2c
    use pftconMod       , only : npcropmin
-   use CNVegMatrixMod  , only : matrix_update_phn
 !
 ! !ARGUMENTS: 
    type(bounds_type)                       , intent(in)    :: bounds
@@ -621,7 +620,6 @@ module CNFUNMod
          leafc_change           => cnveg_carbonflux_inst%leafc_change_patch             , & ! Output:  [real(r8)
          !  (:) ]  Used C from the leaf (gC/m2/s)
          leafn_storage_to_xfer  => cnveg_nitrogenflux_inst%leafn_storage_to_xfer_patch  , & ! Output:  [real(r8) (:) ]
-         iretransn_to_iout      => cnveg_nitrogenflux_inst%iretransn_to_iout_ph         , & ! Input:   [integer]
          plant_ndemand          => cnveg_nitrogenflux_inst%plant_ndemand_patch          , & ! Iutput:  [real(r8) (:)
          !  ]  N flux required to support initial GPP (gN/m2/s)
          plant_ndemand_retrans  => cnveg_nitrogenflux_inst%plant_ndemand_retrans_patch  , & ! Output:  [real(r8) (:)
@@ -1454,12 +1452,6 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       retransn_to_npool(p)      = n_retrans_acc_total(p)/dt
       if(.not. use_matrixcn)then
          free_retransn_to_npool(p) = free_nretrans(p)/dt
-      else
-         if(retransn(p) .gt. 0)then
-            free_retransn_to_npool(p) = retransn(p) * matrix_update_phn(p,iretransn_to_iout,free_nretrans(p)/dt/retransn(p),dt,cnveg_nitrogenflux_inst,.true.,.true.)
-         else
-            free_retransn_to_npool(p) = 0._r8
-         end if
       end if
       ! this is the N that comes off leaves. 
       Nretrans(p)               = retransn_to_npool(p) + free_retransn_to_npool(p)
