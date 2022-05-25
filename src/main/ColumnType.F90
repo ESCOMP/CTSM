@@ -73,7 +73,7 @@ module ColumnType
      integer,  pointer :: colu                 (:)   ! column index of uphill column (hillslope hydrology)
      integer,  pointer :: cold                 (:)   ! column index of downhill column (hillslope hydrology)
      integer,  pointer :: hillslope_ndx        (:)   ! hillslope identifier
-     real(r8), pointer :: hill_elev            (:)   ! mean elevation of column relative to mean gridcell elevation (m)
+     real(r8), pointer :: hill_elev            (:)   ! mean elevation of column relative to stream channel (m)
      real(r8), pointer :: hill_slope           (:)   ! mean along-hill slope (m/m)
      real(r8), pointer :: hill_area            (:)   ! mean surface area (m2)
      real(r8), pointer :: hill_width           (:)   ! across-hill width of bottom boundary of column (m)

@@ -279,12 +279,13 @@ contains
        if (.not. this%needs_downscaling_col(c)) then
           g = col%gridcell(c)
           l = col%landunit(c)
+
+          this%topo_col(c) = atm_topo(g)
+
           if (col%is_hillslope_column(c) .and. downscale_hillslope_meteorology) then
-             this%topo_col(c) = atm_topo(g) &
+             this%topo_col(c) =  this%topo_col(c) &
                   + (col%hill_elev(c) - mean_hillslope_elevation(l))
              this%needs_downscaling_col(c) = .true.
-          else
-             this%topo_col(c) = atm_topo(g)
           endif
        end if
     end do
