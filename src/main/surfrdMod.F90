@@ -306,7 +306,7 @@ contains
 
     call ncd_inqdlen(ncid, dimid, check_numpft, 'natpft')
 
-    if(chek_numpft.ne.actual_numpft)then
+    if(check_numpft.ne.actual_numpft)then
        write(iulog,*)'the sum of the cftdim and the natpft dim should match the lsmpft dim in the surface file'
        write(iulog,*)'natpft: ',check_numpft
        write(iulog,*)'lsmpft: ',actual_maxsoil_patches
