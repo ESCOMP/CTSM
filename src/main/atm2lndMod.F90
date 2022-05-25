@@ -22,7 +22,7 @@ module atm2lndMod
   use filterColMod   , only : filter_col_type
   use LandunitType   , only : lun                
   use ColumnType     , only : col
-  use landunit_varcon, only : istice, istsoil
+  use landunit_varcon, only : istice
   use WaterType      , only : water_type
   use Wateratm2lndBulkType, only : wateratm2lndbulk_type
 
@@ -757,7 +757,8 @@ contains
     integer  :: c,l,g,n      ! indices
     real(r8) :: norm(numrad)
     real(r8) :: sum_solar(bounds%begg:bounds%endg,numrad)
-    real(r8) :: sum_wtlunit(bounds%begg:bounds%endg)
+    real(r8) :: sum_wtgcell(bounds%begg:bounds%endg)
+    logical  :: checkConservation = .true.
 
     character(len=*), parameter :: subname = 'downscale_hillslope_solar'
     !-----------------------------------------------------------------------
@@ -765,48 +766,74 @@ contains
     associate(&
          ! Gridcell-level fields:
          forc_solai_grc  =>    atm2lnd_inst%forc_solai_grc , & ! Input:  [real(r8) (:)]  gridcell indirect incoming solar radiation
-         forc_solad_not_downscaled_grc  =>    atm2lnd_inst%forc_solad_not_downscaled_grc , & ! Input:  [real(r8) (:)]  gridcell direct incoming solar radiation
+         forc_solad_grc  =>    atm2lnd_inst%forc_solad_not_downscaled_grc , & ! Input:  [real(r8) (:)]  gridcell direct incoming solar radiation
          coszen_grc      =>    surfalb_inst%coszen_grc     , & ! Input:  [real(r8) (:)]  cosine of solar zenith angle            
          
          ! Column-level fields:
          coszen_col                 =>    surfalb_inst%coszen_col                , & ! Input:   [real(r8) (:)]  cosine of solar zenith angle            
-         forc_solar_downscaled_col  =>    atm2lnd_inst%forc_solar_downscaled_col , & ! Output:  [real(r8) (:)]  column total incoming solar radiation
-         forc_solad_downscaled_col  =>    atm2lnd_inst%forc_solad_downscaled_col   & ! Output:  [real(r8) (:)]  column direct incoming solar radiation
+         forc_solar_col  =>    atm2lnd_inst%forc_solar_downscaled_col , & ! Output:  [real(r8) (:)]  column total incoming solar radiation
+         forc_solad_col  =>    atm2lnd_inst%forc_solad_downscaled_col   & ! Output:  [real(r8) (:)]  column direct incoming solar radiation
          )
       
       ! Initialize column forcing
       sum_solar(bounds%begg:bounds%endg,1:numrad) = 0._r8
-      sum_wtlunit(bounds%begg:bounds%endg) = 0._r8
+      sum_wtgcell(bounds%begg:bounds%endg) = 0._r8
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
-         forc_solad_downscaled_col(c,1:numrad)  = forc_solad_not_downscaled_grc(g,1:numrad)
-         if (col%is_hillslope_column(c)) then
+         if (col%is_hillslope_column(c) .and. col%active(c)) then
             if (coszen_grc(g) > 0._r8) then
-               forc_solad_downscaled_col(c,1:numrad)  = forc_solad_not_downscaled_grc(g,1:numrad)*(coszen_col(c)/coszen_grc(g))
+               forc_solad_col(c,1:numrad)  = forc_solad_grc(g,1:numrad)*(coszen_col(c)/coszen_grc(g))
             endif
             
-            sum_solar(g,1:numrad) = sum_solar(g,1:numrad) + col%wtlunit(c)*forc_solad_downscaled_col(c,1:numrad)
-            sum_wtlunit(g) = sum_wtlunit(g) + col%wtlunit(c)
+            sum_solar(g,1:numrad) = sum_solar(g,1:numrad) + col%wtgcell(c)*forc_solad_col(c,1:numrad)
+            sum_wtgcell(g) = sum_wtgcell(g) + col%wtgcell(c)
          end if
       end do
 
       ! Normalize column level solar
       do c = bounds%begc,bounds%endc
-         if (col%is_hillslope_column(c)) then
+         if (col%is_hillslope_column(c) .and. col%active(c)) then
             g = col%gridcell(c)
             do n = 1,numrad
-               ! absorbed energy is solar flux x area landunit (sum_wtlunit)
+               ! absorbed energy is solar flux x area landunit (sum_wtgcell)
                if(sum_solar(g,n) > 0._r8) then
-                  norm(n) = sum_wtlunit(g)*forc_solad_not_downscaled_grc(g,n)/sum_solar(g,n)
+                  norm(n) = sum_wtgcell(g)*forc_solad_grc(g,n)/sum_solar(g,n)
+                  forc_solad_col(c,n)  = forc_solad_col(c,n)*norm(n)
                else
-                  norm(n) = 0._r8
+                  forc_solad_col(c,n)  = forc_solad_grc(g,n)
                endif
-               forc_solad_downscaled_col(c,n)  = forc_solad_downscaled_col(c,n)*norm(n)
             enddo
          end if
-         forc_solar_downscaled_col(c) = sum(forc_solad_downscaled_col(c,1:numrad))+sum(forc_solai_grc(g,1:numrad))
+         forc_solar_col(c) = sum(forc_solad_col(c,1:numrad))+sum(forc_solai_grc(g,1:numrad))
          
       end do
+
+            ! check conservation
+      if(checkConservation)  then
+         sum_solar(bounds%begg:bounds%endg,1:numrad) = 0._r8
+         sum_wtgcell(bounds%begg:bounds%endg)   = 0._r8
+         ! Calculate normalization (area-weighted solar flux)
+         do c = bounds%begc,bounds%endc
+            if (col%is_hillslope_column(c) .and. col%active(c)) then
+               g = col%gridcell(c)
+               do n = 1,numrad
+                  sum_solar(g,n) = sum_solar(g,n) + col%wtgcell(c)*forc_solad_col(c,n)
+               enddo
+               sum_wtgcell(g)    = sum_wtgcell(g) + col%wtgcell(c)
+            end if
+         end do
+         do g = bounds%begg,bounds%endg
+            do n = 1,numrad
+               if(abs(sum_solar(g,n) - sum_wtgcell(g)*forc_solad_grc(g,n)) > 1.e-6) then
+                  write(iulog,*) 'downscaled solar not conserved', g, n, sum_solar(g,n), sum_wtgcell(g)*forc_solad_grc(g,n)
+                  call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                       msg=' ERROR: Energy conservation error downscaling solar'//&
+                       errMsg(sourcefile, __LINE__))
+               endif
+            enddo
+         enddo
+      endif
+
 
     end associate
 
@@ -840,9 +867,8 @@ contains
     real(r8) :: norm_rain(bounds%begg:bounds%endg)
     real(r8) :: norm_snow(bounds%begg:bounds%endg)
     real(r8) :: sum_wt(bounds%begg:bounds%endg)
-    real(r8) :: max_topo(bounds%begg:bounds%endg)
-    real(r8) :: min_topo(bounds%begg:bounds%endg)
-    real(r8) :: rain_scalar, snow_scalar
+    real(r8), parameter :: rain_scalar = 1.5e-3_r8        ! (1/m)
+    real(r8), parameter :: snow_scalar = 1.5e-3_r8        ! (1/m)
     logical  :: checkConservation = .true.
     character(len=*), parameter :: subname = 'downscale_hillslope_precipitation'
     !-----------------------------------------------------------------------
@@ -860,33 +886,18 @@ contains
          forc_snow_c  => wateratm2lndbulk_inst%forc_snow_downscaled_col       & ! Output: [real(r8) (:)]  snow rate [mm/s]
          )
       
-      ! Extract maximum column-level topographic elevation
-
-      min_topo(bounds%begg:bounds%endg) = 0._r8
-      max_topo(bounds%begg:bounds%endg) = 0._r8
-      do l = bounds%begl, bounds%endl
-         if (lun%itype(l) == istsoil) then
-            g = lun%gridcell(l)
-            min_topo(g) = minval(topo_c(lun%coli(l):lun%colf(l)))
-            max_topo(g) = maxval(topo_c(lun%coli(l):lun%colf(l)))
-         endif
-      enddo
-       
       ! Redistribute precipitation based on departure
       ! of column elevation from mean elevation
 
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
-         if (col%is_hillslope_column(c)) then
+         if (col%is_hillslope_column(c) .and. col%active(c)) then
 
             ! spatially uniform normalization, but separate rain/snow
-            rain_scalar = 1.2e-3
-            rain_scalar = 1.5e-3
             topo_anom = max(-1._r8,(topo_c(c) - forc_topo_g(g))*rain_scalar) ! rain
             precip_anom = forc_rain_g(g) * topo_anom
             forc_rain_c(c) = forc_rain_c(c) + precip_anom
 
-            snow_scalar = rain_scalar
             topo_anom = max(-1._r8,(topo_c(c) - forc_topo_g(g))*snow_scalar) ! snow
             precip_anom = forc_snow_g(g) * topo_anom
             forc_snow_c(c) = forc_snow_c(c) + precip_anom
@@ -901,10 +912,10 @@ contains
       ! Calculate normalization (area-weighted average precipitation)
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
-         if (col%is_hillslope_column(c)) then
-            norm_rain(g) = norm_rain(g) + col%wtlunit(c)*forc_rain_c(c)
-            norm_snow(g) = norm_snow(g) + col%wtlunit(c)*forc_snow_c(c)
-            sum_wt(g)    = sum_wt(g) + col%wtlunit(c)
+         if (col%is_hillslope_column(c) .and. col%active(c)) then
+            norm_rain(g) = norm_rain(g) + col%wtgcell(c)*forc_rain_c(c)
+            norm_snow(g) = norm_snow(g) + col%wtgcell(c)*forc_snow_c(c)
+            sum_wt(g)    = sum_wt(g) + col%wtgcell(c)
          end if
       end do
       do g = bounds%begg,bounds%endg
@@ -917,12 +928,16 @@ contains
       ! Normalize column precipitation to conserve gridcell average 
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
-         if (col%is_hillslope_column(c)) then
+         if (col%is_hillslope_column(c) .and. col%active(c)) then
             if (norm_rain(g) > 0._r8) then 
                forc_rain_c(c) = forc_rain_c(c) * forc_rain_g(g) / norm_rain(g)
+            else
+               forc_rain_c(c) = forc_rain_g(g)
             endif
             if (norm_snow(g) > 0._r8) then 
                forc_snow_c(c) = forc_snow_c(c) * forc_snow_g(g) / norm_snow(g)
+            else
+               forc_snow_c(c) = forc_snow_g(g)
             endif
          end if
       end do
@@ -935,10 +950,10 @@ contains
          ! Calculate normalization (area-weighted average precipitation)
          do c = bounds%begc,bounds%endc
             g = col%gridcell(c)
-            if (col%is_hillslope_column(c)) then
-               norm_rain(g) = norm_rain(g) + col%wtlunit(c)*forc_rain_c(c)
-               norm_snow(g) = norm_snow(g) + col%wtlunit(c)*forc_snow_c(c)
-               sum_wt(g)    = sum_wt(g) + col%wtlunit(c)
+            if (col%is_hillslope_column(c) .and. col%active(c)) then
+               norm_rain(g) = norm_rain(g) + col%wtgcell(c)*forc_rain_c(c)
+               norm_snow(g) = norm_snow(g) + col%wtgcell(c)*forc_snow_c(c)
+               sum_wt(g)    = sum_wt(g) + col%wtgcell(c)
             end if
          end do
          do g = bounds%begg,bounds%endg
