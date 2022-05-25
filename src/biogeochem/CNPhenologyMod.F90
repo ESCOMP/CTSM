@@ -128,7 +128,6 @@ module CNPhenologyMod
 
   logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
   logical          :: ignore_rx_crop_gdds = .false. ! Troubleshooting
-  real(r8)         :: min_crop_gdd_target = 1._r8   ! Troubleshooting
 
   ! Constants for seasonal decidious leaf onset and offset
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
@@ -172,7 +171,7 @@ contains
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
                            min_critical_dayl_method, generate_crop_gdds, &
-                           ignore_rx_crop_gdds, min_crop_gdd_target
+                           ignore_rx_crop_gdds
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -198,7 +197,6 @@ contains
     call shr_mpi_bcast (min_critical_dayl_method,     mpicom)
     call shr_mpi_bcast (generate_crop_gdds,          mpicom)
     call shr_mpi_bcast (ignore_rx_crop_gdds,         mpicom)
-    call shr_mpi_bcast (min_crop_gdd_target,         mpicom)
 
     if (      min_critical_dayl_method == "DependsOnLat"       )then
        critical_daylight_method = critical_daylight_depends_on_lat
@@ -2438,6 +2436,7 @@ contains
          crop_seedc_to_leaf =>   cnveg_carbonflux_inst%crop_seedc_to_leaf_patch  , & ! Output: [real(r8) (:) ]  (gC/m2/s) seed source to leaf
          crop_seedn_to_leaf =>   cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch, & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to leaf
          hybgdd            =>    pftcon%hybgdd                                 , & ! Input:  [real(r8) (:) ]
+         gddmin            =>    pftcon%gddmin                                 , & ! Input:
          gdd020            =>    temperature_inst%gdd020_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd0
          gdd820            =>    temperature_inst%gdd820_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd8
          gdd1020           =>    temperature_inst%gdd1020_patch                  & ! Input:  [real(r8) (:) ]  20 yr mean of gdd10
@@ -2498,16 +2497,15 @@ contains
       endif
 
       ! set GDD target
-      gddmaturity(p) = min_crop_gdd_target
       if (do_plant_prescribed .and. (.not. generate_crop_gdds) .and. (.not. ignore_rx_crop_gdds) .and. crop_inst%rx_cultivar_gdds_thisyr(p,s) .gt. 0._r8) then
          gdd_target = crop_inst%rx_cultivar_gdds_thisyr(p,s)
 
          ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
          ! Just manually set a minimum of 1.0
-         if (gdd_target < min_crop_gdd_target) then
-            write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gdd_target ',gdd_target,'; using min_crop_gdd_target instead (',min_crop_gdd_target,')'
+         if (gdd_target < gddmin(ivt(p))) then
+            write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gdd_target ',gdd_target,'; using gddmin(ivt(p)) instead (',gddmin(ivt(p)),')'
          endif
-         gdd_target = max(gdd_target, min_crop_gdd_target)
+         gdd_target = max(gdd_target, gddmin(ivt(p)))
 
          gddmaturity(p) = gdd_target
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
@@ -2535,10 +2533,10 @@ contains
 
          ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
          ! Just manually set a minimum of 1.0
-         if (gddmaturity(p) < min_crop_gdd_target) then
-            write(iulog,*) 'Some patch with ivt ',ivt(p),' has calculated gddmaturity ',gddmaturity(p),'; using min_crop_gdd_target instead (',min_crop_gdd_target,')'
+         if (gddmaturity(p) < gddmin(ivt(p))) then
+            write(iulog,*) 'Some patch with ivt ',ivt(p),' has calculated gddmaturity ',gddmaturity(p),'; using gddmin(ivt(p)) instead (',gddmin(ivt(p)),')'
          endif
-         gddmaturity(p) = max(gddmaturity(p), min_crop_gdd_target)
+         gddmaturity(p) = max(gddmaturity(p), gddmin(ivt(p)))
       endif
 !      write (iulog,'(a,i4,a,f0.0)')  'gddmaturity (ivt ',ivt(p),'): ',gddmaturity(p)
 
