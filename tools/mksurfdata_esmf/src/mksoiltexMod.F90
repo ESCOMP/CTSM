@@ -263,10 +263,10 @@ contains
 
        if (pctlnd_pft_o(no) < 1.e-6_r8 .or. mapunit_o(no) == 0) then
 
-          ! Adjust sand and clay be loam if pctlnd_pft is < 1.e-6 or mapunit is 0
+          ! Set sand and clay to loam if pctlnd_pft is < 1.e-6 or mapunit is 0
           sand_o(no,:) = 43._r4
           clay_o(no,:) = 18._r4
-          orgc_o(no,:) = 18._r4  ! TODO slevis: value for loam here?
+          orgc_o(no,:) = 0._r4
 
        else
 
@@ -349,8 +349,8 @@ contains
                 write(6,'(a,i8)')'WARNING: changing orgc_o from -4 to 1 at no = ',no
                 orgc_o(no,:) = 1._r4
              else
-                write(6,'(a,i8,a,i8)')'WARNING: changing orgc_o from ',int(orgc_o(no,1)),' to 18 at no = ',no
-                orgc_o(no,:) = 18._r4  ! TODO slevis: Value for loam here?
+                write(6,'(a,i8,a,i8)')'WARNING: changing orgc_o from ',int(orgc_o(no,1)),' to 0 at no = ',no
+                orgc_o(no,:) = 0._r4
              end if
           end if
           if (orgc_o(no,1) < 0.) then
