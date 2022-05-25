@@ -45,13 +45,14 @@ def get_parser():
     )
     parser.add_argument(
         "--machine",
-        help="""currently this recognizes cheyenne and casper (default
+        help="""currently this recognizes cheyenne, casper, izumi (default
                 cheyenne); this needs to be a cime machine, i.e. a machine
                 that has been ported to cime where you can build a cime model;
                 for details see the README in this directory""",
         action="store",
         dest="machine",
         required=False,
+        choices=['cheyenne', 'casper', 'izumi'],
         default='cheyenne'
     )
     parser.add_argument(
@@ -90,16 +91,20 @@ def main ():
     with open(jobscript_file, "w",encoding='utf-8') as runfile:
 
         runfile.write('#!/bin/bash \n')
-        runfile.write(f"#PBS -A {account} \n")
         runfile.write('#PBS -N mksurfdata \n')
         runfile.write('#PBS -j oe \n')
         runfile.write('#PBS -l walltime=30:00 \n')
         if machine == 'cheyenne':
+            runfile.write(f"#PBS -A {account} \n")
             runfile.write('#PBS -q regular \n')
             runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
         elif machine == 'casper':
+            runfile.write(f"#PBS -A {account} \n")
             runfile.write('#PBS -q casper \n')
             runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=12:mpiprocs={tasks_per_node}:mem=80GB \n")
+        elif machine == 'izumi':
+            runfile.write('#PBS -q test \n')
+            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
         runfile.write("\n")
 
         np = int(tasks_per_node) * int(number_of_nodes)
@@ -108,6 +113,8 @@ def main ():
             output = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
         elif machine == 'casper':
             output = f"mpiexec -np {np} ./bld/mksurfdata < {namelist_file}"
+        elif machine == 'izumi':
+            output = f"mpirun -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
         runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")

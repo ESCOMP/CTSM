@@ -55,6 +55,14 @@ running for a single submission:
 > ./gen_mksurfdata_namelist.py --help
 # for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
 > ./gen_mksurfdata_namelist.py --res <resolution> --start-year <year1> --end-year <year2>
+# IF FILES ARE MISSING FROM /inputdata, a target namelist will be generated
+# but with a generic name and with warning to run ./download_input_data next.
+# IF A SMALLER SET OF FILES IS STILL MISSING AFTER RUNNING ./download_input_data
+# and rerunning ./gen_mksurfdata_namelist.py, then rerun
+# ./gen_mksurfdata_namelist.py with --vic selected (and iteratively additional
+# options if still necessary) and rerun ./download_input_data until
+# ./gen_mksurfdata_namelist.py finds all files.
+
 # to generate your target jobscript (again --help for instructions):
 > ./gen_mksurfdata_jobscript_single.py --number-of-nodes 24 --tasks-per-node 12 --namelist-file target.namelist
 > qsub mksurfdata_jobscript_single

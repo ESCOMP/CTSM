@@ -129,7 +129,8 @@ def get_parser():
     parser.add_argument(
         "--rawdata-dir",
         help="""
-            /path/of/root/of/input/data',
+            /path/of/root/of/input/data
+            on izumi use /fs/cgd/csm/inputdata
             [default: %(default)s]
             """,
         action="store",
@@ -374,7 +375,7 @@ def main ():
                 if '%y' not in rawdata_files[child1.tag]:
                     if not os.path.isfile(rawdata_files[child1.tag]):
                         print(f"WARNING: input data file {rawdata_files[child1.tag]} for {child1.tag} does not exist")
-                        print(f"WARNING: run ./download_input_data to try to obtain missing files")
+                        print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
                         _must_run_download_input_data = True
 
             if item.tag == 'mesh_filename':
@@ -382,7 +383,7 @@ def main ():
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
                 if not os.path.isfile(rawdata_files[new_key]):
                     print(f"WARNING: input mesh file {rawdata_files[new_key]} does not exist")
-                    print(f"WARNING: run ./download_input_data to try to obtain missing files")
+                    print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
                     _must_run_download_input_data = True
 
             if item.tag == 'lake_filename':
@@ -455,15 +456,15 @@ def main ():
                 landuse_input_fnam3 = file3.replace("%y",str(year))
                 if not os.path.isfile(landuse_input_fname):
                      print(f"WARNING: landunit_input_fname: {landuse_input_fname} does not exist")
-                     print(f"WARNING: run ./download_input_data to try to obtain missing files")
+                     print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
                      _must_run_download_input_data = True
                 if not os.path.isfile(landuse_input_fnam2):
                      print(f"WARNING: landunit_input_fnam2: {landuse_input_fnam2} does not exist")
-                     print(f"WARNING: run ./download_input_data to try to obtain missing files")
+                     print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
                      _must_run_download_input_data = True
                 if not os.path.isfile(landuse_input_fnam3):
                      print(f"WARNING: landunit_input_fnam3: {landuse_input_fnam3} does not exist")
-                     print(f"WARNING: run ./download_input_data to try to obtain missing files")
+                     print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
                      _must_run_download_input_data = True
 
                 # -- Each line is written twice in the original perl code:
@@ -554,11 +555,11 @@ def main ():
             mksrf_fhrvtyp = mksrf_fhrvtyp.replace("%y",str(start_year))
         if not os.path.isfile(mksrf_fvegtyp):
             print(f"WARNING: input mksrf_fvegtyp file {mksrf_fvegtyp} does not exist")
-            print(f"WARNING: run ./download_input_data to try to obtain missing files")
+            print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
             _must_run_download_input_data = True
         if not os.path.isfile(mksrf_fhrvtyp):
             print(f"WARNING: input mksrf_fhrvtyp file {mksrf_fhrvtyp} does not exist")
-            print(f"WARNING: run ./download_input_data to try to obtain missing files")
+            print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
             _must_run_download_input_data = True
         nlfile.write( f"  mksrf_fvegtyp = \'{mksrf_fvegtyp}\' \n")
         nlfile.write( f"  mksrf_fvegtyp_mesh = \'{mksrf_fvegtyp_mesh}\' \n")
