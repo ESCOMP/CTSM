@@ -264,12 +264,15 @@ contains
     integer, intent(out) :: actual_maxsoil_patches  ! value from surface dataset
     integer, intent(out) :: actual_numcft           ! cft value from sfc dataset
     integer, intent(out) :: actual_numpft           ! pft value from sfc dataset
+    
     !
     ! !LOCAL VARIABLES:
     character(len=256):: locfn                ! local file name
     type(file_desc_t) :: ncid                 ! netcdf file id
     integer :: dimid                          ! netCDF dimension id
     logical :: cft_dim_exists                 ! dimension exists on dataset
+    integer :: check_numpft                   ! Surface dataset count of numpft, should
+                                              ! match maxsoil_patches - actual_numcft
     character(len=32) :: subname = 'surfrd_get_num_patches'  ! subroutine name
     !-----------------------------------------------------------------------
 
@@ -296,17 +299,19 @@ contains
     else
        actual_numcft = 0
     end if
-
-
     
     ! Read maxsoil_patches
-    if(.not.use_fates)then
-       call ncd_inqdlen(ncid, dimid, actual_maxsoil_patches, 'lsmpft')
-       actual_numpft = actual_maxsoil_patches - actual_numcft
-    else
-       ! This will be retrieved from FATES if use_fates=true
-       call ncd_inqdlen(ncid, dimid, actual_numpft, 'natpft')
-       actual_maxsoil_patches = -9
+    call ncd_inqdlen(ncid, dimid, actual_maxsoil_patches, 'lsmpft')
+    actual_numpft = actual_maxsoil_patches - actual_numcft
+
+    call ncd_inqdlen(ncid, dimid, check_numpft, 'natpft')
+
+    if(chek_numpft.ne.actual_numpft)then
+       write(iulog,*)'the sum of the cftdim and the natpft dim should match the lsmpft dim in the surface file'
+       write(iulog,*)'natpft: ',check_numpft
+       write(iulog,*)'lsmpft: ',actual_maxsoil_patches
+       write(iulog,*)'cft: ',actual_numcft
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
     
     if ( masterproc )then
@@ -504,10 +509,8 @@ contains
     SHR_ASSERT_ALL_FL((ubound(wt_nat_patch)    >= (/endg,natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
     call check_dim_size(ncid, 'cft',    cftsize)
-    if(.not.use_fates)then
-       call check_dim_size(ncid, 'natpft', natpft_size)
-    end if
-
+    call check_dim_size(ncid, 'natpft', natpft_size)
+    
     call ncd_io(ncid=ncid, varname='PCT_CFT', flag='read', data=wt_cft, &
             dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( msg=' ERROR: PCT_CFT NOT on surfdata file'//errMsg(sourcefile, __LINE__))
@@ -701,7 +704,7 @@ contains
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
     use surfrdUtilsMod  , only : convert_cft_to_pft
-    use pftconMod       , only : nc3crop
+
     !
     ! !ARGUMENTS:
     implicit none

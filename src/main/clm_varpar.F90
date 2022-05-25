@@ -138,7 +138,7 @@ contains
 
     if (create_crop_landunit) then
        
-       natpft_size = maxsoil_patches - surf_numcft  ! includes bare ground + pfts
+       natpft_size = surf_numpft    ! includes bare ground + natveg pfts
        cft_size    = surf_numcft
        natpft_lb   = 0
        natpft_ub   = natpft_lb + natpft_size - 1
