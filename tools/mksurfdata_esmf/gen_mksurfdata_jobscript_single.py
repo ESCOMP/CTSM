@@ -89,7 +89,6 @@ def main ():
     # Write run script
     # --------------------------
     with open(jobscript_file, "w",encoding='utf-8') as runfile:
-
         runfile.write('#!/bin/bash \n')
         runfile.write('#PBS -N mksurfdata \n')
         runfile.write('#PBS -j oe \n')
@@ -103,18 +102,26 @@ def main ():
             runfile.write('#PBS -q casper \n')
             runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=12:mpiprocs={tasks_per_node}:mem=80GB \n")
         elif machine == 'izumi':
-            runfile.write('#PBS -q test \n')
-            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
+            runfile.write('#PBS -q medium \n')
+            runfile.write(f'#PBS -l nodes={number_of_nodes}:ppn={tasks_per_node} -r n \n')
+        runfile.write("\n")
+
+        tool_path = os.path.dirname(os.path.abspath(__file__))
+        bld_path = os.path.join(tool_path, 'bld')
+
+        runfile.write(f'cd {bld_path} \n')
+        runfile.write("\n")
+        runfile.write('. ./.env_mach_specific.sh \n')
         runfile.write("\n")
 
         np = int(tasks_per_node) * int(number_of_nodes)
 
         if machine == 'cheyenne':
-            output = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
+            output = f"mpiexec_mpt -p \"%g:\" -np {np} ./mksurfdata < ../{namelist_file}"
         elif machine == 'casper':
-            output = f"mpiexec -np {np} ./bld/mksurfdata < {namelist_file}"
+            output = f"mpiexec -np {np} ./mksurfdata < ../{namelist_file}"
         elif machine == 'izumi':
-            output = f"mpirun -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
+            output = f"mpirun -np {np} ./mksurfdata < ../{namelist_file}"
         runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")
