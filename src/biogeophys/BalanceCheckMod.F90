@@ -514,9 +514,9 @@ contains
      !-----------------------------------------------------------------------
 
      associate(                                                                   & 
-          forc_solad_col          =>    atm2lnd_inst%forc_solad_col             , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
-          forc_solad              =>    atm2lnd_inst%forc_solad_grc             , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
-          forc_solai              =>    atm2lnd_inst%forc_solai_grc             , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
+          forc_solad_col    =>    atm2lnd_inst%forc_solad_downscaled_col        , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
+          forc_solad        =>    atm2lnd_inst%forc_solad_not_downscaled_grc    , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
+          forc_solai        =>    atm2lnd_inst%forc_solai_grc                   , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
           forc_rain         =>    wateratm2lnd_inst%forc_rain_downscaled_col    , & ! Input:  [real(r8) (:)   ]  column level rain rate [mm/s]
           forc_rain_grc     =>    wateratm2lnd_inst%forc_rain_not_downscaled_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level rain rate [mm/s]
           forc_snow         =>    wateratm2lnd_inst%forc_snow_downscaled_col    , & ! Input:  [real(r8) (:)   ]  column level snow rate [mm/s]

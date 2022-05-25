@@ -548,9 +548,9 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, Faxa_lwdn , atm2lnd_inst%forc_lwrad_not_downscaled_grc(begg:), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, Faxa_swvdr, atm2lnd_inst%forc_solad_grc(begg:,1), rc=rc)
+    call state_getimport_1d(importState, Faxa_swvdr, atm2lnd_inst%forc_solad_not_downscaled_grc(begg:,1), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, Faxa_swndr, atm2lnd_inst%forc_solad_grc(begg:,2), rc=rc)
+    call state_getimport_1d(importState, Faxa_swndr, atm2lnd_inst%forc_solad_not_downscaled_grc(begg:,2), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, Faxa_swvdf, atm2lnd_inst%forc_solai_grc(begg:,1), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return

@@ -391,8 +391,8 @@ contains
     associate( tlai_z  => surfalb_inst%tlai_z_patch, &    ! tlai increment for canopy layer
           fsun_z      => surfalb_inst%fsun_z_patch, &     ! sunlit fraction of canopy layer
           elai        => canopystate_inst%elai_patch, &   ! one-sided leaf area index
-          forc_solad  => atm2lnd_inst%forc_solad_grc, &   ! direct beam radiation (W/m**2)
-          forc_solad_col  => atm2lnd_inst%forc_solad_col, &   ! direct beam radiation (W/m**2)
+          forc_solad  => atm2lnd_inst%forc_solad_not_downscaled_grc, &   ! direct beam radiation, gridcell (W/m**2)
+          forc_solad_col  => atm2lnd_inst%forc_solad_downscaled_col, &   ! direct beam radiation, column (W/m**2)
           forc_solai  => atm2lnd_inst%forc_solai_grc, &   ! diffuse radiation (W/m**2)
           fabd_sun_z  => surfalb_inst%fabd_sun_z_patch, & ! absorbed sunlit leaf direct PAR
           fabd_sha_z  => surfalb_inst%fabd_sha_z_patch, & ! absorbed shaded leaf direct PAR
@@ -537,8 +537,8 @@ contains
      associate(                                                     &
           snl             =>    col%snl                           , & ! Input:  [integer  (:)   ] negative number of snow layers [nbr]
 
-          forc_solad      =>    atm2lnd_inst%forc_solad_grc       , & ! Input:  [real(r8) (:,:) ] direct beam radiation (W/m**2)        
-          forc_solad_col  =>    atm2lnd_inst%forc_solad_col       , & ! Input:  [real(r8) (:,:) ] direct beam radiation (W/m**2)        
+          forc_solad      =>    atm2lnd_inst%forc_solad_not_downscaled_grc , & ! Input:  [real(r8) (:,:) ] direct beam radiation, gridcell (W/m**2)        
+          forc_solad_col  =>    atm2lnd_inst%forc_solad_downscaled_col     , & ! Input:  [real(r8) (:,:) ] direct beam radiation, column (W/m**2)        
           forc_solai      =>    atm2lnd_inst%forc_solai_grc       , & ! Input:  [real(r8) (:,:) ] diffuse radiation (W/m**2)            
 
           snow_depth      =>    waterdiagnosticbulk_inst%snow_depth_col    , & ! Input:  [real(r8) (:)   ] snow height (m)

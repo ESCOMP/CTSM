@@ -162,7 +162,8 @@ contains
          forc_q_g     => wateratm2lndbulk_inst%forc_q_not_downscaled_grc    , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
          forc_pbot_g  => atm2lnd_inst%forc_pbot_not_downscaled_grc , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)               
          forc_rho_g   => atm2lnd_inst%forc_rho_not_downscaled_grc  , & ! Input:  [real(r8) (:)]  atmospheric density (kg/m**3)           
-         forc_solad_g => atm2lnd_inst%forc_solad_grc               , & ! Input:  [real(r8) (:)]  gridcell direct incoming solar radiation
+         forc_solad_g => atm2lnd_inst%forc_solad_not_downscaled_grc               , & ! Input:  [real(r8) (:)]  gridcell direct incoming solar radiation
+         forc_solar_g => atm2lnd_inst%forc_solar_not_downscaled_grc, & ! Input:  [real(r8) (:)]  gridcell direct incoming solar radiation
 
          ! Column-level downscaled fields:
          forc_rain_c  => wateratm2lndbulk_inst%forc_rain_downscaled_col    , & ! Output: [real(r8) (:)]  rain rate [mm/s]
@@ -172,7 +173,8 @@ contains
          forc_th_c    => atm2lnd_inst%forc_th_downscaled_col       , & ! Output: [real(r8) (:)]  atmospheric potential temperature (Kelvin)
          forc_pbot_c  => atm2lnd_inst%forc_pbot_downscaled_col     , & ! Output: [real(r8) (:)]  atmospheric pressure (Pa)               
          forc_rho_c   => atm2lnd_inst%forc_rho_downscaled_col      , & ! Output: [real(r8) (:)]  atmospheric density (kg/m**3)           
-         forc_solad_c => atm2lnd_inst%forc_solad_col                 & ! Output:  [real(r8) (:)]  column direct incoming solar radiation
+         forc_solad_c => atm2lnd_inst%forc_solad_downscaled_col    , & ! Output:  [real(r8) (:)]  column direct incoming solar radiation
+         forc_solar_c => atm2lnd_inst%forc_solar_downscaled_col      & ! Output:  [real(r8) (:)]  column total incoming solar radiation
          )
       
       ! Initialize column forcing (needs to be done for ALL active columns)
@@ -187,6 +189,7 @@ contains
             forc_q_c(c)     = forc_q_g(g)
             forc_pbot_c(c)  = forc_pbot_g(g)
             forc_rho_c(c)   = forc_rho_g(g)
+            forc_solar_c(c) = forc_solar_g(g)
             forc_solad_c(c,1:numrad) = forc_solad_g(g,1:numrad)
          end if
       end do
@@ -762,13 +765,13 @@ contains
     associate(&
          ! Gridcell-level fields:
          forc_solai_grc  =>    atm2lnd_inst%forc_solai_grc , & ! Input:  [real(r8) (:)]  gridcell indirect incoming solar radiation
-         forc_solad_grc  =>    atm2lnd_inst%forc_solad_grc , & ! Input:  [real(r8) (:)]  gridcell direct incoming solar radiation
+         forc_solad_not_downscaled_grc  =>    atm2lnd_inst%forc_solad_not_downscaled_grc , & ! Input:  [real(r8) (:)]  gridcell direct incoming solar radiation
          coszen_grc      =>    surfalb_inst%coszen_grc     , & ! Input:  [real(r8) (:)]  cosine of solar zenith angle            
          
          ! Column-level fields:
-         forc_solar_col  =>    atm2lnd_inst%forc_solar_col , & ! Output:  [real(r8) (:)]  column total incoming solar radiation
-         forc_solad_col  =>    atm2lnd_inst%forc_solad_col , & ! Output:  [real(r8) (:)]  column direct incoming solar radiation
-         coszen_col      =>    surfalb_inst%coszen_col       & ! Input:   [real(r8) (:)]  cosine of solar zenith angle            
+         coszen_col                 =>    surfalb_inst%coszen_col                , & ! Input:   [real(r8) (:)]  cosine of solar zenith angle            
+         forc_solar_downscaled_col  =>    atm2lnd_inst%forc_solar_downscaled_col , & ! Output:  [real(r8) (:)]  column total incoming solar radiation
+         forc_solad_downscaled_col  =>    atm2lnd_inst%forc_solad_downscaled_col   & ! Output:  [real(r8) (:)]  column direct incoming solar radiation
          )
       
       ! Initialize column forcing
@@ -776,13 +779,13 @@ contains
       sum_wtlunit(bounds%begg:bounds%endg) = 0._r8
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
-         forc_solad_col(c,1:numrad)  = forc_solad_grc(g,1:numrad)
+         forc_solad_downscaled_col(c,1:numrad)  = forc_solad_not_downscaled_grc(g,1:numrad)
          if (col%is_hillslope_column(c)) then
             if (coszen_grc(g) > 0._r8) then
-               forc_solad_col(c,1:numrad)  = forc_solad_grc(g,1:numrad)*(coszen_col(c)/coszen_grc(g))
+               forc_solad_downscaled_col(c,1:numrad)  = forc_solad_not_downscaled_grc(g,1:numrad)*(coszen_col(c)/coszen_grc(g))
             endif
             
-            sum_solar(g,1:numrad) = sum_solar(g,1:numrad) + col%wtlunit(c)*forc_solad_col(c,1:numrad)
+            sum_solar(g,1:numrad) = sum_solar(g,1:numrad) + col%wtlunit(c)*forc_solad_downscaled_col(c,1:numrad)
             sum_wtlunit(g) = sum_wtlunit(g) + col%wtlunit(c)
          end if
       end do
@@ -794,14 +797,14 @@ contains
             do n = 1,numrad
                ! absorbed energy is solar flux x area landunit (sum_wtlunit)
                if(sum_solar(g,n) > 0._r8) then
-                  norm(n) = sum_wtlunit(g)*forc_solad_grc(g,n)/sum_solar(g,n)
+                  norm(n) = sum_wtlunit(g)*forc_solad_not_downscaled_grc(g,n)/sum_solar(g,n)
                else
                   norm(n) = 0._r8
                endif
-               forc_solad_col(c,n)  = forc_solad_col(c,n)*norm(n)
+               forc_solad_downscaled_col(c,n)  = forc_solad_downscaled_col(c,n)*norm(n)
             enddo
          end if
-         forc_solar_col(c) = sum(forc_solad_col(c,1:numrad))+sum(forc_solai_grc(g,1:numrad))
+         forc_solar_downscaled_col(c) = sum(forc_solad_downscaled_col(c,1:numrad))+sum(forc_solai_grc(g,1:numrad))
          
       end do
 

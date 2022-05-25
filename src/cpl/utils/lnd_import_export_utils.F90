@@ -76,8 +76,11 @@ contains
 
        atm2lnd_inst%forc_wind_grc(g) = sqrt(atm2lnd_inst%forc_u_grc(g)**2 + atm2lnd_inst%forc_v_grc(g)**2)
 
-       atm2lnd_inst%forc_solar_grc(g) = atm2lnd_inst%forc_solad_grc(g,1) + atm2lnd_inst%forc_solai_grc(g,1) + &
-                                        atm2lnd_inst%forc_solad_grc(g,2) + atm2lnd_inst%forc_solai_grc(g,2)
+       atm2lnd_inst%forc_solar_not_downscaled_grc(g) = &
+              atm2lnd_inst%forc_solad_not_downscaled_grc(g,1) &
+            + atm2lnd_inst%forc_solai_grc(g,1) &
+            + atm2lnd_inst%forc_solad_not_downscaled_grc(g,2) &
+            + atm2lnd_inst%forc_solai_grc(g,2)
 
        wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc(g) + forc_rainl(g)
        wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
@@ -118,8 +121,8 @@ contains
           call shr_sys_abort( subname//&
                ' ERROR: Longwave down sent from the atmosphere model is negative or zero' )
        end if
-       if ( (atm2lnd_inst%forc_solad_grc(g,1) < 0.0_r8) .or. &
-            (atm2lnd_inst%forc_solad_grc(g,2) < 0.0_r8) .or. &
+       if ( (atm2lnd_inst%forc_solad_not_downscaled_grc(g,1) < 0.0_r8) .or. &
+            (atm2lnd_inst%forc_solad_not_downscaled_grc(g,2) < 0.0_r8) .or. &
             (atm2lnd_inst%forc_solai_grc(g,1) < 0.0_r8) .or. &
             (atm2lnd_inst%forc_solai_grc(g,2) < 0.0_r8) ) then
           call shr_sys_abort( subname//&

@@ -282,7 +282,7 @@ CONTAINS
 
     associate(                                                    & 
          forc_solai =>    atm2lnd_inst%forc_solai_grc           , & ! Input:  [real(r8) (:,:) ] direct beam radiation (visible only)             
-         forc_solad =>    atm2lnd_inst%forc_solad_grc           , & ! Input:  [real(r8) (:,:) ] direct beam radiation (visible only)             
+         forc_solad =>    atm2lnd_inst%forc_solad_downscaled_col, & ! Input:  [real(r8) (:,:) ] direct beam radiation (visible only)             
          forc_t     =>    atm2lnd_inst%forc_t_downscaled_col    , & ! Input:  [real(r8) (:)   ] downscaled atmospheric temperature (Kelvin)                   
          forc_q     =>    wateratm2lndbulk_inst%forc_q_downscaled_col    , & ! Input:  [real(r8) (:)   ] downscaled atmospheric specific humidity (kg/kg)              
          forc_pbot  =>    atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ] downscaled surface pressure (Pa)                              
@@ -321,7 +321,7 @@ CONTAINS
             spec_hum   = forc_q(c)
             rain       = forc_rain(c) 
             sfc_temp   = forc_t(c) 
-            solar_flux = forc_solad(g,1) 
+            solar_flux = forc_solad(c,1) 
             lat        = grc%latdeg(g) 
             lon        = grc%londeg(g) 
             clmveg     = patch%itype(pi) 
