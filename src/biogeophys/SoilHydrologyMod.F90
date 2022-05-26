@@ -1663,7 +1663,7 @@ contains
           zwt_perched        =>    soilhydrology_inst%zwt_perched_col    , & ! Input:  [real(r8) (:)   ] perched water table depth (m)                     
           tdepth             =>    wateratm2lndbulk_inst%tdepth_grc      , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
           tdepth_bankfull    =>    wateratm2lndbulk_inst%tdepthmax_grc   , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
-          stream_water_volume =>    waterstatebulk_inst%stream_water_lun , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
+          stream_water_volume =>    waterstatebulk_inst%stream_water_volume_lun , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
 
 
           qflx_drain_perched =>    waterfluxbulk_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ] perched wt sub-surface runoff (mm H2O /s)         
@@ -1707,7 +1707,7 @@ contains
 
           if (frost_table(c) > zwt_perched(c)) then
              ! Hillslope columns
-             if (col%is_hillslope_column(c)) then 
+             if (col%is_hillslope_column(c) .and. col%active(c)) then 
 
                 ! calculate head gradient
 
@@ -1843,7 +1843,7 @@ contains
           c = filter_hydrologyc(fc)
           ! drainage-out
           qflx_drain_perched(c) = qflx_drain_perched(c) + qflx_drain_perched_out(c)
-          if (col%is_hillslope_column(c)) then
+          if (col%is_hillslope_column(c) .and. col%active(c)) then
              ! drainage-in
              if (col%cold(c) /= ispval) then
                 qflx_drain_perched(col%cold(c)) = &
@@ -2077,7 +2077,7 @@ contains
           depth              =>    soilhydrology_inst%depth_col          , & ! Input:  [real(r8) (:,:) ] VIC soil depth                                   
           icefrac            =>    soilhydrology_inst%icefrac_col        , & ! Output: [real(r8) (:,:) ] fraction of ice in layer                         
           zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ] water table depth (m)                             
-          stream_water_volume =>    waterstatebulk_inst%stream_water_lun     , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
+          stream_water_volume =>    waterstatebulk_inst%stream_water_volume_lun, & ! Input:  [real(r8) (:)   ] stream water volume (m3)
           
           qflx_snwcp_liq     =>    waterfluxbulk_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess rainfall due to snow capping (mm H2O /s) [+]
           qflx_ice_runoff_xs =>    waterfluxbulk_inst%qflx_ice_runoff_xs_col , & ! Output: [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s) [+]
@@ -2151,7 +2151,7 @@ contains
          l = col%landunit(c)
          g = col%gridcell(c)
          ! Hillslope columns
-         if (col%is_hillslope_column(c)) then
+         if (col%is_hillslope_column(c) .and. col%active(c)) then
 
             ! kinematic wave approximation
             if (head_gradient_method == kinematic) then
@@ -2296,7 +2296,7 @@ contains
          endif
          do fc = 1, num_hydrologyc
             c = filter_hydrologyc(fc)
-            if (col%is_hillslope_column(c)) then
+            if (col%is_hillslope_column(c) .and. col%active(c)) then
                l = col%landunit(c)
                !need to sum all columns w/ same hillslope id for each column
                qflx_latflow_avg(c) = 0._r8

@@ -781,8 +781,7 @@ contains
     ! number of hillslopes per landunit
     call ncd_inqdid(ncid,'nhillslope',dimid,readvar) 
     if (.not. readvar) then
-       write(iulog,*)'surfrd error: nhillslope not on surface data file'
-       nhillslope = 1
+       call endrun( msg=' ERROR: nhillslope not on surface data file'//errMsg(sourcefile, __LINE__))
     else
        call ncd_inqdlen(ncid,dimid,nh)
        nhillslope = nh
@@ -790,8 +789,7 @@ contains
     ! maximum number of columns per landunit
     call ncd_inqdid(ncid,'nmaxhillcol',dimid,readvar) 
     if (.not. readvar) then
-       write(iulog,*)'surfrd error: nmaxhillcol not on surface data file'
-       max_columns_hillslope = 1
+       call endrun( msg=' ERROR: nmaxhillcol not on surface data file'//errMsg(sourcefile, __LINE__))
     else
        call ncd_inqdlen(ncid,dimid,nh)
        max_columns_hillslope = nh
@@ -801,9 +799,7 @@ contains
     call ncd_io(ncid=ncid, varname='nhillcolumns', flag='read', data=arrayl, &
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       write(iulog,*)'surfrd error: nhillcolumns not on surface data file'
-       ncolumns_hillslope(begg:endg) = 1
-       write(iulog,*)'setting ncolumns_hillslope[:] = 1'
+       call endrun( msg=' ERROR: nhillcolumns not on surface data file'//errMsg(sourcefile, __LINE__))
     else
        ncolumns_hillslope(begg:endg) = arrayl(begg:endg)
     endif

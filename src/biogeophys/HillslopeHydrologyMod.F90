@@ -692,7 +692,7 @@ contains
        ! Specify lowland/upland soil thicknesses separately
        if(soil_profile_method == soil_profile_set_lowland_upland) then
           do c =  lun%coli(l), lun%colf(l)
-             if (col%is_hillslope_column(c)) then
+             if (col%is_hillslope_column(c) .and. col%active(c)) then
                 if(col%cold(c) /= ispval) then 
                    do j = 1,nlevsoi
                       if(zisoi(j-1) > zmin_bedrock) then
@@ -724,7 +724,7 @@ contains
           b = soil_depth_upland
           
           do c =  lun%coli(l), lun%colf(l)
-             if (col%is_hillslope_column(c)) then
+             if (col%is_hillslope_column(c) .and. col%active(c)) then
                 soil_depth_col = m*(max_hill_dist - col%hill_distance(c)) + b
 
                 do j = 1,nlevsoi
@@ -769,7 +769,7 @@ contains
 
     do l = bounds%begl, bounds%endl
        do c = lun%coli(l), lun%colf(l)
-          if (col%is_hillslope_column(c)) then
+          if (col%is_hillslope_column(c) .and. col%active(c)) then
              sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
              sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
              sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
@@ -831,7 +831,7 @@ contains
 
     do l = bounds%begl, bounds%endl
        do c = lun%coli(l), lun%colf(l)
-          if (col%is_hillslope_column(c)) then
+          if (col%is_hillslope_column(c) .and. col%active(c)) then
              pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
              pdom = pdom + (col%patchi(c) - 1)
 
@@ -883,7 +883,7 @@ contains
 
     do l = bounds%begl, bounds%endl
        do c = lun%coli(l), lun%colf(l)
-          if (col%is_hillslope_column(c)) then
+          if (col%is_hillslope_column(c) .and. col%active(c)) then
              pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
              ! create mask to exclude pdom
              allocate(mask(col%npatches(c)))
@@ -978,7 +978,7 @@ contains
 
     do l = bounds%begl, bounds%endl
        do c = lun%coli(l), lun%colf(l)
-          if (col%is_hillslope_column(c)) then
+          if (col%is_hillslope_column(c) .and. col%active(c)) then
              ! this may require modifying
              ! subgridMod/natveg_patch_exists to ensure that
              ! a patch exists on each column
@@ -1045,20 +1045,20 @@ contains
     integer               :: c, l, g, i, j
     integer               :: nstep
     real(r8) :: dtime                                   ! land model time step (sec)
-    real(r8)              :: cross_sectional_area
-    real(r8)              :: stream_depth
-    real(r8)              :: hydraulic_radius
-    real(r8)              :: flow_velocity
-    real(r8)              :: overbank_area
-!    real(r8), parameter   :: manning_roughness = 0.05
-    real(r8), parameter   :: manning_roughness = 0.03
-    real(r8), parameter   :: manning_exponent  = 0.667
+    real(r8)              :: cross_sectional_area       ! cross sectional area of stream water (m2)
+    real(r8)              :: stream_depth               ! depth of stream water (m)
+    real(r8)              :: hydraulic_radius           ! cross sectional area divided by wetted perimeter (m)
+    real(r8)              :: flow_velocity              ! flow velocity (m/s)
+    real(r8)              :: overbank_area              ! area of water above bankfull (m2)
+    real(r8), parameter   :: manning_roughness = 0.03   ! manning roughness
+    real(r8), parameter   :: manning_exponent  = 0.667  ! manning exponent
 
+    integer, parameter    :: overbank_method = 1        ! method to treat overbank stream storage; 1 = increase dynamic slope, 2 = increase flow area cross section, 3 = remove instantaneously
     character(len=*), parameter :: subname = 'HillslopeStreamOutflow'
 
     !-----------------------------------------------------------------------
     associate(                                                            & 
-         stream_water_volume     =>    waterstatebulk_inst%stream_water_lun            , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
+         stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun            , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
          qstreamflow             =>    waterfluxbulk_inst%qstreamflow_lun               &  ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
          )
 
@@ -1085,18 +1085,25 @@ contains
                        / manning_roughness
                   ! overbank flow
                   if (stream_depth > lun%stream_channel_depth(l)) then
-                     ! try increasing flow area cross section
-!                     overbank_area = (stream_depth -lun%stream_channel_depth(l)) * 30._r8 * lun%stream_channel_width(l)
-                     !                     qstreamflow(l) = (cross_sectional_area + overbank_area) * flow_velocity
-
-                     ! try increasing dynamic slope
-                     qstreamflow(l) = cross_sectional_area * flow_velocity &
-                          *(stream_depth/lun%stream_channel_depth(l))
-
-                     ! try removing all overbank flow instantly
-!!$                     qstreamflow(l) = cross_sectional_area * flow_velocity &
-!!$                          + (stream_depth-lun%stream_channel_depth(l)) &
-!!$                          *lun%stream_channel_width(l)*lun%stream_channel_length(l)/dtime
+                     if (overbank_method  == 1) then
+                        ! try increasing dynamic slope
+                        qstreamflow(l) = cross_sectional_area * flow_velocity &
+                             *(stream_depth/lun%stream_channel_depth(l))
+                     else if (overbank_method  == 2) then
+                        ! try increasing flow area cross section
+                        overbank_area = (stream_depth -lun%stream_channel_depth(l)) * 30._r8 * lun%stream_channel_width(l)
+                        qstreamflow(l) = (cross_sectional_area + overbank_area) * flow_velocity
+                     else if (overbank_method  == 3) then
+                        ! try removing all overbank flow instantly
+                        qstreamflow(l) = cross_sectional_area * flow_velocity &
+                             + (stream_depth-lun%stream_channel_depth(l)) &
+                             *lun%stream_channel_width(l)*lun%stream_channel_length(l)/dtime
+                     else
+                        if (masterproc) then
+                           call endrun( 'ERROR:: invalid overbank_method.'//errmsg(sourcefile, __LINE__) )
+                        end if
+                     endif
+                    
                   else
                      qstreamflow(l) = cross_sectional_area * flow_velocity
                   endif
@@ -1153,14 +1160,14 @@ contains
     character(len=*), parameter :: subname = 'HillslopeUpdateStreamWater'
 
     !-----------------------------------------------------------------------
-    associate(                                                            & 
-         stream_water_volume     =>    waterstatebulk_inst%stream_water_lun    , & ! Input/Output:  [real(r8) (:)   ] stream water volume (m3)
-         qstreamflow             =>    waterfluxbulk_inst%qstreamflow_lun      , & ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
-         qdischarge              =>    waterfluxbulk_inst%qdischarge_col       , & ! Input: [real(r8) (:)   ]  discharge from columns (m3/s)
-         qflx_drain_perched      =>    waterfluxbulk_inst%qflx_drain_perched_col, &! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
-         qflx_rsub_sat           =>    waterfluxbulk_inst%qflx_rsub_sat_col    , & ! Input:  [real(r8) (:)   ]  column level correction runoff (mm H2O /s)
-         qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col        , & ! Input: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
-         stream_water_depth      =>    waterstatebulk_inst%stream_water_depth_lun & ! Output:  [real(r8) (:)   ] stream water depth (m)
+    associate( & 
+         stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun, & ! Input/Output:  [real(r8) (:)   ] stream water volume (m3)
+         qstreamflow             =>    waterfluxbulk_inst%qstreamflow_lun      ,    & ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
+         qdischarge              =>    waterfluxbulk_inst%qdischarge_col       ,    & ! Input: [real(r8) (:)   ]  discharge from columns (m3/s)
+         qflx_drain_perched      =>    waterfluxbulk_inst%qflx_drain_perched_col,   &! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
+         qflx_rsub_sat           =>    waterfluxbulk_inst%qflx_rsub_sat_col    ,    & ! Input:  [real(r8) (:)   ]  column level correction runoff (mm H2O /s)
+         qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col        ,    & ! Input: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
+         stream_water_depth      =>    waterstatebulk_inst%stream_water_depth_lun   & ! Output:  [real(r8) (:)   ] stream water depth (m)
          )
 
        ! Get time step
@@ -1171,7 +1178,7 @@ contains
              g = lun%gridcell(l)
              
              do c = lun%coli(l), lun%colf(l)
-                if (col%is_hillslope_column(c)) then            
+                if (col%is_hillslope_column(c) .and. col%active(c)) then
                    qflx_surf_vol = qflx_surf(c)*1.e-3_r8 &
                         *(grc%area(g)*1.e6_r8*col%wtgcell(c))
                    qflx_drain_perched_vol = qflx_drain_perched(c)*1.e-3_r8 &

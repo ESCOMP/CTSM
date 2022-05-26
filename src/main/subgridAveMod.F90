@@ -408,48 +408,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(parr) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(larr) == (/bounds%endl/)), sourcefile, __LINE__)
 
-    if (c2l_scale_type == 'unity') then
-       do c = bounds%begc,bounds%endc
-          scale_c2l(c) = 1.0_r8
-       end do
-    else if (c2l_scale_type == 'urbanf') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0_r8
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else if (c2l_scale_type == 'urbans') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else
-       write(iulog,*)'p2l_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
+    call set_c2l_scale (bounds, c2l_scale_type, scale_c2l)    
 
     if (p2c_scale_type == 'unity') then
        do p = bounds%begp,bounds%endp
@@ -516,48 +475,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(parr) == (/bounds%endp, num2d/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(larr) == (/bounds%endl, num2d/)), sourcefile, __LINE__)
 
-    if (c2l_scale_type == 'unity') then
-       do c = bounds%begc,bounds%endc
-          scale_c2l(c) = 1.0_r8
-       end do
-    else if (c2l_scale_type == 'urbanf') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0_r8
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else if (c2l_scale_type == 'urbans') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else
-       write(iulog,*)'p2l_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
+    call set_c2l_scale (bounds, c2l_scale_type, scale_c2l)    
 
     if (p2c_scale_type == 'unity') then
        do p = bounds%begp,bounds%endp
@@ -630,48 +548,7 @@ contains
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
 
-    if (c2l_scale_type == 'unity') then
-       do c = bounds%begc,bounds%endc
-          scale_c2l(c) = 1.0_r8
-       end do
-    else if (c2l_scale_type == 'urbanf') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0_r8
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else if (c2l_scale_type == 'urbans') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else
-       write(iulog,*)'p2g_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
+    call set_c2l_scale (bounds, c2l_scale_type, scale_c2l)    
 
     if (p2c_scale_type == 'unity') then
        do p = bounds%begp,bounds%endp
@@ -746,48 +623,7 @@ contains
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
 
-    if (c2l_scale_type == 'unity') then
-       do c = bounds%begc,bounds%endc
-          scale_c2l(c) = 1.0_r8
-       end do
-    else if (c2l_scale_type == 'urbanf') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0_r8
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else if (c2l_scale_type == 'urbans') then
-       do c = bounds%begc,bounds%endc
-          l = col%landunit(c) 
-          if (lun%urbpoi(l)) then
-             if (col%itype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
-             else if (col%itype(c) == icol_roof) then
-                scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else
-       write(iulog,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
+    call set_c2l_scale (bounds, c2l_scale_type, scale_c2l)    
 
     if (p2c_scale_type == 'unity') then
        do p = bounds%begp,bounds%endp
