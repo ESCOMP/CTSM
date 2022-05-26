@@ -102,6 +102,8 @@ class MKSURFDATAESMF(SystemTestsCommon):
             mpi_cmd = f'mpiexec_mpt -np 144 {executable_path} < {self._fsurdat_namelist}'
         elif machine == 'casper':
             mpi_cmd = f'mpiexec -np 144 {executable_path} < {self._fsurdat_namelist}'
+        else:
+            sys.exit(f'machine = {machine} not recognized by this script')
 
         # Run executable to generate fsurdat (rm fsurdat if exists)
         if os.path.exists(self._fsurdat_nc):
