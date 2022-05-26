@@ -183,7 +183,8 @@ contains
     use clm_varcon      , only : spval, ispval, grlnd 
     use landunit_varcon , only : istsoil
     use ncdio_pio
-
+    use initVerticalMod , only : setSoilLayerClass
+    
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -513,17 +514,6 @@ contains
                       end if
                    endif
                 enddo
-                ! from initVertical:
-                ! integer, parameter :: LEVGRND_CLASS_STANDARD        = 1
-                ! integer, parameter :: LEVGRND_CLASS_DEEP_BEDROCK    = 2
-                ! integer, parameter :: LEVGRND_CLASS_SHALLOW_BEDROCK = 3
-
-                ! just hardcoding for now...
-                col%levgrnd_class(c, 1:col%nbedrock(c)) = 1
-                if (col%nbedrock(c) < nlevsoi) then
-                   col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = 3
-                end if
-                
              endif
              if ( allocated(hill_pftndx) ) then
                 col_pftndx(c) = hill_pftndx(l,ci)
@@ -620,7 +610,7 @@ contains
              end if
           endif
        endif
-    enddo
+    enddo ! end of landunit loop
     
     deallocate(pct_hillslope,hill_ndx,col_ndx,col_dndx, &
          hill_slope,hill_area,hill_length, &
@@ -635,6 +625,10 @@ contains
             soil_depth_lowland_in=8.0_r8,soil_depth_upland_in=8.0_r8)
 
     endif
+
+    ! Update layer classes if nbedrock has been modified
+    call setSoilLayerClass(bounds)
+       
 
     ! Modify pft distributions
     ! this may require modifying subgridMod/natveg_patch_exists

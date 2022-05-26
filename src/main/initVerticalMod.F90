@@ -40,7 +40,8 @@ module initVerticalMod
   public :: initVertical
   public :: find_soil_layer_containing_depth
   public :: readParams
-
+  public :: setSoilLayerClass
+  
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: hasBedrock  ! true if the given column type includes bedrock layers
   type, private :: params_type
@@ -80,6 +81,71 @@ contains
 
   end subroutine readParams
 
+    !------------------------------------------------------------------------
+  subroutine setSoilLayerClass(bounds)
+
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! LOCAL VARAIBLES:
+    integer               :: c,l,j             ! indices
+
+    ! Possible values for levgrnd_class. The important thing is that, for a given column,
+    ! layers that are fundamentally different (e.g., soil vs bedrock) have different
+    ! values. This information is used in the vertical interpolation in init_interp.
+    !
+    ! IMPORTANT: These values should not be changed lightly. e.g., try to avoid changing
+    ! the values assigned to LEVGRND_CLASS_STANDARD, LEVGRND_CLASS_DEEP_BEDROCK, etc.  The
+    ! problem with changing these is that init_interp expects that layers with a value of
+    ! (e.g.) 1 on the source file correspond to layers with a value of 1 on the
+    ! destination file. So if you change the values of these constants, you either need to
+    ! adequately inform users of this change, or build in some translation mechanism in
+    ! init_interp (such as via adding more metadata to the restart file on the meaning of
+    ! these different values).
+    !
+    ! The distinction between "shallow" and "deep" bedrock is not made explicitly
+    ! elsewhere. But, since these classes have somewhat different behavior, they are
+    ! distinguished explicitly here.
+    integer, parameter :: LEVGRND_CLASS_STANDARD        = 1
+    integer, parameter :: LEVGRND_CLASS_DEEP_BEDROCK    = 2
+    integer, parameter :: LEVGRND_CLASS_SHALLOW_BEDROCK = 3
+
+    character(len=*), parameter :: subname = 'setSoilLayerClass'
+
+    ! ------------------------------------------------------------------------
+    ! Set classes of layers
+    ! ------------------------------------------------------------------------
+
+    do c = bounds%begc, bounds%endc
+       l = col%landunit(c)
+       if (hasBedrock(col_itype=col%itype(c), lun_itype=lun%itype(l))) then
+          ! NOTE(wjs, 2015-10-17) We are assuming that points with bedrock have both
+          ! "shallow" and "deep" bedrock. Currently, this is not true for lake columns:
+          ! lakes do not distinguish between "shallow" bedrock and "normal" soil.
+          ! However, that was just due to an oversight that is supposed to be corrected
+          ! soon; so to keep things simple we assume that any point with bedrock
+          ! potentially has both shallow and deep bedrock.
+          col%levgrnd_class(c, 1:col%nbedrock(c)) = LEVGRND_CLASS_STANDARD
+          if (col%nbedrock(c) < nlevsoi) then
+             col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = LEVGRND_CLASS_SHALLOW_BEDROCK
+          end if
+          col%levgrnd_class(c, (nlevsoi + 1) : nlevmaxurbgrnd) = LEVGRND_CLASS_DEEP_BEDROCK
+       else
+          col%levgrnd_class(c, 1:nlevmaxurbgrnd) = LEVGRND_CLASS_STANDARD
+       end if
+    end do
+
+    do j = 1, nlevmaxurbgrnd
+       do c = bounds%begc, bounds%endc
+          if (col%z(c,j) == spval) then
+             col%levgrnd_class(c,j) = ispval
+          end if
+       end do
+    end do
+
+  end subroutine setSoilLayerClass
+    
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, thick_wall, thick_roof)
     use clm_varcon, only : zmin_bedrock
@@ -638,36 +704,11 @@ contains
        end if
     end do
 
-    ! ------------------------------------------------------------------------
+    ! ----------------------------------------------
     ! Set classes of layers
-    ! ------------------------------------------------------------------------
+    ! ----------------------------------------------
 
-    do c = bounds%begc, bounds%endc
-       l = col%landunit(c)
-       if (hasBedrock(col_itype=col%itype(c), lun_itype=lun%itype(l))) then
-          ! NOTE(wjs, 2015-10-17) We are assuming that points with bedrock have both
-          ! "shallow" and "deep" bedrock. Currently, this is not true for lake columns:
-          ! lakes do not distinguish between "shallow" bedrock and "normal" soil.
-          ! However, that was just due to an oversight that is supposed to be corrected
-          ! soon; so to keep things simple we assume that any point with bedrock
-          ! potentially has both shallow and deep bedrock.
-          col%levgrnd_class(c, 1:col%nbedrock(c)) = LEVGRND_CLASS_STANDARD
-          if (col%nbedrock(c) < nlevsoi) then
-             col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = LEVGRND_CLASS_SHALLOW_BEDROCK
-          end if
-          col%levgrnd_class(c, (nlevsoi + 1) : nlevmaxurbgrnd) = LEVGRND_CLASS_DEEP_BEDROCK
-       else
-          col%levgrnd_class(c, 1:nlevmaxurbgrnd) = LEVGRND_CLASS_STANDARD
-       end if
-    end do
-
-    do j = 1, nlevmaxurbgrnd
-       do c = bounds%begc, bounds%endc
-          if (col%z(c,j) == spval) then
-             col%levgrnd_class(c,j) = ispval
-          end if
-       end do
-    end do
+    call setSoilLayerClass(bounds)
 
     !-----------------------------------------------
     ! Read in topographic index and slope
