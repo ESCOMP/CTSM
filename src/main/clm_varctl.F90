@@ -235,8 +235,8 @@ module clm_varctl
   !----------------------------------------------------------
   ! CN matrix
   !----------------------------------------------------------  
-  logical, public :: use_matrixcn = .false.      ! true => use cn matrix solution
-  logical, public :: use_soil_matrixcn = .false. ! true => use cn matrix solution for soil BGC
+  logical, public, parameter :: use_matrixcn = .false.      ! true => use cn matrix solution
+  logical, public, parameter :: use_soil_matrixcn = .false. ! true => use cn matrix solution for soil BGC
 
   ! BUG(wjs, 2018-10-25, ESCOMP/ctsm#67) There is a bug that causes incorrect values for C
   ! isotopes if running init_interp from a case without C isotopes to a case with C
