@@ -2039,7 +2039,7 @@ contains
      real(r8) :: drainage_layer                          ! drainage to be removed from current layer (mm)
      real(r8) :: s_y                                     ! specific yield (unitless)
      real(r8) :: vol_ice                          ! volumetric ice content (mm3/mm3)
-     logical  :: no_lateral_flow = .false.        ! flag for testing
+     logical, parameter :: no_lateral_flow = .false.    ! flag for testing
      real(r8) :: transmis                         ! transmissivity (m2/s)
      real(r8) :: head_gradient                    ! hydraulic head gradient (m/m)
      real(r8) :: stream_water_depth               ! depth of water in stream channel (m)
@@ -2153,13 +2153,10 @@ contains
          ! Hillslope columns
          if (col%is_hillslope_column(c) .and. col%active(c)) then
 
-            ! kinematic wave approximation
+            ! method for calculating head gradient
             if (head_gradient_method == kinematic) then
                head_gradient = col%hill_slope(c)
-            endif
-
-            ! darcy's law 
-            if (head_gradient_method == darcy) then
+            else if (head_gradient_method == darcy) then
                if (col%cold(c) /= ispval) then
                   head_gradient = (col%hill_elev(c)-zwt(c)) &
                        - (col%hill_elev(col%cold(c))-zwt(col%cold(c)))
@@ -2193,6 +2190,8 @@ contains
                      head_gradient = head_gradient - 1._r8/k_anisotropic
                   endif
                endif
+            else
+               call endrun(msg="head_gradient_method must be kinematic or darcy"//errmsg(sourcefile, __LINE__))  
             end if
 
             !scs: in cases of bad data, where hand differences in 
@@ -2232,11 +2231,12 @@ contains
                            endif
                         endif
                      end do
-                  endif
                   ! constant conductivity based on shallowest saturated layer hk
-                  if (transmissivity_method == uniform_transmissivity) then
+                  else if (transmissivity_method == uniform_transmissivity) then
                      transmis = (1.e-3_r8*ice_imped(c_src,jwt(c_src)+1)*hksat(c_src,jwt(c_src)+1)) &
                           *(zi(c_src,nbedrock(c_src)) - zwt(c_src) )
+                  else
+                     call endrun(msg="transmissivity_method must be LayerSum or Uniform"//errmsg(sourcefile, __LINE__))
                   endif
                endif
             else

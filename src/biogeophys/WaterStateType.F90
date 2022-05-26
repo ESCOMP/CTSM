@@ -667,9 +667,9 @@ contains
          units='m3', &
          interpinic_flag='interp', readvar=readvar, data=this%stream_water_volume_lun)
 
-    if (flag == 'read' .and. .not. is_restart()) then
-       this%stream_water_volume_lun(bounds%begl:bounds%endl) = 0._r8
-    end if
+!!$    if (flag == 'read' .and. .not. is_restart()) then
+!!$       this%stream_water_volume_lun(bounds%begl:bounds%endl) = 0._r8
+!!$    end if
     
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then

@@ -509,7 +509,8 @@ contains
             units='mm/s',  &
             avgflag='A', &
             long_name=this%info%lname('hillcol lateral outflow'), &
-            ptr_col=this%qflx_latflow_out_col, c2l_scale_type='urbanf')
+            l2g_scale_type='natveg', c2l_scale_type='urbanf', &
+            ptr_col=this%qflx_latflow_out_col)
 
        this%qdischarge_col(begc:endc) = spval
        call hist_addfld1d ( &
@@ -517,7 +518,8 @@ contains
             units='m3/s',  &
             avgflag='A', &
             long_name=this%info%lname('hillslope discharge from column'), &
-            ptr_col=this%qdischarge_col, c2l_scale_type='urbanf')
+            l2g_scale_type='natveg', c2l_scale_type='urbanf', &
+            ptr_col=this%qdischarge_col)
 
        if (use_hillslope_routing) then
           this%qstreamflow_lun(begl:endl) = spval
@@ -526,7 +528,7 @@ contains
                units='m3/s',  &
                avgflag='A', &
                long_name=this%info%lname('streamflow discharge'), &
-               l2g_scale_type='veg', &
+               l2g_scale_type='natveg', &
                ptr_lunit=this%qstreamflow_lun)
        endif
     endif

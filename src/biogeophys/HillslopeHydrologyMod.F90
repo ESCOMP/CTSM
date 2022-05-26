@@ -360,11 +360,11 @@ contains
        if (masterproc) then
           write(iulog,*) 'h_bedrock found on surface data set'
        end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          hill_bedrock(l,:) = fhillslope_in(g,:)
+       enddo
     end if
-    do l = bounds%begl,bounds%endl
-       g = lun%gridcell(l)
-       hill_bedrock(l,:) = fhillslope_in(g,:)
-    enddo
 
     deallocate(fhillslope_in)
     
@@ -579,13 +579,11 @@ contains
              if (col%is_hillslope_column(c)) then
                 col%wtlunit(c) = (col%hill_area(c)/hillslope_area(nh)) &
                      * (pct_hillslope(l,nh)*0.01_r8)
-             else
-                ! do not reweight if column is not a hillslope column
-                !col%wtlunit(c) = 0._r8
              endif
              check_weight = check_weight + col%wtlunit(c)
           enddo
           if (abs(1._r8 - check_weight) > 1.e-6_r8) then 
+             write(iulog,*) 'HillslopeHydrologyMod column reweighting'
              write(iulog,*) 'col%wtlunit does not sum to 1: ', check_weight
              write(iulog,*) 'weights: ', col%wtlunit(lun%coli(l):lun%colf(l))
              write(iulog,*) 'location: ',grc%londeg(g),grc%latdeg(g)
@@ -622,14 +620,14 @@ contains
        ! to ensure patch exists in every gridcell
 
        ! Specify single dominant pft per gridcell
-       call HillslopeDominantPft(bounds)
+       !call HillslopeDominantPft(bounds)
 
        ! Specify different pfts for uplands / lowlands
-       !call HillslopeDominantLowlandPft(bounds)
+       call HillslopeDominantLowlandPft(bounds)
        
        !upland_ivt  = 13 ! c3 non-arctic grass
        !lowland_ivt = 7  ! broadleaf deciduous tree 
-       !call HillslopeSetLowlandUplandPfts(bounds,lowland_ivt=7,upland_ivt=13)
+       call HillslopeSetLowlandUplandPfts(bounds,lowland_ivt=7,upland_ivt=13)
     endif
 
     call ncd_pio_closefile(ncid)
@@ -688,35 +686,32 @@ contains
        soil_depth_upland = soil_depth_upland_default
     endif
 
-    do l = bounds%begl,bounds%endl
-       ! Specify lowland/upland soil thicknesses separately
-       if(soil_profile_method == soil_profile_set_lowland_upland) then
-          do c =  lun%coli(l), lun%colf(l)
-             if (col%is_hillslope_column(c) .and. col%active(c)) then
-                if(col%cold(c) /= ispval) then 
-                   do j = 1,nlevsoi
-                      if(zisoi(j-1) > zmin_bedrock) then
-                         if (zisoi(j-1) < soil_depth_upland .and. zisoi(j) >= soil_depth_upland) then
-                            col%nbedrock(c) = j
-                         end if
+    ! Specify lowland/upland soil thicknesses separately
+    if(soil_profile_method == soil_profile_set_lowland_upland) then
+       do c = bounds%begc,bounds%endc
+          if (col%is_hillslope_column(c) .and. col%active(c)) then
+             if(col%cold(c) /= ispval) then 
+                do j = 1,nlevsoi
+                   if(zisoi(j-1) > zmin_bedrock) then
+                      if (zisoi(j-1) < soil_depth_upland .and. zisoi(j) >= soil_depth_upland) then
+                         col%nbedrock(c) = j
                       end if
-                   enddo
-                else 
-                   do j = 1,nlevsoi 
-                      if(zisoi(j-1) > zmin_bedrock) then
-                         if (zisoi(j-1) < soil_depth_lowland .and. zisoi(j) >= soil_depth_lowland) then
-                            col%nbedrock(c) = j
-                         end if
+                   end if
+                enddo
+             else 
+                do j = 1,nlevsoi 
+                   if(zisoi(j-1) > zmin_bedrock) then
+                      if (zisoi(j-1) < soil_depth_lowland .and. zisoi(j) >= soil_depth_lowland) then
+                         col%nbedrock(c) = j
                       end if
-                   enddo
-                endif
+                   end if
+                enddo
              endif
-          end do
-       endif
-          
-       ! Linear soil thickness profile
-       if(soil_profile_method == soil_profile_linear) then
-          
+          endif
+       end do
+    ! Linear soil thickness profile
+    else if(soil_profile_method == soil_profile_linear) then
+       do l = bounds%begl,bounds%endl
           min_hill_dist = minval(col%hill_distance(lun%coli(l):lun%colf(l)))
           max_hill_dist = maxval(col%hill_distance(lun%coli(l):lun%colf(l)))
           m = (soil_depth_lowland - soil_depth_upland)/ &
@@ -734,8 +729,12 @@ contains
                 enddo
              endif
           enddo
-       endif
-    enddo    ! end of loop over landunits
+       enddo
+    else
+       if (masterproc) then
+          call endrun( 'ERROR:: invalid soil_profile_method.'//errmsg(sourcefile, __LINE__) )
+       end if
+    endif
        
   end subroutine HillslopeSoilThicknessProfile
 
@@ -767,39 +766,37 @@ contains
 
     !------------------------------------------------------------------------
 
-    do l = bounds%begl, bounds%endl
-       do c = lun%coli(l), lun%colf(l)
+    do c = bounds%begc,bounds%endc
           if (col%is_hillslope_column(c) .and. col%active(c)) then
-             sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
-             sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
-             sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
-             pl = ispval
-             pu = ispval
-             do p = col%patchi(c), col%patchf(c)
-                if(patch%itype(p) == lowland_ivt) pl = p
-                if(patch%itype(p) == upland_ivt)  pu = p
-             enddo
+          sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
+          sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
+          sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
+          pl = ispval
+          pu = ispval
+          do p = col%patchi(c), col%patchf(c)
+             if(patch%itype(p) == lowland_ivt) pl = p
+             if(patch%itype(p) == upland_ivt)  pu = p
+          enddo
 
-             ! only reweight if pfts exist within column
-             if (pl /= ispval .and. pu /= ispval) then
-                patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
-                patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
-                patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
+          ! only reweight if pfts exist within column
+          if (pl /= ispval .and. pu /= ispval) then
+             patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
+             patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
+             patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
 
-             ! hillbottom
-                if(col%cold(c) == ispval) then
-                   patch%wtcol(pl) = sum_wtcol
-                   patch%wtlunit(pl) = sum_wtlun
-                   patch%wtgcell(pl) = sum_wtgrc
-                else
-                   patch%wtcol(pu) = sum_wtcol
-                   patch%wtlunit(pu) = sum_wtlun
-                   patch%wtgcell(pu) = sum_wtgrc
-                endif
+          ! hillbottom
+             if(col%cold(c) == ispval) then
+                patch%wtcol(pl) = sum_wtcol
+                patch%wtlunit(pl) = sum_wtlun
+                patch%wtgcell(pl) = sum_wtgrc
+             else
+                patch%wtcol(pu) = sum_wtcol
+                patch%wtlunit(pu) = sum_wtlun
+                patch%wtgcell(pu) = sum_wtgrc
              endif
           endif
-       enddo    ! end loop c
-    enddo ! end loop l
+       endif
+    enddo    ! end loop c
 
   end subroutine HillslopeSetLowlandUplandPfts
 
@@ -829,26 +826,24 @@ contains
 
     !------------------------------------------------------------------------
 
-    do l = bounds%begl, bounds%endl
-       do c = lun%coli(l), lun%colf(l)
-          if (col%is_hillslope_column(c) .and. col%active(c)) then
-             pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
-             pdom = pdom + (col%patchi(c) - 1)
+    do c = bounds%begc,bounds%endc
+       if (col%is_hillslope_column(c) .and. col%active(c)) then
+          pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
+          pdom = pdom + (col%patchi(c) - 1)
 
-             sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
-             sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
-             sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
+          sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
+          sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
+          sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
 
-             patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
-             patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
-             patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
+          patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
+          patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
+          patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
 
-             patch%wtcol(pdom(1)) = sum_wtcol
-             patch%wtlunit(pdom(1)) = sum_wtlun
-             patch%wtgcell(pdom(1)) = sum_wtgrc
-          endif
-       enddo    ! end loop c
-    enddo ! end loop l
+          patch%wtcol(pdom(1)) = sum_wtcol
+          patch%wtlunit(pdom(1)) = sum_wtlun
+          patch%wtgcell(pdom(1)) = sum_wtgrc
+       endif
+    enddo    ! end loop c
 
   end subroutine HillslopeDominantPft
 
@@ -868,6 +863,7 @@ contains
     use clm_varcon      , only : ispval
     use landunit_varcon , only : istsoil
     use PatchType       , only : patch
+    use pftconMod       , only : pftcon, ndllf_evr_tmp_tree, nc3_nonarctic_grass, nc4_grass
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -881,72 +877,70 @@ contains
 
     !------------------------------------------------------------------------
 
-    do l = bounds%begl, bounds%endl
-       do c = lun%coli(l), lun%colf(l)
-          if (col%is_hillslope_column(c) .and. col%active(c)) then
-             pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
-             ! create mask to exclude pdom
-             allocate(mask(col%npatches(c)))
-             mask(:) = 1.
-             mask(pdom(1)) = 0.
+    do c = bounds%begc,bounds%endc
+       if (col%is_hillslope_column(c) .and. col%active(c)) then
+          pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
+          ! create mask to exclude pdom
+          allocate(mask(col%npatches(c)))
+          mask(:) = 1.
+          mask(pdom(1)) = 0.
 
-             pdom = pdom + (col%patchi(c) - 1)
+          pdom = pdom + (col%patchi(c) - 1)
 
-             psubdom = maxloc(mask*patch%wtcol(col%patchi(c):col%patchf(c)))
-             psubdom = psubdom + (col%patchi(c) - 1)
-             deallocate(mask)
+          psubdom = maxloc(mask*patch%wtcol(col%patchi(c):col%patchf(c)))
+          psubdom = psubdom + (col%patchi(c) - 1)
+          deallocate(mask)
 
-             sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
-             sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
-             sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
+          sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
+          sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
+          sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
 
-             patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
-             patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
-             patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
+          patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
+          patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
+          patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
 
-             ! assumes trees are 1-8, shrubs 9-11, and grasses 12-14
-             ! and puts the lowest ivt on the lowland column
-             if ((patch%itype(pdom(1)) > patch%itype(psubdom(1)) &
-                  .and. patch%itype(psubdom(1)) > 0) .or. &
-                  (patch%itype(pdom(1)) == 0)) then
-                plow = psubdom(1)
-                phigh = pdom(1)
-             else
-                plow = pdom(1)
-                phigh = psubdom(1)
-             endif
-
-             ! Special cases (subjective)
-
-             ! if NET/BDT assign BDT to lowland
-             if ((patch%itype(pdom(1)) == 1) .and. (patch%itype(psubdom(1)) < 9)) then
-                plow = psubdom(1)        
-                phigh = pdom(1)
-             endif
-             ! if C3/C4 assign C4 to lowland
-             if ((patch%itype(pdom(1)) == 14) .and. (patch%itype(psubdom(1)) == 13)) then
-                plow = pdom(1)        
-                phigh = psubdom(1)
-             endif
-             if ((patch%itype(pdom(1)) == 13) .and. (patch%itype(psubdom(1)) == 14)) then
-                plow = psubdom(1)        
-                phigh = pdom(1)
-             endif
-
-             if(col%cold(c) == ispval) then
-                ! lowland column
-                patch%wtcol(plow)   = sum_wtcol
-                patch%wtlunit(plow) = sum_wtlun
-                patch%wtgcell(plow) = sum_wtgrc
-             else
-                ! upland columns
-                patch%wtcol(phigh)   = sum_wtcol
-                patch%wtlunit(phigh) = sum_wtlun
-                patch%wtgcell(phigh) = sum_wtgrc
-             endif
+          ! assumes trees are 1-8, shrubs 9-11, and grasses 12-14
+          ! and puts the lowest ivt on the lowland column
+          if ((patch%itype(pdom(1)) > patch%itype(psubdom(1)) &
+               .and. patch%itype(psubdom(1)) > 0) .or. &
+               (patch%itype(pdom(1)) == 0)) then
+             plow = psubdom(1)
+             phigh = pdom(1)
+          else
+             plow = pdom(1)
+             phigh = psubdom(1)
           endif
-       enddo    ! end loop c
-    enddo ! end loop l
+
+          ! Special cases (subjective)
+
+          ! if NET/BDT assign BDT to lowland
+          if ((patch%itype(pdom(1)) == ndllf_evr_tmp_tree) .and. pftcon%is_tree(patch%itype(psubdom(1)))) then
+             plow = psubdom(1)        
+             phigh = pdom(1)
+          endif
+          ! if C3/C4 assign C4 to lowland
+          if ((patch%itype(pdom(1)) == nc4_grass) .and. (patch%itype(psubdom(1)) == nc3_nonarctic_grass)) then
+             plow = pdom(1)        
+             phigh = psubdom(1)
+          endif
+          if ((patch%itype(pdom(1)) == nc3_nonarctic_grass) .and. (patch%itype(psubdom(1)) == nc4_grass)) then
+             plow = psubdom(1)        
+             phigh = pdom(1)
+          endif
+
+          if(col%cold(c) == ispval) then
+             ! lowland column
+             patch%wtcol(plow)   = sum_wtcol
+             patch%wtlunit(plow) = sum_wtlun
+             patch%wtgcell(plow) = sum_wtgrc
+          else
+             ! upland columns
+             patch%wtcol(phigh)   = sum_wtcol
+             patch%wtlunit(phigh) = sum_wtlun
+             patch%wtgcell(phigh) = sum_wtgrc
+          endif
+       endif
+    enddo    ! end loop c
 
   end subroutine HillslopeDominantLowlandPft
 
@@ -976,43 +970,44 @@ contains
 
     !------------------------------------------------------------------------
 
-    do l = bounds%begl, bounds%endl
-       do c = lun%coli(l), lun%colf(l)
-          if (col%is_hillslope_column(c) .and. col%active(c)) then
-             ! this may require modifying
-             ! subgridMod/natveg_patch_exists to ensure that
-             ! a patch exists on each column
+    do c = bounds%begc, bounds%endc
+       if (col%is_hillslope_column(c) .and. col%active(c)) then
+          ! this may require modifying
+          ! subgridMod/natveg_patch_exists to ensure that
+          ! a patch exists on each column
 
-             ! find patch index of specified vegetation type
-             pc = ispval
-             do p = col%patchi(c), col%patchf(c)
-                if(patch%itype(p) == col_pftndx(c)) pc = p
-             enddo
-
-             ! only reweight if pft exist within column
-             if (pc /= ispval) then
-                sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
-                sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
-                sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
-
-                patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
-                patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
-                patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
-
-                patch%wtcol(pc)   = sum_wtcol
-                patch%wtlunit(pc) = sum_wtlun
-                patch%wtgcell(pc) = sum_wtgrc
-
-             else
-                write(iulog,*) 'no pft in column ',c, col_pftndx(c)
-                write(iulog,*) 'pfts ',c,patch%itype(col%patchi(c):col%patchf(c))
-                write(iulog,*) 'weights ',c,patch%wtcol(col%patchi(c):col%patchf(c))
-                write(iulog,*) 'location ',c,grc%londeg(col%gridcell(c)),grc%latdeg(col%gridcell(c))
-
+          ! find patch index of specified vegetation type
+          pc = ispval
+          do p = col%patchi(c), col%patchf(c)
+             if(patch%itype(p) == col_pftndx(c)) then
+                pc = p
+                exit
              endif
+          enddo
+
+          ! only reweight if pft exist within column
+          if (pc /= ispval) then
+             sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
+             sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
+             sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
+
+             patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
+             patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
+             patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
+
+             patch%wtcol(pc)   = sum_wtcol
+             patch%wtlunit(pc) = sum_wtlun
+             patch%wtgcell(pc) = sum_wtgrc
+
+          else
+             write(iulog,*) 'no pft in column ',c, col_pftndx(c)
+             write(iulog,*) 'pfts ',c,patch%itype(col%patchi(c):col%patchf(c))
+             write(iulog,*) 'weights ',c,patch%wtcol(col%patchi(c):col%patchf(c))
+             write(iulog,*) 'location ',c,grc%londeg(col%gridcell(c)),grc%latdeg(col%gridcell(c))
+
           endif
-       enddo    ! end loop c
-    enddo ! end loop l
+       endif
+    enddo    ! end loop c
 
   end subroutine HillslopePftFromFile
 
@@ -1044,16 +1039,16 @@ contains
 
     integer               :: c, l, g, i, j
     integer               :: nstep
-    real(r8) :: dtime                                   ! land model time step (sec)
-    real(r8)              :: cross_sectional_area       ! cross sectional area of stream water (m2)
-    real(r8)              :: stream_depth               ! depth of stream water (m)
-    real(r8)              :: hydraulic_radius           ! cross sectional area divided by wetted perimeter (m)
-    real(r8)              :: flow_velocity              ! flow velocity (m/s)
-    real(r8)              :: overbank_area              ! area of water above bankfull (m2)
-    real(r8), parameter   :: manning_roughness = 0.03   ! manning roughness
-    real(r8), parameter   :: manning_exponent  = 0.667  ! manning exponent
+    real(r8) :: dtime                                     ! land model time step (sec)
+    real(r8)              :: cross_sectional_area         ! cross sectional area of stream water (m2)
+    real(r8)              :: stream_depth                 ! depth of stream water (m)
+    real(r8)              :: hydraulic_radius             ! cross sectional area divided by wetted perimeter (m)
+    real(r8)              :: flow_velocity                ! flow velocity (m/s)
+    real(r8)              :: overbank_area                ! area of water above bankfull (m2)
+    real(r8), parameter   :: manning_roughness = 0.03_r8  ! manning roughness
+    real(r8), parameter   :: manning_exponent  = 0.667_r8 ! manning exponent
 
-    integer, parameter    :: overbank_method = 1        ! method to treat overbank stream storage; 1 = increase dynamic slope, 2 = increase flow area cross section, 3 = remove instantaneously
+    integer, parameter    :: overbank_method = 1          ! method to treat overbank stream storage; 1 = increase dynamic slope, 2 = increase flow area cross section, 3 = remove instantaneously
     character(len=*), parameter :: subname = 'HillslopeStreamOutflow'
 
     !-----------------------------------------------------------------------
@@ -1108,8 +1103,8 @@ contains
                      qstreamflow(l) = cross_sectional_area * flow_velocity
                   endif
 
-                  ! scale streamflow by number of channel 'branches'
-                  qstreamflow(l) = qstreamflow(l) * lun%stream_channel_number(l) * 1e3
+                  ! scale streamflow by number of channel reaches
+                  qstreamflow(l) = qstreamflow(l) * lun%stream_channel_number(l)
 
                   qstreamflow(l) = max(0._r8,min(qstreamflow(l),stream_water_volume(l)/dtime))
                endif
