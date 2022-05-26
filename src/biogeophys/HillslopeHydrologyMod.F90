@@ -34,6 +34,7 @@ module HillslopeHydrologyMod
 
   integer, public :: head_gradient_method    ! Method for calculating hillslope saturated head gradient
   integer, public :: transmissivity_method   ! Method for calculating transmissivity of hillslope columns
+  integer, public :: pft_distribution_method ! Method for distributing pfts across hillslope columns
   
   ! Head gradient methods
   integer, public, parameter :: kinematic = 0
@@ -42,7 +43,13 @@ module HillslopeHydrologyMod
   integer, public, parameter :: uniform_transmissivity = 0
   integer, public, parameter :: layersum = 1
   ! Streamflow methods
-  integer, public, parameter :: streamflow_manning = 0 
+  integer, public, parameter :: streamflow_manning = 0
+  ! Pft distribution methods
+  integer, public, parameter :: pft_standard  = 0
+  integer, public, parameter :: pft_from_file = 1
+  integer, public, parameter :: pft_uniform_dominant_pft = 2
+  integer, public, parameter :: pft_lowland_dominant_pft = 3
+  integer, public, parameter :: pft_lowland_upland = 4
 
   ! PRIVATE 
   character(len=*), parameter, private :: sourcefile = &
@@ -76,19 +83,22 @@ contains
     integer            :: nml_error                  ! namelist i/o error flag
     character(len=*), parameter :: nmlname = 'hillslope_hydrology_inparm'
     character(*), parameter    :: subName = "('read_hillslope_hydrology_namelist')"
-    character(len=50) :: hillslope_head_gradient_method  = 'Darcy'     ! head gradient method string
+    character(len=50) :: hillslope_head_gradient_method  = 'Darcy'    ! head gradient method string
     character(len=50) :: hillslope_transmissivity_method = 'LayerSum' ! transmissivity method string
+    character(len=50) :: hillslope_pft_distribution_method = 'Standard'      ! pft distribution method string
     !-----------------------------------------------------------------------
 
 ! MUST agree with name in namelist and read statement
     namelist /hillslope_hydrology_inparm/ &
          hillslope_head_gradient_method,            &
-         hillslope_transmissivity_method
-
+         hillslope_transmissivity_method,           &
+         hillslope_pft_distribution_method
+    
     ! Default values for namelist
-    head_gradient_method  = darcy
-    transmissivity_method = layersum
-
+    head_gradient_method    = darcy
+    transmissivity_method   = layersum
+    pft_distribution_method = pft_standard
+    
     ! Read hillslope hydrology namelist
     if (masterproc) then
        nu_nml = getavu()
@@ -116,15 +126,31 @@ contains
 
        if (      trim(hillslope_transmissivity_method) == 'Uniform' ) then
           transmissivity_method = uniform_transmissivity
-       else if ( trim(hillslope_transmissivity_method) == 'LayerSum'     ) then
+       else if ( trim(hillslope_transmissivity_method) == 'LayerSum') then
           transmissivity_method = layersum
        else
           call endrun(msg="ERROR bad value for hillslope_transmissivity_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
        end if
+       
+       if (      trim(hillslope_pft_distribution_method) == 'Standard' ) then
+          pft_distribution_method = pft_standard
+       else if ( trim(hillslope_pft_distribution_method) == 'FromFile' ) then
+          pft_distribution_method = pft_from_file
+       else if ( trim(hillslope_pft_distribution_method) == 'DominantPftUniform') then
+          pft_distribution_method = pft_uniform_dominant_pft
+       else if ( trim(hillslope_pft_distribution_method) == 'DominantPftLowland') then
+          pft_distribution_method = pft_lowland_dominant_pft
+       else if ( trim(hillslope_pft_distribution_method) == 'PftLowlandUpland') then
+          pft_distribution_method = pft_lowland_upland
+       else
+          call endrun(msg="ERROR bad value for hillslope_transmissivity_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+
     endif
 
     call shr_mpi_bcast(head_gradient_method, mpicom)
     call shr_mpi_bcast(transmissivity_method, mpicom)
+    call shr_mpi_bcast(pft_distribution_method, mpicom)
 
     if (masterproc) then
 
@@ -132,6 +158,7 @@ contains
        write(iulog,*) 'hillslope_hydrology settings:'
        write(iulog,*) '  hillslope_head_gradient_method  = ',hillslope_head_gradient_method
        write(iulog,*) '  hillslope_transmissivity_method = ',hillslope_transmissivity_method
+       write(iulog,*) '  hillslope_pft_distribution_method = ',hillslope_pft_distribution_method
 
     endif
 
@@ -608,26 +635,30 @@ contains
             soil_depth_lowland_in=8.0_r8,soil_depth_upland_in=8.0_r8)
 
     endif
-    if ( allocated(hill_pftndx) ) then
-       deallocate(hill_pftndx)
-       
+
+    ! Modify pft distributions
+    ! this may require modifying subgridMod/natveg_patch_exists
+    ! to ensure patch exists in every gridcell
+    if (pft_distribution_method == pft_from_file) then
        call HillslopePftFromFile(bounds,col_pftndx)
-
-       deallocate(col_pftndx)
-    else
-       ! Modify pft distributions
-       ! this may require modifying subgridMod/natveg_patch_exists
-       ! to ensure patch exists in every gridcell
-
+    endif
+    if (pft_distribution_method == pft_uniform_dominant_pft) then
        ! Specify single dominant pft per gridcell
-       !call HillslopeDominantPft(bounds)
-
+       call HillslopeDominantPft(bounds)
+    endif
+    if (pft_distribution_method == pft_lowland_dominant_pft) then
        ! Specify different pfts for uplands / lowlands
        call HillslopeDominantLowlandPft(bounds)
-       
+    endif
+    if (pft_distribution_method == pft_lowland_upland) then
        !upland_ivt  = 13 ! c3 non-arctic grass
        !lowland_ivt = 7  ! broadleaf deciduous tree 
        call HillslopeSetLowlandUplandPfts(bounds,lowland_ivt=7,upland_ivt=13)
+    endif
+    
+    if ( allocated(hill_pftndx) ) then
+       deallocate(hill_pftndx)
+       deallocate(col_pftndx)
     endif
 
     call ncd_pio_closefile(ncid)

@@ -754,6 +754,11 @@ Method for calculating hillslope saturated head gradient
 Method for calculating transmissivity of hillslope columns
 </entry>
 
+<entry id="hillslope_pft_distribution_method" type="char*256" category="physics"
+        group="hillslope_hydrology_inparm" valid_values="Standard,FromFile,DominantPftUniform,DominantPftLowland,PftLowlandUpland">
+Method for distributing pfts across hillslope columns
+</entry>
+
 <entry id="use_hydrstress" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the plant hydraulic stress model
