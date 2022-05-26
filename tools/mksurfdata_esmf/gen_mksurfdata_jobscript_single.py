@@ -107,21 +107,20 @@ def main ():
         runfile.write("\n")
 
         tool_path = os.path.dirname(os.path.abspath(__file__))
-        bld_path = os.path.join(tool_path, 'bld')
 
-        runfile.write(f'cd {bld_path} \n')
+        runfile.write(f'cd {tool_path} \n')
         runfile.write("\n")
-        runfile.write('. ./.env_mach_specific.sh \n')
+        runfile.write('. ./bld/.env_mach_specific.sh \n')
         runfile.write("\n")
 
         np = int(tasks_per_node) * int(number_of_nodes)
 
         if machine == 'cheyenne':
-            output = f"mpiexec_mpt -p \"%g:\" -np {np} ./mksurfdata < ../{namelist_file}"
+            output = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
         elif machine == 'casper':
-            output = f"mpiexec -np {np} ./mksurfdata < ../{namelist_file}"
+            output = f"mpiexec -np {np} ./bld/mksurfdata < {namelist_file}"
         elif machine == 'izumi':
-            output = f"mpirun -np {np} ./mksurfdata < ../{namelist_file}"
+            output = f"mpirun -np {np} ./bld/mksurfdata < {namelist_file}"
         runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")
