@@ -26,6 +26,9 @@ module CNAllocationMod
   use CropReprPoolsMod     , only : nrepr
   use CNPhenologyMod       , only : CropPhase
   use CNSharedParamsMod    , only : use_fun
+  ! SSR troubleshooting
+  use GridcellType                    , only : grc
+  use shr_infnan_mod       , only : isnan => shr_infnan_isnan, isinf => shr_infnan_isinf
   !
   implicit none
   private
@@ -279,6 +282,8 @@ contains
     integer :: p, fp, k
     real(r8) :: fleaf                                      ! fraction allocated to leaf
     real(r8) :: crop_phase(bounds%begp:bounds%endp)
+    ! SSR troubleshooting
+    integer  :: g ! Gridcell index
 
     character(len=*), parameter :: subname = 'calc_crop_allocation_fractions'
     !-----------------------------------------------------------------------
@@ -304,7 +309,10 @@ contains
          aleaf                 => cnveg_state_inst%aleaf_patch                      , & ! Output: [real(r8) (:)   ]  leaf allocation coefficient
          astem                 => cnveg_state_inst%astem_patch                      , & ! Output: [real(r8) (:)   ]  stem allocation coefficient
          aroot                 => cnveg_state_inst%aroot_patch                      , & ! Output: [real(r8) (:)   ]  root allocation coefficient
-         arepr                 => cnveg_state_inst%arepr_patch                        & ! Output: [real(r8) (:,:) ]  reproductive allocation coefficient(s)
+         arepr                 => cnveg_state_inst%arepr_patch                      , & ! Output: [real(r8) (:,:) ]  reproductive allocation coefficient(s)
+         ! SSR troubleshooting
+         lon => grc%londeg, &
+         lat => grc%latdeg &
          )
 
     call CropPhase(bounds, num_pcropp, filter_pcropp, crop_inst, cnveg_state_inst, &
@@ -312,6 +320,8 @@ contains
 
     do fp = 1, num_pcropp
        p = filter_pcropp(fp)
+       ! SSR troubleshooting
+       g = patch%gridcell(p)
 
        if (croplive(p)) then
           ! same phases appear in subroutine CropPhenology
@@ -362,6 +372,27 @@ contains
           else if (crop_phase(p) == cphase_grainfill) then
              aroot(p) = max(0._r8, min(1._r8, arooti(ivt(p)) - &
                   (arooti(ivt(p)) - arootf(ivt(p))) * min(1._r8, hui(p)/gddmaturity(p))))
+
+            ! SSR troubleshooting
+            if (isnan(astemi(p))) then
+                  write(iulog,'(a,f7.2,a,f7.2,a,i3,a)') 'srts: lon ',lon(g),' lat ',lat(g),' ivt ',ivt(p),': astemi NaN'
+            end if
+            if (isinf(astemi(p))) then
+                  write(iulog,'(a,f7.2,a,f7.2,a,i3,a)') 'srts: lon ',lon(g),' lat ',lat(g),' ivt ',ivt(p),': astemi Inf'
+            end if
+            if (isnan(astemf(ivt(p)))) then
+                  write(iulog,'(a,f7.2,a,f7.2,a,i3,a)') 'srts: lon ',lon(g),' lat ',lat(g),' ivt ',ivt(p),': astemf NaN'
+            end if
+            if (isinf(astemf(ivt(p)))) then
+                  write(iulog,'(a,f7.2,a,f7.2,a,i3,a)') 'srts: lon ',lon(g),' lat ',lat(g),' ivt ',ivt(p),': astemf Inf'
+            end if
+            if (astemi(p) > astemi(p)) then
+                  write(iulog,*) 'srts: Trying to trigger a crash with this conditional'
+            end if
+            if (astemf(ivt(p)) > astemf(ivt(p))) then
+                  write(iulog,*) 'srts: And if not, maybe this one will'
+            end if
+           
              if (astemi(p) > astemf(ivt(p))) then
                 astem(p) = max(0._r8, max(astemf(ivt(p)), astem(p) * &
                      (1._r8 - min((hui(p)-                 &
