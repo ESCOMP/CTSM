@@ -411,25 +411,18 @@ ptch: do fp = 1,num_soilp
             end if
             cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt
             cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_storage_patch(p)*dt
-            k = 1
-            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_reproductivec_patch(p,k)*dt
-            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_reproductivec_storage_patch(p,k)*dt
+            do k = 1, nrepr
+                cs_veg%cpool_patch(p)          = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_reproductivec_patch(p,k)*dt
+                cs_veg%cpool_patch(p)          = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_reproductivec_storage_patch(p,k)*dt
+            end do
             if(.not. use_matrixcn)then
-               k = 1
-               cs_veg%reproductivec_patch(p,k)    = cs_veg%reproductivec_patch(p,k) &
-                                                  + cf_veg%cpool_to_reproductivec_patch(p,k)*dt
-               cs_veg%reproductivec_storage_patch(p,k) = cs_veg%reproductivec_storage_patch(p,k) &
-                                                       + cf_veg%cpool_to_reproductivec_storage_patch(p,k)*dt
-
                cs_veg%livestemc_patch(p)          = cs_veg%livestemc_patch(p)          + cf_veg%cpool_to_livestemc_patch(p)*dt
                cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p)  + cf_veg%cpool_to_livestemc_storage_patch(p)*dt
-               do k = 2, nrepr
-                  cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_to_reproductivec_patch(p,k)*dt
-                  cs_veg%reproductivec_patch(p,k) = cs_veg%reproductivec_patch(p,k) &
-                       + cf_veg%cpool_to_reproductivec_patch(p,k)*dt
-                  cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_to_reproductivec_storage_patch(p,k)*dt
+               do k = 1, nrepr
+                  cs_veg%reproductivec_patch(p,k)         = cs_veg%reproductivec_patch(p,k) &
+                                                          + cf_veg%cpool_to_reproductivec_patch(p,k)*dt
                   cs_veg%reproductivec_storage_patch(p,k) = cs_veg%reproductivec_storage_patch(p,k) &
-                       + cf_veg%cpool_to_reproductivec_storage_patch(p,k)*dt
+                                                          + cf_veg%cpool_to_reproductivec_storage_patch(p,k)*dt
                end do
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
