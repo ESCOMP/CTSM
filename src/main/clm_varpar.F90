@@ -242,7 +242,7 @@ contains
     !
     ! Number of layers for soil decomposition
     !
-    if ( use_cn .or. use_fates )then
+    if ( use_cn .or. (use_fates .and. .not. use_fates_sp) ) then
        ! to set the number of soil levels for the biogeochemistry calculations.
        ! currently it works on nlevsoi and nlevgrnd levels
        nlevdecomp      = nlevsoi

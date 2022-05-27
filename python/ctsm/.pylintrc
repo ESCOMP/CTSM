@@ -140,6 +140,12 @@ disable=print-statement,
         deprecated-sys-function,
         exception-escape,
         comprehension-escape,
+        R0801,                         # This option to the end are options required to use black formatter
+        W1515,
+        W1514,
+        R1732,
+        C0209,
+        C0326,                         # This and the next are the two options that black documentation tells us to ignore
         C0330,                         # This is an option that the formatter "black" requires us to disable
 # --- default list is above here, our own list is below here ---
 # While pylint's recommendations to keep the number of arguments, local
