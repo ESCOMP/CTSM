@@ -271,9 +271,24 @@ contains
             long_name='soil texture map units', units='unitless')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='ORGANIC', xtype=PIO_REAL, &
-            lev1name='nlevsoi', &
+            lev1name='nlevsoi', &  ! TODO Rm ORGANIC before merging PR #1732
             long_name='organic matter density at soil levels', &
             units='kg/m3 (assumed carbon content 0.58 gC per gOM)')
+       call mkpio_def_spatial_var(pioid=pioid, varname='ORGC', xtype=PIO_REAL, &
+            lev1name='nlevsoi', &
+            long_name='soil organic carbon', units='gC/kg soil')
+
+       call mkpio_def_spatial_var(pioid=pioid, varname='BULK', xtype=PIO_REAL, &
+            lev1name='nlevsoi', &
+            long_name='bulk density', units='g cm-3')
+
+       call mkpio_def_spatial_var(pioid=pioid, varname='CFRAG', xtype=PIO_REAL, &
+            lev1name='nlevsoi', &
+            long_name='coarse fragments', units='vol% > 2 mm')
+
+       call mkpio_def_spatial_var(pioid=pioid, varname='PHAQ', xtype=PIO_REAL, &
+            lev1name='nlevsoi', &
+            long_name='pH measured in water', units='unitless')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='FMAX', xtype=xtype, &
             long_name='maximum fractional saturated area', units='unitless')
