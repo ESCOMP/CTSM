@@ -879,6 +879,7 @@ contains
        num_soilc, filter_soilc, &
        num_soilp, filter_soilp, &
        num_pcropp, filter_pcropp, &
+       num_soilnopcropp, filter_soilnopcropp, &
        num_exposedvegp, filter_exposedvegp, &
        num_noexposedvegp, filter_noexposedvegp, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
@@ -910,6 +911,8 @@ contains
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
+    integer                                 , intent(in)    :: num_soilnopcropp       ! number of non-prog. crop soil patches in filter
+    integer                                 , intent(in)    :: filter_soilnopcropp(:) ! filter for non-prog. crop soil patches
     integer                                 , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
     integer                                 , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
     integer                                 , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
@@ -952,6 +955,7 @@ contains
          num_soilc, filter_soilc,                       &
          num_soilp, filter_soilp,                       &
          num_pcropp, filter_pcropp,                     &
+         num_soilnopcropp, filter_soilnopcropp,         &
          num_exposedvegp, filter_exposedvegp,           &
          num_noexposedvegp, filter_noexposedvegp,       &
          this%cnveg_state_inst,                                                        &
