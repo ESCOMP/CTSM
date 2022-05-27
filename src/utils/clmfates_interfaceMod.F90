@@ -45,10 +45,12 @@ module CLMFatesInterfaceMod
    use TemperatureType   , only : temperature_type
    use EnergyFluxType    , only : energyflux_type
    use SoilStateType     , only : soilstate_type
+   use CNProductsMod     , only : cn_products_type
    use clm_varctl        , only : iulog
    use clm_varctl        , only : fates_parteh_mode
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
+   use clm_varctl        , only : use_fates_tree_damage
    use clm_varctl        , only : use_fates_planthydro
    use clm_varctl        , only : use_fates_cohort_age_tracking
    use clm_varctl        , only : use_fates_ed_st3
@@ -222,6 +224,7 @@ module CLMFatesInterfaceMod
       procedure, public  :: ComputeRootSoilFlux
       procedure, public  :: wrap_hydraulics_drive
       procedure, public  :: WrapUpdateFatesRmean
+      procedure, public  :: wrap_WoodProducts
       
    end type hlm_fates_interface_type
 
@@ -348,6 +351,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_inventory_init
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
+     integer                                        :: pass_tree_damage
 
      call t_startf('fates_globals2')
 
@@ -379,6 +383,13 @@ module CLMFatesInterfaceMod
         elseif(decomp_method == no_soil_decomp ) then
            call set_fates_ctrlparms('decomp_method',cval='NONE')
         end if
+
+        if(use_fates_tree_damage)then
+           pass_tree_damage = 1
+        else
+           pass_tree_damage = 0
+        end if
+        call set_fates_ctrlparms('use_tree_damage',ival=pass_tree_damage)
         
         ! These may be in a non-limiting status (ie when supplements)
         ! are added, but they are always allocated and cycled non-the less
@@ -2268,6 +2279,54 @@ module CLMFatesInterfaceMod
 
  ! ======================================================================================
 
+ subroutine wrap_WoodProducts(this, bounds_clump, fc, filterc, c_products_inst)
+
+   ! !ARGUMENTS:
+   class(hlm_fates_interface_type), intent(inout) :: this
+   type(bounds_type)              , intent(in)    :: bounds_clump
+   integer                        , intent(in)    :: fc                   ! size of column filter
+   integer                        , intent(in)    :: filterc(fc)          ! column filter
+   type(cn_products_type)         , intent(inout) :: c_products_inst
+   
+   ! Locals
+   integer                                        :: s,c,icc,g
+   integer                                        :: nc
+
+   ! This wrapper is not active.  This is just place-holder code until
+   ! harvest-product flux is fully implemented.  RGK-05-2022
+   
+   associate( & 
+        prod10c => c_products_inst%hrv_deadstem_to_prod10_grc, & 
+        prod100c => c_products_inst%hrv_deadstem_to_prod100_grc)
+     
+     nc = bounds_clump%clump_index
+     ! Loop over columns
+     do icc = 1,fc
+        c = filterc(icc)
+        g = col%gridcell(c)
+        s = this%f2hmap(nc)%hsites(c)
+       
+        ! Shijie: Pass harvested wood products to ELM variable
+        prod10c(g) = prod10c(g) + &
+             this%fates(nc)%bc_out(s)%hrv_deadstemc_to_prod10c
+        prod100c(g) = prod100c(g) + &
+             this%fates(nc)%bc_out(s)%hrv_deadstemc_to_prod100c
+
+        ! RGK: THere is also a patch level variable
+        !do ifp = 1,this%fates(nc)%sites(s)%youngest_patch%patchno
+        !   p = ifp+col%patchi(c)
+        !   hrv_deadstemc_to_prod10c(p)  = 
+        !   hrv_deadstemc_to_prod100c(p)
+        !end do
+          
+    end do
+    
+  end associate
+  return
+ end subroutine wrap_WoodProducts
+ 
+ ! ======================================================================================
+
  subroutine wrap_canopy_radiation(this, bounds_clump, nc, &
          num_vegsol, filter_vegsol, coszen, fcansno,  surfalb_inst)
 
@@ -2633,6 +2692,7 @@ module CLMFatesInterfaceMod
    use FatesIOVariableKindMod, only : site_can_r8, site_cnlf_r8, site_cnlfpft_r8
    use FatesIOVariableKindMod, only : site_height_r8, site_elem_r8, site_elpft_r8
    use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8, site_agefuel_r8
+   use FatesIOVariableKindMod, only : site_cdpf_r8, site_cdsc_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -2734,7 +2794,8 @@ module CLMFatesInterfaceMod
              site_fuel_r8, site_cwdsc_r8, &
              site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, &
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
-             site_elcwd_r8, site_elage_r8, site_agefuel_r8)
+             site_elcwd_r8, site_elage_r8, site_agefuel_r8, &
+             site_cdsc_r8, site_cdpf_r8)
 
 
            d_index = fates_hist%dim_kinds(dk_index)%dim2_index
@@ -3022,6 +3083,7 @@ module CLMFatesInterfaceMod
    use FatesIODimensionsMod, only : fates_bounds_type
    use FatesInterfaceTypesMod, only : nlevsclass, nlevage, nlevcoage
    use FatesInterfaceTypesMod, only : nlevheight
+   use FatesInterfaceTypesMod, only : nlevdamage
    use EDtypesMod,        only : nfsc
    use FatesLitterMod,    only : ncwd
    use EDtypesMod,        only : nlevleaf, nclmax
@@ -3104,7 +3166,15 @@ module CLMFatesInterfaceMod
    fates%agefuel_begin = 1
    fates%agefuel_end   = nlevage * nfsc
 
+   fates%cdpf_begin = 1
+   fates%cdpf_end = nlevdamage * numpft_fates * nlevsclass
 
+   fates%cdsc_begin = 1
+   fates%cdsc_end = nlevdamage * nlevsclass
+
+   fates%cdam_begin = 1
+   fates%cdam_end = nlevdamage
+   
    call t_stopf('fates_hlm2fatesbnds')
 
  end subroutine hlm_bounds_to_fates_bounds
