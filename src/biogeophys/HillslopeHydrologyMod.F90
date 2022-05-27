@@ -629,22 +629,18 @@ contains
     ! Update layer classes if nbedrock has been modified
     call setSoilLayerClass(bounds)
        
-
     ! Modify pft distributions
     ! this may require modifying subgridMod/natveg_patch_exists
     ! to ensure patch exists in every gridcell
     if (pft_distribution_method == pft_from_file) then
        call HillslopePftFromFile(bounds,col_pftndx)
-    endif
-    if (pft_distribution_method == pft_uniform_dominant_pft) then
+    else if (pft_distribution_method == pft_uniform_dominant_pft) then
        ! Specify single dominant pft per gridcell
        call HillslopeDominantPft(bounds)
-    endif
-    if (pft_distribution_method == pft_lowland_dominant_pft) then
+    else if (pft_distribution_method == pft_lowland_dominant_pft) then
        ! Specify different pfts for uplands / lowlands
        call HillslopeDominantLowlandPft(bounds)
-    endif
-    if (pft_distribution_method == pft_lowland_upland) then
+    else if (pft_distribution_method == pft_lowland_upland) then
        !upland_ivt  = 13 ! c3 non-arctic grass
        !lowland_ivt = 7  ! broadleaf deciduous tree 
        call HillslopeSetLowlandUplandPfts(bounds,lowland_ivt=7,upland_ivt=13)

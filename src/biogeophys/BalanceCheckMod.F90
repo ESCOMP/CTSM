@@ -907,14 +907,8 @@ contains
              ! level because of interactions between columns and since a separate check is done
              ! in the urban radiation module
              if (.not. lun%urbpoi(l)) then
-                ! patch radiation will no longer balance gridcell values 
-                if(col%is_hillslope_column(c)) then
                    errsol(p) = fsa(p) + fsr(p) &
                         - (forc_solad_col(c,1) + forc_solad_col(c,2) + forc_solai(g,1) + forc_solai(g,2))
-                else
-                   errsol(p) = fsa(p) + fsr(p) &
-                        - (forc_solad(g,1) + forc_solad(g,2) + forc_solai(g,1) + forc_solai(g,2))
-                endif
              else
                 errsol(p) = spval
              end if
