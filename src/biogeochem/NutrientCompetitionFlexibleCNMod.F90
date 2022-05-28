@@ -25,7 +25,8 @@ module NutrientCompetitionFlexibleCNMod
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
   use NutrientCompetitionMethodMod, only : params_inst
   use CropReprPoolsMod    , only : nrepr
-  use clm_varctl          , only : iulog, use_matrixcn
+  use clm_varctl          , only : iulog
+  use CNSharedParamsMod   , only : use_matrixcn
   !
   implicit none
   private

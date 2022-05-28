@@ -23,8 +23,8 @@ module CNGapMortalityMod
   use ColumnType                     , only : col
   use PatchType                      , only : patch
   use GridcellType                   , only : grc
-  use clm_varctl                     , only : use_matrixcn
-  !
+  use CNSharedParamsMod              , only : use_matrixcn
+
   implicit none
   private
   !

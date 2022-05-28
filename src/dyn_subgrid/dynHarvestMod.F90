@@ -23,7 +23,8 @@ module dynHarvestMod
   use clm_varcon              , only : grlnd
   use ColumnType              , only : col                
   use PatchType               , only : patch                
-  use clm_varctl              , only : use_fates, use_matrixcn  
+  use clm_varctl              , only : use_fates
+  use CNSharedParamsMod       , only : use_matrixcn
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none

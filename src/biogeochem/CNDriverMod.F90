@@ -895,7 +895,8 @@ contains
     use SoilBiogeochemNLeachingMod, only: SoilBiogeochemNLeaching
     use CNNStateUpdate3Mod        , only: NStateUpdate3
     use clm_time_manager          , only : is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year,get_curr_date
-    use clm_varctl                , only : use_matrixcn,use_soil_matrixcn
+    use clm_varctl                , only : use_soil_matrixcn
+    use CNSharedParamsMod         , only : use_matrixcn
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  

@@ -7,8 +7,8 @@ module CNVegNitrogenStateType
   use clm_varcon                         , only : spval
   use landunit_varcon                    , only : istcrop, istsoil 
   use clm_varctl                         , only : iulog
-  use clm_varctl                         , only : use_crop, use_matrixcn
-  use CNSharedParamsMod                  , only : use_fun
+  use clm_varctl                         , only : use_crop
+  use CNSharedParamsMod                  , only : use_fun, use_matrixcn
   use decompMod                          , only : bounds_type
   use pftconMod                          , only : npcropmin, noveg, pftcon
   use abortutils                         , only : endrun

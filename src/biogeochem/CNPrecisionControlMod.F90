@@ -648,7 +648,8 @@ contains
     !
     ! !USES:
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    use clm_varctl , only : use_c13, use_c14, use_nguardrail, use_matrixcn
+    use clm_varctl , only : use_c13, use_c14, use_nguardrail
+    use CNSharedParamsMod, only : use_matrixcn
     use clm_varctl , only : iulog
     use pftconMod  , only : nc3crop
     use decompMod  , only : bounds_type, subgrid_level_patch

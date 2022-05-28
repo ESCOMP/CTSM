@@ -21,7 +21,8 @@ module CNCStateUpdate1Mod
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use PatchType                          , only : patch
   use clm_varctl                         , only : use_fates, use_cn, iulog
-  use clm_varctl                         , only : use_matrixcn, use_soil_matrixcn
+  use clm_varctl                         , only : use_soil_matrixcn
+  use CNSharedParamsMod                  , only : use_matrixcn
   !
   implicit none
   private

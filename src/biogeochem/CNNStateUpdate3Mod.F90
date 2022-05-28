@@ -9,7 +9,8 @@ module CNNStateUpdate3Mod
   use shr_kind_mod                    , only: r8 => shr_kind_r8
   use clm_varpar                      , only: nlevdecomp, ndecomp_pools
   use clm_time_manager                , only : get_step_size_real
-  use clm_varctl                      , only : iulog, use_nitrif_denitrif,use_matrixcn,use_soil_matrixcn
+  use clm_varctl                      , only : iulog, use_nitrif_denitrif,use_soil_matrixcn
+  use CNSharedParamsMod               , only : use_matrixcn
   use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type

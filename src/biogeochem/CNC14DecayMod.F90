@@ -8,7 +8,8 @@ module CNC14DecayMod
   use clm_time_manager                   , only : get_step_size_real, get_average_days_per_year
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools
   use clm_varcon                         , only : secspday
-  use clm_varctl                         , only : spinup_state, use_matrixcn, use_soil_matrixcn
+  use clm_varctl                         , only : spinup_state, use_soil_matrixcn
+  use CNSharedParamsMod                  , only : use_matrixcn
   use decompMod                          , only : bounds_type
   use pftconMod                          , only : npcropmin
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type

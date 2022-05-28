@@ -444,7 +444,8 @@ contains
    !
    ! !USES:
    use clm_time_manager     , only: get_step_size_real,get_curr_days_per_year,get_curr_date
-   use clm_varctl           , only: use_cndv, use_soil_matrixcn, use_matrixcn
+   use clm_varctl           , only: use_cndv, use_soil_matrixcn
+   use CNSharedParamsMod    , only: use_matrixcn
    use clm_varcon           , only: secspday
    use pftconMod            , only: nc3crop
    use dynSubgridControlMod , only: run_has_transient_landcover

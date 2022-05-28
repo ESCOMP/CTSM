@@ -60,7 +60,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Init(this, bounds)
-    use clm_varctl       , only : use_matrixcn
+    use CNSharedParamsMod, only : use_matrixcn
     class(cn_balance_type)         :: this
     type(bounds_type) , intent(in) :: bounds  
 

@@ -130,7 +130,7 @@ contains
     !
     ! !USES:
     use pftconMod             , only : pftcon, npcropmin
-    use clm_varctl            , only : use_c13, use_c14, use_matrixcn
+    use clm_varctl            , only : use_c13, use_c14
     use CNVegStateType        , only : cnveg_state_type
     use CropType              , only : crop_type
     use CanopyStateType        , only : canopystate_type
@@ -138,7 +138,7 @@ contains
     use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
     use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
     use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
-    use CNSharedParamsMod     , only : use_fun
+    use CNSharedParamsMod     , only : use_fun, use_matrixcn
     use shr_infnan_mod        , only : shr_infnan_isnan
 
     !
@@ -524,7 +524,8 @@ contains
     use pftconMod              , only : ntmp_soybean, nirrig_tmp_soybean
     use pftconMod              , only : ntrp_soybean, nirrig_trp_soybean
     use clm_varcon             , only : secspday
-    use clm_varctl             , only : use_c13, use_c14, use_matrixcn
+    use clm_varctl             , only : use_c13, use_c14
+    use CNSharedParamsMod      , only : use_matrixcn
     use clm_time_manager       , only : get_step_size_real
     use CanopyStateType        , only : canopystate_type
     use PhotosynthesisMod      , only : photosyns_type

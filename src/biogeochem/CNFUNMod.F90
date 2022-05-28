@@ -25,7 +25,8 @@ module CNFUNMod
   use ColumnType                      , only : col
   use pftconMod                       , only : pftcon, npcropmin
   use decompMod                       , only : bounds_type
-  use clm_varctl                      , only : use_nitrif_denitrif,use_flexiblecn,use_matrixcn
+  use clm_varctl                      , only : use_nitrif_denitrif,use_flexiblecn
+  use CNSharedParamsMod               , only : use_matrixcn
   use abortutils                      , only : endrun
   use CNVegstateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type

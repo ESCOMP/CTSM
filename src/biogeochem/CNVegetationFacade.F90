@@ -439,7 +439,8 @@ contains
     ! !USES:
     use ncdio_pio,       only : file_desc_t
     use clm_varcon,      only : c3_r2, c14ratio
-    use clm_varctl,      only : use_soil_matrixcn, use_matrixcn
+    use clm_varctl,      only : use_soil_matrixcn
+    use CNSharedParamsMod, only : use_matrixcn
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
