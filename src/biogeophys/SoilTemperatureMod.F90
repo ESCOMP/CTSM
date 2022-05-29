@@ -1158,6 +1158,7 @@ contains
          frac_sno_eff     =>    waterdiagnosticbulk_inst%frac_sno_eff_col    , & ! Input:  [real(r8) (:)   ] eff. fraction of ground covered by snow (0 to 1)
          frac_h2osfc      =>    waterdiagnosticbulk_inst%frac_h2osfc_col     , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
          snow_depth       =>    waterdiagnosticbulk_inst%snow_depth_col      , & ! Input:  [real(r8) (:)   ] snow height (m)                         
+         exice_subs_col   =>    waterdiagnosticbulk_inst%exice_subs_col      , & ! Output: [real(r8) (:,:) ]  per layer subsidence due to excess ice melt (mm/s)
          h2osno_no_layers =>    waterstatebulk_inst%h2osno_no_layers_col     , & ! Output: [real(r8) (:)   ] snow not resolved into layers (mm H2O)
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2) (new)             
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
@@ -1412,6 +1413,7 @@ contains
                      endif
 
                      h2osoi_liq(c,j) = max(0._r8,wmass0(c,j)-h2osoi_ice(c,j)-excess_ice(c,j)) !melted exice is added to the respective soil layers
+                     
 
                      if (abs(heatr) > 0._r8) then
                         if (j == snl(c)+1) then
@@ -1444,6 +1446,7 @@ contains
 
                      if (j >= 1) then !why before it was two same statements?
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime +hfus*(wexice0(c,j)-excess_ice(c,j))/dtime
+                        exice_subs_col(c,j) = max(0._r8, (wexice0(c,j)-excess_ice(c,j))/denice/dtime*1000.0_r8) 
                      else
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      endif

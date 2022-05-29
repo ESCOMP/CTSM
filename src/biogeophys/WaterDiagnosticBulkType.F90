@@ -48,6 +48,8 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: air_vol_col            (:,:) ! col air filled porosity
      real(r8), pointer :: h2osoi_liqvol_col      (:,:) ! col volumetric liquid water content (v/v)
      real(r8), pointer :: swe_old_col            (:,:) ! col initial snow water
+     real(r8), pointer :: exice_subs_tot_col   (:)   ! col total subsidence due to excess ice melt
+     real(r8), pointer :: exice_subs_col       (:,:)   ! col per layer subsidence due to excess ice melt
 
      real(r8), pointer :: snw_rds_col            (:,:) ! col snow grain radius (col,lyr)    [m^-6, microns]
      real(r8), pointer :: snw_rds_top_col        (:)   ! col snow grain radius (top layer)  [m^-6, microns]
@@ -194,6 +196,8 @@ contains
     allocate(this%h2osoi_ice_tot_col     (begc:endc))                     ; this%h2osoi_ice_tot_col     (:)   = nan
     allocate(this%h2osoi_liq_tot_col     (begc:endc))                     ; this%h2osoi_liq_tot_col     (:)   = nan
     allocate(this%swe_old_col            (begc:endc,-nlevsno+1:0))        ; this%swe_old_col            (:,:) = nan   
+    allocate(this%exice_subs_tot_col     (begc:endc))                     ; this%exice_subs_tot_col     (:)   = 0.0_r8
+    allocate(this%exice_subs_col         (begc:endc, 1:nlevgrnd))         ; this%exice_subs_col         (:,:) = 0.0_r8
 
     allocate(this%snw_rds_col            (begc:endc,-nlevsno+1:0))        ; this%snw_rds_col            (:,:) = nan
     allocate(this%snw_rds_top_col        (begc:endc))                     ; this%snw_rds_top_col        (:)   = nan
@@ -279,6 +283,15 @@ contains
          avgflag='A', &
          long_name=this%info%lname('vertically summed soil cie (veg landunits only)'), &
          ptr_col=this%h2osoi_ice_tot_col, l2g_scale_type='veg')
+
+    this%exice_subs_tot_col(begc:endc) = 0.0_r8
+    call hist_addfld1d ( &
+         fname=this%info%fname('EXICE_SUBS'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         l2g_scale_type='veg', default='inactive', &
+         long_name=this%info%lname('subsidence due to excess ice melt'), &
+         ptr_col=this%exice_subs_tot_col)
 
     this%iwue_ln_patch(begp:endp) = spval
     call hist_addfld1d ( &
@@ -741,7 +754,7 @@ contains
     use spmdMod          , only : masterproc
     use clm_varcon       , only : pondmx, watmin, spval, nameg
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varctl       , only : bound_h2osoi
+    use clm_varctl       , only : bound_h2osoi, use_excess_ice
     use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
     use restUtilMod
     !
@@ -875,7 +888,19 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%wf_col) 
     end if
 
-
+    if (.not. use_excess_ice .and. flag == 'read') then
+      ! no need to even define the restart vars
+      this%exice_subs_tot_col(bounds%begc:bounds%endc)=0.0_r8
+    else
+      ! have to at least define them 
+      call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXICE_SUBS'),  &
+           dim1name='column', xtype=ncd_double, &
+           long_name=this%info%lname('subsidence due to excess ice melt'), units='mm/s', &
+           interpinic_flag='interp', readvar=readvar, data=this%exice_subs_tot_col)
+      if (use_excess_ice .and. flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
+        this%exice_subs_tot_col(bounds%begc:bounds%endc)=0.0_r8
+      endif
+    endif
 
   end subroutine RestartBulk
 
@@ -1006,10 +1031,12 @@ contains
 
          h2osoi_ice         => waterstate_inst%h2osoi_ice_col, & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
          h2osoi_liq         => waterstate_inst%h2osoi_liq_col, & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)
+         exice_subs_col     => this%exice_subs_col           , & ! Output: [real(r8) (:,:) ]  per layer subsidence due to excess ice melt (mm/s)
 
          h2osoi_ice_tot     => this%h2osoi_ice_tot_col       , & ! Output: [real(r8) (:)   ]  vertically summed ice lens (kg/m2)
          h2osoi_liq_tot     => this%h2osoi_liq_tot_col       , & ! Output: [real(r8) (:)   ]  vertically summed liquid water (kg/m2)   
-         h2osoi_liqice_10cm => this%h2osoi_liqice_10cm_col     & ! Output: [real(r8) (:)   ]  liquid water + ice lens in top 10cm of soil (kg/m2)
+         h2osoi_liqice_10cm => this%h2osoi_liqice_10cm_col   , & ! Output: [real(r8) (:)   ]  liquid water + ice lens in top 10cm of soil (kg/m2)
+         exice_subs_tot_col => this%exice_subs_tot_col         & ! Output  [real(r8) (:)   ]  total subsidence due to excess ice melt (mm/s)
     )
 
     call this%waterdiagnostic_type%Summary(bounds, &
@@ -1042,6 +1069,7 @@ contains
           h2osoi_liqice_10cm(c) = 0.0_r8
           h2osoi_liq_tot(c) = 0._r8
           h2osoi_ice_tot(c) = 0._r8
+          exice_subs_tot_col(c) = 0._r8
        end if
     end do
     do j = 1, nlevsoi
@@ -1064,6 +1092,7 @@ contains
              end if
              h2osoi_liq_tot(c) = h2osoi_liq_tot(c) + h2osoi_liq(c,j)
              h2osoi_ice_tot(c) = h2osoi_ice_tot(c) + h2osoi_ice(c,j)
+             exice_subs_tot_col(c) = exice_subs_tot_col(c) + exice_subs_col(c,j)
           end if
        end do
     end do
