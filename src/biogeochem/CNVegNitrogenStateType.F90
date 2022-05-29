@@ -59,6 +59,9 @@ module CNVegNitrogenStateType
      real(r8), pointer :: cropseedn_deficit_patch             (:) ! (gN/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
      real(r8), pointer :: seedn_grc                           (:) ! (gN/m2) gridcell-level pool for seeding new pFTs via dynamic landcover
 
+     ! Matrix solution variables
+     ! Matrix solution pool for initial state for matrix spinup
+
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: dispvegn_patch                      (:) ! (gN/m2) displayed veg nitrogen, excluding storage
      real(r8), pointer :: storvegn_patch                      (:) ! (gN/m2) stored vegetation nitrogen
@@ -69,6 +72,8 @@ module CNVegNitrogenStateType
      real(r8), pointer :: totn_col                            (:) ! (gN/m2) total column nitrogen, incl veg
      real(r8), pointer :: totecosysn_col                      (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
      real(r8), pointer :: totn_grc                            (:) ! (gN/m2) total gridcell nitrogen
+
+    ! acc spinup for matrix solution
 
    contains
 
@@ -166,6 +171,10 @@ contains
     allocate(this%totecosysn_col                         (begc:endc)) ; this%totecosysn_col                      (:) = nan
     allocate(this%totn_grc                               (begg:endg)) ; this%totn_grc                            (:) = nan
 
+    ! Matrix solution allocations
+    if ( use_matrixcn )then
+    end if
+
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -231,6 +240,10 @@ contains
     call hist_addfld1d (fname='LEAFN_XFER', units='gN/m^2', &
          avgflag='A', long_name='leaf N transfer', &
          ptr_patch=this%leafn_xfer_patch, default='inactive')     
+
+    ! Matrix solution history fields
+    if ( use_matrixcn )then
+    end if
 
     if ( use_fun ) then
        this%leafn_storage_xfer_acc_patch(begp:endp) = spval
@@ -440,20 +453,38 @@ contains
           if (patch%itype(p) == noveg) then
              this%leafn_patch(p)                           = 0._r8
              this%leafn_storage_patch(p)                   = 0._r8
+ 
+             ! Matrix solution settings for bare-soil
+             if ( use_matrixcn )then
+             end if
              if (MM_Nuptake_opt .eqv. .true.) then   
                 this%frootn_patch(p)                       = 0._r8            
                 this%frootn_storage_patch(p)               = 0._r8    
+
+                ! Matrix solution settings for bare-soil and flex-CN
+                if ( use_matrixcn )then
+                end if
              end if 
           else
              this%leafn_patch(p)                           = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
              this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+
+             ! Matrix solution settings
+             if ( use_matrixcn )then
+             end if
              if (MM_Nuptake_opt .eqv. .true.) then  
                 this%frootn_patch(p)                       = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
                 this%frootn_storage_patch(p)               = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
+                ! Matrix solution settings for flex-CN
+                if ( use_matrixcn )then
+                end if
              end if 
           end if
 
           this%leafn_xfer_patch(p)                         = 0._r8
+          ! Matrix solution settings
+          if ( use_matrixcn )then
+          end if
 
           this%leafn_storage_xfer_acc_patch(p)             = 0._r8
           this%storage_ndemand_patch(p)                    = 0._r8
@@ -463,27 +494,45 @@ contains
              this%reproductiven_storage_patch(p,:) = 0._r8
              this%reproductiven_xfer_patch(p,:)    = 0._r8
              this%cropseedn_deficit_patch(p)               = 0._r8
+
+             ! Matrix reproductive pool settings
+             if ( use_matrixcn )then
+             end if
           end if
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
              this%frootn_patch(p)                          = 0._r8
              this%frootn_storage_patch(p)                  = 0._r8
+
+             ! Matrix pool settings
+             if ( use_matrixcn )then
+             end if
           end if 
           this%frootn_xfer_patch(p)                        = 0._r8
           this%livestemn_patch(p)                          = 0._r8
           this%livestemn_storage_patch(p)                  = 0._r8
           this%livestemn_xfer_patch(p)                     = 0._r8
 
+          ! Matrix pool settings
+          if ( use_matrixcn )then
+          end if
+
           ! tree types need to be initialized with some stem mass so that
           ! roughness length is not zero in canopy flux calculation
 
           if (pftcon%woody(patch%itype(p)) == 1._r8) then
              this%deadstemn_patch(p)                       = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+             if ( use_matrixcn )then
+             end if
           else
              this%deadstemn_patch(p)                       = 0._r8
+             if ( use_matrixcn )then
+             end if
           end if
 
           this%deadstemn_storage_patch(p)                  = 0._r8
           this%deadstemn_xfer_patch(p)                     = 0._r8
+          if ( use_matrixcn )then
+          end if
 
           this%livecrootn_patch(p)                         = 0._r8
           this%livecrootn_storage_patch(p)                 = 0._r8
@@ -592,6 +641,10 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='leafn_xfer', xtype=ncd_double,  &
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%leafn_xfer_patch) 
+
+    ! Matrix restart variables
+    if ( use_matrixcn )then
+    end if
 
     if ( use_fun ) then
         call restartvar(ncid=ncid, flag=flag, varname='leafn_storage_xfer_acc', xtype=ncd_double,  &
@@ -778,20 +831,34 @@ contains
              if (patch%itype(p) == noveg) then
                 this%leafn_patch(p)                           = 0._r8
                 this%leafn_storage_patch(p)                   = 0._r8
+
+                ! Set matrix solution variables for bare-soil
+                if ( use_matrixcn )then
+                end if
                 if (MM_Nuptake_opt .eqv. .true.) then   
                    this%frootn_patch(p)                       = 0._r8            
                    this%frootn_storage_patch(p)               = 0._r8    
+                   if ( use_matrixcn )then
+                   end if
                 end if 
              else
                 this%leafn_patch(p)                           = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
                 this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+                if ( use_matrixcn )then
+                end if
                 if (MM_Nuptake_opt .eqv. .true.) then  
                    this%frootn_patch(p)                       = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
                    this%frootn_storage_patch(p)               = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
+                   if ( use_matrixcn )then
+                   end if
                 end if 
              end if
    
              this%leafn_xfer_patch(p)                         = 0._r8
+
+             if ( use_matrixcn )then
+             end if
+
              this%leafn_storage_xfer_acc_patch(p)             = 0._r8
              this%storage_ndemand_patch(p)                    = 0._r8
    
@@ -800,23 +867,36 @@ contains
                 this%reproductiven_storage_patch(p,:)         = 0._r8
                 this%reproductiven_xfer_patch(p,:)            = 0._r8
                 this%cropseedn_deficit_patch(p)               = 0._r8
+
+                if ( use_matrixcn )then
+                end if
              end if
              if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
                 this%frootn_patch(p)                          = 0._r8
                 this%frootn_storage_patch(p)                  = 0._r8
+
+                if ( use_matrixcn )then
+                end if
              end if 
              this%frootn_xfer_patch(p)                        = 0._r8
              this%livestemn_patch(p)                          = 0._r8
              this%livestemn_storage_patch(p)                  = 0._r8
              this%livestemn_xfer_patch(p)                     = 0._r8
+
+             if ( use_matrixcn )then
+             end if
    
              ! tree types need to be initialized with some stem mass so that
              ! roughness length is not zero in canopy flux calculation
    
              if (pftcon%woody(patch%itype(p)) == 1._r8) then
                 this%deadstemn_patch(p)                       = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+                if ( use_matrixcn )then
+                end if
              else
                 this%deadstemn_patch(p)                       = 0._r8
+                if ( use_matrixcn )then
+                end if
              end if
 
              this%deadstemn_storage_patch(p)                  = 0._r8

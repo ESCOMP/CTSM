@@ -59,6 +59,10 @@ module CNVegCarbonStateType
      real(r8), pointer :: gresp_storage_patch                 (:) ! (gC/m2) growth respiration storage
      real(r8), pointer :: gresp_xfer_patch                    (:) ! (gC/m2) growth respiration transfer
      real(r8), pointer :: cpool_patch                         (:) ! (gC/m2) temporary photosynthate C pool
+     ! Matrix data
+     ! Initial pool size for matrix spinup
+     ! Assumulation variables for matrix spinup as well as calculation of diagnostic variables
+     ! Transfer pools
      real(r8), pointer :: xsmrpool_patch                      (:) ! (gC/m2) abstract C pool to meet excess MR demand
      real(r8), pointer :: xsmrpool_loss_patch                 (:) ! (gC/m2) abstract C pool to meet excess MR demand loss
      real(r8), pointer :: ctrunc_patch                        (:) ! (gC/m2) patch-level sink for C truncation
@@ -276,6 +280,11 @@ contains
     allocate(this%totc_col                 (begc:endc)) ; this%totc_col                 (:) = nan
     allocate(this%totecosysc_col           (begc:endc)) ; this%totecosysc_col           (:) = nan
     allocate(this%totc_grc                 (begg:endg)) ; this%totc_grc                 (:) = nan
+
+    ! Matrix solution variables
+    if(use_matrixcn)then
+        ! Initisl pool size for matrix solution
+    end if
 
   end subroutine InitAllocate
 
@@ -510,6 +519,9 @@ contains
             avgflag='A', long_name='total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
 
+       ! Matrix solution history variables
+       if ( use_matrixcn )then
+       end if
     end if
 
     !-------------------------------
@@ -697,6 +709,9 @@ contains
                ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
 
+       ! Matrix solution history variables
+       if ( use_matrixcn )then
+       end if
 
     endif
 
@@ -884,6 +899,9 @@ contains
                ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
 
+       ! Matrix solution history variables
+       if ( use_matrixcn )then
+       end if
 
     endif
 
@@ -963,31 +981,51 @@ contains
              this%leafc_storage_patch(p)                = 0._r8
              this%frootc_patch(p)                       = 0._r8            
              this%frootc_storage_patch(p)               = 0._r8    
+
+             ! Set matrix solution bare-soil
+             if ( use_matrixcn )then
+             end if
           else
              if (pftcon%evergreen(patch%itype(p)) == 1._r8) then
                 this%leafc_patch(p)                        = cnvegcstate_const%initial_vegC * ratio     
                 this%leafc_storage_patch(p)                = 0._r8
                 this%frootc_patch(p)                       = cnvegcstate_const%initial_vegC * ratio           
                 this%frootc_storage_patch(p)               = 0._r8    
+                ! Set matrix solution evergreen
+                if ( use_matrixcn )then
+                end if
              else if (patch%itype(p) >= npcropmin) then ! prognostic crop types
                 this%leafc_patch(p)                        = 0._r8
                 this%leafc_storage_patch(p)                = 0._r8
                 this%frootc_patch(p)                       = 0._r8            
                 this%frootc_storage_patch(p)               = 0._r8    
+                ! Set matrix solution prognostic crops
+                if ( use_matrixcn )then
+                end if
              else
                 this%leafc_patch(p)                        = 0._r8
                 this%leafc_storage_patch(p)                = cnvegcstate_const%initial_vegC * ratio   
                 this%frootc_patch(p)                       = 0._r8            
                 this%frootc_storage_patch(p)               = cnvegcstate_const%initial_vegC * ratio   
+                ! Set matrix solution for everything else
+                if ( use_matrixcn )then
+                end if
              end if
           end if
           this%leafc_xfer_patch(p)                         = 0._r8
           this%leafc_storage_xfer_acc_patch(p)             = 0._r8
           this%storage_cdemand_patch(p)                    = 0._r8
 
+          ! Set matrix solution general
+          if ( use_matrixcn )then
+          end if
+
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
              this%frootc_patch(p)                          = 0._r8 
              this%frootc_storage_patch(p)                  = 0._r8 
+             ! Set matrix solution
+             if ( use_matrixcn )then
+             end if
           end if     
           this%frootc_xfer_patch(p)                        = 0._r8 
 
@@ -995,10 +1033,20 @@ contains
           this%livestemc_storage_patch(p)                  = 0._r8 
           this%livestemc_xfer_patch(p)                     = 0._r8 
 
+          ! Set matrix solution
+          if ( use_matrixcn )then
+          end if
+
           if (pftcon%woody(patch%itype(p)) == 1._r8) then
              this%deadstemc_patch(p)                       = 0.1_r8 * ratio
+             ! Set matrix solution for woody
+             if ( use_matrixcn )then
+             end if
           else
              this%deadstemc_patch(p)                       = 0._r8 
+             ! Set matrix solution for non-woody
+             if ( use_matrixcn )then
+             end if
           end if
           this%deadstemc_storage_patch(p)                  = 0._r8 
           this%deadstemc_xfer_patch(p)                     = 0._r8 
@@ -1022,12 +1070,19 @@ contains
           this%woodc_patch(p)              = 0._r8
           this%totc_patch(p)               = 0._r8 
 
+          ! Initial pool size for matrix solution
+          if ( use_matrixcn )then
+          end if
+
           if ( use_crop )then
              this%reproductivec_patch(p,:)                                  = 0._r8
              this%reproductivec_storage_patch(p,:)                          = 0._r8
              this%reproductivec_xfer_patch(p,:)                             = 0._r8
              this%cropseedc_deficit_patch(p)                                = 0._r8
              this%xsmrpool_loss_patch(p)                                    = 0._r8 
+
+             if ( use_matrixcn )then
+             end if
           end if
 
        endif
@@ -1237,12 +1292,20 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_patch) 
 
+       ! Restart variables for matrix solution
+       if ( use_matrixcn )then
+       end if
+
        if (use_crop) then
           call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss', xtype=ncd_double,  &
                dim1name='pft', long_name='', units='', &
                interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
           if (flag == 'read' .and. (.not. readvar) ) then
               this%xsmrpool_loss_patch(bounds%begp:bounds%endp) = 0._r8
+          end if
+
+          ! Restart variables for matrix solution with prognostic crop
+          if ( use_matrixcn )then
           end if
        end if
 
@@ -1403,26 +1466,46 @@ contains
                          this%leafc_storage_patch(i)                   = 0._r8
                          this%frootc_patch(i)                          = 0._r8            
                          this%frootc_storage_patch(i)                  = 0._r8    
+
+                         ! Bare soil matrix solution
+                         if(use_matrixcn)then
+                         end if
                       else
                          if (pftcon%evergreen(patch%itype(i)) == 1._r8) then
                             this%leafc_patch(i)                        = cnvegcstate_const%initial_vegC * ratio     
                             this%leafc_storage_patch(i)                = 0._r8
                             this%frootc_patch(i)                       = cnvegcstate_const%initial_vegC * ratio           
                             this%frootc_storage_patch(i)               = 0._r8    
+                            ! Evergreen matrix solution
+                            if(use_matrixcn)then
+                            end if
                          else
                             this%leafc_patch(i)                        = 0._r8
                             this%leafc_storage_patch(i)                = cnvegcstate_const%initial_vegC * ratio   
                             this%frootc_patch(i)                       = 0._r8            
                             this%frootc_storage_patch(i)               = cnvegcstate_const%initial_vegC * ratio   
+
+                            ! Otherwise matrix solution
+                            if(use_matrixcn)then
+                            end if
                          end if
                       end if
                       this%leafc_xfer_patch(i)                         = 0._r8
                       this%leafc_storage_xfer_acc_patch(i)             = 0._r8
                       this%storage_cdemand_patch(i)                    = 0._r8
 
+                      ! General  matrix solution
+                      if(use_matrixcn)then
+                      end if
+
+
                       if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
                          this%frootc_patch(i)                          = 0._r8 
                          this%frootc_storage_patch(i)                  = 0._r8 
+
+                         ! Flex CN for matrix solution
+                         if(use_matrixcn)then
+                         end if
                       end if     
                       this%frootc_xfer_patch(i)                        = 0._r8 
 
@@ -1432,8 +1515,14 @@ contains
 
                       if (pftcon%woody(patch%itype(i)) == 1._r8) then
                          this%deadstemc_patch(i)                       = 0.1_r8 * ratio
+                         ! Woody for matrix solution
+                         if(use_matrixcn)then
+                         end if
                       else
                          this%deadstemc_patch(i)                       = 0._r8 
+                         ! Non-Woody for matrix solution
+                         if(use_matrixcn)then
+                         end if
                       end if
                       this%deadstemc_storage_patch(i)                  = 0._r8 
                       this%deadstemc_xfer_patch(i)                     = 0._r8 
@@ -1445,6 +1534,10 @@ contains
                       this%deadcrootc_patch(i)                         = 0._r8 
                       this%deadcrootc_storage_patch(i)                 = 0._r8 
                       this%deadcrootc_xfer_patch(i)                    = 0._r8 
+
+                      ! Live/Dead course roots for matrix solution
+                      if(use_matrixcn)then
+                      end if
 
                       this%gresp_storage_patch(i)                      = 0._r8 
                       this%gresp_xfer_patch(i)                         = 0._r8 
@@ -1463,6 +1556,10 @@ contains
                          this%reproductivec_xfer_patch(i,:)    = 0._r8
                          this%cropseedc_deficit_patch(i)               = 0._r8
                          this%xsmrpool_loss_patch(i)                   = 0._r8 
+
+                         ! Reproductive pools for matrix solution
+                         if(use_matrixcn)then
+                         end if
                       end if
 
                       ! calculate totvegc explicitly so that it is available for the isotope 
@@ -1857,6 +1954,14 @@ contains
           end do
        end if
 
+       ! Restart variables for matrix solution and C13
+       if(use_matrixcn)then
+
+          ! Prgnostic crop C13 variables for matrix solution
+          if ( use_crop )then
+          end if
+       end if
+
     end if
 
     !--------------------------------
@@ -2157,6 +2262,13 @@ contains
           end do
        end if
 
+       ! Restart variables for matrix solution and C13
+       if(use_matrixcn)then
+
+          ! Prgnostic crop C13 variables for matrix solution
+          if ( use_crop )then
+          end if
+       end if
     end if
 
     !--------------------------------
@@ -2445,9 +2557,18 @@ contains
        this%woodc_patch(i)              = value_patch
        this%totvegc_patch(i)            = value_patch
        this%totc_patch(i)               = value_patch
+
+       ! Set matrix solution values
+       if ( use_matrixcn )then
+       end if
+
        if ( use_crop ) then
           this%cropseedc_deficit_patch(i)  = value_patch
           this%xsmrpool_loss_patch(i)   = value_patch
+
+          ! Set matrix solution values for prognostic crop
+          if ( use_matrixcn )then
+          end if
        end if
     end do
 
@@ -2458,6 +2579,10 @@ contains
              this%reproductivec_patch(i,k)          = value_patch
              this%reproductivec_storage_patch(i,k)  = value_patch
              this%reproductivec_xfer_patch(i,k)     = value_patch
+
+             ! Set matrix solution values for prognostic crop reproductive patches
+             if ( use_matrixcn )then
+             end if
           end do
        end do
     end if

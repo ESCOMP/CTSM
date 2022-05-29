@@ -17,6 +17,7 @@ module CNVegNitrogenFluxType
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
+  use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -239,6 +240,8 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: cost_nretrans_patch                       (:)     ! Average cost of retranslocation   (gN/m2/s)
      real(r8), pointer :: nuptake_npp_fraction_patch                (:)     ! frac of npp spent on N acquisition   (gN/m2/s)
 
+     ! Matrix solution variables
+
    contains
 
      procedure , public  :: Init   
@@ -247,6 +250,7 @@ module CNVegNitrogenFluxType
      procedure , public  :: ZeroDWT
      procedure , public  :: Summary => Summary_nitrogenflux
      procedure , private :: InitAllocate 
+     procedure , private :: InitTransfer
      procedure , private :: InitHistory
      procedure , private :: InitCold
 
@@ -262,10 +266,29 @@ contains
     type(bounds_type), intent(in) :: bounds  
 
     call this%InitAllocate (bounds)
+    if(use_matrixcn)then
+       call this%InitTransfer ()
+    end if
     call this%InitHistory (bounds)
     call this%InitCold (bounds)
 
   end subroutine Init
+
+  subroutine InitTransfer (this)
+    !
+    ! !DESCRIPTION:
+    ! Initialize the transfer indices for the matrix solution method
+    !
+    ! !AGRUMENTS:
+    class (cnveg_nitrogenflux_type) :: this
+
+    ! General indices
+    if(.not. use_crop)then
+    ! Indices for crop
+    else
+    end if
+   
+  end subroutine InitTransfer
 
   !------------------------------------------------------------------------
   subroutine InitAllocate(this, bounds)
@@ -505,6 +528,10 @@ contains
     allocate(this%cost_nactive_patch           (begp:endp)) ;    this%cost_nactive_patch         (:) = nan
     allocate(this%cost_nretrans_patch          (begp:endp)) ;    this%cost_nretrans_patch        (:) = nan
     allocate(this%nuptake_npp_fraction_patch   (begp:endp)) ;    this%nuptake_npp_fraction_patch            (:) = nan
+
+    ! Allocate for matrix solution arrays
+    if ( use_matrixcn )then
+    end if
 
   end subroutine InitAllocate
 
@@ -1060,6 +1087,10 @@ contains
     call hist_addfld1d (fname='PLANT_NALLOC', units='gN/m^2/s', &
          avgflag='A', long_name='total allocated N flux', &
          ptr_patch=this%plant_nalloc_patch, default='inactive')
+
+    ! Matrix solution history variables
+    if ( use_matrixcn )then
+    end if
     
     if ( use_fun ) then
        this%Nactive_patch(begp:endp)  = spval
@@ -1764,6 +1795,11 @@ contains
           this%m_decomp_npools_to_fire_col(i,k) = value_column
        end do
     end do
+
+    ! Matrix solution
+    if ( use_matrixcn )then
+    end if
+
 
     do k = 1, ndecomp_pools
        do j = 1, nlevdecomp_full

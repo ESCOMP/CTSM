@@ -149,7 +149,9 @@ contains
     real(r8) :: epsilon                                                            ! small number
     real(r8), pointer :: conc_ptr(:,:,:)                                           ! pointer, concentration state variable being transported
     real(r8), pointer :: source(:,:,:)                                             ! pointer, source term
-    real(r8), pointer :: trcr_tendency_ptr(:,:,:)                                  ! poiner, store the vertical tendency (gain/loss due to vertical transport)
+    real(r8), pointer :: trcr_tendency_ptr(:,:,:)                                  ! pointer, store the vertical tendency (gain/loss due to vertical transport)
+    ! Pointer for matrix
+
     !-----------------------------------------------------------------------
 
     ! Set statement functions
@@ -238,6 +240,7 @@ contains
       !------ loop over litter/som types
       do i_type = 1, ntype
 
+         ! For matrix solution figure out which matrix data to point to
          select case (i_type)
          case (1)  ! C
             conc_ptr          => soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col
@@ -466,6 +469,7 @@ contains
                      end do
                   end do
                else
+               ! For matrix solution set the matrix input array
                   do j = 1,nlevdecomp
                      do fc =1,num_soilc
                         c = filter_soilc(fc)
@@ -480,6 +484,7 @@ contains
                      if(.not. use_soil_matrixcn)then
                         conc_trcr(c,j) = conc_ptr(c,j,s) + source(c,j,s)
                      else
+                     ! For matrix solution set the matrix input array
                      end if
                      if (j > col%nbedrock(c) .and. source(c,j,s) > 0._r8) then 
                         write(iulog,*) 'source >0',c,j,s,source(c,j,s)

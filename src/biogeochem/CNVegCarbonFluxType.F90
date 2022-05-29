@@ -28,6 +28,7 @@ module CNVegCarbonFluxType
   use AnnualFluxDribbler                 , only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use dynSubgridControlMod               , only : get_for_testing_allow_non_annual_changes
   use abortutils                         , only : endrun
+  use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -367,6 +368,9 @@ module CNVegCarbonFluxType
      integer,  pointer :: actpatch_fire                             (:)      ! Patch indices with fire in current time step
      integer           :: num_actpatch_fire                                  ! Number of patches with fire in current time step
 
+     ! Matrix solution arrays for C flux index
+     ! Matrix variables
+
      ! Objects that help convert once-per-year dynamic land cover changes into fluxes
      ! that are dribbled throughout the year
      type(annual_flux_dribbler_type) :: dwt_conv_cflux_dribbler
@@ -413,6 +417,8 @@ contains
   end subroutine Init
 
   subroutine InitTransfer (this)
+    !
+    ! Set up the transfer indices for the matrix solution
     !
     ! !AGRUMENTS:
     class (cnveg_carbonflux_type) :: this

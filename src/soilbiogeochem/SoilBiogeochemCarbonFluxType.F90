@@ -11,6 +11,7 @@ module SoilBiogeochemCarbonFluxType
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
+  use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
   use clm_varctl                         , only : use_fates
   
   ! 
