@@ -610,14 +610,18 @@ contains
     ! Scale the weights by the lu weights from the dataset
     do g = begg, endg
 
-       do p = 0,natpft_dimlen-1
-          wt_nat_patch(g,p) = wt_nat_patch(g,p) * wt_lunit(g,istsoil)/(wt_lunit(g,istsoil)+wt_lunit(g,istcrop))
-       end do
-       do p = natpft_dimlen,natpft_dimlen+cft_dimlen-1
-          wt_nat_patch(g,p) = wt_nat_patch(g,p) * wt_lunit(g,istcrop)/(wt_lunit(g,istsoil)+wt_lunit(g,istcrop))
-       end do
+       if((wt_lunit(g,istsoil)+wt_lunit(g,istcrop))>0._r8)then
+          do p = 0,natpft_dimlen-1
+             wt_nat_patch(g,p) = wt_nat_patch(g,p) * wt_lunit(g,istsoil)/(wt_lunit(g,istsoil)+wt_lunit(g,istcrop))
+          end do
+          do p = natpft_dimlen,natpft_dimlen+cft_dimlen-1
+             wt_nat_patch(g,p) = wt_nat_patch(g,p) * wt_lunit(g,istcrop)/(wt_lunit(g,istsoil)+wt_lunit(g,istcrop))
+          end do
+       else
+          wt_nat_patch(g,:) = 0._r8
+          wt_nat_patch(g,0) = 100._r8
+       end if
     end do
-
     ! Add the crop weight to the natveg weight and zero the crop weight
     wt_lunit(begg:,istsoil) = wt_lunit(begg:,istsoil) + wt_lunit(begg:,istcrop)
     wt_lunit(begg:,istcrop) = 0._r8
