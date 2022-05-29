@@ -52,9 +52,10 @@ module WaterStateType
 
      real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
 
-     real(r8), pointer :: excess_ice_col         (:,:) ! col excess ice lenses (kg/m2) (new) (1:nlevgrnd)
+     real(r8), pointer :: excess_ice_col         (:,:) ! col excess ice lenses (kg/m2) (new) (-nlevsno+1:nlevgrnd)
+     real(r8), pointer :: exice_bulk_init        (:)   ! inital value for excess ice (new) (unitless)
 
-
+     logical, pointer, private :: exice_first_time_col (:) ! col whether excess ice is turned on first time
      type(excessicestream_type), private :: exicestream ! stream type for excess ice initialization NUOPC only
 
    contains
@@ -162,6 +163,11 @@ contains
            container = tracer_vars, &
            bounds = bounds, subgrid_level = subgrid_level_column, &
            dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)
+      allocate(this%exice_first_time_col (bounds%begc:bounds%endc)) ; this%exice_first_time_col (:) = .true. !should be true during initialize1
+      call AllocateVar1d(var = this%exice_bulk_init, name = 'exice_bulk_init', &
+           container = tracer_vars, &
+           bounds = bounds, subgrid_level = subgrid_level_column)
+
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -324,7 +330,6 @@ contains
     integer            :: c,j,l,nlevs,g 
     integer            :: nbedrock
     real(r8)           :: ratio
-    real(r8)           :: exice_bulk_init(bounds%begc:bounds%endc)
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(h2osno_input_col)     == (/bounds%endc/))          , sourcefile, __LINE__)
@@ -529,9 +534,9 @@ contains
       if (use_excess_ice .and. NLFilename /= '') then
         ! enforce initialization with 0 for everything
         this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
-
+        this%exice_bulk_init(bounds%begc:bounds%endc)=0.0_r8
         call this%exicestream%Init(bounds, NLFilename) ! get initial fraction of excess ice per column
-        call this%exicestream%CalcExcessIce(bounds, exice_bulk_init)
+        call this%exicestream%CalcExcessIce(bounds, this%exice_bulk_init)
         do c = bounds%begc,bounds%endc
           g = col%gridcell(c)
           l = col%landunit(c)
@@ -544,7 +549,7 @@ contains
                 endif
                 do j = 2, nlevmaxurbgrnd ! ignore first layer
                   if (j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
-                    this%excess_ice_col(c,j) = col%dz(c,j)*denice*(exice_bulk_init(c))
+                    this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exice_bulk_init(c))
                   else
                     this%excess_ice_col(c,j) = 0.0_r8
                   endif
@@ -556,6 +561,7 @@ contains
         enddo
       else
         this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
+        this%exice_bulk_init(bounds%begc:bounds%endc)=0.0_r8
       end if
     end associate
 
@@ -563,13 +569,13 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, &
-       watsat_col)
+       watsat_col, t_soisno_col)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varcon       , only : denice, denh2o, pondmx, watmin
+    use clm_varcon       , only : denice, denh2o, pondmx, watmin, tfrz
     use landunit_varcon  , only : istcrop, istdlak, istsoil  
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_time_manager , only : is_first_step, is_restart
@@ -583,9 +589,10 @@ contains
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
+    real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     !
     ! !LOCAL VARIABLES:
-    integer  :: p,c,l,j,nlevs
+    integer  :: p,c,l,j,nlevs,nbedrock
     logical  :: readvar
     real(r8) :: maxwatsat    ! maximum porosity    
     real(r8) :: excess       ! excess volumetric soil water
@@ -694,7 +701,32 @@ contains
            long_name=this%info%lname('excess soil ice (vegetated landunits only)'), units='kg/m2', &
            scale_by_thickness=.false., &
            interpinic_flag='interp', readvar=readvar, data=this%excess_ice_col)
-    endif
+      if (use_excess_ice .and. flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
+        
+        this%exice_first_time_col(bounds%begc:bounds%endc) = .false.
+        do c = bounds%begc,bounds%endc
+          l = col%landunit(c)
+          if (.not. lun%lakpoi(l)) then  !not lake
+            if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+              if (use_bedrock) then
+                nbedrock = col%nbedrock(c)
+              else
+                nbedrock = nlevsoi
+              endif
+              do j = 2, nlevmaxurbgrnd ! ignore first layer
+                if (j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
+                  this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exice_bulk_init(c)) ! exice_bulk_init should be already read from the stream during InitCold
+                else
+                  this%excess_ice_col(c,j) = 0.0_r8
+                endif
+              end do
+            else
+              this%excess_ice_col(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
+            endif
+          endif
+        end do
+      endif! end of old file restart
+    endif ! end of exice restart
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then
        do c = bounds%begc, bounds%endc

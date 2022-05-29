@@ -188,7 +188,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine RestartBulk(this, bounds, ncid, flag, &
-       watsat_col)
+       watsat_col, t_soisno_col)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
@@ -203,6 +203,7 @@ contains
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
+    real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,j
@@ -212,7 +213,8 @@ contains
     SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevmaxurbgrnd/)) , sourcefile, __LINE__)
 
     call this%restart (bounds, ncid, flag=flag, &
-         watsat_col=watsat_col(bounds%begc:bounds%endc,:)) 
+         watsat_col=watsat_col(bounds%begc:bounds%endc,:), &
+         t_soisno_col=t_soisno_col(bounds%begc:, -nlevsno+1:)) 
 
 
     call restartvar(ncid=ncid, flag=flag, &

@@ -727,7 +727,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, writing_finidat_interp_dest_file, &
-       watsat_col)
+       watsat_col, t_soisno_col)
     !
     ! !DESCRIPTION:
     ! Read/write information to/from restart file for all water variables
@@ -739,6 +739,7 @@ contains
     character(len=*) , intent(in)    :: flag   ! 'read', 'write' or 'define'
     logical          , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file (ignored for flag=='read')
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
+    real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -751,7 +752,8 @@ contains
     call this%waterfluxbulk_inst%restartBulk (bounds, ncid, flag=flag)
 
     call this%waterstatebulk_inst%restartBulk (bounds, ncid, flag=flag, &
-         watsat_col=watsat_col(bounds%begc:bounds%endc,:))
+         watsat_col=watsat_col(bounds%begc:bounds%endc,:), &
+         t_soisno_col=t_soisno_col(bounds%begc:, -nlevsno+1:))
 
     call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag, &
          writing_finidat_interp_dest_file=writing_finidat_interp_dest_file, &
@@ -762,7 +764,8 @@ contains
        call this%bulk_and_tracers(i)%waterflux_inst%Restart(bounds, ncid, flag=flag)
 
        call this%bulk_and_tracers(i)%waterstate_inst%Restart(bounds, ncid, flag=flag, &
-            watsat_col=watsat_col(bounds%begc:bounds%endc,:))
+            watsat_col=watsat_col(bounds%begc:bounds%endc,:), &
+            t_soisno_col=t_soisno_col(bounds%begc:, -nlevsno+1:))
 
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Restart(bounds, ncid, flag=flag)
 
