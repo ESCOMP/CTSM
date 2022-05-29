@@ -8,10 +8,10 @@ module SoilBiogeochemCarbonFluxType
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use ch4varcon                          , only : allowlakeprod
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con 
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
-  use clm_varctl                         , only : use_fates, use_soil_matrixcn
+  use clm_varctl                         , only : use_fates
   
   ! 
   ! !PUBLIC TYPES:

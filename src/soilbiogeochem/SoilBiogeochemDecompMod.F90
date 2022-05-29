@@ -11,9 +11,9 @@ module SoilBiogeochemDecompMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4, use_fates, iulog, use_soil_matrixcn
+  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4, use_fates, iulog
   use clm_varcon                         , only : dzsoi_decomp
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method, use_soil_matrixcn
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type

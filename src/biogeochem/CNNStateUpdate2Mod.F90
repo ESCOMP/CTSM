@@ -9,7 +9,8 @@ module CNNStateUpdate2Mod
   use clm_time_manager                , only : get_step_size_real
   use clm_varpar                      , only : nlevsoi, nlevdecomp
   use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd
-  use clm_varctl                      , only : iulog, use_soil_matrixcn
+  use clm_varctl                      , only : iulog
+  use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
   use CNSharedParamsMod               , only : use_matrixcn
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type

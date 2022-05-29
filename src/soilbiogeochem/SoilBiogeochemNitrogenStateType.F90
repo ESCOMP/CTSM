@@ -11,8 +11,8 @@ module SoilBiogeochemNitrogenStateType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
-  use clm_varctl                         , only : use_nitrif_denitrif, use_soil_matrixcn
-  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method
+  use clm_varctl                         , only : use_nitrif_denitrif
+  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method, use_soil_matrixcn
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
   use landunit_varcon                    , only : istcrop, istsoil 
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con

@@ -16,12 +16,11 @@ module CNCStateUpdate1Mod
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use CropType                           , only : crop_type
   use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use PatchType                          , only : patch
   use clm_varctl                         , only : use_fates, use_cn, iulog
-  use clm_varctl                         , only : use_soil_matrixcn
   use CNSharedParamsMod                  , only : use_matrixcn
   !
   implicit none

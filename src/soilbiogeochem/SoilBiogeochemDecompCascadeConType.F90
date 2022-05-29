@@ -10,7 +10,7 @@ module SoilBiogeochemDecompCascadeConType
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar     , only : ndecomp_cascade_transitions, ndecomp_pools, nlevdecomp
   use clm_varcon     , only : ispval
-  use clm_varctl     , only : use_soil_matrixcn, iulog
+  use clm_varctl     , only : iulog
   !
   implicit none
 
@@ -54,6 +54,7 @@ module SoilBiogeochemDecompCascadeConType
   integer, public, parameter :: century_decomp = 1                     ! CENTURY decomposition method type
   integer, public, parameter :: mimics_decomp = 2                      ! MIMICS decomposition method type
   integer, public            :: decomp_method  = ispval                ! Type of decomposition to use
+  logical, public, parameter :: use_soil_matrixcn = .false.            ! true => use cn matrix solution for soil BGC
   type(decomp_cascade_type), public :: decomp_cascade_con
   !------------------------------------------------------------------------
 

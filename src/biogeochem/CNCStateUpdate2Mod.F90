@@ -14,8 +14,8 @@
   use CNVegCarbonFluxType            , only : cnveg_carbonflux_type
   use SoilBiogeochemCarbonStatetype  , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemCarbonFluxtype   , only : soilbiogeochem_carbonflux_type
-  use clm_varctl                     , only : use_soil_matrixcn
   use CNSharedParamsMod              , only : use_matrixcn
+  use SoilBiogeochemDecompCascadeConType , only : use_soil_matrixcn
   !
   implicit none
   private

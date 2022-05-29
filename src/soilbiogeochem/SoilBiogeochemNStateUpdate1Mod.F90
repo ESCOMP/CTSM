@@ -9,12 +9,11 @@ module SoilBiogeochemNStateUpdate1Mod
   use clm_time_manager                   , only : get_step_size_real
   use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions
   use clm_varctl                         , only : iulog, use_nitrif_denitrif, use_crop
-  use clm_varctl                         , only : use_soil_matrixcn
   use clm_varcon                         , only : nitrif_n2o_loss_frac
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenfluxType     , only : soilbiogeochem_nitrogenflux_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use CNSharedParamsMod                  , only : use_fun
   use ColumnType                         , only : col 
   !

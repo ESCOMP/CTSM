@@ -6,7 +6,6 @@ module SoilBiogeochemLittVertTranspMod
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varctl                         , only : iulog, use_c13, use_c14, spinup_state, use_fates, use_cn
-  use clm_varctl                         , only : use_soil_matrixcn
   use clm_varcon                         , only : secspday
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
@@ -16,7 +15,7 @@ module SoilBiogeochemLittVertTranspMod
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
