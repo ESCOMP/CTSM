@@ -51,6 +51,10 @@ module clm_varpar
   integer, public, parameter :: dst_src_nbr =   3     ! number of size distns in src soil (BGC only)
   integer, public, parameter :: sz_nbr      = 200     ! number of sub-grid bins in large bin of dust size distribution (BGC only)
   integer, public, parameter :: mxpft       =  78     ! maximum number of PFT's for any mode;
+  integer, public, parameter :: mxsowings   =   1     ! maximum number of crop growing seasons to begin in any year;
+  integer, public            :: mxharvests            ! maximum number of crop harvests in any year
+                                                      ! (allows for multiple harvests in a calendar year in case harvest occurs near
+                                                      ! beginning/end of year);
   ! FIX(RF,032414) might we set some of these automatically from reading pft-physiology?
   integer, public, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
   integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
@@ -151,6 +155,8 @@ contains
     natpft_ub = natpft_lb + natpft_size - 1
     cft_lb = natpft_ub + 1
     cft_ub = cft_lb + cft_size - 1
+
+    mxharvests = mxsowings + 1
 
     ! TODO(wjs, 2015-10-04, bugz 2227) Using actual_numcft in this 'max' gives a significant
     ! overestimate of max_patch_per_col when use_crop is true. This should be reworked -
