@@ -215,6 +215,10 @@ contains
                ! This becomes an issue when fire mortality is pushing deadstemc
                ! to 0.0.
                htop(p) = max(htop(p), 0.01_r8)
+               ! for fruit trees restrict height to maximum pruned tree height
+               if (perennial(ivt(p)) == 1._r8) then
+                  htop(p) = min(htop(p), ztopmx(ivt(p)))
+               end if
 
                hbot(p) = max(0._r8, min(3._r8, htop(p)-1._r8))
 

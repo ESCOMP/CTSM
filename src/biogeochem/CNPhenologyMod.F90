@@ -1691,16 +1691,25 @@ contains
                     ! base temperature, or critical temperature for chill accumulation
                     tbase = baset(ivt(p))
 
-                    ! set flag for start/end of chill period (chill_flag=1),
-                    ! no chill period (chill_flag=0)
-                    ! only valid for NH at the moment!
-                    if (kmo == 11 .and. kda == 1) then
-                       chill_flag(p) = 1._r8
-                    end if
-                    if (kmo == 7 .and. kda == 1 .and. chill_flag(p) == 1._r8) then
-                       chill_flag(p) = 0._r8
-                    end if
-                    
+                    ! set flag for start of chill period (chill_flag=1),
+                    ! set latest date at which to initiate growing growing season even if chill/heat requirements are not met
+                    if (h == 1) then ! for NH 
+                       if (kmo == 11 .and. kda == 1) then
+                          chill_flag(p) = 1._r8
+                       end if
+                       if (kmo == 7 .and. kda == 1 .and. chill_flag(p) == 1._r8) then
+                          chill_day(p) = crequ(ivt(p))
+                          anti_chill_day(p) = -chill_day(p)
+                       end if
+                   else if (h == 2) then ! for SH
+                       if (kmo == 5 .and. kda == 1) then
+                          chill_flag(p) = 1._r8
+                       end if
+                       if (kmo == 1 .and. kda == 1 .and. chill_flag(p) == 1._r8) then
+                          chill_day(p) = crequ(ivt(p))
+                          anti_chill_day(p) = -chill_day(p)
+                       end if
+                   end if 
                  end if
                
                  ! Phase 1: Planting to leaf emergence
