@@ -1911,8 +1911,9 @@ contains
                   cumvd(p)       = 0._r8
                   hdidx(p)       = 0._r8
                   vf(p)          = 0._r8
-                  
+
                   call PlantCrop(p, leafcn(ivt(p)), jday, do_plant_normal, &
+                                 do_plant_lastchance, do_plant_prescribed,  &
                                  temperature_inst, crop_inst, cnveg_state_inst, &
                                  cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
@@ -1946,6 +1947,7 @@ contains
                if (do_plant_prescribed .or. do_plant_normal .or. do_plant_lastchance) then
 
                    call PlantCrop(p, leafcn(ivt(p)), jday, do_plant_normal, &
+                                 do_plant_lastchance, do_plant_prescribed,  &
                                  temperature_inst, crop_inst, cnveg_state_inst, &
                                  cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
@@ -2449,6 +2451,7 @@ contains
 
     !-----------------------------------------------------------------------
   subroutine PlantCrop(p, leafcn_in, jday, do_plant_normal, &
+       do_plant_lastchance, do_plant_prescribed,            &
        temperature_inst, crop_inst, cnveg_state_inst,               &
        cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,            &
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,              &
@@ -2477,6 +2480,8 @@ contains
     real(r8)               , intent(in)    :: leafcn_in ! leaf C:N (gC/gN) of this patch's vegetation type (pftcon%leafcn(ivt(p)))
     integer                , intent(in)    :: jday      ! julian day of the year
     logical                , intent(in)    :: do_plant_normal ! Are all the normal requirements for planting met?
+    logical                , intent(in)    :: do_plant_lastchance ! Are the last-chance requirements for planting met?
+    logical                , intent(in)    :: do_plant_prescribed ! are we planting because it was prescribed?
     type(temperature_type)         , intent(in)    :: temperature_inst
     type(crop_type)                , intent(inout) :: crop_inst
     type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
@@ -2490,7 +2495,7 @@ contains
     ! LOCAL VARAIBLES:
     integer s              ! growing season index
     real(r8) gdd_target    ! cultivar GDD target this growing season
-    logical do_plant_prescribed ! are we planting because it was prescribed?
+    real(r8) this_sowing_reason ! number representing sowing reason(s)
     !------------------------------------------------------------------------
 
     associate(                                                                     & 
@@ -2499,6 +2504,7 @@ contains
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
          next_rx_sdate     =>    crop_inst%next_rx_sdate                         , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
          sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
+         sowing_reason     =>    crop_inst%sowing_reason_thisyr                  , & ! Output:  [real(r8)  (:) ]  reason for each sowing this year for this patch
          gddmaturity       =>    cnveg_state_inst%gddmaturity_patch            , & ! Output: [real(r8) (:) ]  gdd needed to harvest
          idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting
          leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer
@@ -2511,8 +2517,6 @@ contains
          gdd820            =>    temperature_inst%gdd820_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd8
          gdd1020           =>    temperature_inst%gdd1020_patch                  & ! Input:  [real(r8) (:) ]  20 yr mean of gdd10
          )
-
-      do_plant_prescribed = next_rx_sdate(p) == jday
 
       ! impose limit on growing season length needed
       ! for crop maturity - for cold weather constraints
@@ -2536,6 +2540,17 @@ contains
          next_rx_sdate(p) = -1
       endif
       crop_inst%sdates_thisyr(p,s) = real(jday, r8)
+
+      this_sowing_reason = 0._r8
+      if (do_plant_prescribed) then
+          this_sowing_reason = 10._r8
+      end if
+      if (do_plant_normal) then
+          this_sowing_reason = this_sowing_reason + 1._r8
+      else if (do_plant_lastchance) then
+          this_sowing_reason = this_sowing_reason + 2._r8
+      end if
+      sowing_reason(p,s) = this_sowing_reason
 
       ! SSR troubleshooting
       if (leafcn_in == 0.0) then
