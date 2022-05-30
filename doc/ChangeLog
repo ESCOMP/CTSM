@@ -1,4 +1,82 @@
 ===============================================================
+Tag name: ctsm5.1.dev092
+Originator(s): sacks (Bill Sacks)
+Date: Fri Apr 29 18:31:48 MDT 2022
+One-line Summary: Refactor NutrientCompetition / CNAllocation to provide hooks for AgSys
+
+Purpose and description of changes
+----------------------------------
+
+Major refactor of NutrientCompetition / CNAllocation to provide hooks
+for AgSys crop model: separates the NutrientCompetition modules into
+pieces based on (1) consolidating duplicate code between the Clm45 and
+FlexibleCN versions, and (2) separating pieces that will vs. won't be
+used for crop patches when running with the upcoming AgSys crop model.
+
+I have restored the old CNAllocationMod, with some of the
+responsibilities that it used to have. (I'm not sure it's appropriate to
+have the calculation of gpp and maint resp in CNAllocationMod, but I
+left it there because it has always been combined with the allocation
+code, including back when we had a separate CNAllocationMod.)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO - though potential for answer
+changes in unusual cases
+
+   One change in this tag has the potential for answer changes in
+   unusual cases, even though no answer changes were observed in
+   testing: Previously, only the FlexibleCN code applied some logic that
+   changed crop allocation fractions during the grainfill period if
+   peaklai had been reached. I have changed this so that this logic is
+   applied with or without FlexibleCN (because I have moved this block
+   of code to the CNAllocation module, which is shared between the
+   FlexibleCN and non-FlexibleCN versions). I thought this would change
+   answers, but it appears not to, at least based on the tests in the
+   test suite as well as an extra 5-year test I did at f19 resolution
+   (ERS_Ly5.f19_g17.IHistClm45BgcCrop.cheyenne_intel.clm-cropMonthOutput).
+   It's possible that this changes answers in rare cases or with an
+   unusual combination of options that we don't test: specifically, it
+   might change answers for the atypical situation where you are running
+   with FUN but not FlexibleCN. (In this case, I believe this change is
+   the correct thing to do.)
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1705
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev091
 Originator(s): rgknox (Ryan Knox,rgknox@lbl.gov)
 Date: Fri Apr 22 14:11:50 EDT 2022

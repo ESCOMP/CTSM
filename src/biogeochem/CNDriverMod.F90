@@ -11,8 +11,7 @@ module CNDriverMod
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_nitrif_denitrif, use_nguardrail
-  use clm_varctl                      , only : use_crop
-  use clm_varctl                      , only : iulog, use_crop
+  use clm_varctl                      , only : iulog, use_crop, use_crop_agsys
   use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, century_decomp, decomp_method
   use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
@@ -43,7 +42,6 @@ module CNDriverMod
   use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
   use ActiveLayerMod                  , only : active_layer_type
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
-  use CropReprPoolsMod                    , only : nrepr
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -84,8 +82,9 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNDriverNoLeaching(bounds,                                                    &
-       num_soilc, filter_soilc, num_soilp, filter_soilp, num_actfirec, filter_actfirec,    &
-       num_actfirep, filter_actfirep, num_pcropp, filter_pcropp,        &
+       num_soilc, filter_soilc, num_soilp, filter_soilp,                                   &
+       num_pcropp, filter_pcropp, num_soilnopcropp, filter_soilnopcropp,                   &
+       num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,                       &
        num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp,       &
        cnveg_state_inst,                                                                   &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                                      &
@@ -116,6 +115,8 @@ contains
     use clm_varpar                        , only: nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
     use subgridAveMod                     , only: p2c
     use CropType                          , only: crop_type
+    use CNAllocationMod                   , only: calc_gpp_mr_availc, calc_crop_allocation_fractions
+    use CNAllocationMod                   , only: calc_allometry
     use CNNDynamicsMod                    , only: CNNDeposition,CNNFixation, CNNFert, CNSoyfix,CNFreeLivingFixation
     use CNMRespMod                        , only: CNMResp
     use CNFUNMod                          , only: CNFUNInit  !, CNFUN 
@@ -157,6 +158,8 @@ contains
     integer                                 , intent(out)   :: filter_actfirec(:)   ! filter for soil columns on fire
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
+    integer                                 , intent(in)    :: num_soilnopcropp       ! number of non-prog. crop soil patches in filter
+    integer                                 , intent(in)    :: filter_soilnopcropp(:) ! filter for non-prog. crop soil patches
     integer                                 , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
     integer                                 , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
     integer                                 , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
@@ -209,8 +212,6 @@ contains
     real(r8):: pmnf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential mineral N flux, from one pool to another
     real(r8):: p_decomp_npool_to_din(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions)  ! potential flux to dissolved inorganic N
     real(r8):: p_decomp_cn_gain(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)  ! C:N ratio of the flux gained by the receiver pool
-    real(r8):: arepr(bounds%begp:bounds%endp,nrepr) ! reproductive allocation coefficient(s) (only used for use_crop)
-    real(r8):: aroot(bounds%begp:bounds%endp) ! root allocation coefficient (only used for use_crop)
     integer :: begp,endp
     integer :: begc,endc
 
@@ -404,16 +405,44 @@ contains
 
      end if
 
+     call t_startf('cnalloc')
+     call calc_gpp_mr_availc( &
+          bounds, num_soilp, filter_soilp, &
+          crop_inst, photosyns_inst, canopystate_inst, &
+          cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst)
+
+     if (.not. use_crop_agsys) then
+        call calc_crop_allocation_fractions(bounds, num_pcropp, filter_pcropp, &
+             crop_inst, cnveg_state_inst)
+     end if
+
+     call calc_allometry(num_soilp, filter_soilp, &
+          cnveg_carbonflux_inst, cnveg_state_inst)
+     call t_stopf('cnalloc')
+
      call t_startf('calc_plant_nutrient_demand')
+     ! We always call calc_plant_nutrient_demand for natural veg patches, but only call
+     ! it for crop patches if NOT running with AgSys (since AgSys calculates the relevant
+     ! output variables in its own way).
      call nutrient_competition_method%calc_plant_nutrient_demand ( &
-         bounds, num_soilp, filter_soilp,                                 &
-         photosyns_inst, crop_inst, canopystate_inst,                     &
-         cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
-         c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,            &
-         cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
-         soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
-         energyflux_inst, &
-         aroot=aroot(begp:endp), arepr=arepr(begp:endp,:))
+          bounds,                                                          &
+          num_soilnopcropp, filter_soilnopcropp, .false.,                  &
+          crop_inst, canopystate_inst,                                     &
+          cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
+          soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
+          energyflux_inst)
+     if (.not. use_crop_agsys) then
+        call nutrient_competition_method%calc_plant_nutrient_demand ( &
+             bounds,                                                          &
+             num_pcropp, filter_pcropp, .true.,                               &
+             crop_inst, canopystate_inst,                                     &
+             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+             cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
+             soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
+             energyflux_inst)
+     end if
 
      ! get the column-averaged plant_ndemand (needed for following call to SoilBiogeochemCompetition)
 
@@ -447,8 +476,6 @@ contains
          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
          soilbiogeochem_nitrogenstate_inst, &
-         aroot=aroot(begp:endp), &
-         arepr=arepr(begp:endp,:), &
          fpg_col=soilbiogeochem_state_inst%fpg_col(begc:endc))
     call t_stopf('calc_plant_nutrient_competition')
 
