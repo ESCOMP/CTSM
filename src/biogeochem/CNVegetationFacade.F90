@@ -962,10 +962,10 @@ contains
     call CNDriverNoLeaching(bounds,                                         &
          num_soilc, filter_soilc,                       &
          num_soilp, filter_soilp,                       &
-         num_actfirec, filter_actfirec, &
-         num_actfirep, filter_actfirep, &
          num_pcropp, filter_pcropp,                     &
          num_soilnopcropp, filter_soilnopcropp,         &
+         num_actfirec, filter_actfirec, &
+         num_actfirep, filter_actfirep, &
          num_exposedvegp, filter_exposedvegp,           &
          num_noexposedvegp, filter_noexposedvegp,       &
          this%cnveg_state_inst,                                                        &

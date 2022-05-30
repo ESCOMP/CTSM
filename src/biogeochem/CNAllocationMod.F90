@@ -84,6 +84,8 @@ contains
     ! Calculate total GPP, various maintenance respiration terms, and total available C
     ! for allocation
     !
+    ! !USES:
+    use CNSharedParamsMod           , only : use_matrixcn
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
