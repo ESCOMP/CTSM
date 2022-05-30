@@ -2107,7 +2107,9 @@ contains
                 do_harvest = .true.
                 force_harvest = .true.
                 harvest_reason = 4._r8
-            else if (generate_crop_gdds .and. crop_inst%sdates_thisyr(p,1) .gt. 0) then
+
+            ! If generate_crop_gdds and this patch has prescribed sowing inputs
+            else if (generate_crop_gdds .and. crop_inst%rx_sdates_thisyr(p,1) .gt. 0) then
                if (.not. use_cropcal_streams) then 
                   write(iulog,*) 'If using generate_crop_gdds, you must set use_cropcal_streams to true.'
                   call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -2141,7 +2143,7 @@ contains
                   ! WARNING: This implementation assumes that sowing dates don't change over time!
                   ! In order to avoid this, you'd have to read this year's AND next year's prescribed
                   ! sowing dates.
-                  if (crop_inst%sdates_thisyr(p,1) == 1) then
+                  if (crop_inst%rx_sdates_thisyr(p,1) == 1) then
                       do_harvest = jday == dayspyr
                   end if
 
@@ -2150,6 +2152,7 @@ contains
                   end if
 
                endif
+
             else if (sown_today) then
                ! Do not harvest on the day this growing season began;
                ! would create challenges for postprocessing.
