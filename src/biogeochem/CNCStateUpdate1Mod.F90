@@ -20,7 +20,7 @@ module CNCStateUpdate1Mod
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use PatchType                          , only : patch
-  use clm_varctl                         , only : use_fates, use_cn, iulog
+  use clm_varctl                         , only : use_fates, use_cn, iulog, use_fates_sp
   use CNSharedParamsMod                  , only : use_matrixcn
   !
   implicit none
@@ -205,7 +205,7 @@ contains
                end if
             end do
          end do
-      else  !use_fates
+      else if ( .not. use_fates_sp ) then !use_fates
          ! here add all fates litterfall and CWD breakdown to litter fluxes
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
@@ -220,33 +220,35 @@ contains
          end do
       endif
          
-      ! litter and SOM HR fluxes
-      do k = 1, ndecomp_cascade_transitions
-         do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               if (.not. use_soil_matrixcn) then
-                  cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
-                    cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
-                    - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) *dt
-               end if !not use_soil_matrixcn 
-            end do
-         end do
-      end do
-      do k = 1, ndecomp_cascade_transitions
-         if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
+      if ( .not. use_fates_sp ) then !use_fates
+         ! litter and SOM HR fluxes
+         do k = 1, ndecomp_cascade_transitions
             do j = 1,nlevdecomp
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
                   if (.not. use_soil_matrixcn) then
-                     cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
-                       cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) &
-                       + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)*dt
-                  end if !not use_soil_matrixcn
+                     cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
+                       cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
+                       - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) *dt
+                  end if !not use_soil_matrixcn 
                end do
             end do
-         end if
-      end do
+         end do
+         do k = 1, ndecomp_cascade_transitions
+            if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
+               do j = 1,nlevdecomp
+                  do fc = 1,num_soilc
+                     c = filter_soilc(fc)
+                     if (.not. use_soil_matrixcn) then
+                        cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
+                          cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) &
+                          + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)*dt
+                     end if !not use_soil_matrixcn
+                  end do
+               end do
+            end if
+         end do
+      end if
 
     if (.not. use_fates) then    
 ptch: do fp = 1,num_soilp

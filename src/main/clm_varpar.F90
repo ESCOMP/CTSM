@@ -15,7 +15,7 @@ module clm_varpar
   use clm_varctl   , only: soil_layerstruct_predefined
   use clm_varctl   , only: soil_layerstruct_userdefined
   use clm_varctl   , only: soil_layerstruct_userdefined_nlevsoi
-  use clm_varctl   , only: use_fates, use_cn
+  use clm_varctl   , only: use_fates, use_cn, use_fates_sp
 
   !
   ! !PUBLIC TYPES:
@@ -226,7 +226,7 @@ contains
     !
     ! Number of layers for soil decomposition
     !
-    if ( use_cn .or. use_fates )then
+    if ( use_cn .or. (use_fates .and. .not. use_fates_sp) ) then
        ! to set the number of soil levels for the biogeochemistry calculations.
        ! currently it works on nlevsoi and nlevgrnd levels
        nlevdecomp      = nlevsoi
