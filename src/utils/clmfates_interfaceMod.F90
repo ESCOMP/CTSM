@@ -2340,23 +2340,23 @@ module CLMFatesInterfaceMod
    ! This wrapper is not active.  This is just place-holder code until
    ! harvest-product flux is fully implemented.  RGK-05-2022
    
-   associate( & 
-        prod10c => c_products_inst%hrv_deadstem_to_prod10_grc, & 
-        prod100c => c_products_inst%hrv_deadstem_to_prod100_grc)
+   !associate( & 
+   !     prod10c => c_products_inst%hrv_deadstem_to_prod10_grc, & 
+   !     prod100c => c_products_inst%hrv_deadstem_to_prod100_grc)
      
-     nc = bounds_clump%clump_index
+   !  nc = bounds_clump%clump_index
      ! Loop over columns
      do icc = 1,fc
         c = filterc(icc)
         g = col%gridcell(c)
         s = this%f2hmap(nc)%hsites(c)
-       
+        
         ! Shijie: Pass harvested wood products to ELM variable
-        prod10c(g) = prod10c(g) + &
-             this%fates(nc)%bc_out(s)%hrv_deadstemc_to_prod10c
-        prod100c(g) = prod100c(g) + &
-             this%fates(nc)%bc_out(s)%hrv_deadstemc_to_prod100c
-
+        !     prod10c(g) = prod10c(g) + &
+        !          this%fates(nc)%bc_out(s)%hrv_deadstemc_to_prod10c
+        !     prod100c(g) = prod100c(g) + &
+        !          this%fates(nc)%bc_out(s)%hrv_deadstemc_to_prod100c
+        
         ! RGK: THere is also a patch level variable
         !do ifp = 1,this%fates(nc)%sites(s)%youngest_patch%patchno
         !   p = ifp+col%patchi(c)
@@ -2366,7 +2366,7 @@ module CLMFatesInterfaceMod
           
     end do
     
-  end associate
+    !  end associate
   return
  end subroutine wrap_WoodProducts
  
