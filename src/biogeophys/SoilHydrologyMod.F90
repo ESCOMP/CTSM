@@ -32,7 +32,8 @@ module SoilHydrologyMod
   use TemperatureType   , only : temperature_type
   use LandunitType      , only : lun                
   use ColumnType        , only : column_type, col
-  use PatchType         , only : patch                
+  use PatchType         , only : patch
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -70,10 +71,105 @@ module SoilHydrologyMod
   real(r8), private   :: baseflow_scalar = 1.e-2_r8
   real(r8), parameter :: tolerance = 1.e-12_r8                   ! tolerance for checking whether sublimation is greater than ice in top soil layer
 
+  integer, private :: head_gradient_method    ! Method for calculating hillslope saturated head gradient
+  integer, private :: transmissivity_method   ! Method for calculating transmissivity of hillslope columns
+
+  ! Head gradient methods
+  integer, parameter, private :: kinematic = 0
+  integer, parameter, private :: darcy     = 1
+  ! Transmissivity methods
+  integer, parameter, private :: uniform_transmissivity = 0
+  integer, parameter, private :: layersum = 1
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine hillslope_hydrology_ReadNML(NLFilename)
+    !
+    ! DESCRIPTION
+    ! read in hillslope hydrology namelist variables related to
+    ! subsurface lateral flow
+    !
+    ! !USES:
+    use abortutils      , only : endrun
+    use fileutils       , only : getavu, relavu
+    use spmdMod         , only : mpicom, masterproc
+    use shr_mpi_mod     , only : shr_mpi_bcast
+    use clm_varctl      , only : iulog
+    use clm_nlUtilsMod  , only : find_nlgroup_name
+
+    ! !ARGUMENTS:
+    implicit none
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !--------------------------------------------------------------------
+    integer            :: nu_nml                     ! unit for namelist file
+    integer            :: nml_error                  ! namelist i/o error flag
+    character(len=*), parameter :: nmlname = 'hillslope_hydrology_inparm'
+    character(*), parameter    :: subName = "('hillslope_hydrology_ReadNML')"
+    character(len=50) :: hillslope_head_gradient_method  = 'Darcy'    ! head gradient method string
+    character(len=50) :: hillslope_transmissivity_method = 'LayerSum' ! transmissivity method string
+    !-----------------------------------------------------------------------
+
+! MUST agree with name in namelist and read statement
+    namelist /hillslope_hydrology_inparm/ &
+         hillslope_head_gradient_method,  &
+         hillslope_transmissivity_method
+    
+    ! Default values for namelist
+    head_gradient_method    = darcy
+    transmissivity_method   = layersum
+    
+    ! Read hillslope hydrology namelist
+    if (masterproc) then
+       nu_nml = getavu()
+       open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
+       call find_nlgroup_name(nu_nml, 'hillslope_hydrology_inparm', status=nml_error)
+       if (nml_error == 0) then
+          read(nu_nml, nml=hillslope_hydrology_inparm,iostat=nml_error)
+          if (nml_error /= 0) then
+             call endrun(subname // ':: ERROR reading hillslope hydrology namelist')
+          end if
+       else
+          call endrun(subname // ':: ERROR reading hillslope hydrology namelist')
+       end if
+       close(nu_nml)
+       call relavu( nu_nml )
+
+       ! Convert namelist strings to numerical values
+       if (      trim(hillslope_head_gradient_method) == 'Kinematic' ) then
+          head_gradient_method = kinematic
+       else if ( trim(hillslope_head_gradient_method) == 'Darcy'     ) then
+          head_gradient_method = darcy
+       else
+          call endrun(msg="ERROR bad value for hillslope_head_gradient_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+
+       if (      trim(hillslope_transmissivity_method) == 'Uniform' ) then
+          transmissivity_method = uniform_transmissivity
+       else if ( trim(hillslope_transmissivity_method) == 'LayerSum') then
+          transmissivity_method = layersum
+       else
+          call endrun(msg="ERROR bad value for hillslope_transmissivity_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+
+    endif
+
+    call shr_mpi_bcast(head_gradient_method, mpicom)
+    call shr_mpi_bcast(transmissivity_method, mpicom)
+
+    if (masterproc) then
+
+       write(iulog,*) ' '
+       write(iulog,*) 'hillslope_hydrology lateral flow settings:'
+       write(iulog,*) '  hillslope_head_gradient_method  = ',hillslope_head_gradient_method
+       write(iulog,*) '  hillslope_transmissivity_method = ',hillslope_transmissivity_method
+
+    endif
+
+  end subroutine hillslope_hydrology_ReadNML
 
   !-----------------------------------------------------------------------
   subroutine readParams( ncid )
@@ -158,6 +254,8 @@ contains
 
   end subroutine soilhydReadNML
 
+
+  
   !-----------------------------------------------------------------------
   subroutine SetSoilWaterFractions(bounds, num_hydrologyc, filter_hydrologyc, &
        soilhydrology_inst, soilstate_inst, waterstatebulk_inst)
@@ -1612,8 +1710,6 @@ contains
      use LandunitType     , only : lun                
      use landunit_varcon  , only : istsoil
      use clm_varctl       , only : use_hillslope_routing
-     use HillslopeHydrologyMod, only : head_gradient_method, transmissivity_method
-     use HillslopeHydrologyMod, only : kinematic,darcy,uniform_transmissivity,layersum
 
      !
      ! !ARGUMENTS:
@@ -1648,6 +1744,14 @@ contains
      real(r8) :: qflx_drain_perched_vol(bounds%begc:bounds%endc)   ! volumetric lateral subsurface flow through active layer [m3/s]
      real(r8) :: qflx_drain_perched_out(bounds%begc:bounds%endc)   ! lateral subsurface flow through active layer [mm/s]
 
+!!$     integer, parameter :: head_gradient_method = 0
+!!$     integer, parameter :: transmissivity_method = 0
+!!$     integer, parameter :: kinematic = 1
+!!$     integer, parameter :: darcy = 0
+!!$     integer, parameter :: uniform_transmissivity = 1
+!!$     integer, parameter :: layersum = 0
+
+     
      associate(                                                            & 
           nbedrock           =>    col%nbedrock                          , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)           
           z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ] layer depth (m)                                 
@@ -2002,8 +2106,6 @@ contains
      use GridcellType     , only : grc  
      use landunit_varcon  , only : istsoil, istcrop
      use clm_varctl       , only : use_hillslope_routing
-     use HillslopeHydrologyMod, only : head_gradient_method, transmissivity_method
-     use HillslopeHydrologyMod, only : kinematic,darcy,uniform_transmissivity,layersum
 
      !
      ! !ARGUMENTS:
@@ -2017,6 +2119,13 @@ contains
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
      type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
+
+!!$     integer, parameter :: head_gradient_method = 0
+!!$     integer, parameter :: transmissivity_method = 0
+!!$     integer, parameter :: kinematic = 1
+!!$     integer, parameter :: darcy = 0
+!!$     integer, parameter :: uniform_transmissivity = 1
+!!$     integer, parameter :: layersum = 0
 
      !
      ! !LOCAL VARIABLES:

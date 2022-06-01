@@ -4214,7 +4214,7 @@ sub write_output_files {
                soilhydrology_inparm luna friction_velocity mineral_nitrogen_dynamics
                soilwater_movement_inparm rooting_profile_inparm
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
-               clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm hillslope_hydrology_inparm
+               clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm hillslope_hydrology_inparm hillslope_properties_inparm
                cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
                surfacealbedo_inparm water_tracers_inparm);
 

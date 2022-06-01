@@ -8,13 +8,12 @@ module HillslopeHydrologyMod
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use spmdMod        , only : masterproc
+  use spmdMod        , only : masterproc, iam
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
   use clm_varctl     , only : use_hillslope_routing
   use decompMod      , only : bounds_type
   use clm_varcon     , only : rpi
-  use spmdMod        , only : masterproc, iam
 
   ! !PUBLIC TYPES:
   implicit none
@@ -32,16 +31,9 @@ module HillslopeHydrologyMod
   public HillslopeStreamOutflow
   public HillslopeUpdateStreamWater
 
-  integer, public :: head_gradient_method    ! Method for calculating hillslope saturated head gradient
-  integer, public :: transmissivity_method   ! Method for calculating transmissivity of hillslope columns
   integer, public :: pft_distribution_method ! Method for distributing pfts across hillslope columns
+  integer, public :: soil_profile_method     ! Method for varying soil thickness across hillslope columns
   
-  ! Head gradient methods
-  integer, public, parameter :: kinematic = 0
-  integer, public, parameter :: darcy     = 1
-  ! Transmissivity methods
-  integer, public, parameter :: uniform_transmissivity = 0
-  integer, public, parameter :: layersum = 1
   ! Streamflow methods
   integer, public, parameter :: streamflow_manning = 0
   ! Pft distribution methods
@@ -54,18 +46,20 @@ module HillslopeHydrologyMod
   ! PRIVATE 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
-  integer, private, parameter :: soil_profile_set_lowland_upland    = 0 
-  integer, private, parameter :: soil_profile_linear                = 1
+  integer, private, parameter :: soil_profile_uniform               = 0 
+  integer, private, parameter :: soil_profile_from_file             = 1
+  integer, private, parameter :: soil_profile_set_lowland_upland    = 2 
+  integer, private, parameter :: soil_profile_linear                = 3
 
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine read_hillslope_hydrology_namelist()
+  subroutine read_hillslope_properties_namelist()
     !
     ! DESCRIPTION
-    ! read in hillslope hydrology namelist variables
+    ! read in hillslope hydrology veg/soil properties namelist variables
     !
     ! !USES:
     use abortutils      , only : endrun
@@ -81,57 +75,37 @@ contains
     implicit none
     integer            :: nu_nml                     ! unit for namelist file
     integer            :: nml_error                  ! namelist i/o error flag
-    character(len=*), parameter :: nmlname = 'hillslope_hydrology_inparm'
-    character(*), parameter    :: subName = "('read_hillslope_hydrology_namelist')"
-    character(len=50) :: hillslope_head_gradient_method  = 'Darcy'    ! head gradient method string
-    character(len=50) :: hillslope_transmissivity_method = 'LayerSum' ! transmissivity method string
+    character(len=*), parameter :: nmlname = 'hillslope_properties_inparm'
+    character(*), parameter    :: subName = "('read_hillslope_properties_namelist')"
+    ! Default values for namelist
     character(len=50) :: hillslope_pft_distribution_method = 'Standard'      ! pft distribution method string
+    character(len=50) :: hillslope_soil_profile_method     = 'Uniform'       ! soil thickness distribution method string
     !-----------------------------------------------------------------------
 
 ! MUST agree with name in namelist and read statement
-    namelist /hillslope_hydrology_inparm/ &
-         hillslope_head_gradient_method,            &
-         hillslope_transmissivity_method,           &
-         hillslope_pft_distribution_method
+    namelist /hillslope_properties_inparm/  &
+         hillslope_pft_distribution_method, &
+         hillslope_soil_profile_method
     
-    ! Default values for namelist
-    head_gradient_method    = darcy
-    transmissivity_method   = layersum
-    pft_distribution_method = pft_standard
+!    pft_distribution_method = pft_standard
+!    soil_profile_method     = soil_profile_uniform
     
     ! Read hillslope hydrology namelist
     if (masterproc) then
        nu_nml = getavu()
        open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
-       call find_nlgroup_name(nu_nml, 'hillslope_hydrology_inparm', status=nml_error)
+       call find_nlgroup_name(nu_nml, 'hillslope_properties_inparm', status=nml_error)
        if (nml_error == 0) then
-          read(nu_nml, nml=hillslope_hydrology_inparm,iostat=nml_error)
+          read(nu_nml, nml=hillslope_properties_inparm,iostat=nml_error)
           if (nml_error /= 0) then
-             call endrun(subname // ':: ERROR reading hillslope hydrology namelist')
+             call endrun(subname // ':: ERROR reading hillslope properties namelist')
           end if
        else
-          call endrun(subname // ':: ERROR reading hillslope hydrology namelist')
+          call endrun(subname // ':: ERROR reading hillslope properties namelist')
        end if
        close(nu_nml)
        call relavu( nu_nml )
 
-       ! Convert namelist strings to numerical values
-       if (      trim(hillslope_head_gradient_method) == 'Kinematic' ) then
-          head_gradient_method = kinematic
-       else if ( trim(hillslope_head_gradient_method) == 'Darcy'     ) then
-          head_gradient_method = darcy
-       else
-          call endrun(msg="ERROR bad value for hillslope_head_gradient_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
-       end if
-
-       if (      trim(hillslope_transmissivity_method) == 'Uniform' ) then
-          transmissivity_method = uniform_transmissivity
-       else if ( trim(hillslope_transmissivity_method) == 'LayerSum') then
-          transmissivity_method = layersum
-       else
-          call endrun(msg="ERROR bad value for hillslope_transmissivity_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
-       end if
-       
        if (      trim(hillslope_pft_distribution_method) == 'Standard' ) then
           pft_distribution_method = pft_standard
        else if ( trim(hillslope_pft_distribution_method) == 'FromFile' ) then
@@ -143,26 +117,36 @@ contains
        else if ( trim(hillslope_pft_distribution_method) == 'PftLowlandUpland') then
           pft_distribution_method = pft_lowland_upland
        else
-          call endrun(msg="ERROR bad value for hillslope_transmissivity_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          call endrun(msg="ERROR bad value for hillslope_pft_distribution_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+
+       if (      trim(hillslope_soil_profile_method) == 'Uniform' ) then
+          soil_profile_method = soil_profile_uniform
+       else if ( trim(hillslope_soil_profile_method) == 'FromFile' ) then
+          soil_profile_method = soil_profile_from_file
+       else if ( trim(hillslope_soil_profile_method) == 'SetLowlandUpland' ) then
+          soil_profile_method = soil_profile_set_lowland_upland
+       else if ( trim(hillslope_soil_profile_method) == 'Linear') then
+          soil_profile_method = soil_profile_linear
+       else
+          call endrun(msg="ERROR bad value for hillslope_soil_profile_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
        end if
 
     endif
 
-    call shr_mpi_bcast(head_gradient_method, mpicom)
-    call shr_mpi_bcast(transmissivity_method, mpicom)
     call shr_mpi_bcast(pft_distribution_method, mpicom)
+    call shr_mpi_bcast(soil_profile_method, mpicom)
 
     if (masterproc) then
 
        write(iulog,*) ' '
-       write(iulog,*) 'hillslope_hydrology settings:'
-       write(iulog,*) '  hillslope_head_gradient_method  = ',hillslope_head_gradient_method
-       write(iulog,*) '  hillslope_transmissivity_method = ',hillslope_transmissivity_method
+       write(iulog,*) 'hillslope_properties settings:'
        write(iulog,*) '  hillslope_pft_distribution_method = ',hillslope_pft_distribution_method
+       write(iulog,*) '  hillslope_soil_profile_method     = ',hillslope_soil_profile_method
 
     endif
 
-  end subroutine read_hillslope_hydrology_namelist
+  end subroutine read_hillslope_properties_namelist
 
   !-----------------------------------------------------------------------
 
@@ -222,8 +206,8 @@ contains
 
     !-----------------------------------------------------------------------
 
-    ! Read in hillslope_hydrology namelist variables
-    call read_hillslope_hydrology_namelist()
+    ! Read in hillslope_properties namelist variables
+    call read_hillslope_properties_namelist()
 
     ! Open surface dataset to read in data below 
 
@@ -504,17 +488,23 @@ contains
              col%hill_area(c) = hill_area(l,ci)
              ! azimuth of column
              col%hill_aspect(c) = hill_aspect(l,ci)
-             ! pft index of column
-             if ( allocated(hill_bedrock) ) then
-                do j = 1,nlevsoi
-
-                   if(zisoi(j-1) > zmin_bedrock) then
-                      if (zisoi(j-1) < hill_bedrock(l,ci) .and. zisoi(j) >= hill_bedrock(l,ci)) then
-                         col%nbedrock(c) = j
-                      end if
-                   endif
-                enddo
+             ! soil thickness of column
+             if (soil_profile_method==soil_profile_from_file) then
+                if ( allocated(hill_bedrock) ) then
+                   do j = 1,nlevsoi
+                      if(zisoi(j-1) > zmin_bedrock) then
+                         if (zisoi(j-1) < hill_bedrock(l,ci) .and. zisoi(j) >= hill_bedrock(l,ci)) then
+                            col%nbedrock(c) = j
+                         end if
+                      endif
+                   enddo
+                else
+                   if (masterproc) then
+                      call endrun( 'ERROR:: soil_profile_method = soil_profile_from_file, but h_bedrock not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+                   end if
+                endif
              endif
+             ! pft index of column
              if ( allocated(hill_pftndx) ) then
                 col_pftndx(c) = hill_pftndx(l,ci)
              endif
@@ -616,14 +606,16 @@ contains
          hill_slope,hill_area,hill_length, &
          hill_width,hill_height,hill_aspect)
 
-    if ( allocated(hill_bedrock) ) then
-       deallocate(hill_bedrock)
-    else
+    if(soil_profile_method==soil_profile_from_file) then
+       if ( allocated(hill_bedrock) ) then
+          deallocate(hill_bedrock)
+       endif
+    else if (soil_profile_method==soil_profile_set_lowland_upland &
+         .or. soil_profile_method==soil_profile_linear) then 
        ! Modify hillslope soil thickness profile
        call HillslopeSoilThicknessProfile(bounds,&
-            soil_profile_method=soil_profile_set_lowland_upland,&
+            soil_profile_method=soil_profile_method,&
             soil_depth_lowland_in=8.0_r8,soil_depth_upland_in=8.0_r8)
-
     endif
 
     ! Update layer classes if nbedrock has been modified
@@ -672,7 +664,6 @@ contains
     use spmdMod         , only : masterproc
     use fileutils       , only : getfil
     use clm_varcon      , only : spval, ispval, grlnd 
-    use landunit_varcon , only : istsoil
     use ncdio_pio
 
     !
@@ -772,7 +763,6 @@ contains
     use LandunitType    , only : lun                
     use ColumnType      , only : col                
     use clm_varcon      , only : ispval
-    use landunit_varcon , only : istsoil, istcrop
     use PatchType       , only : patch
     !
     ! !ARGUMENTS:
@@ -834,7 +824,6 @@ contains
     use ColumnType      , only : col                
     use decompMod       , only : get_clump_bounds, get_proc_clumps
     use clm_varcon      , only : ispval
-    use landunit_varcon , only : istsoil
     use PatchType       , only : patch
     !
     ! !ARGUMENTS:
@@ -882,7 +871,6 @@ contains
     use ColumnType      , only : col                
     use decompMod       , only : get_clump_bounds, get_proc_clumps
     use clm_varcon      , only : ispval
-    use landunit_varcon , only : istsoil
     use PatchType       , only : patch
     use pftconMod       , only : pftcon, ndllf_evr_tmp_tree, nc3_nonarctic_grass, nc4_grass
     !
@@ -976,7 +964,6 @@ contains
     use ColumnType      , only : col                
     use decompMod       , only : get_clump_bounds, get_proc_clumps
     use clm_varcon      , only : ispval
-    use landunit_varcon , only : istsoil
     use PatchType       , only : patch
 
     use GridcellType    , only : grc
@@ -1143,7 +1130,7 @@ contains
   
   !-----------------------------------------------------------------------
   subroutine HillslopeUpdateStreamWater(bounds, waterstatebulk_inst, &
-       waterfluxbulk_inst,wateratm2lndbulk_inst)
+       waterfluxbulk_inst,wateratm2lndbulk_inst,waterdiagnosticbulk_inst)
     !
     ! !DESCRIPTION:
     ! Calculate discharge from stream channel
@@ -1155,6 +1142,7 @@ contains
     use WaterFluxBulkType   , only : waterfluxbulk_type
     use WaterStateBulkType  , only : waterstatebulk_type
     use Wateratm2lndBulkType, only : wateratm2lndbulk_type
+    use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
     use spmdMod         , only : masterproc
     use clm_varcon      , only : spval, ispval, grlnd 
     use landunit_varcon , only : istsoil
@@ -1166,7 +1154,8 @@ contains
     type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
     type(waterfluxbulk_type),  intent(inout) :: waterfluxbulk_inst
     type(wateratm2lndbulk_type), intent(inout) :: wateratm2lndbulk_inst
-
+    type(waterdiagnosticbulk_type), intent(out) :: waterdiagnosticbulk_inst
+    
     integer               :: c, l, g, i, j
     real(r8) :: qflx_surf_vol                           ! volumetric surface runoff (m3/s)
     real(r8) :: qflx_drain_perched_vol                  ! volumetric perched water table runoff (m3/s)
@@ -1183,7 +1172,7 @@ contains
          qflx_drain_perched      =>    waterfluxbulk_inst%qflx_drain_perched_col,   &! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
          qflx_rsub_sat           =>    waterfluxbulk_inst%qflx_rsub_sat_col    ,    & ! Input:  [real(r8) (:)   ]  column level correction runoff (mm H2O /s)
          qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col        ,    & ! Input: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
-         stream_water_depth      =>    waterstatebulk_inst%stream_water_depth_lun   & ! Output:  [real(r8) (:)   ] stream water depth (m)
+         stream_water_depth      =>    waterdiagnosticbulk_inst%stream_water_depth_lun   & ! Output:  [real(r8) (:)   ] stream water depth (m)
          )
 
        ! Get time step

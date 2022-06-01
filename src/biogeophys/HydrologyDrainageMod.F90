@@ -158,7 +158,7 @@ contains
             
             call HillslopeUpdateStreamWater(bounds, &
                  waterstatebulk_inst, waterfluxbulk_inst, &
-                 wateratm2lndbulk_inst)
+                 wateratm2lndbulk_inst, waterdiagnosticbulk_inst)
          endif
          
       endif

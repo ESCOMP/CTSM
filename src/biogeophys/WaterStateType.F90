@@ -53,7 +53,6 @@ module WaterStateType
 
      ! Hillslope stream variables
      real(r8), pointer :: stream_water_volume_lun(:)   ! landunit volume of water in the streams (m3)
-     real(r8), pointer :: stream_water_depth_lun (:)   ! landunit depth of water in the streams (m)
 
    contains
 
@@ -155,9 +154,6 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%stream_water_volume_lun, name = 'stream_water_volume_lun', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = subgrid_level_landunit)
-    call AllocateVar1d(var = this%stream_water_depth_lun, name = 'stream_water_depth_lun', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_landunit)
 
@@ -289,12 +285,6 @@ contains
             long_name=this%info%lname('volume of water in stream channel (hillslope hydrology only)'), &
             ptr_lunit=this%stream_water_volume_lun, l2g_scale_type='natveg',  default='inactive')
 
-       this%stream_water_depth_lun(begl:endl) = spval
-       call hist_addfld1d (fname=this%info%fname('STREAM_WATER_DEPTH'),  units='m',  &
-            avgflag='A', &
-            long_name=this%info%lname('depth of water in stream channel (hillslope hydrology only)'), &
-            ptr_lunit=this%stream_water_depth_lun, l2g_scale_type='natveg',  default='inactive')
-       
     end if
 
     ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water

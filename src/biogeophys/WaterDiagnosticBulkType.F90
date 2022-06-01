@@ -16,7 +16,7 @@ module WaterDiagnosticBulkType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
-  use clm_varctl     , only : use_cn, iulog, use_luna
+  use clm_varctl     , only : use_cn, iulog, use_luna, use_hillslope
   use clm_varpar     , only : nlevgrnd, nlevsno, nlevcan
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -78,6 +78,9 @@ module WaterDiagnosticBulkType
      ! Summed fluxes
      real(r8), pointer :: qflx_prec_intr_patch   (:)   ! patch interception of precipitation (mm H2O/s)
      real(r8), pointer :: qflx_prec_grnd_col     (:)   ! col water onto ground including canopy runoff (mm H2O/s)
+
+     ! Hillslope stream variables
+     real(r8), pointer :: stream_water_depth_lun (:)   ! landunit depth of water in the streams (m)
 
    contains
 
@@ -221,6 +224,7 @@ contains
     allocate(this%fdry_patch             (begp:endp))                     ; this%fdry_patch             (:)   = nan
     allocate(this%qflx_prec_intr_patch   (begp:endp))                     ; this%qflx_prec_intr_patch   (:)   = nan
     allocate(this%qflx_prec_grnd_col     (begc:endc))                     ; this%qflx_prec_grnd_col     (:)   = nan
+    allocate(this%stream_water_depth_lun (begl:endl))                     ; this%stream_water_depth_lun (:)   = nan
 
   end subroutine InitBulkAllocate
 
@@ -241,12 +245,14 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
     integer           :: begc, endc
+    integer           :: begl, endl
     integer           :: begg, endg
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
+    begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
     this%h2osno_total_col(begc:endc) = spval
@@ -541,6 +547,14 @@ contains
          long_name=this%info%lname('interception'), &
          ptr_patch=this%qflx_prec_intr_patch, set_lake=0._r8)
 
+    if (use_hillslope) then
+       this%stream_water_depth_lun(begl:endl) = spval
+       call hist_addfld1d (fname=this%info%fname('STREAM_WATER_DEPTH'), &
+            units='m',  avgflag='A', &
+            long_name=this%info%lname('depth of water in stream channel (hillslope hydrology only)'), &
+            ptr_lunit=this%stream_water_depth_lun, l2g_scale_type='natveg',  default='inactive')
+    endif
+    
   end subroutine InitBulkHistory
   
   !-----------------------------------------------------------------------

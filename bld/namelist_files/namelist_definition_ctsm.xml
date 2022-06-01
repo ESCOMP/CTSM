@@ -755,7 +755,7 @@ Method for calculating transmissivity of hillslope columns
 </entry>
 
 <entry id="hillslope_pft_distribution_method" type="char*256" category="physics"
-        group="hillslope_hydrology_inparm" valid_values="Standard,FromFile,DominantPftUniform,DominantPftLowland,PftLowlandUpland">
+        group="hillslope_properties_inparm" valid_values="Standard,FromFile,DominantPftUniform,DominantPftLowland,PftLowlandUpland">
 Method for distributing pfts across hillslope columns
 </entry>
 
