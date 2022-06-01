@@ -863,16 +863,34 @@ sub setup_cmdl_bgc {
      }
   }
   #
+  # Set FATES-SP mode
+  #
+  if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_sp', 'use_fates'=>$nl_flags->{'use_fates'} );
+     if ( &value_is_true($nl->get_value('use_fates_sp')) ) {
+        $nl_flags->{'use_fates_sp'} = ".true.";
+     } else {
+        $nl_flags->{'use_fates_sp'} = ".false.";
+     }
+  } else {
+     $nl_flags->{'use_fates_sp'} = ".false.";
+  }
+  #
   # Determine Soil decomposition method
   #
   my $var = "soil_decomp_method";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-              'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+              'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'},
+              'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
   my $soil_decomp_method = remove_leading_and_trailing_quotes( $nl->get_value( $var ) );
 
-  if ( &value_is_true($nl_flags->{'use_cn'}) ||  &value_is_true($nl_flags->{'use_fates'}))  {
+  if (      &value_is_true($nl_flags->{'use_cn'}) ) {
      if ( $soil_decomp_method eq "None" ) {
-        $log->fatal_error("$var must NOT be None if use_cn or use_fates are on");
+        $log->fatal_error("$var must NOT be None if use_cn is on");
+     }
+  } elsif ( &value_is_true($nl_flags->{'use_fates'}) && (not &value_is_true($nl_flags->{'use_fates_sp'}))  )  {
+     if ( $soil_decomp_method eq "None" ) {
+        $log->fatal_error("$var must NOT be None if use_fates is on and use_fates_sp is not TRUE");
      }
   } elsif ( $soil_decomp_method ne "None" ) {
      $log->fatal_error("$var must be None if use_cn and use_fates are off");
@@ -899,6 +917,12 @@ sub setup_cmdl_bgc {
         $var = "use_nitrif_denitrif";
         if ( ! &value_is_true($nl_flags->{$var}) ) {
            $log->warning("$var normally use_nitrif_denitrif should only be FALSE if FATES is on, it has NOT been validated for being off for BGC mode" );
+        }
+     }
+     # if MIMICS is on and use_fates = .true. then use_lch4 must = .true.
+     if ( (! &value_is_true($nl_flags->{'use_lch4'})) && &value_is_true($nl_flags->{'use_fates'}) ) {
+        if ( $soil_decomp_method eq "MIMICSWieder2015" ) {
+           $log->warning("If MIMICS is on and use_fates = .true. then use_lch4 must be .true. and currently it's not" );
         }
      }
   }
@@ -3136,25 +3160,11 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
       # TODO(bja, 2015-04) make this depend on > clm 5.0 and bgc mode at some point.
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'MM_Nuptake_opt',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'downreg_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'plant_ndemand_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'substrate_term_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nscalar_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'temp_scalar_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CNratio_floating',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reduce_dayl_factor',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'vcmax_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CN_residual_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CN_partition_opt',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CN_evergreen_phenology_opt',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
@@ -4095,12 +4105,6 @@ sub setup_logic_fates {
 
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
-        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_sp', 'use_fates'=>$nl_flags->{'use_fates'} );
-        if ( &value_is_true($nl->get_value('use_fates_sp')) ) {
-           $nl_flags->{'use_fates_sp'} = ".true.";
-        } else {
-           $nl_flags->{'use_fates_sp'} = ".false.";
-        }
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                        "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp",
                        "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking" );
@@ -4158,6 +4162,9 @@ sub setup_logic_misc {
       }
    }
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_run_ncdiopio_tests');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_use_second_grain_pool');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_use_repr_structure_pool');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_no_crop_seed_replenishment');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_master_list_file');
 }
 

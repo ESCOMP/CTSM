@@ -54,11 +54,11 @@ To remove NPL from your environment on Cheyenne/Casper:
 # -- standard libraries
 import os
 import logging
-import argparse
 import textwrap
 import configparser
 
 from getpass import getuser
+import argparse
 from argparse import ArgumentParser
 
 # -- import local classes for this script
