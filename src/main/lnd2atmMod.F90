@@ -182,6 +182,9 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: c, l, g  ! indices
     real(r8) :: eflx_sh_ice_to_liq_grc(bounds%begg:bounds%endg) ! sensible heat flux generated from the ice to liquid conversion, averaged to gridcell
+    real(r8), allocatable :: qflx_surf_col_to_rof(:)          ! surface runoff that is sent directly to rof
+    real(r8), allocatable :: qflx_drain_col_to_rof(:)         ! drainagec that is sent directly to rof
+    real(r8), allocatable :: qflx_drain_perched_col_to_rof(:) ! perched drainage that is sent directly to rof
     real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
     real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen
     real(r8), parameter :: amCO2 = amC + 2.0_r8*amO ! Atomic mass number for CO2
@@ -349,21 +352,48 @@ contains
        enddo
 
        ! If hillslope routing is used, exclude inputs to stream channel from gridcell averages to avoid double counting
+       allocate( &
+            qflx_surf_col_to_rof(bounds%begc:bounds%endc), &
+            qflx_drain_col_to_rof(bounds%begc:bounds%endc), &
+            qflx_drain_perched_col_to_rof(bounds%begc:bounds%endc))
+
+       qflx_surf_col_to_rof(bounds%begc:bounds%endc)  = 0._r8
+       qflx_drain_col_to_rof(bounds%begc:bounds%endc) = 0._r8
+       qflx_drain_perched_col_to_rof(bounds%begc:bounds%endc) = 0._r8
+       
+       do c = bounds%begc, bounds%endc
+          ! Exclude hillslope columns from gridcell average
+          ! hillslope runoff is sent to stream rather than directly
+          ! to rof, and is accounted for in qflx_rofliq_stream_grc
+          if (.not. col%is_hillslope_column(c)) then
+             qflx_surf_col_to_rof(c) = qflx_surf_col_to_rof(c) &
+                  + water_inst%waterfluxbulk_inst%qflx_surf_col(c)
+             qflx_drain_col_to_rof(c) = qflx_drain_col_to_rof(c) &
+                  + water_inst%waterfluxbulk_inst%qflx_drain_col(c)
+             qflx_drain_perched_col_to_rof(c) = &
+                  qflx_drain_perched_col_to_rof(c) &
+                  + water_inst%waterfluxbulk_inst%qflx_drain_perched_col(c)
+          endif
+       enddo
+          
        call c2g( bounds, &
-            water_inst%waterfluxbulk_inst%qflx_surf_col (bounds%begc:bounds%endc), &
+            qflx_surf_col_to_rof  (bounds%begc:bounds%endc), &
             water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc   (bounds%begg:bounds%endg), &
-            c2l_scale_type= 'urbanf', l2g_scale_type='unity',c2l_scale_type2= 'exclude_hillslope')
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity')
        
        call c2g( bounds, &
-            water_inst%waterfluxbulk_inst%qflx_drain_col (bounds%begc:bounds%endc), &
+            qflx_drain_col_to_rof (bounds%begc:bounds%endc), &
             water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc   (bounds%begg:bounds%endg), &
-            c2l_scale_type= 'urbanf', l2g_scale_type='unity',c2l_scale_type2= 'exclude_hillslope')
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity')
        
        call c2g( bounds, &
-            water_inst%waterfluxbulk_inst%qflx_drain_perched_col (bounds%begc:bounds%endc), &
+            qflx_drain_perched_col_to_rof (bounds%begc:bounds%endc), &
             water_inst%waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
-            c2l_scale_type= 'urbanf', l2g_scale_type='unity',c2l_scale_type2= 'exclude_hillslope')
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity')
        
+       deallocate(qflx_surf_col_to_rof,qflx_drain_col_to_rof, &
+            qflx_drain_perched_col_to_rof)
+
     else
     
        call c2g( bounds, &
