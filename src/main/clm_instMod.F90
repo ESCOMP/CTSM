@@ -298,7 +298,7 @@ contains
     call canopystate_inst%Init(bounds)
 
     if(use_hillslope) then 
-       call InitHillslope(bounds, fsurdat)
+       call InitHillslope(bounds, fsurdat, glc_behavior)
     endif
 
     call soilstate_inst%Init(bounds)

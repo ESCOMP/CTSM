@@ -22,6 +22,7 @@ module HillslopeHydrologyMod
   save
 
   ! !PUBLIC MEMBER FUNCTIONS:
+  public hillslope_properties_init
   public InitHillslope
   public HillslopeSoilThicknessProfile
   public HillslopeSetLowlandUplandPfts
@@ -30,7 +31,7 @@ module HillslopeHydrologyMod
   public HillslopePftFromFile
   public HillslopeStreamOutflow
   public HillslopeUpdateStreamWater
-
+  
   integer, public :: pft_distribution_method ! Method for distributing pfts across hillslope columns
   integer, public :: soil_profile_method     ! Method for varying soil thickness across hillslope columns
   
@@ -56,7 +57,7 @@ module HillslopeHydrologyMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine read_hillslope_properties_namelist()
+  subroutine hillslope_properties_init(NLFilename)
     !
     ! DESCRIPTION
     ! read in hillslope hydrology veg/soil properties namelist variables
@@ -67,12 +68,12 @@ contains
     use spmdMod         , only : mpicom, masterproc
     use shr_mpi_mod     , only : shr_mpi_bcast
     use clm_varctl      , only : iulog
-    use controlMod      , only : NLFilename
     use clm_nlUtilsMod  , only : find_nlgroup_name
 
     ! !ARGUMENTS:
-    !------------------------------------------------------------------------------
     implicit none
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !----------------------------------------------------------------------
     integer            :: nu_nml                     ! unit for namelist file
     integer            :: nml_error                  ! namelist i/o error flag
     character(len=*), parameter :: nmlname = 'hillslope_properties_inparm'
@@ -146,11 +147,11 @@ contains
 
     endif
 
-  end subroutine read_hillslope_properties_namelist
+  end subroutine hillslope_properties_init
 
   !-----------------------------------------------------------------------
 
-  subroutine InitHillslope(bounds,fsurdat)
+  subroutine InitHillslope(bounds,fsurdat,glc_behavior)
     !
     ! !DESCRIPTION:
     ! Initialize hillslope geomorphology from input dataset
@@ -168,11 +169,16 @@ contains
     use landunit_varcon , only : istsoil
     use ncdio_pio
     use initVerticalMod , only : setSoilLayerClass
+    use reweightMod     , only : reweight_wrapup
+    use subgridWeightsMod , only : compute_higher_order_weights
+    use glcBehaviorMod    , only : glc_behavior_type
+    use subgridWeightsMod , only : check_weights
     
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     character(len=*) , intent(in) :: fsurdat    ! surface data file name
+    type(glc_behavior_type), intent(in) :: glc_behavior
     integer,  pointer     :: ihillslope_in(:,:) ! read in - integer
     integer,  pointer     :: ncolumns_hillslope_in(:) ! read in number of columns
     integer,  allocatable :: hill_ndx(:,:)      ! hillslope index
@@ -200,14 +206,10 @@ contains
     real(r8)              :: ncol_per_hillslope(nhillslope) ! number of columns per hillslope        
     real(r8)              :: hillslope_area(nhillslope)     ! area of hillslope
     real(r8)              :: nhill_per_landunit(nhillslope) ! total number of each representative hillslope per landunit
-    real(r8)              :: check_weight
     
     character(len=*), parameter :: subname = 'InitHillslope'
 
     !-----------------------------------------------------------------------
-
-    ! Read in hillslope_properties namelist variables
-    call read_hillslope_properties_namelist()
 
     ! Open surface dataset to read in data below 
 
@@ -580,25 +582,13 @@ contains
           endif
           
           ! Recalculate column weights using input areas
-          check_weight = 0._r8
           do c = lun%coli(l), lun%colf(l)
              nh = col%hillslope_ndx(c)
              if (col%is_hillslope_column(c)) then
                 col%wtlunit(c) = (col%hill_area(c)/hillslope_area(nh)) &
                      * (pct_hillslope(l,nh)*0.01_r8)
              endif
-             check_weight = check_weight + col%wtlunit(c)
           enddo
-          if (abs(1._r8 - check_weight) > 1.e-6_r8) then 
-             write(iulog,*) 'HillslopeHydrologyMod column reweighting'
-             write(iulog,*) 'col%wtlunit does not sum to 1: ', check_weight
-             write(iulog,*) 'weights: ', col%wtlunit(lun%coli(l):lun%colf(l))
-             write(iulog,*) 'location: ',grc%londeg(g),grc%latdeg(g)
-             write(iulog,*) ' '
-             if (masterproc) then
-                call endrun( 'ERROR:: column weights do not sum to 1.'//errmsg(sourcefile, __LINE__) )
-             end if
-          endif
        endif
     enddo ! end of landunit loop
     
@@ -633,8 +623,9 @@ contains
        ! Specify different pfts for uplands / lowlands
        call HillslopeDominantLowlandPft(bounds)
     else if (pft_distribution_method == pft_lowland_upland) then
-       !upland_ivt  = 13 ! c3 non-arctic grass
-       !lowland_ivt = 7  ! broadleaf deciduous tree 
+       ! example usage: 
+       ! upland_ivt  = 13 ! c3 non-arctic grass
+       ! lowland_ivt = 7  ! broadleaf deciduous tree 
        call HillslopeSetLowlandUplandPfts(bounds,lowland_ivt=7,upland_ivt=13)
     endif
     
@@ -643,6 +634,18 @@ contains
        deallocate(col_pftndx)
     endif
 
+    ! Update higher order weights and check that weights sum to 1
+    call compute_higher_order_weights(bounds)
+    if (masterproc) then
+       write(iulog,*) 'Checking modified hillslope weights via reweight_wrapup'
+    end if
+
+    ! filters have not been allocated yet!
+    ! can check_weights be called directly here?
+!    call reweight_wrapup(bounds, glc_behavior)
+!    call check_weights(bounds)
+    call check_weights(bounds, active_only=.true.)
+    
     call ncd_pio_closefile(ncid)
     
   end subroutine InitHillslope
@@ -755,8 +758,6 @@ contains
     !
     ! !DESCRIPTION: 
     ! Reassign patch weights such that each column has a single pft.
-    ! upland_ivt/lowland_ivt patches must be allocated
-    ! in natveg_patch_exists (subgridMod) even if zero weight on fsurdat
 
     !
     ! !USES
@@ -771,43 +772,33 @@ contains
     integer, intent(in) :: lowland_ivt
     !
     ! !LOCAL VARIABLES:
-    integer :: nc,p,pu,pl,l,c    ! indices
-    
-    real(r8) :: sum_wtcol, sum_wtlun, sum_wtgrc
+    integer :: p,c    ! indices
+    integer :: npatches_per_column
+    logical :: check_npatches = .true.
 
     !------------------------------------------------------------------------
 
-    do c = bounds%begc,bounds%endc
-          if (col%is_hillslope_column(c) .and. col%active(c)) then
-          sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
-          sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
-          sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
-          pl = ispval
-          pu = ispval
+    do c = bounds%begc, bounds%endc
+       if (col%is_hillslope_column(c) .and. col%active(c)) then
+          ! In preparation for this re-weighting of patch type
+          ! only first patch was given a non-zero weight in surfrd_hillslope
+          npatches_per_column = 0
           do p = col%patchi(c), col%patchf(c)
-             if(patch%itype(p) == lowland_ivt) pl = p
-             if(patch%itype(p) == upland_ivt)  pu = p
-          enddo
-
-          ! only reweight if pfts exist within column
-          if (pl /= ispval .and. pu /= ispval) then
-             patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
-             patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
-             patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
-
-          ! hillbottom
+             ! lowland
              if(col%cold(c) == ispval) then
-                patch%wtcol(pl) = sum_wtcol
-                patch%wtlunit(pl) = sum_wtlun
-                patch%wtgcell(pl) = sum_wtgrc
-             else
-                patch%wtcol(pu) = sum_wtcol
-                patch%wtlunit(pu) = sum_wtlun
-                patch%wtgcell(pu) = sum_wtgrc
+                patch%itype(p) = lowland_ivt
+             else ! upland
+                patch%itype(p) = upland_ivt
              endif
+             npatches_per_column = npatches_per_column + 1
+          enddo
+          if (check_npatches) then
+             if ((npatches_per_column /= 1) .and. masterproc) then
+                call endrun( 'ERROR:: number of patches per hillslope column not equal to 1'//errmsg(sourcefile, __LINE__) )
+             end if
           endif
        endif
-    enddo    ! end loop c
+    enddo
 
   end subroutine HillslopeSetLowlandUplandPfts
 
@@ -817,6 +808,8 @@ contains
     ! !DESCRIPTION: 
     ! Reassign patch weights such that each column has a single pft  
     ! determined by each column's most dominant pft on input dataset.  
+    ! Best performance when used with n_dom_pfts = 1 (Actually, this
+    ! is probably redundant to behavior with n_dom_pts = 1 and pft_distribution_method = pft_standard)
 
     !
     ! !USES
@@ -864,6 +857,7 @@ contains
     ! Reassign patch weights such that each column has a single, 
     ! dominant pft.  Use largest weight for lowland, 2nd largest
     ! weight for uplands
+    ! Best performance when used with n_dom_pfts = 2
 
     !
     ! !USES
@@ -958,64 +952,40 @@ contains
     !
     ! !DESCRIPTION: 
     ! Reassign patch weights using indices from surface data file
+    ! Assumes one patch per hillslope column
     !
     ! !USES
-    use LandunitType    , only : lun                
     use ColumnType      , only : col                
-    use decompMod       , only : get_clump_bounds, get_proc_clumps
-    use clm_varcon      , only : ispval
     use PatchType       , only : patch
 
-    use GridcellType    , only : grc
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     integer, intent(in)           :: col_pftndx(:)
     !
     ! !LOCAL VARIABLES:
-    integer :: nc,p,pc,l,c    ! indices
-    real(r8) :: sum_wtcol, sum_wtlun, sum_wtgrc
-
+    integer :: p,c    ! indices
+    integer :: npatches_per_column
+    logical :: check_npatches = .true.
+    
     !------------------------------------------------------------------------
 
     do c = bounds%begc, bounds%endc
        if (col%is_hillslope_column(c) .and. col%active(c)) then
-          ! this may require modifying
-          ! subgridMod/natveg_patch_exists to ensure that
-          ! a patch exists on each column
-
-          ! find patch index of specified vegetation type
-          pc = ispval
+          ! In preparation for this re-weighting of patch type
+          ! only first patch was given a non-zero weight in surfrd_hillslope
+          npatches_per_column = 0
           do p = col%patchi(c), col%patchf(c)
-             if(patch%itype(p) == col_pftndx(c)) then
-                pc = p
-                exit
-             endif
+             patch%itype(p) = col_pftndx(c)
+             npatches_per_column = npatches_per_column + 1
           enddo
-
-          ! only reweight if pft exist within column
-          if (pc /= ispval) then
-             sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
-             sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
-             sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
-
-             patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
-             patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
-             patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
-
-             patch%wtcol(pc)   = sum_wtcol
-             patch%wtlunit(pc) = sum_wtlun
-             patch%wtgcell(pc) = sum_wtgrc
-
-          else
-             write(iulog,*) 'no pft in column ',c, col_pftndx(c)
-             write(iulog,*) 'pfts ',c,patch%itype(col%patchi(c):col%patchf(c))
-             write(iulog,*) 'weights ',c,patch%wtcol(col%patchi(c):col%patchf(c))
-             write(iulog,*) 'location ',c,grc%londeg(col%gridcell(c)),grc%latdeg(col%gridcell(c))
-
+          if (check_npatches) then
+             if ((npatches_per_column /= 1) .and. masterproc) then
+                call endrun( 'ERROR:: number of patches per hillslope column not equal to 1'//errmsg(sourcefile, __LINE__) )
+             end if
           endif
        endif
-    enddo    ! end loop c
+    enddo
 
   end subroutine HillslopePftFromFile
 

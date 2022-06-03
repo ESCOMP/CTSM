@@ -72,7 +72,7 @@ contains
     use clm_varctl  , only : create_crop_landunit, collapse_urban, &
                              toosmall_soil, toosmall_crop, toosmall_glacier, &
                              toosmall_lake, toosmall_wetland, toosmall_urban, &
-                             n_dom_landunits, use_hillslope
+                             n_dom_landunits
     use fileutils           , only : getfil
     use domainMod           , only : domain_type, domain_init, domain_clean
     use clm_instur          , only : wt_lunit, topo_glc_mec, pct_urban_max
@@ -190,11 +190,6 @@ contains
     ! Obtain vegetated landunit info
 
     call surfrd_veg_all(begg, endg, ncid, ldomain%ns, actual_numcft)
-
-    ! Obtain hillslope hydrology info
-    if(use_hillslope) then 
-       call surfrd_hillslope(begg, endg, ncid, ldomain%ns)
-    endif
 
     if (use_cndv) then
        call surfrd_veg_dgvm(begg, endg)
@@ -601,7 +596,7 @@ contains
     ! Determine weight arrays for non-dynamic landuse mode
     !
     ! !USES:
-    use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_pfts
+    use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_pfts, use_hillslope
     use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb, cft_ub
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
@@ -691,6 +686,12 @@ contains
                ' must also have a separate crop landunit, and vice versa)'//&
                errMsg(sourcefile, __LINE__))
     end if
+
+    ! Obtain hillslope hydrology information and modify pft weights
+    if(use_hillslope) then 
+       call surfrd_hillslope(begg, endg, ncid, ns)
+    endif
+
     ! Convert from percent to fraction
     wt_lunit(begg:endg,istsoil) = wt_lunit(begg:endg,istsoil) / 100._r8
     wt_lunit(begg:endg,istcrop) = wt_lunit(begg:endg,istcrop) / 100._r8
@@ -760,9 +761,12 @@ contains
     ! Determine number of hillslopes and columns for hillslope hydrology mode
     !
     ! !USES:
-    use clm_instur, only : ncolumns_hillslope
+    use clm_instur, only : ncolumns_hillslope, wt_nat_patch
     use clm_varctl, only : nhillslope,max_columns_hillslope
-    use ncdio_pio       , only : ncd_inqdid, ncd_inqdlen
+    use clm_varpar, only : natpft_size, natpft_lb
+    use ncdio_pio,  only : ncd_inqdid, ncd_inqdlen
+    use pftconMod , only : noveg
+    use HillslopeHydrologyMod, only : pft_distribution_method, pft_from_file, pft_lowland_upland
     !
     ! !ARGUMENTS:
     integer, intent(in) :: begg, endg
@@ -770,7 +774,7 @@ contains
     integer          ,intent(in)    :: ns     ! domain size
     !
     ! !LOCAL VARIABLES:
-    integer  :: nh, m                          ! index
+    integer  :: g, nh, m                          ! index
     integer  :: dimid,varid                    ! netCDF id's
     integer  :: ier                            ! error status	
     logical  :: readvar                        ! is variable on dataset
@@ -804,6 +808,22 @@ contains
        ncolumns_hillslope(begg:endg) = arrayl(begg:endg)
     endif
     deallocate(arrayl)
+
+    ! pft_from_file assumes that 1 pft will exist on each
+    ! hillslope column.  In prepration, set one pft weight
+    ! to 100 and the rest to 0.  This will be reassigned when
+    ! initHillslope is called later.
+    if(pft_distribution_method == pft_from_file .or. &
+         pft_distribution_method == pft_lowland_upland) then
+       do g = begg, endg
+          ! If hillslopes will be used in a gridcell, modify wt_nat_patch, otherwise use original patch distribution
+          if(ncolumns_hillslope(g) > 0) then
+             ! First patch gets 100% weight; all other natural patches are zeroed out
+             wt_nat_patch(g,:)     = 0._r8
+             wt_nat_patch(g,natpft_lb) = 100._r8
+          endif
+       enddo
+    endif
 
   end subroutine surfrd_hillslope
 

@@ -63,8 +63,9 @@ contains
     use UrbanParamsType      , only: IsSimpleBuildTemp
     use dynSubgridControlMod , only: dynSubgridControl_init
     use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
-    use CropReprPoolsMod         , only: crop_repr_pools_init
-
+    use CropReprPoolsMod     , only: crop_repr_pools_init
+    use HillslopeHydrologyMod, only: hillslope_properties_init
+    
     !
     ! !ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -106,7 +107,8 @@ contains
     if (masterproc) call control_print()
     call dynSubgridControl_init(NLFilename)
     call crop_repr_pools_init()
-
+    call hillslope_properties_init(NLFilename)
+    
     call t_stopf('clm_init1')
 
   end subroutine initialize1
@@ -125,7 +127,7 @@ contains
     use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
     use clm_varctl                    , only : use_cn, use_fates
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
-    use clm_varctl                    , only: use_hillslope
+    use clm_varctl                    , only : use_hillslope
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
     use landunit_varcon               , only : landunit_varcon_init, max_lunit, numurbl
     use pftconMod                     , only : pftcon
