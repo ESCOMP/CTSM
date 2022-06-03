@@ -331,7 +331,10 @@ contains
           end if
 
           ! Only for first sowing date of the year
-          crop_inst%next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
+          ! The conditional here is to ensure nothing weird happens if it's called incorrectly on day 365
+          if (crop_inst%sdates_thisyr(p,1) <= 0) then
+              crop_inst%next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
+          end if
       else
           write(iulog,'(a,i0)') 'cropcal_interp(), rx_sdates: Crop patch has ivt ',ivt
           call ESMF_Finalize(endflag=ESMF_END_ABORT)
