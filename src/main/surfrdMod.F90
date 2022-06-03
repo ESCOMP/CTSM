@@ -607,24 +607,43 @@ contains
     wt_nat_patch(begg:,0:natpft_dimlen-1) = array2d_pft(begg:,:)
     wt_nat_patch(begg:,natpft_dimlen:natpft_dimlen+cft_dimlen-1) = array2d_cft(begg:,:)
 
-    ! Scale the weights by the lu weights from the dataset
-    do g = begg, endg
-
-       if((wt_lunit(g,istsoil)+wt_lunit(g,istcrop))>0._r8)then
-          do p = 0,natpft_dimlen-1
-             wt_nat_patch(g,p) = wt_nat_patch(g,p) * wt_lunit(g,istsoil)/(wt_lunit(g,istsoil)+wt_lunit(g,istcrop))
-          end do
-          do p = natpft_dimlen,natpft_dimlen+cft_dimlen-1
-             wt_nat_patch(g,p) = wt_nat_patch(g,p) * wt_lunit(g,istcrop)/(wt_lunit(g,istsoil)+wt_lunit(g,istcrop))
-          end do
-       else
-          wt_nat_patch(g,:) = 0._r8
-          wt_nat_patch(g,0) = 100._r8
-       end if
-    end do
-    ! Add the crop weight to the natveg weight and zero the crop weight
-    wt_lunit(begg:,istsoil) = wt_lunit(begg:,istsoil) + wt_lunit(begg:,istcrop)
-    wt_lunit(begg:,istcrop) = 0._r8
+    if(.false.)then
+       ! Scale the weights by the lu weights from the dataset
+       do g = begg, endg
+          
+          if((wt_lunit(g,istsoil)+wt_lunit(g,istcrop))>0._r8)then
+             do p = 0,natpft_dimlen-1
+                wt_nat_patch(g,p) = wt_nat_patch(g,p) * wt_lunit(g,istsoil)/(wt_lunit(g,istsoil)+wt_lunit(g,istcrop))
+             end do
+             do p = natpft_dimlen,natpft_dimlen+cft_dimlen-1
+                wt_nat_patch(g,p) = wt_nat_patch(g,p) * wt_lunit(g,istcrop)/(wt_lunit(g,istsoil)+wt_lunit(g,istcrop))
+             end do
+          else
+             wt_nat_patch(g,:) = 0._r8
+             wt_nat_patch(g,0) = 100._r8
+          end if
+       end do
+       ! Add the crop weight to the natveg weight and zero the crop weight
+       wt_lunit(begg:,istsoil) = wt_lunit(begg:,istsoil) + wt_lunit(begg:,istcrop)
+       wt_lunit(begg:,istcrop) = 0._r8
+       
+    else
+       ! Legacy method
+       do g = begg, endg
+          if ( wt_lunit(g,istcrop) > 0.0_r8 )then
+             ! Move CFT over to PFT and do weighted average of the crop and soil parts
+             wt_nat_patch(g,0:natpft_dimlen-1) = wt_nat_patch(g,0:natpft_dimlen-1) * wt_lunit(g,istsoil)
+             wt_nat_patch(g,natpft_dimlen:natpft_dimlen+cft_dimlen-1)       = &
+                  wt_nat_patch(g,natpft_dimlen:natpft_dimlen+cft_dimlen-1) * wt_lunit(g,istcrop)
+             wt_lunit(g,istsoil) = (wt_lunit(g,istsoil) + wt_lunit(g,istcrop)) ! Add crop landunit to soil landunit
+             wt_nat_patch(g,:)   =  wt_nat_patch(g,:) / wt_lunit(g,istsoil)
+             wt_lunit(g,istcrop) = 0.0_r8                ! Zero out crop CFT's
+          else
+             wt_nat_patch(g,natpft_dimlen:natpft_dimlen+cft_dimlen-1) = 0.0_r8    ! Make sure generic crops are zeroed out
+          end if
+       end do
+       
+    end if
     
     deallocate(array2d_cft,array2d_pft)
     
@@ -825,16 +844,17 @@ contains
        !                 variable to 0 where is_pft_known_to_model = .false.?
        call collapse_crop_var(fert_cft(begg:endg,:), cft_size, begg, endg)
 
-       ! Call collapse_to_dominant: enhance ctsm performance with fewer active pfts
-       ! Collapsing to the top N dominant pfts (n_dom_pfts set in namelist).
-       ! - Bare ground could be up to 1 patch before collapsing.
-       ! - Pfts could be up to 14 before collapsing if create_crop_landunit = .T.
-       ! - Pfts could be up to 16 before collapsing if create_crop_landunit = .F.
-       ! TODO Add the same call to subroutine dynpft_interp for transient runs
-
-       call collapse_to_dominant(wt_nat_patch(begg:endg,:), natpft_lb, natpft_ub, &
-            begg, endg, n_dom_pfts)
     end if
+
+    ! Call collapse_to_dominant: enhance ctsm performance with fewer active pfts
+    ! Collapsing to the top N dominant pfts (n_dom_pfts set in namelist).
+    ! - Bare ground could be up to 1 patch before collapsing.
+    ! - Pfts could be up to 14 before collapsing if create_crop_landunit = .T.
+    ! - Pfts could be up to 16 before collapsing if create_crop_landunit = .F.
+    ! TODO Add the same call to subroutine dynpft_interp for transient runs
+    
+    call collapse_to_dominant(wt_nat_patch(begg:endg,:), natpft_lb, natpft_ub, &
+         begg, endg, n_dom_pfts)
     
   end subroutine surfrd_veg_all
 
