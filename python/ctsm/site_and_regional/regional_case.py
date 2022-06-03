@@ -160,8 +160,10 @@ class RegionalCase(BaseCase):
         # specify files
         fsurf_in = os.path.join(indir, file)
         print (self.tag)
+        print (fsurf_in)
         fsurf_out = add_tag_to_filename(fsurf_in, self.tag)
         logger.info("fsurf_in:  %s", fsurf_in)
+        print (fsurf_out)
         logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
 
         # create 1d coordinate variables to enable sel() method
@@ -238,14 +240,14 @@ class RegionalCase(BaseCase):
         """
         Create a mesh subsetted for the RegionalCase class.
         """
-        print ("test")
+        print ("Creating mesh for this: .....")
         mesh_in = os.path.join(mesh_dir, mesh_surf)
         mesh_out = os.path.join(self.out_dir, os.path.splitext(mesh_surf)[0]+'_'+self.tag+'.nc')
         print (mesh_out)
         print (mesh_in)
         node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
         f_in = xr.open_dataset (mesh_in)
-        self.write_mesh (f_in, node_coords, subset_element, subset_node, conn_dict)
+        self.write_mesh (f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out)
 
 
     def subset_mesh_at_reg (self, mesh_in):
@@ -314,7 +316,7 @@ class RegionalCase(BaseCase):
 
 
 
-    def write_mesh (self, f_in, node_coords, subset_element, subset_node, conn_dict):
+    def write_mesh (self, f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out):
         corner_pairs = f_in.variables['nodeCoords'][subset_node,]
 
         dimensions = f_in.dims
@@ -370,32 +372,37 @@ class RegionalCase(BaseCase):
 
 
         #-- add mask
-        f_out['elementMask'] = xr.DataArray(elem_mask_out,
-                                          dims=('elementCount'),
-                                          attrs={'units': 'unitless'})
-        f_out.elementMask.encoding = {'dtype': np.int32}
+        if 'elementMask' in variables:
+            f_out['elementMask'] = xr.DataArray(elem_mask_out,
+                                              dims=('elementCount'),
+                                              attrs={'units': 'unitless'})
+            print (elem_mask_out)
+            f_out.elementMask.encoding = {'dtype': np.int32}
+
+        if 'elementArea' in variables:
+            f_out['elementArea'] = xr.DataArray(elem_area_out,
+                                              dims=('elementCount'),
+                                              attrs={'units': 'unitless'})
 
         #-- setting fill values
         for var in variables:
+            print (var)
             if '_FillValue' in f_in[var].encoding:
                 f_out[var].encoding['_FillValue'] = f_in[var].encoding['_FillValue']
+                print ('FillValue')
             else:
                 f_out[var].encoding['_FillValue'] = None
 
         #-- add global attributes
-
         for attr in global_attributes:
             if attr != 'timeGenerated':
                 f_out.attrs[attr] = global_attributes[attr]
 
-        f_out.attrs['timeGenerated'] = datetime.datetime.now()
-        #out.attrs = {'title': 'ESMF unstructured grid file for rectangular grid',
-        #         'created_by': os.path.basename(__file__),
-        #         'date_created': '{}'.format(datetime.now()),
-        #         'conventions': 'ESMFMESH',
-        #        }
+        f_out.attrs = {'title': 'ESMF unstructured grid file for a region',
+                 'created_by': 'subset_data',
+                 'date_created': '{}'.format(datetime.now()),
+                }
 
-        mesh_out = '/glade/scratch/negins/ctsm-mesh/mesh_out_test.nc'
-        out.to_netcdf(mesh_out)
+        f_out.to_netcdf(mesh_out)
 
 
