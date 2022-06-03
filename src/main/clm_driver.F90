@@ -656,7 +656,7 @@ contains
             frictionvel_inst, ch4_inst, energyflux_inst, temperature_inst, &
             water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst, &
-            photosyns_inst, humanindex_inst)
+            photosyns_inst, humanindex_inst, canopystate_inst)
        call t_stopf('bgflux')
 
        ! non-bareground fluxes for all patches except lakes and urban landunits
