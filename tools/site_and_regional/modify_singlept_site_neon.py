@@ -251,9 +251,9 @@ def find_surffile(surf_dir, site_name):
     """
 
     # sf_name = "surfdata_hist_16pfts_Irrig_CMIP6_simyr2000_"+site_name+"*.nc"
-    sf_name = "surfdata_hist_78pfts_CMIP6_simyr2000_" + site_name + "*.nc"
-    # surf_file = glob.glob(os.path.join(surf_dir,sf_name))
-    surf_file = glob.glob(surf_dir + "/" + sf_name)
+    sf_name = "surfdata_*hist_78pfts_CMIP6_simyr2000_" + site_name + "*.nc"
+    print (os.path.join(surf_dir , sf_name))
+    surf_file = sorted(glob.glob(os.path.join(surf_dir , sf_name)))
 
     if len(surf_file) > 1:
         print("The following files found :", *surf_file, sep="\n- ")
@@ -436,7 +436,7 @@ def check_neon_time():
             dictionary of *_surfaceData.csv files with the last modified
     """
     listing_file = "listing.csv"
-    url = "https://neon-ncar.s3.data.neonscience.org/listing.csv"
+    url = "https://storage.neonscience.org/neon-ncar/listing.csv"
 
     download_file(url, listing_file)
 
@@ -457,16 +457,21 @@ def download_file(url, fname):
         fname (str) :
             file name to save the downloaded file.
     """
-    response = requests.get(url)
+    try:
+        response = requests.get(url)
 
-    with open(fname, "wb") as f:
-        f.write(response.content)
+        with open(fname, "wb") as f:
+            f.write(response.content)
 
-    # -- Check if download status_code
-    if response.status_code == 200:
-        print("Download finished successfully for", fname, ".")
-    elif response.status_code == 404:
-        print("File " + fname + "was not available on the neon server:" + url)
+        # -- Check if download status_code
+        if response.status_code == 200:
+            print("Download finished successfully for", fname, ".")
+        elif response.status_code == 404:
+            print("File " + fname + "was not available on the neon server:" + url)
+    except Exception as err:
+        print ('The server could not fulfill the request.')
+        print ('Something went wrong in downloading', fname)
+        print ('Error code:', err.code)
 
 
 def fill_interpolate(f2, var, method):
@@ -675,6 +680,7 @@ def main():
         print("Updated  : ", f2.PCT_CROP.values)
 
         print("Updating PCT_NAT_PFT")
+        #print (f2.PCT_NAT_PFT)
         print(f2.PCT_NAT_PFT.values[0])
         f2.PCT_NAT_PFT.values[0] = [[100.0]]
         print(f2.PCT_NAT_PFT[0].values)

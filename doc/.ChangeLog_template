@@ -31,9 +31,9 @@ Bugs fixed or introduced
 ------------------------
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
 
-Issues fixed (include CTSM Issue #):
+CTSM issues fixed (include CTSM Issue #):
 
-CIME Issues fixed (include issue #):
+Externals issues fixed (include issue #):
 
 Known bugs introduced in this tag (include issue #):
 
@@ -111,10 +111,13 @@ infrastructure should be run when appropriate, as described below.
 
     (any machine) -
 
-    [If python code has changed and you aren't running aux_clm (e.g., because the only changes are in python
+    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
      code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
-     tests impacted by python changes. If you are already running the full aux_clm then this is unnecessary
-     and you can remove the following line.]
+     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
+     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
+     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
+     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
+     separately run the clm_pymods test suite, and you can remove the following line.]
 
     clm_pymods test suite on cheyenne - 
 

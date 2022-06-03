@@ -9,7 +9,8 @@ import os
 from ctsm import add_cime_to_path # pylint: disable=unused-import
 from ctsm import unit_testing
 
-from ctsm.machine import create_machine, get_possibly_overridden_mach_value
+from ctsm.machine import (create_machine, get_possibly_overridden_mach_value,
+                          CREATE_TEST_QUEUE_UNSPECIFIED)
 from ctsm.machine_utils import get_user
 from ctsm.machine_defaults import MACHINE_DEFAULTS, MachineDefaults, QsubDefaults
 from ctsm.joblauncher.job_launcher_no_batch import JobLauncherNoBatch
@@ -24,7 +25,8 @@ class TestCreateMachine(unittest.TestCase):
     """Tests of create_machine"""
 
     def assertMachineInfo(self, machine, name, scratch_dir, baseline_dir, account,
-                          create_test_retry=0):
+                          create_test_retry=0,
+                          create_test_queue=CREATE_TEST_QUEUE_UNSPECIFIED):
         """Asserts that the basic machine info is as expected.
 
         This does NOT dive down into the job launcher"""
@@ -33,6 +35,7 @@ class TestCreateMachine(unittest.TestCase):
         self.assertEqual(machine.baseline_dir, baseline_dir)
         self.assertEqual(machine.account, account)
         self.assertEqual(machine.create_test_retry, create_test_retry)
+        self.assertEqual(machine.create_test_queue, create_test_queue)
 
     def assertNoBatchInfo(self, machine, nice_level=None):
         """Asserts that the machine's launcher is of type JobLauncherNoBatch"""
@@ -65,6 +68,7 @@ class TestCreateMachine(unittest.TestCase):
                 baseline_dir=os.path.join(os.path.sep, 'my', 'baselines'),
                 account_required=True,
                 create_test_retry=2,
+                create_test_queue="regular",
                 job_launcher_defaults={
                     JOB_LAUNCHER_QSUB: QsubDefaults(
                         queue='regular',
@@ -134,7 +138,8 @@ class TestCreateMachine(unittest.TestCase):
                                                         get_user()),
                                baseline_dir=os.path.join(os.path.sep, 'my', 'baselines'),
                                account='a123',
-                               create_test_retry=2)
+                               create_test_retry=2,
+                               create_test_queue="regular")
         self.assertQsubInfo(machine=machine,
                             queue='regular',
                             walltime='06:00:00',
@@ -157,7 +162,8 @@ class TestCreateMachine(unittest.TestCase):
                                scratch_dir='/custom/path/to/scratch',
                                baseline_dir=os.path.join(os.path.sep, 'my', 'baselines'),
                                account='a123',
-                               create_test_retry=2)
+                               create_test_retry=2,
+                               create_test_queue="regular")
         self.assertQsubInfo(machine=machine,
                             queue='custom_queue',
                             walltime='9:87:65',

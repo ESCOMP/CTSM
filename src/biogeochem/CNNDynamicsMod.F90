@@ -125,7 +125,7 @@ contains
     ! directly into the canopy and mineral N entering the soil pool.
     !
     ! !USES:
-    use CNSharedParamsMod    , only: use_fun
+    !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds  
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
@@ -156,7 +156,7 @@ contains
        waterfluxbulk_inst, soilbiogeochem_nitrogenflux_inst)
 
 
-    use clm_time_manager , only : get_days_per_year
+    use clm_time_manager , only : get_curr_days_per_year
     use shr_sys_mod      , only : shr_sys_flush
     use clm_varcon       , only : secspday, spval
  
@@ -178,7 +178,7 @@ contains
                   ffix_to_sminn    => soilbiogeochem_nitrogenflux_inst%ffix_to_sminn_col & ! Output: [real(:)  ] : free living N fixation to soil mineral N (gN/m2/s)
                 ) 
        
-       dayspyr = get_days_per_year()
+       dayspyr = get_curr_days_per_year()
        secs_per_year = dayspyr*24_r8*3600_r8
 
        do fc = 1,num_soilc
@@ -200,7 +200,7 @@ contains
     ! All N fixation goes to the soil mineral N pool.
     !
     ! !USES:
-    use clm_time_manager , only : get_days_per_year
+    use clm_time_manager , only : get_curr_days_per_year
     use shr_sys_mod      , only : shr_sys_flush
     use clm_varcon       , only : secspday, spval
     use CNSharedParamsMod    , only: use_fun
@@ -218,13 +218,13 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                & 
-         cannsum_npp    => cnveg_carbonflux_inst%annsum_npp_col ,             & ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)                
+         cannsum_npp    => cnveg_carbonflux_inst%annsum_npp_col ,             & ! Input: [real(r8) (:)]  (gC/m2/yr) annual sum of NPP, averaged from patch-level
          col_lag_npp    => cnveg_carbonflux_inst%lag_npp_col    ,             & ! Input: [real(r8) (:)]  (gC/m2/s) lagged net primary production           
 
          nfix_to_sminn  => soilbiogeochem_nitrogenflux_inst%nfix_to_sminn_col & ! Output: [real(r8) (:)]  symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s)
          )
 
-      dayspyr = get_days_per_year()
+      dayspyr = get_curr_days_per_year()
 
       if ( nfix_timeconst > 0._r8 .and. nfix_timeconst < 500._r8 ) then
          ! use exponential relaxation with time constant nfix_timeconst for NPP - NFIX relation
@@ -333,7 +333,7 @@ contains
     associate(                                                                      & 
          wf               =>  waterdiagnosticbulk_inst%wf_col                      ,         & ! Input:  [real(r8) (:) ]  soil water as frac. of whc for top 0.5 m          
 
-         hui              =>  crop_inst%gddplant_patch                    ,         & ! Input:  [real(r8) (:) ]  gdd since planting (gddplant)                    
+         hui              =>  crop_inst%hui_patch                         ,         & ! Input:  [real(r8) (:) ]  patch heat unit index (growing degree-days)    
          croplive         =>  crop_inst%croplive_patch                    ,         & ! Input:  [logical  (:) ]  true if planted and not harvested                  
 
          gddmaturity      =>  cnveg_state_inst%gddmaturity_patch          ,         & ! Input:  [real(r8) (:) ]  gdd needed to harvest                             
