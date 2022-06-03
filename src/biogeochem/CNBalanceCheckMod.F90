@@ -66,6 +66,9 @@ contains
 
     call this%InitAllocate(bounds)
 
+    ! Set warning and error levels for Carbon and Nitrogen balance
+    ! These could become namelist items if we want them to change for different
+    ! types of cases
     this%cwarning = 1.e-8_r8
     this%nwarning = 1.e-7_r8
     this%nerror   = 1.e-3_r8
