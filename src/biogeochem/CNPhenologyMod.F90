@@ -128,8 +128,10 @@ module CNPhenologyMod
   integer, allocatable :: maxplantjday(:,:) ! maximum planting julian day
   integer              :: jdayyrstart(inSH) ! julian day of start of year
 
-  logical,parameter :: matrixcheck_ph = .True.                   ! Matrix check
-  logical,parameter :: acc_ph = .False.                          ! Another matrix check
+  ! Two matrix check parameters that will be invoked when the matrix solution
+  ! comes in (use_matrixcn)
+  logical,parameter :: matrixcheck_ph = .True.                   ! Matrix solution check
+  logical,parameter :: acc_ph = .False.                          ! Another matrix solution check
 
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
 

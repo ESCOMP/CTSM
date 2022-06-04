@@ -563,9 +563,12 @@ contains
         call t_stopf('CNRootDyn')
      end if
 
-    !--------------------------------------------
+    !--------------------------------------------------------------------------
     ! CNUpdate0
-    !--------------------------------------------
+    ! The state updates are still called for the matrix solution (use_matrixn
+    ! and use_soil_matrixcn) but most of the state updates are done after
+    ! the matrix multiply in VegMatrix and SoilMatrix.
+    !--------------------------------------------------------------------------
 
     call t_startf('CNUpdate0')
 
@@ -591,9 +594,12 @@ contains
             c14_cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
        call t_stopf('CNPrecisionControl')
     end if
-    !--------------------------------------------
+    !--------------------------------------------------------------------------
     ! Update1
-    !--------------------------------------------
+    ! The state updates are still called for the matrix solution (use_matrixn
+    ! and use_soil_matrixcn) but most of the state updates are done after
+    ! the matrix multiply in VegMatrix and SoilMatrix.
+    !--------------------------------------------------------------------------
 
     call t_startf('CNUpdate1')
 
@@ -685,9 +691,12 @@ contains
 
     call t_stopf('CNGapMortality')
 
-    !--------------------------------------------
+    !--------------------------------------------------------------------------
     ! Update2 (gap mortality)
-    !--------------------------------------------
+    ! The state updates are still called for the matrix solution (use_matrixn
+    ! and use_soil_matrixcn) but most of the state updates are done after
+    ! the matrix multiply in VegMatrix and SoilMatrix.
+    !--------------------------------------------------------------------------
 
     call t_startf('CNUpdate2')
 
@@ -727,9 +736,12 @@ contains
          cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst,soilbiogeochem_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst)
 
-    !--------------------------------------------
+    !--------------------------------------------------------------------------
     ! Update2h (harvest)
-    !--------------------------------------------
+    ! The state updates are still called for the matrix solution (use_matrixn
+    ! and use_soil_matrixcn) but most of the state updates are done after
+    ! the matrix multiply in VegMatrix and SoilMatrix.
+    !--------------------------------------------------------------------------
 
     ! Set harvest mortality routine 
     if (get_do_harvest()) then
@@ -848,9 +860,12 @@ contains
     call t_stopf('CNFire')
 
 
-    !--------------------------------------------
+    !--------------------------------------------------------------------------
     ! Update3
-    !--------------------------------------------
+    ! The state updates are still called for the matrix solution (use_matrixn
+    ! and use_soil_matrixcn) but most of the state updates are done after
+    ! the matrix multiply in VegMatrix and SoilMatrix.
+    !--------------------------------------------------------------------------
 
     call t_startf('CNUpdate3')
     if ( use_c13 ) then
@@ -981,14 +996,20 @@ contains
 
     call t_stopf('NUpdate3')
 
-    ! Matrix cn code will go here:
+    !--------------------------------------------------------------------------
+    ! Solve the matrix solution and do the state update for matrix solution as
+    ! part of that
+    !--------------------------------------------------------------------------
+
     if ( use_matrixcn ) then
        call t_startf('CNVMatrix')
+       ! Matrix cn code will go here:
        call t_stopf( 'CNVMatrix')
     end if
 
     if ( use_soil_matrixcn ) then
        call t_startf('CNSoilMatrix')
+       ! Soil Matrix cn code will go here:
        call t_stopf( 'CNSoilMatrix')
     end if
     
