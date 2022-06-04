@@ -116,9 +116,12 @@ contains
                else
                   spinup_term = 1._r8
                endif
+               ! Without matrix solution
                if(.not. use_soil_matrixcn)then
                   decomp_cpools_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (1._r8 - decay_const * spinup_term * dt)
                else
+                  ! Matrix solution equivalent to above
+                  ! This will be added when the full matrix solution is brought in
                end if
             end do
          end do
@@ -130,6 +133,8 @@ contains
 
          cpool(p)              = cpool(p)               * (1._r8 - decay_const * dt)
          xsmrpool(p)           = xsmrpool(p)            * (1._r8 - decay_const * dt)
+
+         ! Without Matrix solution
          if(.not. use_matrixcn)then
             ! NOTE: Any changes here need to be applied below
             deadcrootc(p)         = deadcrootc(p)          * (1._r8 - decay_const * dt)

@@ -3,6 +3,9 @@ module CNNStateUpdate1Mod
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module for nitrogen state variable updates, non-mortality fluxes.
+  ! When the matrix solution is being used (use_matrixcn and use_soil_matrixcn)
+  ! only some state updates are done here, the other state updates happen
+  ! after the matrix is solved in VegMatrix and SoilMatrix.
   !
   ! !USES:
   use shr_kind_mod                    , only: r8 => shr_kind_r8
@@ -134,17 +137,26 @@ contains
       do j = 1, nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
+            !
+            ! State update without the matrix solution
+            !
             if (.not. use_soil_matrixcn) then ! to be consistent with C
                do i = i_litr_min, i_litr_max
                   nf_soil%decomp_npools_sourcesink_col(c,j,i) = &
                      nf_veg%phenology_n_to_litr_n_col(c,j,i) * dt
                end do
 
-            ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
-            ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
-            ! time step, but to be safe, I'm explicitly setting it to zero here.
+               ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
+               ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
+               ! time step, but to be safe, I'm explicitly setting it to zero here.
                nf_soil%decomp_npools_sourcesink_col(c,j,i_cwd) = 0._r8
 
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in SoilMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
                ! Do the above to the matrix solution
                do i = i_litr_min, i_litr_max
@@ -157,6 +169,10 @@ contains
          p = filter_soilp(fp)
 
          ! phenology: transfer growth fluxes
+
+         !
+         ! State update without the matrix solution
+         !
          if(.not. use_matrixcn)then
             ns_veg%leafn_patch(p)       = ns_veg%leafn_patch(p)       + nf_veg%leafn_xfer_to_leafn_patch(p)*dt
             ns_veg%leafn_xfer_patch(p)  = ns_veg%leafn_xfer_patch(p)  - nf_veg%leafn_xfer_to_leafn_patch(p)*dt
@@ -186,17 +202,26 @@ contains
                end do
             end if
 
-         ! phenology: litterfall and retranslocation fluxes
+            ! phenology: litterfall and retranslocation fluxes
             ns_veg%leafn_patch(p)    = ns_veg%leafn_patch(p)    - nf_veg%leafn_to_litter_patch(p)*dt
             ns_veg%frootn_patch(p)   = ns_veg%frootn_patch(p)   - nf_veg%frootn_to_litter_patch(p)*dt
             ns_veg%leafn_patch(p)    = ns_veg%leafn_patch(p)    - nf_veg%leafn_to_retransn_patch(p)*dt
             ns_veg%retransn_patch(p) = ns_veg%retransn_patch(p) + nf_veg%leafn_to_retransn_patch(p)*dt
+         !
+         ! For the matrix solution the actual state update comes after the matrix
+         ! multiply in VegMatrix, but the matrix needs to be setup with
+         ! the equivalent of above. Those changes can be here or in the
+         ! native subroutines dealing with that field
+         !
          else
             ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
          end if !not use_matrixcn
 
          ! live wood turnover and retranslocation fluxes
          if (woody(ivt(p)) == 1._r8) then
+            !
+            ! State update without the matrix solution
+            !
             if(.not. use_matrixcn)then
                ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_deadstemn_patch(p)*dt
                ns_veg%deadstemn_patch(p)    = ns_veg%deadstemn_patch(p)  + nf_veg%livestemn_to_deadstemn_patch(p)*dt
@@ -214,11 +239,20 @@ contains
                   nf_veg%free_retransn_to_npool_patch(p) = nf_veg%free_retransn_to_npool_patch(p) + nf_veg%livestemn_to_retransn_patch(p)
                   nf_veg%free_retransn_to_npool_patch(p) = nf_veg%free_retransn_to_npool_patch(p) + nf_veg%livecrootn_to_retransn_patch(p)
                end if
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in VegMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
          end if 
          if (ivt(p) >= npcropmin) then ! Beth adds retrans from froot
+            !
+            ! State update without the matrix solution
+            !
             if(.not. use_matrixcn)then
                ns_veg%frootn_patch(p)       = ns_veg%frootn_patch(p)     - nf_veg%frootn_to_retransn_patch(p)*dt
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%frootn_to_retransn_patch(p)*dt
@@ -227,6 +261,12 @@ contains
                ns_veg%leafn_patch(p)        = ns_veg%leafn_patch(p)      - nf_veg%leafn_to_biofueln_patch(p)*dt
                ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_retransn_patch(p)*dt
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in VegMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
@@ -257,6 +297,9 @@ contains
          ns_veg%npool_patch(p)              = ns_veg%npool_patch(p)          - nf_veg%npool_to_leafn_storage_patch(p)*dt
          ns_veg%npool_patch(p)              = ns_veg%npool_patch(p)          - nf_veg%npool_to_frootn_patch(p)*dt
          ns_veg%npool_patch(p)              = ns_veg%npool_patch(p)          - nf_veg%npool_to_frootn_storage_patch(p)*dt
+         !
+         ! State update without the matrix solution
+         !
          if (.not. use_matrixcn) then
             ns_veg%retransn_patch(p)        = ns_veg%retransn_patch(p)       - nf_veg%retransn_to_npool_patch(p)*dt
             ns_veg%retransn_patch(p)        = ns_veg%retransn_patch(p)       - nf_veg%free_retransn_to_npool_patch(p)*dt !how is retransn a state? 
@@ -264,6 +307,12 @@ contains
             ns_veg%leafn_storage_patch(p)   = ns_veg%leafn_storage_patch(p)  + nf_veg%npool_to_leafn_storage_patch(p)*dt
             ns_veg%frootn_patch(p)          = ns_veg%frootn_patch(p)         + nf_veg%npool_to_frootn_patch(p)*dt
             ns_veg%frootn_storage_patch(p)  = ns_veg%frootn_storage_patch(p) + nf_veg%npool_to_frootn_storage_patch(p)*dt
+         !
+         ! For the matrix solution the actual state update comes after the matrix
+         ! multiply in VegMatrix, but the matrix needs to be setup with
+         ! the equivalent of above. Those changes can be here or in the
+         ! native subroutines dealing with that field
+         !
          else
             ! No matrix code needed here
          end if
@@ -277,6 +326,9 @@ contains
             ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_livecrootn_storage_patch(p)*dt
             ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_deadcrootn_patch(p)*dt
             ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_deadcrootn_storage_patch(p)*dt
+            !
+            ! State update without the matrix solution
+            !
             if(.not. use_matrixcn) then
                ns_veg%livestemn_patch(p)          = ns_veg%livestemn_patch(p)          + nf_veg%npool_to_livestemn_patch(p)*dt
                ns_veg%livestemn_storage_patch(p)  = ns_veg%livestemn_storage_patch(p)  + nf_veg%npool_to_livestemn_storage_patch(p)*dt
@@ -286,6 +338,12 @@ contains
                ns_veg%livecrootn_storage_patch(p) = ns_veg%livecrootn_storage_patch(p) + nf_veg%npool_to_livecrootn_storage_patch(p)*dt
                ns_veg%deadcrootn_patch(p)         = ns_veg%deadcrootn_patch(p)         + nf_veg%npool_to_deadcrootn_patch(p)*dt
                ns_veg%deadcrootn_storage_patch(p) = ns_veg%deadcrootn_storage_patch(p) + nf_veg%npool_to_deadcrootn_storage_patch(p)*dt
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in VegMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if ! not use_matrixcn
@@ -298,6 +356,9 @@ contains
                ns_veg%npool_patch(p) = ns_veg%npool_patch(p) - nf_veg%npool_to_reproductiven_patch(p,k)*dt
                ns_veg%npool_patch(p) = ns_veg%npool_patch(p) - nf_veg%npool_to_reproductiven_storage_patch(p,k)*dt
             end do
+            !
+            ! State update without the matrix solution
+            !
             if(.not. use_matrixcn) then
                ns_veg%livestemn_patch(p)          = ns_veg%livestemn_patch(p)          + nf_veg%npool_to_livestemn_patch(p)*dt
                ns_veg%livestemn_storage_patch(p)  = ns_veg%livestemn_storage_patch(p)  + nf_veg%npool_to_livestemn_storage_patch(p)*dt
@@ -307,12 +368,22 @@ contains
                   ns_veg%reproductiven_storage_patch(p,k) = ns_veg%reproductiven_storage_patch(p,k) &
                        + nf_veg%npool_to_reproductiven_storage_patch(p,k)*dt
                end do
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in VegMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if ! not use_matrixcn
          end if
 
          ! move storage pools into transfer pools
+
+         !
+         ! State update without the matrix solution
+         !
          if(.not. use_matrixcn) then
             ns_veg%leafn_storage_patch(p)  = ns_veg%leafn_storage_patch(p)  - nf_veg%leafn_storage_to_xfer_patch(p)*dt
             ns_veg%leafn_xfer_patch(p)     = ns_veg%leafn_xfer_patch(p)     + nf_veg%leafn_storage_to_xfer_patch(p)*dt
@@ -329,12 +400,22 @@ contains
                ns_veg%deadcrootn_storage_patch(p) = ns_veg%deadcrootn_storage_patch(p) - nf_veg%deadcrootn_storage_to_xfer_patch(p)*dt
                ns_veg%deadcrootn_xfer_patch(p)    = ns_veg%deadcrootn_xfer_patch(p)    + nf_veg%deadcrootn_storage_to_xfer_patch(p)*dt
             end if
+         !
+         ! For the matrix solution the actual state update comes after the matrix
+         ! multiply in VegMatrix, but the matrix needs to be setup with
+         ! the equivalent of above. Those changes can be here or in the
+         ! native subroutines dealing with that field
+         !
          else
             ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
          end if  ! not use_matrixcn
 
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
             ! lines here for consistency; the transfer terms are zero
+
+            !
+            ! State update without the matrix solution
+            !
             if(.not. use_matrixcn)then
                ns_veg%livestemn_storage_patch(p)  = ns_veg%livestemn_storage_patch(p) - nf_veg%livestemn_storage_to_xfer_patch(p)*dt
                ns_veg%livestemn_xfer_patch(p)     = ns_veg%livestemn_xfer_patch(p)    + nf_veg%livestemn_storage_to_xfer_patch(p)*dt
@@ -344,6 +425,12 @@ contains
                   ns_veg%reproductiven_xfer_patch(p,k) = ns_veg%reproductiven_xfer_patch(p,k) &
                        + nf_veg%reproductiven_storage_to_xfer_patch(p,k)*dt
                end do
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in VegMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if ! not use_matrixcn

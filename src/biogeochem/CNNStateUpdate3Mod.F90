@@ -4,6 +4,9 @@ module CNNStateUpdate3Mod
   ! !DESCRIPTION:
   ! Module for nitrogen state variable update, mortality fluxes.
   ! Also, sminn leaching flux.
+  ! When the matrix solution is being used (use_matrixcn and use_soil_matrixcn)
+  ! only some state updates are done here, the other state updates happen
+  ! after the matrix is solved in VegMatrix and SoilMatrix.
   !
   ! !USES:
   use shr_kind_mod                    , only: r8 => shr_kind_r8
@@ -82,6 +85,10 @@ contains
 
             ! column level nitrogen fluxes from fire
             ! patch-level wood to column-level CWD (uncombusted wood)
+
+            !
+            ! State update without the matrix solution
+            !
             if (.not. use_soil_matrixcn)then
                ns_soil%decomp_npools_vr_col(c,j,i_cwd) = ns_soil%decomp_npools_vr_col(c,j,i_cwd) + &
                  nf_veg%fire_mortality_n_to_cwdn_col(c,j) * dt
@@ -92,6 +99,12 @@ contains
                      ns_soil%decomp_npools_vr_col(c,j,k) + &
                      nf_veg%m_n_to_litr_fire_col(c,j,k) * dt
                end do
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in SoilMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
                ! Do above for the matrix solution
 
@@ -103,6 +116,10 @@ contains
       end do
 
       ! litter and CWD losses to fire
+
+      !
+      ! State update without the matrix solution
+      !
       if(.not. use_soil_matrixcn)then
          do l = 1, ndecomp_pools
             do j = 1, nlevdecomp
@@ -121,6 +138,9 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
+         !
+         ! State update without the matrix solution
+         !
          if(.not. use_matrixcn)then 
             !from fire displayed pools
             ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p) -                           &
@@ -213,6 +233,12 @@ contains
               nf_veg%m_retransn_to_fire_patch(p) * dt
             ns_veg%retransn_patch(p) =  ns_veg%retransn_patch(p) -                     &
               nf_veg%m_retransn_to_litter_fire_patch(p) * dt
+         !
+         ! For the matrix solution the actual state update comes after the matrix
+         ! multiply in VegMatrix, but the matrix needs to be setup with
+         ! the equivalent of above. Those changes can be here or in the
+         ! native subroutines dealing with that field
+         !
          else
             ! NOTE: The equivalent changes for matrix code are in CNFireBase and CNFireLi2014 codes EBK (11/26/2019)
          end if !.not. use_matrixcn

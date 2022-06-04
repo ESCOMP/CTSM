@@ -2,6 +2,9 @@ module CNCStateUpdate1Mod
 
   !-----------------------------------------------------------------------
   ! Module for carbon state variable update, non-mortality fluxes.
+  ! When the matrix solution is being used (use_matrixcn and use_soil_matrixcn)
+  ! only some state updates are done here, the other state updates happen
+  ! after the matrix is solved in VegMatrix and SoilMatrix.
   !
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
@@ -189,6 +192,9 @@ contains
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
+               !
+               ! State update without the matrix solution
+               !
                if (.not. use_soil_matrixcn) then
                   ! phenology and dynamic land cover fluxes
                   do i = i_litr_min, i_litr_max
@@ -200,6 +206,12 @@ contains
                   ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
                   ! time step, but to be safe, I'm explicitly setting it to zero here.
                   cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
+               !
+               ! For the matrix solution the actual state update comes after the matrix
+               ! multiply in SoilMatrix, but the matrix needs to be setup with
+               ! the equivalent of above. Those changes can be here or in the
+               ! native subroutines dealing with that field
+               !
                else
                   ! phenology and dynamic land cover fluxes
                end if
@@ -226,6 +238,9 @@ contains
             do j = 1,nlevdecomp
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
+                  !
+                  ! State update without the matrix solution
+                  !
                   if (.not. use_soil_matrixcn) then
                      cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
                        cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
@@ -239,6 +254,9 @@ contains
                do j = 1,nlevdecomp
                   do fc = 1,num_soilc
                      c = filter_soilc(fc)
+                     !
+                     ! State update without the matrix solution
+                     !
                      if (.not. use_soil_matrixcn) then
                         cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
                           cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) &
@@ -256,6 +274,10 @@ ptch: do fp = 1,num_soilp
          c = patch%column(p)
 
          ! phenology: transfer growth fluxes
+
+         !
+         ! State update without the matrix solution
+         !
         if(.not. use_matrixcn)then
            ! NOTE: Any changes that go here MUST be applied to the matrix
            ! version as well
@@ -285,11 +307,11 @@ ptch: do fp = 1,num_soilp
               end do
            end if
 
-         ! phenology: litterfall fluxes
+           ! phenology: litterfall fluxes
            cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) - cf_veg%leafc_to_litter_patch(p)*dt
            cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) - cf_veg%frootc_to_litter_patch(p)*dt
          
-         ! livewood turnover fluxes
+           ! livewood turnover fluxes
            if (woody(ivt(p)) == 1._r8) then
               cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_deadstemc_patch(p)*dt
               cs_veg%deadstemc_patch(p)  = cs_veg%deadstemc_patch(p)  + cf_veg%livestemc_to_deadstemc_patch(p)*dt
@@ -313,6 +335,12 @@ ptch: do fp = 1,num_soilp
                       - (cf_veg%repr_structurec_to_cropprod_patch(p,k) + cf_veg%repr_structurec_to_litter_patch(p,k))*dt
               end do
            end if
+        !
+        ! For the matrix solution the actual state update comes after the matrix
+        ! multiply in VegMatrix, but the matrix needs to be setup with
+        ! the equivalent of above. Those changes can be here or in the
+        ! native subroutines dealing with that field
+        !
         else
            ! NOTE: Changes for above that apply for matrix code are in CNPhenology EBK (11/26/2019)
 
@@ -367,11 +395,20 @@ ptch: do fp = 1,num_soilp
          cs_veg%cpool_patch(p)             = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_leafc_storage_patch(p)*dt
          cs_veg%cpool_patch(p)             = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_frootc_patch(p)*dt
          cs_veg%cpool_patch(p)             = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_frootc_storage_patch(p)*dt 
+         !
+         ! State update without the matrix solution
+         !
          if(.not. use_matrixcn) then
            cs_veg%leafc_patch(p)           = cs_veg%leafc_patch(p)          + cf_veg%cpool_to_leafc_patch(p)*dt
            cs_veg%leafc_storage_patch(p)   = cs_veg%leafc_storage_patch(p)  + cf_veg%cpool_to_leafc_storage_patch(p)*dt
            cs_veg%frootc_patch(p)          = cs_veg%frootc_patch(p)         + cf_veg%cpool_to_frootc_patch(p)*dt
            cs_veg%frootc_storage_patch(p)  = cs_veg%frootc_storage_patch(p) + cf_veg%cpool_to_frootc_storage_patch(p)*dt
+           !
+           ! For the matrix solution the actual state update comes after the matrix
+           ! multiply in VegMatrix, but the matrix needs to be setup with
+           ! the equivalent of above. Those changes can be here or in the
+           ! native subroutines dealing with that field
+           !
          else
            ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
          end if !not use_matrixcn
@@ -392,6 +429,9 @@ ptch: do fp = 1,num_soilp
             cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livecrootc_storage_patch(p)*dt
             cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_deadcrootc_patch(p)*dt
             cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_deadcrootc_storage_patch(p)*dt 
+            !
+            ! State update without the matrix solution
+            !
             if(.not. use_matrixcn)then
                cs_veg%livestemc_patch(p)          = cs_veg%livestemc_patch(p)          + cf_veg%cpool_to_livestemc_patch(p)*dt
                cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p)  + cf_veg%cpool_to_livestemc_storage_patch(p)*dt
@@ -401,6 +441,12 @@ ptch: do fp = 1,num_soilp
                cs_veg%livecrootc_storage_patch(p) = cs_veg%livecrootc_storage_patch(p) + cf_veg%cpool_to_livecrootc_storage_patch(p)*dt
                cs_veg%deadcrootc_patch(p)         = cs_veg%deadcrootc_patch(p)         + cf_veg%cpool_to_deadcrootc_patch(p)*dt
                cs_veg%deadcrootc_storage_patch(p) = cs_veg%deadcrootc_storage_patch(p) + cf_veg%cpool_to_deadcrootc_storage_patch(p)*dt
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in VegMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
@@ -417,6 +463,9 @@ ptch: do fp = 1,num_soilp
                 cs_veg%cpool_patch(p)          = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_reproductivec_patch(p,k)*dt
                 cs_veg%cpool_patch(p)          = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_reproductivec_storage_patch(p,k)*dt
             end do
+            !
+            ! State update without the matrix solution
+            !
             if(.not. use_matrixcn)then
                cs_veg%livestemc_patch(p)          = cs_veg%livestemc_patch(p)          + cf_veg%cpool_to_livestemc_patch(p)*dt
                cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p)  + cf_veg%cpool_to_livestemc_storage_patch(p)*dt
@@ -426,6 +475,12 @@ ptch: do fp = 1,num_soilp
                   cs_veg%reproductivec_storage_patch(p,k) = cs_veg%reproductivec_storage_patch(p,k) &
                                                           + cf_veg%cpool_to_reproductivec_storage_patch(p,k)*dt
                end do
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in VegMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if  !not use_matrixcn
@@ -488,17 +543,30 @@ ptch: do fp = 1,num_soilp
          cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p) + cf_veg%cpool_to_gresp_storage_patch(p)*dt
 
          ! move storage pools into transfer pools
-        if(.not. use_matrixcn)then
-          cs_veg%leafc_storage_patch(p)  = cs_veg%leafc_storage_patch(p)  - cf_veg%leafc_storage_to_xfer_patch(p)*dt
-          cs_veg%leafc_xfer_patch(p)     = cs_veg%leafc_xfer_patch(p)     + cf_veg%leafc_storage_to_xfer_patch(p)*dt
-          cs_veg%frootc_storage_patch(p) = cs_veg%frootc_storage_patch(p) - cf_veg%frootc_storage_to_xfer_patch(p)*dt
-          cs_veg%frootc_xfer_patch(p)    = cs_veg%frootc_xfer_patch(p)    + cf_veg%frootc_storage_to_xfer_patch(p)*dt
+
+         !
+         ! State update without the matrix solution
+         !
+         if(.not. use_matrixcn)then
+            cs_veg%leafc_storage_patch(p)  = cs_veg%leafc_storage_patch(p)  - cf_veg%leafc_storage_to_xfer_patch(p)*dt
+            cs_veg%leafc_xfer_patch(p)     = cs_veg%leafc_xfer_patch(p)     + cf_veg%leafc_storage_to_xfer_patch(p)*dt
+            cs_veg%frootc_storage_patch(p) = cs_veg%frootc_storage_patch(p) - cf_veg%frootc_storage_to_xfer_patch(p)*dt
+            cs_veg%frootc_xfer_patch(p)    = cs_veg%frootc_xfer_patch(p)    + cf_veg%frootc_storage_to_xfer_patch(p)*dt
+         !
+         ! For the matrix solution the actual state update comes after the matrix
+         ! multiply in VegMatrix, but the matrix needs to be setup with
+         ! the equivalent of above. Those changes can be here or in the
+         ! native subroutines dealing with that field
+         !
          else
-           ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
+            ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
          end if !not use_matrixcn
          if (woody(ivt(p)) == 1._r8) then
             cs_veg%gresp_storage_patch(p)      = cs_veg%gresp_storage_patch(p)     - cf_veg%gresp_storage_to_xfer_patch(p)*dt
             cs_veg%gresp_xfer_patch(p)         = cs_veg%gresp_xfer_patch(p)        + cf_veg%gresp_storage_to_xfer_patch(p)*dt
+            !
+            ! State update without the matrix solution
+            !
             if(.not. use_matrixcn)then
                cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p) - cf_veg%livestemc_storage_to_xfer_patch(p)*dt
                cs_veg%livestemc_xfer_patch(p)     = cs_veg%livestemc_xfer_patch(p)    + cf_veg%livestemc_storage_to_xfer_patch(p)*dt
@@ -508,12 +576,21 @@ ptch: do fp = 1,num_soilp
                cs_veg%livecrootc_xfer_patch(p)    = cs_veg%livecrootc_xfer_patch(p)   + cf_veg%livecrootc_storage_to_xfer_patch(p)*dt
                cs_veg%deadcrootc_storage_patch(p) = cs_veg%deadcrootc_storage_patch(p)- cf_veg%deadcrootc_storage_to_xfer_patch(p)*dt
                cs_veg%deadcrootc_xfer_patch(p)    = cs_veg%deadcrootc_xfer_patch(p)   + cf_veg%deadcrootc_storage_to_xfer_patch(p)*dt
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in VegMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
          end if
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
             ! lines here for consistency; the transfer terms are zero
+            !
+            ! State update without the matrix solution
+            !
             if(.not. use_matrixcn)then
                ! lines here for consistency; the transfer terms are zero
                cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p) - cf_veg%livestemc_storage_to_xfer_patch(p)*dt
@@ -524,6 +601,12 @@ ptch: do fp = 1,num_soilp
                   cs_veg%reproductivec_xfer_patch(p,k) = cs_veg%reproductivec_xfer_patch(p,k) &
                        + cf_veg%reproductivec_storage_to_xfer_patch(p,k)*dt
                end do
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in VegMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
@@ -550,6 +633,9 @@ ptch: do fp = 1,num_soilp
                if ( .not. dribble_crophrv_xsmrpool_2atm ) then
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%cpool_patch(p)/dt
+                  !
+                  ! State update without the matrix solution
+                  !
                   if(.not. use_matrixcn)then
                      cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%frootc_patch(p)/dt
                   end if
@@ -562,10 +648,16 @@ ptch: do fp = 1,num_soilp
                   cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) + &
                                                   cs_veg%xsmrpool_patch(p) + &
                                                   cs_veg%cpool_patch(p)
+                  !
+                  ! State update without the matrix solution
+                  !
                   if(.not. use_matrixcn)then
                      cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) + cs_veg%frootc_patch(p)
                   end if
                end if
+               !
+               ! State update without the matrix solution
+               !
                if (.not. use_matrixcn) then
                   cs_veg%frootc_patch(p)          = 0._r8
                end if
