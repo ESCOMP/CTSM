@@ -1128,6 +1128,7 @@ contains
     real(r8) :: temp1                              !temporary variables [kg/m2]
     real(r8) :: hm(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)    !energy residual [W/m2]
     real(r8) :: xm(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)    !melting or freezing within a time step [kg/m2]
+    real(r8) :: xm2(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)         !additional melting or freezing within a time step [kg/m2] (needed for excess ice melt)
     real(r8) :: wmass0(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)!initial mass of ice and liquid (kg/m2)
     real(r8) :: wice0 (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)!initial mass of ice (kg/m2)
     real(r8) :: wliq0 (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)!initial mass of liquid (kg/m2)
@@ -1135,8 +1136,6 @@ contains
     real(r8) :: propor                             !proportionality constant (-)
     real(r8) :: tinc(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)  !t(n+1)-t(n) [K]
     real(r8) :: smp                                !frozen water potential (mm)
-    real(r8) :: xm2(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)   !xm variable [kg/m2]
-    real(r8) :: xm3(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)   !xm variable [kg/m2]
     real(r8) :: wexice0(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)!initial mass of excess_ice at the timestep (kg/m2)
 
 
@@ -1207,7 +1206,6 @@ contains
                hm(c,j) = 0._r8
                xm(c,j) = 0._r8
                xm2(c,j)=0._r8
-               xm3(c,j)=0._r8
                wice0(c,j) = h2osoi_ice(c,j)
                wliq0(c,j) = h2osoi_liq(c,j)
                wexice0(c,j)=excess_ice(c,j)
@@ -1446,11 +1444,11 @@ contains
 
                      if (j >= 1) then !why before it was two same statements?
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime +hfus*(wexice0(c,j)-excess_ice(c,j))/dtime
-                        exice_subs_col(c,j) = max(0._r8, (wexice0(c,j)-excess_ice(c,j))/denice/dtime*1000.0_r8) 
+                        exice_subs_col(c,j) = max(0._r8, (wexice0(c,j)-excess_ice(c,j))/denice) 
                      else
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      endif
-                      ! put exice melt here
+                     
                      if (imelt(c,j) == 1 .AND. j < 1) then
                         qflx_snomelt_lyr(c,j) = max(0._r8,(wice0(c,j)-h2osoi_ice(c,j)))/dtime
                         qflx_snomelt(c)       = qflx_snomelt(c) + qflx_snomelt_lyr(c,j)

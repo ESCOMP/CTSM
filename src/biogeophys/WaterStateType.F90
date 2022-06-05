@@ -690,8 +690,7 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_ice_col)
 
     ! Restart excess ice vars
-         !write(iulog,*) 'restarting excess ice wars'
-    if (.not. use_excess_ice .and. flag == 'read') then
+    if (.not. use_excess_ice) then
       ! no need to even define the restart vars
       this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
     else
@@ -699,9 +698,9 @@ contains
       call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXCESS_ICE'), xtype=ncd_double,  &
            dim1name='column', dim2name='levtot', switchdim=.true., &
            long_name=this%info%lname('excess soil ice (vegetated landunits only)'), units='kg/m2', &
-           scale_by_thickness=.false., &
+           scale_by_thickness=.true., &
            interpinic_flag='interp', readvar=readvar, data=this%excess_ice_col)
-      if (use_excess_ice .and. flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
+      if (flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
         
         this%exice_first_time_col(bounds%begc:bounds%endc) = .false.
         do c = bounds%begc,bounds%endc
@@ -727,6 +726,7 @@ contains
         end do
       endif! end of old file restart
     endif ! end of exice restart
+
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then
        do c = bounds%begc, bounds%endc
