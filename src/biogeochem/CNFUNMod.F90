@@ -1451,8 +1451,11 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       Npassive(p)               = n_passive_acc(p)/dt
       Nfix(p)                   = n_fix_acc_total(p)/dt                   
       retransn_to_npool(p)      = n_retrans_acc_total(p)/dt
+      ! Without matrix solution
       if(.not. use_matrixcn)then
          free_retransn_to_npool(p) = free_nretrans(p)/dt
+      ! With matrix solution (when it comes in)
+      else
       end if
       ! this is the N that comes off leaves. 
       Nretrans(p)               = retransn_to_npool(p) + free_retransn_to_npool(p)
