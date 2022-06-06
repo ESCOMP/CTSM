@@ -278,7 +278,7 @@ ptch: do fp = 1,num_soilp
          !
          ! State update without the matrix solution
          !
-        if(.not. use_matrixcn)then
+         if(.not. use_matrixcn)then
            ! NOTE: Any changes that go here MUST be applied to the matrix
            ! version as well
            cs_veg%leafc_patch(p)           = cs_veg%leafc_patch(p)       + cf_veg%leafc_xfer_to_leafc_patch(p)*dt
@@ -335,55 +335,55 @@ ptch: do fp = 1,num_soilp
                       - (cf_veg%repr_structurec_to_cropprod_patch(p,k) + cf_veg%repr_structurec_to_litter_patch(p,k))*dt
               end do
            end if
-        !
-        ! For the matrix solution the actual state update comes after the matrix
-        ! multiply in VegMatrix, but the matrix needs to be setup with
-        ! the equivalent of above. Those changes can be here or in the
-        ! native subroutines dealing with that field
-        !
-        else
-           ! NOTE: Changes for above that apply for matrix code are in CNPhenology EBK (11/26/2019)
+         !
+         ! For the matrix solution the actual state update comes after the matrix
+         ! multiply in VegMatrix, but the matrix needs to be setup with
+         ! the equivalent of above. Those changes can be here or in the
+         ! native subroutines dealing with that field
+         !
+         else
+            ! NOTE: Changes for above that apply for matrix code are in CNPhenology EBK (11/26/2019)
+ 
+            ! This part below MUST match exactly the code for the non-matrix part
+            ! above!
+         end if !not use_matrixcn
 
-           ! This part below MUST match exactly the code for the non-matrix part
-           ! above!
-        end if !not use_matrixcn
+         check_cpool = cs_veg%cpool_patch(p)- cf_veg%psnsun_to_cpool_patch(p)*dt-cf_veg%psnshade_to_cpool_patch(p)*dt
+         cpool_delta  =  cs_veg%cpool_patch(p) 
 
-        check_cpool = cs_veg%cpool_patch(p)- cf_veg%psnsun_to_cpool_patch(p)*dt-cf_veg%psnshade_to_cpool_patch(p)*dt
-        cpool_delta  =  cs_veg%cpool_patch(p) 
+         ! maintenance respiration fluxes from cpool
 
-           ! maintenance respiration fluxes from cpool
-
-           cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_to_xsmrpool_patch(p)*dt
-           cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%leaf_curmr_patch(p)*dt
-           cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%froot_curmr_patch(p)*dt
-           If (woody(ivt(p)) == 1._r8) then
+         cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_to_xsmrpool_patch(p)*dt
+         cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%leaf_curmr_patch(p)*dt
+         cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%froot_curmr_patch(p)*dt
+         If (woody(ivt(p)) == 1._r8) then
               cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livestem_curmr_patch(p)*dt
               cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livecroot_curmr_patch(p)*dt
-           end if
-           if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         end if
+         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
               cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livestem_curmr_patch(p)*dt
               do k = 1, nrepr
                  cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%reproductive_curmr_patch(p,k)*dt
               end do
-           end if
+         end if
          
          
-           cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) -  cf_veg%cpool_to_resp_patch(p)*dt
+         cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) -  cf_veg%cpool_to_resp_patch(p)*dt
 
-           !RF Add in the carbon spent on uptake respiration. 
-           cs_veg%cpool_patch(p)= cs_veg%cpool_patch(p) - cf_veg%soilc_change_patch(p)*dt
+         !RF Add in the carbon spent on uptake respiration. 
+         cs_veg%cpool_patch(p)= cs_veg%cpool_patch(p) - cf_veg%soilc_change_patch(p)*dt
            
-           ! maintenance respiration fluxes from xsmrpool
-           cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) + cf_veg%cpool_to_xsmrpool_patch(p)*dt
-           cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%leaf_xsmr_patch(p)*dt
-           cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%froot_xsmr_patch(p)*dt
-           if (woody(ivt(p)) == 1._r8) then
+         ! maintenance respiration fluxes from xsmrpool
+         cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) + cf_veg%cpool_to_xsmrpool_patch(p)*dt
+         cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%leaf_xsmr_patch(p)*dt
+         cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%froot_xsmr_patch(p)*dt
+         if (woody(ivt(p)) == 1._r8) then
               cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livestem_xsmr_patch(p)*dt
               cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livecroot_xsmr_patch(p)*dt
-           end if
+         end if
 
-           ! allocation fluxes
-           if (carbon_resp_opt == 1) then
+         ! allocation fluxes
+         if (carbon_resp_opt == 1) then
               cf_veg%cpool_to_leafc_patch(p) = cf_veg%cpool_to_leafc_patch(p) - cf_veg%cpool_to_leafc_resp_patch(p)
               cf_veg%cpool_to_leafc_storage_patch(p) = cf_veg%cpool_to_leafc_storage_patch(p) - &
                    cf_veg%cpool_to_leafc_storage_resp_patch(p)
@@ -674,8 +674,8 @@ ptch: do fp = 1,num_soilp
             end if
          end if
          
-        end do ptch ! end of patch loop
-      end if   ! end of NOT fates
+      end do ptch ! end of patch loop
+    end if   ! end of NOT fates
     
     end associate
   
