@@ -162,9 +162,9 @@ class ModifyFsurdat:
         # If dom_plant is a cft, add PCT_NATVEG to PCT_CROP in the rectangle
         # and remove same from PCT_NATVEG, i.e. set PCT_NATVEG = 0.
         if dom_plant > max(self.file.natpft):  # dom_plant is a cft (crop)
-            self.file["PCT_CROP"] = self.file["PCT_CROP"] + self.file[
-                "PCT_NATVEG"
-            ].where(self.rectangle, other=0)
+            self.file["PCT_CROP"] = self.file["PCT_CROP"] + self.file["PCT_NATVEG"].where(
+                self.rectangle, other=0
+            )
             self.setvar_lev0("PCT_NATVEG", 0)
 
             for cft in self.file.cft:
@@ -173,9 +173,7 @@ class ModifyFsurdat:
                 self.setvar_lev1("PCT_CFT", val=0, lev1_dim=cft_local)
 
             # set 3D variable
-            self.setvar_lev1(
-                "PCT_CFT", val=100, lev1_dim=dom_plant - (max(self.file.natpft) + 1)
-            )
+            self.setvar_lev1("PCT_CFT", val=100, lev1_dim=dom_plant - (max(self.file.natpft) + 1))
         else:  # dom_plant is a pft (not a crop)
             for pft in self.file.natpft:
                 # initialize 3D variable; set outside the loop below
@@ -252,9 +250,9 @@ class ModifyFsurdat:
         Sets 4d variable var to value val in user-defined rectangle,
         defined as "other" in the function
         """
-        self.file[var][lev2_dim, lev1_dim, ...] = self.file[var][
-            lev2_dim, lev1_dim, ...
-        ].where(self.not_rectangle, other=val)
+        self.file[var][lev2_dim, lev1_dim, ...] = self.file[var][lev2_dim, lev1_dim, ...].where(
+            self.not_rectangle, other=val
+        )
 
     def set_idealized(self):
         """

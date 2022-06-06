@@ -18,9 +18,7 @@ def run_cmd_output_on_error(cmd, errmsg, cwd=None):
     cwd: string or None - path from which the command should be run
     """
     try:
-        _ = subprocess.check_output(
-            cmd, stderr=subprocess.STDOUT, universal_newlines=True, cwd=cwd
-        )
+        _ = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, cwd=cwd)
     except subprocess.CalledProcessError as error:
         print("ERROR while running:")
         print(" ".join(cmd))

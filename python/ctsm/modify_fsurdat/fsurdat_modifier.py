@@ -31,9 +31,7 @@ def main():
 
     # read the command line argument to obtain the path to the .cfg file
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "cfg_path", help="/path/name.cfg of input file, eg ./modify.cfg"
-    )
+    parser.add_argument("cfg_path", help="/path/name.cfg of input file, eg ./modify.cfg")
     add_logging_args(parser)
     args = parser.parse_args()
     process_logging_args(args)
@@ -203,9 +201,7 @@ def fsurdat_modifier(cfg_path):
     if idealized:
         modify_fsurdat.set_idealized()  # set 2D variables
         # set 3D and 4D variables pertaining to natural vegetation
-        modify_fsurdat.set_dom_plant(
-            dom_plant=0, lai=[], sai=[], hgt_top=[], hgt_bot=[]
-        )
+        modify_fsurdat.set_dom_plant(dom_plant=0, lai=[], sai=[], hgt_top=[], hgt_bot=[])
         logger.info("idealized complete")
 
     if max_sat_area is not None:  # overwrite "idealized" value

@@ -31,13 +31,9 @@ _RES = "f10_f10_mg37"
 
 _PATH_TO_TEMPLATES = os.path.join(path_to_ctsm_root(), "lilac", "bld_templates")
 
-_PATH_TO_MAKE_RUNTIME_INPUTS = os.path.join(
-    path_to_ctsm_root(), "lilac", "make_runtime_inputs"
-)
+_PATH_TO_MAKE_RUNTIME_INPUTS = os.path.join(path_to_ctsm_root(), "lilac", "make_runtime_inputs")
 
-_PATH_TO_DOWNLOAD_INPUT_DATA = os.path.join(
-    path_to_ctsm_root(), "lilac", "download_input_data"
-)
+_PATH_TO_DOWNLOAD_INPUT_DATA = os.path.join(path_to_ctsm_root(), "lilac", "download_input_data")
 
 _MACHINE_CONFIG_DIRNAME = "machine_configuration"
 _INPUTDATA_DIRNAME = "inputdata"
@@ -160,9 +156,7 @@ def build_ctsm(
     if machine is None:
         assert os_type is not None, "with machine absent, os_type must be given"
         assert netcdf_path is not None, "with machine absent, netcdf_path must be given"
-        assert (
-            esmf_mkfile_path is not None
-        ), "with machine absent, esmf_mkfile_path must be given"
+        assert esmf_mkfile_path is not None, "with machine absent, esmf_mkfile_path must be given"
         assert max_mpitasks_per_node is not None, (
             "with machine absent " "max_mpitasks_per_node must be given"
         )
@@ -230,9 +224,7 @@ def rebuild_ctsm(build_dir):
             cwd=case_dir,
         )
     except subprocess.CalledProcessError:
-        abort(
-            "ERROR resetting build for CTSM in order to rebuild - see above for details"
-        )
+        abort("ERROR resetting build for CTSM in order to rebuild - see above for details")
 
     _build_case(build_dir)
 
@@ -627,12 +619,8 @@ def _fill_out_machine_files(
     # ------------------------------------------------------------------------
 
     fill_template_file(
-        path_to_template=os.path.join(
-            _PATH_TO_TEMPLATES, "config_machines_template.xml"
-        ),
-        path_to_final=os.path.join(
-            build_dir, _MACHINE_CONFIG_DIRNAME, "config_machines.xml"
-        ),
+        path_to_template=os.path.join(_PATH_TO_TEMPLATES, "config_machines_template.xml"),
+        path_to_final=os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, "config_machines.xml"),
         substitutions={
             "OS": os_type,
             "COMPILER": compiler,
@@ -753,9 +741,7 @@ def _create_case(
     create_newcase_cmd.extend(machine_args)
     if inputdata_path:
         create_newcase_cmd.extend(["--input-dir", inputdata_path])
-    run_cmd_output_on_error(
-        create_newcase_cmd, errmsg="Problem creating CTSM case directory"
-    )
+    run_cmd_output_on_error(create_newcase_cmd, errmsg="Problem creating CTSM case directory")
 
     subprocess.check_call([xmlchange, "LILAC_MODE=on"], cwd=case_dir)
     if build_debug:
@@ -814,9 +800,7 @@ def _stage_runtime_inputs(build_dir, no_pnetcdf):
         pio_rearranger = 2
     fill_template_file(
         path_to_template=os.path.join(_PATH_TO_TEMPLATES, "lnd_modelio_template.nml"),
-        path_to_final=os.path.join(
-            build_dir, _RUNTIME_INPUTS_DIRNAME, "lnd_modelio.nml"
-        ),
+        path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, "lnd_modelio.nml"),
         substitutions={
             "PIO_REARRANGER": pio_rearranger,
             "PIO_STRIDE": pio_stride,
@@ -861,9 +845,7 @@ def _build_case(build_dir):
     except subprocess.CalledProcessError:
         abort("ERROR building CTSM or its dependencies - see above for details")
 
-    make_link(
-        os.path.join(case_dir, "bld", "ctsm.mk"), os.path.join(build_dir, "ctsm.mk")
-    )
+    make_link(os.path.join(case_dir, "bld", "ctsm.mk"), os.path.join(build_dir, "ctsm.mk"))
 
 
 def _xmlquery(varname, build_dir):

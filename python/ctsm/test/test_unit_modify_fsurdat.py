@@ -137,9 +137,7 @@ class TestModifyFsurdat(unittest.TestCase):
         # Hardwire where I expect not_rectangle to be False (0)
         # I have chosen the lon/lat ranges to match their corresponding index
         # values to keep this simple
-        compare[
-            lat_1 - min_lat : lat_2 - min_lat + 1, lon_1 - min_lon : lon_2 - min_lon + 1
-        ] = 0
+        compare[lat_1 - min_lat : lat_2 - min_lat + 1, lon_1 - min_lon : lon_2 - min_lon + 1] = 0
         np.testing.assert_array_equal(not_rectangle, compare)
 
     def test_getNotRectangle_lon1leLon2Lat1gtLat2(self):

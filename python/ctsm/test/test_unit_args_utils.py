@@ -12,9 +12,7 @@ import unittest
 import argparse
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
-_CTSM_PYTHON = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir
-)
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
@@ -50,9 +48,7 @@ class TestArgsPlon(unittest.TestCase):
         """
         Test of plon values greater than 360
         """
-        with self.assertRaisesRegex(
-            argparse.ArgumentTypeError, "Longitude.*should be between"
-        ):
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, "Longitude.*should be between"):
             _ = plon_type(360.5)
 
     # -- < -180
@@ -60,9 +56,7 @@ class TestArgsPlon(unittest.TestCase):
         """
         Test of plon values smaller than -180
         """
-        with self.assertRaisesRegex(
-            argparse.ArgumentTypeError, "Longitude.*should be between"
-        ):
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, "Longitude.*should be between"):
             _ = plon_type(-200)
 
     # -- = -180
@@ -99,9 +93,7 @@ class TestArgsPlat(unittest.TestCase):
         """
         Test of plat_type bigger than 90
         """
-        with self.assertRaisesRegex(
-            argparse.ArgumentTypeError, "Latitude.*should be between"
-        ):
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, "Latitude.*should be between"):
             _ = plat_type(91)
 
     def test_platType_outOfBounds_pos90(self):
@@ -122,9 +114,7 @@ class TestArgsPlat(unittest.TestCase):
         """
         Test of plat_type smaller than -90
         """
-        with self.assertRaisesRegex(
-            argparse.ArgumentTypeError, "Latitude.*should be between"
-        ):
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, "Latitude.*should be between"):
             _ = plat_type(-91)
 
 

@@ -23,9 +23,7 @@ class TestMakeRuntimeInputs(unittest.TestCase):
 
     def test_buildnmlOpts_fates(self):
         """Test determine_buildnml_opts with bgc_mode='fates'"""
-        bldnml_opts = determine_bldnml_opts(
-            bgc_mode="fates", crop="off", vichydro="off"
-        )
+        bldnml_opts = determine_bldnml_opts(bgc_mode="fates", crop="off", vichydro="off")
         self.assertRegex(bldnml_opts, r"^ *-bgc fates +-no-megan *$")
 
     def test_buildnmlOpts_bgcCrop(self):

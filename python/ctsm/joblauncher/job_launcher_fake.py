@@ -17,9 +17,7 @@ class JobLauncherFake(JobLauncherBase):
         self._commands = []
 
     def run_command_impl(self, command, stdout_path, stderr_path):
-        self._commands.append(
-            Command(cmd=" ".join(command), out=stdout_path, err=stderr_path)
-        )
+        self._commands.append(Command(cmd=" ".join(command), out=stdout_path, err=stderr_path))
 
     def run_command_logger_message(self, command, stdout_path, stderr_path):
         message = (

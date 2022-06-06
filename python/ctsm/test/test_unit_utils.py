@@ -93,9 +93,7 @@ class TestUtilsLonRange0to360(unittest.TestCase):
         """
         Tests that lon_range_0_to_360 aborts gracefully when lon = 361
         """
-        with self.assertRaisesRegex(
-            SystemExit, "lon_in needs to be in the range 0 to 360"
-        ):
+        with self.assertRaisesRegex(SystemExit, "lon_in needs to be in the range 0 to 360"):
             _ = lon_range_0_to_360(361)
 
 

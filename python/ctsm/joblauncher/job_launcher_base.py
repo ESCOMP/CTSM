@@ -91,9 +91,7 @@ class JobLauncherBase(object):
 
         If dry_run is True, then just print the command to be run without actually running it.
         """
-        logger.info(
-            "%s", self.run_command_logger_message(command, stdout_path, stderr_path)
-        )
+        logger.info("%s", self.run_command_logger_message(command, stdout_path, stderr_path))
         if not dry_run:
             self.run_command_impl(command, stdout_path, stderr_path)
 

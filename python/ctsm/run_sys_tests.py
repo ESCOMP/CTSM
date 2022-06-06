@@ -162,9 +162,7 @@ def run_sys_tests(
         + (testlist is not None and len(testlist) > 0)
     )
     if num_provided_options != 1:
-        raise RuntimeError(
-            "Exactly one of suite_name, testfile or testlist must be provided"
-        )
+        raise RuntimeError("Exactly one of suite_name, testfile or testlist must be provided")
 
     if testid_base is None:
         testid_base = _get_testid_base(machine.name)
@@ -293,9 +291,7 @@ or tests listed individually on the command line (via the -t/--testname argument
 
     tests_to_run.add_argument("-s", "--suite-name", help="Name of test suite to run")
 
-    tests_to_run.add_argument(
-        "-f", "--testfile", help="Path to file listing tests to run"
-    )
+    tests_to_run.add_argument("-f", "--testfile", help="Path to file listing tests to run")
 
     tests_to_run.add_argument(
         "-t",
@@ -325,13 +321,10 @@ or tests listed individually on the command line (via the -t/--testname argument
         "-g",
         "--generate",
         metavar="GENERATE_NAME",
-        help="Baseline name (often tag) to generate\n"
-        "(required unless --skip-generate is given)",
+        help="Baseline name (often tag) to generate\n" "(required unless --skip-generate is given)",
     )
 
-    generate.add_argument(
-        "--skip-generate", action="store_true", help="Do not generate baselines"
-    )
+    generate.add_argument("--skip-generate", action="store_true", help="Do not generate baselines")
 
     parser.add_argument(
         "--suite-compiler",
@@ -446,9 +439,7 @@ or tests listed individually on the command line (via the -t/--testname argument
         help="Walltime for the create_test command.\n"
         "Only applies on machines for which we submit the create_test command\n"
         "rather than running it on the login node.\n"
-        "Default for this machine: {}".format(
-            default_machine.job_launcher.get_walltime()
-        ),
+        "Default for this machine: {}".format(default_machine.job_launcher.get_walltime()),
     )
 
     parser.add_argument(
@@ -457,9 +448,7 @@ or tests listed individually on the command line (via the -t/--testname argument
         "create_test command.\n"
         "(To allow the argument parsing to accept this, enclose the string\n"
         'in quotes, with a leading space, as in " --my-arg foo".)\n'
-        "Default for this machine: {}".format(
-            default_machine.job_launcher.get_extra_args()
-        ),
+        "Default for this machine: {}".format(default_machine.job_launcher.get_extra_args()),
     )
 
     parser.add_argument(
@@ -506,13 +495,9 @@ or tests listed individually on the command line (via the -t/--testname argument
 
 def _check_arg_validity(args):
     if args.suite_compiler and not args.suite_name:
-        raise RuntimeError(
-            "--suite-compiler can only be specified if using --suite-name"
-        )
+        raise RuntimeError("--suite-compiler can only be specified if using --suite-name")
     if args.rerun_existing_failures and not args.testid_base:
-        raise RuntimeError(
-            "With --rerun-existing-failures, must also specify --testid-base"
-        )
+        raise RuntimeError("With --rerun-existing-failures, must also specify --testid-base")
 
 
 def _get_testid_base(machine_name):
@@ -670,9 +655,7 @@ def _cs_status_xfail_arg():
     expected fails xml file
     """
     ctsm_root = path_to_ctsm_root()
-    xfail_path = os.path.join(
-        ctsm_root, "cime_config", "testdefs", "ExpectedTestFails.xml"
-    )
+    xfail_path = os.path.join(ctsm_root, "cime_config", "testdefs", "ExpectedTestFails.xml")
     return "--expected-fails-file {}".format(xfail_path)
 
 
@@ -720,9 +703,7 @@ def _get_compilers_for_suite(suite_name, machine_name):
     return compilers
 
 
-def _run_create_test(
-    cime_path, test_args, machine, testid, testroot, create_test_args, dry_run
-):
+def _run_create_test(cime_path, test_args, machine, testid, testroot, create_test_args, dry_run):
     create_test_cmd = _build_create_test_cmd(
         cime_path=cime_path,
         test_args=test_args,

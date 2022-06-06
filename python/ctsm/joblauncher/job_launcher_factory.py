@@ -75,7 +75,5 @@ def _assert_not_none(arg, arg_name, job_launcher_type):
     """Raises an exception if the given argument has value None"""
     if arg is None:
         raise TypeError(
-            "{} cannot be None for job launcher of type {}".format(
-                arg_name, job_launcher_type
-            )
+            "{} cannot be None for job launcher of type {}".format(arg_name, job_launcher_type)
         )

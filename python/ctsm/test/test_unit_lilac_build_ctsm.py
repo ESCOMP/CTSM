@@ -50,9 +50,7 @@ class TestBuildCtsm(unittest.TestCase):
         """
         expected_re = r"--os cannot be provided if --rebuild is set"
         with self.assertRaises(SystemExit):
-            _ = _commandline_args(
-                args_to_parse=["build/directory", "--rebuild", "--os", "linux"]
-            )
+            _ = _commandline_args(args_to_parse=["build/directory", "--rebuild", "--os", "linux"])
         self.assertRegex(mock_stderr.getvalue(), expected_re)
 
     @patch("sys.stderr", new_callable=StringIO)
@@ -82,9 +80,7 @@ class TestBuildCtsm(unittest.TestCase):
         """
         expected_re = r"--no-build cannot be provided if --rebuild is set"
         with self.assertRaises(SystemExit):
-            _ = _commandline_args(
-                args_to_parse=["build/directory", "--rebuild", "--no-build"]
-            )
+            _ = _commandline_args(args_to_parse=["build/directory", "--rebuild", "--no-build"])
         self.assertRegex(mock_stderr.getvalue(), expected_re)
 
     @patch("sys.stderr", new_callable=StringIO)
@@ -154,9 +150,7 @@ class TestBuildCtsm(unittest.TestCase):
 
         This tests an argument in the new-machine-required list
         """
-        expected_re = (
-            r"--os must be provided if neither --machine nor --rebuild are set"
-        )
+        expected_re = r"--os must be provided if neither --machine nor --rebuild are set"
         with self.assertRaises(SystemExit):
             _ = _commandline_args(
                 args_to_parse=[
@@ -177,7 +171,9 @@ class TestBuildCtsm(unittest.TestCase):
     @patch("sys.stderr", new_callable=StringIO)
     def test_commandlineArgs_noRebuild_invalidNeedToDictatePnetcdf(self, mock_stderr):
         """Test _commandline_args without --rebuild or --machine: invalid b/c nothing specified for pnetcdf"""
-        expected_re = r"For a user-defined machine, need to specify either --no-pnetcdf or --pnetcdf-path"
+        expected_re = (
+            r"For a user-defined machine, need to specify either --no-pnetcdf or --pnetcdf-path"
+        )
         with self.assertRaises(SystemExit):
             _ = _commandline_args(
                 args_to_parse=[
@@ -242,9 +238,7 @@ class TestBuildCtsm(unittest.TestCase):
         """Test _commandline_args with --machine, with a missing required argument"""
         expected_re = r"--compiler must be provided if --rebuild is not set"
         with self.assertRaises(SystemExit):
-            _ = _commandline_args(
-                args_to_parse=["build/directory", "--machine", "mymachine"]
-            )
+            _ = _commandline_args(args_to_parse=["build/directory", "--machine", "mymachine"])
         self.assertRegex(mock_stderr.getvalue(), expected_re)
 
     @patch("sys.stderr", new_callable=StringIO)

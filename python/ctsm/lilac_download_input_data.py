@@ -84,9 +84,7 @@ Script to download any missing input data for CTSM and LILAC
 
 def _create_lilac_input_data_list(rundir):
     with open(os.path.join(rundir, "lilac_in")) as lilac_in:
-        with open(
-            os.path.join(rundir, "lilac.input_data_list"), "w"
-        ) as input_data_list:
+        with open(os.path.join(rundir, "lilac.input_data_list"), "w") as input_data_list:
             for line in lilac_in:
                 if re.search(_LILAC_FILENAME, line):
                     # Remove quotes from filename, then output this line

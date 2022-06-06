@@ -38,9 +38,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._cfg_template_path = os.path.join(
             path_to_ctsm_root(), "tools/modify_fsurdat/modify_template.cfg"
         )
-        testinputs_path = os.path.join(
-            path_to_ctsm_root(), "python/ctsm/test/testinputs"
-        )
+        testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._fsurdat_in = os.path.join(
             testinputs_path,
             "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc",
@@ -93,9 +91,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self.assertFalse(fsurdat_out_data.equals(fsurdat_in_data))
 
         # compare fsurdat_out to fsurdat_out_baseline located in /testinputs
-        fsurdat_out_baseline = (
-            self._fsurdat_in[:-3] + "_modified_with_crop" + self._fsurdat_in[-3:]
-        )
+        fsurdat_out_baseline = self._fsurdat_in[:-3] + "_modified_with_crop" + self._fsurdat_in[-3:]
         fsurdat_out_base_data = xr.open_dataset(fsurdat_out_baseline)
         # assert that fsurdat_out equals fsurdat_out_baseline
         self.assertTrue(fsurdat_out_data.equals(fsurdat_out_base_data))
@@ -120,9 +116,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self.assertFalse(fsurdat_out_data.equals(fsurdat_in_data))
 
         # compare fsurdat_out to fsurdat_out_baseline located in /testinputs
-        fsurdat_out_baseline = (
-            self._fsurdat_in[:-3] + "_modified" + self._fsurdat_in[-3:]
-        )
+        fsurdat_out_baseline = self._fsurdat_in[:-3] + "_modified" + self._fsurdat_in[-3:]
         fsurdat_out_base_data = xr.open_dataset(fsurdat_out_baseline)
         # assert that fsurdat_out equals fsurdat_out_baseline
         self.assertTrue(fsurdat_out_data.equals(fsurdat_out_base_data))

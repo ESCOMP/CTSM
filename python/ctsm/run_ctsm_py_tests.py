@@ -62,13 +62,9 @@ def _commandline_args(description):
 
     test_subset = parser.add_mutually_exclusive_group()
 
-    test_subset.add_argument(
-        "-u", "--unit", action="store_true", help="Only run unit tests"
-    )
+    test_subset.add_argument("-u", "--unit", action="store_true", help="Only run unit tests")
 
-    test_subset.add_argument(
-        "-s", "--sys", action="store_true", help="Only run system tests"
-    )
+    test_subset.add_argument("-s", "--sys", action="store_true", help="Only run system tests")
 
     test_subset.add_argument(
         "-p", "--pattern", help="File name pattern to match\n" "Default is test*.py"

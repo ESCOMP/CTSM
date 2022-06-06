@@ -78,9 +78,7 @@ class TestRunSysTests(unittest.TestCase):
         machine = self._make_machine()
         with mock.patch("ctsm.run_sys_tests.datetime") as mock_date:
             mock_date.now.side_effect = self._fake_now
-            run_sys_tests(
-                machine=machine, cime_path=self._cime_path(), testlist=["foo"]
-            )
+            run_sys_tests(machine=machine, cime_path=self._cime_path(), testlist=["foo"])
 
         expected_dir = os.path.join(self._scratch, self._expected_testroot())
         self.assertTrue(os.path.isdir(expected_dir))
@@ -114,16 +112,10 @@ class TestRunSysTests(unittest.TestCase):
         self.assertEqual(len(all_commands), 1)
         command = all_commands[0].cmd
         expected_create_test = os.path.join(self._cime_path(), "scripts", "create_test")
-        six.assertRegex(
-            self, command, r"^ *{}\s".format(re.escape(expected_create_test))
-        )
-        six.assertRegex(
-            self, command, r"--test-id +{}\s".format(self._expected_testid())
-        )
+        six.assertRegex(self, command, r"^ *{}\s".format(re.escape(expected_create_test)))
+        six.assertRegex(self, command, r"--test-id +{}\s".format(self._expected_testid()))
         expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
-        six.assertRegex(
-            self, command, r"--output-root +{}\s".format(expected_testroot_path)
-        )
+        six.assertRegex(self, command, r"--output-root +{}\s".format(expected_testroot_path))
         six.assertRegex(self, command, r"--retry +0(\s|$)")
         six.assertRegex(self, command, r"test1 +test2(\s|$)")
         assertNotRegex(self, command, r"--compare\s")
@@ -171,9 +163,7 @@ class TestRunSysTests(unittest.TestCase):
         command = all_commands[0].cmd
         six.assertRegex(self, command, r"--test-id +mytestid(\s|$)")
         expected_testroot = os.path.join(testroot_base, "tests_mytestid")
-        six.assertRegex(
-            self, command, r"--output-root +{}(\s|$)".format(expected_testroot)
-        )
+        six.assertRegex(self, command, r"--output-root +{}(\s|$)".format(expected_testroot))
         six.assertRegex(self, command, r"--testfile +/path/to/testfile(\s|$)")
         six.assertRegex(self, command, r"--compare +mycompare(\s|$)")
         six.assertRegex(self, command, r"--generate +mygenerate(\s|$)")
@@ -207,16 +197,12 @@ class TestRunSysTests(unittest.TestCase):
                 {"compiler": "pgi"},
                 {"compiler": "intel"},
             ]
-            run_sys_tests(
-                machine=machine, cime_path=self._cime_path(), suite_name="my_suite"
-            )
+            run_sys_tests(machine=machine, cime_path=self._cime_path(), suite_name="my_suite")
 
         all_commands = machine.job_launcher.get_commands()
         self.assertEqual(len(all_commands), 2)
         for command in all_commands:
-            six.assertRegex(
-                self, command.cmd, r"--xml-category +{}(\s|$)".format("my_suite")
-            )
+            six.assertRegex(self, command.cmd, r"--xml-category +{}(\s|$)".format("my_suite"))
             six.assertRegex(
                 self, command.cmd, r"--xml-machine +{}(\s|$)".format(self._MACHINE_NAME)
             )
@@ -226,12 +212,8 @@ class TestRunSysTests(unittest.TestCase):
 
         expected_testid1 = "{}_int".format(self._expected_testid())
         expected_testid2 = "{}_pgi".format(self._expected_testid())
-        six.assertRegex(
-            self, all_commands[0].cmd, r"--test-id +{}(\s|$)".format(expected_testid1)
-        )
-        six.assertRegex(
-            self, all_commands[1].cmd, r"--test-id +{}(\s|$)".format(expected_testid2)
-        )
+        six.assertRegex(self, all_commands[0].cmd, r"--test-id +{}(\s|$)".format(expected_testid1))
+        six.assertRegex(self, all_commands[1].cmd, r"--test-id +{}(\s|$)".format(expected_testid2))
 
         expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
         self.assertEqual(
@@ -251,9 +233,7 @@ class TestRunSysTests(unittest.TestCase):
             os.path.join(expected_testroot_path, "STDERR." + expected_testid2),
         )
 
-        expected_cs_status = os.path.join(
-            self._scratch, self._expected_testroot(), "cs.status"
-        )
+        expected_cs_status = os.path.join(self._scratch, self._expected_testroot(), "cs.status")
         expected_cs_status = os.path.join(
             self._scratch, self._expected_testroot(), "cs.status.fails"
         )
@@ -285,9 +265,7 @@ class TestRunSysTests(unittest.TestCase):
     def test_withDryRun_nothingDone(self):
         """With dry_run=True, no directories should be created, and no commands should be run"""
         machine = self._make_machine()
-        run_sys_tests(
-            machine=machine, cime_path=self._cime_path(), testlist=["foo"], dry_run=True
-        )
+        run_sys_tests(machine=machine, cime_path=self._cime_path(), testlist=["foo"], dry_run=True)
         self.assertEqual(os.listdir(self._scratch), [])
         self.assertEqual(machine.job_launcher.get_commands(), [])
 

@@ -122,11 +122,7 @@ def create_machine(
         # in a particular case.
         create_test_retry = mach_defaults.create_test_retry
         create_test_queue = mach_defaults.create_test_queue
-        if (
-            account is None
-            and mach_defaults.account_required
-            and not allow_missing_entries
-        ):
+        if account is None and mach_defaults.account_required and not allow_missing_entries:
             raise RuntimeError("Could not find an account code")
     else:
         if not allow_missing_entries:

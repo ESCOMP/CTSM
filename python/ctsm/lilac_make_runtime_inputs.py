@@ -118,16 +118,12 @@ def determine_bldnml_opts(bgc_mode, crop, vichydro):
 
     if crop == "on":
         if bgc_mode not in ["bgc", "cn"]:
-            abort(
-                "Error: setting crop to 'on' is only compatible with bgc_mode of 'bgc' or 'cn'"
-            )
+            abort("Error: setting crop to 'on' is only compatible with bgc_mode of 'bgc' or 'cn'")
         bldnml_opts += " -crop"
 
     if vichydro == "on":
         if bgc_mode != "sp":
-            abort(
-                "Error: setting vichydro to 'on' is only compatible with bgc_mode of 'sp'"
-            )
+            abort("Error: setting vichydro to 'on' is only compatible with bgc_mode of 'sp'")
         bldnml_opts += " -vichydro"
 
     return bldnml_opts
@@ -148,9 +144,7 @@ def buildnml(cime_path, rundir):
     config = ConfigParser()
     config.read(ctsm_cfg_path)
 
-    lnd_domain_file = get_config_value(
-        config, "buildnml_input", "lnd_domain_file", ctsm_cfg_path
-    )
+    lnd_domain_file = get_config_value(config, "buildnml_input", "lnd_domain_file", ctsm_cfg_path)
     fsurdat = get_config_value(
         config, "buildnml_input", "fsurdat", ctsm_cfg_path, can_be_unset=True
     )
@@ -201,16 +195,12 @@ def buildnml(cime_path, rundir):
 
     co2_ppmv = get_config_value(config, "buildnml_input", "co2_ppmv", ctsm_cfg_path)
     use_case = get_config_value(config, "buildnml_input", "use_case", ctsm_cfg_path)
-    lnd_tuning_mode = get_config_value(
-        config, "buildnml_input", "lnd_tuning_mode", ctsm_cfg_path
-    )
+    lnd_tuning_mode = get_config_value(config, "buildnml_input", "lnd_tuning_mode", ctsm_cfg_path)
     spinup = get_config_value(
         config, "buildnml_input", "spinup", ctsm_cfg_path, allowed_values=["off", "on"]
     )
 
-    inputdata_path = get_config_value(
-        config, "buildnml_input", "inputdata_path", ctsm_cfg_path
-    )
+    inputdata_path = get_config_value(config, "buildnml_input", "inputdata_path", ctsm_cfg_path)
 
     # Parse the user_nl_ctsm file
     infile = os.path.join(rundir, ".namelist")

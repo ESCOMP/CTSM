@@ -60,9 +60,7 @@ class TestCreateMachine(unittest.TestCase):
             nice_level = 0
         self.assertEqual(launcher.get_nice_level(), nice_level)
 
-    def assertQsubInfo(
-        self, machine, queue, walltime, account, required_args, extra_args
-    ):
+    def assertQsubInfo(self, machine, queue, walltime, account, required_args, extra_args):
         """Asserts that the machine's launcher is of type JobLauncherQsub, and has values as
         expected"""
         launcher = machine.job_launcher
@@ -99,9 +97,7 @@ class TestCreateMachine(unittest.TestCase):
 
     def test_unknownMachine_defaults(self):
         """Tests a machine not in the defaults structure, with no overriding arguments"""
-        machine = create_machine(
-            "unknown_test_machine", MACHINE_DEFAULTS, account="a123"
-        )
+        machine = create_machine("unknown_test_machine", MACHINE_DEFAULTS, account="a123")
         self.assertMachineInfo(
             machine=machine,
             name="unknown_test_machine",
@@ -236,9 +232,7 @@ class TestCreateMachine(unittest.TestCase):
     def test_baselineDir_noDefault(self):
         """Tests get_possibly_overridden_mach_value when baseline_dir is not provided
         and there is no default"""
-        machine = create_machine(
-            "unknown_test_machine", MACHINE_DEFAULTS, account="a123"
-        )
+        machine = create_machine("unknown_test_machine", MACHINE_DEFAULTS, account="a123")
         baseline_dir = get_possibly_overridden_mach_value(
             machine, varname="baseline_dir", value=None
         )

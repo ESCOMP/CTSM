@@ -434,9 +434,7 @@ def subset_point(args, file_dict: dict):
     Subsets surface, domain, land use, and/or DATM files at a single point
     """
 
-    logger.info(
-        "----------------------------------------------------------------------------"
-    )
+    logger.info("----------------------------------------------------------------------------")
     logger.info("This script extracts a single point from the global CTSM datasets.")
 
     num_pft = int(determine_num_pft(args.crop_flag))
@@ -465,9 +463,7 @@ def subset_point(args, file_dict: dict):
 
     # --  Create CTSM domain file
     if single_point.create_domain:
-        single_point.create_domain_at_point(
-            file_dict["main_dir"], file_dict["fdomain_in"]
-        )
+        single_point.create_domain_at_point(file_dict["main_dir"], file_dict["fdomain_in"])
 
     # --  Create CTSM surface data file
     if single_point.create_surfdata:
@@ -494,9 +490,7 @@ def subset_point(args, file_dict: dict):
 
     # -- Write shell commands
     if single_point.create_user_mods:
-        single_point.write_shell_commands(
-            os.path.join(args.user_mods_dir, "shell_commands")
-        )
+        single_point.write_shell_commands(os.path.join(args.user_mods_dir, "shell_commands"))
 
     logger.info("Successfully ran script for single point.")
 
@@ -506,9 +500,7 @@ def subset_region(args, file_dict: dict):
     Subsets surface, domain, land use, and/or DATM files for a region
     """
 
-    logger.info(
-        "----------------------------------------------------------------------------"
-    )
+    logger.info("----------------------------------------------------------------------------")
     logger.info("This script extracts a region from the global CTSM datasets.")
 
     # --  Create Region Object

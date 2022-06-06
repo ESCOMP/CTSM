@@ -34,16 +34,16 @@ class TestSysBuildCtsm(unittest.TestCase):
         # user-defined machine infrastructure on an NCAR machine. So bypass this CIME
         # check by temporarily removing NCAR_HOST from the environment if it was present.
         # (Then we restore it in the tearDown method.)
-        if 'NCAR_HOST' in os.environ:
-            self._ncarhost = os.environ['NCAR_HOST']
-            del os.environ['NCAR_HOST']
+        if "NCAR_HOST" in os.environ:
+            self._ncarhost = os.environ["NCAR_HOST"]
+            del os.environ["NCAR_HOST"]
         else:
             self._ncarhost = None
 
     def tearDown(self):
         shutil.rmtree(self._tempdir, ignore_errors=True)
         if self._ncarhost is not None:
-            os.environ['NCAR_HOST'] = self._ncarhost
+            os.environ["NCAR_HOST"] = self._ncarhost
 
     def test_buildSetup_userDefinedMachine_minimalInfo(self):
         """Get through the case.setup phase with a user-defined machine

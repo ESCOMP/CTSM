@@ -27,9 +27,7 @@ def plat_type(plat):
     """
     plat_out = float(plat)
     if plat_out < -90 or plat_out > 90:
-        raise argparse.ArgumentTypeError(
-            "ERROR: Latitude should be between -90 and 90."
-        )
+        raise argparse.ArgumentTypeError("ERROR: Latitude should be between -90 and 90.")
     return plat_out
 
 
