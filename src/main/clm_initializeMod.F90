@@ -62,6 +62,7 @@ contains
     use UrbanParamsType      , only: IsSimpleBuildTemp
     use dynSubgridControlMod , only: dynSubgridControl_init
     use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
+    use CropReprPoolsMod         , only: crop_repr_pools_init
     !
     ! !ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -102,6 +103,7 @@ contains
     call landunit_varcon_init()
     if (masterproc) call control_print()
     call dynSubgridControl_init(NLFilename)
+    call crop_repr_pools_init()
 
     call t_stopf('clm_init1')
 
@@ -301,7 +303,7 @@ contains
     call clm_instReadNML( NLFilename )
     allocate(nutrient_competition_method, &
          source=create_nutrient_competition_method(bounds_proc))
-    call readParameters(nutrient_competition_method, photosyns_inst)
+    call readParameters(photosyns_inst)
 
     ! Initialize time manager
     if (nsrest == nsrStartup) then
@@ -644,7 +646,7 @@ contains
        end if
        call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
-            soilstate_inst)
+            soilstate_inst, soilbiogeochem_carbonflux_inst)
     end if
 
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through

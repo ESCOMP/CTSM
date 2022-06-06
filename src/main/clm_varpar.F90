@@ -15,7 +15,7 @@ module clm_varpar
   use clm_varctl   , only: soil_layerstruct_predefined
   use clm_varctl   , only: soil_layerstruct_userdefined
   use clm_varctl   , only: soil_layerstruct_userdefined_nlevsoi
-  use clm_varctl   , only: use_fates, use_cn
+  use clm_varctl   , only: use_fates, use_cn, use_fates_sp
 
   !
   ! !PUBLIC TYPES:
@@ -51,6 +51,10 @@ module clm_varpar
   integer, public, parameter :: dst_src_nbr =   3     ! number of size distns in src soil (BGC only)
   integer, public, parameter :: sz_nbr      = 200     ! number of sub-grid bins in large bin of dust size distribution (BGC only)
   integer, public, parameter :: mxpft       =  78     ! maximum number of PFT's for any mode;
+  integer, public, parameter :: mxsowings   =   1     ! maximum number of crop growing seasons to begin in any year;
+  integer, public            :: mxharvests            ! maximum number of crop harvests in any year
+                                                      ! (allows for multiple harvests in a calendar year in case harvest occurs near
+                                                      ! beginning/end of year);
   ! FIX(RF,032414) might we set some of these automatically from reading pft-physiology?
   integer, public, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
   integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
@@ -145,6 +149,8 @@ contains
     cft_lb = natpft_ub + 1
     cft_ub = cft_lb + cft_size - 1
 
+    mxharvests = mxsowings + 1
+
     ! TODO(wjs, 2015-10-04, bugz 2227) Using actual_numcft in this 'max' gives a significant
     ! overestimate of max_patch_per_col when use_crop is true. This should be reworked -
     ! or, better, removed from the code entirely (because it is a maintenance problem, and
@@ -213,7 +219,7 @@ contains
     !
     ! Number of layers for soil decomposition
     !
-    if ( use_cn .or. use_fates )then
+    if ( use_cn .or. (use_fates .and. .not. use_fates_sp) ) then
        ! to set the number of soil levels for the biogeochemistry calculations.
        ! currently it works on nlevsoi and nlevgrnd levels
        nlevdecomp      = nlevsoi

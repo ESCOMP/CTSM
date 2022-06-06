@@ -28,8 +28,22 @@ class TestSysBuildCtsm(unittest.TestCase):
     def setUp(self):
         self._tempdir = tempfile.mkdtemp()
 
+        # Hack around a check in CIME: As of https://github.com/ESMCI/cime/pull/4228, If
+        # NCAR_HOST is in the environment, CIME checks if the machine you're running on is
+        # the one you have set up the case for. This is a problem for trying to test the
+        # user-defined machine infrastructure on an NCAR machine. So bypass this CIME
+        # check by temporarily removing NCAR_HOST from the environment if it was present.
+        # (Then we restore it in the tearDown method.)
+        if 'NCAR_HOST' in os.environ:
+            self._ncarhost = os.environ['NCAR_HOST']
+            del os.environ['NCAR_HOST']
+        else:
+            self._ncarhost = None
+
     def tearDown(self):
         shutil.rmtree(self._tempdir, ignore_errors=True)
+        if self._ncarhost is not None:
+            os.environ['NCAR_HOST'] = self._ncarhost
 
     def test_buildSetup_userDefinedMachine_minimalInfo(self):
         """Get through the case.setup phase with a user-defined machine
