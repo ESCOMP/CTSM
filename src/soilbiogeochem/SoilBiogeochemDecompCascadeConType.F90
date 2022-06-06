@@ -10,7 +10,7 @@ module SoilBiogeochemDecompCascadeConType
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar     , only : ndecomp_cascade_transitions, ndecomp_pools, nlevdecomp
   use clm_varcon     , only : ispval
-  use SPMMod         , only : sparse_matrix_type, diag_matrix_type, vector_type
+  use SparseMatrixMultiplyMod, only : sparse_matrix_type, diag_matrix_type, vector_type
   use clm_varctl     , only : iulog
   !
   implicit none
@@ -240,7 +240,7 @@ contains
     ! Collect those non-zero entry information, and save them into the list.
     !------------------------------------------------------------------------
     ! !USES:
-    use SPMMod         , only : sparse_matrix_type, diag_matrix_type, vector_type
+    use SparseMatrixMultiplyMod, only : sparse_matrix_type, diag_matrix_type, vector_type
     ! !LOGAL VARIABLES:
     integer i,j,k,m,n
   

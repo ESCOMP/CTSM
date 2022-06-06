@@ -28,7 +28,7 @@ module CNVegCarbonFluxType
   use AnnualFluxDribbler                 , only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use dynSubgridControlMod               , only : get_for_testing_allow_non_annual_changes
   use abortutils                         , only : endrun
-  use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none

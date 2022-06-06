@@ -17,7 +17,7 @@ module CNVegNitrogenFluxType
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
-  use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none

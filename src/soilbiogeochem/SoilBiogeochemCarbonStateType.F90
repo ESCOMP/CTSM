@@ -16,7 +16,7 @@ module SoilBiogeochemCarbonStateType
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
-  use SPMMod                             , only : sparse_matrix_type, vector_type
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none

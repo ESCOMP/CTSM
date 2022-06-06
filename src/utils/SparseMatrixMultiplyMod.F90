@@ -1,11 +1,11 @@
-module SPMMod
+module SparseMatrixMultiplyMod
 
 #include "shr_assert.h"
 
   !-----------------------------------------------------------------------
   !BOP
   !
-  ! !MODULE: SPMMod
+  ! !MODULE: SparseMatrixMultiplyMod
   !
   ! !DESCRIPTION:
   ! Sparse matrix multiplication add addition
@@ -1417,4 +1417,4 @@ contains
 
   !-----------------------------------------------------------------------
 
-end module SPMMod
+end module SparseMatrixMultiplyMod
