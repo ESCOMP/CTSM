@@ -2632,12 +2632,14 @@ contains
             end if
 
             ! If switched on, use pH factor for production based on spatial pH data defined in surface data.
-            if (.not. lake .and. usephfact .and. pH(c) >  pHmin .and.pH(c) <  pHmax) then
-               pH_fact_ch4 = 10._r8**(-0.2235_r8*pH(c)*pH(c) + 2.7727_r8*pH(c) - 8.6_r8)
-               ! fitted function using data from Dunfield et al. 1993  
-               ! Strictly less than one, with optimum at 6.5
-               ! From Lei Meng
-               f_ch4_adj = f_ch4_adj * pH_fact_ch4
+            if (.not. lake .and. usephfact )then 
+               if (  pH(c) >  pHmin .and.pH(c) <  pHmax) then
+                  pH_fact_ch4 = 10._r8**(-0.2235_r8*pH(c)*pH(c) + 2.7727_r8*pH(c) - 8.6_r8)
+                  ! fitted function using data from Dunfield et al. 1993  
+                  ! Strictly less than one, with optimum at 6.5
+                  ! From Lei Meng
+                  f_ch4_adj = f_ch4_adj * pH_fact_ch4
+               end if
             else
                ! if no data, then no pH effects
             end if
@@ -4261,7 +4263,7 @@ contains
     ! !DESCRIPTION: Annual mean fields.
     !
     ! !USES:
-    use clm_time_manager, only: get_step_size_real, get_days_per_year, get_nstep
+    use clm_time_manager, only: get_step_size_real, get_curr_days_per_year, get_nstep
     use clm_varcon      , only: secspday
     !
     ! !ARGUMENTS:
@@ -4303,7 +4305,7 @@ contains
 
       ! set time steps
       dt = get_step_size_real()
-      secsperyear = real( get_days_per_year() * secspday, r8)
+      secsperyear = real( get_curr_days_per_year() * secspday, r8)
 
       do fc = 1,num_methc
          c = filter_methc(fc)
@@ -4371,7 +4373,9 @@ contains
     ! its original values
     !
     ! !USES:
-    use ch4varcon  , only : allowlakeprod
+    use ch4varcon       , only : allowlakeprod
+    use clm_varcon      , only : dzsoi_decomp
+    use landunit_varcon , only : isturb_tbd, isturb_hd, isturb_md
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds   
@@ -4384,7 +4388,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
-    integer :: j
+    integer :: j, l
 
     character(len=*), parameter       :: subname = 'ch4_totcolch4'
     !-----------------------------------------------------------------------
@@ -4411,9 +4415,18 @@ contains
     do j = 1, nlevsoi
        do fc = 1, num_nolakec
           c = filter_nolakec(fc)
-          totcolch4(c) = totcolch4(c) + &
-               (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
-               dz(c,j)*catomw
+          l = col%landunit(c)
+          ! See doc/design/dynamic_urban.rst for an explanation of why we use dzsoi_decomp instead of dz for 
+          ! urban landunits.
+          if (lun%itype(l) .eq. isturb_tbd .or. lun%itype(l) .eq. isturb_hd .or. lun%itype(l) .eq. isturb_md) then
+             totcolch4(c) = totcolch4(c) + &
+                  (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
+                  dzsoi_decomp(j)*catomw
+          else
+             totcolch4(c) = totcolch4(c) + &
+                  (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
+                  dz(c,j)*catomw
+          end if
           ! mol CH4 --> g C
        end do
 

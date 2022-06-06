@@ -30,6 +30,7 @@ module SoilBiogeochemDecompCascadeConType
      character(len=8)  , pointer  :: decomp_pool_name_history(:)       ! name of pool for history files
      character(len=20) , pointer  :: decomp_pool_name_long(:)          ! name of pool for netcdf long names
      character(len=8)  , pointer  :: decomp_pool_name_short(:)         ! name of pool for netcdf short names
+     logical           , pointer  :: is_microbe(:)                     ! TRUE => pool is a microbe pool
      logical           , pointer  :: is_litter(:)                      ! TRUE => pool is a litter pool
      logical           , pointer  :: is_soil(:)                        ! TRUE => pool is a soil pool
      logical           , pointer  :: is_cwd(:)                         ! TRUE => pool is a cwd pool
@@ -45,6 +46,7 @@ module SoilBiogeochemDecompCascadeConType
   integer, public, parameter :: i_atm = 0                              ! for terminal pools (i.e. 100% respiration) (only used for CN not for BGC)
   integer, public, parameter :: no_soil_decomp = 0                     ! No soil decomposition is done
   integer, public, parameter :: century_decomp = 1                     ! CENTURY decomposition method type
+  integer, public, parameter :: mimics_decomp = 2                      ! MIMICS decomposition method type
   integer, public            :: decomp_method  = ispval                ! Type of decomposition to use
   type(decomp_cascade_type), public :: decomp_cascade_con
   !------------------------------------------------------------------------
@@ -53,7 +55,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine decomp_cascade_par_init( NLFilename )
-    use clm_varctl         , only : use_fates, use_cn
+    use clm_varctl         , only : use_fates, use_cn, use_fates_sp
     use clm_varpar         , only : ndecomp_pools_max
     use spmdMod            , only : masterproc, mpicom
     use clm_nlUtilsMod     , only : find_nlgroup_name
@@ -87,6 +89,8 @@ contains
           decomp_method = no_soil_decomp
        case( 'CENTURYKoven2013' ) 
           decomp_method = century_decomp
+       case( 'MIMICSWieder2015' )
+          decomp_method = mimics_decomp
        case default
           call endrun('Bad soil_decomp_method = '//soil_decomp_method )
        end select
@@ -94,10 +98,21 @@ contains
     ! Broadcast namelist items to all processors
     call shr_mpi_bcast(decomp_method, mpicom)
     ! Don't do anything if neither FATES or BGC is on
-    if ( use_fates .or. use_cn ) then
+    if ( use_cn ) then
        if ( decomp_method == no_soil_decomp )then
-          call endrun('When running with FATES or BGC an active soil_decomp_method must be used')
+          call endrun('When running with BGC an active soil_decomp_method must be used')
        end if
+    else if ( use_fates ) then
+       if ( .not. use_fates_sp .and. (decomp_method == no_soil_decomp) )then
+          call endrun('When running with FATES and without FATES-SP an active soil_decomp_method must be used')
+       end if
+    else
+       if ( decomp_method /= no_soil_decomp )then
+          call endrun('When running without FATES or BGC soil_decomp_method must be None')
+       end if
+    end if
+     
+    if ( decomp_method /= no_soil_decomp )then
        ! We hardwire these parameters here because we use them
        ! in InitAllocate (in SoilBiogeochemStateType) which is called earlier than
        ! init_decompcascade_bgc where they might have otherwise been derived on the
@@ -109,27 +124,23 @@ contains
           if (decomp_method == century_decomp) then
              ndecomp_pools = 6
              ndecomp_cascade_transitions = 8
-          else  ! TODO slevis: Currently for CN. MIMICS will get its own.
+          else if (decomp_method == mimics_decomp) then
              ndecomp_pools = 7
-             ndecomp_cascade_transitions = 7
+             ndecomp_cascade_transitions = 14
           end if
        else
           if (decomp_method == century_decomp) then
              ndecomp_pools = 7
              ndecomp_cascade_transitions = 10
-          else  ! TODO slevis: Currently for CN. MIMICS will get its own.
+          else if (decomp_method == mimics_decomp) then
              ndecomp_pools = 8
-             ndecomp_cascade_transitions = 9
+             ndecomp_cascade_transitions = 15
           end if
        endif
        ! The next param also appears as a dimension in the params files dated
        ! c210418.nc and later
        ndecomp_pools_max = 8  ! largest ndecomp_pools value above
     else
-       if ( decomp_method /= no_soil_decomp )then
-          call endrun('When running without FATES or BGC soil_decomp_method must be None')
-       end if
-
        ndecomp_pools               = 7
        ndecomp_cascade_transitions = 7
        ndecomp_pools_max           = 8
@@ -166,6 +177,7 @@ contains
        allocate(decomp_cascade_con%decomp_pool_name_history(ibeg:ndecomp_pools))
        allocate(decomp_cascade_con%decomp_pool_name_long(ibeg:ndecomp_pools))
        allocate(decomp_cascade_con%decomp_pool_name_short(ibeg:ndecomp_pools))
+       allocate(decomp_cascade_con%is_microbe(ibeg:ndecomp_pools))
        allocate(decomp_cascade_con%is_litter(ibeg:ndecomp_pools))
        allocate(decomp_cascade_con%is_soil(ibeg:ndecomp_pools))
        allocate(decomp_cascade_con%is_cwd(ibeg:ndecomp_pools))
@@ -187,6 +199,7 @@ contains
        decomp_cascade_con%decomp_pool_name_restart(ibeg:ndecomp_pools)       = ''
        decomp_cascade_con%decomp_pool_name_long(ibeg:ndecomp_pools)          = ''
        decomp_cascade_con%decomp_pool_name_short(ibeg:ndecomp_pools)         = ''
+       decomp_cascade_con%is_microbe(ibeg:ndecomp_pools)                     = .false.
        decomp_cascade_con%is_litter(ibeg:ndecomp_pools)                      = .false.
        decomp_cascade_con%is_soil(ibeg:ndecomp_pools)                        = .false.
        decomp_cascade_con%is_cwd(ibeg:ndecomp_pools)                         = .false.
