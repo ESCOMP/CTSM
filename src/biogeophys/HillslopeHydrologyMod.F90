@@ -1100,7 +1100,7 @@ contains
   
   !-----------------------------------------------------------------------
   subroutine HillslopeUpdateStreamWater(bounds, waterstatebulk_inst, &
-       waterfluxbulk_inst,wateratm2lndbulk_inst,waterdiagnosticbulk_inst)
+       waterfluxbulk_inst,waterdiagnosticbulk_inst)
     !
     ! !DESCRIPTION:
     ! Calculate discharge from stream channel
@@ -1111,7 +1111,6 @@ contains
     use ColumnType      , only : col                
     use WaterFluxBulkType   , only : waterfluxbulk_type
     use WaterStateBulkType  , only : waterstatebulk_type
-    use Wateratm2lndBulkType, only : wateratm2lndbulk_type
     use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
     use spmdMod         , only : masterproc
     use clm_varcon      , only : spval, ispval, grlnd 
@@ -1123,13 +1122,12 @@ contains
     type(bounds_type), intent(in) :: bounds
     type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
     type(waterfluxbulk_type),  intent(inout) :: waterfluxbulk_inst
-    type(wateratm2lndbulk_type), intent(inout) :: wateratm2lndbulk_inst
     type(waterdiagnosticbulk_type), intent(out) :: waterdiagnosticbulk_inst
     
     integer               :: c, l, g, i, j
     real(r8) :: qflx_surf_vol                           ! volumetric surface runoff (m3/s)
-    real(r8) :: qflx_drain_perched_vol                  ! volumetric perched water table runoff (m3/s)
-    real(r8) :: qflx_rsub_sat_vol                       ! volumetric correction runoff (m3/s)
+    real(r8) :: qflx_drain_perched_vol                  ! volumetric perched saturated drainage (m3/s)
+    real(r8) :: qflx_drain_vol                          ! volumetric saturated drainage (m3/s)
     real(r8) :: dtime                                   ! land model time step (sec)
 
     character(len=*), parameter :: subname = 'HillslopeUpdateStreamWater'
@@ -1138,9 +1136,8 @@ contains
     associate( & 
          stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun, & ! Input/Output:  [real(r8) (:)   ] stream water volume (m3)
          qstreamflow             =>    waterfluxbulk_inst%qstreamflow_lun      ,    & ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
-         qdischarge              =>    waterfluxbulk_inst%qdischarge_col       ,    & ! Input: [real(r8) (:)   ]  discharge from columns (m3/s)
-         qflx_drain_perched      =>    waterfluxbulk_inst%qflx_drain_perched_col,   &! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
-         qflx_rsub_sat           =>    waterfluxbulk_inst%qflx_rsub_sat_col    ,    & ! Input:  [real(r8) (:)   ]  column level correction runoff (mm H2O /s)
+         qflx_drain              =>    waterfluxbulk_inst%qflx_drain_col,           & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
+         qflx_drain_perched      =>    waterfluxbulk_inst%qflx_drain_perched_col,   & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
          qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col        ,    & ! Input: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
          stream_water_depth      =>    waterdiagnosticbulk_inst%stream_water_depth_lun   & ! Output:  [real(r8) (:)   ] stream water depth (m)
          )
@@ -1151,19 +1148,21 @@ contains
        do l = bounds%begl,bounds%endl
           if(lun%itype(l) == istsoil) then
              g = lun%gridcell(l)
-             
+             ! the drainage terms are 'net' quantities, so summing over
+             ! all columns in a hillslope is equivalent to the outflow
+             ! from the lowland column 
              do c = lun%coli(l), lun%colf(l)
                 if (col%is_hillslope_column(c) .and. col%active(c)) then
                    qflx_surf_vol = qflx_surf(c)*1.e-3_r8 &
                         *(grc%area(g)*1.e6_r8*col%wtgcell(c))
                    qflx_drain_perched_vol = qflx_drain_perched(c)*1.e-3_r8 &
                         *(grc%area(g)*1.e6_r8*col%wtgcell(c))
-                   ! rsub_sat is not included in qdischarge, so add explicitly
-                   qflx_rsub_sat_vol = qflx_rsub_sat(c)*1.e-3_r8 &
+                   qflx_drain_vol = qflx_drain(c)*1.e-3_r8 &
                         *(grc%area(g)*1.e6_r8*col%wtgcell(c))
+
                    stream_water_volume(l) = stream_water_volume(l) &
-                        + (qdischarge(c) + qflx_drain_perched_vol &
-                         + qflx_rsub_sat_vol + qflx_surf_vol) * dtime
+                        + (qflx_drain_perched_vol &
+                         + qflx_drain_vol + qflx_surf_vol) * dtime
                 endif
              enddo
              stream_water_volume(l) = stream_water_volume(l) &
