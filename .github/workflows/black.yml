@@ -15,5 +15,5 @@ jobs:
           with:
              # Use options and version identical to the conda environment
              options: "--check --config python/pyproject.toml"
-             src:     "./python"
+             src:     "./"
              version: "22.3.0"
