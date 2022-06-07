@@ -1,4 +1,4 @@
-name: push black workflow
+name: black
 #
 # Run the python formatting in check mode
 #
