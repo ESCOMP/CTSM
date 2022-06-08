@@ -528,6 +528,21 @@ def subset_region(args, file_dict: dict):
         region.create_landuse_at_reg(file_dict["fluse_dir"], file_dict["fluse_in"],
                                      args.user_mods_dir)
 
+
+    # -- Write shell commands
+    if region.create_user_mods:
+        if not region.create_mesh:
+            err_msg = """
+                      \n
+                      ERROR: For regional cases, you can not create user_mods
+                      without creating the mesh file.
+
+                      Please rerun the script adding --create-mesh to subset the mesh file.
+                      """
+            raise argparse.ArgumentTypeError(err_msg)
+
+        region.write_shell_commands(os.path.join(args.user_mods_dir, "shell_commands"))
+
     logger.info("Successfully ran script for a regional case.")
 
 

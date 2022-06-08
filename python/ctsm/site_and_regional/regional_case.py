@@ -255,6 +255,9 @@ class RegionalCase(BaseCase):
         logger.info("mesh_in  :  %s", mesh_in)
         logger.info("mesh_out :  %s", mesh_out)
 
+        self.mesh = mesh_out
+        print (self)
+
         node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
 
         f_in = xr.open_dataset (mesh_in)
@@ -403,4 +406,17 @@ class RegionalCase(BaseCase):
         f_out.to_netcdf(mesh_out)
         logger.info("Successfully created file (mesh_out) %s", mesh_out)
 
-
+    def write_shell_commands(self, namelist):
+        """
+        writes out xml commands commands to a file (i.e. shell_commands) for single-point runs
+        """
+        # write_to_file surrounds text with newlines
+        with open(namelist, "w") as nl_file:
+            self.write_to_file(
+                "# Change below line if you move the subset data directory", nl_file
+            )
+            self.write_to_file(
+                "./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file
+            )
+            self.write_to_file("./xmlchange ATM_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
+            self.write_to_file("./xmlchange LAND_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
