@@ -7,14 +7,17 @@ case $hostname in
   ##cheyenne
   cheyenne* | r* )
       export MACH="cheyenne"
+      pio_iotype=1
       ;;
   ##casper
   casper* )
       export MACH="casper"
+      pio_iotype=1
       ;;
   ## Other machines
   *)
       export MACH="$hostname"
+      pio_iotype=2
       ;;
 esac
 
@@ -28,6 +31,9 @@ cwd=`pwd`
 rm -rf bld
 mkdir bld
 cd bld
+
+# Write pio_iotype to file with name pio_iotype.txt
+echo $pio_iotype > pio_iotype.txt
 
 # Run the cime configure tool to figure out what modules need to be loaded
 echo "Run cime configure for machine $MACH..."
