@@ -159,11 +159,8 @@ class RegionalCase(BaseCase):
 
         # specify files
         fsurf_in = os.path.join(indir, file)
-        print (self.tag)
-        print (fsurf_in)
         fsurf_out = add_tag_to_filename(fsurf_in, self.tag)
         logger.info("fsurf_in:  %s", fsurf_in)
-        print (fsurf_out)
         logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
 
         # create 1d coordinate variables to enable sel() method
@@ -240,12 +237,26 @@ class RegionalCase(BaseCase):
         """
         Create a mesh subsetted for the RegionalCase class.
         """
-        print ("Creating mesh for this: .....")
+        logger.info(
+            "----------------------------------------------------------------------"
+        )
+        logger.info(
+            "Subsetting mesh file for region: %s",
+            self.tag
+        )
+
+        today = datetime.today()
+        today_string = today.strftime("%y%m%d")
+
+
         mesh_in = os.path.join(mesh_dir, mesh_surf)
-        mesh_out = os.path.join(self.out_dir, os.path.splitext(mesh_surf)[0]+'_'+self.tag+'.nc')
-        print (mesh_out)
-        print (mesh_in)
+        mesh_out = os.path.join(self.out_dir, os.path.splitext(mesh_surf)[0]+'_'+self.tag+'_c'+today_string+'.nc')
+
+        logger.info("mesh_in  :  %s", mesh_in)
+        logger.info("mesh_out :  %s", mesh_out)
+
         node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
+
         f_in = xr.open_dataset (mesh_in)
         self.write_mesh (f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out)
 
@@ -266,35 +277,21 @@ class RegionalCase(BaseCase):
         cnt = 0
 
         for n in tqdm(range(elem_count)):
-            #print (elem_conn.shape)
-            #print (num_elem_conn.shape)
-            #print ('-----')
-            #print (numElementConn[n])
             endx = elem_conn[n,:num_elem_conn[n].values].values
-            #print ('endx:', endx)
-            #print ('-----')
             endx[:,] -= 1# convert to zero based index
             endx = [int(xi) for xi in endx]
-            #print ('-----')
 
-            #endx = endx.values
-            #print ('endx:', endx)
-            #print (node_coords.shape)
-            #print (node_coords)
             nlon = node_coords[endx,0].values
             nlat = node_coords[endx,1].values
-            #print ('-----')
 
             l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
             l2 = np.logical_or(nlat <= self.lat1,nlat >= self.lat2)
             if np.any(np.logical_or(l1,l2)):
-                #print(nlon,nlat)
                 pass
             else:
                 subset_element.append(n)
                 cnt+=1
 
-        print (subset_element)
 
         subset_node = []
         conn_dict = {}
@@ -317,6 +314,9 @@ class RegionalCase(BaseCase):
 
 
     def write_mesh (self, f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out):
+        """
+        This function writes out the subsetted mesh file.
+        """
         corner_pairs = f_in.variables['nodeCoords'][subset_node,]
 
         dimensions = f_in.dims
@@ -376,7 +376,6 @@ class RegionalCase(BaseCase):
             f_out['elementMask'] = xr.DataArray(elem_mask_out,
                                               dims=('elementCount'),
                                               attrs={'units': 'unitless'})
-            print (elem_mask_out)
             f_out.elementMask.encoding = {'dtype': np.int32}
 
         if 'elementArea' in variables:
@@ -386,10 +385,8 @@ class RegionalCase(BaseCase):
 
         #-- setting fill values
         for var in variables:
-            print (var)
             if '_FillValue' in f_in[var].encoding:
                 f_out[var].encoding['_FillValue'] = f_in[var].encoding['_FillValue']
-                print ('FillValue')
             else:
                 f_out[var].encoding['_FillValue'] = None
 
@@ -404,5 +401,6 @@ class RegionalCase(BaseCase):
                 }
 
         f_out.to_netcdf(mesh_out)
+        logger.info("Successfully created file (mesh_out) %s", mesh_out)
 
 
