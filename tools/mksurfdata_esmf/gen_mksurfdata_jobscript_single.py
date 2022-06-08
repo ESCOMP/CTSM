@@ -112,9 +112,9 @@ def main ():
         runfile.write('# Edit the mpirun command to use the MPI executable ' \
                       'on your system and the arguments it requires \n')
         if machine == 'cheyenne':
-            output = f"mpiexec_mpt -p \"%g:\" -np {n_p} ./bld/mksurfdata < {namelist_file}"
+            output = f"mpiexec_mpt -p \"%g:\" -np {n_p} ./tool_bld/mksurfdata < {namelist_file}"
         elif machine == 'casper':
-            output = f"mpiexec -np {n_p} ./bld/mksurfdata < {namelist_file}"
+            output = f"mpiexec -np {n_p} ./tool_bld/mksurfdata < {namelist_file}"
         runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")

@@ -26,7 +26,7 @@ cwd=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # Default settings
 verbose="No"
-blddir=$cwd/bld  # may overwrite this default with command-line option (below)
+blddir=$cwd/tool_bld  # may overwrite this default with command-line option (below)
 
 # Define what machine to use that's been ported to cime
 # May overwrite this default with command-line option --machine
@@ -73,10 +73,10 @@ while [ $# -gt 0 ]; do
    shift
 done
 
-# Create /bld directory
+# Create /tool_bld directory
 echo "cime Machine is: $MACH..."
 if [ -d "$blddir" ]; then
-  echo "A /bld directory exists; remove it to do a clean build..."
+  echo "A /tool_bld directory exists; remove it to do a clean build..."
   exit 1
 fi
 mkdir $blddir
