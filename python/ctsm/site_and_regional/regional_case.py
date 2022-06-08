@@ -256,7 +256,6 @@ class RegionalCase(BaseCase):
         logger.info("mesh_out :  %s", mesh_out)
 
         self.mesh = mesh_out
-        print (self)
 
         node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
 
