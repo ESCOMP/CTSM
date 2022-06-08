@@ -35,6 +35,8 @@ class MKSURFDATAESMF(SystemTestsCommon):
         time_stamp = datetime.today().strftime("%y%m%d")
         self._res = '10x15'  # see important comment in script's docstring
         self._model_yr = '1850'
+        self._jobscript = os.path.join(self._get_caseroot(),
+            'mksurfdata_jobscript_single')
         self._fsurdat_namelist = os.path.join(self._get_caseroot(),
             f'surfdata_{self._res}_hist_78pfts_CMIP6_{self._model_yr}_c{time_stamp}.namelist')
         self._fsurdat_nc = os.path.join(self._get_caseroot(),
@@ -46,7 +48,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
         """
         Build executable that will generate fsurdat
         Generate namelist for generating fsurdat
-        SKIP Generate jobscript that runs executable
+        Generate jobscript that runs executable
         Modify user_nl_clm to point to the generated fsurdat
         """
         # build_phase gets called twice:
@@ -60,7 +62,10 @@ class MKSURFDATAESMF(SystemTestsCommon):
                 'gen_mksurfdata_build.sh')
             nml_script_path = os.path.join(self._tool_path,
                 'gen_mksurfdata_namelist.py')
+            gen_jobscript_path = os.path.join(self._tool_path,
+                'gen_mksurfdata_jobscript_single.py')
             gen_mksurfdata_namelist = f'{nml_script_path} --res {self._res} --start-year {self._model_yr} --end-year {self._model_yr}'
+            gen_mksurfdata_jobscript = f'{gen_jobscript_path} --number-of-nodes 12 --tasks-per-node 12 --namelist-file {self._fsurdat_namelist}'
 
             # Rm tool_bld and build executable that will generate fsurdat
             try:
@@ -80,6 +85,16 @@ class MKSURFDATAESMF(SystemTestsCommon):
             except subprocess.CalledProcessError as e:
                 sys.exit(f'{e} ERROR RUNNING {gen_mksurfdata_namelist}. DETAILS IN {self._TestStatus_log_path}')
 
+            # Generate jobscript that will run the executable
+            if os.path.exists(self._jobscript):
+                os.remove(self._jobscript)
+            try:
+                subprocess.check_call(gen_mksurfdata_jobscript, shell=True)
+            except subprocess.CalledProcessError as e:
+                sys.exit(f'{e} ERROR RUNNING {gen_mksurfdata_jobscript}. DETAILS IN {self._TestStatus_log_path}')
+            # Change self._jobscript to an executable file
+            subprocess.check_call(f'chmod a+x {self._jobscript}', shell=True)
+
         # Call this step only once even if the test stops and gets restarted.
         if not os.path.exists(os.path.join(self._get_caseroot(),
             'done_MKSURFDATAESMF_setup.txt')):
@@ -95,23 +110,14 @@ class MKSURFDATAESMF(SystemTestsCommon):
         Run executable to generate fsurdat
         Submit CTSM run that uses fsurdat just generated
         """
-        # Paths and command strings
-        executable_path = os.path.join(self._tool_bld, 'mksurfdata')
-        machine = self._case.get_value("MACH")
-        if machine == 'cheyenne':
-            mpi_cmd = f'mpiexec_mpt -np 144 {executable_path} < {self._fsurdat_namelist}'
-        elif machine == 'casper':
-            mpi_cmd = f'mpiexec -np 144 {executable_path} < {self._fsurdat_namelist}'
-        else:
-            sys.exit(f'machine = {machine} not recognized by this script')
 
         # Run executable to generate fsurdat (rm fsurdat if exists)
         if os.path.exists(self._fsurdat_nc):
             os.remove(self._fsurdat_nc)
         try:
-            subprocess.check_call(mpi_cmd, shell=True)
+            subprocess.check_call(self._jobscript, shell=True)
         except subprocess.CalledProcessError as e:
-            sys.exit(f'{e} ERROR RUNNING {mpi_cmd}; details in {self._TestStatus_log_path}')
+            sys.exit(f'{e} ERROR RUNNING {self._jobscript}; details in {self._TestStatus_log_path}')
 
         # Submit CTSM run that uses fsurdat just generated
         self.run_indv()
