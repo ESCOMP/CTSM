@@ -108,7 +108,7 @@ def main ():
         # Run env_mach_specific.sh to control the machine dependent environment
         # including the paths to compilers and libraries external to cime such
         # as netcdf
-        runfile.write('. ./.env_mach_specific.sh \n')
+        runfile.write('. ./tool_bld/.env_mach_specific.sh \n')
         runfile.write('# Edit the mpirun command to use the MPI executable ' \
                       'on your system and the arguments it requires \n')
         if machine == 'cheyenne':
