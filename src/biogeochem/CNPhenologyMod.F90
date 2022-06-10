@@ -1707,6 +1707,7 @@ contains
     integer g         ! gridcell indices
     integer h         ! hemisphere indices
     integer s         ! growing season indices
+    integer k         ! grain pool indices
     integer idpp      ! number of days past planting
     integer mxmat     ! maximum growing season length
     real(r8) harvest_reason
@@ -1828,6 +1829,9 @@ contains
                crop_inst%gddaccum_thisyr(p,s) = -1._r8
                crop_inst%hui_thisyr(p,s) = -1._r8
                crop_inst%harvest_reason_thisyr(p,s) = -1._r8
+               do k = repr_grain_min, repr_grain_max
+                  cnveg_carbonflux_inst%repr_grainc_to_food_accum_thisyr(p,s,k) = 0._r8
+               end do
             end do
             next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
          end if
@@ -2231,6 +2235,10 @@ contains
                   crop_inst%gddaccum_thisyr(p, harvest_count(p)) = crop_inst%gddaccum_patch(p)
                   crop_inst%hui_thisyr(p, harvest_count(p)) = hui(p)
                   crop_inst%harvest_reason_thisyr(p, harvest_count(p)) = harvest_reason
+                  do k = repr_grain_min, repr_grain_max
+                     cnveg_carbonflux_inst%repr_grainc_to_food_accum_thisyr(p, harvest_count(p), k) = &
+                        cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p, k)
+                  end do
                endif
 
                croplive(p) = .false.     ! no re-entry in greater if-block
@@ -2493,6 +2501,7 @@ contains
     !
     ! LOCAL VARAIBLES:
     integer s              ! growing season index
+    integer k              ! grain pool index
     real(r8) gdd_target    ! cultivar GDD target this growing season
     real(r8) this_sowing_reason ! number representing sowing reason(s)
     !------------------------------------------------------------------------
@@ -2523,6 +2532,9 @@ contains
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
       s = sowing_count(p) + 1
+      do k = repr_grain_min, repr_grain_max
+         cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p, k) = 0._r8
+      end do
 
       ! SSR troubleshooting
       if (s < 1) then
