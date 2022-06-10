@@ -3705,7 +3705,7 @@ sub setup_logic_megan {
 
   if ($nl_flags->{'megan'} ) {
     if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
-       $log->fatal_error("MEGAN can NOT be on when ED is also on.\n" .
+       $log->warning("MEGAN can NOT be on when ED is also on.\n" .
                    "   Use the '-no-megan' option when '-bgc fates' is activated");
     }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_specifier');
