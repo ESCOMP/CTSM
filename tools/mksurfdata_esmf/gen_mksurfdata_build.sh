@@ -33,7 +33,7 @@ mkdir bld
 cd bld
 
 # Write pio_iotype to file with name pio_iotype.txt
-echo $pio_iotype > pio_iotype.txt
+echo $pio_iotype > $cwd/pio_iotype.txt
 
 # Run the cime configure tool to figure out what modules need to be loaded
 echo "Run cime configure for machine $MACH..."
