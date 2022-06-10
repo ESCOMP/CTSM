@@ -99,14 +99,11 @@ contains
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numpft, actual_numcft)
 
+    ! If fates is on, we override actual_maxsoil_patches. FATES dictates the
+    ! number of patches per column.  We still use numcft from the surface
+    ! file though...
     if(use_fates) then
-
-       ! If fates is on, we override actual_maxsoil_patches. FATES dictates the
-       ! number of patches per column.  We still use numcft from the surface
-       ! file though...
-       
        call CLMFatesGlobals1(actual_numpft, actual_numcft, actual_maxsoil_patches)
-       
     end if
     
     call clm_varpar_init(actual_maxsoil_patches, actual_numpft, actual_numcft)

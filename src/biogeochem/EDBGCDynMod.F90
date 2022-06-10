@@ -260,6 +260,14 @@ contains
        call t_stopf('SoilBiogeochemLittVertTransp')
     end if
 
+    ! Wood product fluxes will eventually be added to FATES-CLM. However
+    ! it is likely this will be implemented during or after we break away from
+    ! using this module. This module and the current coupling stategy bypasses
+    ! a number of processes in CLM, which includes the wood product modules.
+    ! Therefore the following call is a placeholder so that the wood-product 
+    ! wrapper code can be copied from here and applied at the right place when the time comes.
+    ! RGK 06-2022
+    
     !call FatesWrapWoodProducts(bounds, num_soilc, filter_soilc,c_products_inst)
     !call t_startf('CNWoodProducts')
     !call c_products_inst%UpdateProducts(bounds, &

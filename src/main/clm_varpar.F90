@@ -127,7 +127,12 @@ contains
     character(len=32) :: subname = 'clm_varpar_init'  ! subroutine name
     !------------------------------------------------------------------------------
 
-    maxsoil_patches = actual_maxsoil_patches  ! # of patches with bare ground
+    ! actual_maxsoil_patches is either the total number of cfts+pfts in the surface
+    ! file (for non-fates), or the number of patches plus the bareground that
+    ! fates requests.  If this is a fates-sp run, this value will also be the number 
+    ! of cfts+pfts as in a nonfates run
+
+    maxsoil_patches = actual_maxsoil_patches
     
     maxveg = maxsoil_patches - 1  ! # of patches without bare ground
 
@@ -135,6 +140,12 @@ contains
     ! for (1) Patches on the natural vegetation landunit (includes bare ground, and includes
     ! crops if create_crop_landunit=false), and (2) CFTs on the crop landunit (no elements
     ! if create_crop_landunit=false)
+    ! As for when we don't have a crop LU, which is currently when FATES is on...
+    ! These values are used to create the wt_nat_patch array that is used by fates_sp 
+    ! and fixed biogeog. Also, the pft and cft vectors are concatenated into
+    ! the natpft vector (wt_nat_patch), the wt_cft array is unused (size zero)
+    ! The following values should not be used for allocating patch structures
+    ! though.  That should be handled completely by maxoil_patches and maxveg
 
     if (create_crop_landunit) then
        
@@ -144,16 +155,8 @@ contains
        natpft_ub   = natpft_lb + natpft_size - 1
        cft_lb      = natpft_ub + 1
        cft_ub      = cft_lb + cft_size - 1
-       
-    else
 
-       ! FATES
-       ! These values are used to create the wt_nat_patch
-       ! array that is used by fates_sp and fixed biogeog.
-       ! Also, the pft and cft vectors are concatenated into
-       ! the natpft vector (wt_nat_patch), the wt_cft array is unused (size zero)
-       ! The following values should not be used for allocating patch structures
-       ! though.  That should be handled completely by maxoil_patches and maxveg
+    else ! only true when FATES is active
        
        natpft_size = surf_numpft+surf_numcft
        cft_size    = 0
@@ -161,15 +164,15 @@ contains
        natpft_ub   = surf_numpft+surf_numcft-1
        cft_lb      = 0
        cft_ub      = 0
-
-       if(use_fates_sp)then
-          if(natpft_ub .ne. maxveg) then
-             write(iulog,*) 'when fates is in SP mode, maxveg should match the upper bound'
-             write(iulog,*) 'on the surface dataset PFT+CFT indices (ie lsmft), yours: ',natpft_ub,maxveg
-             ! can't endrun due to circular dependencies?
-          end if
-       end if
        
+    end if
+       
+    if(.not.use_fates .or. use_fates_sp)then
+       if(natpft_ub .ne. maxveg) then
+          write(iulog,*) 'maxveg should match the upper bound for non-fates and fates-sp runs'
+          write(iulog,*) 'the surface dataset PFT+CFT indices (ie lsmft), yours: ',natpft_ub,maxveg
+          call shr_sys_abort(subname//' ERROR: conflict in maxveg and pft bounds')
+       end if
     end if
 
     mxharvests = mxsowings + 1
