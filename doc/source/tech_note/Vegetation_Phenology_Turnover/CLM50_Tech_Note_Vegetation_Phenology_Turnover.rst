@@ -643,7 +643,7 @@ follows:
 
    OSWI_{sum}^{n} =\left\{\begin{array}{l} {OSWI_{sum}^{n-1} +f_{day} \qquad \qquad \qquad {\rm for\; }\Psi _{s,3} \le \Psi _{offset} } \\ {{\rm max}\left(OSWI_{sum}^{n-1} -f_{day} ,0\right)\qquad {\rm for\; }\Psi _{s,3} >\Psi _{onset} } \end{array}\right.
 
-where :math:`{\Psi}_{offset} = -2 MPa` is the offset soil
+where :math:`{\Psi}_{offset} = -0.8 MPa` is the offset soil
 water potential threshold. An offset period is triggered if the previous
 onset period is complete and :math:`{OSWI}_{sum}`
 :math:`\mathrm{\ge}` :math:`{OSWI}_{sum\_crit}`, where :math:`{OSWI}_{sum\_crit} = 15`.
