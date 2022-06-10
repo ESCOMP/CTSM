@@ -30,6 +30,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <co2_ppmv sim_year="2100" ssp_rcp="SSP5-8.5" >1135.2</co2_ppmv>
 <co2_ppmv sim_year="2100" ssp_rcp="SSP5-3.4" >496.6</co2_ppmv>
 <co2_ppmv sim_year="2100" ssp_rcp="SSP1-2.6" >445.6</co2_ppmv>
+<co2_ppmv sim_year="2100" ssp_rcp="SSP3-7.0" >432.3</co2_ppmv>
 <co2_ppmv sim_year="1850"                    >284.7</co2_ppmv>
 <co2_ppmv sim_year="PtVg"                    >284.7</co2_ppmv>
 
@@ -817,7 +818,7 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_numaIA_hist_78pfts_CMIP6_si
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_brazil_hist_78pfts_CMIP6_simyr1850_c190214.nc</fsurdat>
 
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</fsurdat>
+lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne30np4_hist_78pfts_CMIP6_simyr1850_c200426.nc</fsurdat>
 
 <!-- Potential vegetation land use dataset, crop is off, and zeroed, all areas are natural vegetation without human disturbance -->
 <fsurdat hgrid="0.9x1.25"     sim_year="PtVg" use_crop=".false." irrigate=".false."
@@ -831,6 +832,8 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP1-2.6_78pfts_CMIP6_
 lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-8.5_78pfts_CMIP6_simyr2100_c200330.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="2100" use_crop=".true." ssp_rcp="SSP5-3.4" >
 lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_simyr2100_c200330.nc</fsurdat>
+<fsurdat hgrid="0.9x1.25"  sim_year="2100" use_crop=".true." ssp_rcp="SSP3-7.0" >
+lnd/clm2/surfdata_map/release-clm5.0.34/surfdata_0.9x1.25_SSP3-7.0_78pfts_CMIP6_simyr2100_c211227.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 
@@ -1087,23 +1090,14 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
 
 <!-- Only the CMIP6 Tier I Nitogen deposition files are available -->
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
+<stream_fldfilename_ndep hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5" sim_year_range="1850-2100"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
+<stream_fldfilename_ndep hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6" sim_year_range="1850-2100"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP1-2.6-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
+<stream_fldfilename_ndep hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5" sim_year_range="1850-2100"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-
-<stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP1-2.6-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0" sim_year_range="1850-2100"
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc</stream_fldfilename_ndep>
 
 <ndep_taxmode            phys="clm5_0" use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm5_0" use_cn=".true.">NDEP_month</ndep_varlist>

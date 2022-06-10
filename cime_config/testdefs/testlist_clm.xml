@@ -1105,13 +1105,14 @@
       <option name="wallclock">00:60:00</option>
     </options>
   </test>
-  <test name="PEM_Ld1" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/crop">
+  <test name="PEM_Ld1_P96x1" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment"  >2-node test on izumi with production compiler checking that different processor count gives the same answers</option>
     </options>
   </test>
   <test name="PET_P36x2_D" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/default">
@@ -1506,6 +1507,24 @@
       <option name="comment"  >This gives a short debug test of the cmip6 configuration as well as a test of the cmip6 configuration at the production resolution, both of which we want. This test needs to use init_interp to work, because of adding virtual Antarctica columns (currently the default out-of-the-box setting uses init_interp for this). Note, use of basic testmod her means no output will happen</option>
     </options>
   </test>
+  <test name="SMS_Ld5_D" grid="f09_g17" compset="IHistClm50BgcCrop" testmods="clm/smyle_hist">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Add a test of the smyle transient use-case</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5_D" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/smyle_1850">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Add a test of the smyle 1850 use-case</option>
+    </options>
+  </test>
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm50BgcCropCmip6" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
@@ -1548,6 +1567,15 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Transient production future scenario SSP5-8.5 extension case</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5" grid="f09_g17" compset="ISSP370ExtClm50BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Control 2100 production future scenario SSP3-7.0 extension case</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f10_f10_musgs" compset="ISSP245Clm50BgcCrop" testmods="clm/ciso_dec2050Start">

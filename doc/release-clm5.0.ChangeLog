@@ -1,4 +1,124 @@
 ===============================================================
+Tag name:  release-clm5.0.35
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Feb  8 16:09:57 MST 2022
+One-line Summary: Add SSP3-7.0 extension, and SMYLE 1850 and transient, compsets and use-cases
+
+Purpose of this version:
+------------------------
+
+Update externals for cism and cime to cesm2.1.4-rc-10. cime update was needed to run on izumi.
+iAdds a compset for the smyle L83 model (both 1850 and transient). BWsc1850smyle (jedwards4b)
+Add SSP3-7.0 extension compset and use-case, that runs for fixed 2100 conditions with 2100 landuse
+and 2100 harvest and fertilizer.
+
+Update Nitrogen-deposition datasets with files created from WACCM simulations for SSP scenarios (SSP3-7.0,
+SSP5-3.4, and SSP5-8.5).
+
+Fix several issues.
+
+
+CTSM Master Tag This Corresponds To:
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #):
+    Fixes #1197 SMYLE use-case setup 
+    Fixes #1633 2100 to 2500 Extension compset for SSP3-7.0
+    Fixes #1632 Missing ndep file to 2100 for SSP5-3.4
+    Fixes #1631 ndep file for SSP2-4.5 is incorrect
+    Fixes #1578 Need to replace SSP370 ndep file with new one 
+    Fixes #1131 Nitrogen Deposition file for SSP534OS
+    Fixes #1093 Problems with running fates_next_api/release-clm5.0 on izumi 
+    Fixes #1036 ne30np4 1850 case fails because the fsurdat file is incorrect.
+    Fixes #738  Totvegc threshold used to zero out soil carbon upon exit_spinup needs to be revisited
+
+Science changes since:  release-clm5.0.34
+  Increase totvegcthresh to 1.0 to provide more seed Carbon to PFT's that may have died in AD spinup mode
+  Update Nitorogen Deposition files for several SSP cases
+
+Software changes since:  release-clm5.0.34
+  Add tests for new use-cases
+
+Changes to User Interface since: 
+  New 2100_SSP3-7.0_control use-case and ISSP370ExtClm50BgcCrop compset
+  New 20thC_smyle_transient and 1850_smyle_control use-cases
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (30 different because of updates)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- PASS
+
+  fates tests (fates):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ PASS
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- PASS
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: Yes, only for some SSP cases and for AD spinup
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: AD spinup mode, and SSP3-7.0, SSP2-4.5 and SSP5-3.4 because of ndep files
+    - what platforms/compilers: All
+    - nature of change:
+       SSP cases are different because of update Nitrogen Deposition files
+       Gives more seed Carbon to PFT's that may have died
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+  (This will likely be true if the LII tests failed)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: (update cism, cime, and PTCLM)
+
+   cism:   cism-release-cesm2.1.2_02
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.39
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_20200902
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1614 -- add smyle L83 compset and SSP3-7.0 extension (jedwards4b)
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.34
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Mon Apr 20 22:08:42 MDT 2020

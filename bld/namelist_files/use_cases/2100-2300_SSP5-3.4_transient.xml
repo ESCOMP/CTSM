@@ -14,4 +14,7 @@
 
 <ssp_rcp>SSP5-3.4</ssp_rcp>
 
+<stream_fldfilename_ndep use_cn=".true."
+>lnd/clm2/ndepdata/fndep_clm_SSP534osext_b.e21.BWSSP534osextcmip6.f09_g17.CMIP6-SSP5-3.4OSext-WACCM.001_2100-2300_monthly_0.9x1.25_c200624.nc</stream_fldfilename_ndep>
+
 </namelist_defaults>
