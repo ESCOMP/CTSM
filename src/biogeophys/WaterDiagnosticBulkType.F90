@@ -287,7 +287,7 @@ contains
          avgflag='A', &
          long_name=this%info%lname('vertically summed soil ice (veg landunits only)'), &
          ptr_col=this%h2osoi_ice_tot_col, l2g_scale_type='veg')
-
+    ! excess ice vars
     this%exice_vol_tot_col(begc:endc) = 0.0_r8
     call hist_addfld1d ( &
          fname=this%info%fname('TOTEXICE_VOL'),  &
@@ -911,7 +911,7 @@ contains
       ! have to at least define them 
       call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXICE_SUBS'),  &
            dim1name='column', xtype=ncd_double, &
-           long_name=this%info%lname('vertically summed volumetric excess ice concentration (veg landunits only)'), units='mm/s', &
+           long_name=this%info%lname('vertically summed volumetric excess ice concentration (veg landunits only)'), units='m', &
            interpinic_flag='interp', readvar=readvar, data=this%exice_subs_tot_col)
       ! initialization of these to zero is ok, since they are not in history anyway
       this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8

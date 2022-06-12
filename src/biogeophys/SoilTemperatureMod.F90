@@ -1210,6 +1210,9 @@ contains
                wliq0(c,j) = h2osoi_liq(c,j)
                wexice0(c,j)=excess_ice(c,j)
                wmass0(c,j) = h2osoi_ice(c,j) + h2osoi_liq(c,j) + wexice0(c,j)
+              if (j>=1) then
+                exice_subs_col(c,j)=0._r8
+              endif
             endif   ! end of snow layer if-block
 
             if (j <= 0) then
