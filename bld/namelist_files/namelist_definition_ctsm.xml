@@ -2130,7 +2130,7 @@ Command line arguement for biogeochemistry mode for CLM4.5
         Nitrification/De-nitrification
         Methane model
         Vertically resolved Carbon
-   fates = FATES/ED ecosystem demography model with below ground BGC:
+   fates = FATES Functionally Assembled Terrestrial Ecosystem Simulator (ecosystem demography model with below ground BGC):
 </entry>
 
 <!-- ========================================================================================  -->

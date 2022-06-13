@@ -741,7 +741,7 @@ sub setup_cmdl_fates_mode {
 
     $var = "use_fates";
     if ( &value_is_true($nl_flags->{$var}) ) {
-      # This section is a place-holder to test for modules that are not allowed with ED
+      # This section is a place-holder to test for modules that are not allowed with FATES
       # the defaults which are set in the logic section of the namelist builder will
       # automatically set these correctly (well that is the assumption), but here we
       # want to set a catch to fail and warn users if they explicitly set incompatible user namelist
@@ -1167,7 +1167,7 @@ sub setup_cmdl_spinup {
      $log->fatal_error("$var has an invalid value ($val). Valid values are: @valid_values");
   }
   if ( $nl_flags->{'bgc_spinup'} eq "on" && (not &value_is_true( $nl_flags->{'use_cn'} ))  && (not &value_is_true($nl_flags->{'use_fates'})) ) {
-     $log->fatal_error("$var can not be '$nl_flags->{'bgc_spinup'}' if neither CN nor ED is turned on (use_cn=$nl_flags->{'use_cn'}, use_fates=$nl_flags->{'use_fates'}).");
+     $log->fatal_error("$var can not be '$nl_flags->{'bgc_spinup'}' if neither CN nor FATES is turned on (use_cn=$nl_flags->{'use_cn'}, use_fates=$nl_flags->{'use_fates'}).");
   }
   if ( $nl->get_value("spinup_state") eq 0 && $nl_flags->{'bgc_spinup'} eq "on" ) {
      $log->fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
@@ -2611,7 +2611,7 @@ sub setup_logic_do_transient_crops {
       # In principle, use_fates should be compatible with
       # do_transient_crops. However, this hasn't been tested, so to be safe,
       # we are not allowing this combination for now.
-      $cannot_be_true = "$var has not been tested with ED, so for now these two options cannot be combined";
+      $cannot_be_true = "$var has not been tested with FATES, so for now these two options cannot be combined";
    }
 
    if ($cannot_be_true) {
@@ -3660,6 +3660,10 @@ sub setup_logic_dry_deposition {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ($opts->{'drydep'} ) {
+    if ( &value_is_true( $nl_flags->{'use_fates'}) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+       $log->warning("DryDeposition can NOT be on when FATES is also on unless FATES-SP mode is on.\n" .
+                     "   Use the '--no-drydep' option when '-bgc fates' is activated");
+    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_list');
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_method');
   } else {
@@ -3705,7 +3709,7 @@ sub setup_logic_megan {
 
   if ($nl_flags->{'megan'} ) {
     if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
-       $log->warning("MEGAN can NOT be on when ED is also on.\n" .
+       $log->warning("MEGAN can NOT be on when FATES is also on.\n" .
                    "   Use the '-no-megan' option when '-bgc fates' is activated");
     }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_specifier');
