@@ -170,7 +170,6 @@ contains
     real(r8) :: ur(bounds%begp:bounds%endp)        ! wind speed at reference height [m/s]
     real(r8) :: ustar(bounds%begp:bounds%endp)     ! friction velocity [m/s]
     real(r8) :: wc                                 ! convective velocity [m/s]
-    real(r8) :: zeta                               ! dimensionless height used in Monin-Obukhov theory
     real(r8) :: zldis(bounds%begp:bounds%endp)     ! reference height "minus" zero displacement height [m]
     real(r8) :: displa(bounds%begp:bounds%endp)    ! displacement (always zero) [m]
     real(r8) :: u2m                                ! 2 m wind speed (m/s)
@@ -239,6 +238,7 @@ contains
          forc_hgt_t_patch =>    frictionvel_inst%forc_hgt_t_patch      , & ! Input:  [real(r8) (:)   ]  observational height of temperature at pft level [m]
          forc_hgt_q_patch =>    frictionvel_inst%forc_hgt_q_patch      , & ! Input:  [real(r8) (:)   ]  observational height of specific humidity at pft level [m]
          zetamax          =>    frictionvel_inst%zetamaxstable         , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
+         zeta             =>    frictionvel_inst%zeta_patch            , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter
          ram1             =>    frictionvel_inst%ram1_patch            , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                    
 
          q_ref2m          =>    waterdiagnosticbulk_inst%q_ref2m_patch          , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)      
@@ -554,17 +554,17 @@ contains
             qstar = temp2(p)*dqh(p)
 
             thvstar=tstar*(1._r8+0.61_r8*forc_q(c)) + 0.61_r8*forc_th(c)*qstar
-            zeta=zldis(p)*vkc * grav*thvstar/(ustar(p)**2*thv(c))
+            zeta(p)=zldis(p)*vkc * grav*thvstar/(ustar(p)**2*thv(c))
 
-            if (zeta >= 0._r8) then     !stable
-               zeta = min(zetamax,max(zeta,0.01_r8))
+            if (zeta(p) >= 0._r8) then     !stable
+               zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
                um(p) = max(ur(p),0.1_r8)
             else                     !unstable
-               zeta = max(-100._r8,min(zeta,-0.01_r8))
+               zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
                wc = beta1*(-grav*ustar(p)*thvstar*zii/thv(c))**0.333_r8
                um(p) = sqrt(ur(p)*ur(p)+wc*wc)
             end if
-            obu(p) = zldis(p)/zeta
+            obu(p) = zldis(p)/zeta(p)
 
             if (obuold(p)*obu(p) < 0._r8) nmozsgn(p) = nmozsgn(p)+1
 

@@ -3885,7 +3885,10 @@ sub setup_logic_friction_vel {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'zetamaxstable' );
+  my $z0param_method = remove_leading_and_trailing_quotes($nl->get_value('z0param_method' ));
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'zetamaxstable',
+              'z0param_method'=>$z0param_method );
 }
 
 #-------------------------------------------------------------------------------

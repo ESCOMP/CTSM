@@ -117,7 +117,6 @@ contains
     integer  :: p,c,g,f,j,l                      ! indices
     integer  :: iter                             ! iteration index
     real(r8) :: zldis(bounds%begp:bounds%endp)   ! reference height "minus" zero displacement height [m]
-    real(r8) :: zeta                             ! dimensionless height used in Monin-Obukhov theory
     real(r8) :: wc                               ! convective velocity [m/s]
     real(r8) :: dth(bounds%begp:bounds%endp)     ! diff of virtual temp. between ref. height and surface
     real(r8) :: dthv                             ! diff of vir. poten. temp. between ref. height and surface
@@ -239,6 +238,7 @@ contains
          forc_hgt_q_patch       => frictionvel_inst%forc_hgt_q_patch            , & ! Output: [real(r8) (:)   ] observational height of specific humidity at patch level [m]
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
          zetamax                => frictionvel_inst%zetamaxstable               , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
+         zeta                   => frictionvel_inst%zeta_patch                  , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter
          z0mg_col               => frictionvel_inst%z0mg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, momentum [m]
          z0hg_col               => frictionvel_inst%z0hg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, sensible heat [m]
          z0qg_col               => frictionvel_inst%z0qg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, latent heat [m]
@@ -369,17 +369,17 @@ contains
                forc_hgt_q_patch(p) = forc_hgt_q_patch(g) + z0qg_patch(p) + displa(p)
             end if
             thvstar = tstar*(1._r8+0.61_r8*forc_q(c)) + 0.61_r8*forc_th(c)*qstar
-            zeta = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
+            zeta(p) = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
-            if (zeta >= 0._r8) then                   !stable
-               zeta = min(zetamax,max(zeta,0.01_r8))
+            if (zeta(p) >= 0._r8) then                   !stable
+               zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
                um(p) = max(ur(p),0.1_r8)
             else                                      !unstable
-               zeta = max(-100._r8,min(zeta,-0.01_r8))
+               zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
                wc = beta(c)*(-grav*ustar(p)*thvstar*zii(c)/thv(c))**0.333_r8
                um(p) = sqrt(ur(p)*ur(p) + wc*wc)
             end if
-            obu(p) = zldis(p)/zeta
+            obu(p) = zldis(p)/zeta(p)
 
             num_iter(p) = iter
          end do

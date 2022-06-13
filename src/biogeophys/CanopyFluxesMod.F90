@@ -1395,7 +1395,7 @@ bioms:   do f = 1, fn
                if(use_biomass_heat_storage) then 
                   ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
                   if (z0param_method == 'Meier2022') then
-                     zeta(p) = min(20._r8,max(zeta(p),0.01_r8))
+                     zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
                   else
                      zeta(p) = min(100._r8,max(zeta(p),0.01_r8))
                   end if
