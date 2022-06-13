@@ -118,6 +118,9 @@ contains
     ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: actual_maxsoil_patches  ! Number of soil patches to allocate
+                                                   ! This value comes either from the
+                                                   ! surface dataset (non-fates) or 
+                                                   ! from fates (via its parameter file)
     integer, intent(in) :: surf_numpft             ! Number of PFTs in the surf dataset
     integer, intent(in) :: surf_numcft             ! Number of CFTs in the surf dataset
     !

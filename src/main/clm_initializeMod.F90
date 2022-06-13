@@ -440,8 +440,7 @@ contains
           call C13_init_TimeSeries()
        end if
        
-    else
-       ! FATES OR Satellite phenology
+    else ! FATES OR Satellite phenology
        
        if(use_fates_sp .or. .not.use_fates)then
           call SatellitePhenologyInit(bounds_proc)
