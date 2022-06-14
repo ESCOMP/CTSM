@@ -829,22 +829,21 @@ contains
     if ( .not. use_fates ) then
        ! Check sum of vegetation adds to 1
        call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
-
-       ! Call collapse_crop_types: allows need to maintain only 78-pft input data
-       ! For use_crop = .false. collapsing 78->16 pfts or 16->16 or some new
-       !    configuration
-       ! For use_crop = .true. most likely collapsing 78 to the list of crops for
-       !    which the CLM includes parameterizations
-       ! The call collapse_crop_types also appears in subroutine dyncrop_interp
-       call collapse_crop_types(wt_cft(begg:endg,:), fert_cft(begg:endg,:), cft_size, begg, endg, verbose=.true.)
-
-       ! Collapse crop variables as needed
-       ! The call to collapse_crop_var also appears in subroutine dyncrop_interp
-       ! - fert_cft TODO Is this call redundant because it simply sets the crop
-       !                 variable to 0 where is_pft_known_to_model = .false.?
-       call collapse_crop_var(fert_cft(begg:endg,:), cft_size, begg, endg)
-
     end if
+
+    ! Call collapse_crop_types: allows need to maintain only 78-pft input data
+    ! For use_crop = .false. collapsing 78->16 pfts or 16->16 or some new
+       !    configuration
+    ! For use_crop = .true. most likely collapsing 78 to the list of crops for
+    !    which the CLM includes parameterizations
+    ! The call collapse_crop_types also appears in subroutine dyncrop_interp
+    call collapse_crop_types(wt_cft(begg:endg,:), fert_cft(begg:endg,:), cft_size, begg, endg, verbose=.true.)
+    
+    ! Collapse crop variables as needed
+    ! The call to collapse_crop_var also appears in subroutine dyncrop_interp
+    ! - fert_cft TODO Is this call redundant because it simply sets the crop
+    !                 variable to 0 where is_pft_known_to_model = .false.?
+    call collapse_crop_var(fert_cft(begg:endg,:), cft_size, begg, endg)
 
     ! Call collapse_to_dominant: enhance ctsm performance with fewer active pfts
     ! Collapsing to the top N dominant pfts (n_dom_pfts set in namelist).
