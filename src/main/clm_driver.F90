@@ -221,10 +221,12 @@ contains
 
     ! ============================================================================
     ! Specified phenology
+    ! Done in SP mode, FATES-SP mode and also when dry-deposition is active
     ! ============================================================================
 
     if (use_cn) then
        ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
+       ! NOTE: This is also true of FATES below
        if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
@@ -233,22 +235,25 @@ contains
 
     elseif(use_fates) then
 
-       ! FATES does not use any leaf/stem/htop data unless in satphen mode
-       if ( use_fates_sp) then
+       ! For FATES-Specified phenology mode interpolate the weights for
+       ! time-interpolation of monthly vegetation data (as in SP mode below)
+       ! Also for FATES with dry-deposition as above need to call CLMSP so that mlaidiff is obtained
+       if ( use_fates_sp .or. (n_drydep > 0 .and. drydep_method == DD_XLND ) )then
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
        end if
-       
+
     else
-       
+
        ! Determine weights for time interpolation of monthly vegetation data.
        ! This also determines whether it is time to read new monthly vegetation and
        ! obtain updated leaf area index [mlai1,mlai2], stem area index [msai1,msai2],
        ! vegetation top [mhvt1,mhvt2] and vegetation bottom [mhvb1,mhvb2]. The
        ! weights obtained here are used in subroutine SatellitePhenology to obtain time
        ! interpolated values.
-       if ( doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND ) )then
+       ! This is also done for FATES-SP mode above
+       if (doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND ) )then
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
@@ -256,7 +261,6 @@ contains
 
     end if
 
-    
     ! ==================================================================================
     ! Determine decomp vertical profiles
     !
