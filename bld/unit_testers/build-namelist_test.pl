@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1845;
+my $ntests = 1846;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1254;
 }
@@ -953,6 +953,11 @@ my %failtest = (
                                    },
      "useFATESWcreatecrop"       =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"create_crop_landunit=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "useFATESWn_dom_pft"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"n_dom_pfts = 1",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
