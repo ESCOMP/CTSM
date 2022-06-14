@@ -4009,7 +4009,6 @@ contains
           do fi = 1,num_patch
              i = filter_patch(fi)
              this%repr_grainc_to_food_patch(i,k) = value_patch
-             this%repr_grainc_to_food_accum_patch(i,k) = this%repr_grainc_to_food_accum_patch(i,k) + value_patch
              this%repr_grainc_to_seed_patch(i,k) = value_patch
           end do
        end do

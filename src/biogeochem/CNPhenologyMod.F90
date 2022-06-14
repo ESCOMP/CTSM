@@ -3447,6 +3447,9 @@ contains
                 cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
                      cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) + &
                      cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,k)
+                cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p,k) = &
+                     cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p,k) + &
+                     cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,k)
                 cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
                      cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) + &
                      cnveg_nitrogenflux_inst%repr_grainn_to_food_patch(p,k)
