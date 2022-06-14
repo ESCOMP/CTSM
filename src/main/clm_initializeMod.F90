@@ -442,7 +442,7 @@ contains
 
     else ! FATES OR Satellite phenology
 
-       if(use_fates_sp .or. .not.use_fates)then
+       if(use_fates_sp .or. (.not.use_cn) .or. (n_drydep > 0 .and.  drydep_method == DD_XLND) )then
           call SatellitePhenologyInit(bounds_proc)
        end if
 
@@ -611,11 +611,9 @@ contains
     ! to get estimates of monthly LAI
     if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
        call readAnnualVegetation(bounds_proc, canopystate_inst)
-       if (nsrest == nsrStartup .and. finidat /= ' ') then
-          ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
-          ! This needs to be done even if CN or CNDV is on!
-          call interpMonthlyVeg(bounds_proc, canopystate_inst)
-       end if
+       ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
+       ! This needs to be done even if CN or CNDV is on!
+       call interpMonthlyVeg(bounds_proc, canopystate_inst)
     ! If fates has satellite phenology enabled, get the monthly veg values
     ! prior to the first call to SatellitePhenology()
     elseif ( use_fates_sp ) then
