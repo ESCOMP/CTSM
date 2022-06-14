@@ -431,6 +431,7 @@ contains
        if (n_drydep > 0 .and. drydep_method == DD_XLND) then
           ! Must do this also when drydeposition is used so that estimates of monthly
           ! differences in LAI can be computed
+          ! Also do this for FATES see below
           call SatellitePhenologyInit(bounds_proc)
        end if
        if ( use_c14 .and. use_c14_bombspike ) then
@@ -442,6 +443,8 @@ contains
 
     else ! FATES OR Satellite phenology
 
+       ! For SP FATES-SP Initialize SP
+       ! Also for FATES with Dry-Deposition on as well (see above)
        if(use_fates_sp .or. (.not.use_cn) .or. (n_drydep > 0 .and.  drydep_method == DD_XLND) )then
           call SatellitePhenologyInit(bounds_proc)
        end if
