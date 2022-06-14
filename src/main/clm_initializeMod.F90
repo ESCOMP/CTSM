@@ -41,7 +41,7 @@ module clm_initializeMod
 
   integer :: actual_numcft  ! numcft from sfc dataset
   integer :: actual_numpft  ! numpft from sfc dataset
-  
+
 !-----------------------------------------------------------------------
 contains
 !-----------------------------------------------------------------------
@@ -105,7 +105,7 @@ contains
     if(use_fates) then
        call CLMFatesGlobals1(actual_numpft, actual_numcft, actual_maxsoil_patches)
     end if
-    
+
     call clm_varpar_init(actual_maxsoil_patches, actual_numpft, actual_numcft)
     call decomp_cascade_par_init( NLFilename )
     call clm_varcon_init( IsSimpleBuildTemp() )
@@ -228,7 +228,7 @@ contains
     allocate (haslake      (begg:endg                      ))
     allocate (pct_urban_max(begg:endg, numurbl             ))
     allocate (wt_nat_patch (begg:endg, natpft_lb:natpft_ub ))
-    
+
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
     call pftcon%Init()
@@ -250,9 +250,9 @@ contains
        ! to allocate space)
        ! This also sets up various global constants in FATES
        ! ------------------------------------------------------------------------
-       
+
        call CLMFatesGlobals2()
-       
+
     end if
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
@@ -439,9 +439,9 @@ contains
        if ( use_c13 .and. use_c13_timeseries ) then
           call C13_init_TimeSeries()
        end if
-       
+
     else ! FATES OR Satellite phenology
-       
+
        if(use_fates_sp .or. .not.use_fates)then
           call SatellitePhenologyInit(bounds_proc)
        end if
@@ -607,9 +607,9 @@ contains
     end if
 
     ! Read monthly vegetation
-    ! Even if CN is on, and dry-deposition is active, read CLMSP annual vegetation
+    ! Even if CN or FATES is on, and dry-deposition is active, read CLMSP annual vegetation
     ! to get estimates of monthly LAI
-    if ( n_drydep > 0 .and. drydep_method == DD_XLND .and. .not.use_fates )then
+    if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
        call readAnnualVegetation(bounds_proc, canopystate_inst)
        if (nsrest == nsrStartup .and. finidat /= ' ') then
           ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
@@ -621,7 +621,7 @@ contains
     elseif ( use_fates_sp ) then
        call interpMonthlyVeg(bounds_proc, canopystate_inst)
     end if
-    
+
     ! Determine gridcell averaged properties to send to atm
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')
