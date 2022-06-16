@@ -265,7 +265,7 @@ contains
            ! decomposition k
            data2dptr => this%decomp_k_col(:,:,k)
            fieldname = 'K_'//trim(decomp_cascade_con%decomp_pool_name_history(k))
-           longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' potential loss coefficient'
+           longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' loss coefficient'
            call hist_addfld_decomp (fname=fieldname, units='1/s',  type2d='levdcmp', &
                 avgflag='A', long_name=longname, &
                 ptr_col=data2dptr, default='inactive')
