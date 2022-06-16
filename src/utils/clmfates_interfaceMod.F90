@@ -67,8 +67,7 @@ module CLMFatesInterfaceMod
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
    use clm_varcon        , only : ispval
-   !use clm_varpar        , only : natpft_size, cft_size
-   use clm_varpar        , only : natpft_lb, natpft_ub
+   use clm_varpar        , only : surfpft_lb,surfpft_ub
    use clm_varpar        , only : numrad
    use clm_varpar        , only : ivis
    use clm_varpar        , only : inir
@@ -694,7 +693,7 @@ module CLMFatesInterfaceMod
 
             ndecomp = col%nbedrock(c)
 
-            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, num_harvest_inst,natpft_lb,natpft_ub)
+            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, num_harvest_inst,surfpft_lb,surfpft_ub)
             call allocate_bcout(this%fates(nc)%bc_out(s),col%nbedrock(c),ndecomp)
             call zero_bcs(this%fates(nc),s)
 
@@ -708,12 +707,12 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in(s)%pft_areafrac(:)=0._r8
             ! initialize static layers for reduced complexity FATES versions from HLM
             ! maybe make this into a subroutine of it's own later.
-            do m = natpft_lb,natpft_ub
-               ft = m - natpft_lb
+            do m = surfpft_lb,surfpft_ub
+               ft = m - surfpft_lb
                this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,m)
             end do
 
-            if(abs(sum(this%fates(nc)%bc_in(s)%pft_areafrac(natpft_lb:natpft_ub))-1.0_r8).gt.1.0e-9)then
+            if(abs(sum(this%fates(nc)%bc_in(s)%pft_areafrac(surfpft_lb:surfpft_ub))-1.0_r8).gt.1.0e-9)then
                write(iulog,*) 'pft_area error in interfc ',s, sum(this%fates(nc)%bc_in(s)%pft_areafrac(:))-1.0_r8
                call endrun(msg=errMsg(sourcefile, __LINE__))
               endif
@@ -954,7 +953,7 @@ module CLMFatesInterfaceMod
          ! in FATES.
          ! N.B. Fow now these are fixed values pending HLM updates.
          if(use_fates_sp)then
-           do ft = natpft_lb,natpft_ub
+           do ft = surfpft_lb,surfpft_ub
                ! here we are mapping from P space in the HLM to FT space in the sp_input arrays.
                p = ft + col%patchi(c) ! for an FT of 1 we want to use
                this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = canopystate_inst%tlai_patch(p)
@@ -1593,7 +1592,7 @@ module CLMFatesInterfaceMod
                if(use_fates_sp)then
                   do s = 1,this%fates(nc)%nsites
                      c = this%f2hmap(nc)%fcolumn(s)
-                     do ft = natpft_lb,natpft_ub  !set of pfts in HLM
+                     do ft = surfpft_lb,surfpft_ub  !set of pfts in HLM
                         ! here we are mapping from P space in the HLM to FT space in the sp_input arrays.
                         p = ft + col%patchi(c) ! for an FT of 1 we want to use
                         this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = canopystate_inst%tlai_patch(p)
@@ -1740,7 +1739,7 @@ module CLMFatesInterfaceMod
             if(use_fates_sp)then
                do s = 1,this%fates(nc)%nsites
                   c = this%f2hmap(nc)%fcolumn(s)
-                  do ft = natpft_lb,natpft_ub
+                  do ft = surfpft_lb,surfpft_ub
                      ! here we are mapping from P space in the HLM to FT space in the sp_input arrays.
                      p = ft + col%patchi(c) ! for an FT of 1 we want to use
                      this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = canopystate_inst%tlai_patch(p)
