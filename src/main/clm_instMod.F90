@@ -533,7 +533,8 @@ contains
     call water_inst%restart(bounds, ncid, flag=flag, &
          writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
          watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:), &
-         t_soisno_col=temperature_inst%t_soisno_col(bounds%begc:, -nlevsno+1:))
+         t_soisno_col=temperature_inst%t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:), & 
+         altmax_lastyear_indx=active_layer_inst%altmax_lastyear_indx_col(bounds%begc:bounds%endc))
 
     call irrigation_inst%restart (bounds, ncid, flag=flag)
 

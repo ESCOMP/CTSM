@@ -188,7 +188,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine RestartBulk(this, bounds, ncid, flag, &
-       watsat_col, t_soisno_col)
+       watsat_col, t_soisno_col, altmax_lastyear_indx)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
@@ -204,6 +204,7 @@ contains
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
     real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    integer          , intent(in)    :: altmax_lastyear_indx(bounds%begc:) !col active layer index last year
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,j
@@ -214,7 +215,8 @@ contains
 
     call this%restart (bounds, ncid, flag=flag, &
          watsat_col=watsat_col(bounds%begc:bounds%endc,:), &
-         t_soisno_col=t_soisno_col(bounds%begc:, -nlevsno+1:)) 
+         t_soisno_col=t_soisno_col(bounds%begc:, -nlevsno+1:), &
+         altmax_lastyear_indx=altmax_lastyear_indx(bounds%begc:)) 
 
 
     call restartvar(ncid=ncid, flag=flag, &
