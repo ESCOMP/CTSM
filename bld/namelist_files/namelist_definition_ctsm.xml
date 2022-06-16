@@ -2823,7 +2823,7 @@ use case.)
 <!-- ========================================================================================  -->
 <entry id="use_excess_ice" type="logical" category="physics"
         group="clm_inparm" valid_values="" >
-Toggle to turn on the excess ice physics, (Lee et al., 2014; Cai et al., 2020)
+If TRUE turn on the excess ice physics, (Lee et al., 2014; Cai et al., 2020)
 </entry>
 
 <entry id="stream_fldfilename_exice" type="char*256(30)" category="datasets"
@@ -2835,5 +2835,13 @@ Filename of input stream data for excess ice data
        input_pathname="abs" group="exice_streams" valid_values="" >
 mesh filename of input stream data for excess ice
 </entry>
+
+<entry id="stream_mapalgo_exice" type="char*256" category="datasets"
+       group="exice_streams" valid_values="bilinear,nn" >
+Mapping method from excess ice input stream data to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+</entry>
+
 
 </namelist_definition>

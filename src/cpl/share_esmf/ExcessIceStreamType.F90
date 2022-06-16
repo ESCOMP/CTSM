@@ -37,7 +37,7 @@ module ExcessIceStreamType
   type, private :: streamcontrol_type
      character(len=CL)  :: stream_fldFileName_exice   ! data Filename
      character(len=CL)  :: stream_meshfile_exice      ! mesh Filename
-     character(len=CL)  :: exicemapalgo               ! map algo
+     character(len=CL)  :: stream_mapalgo_exice       ! map algo
   contains
      procedure, private :: ReadNML     ! Read in namelist
   end type streamcontrol_type
@@ -95,10 +95,10 @@ contains
       compname            = 'LND',                                              &
       model_clock         = model_clock,                                        &
       model_mesh          = mesh,                                               &
-      stream_meshfile     = control%stream_meshfile_exice,              &
+      stream_meshfile     = control%stream_meshfile_exice,                      &
       stream_lev_dimname  = 'null',                                             &
-      stream_mapalgo      = 'nn',                       &
-      stream_filenames    = (/trim(control%stream_fldFileName_exice)/), &
+      stream_mapalgo      = control%stream_mapalgo_exice,                       &
+      stream_filenames    = (/trim(control%stream_fldFileName_exice)/),         &
       stream_fldlistFile  = stream_varnames,                                    &
       stream_fldListModel = stream_varnames,                                    &
       stream_yearFirst    = 1996,                                               &
@@ -107,8 +107,8 @@ contains
       stream_offset       = 0,                                                  &
       stream_taxmode      = 'extend',                                           &
       stream_dtlimit      = 1.0e30_r8,                                          &
-      stream_tintalgo     = 'nearest',                                           &
-      stream_name         = 'excess ice ',                                 &
+      stream_tintalgo     = 'nearest',                                          &
+      stream_name         = 'excess ice ',                                      &
       rc                  = rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
         call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -247,13 +247,13 @@ subroutine ReadNML(this, bounds, NLFilename)
   integer            :: nml_error ! namelist i/o error flag
   character(len=CL)  :: stream_fldFileName_exice = ' '
   character(len=CL)  :: stream_meshfile_exice = ' '
-  character(len=CL)  :: exicemapalgo = 'bilinear'
+  character(len=CL)  :: stream_mapalgo_exice = 'bilinear'
   character(len=*), parameter :: namelist_name = 'exice_streams'    ! MUST agree with name in namelist and read
   character(len=*), parameter :: subName = "('exice_streams::ReadNML')"
   !-----------------------------------------------------------------------
 
   namelist /exice_streams/ &               ! MUST agree with namelist_name above
-       exicemapalgo,  stream_fldFileName_exice, stream_meshfile_exice
+       stream_mapalgo_exice,  stream_fldFileName_exice, stream_meshfile_exice
 
   ! Default values for namelist
 
@@ -272,7 +272,7 @@ subroutine ReadNML(this, bounds, NLFilename)
      close(nu_nml)
   endif
 
-  call shr_mpi_bcast(exicemapalgo             , mpicom)
+  call shr_mpi_bcast(stream_mapalgo_exice     , mpicom)
   call shr_mpi_bcast(stream_fldFileName_exice , mpicom)
   call shr_mpi_bcast(stream_meshfile_exice    , mpicom)
 
@@ -281,11 +281,11 @@ subroutine ReadNML(this, bounds, NLFilename)
      write(iulog,*) namelist_name, ' stream settings:'
      write(iulog,*) '  stream_fldFileName_exice = ',stream_fldFileName_exice
      write(iulog,*) '  stream_meshfile_exice    = ',stream_meshfile_exice
-     write(iulog,*) '  exicemapalgo             = ',exicemapalgo
+     write(iulog,*) '  stream_mapalgo_exice     = ',stream_mapalgo_exice
   endif
   this%stream_fldFileName_exice = stream_fldFileName_exice
   this%stream_meshfile_exice    = stream_meshfile_exice
-  this%exicemapalgo             = exicemapalgo
+  this%stream_mapalgo_exice     = stream_mapalgo_exice
 
 end subroutine ReadNML
 

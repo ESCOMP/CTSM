@@ -4153,6 +4153,7 @@ sub setup_logic_exice {
   if ($opts->{'driver'} eq "nuopc" ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_exice');
     }
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_mapalgo_exice');
 
 } # end exice streams
 
