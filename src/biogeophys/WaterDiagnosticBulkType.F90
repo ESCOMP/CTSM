@@ -241,6 +241,7 @@ contains
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
+    use clm_varctl     , only : use_excess_ice
     !
     ! !ARGUMENTS:
     class(waterdiagnosticbulk_type), intent(in) :: this
@@ -288,23 +289,25 @@ contains
          long_name=this%info%lname('vertically summed soil ice (veg landunits only)'), &
          ptr_col=this%h2osoi_ice_tot_col, l2g_scale_type='veg')
     ! excess ice vars
-    this%exice_vol_tot_col(begc:endc) = 0.0_r8
-    call hist_addfld1d ( &
-         fname=this%info%fname('TOTEXICE_VOL'),  &
-         units='m3/m3',  &
-         avgflag='A', &
-         l2g_scale_type='veg', default='inactive', &
-         long_name=this%info%lname('vertically averaged volumetric excess ice concentration (veg landunits only)'), &
-         ptr_col=this%exice_vol_tot_col)
+    if (use_excess_ice) then
+      this%exice_vol_tot_col(begc:endc) = 0.0_r8
+      call hist_addfld1d ( &
+           fname=this%info%fname('TOTEXICE_VOL'),  &
+           units='m3/m3',  &
+           avgflag='A', &
+           l2g_scale_type='veg', &
+           long_name=this%info%lname('vertically averaged volumetric excess ice concentration (veg landunits only)'), &
+           ptr_col=this%exice_vol_tot_col)
 
-    this%exice_subs_tot_col(begc:endc) = 0.0_r8
-    call hist_addfld1d ( &
-         fname=this%info%fname('EXICE_SUBS'),  &
-         units='m',  &
-         avgflag='SUM', &
-         l2g_scale_type='veg', default='inactive', &
-         long_name=this%info%lname('subsidence due to excess ice melt (veg landunits only)'), &
-         ptr_col=this%exice_subs_tot_col)
+      this%exice_subs_tot_col(begc:endc) = 0.0_r8
+      call hist_addfld1d ( &
+           fname=this%info%fname('EXICE_SUBS'),  &
+           units='m',  &
+           avgflag='SUM', &
+           l2g_scale_type='veg', &
+           long_name=this%info%lname('subsidence due to excess ice melt (veg landunits only)'), &
+           ptr_col=this%exice_subs_tot_col)
+    end if
 
     this%iwue_ln_patch(begp:endp) = spval
     call hist_addfld1d ( &
