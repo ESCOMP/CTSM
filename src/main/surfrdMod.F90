@@ -564,7 +564,7 @@ contains
     
     ! !USES:
     use clm_instur      , only : wt_nat_patch, wt_lunit
-    use clm_varpar      , only : cft_size, natpft_size
+    use clm_varpar      , only : cft_size, surfpft_lb, surfpft_ub
     use landunit_varcon , only : istsoil, istcrop
     
     ! !ARGUMENTS:
@@ -586,8 +586,8 @@ contains
     call ncd_inqdlen(ncid, dimid, natpft_dimlen, 'natpft')
 
     ! double check that cft_dimlen+natpft_dimlen = natpft_size
-    if((cft_dimlen+natpft_dimlen).ne.natpft_size)then
-       call endrun( msg=' ERROR: PCT+CFT dimlen does not match natpft_size when fates is on'//errMsg(sourcefile, __LINE__))
+    if((cft_dimlen+natpft_dimlen).ne.(surfpft_ub-surfpft_lb+1))then
+       call endrun( msg=' ERROR: PCT+CFT dimlen does not match array size for wt_nat_patch when fates is on'//errMsg(sourcefile, __LINE__))
     end if
     
     allocate( array2d_cft(begg:endg,1:cft_dimlen) )

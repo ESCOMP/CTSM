@@ -90,6 +90,12 @@ module clm_varpar
   integer, public :: natpft_ub          ! In PATCH arrays, upper bound of Patches on the natural veg landunit
   integer, public :: natpft_size        ! Number of Patches on natural veg landunit (including bare ground)
 
+  integer, public :: surfpft_lb         ! Lower bound of PFTs in the surface file
+                                        ! synonymous with natpft_lb for non-fates and fates-sp
+  integer, public :: surfpft_ub         ! Upper bound of PFTs in the surface file
+                                        ! synonymous with natpft_ub for non-fates and fates-sp
+
+  
   ! The following variables pertain to arrays of all PFTs - e.g., those dimensioned (g,
   ! pft_index). These include unused CFTs that are merged into other CFTs. Thus, these
   ! variables do NOT give the actual number of CFTs on the crop landunit - that number
@@ -158,26 +164,28 @@ contains
        natpft_ub   = natpft_lb + natpft_size - 1
        cft_lb      = natpft_ub + 1
        cft_ub      = cft_lb + cft_size - 1
-
+       surfpft_lb  = natpft_lb
+       surfpft_ub  = natpft_ub
+       
     else ! only true when FATES is active
        
-       natpft_size = surf_numpft+surf_numcft
+       natpft_size = maxsoil_patches
        cft_size    = 0
        natpft_lb   = 0
-       natpft_ub   = surf_numpft+surf_numcft-1
+       natpft_ub   = natpft_lb + natpft_size - 1
        cft_lb      = 0
        cft_ub      = 0
+       surfpft_lb  = 0
+       surfpft_ub  = surf_numpft+surf_numcft-1
        
     end if
        
-    if(.not.use_fates .or. use_fates_sp)then
-       if(natpft_ub .ne. maxveg) then
-          write(iulog,*) 'maxveg should match the upper bound for non-fates and fates-sp runs'
-          write(iulog,*) 'the surface dataset PFT+CFT indices (ie lsmft), yours: ',natpft_ub,maxveg
-          call shr_sys_abort(subname//' ERROR: conflict in maxveg and pft bounds')
-       end if
+    if(use_fates_sp .and. (natpft_ub .ne. maxveg) ) then
+       write(iulog,*) 'maxveg should match the upper bound for non-fates and fates-sp runs'
+       write(iulog,*) 'the surface dataset PFT+CFT indices (ie lsmft), yours: ',natpft_ub,maxveg
+       call shr_sys_abort(subname//' ERROR: conflict in maxveg and pft bounds')
     end if
-
+    
     mxharvests = mxsowings + 1
 
     ! TODO(wjs, 2015-10-04, bugz 2227) Using surf_numcft in this 'max' gives a significant

@@ -227,8 +227,8 @@ contains
     allocate (topo_glc_mec (begg:endg, maxpatch_glc     ))
     allocate (haslake      (begg:endg                      ))
     allocate (pct_urban_max(begg:endg, numurbl             ))
-    allocate (wt_nat_patch (begg:endg, natpft_lb:natpft_ub ))
-
+    allocate (wt_nat_patch (begg:endg, surfpft_lb:surfpft_ub ))
+    
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
     call pftcon%Init()

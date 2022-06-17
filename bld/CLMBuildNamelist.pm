@@ -2046,6 +2046,10 @@ sub setup_logic_subgrid {
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_lake');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_wetland');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_urban');
+
+   if ( &value_is_true($nl_flags->{'use_fates'}) && $nl->get_value('n_dom_pfts') != 0 ) {
+      $log->fatal_error( "FATES and n_dom_pfts can NOT be set at the same time" );
+   }
 }
 
 #-------------------------------------------------------------------------------
