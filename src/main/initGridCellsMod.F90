@@ -206,7 +206,7 @@ contains
     ! !USES
     use clm_instur, only : wt_lunit, wt_nat_patch
     use subgridMod, only : subgrid_get_info_natveg, natveg_patch_exists
-    use clm_varpar, only : natpft_lb, natpft_ub, maxveg
+    use clm_varpar, only : natpft_lb, natpft_ub, natpft_size
     !
     ! !ARGUMENTS:
     integer , intent(in)    :: ltype             ! landunit type
@@ -245,25 +245,26 @@ contains
        call add_column(ci=ci, li=li, ctype=1, wtlunit=1.0_r8)
        ncols_added = ncols_added + 1
 
-       if(use_fates .and. .not.use_fates_sp)then
-          ! The total number of patches does not match what is in the surface
-          ! file, and the weighting can't be used either.  We use
-          ! equal weights until FATES is called, which will update the weights
-          ! based on canopy coverage
-          do m = 0,maxveg
-             ! This will be overwritten by ed_wt during fates initialization
-             p_wt = 1.0_r8/real(maxveg+1,r8) 
+       ! For FATES: the total number of patches may not match what is in the surface
+       ! file, and therefor the weighting can't be used. The weightings in
+       ! wt_nat_patch may be meaningful (like with fixed biogeography), but they
+       ! they need a mapping table to connect to the allocated patches (in fates)
+       ! so the wt_nat_patch array is not applicable to these area weights
+       ! A subsequent call, via the clmfates interface will update these weights
+       ! by using said mapping table
+       
+       do m = natpft_lb,natpft_ub
+          if (natveg_patch_exists(gi, m)) then
+             if(use_fates .and. .not.use_fates_sp)then
+                p_wt = 1.0_r8/real(natpft_size,r8)
+             else
+                p_wt = wt_nat_patch(gi,m)
+             end if
              call add_patch(pi=pi, ci=ci, ptype=m, wtcol=p_wt)
              npatches_added = npatches_added + 1
-          end do
-       else
-          do m = natpft_lb,natpft_ub
-             if (natveg_patch_exists(gi, m)) then
-                call add_patch(pi=pi, ci=ci, ptype=m, wtcol=wt_nat_patch(gi,m))
-                npatches_added = npatches_added + 1
-             end if
-          end do
-       end if
+          end if
+       end do
+
     end if
 
     SHR_ASSERT_FL(nlunits_added == nlunits, sourcefile, __LINE__)

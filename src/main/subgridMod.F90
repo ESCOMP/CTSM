@@ -148,19 +148,11 @@ contains
 
     npatches = 0
 
-    if(use_fates)then
-       do pft = 0,maxveg
-          if (natveg_patch_exists(gi, pft)) then
-             npatches = npatches + 1
-          end if
-       end do
-    else
-       do pft = natpft_lb, natpft_ub
-          if (natveg_patch_exists(gi, pft)) then
-             npatches = npatches + 1
-          end if
-       end do
-    end if
+    do pft = natpft_lb, natpft_ub
+       if (natveg_patch_exists(gi, pft)) then
+          npatches = npatches + 1
+       end if
+    end do
 
     if (npatches > 0) then
        ! Assume that the vegetated landunit has one column
