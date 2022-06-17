@@ -445,7 +445,9 @@ contains
 
        ! For SP FATES-SP Initialize SP
        ! Also for FATES with Dry-Deposition on as well (see above)
-       if(use_fates_sp .or. (.not.use_cn) .or. (n_drydep > 0 .and.  drydep_method == DD_XLND) )then
+       !if(use_fates_sp .or. (.not.use_cn) .or. (n_drydep > 0 .and.  drydep_method == DD_XLND) )then  !  Replace with this when we have dry-deposition working
+       ! For now don't allow for dry-deposition because of issues in #1044 EBK Jun/17/2022
+       if( use_fates_sp .or. .not. use_fates )then
           call SatellitePhenologyInit(bounds_proc)
        end if
 
@@ -612,10 +614,12 @@ contains
     ! Read monthly vegetation
     ! Even if CN or FATES is on, and dry-deposition is active, read CLMSP annual vegetation
     ! to get estimates of monthly LAI
-    if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
+    !if ( n_drydep > 0 .and. drydep_method == DD_XLND )then  !  Replace with this when we have dry-deposition working
+    ! For now don't allow for dry-deposition because of issues in #1044 EBK Jun/17/2022
+    if ( n_drydep > 0 .and. drydep_method == DD_XLND .and. .not. use_fates )then
        call readAnnualVegetation(bounds_proc, canopystate_inst)
        ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
-       ! This needs to be done even if CN or CNDV is on!
+       ! This needs to be done even if FATES, CN or CNDV is on!
        call interpMonthlyVeg(bounds_proc, canopystate_inst)
     ! If fates has satellite phenology enabled, get the monthly veg values
     ! prior to the first call to SatellitePhenology()

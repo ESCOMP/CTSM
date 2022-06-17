@@ -238,7 +238,7 @@ contains
        ! For FATES-Specified phenology mode interpolate the weights for
        ! time-interpolation of monthly vegetation data (as in SP mode below)
        ! Also for FATES with dry-deposition as above need to call CLMSP so that mlaidiff is obtained
-       !if ( use_fates_sp .or. (n_drydep > 0 .and. drydep_method == DD_XLND ) ) then    ! Replace this when we have dry-deposition working
+       !if ( use_fates_sp .or. (n_drydep > 0 .and. drydep_method == DD_XLND ) ) then    ! Replace with this when we have dry-deposition working
        ! For now don't allow for dry-deposition because of issues in #1044 EBK Jun/17/2022
        if ( use_fates_sp ) then
           call t_startf('interpMonthlyVeg')
