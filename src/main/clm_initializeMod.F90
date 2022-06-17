@@ -127,6 +127,7 @@ contains
     ! !USES:
     use clm_varcon                    , only : spval
     use clm_varpar                    , only : natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glc
+    use clm_varpar                    , only : surfpft_lb, surfpft_ub
     use clm_varpar                    , only : nlevsno
     use clm_varpar                    , only : natpft_size,cft_size
     use clm_varctl                    , only : fsurdat
