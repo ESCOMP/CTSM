@@ -41,7 +41,7 @@ module clm_initializeMod
 
   integer :: actual_numcft  ! numcft from sfc dataset
   integer :: actual_numpft  ! numpft from sfc dataset
-  
+
 !-----------------------------------------------------------------------
 contains
 !-----------------------------------------------------------------------
@@ -105,7 +105,7 @@ contains
     if(use_fates) then
        call CLMFatesGlobals1(actual_numpft, actual_numcft, actual_maxsoil_patches)
     end if
-    
+
     call clm_varpar_init(actual_maxsoil_patches, actual_numpft, actual_numcft)
     call decomp_cascade_par_init( NLFilename )
     call clm_varcon_init( IsSimpleBuildTemp() )
@@ -127,6 +127,7 @@ contains
     ! !USES:
     use clm_varcon                    , only : spval
     use clm_varpar                    , only : natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glc
+    use clm_varpar                    , only : surfpft_lb, surfpft_ub
     use clm_varpar                    , only : nlevsno
     use clm_varpar                    , only : natpft_size,cft_size
     use clm_varctl                    , only : fsurdat
@@ -250,9 +251,9 @@ contains
        ! to allocate space)
        ! This also sets up various global constants in FATES
        ! ------------------------------------------------------------------------
-       
+
        call CLMFatesGlobals2()
-       
+
     end if
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
@@ -431,6 +432,7 @@ contains
        if (n_drydep > 0 .and. drydep_method == DD_XLND) then
           ! Must do this also when drydeposition is used so that estimates of monthly
           ! differences in LAI can be computed
+          ! Also do this for FATES see below
           call SatellitePhenologyInit(bounds_proc)
        end if
        if ( use_c14 .and. use_c14_bombspike ) then
@@ -439,10 +441,14 @@ contains
        if ( use_c13 .and. use_c13_timeseries ) then
           call C13_init_TimeSeries()
        end if
-       
+
     else ! FATES OR Satellite phenology
-       
-       if(use_fates_sp .or. .not.use_fates)then
+
+       ! For SP FATES-SP Initialize SP
+       ! Also for FATES with Dry-Deposition on as well (see above)
+       !if(use_fates_sp .or. (.not.use_cn) .or. (n_drydep > 0 .and.  drydep_method == DD_XLND) )then  !  Replace with this when we have dry-deposition working
+       ! For now don't allow for dry-deposition because of issues in #1044 EBK Jun/17/2022
+       if( use_fates_sp .or. .not. use_fates )then
           call SatellitePhenologyInit(bounds_proc)
        end if
 
@@ -607,21 +613,19 @@ contains
     end if
 
     ! Read monthly vegetation
-    ! Even if CN is on, and dry-deposition is active, read CLMSP annual vegetation
+    ! Even if CN or FATES is on, and dry-deposition is active, read CLMSP annual vegetation
     ! to get estimates of monthly LAI
-    if ( n_drydep > 0 .and. drydep_method == DD_XLND .and. .not.use_fates )then
+    if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
        call readAnnualVegetation(bounds_proc, canopystate_inst)
-       if (nsrest == nsrStartup .and. finidat /= ' ') then
-          ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
-          ! This needs to be done even if CN or CNDV is on!
-          call interpMonthlyVeg(bounds_proc, canopystate_inst)
-       end if
+       ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
+       ! This needs to be done even if FATES, CN or CNDV is on!
+       call interpMonthlyVeg(bounds_proc, canopystate_inst)
     ! If fates has satellite phenology enabled, get the monthly veg values
     ! prior to the first call to SatellitePhenology()
     elseif ( use_fates_sp ) then
        call interpMonthlyVeg(bounds_proc, canopystate_inst)
     end if
-    
+
     ! Determine gridcell averaged properties to send to atm
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')
