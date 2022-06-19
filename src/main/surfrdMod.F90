@@ -539,7 +539,6 @@ contains
        irrig_method = irrig_method_unset
     end if
 
-    ! FATES should over-write these weights later on
     allocate( array2D(begg:endg,1:natpft_size) )
     call ncd_io(ncid=ncid, varname='PCT_NAT_PFT', flag='read', data=array2D, &
          dim1name=grlnd, readvar=readvar)
