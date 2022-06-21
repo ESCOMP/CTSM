@@ -30,10 +30,10 @@ None
 Bugs fixed or introduced
 ------------------------
 
-CTSM Issues Fixed (include github issue #):
-Fixes #1764
-Fixes #1762
-Fixes #1784
+CTSM Issues Fixed:
+Fixes #1764 "fates test fails to run on dev095"
+Fixes #1762 "Change threaded fates test from P32x2 to P36x2"
+Fixes #1784 "Get dry-deposition working with FATES-SP mode"
 
 Known bugs introduced in this tag (include issue #): None
 
@@ -42,6 +42,9 @@ Known bugs found since the previous tag (include issue #): None
 
 Notes of particular relevance for users
 ---------------------------------------
+
+Relevant issue #1785 "Refactor surfrd for FATES"
+Relevant issue #1780 "Some collapse options should be disabled with FATES"
 
 In the process of this PR, we learned that FATES is fundamentally incompatible with the dry-deposition code. FATES-SP may be compatibile, but still needs investigation.
 
