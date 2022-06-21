@@ -1700,6 +1700,7 @@ contains
     integer g         ! gridcell indices
     integer h         ! hemisphere indices
     integer s         ! growing season indices
+    integer k         ! grain pool indices
     integer idpp      ! number of days past planting
     real(r8) dayspyr  ! days per year in this year
     real(r8) avg_dayspyr ! average number of days per year
@@ -1808,6 +1809,9 @@ contains
             end do
             do s = 1, mxharvests
                crop_inst%hdates_thisyr(p,s) = -1._r8
+               do k = repr_grain_min, repr_grain_max
+                  cnveg_carbonflux_inst%repr_grainc_to_food_accum_thisyr(p,s,k) = 0._r8
+               end do
             end do
          end if
 
@@ -2084,6 +2088,10 @@ contains
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                harvest_count(p) = harvest_count(p) + 1
                crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
+               do k = repr_grain_min, repr_grain_max
+                  cnveg_carbonflux_inst%repr_grainc_to_food_accum_thisyr(p, harvest_count(p), k) = &
+                     cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p, k)
+               end do
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = cphase_harvest
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
@@ -2309,6 +2317,9 @@ contains
     type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: c13_cnveg_carbonstate_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
+    !
+    ! LOCAL VARAIBLES:
+    integer k              ! grain pool index
     !------------------------------------------------------------------------
 
     associate(                                                                     & 
@@ -2329,6 +2340,9 @@ contains
       harvdate(p)  = NOT_Harvested
       sowing_count(p) = sowing_count(p) + 1
       crop_inst%sdates_thisyr(p,sowing_count(p)) = jday
+      do k = repr_grain_min, repr_grain_max
+         cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p, k) = 0._r8
+      end do
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
@@ -3164,6 +3178,9 @@ contains
                 p = filter_soilp(fp)
                 cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
                      cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) + &
+                     cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,k)
+                cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p,k) = &
+                     cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p,k) + &
                      cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,k)
                 cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
                      cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) + &
