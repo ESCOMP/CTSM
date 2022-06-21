@@ -1,4 +1,88 @@
 ===============================================================
+Tag name: ctsm5.1.dev099
+Originator(s): rgknox (Ryan Knox)
+Date: Tue Jun 21 03:20:42 PM EDT 2022
+One-line Summary: Enabling FATES control over the number of patches on the natural land unit
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes 1) allows FATES to dictate the number of patches on the naturaly vegetated land unit and 2) is compatible with a version of FATES that updates the parameter file format (changes in parameter naming and parameter set).  Efforts were made to adhere to the system of how patches are looped and loop bounds are defined. There is interaction with the reading of the surface file, which previously dictated all patch counts based on the number of PFTs in the file.  FATES-SP and biogeography preserves the ability to use surface file weighting factors associated with PFTs and CFTs to drive area fractions in FATES.  This change is motivated by FATES-side updates to the parameter file, which includes new settings where the user can control the number of primary "fates_maxpatch_primary" and secondary "fates_maxpatch_secondary" patches. Users should also be aware of a new namelist setting "use_fates_tree_damage" which defaults to false (inoperative).
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+
+None
+
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM Issues Fixed (include github issue #):
+Fixes #1764
+Fixes #1762
+Fixes #1784
+
+Known bugs introduced in this tag (include issue #): None
+
+Known bugs found since the previous tag (include issue #): None
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+In the process of this PR, we learned that FATES is fundamentally incompatible with the dry-deposition code. FATES-SP may be compatibile, but still needs investigation.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): There is a new namelist setting for FATES simulations that turns on the crown damage module: "use_fates_tree_damage". Settings for this module can be found in the FATES parameter file.  This namelist variable is a binary true/false, and it defaults to false.
+
+Changes to the datasets (e.g., parameter, surface or initial files): Users should also be aware that FATES has a new parameter file format and API. The default file on the ucar dataserver has been updated.
+
+Substantial timing or memory changes: none that we're aware of, but with more refined control of patch counts and allocation should come improvements in memory usage.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None.  Some new code was added to surfrdMod.F90, but this is not redundant. Efforts may be made in the future to have more unification there when we have FATES compatable with crops on the crop land-unit.
+
+Changes to tests or testing:  Tests were added to cover the new crown damage module, and combinations of dry-deposition and megan with FATES-SP.  The build system is also aware that these features will not and should not be used with FATES in a non-SP framework.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests :
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: dev098 was updated to point to the moost recent FATES tag: sci.1.57.4_api.23.0.0.
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:  NLCOMP changes (differences in namelist fields) were the only differences and they were expected.  All other tests generated B4B results.
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev098
 Originator(s): swensosc (Sean Swenson)
 Date: Fri May 20 18:15:53 MDT 2022
