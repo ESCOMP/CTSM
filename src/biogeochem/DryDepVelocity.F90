@@ -103,9 +103,14 @@ CONTAINS
   !------------------------------------------------------------------------
   subroutine Init(this, bounds)
 
+    use clm_varctl     , only : use_fates, use_fates_sp
     class(drydepvel_type) :: this
     type(bounds_type), intent(in) :: bounds  
 
+    if ( (.not. use_fates_sp) .and. use_fates .and. (n_drydep > 0 .and. drydep_method == DD_XLND) )then
+       call endrun( msg='ERROR: Dry-deposition currently does NOT work with FATES outside of FATES-SP mode (see github issue #1044)'//&
+                    errMsg(sourcefile, __LINE__))
+    end if
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
 
