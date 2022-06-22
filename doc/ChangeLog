@@ -1,4 +1,998 @@
 ===============================================================
+Tag name: ctsm5.1.dev099
+Originator(s): rgknox (Ryan Knox)
+Date: Tue Jun 21 03:20:42 PM EDT 2022
+One-line Summary: Enabling FATES control over the number of patches on the natural land unit
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes 1) allows FATES to dictate the number of patches on the naturaly vegetated land unit and 2) is compatible with a version of FATES that updates the parameter file format (changes in parameter naming and parameter set).  Efforts were made to adhere to the system of how patches are looped and loop bounds are defined. There is interaction with the reading of the surface file, which previously dictated all patch counts based on the number of PFTs in the file.  FATES-SP and biogeography preserves the ability to use surface file weighting factors associated with PFTs and CFTs to drive area fractions in FATES.  This change is motivated by FATES-side updates to the parameter file, which includes new settings where the user can control the number of primary "fates_maxpatch_primary" and secondary "fates_maxpatch_secondary" patches. Users should also be aware of a new namelist setting "use_fates_tree_damage" which defaults to false (inoperative).
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+
+None
+
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM Issues Fixed:
+Fixes #1764 "fates test fails to run on dev095"
+Fixes #1762 "Change threaded fates test from P32x2 to P36x2"
+Fixes #1784 "Get dry-deposition working with FATES-SP mode"
+
+Known bugs introduced in this tag (include issue #): None
+
+Known bugs found since the previous tag (include issue #): None
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Relevant issue #1785 "Refactor surfrd for FATES"
+Relevant issue #1780 "Some collapse options should be disabled with FATES"
+
+In the process of this PR, we learned that FATES is fundamentally incompatible with the dry-deposition code. FATES-SP may be compatibile, but still needs investigation.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): There is a new namelist setting for FATES simulations that turns on the crown damage module: "use_fates_tree_damage". Settings for this module can be found in the FATES parameter file.  This namelist variable is a binary true/false, and it defaults to false.
+
+Changes to the datasets (e.g., parameter, surface or initial files): Users should also be aware that FATES has a new parameter file format and API. The default file on the ucar dataserver has been updated.
+
+Substantial timing or memory changes: none that we're aware of, but with more refined control of patch counts and allocation should come improvements in memory usage.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None.  Some new code was added to surfrdMod.F90, but this is not redundant. Efforts may be made in the future to have more unification there when we have FATES compatable with crops on the crop land-unit.
+
+Changes to tests or testing:  Tests were added to cover the new crown damage module, and combinations of dry-deposition and megan with FATES-SP.  The build system is also aware that these features will not and should not be used with FATES in a non-SP framework.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests :
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: dev098 was updated to point to the moost recent FATES tag: sci.1.57.4_api.23.0.0.
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:  NLCOMP changes (differences in namelist fields) were the only differences and they were expected.  All other tests generated B4B results.
+
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev098
+Originator(s): swensosc (Sean Swenson)
+Date: Fri May 20 18:15:53 MDT 2022
+One-line Summary: Correct perched water table calculation
+
+Purpose and description of changes
+----------------------------------
+
+Modifies the calculation of the frost table and perched water table
+layers.
+
+This brings in the answer-changing aspects of the Hillslope Hydrology
+branch (https://github.com/ESCOMP/CTSM/pull/1715).
+
+Specific changes are:
+
+* PerchedWaterTable
+
+1) Frost table depth
+
+a) original frost table determination looped from the top 
+of the soil column downward to the index of the first layer 
+whose temperature was <= freezing, and whose neighbor above 
+had a temperature above freezing.  The frost table depth is 
+then given by the node of that soil layer, i.e. z(k_frz).  
+
+b) in the new method, the same index is found, but the 
+depth of the frost table is given by the depth of the top 
+of the frozen layer, i.e. zi(k_frz-1).  Note zi(k_frz) would 
+be the bottom of layer k_frz.  
+
+2) Perched water table depth
+
+a) in the original formulation, a loop from k_frz to layer 1 
+was used to identify the deepest layer in 1:k_frz whose 
+volumetric soil moisture was greater than a threshold given 
+by sat_lev (e.g. sat_lev = 0.9).  
+
+b) in the new method, the search is only done if k_frz is 
+greater than 1.  The rationale is that if k_frz = 1, then 
+zwt_perched has already been initialized to the frost_table 
+depth (which is equal to the top of the uppermost soil layer), 
+and therefore no search is required.
+
+3) Determining perched water table depth within layer 
+identified by index k_perch in 2)
+
+a) in the original formulation, the perched water table 
+depth was calculated by linearly interpolating between layers 
+k_perch and k_perch+1, with no consideration of their relative 
+values.  In the case where the deeper layer was drier than the 
+layer above it, this could result in values far outside the 
+soil layer.
+
+b) in the new formulation, if the deeper layer is drier than the 
+layer above it (s1 > s2), then the perched water table depth is 
+simply given by the depth of the upper surface of layer k_perch, 
+i.e. zi(c,k_perch-1).
+
+* PerchedLateralFlow
+
+1) Removal of icefrac calculation
+
+a) in the original calculation, the frozen layer was included, 
+so an ice impedance factor was calculated using icefrac.  If 
+only unfrozen layers are used, no ice impedance factor is needed.
+
+b) in the new formulation, the icefrac variable and loop are 
+removed.
+
+2) Move loop calculating frost and perched water table depths
+
+a) in the original formulation, the frost and perched water 
+table depths were calculated in the same loop as the calculation 
+of the lateral flow from the perched saturated zone.
+
+b) in preparation for the hillslope hydrology branch, this 
+calculation is moved into its own loop.
+
+3) q_perch calculation 
+
+a)in the original formulation, q_perch was calculated by summing 
+over layers k_perch to k_frost.  However, because k_frost is now 
+identified as the frozen layer, and its depth the top of the frozen 
+layer, it should not be included in the calculation; only the 
+unfrozen layers above it should be included.
+
+b) in the new formulation, the loop is bounded by k_frost-1 instead 
+of k_frost.
+
+4) Removal of water from perched saturated zone
+
+a) the in the original method, the frozen layer (k_frost) 
+was included in the loop.  Also, the drainage was defined to be 
+negative, which was confusing.  
+
+b) in the new method, the frozen layer is not included in the 
+loop; water is only removed from the unfrozen layers above k_frost.  
+Calculate drainage as positive values, which are then subtracted 
+from the soil moisture in each layer.  
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All Clm50 and Clm51 cases
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Larger than roundoff; small changes to surface climate due to
+      differences originating in soil moisture
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1738
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev097
+Originator(s): sacks (Bill Sacks)
+Date: Fri May 20 15:30:17 MDT 2022
+One-line Summary: Update ccs_config to fix issue on izumi and maybe elsewhere
+
+Purpose and description of changes
+----------------------------------
+
+Point to latest ccs_config
+
+This fixes an issue I had on izumi where I couldn't run
+anything (https://github.com/ESMCI/ccs_config_cesm/issues/45).
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Externals issues fixed (include issue #):
+https://github.com/ESMCI/ccs_config_cesm/issues/45
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Added LILAC test to the expected fails list (this has been failing for
+  the last 2 tags)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- ccs_config: ccs_config_cesm0.0.35 -> ccs_config_cesm0.0.36
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev096
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed May 18 12:44:01 MDT 2022
+One-line Summary: Fix a few glitches from the last tag
+
+Purpose and description of changes
+----------------------------------
+
+Update cime to fix DAE issue
+modify_neon issue
+When FatesSp is on, make soil_decomp None by default
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   Fixes #1744 -- DAE tests fail
+   Fixes #1743 -- NEON test failing
+   Fixes #1749 -- cime path
+   Fixes #1752 -- modify_neon script
+
+CIME Issues fixed (include issue #): Fix DAE tests
+
+Known bugs introduced in this tag (include issue #):
+   #1759 -- LILAC test fails
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   manage_python_env is at a prototype stage and not fully developed
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   When use_fates_sp is set -- by default soil_decomp_method will be None
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+   Add a simple FatesSp test to aux_clm testlist
+
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - PASS (neon tools)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+    clm_pymods test suite on cheyenne - 
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, ccs_config
+   cime       to cime6.0.27
+   ccs_config to ccs_config_cesm0.035
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #1753 -- Fix modify_singlept_site_neon.py script
+   #1750 -- Correct the path to cime python code
+   #1747 -- Fix a few glitches in last tag
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev095
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon May  9 05:02:41 MDT 2022
+One-line Summary: Turn soil BGC off for FATES-SP mode, externals updates, FatesSP user-mod directory and compset
+
+Purpose and description of changes
+----------------------------------
+
+Bring in externals updates that include adding AWS as a supported machine.
+
+Add a FatesSP compset and user-mod directory.
+
+Turn soil-BGC off when running FatesSP. Replace PGI tests on izumi with nvhpc tests on cheyenne.
+Fix an issue with a particular gnu compiler version in ch4Mod.F90 in DEBUG mode. Add some more
+threading tests for Fates. Start adding a prescribed-LAI tests for FatesSp
+
+Add a file to setup a python environment in conda for the python testing. Set line length for black
+to same as pylint (100). Add some extra excludes for black to the pylint checking.
+
+Paths for CIME python code was changed, which required changes to some CTSM python code.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   Fixes: #1720 -- Get FatesSp to run without soil-BGC
+   Fixes: #1726 -- Tutorial tasks
+   Fixes: #1729 -- SIGFPE in ch4Mod with DEBUG=TRUE
+   Fixes: #1610 -- Replace izumi_pgi tests with cheyenne_nvhpc
+   Initial add of FatesSP compset: #1697
+   Starts adding a test mod for: #1722 FatesSP with prescribed LAI
+   Some part of #1736 threading tests for Fates
+
+   Known bugs introduced in this tag (include issue #):
+    #1744 -- DAE tests fail
+    #1743 -- NEON test fails on izumi
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   FatesSp mode MUST be run with soil_decomp_method of None.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   Add new compset: I2000Clm51FatesSpCruRsGs
+   Add new long compset trigger for FATES-SP mode: FATES-SP
+   And new user-mod directory: fates_sp
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  It's hardcoded in both build-namelist and the FORTRAN code that FatesSp mode must
+  be run with soil_decomp_method set to None. Some if statements would allow this to
+  change, but not all.
+
+Changes to tests or testing:
+   Replace izumi_pgi with cheyenne_nvhpc
+   Remove pgi mct test, since DEBUG off nvhpc tests work
+   Add a DEBUG on test for FatesSp that currently fails (for fates testlist)
+   Have FatesColdDefReducedComplexSatPhen test-mod use the new fates_sp user-mod
+   Add FatesSp threaded test (both fates and aux_clm test lists)
+   FatesSp tests use new FatesSp compset
+
+Testing summary: regular tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (2 tests change from ctsm5.1.dev094)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK (to mksrfdt_5x5_amazon_hirespft_2005)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne ---- OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: A few tests some roundoff difference in cpl history files
+  Externals update shows answer changes in very limited circumstances.
+  Only cpl history files show a roundoff difference for these tests:
+
+     SMS_D_Ld1_Mmpi-serial.f45_f45_mg37.I2000Clm50SpRs.izumi_gnu.clm-ptsROA
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): ccs_config, cime, cmeps, share, pio
+   ccs_config to ccs_config_cesm0.0.32
+   cime       to cime6.0.26
+   cmeps      to cmeps0.13.63
+   share      to share1.0.11
+   pio        to pio2_5_7
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #1723 -- First pass at turnning Soil-BGC off for FatesSp
+  #1740 -- Workaround for some python unit tests
+  #1741 -- Fixes to run_neon
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev094
+Originator(s): negins (Negin Sobhani,UCAR/TSS,303-497-1224)
+Date: Fri May  6 00:04:54 MDT 2022
+One-line Summary: subset_data allows zeroing out nonveg landunits without any dompft selected
+
+Purpose and description of changes
+----------------------------------
+Previously subset_data explicitly checked to make sure the user has chosen at
+least one of the following options:
+
+dominant pft(s) or
+--include-nonveg (overrides default setting non-veg units to 0%)
+
+However, Adrianna pointed out that this limits FATES users who would not
+want to set a dominant pft(s) and would also want all 100% vegetated at the
+single point. So I removed this capability. This needed recalculating
+PCT_CROP and PCT_NATVEG while zero-ing out other land unit types.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+ Fixes CTSM/#1707 -- Allowing the user to zero non-veg landunits without any
+ dominant pft given by the user.
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ Previously the user needed to choose at least one of the following options
+ for subsetting at single points:
+ --dompft
+ --include-nonveg
+ Now the user is not required to specify either options and can still zero out
+ non-veg landunits without any dominant pft given by the user.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Added 4 new tests to python/ctsm/test/test_unit_singlept_data_surfdata.py
+ to test recalculation of PCT_CROP and PCT_NATVEG while zero-ing out non-veg
+ land units. 
+
+Testing summary:
+----------------
+here is guidance on different available levels of system testing:
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    clm_pymods test suite on cheyenne - PASS
+	pylint -- PASS (10.00/10) (cheyenne + python/3.7.9)
+	Python unit tests -- PASS (cheyenne)
+	Python system tests -- FAIL (cheyenne) (CTSM/Issue #1739)
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/1727
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev093
+Originator(s): slevis (Samuel Levis)
+Date: Tue May  3 21:50:20 MDT 2022
+One-line Summary: Modifications for FATES-MIMICS to work
+
+Purpose and description of changes
+----------------------------------
+
+ 1) For FATES-MIMICS cases, use ligninNratioAvg calculated by FATES.
+ 2) For FATES-MIMICS cases, use annsum_npp_col calculated by FATES.
+ 3) Small modification to allow carbon-only to work with MIMICS.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #): 
+   Fixes #1636 -- FATES tests fail with MIMICS active
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ MIMICS-FATES now do work together, but only as long as use_lch4 = .true.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ To confirm that MIMICS-FATES works, I added the testmod mimicsFatesColdDef.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+ ...but made history variable CWDC_HR active.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1643
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev092
+Originator(s): sacks (Bill Sacks)
+Date: Fri Apr 29 18:31:48 MDT 2022
+One-line Summary: Refactor NutrientCompetition / CNAllocation to provide hooks for AgSys
+
+Purpose and description of changes
+----------------------------------
+
+Major refactor of NutrientCompetition / CNAllocation to provide hooks
+for AgSys crop model: separates the NutrientCompetition modules into
+pieces based on (1) consolidating duplicate code between the Clm45 and
+FlexibleCN versions, and (2) separating pieces that will vs. won't be
+used for crop patches when running with the upcoming AgSys crop model.
+
+I have restored the old CNAllocationMod, with some of the
+responsibilities that it used to have. (I'm not sure it's appropriate to
+have the calculation of gpp and maint resp in CNAllocationMod, but I
+left it there because it has always been combined with the allocation
+code, including back when we had a separate CNAllocationMod.)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO - though potential for answer
+changes in unusual cases
+
+   One change in this tag has the potential for answer changes in
+   unusual cases, even though no answer changes were observed in
+   testing: Previously, only the FlexibleCN code applied some logic that
+   changed crop allocation fractions during the grainfill period if
+   peaklai had been reached. I have changed this so that this logic is
+   applied with or without FlexibleCN (because I have moved this block
+   of code to the CNAllocation module, which is shared between the
+   FlexibleCN and non-FlexibleCN versions). I thought this would change
+   answers, but it appears not to, at least based on the tests in the
+   test suite as well as an extra 5-year test I did at f19 resolution
+   (ERS_Ly5.f19_g17.IHistClm45BgcCrop.cheyenne_intel.clm-cropMonthOutput).
+   It's possible that this changes answers in rare cases or with an
+   unusual combination of options that we don't test: specifically, it
+   might change answers for the atypical situation where you are running
+   with FUN but not FlexibleCN. (In this case, I believe this change is
+   the correct thing to do.)
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1705
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev091
+Originator(s): rgknox (Ryan Knox,rgknox@lbl.gov)
+Date: Fri Apr 22 14:11:50 EDT 2022
+One-line Summary: clm decomp method is now passed to fates to enabled mimics coupling
+
+Purpose and description of changes
+----------------------------------
+
+This is a small changeset, which only adds the passing of a text based flag to FATES, that defines which soil decomposition method is active. This setting is needed by FATES, so that it can pass specific boundary conditions to CLM (and potentially ELM in the future). This change was necessitated because MIMICS requires a Nitrogen to lignin-carbon ratio in the litter flux, yet other decomposition schemes do not. Moreover, the generation of this boundary condition is not trivial, so it is worth it to avoid its computation if mimics is not on.  This change should have NO impact on any tests.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+None
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+None, this does not currently have an affect on any functionality, it simply lays groundwork for FATES-MIMICS coupling.  There are no changes to memory usage or run-time.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+No changes in testing. These changes will enable completion (or progress) on CTSM #1643
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- aux_clm, PASS, b4b against ctsm5.1.dev090
+    izumi ------- aux_clm, PASS, b4b against ctsm5.1.dev090
+
+
+Answer changes
+--------------
+None
+
+Pull Requests that document the changes (include PR ids): #1700
+(https://github.com/ESCOMP/ctsm/pull/1700)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev090
+Originator(s): samrabin (Sam Rabin)
+Date: Thu Mar 31 15:03:34 MDT 2022
+One-line Summary: Fix misleading name of "gddplant"
+
+Purpose and description of changes
+----------------------------------
+
+1. Rename `gddplant_patch` to `hui_patch` (and `GDDPLANT` to `HUI`).
+2. Add new variable `gddaccum_patch` (output `GDDACCUM`).
+
+Output variable `GDDPLANT` (not included by default) is now `HUI`, and
+new output `GDDACCUM` has been added to track _actual_ accumulation of
+GDDs since planting without any modifications such as occurs here:
+https://github.com/ESCOMP/CTSM/blob/d9ae4b48d9c55fe3c998019bcf76817da570db87/src/biogeochem/CNPhenologyMod.F90#L2044-L2046
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1655 (gddplant_patch (GDDPLANT) is misleadingly
+  named)
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- See above notes about changes to some output variables
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Changed variables output in crop testmod (and any testmods that inherit
+  from it)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+There are FIELDLIST diffs for cases using the crop testmod or other
+testmods inheriting from it, but otherwise bit-for-bit.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1684
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev089
+Originator(s): sacks (Bill Sacks)
+Date: Thu Mar 31 11:44:12 MDT 2022
+One-line Summary: For CLM45 apply peaklai to aleaf in grainfill
+
+Purpose and description of changes
+----------------------------------
+
+This tag makes the crop allocation code in
+NutrientCompetitionCLM45defaultMod consistent with that in
+NutrientCompetitionFlexibleCNMod by forcing aleaf to 1e-5 if peaklai has
+been reached during the grainfill period (in addition to the similar
+existing check that was already in both places during the vegetative
+growth period). This reconciliation will be helpful so that I can
+extract these into a shared subroutine.
+
+I thought this would potentially change answers for CLM45 cases, but
+based on the test suite and from a 5-year run of IHistClm45BgcCrop at
+f19_g17 resolution, it seems like this won't change answers in our
+typical configurations: From that 5-year f19_g17 run, whenever peaklai
+is 1 during the grainfill period, aleaf is already exactly 1e-5. I don't
+understand why this is always the case; maybe, in Clm45, if peaklai
+isn't reached before grainfill then it is never reached that growing
+season? I have come to suspect that the difference between Clm45 and
+Clm50 in this respect may actually be due to whether you're running with
+FUN, since running with FUN changes some relevant driver sequencing. So
+it's possible that this would change answers for the atypical situation
+where someone was running with FUN but not FlexibleCN; in this case, I
+think this change would be the right thing to do. In addition, from the
+test suite, I found this leads to answer changes when using CLM45
+together with old hydrology (h2osfcflag = 0 and use_subgrid_fluxes =
+.false.).
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but only in very limited cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Very limited cases with crop and without
+      FlexibleCN (see below for details)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      not investigated, but suspected to be larger than roundoff / same climate
+
+      I thought this would potentially change answers for CLM45 cases,
+      but based on the test suite and from a 5-year run of
+      IHistClm45BgcCrop at f19_g17 resolution, it seems like this won't
+      change answers in our typical configurations: From that 5-year
+      f19_g17 run, whenever peaklai is 1 during the grainfill period,
+      aleaf is already exactly 1e-5. I don't understand why this is
+      always the case; maybe, in Clm45, if peaklai isn't reached before
+      grainfill then it is never reached that growing season? I have
+      come to suspect that the difference between Clm45 and Clm50 in
+      this respect may actually be due to whether you're running with
+      FUN, since running with FUN changes some relevant driver
+      sequencing. So it's possible that this would change answers for
+      the atypical situation where someone was running with FUN but not
+      FlexibleCN; in this case, I think this change would be the right
+      thing to do. In addition, from the test suite, I found this leads
+      to answer changes when using CLM45 together with old hydrology
+      (h2osfcflag = 0 and use_subgrid_fluxes = .false.).
+
+      Tests with answer changes were:
+      ERP_D_P36x2_Ld3.f10_f10_mg37.I2000Clm45BgcCrop.cheyenne_gnu.clm-no_subgrid_fluxes
+      SMS_D_Ld1_P48x1.f10_f10_mg37.I2000Clm45BgcCrop.izumi_nag.clm-oldhyd
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1694
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev088
 Originator(s): samrabin (Sam Rabin)
 Date: Mon Mar 28 10:13:22 MDT 2022
