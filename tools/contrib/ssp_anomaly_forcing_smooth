@@ -12,6 +12,7 @@ import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import netCDF4 as netcdf4
+import argparse
 from scipy import interpolate
 
 # load proper modules first, i.e.
@@ -126,7 +127,7 @@ histdir_full = ['b.e21.BHIST.f09_g17.CMIP6-historical.010/','b.e21.BHIST.f09_g17
 sim_pairs = zip(sspdir_full, histdir_full)
 # print simulation pairs and exit
 if args.print_ssps:
-    print(basedir,'\n')
+    print(datapath,'\n')
     for sim in sim_pairs:
         print('SSP: ',sim[0])
         print('historical: ', sim[1],'\n')
@@ -244,8 +245,12 @@ for f in range(nfields):
 
         for hfile in histfiles:
             print(hfile.split('month_1/')[-1])
+            if ( not os.path.exists(hfile) ):
+               sys.exit( hfile+" does not exist" )
         for sfile in sspfiles:
             print(sfile.split('month_1/')[-1])
+            if ( not os.path.exists(sfile) ):
+               sys.exit( hfile+" does not exist" )
 
         #--  Read in historical data  -----------
         f1 = netcdf4.Dataset(histfiles, 'r')
