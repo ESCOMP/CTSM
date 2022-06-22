@@ -88,7 +88,7 @@ def get_parser():
         "--model-mesh-nx",
         help="""
             model mesh [default: %(default)s]
-            Ignore the --res option and force the model mesh to have this nx 
+            Required when using --model-mesh; force the model mesh to have this nx
             """,
         action="store",
         dest="force_model_mesh_nx",
@@ -99,7 +99,7 @@ def get_parser():
         "--model-mesh-ny",
         help="""
             model mesh [default: %(default)s]
-            Ignore the --res option and force the model mesh to have this ny 
+            Required when using --model-mesh; force the model mesh to have this ny
             """,
         action="store",
         dest="force_model_mesh_ny",
