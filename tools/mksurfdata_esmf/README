@@ -32,7 +32,7 @@ on your machine you will be able to build the tool there.
 
 To get a list of the machines that have been ported to cime: 
 
-cd ../../cime/scripts
+cd ../../cime/scripts  # assumes we are in tools/mksurfdata_esmf
 ./query_config --machines
 
 NOTE:
@@ -41,16 +41,14 @@ to be referenced with the env variable PIO which will need to be in the porting 
 for the machine. Currently an independent PIO library is not available on cime ported machines.
 
 =======================
-building the executable
+building the executable (working in tools/mksurfdata_esmf)
 =======================
 
-> cd tools/mksurfdata_esmf
 > ./gen_mksurfdata_build.sh      # For machines with a cime build
 
 =======================
 running for a single submission:
 =======================
-> cd ../
 # to generate your target namelist:
 > ./gen_mksurfdata_namelist.py --help
 # for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
