@@ -250,10 +250,10 @@ for f in range(nfields):
         for sfile in sspfiles:
             print(sfile.split('month_1/')[-1])
             if ( not os.path.exists(sfile) ):
-               sys.exit( hfile+" does not exist" )
+               sys.exit( sfile+" does not exist" )
 
         #--  Read in historical data  -----------
-        f1 = netcdf4.Dataset(histfiles, 'r')
+        f1 = netcdf4.MFDataset(histfiles, 'r')
         if nens == 0:
             # read in coordinates
             lon   = np.asfarray(f1.variables['lon'][:],np.float64)
@@ -327,7 +327,7 @@ for f in range(nfields):
             ssp_nyrs    = ssp_yrend - ssp_yrstart + 1
             print('SSP years: ', ssp_yrstart,ssp_yrend,ssp_nyrs)
             tot_nyrs    = hist_nyrs+ssp_nyrs
-            outfile_suffix = '.CESM.'+ssptag1+'.'+str(ssp_yrstart)+'-'+str(ssp_yrend)+creationdate+'.nc'
+            outfile_suffix = '.CESM.'+ssptag+'.'+str(ssp_yrstart)+'-'+str(ssp_yrend)+creationdate+'.nc'
 
         ssp_fld += np.asfarray(f1.variables[field_in[f]][ssp_ind,:,:],np.float64)
         f1.close()
@@ -462,7 +462,7 @@ for f in range(nfields):
     x=x2.communicate()
     timetag = x[0].decode('utf-8').strip()
 
-    w.creation_date = timetag
+    outfile.creation_date = timetag
  
     # List of source files
     file_list = 'historical: '+', '.join(histfiles)+' projections: '+', '.join(sspfiles)
@@ -520,19 +520,17 @@ for f in range(nfields):
     wtime_offset = (15 - ssp_time[0])
     wtime[:]    = ssp_time + wtime_offset
     wtime.calendar = 'noleap'
-    wtime[:]   = outtime
     wlon[:]    = lon
     wlat[:]    = lat
     wmask[:,:] = landmask
     wfrac[:,:] = landfrac
     warea[:,:] = area
-    wvar[:,:,:] = outputvarvalues
     if field_out[f] == 'sfcWind':
         wvar[:,:,:] = anom_fld / np.sqrt(2)
     else:
         wvar[:,:,:] = anom_fld
 
-    outfilew.close()
+    outfile.close()
 
     # create second wind field for V component
     if field_out[f] == 'sfcWind':
@@ -544,7 +542,7 @@ for f in range(nfields):
         x=x2.communicate()
         timetag = x[0].decode('utf-8').strip()
 
-        outfilew.creation_date = timetag
+        outfile.creation_date = timetag
         file_list = 'historical: '+', '.join(histfiles)+' projections: '+', '.join(sspfiles)
         outfile.source_files = file_list
         outfile.title = 'anomaly forcing data'
