@@ -319,7 +319,7 @@ for f in range(nfields):
             landfrac[ind] = 0
 
             x = time_units.split()[2]
-            ref_year = np.float32(x.split("-")[0])
+            ref_year = float(x.split("-")[0])
             hist_yrstart = np.min(hist_time / 365.0 + ref_year).astype(int)
             # overwrite hist_yrstart to select just 20 years prior to climo_year
             hist_yrstart = climo_year - (climo_base_nyrs - 1)
@@ -364,7 +364,7 @@ for f in range(nfields):
             ssp_time_units = f1.variables["time"].units
             ssp_time_longname = f1.variables["time"].long_name
             x = ssp_time_units.split()[2]
-            ssp_ref_year = np.float32(x.split("-")[0])
+            ssp_ref_year = float(x.split("-")[0])
 
             # adjust ssp_time to reference time of hist_time
             # ssp_time += 365*(ssp_ref_year - ref_year)
@@ -417,8 +417,8 @@ for f in range(nfields):
     # --  end Loop over ensemble members  ------------------------------
 
     # normalize summed fields by number of ensemble members
-    hist_fld = hist_fld / np.float(num_ens)
-    ssp_fld = ssp_fld / np.float(num_ens)
+    hist_fld = hist_fld / float(num_ens)
+    ssp_fld = ssp_fld / float(num_ens)
     # concatenate arrays to form contiguous time series
     temp_fld = np.concatenate((hist_fld, ssp_fld), axis=0)
     time = np.concatenate((hist_time, ssp_time), axis=0)
@@ -433,7 +433,7 @@ for f in range(nfields):
         m = np.where(np.logical_and(ind >= 0, ind < tm))[0]
         ind2 = ind[m].astype(int)
 
-        stemp_fld[n, :, :] = np.sum(temp_fld[ind2, :, :], axis=0) / np.float32(
+        stemp_fld[n, :, :] = np.sum(temp_fld[ind2, :, :], axis=0) / float(
             ind2.size
         )
 
@@ -457,7 +457,7 @@ for f in range(nfields):
             + t_climo_year
             + n
         ).astype(int)
-        climo[n, :, :] = np.sum(stemp_fld[ind, :, :], axis=0) / np.float32(ind.size)
+        climo[n, :, :] = np.sum(stemp_fld[ind, :, :], axis=0) / float(ind.size)
 
     print("climo calculated")
 
