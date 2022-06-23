@@ -320,10 +320,10 @@ for f in range(nfields):
 
             x = time_units.split()[2]
             ref_year = np.float32(x.split("-")[0])
-            hist_yrstart = np.min(hist_time / 365.0 + ref_year).astype(np.int)
+            hist_yrstart = np.min(hist_time / 365.0 + ref_year).astype(int)
             # overwrite hist_yrstart to select just 20 years prior to climo_year
             hist_yrstart = climo_year - (climo_base_nyrs - 1)
-            hist_yrend = (np.max(hist_time / 365.0 + ref_year) - 1).astype(np.int)
+            hist_yrend = (np.max(hist_time / 365.0 + ref_year) - 1).astype(int)
             hist_nyrs = hist_yrend - hist_yrstart + 1
             print("hist years: ", hist_yrstart, hist_yrend, hist_nyrs)
 
@@ -374,15 +374,15 @@ for f in range(nfields):
             ref_year = ssp_ref_year
 
             # ssp_ind could be modified to subset data if needed...
-            ssp_ind = np.arange(ssp_time.size, dtype=np.int)
+            ssp_ind = np.arange(ssp_time.size, dtype=int)
 
             ssp_time = ssp_time[ssp_ind]
             long_name = f1.variables[field_in[f]].long_name
             ntime_ssp = ssp_time.size
             ssp_fld = np.zeros((ntime_ssp, nlat, nlon))
 
-            ssp_yrstart = np.min(ssp_time / 365.0 + ref_year).astype(np.int)
-            ssp_yrend = (np.max(ssp_time / 365.0 + ref_year) - 1).astype(np.int)
+            ssp_yrstart = np.min(ssp_time / 365.0 + ref_year).astype(int)
+            ssp_yrend = (np.max(ssp_time / 365.0 + ref_year) - 1).astype(int)
             ssp_nyrs = ssp_yrend - ssp_yrstart + 1
             print("SSP years: ", ssp_yrstart, ssp_yrend, ssp_nyrs)
             tot_nyrs = hist_nyrs + ssp_nyrs
@@ -431,7 +431,7 @@ for f in range(nfields):
         ind = nmo * (np.arange(climo_base_nyrs) - (climo_base_nyrs - 1) / 2) + n
         # account for edges
         m = np.where(np.logical_and(ind >= 0, ind < tm))[0]
-        ind2 = ind[m].astype(np.int)
+        ind2 = ind[m].astype(int)
 
         stemp_fld[n, :, :] = np.sum(temp_fld[ind2, :, :], axis=0) / np.float32(
             ind2.size
@@ -456,7 +456,7 @@ for f in range(nfields):
             nmo * (np.arange(climo_base_nyrs) - (climo_base_nyrs - 1) / 2)
             + t_climo_year
             + n
-        ).astype(np.int)
+        ).astype(int)
         climo[n, :, :] = np.sum(stemp_fld[ind, :, :], axis=0) / np.float32(ind.size)
 
     print("climo calculated")
@@ -469,7 +469,7 @@ for f in range(nfields):
     # calculate anomaly relative to climatology
     anom_fld = np.zeros((ssp_fld_smoothed.shape))
     for y in range(ssp_nyrs):
-        ind = (np.arange(nmo) + y * nmo).astype(np.int)
+        ind = (np.arange(nmo) + y * nmo).astype(int)
         if anomsf[f] == "anomaly":
             anom_fld[ind, :, :] = ssp_fld_smoothed[ind, :, :] - climo
 
