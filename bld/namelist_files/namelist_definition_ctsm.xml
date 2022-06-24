@@ -2819,9 +2819,9 @@ use case.)
 </entry>
 
 <!-- ========================================================================================  -->
-<!-- Namelist options related to excessice                                                     -->
+<!-- Namelist options related to excess ice                                                    -->
 <!-- ========================================================================================  -->
-<entry id="use_excess_ice" type="logical" category="physics"
+<entry id="use_excess_ice" type="logical" category="clm_physics"
         group="clm_inparm" valid_values="" >
 If TRUE turn on the excess ice physics, (Lee et al., 2014; Cai et al., 2020)
 </entry>

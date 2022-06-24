@@ -2137,6 +2137,7 @@ sub setup_logic_soilstate {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock',
               'use_fates'=>$nl_flags->{'use_fates'}, 'vichydro'=>$nl_flags->{'vichydro'} );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice'); # excess ice flag should be read before stream vars
 
   my $var1 = "soil_layerstruct_predefined";
   my $var2 = "soil_layerstruct_userdefined";
@@ -4148,12 +4149,13 @@ sub setup_logic_exice {
   # excess ice streams
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
-
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_exice');
-  if ($opts->{'driver'} eq "nuopc" ) {
+  my $use_exice = $nl->get_value( 'use_excess_ice'               );
+  if (defined($use_exice) && $opts->{'driver'} eq "nuopc" && value_is_true($use_exice)) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_exice');
-    }
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_mapalgo_exice');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_exice');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_mapalgo_exice');
+  }
+
 
 } # end exice streams
 
