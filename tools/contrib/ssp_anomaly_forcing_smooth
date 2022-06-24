@@ -539,50 +539,78 @@ for f in range(nfields):
 
     # create netcdf file  ---------------------------------
 
-    if field_out[f] == "sfcWind":
-        outfilename = outdir + "/" + "af." + field_out_wind[0] + outfile_suffix
-        outfilename2 = outdir + "/" + "af." + field_out_wind[1] + outfile_suffix
-    else:
-        outfilename = outdir + "/" + "af." + field_out[f] + outfile_suffix
+    print( f )
+    if ( f == 0 ):
+        outfilename = outdir + "/" + "af.allvars" + outfile_suffix
+        print("Creating: " + outfilename)
+        outfile = netcdf4.Dataset(outfilename, "w")
 
-    print("Creating: " + outfilename)
-    outfile = netcdf4.Dataset(outfilename, "w")
+        # creation date on the file
+        command = 'date "+%y%m%d"'
+        x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
+        x = x2.communicate()
+        timetag = x[0].decode("utf-8").strip()
 
-    # creation date on the file
-    command = 'date "+%y%m%d"'
-    x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
-    x = x2.communicate()
-    timetag = x[0].decode("utf-8").strip()
+        outfile.creation_date = timetag
 
-    outfile.creation_date = timetag
+        # List of source files
+        file_list = (
+            "historical: " + ", ".join(histfiles) + " projections: " + ", ".join(sspfiles)
+        )
+        outfile.source_files = file_list
 
-    # List of source files
-    file_list = (
-        "historical: " + ", ".join(histfiles) + " projections: " + ", ".join(sspfiles)
-    )
-    outfile.source_files = file_list
+        outfile.title = "anomaly forcing data"
+        outfile.note1 = (
+            "Anomaly/scale factors calculated relative to "
+            + str(climo_year - (climo_base_nyrs - 1) / 2)
+            + "-"
+            + str(climo_year + (climo_base_nyrs - 1) / 2)
+        )
+        outfile.history = historydate + ": created by " + sys.argv[0]
+        stdout = os.popen("git describe")
+        outfile.gitdescribe = stdout.read().rstrip()
 
-    outfile.title = "anomaly forcing data"
-    outfile.note1 = (
-        "Anomaly/scale factors calculated relative to "
-        + str(climo_year - (climo_base_nyrs - 1) / 2)
-        + "-"
-        + str(climo_year + (climo_base_nyrs - 1) / 2)
-    )
-    outfile.history = historydate + ": created by " + sys.argv[0]
-    stdout = os.popen("git describe")
-    outfile.gitdescribe = stdout.read().rstrip()
+        outfile.createDimension("lat", size=int(nlat))
+        outfile.createDimension("lon", size=int(nlon))
+        outfile.createDimension("time", size=ntime_ssp)
 
-    outfile.createDimension("lat", size=int(nlat))
-    outfile.createDimension("lon", size=int(nlon))
-    outfile.createDimension("time", size=ntime_ssp)
+        wtime = outfile.createVariable("time", np.float64, ("time",))
+        wlat = outfile.createVariable("lat", np.float64, ("lat",))
+        wlon = outfile.createVariable("lon", np.float64, ("lon",))
+        wmask = outfile.createVariable("landmask", np.int32, ("lat", "lon"))
+        warea = outfile.createVariable("area", np.float64, ("lat", "lon"))
+        wfrac = outfile.createVariable("landfrac", np.float64, ("lat", "lon"))
+        wtime.units = ssp_time_units
+        wlon.units = "degrees"
+        wlat.units = "degrees"
+        warea.units = "km2"
+        wfrac.units = "unitless"
+        wmask.units = "unitless"
 
-    wtime = outfile.createVariable("time", np.float64, ("time",))
-    wlat = outfile.createVariable("lat", np.float64, ("lat",))
-    wlon = outfile.createVariable("lon", np.float64, ("lon",))
-    wmask = outfile.createVariable("landmask", np.int32, ("lat", "lon"))
-    warea = outfile.createVariable("area", np.float64, ("lat", "lon"))
-    wfrac = outfile.createVariable("landfrac", np.float64, ("lat", "lon"))
+        # wtime.long_name = 'Months since January '+str(fut_yrstart)
+        wtime.long_name = ssp_time_longname
+        wlon.long_name = "Longitude"
+        wlat.long_name = "Latitude"
+        warea.long_name = "Grid cell area"
+        wfrac.long_name = "Grid cell land fraction"
+        wmask.long_name = "Grid cell land mask"
+
+        wtime.calendar = "noleap"
+
+        # write to file  --------------------------------------------
+        # wtime_offset = 0
+        # adjust time to middle of month
+        # wtime_offset = -15
+        wtime_offset = 15 - ssp_time[0]
+        wtime[:] = ssp_time + wtime_offset
+        wtime.calendar = "noleap"
+        wlon[:] = lon
+        wlat[:] = lat
+        wmask[:, :] = landmask
+        wfrac[:, :] = landfrac
+        warea[:, :] = area
+    # -- End if on open file
+
     if field_out[f] == "sfcWind":
         wvar = outfile.createVariable(
             field_out_wind[0],
@@ -597,122 +625,43 @@ for f in range(nfields):
             ("time", "lat", "lon"),
             fill_value=np.float64(1.0e36),
         )
-
-    wtime.units = ssp_time_units
-    wlon.units = "degrees"
-    wlat.units = "degrees"
     wvar.units = units[f]
-    warea.units = "km2"
-    wfrac.units = "unitless"
-    wmask.units = "unitless"
 
-    # wtime.long_name = 'Months since January '+str(fut_yrstart)
-    wtime.long_name = ssp_time_longname
-    wlon.long_name = "Longitude"
-    wlat.long_name = "Latitude"
+    # write to file  --------------------------------------------
     if field_out[f] == "sfcWind":
         wvar.long_name = str(long_name) + " U component " + anomsf[f]
     else:
         wvar.long_name = str(long_name) + " " + anomsf[f]
-    warea.long_name = "Grid cell area"
-    wfrac.long_name = "Grid cell land fraction"
-    wmask.long_name = "Grid cell land mask"
 
-    wtime.calendar = "noleap"
-
-    # write to file  --------------------------------------------
-    # wtime_offset = 0
-    # adjust time to middle of month
-    # wtime_offset = -15
-    wtime_offset = 15 - ssp_time[0]
-    wtime[:] = ssp_time + wtime_offset
-    wtime.calendar = "noleap"
-    wlon[:] = lon
-    wlat[:] = lat
-    wmask[:, :] = landmask
-    wfrac[:, :] = landfrac
-    warea[:, :] = area
     if field_out[f] == "sfcWind":
         wvar[:, :, :] = anom_fld / np.sqrt(2)
     else:
         wvar[:, :, :] = anom_fld
 
-    outfile.close()
 
     # create second wind field for V component
     if field_out[f] == "sfcWind":
-        print("creating " + outfilename2)
-        w = netcdf4.Dataset(outfilename2, "w")
-
         command = 'date "+%y%m%d"'
         x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
         x = x2.communicate()
         timetag = x[0].decode("utf-8").strip()
 
-        outfile.creation_date = timetag
-        file_list = (
-            "historical: "
-            + ", ".join(histfiles)
-            + " projections: "
-            + ", ".join(sspfiles)
-        )
-        outfile.source_files = file_list
-        outfile.title = "anomaly forcing data"
-        outfile.note1 = (
-            "Anomaly/scale factors calculated relative to "
-            + str(climo_year - (climo_base_nyrs - 1) / 2)
-            + "-"
-            + str(climo_year + (climo_base_nyrs - 1) / 2)
-        )
-
-        outfile.createDimension("lat", int(nlat))
-        outfile.createDimension("lon", int(nlon))
-        outfile.createDimension("time", int(ntime_ssp))
-
-        wtime = outfile.createVariable("time", np.float64, ("time",))
-        wlat = outfile.createVariable("lat", np.float64, ("lat",))
-        wlon = outfile.createVariable("lon", np.float64, ("lon",))
-        wmask = outfile.createVariable("landmask", np.int32, ("lat", "lon"))
-        warea = outfile.createVariable("area", np.float64, ("lat", "lon"))
-        wfrac = outfile.createVariable("landfrac", np.float64, ("lat", "lon"))
         wvar = outfile.createVariable(
             field_out_wind[1],
             np.float64,
             ("time", "lat", "lon"),
             fill_value=np.float64(1.0e36),
         )
-
-        wtime.units = ssp_time_units
-        wlon.units = "degrees"
-        wlat.units = "degrees"
         wvar.units = units[f]
-        warea.units = "km2"
-        wfrac.units = "unitless"
-        wmask.units = "unitless"
-
-        # wtime.long_name = 'Months since January '+str(ssp_yrstart)
-        wtime.long_name = ssp_time_longname
-        wtime.calendar = "noleap"
-        wlon.long_name = "Longitude"
-        wlat.long_name = "Latitude"
         wvar.long_name = str(long_name) + " V component " + anomsf[f]
-        warea.long_name = "Grid cell area"
-        wfrac.long_name = "Grid cell land fraction"
-        wmask.long_name = "Grid cell land mask"
 
         # write to file  --------------------------------------------
-        wtime[:] = ssp_time + wtime_offset
-        wlon[:] = lon
-        wlat[:] = lat
-        wmask[:, :] = landmask
-        wfrac[:, :] = landfrac
-        warea[:, :] = area
         wvar[:, :, :] = anom_fld / np.sqrt(2)
 
-        outfile.close()
     # -- end if statement for write for V field --------
 
 # --  End Loop over forcing fields  ------------------------------------
+outfile.close()
 
 
 print("\n\nSuccessfully made anomoly forcing datasets\n")
