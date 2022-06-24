@@ -52,7 +52,7 @@ module WaterStateType
 
      real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
 
-     real(r8), pointer :: excess_ice_col         (:,:) ! col excess ice lenses (kg/m2) (new) (-nlevsno+1:nlevgrnd)
+     real(r8), pointer :: excess_ice_col         (:,:) ! col excess ice (kg/m2) (new) (-nlevsno+1:nlevgrnd)
      real(r8), pointer :: exice_bulk_init        (:)   ! inital value for excess ice (new) (unitless)
 
      type(excessicestream_type), private :: exicestream ! stream type for excess ice initialization NUOPC only
@@ -554,7 +554,7 @@ contains
                   nbedrock = nlevsoi
                 endif
                 do j = 2, nlevmaxurbgrnd ! ignore first layer
-                  if (n1m<nbedrock) then
+                  if (n1m<nbedrock) then ! bedrock below 1 m
                     if (j >= n1m .and. j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
                       this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exice_bulk_init(c))
                     else
@@ -569,7 +569,7 @@ contains
             this%excess_ice_col(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
           endif
         enddo
-      else
+      else ! use_excess_ice is false
         this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
         this%exice_bulk_init(bounds%begc:bounds%endc)=0.0_r8
       end if

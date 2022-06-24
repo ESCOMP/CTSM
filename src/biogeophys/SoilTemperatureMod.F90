@@ -198,7 +198,7 @@ contains
          frac_sno_eff            => waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
          snow_depth              => waterdiagnosticbulk_inst%snow_depth_col          , & ! Input:  [real(r8) (:)   ]  snow height (m)                         
          h2osfc                  => waterstatebulk_inst%h2osfc_col                   , & ! Input:  [real(r8) (:)   ]  surface water (mm)                      
-         excess_ice              => waterstatebulk_inst%excess_ice_col               , & ! Input:  [real(r8) (:,:) ]  excess ice lenses (kg/m2) (new) (1:nlevgrnd)
+         excess_ice              => waterstatebulk_inst%excess_ice_col               , & ! Input:  [real(r8) (:,:) ]  excess ice (kg/m2) (new) (1:nlevgrnd)
          frac_h2osfc             => waterdiagnosticbulk_inst%frac_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
 
          
@@ -1161,7 +1161,7 @@ contains
          h2osno_no_layers =>    waterstatebulk_inst%h2osno_no_layers_col     , & ! Output: [real(r8) (:)   ] snow not resolved into layers (mm H2O)
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2) (new)             
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
-         excess_ice       =>    waterstatebulk_inst%excess_ice_col      , & ! Input:  [real(r8) (:,:) ]  excess ice lenses (kg/m2) (new) (1:nlevgrnd)
+         excess_ice       =>    waterstatebulk_inst%excess_ice_col      , & ! Input:  [real(r8) (:,:) ]  excess ice (kg/m2) (new) (1:nlevgrnd)
          
          qflx_snow_drain  =>    waterfluxbulk_inst%qflx_snow_drain_col  , & ! Output: [real(r8) (:)   ] drainage from snow pack                           
          qflx_snofrz_lyr  =>    waterfluxbulk_inst%qflx_snofrz_lyr_col  , & ! Output: [real(r8) (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
@@ -1393,7 +1393,7 @@ contains
                      if (xm(c,j) > 0._r8) then !if there is excess heat to melt the ice
                        h2osoi_ice(c,j) = max(0._r8, wice0(c,j)-xm(c,j))
                        heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
-                       xm2(c,j) = xm(c,j) - h2osoi_ice(c,j) !excess ice modifications
+                       xm2(c,j) = xm(c,j) - h2osoi_ice(c,j) !excess ice melting
                          if (h2osoi_ice(c,j) == 0._r8) then ! this might be redundant 
                            if (excess_ice(c,j) >= 0._r8 .and. xm2(c,j)>0._r8 .and. j>=2) then ! if there is excess ice to melt
                              excess_ice(c,j) = max(0._r8,wexice0(c,j) - xm2(c,j))
@@ -1413,7 +1413,7 @@ contains
                         heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      endif
 
-                     h2osoi_liq(c,j) = max(0._r8,wmass0(c,j)-h2osoi_ice(c,j)-excess_ice(c,j)) !melted exice is added to the respective soil layers
+                     h2osoi_liq(c,j) = max(0._r8,wmass0(c,j)-h2osoi_ice(c,j)-excess_ice(c,j)) !melted excess ice is added to the respective soil layers
                      
 
                      if (abs(heatr) > 0._r8) then
@@ -1447,6 +1447,7 @@ contains
 
                      if (j >= 1) then !why before it was two same statements?
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime +hfus*(wexice0(c,j)-excess_ice(c,j))/dtime
+                        ! subsidence calculation
                         exice_subs_col(c,j) = max(0._r8, (wexice0(c,j)-excess_ice(c,j))/denice) 
                      else
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime

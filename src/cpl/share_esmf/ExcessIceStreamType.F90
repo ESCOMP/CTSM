@@ -173,6 +173,8 @@ contains
   end subroutine InitAllocate
 
   subroutine CalcExcessIce(this,bounds,exice_bulk_init)
+  
+  ! only transfers grid values to columns
    use shr_const_mod   , only : SHR_CONST_TKFRZ
    use landunit_varcon , only : istwet, istsoil, istcrop, istice
    use column_varcon   , only : icol_road_perv, icol_road_imperv

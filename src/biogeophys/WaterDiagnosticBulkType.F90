@@ -301,7 +301,7 @@ contains
 
       this%exice_subs_tot_col(begc:endc) = 0.0_r8
       call hist_addfld1d ( &
-           fname=this%info%fname('EXICE_SUBS'),  &
+           fname=this%info%fname('SUBSIDENCE'),  &
            units='m',  &
            avgflag='SUM', &
            l2g_scale_type='veg', &
@@ -911,14 +911,14 @@ contains
       this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
       this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
     else
+      ! initialization of these to zero is ok, since they might not be in the restart file
+      this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
+      this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
       ! have to at least define them 
-      call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXICE_SUBS'),  &
+      call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('SUBSIDENCE'),  &
            dim1name='column', xtype=ncd_double, &
            long_name=this%info%lname('vertically summed volumetric excess ice concentration (veg landunits only)'), units='m', &
            interpinic_flag='interp', readvar=readvar, data=this%exice_subs_tot_col)
-      ! initialization of these to zero is ok, since they are not in history anyway
-      this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
-      this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
       if (flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
         this%exice_subs_tot_col(bounds%begc:bounds%endc)=0.0_r8
         this%exice_vol_tot_col(bounds%begc:bounds%endc)=0.0_r8
