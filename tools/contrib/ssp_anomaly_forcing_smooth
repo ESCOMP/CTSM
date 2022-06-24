@@ -16,28 +16,9 @@ import argparse
 from scipy import interpolate
 
 # load proper modules first, i.e.
-# cheyenne
 """
-module load python/2.7.16  
-ncar_pylib
-#module load numpy/1.12.0
-#module load matplotlib/2.0.0
-#module load scipy/0.18.1
-#module load intel/16.0.3         
-#module load ncarcompilers/0.3.5
-#module load netcdf/4.4.1.1
-#module load netcdf4-python/1.2.7
-"""
-
-# caldera / geyser
-
-"""
-module load python/2.7.7  
-module load numpy/1.11.0
-module load pyside/1.1.2
-module load matplotlib/1.5.1
-module load scipy/0.18.1
-module load netcdf4python/1.2.4
+conda create  -n ssp_af  # Do this one time
+conda install -n ssp_af --file conda_env_ssp_af.txt
 """
 
 parser = argparse.ArgumentParser(description="Create anomaly forcing")
@@ -553,6 +534,7 @@ for f in range(nfields):
         wvar[:, :, :] = temp_fld
         wvar2[:, :, :] = stemp_fld
         w.close()
+        print( "Exit early after writing out climatology\n\n" )
         sys.exit()
 
     # create netcdf file  ---------------------------------
