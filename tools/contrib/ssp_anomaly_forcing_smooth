@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import netCDF4 as netcdf4
 import argparse
 from scipy import interpolate
+from getpass import getuser
 
 # load proper modules first, i.e.
 """
@@ -252,13 +253,9 @@ for f in range(nfields):
         fdir = dpath + fut_case + dfile
 
         # Check that directories exist
-        if os.path.exists(hdir):
-            print("Data file directory:" + hdir)
-        else:
+        if not os.path.exists(hdir):
             sys.exit("Could not find directory: " + hdir)
-        if os.path.exists(fdir):
-            print("Data file directory:" + fdir)
-        else:
+        if not os.path.exists(fdir):
             sys.exit("Could not find directory: " + fdir)
 
         # --  Get historical and SSP filenames  --------------------
@@ -394,7 +391,6 @@ for f in range(nfields):
             ssp_time[-1] / 365.0 + ssp_ref_year,
             ssp_time.size,
         )
-        print("array sizes: ", hist_fld.shape, ssp_fld.shape)
     # --  end Loop over ensemble members  ------------------------------
 
     # normalize summed fields by number of ensemble members
@@ -414,9 +410,7 @@ for f in range(nfields):
         m = np.where(np.logical_and(ind >= 0, ind < tm))[0]
         ind2 = ind[m].astype(int)
 
-        stemp_fld[n, :, :] = np.sum(temp_fld[ind2, :, :], axis=0) / float(
-            ind2.size
-        )
+        stemp_fld[n, :, :] = np.sum(temp_fld[ind2, :, :], axis=0) / float(ind2.size)
 
     print(
         "full time: ",
@@ -424,7 +418,6 @@ for f in range(nfields):
         time[-1] / 365.0 + ref_year,
         time.size,
     )
-    print("array shape: ", stemp_fld.shape)
 
     # create climatology of smoothed data
     climo = np.zeros((nmo, nlat, nlon))
@@ -534,13 +527,12 @@ for f in range(nfields):
         wvar[:, :, :] = temp_fld
         wvar2[:, :, :] = stemp_fld
         w.close()
-        print( "Exit early after writing out climatology\n\n" )
+        print("Exit early after writing out climatology\n\n")
         sys.exit()
 
     # create netcdf file  ---------------------------------
 
-    print( f )
-    if ( f == 0 ):
+    if f == 0:
         outfilename = outdir + "/" + "af.allvars" + outfile_suffix
         print("Creating: " + outfilename)
         outfile = netcdf4.Dataset(outfilename, "w")
@@ -551,13 +543,7 @@ for f in range(nfields):
         x = x2.communicate()
         timetag = x[0].decode("utf-8").strip()
 
-        outfile.creation_date = timetag
-
-        # List of source files
-        file_list = (
-            "historical: " + ", ".join(histfiles) + " projections: " + ", ".join(sspfiles)
-        )
-        outfile.source_files = file_list
+        outfile.Created_on = timetag
 
         outfile.title = "anomaly forcing data"
         outfile.note1 = (
@@ -569,10 +555,18 @@ for f in range(nfields):
         outfile.history = historydate + ": created by " + sys.argv[0]
         stdout = os.popen("git describe")
         outfile.gitdescribe = stdout.read().rstrip()
+        outfile.Source = "CMIP6 CESM simulations"
+        outfile.Conventions = "CF-1.0"
+        outfile.Created_by = getuser()
+        outfile.Created_from_historical_dir = hdir
+        outfile.Created_from_scenario_dir = fdir
+        outfile.History_years = str(hist_yrstart)+","+str(hist_yrend)
+        outfile.Scenario_years = str(ssp_yrstart)+","+str(ssp_yrend)
+        outfile.institution = "National Center for Atmospheric Research"
 
         outfile.createDimension("lat", size=int(nlat))
         outfile.createDimension("lon", size=int(nlon))
-        outfile.createDimension("time", size=ntime_ssp)
+        outfile.createDimension("time", None)
 
         wtime = outfile.createVariable("time", np.float64, ("time",))
         wlat = outfile.createVariable("lat", np.float64, ("lat",))
@@ -581,8 +575,8 @@ for f in range(nfields):
         warea = outfile.createVariable("area", np.float64, ("lat", "lon"))
         wfrac = outfile.createVariable("landfrac", np.float64, ("lat", "lon"))
         wtime.units = ssp_time_units
-        wlon.units = "degrees"
-        wlat.units = "degrees"
+        wlon.units = "degrees_east"
+        wlat.units = "degrees_north"
         warea.units = "km2"
         wfrac.units = "unitless"
         wmask.units = "unitless"
@@ -594,6 +588,11 @@ for f in range(nfields):
         warea.long_name = "Grid cell area"
         wfrac.long_name = "Grid cell land fraction"
         wmask.long_name = "Grid cell land mask"
+        wlon.mode = "time-invariant"
+        wlat.mode = "time-invariant"
+        warea.mode = "time-invariant"
+        wfrac.mode = "time-invariant"
+        wmask.mode = "time-invariant"
 
         wtime.calendar = "noleap"
 
@@ -626,6 +625,16 @@ for f in range(nfields):
             fill_value=np.float64(1.0e36),
         )
     wvar.units = units[f]
+    wvar.mode = "time-dependent"
+
+    # List of source files
+    file_list = (
+        "historical: "
+        + ", ".join(histfiles).replace(hdir,'')
+        + " projections: "
+        + ", ".join(sspfiles).replace(fdir,'')
+    )
+    wvar.source_files = file_list
 
     # write to file  --------------------------------------------
     if field_out[f] == "sfcWind":
@@ -637,7 +646,6 @@ for f in range(nfields):
         wvar[:, :, :] = anom_fld / np.sqrt(2)
     else:
         wvar[:, :, :] = anom_fld
-
 
     # create second wind field for V component
     if field_out[f] == "sfcWind":
@@ -653,7 +661,16 @@ for f in range(nfields):
             fill_value=np.float64(1.0e36),
         )
         wvar.units = units[f]
+        wvar.cell_methods = "time: mean"
         wvar.long_name = str(long_name) + " V component " + anomsf[f]
+
+        # List of source files
+        file_list = (
+            "historical: "
+            + ", ".join(histfiles).replace(hdir,'')
+            + " projections: "
+            + ",     ".join(sspfiles).replace(fdir,'')
+        )
 
         # write to file  --------------------------------------------
         wvar[:, :, :] = anom_fld / np.sqrt(2)
