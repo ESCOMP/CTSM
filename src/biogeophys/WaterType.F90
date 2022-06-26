@@ -246,7 +246,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InitForTesting(this, bounds, params, &
-       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer)
+       h2osno_col, snow_depth_col, watsat_col, &
+       t_soisno_col, use_aquifer_layer, NLFilename)
     !
     ! !DESCRIPTION:
     ! Version of Init routine just for unit tests
@@ -259,9 +260,10 @@ contains
     type(water_params_type), intent(in) :: params
     real(r8)          , intent(in) :: h2osno_col(bounds%begc:)
     real(r8)          , intent(in) :: snow_depth_col(bounds%begc:)
-    real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
+    real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)            ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
-    logical , intent(in), optional :: use_aquifer_layer ! whether an aquifer layer is used in this run (false by default)
+    character(len=*) , intent(in) :: NLFilename                               ! Namelist filename
+    logical , intent(in), optional :: use_aquifer_layer                       ! whether an aquifer layer is used in this run (false by default)
     !
     ! !LOCAL VARIABLES:
     logical :: l_use_aquifer_layer
@@ -280,7 +282,8 @@ contains
          snow_depth_col = snow_depth_col, &
          watsat_col = watsat_col, &
          t_soisno_col = t_soisno_col, &
-         use_aquifer_layer = l_use_aquifer_layer)
+         use_aquifer_layer = l_use_aquifer_layer, &
+         NLFilename = NLFilename)
 
   end subroutine InitForTesting
 
@@ -300,22 +303,16 @@ contains
     real(r8)         , intent(in) :: snow_depth_col(bounds%begc:)
     real(r8)         , intent(in) :: watsat_col(bounds%begc:, 1:)            ! volumetric soil water at saturation (porosity)
     real(r8)         , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
-    logical          , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
-    character(len=*) , intent(in) , optional    :: NLFilename ! Namelist filename
+    logical          , intent(in) :: use_aquifer_layer                       ! whether an aquifer layer is used in this run
+    character(len=*) , intent(in) :: NLFilename                              ! Namelist filename
     !
     ! !LOCAL VARIABLES:
     integer :: begc, endc
     integer :: i
-    character(len=256) :: l_NLFilename ! local for namelist filename
 
     character(len=*), parameter :: subname = 'DoInit'
     !-----------------------------------------------------------------------
 
-    !check if NLFilename is passed
-    l_NLFilename = ''
-    if (present(NLFilename)) then
-      l_NLFilename = NLFilename
-   end if
 
     begc = bounds%begc
     endc = bounds%endc
@@ -343,7 +340,7 @@ contains
          watsat_col = watsat_col(begc:endc, 1:),   &
          t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:), &
          use_aquifer_layer = use_aquifer_layer, & 
-         NLFilename = l_NLFilename)
+         NLFilename = NLFilename)
 
     call this%waterdiagnosticbulk_inst%InitBulk(bounds, &
          bulk_info, &
@@ -384,7 +381,7 @@ contains
             watsat_col = watsat_col(begc:endc, 1:),   &
             t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:), &
             use_aquifer_layer = use_aquifer_layer, &
-            NLFilename = l_NLFilename)
+            NLFilename = NLFilename)
 
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Init(bounds, &
             this%bulk_and_tracers(i)%info, &
