@@ -242,7 +242,7 @@ contains
 
     namelist /clm_inparm/ use_soil_moisture_streams
 
-    namelist /clm_inparm/ use_excess_ice !MVD
+    namelist /clm_inparm/ use_excess_ice
 
     namelist /clm_inparm/ use_lai_streams
 
@@ -735,7 +735,7 @@ contains
 
     call mpi_bcast (use_soil_moisture_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (use_excess_ice, 1, MPI_LOGICAL, 0, mpicom,ier) !MVD
+    call mpi_bcast (use_excess_ice, 1, MPI_LOGICAL, 0, mpicom,ier)
 
     call mpi_bcast (use_lai_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 

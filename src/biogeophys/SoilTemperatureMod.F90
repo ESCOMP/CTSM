@@ -700,7 +700,7 @@ contains
                   col%itype(c) /= icol_roof .and. col%itype(c) /= icol_road_imperv) .or. &
                   (col%itype(c) == icol_road_imperv .and. j > nlev_improad(l))) then
 
-                    ! TODO recalculate watsat and satw to have excess ice included
+                    !TODO recalculate watsat and satw to have excess ice included
                   satw = (h2osoi_liq(c,j)/denh2o + h2osoi_ice(c,j)/denice +excess_ice(c,j)/denice)/(dz(c,j)*watsat(c,j))
                   satw = min(1._r8, satw)
                   if (satw > .1e-6_r8) then
@@ -1445,7 +1445,7 @@ contains
                         end if
                      endif  ! end of heatr > 0 if-block
 
-                     if (j >= 1) then !why before it was two same statements?
+                     if (j >= 1) then
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime +hfus*(wexice0(c,j)-excess_ice(c,j))/dtime
                         ! subsidence calculation
                         exice_subs_col(c,j) = max(0._r8, (wexice0(c,j)-excess_ice(c,j))/denice) 
