@@ -557,16 +557,32 @@ for f in range(nfields):
         outfile.gitdescribe = stdout.read().rstrip()
         outfile.Source = "CMIP6 CESM simulations"
         outfile.Conventions = "CF-1.0"
+        outfile.comment = (
+            "Monthly scale factors for given SSP scenario compared to a climatology based on data centered on "
+            + str(climo_year)
+            + " over the range given in note1"
+        )
+        outfile.number_of_ensemble_members = str(num_ens)
         outfile.Created_by = getuser()
-        outfile.Created_from_historical_dir = hdir
-        outfile.Created_from_scenario_dir = fdir
-        outfile.History_years = str(hist_yrstart)+","+str(hist_yrend)
-        outfile.Scenario_years = str(ssp_yrstart)+","+str(ssp_yrend)
+
+        for nens in range(num_ens):
+            hdir = dpath + histdir[nens] + dfile
+            fdir = dpath + sspdir[nens] + dfile
+            if nens == 0:
+                outfile.Created_from_historical_dir = hdir
+                outfile.Created_from_scenario_dir = fdir
+            else:
+                outfile.Created_from_historical_dir += ", " + hdir
+                outfile.Created_from_scenario_dir += ", " + fdir
+
+        outfile.History_years = str(hist_yrstart) + "," + str(hist_yrend)
+        outfile.Scenario_years = str(ssp_yrstart) + "," + str(ssp_yrend)
         outfile.institution = "National Center for Atmospheric Research"
 
         outfile.createDimension("lat", size=int(nlat))
         outfile.createDimension("lon", size=int(nlon))
-        outfile.createDimension("time", None)
+        outfile.createDimension("time", size=ntime_ssp)
+        # outfile.createDimension("time", None)
 
         wtime = outfile.createVariable("time", np.float64, ("time",))
         wlat = outfile.createVariable("lat", np.float64, ("lat",))
@@ -627,15 +643,6 @@ for f in range(nfields):
     wvar.units = units[f]
     wvar.mode = "time-dependent"
 
-    # List of source files
-    file_list = (
-        "historical: "
-        + ", ".join(histfiles).replace(hdir,'')
-        + " projections: "
-        + ", ".join(sspfiles).replace(fdir,'')
-    )
-    wvar.source_files = file_list
-
     # write to file  --------------------------------------------
     if field_out[f] == "sfcWind":
         wvar.long_name = str(long_name) + " U component " + anomsf[f]
@@ -646,6 +653,10 @@ for f in range(nfields):
         wvar[:, :, :] = anom_fld / np.sqrt(2)
     else:
         wvar[:, :, :] = anom_fld
+
+    # List of source files
+    wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
+    wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
 
     # create second wind field for V component
     if field_out[f] == "sfcWind":
@@ -664,16 +675,12 @@ for f in range(nfields):
         wvar.cell_methods = "time: mean"
         wvar.long_name = str(long_name) + " V component " + anomsf[f]
 
-        # List of source files
-        file_list = (
-            "historical: "
-            + ", ".join(histfiles).replace(hdir,'')
-            + " projections: "
-            + ",     ".join(sspfiles).replace(fdir,'')
-        )
-
         # write to file  --------------------------------------------
         wvar[:, :, :] = anom_fld / np.sqrt(2)
+
+        # List of source files
+        wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
+        wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
 
     # -- end if statement for write for V field --------
 
