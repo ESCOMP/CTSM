@@ -22,22 +22,20 @@ class ModifyMeshMask:
     Description
     -----------
     """
-    # In this (the mesh_mask_modifier) tool, landmask needs all lnd/ocn
-    # specified, not just the section being changed by the modify_fsurdat tool.
-    # Existing example landmask file
+    # The mesh_mask_modifier tool reads landmask, while the modify_fsurdat tool
+    # reads landmask_diff from the landmask file. Sample landmask file:
     # /glade/work/slevis/git/mksurfdata_toolchain/tools/modify_fsurdat/fill_indian_ocean/fill_indianocean_slevis.nc
-    # names this variable landfrac, so we read that here instead of landmask.
     def __init__(self, my_data, landmask_file):
 
         self.file = my_data
 
         # landmask from user-specified .nc file in the .cfg file
         self._landmask_file = xr.open_dataset(landmask_file)
-        self.rectangle = np.ceil(self._landmask_file.landfrac)  # (lsmlat, lsmlon)
-        self.lat_2d = self._landmask_file.lat  # (lsmlat)
-        self.lon_2d = self._landmask_file.lon  # (lsmlon)
-        self.lsmlat = self._landmask_file.lsmlat
-        self.lsmlon = self._landmask_file.lsmlon
+        self.rectangle = self._landmask_file.landmask
+        self.lat_2d = self._landmask_file.lsmlat
+        self.lon_2d = self._landmask_file.lsmlon
+        self.lsmlat = self._landmask_file.dims["lsmlat"]
+        self.lsmlon = self._landmask_file.dims["lsmlon"]
 
         self.not_rectangle = np.logical_not(self.rectangle)
 
@@ -58,9 +56,9 @@ class ModifyMeshMask:
         """
 
         ncount = 0  # initialize
-        for row in self.lsmlat:  # rows from landmask file
-            logger.info('row = %d', row)
-            for col in self.lsmlon:  # cols from landmask file
+        for row in range(self.lsmlat):  # rows from landmask file
+            logger.info('row = %d', row + 1)
+            for col in range(self.lsmlon):  # cols from landmask file
                 # Reshape landmask file's mask (not_rectangle) into the
                 # elementCount dimension of the mesh file.
                 # In the process overwrite self.file[var].

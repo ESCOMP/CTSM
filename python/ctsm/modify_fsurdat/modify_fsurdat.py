@@ -36,7 +36,7 @@ class ModifyFsurdat:
             # overwrite self.not_rectangle with data from
             # user-specified .nc file in the .cfg file
             self._landmask_file = xr.open_dataset(landmask_file)
-            self.rectangle = self._landmask_file.landmask
+            self.rectangle = self._landmask_file.landmask_diff.data
 
         self.not_rectangle = np.logical_not(self.rectangle)
 
