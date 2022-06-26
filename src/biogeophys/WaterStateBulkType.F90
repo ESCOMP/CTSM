@@ -54,10 +54,10 @@ contains
     class(water_info_base_type), intent(in), target :: info
     type(water_tracer_container_type), intent(inout) :: vars
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
-    real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
+    real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)            ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
-    logical           , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
-    character(len=*) , intent(in)  :: NLFilename ! Namelist filename
+    logical           , intent(in) :: use_aquifer_layer                       ! whether an aquifer layer is used in this run
+    character(len=*)  , intent(in) :: NLFilename                              ! Namelist filename
 
     call this%Init(bounds = bounds, &
          info = info, &
@@ -200,11 +200,11 @@ contains
     ! !ARGUMENTS:
     class(waterstatebulk_type), intent(in) :: this
     type(bounds_type), intent(in)    :: bounds 
-    type(file_desc_t), intent(inout) :: ncid   ! netcdf id
-    character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
-    real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
+    type(file_desc_t), intent(inout) :: ncid                                    ! netcdf id
+    character(len=*) , intent(in)    :: flag                                    ! 'read' or 'write'
+    real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)           ! volumetric soil water at saturation (porosity)
     real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
-    integer          , intent(in)    :: altmax_lastyear_indx(bounds%begc:) !col active layer index last year
+    integer          , intent(in)    :: altmax_lastyear_indx(bounds%begc:)      !col active layer index last year
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,j

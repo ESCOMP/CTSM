@@ -288,7 +288,7 @@ contains
       do fc = 1,num_nolakec
         c = filter_nolakec(fc)
         l = col%landunit(c)
-        if( lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+        if( lun%itype(l) == istsoil .or. lun%itype(l) == istcrop ) then
           dz(c,1:nlevmaxurbgrnd)=dz(c,1:nlevmaxurbgrnd)+excess_ice(c,1:nlevmaxurbgrnd)/denice ! add extra layer thickness
           do j=1,nlevmaxurbgrnd ! if excess ice amount dropped to zero there will be no adjustment
             zi(c,j) = zi(c,j) + sum(excess_ice(c,1:j)) / denice
@@ -524,7 +524,7 @@ contains
            do fc = 1,num_nolakec
              c = filter_nolakec(fc)
              l = col%landunit(c)
-             if( lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+             if( lun%itype(l) == istsoil .or. lun%itype(l) == istcrop ) then
                dz(c,1:nlevmaxurbgrnd)=dz_0(c,1:nlevmaxurbgrnd)
                zi(c,1:nlevmaxurbgrnd)=zi_0(c,1:nlevmaxurbgrnd)
                z(c,1:nlevmaxurbgrnd)=z_0(c,1:nlevmaxurbgrnd)
@@ -673,7 +673,7 @@ contains
          h2osno_no_layers => waterstatebulk_inst%h2osno_no_layers_col , & ! Input:  [real(r8) (:)   ]  snow not resolved into layers (mm H2O)
          h2osoi_liq   =>    waterstatebulk_inst%h2osoi_liq_col   , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                  
          h2osoi_ice   =>    waterstatebulk_inst%h2osoi_ice_col   , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                      
-         excess_ice   => waterstatebulk_inst%excess_ice_col               , & ! Input:  [real(r8) (:,:) ]  excess ice lenses (kg/m2) (new) (1:nlevgrnd)
+         excess_ice   => waterstatebulk_inst%excess_ice_col      , & ! Input:  [real(r8) (:,:) ]  excess ice lenses (kg/m2) (new) (1:nlevgrnd)
          bw           =>    waterdiagnosticbulk_inst%bw_col	     , & ! Output: [real(r8) (:,:) ]  partial density of water in the snow pack (ice + liquid) [kg/m3] 
          
          tkmg         =>    soilstate_inst%tkmg_col	         , & ! Input:  [real(r8) (:,:) ]  thermal conductivity, soil minerals  [W/m-K]
@@ -700,7 +700,7 @@ contains
                   col%itype(c) /= icol_roof .and. col%itype(c) /= icol_road_imperv) .or. &
                   (col%itype(c) == icol_road_imperv .and. j > nlev_improad(l))) then
 
-                    !TODO recalculate watsat and satw to have excess ice included
+                !TODO recalculate watsat and satw to have excess ice included
                   satw = (h2osoi_liq(c,j)/denh2o + h2osoi_ice(c,j)/denice +excess_ice(c,j)/denice)/(dz(c,j)*watsat(c,j))
                   satw = min(1._r8, satw)
                   if (satw > .1e-6_r8) then
@@ -803,7 +803,8 @@ contains
                .and. col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall .and. &
                col%itype(c) /= icol_roof .and. col%itype(c) /= icol_road_imperv) .or. &
                (col%itype(c) == icol_road_imperv .and. j > nlev_improad(l))) then
-               cv(c,j) = csol(c,j)*(1._r8-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq) + excess_ice(c,j)*cpice
+               cv(c,j) = csol(c,j)*(1._r8-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice + &
+                         h2osoi_liq(c,j)*cpliq) + excess_ice(c,j)*cpice
                if (j > nbedrock(c)) cv(c,j) = csol_bedrock*dz(c,j)
             else if (lun%itype(l) == istwet) then 
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
@@ -1133,10 +1134,10 @@ contains
     real(r8) :: wice0 (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)!initial mass of ice (kg/m2)
     real(r8) :: wliq0 (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)!initial mass of liquid (kg/m2)
     real(r8) :: supercool(bounds%begc:bounds%endc,nlevmaxurbgrnd)        !supercooled water in soil (kg/m2) 
-    real(r8) :: propor                             !proportionality constant (-)
+    real(r8) :: propor                                                   !proportionality constant (-)
     real(r8) :: tinc(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)  !t(n+1)-t(n) [K]
-    real(r8) :: smp                                !frozen water potential (mm)
-    real(r8) :: wexice0(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)!initial mass of excess_ice at the timestep (kg/m2)
+    real(r8) :: smp                                                      !frozen water potential (mm)
+    real(r8) :: wexice0(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)     !initial mass of excess_ice at the timestep (kg/m2)
 
 
     !-----------------------------------------------------------------------
@@ -1159,9 +1160,9 @@ contains
          snow_depth       =>    waterdiagnosticbulk_inst%snow_depth_col      , & ! Input:  [real(r8) (:)   ] snow height (m)                         
          exice_subs_col   =>    waterdiagnosticbulk_inst%exice_subs_col      , & ! Output: [real(r8) (:,:) ]  per layer subsidence due to excess ice melt (mm/s)
          h2osno_no_layers =>    waterstatebulk_inst%h2osno_no_layers_col     , & ! Output: [real(r8) (:)   ] snow not resolved into layers (mm H2O)
-         h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2) (new)             
-         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
-         excess_ice       =>    waterstatebulk_inst%excess_ice_col      , & ! Input:  [real(r8) (:,:) ]  excess ice (kg/m2) (new) (1:nlevgrnd)
+         h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col           , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2) (new)             
+         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col           , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
+         excess_ice       =>    waterstatebulk_inst%excess_ice_col           , & ! Input:  [real(r8) (:,:) ]  excess ice (kg/m2) (new) (1:nlevgrnd)
          
          qflx_snow_drain  =>    waterfluxbulk_inst%qflx_snow_drain_col  , & ! Output: [real(r8) (:)   ] drainage from snow pack                           
          qflx_snofrz_lyr  =>    waterfluxbulk_inst%qflx_snofrz_lyr_col  , & ! Output: [real(r8) (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
@@ -1210,9 +1211,9 @@ contains
                wliq0(c,j) = h2osoi_liq(c,j)
                wexice0(c,j)=excess_ice(c,j)
                wmass0(c,j) = h2osoi_ice(c,j) + h2osoi_liq(c,j) + wexice0(c,j)
-              if (j>=1) then
-                exice_subs_col(c,j)=0._r8
-              endif
+               if (j>=1) then
+                  exice_subs_col(c,j)=0._r8
+               endif
             endif   ! end of snow layer if-block
 
             if (j <= 0) then
@@ -1271,9 +1272,9 @@ contains
 
                ! melt excess ice after normal ice
                if (excess_ice(c,j) > 0._r8 .AND. t_soisno(c,j) > tfrz) then
-                imelt(c,j) = 1
-                tinc(c,j) = tfrz - t_soisno(c,j)
-                t_soisno(c,j) = tfrz
+                  imelt(c,j) = 1
+                  tinc(c,j) = tfrz - t_soisno(c,j)
+                  t_soisno(c,j) = tfrz
                endif
 
                ! from Zhao (1997) and Koren (1999)
@@ -1391,24 +1392,24 @@ contains
 
                      heatr = 0._r8
                      if (xm(c,j) > 0._r8) then !if there is excess heat to melt the ice
-                       h2osoi_ice(c,j) = max(0._r8, wice0(c,j)-xm(c,j))
-                       heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
-                       xm2(c,j) = xm(c,j) - h2osoi_ice(c,j) !excess ice melting
-                         if (h2osoi_ice(c,j) == 0._r8) then ! this might be redundant 
+                        h2osoi_ice(c,j) = max(0._r8, wice0(c,j)-xm(c,j))
+                        heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
+                        xm2(c,j) = xm(c,j) - h2osoi_ice(c,j) !excess ice melting
+                        if (h2osoi_ice(c,j) == 0._r8) then ! this might be redundant 
                            if (excess_ice(c,j) >= 0._r8 .and. xm2(c,j)>0._r8 .and. j>=2) then ! if there is excess ice to melt
-                             excess_ice(c,j) = max(0._r8,wexice0(c,j) - xm2(c,j))
-                             heatr = hm(c,j) - hfus * (wexice0(c,j)-excess_ice(c,j)+wice0(c,j)-h2osoi_ice(c,j)) / dtime
+                              excess_ice(c,j) = max(0._r8,wexice0(c,j) - xm2(c,j))
+                              heatr = hm(c,j) - hfus * (wexice0(c,j)-excess_ice(c,j)+wice0(c,j)-h2osoi_ice(c,j)) / dtime
                            endif
-                         endif !end of excess ice block
+                        endif !end of excess ice block
                      else if (xm(c,j) < 0._r8) then
                         if (j <= 0) then
                            h2osoi_ice(c,j) = min(wmass0(c,j), wice0(c,j)-xm(c,j))  ! snow
                         else
-                           if (wmass0(c,j) - wexice0(c,j) < supercool(c,j)) then !even if excess ice is present, it cannot refreeze
-                              h2osoi_ice(c,j) = 0._r8
-                           else
-                              h2osoi_ice(c,j) = min(wmass0(c,j) - wexice0(c,j) - supercool(c,j),wice0(c,j)-xm(c,j))
-                           endif
+                          if (wmass0(c,j) - wexice0(c,j) < supercool(c,j)) then !even if excess ice is present, it cannot refreeze
+                             h2osoi_ice(c,j) = 0._r8
+                          else
+                             h2osoi_ice(c,j) = min(wmass0(c,j) - wexice0(c,j) - supercool(c,j),wice0(c,j)-xm(c,j))
+                          endif
                         endif
                         heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      endif
@@ -1446,7 +1447,8 @@ contains
                      endif  ! end of heatr > 0 if-block
 
                      if (j >= 1) then
-                        xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime +hfus*(wexice0(c,j)-excess_ice(c,j))/dtime
+                        xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime + &
+                                 hfus*(wexice0(c,j)-excess_ice(c,j))/dtime
                         ! subsidence calculation
                         exice_subs_col(c,j) = max(0._r8, (wexice0(c,j)-excess_ice(c,j))/denice) 
                      else

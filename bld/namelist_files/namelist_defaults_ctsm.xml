@@ -2587,7 +2587,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <init_interp_method>general</init_interp_method>
 
 <!-- =========================================  -->
-<!-- Defaults for excess_ice                    -->
+<!-- Defaults for excess ice                    -->
 <!-- =========================================  -->
 
 <use_excess_ice>.false.</use_excess_ice>

@@ -905,30 +905,32 @@ contains
     end if
 
     if (.not. use_excess_ice) then
-      ! no need to even define the restart vars
-      this%exice_subs_tot_col(bounds%begc:bounds%endc)=0.0_r8
-      this%exice_vol_tot_col(bounds%begc:bounds%endc)=0.0_r8
-      this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
-      this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
+       ! no need to even define the restart vars
+       this%exice_subs_tot_col(bounds%begc:bounds%endc)=0.0_r8
+       this%exice_vol_tot_col(bounds%begc:bounds%endc)=0.0_r8
+       this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
+       this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
     else
-      ! initialization of these to zero is ok, since they might not be in the restart file
-      this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
-      this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
-      ! have to at least define them 
-      call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('SUBSIDENCE'),  &
-           dim1name='column', xtype=ncd_double, &
-           long_name=this%info%lname('vertically summed volumetric excess ice concentration (veg landunits only)'), units='m', &
-           interpinic_flag='interp', readvar=readvar, data=this%exice_subs_tot_col)
-      if (flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
-        this%exice_subs_tot_col(bounds%begc:bounds%endc)=0.0_r8
-        this%exice_vol_tot_col(bounds%begc:bounds%endc)=0.0_r8
-        this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
-        this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
-      endif
-      call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('TOTEXICE_VOL'),  &
-           dim1name='column', xtype=ncd_double, &
-           long_name=this%info%lname('vertically averaged volumetric excess ice concentration (veg landunits only)'), units='m3/m3', &
-           interpinic_flag='interp', readvar=readvar, data=this%exice_vol_tot_col)
+       ! initialization of these to zero is ok, since they might not be in the restart file
+       this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
+       this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
+       ! have to at least define them 
+       call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('SUBSIDENCE'),  &
+            dim1name='column', xtype=ncd_double, &
+            long_name=this%info%lname('vertically summed volumetric excess ice concentration (veg landunits only)'), &
+            units='m', &
+            interpinic_flag='interp', readvar=readvar, data=this%exice_subs_tot_col)
+       if (flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
+         this%exice_subs_tot_col(bounds%begc:bounds%endc)=0.0_r8
+         this%exice_vol_tot_col(bounds%begc:bounds%endc)=0.0_r8
+         this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
+         this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
+       endif
+       call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('TOTEXICE_VOL'),  &
+            dim1name='column', xtype=ncd_double, &
+            long_name=this%info%lname('vertically averaged volumetric excess ice concentration (veg landunits only)'), &
+            units='m3/m3', &
+            interpinic_flag='interp', readvar=readvar, data=this%exice_vol_tot_col)
     endif
 
   end subroutine RestartBulk
