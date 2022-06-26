@@ -4,7 +4,16 @@ module ExcessIceStreamType
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Contains methods for reading in excess ice initial bulk values from data stream
+  ! Contains methods for reading in excess ice initial bulk values from data stream.
+  ! Needed in parameterization for excess ice in soil (Lee et al., 2014).
+  ! Used when use_excess_ice is true for initialization:
+  ! startup type runs starting from coldstart and initial datasets
+  ! that do not have required variables
+  ! or hybrid runs from cases with use_excess_ice was false.
+  ! Dataset is interpolated to 0.125x0.125 degrees grid from Brown et al., 1997
+  ! with values derived from permafrost types.
+  ! Values represent fraction of excess ice within soil column
+  ! and are distributed within it later in initialization
   !
   ! !USES
   use ESMF
@@ -25,9 +34,9 @@ module ExcessIceStreamType
   contains
 
       ! !PUBLIC MEMBER FUNCTIONS:
-      procedure, public :: Init            ! Initialize and read data in
-      procedure, public :: UseStreams      ! If streams will be used
-      procedure, public :: CalcExcessIce   ! Calculate excess ice ammount
+      procedure, public  :: Init            ! Initialize and read data in
+      procedure, private :: UseStreams      ! If streams will be used
+      procedure, public  :: CalcExcessIce   ! Calculate excess ice ammount
 
       ! !PRIVATE MEMBER FUNCTIONS:
       procedure, private :: InitAllocate   ! Allocate data
@@ -107,6 +116,7 @@ contains
       stream_offset       = 0,                                                  &
       stream_taxmode      = 'extend',                                           &
       stream_dtlimit      = 1.0e30_r8,                                          &
+      ! in ch4FinundatedStreamType it is set to linear but we have a single date dataset
       stream_tintalgo     = 'nearest',                                          &
       stream_name         = 'excess ice ',                                      &
       rc                  = rc)
@@ -125,24 +135,24 @@ contains
       mcdate = year*10000 + mon*100 + day
       
       call shr_strdata_advance(sdat_exice, ymd=mcdate, tod=sec, logunit=iulog, istr='exice', rc=rc) 
-         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-            call ESMF_Finalize(endflag=ESMF_END_ABORT)
-         end if
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+        end if
         
-         ! Get pointer for stream data that is time and spatially interpolate to model time and grid
-         do n = 1,size(stream_varnames)
+        ! Get pointer for stream data that is time and spatially interpolate to model time and grid
+        do n = 1,size(stream_varnames)
           call dshr_fldbun_getFldPtr(sdat_exice%pstrm(1)%fldbun_model, stream_varnames(n), fldptr1=dataptr1d, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-             call ESMF_Finalize(endflag=ESMF_END_ABORT)
+            call ESMF_Finalize(endflag=ESMF_END_ABORT)
           end if
           if (trim(stream_varnames(n)) == 'EXICE') then
             ig = 0
             do g = bounds%begg,bounds%endg
-               ig = ig+1
-               this%exice_bulk(g) = dataptr1d(ig)
+              ig = ig+1
+              this%exice_bulk(g) = dataptr1d(ig)
             end do
           end if
-         end do
+        end do
     end if
   end subroutine Init
 
