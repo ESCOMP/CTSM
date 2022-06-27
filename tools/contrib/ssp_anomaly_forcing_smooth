@@ -538,7 +538,7 @@ for f in range(nfields):
         outfile = netcdf4.Dataset(outfilename, "w")
 
         # creation date on the file
-        command = 'date "+%y%m%d"'
+        command = 'date "+%Y/%m/%d"'
         x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
         x = x2.communicate()
         timetag = x[0].decode("utf-8").strip()
@@ -569,11 +569,11 @@ for f in range(nfields):
             hdir = dpath + histdir[nens] + dfile
             fdir = dpath + sspdir[nens] + dfile
             if nens == 0:
-                outfile.Created_from_historical_dir = hdir
-                outfile.Created_from_scenario_dir = fdir
+                outfile.Created_from_historical_dirs = hdir
+                outfile.Created_from_scenario_dirs = fdir
             else:
-                outfile.Created_from_historical_dir += ", " + hdir
-                outfile.Created_from_scenario_dir += ", " + fdir
+                outfile.Created_from_historical_dirs += ", " + hdir
+                outfile.Created_from_scenario_dirs += ", " + fdir
 
         outfile.History_years = str(hist_yrstart) + "," + str(hist_yrend)
         outfile.Scenario_years = str(ssp_yrstart) + "," + str(ssp_yrend)
@@ -581,8 +581,7 @@ for f in range(nfields):
 
         outfile.createDimension("lat", size=int(nlat))
         outfile.createDimension("lon", size=int(nlon))
-        outfile.createDimension("time", size=ntime_ssp)
-        # outfile.createDimension("time", None)
+        outfile.createDimension("time", None)
 
         wtime = outfile.createVariable("time", np.float64, ("time",))
         wlat = outfile.createVariable("lat", np.float64, ("lat",))
