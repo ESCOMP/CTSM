@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev099   rgknox 06/21/2022 Enabling FATES control over the number of patches on the natural land unit
     ctsm5.1.dev098 swensosc 05/20/2022 Correct perched water table calculation
     ctsm5.1.dev097    sacks 05/20/2022 Update ccs_config to fix issue on izumi and maybe elsewhere
     ctsm5.1.dev096     erik 05/18/2022 Fix a few glitches from the last tag
