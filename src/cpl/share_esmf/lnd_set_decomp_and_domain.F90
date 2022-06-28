@@ -293,7 +293,7 @@ contains
     !-------------------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*) 'Attempting to global dimensions from surface dataset'
+       write(iulog,*) 'Attempting to read global dimensions from surface dataset'
        if (fsurdat == ' ') then
           write(iulog,*)'fsurdat must be specified'
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -342,6 +342,13 @@ contains
   !===============================================================================
   subroutine lnd_set_lndmask_from_maskmesh(mesh_lnd, mesh_mask, vm, gsize, lndmask_glob, lndfrac_glob, rc)
 
+    ! If the landfrac/landmask file does not exists then determine the
+    ! land fraction and land mask on the land grid by mapping the mask
+    ! from the mesh_mask to the mesh_lnd mesh. Then write out the
+    ! landfrac/landmesh file.  If the landfrac/landmask file does
+    ! exist then simply read in the global land fraction and land mask
+    ! from the file
+
     ! input/out variables
     type(ESMF_Mesh)     , intent(in)  :: mesh_lnd
     type(ESMF_Mesh)     , intent(in)  :: mesh_mask
@@ -374,97 +381,124 @@ contains
     integer                :: srcTermProcessing_Value = 0
     real(r8)               :: fminval = 0.001_r8
     real(r8)               :: fmaxval = 1._r8
+    logical                :: lexist
     logical                :: checkflag = .false.
+    character(len=CL)      :: flandfrac = './init_generated_files/ctsm_landfrac.nc'
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
 
-    call ESMF_MeshGet(mesh_lnd, spatialDim=spatialDim, numOwnedElements=lsize_lnd, &
-         elementDistGrid=distgrid_lnd, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    allocate(lndmask_loc(lsize_lnd))
-    allocate(lndfrac_loc(lsize_lnd))
+    ! Determine if lndfrac/lndmask file exists
+    inquire(file=trim(flandfrac), exist=lexist)
 
-    ! create fields on land and ocean meshes
-    field_lnd = ESMF_FieldCreate(mesh_lnd, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    field_mask = ESMF_FieldCreate(mesh_mask, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (lexist) then
 
-    ! create route handle to map ocean mask from mask mesh to land mesh
-    call ESMF_FieldRegridStore(field_mask, field_lnd, routehandle=rhandle_mask2lnd, &
-         srcMaskValues=(/srcMaskValue/), dstMaskValues=(/dstMaskValue/), &
-         regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=ESMF_NORMTYPE_DSTAREA, &
-         srcTermProcessing=srcTermProcessing_Value, &
-         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    ! fill in values for field_mask with mask on mask mesh
-    call ESMF_MeshGet(mesh_mask, elementdistGrid=distgrid_mask, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_DistGridGet(distgrid_mask, localDe=0, elementCount=lsize_mask, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    allocate(maskmask_loc(lsize_mask))
-    elemMaskArray = ESMF_ArrayCreate(distgrid_mask, maskmask_loc, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_MeshGet(mesh_mask, elemMaskArray=elemMaskArray, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldGet(field_mask, farrayptr=dataptr1d, rc=rc)
-    dataptr1d(:) = maskmask_loc(:)
-
-    ! map mask mask to land mesh
-    call ESMF_FieldRegrid(field_mask, field_lnd, routehandle=rhandle_mask2lnd, &
-         termorderflag=ESMF_TERMORDER_SRCSEQ, checkflag=checkflag, zeroregion=ESMF_REGION_TOTAL, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_MeshGet(mesh_lnd, spatialDim=spatialDim, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    allocate(maskfrac_loc(lsize_lnd))
-    call ESMF_FieldGet(field_lnd, farrayptr=maskfrac_loc, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    do n = 1,lsize_lnd
-       lndfrac_loc(n) = 1._r8 - maskfrac_loc(n)
-       if (lndfrac_loc(n) > fmaxval) lndfrac_loc(n) = 1._r8
-       if (lndfrac_loc(n) < fminval) lndfrac_loc(n) = 0._r8
-       if (lndfrac_loc(n) /= 0._r8) then
-          lndmask_loc(n) = 1
-       else
-          lndmask_loc(n) = 0
+       ! If file exists - read in lndmask and lndfrac
+       if (masterproc) then
+          write(iulog,*)
+          write(iulog,'(a)')' Reading in land fraction and land mask from ctsm_landfrac.nc'
        end if
-    enddo
-    call ESMF_FieldDestroy(field_lnd)
-    call ESMF_FieldDestroy(field_mask)
+       call lnd_set_read_write_landmask(trim(flandfrac), .false., .true., &
+            lndmask_glob, lndfrac_glob, size(lndmask_glob))
 
-    ! determine global landmask_glob - needed to determine the ctsm decomposition
-    ! land frac, lats, lons and areas will be done below
-    allocate(gindex_input(lsize_lnd))
-    call ESMF_DistGridGet(distgrid_lnd, 0, seqIndexList=gindex_input, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    do n = 1,lsize_lnd
-       lndmask_glob(gindex_input(n)) = lndmask_loc(n)
-    end do
-    allocate(itemp_glob(gsize))
-    call ESMF_VMAllReduce(vm, sendData=lndmask_glob, recvData=itemp_glob, count=gsize, &
-         reduceflag=ESMF_REDUCE_SUM, rc=rc)
-    lndmask_glob(:) = int(itemp_glob(:))
-    deallocate(itemp_glob)
+    else
 
-    ! Determine ldomain%frac using both input and ctsm decompositions
-    ! lndfrac_glob is filled using the input decomposition and
-    ! ldomin%frac is set using the ctsm decomposition
-    allocate(rtemp_glob(gsize))
-    do n = 1,lsize_lnd
-       lndfrac_glob(gindex_input(n)) = lndfrac_loc(n)
-    end do
-    call ESMF_VMAllReduce(vm, sendData=lndfrac_glob, recvData=rtemp_glob, count=gsize, &
-         reduceflag=ESMF_REDUCE_SUM, rc=rc)
-    lndfrac_glob(:) = rtemp_glob(:)
-    deallocate(rtemp_glob)
+       ! If file does not exist - compute lndmask and lndfrac and write to output file
+       if (masterproc) then
+          write(iulog,*)
+          write(iulog,'(a)')' Computing land fraction and land mask by mapping mask from mesh_mask file'
+       end if
+       call ESMF_MeshGet(mesh_lnd, spatialDim=spatialDim, numOwnedElements=lsize_lnd, &
+            elementDistGrid=distgrid_lnd, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       allocate(lndmask_loc(lsize_lnd))
+       allocate(lndfrac_loc(lsize_lnd))
 
-    ! deallocate memory
-    deallocate(maskmask_loc)
-    deallocate(lndmask_loc)
-    deallocate(lndfrac_loc)
+       ! create fields on land and ocean meshes
+       field_lnd = ESMF_FieldCreate(mesh_lnd, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       field_mask = ESMF_FieldCreate(mesh_mask, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! create route handle to map ocean mask from mask mesh to land mesh
+       call ESMF_FieldRegridStore(field_mask, field_lnd, routehandle=rhandle_mask2lnd, &
+            srcMaskValues=(/srcMaskValue/), dstMaskValues=(/dstMaskValue/), &
+            regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=ESMF_NORMTYPE_DSTAREA, &
+            srcTermProcessing=srcTermProcessing_Value, &
+            ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+       ! fill in values for field_mask with mask on mask mesh
+       call ESMF_MeshGet(mesh_mask, elementdistGrid=distgrid_mask, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_DistGridGet(distgrid_mask, localDe=0, elementCount=lsize_mask, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       allocate(maskmask_loc(lsize_mask))
+       elemMaskArray = ESMF_ArrayCreate(distgrid_mask, maskmask_loc, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_MeshGet(mesh_mask, elemMaskArray=elemMaskArray, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field_mask, farrayptr=dataptr1d, rc=rc)
+       dataptr1d(:) = maskmask_loc(:)
+
+       ! map mask mask to land mesh
+       call ESMF_FieldRegrid(field_mask, field_lnd, routehandle=rhandle_mask2lnd, &
+            termorderflag=ESMF_TERMORDER_SRCSEQ, checkflag=checkflag, zeroregion=ESMF_REGION_TOTAL, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+       call ESMF_MeshGet(mesh_lnd, spatialDim=spatialDim, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       allocate(maskfrac_loc(lsize_lnd))
+       call ESMF_FieldGet(field_lnd, farrayptr=maskfrac_loc, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       do n = 1,lsize_lnd
+          lndfrac_loc(n) = 1._r8 - maskfrac_loc(n)
+          if (lndfrac_loc(n) > fmaxval) lndfrac_loc(n) = 1._r8
+          if (lndfrac_loc(n) < fminval) lndfrac_loc(n) = 0._r8
+          if (lndfrac_loc(n) /= 0._r8) then
+             lndmask_loc(n) = 1
+          else
+             lndmask_loc(n) = 0
+          end if
+       enddo
+       call ESMF_FieldDestroy(field_lnd)
+       call ESMF_FieldDestroy(field_mask)
+
+       ! determine global landmask_glob - needed to determine the ctsm decomposition
+       ! land frac, lats, lons and areas will be done below
+       allocate(gindex_input(lsize_lnd))
+       call ESMF_DistGridGet(distgrid_lnd, 0, seqIndexList=gindex_input, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       do n = 1,lsize_lnd
+          lndmask_glob(gindex_input(n)) = lndmask_loc(n)
+       end do
+       allocate(itemp_glob(gsize))
+       call ESMF_VMAllReduce(vm, sendData=lndmask_glob, recvData=itemp_glob, count=gsize, &
+            reduceflag=ESMF_REDUCE_SUM, rc=rc)
+       lndmask_glob(:) = int(itemp_glob(:))
+       deallocate(itemp_glob)
+
+       ! Determine ldomain%frac using both input and ctsm decompositions
+       ! lndfrac_glob is filled using the input decomposition and
+       ! ldomin%frac is set using the ctsm decomposition
+       allocate(rtemp_glob(gsize))
+       do n = 1,lsize_lnd
+          lndfrac_glob(gindex_input(n)) = lndfrac_loc(n)
+       end do
+       call ESMF_VMAllReduce(vm, sendData=lndfrac_glob, recvData=rtemp_glob, count=gsize, &
+            reduceflag=ESMF_REDUCE_SUM, rc=rc)
+       lndfrac_glob(:) = rtemp_glob(:)
+       deallocate(rtemp_glob)
+
+       ! deallocate memory
+       deallocate(maskmask_loc)
+       deallocate(lndmask_loc)
+       deallocate(lndfrac_loc)
+
+       call lnd_set_read_write_landmask(trim(flandfrac), .true., .false., &
+            lndmask_glob, lndfrac_glob, size(lndmask_glob))
+
+    end if
 
   end subroutine lnd_set_lndmask_from_maskmesh
 
@@ -743,24 +777,17 @@ contains
   end function chkerr
 
   !===============================================================================
-  subroutine lnd_set_read_write_landmask(write_file, read_file, lndmask_glob, lndfrac_glob, gsize)
+  subroutine lnd_set_read_write_landmask(flandfrac, write_file, read_file, lndmask_glob, lndfrac_glob, gsize)
 
-    ! This subroutine is currently unused (as of 2021-03-17), but it may be needed in the
-    ! future. Its purpose is: Now that we get landmask and landfrac at runtime, from
+    ! Write or read landfrac and landmask to file so that mapping does not have to be done each time
     ! mapping the ocean mask to the land grid, it's possible that landfrac will be
-    ! roundoff-level different with different processor counts. Mariana Vertenstein
-    ! hasn't seen this happen yet, but if it does, then we can use this subroutine to
-    ! solve this issue in tests that change processor count (ERP, PEM). I think Mariana's
-    ! intent was: in the first run, we would write landmask and landfrac to a landfrac.nc
-    ! file; then, in the second run (with different processor count), we would read that
-    ! file rather than doing the mapping again. This way, both runs of the ERP or PEM
-    ! test would use consistent landmask and landfrac values.
 
     use ncdio_pio , only : ncd_io, file_desc_t, ncd_pio_openfile, ncd_pio_closefile
     use ncdio_pio , only : ncd_defdim, ncd_defvar, ncd_enddef, ncd_inqdlen
     use ncdio_pio , only : ncd_int, ncd_double, ncd_pio_createfile
 
     ! input/output variables
+    character(len=*) , intent(in) :: flandfrac
     logical          , intent(in) :: write_file
     logical          , intent(in) :: read_file
     integer          , pointer    :: lndmask_glob(:)
@@ -770,7 +797,6 @@ contains
     ! local variables
     type(file_desc_t) :: pioid ! netcdf file id
     integer           :: dimid
-    character(len=CL) :: flandfrac = 'landfrac.nc'
     !-------------------------------------------------------------------------------
 
     if (write_file) then

@@ -663,7 +663,7 @@ contains
 
     ! Atmosphere ndep
     if (fldchk(importState, Faxa_ndep)) then
-       ! The mediator is sending ndep in units if kgN/m2/s - and ctsm
+       ! The mediator is sending ndep in units of kgN/m2/s - and ctsm
        ! uses units of gN/m2/sec so the following conversion needs to happen
        call state_getimport_2d(importState, Faxa_ndep, forc_ndep(begg:,:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return

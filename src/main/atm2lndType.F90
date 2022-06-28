@@ -615,6 +615,9 @@ contains
          avgflag='A', long_name='atmospheric air potential temperature (downscaled to columns in glacier regions)', &
          ptr_col=this%forc_th_downscaled_col)
 
+    call hist_addfld1d (fname='ATM_NDEP', units='g(N)/m2/sec',  &
+         avgflag='A', long_name='atmospheric nitrogen deposition flux', &
+         ptr_gcell=this%forc_ndep_grc)
 
     ! Time averaged quantities
     this%fsi24_patch(begp:endp) = spval

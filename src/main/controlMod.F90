@@ -292,7 +292,7 @@ contains
        write(iulog,*) 'Attempting to initialize run control settings .....'
     endif
 
-    finidat_interp_dest = 'finidat_interp_dest'//trim(inst_suffix)//'.nc'
+    finidat_interp_dest = './init_generated_files/finidat_interp_dest'//trim(inst_suffix)//'.nc'
     runtyp(:)               = 'missing'
     runtyp(nsrStartup  + 1) = 'initial'
     runtyp(nsrContinue + 1) = 'restart'
@@ -1088,7 +1088,7 @@ contains
     character(len=*), intent(inout) :: finidat_interp_source
     !
     ! !LOCAL VARIABLES:
-
+    logical :: lexists
     character(len=*), parameter :: subname = 'apply_use_init_interp'
     !-----------------------------------------------------------------------
 
@@ -1101,7 +1101,7 @@ contains
             &already set')
     end if
 
-    if (get_filename(finidat) == &
+    if ( get_filename(finidat) == &
          get_filename(finidat_interp_dest)) then
        write(iulog,*) 'ERROR: With use_init_interp, cannot use the same filename for source and dest'
        write(iulog,*) '(because this will lead to the source being overwritten before it is read).'
@@ -1113,11 +1113,14 @@ contains
        call endrun(msg=' ERROR: With use_init_interp, cannot use the same filename for source and dest')
     end if
 
-    finidat_interp_source = finidat
-    finidat = ' '
+    inquire(file=trim(finidat_interp_dest), exist=lexists)
+    if (lexists) then
+       finidat = trim(finidat_interp_dest)
+    else
+       finidat_interp_source = finidat
+       finidat = ' '
+    end if
 
   end subroutine apply_use_init_interp
-
-
 
 end module controlMod
