@@ -648,6 +648,12 @@ Switch deciding which nutrient model to use in FATES.
 (Only relevant if FATES is on)
 </entry>
 
+<entry id="use_fates_tree_damage" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false."> 
+Toggle to turn on the tree damage module in FATES
+(Only relevant if FATES is on)
+</entry>
+
 <entry id="fates_spitfire_mode" type="integer" category="physics"
         group="clm_inparm" valid_values="0,1,2,3,4,5" value=".false.">
 Turn on spitfire module to simulate fire by setting fates_spitfire_mode > 0.
@@ -985,6 +991,36 @@ Whether snow on the vegetation canopy affects the radiation/albedo calculations
        group="clm_inparm" >
 Whether to run some tests of ncdio_pio as part of the model run. This is
 typically only used in automated tests.
+</entry>
+
+<entry id="for_testing_use_second_grain_pool" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, allocate memory for and use a second crop grain pool. This is
+meant only for software testing of infrastructure to support the AgSys
+crop model integration. This option can be dropped once AgSys is
+integrated and we have tests of it.
+</entry>
+
+<entry id="for_testing_use_repr_structure_pool" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, allocate memory for two crop reproductive structure pools and
+send all reproductive C and N to the second reproductive structure pool
+instead of the grain pool. This is meant only for software testing of
+infrastructure to support the AgSys crop model integration. This option
+can be dropped once AgSys is integrated and we have tests of it.
+</entry>
+
+<entry id="for_testing_no_crop_seed_replenishment" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, do NOT use grain C/N to replenish the crop seed deficits. This
+is needed when doing software testing to verify that we can get
+bit-for-bit identical answers when using a reproductive structure pool
+as when using a grain pool (in conjunction with
+for_testing_use_repr_structure_pool). We do this testing to have some
+tests of the infrastructure to support the AgSys crop model integration.
+This option can be dropped if/when we stop doing this software testing,
+e.g., because we have integrated AgSys and have tests of it that make
+these software infrastructure tests obsolete.
 </entry>
 
 <!-- ========================================================================================  -->
@@ -2094,7 +2130,7 @@ Command line arguement for biogeochemistry mode for CLM4.5
         Nitrification/De-nitrification
         Methane model
         Vertically resolved Carbon
-   fates = FATES/ED ecosystem demography model with below ground BGC:
+   fates = FATES Functionally Assembled Terrestrial Ecosystem Simulator (ecosystem demography model with below ground BGC):
 </entry>
 
 <!-- ========================================================================================  -->
@@ -2271,36 +2307,6 @@ Allow the CN ratio to flexibly change with the simulation, rather than being fix
 How much Carbon to initialize vegetation pools (leafc/frootc and storage) to when -- Michaelis Menten nitrogen uptake kinetics is on
 </entry>
 
-<entry id="downreg_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".false.">
-   GPP downregulation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="plant_ndemand_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1,2,3">
-   Plant nitrogen demand for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="substrate_term_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten substrate limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="nscalar_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten nitrogen limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="temp_scalar_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten temperature limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
 <entry id="CNratio_floating" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".false.">
    Flexible CN ratio used for Phenology
@@ -2319,19 +2325,6 @@ Vcmax calculation for Photosynthesis
     vcmax_opt = 4 As for vcmax_opt=0, but using leafN, and exponential if tree  (EXPERIMENTAL NOT TESTED!)
     vcmax_opt = 3 Based on leafN and VCAD (used with Luna for crop and C4 vegetation)
     vcmax_opt = 0 Based on canopy top and foilage Nitrogen limitation factor from params file (clm4.5)
-</entry>
-
-<entry id="CN_residual_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1">
-Residual option for flexible-CN
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="CN_partition_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1">
-Partition option for flexible-CN
-   CN_partition_opt = 1
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="CN_evergreen_phenology_opt" type="integer" category="clm_nitrogen"

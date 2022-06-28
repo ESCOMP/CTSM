@@ -201,8 +201,10 @@ contains
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
-         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests
-    
+         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
+         for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool, &
+         for_testing_no_crop_seed_replenishment
+
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
          som_adv_flux, max_depth_cryoturb
@@ -227,7 +229,8 @@ contains
           use_fates_nocomp,                             &
           use_fates_sp,                                 &
           fates_inventory_ctrl_filename,                &
-          fates_parteh_mode
+          fates_parteh_mode,                            &
+          use_fates_tree_damage
     
    ! Ozone vegetation stress method 
    namelist / clm_inparam / o3_veg_stress_method
@@ -235,10 +238,9 @@ contains
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
 
-    namelist /clm_nitrogen/ MM_Nuptake_opt, downreg_opt, &
-         plant_ndemand_opt, substrate_term_opt, nscalar_opt, temp_scalar_opt, &
-         CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, CN_residual_opt, &
-         CN_partition_opt, CN_evergreen_phenology_opt, carbon_resp_opt  
+    namelist /clm_nitrogen/ MM_Nuptake_opt, &
+         CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, &
+         CN_evergreen_phenology_opt, carbon_resp_opt
 
     namelist /clm_inparm/ use_soil_moisture_streams
 
@@ -656,6 +658,11 @@ contains
     ! Whether to run tests of ncdio_pio
     call mpi_bcast(for_testing_run_ncdiopio_tests, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    ! Various flags used for testing infrastructure for having multiple crop reproductive pools
+    call mpi_bcast(for_testing_use_second_grain_pool, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast(for_testing_use_repr_structure_pool, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast(for_testing_no_crop_seed_replenishment, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     ! Landunit generation
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -700,6 +707,7 @@ contains
     call mpi_bcast (fates_spitfire_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_fates_logging, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_tree_damage, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_cohort_age_tracking, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_st3, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_prescribed_phys,  1, MPI_LOGICAL, 0, mpicom, ier)
@@ -715,18 +723,11 @@ contains
     call mpi_bcast (use_flexibleCN, 1, MPI_LOGICAL, 0, mpicom, ier)
     ! TODO(bja, 2015-08) need to move some of these into a module with limited scope.
     call mpi_bcast (MM_Nuptake_opt, 1, MPI_LOGICAL, 0, mpicom, ier)             
-    call mpi_bcast (downreg_opt, 1, MPI_LOGICAL, 0, mpicom, ier)                
-    call mpi_bcast (plant_ndemand_opt, 1, MPI_INTEGER, 0, mpicom, ier)          
-    call mpi_bcast (substrate_term_opt, 1, MPI_LOGICAL, 0, mpicom, ier)         
-    call mpi_bcast (nscalar_opt, 1, MPI_LOGICAL, 0, mpicom, ier)                
-    call mpi_bcast (temp_scalar_opt, 1, MPI_LOGICAL, 0, mpicom, ier)            
-    call mpi_bcast (CNratio_floating, 1, MPI_LOGICAL, 0, mpicom, ier)           
+    call mpi_bcast (CNratio_floating, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (lnc_opt, 1, MPI_LOGICAL, 0, mpicom, ier)                    
     call mpi_bcast (reduce_dayl_factor, 1, MPI_LOGICAL, 0, mpicom, ier)         
     call mpi_bcast (vcmax_opt, 1, MPI_INTEGER, 0, mpicom, ier)                  
-    call mpi_bcast (CN_residual_opt, 1, MPI_INTEGER, 0, mpicom, ier)            
-    call mpi_bcast (CN_partition_opt, 1, MPI_INTEGER, 0, mpicom, ier)           
-    call mpi_bcast (CN_evergreen_phenology_opt, 1, MPI_INTEGER, 0, mpicom, ier) 
+    call mpi_bcast (CN_evergreen_phenology_opt, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (carbon_resp_opt, 1, MPI_INTEGER, 0, mpicom, ier) 
 
     call mpi_bcast (use_luna, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1031,17 +1032,10 @@ contains
     write(iulog, *) '  use_flexibleCN = ', use_flexibleCN                       
     if (use_flexibleCN) then
        write(iulog, *) '    MM_Nuptake_opt = ', MM_Nuptake_opt                       
-       write(iulog, *) '    downreg_opt = ', downreg_opt                       	  
-       write(iulog, *) '    plant_ndemand_opt = ', plant_ndemand_opt           
-       write(iulog, *) '    substrate_term_opt = ', substrate_term_opt                   
-       write(iulog, *) '    nscalar_opt = ', nscalar_opt                
-       write(iulog, *) '    temp_scalar_opt = ', temp_scalar_opt                      
-       write(iulog, *) '    CNratio_floating = ', CNratio_floating            
+       write(iulog, *) '    CNratio_floating = ', CNratio_floating
        write(iulog, *) '    lnc_opt = ', lnc_opt                              
        write(iulog, *) '    reduce_dayl_factor = ', reduce_dayl_factor          
        write(iulog, *) '    vcmax_opt = ', vcmax_opt                            
-       write(iulog, *) '    CN_residual_opt = ', CN_residual_opt
-       write(iulog, *) '    CN_partition_opt = ', CN_partition_opt
        write(iulog, *) '    CN_evergreen_phenology_opt = ', CN_evergreen_phenology_opt
        write(iulog, *) '    carbon_resp_opt = ', carbon_resp_opt
     end if
@@ -1056,6 +1050,7 @@ contains
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
        write(iulog, *) '    fates_parteh_mode = ', fates_parteh_mode
        write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
+       write(iulog, *) '    use_fates_tree_damage = ', use_fates_tree_damage
        write(iulog, *) '    use_fates_cohort_age_tracking = ', use_fates_cohort_age_tracking
        write(iulog, *) '    use_fates_ed_st3 = ',use_fates_ed_st3
        write(iulog, *) '    use_fates_ed_prescribed_phys = ',use_fates_ed_prescribed_phys
