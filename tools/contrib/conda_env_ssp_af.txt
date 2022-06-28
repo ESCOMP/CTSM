@@ -1,8 +1,0 @@
-# To install this on cheyenne with conda loaded in modules
-# conda create  -n ssp_af  # Do this one time
-# conda install -n ssp_af --file conda_env_ssp_af.txt
-python=3.7.9
-scipy>=0.18.1
-netcdf4>=1.2.4
-matplotlib>=1.5.1
-numpy<1.18.5,>=1.11.0
