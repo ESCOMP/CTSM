@@ -18,5 +18,5 @@ Anomaly.Forcing.Temperature:datavars = pr    Faxa_prec_af, \
                                        vas Sa_v_af, \
                                        rsds  Faxa_swdn_af, \
                                        rlds  Faxa_lwdn_af
-Anomaly.Forcing.Temperature:datafiles =$DIN_LOC_ROOT/atm/datm7/anomaly_forcing/CMIP6-SSP1-2.6/af.allvars.CESM.SSP1-2.6.2015-2100_c20220626.nc
+Anomaly.Forcing.Temperature:datafiles =$DIN_LOC_ROOT/atm/datm7/anomaly_forcing/CMIP6-SSP1-2.6/af.allvars.CESM.SSP1-2.6.2015-2100_c20220628.nc
 
