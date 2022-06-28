@@ -1,26 +1,25 @@
 #! /usr/bin/env python3
-#
-#  ssp_anomaly_forcing_smooth
-#
-# Create anomoly forcing datasets for SSP scenarios that can be used by CESM datm model
-#
-import sys
-import os
-import string
-import subprocess
-import datetime
-import numpy as np
-import matplotlib.pyplot as plt
-import netCDF4 as netcdf4
-import argparse
-from scipy import interpolate
-from getpass import getuser
-
-# load proper modules first, i.e.
 """
+
+ssp_anomaly_forcing_smooth
+
+Create anomoly forcing datasets for SSP scenarios that can be used by CESM datm model
+
+load proper modules first, i.e.
+
 conda create  -n ssp_af  # Do this one time
 conda install -n ssp_af --file conda_env_ssp_af.txt
+
 """
+import sys
+import os
+import subprocess
+import datetime
+import argparse
+from getpass import getuser
+import numpy as np
+import netCDF4 as netcdf4
+
 
 parser = argparse.ArgumentParser(description="Create anomaly forcing")
 parser.add_argument(
@@ -48,15 +47,6 @@ if args.sspnum == 0:
     sys.exit("choose valid ssp number")
 
 # -------------------------------------------------------
-"""
-
-This script creates CTSM anomaly forcing data
-
-"""
-# -------------------------------------------------------
-
-# --  end of function definitions  ---------------------------------
-# 0
 
 print("Create anomoly forcing data that can be used by CTSM in CESM")
 # Input and output directories make sure they exist
@@ -81,23 +71,39 @@ The corrected SSP simulations:
     b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.102 (MOAR)
     b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.103
 
-historical runs used to initialize SSPs: 
-b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.001/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.002/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.002-old/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.001/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.002/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.003/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.004.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.003.oldTag/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.004.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP245.f09_g17.CMIP6-SSP2-4.5.001.BAD/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.001/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.002/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.003/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.004/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.005/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.006/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.001/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.010.clm2.r.2015-01-01-00000.nc'
-b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.002/CaseDocs/lnd_in: finidat = 'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+historical runs used to initialize SSPs:
+b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.001/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.002/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.002-old/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.001/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.002/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.003/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.004.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.003.oldTag/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.004.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP245.f09_g17.CMIP6-SSP2-4.5.001.BAD/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.001/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.002/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.003/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.004/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.005/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.006/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.001/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.010.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.002/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
 
 _v2 is just used for restart files that have been spatially interpolated
 
@@ -303,7 +309,8 @@ for f in range(nfields):
             hist_yrstart = climo_year - (climo_base_nyrs - 1)
             hist_yrend = (np.max(hist_time / 365.0 + ref_year) - 1).astype(int)
             hist_nyrs = hist_yrend - hist_yrstart + 1
-            print("hist years: ", hist_yrstart, hist_yrend, hist_nyrs)
+            if f == 0:
+                print("hist years: ", hist_yrstart, hist_yrend, hist_nyrs)
 
             hist_ind = np.where(
                 np.logical_and(
@@ -328,11 +335,12 @@ for f in range(nfields):
             hist_fld += np.asfarray(f1.variables["SNOW"][hist_ind, :, :], np.float64)
             f1.close()
 
-        print(
-            "hist_time: ",
-            hist_time[0] / 365.0 + ref_year,
-            hist_time[-1] / 365.0 + ref_year,
-        )
+        if f == 0:
+            print(
+                "hist_time: ",
+                hist_time[0] / 365.0 + ref_year,
+                hist_time[-1] / 365.0 + ref_year,
+            )
 
         # read in future data  ---------------------
 
@@ -362,7 +370,8 @@ for f in range(nfields):
             ssp_yrstart = np.min(ssp_time / 365.0 + ref_year).astype(int)
             ssp_yrend = (np.max(ssp_time / 365.0 + ref_year) - 1).astype(int)
             ssp_nyrs = ssp_yrend - ssp_yrstart + 1
-            print("SSP years: ", ssp_yrstart, ssp_yrend, ssp_nyrs)
+            if f == 0:
+                print("SSP years: ", ssp_yrstart, ssp_yrend, ssp_nyrs)
             tot_nyrs = hist_nyrs + ssp_nyrs
             outfile_suffix = (
                 ".CESM."
@@ -385,12 +394,13 @@ for f in range(nfields):
             ssp_fld += np.asfarray(f1.variables["SNOW"][ssp_ind, :, :], np.float64)
             f1.close()
 
-        print(
-            "ssp_time: ",
-            ssp_time[0] / 365.0 + ssp_ref_year,
-            ssp_time[-1] / 365.0 + ssp_ref_year,
-            ssp_time.size,
-        )
+        if f == 0:
+            print(
+                "ssp_time: ",
+                ssp_time[0] / 365.0 + ssp_ref_year,
+                ssp_time[-1] / 365.0 + ssp_ref_year,
+                ssp_time.size,
+            )
     # --  end Loop over ensemble members  ------------------------------
 
     # normalize summed fields by number of ensemble members
@@ -412,19 +422,21 @@ for f in range(nfields):
 
         stemp_fld[n, :, :] = np.sum(temp_fld[ind2, :, :], axis=0) / float(ind2.size)
 
-    print(
-        "full time: ",
-        time[0] / 365.0 + ref_year,
-        time[-1] / 365.0 + ref_year,
-        time.size,
-    )
+    if f == 0:
+        print(
+            "full time: ",
+            time[0] / 365.0 + ref_year,
+            time[-1] / 365.0 + ref_year,
+            time.size,
+        )
 
     # create climatology of smoothed data
     climo = np.zeros((nmo, nlat, nlon))
     t_climo_year = np.argmin(np.abs((time / 365.0 + ref_year) - climo_year))
     # shift to january of climo_year
     t_climo_year += 1
-    print((time[t_climo_year] / 365.0 + ref_year))
+    if f == 0:
+        print((time[t_climo_year] / 365.0 + ref_year))
     for n in range(nmo):
         ind = (
             nmo * (np.arange(climo_base_nyrs) - (climo_base_nyrs - 1) / 2)
@@ -433,11 +445,13 @@ for f in range(nfields):
         ).astype(int)
         climo[n, :, :] = np.sum(stemp_fld[ind, :, :], axis=0) / float(ind.size)
 
-    print("climo calculated")
+    if f == 0:
+        print("climo calculated")
 
     # extract smoothed SSP data
     t_ssp_start = (ssp_yrstart - hist_yrstart) * nmo
-    print((time[t_ssp_start] / 365.0 + ref_year))
+    if f == 0:
+        print((time[t_ssp_start] / 365.0 + ref_year))
     ssp_fld_smoothed = stemp_fld[t_ssp_start:, :, :]
 
     # calculate anomaly relative to climatology
@@ -466,8 +480,11 @@ for f in range(nfields):
 
     # write out climo to check field  -------------------------
     if write_climo:
+        # Use NetCDF4 format, because using older NetCDF formats are too slow
         w = netcdf4.Dataset(
-            outdir + field_out[f] + "_climo" + creationdate + ".nc", "w"
+            outdir + field_out[f] + "_climo" + creationdate + ".nc",
+            "w",
+            format="NETCDF4_CLASSIC",
         )
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
@@ -494,8 +511,11 @@ for f in range(nfields):
         wvar[:, :, :] = climo
         w.close()
 
+        # Use NetCDF4 format, because using older NetCDF formats are too slow
         w = netcdf4.Dataset(
-            outdir + field_out[f] + "_smooth" + creationdate + ".nc", "w"
+            outdir + field_out[f] + "_smooth" + creationdate + ".nc",
+            "w",
+            format="NETCDF4_CLASSIC",
         )
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
@@ -533,9 +553,12 @@ for f in range(nfields):
     # create netcdf file  ---------------------------------
 
     if f == 0:
+        # Use NetCDF4 format, because using older NetCDF formats are too slow
+        # Will need to convert to CDF5 format at the end, as we can't seem to
+        # output in CDF5 format using netCDF4 python interfaces
         outfilename = outdir + "/" + "af.allvars" + outfile_suffix
         print("Creating: " + outfilename)
-        outfile = netcdf4.Dataset(outfilename, "w")
+        outfile = netcdf4.Dataset(outfilename, "w", format="NETCDF4_CLASSIC")
 
         # creation date on the file
         command = 'date "+%Y/%m/%d"'
@@ -558,7 +581,8 @@ for f in range(nfields):
         outfile.Source = "CMIP6 CESM simulations"
         outfile.Conventions = "CF-1.0"
         outfile.comment = (
-            "Monthly scale factors for given SSP scenario compared to a climatology based on data centered on "
+            "Monthly scale factors for given SSP scenario compared to a climatology based on"
+            + " data centered on "
             + str(climo_year)
             + " over the range given in note1"
         )
@@ -685,6 +709,10 @@ for f in range(nfields):
 
 # --  End Loop over forcing fields  ------------------------------------
 outfile.close()
+# Convert to CDF5 format
+cdfoutfilename = "cdf5version.nc"
+os.system("nccopy -k 5 " + outfilename + " " + cdfoutfilename)
+os.rename(cdfoutfilename, outfilename)
 
 
 print("\n\nSuccessfully made anomoly forcing datasets\n")
