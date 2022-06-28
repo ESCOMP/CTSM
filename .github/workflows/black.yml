@@ -1,0 +1,19 @@
+name: black check on push and PR
+#
+# Run the python formatting in check mode
+#
+on: [push, pull_request]
+
+jobs:
+  black-check:
+     runs-on: ubuntu-latest
+     steps:
+        # Checkout the code
+        - uses: actions/checkout@v2
+        # Use the latest stable version of the github action
+        - uses: psf/black@stable
+          with:
+             # Use options and version identical to the conda environment
+             options: "--check --config python/pyproject.toml"
+             src:     "./"
+             version: "22.3.0"
