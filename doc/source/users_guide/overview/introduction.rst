@@ -32,8 +32,7 @@ release subversion repository as a part of |cesmrelease|. Documentation
 may be different if you are using an older version, you should either
 use the documentation for that release version, update to the latest
 version, or use the documentation inside your own source tree. There
-is information in the ChangeLog file and in the `What is new with
-|version| in |cesmrelease| since previous public releases? <CLM-URL>`_
+is information in the ChangeLog file and in :ref:`what-is-new-with-clm5_0`
 regarding the changes from previous versions of CESM.
 
 .. note:: This release of |version| in |cesmrelease| includes BOTH CLM4.0
@@ -46,21 +45,19 @@ regarding the changes from previous versions of CESM.
  than to a specific version of CLM4.5. Likewise, when referring to |version| we are referring to the
  |version| physics in |version| in |cesmrelease|.
 
-The novice user should read `Chapter 1 <CLM-URL>`_ in detail before
-beginning work, while the expert user should read `What is new with
-|version| in |cesmrelease| since previous public releases? <CLM-URL>`_ and
-`Quickstart to using |version| <CLM-URL>`_ chapters, and then use the
-more detailed chapters as reference. Before novice users go onto more
-technical problems covered in `Chapter 2 <CLM-URL>`_, `Chapter 3
-<CLM-URL>`_, `Chapter 4 <CLM-URL>`_, or `Chapter 5 <CLM-URL>`_ they
-should know the material covered in `Chapter 1 <CLM-URL>`_ and be able
+The novice user should read :ref:`overview_section` in detail before
+beginning work, while the expert user should read :ref:`what-is-new-with-clm5_0` and
+:ref:`quickstart`, and then use the
+more detailed sections as reference. Before novice users go onto more
+technical problems covered in :ref:`customizing_section`,
+:ref:`using-clm-tools-section`, :ref:`adding-new-resolutions-section`,
+:ref:`running-special-cases-section` or :ref:`running-single-points`, they
+should know the material covered in :ref:`overview_section` and be able
 to replicate some of the examples given there.
 
-All users should read the `How to Use This Document <CLM-URL>`_ and
-`Other resources to get help from <CLM-URL>`_ sections to understand
+All users should read :ref:`how-to-use-this-document` and :ref:`getting-help` to understand
 the document conventions and the various ways of getting help on using
-|version|. Users should also read the `What is scientifically validated
-and functional in |version| in |cesmrelease|? <CLM-URL>`_ section to see if
+|version|. Users should also read the :ref:`scientific-validiation` section to see if
 their planned use of the model is something that has been
 scientifically validated and well tested. Users that are NOT using
 NCAR machines or our list of well tested machines should also read the
@@ -70,8 +67,8 @@ to do their work.
 
 Developers that are making changes to CLM either for their own
 development or for development that they hope will eventually become a
-part of the main CLM should read the `Chapter 8 <CLM-URL>`_
-chapter. We have a suite of test scripts that automatically test many
+part of the main CLM should read :ref:`testing_section`.
+We have a suite of test scripts that automatically test many
 different model configurations and namelist options, as well as
 ensuring things like restarts are bit-for-bit and the like. It's
 helpful to use these scripts to ensure your changes are working
