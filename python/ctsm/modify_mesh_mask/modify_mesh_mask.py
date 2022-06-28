@@ -59,6 +59,9 @@ class ModifyMeshMask:
         for row in range(self.lsmlat):  # rows from landmask file
             logger.info('row = %d', row + 1)
             for col in range(self.lsmlon):  # cols from landmask file
+                errmsg = f'self._landmask_file.landmask not 0 or 1 at row, col, value = {row} {col} {self.rectangle[row, col]}'
+                assert isclose(self.rectangle[row, col], 0, abs_tol=1e-9) or \
+                       isclose(self.rectangle[row, col], 1, abs_tol=1e-9), errmsg
                 # Reshape landmask file's mask (not_rectangle) into the
                 # elementCount dimension of the mesh file.
                 # In the process overwrite self.file[var].

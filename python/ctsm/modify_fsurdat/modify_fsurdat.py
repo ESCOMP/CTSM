@@ -8,6 +8,7 @@ The wrapper script includes a full description and instructions.
 import os
 import logging
 
+from math import isclose
 import numpy as np
 import xarray as xr
 
@@ -37,6 +38,14 @@ class ModifyFsurdat:
             # user-specified .nc file in the .cfg file
             self._landmask_file = xr.open_dataset(landmask_file)
             self.rectangle = self._landmask_file.landmask_diff.data
+            self.lsmlat = self._landmask_file.dims["lsmlat"]
+            self.lsmlon = self._landmask_file.dims["lsmlon"]
+
+        for row in range(self.lsmlat):  # rows from landmask file
+            for col in range(self.lsmlon):  # cols from landmask file
+                errmsg = f'self._landmask_file.landmask_diff not 0 or 1 at row, col, value = {row} {col} {self.rectangle[row, col]}'
+                assert isclose(self.rectangle[row, col], 0, abs_tol=1e-9) or \
+                       isclose(self.rectangle[row, col], 1, abs_tol=1e-9), errmsg
 
         self.not_rectangle = np.logical_not(self.rectangle)
 
