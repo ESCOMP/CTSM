@@ -67,10 +67,15 @@ def fsurdat_modifier(cfg_path):
 
     landmask_file = get_config_value(config=config, section=section,
         item='landmask_file', file_path=cfg_path, can_be_unset=True)
+    lat_varname = get_config_value(config=config, section=section,
+        item='lat_varname', file_path=cfg_path, can_be_unset=True)
+    lon_varname = get_config_value(config=config, section=section,
+        item='lon_varname', file_path=cfg_path, can_be_unset=True)
 
     # Create ModifyFsurdat object
     modify_fsurdat = ModifyFsurdat.init_from_file(fsurdat_in,
-        lnd_lon_1, lnd_lon_2, lnd_lat_1, lnd_lat_2, landmask_file)
+        lnd_lon_1, lnd_lon_2, lnd_lat_1, lnd_lat_2, landmask_file,
+        lat_varname, lon_varname)
 
     # If output file exists, abort before starting work
     if os.path.exists(fsurdat_out):

@@ -50,10 +50,16 @@ def mesh_mask_modifier(cfg_path):
         item='mesh_mask_out', file_path=cfg_path)
     landmask_file = get_config_value(config=config, section=section,
         item='landmask_file', file_path=cfg_path)
+    lat_varname = get_config_value(config=config, section=section,
+        item='lat_varname', file_path=cfg_path)
+    lon_varname = get_config_value(config=config, section=section,
+        item='lon_varname', file_path=cfg_path)
 
     # Create ModifyMeshMask object
     modify_mesh_mask = ModifyMeshMask.init_from_file(mesh_mask_in,
-                                                     landmask_file)
+                                                     landmask_file,
+                                                     lat_varname,
+                                                     lon_varname)
 
     # If output file exists, abort before starting work
     if os.path.exists(mesh_mask_out):
