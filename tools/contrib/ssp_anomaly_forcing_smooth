@@ -484,7 +484,7 @@ for f in range(nfields):
         w = netcdf4.Dataset(
             outdir + field_out[f] + "_climo" + creationdate + ".nc",
             "w",
-            format="NETCDF4_CLASSIC",
+            format="NETCDF3_64BIT_DATA"
         )
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
@@ -515,7 +515,7 @@ for f in range(nfields):
         w = netcdf4.Dataset(
             outdir + field_out[f] + "_smooth" + creationdate + ".nc",
             "w",
-            format="NETCDF4_CLASSIC",
+            format="NETCDF3_64BIT_DATA"
         )
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
@@ -558,7 +558,7 @@ for f in range(nfields):
         # output in CDF5 format using netCDF4 python interfaces
         outfilename = outdir + "/" + "af.allvars" + outfile_suffix
         print("Creating: " + outfilename)
-        outfile = netcdf4.Dataset(outfilename, "w", format="NETCDF4_CLASSIC")
+        outfile = netcdf4.Dataset(outfilename, "w", format="NETCDF3_64BIT_DATA")
 
         # creation date on the file
         command = 'date "+%Y/%m/%d"'
@@ -709,10 +709,5 @@ for f in range(nfields):
 
 # --  End Loop over forcing fields  ------------------------------------
 outfile.close()
-# Convert to CDF5 format
-cdfoutfilename = "cdf5version.nc"
-os.system("nccopy -k 5 " + outfilename + " " + cdfoutfilename)
-os.rename(cdfoutfilename, outfilename)
-
 
 print("\n\nSuccessfully made anomoly forcing datasets\n")
