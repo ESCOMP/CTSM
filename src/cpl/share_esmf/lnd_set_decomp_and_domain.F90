@@ -3,8 +3,10 @@ module lnd_set_decomp_and_domain
   use ESMF
   use shr_kind_mod , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod  , only : shr_sys_abort
+  use shr_log_mod  , only : errMsg => shr_log_errMsg
   use spmdMod      , only : masterproc
   use clm_varctl   , only : iulog
+  use abortutils   , only : endrun
 
   implicit none
   private ! except
@@ -273,9 +275,6 @@ contains
     use clm_varctl  , only : fsurdat, single_column
     use fileutils   , only : getfil
     use ncdio_pio   , only : ncd_io, file_desc_t, ncd_pio_openfile, ncd_pio_closefile, ncd_inqdlen, ncd_inqdid
-    use abortutils  , only : endrun
-    use shr_log_mod , only : errMsg => shr_log_errMsg
-    use shr_sys_mod , only : shr_sys_abort
 
     ! input/output variables
     integer, intent(out) :: ni
@@ -384,6 +383,7 @@ contains
     logical                :: lexist
     logical                :: checkflag = .false.
     character(len=CL)      :: flandfrac = './init_generated_files/ctsm_landfrac.nc'
+    character(len=CL)      :: flandfrac_status = './init_generated_files/ctsm_landfrac.status'
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -398,7 +398,7 @@ contains
           write(iulog,*)
           write(iulog,'(a)')' Reading in land fraction and land mask from ctsm_landfrac.nc'
        end if
-       call lnd_set_read_write_landmask(trim(flandfrac), .false., .true., &
+       call lnd_set_read_write_landmask(trim(flandfrac), trim(flandfrac_status), .false., .true., &
             lndmask_glob, lndfrac_glob, size(lndmask_glob))
 
     else
@@ -495,7 +495,7 @@ contains
        deallocate(lndmask_loc)
        deallocate(lndfrac_loc)
 
-       call lnd_set_read_write_landmask(trim(flandfrac), .true., .false., &
+       call lnd_set_read_write_landmask(trim(flandfrac), trim(flandfrac_status), .true., .false., &
             lndmask_glob, lndfrac_glob, size(lndmask_glob))
 
     end if
@@ -569,8 +569,6 @@ contains
     use clm_varctl , only : fatmlndfrc
     use fileutils  , only : getfil
     use ncdio_pio  , only : ncd_io, ncd_pio_openfile, ncd_pio_closefile, ncd_inqfdims, file_desc_t
-    use abortutils , only : endrun
-    use shr_log_mod, only : errMsg => shr_log_errMsg
 
     ! input/output variables
     integer         , pointer       :: mask(:)   ! grid mask
@@ -777,7 +775,8 @@ contains
   end function chkerr
 
   !===============================================================================
-  subroutine lnd_set_read_write_landmask(flandfrac, write_file, read_file, lndmask_glob, lndfrac_glob, gsize)
+  subroutine lnd_set_read_write_landmask(flandfrac, flandfrac_status, write_file, read_file, &
+       lndmask_glob, lndfrac_glob, gsize)
 
     ! Write or read landfrac and landmask to file so that mapping does not have to be done each time
     ! mapping the ocean mask to the land grid, it's possible that landfrac will be
@@ -788,6 +787,7 @@ contains
 
     ! input/output variables
     character(len=*) , intent(in) :: flandfrac
+    character(len=*) , intent(in) :: flandfrac_status
     logical          , intent(in) :: write_file
     logical          , intent(in) :: read_file
     integer          , pointer    :: lndmask_glob(:)
@@ -797,9 +797,13 @@ contains
     ! local variables
     type(file_desc_t) :: pioid ! netcdf file id
     integer           :: dimid
+    integer           :: iun
+    integer           :: ioe
+    logical           :: lexists
     !-------------------------------------------------------------------------------
 
     if (write_file) then
+
        if (masterproc) then
           write(iulog,*)
           write(iulog,'(a)') 'lnd_set_decomp_and_domain: writing landmask and landfrac data to landfrac.nc'
@@ -813,7 +817,18 @@ contains
        call ncd_io(ncid=pioid, varname='landmask', data=lndmask_glob, flag='write')
        call ncd_io(ncid=pioid, varname='landfrac', data=lndfrac_glob, flag='write')
        call ncd_pio_closefile(pioid)
+       open (newunit=iun, file=flandfrac_status, status='unknown',  iostat=ioe)
+       if (ioe /= 0) then
+          call endrun(msg='ERROR failed to open file '//trim(flandfrac_status)//errMsg(sourcefile, __LINE__))
+       end if
+       write(iun,'(a)')'Successfully wrote out '//trim(flandfrac_status)
+       close(iun)
+       if (masterproc) then
+          write(iulog,'(a)')' Successfully wrote land fraction/mask status file '//trim(flandfrac_status)
+       end if
+
     else if (read_file) then
+
        if (masterproc) then
           write(iulog,*)
           write(iulog,'(a)') 'lnd_set_decomp_and_domain: reading landmask and landfrac data from landfrac.nc'
@@ -823,6 +838,15 @@ contains
        call ncd_io(ncid=pioid, varname='landmask', data=lndmask_glob, flag='read')
        call ncd_io(ncid=pioid, varname='landfrac', data=lndfrac_glob, flag='read')
        call ncd_pio_closefile(pioid)
+       if (.not. lexists) then
+          if (masterproc) then
+             write(iulog,'(a)')' failed to find file '//trim(flandfrac_status)
+             write(iulog,'(a)')' this indicates a problem in creating '//trim(flandfrac_status)
+             write(iulog,'(a)')' remove '//trim(flandfrac)//' and try again'
+          end if
+          call endrun()
+       end if
+
     end if
 
   end subroutine lnd_set_read_write_landmask
