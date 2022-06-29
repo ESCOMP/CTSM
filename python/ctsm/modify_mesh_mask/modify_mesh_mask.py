@@ -25,20 +25,18 @@ class ModifyMeshMask:
     # The mesh_mask_modifier tool reads landmask, while the modify_fsurdat tool
     # reads landmask_diff from the landmask file. Sample landmask file:
     # /glade/work/slevis/git/mksurfdata_toolchain/tools/modify_fsurdat/fill_indian_ocean/fill_indianocean_slevis.nc
+    # Read landmask_diff here only for consistency checks
     def __init__(self, my_data, landmask_file, lat_varname, lon_varname):
 
         self.file = my_data
 
         # landmask from user-specified .nc file in the .cfg file
         self._landmask_file = xr.open_dataset(landmask_file)
-        self.rectangle = self._landmask_file.landmask
         # CF convention has dimension and coordinate variable names the same
         self.lat_2d = self._landmask_file[lat_varname]
         self.lon_2d = self._landmask_file[lon_varname]
         self.lsmlat = self._landmask_file.dims[lat_varname]
         self.lsmlon = self._landmask_file.dims[lon_varname]
-
-        self.not_rectangle = np.logical_not(self.rectangle)
 
 
     @classmethod
@@ -51,22 +49,33 @@ class ModifyMeshMask:
 
     def set_mesh_mask(self, var):
         """
-        Sets 1d mask variable "var" = 2d mask variable "not_rectangle".
-        Assumes that 1d vector is in same south-to-north west-to-east
+        Sets 1d mask variable var = ocnmask = not(landmask).
+        Assumes the 1d vector is in the same south-to-north west-to-east
         order as the 2d array.
         """
 
-        ncount = 0  # initialize
+        # Initialize
+        ncount = 0
+        landmask_diff = self._landmask_file.landmask_diff
+        landmask = self._landmask_file.landmask
+
         for row in range(self.lsmlat):  # rows from landmask file
             logger.info('row = %d', row + 1)
             for col in range(self.lsmlon):  # cols from landmask file
-                errmsg = f'self._landmask_file.landmask not 0 or 1 at row, col, value = {row} {col} {self.rectangle[row, col]}'
-                assert isclose(self.rectangle[row, col], 0, abs_tol=1e-9) or \
-                       isclose(self.rectangle[row, col], 1, abs_tol=1e-9), errmsg
-                # Reshape landmask file's mask (not_rectangle) into the
+                errmsg = f'landmask not 0 or 1 at row, col, value = {row} {col} {landmask[row, col]}'
+                assert isclose(landmask[row, col], 0, abs_tol=1e-9) or \
+                       isclose(landmask[row, col], 1, abs_tol=1e-9), errmsg
+                errmsg = f'landmask_diff not 0 or 1 at row, col, value = {row} {col} {landmask_diff[row, col]}'
+                assert isclose(landmask_diff[row, col], 0, abs_tol=1e-9) or \
+                       isclose(landmask_diff[row, col], 1, abs_tol=1e-9), errmsg
+                if int(landmask_diff[row, col]) == 1:
+                    errmsg = f'landmask should equal landmask_diff where the latter equals 1, but here landmask = 0 at row, col = {row} {col}'
+                    assert int(landmask[row, col]) == 1, errmsg
+                # Reshape landmask into the
                 # elementCount dimension of the mesh file.
                 # In the process overwrite self.file[var].
-                self.file[var][ncount] = self.not_rectangle[row, col]
+                ocnmask = np.logical_not(int(landmask[row, col]))
+                self.file[var][ncount] = ocnmask
 
                 # All else in this function supports error checking
 
