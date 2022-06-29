@@ -5,6 +5,7 @@ This module includes the definition for a RegionalCase classs.
 # -- Import Python Standard Libraries
 import logging
 import os
+import argparse
 
 # -- 3rd party libraries
 import numpy as np
@@ -52,6 +53,15 @@ class RegionalCase(BaseCase):
 
     Methods
     -------
+    check_region_bounds
+        Check for the regional bounds
+
+    check_region_lons
+        Check for the regional lons
+
+    check_region_lats
+        Check for the regional lats
+
     create_tag
         Create a tag for this region which is either
         region's name or a combination of bounds of this
@@ -102,6 +112,7 @@ class RegionalCase(BaseCase):
         self.reg_name = reg_name
         self.create_mesh = create_mesh
         self.out_dir = out_dir
+        self.check_region_bounds()
         self.create_tag()
 
     def create_tag(self):
@@ -116,6 +127,50 @@ class RegionalCase(BaseCase):
             self.tag = "{}-{}_{}-{}".format(
                 str(self.lon1), str(self.lon2), str(self.lat1), str(self.lat2)
             )
+
+    def check_region_bounds (self):
+        """
+        Check for the regional bounds
+        """
+        self.check_region_lons()
+        self.check_region_lats()
+
+    def check_region_lons (self):
+        """
+        Check for the regional lon bounds
+        """
+        if self.lon1 >= self.lon2:
+            err_msg = """
+            \n
+            ERROR: lon1 is bigger than lon2.
+            lon1 points to the westernmost longitude of the region. {}
+            lon2 points to the easternmost longitude of the region. {}
+            Please make sure lon1 is smaller than lon2.
+
+            Please note that if longitude in -180-0, the code automatically
+            convert it to 0-360.
+            """.format(
+                self.lon1, self.lon2
+            )
+            raise argparse.ArgumentTypeError(err_msg)
+
+    def check_region_lats (self):
+        """
+        Check for the regional lat bound
+        """
+        if self.lat1 >= self.lat2:
+            err_msg = """
+            \n
+            ERROR: lat1 is bigger than lat2.
+            lat1 points to the westernmost longitude of the region. {}
+            lat2 points to the easternmost longitude of the region. {}
+            Please make sure lat1 is smaller than lat2.
+
+            """.format(
+                self.lat1, self.lat2
+            )
+            raise argparse.ArgumentTypeError(err_msg)
+
 
     def create_domain_at_reg(self, indir, file):
         """
