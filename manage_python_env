@@ -1,4 +1,4 @@
-#!/bin/bash -f
+#!/bin/bash
 #
 # manage_python_env -- setup the python environment in order to use CTSM python tools
 #
@@ -7,12 +7,17 @@
 #
 
 # Check if conda is in your path
-conda --help >& /dev/null
-if [ $? != 0 ]; then
-   echo "conda is NOT in your path add it with modules or whatever is required on your system to get it in your path"
+conda --help >& condahelp.txt
+error=$?
+if [ $error != 0 ]; then
+   echo "conda is NOT in your path for the bash shell add it with modules or whatever is required on your system to get it in your path"
    echo "on cheyenne use -- module load conda"
+   echo "For notes on installing on a user system see: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html"
+   echo "Error code was $error"
+   cat condahelp.txt
    exit -1
 fi
+rm condahelp.txt
 ctsm_python=ctsm_py
 
 
