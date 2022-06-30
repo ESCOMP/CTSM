@@ -14,6 +14,8 @@ jobs:
         - uses: psf/black@stable
           with:
              # Use options and version identical to the conda environment
+             # Using pyproject.toml makes sure this testing is consistent with our python directory testing
              options: "--check --config python/pyproject.toml"
-             src:     "./"
+             src:     "./python"
+             # Version should be coordinated with the ctsm_py conda environment under the python directory
              version: "22.3.0"
