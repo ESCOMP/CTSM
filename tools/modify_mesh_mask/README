@@ -11,10 +11,9 @@ tools/modify_mesh_mask/modify_template.cfg
 Instructions
 ------------
 To run on Cheyenne/Casper
-1) Load the following to your local environment:
-module load python
-ncar_pylib
-(Use "deactivate" to reverse the latter.)
+1) Activate the following environment:
+conda activate ctsm_py
+Use "deactivate" to reverse the latter.
 2) Copy, then modify the configure file named modify_template.cfg, which
 contains all the arguments needed by the script.
 3) Run the script ./mesh_mask_modifier pointing to the copied/modified
@@ -55,6 +54,8 @@ Run the tool
 >>> ./mesh_mask_modifier modify_fill_indianocean.cfg
 
 A modified mesh file should appear in the directory where you ran.
-Point to this as your mesh file in
-~user/ctsm/ccs_config/component_grids_nuopc.xml for domain name gx1v7
-(i.e. the ocean domain) before starting your CTSM or CESM simulation.
+Point to this file in your case's env_run.xml in the line that sets
+MASK_MESH. If for some reason this fails, hardwire the ocean domain mesh
+file name in ~user/ctsm/ccs_config/component_grids_nuopc.xml before
+starting your CTSM or CESM simulation. In the specific example shown
+here, hardwire the mesh file name for domain name gx1v7.

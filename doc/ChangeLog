@@ -1,4 +1,70 @@
 ===============================================================
+Tag name: ctsm5.2.dev101
+Originator(s): slevis (Samuel Levis, 303-665-1310)
+Date: Thu Jun 30 16:13:05 MDT 2022
+One-line Summary: Introduction of modify_meshes tool for use in I-cases and F-cases
+
+Purpose and description of changes
+----------------------------------
+
+ Merging the modify_meshes tool to main. This tool is a follow-up to the
+ modify_fsurdat tool for I- and F-cases where users are adding land to
+ areas that by default were expected as ocean. In such cases, fsurdat
+ modifications will take effect only if users also modify the mask_mesh
+ file which ultimately determines the landmask used by the CTSM.
+ Details in the tool's README.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #): #1644
+
+
+Testing summary:
+----------------
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - OK (two lilac tests fail)
+    clm_pymods test suite on cheyenne - OK (expected lilac failure)
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: dev099
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/1677
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev099
 Originator(s): rgknox (Ryan Knox)
 Date: Tue Jun 21 03:20:42 PM EDT 2022
