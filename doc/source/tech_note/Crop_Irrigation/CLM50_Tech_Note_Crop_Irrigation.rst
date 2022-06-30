@@ -139,7 +139,7 @@ managed crop types that are using the same parameter set.
 .. table:: Crop plant functional types (pfts) included in CLM5BGCCROP.
 
  ===  ===========================  ================  ===========================
- ITV  Plant function types (PFTs)  Management Class  Crop Parameters Used       
+ IVT  Plant function types (PFTs)  Management Class  Crop Parameters Used
  ===  ===========================  ================  ===========================
   15  c3 unmanaged rainfed crop    none              not applicable             
   16  c3 unmanaged irrigated crop  none              not applicable             
@@ -348,7 +348,7 @@ Harvest occurs in one time step using the BGC leaf offset algorithm.
 .. table:: Crop phenology and morphology parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
 
  ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================
- \                                    temperate corn             spring wheat                temperatue soybean          cotton                      rice                        sugarcane                  tropical corn              tropical soybean          
+ \                                    temperate corn             spring wheat                temperate soybean           cotton                      rice                        sugarcane                  tropical corn              tropical soybean
  ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================
  IVT                                  17, 18                     19, 20                      23, 24                      41, 42                      61, 62                      67, 68                     75, 76                     77, 78                    
  :math:`Date_{planting}^{min}`        April 1                    April 1                     May 1                       April 1                     Janurary 1                  Janurary 1                 March 20                   April 15                      
