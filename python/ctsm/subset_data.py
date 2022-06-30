@@ -170,7 +170,7 @@ def get_parser():
     # -- region-specific parser options
     rg_parser.add_argument(
         "--lat1",
-        help="Region start latitude. [default: %(default)s]",
+        help="Region southernmost latitude. [default: %(default)s]",
         action="store",
         dest="lat1",
         required=False,
@@ -179,7 +179,7 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lat2",
-        help="Region end latitude. [default: %(default)s]",
+        help="Region northernmost latitude. [default: %(default)s]",
         action="store",
         dest="lat2",
         required=False,
@@ -188,7 +188,7 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lon1",
-        help="Region start longitude. [default: %(default)s]",
+        help="Region westernmost longitude. [default: %(default)s]",
         action="store",
         dest="lon1",
         required=False,
@@ -197,7 +197,7 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lon2",
-        help="Region end longitude. [default: %(default)s]",
+        help="Region easternmost longitude. [default: %(default)s]",
         action="store",
         dest="lon2",
         required=False,
