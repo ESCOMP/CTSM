@@ -473,4 +473,4 @@ class RegionalCase(BaseCase):
                 "./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file
             )
             self.write_to_file("./xmlchange ATM_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
-            self.write_to_file("./xmlchange LAND_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
+            self.write_to_file("./xmlchange LND_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
