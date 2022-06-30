@@ -54,7 +54,10 @@ module load nco
 module load python
 module load ncl
 
-ncar_pylib
+module load conda
+cd ../..
+./manage_python_env
+cd -
 
 
 ##omp threads

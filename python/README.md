@@ -7,13 +7,14 @@ all` from this directory.
 
 ## Python environment
 
-One way to get a python environment for this to work together on cheyenne is to use
-
-ncar\_pylib
-
 Another way is to use the file conda\_env\_ctsm\_py.txt to setup
-a python environment. Comments in the file tell how to do this
-on cheyenne.
+a python environment. Comments in the file tell how to do this.
+
+You can also use the script in the top level directory to do
+all the conda commands and do this for you.
+
+ cd ..
+ ./manage_python_env
 
 ## Unit and system tests
 
