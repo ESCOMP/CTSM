@@ -5,14 +5,12 @@ Run this code by using the following wrapper script:
 The wrapper script includes a full description and instructions.
 """
 
-import os
 import logging
 
 from math import isclose
 import numpy as np
 import xarray as xr
 
-from ctsm.utils import update_metadata
 from ctsm.config_utils import lon_range_0_to_360
 
 logger = logging.getLogger(__name__)
@@ -24,7 +22,8 @@ class ModifyMeshMask:
     """
     # The mesh_mask_modifier tool reads landmask, while the modify_fsurdat tool
     # reads landmask_diff from the landmask file. Sample landmask file:
-    # /glade/work/slevis/git/mksurfdata_toolchain/tools/modify_fsurdat/fill_indian_ocean/fill_indianocean_slevis.nc
+    # fill_indianocean_slevis.nc located here as of 2022/06/30:
+    # /glade/work/slevis/git/mksurfdata_toolchain/tools/modify_fsurdat/fill_indian_ocean/
     # Read landmask_diff here only for consistency checks
     def __init__(self, my_data, landmask_file, lat_varname, lon_varname):
 
@@ -62,14 +61,17 @@ class ModifyMeshMask:
         for row in range(self.lsmlat):  # rows from landmask file
             logger.info('row = %d', row + 1)
             for col in range(self.lsmlon):  # cols from landmask file
-                errmsg = f'landmask not 0 or 1 at row, col, value = {row} {col} {landmask[row, col]}'
+                errmsg = 'landmask not 0 or 1 at row, col, value = ' + \
+                         f'{row} {col} {landmask[row, col]}'
                 assert isclose(landmask[row, col], 0, abs_tol=1e-9) or \
                        isclose(landmask[row, col], 1, abs_tol=1e-9), errmsg
-                errmsg = f'landmask_diff not 0 or 1 at row, col, value = {row} {col} {landmask_diff[row, col]}'
+                errmsg = 'landmask_diff not 0 or 1 at row, col, value = ' + \
+                         f'{row} {col} {landmask_diff[row, col]}'
                 assert isclose(landmask_diff[row, col], 0, abs_tol=1e-9) or \
                        isclose(landmask_diff[row, col], 1, abs_tol=1e-9), errmsg
                 if int(landmask_diff[row, col]) == 1:
-                    errmsg = f'landmask should equal landmask_diff where the latter equals 1, but here landmask = 0 at row, col = {row} {col}'
+                    errmsg = 'landmask should = landmask_diff where the ' + \
+                             f'latter equals 1, but here landmask = 0 at row, col = {row} {col}'
                     assert int(landmask[row, col]) == 1, errmsg
                 # Reshape landmask into the
                 # elementCount dimension of the mesh file.

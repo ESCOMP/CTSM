@@ -5,15 +5,13 @@ Run this code by using the following wrapper script:
 The wrapper script includes a full description and instructions.
 """
 
-import os
 import logging
 
 from math import isclose
 import numpy as np
 import xarray as xr
 
-from ctsm.git_utils import get_ctsm_git_short_hash
-from ctsm.utils import abort, update_metadata
+from ctsm.utils import abort
 from ctsm.config_utils import lon_range_0_to_360
 
 logger = logging.getLogger(__name__)
@@ -37,19 +35,20 @@ class ModifyFsurdat:
         if landmask_file is not None:
             # overwrite self.not_rectangle with data from
             # user-specified .nc file in the .cfg file
-            self._landmask_file = xr.open_dataset(landmask_file)
-            self.rectangle = self._landmask_file.landmask_diff.data
+            landmask_ds = xr.open_dataset(landmask_file)
+            self.rectangle = landmask_ds.landmask_diff.data
             # CF convention has dimension and coordinate variable names the same
             if lat_varname is None:  # set to default
                 lat_varname = 'lsmlat'
             if lon_varname is None:  # set to default
                 lon_varname = 'lsmlon'
-            self.lsmlat = self._landmask_file.dims[lat_varname]
-            self.lsmlon = self._landmask_file.dims[lon_varname]
+            lsmlat = landmask_ds.dims[lat_varname]
+            lsmlon = landmask_ds.dims[lon_varname]
 
-            for row in range(self.lsmlat):  # rows from landmask file
-                for col in range(self.lsmlon):  # cols from landmask file
-                    errmsg = f'self._landmask_file.landmask_diff not 0 or 1 at row, col, value = {row} {col} {self.rectangle[row, col]}'
+            for row in range(lsmlat):  # rows from landmask file
+                for col in range(lsmlon):  # cols from landmask file
+                    errmsg = 'landmask_ds.landmask_diff not 0 or 1 at ' + \
+                             f'row, col, value = {row} {col} {self.rectangle[row, col]}'
                     assert isclose(self.rectangle[row, col], 0, abs_tol=1e-9) \
                            or \
                            isclose(self.rectangle[row, col], 1, abs_tol=1e-9), \
