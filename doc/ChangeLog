@@ -46,7 +46,7 @@ Testing summary:
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    cheyenne - OK (two lilac tests fail)
+    cheyenne - PASS
     clm_pymods test suite on cheyenne - OK (expected lilac failure)
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here: dev099
