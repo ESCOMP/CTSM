@@ -838,6 +838,7 @@ contains
        call ncd_io(ncid=pioid, varname='landmask', data=lndmask_glob, flag='read')
        call ncd_io(ncid=pioid, varname='landfrac', data=lndfrac_glob, flag='read')
        call ncd_pio_closefile(pioid)
+       inquire(file=trim(flandfrac_status), exist=lexists)
        if (.not. lexists) then
           if (masterproc) then
              write(iulog,'(a)')' failed to find file '//trim(flandfrac_status)
