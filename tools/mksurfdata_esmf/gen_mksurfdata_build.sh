@@ -42,7 +42,18 @@ case $hostname in
       export MACH="casper"
       pio_iotype=1
       ;;
+  ##izumi
+  izumi*)
+      export MACH="izumi"
+      pio_iotype=2
+      ;;
+  ##Hobart
+  hobart*)
+      export MACH="hobart"
+      pio_iotype=2
+      ;;
   ## Other machines
+  ## Assumption: pnetcdf is off; therefore, pio_iotype = 2
   *)
       export MACH="$hostname"
       pio_iotype=2

@@ -2,13 +2,15 @@
 Build Requirements:
 ===================
 
-mksurfdata_esmf is an distributed memory parallel program (using Message Passing Interface -- MPI) that utilizes
-both ESMF (Earth System Modelling Framework) for regridding as well as PIO (Parallel I/O) and NetCDF output. As
+mksurfdata_esmf is a distributed memory parallel program (using Message Passing
+Interface -- MPI) that utilizes
+both ESMF (Earth System Modelling Framework) for regridding as well as Parallel
+I/O (PIO) and NetCDF output. As
 such libraries must be built for the following:
 
 1) MPI
 2) NetCDF
-3) ParallelIO
+3) PIO
 4) ESMF
 
 In addition for the build: python, bash-shell, CMake and GNU-Make are required
@@ -45,6 +47,10 @@ building the executable (working in tools/mksurfdata_esmf)
 =======================
 
 > ./gen_mksurfdata_build.sh      # For machines with a cime build
+# Note: The pio_iotype value gets set and written to a simple .txt file
+# by this build script. The value depends on your machine. If not running
+# on cheyenne, casper, izumi, or hobart, you may need to update this, though
+# a default value does get set for other machines.
 
 =======================
 running for a single submission:
