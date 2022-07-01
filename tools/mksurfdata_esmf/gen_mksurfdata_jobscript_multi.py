@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-
-import sys, os, shutil
-import logging
-import argparse, textwrap
+"""
+gen_mksurfdata_jobscript_multi.py generates a jobscript for running the
+mksurfdata executable to generate many fsurdat files at once. For detailed
+instructions, see README.
+"""
+import os
+import sys
+import argparse
 import subprocess
-from datetime import datetime
 
 valid_scenarios=["all",
                  "standard",
@@ -85,7 +88,8 @@ def get_parser():
     )
     parser.add_argument(
         "--jobscript-file",
-        help="""output jobscript file to be submitted on cheyenne (default is mksurfdata_jobscript_multi)]""",
+        help="""output jobscript file to be submitted on cheyenne
+                [default: %(default)s]""",
         action="store",
         dest="jobscript_file",
         required=False,
@@ -94,7 +98,9 @@ def get_parser():
     return parser
 
 def main ():
-
+    """
+    See docstring at the top.
+    """
     # --------------------------
     # Obtain input args
     # --------------------------
@@ -106,7 +112,7 @@ def main ():
     account = args.account
 
     # --------------------------
-    # Determine target list 
+    # Determine target list
     # --------------------------
     target_list = []
     if scenario == 'all':
@@ -119,7 +125,7 @@ def main ():
                        "crop-global-historical",
                        "crop-global-transient",
                        "crop-tropics-present",
-                       "crop-global-SSP1-2.6", 
+                       "crop-global-SSP1-2.6",
                        "crop-global-SSP3-7.0",
                        "crop-global-SSP5-3.4",
                        "crop-global-SSP2-4.5",
@@ -138,7 +144,7 @@ def main ():
                        "crop-global-historical",
                        "crop-global-transient"]
     elif scenario == "crop-global-future":
-        target_list = ["crop-global-SSP1-2.6", 
+        target_list = ["crop-global-SSP1-2.6",
                        "crop-global-SSP3-7.0",
                        "crop-global-SSP5-3.4",
                        "crop-global-SSP2-4.5",
@@ -157,11 +163,11 @@ def main ():
     resolution_dict = {
         "standard_res_no_crop" : ["0.9x1.25","1.9x2.5","10x15"],
         "standard_res"         : ['0.9x1.25','1.9x2.5','10x15','4x5','C96',
-                                  'ne30np4','ne30np4.pg2','ne30np4.pg3','ne30np4.pg4','ne120np4.pg3',
-                                  'ne0np4.ARCTICGRIS.ne30x8','ne0np4.ARCTIC.ne30x4','ne0np4CONUS.ne30x8'],
+            'ne30np4','ne30np4.pg2','ne30np4.pg3','ne30np4.pg4','ne120np4.pg3',
+            'ne0np4.ARCTICGRIS.ne30x8','ne0np4.ARCTIC.ne30x4', 'ne0np4CONUS.ne30x8'],
         "future_res"           : ["0.9x1.25","1.9x2.5","10x15"],
-        "trans_res"            : ['0.9x1.25','1.9x2.5','10x15',
-                                  'ne30np4','ne0np4.ARCTICGRIS.ne30x8','ne0np4.ARCTIC.ne30x4','ne0np4CONUS.ne30x8','ne120np4'],
+        "trans_res"            : ['0.9x1.25','1.9x2.5','10x15','ne30np4',
+            'ne0np4.ARCTICGRIS.ne30x8','ne0np4.ARCTIC.ne30x4','ne0np4CONUS.ne30x8','ne120np4'],
         "T42_res"              : ['T42'],
         "nldas_res"            : ['0.125nldas2'],
         "5x5_amazon_res"       : ['5x5_amazon'],
@@ -208,23 +214,29 @@ def main ():
         runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
         runfile.write("\n")
 
-        np = int(tasks_per_node) * int(number_of_nodes)
+        n_p = int(tasks_per_node) * int(number_of_nodes)
 
+        # Run env_mach_specific.sh to control the machine dependent
+        # environment including the paths to compilers and libraries
+        # external to cime such as netcdf
+        runfile.write('. ./.env_mach_specific.sh \n')
         for target in target_list:
             res_set = dataset_dict[target][1]
             for res in resolution_dict[res_set]:
-                command = os.path.join(os.getcwd(), "gen_mksurfdata_namelist.py")
+                command = os.path.join(os.getcwd(),
+                                       "gen_mksurfdata_namelist.py")
                 command = command + " " + dataset_dict[target][0] + " " + res
                 print (f"command is {command}")
                 commands = [x for x in command.split(' ') if x]
-                run_cmd = subprocess.run(commands, check=True, capture_output=True)
-                if run_cmd.returncode != 0:
-                    print ("Error in calling gen_mksurfdata_namelist.py")
-                    sys.exit(1)
+                try:
+                    run_cmd = subprocess.run(commands, check=True,
+                                             capture_output=True)
+                except subprocess.CalledProcessError as err:
+                    sys.exit(f'{err} ERROR calling {command}')
                 output = run_cmd.stdout.decode('utf-8').strip()
                 namelist = output.split(' ')[-1]
                 print (f"generated namelist {namelist}")
-                output = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist}"
+                output = f"mpiexec_mpt -p \"%g:\" -np {n_p} ./tool_bld/mksurfdata < {namelist}"
                 runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-
-import sys, os, shutil
-import logging
-import argparse, textwrap
-import subprocess
-from datetime import datetime
+"""
+gen_mksurfdata_jobscript_single.py generates a jobscript for running the
+mksurfdata executable to generate a single fsurdat file. For detailed
+instructions, see README.
+"""
+import sys
+import argparse
 
 def get_parser():
     """
@@ -23,7 +24,7 @@ def get_parser():
     )
     parser.add_argument(
         "--account",
-        help="""account number (default P93300606)""",
+        help="""account number (default: %(default)s)""",
         action="store",
         dest="account",
         required=False,
@@ -46,7 +47,7 @@ def get_parser():
     parser.add_argument(
         "--machine",
         help="""currently this recognizes cheyenne, casper, izumi (default
-                cheyenne); this needs to be a cime machine, i.e. a machine
+                %(default)s); this needs to be a cime machine, i.e. a machine
                 that has been ported to cime where you can build a cime model;
                 for details see the README in this directory""",
         action="store",
@@ -64,7 +65,7 @@ def get_parser():
     )
     parser.add_argument(
         "--jobscript-file",
-        help="""output jobscript file to be submitted on cheyenne (default is mksurfdata_jobscript_single)]""",
+        help="""output jobscript file to be submitted on cheyenne (default: %(default)s)""",
         action="store",
         dest="jobscript_file",
         required=False,
@@ -73,7 +74,9 @@ def get_parser():
     return parser
 
 def main ():
-
+    """
+    See docstring at the top.
+    """
     # --------------------------
     # Obtain input args
     # --------------------------
@@ -90,6 +93,9 @@ def main ():
     # --------------------------
     with open(jobscript_file, "w",encoding='utf-8') as runfile:
         runfile.write('#!/bin/bash \n')
+        runfile.write('# Edit the batch directives for your batch system \n')
+        runfile.write('# Below are the batch directives used on cheyenne \n')
+        runfile.write(f"#PBS -A {account} \n")
         runfile.write('#PBS -N mksurfdata \n')
         runfile.write('#PBS -j oe \n')
         runfile.write('#PBS -l walltime=30:00 \n')
@@ -110,17 +116,23 @@ def main ():
 
         runfile.write(f'cd {tool_path} \n')
         runfile.write("\n")
-        runfile.write('. ./bld/.env_mach_specific.sh \n')
+        runfile.write('. ./tool_bld/.env_mach_specific.sh \n')
         runfile.write("\n")
 
-        np = int(tasks_per_node) * int(number_of_nodes)
+        n_p = int(tasks_per_node) * int(number_of_nodes)
 
+        # Run env_mach_specific.sh to control the machine dependent environment
+        # including the paths to compilers and libraries external to cime such
+        # as netcdf
+        runfile.write('. ./tool_bld/.env_mach_specific.sh \n')
+        runfile.write('# Edit the mpirun command to use the MPI executable ' \
+                      'on your system and the arguments it requires \n')
         if machine == 'cheyenne':
-            output = f"mpiexec_mpt -p \"%g:\" -np {np} ./bld/mksurfdata < {namelist_file}"
+            output = f"mpiexec_mpt -p \"%g:\" -np {n_p} ./tool_bld/mksurfdata < {namelist_file}"
         elif machine == 'casper':
-            output = f"mpiexec -np {np} ./bld/mksurfdata < {namelist_file}"
+            output = f"mpiexec -np {n_p} ./tool_bld/mksurfdata < {namelist_file}"
         elif machine == 'izumi':
-            output = f"mpirun -np {np} ./bld/mksurfdata < {namelist_file}"
+            output = f"mpirun -np {n_p} ./tool_bld/mksurfdata < {namelist_file}"
         runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")
