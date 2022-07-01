@@ -1,6 +1,7 @@
 # To install this on cheyenne with conda loaded in modules
 # use the top level bash script:
-# ../manage_python_env
+# ../manage_python_env                                    # Do this each time you update your CTSM Version
+# conda activate ctsm_py                                  # Do this anytime you want to run a CTSM python script
 # Or the individual conda commands:
 # conda create  -n ctsm_py                                # Do this one time for each machine
 # conda install -n ctsm_py --file conda_env_ctsm_py.txt   # Do this each time you update your CTSM Version

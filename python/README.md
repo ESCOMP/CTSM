@@ -15,6 +15,7 @@ all the conda commands and do this for you.
 
  cd ..
  ./manage_python_env
+ conda activate ctsm_py
 
 ## Unit and system tests
 

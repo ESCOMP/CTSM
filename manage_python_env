@@ -102,12 +102,6 @@ if [ $? != 0 ]; then
    exit -2
 fi
 echo "Successfully installed the $ctsm_python python environment"
-echo "Activate $ctsm_python"
-conda activate $ctsm_python
-if [ $? != 0 ]; then
-   echo "Trouble activating the $ctsm_python python environment fix as outlined above and then run"
-   echo "conda activate $ctsm_python"
-   echo "On CGD systems for tcsh you need to source the conda.csh under the /etc/profile.d/ subdirectory of the /usr/local/anaconda-* version you are using for python"
-   exit -3
-fi
-echo "Successfully installed and activated the $ctsm_python python environment"
+echo
+echo "activate the environment by doing the following..."
+echo "conda activate $ctsm_python"
