@@ -50,7 +50,7 @@ def get_parser():
         action="store",
         dest="machine",
         required=False,
-        choices=['cheyenne', 'casper'],  # TODO Plan on adding izumi here
+        choices=['cheyenne', 'casper'],
         default='cheyenne'
     )
     parser.add_argument(
@@ -71,7 +71,9 @@ def get_parser():
     return parser
 
 def main ():
-
+    """
+    See docstring at the top.
+    """
     # --------------------------
     # Obtain input args
     # --------------------------
