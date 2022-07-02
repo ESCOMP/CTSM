@@ -696,7 +696,7 @@ contains
      !
      ! patch loop
      !
-     num_actfirep = 0
+     num_actfirep = 0    ! Initialize active fire patch filter to zero
      do fp = 1,num_soilp
         p = filter_soilp(fp)
         c = patch%column(p)
@@ -722,6 +722,7 @@ contains
         ! carbon fluxes
         m = spinup_factor_deadwood
 
+        ! For patches with active fire add to active fire filter 
         if(f /= 0)then
            num_actfirep = num_actfirep + 1
            filter_actfirep(num_actfirep) = p
@@ -1021,12 +1022,13 @@ contains
      ! vertically-resolved decomposing C/N fire loss   
      ! column loop
      !
-     num_actfirec = 0
+     num_actfirec = 0     ! Initialize active fire column filter to zero
      do fc = 1,num_soilc
         c = filter_soilc(fc)
 
         f = farea_burned(c) 
 
+        ! If fire is active add to active fire filter
         if(f /= 0 .or. f /= baf_crop(c))then
            num_actfirec = num_actfirec + 1
            filter_actfirec(num_actfirec) = c

@@ -67,8 +67,8 @@ module NutrientCompetitionFlexibleCNMod
   private :: calc_npool_to_components_agsys       ! Calculate npool_to_* terms for a single crop patch when using AgSys
 
   ! !PRIVATE DATA:
-  logical,parameter :: matrixcheck_ph = .True.
-  logical,parameter :: acc_ph = .False.
+  logical,parameter :: matrixcheck_ph = .True.    ! If matrix solution check should be applied
+  logical,parameter :: acc_ph = .False.           ! Another matrix check option
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -249,8 +249,8 @@ contains
     real(r8):: frootcn_max
     real(r8):: livewdcn_max
     real(r8):: frac_resp
-    real(r8):: npool_to_veg 
-    real(r8):: cpool_to_veg
+    real(r8):: npool_to_veg                  ! Temporary for nitrogen pool transfer to vegetation components
+    real(r8):: cpool_to_veg                  ! Temporary for carbon pool transfer to vegetation components
     real(r8) :: tmp
 
     ! -----------------------------------------------------------------------
