@@ -93,7 +93,13 @@ echo "Using the file: $condadir/$condafile"
 conda list -n $ctsm_python >& /dev/null
 if [ $? != 0 ]; then
    echo "Create $ctsm_python"
-   conda create --force -n $ctsm_python -q
+   cmd="conda create --force -n $ctsm_python -q"
+   echo "$cmd"
+   $cmd
+   if [ $? != 0 ]; then
+      echo "Error creating conda environment $ctsm_python"
+      exit -1
+   fi
 else
    echo "$ctsm_python environment already exists"
 fi
@@ -102,7 +108,9 @@ verbosity="-q"
 if [ "$verbose" == "Yes" ]; then
   verbosity="-v"
 fi
-conda install --yes $verbosity -c conda-forge -n $ctsm_python --file $condadir/$condafile $option
+cmd="conda install --yes $verbosity -c conda-forge -n $ctsm_python --file $condadir/$condafile $option"
+echo "$cmd"
+$cmd
 if [ $? != 0 ]; then
    echo "Trouble installing the $ctsm_python python environment"
    echo "There must be a problem in the $condadir/$condafile conda specification environment file"
