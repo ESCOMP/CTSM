@@ -4,6 +4,7 @@ gen_mksurfdata_jobscript_single.py generates a jobscript for running the
 mksurfdata executable to generate a single fsurdat file. For detailed
 instructions, see README.
 """
+import os
 import sys
 import argparse
 
@@ -95,7 +96,6 @@ def main ():
         runfile.write('#!/bin/bash \n')
         runfile.write('# Edit the batch directives for your batch system \n')
         runfile.write('# Below are the batch directives used on cheyenne \n')
-        runfile.write(f"#PBS -A {account} \n")
         runfile.write('#PBS -N mksurfdata \n')
         runfile.write('#PBS -j oe \n')
         runfile.write('#PBS -l walltime=30:00 \n')
@@ -110,13 +110,6 @@ def main ():
         elif machine == 'izumi':
             runfile.write('#PBS -q medium \n')
             runfile.write(f'#PBS -l nodes={number_of_nodes}:ppn={tasks_per_node} -r n \n')
-        runfile.write("\n")
-
-        tool_path = os.path.dirname(os.path.abspath(__file__))
-
-        runfile.write(f'cd {tool_path} \n')
-        runfile.write("\n")
-        runfile.write('. ./tool_bld/.env_mach_specific.sh \n')
         runfile.write("\n")
 
         n_p = int(tasks_per_node) * int(number_of_nodes)

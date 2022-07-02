@@ -14,7 +14,7 @@ usage() {
   echo "[-v|--verbose]  "
   echo "     Run in verbose mode"
   echo "[-b|--blddir <blddir>]  "
-  echo "     Overwrites default, which is /bld in the same directory as ./gen_mksurfdata_build.sh"
+  echo "     Overwrites default, which is /tool_bld in the same directory as ./gen_mksurfdata_build.sh"
   echo "[-m|--machine <machine>]  "
   echo "     Overwrites default MACH"
   echo "***********************************************************************"
@@ -97,7 +97,9 @@ mkdir $blddir
 cd $blddir
 
 # Write pio_iotype to file with name pio_iotype.txt
-echo $pio_iotype > $cwd/pio_iotype.txt
+pio_iotype_filepath=../pio_iotype.txt  # one up from /tool_bld
+echo 'VALUE OF pio_iotype WRITTEN BY gen_mksurfdata_build.sh AND USED BY mksurfdata (i.e. THE FORTRAN EXECUTABLE):' > $pio_iotype_filepath
+echo $pio_iotype >> $pio_iotype_filepath
 
 # Run the cime configure tool to figure out what modules need to be loaded
 echo "Run cime configure for machine $MACH..."

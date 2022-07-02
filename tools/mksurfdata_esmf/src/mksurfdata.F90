@@ -238,6 +238,7 @@ program mksurfdata
      if (ier /= 0) then
         call shr_sys_abort(subname//" failed to open file pio_iotype.txt")
      end if
+     read(nfpio,*)  ! skip file header
      read(nfpio, '(i)', iostat=ier) pio_iotype
      if (ier /= 0) then
         call shr_sys_abort(subname//" failed to read file pio_iotype.txt")

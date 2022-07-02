@@ -231,8 +231,8 @@ def main ():
                 try:
                     run_cmd = subprocess.run(commands, check=True,
                                              capture_output=True)
-                except subprocess.CalledProcessError as err:
-                    sys.exit(f'{err} ERROR calling {command}')
+                except subprocess.CalledProcessError as e:
+                    sys.exit(f'{e} ERROR calling {command}')
                 output = run_cmd.stdout.decode('utf-8').strip()
                 namelist = output.split(' ')[-1]
                 print (f"generated namelist {namelist}")
