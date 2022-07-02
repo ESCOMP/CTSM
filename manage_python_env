@@ -11,7 +11,8 @@ conda --help >& condahelp.txt
 error=$?
 if [ $error != 0 ]; then
    echo "conda is NOT in your path for the bash shell add it with modules or whatever is required on your system to get it in your path"
-   echo "on cheyenne use -- module load conda"
+   echo "on cheyenne/capser/etc use -- module load conda"
+   echo "on izumi/CGD systems use -- module load lang/python"
    echo "For notes on installing on a user system see: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html"
    echo "Error code was $error"
    cat condahelp.txt
@@ -22,7 +23,13 @@ ctsm_python=ctsm_py
 
 
 condadir="python"
-condafile="conda_env_ctsm_py.txt"
+
+domain=`domainname`
+if [[ $domain =~ cgd.* ]]; then
+   condafile="conda_env_ctsm_py_cgd.txt"
+else
+   condafile="conda_env_ctsm_py.txt"
+fi
 #----------------------------------------------------------------------
 # Usage subroutine
 usage() {
@@ -80,12 +87,19 @@ if [ ! -f $condadir/$condafile ]; then
 fi
 
 echo "Use conda to install the python environment needed to run the CTSM python tools in the conda environment: $ctsm_python"
+echo "Using the file: $condadir/$condafile"
 
 # Check if the environment already exists, if it does continue, if not create it
 conda list -n $ctsm_python >& /dev/null
 if [ $? != 0 ]; then
    echo "Create $ctsm_python"
-   conda create -n $ctsm_python
+   cmd="conda create --force -n $ctsm_python -q"
+   echo "$cmd"
+   $cmd
+   if [ $? != 0 ]; then
+      echo "Error creating conda environment $ctsm_python"
+      exit -1
+   fi
 else
    echo "$ctsm_python environment already exists"
 fi
@@ -94,11 +108,22 @@ verbosity="-q"
 if [ "$verbose" == "Yes" ]; then
   verbosity="-v"
 fi
-conda install --yes $verbosity -n $ctsm_python --file $condadir/$condafile $option
+cmd="conda install --yes $verbosity -c conda-forge -n $ctsm_python --file $condadir/$condafile $option"
+echo "$cmd"
+$cmd
 if [ $? != 0 ]; then
    echo "Trouble installing the $ctsm_python python environment"
    echo "There must be a problem in the $condadir/$condafile conda specification environment file"
    echo "Change the file and try again"
+   if [[ $domain =~ cgd.* ]]; then
+       pythonpath=`which python`
+       echo
+       echo "On CGD systems you may need to do the following..."
+       echo "Create a bin subdirectory and then link the python version into it..."
+       echo "   mkdir $HOME/.conda/envs/$ctsm_python/bin/"
+       echo "   ln -s $pythonpath $HOME/.conda/envs/$ctsm_python/bin/python3.7"
+       echo
+   fi
    exit -2
 fi
 echo "Successfully installed the $ctsm_python python environment"
