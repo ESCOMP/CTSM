@@ -4,6 +4,7 @@ gen_mksurfdata_jobscript_single.py generates a jobscript for running the
 mksurfdata executable to generate a single fsurdat file. For detailed
 instructions, see README.
 """
+import os
 import sys
 import argparse
 
@@ -46,11 +47,14 @@ def get_parser():
     )
     parser.add_argument(
         "--machine",
-        help="""default: %(default)s""",
+        help="""currently this recognizes cheyenne, casper, izumi (default
+                %(default)s); this needs to be a cime machine, i.e. a machine
+                that has been ported to cime where you can build a cime model;
+                for details see the README in this directory""",
         action="store",
         dest="machine",
         required=False,
-        choices=['cheyenne', 'casper'],
+        choices=['cheyenne', 'casper', 'izumi'],
         default='cheyenne'
     )
     parser.add_argument(
@@ -89,23 +93,33 @@ def main ():
     # Write run script
     # --------------------------
     with open(jobscript_file, "w",encoding='utf-8') as runfile:
-
         runfile.write('#!/bin/bash \n')
         runfile.write('# Edit the batch directives for your batch system \n')
         runfile.write('# Below are the batch directives used on cheyenne \n')
-        runfile.write(f"#PBS -A {account} \n")
         runfile.write('#PBS -N mksurfdata \n')
         runfile.write('#PBS -j oe \n')
-        runfile.write('#PBS -l walltime=30:00 \n')
         if machine == 'cheyenne':
+            runfile.write('#PBS -l walltime=30:00 \n')
+            runfile.write(f"#PBS -A {account} \n")
             runfile.write('#PBS -q regular \n')
             runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
         elif machine == 'casper':
+            runfile.write('#PBS -l walltime=1:00:00 \n')
+            runfile.write(f"#PBS -A {account} \n")
             runfile.write('#PBS -q casper \n')
-            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=12:mpiprocs={tasks_per_node} \n")
+            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=12:mpiprocs={tasks_per_node}:mem=80GB \n")
+        elif machine == 'izumi':
+            runfile.write('#PBS -l walltime=2:00:00 \n')
+            runfile.write('#PBS -q medium \n')
+            runfile.write(f'#PBS -l nodes={number_of_nodes}:ppn={tasks_per_node},mem=555GB -r n \n')
+            tool_path = os.path.dirname(os.path.abspath(__file__))
+            runfile.write("\n")
+            runfile.write(f'cd {tool_path} \n')
+
         runfile.write("\n")
 
         n_p = int(tasks_per_node) * int(number_of_nodes)
+        mksurfdata_path = './tool_bld/mksurfdata'
 
         # Run env_mach_specific.sh to control the machine dependent environment
         # including the paths to compilers and libraries external to cime such
@@ -114,9 +128,11 @@ def main ():
         runfile.write('# Edit the mpirun command to use the MPI executable ' \
                       'on your system and the arguments it requires \n')
         if machine == 'cheyenne':
-            output = f"mpiexec_mpt -p \"%g:\" -np {n_p} ./tool_bld/mksurfdata < {namelist_file}"
+            output = f"mpiexec_mpt -p \"%g:\" -np {n_p} {mksurfdata_path} < {namelist_file}"
         elif machine == 'casper':
-            output = f"mpiexec -np {n_p} ./tool_bld/mksurfdata < {namelist_file}"
+            output = f"mpiexec -np {n_p} {mksurfdata_path} < {namelist_file}"
+        elif machine == 'izumi':
+            output = f"mpiexec --machinefile $PBS_NODEFILE -n {n_p} --prepend-rank {mksurfdata_path} < {namelist_file}"
         runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")

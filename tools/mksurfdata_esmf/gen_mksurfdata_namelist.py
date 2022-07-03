@@ -143,7 +143,8 @@ def get_parser():
     parser.add_argument(
         "--rawdata-dir",
         help="""
-            /path/of/root/of/input/data',
+            /path/of/root/of/input/data
+            on izumi use /fs/cgd/csm/inputdata
             [default: %(default)s]
             """,
         action="store",
@@ -347,6 +348,7 @@ def main ():
     rawdata_files = {}
 
     # determine input rawdata
+    _must_run_download_input_data = False
     tool_path = os.path.dirname(os.path.abspath(__file__))
     xml_path = os.path.join(tool_path, 'gen_mksurfdata_namelist.xml')
     tree1 = ET.parse(xml_path)
@@ -392,18 +394,17 @@ def main ():
                 rawdata_files[child1.tag] = os.path.join(input_path, item.text)
                 if '%y' not in rawdata_files[child1.tag]:
                     if not os.path.isfile(rawdata_files[child1.tag]):
-                        error_msg = 'ERROR: input data file ' \
-                                    f'{rawdata_files[child1.tag]} for ' \
-                                    f'{child1.tag} does not exist'
-                        sys.exit(error_msg)
+                        print(f"WARNING: input data file {rawdata_files[child1.tag]} for {child1.tag} does not exist")
+                        print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+                        _must_run_download_input_data = True
 
             if item.tag == 'mesh_filename':
                 new_key = f"{child1.tag}_mesh"
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
                 if not os.path.isfile(rawdata_files[new_key]):
-                    error_msg = 'ERROR: input mesh file ' \
-                                f'{rawdata_files[new_key]} does not exist'
-                    sys.exit(error_msg)
+                    print(f"WARNING: input mesh file {rawdata_files[new_key]} does not exist")
+                    print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+                    _must_run_download_input_data = True
 
             if item.tag == 'lake_filename':
                 new_key = f"{child1.tag}_lake"
@@ -478,17 +479,17 @@ def main ():
                 landuse_input_fnam2 = file2.replace("%y", year_str)
                 landuse_input_fnam3 = file3.replace("%y", year_str)
                 if not os.path.isfile(landuse_input_fname):
-                    error_msg = 'ERROR: landunit_input_fname: ' \
-                                f'{landuse_input_fname} does not exist'
-                    sys.exit(error_msg)
+                     print(f"WARNING: landunit_input_fname: {landuse_input_fname} does not exist")
+                     print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+                     _must_run_download_input_data = True
                 if not os.path.isfile(landuse_input_fnam2):
-                    error_msg = 'ERROR: landunit_input_fnam2: ' \
-                                f'{landuse_input_fnam2} does not exist'
-                    sys.exit(error_msg)
+                     print(f"WARNING: landunit_input_fnam2: {landuse_input_fnam2} does not exist")
+                     print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+                     _must_run_download_input_data = True
                 if not os.path.isfile(landuse_input_fnam3):
-                    error_msg = 'ERROR: landunit_input_fnam3: ' \
-                                f'{landuse_input_fnam3} does not exist'
-                    sys.exit(error_msg)
+                     print(f"WARNING: landunit_input_fnam3: {landuse_input_fnam3} does not exist")
+                     print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+                     _must_run_download_input_data = True
 
                 # -- Each line is written twice in the original perl code:
                 landuse_line = f"{landuse_input_fname:<196}{year_str}\n"
@@ -528,8 +529,11 @@ def main ():
         # The "git -C" option permits a system test to run this tool from
         # elsewhere while running the git command from the tool_path
         gitdescribe = subprocess.check_output(git_desc_cmd, shell=True).strip()
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
         # In case the "git -C" option is unavailable, as on casper (2022/5/24)
+        # Still, this does NOT allow the system test to work on machines
+        # without git -C
+        logger.info('git -C option unavailable on casper as of 2022/7/2', e)
         gitdescribe = subprocess.check_output('git describe', shell=True).strip()
     gitdescribe = gitdescribe.decode('utf-8')
 
@@ -588,13 +592,13 @@ def main ():
         if '%y' in mksrf_fhrvtyp:
             mksrf_fhrvtyp = mksrf_fhrvtyp.replace("%y",str(start_year))
         if not os.path.isfile(mksrf_fvegtyp):
-            error_msg = f'ERROR: input mksrf_fvegtyp file {mksrf_fvegtyp} ' \
-                         'does not exist'
-            sys.exit(error_msg)
+            print(f"WARNING: input mksrf_fvegtyp file {mksrf_fvegtyp} does not exist")
+            print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+            _must_run_download_input_data = True
         if not os.path.isfile(mksrf_fhrvtyp):
-            error_msg = f'ERROR: input mksrf_fhrvtyp file {mksrf_fhrvtyp} ' \
-                         'does not exist'
-            sys.exit(error_msg)
+            print(f"WARNING: input mksrf_fhrvtyp file {mksrf_fhrvtyp} does not exist")
+            print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+            _must_run_download_input_data = True
         nlfile.write( f"  mksrf_fvegtyp = \'{mksrf_fvegtyp}\' \n")
         nlfile.write( f"  mksrf_fvegtyp_mesh = \'{mksrf_fvegtyp_mesh}\' \n")
         nlfile.write( f"  mksrf_fhrvtyp = \'{mksrf_fhrvtyp}\' \n")
@@ -632,6 +636,11 @@ def main ():
         nlfile.write(f"  gitdescribe = \'{gitdescribe}\' \n")
 
         nlfile.write("/ \n")
+
+    if _must_run_download_input_data:
+        temp_nlfname = 'surfdata.namelist'
+        os.rename(nlfname, temp_nlfname)
+        nlfname = temp_nlfname
 
     print (f"Successfully created input namelist file {nlfname}")
     sys.exit(0)
