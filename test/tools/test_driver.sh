@@ -55,6 +55,7 @@ module load ncl
 
 module load conda
 $CESMDATAROOT/manage_python_env
+conda activate ctsm_py
 
 
 ##omp threads
@@ -119,6 +120,7 @@ module load nco
 module load conda
 module load ncl
 $CESMDATAROOT/manage_python_env
+conda activate ctsm_py
 
 
 ##omp threads
@@ -219,6 +221,7 @@ module load tool/nco
 module load tool/netcdf
 module load lang/python
 $CESMDATAROOT/manage_python_env
+conda activate ctsm_py
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
@@ -301,6 +304,7 @@ module load tool/nco
 module load tool/netcdf
 module load lang/python
 $CESMDATAROOT/manage_python_env
+conda activate ctsm_py
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
