@@ -10,10 +10,10 @@ tools/modify_mesh_mask/modify_template.cfg
 
 Instructions
 ------------
-To run on Cheyenne/Casper
+To run on cheyenne/casper/izumi
 1) Activate the following environment:
-conda activate ctsm_py
-Use "deactivate" to reverse the latter.
+conda activate ctsm_py  # izumi: replace ctsm_py with ctsm
+(Use "deactivate" to reverse the latter.)
 2) Copy, then modify the configure file named modify_template.cfg, which
 contains all the arguments needed by the script.
 3) Run the script ./mesh_mask_modifier pointing to the copied/modified

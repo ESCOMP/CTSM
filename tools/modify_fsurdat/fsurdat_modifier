@@ -28,10 +28,9 @@ This wrapper script accesses
 
 Instructions
 ------------
-To run on Cheyenne/Casper
-1) Load the following to your local environment:
-module load python
-ncar_pylib
+To run on cheyenne/casper/izumi
+1) Activate the following environment:
+conda activate ctsm_py  # izumi: replace ctsm_py with ctsm
 (Use "deactivate" to reverse the latter.)
 2) Copy, then modify the configure file named modify_template.cfg, which
 contains all the arguments needed by the script.
