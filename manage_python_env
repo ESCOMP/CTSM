@@ -5,6 +5,10 @@
 # Simple bash script to setup the python environment for the user so they can run the CTSM
 # python tools using "conda".
 #
+dir=${0%/*}
+if [ "$dir" = "$0" ];then
+  dir="."
+fi
 
 # Check if conda is in your path
 conda --help >& condahelp.txt
@@ -22,7 +26,7 @@ rm condahelp.txt
 ctsm_python=ctsm_py
 
 
-condadir="python"
+condadir="$dir/python"
 
 domain=`domainname`
 if [[ $domain =~ cgd.* ]]; then
