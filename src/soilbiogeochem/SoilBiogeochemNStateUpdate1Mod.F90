@@ -13,7 +13,7 @@ module SoilBiogeochemNStateUpdate1Mod
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenfluxType     , only : soilbiogeochem_nitrogenflux_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use CNSharedParamsMod                  , only : use_fun
   use ColumnType                         , only : col 
   !
@@ -118,43 +118,49 @@ contains
       end if
 
       ! decomposition fluxes
-      do k = 1, ndecomp_cascade_transitions
-         do j = 1, nlevdecomp
-            ! column loop
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-
-               nf%decomp_npools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
-                    nf%decomp_npools_sourcesink_col(c,j,cascade_donor_pool(k)) - &
-                    nf%decomp_cascade_ntransfer_vr_col(c,j,k) * dt
-            end do
-         end do
-      end do
-      do k = 1, ndecomp_cascade_transitions
-         if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
+      if (.not. use_soil_matrixcn) then
+         do k = 1, ndecomp_cascade_transitions
             do j = 1, nlevdecomp
                ! column loop
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
 
-                  nf%decomp_npools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
-                       nf%decomp_npools_sourcesink_col(c,j,cascade_receiver_pool(k)) + &
-                       (nf%decomp_cascade_ntransfer_vr_col(c,j,k) + &
-                        nf%decomp_cascade_sminn_flux_vr_col(c,j,k)) * dt
-               end do
-            end do
-         else  ! terminal transitions
-            do j = 1, nlevdecomp
-               ! column loop
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
                   nf%decomp_npools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
                        nf%decomp_npools_sourcesink_col(c,j,cascade_donor_pool(k)) - &
-                       nf%decomp_cascade_sminn_flux_vr_col(c,j,k) * dt
+                       nf%decomp_cascade_ntransfer_vr_col(c,j,k) * dt
                end do
             end do
-         end if
-      end do
+         end do
+
+
+         do k = 1, ndecomp_cascade_transitions
+            if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
+               do j = 1, nlevdecomp
+                  ! column loop
+                  do fc = 1,num_soilc
+                     c = filter_soilc(fc)
+
+                     nf%decomp_npools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
+                          nf%decomp_npools_sourcesink_col(c,j,cascade_receiver_pool(k)) + &
+                          (nf%decomp_cascade_ntransfer_vr_col(c,j,k) + &
+                           nf%decomp_cascade_sminn_flux_vr_col(c,j,k)) * dt
+                  end do
+               end do
+            else  ! terminal transitions
+               do j = 1, nlevdecomp
+                  ! column loop
+                  do fc = 1,num_soilc
+                     c = filter_soilc(fc)
+                     nf%decomp_npools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
+                          nf%decomp_npools_sourcesink_col(c,j,cascade_donor_pool(k)) - &
+                          nf%decomp_cascade_sminn_flux_vr_col(c,j,k) * dt
+                  end do
+               end do
+            end if
+         end do
+      else
+         ! Matrix solution equvalent to above is in CNSoilMatrixMod.F90? (TODO check on this)
+      end if  ! 
 
       if (.not. use_nitrif_denitrif) then
 

@@ -5,9 +5,10 @@ module CNVegNitrogenFluxType
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, i_litr_min, i_litr_max
+  use clm_varpar                         , only : nvegnpool
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use clm_varctl                         , only : use_nitrif_denitrif, use_crop
-  use CNSharedParamsMod                  , only : use_fun
+  use CNSharedParamsMod                  , only : use_fun, use_matrixcn
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
@@ -16,6 +17,7 @@ module CNVegNitrogenFluxType
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -236,7 +238,9 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: cost_nfix_patch                           (:)     ! Average cost of fixation          (gN/m2/s)
      real(r8), pointer :: cost_nactive_patch                        (:)     ! Average cost of active uptake     (gN/m2/s)
      real(r8), pointer :: cost_nretrans_patch                       (:)     ! Average cost of retranslocation   (gN/m2/s)
-     real(r8), pointer :: nuptake_npp_fraction_patch                (:)    ! frac of npp spent on N acquisition   (gN/m2/s)
+     real(r8), pointer :: nuptake_npp_fraction_patch                (:)     ! frac of npp spent on N acquisition   (gN/m2/s)
+
+     ! Matrix solution variables
 
    contains
 
@@ -246,6 +250,7 @@ module CNVegNitrogenFluxType
      procedure , public  :: ZeroDWT
      procedure , public  :: Summary => Summary_nitrogenflux
      procedure , private :: InitAllocate 
+     procedure , private :: InitTransfer
      procedure , private :: InitHistory
      procedure , private :: InitCold
 
@@ -261,10 +266,29 @@ contains
     type(bounds_type), intent(in) :: bounds  
 
     call this%InitAllocate (bounds)
+    if(use_matrixcn)then
+       call this%InitTransfer ()
+    end if
     call this%InitHistory (bounds)
     call this%InitCold (bounds)
 
   end subroutine Init
+
+  subroutine InitTransfer (this)
+    !
+    ! !DESCRIPTION:
+    ! Initialize the transfer indices for the matrix solution method
+    !
+    ! !AGRUMENTS:
+    class (cnveg_nitrogenflux_type) :: this
+
+    ! General indices
+    if(.not. use_crop)then
+    ! Indices for crop
+    else
+    end if
+   
+  end subroutine InitTransfer
 
   !------------------------------------------------------------------------
   subroutine InitAllocate(this, bounds)
@@ -504,6 +528,10 @@ contains
     allocate(this%cost_nactive_patch           (begp:endp)) ;    this%cost_nactive_patch         (:) = nan
     allocate(this%cost_nretrans_patch          (begp:endp)) ;    this%cost_nretrans_patch        (:) = nan
     allocate(this%nuptake_npp_fraction_patch   (begp:endp)) ;    this%nuptake_npp_fraction_patch            (:) = nan
+
+    ! Allocate for matrix solution arrays
+    if ( use_matrixcn )then
+    end if
 
   end subroutine InitAllocate
 
@@ -1059,6 +1087,10 @@ contains
     call hist_addfld1d (fname='PLANT_NALLOC', units='gN/m^2/s', &
          avgflag='A', long_name='total allocated N flux', &
          ptr_patch=this%plant_nalloc_patch, default='inactive')
+
+    ! Matrix solution history variables
+    if ( use_matrixcn )then
+    end if
     
     if ( use_fun ) then
        this%Nactive_patch(begp:endp)  = spval
@@ -1291,7 +1323,7 @@ contains
 
     ! initialize fields for special filters
 
-    call this%SetValues (&
+    call this%SetValues (nvegnpool=nvegnpool, &
          num_patch=num_special_patch, filter_patch=special_patch, value_patch=0._r8, &
          num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
@@ -1428,7 +1460,7 @@ contains
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nactive_patch) 
         call set_missing_vals_to_constant(this%Nactive_patch, 0._r8)
-!    
+
         call restartvar(ncid=ncid, flag=flag, varname='Nnonmyc', xtype=ncd_double,       &
              dim1name='pft', &
              long_name='', units='', &
@@ -1496,7 +1528,7 @@ contains
                 interpinic_flag='interp', readvar=readvar, data=this%Necm_nh4_patch)
            call set_missing_vals_to_constant(this%Necm_nh4_patch, 0._r8)
         end if
-!
+
         call restartvar(ncid=ncid, flag=flag, varname='Npassive', xtype=ncd_double,      &
              dim1name='pft', &
              long_name='', units='', &
@@ -1544,7 +1576,7 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
-  subroutine SetValues ( this, &
+  subroutine SetValues ( this, nvegnpool, &
        num_patch, filter_patch, value_patch, &
        num_column, filter_column, value_column)
     !
@@ -1555,6 +1587,7 @@ contains
     ! !ARGUMENTS:
     class (cnveg_nitrogenflux_type) :: this
     integer , intent(in) :: num_patch
+    integer , intent(in) :: nvegnpool
     integer , intent(in) :: filter_patch(:)
     real(r8), intent(in) :: value_patch
     integer , intent(in) :: num_column
@@ -1762,6 +1795,11 @@ contains
           this%m_decomp_npools_to_fire_col(i,k) = value_column
        end do
     end do
+
+    ! Matrix solution
+    if ( use_matrixcn )then
+    end if
+
 
     do k = 1, ndecomp_pools
        do j = 1, nlevdecomp_full

@@ -1,4 +1,150 @@
 ===============================================================
+Tag name: ctsm5.1.dev100
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Jul  5 17:40:21 MDT 2022
+One-line Summary: Start bringing in matrixcn overall options and sparse matrix multiplier code, misc updates
+
+Purpose and description of changes
+----------------------------------
+
+First Commit of CN Matrix Solution:
+Start bringing in the use_matrixcn and use_soil_matrixcn control options for the Carbon/Nitrogen BGC model using
+the matrix solution methodology developed by Dr. Yiqi Luo and his EcoLab members: Drs. Xingjie Lu, 
+Yuanyuan Huang and Zhengguang Du, at Northern Arizona University
+
+Work on Anomaly forcing for SSEP scenarios:
+Do some work on anomoly forcing for SSP scenarios. Update the script in tools/contrib to work with the latest
+data and replicate results of Keith Oleson and Sean Swenson. Add some test cases for it.
+
+Python Environment Management using Conda:
+More work on the manage_python_env script to setup the "ctsm_py" conda environment. This now works for UCAR machines
+(such as cheyenne and casper) as well as CGD machines (like izumi). This script can also be called for tools, and
+the test tools mechanism is now using it rather than ncar_pylib.
+
+./manage_python_env
+
+SCAM Fix:
+Add checkimport method for CMEPS so that single-column case can work with SCAM, from Jim Edwards.
+
+Black Formatter for Python Code:
+Run "black" python code reformatter on all code under the "python" directory. Add the commits
+to .git-blame-ignore-revs so they can be ignored when "git blame" is used, if you add this
+to each clone where you want this to apply:
+
+   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+You can do it for your worktrees, but since the file only applies to CTSM for ctsm5.1.dev100 and
+forward, you'll need to do it for each CTSM clone seperately. Also there is now a github action
+that checks that python code under the "python" subdirectory is black clean. If it's not the action
+will fail and send you an email about it.
+
+Make Map Data Fix:
+Simple fix from Sam Rabin.
+
+Fix for DISPLA on History Output:
+Fix from Keith Oleson to set history output for DISPLA (displa_patch) to zero when vegetation is buried by snow.
+
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #1300 -- Update Anomaly forcing data and contrib scrip
+   Fixes #1396 -- Add test for Anomaly forcing and rename test for bias correction
+   Fixes #987 -- Anomaly Forcings
+   Fixes #1795 -- SMS_D.f45_f45_mg37.I2000Clm50FatesRs.cheyenne_gnu.clm-FatesColdDefDryDep fails in ctsm5.1.dev099
+   Fixes #1755 -- Handle python environments for CTSM tools
+   Fixes #1471 -- Add support for using "black" as a python formatter to our python coding process
+   Handles #1794 -- conda environment on CGD systems currently limits python versions to 3.7.0
+   Some work on #1796 for deprecation of ncar_pylib. Remove it's use in tools testing and in some documentation.
+   Some work on #1580 to add a file with the latest conda environment that will work
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   There is the introduction of lots of if statements for use_matrixcn and use_soil_matrixcn.
+   These if statements are added, but they are hardcoded off, so inactive. In some cases the
+   if statements could be reduced with some work, but maintaing both versions will be important
+   until that does happen. These statements need to be kept in the code, as well as a few places
+   where variables that will be needed for the Matrix solution code are added in, even though
+   they aren't needed in this version.
+
+   Some development was done on the tools/contrib/ssp_anomaly_forcing_smooth script, but the guts should
+   be moved over to the python directory, and the top level script moved outside of the contrib directory.
+
+Changes to tests or testing:
+   Change name of bias-correction test
+   Add new tests for anomaly forcing for SSP cases
+   Remove Fates-Drydep test that is a known fail
+
+Testing summary:    regular tools
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+    izumi ---- OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No, bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  Start bringing in matrixcn overall options and sparse matrix multiplier code #1771
+  add checkimport to clm for scam case #1770
+  Apply black to python directory #1577
+  Fix missing hostname/CSMDATA in mkmapdata.sh #1765
+  Fix issue #1569 (History output for DISPLA is incorrect when vegetation is buried by snow) #1570
+  Fix issues #1769, #1607, #1389 in master documentation #1779
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev099
 Originator(s): rgknox (Ryan Knox)
 Date: Tue Jun 21 03:20:42 PM EDT 2022
