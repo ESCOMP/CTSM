@@ -13,9 +13,14 @@ a python environment. Comments in the file tell how to do this.
 You can also use the script in the top level directory to do
 all the conda commands and do this for you.
 
- cd ..
- ./manage_python_env
+ ../manage_python_env
  conda activate ctsm_py
+
+Conda requirements files:
+
+conda_env_ctsm_py.txt --------- Standard conda environment to use for most machines
+conda_env_ctsm_py_cgd.txt ----- Standard conda environment for CGD machines
+conda_env_ctsm_py_latest.txt -- Test environment with latest versions that work
 
 ## Unit and system tests
 
