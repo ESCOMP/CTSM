@@ -159,6 +159,8 @@ contains
             ! Each of these MUST correspond to the code above. Any changes in
             ! code above need to apply here as well
          end if
+         ! Some fields like cpool, and xsmrpool above, and the gresp and
+         ! pft_ctrunc fields are handled the same for both matrix on and off
          gresp_storage(p)      = gresp_storage(p)       * (1._r8 - decay_const * dt)
          gresp_xfer(p)         = gresp_xfer(p)          * (1._r8 - decay_const * dt)
          pft_ctrunc(p)         = pft_ctrunc(p)          * (1._r8 - decay_const * dt)

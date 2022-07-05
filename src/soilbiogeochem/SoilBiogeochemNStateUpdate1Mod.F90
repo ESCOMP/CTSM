@@ -158,6 +158,8 @@ contains
                end do
             end if
          end do
+      else
+         ! Matrix solution equvalent to above is in CNSoilMatrixMod.F90? (TODO check on this)
       end if  ! 
 
       if (.not. use_nitrif_denitrif) then

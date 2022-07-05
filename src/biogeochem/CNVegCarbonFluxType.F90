@@ -4616,18 +4616,16 @@ contains
 
 
     ! vertically integrate column-level carbon fire losses
-!    if(.not. use_soil_matrixcn)then
-       do l = 1, ndecomp_pools
-          do j = 1,nlevdecomp
-             do fc = 1,num_soilc
-                c = filter_soilc(fc)
-                this%m_decomp_cpools_to_fire_col(c,l) = &
-                     this%m_decomp_cpools_to_fire_col(c,l) + &
-                     this%m_decomp_cpools_to_fire_vr_col(c,j,l)*dzsoi_decomp(j)
-             end do
+    do l = 1, ndecomp_pools
+       do j = 1,nlevdecomp
+          do fc = 1,num_soilc
+             c = filter_soilc(fc)
+             this%m_decomp_cpools_to_fire_col(c,l) = &
+                  this%m_decomp_cpools_to_fire_col(c,l) + &
+                  this%m_decomp_cpools_to_fire_vr_col(c,j,l)*dzsoi_decomp(j)
           end do
        end do
-!    end if !not use_soil_matrixcn
+    end do
 
     do fc = 1,num_soilc
        c = filter_soilc(fc)

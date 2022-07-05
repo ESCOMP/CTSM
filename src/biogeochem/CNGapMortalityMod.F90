@@ -123,7 +123,7 @@ contains
     real(r8):: m                ! rate for fractional mortality (1/s)
     real(r8):: mort_max         ! asymptotic max mortality rate (/yr)
     real(r8):: k_mort = 0.3_r8  ! coeff of growth efficiency in mortality equation
-    logical,parameter :: matrixcheck_gm = .False. ! If matrix check shoudl be done
+    logical,parameter :: matrixcheck_gm = .False. ! If matrix check should be done
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
@@ -191,20 +191,16 @@ contains
          ! patch-level gap mortality carbon fluxes
          !------------------------------------------------------
 
-         ! displayed pools
          if(.not. use_matrixcn)then
+            ! displayed pools
             cnveg_carbonflux_inst%m_leafc_to_litter_patch(p)               = cnveg_carbonstate_inst%leafc_patch(p)               * m
             cnveg_carbonflux_inst%m_frootc_to_litter_patch(p)              = cnveg_carbonstate_inst%frootc_patch(p)              * m
             cnveg_carbonflux_inst%m_livestemc_to_litter_patch(p)           = cnveg_carbonstate_inst%livestemc_patch(p)           * m
             cnveg_carbonflux_inst%m_livecrootc_to_litter_patch(p)          = cnveg_carbonstate_inst%livecrootc_patch(p)          * m
-         end if
-         if(.not. use_matrixcn)then
-            cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)  * m * spinup_factor_deadwood
-            cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p) * m * spinup_factor_deadwood
-         end if !use_matrixcn
+            cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)           = cnveg_carbonstate_inst%deadstemc_patch(p)  * m * spinup_factor_deadwood
+            cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)          = cnveg_carbonstate_inst%deadcrootc_patch(p) * m * spinup_factor_deadwood
 
-         ! storage pools
-         if(.not. use_matrixcn)then
+            ! storage pools
             cnveg_carbonflux_inst%m_leafc_storage_to_litter_patch(p)       = cnveg_carbonstate_inst%leafc_storage_patch(p)       * m
             cnveg_carbonflux_inst%m_frootc_storage_to_litter_patch(p)      = cnveg_carbonstate_inst%frootc_storage_patch(p)      * m
             cnveg_carbonflux_inst%m_livestemc_storage_to_litter_patch(p)   = cnveg_carbonstate_inst%livestemc_storage_patch(p)   * m
@@ -213,7 +209,7 @@ contains
             cnveg_carbonflux_inst%m_deadcrootc_storage_to_litter_patch(p)  = cnveg_carbonstate_inst%deadcrootc_storage_patch(p)  * m
             cnveg_carbonflux_inst%m_gresp_storage_to_litter_patch(p)       = cnveg_carbonstate_inst%gresp_storage_patch(p)       * m
          
-         ! transfer pools
+            ! transfer pools
             cnveg_carbonflux_inst%m_leafc_xfer_to_litter_patch(p)          = cnveg_carbonstate_inst%leafc_xfer_patch(p)          * m
             cnveg_carbonflux_inst%m_frootc_xfer_to_litter_patch(p)         = cnveg_carbonstate_inst%frootc_xfer_patch(p)         * m
             cnveg_carbonflux_inst%m_livestemc_xfer_to_litter_patch(p)      = cnveg_carbonstate_inst%livestemc_xfer_patch(p)      * m
@@ -222,7 +218,11 @@ contains
             cnveg_carbonflux_inst%m_deadcrootc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%deadcrootc_xfer_patch(p)     * m
             cnveg_carbonflux_inst%m_gresp_xfer_to_litter_patch(p)          = cnveg_carbonstate_inst%gresp_xfer_patch(p)          * m
          else
-            ! NOTE: The non-matrix version of this is in CNCStateUpdate2Mod CStateUpdate2 (EBK 11/25/2019)
+            ! For the matrix solution the same mortality gets applied, but it may be limited by the matrix solution
+            ! This could be unified, by not limiting matrix_update_gmc when use_matrixcn is true
+            ! displayed pools
+            ! storage pools
+            ! transfer pools
          end if !use_matrixcn
 
          !------------------------------------------------------
@@ -235,28 +235,40 @@ contains
             cnveg_nitrogenflux_inst%m_frootn_to_litter_patch(p)           = cnveg_nitrogenstate_inst%frootn_patch(p)              * m
             cnveg_nitrogenflux_inst%m_livestemn_to_litter_patch(p)        = cnveg_nitrogenstate_inst%livestemn_patch(p)           * m
             cnveg_nitrogenflux_inst%m_livecrootn_to_litter_patch(p)       = cnveg_nitrogenstate_inst%livecrootn_patch(p)          * m
+         else
+            ! For the matrix solution the same mortality gets applied, but it may be limited by the matrix solution
+            ! This could be unified, by not limiting matrix_update_gmn when use_matrixcn is true
          end if
 
          if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
             if(.not. use_matrixcn)then
                cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * m * spinup_factor_deadwood
                cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)    = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * m * spinup_factor_deadwood
+            else
+               ! For the matrix solution the same mortality gets applied, but it may be limited by the matrix solution
+               ! This could be unified, by not limiting matrix_update_gmn when use_matrixcn is true
             end if !.not. use_matrixcn
          else
             if (.not. use_matrixcn) then
                cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadstemn_patch(p)           * m 
                cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)    = cnveg_nitrogenstate_inst%deadcrootn_patch(p)          * m 
+            else
+               ! For the matrix solution the same mortality gets applied, but it may be limited by the matrix solution
+               ! This could be unified, by not limiting matrix_update_gmn when use_matrixcn is true
             end if !use_matrixcn
          end if
 
          if (ivt(p) < npcropmin) then
             if(.not. use_matrixcn)then
                cnveg_nitrogenflux_inst%m_retransn_to_litter_patch(p) = cnveg_nitrogenstate_inst%retransn_patch(p) * m
+            else
+               ! For the matrix solution the same mortality gets applied, but it may be limited by the matrix solution
+               ! This could be unified, by not limiting matrix_update_gmn when use_matrixcn is true
             end if
          end if
             
          if(.not. use_matrixcn)then
-         ! storage pools
+            ! storage pools
             cnveg_nitrogenflux_inst%m_leafn_storage_to_litter_patch(p)       = cnveg_nitrogenstate_inst%leafn_storage_patch(p)      * m
             cnveg_nitrogenflux_inst%m_frootn_storage_to_litter_patch(p)      = cnveg_nitrogenstate_inst%frootn_storage_patch(p)     * m
             cnveg_nitrogenflux_inst%m_livestemn_storage_to_litter_patch(p)   = cnveg_nitrogenstate_inst%livestemn_storage_patch(p)  * m
@@ -264,13 +276,18 @@ contains
             cnveg_nitrogenflux_inst%m_livecrootn_storage_to_litter_patch(p)  = cnveg_nitrogenstate_inst%livecrootn_storage_patch(p) * m
             cnveg_nitrogenflux_inst%m_deadcrootn_storage_to_litter_patch(p)  = cnveg_nitrogenstate_inst%deadcrootn_storage_patch(p) * m
 
-         ! transfer pools
+            ! transfer pools
             cnveg_nitrogenflux_inst%m_leafn_xfer_to_litter_patch(p)          = cnveg_nitrogenstate_inst%leafn_xfer_patch(p)         * m
             cnveg_nitrogenflux_inst%m_frootn_xfer_to_litter_patch(p)         = cnveg_nitrogenstate_inst%frootn_xfer_patch(p)        * m
             cnveg_nitrogenflux_inst%m_livestemn_xfer_to_litter_patch(p)      = cnveg_nitrogenstate_inst%livestemn_xfer_patch(p)     * m
             cnveg_nitrogenflux_inst%m_deadstemn_xfer_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_xfer_patch(p)     * m
             cnveg_nitrogenflux_inst%m_livecrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%livecrootn_xfer_patch(p)    * m
             cnveg_nitrogenflux_inst%m_deadcrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_xfer_patch(p)    * m
+         else
+            ! For the matrix solution the same mortality gets applied, but it may be limited by the matrix solution
+            ! This could be unified, by not limiting matrix_update_gmn when use_matrixcn is true
+            ! storage pools
+            ! transfer pools
          end if !use_matrixcn
 
          ! added by F. Li and S. Levis
