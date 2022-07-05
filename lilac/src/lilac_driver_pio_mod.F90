@@ -1,9 +1,9 @@
-module lilac_init_pio_mod
+module lilac_driver_pio_mod
 
   ! As of 2022-07-05, this file is identical to
-  ! components/cpl7/driver/main/init_pio_mod.F90, except (1) the module name has been
-  ! changed to lilac_init_pio_mod (rather than init_pio_mod), (2) all init_pio_* routines
-  ! have been renamed to lilac_init_pio_*, and (3) this description comment has been
+  ! components/cpl7/driver/main/driver_pio_mod.F90, except (1) the module name has been
+  ! changed to lilac_driver_pio_mod (rather than driver_pio_mod), (2) all driver_pio_* routines
+  ! have been renamed to lilac_driver_pio_*, and (3) this description comment has been
   ! added.
 
   use pio
@@ -21,9 +21,9 @@ module lilac_init_pio_mod
 #include <mpif.h>
 #endif
   private
-  public :: lilac_init_pio_init1
-  public :: lilac_init_pio_init2
-  public :: lilac_init_pio_finalize
+  public :: lilac_driver_pio_init1
+  public :: lilac_driver_pio_init2
+  public :: lilac_driver_pio_finalize
 
   integer :: io_comm
   logical :: pio_async_interface
@@ -53,7 +53,7 @@ contains
 !! Global_Comm and sets module variable io_comm.
 !!
 !<
-  subroutine lilac_init_pio_init1(ncomps, nlfilename, Global_Comm)
+  subroutine lilac_driver_pio_init1(ncomps, nlfilename, Global_Comm)
     integer, intent(in) :: ncomps
     character(len=*) :: nlfilename
     integer, intent(inout) :: Global_Comm
@@ -61,13 +61,13 @@ contains
 
     integer :: i, pio_root, pio_stride, pio_numiotasks, pio_iotype, pio_rearranger, pio_netcdf_ioformat
     integer :: mpigrp_world, mpigrp, ierr, mpicom
-    character(*),parameter :: subName =   '(lilac_init_pio_init1) '
+    character(*),parameter :: subName =   '(lilac_driver_pio_init1) '
     integer :: pelist(3,1)
 
     integer, allocatable :: comp_comm(:)
     type(iosystem_desc_t), allocatable :: iosystems(:)
 
-    call lilac_init_pio_read_default_namelist(nlfilename, Global_Comm, pio_stride, pio_root, pio_numiotasks, &
+    call lilac_driver_pio_read_default_namelist(nlfilename, Global_Comm, pio_stride, pio_root, pio_numiotasks, &
          pio_iotype, pio_async_interface, pio_rearranger)
 
     pio_netcdf_ioformat = PIO_64BIT_OFFSET
@@ -123,7 +123,7 @@ contains
 #endif
     end if
     total_comps = ncomps
-  end subroutine lilac_init_pio_init1
+  end subroutine lilac_driver_pio_init1
 !>
 !! @public
 !! @brief if pio_async_interface is true, tasks in io_comm do not return from this subroutine.
@@ -135,7 +135,7 @@ contains
 !<
 
 
-  subroutine lilac_init_pio_init2(comp_id, comp_name, comp_iamin, comp_comm, comp_comm_iam)
+  subroutine lilac_driver_pio_init2(comp_id, comp_name, comp_iamin, comp_comm, comp_comm_iam)
     use shr_string_mod, only : shr_string_toLower
     integer, intent(in) :: comp_id(:)
     logical, intent(in) :: comp_iamin(:)
@@ -144,7 +144,7 @@ contains
     integer :: i
     character(len=shr_kind_cl) :: nlfilename, cname
     integer :: ret
-    character(*), parameter :: subName = '(lilac_init_pio_init2) '
+    character(*), parameter :: subName = '(lilac_driver_pio_init2) '
 
     ! 0 is a valid value of pio_buffer_size_limit
     if(pio_buffer_size_limit>=0) then
@@ -189,7 +189,7 @@ contains
                 nlfilename=trim(shr_string_toLower(cname(1:3)))//'_modelio.nml_'//cname(4:8)
              endif
 
-             call lilac_init_pio_read_component_namelist(nlfilename , comp_comm(i), pio_comp_settings(i)%pio_stride, &
+             call lilac_driver_pio_read_component_namelist(nlfilename , comp_comm(i), pio_comp_settings(i)%pio_stride, &
                   pio_comp_settings(i)%pio_root, pio_comp_settings(i)%pio_numiotasks, &
                   pio_comp_settings(i)%pio_iotype, pio_comp_settings(i)%pio_rearranger, &
                   pio_comp_settings(i)%pio_netcdf_ioformat)
@@ -225,23 +225,23 @@ contains
        end if
     enddo
 
-  end subroutine lilac_init_pio_init2
+  end subroutine lilac_driver_pio_init2
 
 !===============================================================================
-  subroutine lilac_init_pio_finalize(  )
+  subroutine lilac_driver_pio_finalize(  )
     integer :: ierr
     integer :: i
     do i=1,total_comps
        call pio_finalize(iosystems(i), ierr)
     end do
 
-  end subroutine lilac_init_pio_finalize
+  end subroutine lilac_driver_pio_finalize
 
 !===============================================================================
 
 
 
-  subroutine lilac_init_pio_read_default_namelist(nlfilename, Comm, pio_stride, pio_root, pio_numiotasks, &
+  subroutine lilac_driver_pio_read_default_namelist(nlfilename, Comm, pio_stride, pio_root, pio_numiotasks, &
        pio_iotype, pio_async_interface, pio_rearranger)
 
     character(len=*), intent(in) :: nlfilename
@@ -256,7 +256,7 @@ contains
     logical :: pio_rearr_comm_enable_hs_comp2io, pio_rearr_comm_enable_isend_comp2io
     integer :: pio_rearr_comm_max_pend_req_io2comp
     logical :: pio_rearr_comm_enable_hs_io2comp, pio_rearr_comm_enable_isend_io2comp
-    character(*),parameter :: subName =   '(lilac_init_pio_read_default_namelist) '
+    character(*),parameter :: subName =   '(lilac_driver_pio_read_default_namelist) '
 
     integer :: iam, ierr, npes, unitn
     logical :: iamroot
@@ -320,11 +320,11 @@ contains
           close(unitn)
           call shr_file_freeUnit( unitn )
 
-          call lilac_init_pio_getiotypefromname(pio_typename, pio_iotype, pio_iotype_netcdf)
+          call lilac_driver_pio_getiotypefromname(pio_typename, pio_iotype, pio_iotype_netcdf)
        end if
     end if
 
-     call lilac_init_pio_namelist_set(npes, Comm, pio_stride, pio_root, pio_numiotasks, pio_iotype, &
+     call lilac_driver_pio_namelist_set(npes, Comm, pio_stride, pio_root, pio_numiotasks, pio_iotype, &
           iamroot, pio_rearranger, pio_netcdf_ioformat)
     call shr_mpi_bcast(pio_debug_level, Comm)
     call shr_mpi_bcast(pio_root, Comm)
@@ -340,15 +340,15 @@ contains
     endif
 
 
-    call lilac_init_pio_rearr_opts_set(Comm, pio_rearr_comm_type, pio_rearr_comm_fcd, &
+    call lilac_driver_pio_rearr_opts_set(Comm, pio_rearr_comm_type, pio_rearr_comm_fcd, &
          pio_rearr_comm_max_pend_req_comp2io, pio_rearr_comm_enable_hs_comp2io, &
          pio_rearr_comm_enable_isend_comp2io, &
          pio_rearr_comm_max_pend_req_io2comp, pio_rearr_comm_enable_hs_io2comp, &
          pio_rearr_comm_enable_isend_io2comp, pio_numiotasks)
 
-  end subroutine lilac_init_pio_read_default_namelist
+  end subroutine lilac_driver_pio_read_default_namelist
 
-  subroutine lilac_init_pio_read_component_namelist(nlfilename, Comm, pio_stride, pio_root, &
+  subroutine lilac_driver_pio_read_component_namelist(nlfilename, Comm, pio_stride, pio_root, &
        pio_numiotasks, pio_iotype, pio_rearranger, pio_netcdf_ioformat)
     character(len=*), intent(in) :: nlfilename
     integer, intent(in) :: Comm
@@ -361,7 +361,7 @@ contains
 
     integer :: iam, ierr, npes
     logical :: iamroot
-    character(*),parameter :: subName =   '(lilac_init_pio_read_component_namelist) '
+    character(*),parameter :: subName =   '(lilac_driver_pio_read_component_namelist) '
     integer :: pio_default_stride, pio_default_root, pio_default_numiotasks, pio_default_iotype
     integer :: pio_default_rearranger, pio_default_netcdf_ioformat
 
@@ -421,8 +421,8 @@ contains
           close(unitn)
           call shr_file_freeUnit( unitn )
 
-          call lilac_init_pio_getiotypefromname(pio_typename, pio_iotype, pio_default_iotype)
-          call lilac_init_pio_getioformatfromname(pio_netcdf_format, pio_netcdf_ioformat, pio_default_netcdf_ioformat)
+          call lilac_driver_pio_getiotypefromname(pio_typename, pio_iotype, pio_default_iotype)
+          call lilac_driver_pio_getioformatfromname(pio_netcdf_format, pio_netcdf_ioformat, pio_default_netcdf_ioformat)
        end if
        if(pio_stride== -99) then
           if (pio_numiotasks > 0) then
@@ -440,13 +440,13 @@ contains
 
 
 
-    call lilac_init_pio_namelist_set(npes, Comm, pio_stride, pio_root, pio_numiotasks, pio_iotype, &
+    call lilac_driver_pio_namelist_set(npes, Comm, pio_stride, pio_root, pio_numiotasks, pio_iotype, &
          iamroot, pio_rearranger, pio_netcdf_ioformat)
 
 
-  end subroutine lilac_init_pio_read_component_namelist
+  end subroutine lilac_driver_pio_read_component_namelist
 
-  subroutine lilac_init_pio_getioformatfromname(pio_netcdf_format, pio_netcdf_ioformat, pio_default_netcdf_ioformat)
+  subroutine lilac_driver_pio_getioformatfromname(pio_netcdf_format, pio_netcdf_ioformat, pio_default_netcdf_ioformat)
     use shr_string_mod, only : shr_string_toupper
     character(len=*), intent(inout) :: pio_netcdf_format
     integer, intent(out) :: pio_netcdf_ioformat
@@ -463,10 +463,10 @@ contains
        pio_netcdf_ioformat = pio_default_netcdf_ioformat
     endif
 
-  end subroutine lilac_init_pio_getioformatfromname
+  end subroutine lilac_driver_pio_getioformatfromname
 
 
-  subroutine lilac_init_pio_getiotypefromname(typename, iotype, defaulttype)
+  subroutine lilac_driver_pio_getiotypefromname(typename, iotype, defaulttype)
     use shr_string_mod, only : shr_string_toupper
     character(len=*), intent(inout) :: typename
     integer, intent(out) :: iotype
@@ -486,20 +486,20 @@ contains
     else if ( typename .eq. 'DEFAULT') then
        iotype = defaulttype
     else
-       write(shr_log_unit,*) 'lilac_init_pio_mod: WARNING Bad io_type argument - using iotype_netcdf'
+       write(shr_log_unit,*) 'lilac_driver_pio_mod: WARNING Bad io_type argument - using iotype_netcdf'
        iotype=pio_iotype_netcdf
     end if
 
-  end subroutine lilac_init_pio_getiotypefromname
+  end subroutine lilac_driver_pio_getiotypefromname
 
 !===============================================================================
-  subroutine lilac_init_pio_namelist_set(npes,mycomm, pio_stride, pio_root, pio_numiotasks, &
+  subroutine lilac_driver_pio_namelist_set(npes,mycomm, pio_stride, pio_root, pio_numiotasks, &
        pio_iotype, iamroot, pio_rearranger, pio_netcdf_ioformat)
     integer, intent(in) :: npes, mycomm
     integer, intent(inout) :: pio_stride, pio_root, pio_numiotasks
     integer, intent(inout) :: pio_iotype, pio_rearranger, pio_netcdf_ioformat
     logical, intent(in) :: iamroot
-    character(*),parameter :: subName =   '(lilac_init_pio_namelist_set) '
+    character(*),parameter :: subName =   '(lilac_driver_pio_namelist_set) '
 
     call shr_mpi_bcast(pio_iotype  , mycomm)
     call shr_mpi_bcast(pio_stride  , mycomm)
@@ -568,13 +568,13 @@ contains
        end if
     end if
 
-  end subroutine lilac_init_pio_namelist_set
+  end subroutine lilac_driver_pio_namelist_set
 
   ! This subroutine sets the global PIO rearranger options
   ! The input args that represent the rearranger options are valid only
   ! on the root proc of comm
-  ! The rearranger options are passed to PIO_Init() in lilac_init_pio_init2()
-  subroutine lilac_init_pio_rearr_opts_set(comm, pio_rearr_comm_type, pio_rearr_comm_fcd, &
+  ! The rearranger options are passed to PIO_Init() in lilac_driver_pio_init2()
+  subroutine lilac_driver_pio_rearr_opts_set(comm, pio_rearr_comm_type, pio_rearr_comm_fcd, &
           pio_rearr_comm_max_pend_req_comp2io, pio_rearr_comm_enable_hs_comp2io, &
           pio_rearr_comm_enable_isend_comp2io, &
           pio_rearr_comm_max_pend_req_io2comp, pio_rearr_comm_enable_hs_io2comp, &
@@ -590,7 +590,7 @@ contains
     logical, intent(in) :: pio_rearr_comm_enable_isend_io2comp
     integer, intent(in) :: pio_numiotasks
 
-    character(*), parameter :: subname = '(lilac_init_pio_rearr_opts_set) '
+    character(*), parameter :: subname = '(lilac_driver_pio_rearr_opts_set) '
     integer, parameter :: NUM_REARR_COMM_OPTS = 8
     integer, parameter :: PIO_REARR_COMM_DEF_MAX_PEND_REQ = 64
     ! Automatically reset if the number of maximum pending requests is set to 0
@@ -771,4 +771,4 @@ contains
   end subroutine
 !===============================================================================
 
-end module lilac_init_pio_mod
+end module lilac_driver_pio_mod
