@@ -67,11 +67,12 @@ def get_parser():
         help="""
             model resolution [default: %(default)s]
             To see available supported resolutions, simply invoke this command
-            with a --res unknown option
+            with a --res unknown option. For custom resolutions, provide a grid
+            name of your choosing to be used in the name of the fsurdat file.
             """,
         action="store",
         dest="res",
-        required=False,
+        required=True,
         default="4x5",
     )
     parser.add_argument(
@@ -305,8 +306,6 @@ def main ():
                         '--model-mesh-nx x --model-mesh-ny must equal ' \
                         'exactly elementCount in --model-mesh'
             sys.exit(error_msg)
-        else:
-            res = f'{force_model_mesh_nx}x{force_model_mesh_ny}'
 
     hostname = os.getenv("HOSTNAME")
     logname = os.getenv("LOGNAME")
@@ -469,9 +468,19 @@ def main ():
         for child1 in root:  # this is domain tag
             for _, value in child1.attrib.items():
                 valid_grids.append(value)
-        error_msg = f'ERROR: invalid input res {res};' \
-                    f'valid grid values are {valid_grids}'
-        sys.exit(error_msg)
+        if res in valid_grids:
+            error_msg = 'ERROR: You have requested a valid grid for which ' \
+        '../../ccs_config/component_grids_nuopc.xml does not include a mesh ' \
+        'file. For a regular regional or 1x1 grid, you may generate the ' \
+        'fsurdat file using the subset_data tool instead. Alternatively ' \
+        'and definitely for curvilinear grids, you may generate ' \
+        'a mesh file using the workflow currently (2022/7/6) described in ' \
+        'https://github.com/ESCOMP/CTSM/issues/1773#issuecomment-1163432584'
+            sys.exit(error_msg)
+        else:
+            error_msg = f'ERROR: invalid input res {res}; ' \
+                        f'valid grid values are {valid_grids}'
+            sys.exit(error_msg)
 
     # Determine num_pft
     if nocrop_flag:
