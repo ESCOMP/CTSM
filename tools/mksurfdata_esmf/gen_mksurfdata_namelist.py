@@ -65,7 +65,7 @@ def get_parser():
     parser.add_argument(
         "--res",
         help="""
-            model resolution [default: %(default)s]
+            Model resolution (required) 
             To see available supported resolutions, simply invoke this command
             with a --res unknown option. For custom resolutions, provide a grid
             name of your choosing to be used in the name of the fsurdat file.
@@ -73,7 +73,6 @@ def get_parser():
         action="store",
         dest="res",
         required=True,
-        default="4x5",
     )
     parser.add_argument(
         "--model-mesh",
