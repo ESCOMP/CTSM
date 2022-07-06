@@ -11,6 +11,7 @@ import argparse
 import textwrap
 import subprocess
 from datetime import datetime
+import netCDF4
 
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                             os.pardir,
@@ -77,34 +78,38 @@ def get_parser():
         "--model-mesh",
         help="""
             model mesh [default: %(default)s]
-            Ignore the --res option and force the model mesh file to be this input
+            Ignore --res and use --model-mesh to be this file
             """,
         action="store",
         dest="force_model_mesh_file",
         required=False,
-        default="none",
+        default=None,
     )
     parser.add_argument(
         "--model-mesh-nx",
         help="""
             model mesh [default: %(default)s]
-            Required when using --model-mesh; force the model mesh to have this nx
+            Required when using --model-mesh: set nx to the grid's number of
+            columns; expect nx x ny = elementCount for consistency with the
+            model mesh
             """,
         action="store",
         dest="force_model_mesh_nx",
         required=False,
-        default="-999",
+        default=None
     )
     parser.add_argument(
         "--model-mesh-ny",
         help="""
             model mesh [default: %(default)s]
-            Required when using --model-mesh; force the model mesh to have this ny
+            Required when using --model-mesh: set ny to the grid's number of
+            rows; expect nx x ny = elementCount for consistency with the model
+            mesh
             """,
         action="store",
         dest="force_model_mesh_ny",
         required=False,
-        default="-999",
+        default=None
     )
     parser.add_argument(
         "--glc-nec",
@@ -274,8 +279,33 @@ def main ():
     else:
         hires_pft = 'off'
 
-    if force_model_mesh_file != 'none':
-        res = force_model_mesh_nx + 'x' + force_model_mesh_ny
+    if force_model_mesh_file is not None:
+        mesh_file = netCDF4.Dataset(force_model_mesh_file, 'r')
+        element_count = mesh_file.dimensions['elementCount'].size
+        if 'origGridDims' in mesh_file.variables:
+            orig_grid_dims = mesh_file.variables['origGridDims']
+            force_model_mesh_nx = orig_grid_dims[0]
+            force_model_mesh_ny = orig_grid_dims[1]
+            mesh_file.close()
+            important_msg = 'Found data for force_model_mesh_nx and ' \
+                            'force_model_mesh_ny in the mesh file so ' \
+                            'IGNORING ANY USER-ENTERED VALUES.'
+            logger.info(important_msg)
+        elif force_model_mesh_nx is None or force_model_mesh_ny is None:
+            error_msg = 'ERROR: You set --model-mesh but the file does not ' \
+                        'contain the variable origGridDims, so you MUST ALSO ' \
+                        'SET --model-mesh-nx AND --model-mesh-ny'
+            sys.exit(error_msg)
+
+        # using force_model_mesh_nx and force_model_mesh_ny either from the
+        # mesh file (see previous if statement) or the user-entered values
+        if element_count != int(force_model_mesh_nx) * int(force_model_mesh_ny):
+            error_msg = 'ERROR: The product of ' \
+                        '--model-mesh-nx x --model-mesh-ny must equal ' \
+                        'exactly elementCount in --model-mesh'
+            sys.exit(error_msg)
+        else:
+            res = f'{force_model_mesh_nx}x{force_model_mesh_ny}'
 
     hostname = os.getenv("HOSTNAME")
     logname = os.getenv("LOGNAME")
@@ -433,7 +463,7 @@ def main ():
                     if child2.tag == 'ny':
                         rawdata_files["mksrf_fgrid_mesh_ny"] = child2.text
 
-    if force_model_mesh_file == 'none' and len(model_mesh) == 0:
+    if not model_mesh and force_model_mesh_file is None:
         valid_grids = []
         for child1 in root:  # this is domain tag
             for _, value in child1.attrib.items():
@@ -558,14 +588,14 @@ def main ():
         # -------------------
         # raw input data
         # -------------------
-        if force_model_mesh_file != 'none':
-            mksrf_fgrid_mesh_nx = force_model_mesh_nx
-            mksrf_fgrid_mesh_ny = force_model_mesh_ny
-            mksrf_fgrid_mesh    = force_model_mesh_file
-        else:
+        if force_model_mesh_file is None:
             mksrf_fgrid_mesh_nx = rawdata_files["mksrf_fgrid_mesh_nx"]
             mksrf_fgrid_mesh_ny = rawdata_files["mksrf_fgrid_mesh_ny"]
             mksrf_fgrid_mesh    = rawdata_files["mksrf_fgrid_mesh"]
+        else:
+            mksrf_fgrid_mesh_nx = force_model_mesh_nx
+            mksrf_fgrid_mesh_ny = force_model_mesh_ny
+            mksrf_fgrid_mesh    = force_model_mesh_file
         nlfile.write( f"  mksrf_fgrid_mesh = \'{mksrf_fgrid_mesh}\' \n")
         nlfile.write( f"  mksrf_fgrid_mesh_nx = {mksrf_fgrid_mesh_nx} \n")
         nlfile.write( f"  mksrf_fgrid_mesh_ny = {mksrf_fgrid_mesh_ny} \n")
