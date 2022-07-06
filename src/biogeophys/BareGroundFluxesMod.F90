@@ -20,6 +20,7 @@ module BareGroundFluxesMod
   use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
   use Wateratm2lndBulkType       , only : wateratm2lndbulk_type
   use HumanIndexMod        , only : humanindex_type
+  use CanopyStateType      , only : canopystate_type
   use LandunitType         , only : lun                
   use ColumnType           , only : col                
   use PatchType            , only : patch                
@@ -71,7 +72,7 @@ contains
        atm2lnd_inst, soilstate_inst, &
        frictionvel_inst, ch4_inst, energyflux_inst, temperature_inst, &
        waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
-       wateratm2lndbulk_inst, photosyns_inst, humanindex_inst)
+       wateratm2lndbulk_inst, photosyns_inst, humanindex_inst, canopystate_inst)
     !
     ! !DESCRIPTION:
     ! Compute sensible and latent fluxes and their derivatives with respect
@@ -107,13 +108,13 @@ contains
     type(wateratm2lndbulk_type)  , intent(inout) :: wateratm2lndbulk_inst
     type(photosyns_type)   , intent(inout) :: photosyns_inst
     type(humanindex_type)  , intent(inout) :: humanindex_inst
+    type(canopystate_type) , intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
     integer, parameter  :: niters = 3            ! maximum number of iterations for surface temperature
     integer  :: p,c,g,f,j,l                      ! indices
     integer  :: iter                             ! iteration index
     real(r8) :: zldis(bounds%begp:bounds%endp)   ! reference height "minus" zero displacement height [m]
-    real(r8) :: displa(bounds%begp:bounds%endp)  ! displacement height [m]
     real(r8) :: zeta                             ! dimensionless height used in Monin-Obukhov theory
     real(r8) :: wc                               ! convective velocity [m/s]
     real(r8) :: dth(bounds%begp:bounds%endp)     ! diff of virtual temp. between ref. height and surface
@@ -235,11 +236,15 @@ contains
          rh_ref2m               => waterdiagnosticbulk_inst%rh_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)                              
 
          forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Input:
+         displa                 => canopystate_inst%displa_patch                , & ! Input:  [real(r8) (:)   ]  displacement height (m)
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
          zetamax                => frictionvel_inst%zetamaxstable               , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          z0mg_col               => frictionvel_inst%z0mg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, momentum [m]
          z0hg_col               => frictionvel_inst%z0hg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, sensible heat [m]
          z0qg_col               => frictionvel_inst%z0qg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, latent heat [m]
+         z0mv                   => frictionvel_inst%z0mv_patch                  , & ! Output: [real(r8) (:)   ] roughness length over vegetation, momentum [m]
+         z0hv                   => frictionvel_inst%z0hv_patch                  , & ! Output: [real(r8) (:)   ] roughness length over vegetation, sensible heat [m]
+         z0qv                   => frictionvel_inst%z0qv_patch                  , & ! Output: [real(r8) (:)   ] roughness length over vegetation, latent heat [m]
          ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)
          num_iter               => frictionvel_inst%num_iter_patch              , & ! Output: [real(r8) (:)   ]  number of iterations
          htvp                   => energyflux_inst%htvp_col                     , & ! Input:  [real(r8) (:)   ]  latent heat of evaporation (/sublimation) [J/kg]                      
@@ -286,6 +291,9 @@ contains
          ! Initialization variables
 
          displa(p) = 0._r8
+         z0mv(p)   = 0._r8
+         z0hv(p)   = 0._r8
+         z0qv(p)   = 0._r8
          dlrad(p)  = 0._r8
          ulrad(p)  = 0._r8
          dhsdt_canopy(p) = 0._r8
@@ -432,6 +440,12 @@ contains
             rh_ref2m_r(p) = rh_ref2m(p)
             t_ref2m_r(p) = t_ref2m(p)
          end if
+
+         ! Copy local patch ground roughness back to column arrays for history output which
+         ! uses the column arrays. z0mg is unchanged so only need to copy z0hg and z0qg
+
+         z0hg_col(c) = z0hg_patch(p)
+         z0qg_col(c) = z0qg_patch(p)
 
          ! Human Heat Stress
          if ( all_human_stress_indices .or. fast_human_stress_indices ) then

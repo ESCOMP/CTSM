@@ -1456,7 +1456,7 @@
       </machine>
     </machines>
   </test>
-  <test name="SMS_D_Ld1_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/af_bias_v7">
+  <test name="SMS_D_Ld1_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/datm_bias_correct_cruv7">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -1464,13 +1464,13 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_P48x1_Vmct" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/af_bias_v7">
+  <test name="SMS_D_Ld1_P48x1_Vmct" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/datm_bias_correct_cruv7">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >MCT test covering anomaly forcing</option>
+      <option name="comment"  >MCT test covering bias correction</option>
     </options>
   </test>
   <test name="SMS_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default">
@@ -1620,7 +1620,7 @@
       <option name="comment"  >Want nag _D test with irrigation on</option>
     </options>
   </test>
-  <test name="SMS_Ld1_PS" grid="f09_g17" compset="I2000Clm50BgcCru" testmods="clm/af_bias_v7">
+  <test name="SMS_Ld1_PS" grid="f09_g17" compset="I2000Clm50BgcCru" testmods="clm/datm_bias_correct_cruv7">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -1705,6 +1705,15 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Transient production low res future scenario SSP3-7.0 case with isotopes with a december 2050 start, use gnu to move off of intel</option>
+    </options>
+  </test>
+  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP126Clm50BgcCrop" testmods="clm/datm_ssp126_anom_forc">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Transient production with anomaly forcing low res future scenario SSP1-2.6 case</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/nlevgrnd_small">
@@ -1802,6 +1811,15 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDefTreeDamage">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Ensure functionality of the tree damage option in FATES</option>
     </options>
   </test>
   <test name="ERS_D_Ld3_PS" grid="f09_g17" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
@@ -2060,7 +2078,7 @@
       <option name="comment">Short ERP debug FATES test for f19_g17 grid.</option>
     </options>
   </test>
-  <test name="ERP_D_P32x2_Ld3" grid="f19_g17" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDef">
+  <test name="ERP_D_P36x2_Ld3" grid="f19_g17" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
@@ -2249,6 +2267,24 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Test with DEBUG on for FatesSP mode, NOTE: FatesSp has the largest difference in CTSM code for any FATES mode</option>
+    </options>
+  </test>
+  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefDryDepReducedComplexSatPhen">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Run a test with dry deposition on and FATES-SP</option>
+    </options>
+  </test>
+  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefMeganReducedComplexSatPhen">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Run a test with MEGAN on and FATES-SP</option>
     </options>
   </test>
 <!--    Don't active this test until #1722 is fixed

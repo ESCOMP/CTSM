@@ -4,7 +4,7 @@ module filterMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Module of filters used for processing columns and pfts of particular
+  ! Module of filters used for processing columns and patches of particular
   ! types, including lake, non-lake, urban, soil, snow, non-snow, and
   ! naturally-vegetated patches.
   !
@@ -29,18 +29,21 @@ module filterMod
      integer, pointer :: allc(:)         ! all columns
      integer :: num_allc                 ! number of points in allc filter
 
-     integer, pointer :: natvegp(:)      ! CNDV nat-vegetated (present) filter (pfts)
-     integer :: num_natvegp              ! number of pfts in nat-vegetated filter
+     integer, pointer :: natvegp(:)      ! CNDV nat-vegetated (present) filter (patches)
+     integer :: num_natvegp              ! number of patches in nat-vegetated filter
 
-     integer, pointer :: pcropp(:)       ! prognostic crop filter (pfts)
-     integer :: num_pcropp               ! number of pfts in prognostic crop filter
-     integer, pointer :: soilnopcropp(:) ! soil w/o prog. crops (pfts)
-     integer :: num_soilnopcropp         ! number of pfts in soil w/o prog crops
+     integer, pointer :: pcropp(:)       ! prognostic crop filter (patches)
+     integer :: num_pcropp               ! number of patches in prognostic crop filter
+     integer, pointer :: soilnopcropp(:) ! soil w/o prog. crops (patches)
+     integer :: num_soilnopcropp         ! number of patches in soil w/o prog crops
 
-     integer, pointer :: lakep(:)        ! lake filter (pfts)
-     integer :: num_lakep                ! number of pfts in lake filter
-     integer, pointer :: nolakep(:)      ! non-lake filter (pfts)
-     integer :: num_nolakep              ! number of pfts in non-lake filter
+     integer, pointer :: all_soil_patches(:) ! all soil or crop patches. Used for updating FATES SP drivers
+     integer :: num_all_soil_patches         ! number of patches in all_soil_patches filter
+
+     integer, pointer :: lakep(:)        ! lake filter (patches)
+     integer :: num_lakep                ! number of patches in lake filter
+     integer, pointer :: nolakep(:)      ! non-lake filter (patches)
+     integer :: num_nolakep              ! number of patches in non-lake filter
      integer, pointer :: lakec(:)        ! lake filter (columns)
      integer :: num_lakec                ! number of columns in lake filter
      integer, pointer :: nolakec(:)      ! non-lake filter (columns)
@@ -48,8 +51,8 @@ module filterMod
 
      integer, pointer :: soilc(:)        ! soil filter (columns)
      integer :: num_soilc                ! number of columns in soil filter
-     integer, pointer :: soilp(:)        ! soil filter (pfts)
-     integer :: num_soilp                ! number of pfts in soil filter
+     integer, pointer :: soilp(:)        ! soil filter (patches)
+     integer :: num_soilp                ! number of patches in soil filter
 
      integer, pointer :: snowc(:)        ! snow filter (columns)
      integer :: num_snowc                ! number of columns in snow filter
@@ -79,19 +82,25 @@ module filterMod
      integer, pointer :: nourbanc(:)     ! non-urban filter (columns)
      integer :: num_nourbanc             ! number of columns in non-urban filter
 
-     integer, pointer :: urbanp(:)       ! urban filter (pfts)
-     integer :: num_urbanp               ! number of pfts in urban filter
-     integer, pointer :: nourbanp(:)     ! non-urban filter (pfts)
-     integer :: num_nourbanp             ! number of pfts in non-urban filter
+     integer, pointer :: urbanp(:)       ! urban filter (patches)
+     integer :: num_urbanp               ! number of patches in urban filter
+     integer, pointer :: nourbanp(:)     ! non-urban filter (patches)
+     integer :: num_nourbanp             ! number of patches in non-urban filter
 
-     integer, pointer :: nolakeurbanp(:) ! non-lake, non-urban filter (pfts)
-     integer :: num_nolakeurbanp         ! number of pfts in non-lake, non-urban filter
+     integer, pointer :: nolakeurbanp(:) ! non-lake, non-urban filter (patches)
+     integer :: num_nolakeurbanp         ! number of patches in non-lake, non-urban filter
 
      integer, pointer :: icec(:)         ! glacier filter (cols)
      integer :: num_icec                 ! number of columns in glacier filter
 
      integer, pointer :: do_smb_c(:)     ! glacier+bareland SMB calculations-on filter (cols)
      integer :: num_do_smb_c             ! number of columns in glacier+bareland SMB mec filter
+
+     integer, pointer :: actfirec(:)     ! soil columns with active fire filter (cols)
+     integer :: num_actfirec             ! number of columns in active fire filter
+
+     integer, pointer :: actfirep(:)     ! soil patches with active fire filter (patches)
+     integer :: num_actfirep             ! number of patches in active fire filter
 
   end type clumpfilter
   public clumpfilter
@@ -230,6 +239,12 @@ contains
        allocate(this_filter(nc)%icec(bounds%endc-bounds%begc+1))
        allocate(this_filter(nc)%do_smb_c(bounds%endc-bounds%begc+1))
 
+       allocate(this_filter(nc)%actfirec(bounds%endc-bounds%begc+1))
+       allocate(this_filter(nc)%actfirep(bounds%endp-bounds%begp+1))
+
+       this_filter(nc)%num_actfirep = 1
+       this_filter(nc)%num_actfirec = 1
+       
     end do
 !$OMP END PARALLEL DO
 
@@ -378,7 +393,6 @@ contains
        end if
     end do
     this_filter(nc)%num_soilc = fs
-
     ! Create soil filter at patch-level
 
     fs = 0

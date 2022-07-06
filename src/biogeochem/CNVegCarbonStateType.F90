@@ -12,6 +12,7 @@ module CNVegCarbonStateType
   use pftconMod	     , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
   use clm_varctl     , only : iulog, use_cndv, use_crop
+  use CNSharedParamsMod, only : use_matrixcn
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc 
@@ -32,59 +33,63 @@ module CNVegCarbonStateType
 
      integer :: species  ! c12, c13, c14
 
-     real(r8), pointer :: reproductivec_patch             (:,:) ! (gC/m2) reproductive (e.g., grain) C (crop model)
-     real(r8), pointer :: reproductivec_storage_patch     (:,:) ! (gC/m2) reproductive (e.g., grain) C storage (crop model)
-     real(r8), pointer :: reproductivec_xfer_patch        (:,:) ! (gC/m2) reproductive (e.g., grain) C transfer (crop model)
-     real(r8), pointer :: leafc_patch              (:) ! (gC/m2) leaf C
-     real(r8), pointer :: leafc_storage_patch      (:) ! (gC/m2) leaf C storage
-     real(r8), pointer :: leafc_xfer_patch         (:) ! (gC/m2) leaf C transfer
-     real(r8), pointer :: leafc_storage_xfer_acc_patch   (:) ! (gC/m2) Accmulated leaf C transfer
-     real(r8), pointer :: storage_cdemand_patch          (:) ! (gC/m2)       C use from the C storage pool 
-     real(r8), pointer :: frootc_patch             (:) ! (gC/m2) fine root C
-     real(r8), pointer :: frootc_storage_patch     (:) ! (gC/m2) fine root C storage
-     real(r8), pointer :: frootc_xfer_patch        (:) ! (gC/m2) fine root C transfer
-     real(r8), pointer :: livestemc_patch          (:) ! (gC/m2) live stem C
-     real(r8), pointer :: livestemc_storage_patch  (:) ! (gC/m2) live stem C storage
-     real(r8), pointer :: livestemc_xfer_patch     (:) ! (gC/m2) live stem C transfer
-     real(r8), pointer :: deadstemc_patch          (:) ! (gC/m2) dead stem C
-     real(r8), pointer :: deadstemc_storage_patch  (:) ! (gC/m2) dead stem C storage
-     real(r8), pointer :: deadstemc_xfer_patch     (:) ! (gC/m2) dead stem C transfer
-     real(r8), pointer :: livecrootc_patch         (:) ! (gC/m2) live coarse root C
-     real(r8), pointer :: livecrootc_storage_patch (:) ! (gC/m2) live coarse root C storage
-     real(r8), pointer :: livecrootc_xfer_patch    (:) ! (gC/m2) live coarse root C transfer
-     real(r8), pointer :: deadcrootc_patch         (:) ! (gC/m2) dead coarse root C
-     real(r8), pointer :: deadcrootc_storage_patch (:) ! (gC/m2) dead coarse root C storage
-     real(r8), pointer :: deadcrootc_xfer_patch    (:) ! (gC/m2) dead coarse root C transfer
-     real(r8), pointer :: gresp_storage_patch      (:) ! (gC/m2) growth respiration storage
-     real(r8), pointer :: gresp_xfer_patch         (:) ! (gC/m2) growth respiration transfer
-     real(r8), pointer :: cpool_patch              (:) ! (gC/m2) temporary photosynthate C pool
-     real(r8), pointer :: xsmrpool_patch           (:) ! (gC/m2) abstract C pool to meet excess MR demand
-     real(r8), pointer :: xsmrpool_loss_patch      (:) ! (gC/m2) abstract C pool to meet excess MR demand loss
-     real(r8), pointer :: ctrunc_patch             (:) ! (gC/m2) patch-level sink for C truncation
-     real(r8), pointer :: woodc_patch              (:) ! (gC/m2) wood C
-     real(r8), pointer :: leafcmax_patch           (:) ! (gC/m2) ann max leaf C
-     real(r8), pointer :: totc_patch               (:) ! (gC/m2) total patch-level carbon, including cpool
-     real(r8), pointer :: rootc_col                (:) ! (gC/m2) root carbon at column level (fire)
-     real(r8), pointer :: leafc_col                (:) ! (gC/m2) column-level leafc (fire)
-     real(r8), pointer :: deadstemc_col            (:) ! (gC/m2) column-level deadstemc (fire)
-     real(r8), pointer :: fuelc_col                (:) ! fuel load outside cropland
-     real(r8), pointer :: fuelc_crop_col           (:) ! fuel load for cropland
-     real(r8), pointer :: cropseedc_deficit_patch  (:) ! (gC/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
+     real(r8), pointer :: reproductivec_patch               (:,:) ! (gC/m2) reproductive (e.g., grain) C (crop model)
+     real(r8), pointer :: reproductivec_storage_patch       (:,:) ! (gC/m2) reproductive (e.g., grain) C storage (crop model)
+     real(r8), pointer :: reproductivec_xfer_patch          (:,:) ! (gC/m2) reproductive (e.g., grain) C transfer (crop model)
+     real(r8), pointer :: leafc_patch                         (:) ! (gC/m2) leaf C
+     real(r8), pointer :: leafc_storage_patch                 (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: leafc_xfer_patch                    (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: leafc_storage_xfer_acc_patch        (:) ! (gC/m2) Accmulated leaf C transfer
+     real(r8), pointer :: storage_cdemand_patch               (:) ! (gC/m2)       C use from the C storage pool 
+     real(r8), pointer :: frootc_patch                        (:) ! (gC/m2) fine root C
+     real(r8), pointer :: frootc_storage_patch                (:) ! (gC/m2) fine root C storage
+     real(r8), pointer :: frootc_xfer_patch                   (:) ! (gC/m2) fine root C transfer
+     real(r8), pointer :: livestemc_patch                     (:) ! (gC/m2) live stem C
+     real(r8), pointer :: livestemc_storage_patch             (:) ! (gC/m2) live stem C storage
+     real(r8), pointer :: livestemc_xfer_patch                (:) ! (gC/m2) live stem C transfer
+     real(r8), pointer :: deadstemc_patch                     (:) ! (gC/m2) dead stem C
+     real(r8), pointer :: deadstemc_storage_patch             (:) ! (gC/m2) dead stem C storage
+     real(r8), pointer :: deadstemc_xfer_patch                (:) ! (gC/m2) dead stem C transfer
+     real(r8), pointer :: livecrootc_patch                    (:) ! (gC/m2) live coarse root C
+     real(r8), pointer :: livecrootc_storage_patch            (:) ! (gC/m2) live coarse root C storage
+     real(r8), pointer :: livecrootc_xfer_patch               (:) ! (gC/m2) live coarse root C transfer
+     real(r8), pointer :: deadcrootc_patch                    (:) ! (gC/m2) dead coarse root C
+     real(r8), pointer :: deadcrootc_storage_patch            (:) ! (gC/m2) dead coarse root C storage
+     real(r8), pointer :: deadcrootc_xfer_patch               (:) ! (gC/m2) dead coarse root C transfer
+     real(r8), pointer :: gresp_storage_patch                 (:) ! (gC/m2) growth respiration storage
+     real(r8), pointer :: gresp_xfer_patch                    (:) ! (gC/m2) growth respiration transfer
+     real(r8), pointer :: cpool_patch                         (:) ! (gC/m2) temporary photosynthate C pool
+     ! Matrix data
+     ! Initial pool size for matrix spinup
+     ! Assumulation variables for matrix spinup as well as calculation of diagnostic variables
+     ! Transfer pools
+     real(r8), pointer :: xsmrpool_patch                      (:) ! (gC/m2) abstract C pool to meet excess MR demand
+     real(r8), pointer :: xsmrpool_loss_patch                 (:) ! (gC/m2) abstract C pool to meet excess MR demand loss
+     real(r8), pointer :: ctrunc_patch                        (:) ! (gC/m2) patch-level sink for C truncation
+     real(r8), pointer :: woodc_patch                         (:) ! (gC/m2) wood C
+     real(r8), pointer :: leafcmax_patch                      (:) ! (gC/m2) ann max leaf C
+     real(r8), pointer :: totc_patch                          (:) ! (gC/m2) total patch-level carbon, including cpool
+     real(r8), pointer :: rootc_col                           (:) ! (gC/m2) root carbon at column level (fire)
+     real(r8), pointer :: leafc_col                           (:) ! (gC/m2) column-level leafc (fire)
+     real(r8), pointer :: deadstemc_col                       (:) ! (gC/m2) column-level deadstemc (fire)
+     real(r8), pointer :: fuelc_col                           (:) ! fuel load outside cropland
+     real(r8), pointer :: fuelc_crop_col                      (:) ! fuel load for cropland
+     real(r8), pointer :: cropseedc_deficit_patch             (:) ! (gC/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
 
      ! pools for dynamic landcover
-     real(r8), pointer :: seedc_grc                (:) ! (gC/m2) gridcell-level pool for seeding new PFTs via dynamic landcover
+     real(r8), pointer :: seedc_grc                           (:) ! (gC/m2) gridcell-level pool for seeding new PFTs via dynamic landcover
 
      ! summary (diagnostic) state variables, not involved in mass balance
-     real(r8), pointer :: dispvegc_patch           (:) ! (gC/m2) displayed veg carbon, excluding storage and cpool
-     real(r8), pointer :: storvegc_patch           (:) ! (gC/m2) stored vegetation carbon, excluding cpool
-     real(r8), pointer :: totvegc_patch            (:) ! (gC/m2) total vegetation carbon, excluding cpool
-     real(r8), pointer :: totvegc_col              (:) ! (gC/m2) total vegetation carbon, excluding cpool averaged to column (p2c)
+     real(r8), pointer :: dispvegc_patch                      (:) ! (gC/m2) displayed veg carbon, excluding storage and cpool
+     real(r8), pointer :: storvegc_patch                      (:) ! (gC/m2) stored vegetation carbon, excluding cpool
+     real(r8), pointer :: totvegc_patch                       (:) ! (gC/m2) total vegetation carbon, excluding cpool
+     real(r8), pointer :: totvegc_col                         (:) ! (gC/m2) total vegetation carbon, excluding cpool averaged to column (p2c)
 
      ! Total C pools       
-     real(r8), pointer :: totc_p2c_col             (:) ! (gC/m2) totc_patch averaged to col
-     real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool
-     real(r8), pointer :: totecosysc_col           (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
-     real(r8), pointer :: totc_grc                 (:) ! (gC/m2) total gridcell carbon
+     real(r8), pointer :: totc_p2c_col                        (:) ! (gC/m2) totc_patch averaged to col
+     real(r8), pointer :: totc_col                            (:) ! (gC/m2) total column carbon, incl veg and cpool
+     real(r8), pointer :: totecosysc_col                      (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
+     real(r8), pointer :: totc_grc                            (:) ! (gC/m2) total gridcell carbon
 
      logical, private  :: dribble_crophrv_xsmrpool_2atm
    contains
@@ -225,40 +230,40 @@ contains
     begc = bounds%begc; endc = bounds%endc
     begg = bounds%begg; endg = bounds%endg
 
-    allocate(this%leafc_patch              (begp:endp)) ; this%leafc_patch              (:) = nan
-    allocate(this%leafc_storage_patch      (begp:endp)) ; this%leafc_storage_patch      (:) = nan
-    allocate(this%leafc_xfer_patch         (begp:endp)) ; this%leafc_xfer_patch         (:) = nan
-    allocate(this%leafc_storage_xfer_acc_patch (begp:endp)) ; this%leafc_storage_xfer_acc_patch (:) = nan
-    allocate(this%storage_cdemand_patch        (begp:endp)) ; this%storage_cdemand_patch        (:) = nan
-    allocate(this%frootc_patch             (begp:endp)) ; this%frootc_patch             (:) = nan
-    allocate(this%frootc_storage_patch     (begp:endp)) ; this%frootc_storage_patch     (:) = nan
-    allocate(this%frootc_xfer_patch        (begp:endp)) ; this%frootc_xfer_patch        (:) = nan
-    allocate(this%livestemc_patch          (begp:endp)) ; this%livestemc_patch          (:) = nan
-    allocate(this%livestemc_storage_patch  (begp:endp)) ; this%livestemc_storage_patch  (:) = nan
-    allocate(this%livestemc_xfer_patch     (begp:endp)) ; this%livestemc_xfer_patch     (:) = nan
-    allocate(this%deadstemc_patch          (begp:endp)) ; this%deadstemc_patch          (:) = nan
-    allocate(this%deadstemc_storage_patch  (begp:endp)) ; this%deadstemc_storage_patch  (:) = nan
-    allocate(this%deadstemc_xfer_patch     (begp:endp)) ; this%deadstemc_xfer_patch     (:) = nan
-    allocate(this%livecrootc_patch         (begp:endp)) ; this%livecrootc_patch         (:) = nan
-    allocate(this%livecrootc_storage_patch (begp:endp)) ; this%livecrootc_storage_patch (:) = nan
-    allocate(this%livecrootc_xfer_patch    (begp:endp)) ; this%livecrootc_xfer_patch    (:) = nan
-    allocate(this%deadcrootc_patch         (begp:endp)) ; this%deadcrootc_patch         (:) = nan
-    allocate(this%deadcrootc_storage_patch (begp:endp)) ; this%deadcrootc_storage_patch (:) = nan
-    allocate(this%deadcrootc_xfer_patch    (begp:endp)) ; this%deadcrootc_xfer_patch    (:) = nan
-    allocate(this%gresp_storage_patch      (begp:endp)) ; this%gresp_storage_patch      (:) = nan
-    allocate(this%gresp_xfer_patch         (begp:endp)) ; this%gresp_xfer_patch         (:) = nan
-    allocate(this%cpool_patch              (begp:endp)) ; this%cpool_patch              (:) = nan
-    allocate(this%xsmrpool_patch           (begp:endp)) ; this%xsmrpool_patch           (:) = nan
-    allocate(this%xsmrpool_loss_patch      (begp:endp)) ; this%xsmrpool_loss_patch      (:) = nan
-    allocate(this%ctrunc_patch             (begp:endp)) ; this%ctrunc_patch             (:) = nan
-    allocate(this%dispvegc_patch           (begp:endp)) ; this%dispvegc_patch           (:) = nan
-    allocate(this%storvegc_patch           (begp:endp)) ; this%storvegc_patch           (:) = nan
-    allocate(this%leafcmax_patch           (begp:endp)) ; this%leafcmax_patch           (:) = nan
-    allocate(this%totc_patch               (begp:endp)) ; this%totc_patch               (:) = nan
-    allocate(this%reproductivec_patch(begp:endp, nrepr)) ; this%reproductivec_patch   (:,:) = nan
-    allocate(this%reproductivec_storage_patch(begp:endp, nrepr)) ; this%reproductivec_storage_patch(:,:) = nan
-    allocate(this%reproductivec_xfer_patch(begp:endp, nrepr)) ; this%reproductivec_xfer_patch(:,:) = nan
-    allocate(this%woodc_patch              (begp:endp)) ; this%woodc_patch              (:) = nan     
+    allocate(this%leafc_patch                            (begp:endp)) ; this%leafc_patch                        (:) = nan
+    allocate(this%leafc_storage_patch                    (begp:endp)) ; this%leafc_storage_patch                (:) = nan
+    allocate(this%leafc_xfer_patch                       (begp:endp)) ; this%leafc_xfer_patch                   (:) = nan
+    allocate(this%leafc_storage_xfer_acc_patch           (begp:endp)) ; this%leafc_storage_xfer_acc_patch       (:) = nan
+    allocate(this%storage_cdemand_patch                  (begp:endp)) ; this%storage_cdemand_patch              (:) = nan
+    allocate(this%frootc_patch                           (begp:endp)) ; this%frootc_patch                       (:) = nan
+    allocate(this%frootc_storage_patch                   (begp:endp)) ; this%frootc_storage_patch               (:) = nan
+    allocate(this%frootc_xfer_patch                      (begp:endp)) ; this%frootc_xfer_patch                  (:) = nan
+    allocate(this%livestemc_patch                        (begp:endp)) ; this%livestemc_patch                    (:) = nan
+    allocate(this%livestemc_storage_patch                (begp:endp)) ; this%livestemc_storage_patch            (:) = nan
+    allocate(this%livestemc_xfer_patch                   (begp:endp)) ; this%livestemc_xfer_patch               (:) = nan
+    allocate(this%deadstemc_patch                        (begp:endp)) ; this%deadstemc_patch                    (:) = nan
+    allocate(this%deadstemc_storage_patch                (begp:endp)) ; this%deadstemc_storage_patch            (:) = nan
+    allocate(this%deadstemc_xfer_patch                   (begp:endp)) ; this%deadstemc_xfer_patch               (:) = nan
+    allocate(this%livecrootc_patch                       (begp:endp)) ; this%livecrootc_patch                   (:) = nan
+    allocate(this%livecrootc_storage_patch               (begp:endp)) ; this%livecrootc_storage_patch           (:) = nan
+    allocate(this%livecrootc_xfer_patch                  (begp:endp)) ; this%livecrootc_xfer_patch              (:) = nan
+    allocate(this%deadcrootc_patch                       (begp:endp)) ; this%deadcrootc_patch                   (:) = nan
+    allocate(this%deadcrootc_storage_patch               (begp:endp)) ; this%deadcrootc_storage_patch           (:) = nan
+    allocate(this%deadcrootc_xfer_patch                  (begp:endp)) ; this%deadcrootc_xfer_patch              (:) = nan
+    allocate(this%gresp_storage_patch                    (begp:endp)) ; this%gresp_storage_patch                (:) = nan
+    allocate(this%gresp_xfer_patch                       (begp:endp)) ; this%gresp_xfer_patch                   (:) = nan
+    allocate(this%cpool_patch                            (begp:endp)) ; this%cpool_patch                        (:) = nan
+    allocate(this%xsmrpool_patch                         (begp:endp)) ; this%xsmrpool_patch                     (:) = nan
+    allocate(this%xsmrpool_loss_patch                    (begp:endp)) ; this%xsmrpool_loss_patch                (:) = nan
+    allocate(this%ctrunc_patch                           (begp:endp)) ; this%ctrunc_patch                       (:) = nan
+    allocate(this%dispvegc_patch                         (begp:endp)) ; this%dispvegc_patch                     (:) = nan
+    allocate(this%storvegc_patch                         (begp:endp)) ; this%storvegc_patch                     (:) = nan
+    allocate(this%leafcmax_patch                         (begp:endp)) ; this%leafcmax_patch                     (:) = nan
+    allocate(this%totc_patch                             (begp:endp))  ; this%totc_patch                        (:) = nan
+    allocate(this%reproductivec_patch             (begp:endp, nrepr)) ; this%reproductivec_patch               (:,:) = nan
+    allocate(this%reproductivec_storage_patch     (begp:endp, nrepr)) ; this%reproductivec_storage_patch       (:,:) = nan
+    allocate(this%reproductivec_xfer_patch        (begp:endp, nrepr)) ; this%reproductivec_xfer_patch          (:,:) = nan
+    allocate(this%woodc_patch                            (begp:endp)) ; this%woodc_patch                        (:) = nan     
 
     allocate(this%cropseedc_deficit_patch  (begp:endp)) ; this%cropseedc_deficit_patch  (:) = nan
     allocate(this%seedc_grc                (begg:endg)) ; this%seedc_grc                (:) = nan
@@ -275,6 +280,11 @@ contains
     allocate(this%totc_col                 (begc:endc)) ; this%totc_col                 (:) = nan
     allocate(this%totecosysc_col           (begc:endc)) ; this%totecosysc_col           (:) = nan
     allocate(this%totc_grc                 (begg:endg)) ; this%totc_grc                 (:) = nan
+
+    ! Matrix solution variables
+    if(use_matrixcn)then
+        ! Initisl pool size for matrix solution
+    end if
 
   end subroutine InitAllocate
 
@@ -509,6 +519,9 @@ contains
             avgflag='A', long_name='total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
 
+       ! Matrix solution history variables
+       if ( use_matrixcn )then
+       end if
     end if
 
     !-------------------------------
@@ -696,6 +709,9 @@ contains
                ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
 
+       ! Matrix solution history variables
+       if ( use_matrixcn )then
+       end if
 
     endif
 
@@ -883,6 +899,9 @@ contains
                ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
 
+       ! Matrix solution history variables
+       if ( use_matrixcn )then
+       end if
 
     endif
 
@@ -896,6 +915,7 @@ contains
     !
     ! !USES:
     use landunit_varcon	 , only : istsoil, istcrop 
+    use clm_time_manager , only : is_restart, get_nstep
     use clm_varctl, only : MM_Nuptake_opt, spinup_state
     !
     ! !ARGUMENTS:
@@ -957,57 +977,87 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
           if (patch%itype(p) == noveg) then
-             this%leafc_patch(p)          = 0._r8
-             this%leafc_storage_patch(p)  = 0._r8
-             this%frootc_patch(p)         = 0._r8            
-             this%frootc_storage_patch(p) = 0._r8    
+             this%leafc_patch(p)                        = 0._r8
+             this%leafc_storage_patch(p)                = 0._r8
+             this%frootc_patch(p)                       = 0._r8            
+             this%frootc_storage_patch(p)               = 0._r8    
+
+             ! Set matrix solution bare-soil
+             if ( use_matrixcn )then
+             end if
           else
              if (pftcon%evergreen(patch%itype(p)) == 1._r8) then
-                this%leafc_patch(p)          = cnvegcstate_const%initial_vegC * ratio     
-                this%leafc_storage_patch(p)  = 0._r8
-                this%frootc_patch(p)         = cnvegcstate_const%initial_vegC * ratio           
-                this%frootc_storage_patch(p) = 0._r8    
+                this%leafc_patch(p)                        = cnvegcstate_const%initial_vegC * ratio     
+                this%leafc_storage_patch(p)                = 0._r8
+                this%frootc_patch(p)                       = cnvegcstate_const%initial_vegC * ratio           
+                this%frootc_storage_patch(p)               = 0._r8    
+                ! Set matrix solution evergreen
+                if ( use_matrixcn )then
+                end if
              else if (patch%itype(p) >= npcropmin) then ! prognostic crop types
-                this%leafc_patch(p)          = 0._r8
-                this%leafc_storage_patch(p)  = 0._r8
-                this%frootc_patch(p)         = 0._r8            
-                this%frootc_storage_patch(p) = 0._r8    
+                this%leafc_patch(p)                        = 0._r8
+                this%leafc_storage_patch(p)                = 0._r8
+                this%frootc_patch(p)                       = 0._r8            
+                this%frootc_storage_patch(p)               = 0._r8    
+                ! Set matrix solution prognostic crops
+                if ( use_matrixcn )then
+                end if
              else
-                this%leafc_patch(p)          = 0._r8
-                this%leafc_storage_patch(p)  = cnvegcstate_const%initial_vegC * ratio   
-                this%frootc_patch(p)         = 0._r8            
-                this%frootc_storage_patch(p) = cnvegcstate_const%initial_vegC * ratio   
+                this%leafc_patch(p)                        = 0._r8
+                this%leafc_storage_patch(p)                = cnvegcstate_const%initial_vegC * ratio   
+                this%frootc_patch(p)                       = 0._r8            
+                this%frootc_storage_patch(p)               = cnvegcstate_const%initial_vegC * ratio   
+                ! Set matrix solution for everything else
+                if ( use_matrixcn )then
+                end if
              end if
           end if
-          this%leafc_xfer_patch(p) = 0._r8
-          this%leafc_storage_xfer_acc_patch(p)  = 0._r8
-          this%storage_cdemand_patch(p)         = 0._r8
+          this%leafc_xfer_patch(p)                         = 0._r8
+          this%leafc_storage_xfer_acc_patch(p)             = 0._r8
+          this%storage_cdemand_patch(p)                    = 0._r8
+
+          ! Set matrix solution general
+          if ( use_matrixcn )then
+          end if
 
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
-             this%frootc_patch(p)            = 0._r8 
-             this%frootc_storage_patch(p)    = 0._r8 
+             this%frootc_patch(p)                          = 0._r8 
+             this%frootc_storage_patch(p)                  = 0._r8 
+             ! Set matrix solution
+             if ( use_matrixcn )then
+             end if
           end if     
-          this%frootc_xfer_patch(p)       = 0._r8 
+          this%frootc_xfer_patch(p)                        = 0._r8 
 
-          this%livestemc_patch(p)         = 0._r8 
-          this%livestemc_storage_patch(p) = 0._r8 
-          this%livestemc_xfer_patch(p)    = 0._r8 
+          this%livestemc_patch(p)                          = 0._r8 
+          this%livestemc_storage_patch(p)                  = 0._r8 
+          this%livestemc_xfer_patch(p)                     = 0._r8 
+
+          ! Set matrix solution
+          if ( use_matrixcn )then
+          end if
 
           if (pftcon%woody(patch%itype(p)) == 1._r8) then
-             this%deadstemc_patch(p) = 0.1_r8 * ratio
+             this%deadstemc_patch(p)                       = 0.1_r8 * ratio
+             ! Set matrix solution for woody
+             if ( use_matrixcn )then
+             end if
           else
-             this%deadstemc_patch(p) = 0._r8 
+             this%deadstemc_patch(p)                       = 0._r8 
+             ! Set matrix solution for non-woody
+             if ( use_matrixcn )then
+             end if
           end if
-          this%deadstemc_storage_patch(p)  = 0._r8 
-          this%deadstemc_xfer_patch(p)     = 0._r8 
+          this%deadstemc_storage_patch(p)                  = 0._r8 
+          this%deadstemc_xfer_patch(p)                     = 0._r8 
 
-          this%livecrootc_patch(p)         = 0._r8 
-          this%livecrootc_storage_patch(p) = 0._r8 
-          this%livecrootc_xfer_patch(p)    = 0._r8 
+          this%livecrootc_patch(p)                         = 0._r8 
+          this%livecrootc_storage_patch(p)                 = 0._r8 
+          this%livecrootc_xfer_patch(p)                    = 0._r8 
 
-          this%deadcrootc_patch(p)         = 0._r8 
-          this%deadcrootc_storage_patch(p) = 0._r8 
-          this%deadcrootc_xfer_patch(p)    = 0._r8 
+          this%deadcrootc_patch(p)                         = 0._r8 
+          this%deadcrootc_storage_patch(p)                 = 0._r8 
+          this%deadcrootc_xfer_patch(p)                    = 0._r8 
 
           this%gresp_storage_patch(p)      = 0._r8 
           this%gresp_xfer_patch(p)         = 0._r8 
@@ -1020,12 +1070,19 @@ contains
           this%woodc_patch(p)              = 0._r8
           this%totc_patch(p)               = 0._r8 
 
+          ! Initial pool size for matrix solution
+          if ( use_matrixcn )then
+          end if
+
           if ( use_crop )then
-             this%reproductivec_patch(p,:)         = 0._r8
-             this%reproductivec_storage_patch(p,:) = 0._r8
-             this%reproductivec_xfer_patch(p,:)    = 0._r8
-             this%cropseedc_deficit_patch(p)  = 0._r8
-             this%xsmrpool_loss_patch(p)  = 0._r8 
+             this%reproductivec_patch(p,:)                                  = 0._r8
+             this%reproductivec_storage_patch(p,:)                          = 0._r8
+             this%reproductivec_xfer_patch(p,:)                             = 0._r8
+             this%cropseedc_deficit_patch(p)                                = 0._r8
+             this%xsmrpool_loss_patch(p)                                    = 0._r8 
+
+             if ( use_matrixcn )then
+             end if
           end if
 
        endif
@@ -1073,6 +1130,7 @@ contains
     ! !USES:
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
     use clm_varcon       , only : c13ratio, c14ratio
+    use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
     use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
     use clm_time_manager , only : is_restart
     use landunit_varcon	 , only : istsoil, istcrop 
@@ -1234,12 +1292,20 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_patch) 
 
+       ! Restart variables for matrix solution
+       if ( use_matrixcn )then
+       end if
+
        if (use_crop) then
           call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss', xtype=ncd_double,  &
                dim1name='pft', long_name='', units='', &
                interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
           if (flag == 'read' .and. (.not. readvar) ) then
               this%xsmrpool_loss_patch(bounds%begp:bounds%endp) = 0._r8
+          end if
+
+          ! Restart variables for matrix solution with prognostic crop
+          if ( use_matrixcn )then
           end if
        end if
 
@@ -1396,70 +1462,104 @@ contains
                       end if
 
                       if (patch%itype(i) == noveg) then
-                         this%leafc_patch(i)          = 0._r8
-                         this%leafc_storage_patch(i)  = 0._r8
-                         this%frootc_patch(i)         = 0._r8            
-                         this%frootc_storage_patch(i) = 0._r8    
+                         this%leafc_patch(i)                           = 0._r8
+                         this%leafc_storage_patch(i)                   = 0._r8
+                         this%frootc_patch(i)                          = 0._r8            
+                         this%frootc_storage_patch(i)                  = 0._r8    
+
+                         ! Bare soil matrix solution
+                         if(use_matrixcn)then
+                         end if
                       else
                          if (pftcon%evergreen(patch%itype(i)) == 1._r8) then
-                            this%leafc_patch(i)          = cnvegcstate_const%initial_vegC * ratio     
-                            this%leafc_storage_patch(i)  = 0._r8
-                            this%frootc_patch(i)         = cnvegcstate_const%initial_vegC * ratio           
-                            this%frootc_storage_patch(i) = 0._r8    
+                            this%leafc_patch(i)                        = cnvegcstate_const%initial_vegC * ratio     
+                            this%leafc_storage_patch(i)                = 0._r8
+                            this%frootc_patch(i)                       = cnvegcstate_const%initial_vegC * ratio           
+                            this%frootc_storage_patch(i)               = 0._r8    
+                            ! Evergreen matrix solution
+                            if(use_matrixcn)then
+                            end if
                          else
-                            this%leafc_patch(i)          = 0._r8
-                            this%leafc_storage_patch(i)  = cnvegcstate_const%initial_vegC * ratio   
-                            this%frootc_patch(i)         = 0._r8            
-                            this%frootc_storage_patch(i) = cnvegcstate_const%initial_vegC * ratio   
+                            this%leafc_patch(i)                        = 0._r8
+                            this%leafc_storage_patch(i)                = cnvegcstate_const%initial_vegC * ratio   
+                            this%frootc_patch(i)                       = 0._r8            
+                            this%frootc_storage_patch(i)               = cnvegcstate_const%initial_vegC * ratio   
+
+                            ! Otherwise matrix solution
+                            if(use_matrixcn)then
+                            end if
                          end if
                       end if
-                      this%leafc_xfer_patch(i) = 0._r8
-                      this%leafc_storage_xfer_acc_patch(i)  = 0._r8
-                      this%storage_cdemand_patch(i)         = 0._r8
+                      this%leafc_xfer_patch(i)                         = 0._r8
+                      this%leafc_storage_xfer_acc_patch(i)             = 0._r8
+                      this%storage_cdemand_patch(i)                    = 0._r8
+
+                      ! General  matrix solution
+                      if(use_matrixcn)then
+                      end if
+
 
                       if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
-                         this%frootc_patch(i)            = 0._r8 
-                         this%frootc_storage_patch(i)    = 0._r8 
-                      end if     
-                      this%frootc_xfer_patch(i)       = 0._r8 
+                         this%frootc_patch(i)                          = 0._r8 
+                         this%frootc_storage_patch(i)                  = 0._r8 
 
-                      this%livestemc_patch(i)         = 0._r8 
-                      this%livestemc_storage_patch(i) = 0._r8 
-                      this%livestemc_xfer_patch(i)    = 0._r8 
+                         ! Flex CN for matrix solution
+                         if(use_matrixcn)then
+                         end if
+                      end if     
+                      this%frootc_xfer_patch(i)                        = 0._r8 
+
+                      this%livestemc_patch(i)                          = 0._r8 
+                      this%livestemc_storage_patch(i)                  = 0._r8 
+                      this%livestemc_xfer_patch(i)                     = 0._r8 
 
                       if (pftcon%woody(patch%itype(i)) == 1._r8) then
-                         this%deadstemc_patch(i) = 0.1_r8 * ratio
+                         this%deadstemc_patch(i)                       = 0.1_r8 * ratio
+                         ! Woody for matrix solution
+                         if(use_matrixcn)then
+                         end if
                       else
-                         this%deadstemc_patch(i) = 0._r8 
+                         this%deadstemc_patch(i)                       = 0._r8 
+                         ! Non-Woody for matrix solution
+                         if(use_matrixcn)then
+                         end if
                       end if
-                      this%deadstemc_storage_patch(i)  = 0._r8 
-                      this%deadstemc_xfer_patch(i)     = 0._r8 
+                      this%deadstemc_storage_patch(i)                  = 0._r8 
+                      this%deadstemc_xfer_patch(i)                     = 0._r8 
 
-                      this%livecrootc_patch(i)         = 0._r8 
-                      this%livecrootc_storage_patch(i) = 0._r8 
-                      this%livecrootc_xfer_patch(i)    = 0._r8 
+                      this%livecrootc_patch(i)                         = 0._r8 
+                      this%livecrootc_storage_patch(i)                 = 0._r8 
+                      this%livecrootc_xfer_patch(i)                    = 0._r8 
 
-                      this%deadcrootc_patch(i)         = 0._r8 
-                      this%deadcrootc_storage_patch(i) = 0._r8 
-                      this%deadcrootc_xfer_patch(i)    = 0._r8 
+                      this%deadcrootc_patch(i)                         = 0._r8 
+                      this%deadcrootc_storage_patch(i)                 = 0._r8 
+                      this%deadcrootc_xfer_patch(i)                    = 0._r8 
 
-                      this%gresp_storage_patch(i)      = 0._r8 
-                      this%gresp_xfer_patch(i)         = 0._r8 
+                      ! Live/Dead course roots for matrix solution
+                      if(use_matrixcn)then
+                      end if
 
-                      this%cpool_patch(i)              = 0._r8 
-                      this%xsmrpool_patch(i)           = 0._r8 
-                      this%ctrunc_patch(i)             = 0._r8 
-                      this%dispvegc_patch(i)           = 0._r8 
-                      this%storvegc_patch(i)           = 0._r8 
-                      this%woodc_patch(i)              = 0._r8
-                      this%totc_patch(i)               = 0._r8 
+                      this%gresp_storage_patch(i)                      = 0._r8 
+                      this%gresp_xfer_patch(i)                         = 0._r8 
+
+                      this%cpool_patch(i)                              = 0._r8 
+                      this%xsmrpool_patch(i)                           = 0._r8 
+                      this%ctrunc_patch(i)                             = 0._r8 
+                      this%dispvegc_patch(i)                           = 0._r8 
+                      this%storvegc_patch(i)                           = 0._r8 
+                      this%woodc_patch(i)                              = 0._r8
+                      this%totc_patch(i)                               = 0._r8 
 
                       if ( use_crop )then
                          this%reproductivec_patch(i,:)         = 0._r8
                          this%reproductivec_storage_patch(i,:) = 0._r8
                          this%reproductivec_xfer_patch(i,:)    = 0._r8
-                         this%cropseedc_deficit_patch(i)  = 0._r8
-                         this%xsmrpool_loss_patch(i)  = 0._r8 
+                         this%cropseedc_deficit_patch(i)               = 0._r8
+                         this%xsmrpool_loss_patch(i)                   = 0._r8 
+
+                         ! Reproductive pools for matrix solution
+                         if(use_matrixcn)then
+                         end if
                       end if
 
                       ! calculate totvegc explicitly so that it is available for the isotope 
@@ -1854,6 +1954,14 @@ contains
           end do
        end if
 
+       ! Restart variables for matrix solution and C13
+       if(use_matrixcn)then
+
+          ! Prgnostic crop C13 variables for matrix solution
+          if ( use_crop )then
+          end if
+       end if
+
     end if
 
     !--------------------------------
@@ -2154,6 +2262,13 @@ contains
           end do
        end if
 
+       ! Restart variables for matrix solution and C13
+       if(use_matrixcn)then
+
+          ! Prgnostic crop C13 variables for matrix solution
+          if ( use_crop )then
+          end if
+       end if
     end if
 
     !--------------------------------
@@ -2164,7 +2279,7 @@ contains
        if (carbon_type == 'c12') then
           do k = 1, nrepr
              data1dptr => this%reproductivec_patch(:,k)
-             ! e.g., grainc
+             ! e.g., reproductivec
              varname = get_repr_rest_fname(k)//'c'
              call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                   xtype=ncd_double,  &
@@ -2176,7 +2291,7 @@ contains
 
           do k = 1, nrepr
              data1dptr => this%reproductivec_storage_patch(:,k)
-             ! e.g., grainc_storage
+             ! e.g., reproductivec_storage
              varname = get_repr_rest_fname(k)//'c_storage'
              call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                   xtype=ncd_double,  &
@@ -2188,7 +2303,7 @@ contains
 
           do k = 1, nrepr
              data1dptr => this%reproductivec_xfer_patch(:,k)
-             ! e.g., grainc_xfer
+             ! e.g., reproductivec_xfer
              varname = get_repr_rest_fname(k)//'c_xfer'
              call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                   xtype=ncd_double,  &
@@ -2206,7 +2321,7 @@ contains
        if (carbon_type == 'c13') then
           do k = 1, nrepr
              data1dptr => this%reproductivec_patch(:,k)
-             ! e.g., grainc_13
+             ! e.g., reprocuctive_13
              varname = get_repr_rest_fname(k)//'c_13'
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
@@ -2224,7 +2339,7 @@ contains
 
           do k = 1, nrepr
              data1dptr => this%reproductivec_storage_patch(:,k)
-             ! e.g., grainc_13_storage
+             ! e.g., reproductivec_13_storage
              varname = get_repr_rest_fname(k)//'c_13_storage'
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
@@ -2242,7 +2357,7 @@ contains
 
           do k = 1, nrepr
              data1dptr => this%reproductivec_xfer_patch(:,k)
-             ! e.g., grainc_13_xfer
+             ! e.g., reproductivec_13_xfer
              varname = get_repr_rest_fname(k)//'c_13_xfer'
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
@@ -2273,7 +2388,7 @@ contains
 
           do k = 1, nrepr
              data1dptr => this%reproductivec_patch(:,k)
-             ! e.g., grainc_14
+             ! e.g., reproductivec_14
              varname = get_repr_rest_fname(k)//'c_14'
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
@@ -2291,7 +2406,7 @@ contains
 
           do k = 1, nrepr
              data1dptr => this%reproductivec_storage_patch(:,k)
-             ! e.g., grainc_14_storage
+             ! e.g., reproductivec_14_storage
              varname = get_repr_rest_fname(k)//'c_14_storage'
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
@@ -2309,7 +2424,7 @@ contains
 
           do k = 1, nrepr
              data1dptr => this%reproductivec_xfer_patch(:,k)
-             ! e.g., grainc_14_xfer
+             ! e.g., reproductivec_14_xfer
              varname = get_repr_rest_fname(k)//'c_14_xfer'
              call restartvar(ncid=ncid, flag=flag, varname=varname, &
                   xtype=ncd_double,  &
@@ -2442,9 +2557,18 @@ contains
        this%woodc_patch(i)              = value_patch
        this%totvegc_patch(i)            = value_patch
        this%totc_patch(i)               = value_patch
+
+       ! Set matrix solution values
+       if ( use_matrixcn )then
+       end if
+
        if ( use_crop ) then
           this%cropseedc_deficit_patch(i)  = value_patch
           this%xsmrpool_loss_patch(i)   = value_patch
+
+          ! Set matrix solution values for prognostic crop
+          if ( use_matrixcn )then
+          end if
        end if
     end do
 
@@ -2455,6 +2579,10 @@ contains
              this%reproductivec_patch(i,k)          = value_patch
              this%reproductivec_storage_patch(i,k)  = value_patch
              this%reproductivec_xfer_patch(i,k)     = value_patch
+
+             ! Set matrix solution values for prognostic crop reproductive patches
+             if ( use_matrixcn )then
+             end if
           end do
        end do
     end if

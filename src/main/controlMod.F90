@@ -185,6 +185,7 @@ contains
 
     namelist /clm_inparm / &
          deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
+
     ! lake_melt_icealb is of dimension numrad
 
     ! Glacier_mec info
@@ -229,7 +230,8 @@ contains
           use_fates_nocomp,                             &
           use_fates_sp,                                 &
           fates_inventory_ctrl_filename,                &
-          fates_parteh_mode
+          fates_parteh_mode,                            &
+          use_fates_tree_damage
     
    ! Ozone vegetation stress method 
    namelist / clm_inparam / o3_veg_stress_method
@@ -305,7 +307,6 @@ contains
 #endif
 
     use_init_interp = .false.
-
     if (masterproc) then
 
        ! ----------------------------------------------------------------------
@@ -462,6 +463,7 @@ contains
              call endrun(msg=' ERROR: ozone is not compatible with FATES.'//&
                   errMsg(sourcefile, __LINE__))
           end if
+
        end if
 
        ! If nfix_timeconst is equal to the junk default value, then it was not specified
@@ -536,6 +538,10 @@ contains
        call CNNDynamicsReadNML       ( NLFilename )
        call CNPhenologyReadNML       ( NLFilename )
     end if
+
+    ! ----------------------------------------------------------------------
+    ! Initialize the CN soil matrix namelist items
+    ! ----------------------------------------------------------------------
 
     ! ----------------------------------------------------------------------
     ! consistency checks
@@ -706,6 +712,7 @@ contains
     call mpi_bcast (fates_spitfire_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_fates_logging, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_tree_damage, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_cohort_age_tracking, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_st3, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_prescribed_phys,  1, MPI_LOGICAL, 0, mpicom, ier)
@@ -836,6 +843,7 @@ contains
     ! clump decomposition variables
 
     call mpi_bcast (clump_pproc, 1, MPI_INTEGER, 0, mpicom, ier)
+
 
   end subroutine control_spmd
 
@@ -1048,6 +1056,7 @@ contains
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
        write(iulog, *) '    fates_parteh_mode = ', fates_parteh_mode
        write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
+       write(iulog, *) '    use_fates_tree_damage = ', use_fates_tree_damage
        write(iulog, *) '    use_fates_cohort_age_tracking = ', use_fates_cohort_age_tracking
        write(iulog, *) '    use_fates_ed_st3 = ',use_fates_ed_st3
        write(iulog, *) '    use_fates_ed_prescribed_phys = ',use_fates_ed_prescribed_phys
