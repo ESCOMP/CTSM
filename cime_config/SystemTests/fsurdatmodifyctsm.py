@@ -65,54 +65,37 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
     def _run_modify_fsurdat(self):
         tool_path = os.path.join(self._ctsm_root,
                                  'tools/modify_fsurdat/fsurdat_modifier')
-        # Need to specify a specific python version that has the required
-        # dependencies
-        python_path = _get_python_path()
-        subprocess.check_call([python_path, tool_path, self._cfg_file_path])
+
+        self._case.load_env(reset=True)
+        conda_env = ". "+self._get_caseroot()+"/.env_mach_specific.sh; "
+        # Preprend the commands to get the conda environment for python first
+        conda_env += self._get_conda_env()
+        # Source the env
+        subprocess.run( conda_env+"python3 "+tool_path+" "+self._cfg_file_path, shell=True, check=True)
 
     def _modify_user_nl(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
                                 component = "clm",
                                 contents = "fsurdat = '{}'".format(self._fsurdat_out))
 
-def _get_python_path():
-    """Get path to ncar_pylib's python on cheyenne
+    def _get_conda_env(self):
+        #
+        # Add specific commands needed on different machines to get conda available
+        # Use semicolon here since it's OK to fail
+        #
+        # Remove python and add conda to environment for cheyennne
+        conda_env = "module unload python; module load conda"
+        # CGD machines should already have conda loaded
+        conda_env += "; module load lang/python"
+        # End above machine specific with a semicolon
+        conda_env += "; "
 
-    This is needed because we need a python environment that includes xarray
-    and its dependencies. This is currently hard-coded for cheyenne until we
-    come up with a robust way in CIME of ensuring that the correc python
-    environment is loaded.
+        # The following uses "&&" as they all need to work
+        # Run the manage_python_env script
+        conda_env += self._ctsm_root+"/manage_python_env"
+        # Activate the python environment
+        conda_env += " && conda activate ctsm_py"
+        # End above to get to actual command
+        conda_env += " && "
 
-    """
-    out = subprocess.check_output(['/glade/u/apps/opt/ncar_pylib/ncar_pylib',
-                                   '-l'], universal_newlines=True)
-
-    # First look for a loaded ('L') python
-    path = _find_path_from_pylib_output(out, 'L')
-    # If no loaded python found, look for a default ('D') python
-    if path is None:
-        path = _find_path_from_pylib_output(out, 'D')
-
-    if path is None:
-        raise RuntimeError('No python found')
-
-    return os.path.join(path, 'bin', 'python')
-
-def _find_path_from_pylib_output(ncar_pylib_output, char):
-    """Given line-by-line output from ncar_pylib, return the path to python if found
-
-    Args:
-    - ncar_pylib_output: line-by-line output from ncar_pylib
-    - char: the character to look for in the leading parenthetical expression (typically 'L' or 'D')
-
-    Returns a path to python, or None if not found
-    """
-    # The line of interest looks like the following (for char = 'L'):
-    # (L) ... /path/to/python
-    regex = r'\(' + char + r'\).* (/\S+)'
-    for line in ncar_pylib_output.splitlines():
-        match_line = re.match(regex, line)
-        if match_line:
-            return match_line.group(1)
-
-    return None
+        return( conda_env )
