@@ -280,6 +280,7 @@ def main ():
         hires_pft = 'off'
 
     if force_model_mesh_file is not None:
+        # open mesh_file to read element_count and, if available, orig_grid_dims
         mesh_file = netCDF4.Dataset(force_model_mesh_file, 'r')
         element_count = mesh_file.dimensions['elementCount'].size
         if 'origGridDims' in mesh_file.variables:
@@ -289,7 +290,7 @@ def main ():
             mesh_file.close()
             important_msg = 'Found data for force_model_mesh_nx and ' \
                             'force_model_mesh_ny in the mesh file so ' \
-                            'IGNORING ANY USER-ENTERED VALUES.'
+                            'IGNORING ANY CORRESPONDING USER-ENTERED VALUES.'
             logger.info(important_msg)
         elif force_model_mesh_nx is None or force_model_mesh_ny is None:
             error_msg = 'ERROR: You set --model-mesh but the file does not ' \
