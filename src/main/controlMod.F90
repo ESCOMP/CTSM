@@ -140,7 +140,6 @@ contains
 
     namelist /clm_inparm/ &
          fatmlndfrc, finidat, nrevsn, &
-         finidat_interp_dest, &
          use_init_interp, compname
 
     ! Input datasets
