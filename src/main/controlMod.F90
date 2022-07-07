@@ -967,7 +967,7 @@ contains
     endif
 
     write(iulog,'(a,i8)') '   Number of snow layers =', nlevsno
-    write(iulog,'(a,i8)') '   Max snow depth (mm) =', h2osno_max
+    write(iulog,'(a,d20.10)') '   Max snow depth (mm) =', h2osno_max
 
     write(iulog,'(a,i8)') '   glc number of elevation classes =', maxpatch_glc
     if (glc_do_dynglacier) then
