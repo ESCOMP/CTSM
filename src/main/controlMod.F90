@@ -1128,7 +1128,7 @@ contains
 
        ! If the input source file in finidat_interp_dest does not match the namelist input for mapping
        ! then use the namelist input (i.e. finidat) - otherwise just use the generated file
-       if (trim(initial_source_file) /= trim(finidat_interp_source)) then
+       if (trim(initial_source_file) /= trim(finidat)) then
           finidat_interp_source = finidat
           finidat = ' '
           if (masterproc) then
