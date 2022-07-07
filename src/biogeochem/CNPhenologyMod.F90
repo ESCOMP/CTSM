@@ -2337,9 +2337,6 @@ contains
       harvdate(p)  = NOT_Harvested
       sowing_count(p) = sowing_count(p) + 1
       crop_inst%sdates_thisyr(p,sowing_count(p)) = jday
-      do k = repr_grain_min, repr_grain_max
-         cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p, k) = 0._r8
-      end do
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
@@ -3189,9 +3186,6 @@ contains
                 p = filter_soilp(fp)
                 cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
                      cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) + &
-                     cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,k)
-                cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p,k) = &
-                     cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p,k) + &
                      cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,k)
                 cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
                      cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) + &
