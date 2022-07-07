@@ -1,9 +1,9 @@
 module initInterpMod
 
-  !----------------------------------------------------------------------- 
+  !-----------------------------------------------------------------------
   ! Interpolate initial conditions file from one resolution and/or landmask
   ! to another resolution and/or landmask
-  !----------------------------------------------------------------------- 
+  !-----------------------------------------------------------------------
 
 #include "shr_assert.h"
   use initInterpBounds, only : interp_bounds_type
@@ -40,7 +40,7 @@ module initInterpMod
 
   ! Private methods
 
-  private :: copy_metadata
+  private :: copy_and_add_metadata
   private :: check_dim_subgrid
   private :: check_dim_level
   private :: skip_var
@@ -54,7 +54,7 @@ module initInterpMod
   private :: check_interp_non_ciso_to_ciso
 
   ! Private data
- 
+
   character(len=8) :: created_glacier_mec_landunits
 
   ! Allowable interpolation methods
@@ -169,8 +169,8 @@ contains
 
   subroutine initInterp (filei, fileo, bounds, glc_behavior)
 
-    !----------------------------------------------------------------------- 
-    ! Read initial data from netCDF instantaneous initial data history file 
+    !-----------------------------------------------------------------------
+    ! Read initial data from netCDF instantaneous initial data history file
     !-----------------------------------------------------------------------
 
     use decompMod, only: bounds_type
@@ -183,14 +183,14 @@ contains
     type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! local variables
-    integer            :: i,j,k,l,m,n     ! loop indices    
-    integer            :: begi, endi      ! beginning/ending indices 
+    integer            :: i,j,k,l,m,n     ! loop indices
+    integer            :: begi, endi      ! beginning/ending indices
     integer            :: bego, endo      ! beginning/ending indices
     type(interp_bounds_type) :: bounds_i  ! input file bounds
     type(interp_bounds_type) :: bounds_o  ! output file bounds
     integer            :: nlevi,nlevo     ! input/output number of levels
-    type(file_desc_t), target :: ncidi, ncido    ! input/output pio fileids 
-    integer            :: dimleni,dimleno ! input/output dimension length       
+    type(file_desc_t), target :: ncidi, ncido    ! input/output pio fileids
+    integer            :: dimleni,dimleno ! input/output dimension length
     integer            :: nvars           ! number of variables
     character(len=256) :: varname         ! variable name
     character(len=256) :: varname_i_options ! possible variable names on input file
@@ -204,11 +204,11 @@ contains
     integer            :: status          ! return code
     integer            :: iflag_interpinic
     real(r8)           :: rvalue
-    integer            :: ivalue 
+    integer            :: ivalue
     integer            :: spinup_state_i, spinup_state_o
-    integer            :: decomp_cascade_state_i, decomp_cascade_state_o 
-    integer            :: npftsi, ncolsi, nlunsi, ngrcsi 
-    integer            :: npftso, ncolso, nlunso, ngrcso 
+    integer            :: decomp_cascade_state_i, decomp_cascade_state_o
+    integer            :: npftsi, ncolsi, nlunsi, ngrcsi
+    integer            :: npftso, ncolso, nlunso, ngrcso
     logical            :: glc_elevclasses_same
     logical            :: att_found
     integer , allocatable, target  :: pftindx(:)
@@ -237,7 +237,7 @@ contains
     call ncd_pio_openfile (ncidi, trim(filei) , 0)
     call ncd_pio_openfile (ncido, trim(fileo),  ncd_write)
 
-    call copy_metadata(ncidi, ncido)
+    call copy_and_add_metadata(ncidi, ncido, filei)
 
     call check_interp_non_ciso_to_ciso(ncidi)
 
@@ -278,7 +278,7 @@ contains
     end if
 
     ! --------------------------------------------
-    ! Determine input file global attributes that are needed 
+    ! Determine input file global attributes that are needed
     ! --------------------------------------------
 
     status = pio_get_att(ncidi, pio_global, &
@@ -422,9 +422,9 @@ contains
          bounds_source = bounds_i, bounds_dest = bounds_o, &
          pftindex = pftindx, colindex = colindx)
 
-    !------------------------------------------------------------------------          
+    !------------------------------------------------------------------------
     ! Read input initial data and write output initial data
-    !------------------------------------------------------------------------          
+    !------------------------------------------------------------------------
 
     ! Only examing the snow interfaces above zi=0 => zisno and zsno have
     ! the same level dimension below
@@ -436,20 +436,20 @@ contains
     if (masterproc) then
        write(iulog,*)'reading in initial dataset'
     end if
-    ! Get number of output variables and loop over them 
+    ! Get number of output variables and loop over them
     status = pio_inquire(ncido, nVariables=nvars)
     do varido = 1, nvars
 
-       !---------------------------------------------------          
-       ! Given varido, get out variable data 
-       !---------------------------------------------------          
+       !---------------------------------------------------
+       ! Given varido, get out variable data
+       !---------------------------------------------------
 
        status = pio_inquire_variable(ncido, varid=varido, name=varname, &
             xtype=xtypeo, ndims=ndimso, dimids=dimidso)
 
-       !---------------------------------------------------          
+       !---------------------------------------------------
        ! If variable is zsoi, SKIP this variable
-       !---------------------------------------------------          
+       !---------------------------------------------------
 
        if  ( trim(varname) == 'zsoi' ) then
           if (masterproc) then
@@ -458,10 +458,10 @@ contains
           CYCLE
        end if
 
-       !---------------------------------------------------          
+       !---------------------------------------------------
        ! If interpinic flag is set to skip on output file
        ! SKIP this variable
-       !---------------------------------------------------          
+       !---------------------------------------------------
 
        status = pio_inq_varid (ncido, trim(varname), vardesc)
        status = pio_get_att(ncido, vardesc, 'interpinic_flag', iflag_interpinic)
@@ -472,10 +472,10 @@ contains
           CYCLE
        end if
 
-       !---------------------------------------------------          
+       !---------------------------------------------------
        ! Read metadata telling us possible variable names on input file;
        ! determine which of these is present on the input file
-       !---------------------------------------------------          
+       !---------------------------------------------------
 
        ! 'varnames_on_old_files' is a colon-delimited list of possible variable names,
        ! enabling backwards compatibility with old input files
@@ -511,7 +511,7 @@ contains
        !---------------------------------------------------
        ! If variable is on output file - but not on input file
        ! SKIP this variable
-       !---------------------------------------------------          
+       !---------------------------------------------------
 
        call pio_seterrorhandling(ncidi, PIO_BCAST_ERROR)
        status = pio_inq_varid(ncidi, name=varname_i, vardesc=vardesc)
@@ -523,15 +523,15 @@ contains
           CYCLE
        end if
 
-       !---------------------------------------------------          
-       ! For scalar outut variables 
-       !---------------------------------------------------          
+       !---------------------------------------------------
+       ! For scalar outut variables
+       !---------------------------------------------------
 
        if ( ndimso == 0 ) then
 
           if  ( trim(varname) .eq. 'spinup_state' ) then
 
-             ! since we are copying soil variables, need to also copy spinup state 
+             ! since we are copying soil variables, need to also copy spinup state
              ! since otherwise if they are different then it will break the spinup procedure
              status = pio_inq_varid(ncidi, trim(varname_i), vardesc)
              status = pio_get_var(ncidi, vardesc, spinup_state_i)
@@ -549,7 +549,7 @@ contains
                         trim(varname_i), ' => ', trim(varname)
                 end if
              endif
-             
+
           else if  ( trim(varname) .eq. 'decomp_cascade_state' ) then
 
              ! ditto for the decomposition cascade
@@ -586,9 +586,9 @@ contains
 
           end if
 
-       !---------------------------------------------------          
+       !---------------------------------------------------
        ! For 1D output variables
-       !---------------------------------------------------          
+       !---------------------------------------------------
 
        else if ( ndimso == 1 ) then
 
@@ -614,7 +614,7 @@ contains
           if ( xtypeo == pio_int )then
              call interp_1d_int ( varname, varname_i, vec_dimname, begi, endi, bego, endo, &
                   ncidi, ncido, sgridindex )
-          else if ( xtypeo == pio_double )then                                 
+          else if ( xtypeo == pio_double )then
              call interp_1d_double( varname, varname_i, vec_dimname, begi, endi, bego, endo, &
                   ncidi, ncido, sgridindex )
           else
@@ -622,9 +622,9 @@ contains
                   trim(varname)//errMsg(sourcefile, __LINE__))
           end if
 
-       !---------------------------------------------------          
+       !---------------------------------------------------
        ! For 2D output variables
-       !---------------------------------------------------          
+       !---------------------------------------------------
 
        else if ( ndimso == 2 )then
 
@@ -693,8 +693,8 @@ contains
     ! variables
     call pio_syncfile(ncido)
 
-    ! BUG: (EBK, 2016-1-6, bugz: 2261) PIO2 in cime4.3.9 has a bug where you can't do 
-    ! two writes of the same variable to a file. So we have to close and reopen the file. 
+    ! BUG: (EBK, 2016-1-6, bugz: 2261) PIO2 in cime4.3.9 has a bug where you can't do
+    ! two writes of the same variable to a file. So we have to close and reopen the file.
     ! When PIO2 is robust enough to handle that we can remove the following two lines.
     call pio_closefile(ncido)
     call ncd_pio_openfile (ncido, trim(fileo),  ncd_write)
@@ -732,7 +732,7 @@ contains
   end subroutine initInterp
 
   !-----------------------------------------------------------------------
-  subroutine copy_metadata(ncidi, ncido)
+  subroutine copy_and_add_metadata(ncidi, ncido, filei)
     !
     ! !DESCRIPTION:
     ! Copy any necessary global metadata from the input file to the output file
@@ -740,18 +740,19 @@ contains
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncidi ! input (source) file
     type(file_desc_t), intent(inout) :: ncido ! output (destination) file
+    character(len=*) , intent(in)    :: filei ! input (source) filename
+
     !
     ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'copy_metadata'
+    character(len=*), parameter :: subname = 'copy_and_add_metadata'
     !-----------------------------------------------------------------------
 
     call ncd_redef(ncido)
+    call ncd_putatt(ncido, ncd_global, 'initial_source_file', trim(filei))
     call copy_issue_fixed_metadata(ncidi, ncido)
     call ncd_enddef(ncido)
 
-  end subroutine copy_metadata
-
+  end subroutine copy_and_add_metadata
 
   !-----------------------------------------------------------------------
   function skip_var(iflag_interpinic)
@@ -801,17 +802,17 @@ contains
     character(len=*)  , intent(inout) :: dimname
     integer           , intent(in)    :: begi, endi
     integer           , intent(in)    :: bego, endo
-    type(file_desc_t) , intent(inout) :: ncidi         
-    type(file_desc_t) , intent(inout) :: ncido         
+    type(file_desc_t) , intent(inout) :: ncidi
+    type(file_desc_t) , intent(inout) :: ncido
     type(subgrid_special_indices_type), intent(in) :: subgrid_special_indices
     type(glc_behavior_type), intent(in) :: glc_behavior
     logical           , intent(in)    :: glc_elevclasses_same
     logical           , intent(out)   :: activei(begi:endi)
     logical           , intent(out)   :: activeo(bego:endo)
-    integer           , intent(out)   :: minindx(bego:endo)         
+    integer           , intent(out)   :: minindx(bego:endo)
     !
-    ! local variables 
-    type(subgrid_type)   :: subgridi 
+    ! local variables
+    type(subgrid_type)   :: subgridi
     type(subgrid_type)   :: subgrido
     ! --------------------------------------------------------------------
 
@@ -866,12 +867,12 @@ contains
     type(file_desc_t)  , intent(inout) :: ncid
     character(len=*)   , intent(in)    :: dimname
     logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
-    logical            , intent(out)   :: active(beg:end)    
+    logical            , intent(out)   :: active(beg:end)
     type(subgrid_type) , intent(inout) :: subgrid
     !
     ! local variables
     integer              :: n
-    integer, pointer     :: itemp(:) 
+    integer, pointer     :: itemp(:)
     real(r8), parameter  :: deg2rad  = SHR_CONST_PI/180._r8
     !-----------------------------------------------------------------------
 
@@ -895,8 +896,8 @@ contains
     end if
 
     if (dimname == 'pft') then
-       call read_var_double(ncid=ncid, varname='pfts1d_lon'    , data=subgrid%lon  , dim1name='pft', use_glob=use_glob) 
-       call read_var_double(ncid=ncid, varname='pfts1d_lat'    , data=subgrid%lat  , dim1name='pft', use_glob=use_glob) 
+       call read_var_double(ncid=ncid, varname='pfts1d_lon'    , data=subgrid%lon  , dim1name='pft', use_glob=use_glob)
+       call read_var_double(ncid=ncid, varname='pfts1d_lat'    , data=subgrid%lat  , dim1name='pft', use_glob=use_glob)
        call read_var_int(ncid=ncid, varname='pfts1d_itypveg', data=subgrid%ptype, dim1name='pft', use_glob=use_glob)
        call read_var_int(ncid=ncid, varname='pfts1d_itypcol', data=subgrid%ctype, dim1name='pft', use_glob=use_glob)
        call read_var_int(ncid=ncid, varname='pfts1d_ityplun', data=subgrid%ltype, dim1name='pft', use_glob=use_glob)
@@ -905,22 +906,22 @@ contains
           call read_var_double(ncid=ncid, varname='pfts1d_topoglc', data=subgrid%topoglc, dim1name='pft', use_glob=use_glob)
        end if
     else if (dimname == 'column') then
-       call read_var_double(ncid=ncid, varname='cols1d_lon'    , data=subgrid%lon  , dim1name='column', use_glob=use_glob) 
-       call read_var_double(ncid=ncid, varname='cols1d_lat'    , data=subgrid%lat  , dim1name='column', use_glob=use_glob)  
-       call read_var_int(ncid=ncid, varname='cols1d_ityp'   , data=subgrid%ctype, dim1name='column', use_glob=use_glob) 
-       call read_var_int(ncid=ncid, varname='cols1d_ityplun', data=subgrid%ltype, dim1name='column', use_glob=use_glob) 
+       call read_var_double(ncid=ncid, varname='cols1d_lon'    , data=subgrid%lon  , dim1name='column', use_glob=use_glob)
+       call read_var_double(ncid=ncid, varname='cols1d_lat'    , data=subgrid%lat  , dim1name='column', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='cols1d_ityp'   , data=subgrid%ctype, dim1name='column', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='cols1d_ityplun', data=subgrid%ltype, dim1name='column', use_glob=use_glob)
        call read_var_int(ncid=ncid, varname='cols1d_active' , data=itemp        , dim1name='column', use_glob=use_glob)
        if (associated(subgrid%topoglc)) then
-          call read_var_double(ncid=ncid, varname='cols1d_topoglc', data=subgrid%topoglc, dim1name='column', use_glob=use_glob) 
+          call read_var_double(ncid=ncid, varname='cols1d_topoglc', data=subgrid%topoglc, dim1name='column', use_glob=use_glob)
        end if
     else if (dimname == 'landunit') then
-       call read_var_double(ncid=ncid, varname='land1d_lon'    , data=subgrid%lon  , dim1name='landunit', use_glob=use_glob) 
-       call read_var_double(ncid=ncid, varname='land1d_lat'    , data=subgrid%lat  , dim1name='landunit', use_glob=use_glob) 
+       call read_var_double(ncid=ncid, varname='land1d_lon'    , data=subgrid%lon  , dim1name='landunit', use_glob=use_glob)
+       call read_var_double(ncid=ncid, varname='land1d_lat'    , data=subgrid%lat  , dim1name='landunit', use_glob=use_glob)
        call read_var_int(ncid=ncid, varname='land1d_ityplun', data=subgrid%ltype, dim1name='landunit', use_glob=use_glob)
-       call read_var_int(ncid=ncid, varname='land1d_active' , data=itemp        , dim1name='landunit', use_glob=use_glob) 
+       call read_var_int(ncid=ncid, varname='land1d_active' , data=itemp        , dim1name='landunit', use_glob=use_glob)
     else if (dimname == 'gridcell') then
-       call read_var_double(ncid=ncid, varname='grid1d_lon'    , data=subgrid%lon  , dim1name='gridcell', use_glob=use_glob) 
-       call read_var_double(ncid=ncid, varname='grid1d_lat'    , data=subgrid%lat  , dim1name='gridcell', use_glob=use_glob) 
+       call read_var_double(ncid=ncid, varname='grid1d_lon'    , data=subgrid%lon  , dim1name='gridcell', use_glob=use_glob)
+       call read_var_double(ncid=ncid, varname='grid1d_lat'    , data=subgrid%lat  , dim1name='gridcell', use_glob=use_glob)
 
        ! All gridcells in the restart file are active
        itemp(beg:end) = 1
@@ -991,7 +992,7 @@ contains
     integer :: ivalue
     real(r8):: rvalue
     ! --------------------------------------------------------------------
- 
+
     if (masterproc) then
        write(iulog,*) 'Copying      : ',trim(varname_i), ' => ', trim(varname)
     end if
@@ -1004,7 +1005,7 @@ contains
        call ncd_io(ncid=ncido, varname=trim(varname), flag='write', data=rvalue)
     else
        if (masterproc) then
-          write(iulog,*)'ERROR interpinic: unhandled case for var ',trim(varname),' stopping' 
+          write(iulog,*)'ERROR interpinic: unhandled case for var ',trim(varname),' stopping'
        end if
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
@@ -1200,7 +1201,7 @@ contains
     ! match can be found for the generic subprogram call "WRITEVAR"'. So we
     ! explicitly call the specific routine, rather than calling writevar.
     call var2do%writevar_double(rbuf2do)
-       
+
     deallocate(rbuf2do, rbuf2do_levelsi)
     multilevel_interpolator => null()
 
@@ -1212,8 +1213,8 @@ contains
 
     ! --------------------------------------------------------------------
     ! arguments
-    type(file_desc_t) , intent(inout) :: ncidi         
-    type(file_desc_t) , intent(inout) :: ncido         
+    type(file_desc_t) , intent(inout) :: ncidi
+    type(file_desc_t) , intent(inout) :: ncido
     character(len=*)  , intent(in)    :: dimname
     integer           , intent(out)   :: dimleni
     integer           , intent(out)   :: dimleno
@@ -1238,8 +1239,8 @@ contains
 
     ! --------------------------------------------------------------------
     ! arguments
-    type(file_desc_t) , intent(inout) :: ncidi         
-    type(file_desc_t) , intent(inout) :: ncido         
+    type(file_desc_t) , intent(inout) :: ncidi
+    type(file_desc_t) , intent(inout) :: ncido
     character(len=*)  , intent(in)    :: dimname
     logical           , intent(in)    :: must_be_same
     !
@@ -1282,7 +1283,7 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    type(file_desc_t)       , intent(inout) :: ncido         
+    type(file_desc_t)       , intent(inout) :: ncido
     type(interp_bounds_type), intent(in)    :: bounds_o
     !
     ! !LOCAL VARIABLES:

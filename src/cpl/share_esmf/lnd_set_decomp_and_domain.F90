@@ -834,18 +834,20 @@ contains
           write(iulog,'(a)') 'lnd_set_decomp_and_domain: reading landmask and landfrac data from landfrac.nc'
           write(iulog,*)
        end if
-       call ncd_pio_openfile (pioid, trim(flandfrac), 0)
-       call ncd_io(ncid=pioid, varname='landmask', data=lndmask_glob, flag='read')
-       call ncd_io(ncid=pioid, varname='landfrac', data=lndfrac_glob, flag='read')
-       call ncd_pio_closefile(pioid)
        inquire(file=trim(flandfrac_status), exist=lexists)
        if (.not. lexists) then
+          ! To read the file first check that the status file exists
           if (masterproc) then
              write(iulog,'(a)')' failed to find file '//trim(flandfrac_status)
              write(iulog,'(a)')' this indicates a problem in creating '//trim(flandfrac_status)
              write(iulog,'(a)')' remove '//trim(flandfrac)//' and try again'
           end if
           call endrun()
+       else
+          call ncd_pio_openfile (pioid, trim(flandfrac), 0)
+          call ncd_io(ncid=pioid, varname='landmask', data=lndmask_glob, flag='read')
+          call ncd_io(ncid=pioid, varname='landfrac', data=lndfrac_glob, flag='read')
+          call ncd_pio_closefile(pioid)
        end if
 
     end if

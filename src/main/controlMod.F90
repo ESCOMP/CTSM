@@ -957,49 +957,49 @@ contains
     end if
 
     if (fsnowoptics == ' ') then
-       write(iulog,*) '   snow optical properties file NOT set'
+       write(iulog,'(a)') '   snow optical properties file NOT set'
     else
-       write(iulog,*) '   snow optical properties file = ',trim(fsnowoptics)
+       write(iulog,'(a)') '   snow optical properties file = '//trim(fsnowoptics)
     endif
     if (fsnowaging == ' ') then
-       write(iulog,*) '   snow aging parameters file NOT set'
+       write(iulog,'(a)') '   snow aging parameters file NOT set'
     else
-       write(iulog,*) '   snow aging parameters file = ',trim(fsnowaging)
+       write(iulog,'(a)') '   snow aging parameters file = '//trim(fsnowaging)
     endif
 
-    write(iulog,*) '   Number of snow layers =', nlevsno
-    write(iulog,*) '   Max snow depth (mm) =', h2osno_max
+    write(iulog,'(a,i8)') '   Number of snow layers =', nlevsno
+    write(iulog,'(a,i8)') '   Max snow depth (mm) =', h2osno_max
 
-    write(iulog,*) '   glc number of elevation classes =', maxpatch_glc
+    write(iulog,'(a,i8)') '   glc number of elevation classes =', maxpatch_glc
     if (glc_do_dynglacier) then
        write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'
     else
-       write(iulog,*) '   glc CLM glacier areas and topography will NOT evolve dynamically'
+       write(iulog,'(a)') '   glc CLM glacier areas and topography will NOT evolve dynamically'
     end if
-    write(iulog,*) '   glc snow persistence max days = ', glc_snow_persistence_max_days
+    write(iulog,'(a,i8)') '   glc snow persistence max days = ', glc_snow_persistence_max_days
 
     if (nsrest == nsrStartup) then
        if (finidat /= ' ') then
-          write(iulog,*) '   initial data: ', trim(finidat)
+          write(iulog,'(a)') '   initial data: ', trim(finidat)
        else if (finidat_interp_source /= ' ') then
-          write(iulog,*) '   initial data interpolated from: ', trim(finidat_interp_source)
+          write(iulog,'(a)') '   initial data interpolated from: '// trim(finidat_interp_source)
        else
-          write(iulog,*) '   initial data created by model (cold start)'
+          write(iulog,'(a)') '   initial data created by model (cold start)'
        end if
     else
        write(iulog,*) '   restart data   = ',trim(nrevsn)
     end if
 
-    write(iulog,*) '   atmospheric forcing data is from cesm atm model'
-    write(iulog,*) 'Restart parameters:'
-    write(iulog,*)'   restart pointer file directory     = ',trim(rpntdir)
-    write(iulog,*)'   restart pointer file name          = ',trim(rpntfil)
-    write(iulog,*) 'model physics parameters:'
+    write(iulog,'(a)') '   atmospheric forcing data is from cesm atm model'
+    write(iulog,'(a)') 'Restart parameters:'
+    write(iulog,'(a)')'   restart pointer file directory     = '//trim(rpntdir)
+    write(iulog,'(a)')'   restart pointer file name          = '//trim(rpntfil)
+    write(iulog,'(a)') 'model physics parameters:'
 
     if ( trim(co2_type) == 'constant' )then
-       write(iulog,*) '   CO2 volume mixing ratio   (umol/mol)   = ', co2_ppmv
+       write(iulog,'(a,d20.10)') '   CO2 volume mixing ratio   (umol/mol)   = ', co2_ppmv
     else
-       write(iulog,*) '   CO2 volume mixing ratio                = ', co2_type
+       write(iulog,'(a)'       ) '   CO2 volume mixing ratio                = '//trim(co2_type)
     end if
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
@@ -1014,9 +1014,9 @@ contains
        write(iulog,*) '   Namelist should not differ except for ending time step and run type'
     end if
     if (nsrest == nsrBranch) then
-       write(iulog,*) 'branch warning:'
-       write(iulog,*) '   Namelist not checked for agreement with initial run.'
-       write(iulog,*) '   Surface data set and reference date should not differ from initial run'
+       write(iulog,'(a)') 'branch warning:'
+       write(iulog,'(a)') '   Namelist not checked for agreement with initial run.'
+       write(iulog,'(a)') '   Surface data set and reference date should not differ from initial run'
     end if
     write(iulog,*) '   nsegspc              = ',nsegspc
     ! New fields
@@ -1081,6 +1081,7 @@ contains
     ! given the values of finidat and finidat_interp_source.
     !
     ! !USES:
+    use netcdf
     !
     ! !ARGUMENTS:
     character(len=*), intent(in)    :: finidat_interp_dest
@@ -1088,7 +1089,10 @@ contains
     character(len=*), intent(inout) :: finidat_interp_source
     !
     ! !LOCAL VARIABLES:
-    logical :: lexists
+    logical                    :: lexists
+    integer                    :: ncid
+    character(len=SHR_KIND_CL) :: initial_source_file
+    integer                    :: status
     character(len=*), parameter :: subname = 'apply_use_init_interp'
     !-----------------------------------------------------------------------
 
@@ -1115,12 +1119,48 @@ contains
 
     inquire(file=trim(finidat_interp_dest), exist=lexists)
     if (lexists) then
-       finidat = trim(finidat_interp_dest)
+       ! open the input file and check for the name of the input source file
+       status = nf90_open(trim(finidat_interp_dest), 0, ncid)  
+       if (status /= nf90_noerr) call handle_err(status)
+       status = nf90_get_att(ncid, NF90_GLOBAL, 'initial_source_file', initial_source_file)
+       if (status /= nf90_noerr) call handle_err(status)
+       status = nf90_close(ncid)
+       if (status /= nf90_noerr) call handle_err(status)
+
+       ! If the input source file in finidat_interp_dest does not match the namelist input for mapping
+       ! then use the namelist input (i.e. finidat) - otherwise just use the generated file
+       if (trim(initial_source_file) /= trim(finidat_interp_source)) then
+          finidat_interp_source = finidat
+          finidat = ' '
+          if (masterproc) then
+             write(iulog,'(a)')' interpolating initial dataset using source file '//trim(finidat_interp_source)
+          end if
+       else
+          finidat = trim(finidat_interp_dest)
+          if (masterproc) then
+             write(iulog,'(a)')' using interpolated initial dataset file '//trim(finidat)
+          end if
+       end if
     else
        finidat_interp_source = finidat
        finidat = ' '
+       if (masterproc) then
+          write(iulog,'(a)')' interpolating initial dataset using source file '//trim(finidat_interp_source)
+       end if
     end if
 
+  contains
+    subroutine handle_err(status)
+      integer, intent ( in) :: status
+      if (status /= nf90_noerr) then
+         if (masterproc) then
+            write(iulog,'(a)') trim(nf90_strerror(status))
+         end if
+         call endrun()
+      end if
+    end subroutine handle_err
+
   end subroutine apply_use_init_interp
+
 
 end module controlMod
