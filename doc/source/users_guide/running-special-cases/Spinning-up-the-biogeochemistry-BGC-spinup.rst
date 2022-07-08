@@ -95,7 +95,7 @@ Example: Final CLMBGC Spinup Simulation for |version|-BGC
    # Set the runtype to startup
    > ./xmlchange RUN_TYPE=startup
    # And copy the rpointer files for datm and drv from the earlier case
-   > cp /glade/scratch/$LOGIN/archive/BGC_spinup/rest/rpointer.atm /ptmp/$LOGIN/CN_finalspinup
+   > cp /glade/scratch/$LOGIN/archive/BGC_spinup/rest/rpointer.atm /glade/scratch/$LOGIN/CN_finalspinup/run
    # Set the finidat file to the last restart file saved in previous step
    > echo ' finidat = "BGC_spinup.clm2.r.0201-01-01-00000.nc"' > user_nl_clm
    # Now setup
