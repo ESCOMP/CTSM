@@ -60,10 +60,17 @@ module clm_varpar
   integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
   integer, public, parameter :: nvariants   =   2     ! number of variants of PFT constants
 
-  integer, public :: maxveg                ! # of pfts + cfts
-  integer, public :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
+  ! CN Matrix solution sizes
+  integer, public, parameter :: nvegpool_natveg = 18  ! number of vegetation matrix pool without crop
+  integer, public, parameter :: nvegpool_crop   =  3  ! number of vegetation matrix pool with crop
+  integer, public, parameter :: nveg_retransn   =  1  ! number of vegetation retranslocation pool
+  integer, public :: nvegcpool                        ! number of vegetation C pools
+  integer, public :: nvegnpool                        ! number of vegetation N pools
 
-  integer, public :: maxsoil_patches  ! # of pfts + cfts + bare ground; replaces maxpatch_pft, which is obsolete
+  integer, public :: maxveg                           ! # of pfts + cfts
+  integer, public :: maxpatch_urb= 5                  ! max number of urban patches (columns) in urban landunit
+
+  integer, public :: maxsoil_patches                  ! # of pfts + cfts + bare ground; replaces maxpatch_pft, which is obsolete
 
   ! constants for decomposition cascade
 
@@ -72,13 +79,13 @@ module clm_varpar
   integer, public            :: i_litr3 = -9  ! TEMPORARY FOR CascadeCN TO BUILD
   ! The code currently expects i_litr_min = i_met_lit = 1 and
   !                            i_litr_max = 2 or 3
-  integer, public :: i_litr_min = -9  ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_litr_max = -9  ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_met_lit = -9  ! index of metabolic litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_cop_mic = -9  ! index of copiotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_oli_mic = -9  ! index of oligotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_cwd      = -9  ! index of cwd pool; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_cwdl2 = -9  ! index of cwd to l2 transition; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_litr_min    = -9    ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_litr_max    = -9    ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_met_lit     = -9    ! index of metabolic litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_cop_mic     = -9    ! index of copiotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_oli_mic     = -9    ! index of oligotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_cwd         = -9    ! index of cwd pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_cwdl2       = -9    ! index of cwd to l2 transition; overwritten in SoilBiogeochemDecompCascade*Mod
 
   integer, public :: ndecomp_pools_max
   integer, public :: ndecomp_pools
@@ -280,6 +287,13 @@ contains
        write(iulog, '(a, i3)') '    nlevdecomp_full = ', nlevdecomp_full
        write(iulog, '(a, i3)') '    nlevlak = ', nlevlak
        write(iulog, *)
+    end if
+
+    ! CN Matrix settings
+    if (use_crop)then
+       nvegcpool = nvegpool_natveg + nvegpool_crop
+    else
+       nvegcpool = nvegpool_natveg
     end if
 
   end subroutine clm_varpar_init
