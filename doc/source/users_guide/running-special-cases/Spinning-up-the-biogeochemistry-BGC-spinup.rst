@@ -3,7 +3,7 @@
 .. include:: ../substitutions.rst
 
 ==========================
- Spinup of CLM5.0-BGC-Crop
+ Spinup of |version|-BGC-Crop
 ==========================
 
 To get the |version|-BGC model to a steady state, you first run it from arbitrary initial conditions using the "accelerated decomposition spinup" (-bgc_spinup on in CLM **configure**, see example below) mode for about 200 simulation years. :numref:`Figure BGC AD spinup plot for 1850 GSWP3` shows spinup behavior for an 1850 
@@ -53,7 +53,7 @@ equilibrium (e.g., TOTECOSYSC, TOTSOMC, TOTVEGC), particularly at high latitudes
 reach a new equilibrium. In this configuration, this will also automatically reseed "dead" plant functional types in the initial file with a 
 bit of leaf carbon to give those plant functional types another chance to grow under the new atmospheric forcing or model conditions.
 
-**1. 50_AD_SPINUP**
+**1. |version| accelerated-decomposition (AD) spinup**
      For the first step of running 200+ years in "-bgc_spinup on" mode, you will setup a case, and then edit the values in env_build.xml and env_run.xml so that the right configuration is turned on and the simulation is setup to run for the required length of simulation time. So do the following:
    
 Example:: AD_SPINUP Simulation for |version|-BGC
@@ -70,7 +70,7 @@ Example:: AD_SPINUP Simulation for |version|-BGC
    # Now build
    > ./case.build
    # The following sets RESUBMIT to 3 times in env_run.xml (you could also use an editor)
-   # The following sets STOP_DATE,STOP_N and STOP_OPTION to Jan/1/0201, 20, "nyears" in env_run.xml (you could also use an       editor)
+   # The following sets STOP_DATE,STOP_N and STOP_OPTION to Jan/1/0201, 20, "nyears" in env_run.xml (you could also use an editor)
    > ./xmlchange RESUBMIT=3,STOP_N=50,STOP_OPTION=nyears,STOP_DATE=02010101
    # Now run normally
    > ./case.submit
