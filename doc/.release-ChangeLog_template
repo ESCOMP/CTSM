@@ -36,42 +36,42 @@ Testing:
   unit-tests (components/clm/src):
 
     cheyenne - 
-    hobart ---
+    izumi ----
 
   tools-tests (components/clm/test/tools):
 
     cheyenne - 
-    hobart ---
+    izumi ----
 
   PTCLM testing (components/clm/tools/shared/PTCLM/test):
 
      cheyenne - 
-     hobart ---
+     izumi ----
 
   regular tests (aux_clm):
 
     cheyenne_intel ---- 
     cheyenne_gnu ------ 
-    hobart_nag -------- 
-    hobart_pgi -------- 
-    hobart_intel ------ 
+    izumi_nag --------- 
+    izumi_pgi --------- 
+    izumi_intel ------- 
 
   regular tests (prealpha):
 
     cheyenne_intel -
     cheyenne_gnu ---
-    hobart_nag -----
+    izumi_nag ------
 
   regular tests (prebeta):
 
     cheyenne_intel -
     cheyenne_gnu ---
-    hobart_nag -----
+    izumi_nag ------
 
 Summary of Answer changes:
 -------------------------
 
-Baseline version for comparison:
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
 
 Changes answers relative to baseline:
 
@@ -84,6 +84,9 @@ Changes answers relative to baseline:
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
 
   URL for LMWG diagnostics output for new climate:
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+  (This will likely be true if the LII tests failed)
 
 Detailed list of changes:
 ------------------------

@@ -15,6 +15,11 @@ I.  General directory structure:
                            can be plotted easily
         ncl_scripts ------ NCL post or pre processing scripts.
 
+        contrib ---------- Miscellaneous tools for pre or post processing of CTSM.
+                           Typically these are contributed by anyone who has something
+                           they think might be helpful to the community. They may not
+                           be as well tested or supported as other tools.
+
     cime-tools ($CIMEROOT/tools/) (CIMEROOT is ../cime for a CTSM checkout and ../../../cime for a CESM checkout)
         $CIMEROOT/mapping/gen_domain_files
             gen_domain ------- Create data model domain datasets from SCRIP mapping datasets.

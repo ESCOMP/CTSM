@@ -27,6 +27,8 @@ module SoilBiogeochemNitrogenStateType
   type, public :: soilbiogeochem_nitrogenstate_type
 
      real(r8), pointer :: decomp_npools_vr_col         (:,:,:) ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools
+     real(r8), pointer :: decomp_soiln_vr_col          (:,:)   ! col (gN/m3) vertically-resolved decomposing total soil N pool
+
      real(r8), pointer :: sminn_vr_col                 (:,:)   ! col (gN/m3) vertically-resolved soil mineral N
      real(r8), pointer :: ntrunc_vr_col                (:,:)   ! col (gN/m3) vertically-resolved column-level sink for N truncation
 
@@ -128,6 +130,8 @@ contains
 
     allocate(this%decomp_npools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools));
     this%decomp_npools_vr_col(:,:,:)= nan
+    allocate(this%decomp_soiln_vr_col(begc:endc,1:nlevdecomp_full))
+    this%decomp_soiln_vr_col(:,:)= nan
 
   end subroutine InitAllocate
 
@@ -159,6 +163,13 @@ contains
     !---------------------------------------------------------------------
 
     begc = bounds%begc; endc = bounds%endc
+
+    if ( nlevdecomp_full > 1 ) then
+       this%decomp_soiln_vr_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='SOILN_vr', units='gN/m^3',  type2d='levdcmp', &
+            avgflag='A', long_name='SOIL N (vertically resolved)', &
+            ptr_col=this%decomp_soiln_vr_col)
+    end if
 
     if ( nlevdecomp_full > 1 ) then
        this%decomp_npools_vr_col(begc:endc,:,:) = spval
@@ -801,6 +812,27 @@ contains
             endif
          end do
       end do
+
+      ! Add soil nitrogen pools together to produce vertically-resolved decomposing total soil N pool
+      if ( nlevdecomp_full > 1 ) then
+         do j = 1, nlevdecomp
+            do fc = 1,num_allc
+               c = filter_allc(fc)
+               this%decomp_soiln_vr_col(c,j) = 0._r8
+            end do
+         end do
+         do l = 1, ndecomp_pools
+            if ( decomp_cascade_con%is_soil(l) ) then
+               do j = 1, nlevdecomp
+                  do fc = 1,num_allc
+                     c = filter_allc(fc)
+                     this%decomp_soiln_vr_col(c,j) = this%decomp_soiln_vr_col(c,j) + &
+                          this%decomp_npools_vr_col(c,j,l)
+                  end do
+               end do
+            end if
+         end do
+      end if
       
       ! total litter nitrogen to 1 meter (TOTLITN_1m)
       do fc = 1,num_allc
