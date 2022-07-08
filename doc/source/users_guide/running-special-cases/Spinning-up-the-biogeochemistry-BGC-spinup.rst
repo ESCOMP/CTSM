@@ -91,7 +91,7 @@ Example: Final CLMBGC Spinup Simulation for |version|-BGC
    > cd BGC_finalspinup
    # Now, Copy the last CLM restart file from the earlier case into your run directory
    > cp /ptmp/$LOGIN/archive/BGC_spinup/rest/BGC_spinup.clm*.r*.0201-01-01-00000.nc \
-   /glade/scratch/$LOGIN/CN_finalspinup
+   /glade/scratch/$LOGIN/CN_finalspinup/run
    # Set the runtype to startup
    > ./xmlchange RUN_TYPE=startup
    # And copy the rpointer files for datm and drv from the earlier case
