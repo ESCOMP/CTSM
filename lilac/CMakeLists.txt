@@ -62,10 +62,10 @@ message("----------------------------------------------------")
 # done first, so that in case of name collisions, the CLM versions take
 # precedence (when there are two files with the same name, the one added later
 # wins).
-add_subdirectory(${CIME_ROOT}/src/share/util csm_share)
-add_subdirectory(${CIME_ROOT}/src/share/unit_test_stubs/util csm_share_stubs)
-add_subdirectory(${CIME_ROOT}/src/share/esmf_wrf_timemgr esmf_wrf_timemgr)
-add_subdirectory(${CIME_ROOT}/src/drivers/mct/shr drv_share)
+add_subdirectory(${CIME_ROOT}/../share/src csm_share)
+add_subdirectory(${CIME_ROOT}/../share/unit_test_stubs/util csm_share_stubs)
+add_subdirectory(${CIME_ROOT}/../share/esmf_wrf_timemgr esmf_wrf_timemgr)
+add_subdirectory(${CIME_ROOT}/../components/cpl7/driver drv_share)
 message("----------------------------------------------------")
 
 # Extract just the files we need from drv_share
@@ -108,11 +108,11 @@ endforeach()
 # We rely on pio for cmake utilities like findnetcdf.cmake, so that we don't
 # need to duplicate this cmake code
 message ("CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
-list    (APPEND CMAKE_MODULE_PATH "${CIME_ROOT}/src/externals/pio2/cmake")
+list    (APPEND CMAKE_MODULE_PATH "${CIME_ROOT}/../libraries/parallelio/cmake")
 message ("CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 
 
-add_subdirectory (${CIME_ROOT}/src/externals/pio2/test)
+add_subdirectory (${CIME_ROOT}/..libraries/parallelio/tests)
 
 message("----------------------------------------------------")
 option(ENABLE_PFUNIT "Enable pfUnit testing Framework" ON)
