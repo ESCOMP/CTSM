@@ -1,4 +1,110 @@
 ===============================================================
+Tag name:  ctsm1.0.dev025
+Originator(s): Keith Oleson, Bill Sacks
+Date: Wed Jan 23 10:48:01 MST 2019
+One-line Summary: History fields for vertically-resolved sums of soil C and N, and minor fixes
+
+Purpose of changes
+------------------
+
+Main change is from Keith Oleson: Add history fields for
+vertically-resolved sums of SOIL1C, SOIL2C, and SOIL3C for C12, C13,
+C14, and similarly for N. New fields are SOILC_vr, C13_SOILC_vr, and
+C14_SOILC_vr, and SOILN_vr. For runs that use the output_bgc usermods,
+including cmip6 runs, we no longer output 'SOIL1C_vr', 'SOIL1N_vr',
+'SOIL2C_vr', 'SOIL2N_vr', 'SOIL3C_vr', 'SOIL3N_vr'; instead we output
+'SOILC_vr', 'SOILN_vr', and similarly for C isotopes.
+
+Also minor fixes:
+- Output cpl hist files in SSP test (resolves ESCOMP/ctsm#61)
+- Remove FATES-related commented-out code in OzoneMod (this has been
+  moved to https://github.com/ESCOMP/ctsm/issues/618)
+- Minor tweak to run_sys_tests
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#61
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values):
+- For runs that use the output_bgc usermods, including cmip6 runs, we no
+  longer output 'SOIL1C_vr', 'SOIL1N_vr', 'SOIL2C_vr', 'SOIL2N_vr',
+  'SOIL3C_vr', 'SOIL3N_vr'; instead we output 'SOILC_vr', 'SOILN_vr',
+  and similarly for C isotopes.
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Bill Sacks; Erik Kluzek reviewed the changes to the SSP test
+
+
+CTSM testing:
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    hobart ------ pass
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev024
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/551
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev015
 Originator(s):  sacks (Bill Sacks)
 Date: Sun Oct 28 14:29:30 MDT 2018

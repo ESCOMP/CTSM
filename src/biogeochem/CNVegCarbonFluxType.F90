@@ -186,6 +186,8 @@ module CNVegCarbonFluxType
 
      ! growth respiration fluxes                               
      real(r8), pointer :: xsmrpool_to_atm_patch                     (:)     ! excess MR pool harvest mortality (gC/m2/s)
+     real(r8), pointer :: xsmrpool_to_atm_col                       (:)     ! excess MR pool harvest mortality (gC/m2/s) (p2c)
+     real(r8), pointer :: xsmrpool_to_atm_grc                       (:)     ! excess MR pool harvest mortality (gC/m2/s) (p2g)
      real(r8), pointer :: cpool_leaf_gr_patch                       (:)     ! leaf growth respiration (gC/m2/s)
      real(r8), pointer :: cpool_leaf_storage_gr_patch               (:)     ! leaf growth respiration to storage (gC/m2/s)
      real(r8), pointer :: transfer_leaf_gr_patch                    (:)     ! leaf growth respiration from storage (gC/m2/s)
@@ -367,6 +369,7 @@ module CNVegCarbonFluxType
      ! that are dribbled throughout the year
      type(annual_flux_dribbler_type) :: dwt_conv_cflux_dribbler
      type(annual_flux_dribbler_type) :: hrv_xsmrpool_to_atm_dribbler
+     logical, private  :: dribble_crophrv_xsmrpool_2atm
    contains
 
      procedure , public  :: Init   
@@ -389,12 +392,14 @@ module CNVegCarbonFluxType
 contains
    
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, carbon_type)
+  subroutine Init(this, bounds, carbon_type, dribble_crophrv_xsmrpool_2atm)
 
     class(cnveg_carbonflux_type) :: this
     type(bounds_type), intent(in) :: bounds  
     character(len=3) , intent(in) :: carbon_type ! one of ['c12', c13','c14']
+    logical          , intent(in) :: dribble_crophrv_xsmrpool_2atm
 
+    this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
     call this%InitAllocate ( bounds, carbon_type)
     call this%InitHistory ( bounds, carbon_type )
     call this%InitCold (bounds )
@@ -460,7 +465,7 @@ contains
     allocate(this%hrv_deadcrootc_xfer_to_litter_patch       (begp:endp)) ; this%hrv_deadcrootc_xfer_to_litter_patch       (:) = nan
     allocate(this%hrv_gresp_storage_to_litter_patch         (begp:endp)) ; this%hrv_gresp_storage_to_litter_patch         (:) = nan
     allocate(this%hrv_gresp_xfer_to_litter_patch            (begp:endp)) ; this%hrv_gresp_xfer_to_litter_patch            (:) = nan
-    allocate(this%hrv_xsmrpool_to_atm_patch                 (begp:endp)) ; this%hrv_xsmrpool_to_atm_patch                 (:) = nan
+    allocate(this%hrv_xsmrpool_to_atm_patch                 (begp:endp)) ; this%hrv_xsmrpool_to_atm_patch                 (:) = 0.0_r8
     allocate(this%m_leafc_to_fire_patch                     (begp:endp)) ; this%m_leafc_to_fire_patch                     (:) = nan
     allocate(this%m_leafc_storage_to_fire_patch             (begp:endp)) ; this%m_leafc_storage_to_fire_patch             (:) = nan
     allocate(this%m_leafc_xfer_to_fire_patch                (begp:endp)) ; this%m_leafc_xfer_to_fire_patch                (:) = nan
@@ -600,7 +605,9 @@ contains
     allocate(this%cpool_grain_gr_patch                      (begp:endp)) ; this%cpool_grain_gr_patch                      (:) = nan
     allocate(this%cpool_grain_storage_gr_patch              (begp:endp)) ; this%cpool_grain_storage_gr_patch              (:) = nan
     allocate(this%transfer_grain_gr_patch                   (begp:endp)) ; this%transfer_grain_gr_patch                   (:) = nan
-    allocate(this%xsmrpool_to_atm_patch                     (begp:endp)) ; this%xsmrpool_to_atm_patch                     (:) = nan
+    allocate(this%xsmrpool_to_atm_patch                     (begp:endp)) ; this%xsmrpool_to_atm_patch                     (:) = 0.0_r8
+    allocate(this%xsmrpool_to_atm_col                       (begc:endc)) ; this%xsmrpool_to_atm_col                       (:) = 0.0_r8
+    allocate(this%xsmrpool_to_atm_grc                       (begg:endg)) ; this%xsmrpool_to_atm_grc                       (:) = 0.0_r8
     allocate(this%grainc_storage_to_xfer_patch              (begp:endp)) ; this%grainc_storage_to_xfer_patch              (:) = nan
     allocate(this%frootc_alloc_patch                        (begp:endp)) ; this%frootc_alloc_patch                        (:) = nan
     allocate(this%frootc_loss_patch                         (begp:endp)) ; this%frootc_loss_patch                         (:) = nan
@@ -696,7 +703,7 @@ contains
     allocate(this%fire_closs_p2c_col      (begc:endc)) ; this%fire_closs_p2c_col      (:) = nan
     allocate(this%fire_closs_col          (begc:endc)) ; this%fire_closs_col          (:) = nan
     allocate(this%wood_harvestc_col       (begc:endc)) ; this%wood_harvestc_col       (:) = nan
-    allocate(this%hrv_xsmrpool_to_atm_col (begc:endc)) ; this%hrv_xsmrpool_to_atm_col (:) = nan 
+    allocate(this%hrv_xsmrpool_to_atm_col (begc:endc)) ; this%hrv_xsmrpool_to_atm_col (:) = 0.0_r8
     allocate(this%tempsum_npp_patch       (begp:endp)) ; this%tempsum_npp_patch       (:) = nan
     allocate(this%annsum_npp_patch        (begp:endp)) ; this%annsum_npp_patch        (:) = nan
     allocate(this%tempsum_litfall_patch   (begp:endp)) ; this%tempsum_litfall_patch   (:) = nan
@@ -3880,6 +3887,7 @@ contains
        this%cwdc_hr_col(i)                   = value_column
        this%cwdc_loss_col(i)                 = value_column
        this%litterc_loss_col(i)              = value_column
+
     end do
 
     do fi = 1,num_patch
@@ -3938,8 +3946,10 @@ contains
        this%fire_closs_col(i)          = value_column 
        this%wood_harvestc_col(i)       = value_column 
        this%hrv_xsmrpool_to_atm_col(i) = value_column
-
        this%nep_col(i)                 = value_column
+       if ( use_crop )then
+          this%xsmrpool_to_atm_col(i)  = value_column
+       end if
 
     end do
 
@@ -4117,8 +4127,9 @@ contains
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%ar_patch(p) =           &
                this%mr_patch(p)      + &
-               this%gr_patch(p)      + &
-               this%xsmrpool_to_atm_patch(p) ! xsmr... is -ve (slevis)
+               this%gr_patch(p)
+          if ( .not. this%dribble_crophrv_xsmrpool_2atm ) this%ar_patch(p) = this%ar_patch(p) + &
+                                             this%xsmrpool_to_atm_patch(p) ! xsmr... is -ve (slevis)
        else         
              this%ar_patch(p) =           &
                   this%mr_patch(p)      + &
@@ -4401,6 +4412,18 @@ contains
          this%hrv_xsmrpool_to_atm_patch(bounds%begp:bounds%endp), &
          this%hrv_xsmrpool_to_atm_col(bounds%begc:bounds%endc))
 
+    if (use_crop .and. this%dribble_crophrv_xsmrpool_2atm) then
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%xsmrpool_to_atm_patch(bounds%begp:bounds%endp), &
+            this%xsmrpool_to_atm_col(bounds%begc:bounds%endc))
+
+       call c2g( bounds = bounds, &
+            carr = this%xsmrpool_to_atm_col(bounds%begc:bounds%endc), &
+            garr = this%xsmrpool_to_atm_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type = 'unity', &
+            l2g_scale_type = 'unity')
+    end if
+
     call p2c(bounds, num_soilc, filter_soilc, &
          this%fire_closs_patch(bounds%begp:bounds%endp), &
          this%fire_closs_p2c_col(bounds%begc:bounds%endc))
@@ -4545,6 +4568,7 @@ contains
        this%nbp_grc(g) = &
             -this%nee_grc(g)        - &
             this%landuseflux_grc(g)
+       if ( this%dribble_crophrv_xsmrpool_2atm ) this%nbp_grc(g) = this%nbp_grc(g) - this%xsmrpool_to_atm_grc(g)
     end do
 
     ! coarse woody debris C loss

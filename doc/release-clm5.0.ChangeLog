@@ -1,4 +1,2301 @@
 ===============================================================
+Tag name:  release-clm5.0.35
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Feb  8 16:09:57 MST 2022
+One-line Summary: Add SSP3-7.0 extension, and SMYLE 1850 and transient, compsets and use-cases
+
+Purpose of this version:
+------------------------
+
+Update externals for cism and cime to cesm2.1.4-rc-10. cime update was needed to run on izumi.
+iAdds a compset for the smyle L83 model (both 1850 and transient). BWsc1850smyle (jedwards4b)
+Add SSP3-7.0 extension compset and use-case, that runs for fixed 2100 conditions with 2100 landuse
+and 2100 harvest and fertilizer.
+
+Update Nitrogen-deposition datasets with files created from WACCM simulations for SSP scenarios (SSP3-7.0,
+SSP5-3.4, and SSP5-8.5).
+
+Fix several issues.
+
+
+CTSM Master Tag This Corresponds To:
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #):
+    Fixes #1197 SMYLE use-case setup 
+    Fixes #1633 2100 to 2500 Extension compset for SSP3-7.0
+    Fixes #1632 Missing ndep file to 2100 for SSP5-3.4
+    Fixes #1631 ndep file for SSP2-4.5 is incorrect
+    Fixes #1578 Need to replace SSP370 ndep file with new one 
+    Fixes #1131 Nitrogen Deposition file for SSP534OS
+    Fixes #1093 Problems with running fates_next_api/release-clm5.0 on izumi 
+    Fixes #1036 ne30np4 1850 case fails because the fsurdat file is incorrect.
+    Fixes #738  Totvegc threshold used to zero out soil carbon upon exit_spinup needs to be revisited
+
+Science changes since:  release-clm5.0.34
+  Increase totvegcthresh to 1.0 to provide more seed Carbon to PFT's that may have died in AD spinup mode
+  Update Nitorogen Deposition files for several SSP cases
+
+Software changes since:  release-clm5.0.34
+  Add tests for new use-cases
+
+Changes to User Interface since: 
+  New 2100_SSP3-7.0_control use-case and ISSP370ExtClm50BgcCrop compset
+  New 20thC_smyle_transient and 1850_smyle_control use-cases
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (30 different because of updates)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- PASS
+
+  fates tests (fates):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ PASS
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- PASS
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: Yes, only for some SSP cases and for AD spinup
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: AD spinup mode, and SSP3-7.0, SSP2-4.5 and SSP5-3.4 because of ndep files
+    - what platforms/compilers: All
+    - nature of change:
+       SSP cases are different because of update Nitrogen Deposition files
+       Gives more seed Carbon to PFT's that may have died
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+  (This will likely be true if the LII tests failed)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: (update cism, cime, and PTCLM)
+
+   cism:   cism-release-cesm2.1.2_02
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.39
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_20200902
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1614 -- add smyle L83 compset and SSP3-7.0 extension (jedwards4b)
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.34
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Apr 20 22:08:42 MDT 2020
+One-line Summary: Update documentation for release-clm5.0 branch, and fix issues with no-anthro surface dataset creation
+
+Purpose of this version:
+------------------------
+
+Fix the issues with the no-anthro surface dataset creation (the PtVg simulation year). This 
+makes sure GDP and urban is set to zero and abm to missing for this case. Also bring in the python3
+fix that was intended for the last release tag.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #980 #974
+  Fixes #980 -- PtVg option to mksurfdata should also set urban, and GDP to zero, as well as abm to missing
+  Fixes #974 -- Python 3 problem in SSP test
+
+Science changes since: release-clm5.0.33
+  For Potential vegetation sim_year set urban to zero, GDP to zero and abm to missing with mksurfdata.pl
+
+Software changes since: release-clm5.0.33
+  Fix python3 issue for testing in ssp.py
+
+Changes to User Interface since: release-clm5.0.33
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    izumi ---- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+    izumi ---- OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test): None
+
+  regular tests (aux_clm): None
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No bit-for-bit (other than PtVg surface dataset creation)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: No updates
+
+   cism:   cism-release-cesm2.1.2_04
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.33
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_20200121
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #976 #986
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #976 -- bring documentation to release branch
+   #986 -- Fix issues with no-atnthro surface dataset creation
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.33
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Apr  7 13:21:28 MDT 2020
+One-line Summary: Turn irrigation on for 2300 SSP extensions
+
+Purpose of this version:
+------------------------
+
+Irrigation was turned off for the 2300 extensions. This turns it on. Also add SSP2-4.5 to the
+anomaly forcing script.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #974 #972 #966
+  #974 -- Python3 problem in SSP test
+  #972 -- Irrigate is turned off for the 2300 extensions
+  #966 -- Units for a few history fields needs to change for ILAMB
+
+Science changes since: release-clm5.0.32
+  Irrigation is now properly turned on for the 2100-2300 SSP extensions
+  Change some units of history fields
+
+Software changes since: release-clm5.0.32
+  Anomaly forcing script can now do SSP2-4.5
+  Small changes to anomoly forcing script and singlept script
+
+Changes to User Interface since: release-clm5.0.32
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (two tests are different than before because of irrigate)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools): None
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test): None
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- PASS
+    izumi_pgi --------- PASS
+    izumi_intel ------- PASS
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers: All
+    - nature of change: Climate changing as irrigation is on
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+  (This will likely be true if the LII tests failed)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: No updates
+
+   cism:   cism-release-cesm2.1.2_04
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.33
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_20200121
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #975
+(https://github.com/ESCOMP/ctsm/pull)
+  #975 -- fix irrigate for 2300 extensions
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.32
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Apr  2 00:23:04 MDT 2020
+One-line Summary: Extensions to 2300 for SSP5-8.5,SSP5-3.4, and SSP1-2.6
+
+Purpose of this version:
+------------------------
+
+Add 2100 surface datasets, landuse.timeseries files for 2100-2300 for SSP5-3.4, SSP5-8.5, and SSP1-2.6. 
+Also add compsets to run them and the build-namelist use-cases for them. Only for f09 resolution with crop on.
+
+Updates cime as a cime update was needed to run the extensions in I compsets (for presaero and CO2). 
+Add a test for it. Add -ignore_warnings to cmip6_waccm_deck user-mod which is required for the 
+fully coupled compset for BWSSP534osext as the ndep file doesn't exist for it, but WACCM is 
+providing ndep. Get more of the build-namelist unit tester tests working, which previously weren't running.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #944, #955
+   Fixes #944 -- extensions to 2300
+   Fixes #955 -- surface dataset creation bug for 2100
+
+Science changes since: release-clm5.0.31
+   Add 2100 surface datasets and transient extensions from 2100-2300
+
+Software changes since: release-clm5.0.31
+   Fix bug with creation of 2100 surface datasets
+
+Changes to User Interface since: release-clm5.0.31
+
+   New compsets: ISSP585ExtClm50BgcCrop, ISSP534xtClm50BgcCrop, ISSP126ExtClm50BgcCrop
+   New CLM_NML_USE_CASE: 2100-2300_SSP5-8.5_transient, 2100-2300_SSP5-3.4_transient, 2100-2300_SSP1-2.6_transient
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools): None
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test): None
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- PASS
+    izumi_pgi --------- PASS
+    izumi_intel ------- PASS
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No (bit-for-bit)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: cime updated
+
+   cism:   cism-release-cesm2.1.2_04
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.33
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_20200121
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #959
+(https://github.com/ESCOMP/ctsm/pull)
+   #959 -- Add surface datasets/landuse-timeseries/compsets/use-cases for extensions to 2300
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.31
+Originator(s):  erik (Erik Kluzek)
+Date: Sun Mar 29 15:09:19 MDT 2020
+One-line Summary: Bring in raw datasets for 2100-2300 extension for SSP5-8.5/3.5 and SSP1-2.6, some other misc. changes
+
+Purpose of this version:
+------------------------
+
+New Raw datasets to 2300 for SSP1-2.6, SSP5-3.4 and SSP5-8.5.
+Fix the pgi build on izumi.  Bring in anomaly forcing script to create af forcing that can be used by datm
+to run anomoly forcing to get SSP like forcing.  Update manage_externals that fixes the python 3.8 bug.
+
+Update cime and cism-wrapper.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #921 #922 #933 #946
+
+  Fixes #921 -- PGI build
+  Sets up the script to use for #922
+  Fixes #933 -- Notes about creating SSP landuse files
+  Fixes #946 -- Better error message for missing ndep files
+
+Science changes since: release-clm5.0.30
+  Raw datasets for the 2100-2300 extenstion for SSP1-2.6, SSP5-3.4 and SSP5-8.5
+
+Software changes since: release-clm5.0.30
+  Fix pgi build on izumi
+  Update manage_externals
+
+Changes to User Interface since: 
+  Add ssp_anomaly_forcing script to contrib
+  Improve error message when a ndep file can't be found (tell user what to do, allow -ignore_warnings to override it)
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test): None
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used: update cism and cime
+
+   cism:   cism-release-cesm2.1.2_04
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.32
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_20200121
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #949
+(https://github.com/ESCOMP/ctsm/pull)
+
+ #949 -- surface dataset creation for 2100-2300 SSP extensions (SSP1-2.6, SSP5-3.4, SSP5-8.5
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.30
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Jan 21 13:50:48 MST 2020
+One-line Summary: Update FATES to sci.1.30.0_api.8.0.0
+
+Purpose of this version:
+------------------------
+
+Update FATES to sci.1.30.0_api.8.0.0, and point to the NGEET version, rather
+than NCAR/fates-release version.
+
+One change to soil-moisture (also check if gridcell weight is non-zero, before specifying prescribed soil moisture.
+Also update mosart with cold start bug fix. Update rtm, cism, and cime to versions on cesm2.1.2 release tag. 
+Fix some issues with PTCLM.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #847 #871
+  Fixes #847 -- issues with prescribed soil moisture
+  Fixes #871 -- don't check for valid resolution for CESM cases by default
+
+Science changes since: release-clm5.0.28
+  FATES science update from sci-1.27.1  to sci.1.30.0
+
+Software changes since: release-clm5.0.28
+  FATES API update from api.7.3.0 to api.8.0.0
+
+Changes to User Interface since: release-clm5.0.28
+  fates paramfile is updated
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (35 tests are different because of fates param file update)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: Yes, but only when running with FATES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: with FATES active
+    - what platforms/compilers: all
+    - nature of change: similar climate
+
+Detailed list of changes:
+------------------------
+
+Externals being used: all externals updated
+
+   cism:   cism-release-cesm2.1.2_01
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.28
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_20200121
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #846
+(https://github.com/ESCOMP/ctsm/pull)
+   #846 -- Update to fates sci.1.30.0_api.8.0.0
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.29
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Nov 19 12:14:02 MST 2019
+One-line Summary: Some answer changes needed for prescribed soil-moisture and clm4_5 defaults (1850-ndep, and urbantv settings)
+
+Purpose of this version:
+------------------------
+
+Some answer changes needed for prescribed soil-moisture. And clm4_5 defaults for 1850 Nitrogen deposition and or urbantv
+settings were made to be consistent with clm5_0.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #175, #817, #832 #833
+
+   Fixes #817 -- Have clm4_5 use the same ndep file as clm5_0 for 1850
+   Fixes #175 -- Have clm4_5 use the same settings for urbantv years as clm5_0
+   Fixes #832 -- don't override with missing value, let the model set it
+   Fixes #833 -- time interpolation of soilm causes bad values for some missing points
+
+Science changes since: release-clm5.0.28
+
+   Defaults for clm4_5, prescribed soil-moisture
+
+   Some defaults were changed for clm4_5 to be consistent with clm5_0 (use of the same 1850-ndep file, 
+   and changes in the urbantv year settings)
+
+   Prescribed soil-moisture was changes so that if time-interpolation produces large values, they
+   will be marked as missing (spval). Also points where the input prescribed soil moisture is missing
+   are now ignored (and run normally).
+
+Software changes since:  release-clm5.0.28
+
+
+Changes to User Interface since: release-clm5.0.28
+
+  Behavior of soilm_ignore_data_if_missing changes!
+
+  Behavior of soilm_ignore_data_if_missing changes. Now if true will ignore any points
+  where the prescribed soil moisture dataset is missing. So for these points the model
+  will run normally (as if prescribed soil moisture was off). Before it would mark them
+  as missing, but modify h2osoi_ice/liq in an odd fashion.
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (10 tests are different)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - NOT run
+    hobart --- NOT run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - NOT run
+     hobart --- NOT run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: Yes for some! prescribed soil-moisture and clm4_5 (1850-ndep, and urbantv settings)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: prescribed soil-moisture, or clm4_5 due to default changes in 1850-ndep and urbantv
+    - what platforms/compilers: all
+    - nature of change:  similar climate
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+
+Detailed list of changes:
+------------------------
+
+Externals being used: No changes
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.03
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.25
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #841
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #841 -- Some answer changes for release branch
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.28
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Nov 14 23:03:39 MST 2019
+One-line Summary: Several bit-for-bit fixes especially around soil-moisture streams
+
+Purpose of this version:
+------------------------
+
+A list of several bit-for-bit fixes. Some very minor and other's more extensive.
+
+mksurfdata_map was extended so that when you specify vegetation types, you can let it use the natural and crop coverage
+from the input datasets. This allows you to for example run a global simulation with all vegetation types in every grid cell.
+This can be useful in seeing what types of vegetation grow in each grid cell. Also simplify some of the logic that allowed
+for old format PFT datasets that didn't include crop information. Since, we don't have or need to work with such datasets
+this complex logic could be removed. Also added some new unit tests for mksurfdata and the defining PFT values.
+
+Add time interpolation alogrithm type to most of the stream files, so it can be changed via namelist. Add historical data to the
+Nitrogen deposition future scenario datasets.
+
+Add namelist control variables for soilm_offset, and tint_algo for most of the streams. tint_algo allows you to control the time
+interpolation and change it to a simpler one (like upper) in order to show that the streams output agrees with the streams data
+input. soilm_offset allows the user to change the time-stamp offset if the time-stamp isn't at the middle of averaging interval.
+This is important for the soil moisture streams for a case where you want to use the output of a CTSM simulation for soil-moisture
+as normally the time-stamp is the end of the interval (so you could use -1296000 to roughly compensate for the time-stamps to be
+at the end of the month rather than mid-month). Add a namelist item to continue when soil moisture is prescribed and a gridpoint
+is missing on the input streams file, but required for the simulation running. Also add an optional history field H2OSOI_PRESCRIBED_GRC
+that corresponds to the input soil moisture streams, so you can ensure the prescribe soil moisture is working correctly and agrees
+with the input dataset.
+
+Fix the threading bug for soil-moisture and LAI streams. This is done by adding a new "advance" subroutine that does the streams
+advance part of the calculation in a non-OpenMP area of the CLM driver, while the "interp" subroutine remains in the Open-MP 
+loop.
+
+Include missing prescribed testmods directory. Allow branches with use_init_interp=T with a log message about it. 
+Move tests from hobart to izumi.
+
+This is bit-for-bit
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #809, #804, #786, #702, #791, #150 #830, #831, #832, #836
+  Fixes #809 -- mkmapdata old version of intel
+  Fixes #804 -- allow mksurfdata_map to prescribe vegetation cover for globe
+  Fixes #786 -- allow use_init_interp for a branch
+  Fixes #702 -- add historical period to start of ndep SSP files
+  Fixes #791 -- fix threading for prescribed LAI and soil-moisture
+  Fixes #150 -- remove extra logic in mksurfdata_map for old format and missing crops
+  Fixes #830 -- time offset is assumed to be zero for soil moisture streams
+  Fixes #831 -- add namelist tint_algo settings for input streams
+  partial for  #832 -- an option to override if soil moisture stream has missing data where needed
+  Fixes #836 -- add izumi as a place that can run tools tests
+
+Science changes since: release-clm6.0.27
+   None, answers are the same. Some more flexibility was added with namelist control as follows in the next section.
+
+Software changes since: release-clm6.0.27
+   New namelist items: ndep_tintalgo, soilm_offset, soilm_ignore_data_if_missing, lai_tintalgo, lightng_tintalgo, popdens_tintalgo
+                       urbantv_tintalgo
+   If maxpatch_pft's is not set to a regular value (with or without crops) will now abort, with an option to override if needed
+
+   Move tests from hobart to izumi. prescribed test-mod directory that wasn't there before is now there.
+   Add some assert debug checking for lai and soilm streams.
+   Add some new unit tests for mksurfdata_map
+
+Changes to User Interface since: release-clm6.0.27
+   Note, that streams text files are now legitimate XML files
+
+Testing:  regular
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+    izumi ---- Not working (needs a cime update)
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+    hobart --- OK
+    izumi ---- OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_intel ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK (fail on run needs some cime updates)
+    izumi_intel ------- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No (bit-for-bit) (other than two tests on hobart because of cime issue #3302)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: Update cime
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.03
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.25
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #814
+(https://github.com/ESCOMP/ctsm/pull)
+   #814 -- A few fixes and extend mksurfdata to set PFT/CFT fractions but use veg-cover from dataset
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.27
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Aug 13 14:31:50 MDT 2019
+One-line Summary: Add presoribed soil moisture streams as an option, and a few fixes
+
+Purpose of this version:
+------------------------
+
+Add new prescribed moisture streams feature from Sean Swenson. This allows the user
+to specify a steams file for soil moisture and use it in place of the model prognostically
+determining soil moisture. To turn it on set use_soil_moisture_streams=T. You can also 
+set the filename to use with stream_fldfilename_soilm, and there are other _soilm namelist
+items to control the years to run over. The file MUST be on the same grid as the model resolution.
+
+Update 0.125x0.125 mapping and surfdata data, and fix hirespft data issues. Update cime 
+with SSP1-2.6 presaero data. So now can run the SSP1-2.6 CMIP6 future scenario.
+Update rtm release branch to rtm1_0_69, which brings in a fix for cold starts.
+
+Move mksurfdata changes from ctsm1.0.dev053 over, which fixes a rare soil color bug.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #757 #629 #343 #276
+  Fixes #757 -- Softlinks in inputdata repo saved as a link rather than a datafile
+  Fixes #629 -- Remove unused fields on surface datasets (add option for glc fields)
+  Fixes #343 -- Move config_archive to ctsm
+  Fixes #276 -- Add some CLM tests for CESM to run
+
+CIME Issues fixed (include issue #): #3163 #3170
+ #3170 -- fixes creation of empty file from inputdata download
+ #3163 -- JOB_WALLCLOCK error
+
+Science changes since: release-clm5.0.26
+   Add SSP1-2.6 prescribed aerosol
+   Fix soil color bug in mksurfdata_map
+
+Software changes since: release-clm5.0.26
+   Add ability to run with prescribed soil moisture streams
+
+Changes to User Interface since: release-clm5.0.26
+   New soil_moisture_streams namelist
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+    hobart --- OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+     hobart --- OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used: Update cime and rtm
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.03
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.20
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: ctsm1.0.dev053
+
+Pull Requests that document the changes (include PR ids): #781
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #781 -- Prescribed soil moisture on release branch and some other updates and fixes
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.26
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Jul 29 18:11:26 MDT 2019
+One-line Summary: Add a CN precision control call to fix problems related to small negative values
+
+Purpose of this version:
+------------------------
+
+Small negative values (roughly roundoff-level different from zero) in
+frootc (and possibly other quantities) were occasionally creating
+problems with carbon isotope fluxes and FPI in the first time step of
+the year, at the time of transient landcover change. This tag fixes the
+problem by introducing an extra call to SoilBiogeochemPrecisionControl
+in between computing the patch-level transient landcover fluxes and
+moving these to column-level. In particular, this truncates small
+negative values of decomp_cpools_vr_col to zero, which prevents the
+previous blow-ups.
+
+For most of the problematic fields, the explanation seems to be: frootc
+can sometimes be negative; this is intentional. Negative frootc causes
+negative dwt_frootc_to_litter if the patch in question is shrinking. The
+resulting negative fluxes cause problems in the ciso calculation. This
+can be worked around by inserting an extra precision control call
+between the calculation of the dwt fluxes and the ciso fluxes, so that
+small negative dwt fluxes are set to 0.
+
+This does not necessarily fully explain the issue with FPI, but the
+insertion of the extra precision control call fixes that issue, too.
+
+For more details, see the discussion in
+https://github.com/ESCOMP/ctsm/issues/741
+
+
+CTSM Master Tag This Corresponds To: N/A
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#741
+
+Science changes since: release-clm5.0.25
+    None
+
+Software changes since: release-clm5.0.25
+    Extra call to SoilBiogeochemPrecisionControl
+
+Changes to User Interface since: release-clm5.0.25
+    None
+
+Testing:
+--------
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - not run
+    hobart --- not run
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+    hobart --- not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+     hobart --- not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass (other thana expected failures), answers change
+    as expected for some tests
+
+  regular tests (prealpha):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+  regular tests (prebeta):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Transient cases and a few other
+      configurations as noted below
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff / same climate
+
+      According to Keith Oleson's analysis of the LMWG diagnostics:
+      Changes are possibly greater than roundoff-level, but are not
+      climate changing or scientifically meaningful.
+
+      Other than transient cases (including cases with transient glacier
+      area as well as those with transient natural vegetation / crop
+      area), the test suite showed differences in the following cases:
+
+      - Two present-day tests that specify changes in soil layer
+        structure
+        (ERI_D_Ld9.ne30_g16.I2000Clm50BgcCruGs.cheyenne_intel.clm-vrtlay
+        and
+        ERS_D_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-deepsoil_bedrock),
+        have changes in many fields (for the latter: mostly looks
+        roundoff-level, but a few greater than roundoff-level diffs)
+
+      - The present-day ciso test,
+        ERP_D_Ld5.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_gnu.clm-ciso_flexCN_FUN,
+        has changes in a few c13 and c14 fields
+
+      - There are changes in many fields in SSP tests
+
+      - ERP_D_P36x2_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-noFUN_flexCN
+        (and a similar test on hobart) have roundoff-level changes in
+        SMINN_vr, SMIN_NH4_vr and SMIN_NO3_vr
+
+  URL for LMWG diagnostics output for new climate:
+  http://webext.cgd.ucar.edu/I20TR/clm50_cesm20R_2deg_GSWP3V1_issue741_hist/lnd/clm50_cesm20R_2deg_GSWP3V1_issue741_hist.1995_2014-clm50_cesm20R_2deg_GSWP3V1_hist.1995_2014/setsIndex.html
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+  (This will likely be true if the LII tests failed)
+
+Detailed list of changes:
+------------------------
+
+Externals being used:  No updates
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.16
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): None
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.25
+Originator(s):  erik (Erik Kluzek)
+Date: Wed May 29 11:16:13 MDT 2019
+One-line Summary: Change two files from NetCDF-4 format to NetCDF-3 (because some machines have trouble with NetCDF-4 in pnetcdf)
+
+Purpose of this version:
+------------------------
+
+There are two files in NetCDF-4 format that the model uses. Copy these files to NetCDF-3 classic format and point
+to the new version in the CLM XML database (use nccopy -k classic). There are some machines that have trouble with
+reading NetCDF-4 files in pnetcdf.
+
+There are still some NetCDF-4 files for mksurfdata_map, but some of these are required to be in NetCDF-4 format. And we only
+support mksurfdata_map and mkmapdata on cheyenne.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #734
+  Fixes #734 -- Isotope historical files are in NetCDF-4 format need them in NetCDF-3 or NetCDF-5
+
+Science changes since: release-clm5.0.24
+    None
+
+Software changes since: release-clm5.0.24
+    None
+
+Changes to User Interface since: release-clm5.0.24
+    None
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (6 tests compare different to baseline)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  regular tests (prealpha):
+
+    cheyenne_intel - OK
+    cheyenne_gnu --- OK
+    hobart_nag ----- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No! bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used: No updates
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.16
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #737
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #737 -- Convert the file from NetCDF-4 classic format to NetCDF-3 classic format
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.24
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed May 22 13:33:48 MDT 2019
+One-line Summary: Correct ndep end year for SSPs, 2-degree CMIP6WACCMDECK with C-isotopes off, fixes mksurfdata for high resolution
+
+Purpose of this version:
+------------------------
+
+Fix a couple small issues. Correct end year for ndep for SSP's so can run to the end of 2100. Some fixes to mksurfdata_map for high
+resolution surface datasets. Have 2-degree WACCM-CMIP6DECK match a user-mod directory without carbon isotopes on. Remove the
+ne120np4 and conus_30_x8 surface dataset files, as they can't be used (see #673).
+
+Remove 8x16, 32x64 resolutions as they are no longer needed and there are problems with them. Add in the mapping files needed for
+94x192. Check that special landunit percent area's is not less than 0.0, and don't let PCT_WET be less than zero for areas with
+ocean (see #673).
+
+Change some of the longer single point tests to use Qian forcing (as faster, less memory, less problems). Add compsets for this.
+This change was also done on master.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #673, #714, #716, #717, #726
+
+  Fixes #726 -- Some resolutions fail in mksurfdata_map
+  Fixes #717 -- Change end year for ndep to 2101 for SSP's
+  Fixes #716 -- 2 degree CMIP6WACCMDECK needs Carbon isotopes off
+  Fixes #714 -- Fails on cheyenne for some longer single point simulations
+  Fixes #673 -- Ice shelf wetland fix in mksurfdata_map can lead to glacier+lake > 100% on surface datasets
+
+Science changes since: release-clm5.0.23
+   Turn Carbon isotopes off for 2-degree CMIP6WACCMDECK
+
+Software changes since: release-clm5.0.23
+   End year for ndep is now 2101, so will run to end of 2100
+   Fixes to mksurfdata_map for high resolutions
+
+Changes to User Interface since: release-clm5.0.23
+   Remove ne120np, conus_30_x8 surface datasets
+   Remove 8x16, and 32x64 resolutions
+   Add 94x192 mapping files, so can work in mksurfdata_map
+
+Testinw:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (15 SSP tests are different as expected)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart ---PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No
+
+Detailed list of changes:
+------------------------
+
+Externals being used: (cime goes from branch to full tag)
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.16
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #720
+(https://github.com/ESCOMP/ctsm/pull)
+
+ #720 -- Fix a couple small issues, 2-degree no-ciso for WACCMDECK and ndep end year 2101
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.23
+Originator(s):  erik (Erik Kluzek)
+Date: Wed May 15 15:31:15 MDT 2019
+One-line Summary: Update cime to bring in CO2 transient files for the CMIP6 SSP's as well as presaero for three of them
+
+Purpose of this version:
+------------------------
+
+With updated cime with transient CO2 for all CMIP6 SSP scenarios and prescribed aerosol files for three of
+the CMIP6 SSP scenarios (SSP3-7.0, SSP2-4.5, SSP5-8.5). Previously all SSP scenaros would run, and use the
+closest SSP nitrogen deposition file, now only the ones that are available work (Tier I). Also CLM4.5 used
+the old CMIP5 ndep files, and now they use the CMIP6 ones available.
+
+Fix some small issues with some of the tools
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #707 #708 #711 #712
+  Fixes #707 -- Missing mapping files for hirespft
+  Fixes #708 -- time_bnds not set by tools/ncl_scripts/getco2_historical.ncl
+  Fixes #711 -- Model assumes the closest SSP scenario for ndep 
+  Fixes #712 -- Missing CO2 files for SSP1-1.9 and SSP4-3.4
+
+New issues found: #714 -- Fails with cheyenne_gnu for some longer single point tests
+
+Science changes since: release-clm5.0.22
+    Forcing period is different for present day compsets (I2000, I2003, and I2010)
+    SSP scenarios now have CMIP6 transient CO2 and presaero (for SP3-7.0, SSP2-4.5, SSP5-8.5)
+    clm4.5 will use CMIP6 SSP ndep datasets rather than CMIP5
+
+Software changes since: release-clm5.0.22
+    None
+
+Changes to User Interface since: release-clm5.0.22
+    Now SSP cases that don't have needed datasets will fail
+
+Testing: regular
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - OK (36 tests are different as expected)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  regular tests (fates):
+
+    cheyenne_intel - OK
+    cheyenne_gnu --- OK
+    hobart_nag ----- OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.22
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Present day compsets, SSP compsets, and Clm45 compsets
+    - what platforms/compilers: All
+    - nature of change: New datasets, new forcing period for present day
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+  (This will likely be true if the LII tests failed)
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   branch_tags/cime5.6.15_a01 (same as cim5.6.16)
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #713
+(https://github.com/ESCOMP/ctsm/pull)
+   #713 -- Fix a few issues, and update cime to a version with CO2 SSP files as well as three presaero SSP files
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.22
+Originator(s):  erik (Erik Kluzek)
+Date: Wed May  8 13:32:51 MDT 2019
+One-line Summary: Fix carbon isotope bug that caused wrong answers for isotopes under transient land-use change
+
+Purpose of this version:
+------------------------
+
+We currently have a bug so that for transient land-use change cases answers are different starting in soil
+carbon when Carbon isotopes (use_c13, or use_c14) are on versus off. Answers are identical if there is no
+land-use change. The bug does cause bulk Carbon (C12) to be slightly different, but qualitatively the same.
+There is a significant impact to the Carbon isotope simulation however. The bug was causing changes in isotopic
+pools to be directed to the bulk Carbon. Because, isotopes are so much smaller than bulk Carbon, this doesn't 
+cause a marked difference in the bulk Carbon simulation. But, the lack of the change in the isotopic pool
+does have a meaningful impact on the simulation of the Carbon isotopic fields.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #262 #675
+   Fixes #675 -- Carbon isotopes under transient land-use change
+   Fixes #262 -- hirespft option to mksurfdata.pl
+
+Issues found: #707
+   #707 -- missing hirespft mapping files
+
+Science changes since: release-clm5.0.21
+    Fix Carbon isotope issue under transient land-use change
+
+Software changes since: release-clm5.0.21
+    Bring in mapping files for 3x3min MODISv2 grid for most resolutions
+
+Changes to User Interface since: release-clm5.0.21
+    None
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart ---PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.21
+
+Changes answers relative to baseline: Yes, but only when Carbon isotopes on under transient land-use change!
+
+  Summarize any changes to answers:
+    - what code configurations: Bgc with use_c13 or use_c14 T and with a transient land-use change after each year boundary
+    - what platforms/compilers: All
+    - nature of change: same climate for bulk Carbon, isotopic Carbon is quite different for regions with land-use change
+
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+      /oleson/clm50_release-clm5.0.20_1deg_GSWP3V1_isofix2_hist
+
+  URL for LMWG diagnostics output for new climate:
+http://webext.cgd.ucar.edu/I20TR/clm50_release-clm5.0.20_1deg_GSWP3V1_isofix2_hist/lnd/clm50_release-clm5.0.20_1deg_GSWP3V1_isofix2_hist.1995_2014-clm50_release-clm5.0.20_1deg_GSWP3V1_isofix_hist.1995_2014/setsIndex.html  
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime5.6.14
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: ctsm1.0.dev036
+
+Pull Requests that document the changes (include PR ids): #698
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #698 -- Bring the carbon isotope fix to the release branch
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.21
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri May  3 16:10:35 MDT 2019
+One-line Summary: New ndep files, update fates, fix some issues
+
+Purpose of this version:
+------------------------
+
+New nitrogen deposition files for future scenarios: SSP245 and SSP370. And now points
+to the closest reasonable new CMIP6 SSP ndep file that we have (for clm50, clm45 points
+to the old RCP files).
+
+Update FATES to s1.21.0.a7.0.0. Which brings in a list of improvements and bug fixes. New
+options include fates-hydro and fates-parteh
+
+Point to all of the available CO2 files, so we can convert them for use by datm.
+
+Bring in new high resolution PFT land-mask SCRIP grid file (MODISv2), as a start to get the -hirespft
+option to work in mksrfdata.pl. Mapping files still need to be created.
+
+Add a test that turning on Carbon isotopes does NOT change answers (currently triggered because of #667)
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #706, #700, #678, #664, #642, #672, and #262
+   Fix #706 -- Add cmip6_nociso_deck user-mods directory and point to it for f19 CMIP6DECK compsets
+   Fix #700 -- Stream start/align incorrect for SSP's
+   Fix #678 -- Wrong mask name for clm40
+   Fix #664 -- Typo in SSP5-3.4 c13 isotope file
+   Fix #642 -- Update ESMF libarary for maps to ESMF7.1.0r
+   Fix #672 -- mksurfdata.pl aborts with error
+   Fix #262 -- hirespft option to mksurfdata.pl doesn't work (partial now needs maps)
+
+Science changes since: release-clm5.0.20
+   Updated domain files for f19 resolution causes a small change in answers
+
+   FATES updated from version 1.8.1 to 1.21.0. List of improvements include:
+      Some new options that came in various versions: fates-hydro, variable SLA Profile and Wood CN Ratio, parteh, 
+           optional maintenance respiration throttling, optional trimming logic to roots
+      Changes to Norman Canopy radiation
+      A bug to some pointers that spread outside where they should have.
+      Some bug fixes in allometry
+      The Plant Allocation Reactive Transport Extensible Hypotheses (PARTEH) v1 software infrastructure has been added.
+      Key changes that enable simulation of a coastal salt mars
+      Remove Lasslop wind effects on fire Rate of Spread
+      Fixes to fire mortality diagnostics, patch disturbance area checks and trimming
+
+Software changes since: release-clm5.0.20
+
+   hirespft dataset now uses the MODISv2 mask
+
+Changes to User Interface since: release-clm5.0.20
+   New ndep files for SSP245 and SSP370. For Clm50 point to one of the new ndep files for every SSP
+   even if the exact one isn't yet available (for Clm45 it points to the CMIP5 RCP scenarios)
+
+   New fates namelist option: fates_parteh_mode (switches nutrient model in FATES)
+
+   Remove fates finidat file
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - OK (67 tests different because of new fates parameter file, and first/align changes for SSP's)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - OK
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: FATES and f19 resolution
+    - what platforms/compilers: All
+    - nature of change:
+        f19 is a small change due to updated domain files
+        FATES science changed from version 1.8.1 to 1.21.0
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime5.6.14
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+
+CTSM Tag versions pulled over from master development branch: Pull LCISO test from ctsm1.0.dev036
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #695 -- Add more ndep files, fix some bugs, point to new SSP CO2 files
+   #687 -- Update fates version on release branch
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.20
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Mar 12 16:08:55 MDT 2019
+One-line Summary: Update all fsurdat files and bring in files for future scenarios, remove CMIP5 rcp options, bring in some bug fixes
+
+Purpose of this version:
+------------------------
+
+Update all surface datasets and add datasets needed for future scenarios. Remove CLM40-RCP options.
+
+Also bring in change for reseeding so that reseeding happens for generic crop and
+to increase the threshold from exactly zero to 1 (still very small).  Fix QSNOEVAP history field.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many changes missing)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #621, #608, #624 #653
+  #621 -- Fully remove CMIP5 rcp's (for clm40,clm45,clm50) and implement CMIP6 ssp_rcp's for clm45/clm50
+  #608 -- Odd (blocky) spatial patterns in generic crop leafc for BGC simulation when initialized from BGC-Crop
+  #624 -- QSNOEVAP history output incorrect
+  #653 -- To save disk on fsurdat files use zwt0 on finindated file
+
+Science changes since: release-clm5.0.19
+  Surface datasets no longer have wetland over Antarctica
+  QSNOEVAP output corrected
+  reseeding changes so that it happens over generic crop and also raise the threshold from identically zero
+    to 1 (which is still very small)
+
+Software changes since: release-clm5.0.19
+  Remove the option to run CMIP5 rcp scenarios
+
+Changes to User Interface since: release-clm5.0.19
+  "-rcp" option to build-namelist is removed and replaced with "-ssp_rcp"
+  New use-cases for all eight of the SSP's
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.19
+
+Changes answers relative to baseline: Yes! (for clm4_5/clm5_0)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm4_5/clm5_0
+    - what platforms/compilers: All
+    - nature of change: similar climate, new fsurdat files (Antarctica fix), and QSNOEVAP, and reseed fix
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime5.6.12
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #625 #611 #651
+(https://github.com/ESCOMP/ctsm/pull)
+  #651 -- New datasets and capability to run CMIP6 future scenarios
+  #625 -- Correct QSNOEVAP history variable
+  #611 -- Reseed generic crops and increase totvegc threshold from 0 to 1 for reseeding
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.19
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri Mar  8 13:58:16 MST 2019
+One-line Summary: Update cime version to one with updates for cheyenne after the Mar/5th/2019 downtime that resulting in mpt2.16 not being able to be used
+
+Purpose of this version:
+------------------------
+
+Update cime version with changes needed to run on cheyenne after the Mar/5th/2019 downtime that resulted in the model
+NOT being able to run 
+
+CIME important updates:
+  Update fv1.9x2.5,gx1v7 grids
+  Initial port to CGD machine izumi
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many changes missing)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #655 #654
+
+Science changes since: None
+
+Software changes since:  New f19_g17 grids, works on izumi, works on cheyenne_intel after the downtime
+
+Changes to User Interface since: None
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.18
+
+Changes answers relative to baseline: Yes, but only f19_g17 resolutions
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: any at f19_g17 resolution
+    - what platforms/compilers: All
+    - nature of change: larger than roundoff/same climate
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime5.6.12
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #656
+(https://github.com/ESCOMP/ctsm/pull)
+   #656 -- update cime
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.18
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Feb 13 19:01:26 MST 2019
+One-line Summary: Add NoAnthro compset, reduce fields on fsurdat in mksurfdata_map, initial add of tools/contrib directory
+
+Purpose of this version:
+------------------------
+
+New NoAnthro compsets: I1850Clm50BgcNoAnthro, I1850Clm50SpNoAnthro and tests for it.
+More updates to surface dataset generation, to reduce the fields that are output, removing ones
+that aren't used.
+
+New tools/contrib directory with initial add of some useful scripts for users. Currently unsupported
+and only expected to run on cheyenne. The following scripts are added:
+
+   run_clm_historical ---- does all the setup and submission required to do a 1850-2010 CLM historical
+   subset_surfdata ------- create regional domain, surface data, and rtm directional files by 
+          extracting data from global datasets 
+   singlept -------------- create single point domain, surface data, and datm forcing files by 
+           extracting data from global datasets
+   SpinupStability.ncl --- This script assesses the equilibrium state of a spinup run
+   run_clmtowers --------- This script will run any number of flux tower sites.
+
+Add new default f09 Potential Vegetation (PtVg) surface dataset. For mksurfdata new high resolution
+PFT datasets (at 3x3min) for 2005. New rawdata PFT files from 0850-1849.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many changes missing)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): Fixes #629 #557 #262
+   #629 -- Unused fields from fsurdat files
+   #557 -- No anthro compset
+   #262 -- hirespft option doesn't work for mksurfdata.pl
+
+Science changes since: release-clm5.0.17
+   None
+
+Software changes since: release-clm5.0.17
+   PtVg and pre-millenial raw PFT datasets
+   reduce fields created on fsurdat files
+
+Changes to User Interface since: release-clm5.0.17
+   New NoAnthro compsets: I1850Clm50BgcNoAnthro, I1850Clm50SpNoAnthro
+   Add new option "-vic" to mksurfdata.pl to output fields needed for VIC (only have a few resolutions with VIC on by default)
+   Add 2005 high resolution datasets that can be used for the -hirespft option to mksrfdata.pl
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+    hobart --- OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  regular tests (prealpha):
+
+    cheyenne_intel - OK
+    cheyenne_gnu --- OK
+    hobart_nag ----- OK
+
+  regular tests (prebeta):
+
+    cheyenne_intel - OK
+    cheyenne_gnu --- OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.17
+
+Changes answers relative to baseline: No (bit-for-bit)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: Change cime to cime5.6.11 (just a name change)
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime5.6.11
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #619 #620 #634
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #619 -- Begin adding "contrib" tools directory
+  #620 -- Add NoAnthro compset and tests
+  #634 -- Remove some of the fields added to fsurdat files in mksurfdata_map
+
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.17
+Originator(s): Keith Oleson, Bill Sacks
+Date: Wed Jan 23 11:03:22 MST 2019
+One-line Summary: History fields for vertically-resolved sums of soil C and N, and minor fixes
+
+Purpose of this version:
+------------------------
+
+Main change is from Keith Oleson: Add history fields for
+vertically-resolved sums of SOIL1C, SOIL2C, and SOIL3C for C12, C13,
+C14, and similarly for N. New fields are SOILC_vr, C13_SOILC_vr, and
+C14_SOILC_vr, and SOILN_vr. For runs that use the output_bgc usermods,
+including cmip6 runs, we no longer output 'SOIL1C_vr', 'SOIL1N_vr',
+'SOIL2C_vr', 'SOIL2N_vr', 'SOIL3C_vr', 'SOIL3N_vr'; instead we output
+'SOILC_vr', 'SOILN_vr', and similarly for C isotopes.
+
+Also minor fixes:
+- Output cpl hist files in SSP test (resolves ESCOMP/ctsm#61)
+- Remove FATES-related commented-out code in OzoneMod (this has been
+  moved to https://github.com/ESCOMP/ctsm/issues/618)
+- Minor tweak to run_sys_tests
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#61
+
+Science changes since: release-clm5.0.16
+   None
+
+Software changes since: release-clm5.0.16
+   See above
+
+Changes to User Interface since: release-clm5.0.16
+   None
+
+Testing:
+--------
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+    hobart --- not run
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+    hobart --- not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+     hobart --- not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+  regular tests (prealpha):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+  regular tests (prebeta):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.16
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime_cesm2_1_rel_06
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: ctsm1.0.dev025
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/551
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.16
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Jan 15 15:13:43 MST 2019
+One-line Summary: PtVg and ssp_rcp future scenario options and Antarctica wetlands fix to mksurfdata, and option to dribble crop harvest XSMRPOOL flux to atmosphere
+
+Purpose of this version:
+------------------------
+
+no-anthro changes on release branch. Update of mksurfdata for Antarctic. Also start adding in newly created SSP-RCP datasets that are easy to add in.
+Also add in new option for dribble_crophrv_xsmrpool_2atm.
+
+CTSM Master Tag This Corresponds To: N/A
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #553 #533 #589 #547 #545
+  #553 -- More robust mksurfdata_map logic for determining where to put wetlands
+  #533 -- Add -no-anthro option to mksurfdata_map
+  #589 -- Existence of content in the lai_streams namelist makes it confusing to users
+  #547 -- Add conus_30_x8 grid as valid option for CTSM and mksurfdata_map
+  #545 -- Antarctica ice shelves are being treated as wetlands rather than glaciers
+
+Science changes since: release-clm5.0.15
+  mksurfdata now properly makes Antarctica teated as glacier rather than wetland
+  Add in option to create all of the SSP-RCP future scenarios in mksurfdata_map
+  Add dribble_crophrv_xsmrpool_2atm, to do slow release of crop harvested XSMRPOOL to atmosphere
+    (only active by default when co2_type="prognostic")
+
+Software changes since: release-clm5.0.15
+  Add no-anthro option for mksurfdata_map
+
+Changes to User Interface since: release-clm5.0.15
+  New namelist option: dribble_crophrv_xsmrpool_2atm
+  Add SSP-RCP future scenarios can be done in mksurfdata_map
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+    hobart ---
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.15
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime_cesm2_1_rel_06
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: N/A
+
+Pull Requests that document the changes (include PR ids):  #567 #561 #564 #616 #610
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #616 -- No anthro options to tools, and all future scenarios in place, plus a few small issue fixes
+   #610 -- Add option to dribble XSMRPOOL at crop harvest to atmosphere over a half year
+   #567 -- ignore patterns for vim
+   #564 -- Update mksurfdata_map to include glaciers outside of pft landmask
+   #561 -- Add list of checks for new surface datasets
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.15
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Dec  6 10:14:30 MST 2018
+One-line Summary: Option for rain-to-snow to immediately run off in some regions
+
+Purpose of this version:
+------------------------
+
+Up until now: When repartition_rain_snow is .true. (which is the default
+for CLM5), rain that falls when the near-surface temperature is cold is
+converted to snow. This repartitioning was put in place for two
+reasons: (1) Downscaling to elevation classes: changing the balance
+between rain and snow for different elevation classes; (2) Correcting
+problems in CAM. However, members of the Land Ice Working Group would
+like to change this behavior so that, when CAM produces cold-temperature
+rain, this rain immediately runs off rather than being converted to
+snow. The purpose of this is to reduce the too-high SMB over portions of
+Greenland in CESM2 coupled runs (which results in part from CAM's
+generation of liquid precipitation despite very cold temperatures).
+
+This new behavior is implemented in a glacier region-specific manner,
+based on a new namelist flag, glacier_region_rain_to_snow_behavior. It
+is not at all ideal to make this aspect of the physics differ by region,
+but this has been requested by members of the Land Ice Working Group in
+order to address biases over Greenland while having minimal impact on
+the climate (so that the climate can stay very similar to that of the
+official CMIP6 runs). Note that, unlike other glacier region-specific
+behaviors, this one applies to all landunits, not just glaciers. This
+also seems a bit non-ideal, but we want the physics to be the same for
+all landunit types in a given region, and we also want this behavior to
+apply to vegetated columns because they are used for glacial
+inception (and we want this alternate behavior to apply to glacial
+inception, too, in order to decrease some instances of inception).
+
+The justification for this new physics is: In the case of (1) above: If
+CAM is generating rain at a given elevation / temperature, that doesn't
+necessarily imply that an equal water equivalent of snow would be
+generated at a higher elevation / lower temperature: indeed, in reality,
+there might not be any precipitation falling at that higher elevation /
+lower temperature. In the case of (2) above: There seem to be problems
+with CAM's microphysics that cause it to produce too much rain when
+temperatures are very cold; it seems (at least to some people) equally
+justifiable to throw this cold rain away (by sending it to the ocean as
+runoff) as it is to convert this cold rain to snow.
+
+Note: I don't think any changes are needed in
+BalanceCheck (unfortunately), since BalanceCheck currently uses the
+post-downscaling precipitation fluxes, and the pre-lnd2atm runoff
+fluxes (i.e., the new runoff flux isn't included in the terms in
+BalanceCheck, and it doesn't need to be because BalanceCheck uses the
+post-downscaling precipitation fluxes). (See also
+https://github.com/ESCOMP/ctsm/issues/201#issuecomment-444264954 .)
+
+CTSM Master Tag This Corresponds To: N/A
+
+   At least for now, we are bringing this to the release branch but not to
+   master. Here is an excerpt from the email explaining this rationale:
+
+   My question is: Should I do this:
+
+   (1) Just on a branch off of the release-clm5.0 branch, with no plan to
+       bring it back to release-clm5.0 or master
+
+   (2) On the release-clm5.0 branch, but not bring it back to master
+
+   (3) On the release-clm5.0 branch and master
+
+   My inclination right now is towards (2). I don't really like (1) because
+   this change will be wanted for a number of CMIP6-related experiments,
+   and it feels like it could be a pain to keep this branch up-to-date with
+   the evolving release-clm5.0 branch. However, the changes are going to be
+   a bit messy and having this be region-specific isn't really physically
+   justifiable (it's just being done that way to keep the climate as close
+   as possible to the official CMIP6 runs), so I'm not sure we really want
+   this on master. If we did anything on master, I could imagine having a
+   globally-applicable switch controlling this behavior, rather than having
+   it apply to just certain glacier regions.
+
+   Bette: The main reason I could see for bringing this to master is if you
+   imagine needing to use this new option in isotope-enabled runs, since
+   the isotope-enabled version of CTSM won't be on the release-clm5.0
+   branch. Do you think it's likely that you'd need to do that, or would
+   the isotope-enabled runs use the standard CMIP6 physics settings in this
+   respect?
+
+Summary of changes:
+-------------------
+
+Science changes since: release-clm5.0.14
+   None by default: just introduces a new option
+
+Software changes since: release-clm5.0.14
+   Introduces a new option, glacier_region_rain_to_snow_behavior,
+   controlling whether would-be rain-to-snow conversion ends up as snow
+   or instead ends up as liquid runoff.
+
+Changes to User Interface since: release-clm5.0.14
+   Introduces a new option, glacier_region_rain_to_snow_behavior,
+   controlling whether would-be rain-to-snow conversion ends up as snow
+   or instead ends up as liquid runoff.
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok
+
+    Tests pass, namelists differ as expected
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+    hobart --- not run
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+    hobart --- not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+     hobart --- not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+  regular tests (prealpha):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+  regular tests (prebeta):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.14
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime_cesm2_1_rel_05
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: none
+
+Pull Requests that document the changes (include PR ids):
+   ESCOMP/ctsm#586 - Option for rain-to-snow to immediately run off in
+   some regions
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.14
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Nov 29 11:46:41 MST 2018
