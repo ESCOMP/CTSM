@@ -795,7 +795,8 @@ contains
        if ( use_fates ) call check_dim_size(ncid, nameCohort  , numCohort, msg=msg)
     end if
     msg = 'You can deal with this mismatch by rerunning with ' // &
-         'use_init_interp = .true. in user_nl_clm'
+         'use_init_interp = .true. in user_nl_clm and '// &
+         'remove the init_generated_files/ directory in your run directory'
     call check_dim_size(ncid, 'levsno'  , nlevsno, msg=msg)
     call check_dim_size(ncid, 'levgrnd' , nlevgrnd, msg=msg)
     call check_dim_size(ncid, 'levlak'  , nlevlak)
