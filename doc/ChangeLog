@@ -1,4 +1,99 @@
 ===============================================================
+Tag name: ctsm5.1.dev102
+Originator(s): sacks (Bill Sacks)
+Date: Mon Jul 11 12:14:48 MDT 2022
+One-line Summary: Fix LILAC interface to PIO
+
+Purpose and description of changes
+----------------------------------
+
+Fixes the LILAC interface to PIO.
+
+This involved splitting shr_pio_mod into two pieces:
+
+(1) Reading configuration files and initializing PIO appropriately
+
+(2) Storing information about PIO (io system descriptors, io types, io
+formats) and providing an interface to query this information
+
+Piece (2) lives in the share code and is used regardless of the driver.
+Piece (1) is driver-specific, so for now we have three versions of that
+piece: one in CMEPS (created by extracting the initialization pieces
+from cmeps/cesm/nuopc_cap_share/shr_pio_mod.F90), one in the cpl7 repo
+(created by extracting the initialization pieces from
+share/src/shr_pio_mod.F90), and one in CTSM's LILAC directory (which is
+essentially identical to the one in the cpl7 repo). Piece (2) – the
+actual share code piece – is used by components (their use statements
+stay exactly as they are now) as well as by piece (1) (which is
+responsible for setting the module-level variables in piece (2)). See
+https://github.com/ESCOMP/CTSM/issues/1759#issuecomment-1171779485 for
+more context.
+
+Much of the work here was in externals:
+https://github.com/ESCOMP/CESM_share/pull/34,
+https://github.com/ESCOMP/CMEPS/pull/306 and
+https://github.com/ESCOMP/CESM_CPL7andDataComps/pull/16. So this PR
+updates those externals to versions with those changes. In addition,
+changes were needed within LILAC - to implement the LILAC version of
+piece (1) described above.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1759 (LILAC test failing in ctsm5.1.dev095 with
+  cime/share/pio update)
+
+Externals issues fixed (include issue #):
+- https://github.com/ESCOMP/CESM_share/issues/33 (ctsm lilac should use
+  old shr_pio_mod.F90)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- CMEPS: cmeps0.13.63 -> cmeps0.13.68
+- CPL7:  cpl7.0.12 -> cpl7.0.13
+- share: share1.0.11 -> share1.0.12
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1800
+https://github.com/ESCOMP/CESM_share/pull/34
+https://github.com/ESCOMP/CMEPS/pull/306
+https://github.com/ESCOMP/CESM_CPL7andDataComps/pull/16
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev101
 Originator(s): samrabin (Sam Rabin)
 Date: Mon Jul 11 11:48:48 MDT 2022
