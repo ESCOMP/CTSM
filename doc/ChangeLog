@@ -73,6 +73,11 @@ Testing summary:
     cheyenne ---- PASS
     izumi ------- PASS
 
+  In addition, to verify that the LILAC changes don't change answers, I ran
+  LILACSMOKE_D_Ld2.f10_f10_mg37.I2000Ctsm50NwpSpAsRs.cheyenne_intel.clm-lilac
+  with my changes rebased onto dev097 (in order to avoid recent answer
+  changing tags), with comparisons against dev094 (which was the last
+  time that test passed). It was bit-for-bit.
 
 Answer changes
 --------------
