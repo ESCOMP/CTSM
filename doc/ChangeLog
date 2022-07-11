@@ -1,4 +1,77 @@
 ===============================================================
+Tag name: ctsm5.1.dev101
+Originator(s): samrabin (Sam Rabin)
+Date: Mon Jul 11 11:48:48 MDT 2022
+One-line Summary: Fix winter wheat sowing window bugs
+
+Purpose and description of changes
+----------------------------------
+
+Fixes problems with winter wheat sowing criteria: The "normal" sowing
+condition for winter wheat only accounted for whether today is on/after
+the first day of the planting window; it did not also require that today
+is on/before the last day of the window. Additionally, the "last chance"
+condition allowed planting anytime on/after the last day of the window.
+See https://github.com/ESCOMP/CTSM/issues/1691 for details.
+
+Winter wheat is not present in our standard surface datasets, so this
+has no impact on typical simulations.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1691 (Problems with winter wheat sowing criteria)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for winter wheat
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only configurations that include winter wheat
+      (this is non-standard, but winter wheat is included in smallville
+      tests, so smallville tests change answers)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      not investigated, but expected to be larger than roundoff/same
+      climate (with possibly large local changes in areas with large
+      amounts of winter wheat)
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1692
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev100
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue Jul  5 17:40:21 MDT 2022
