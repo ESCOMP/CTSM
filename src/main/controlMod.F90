@@ -264,7 +264,6 @@ contains
 
     ! dust emission, dmleung 14 Dec 2021
     namelist /clm_inparm/  &
-         !clay_frc, &            !-dmleung 14 Dec 2021; eliminated per Erik Kluzek's request, dmleung 11 Jul 2022
          rough_fct, lulc_frc    !-dmleung 17 Dec 2021
 
     ! ----------------------------------------------------------------------
@@ -611,7 +610,6 @@ contains
     call mpi_bcast (fsnowaging,  len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
 
     ! initialize input data for new dust emission module dmleung 14 Dec 2021
-    !call mpi_bcast (clay_frc, len(clay_frc), MPI_CHARACTER, 0, mpicom, ier)  ! added by dmleung, 14 Dec 2021; eliminated per Erk Kluzek's request, dmleung 11 Jul 2022
     call mpi_bcast (rough_fct, len(rough_fct), MPI_CHARACTER, 0, mpicom, ier)! added by dmleung, 17 Dec 2021
     call mpi_bcast (lulc_frc, len(lulc_frc), MPI_CHARACTER, 0, mpicom, ier)  ! added by dmleung, 17 Dec 2021
 
@@ -833,13 +831,7 @@ contains
        write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
     end if
     !##### for dmleung's input data for new dust emission module #####
-    ! eliminate the use of alternative clay fraction per Erik Kluzek's request, dmleung 11 Jul 2022
-    !if (clay_frc == ' ') then     ! -dml, 2 Mar 2021, added 14 Dec 2021
-    !   write(iulog,*) '   clay_frc surface dataset not set'
-    !else
-    !   write(iulog,*) '   surface data   = ',trim(clay_frc)
-    !end if
-    if (rough_fct == ' ') then    ! -dmleung, 17 Dec 2020
+    if (rough_fct == ' ') then    ! -dmleung, 17 Dec 2021
        write(iulog,*) '   rough_fct surface dataset not set'
     else
        write(iulog,*) '   surface data   = ',trim(rough_fct)
