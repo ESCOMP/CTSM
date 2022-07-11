@@ -1814,6 +1814,9 @@ contains
                   cnveg_carbonflux_inst%repr_grainc_to_food_perharv(p,s,k) = 0._r8
                end do
             end do
+            do k = repr_grain_min, repr_grain_max
+               cnveg_carbonflux_inst%repr_grainc_to_food_thisyr(p,k) = 0._r8
+            end do
          end if
 
          ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-18)
@@ -2705,7 +2708,8 @@ contains
          frootc_to_litter      =>    cnveg_carbonflux_inst%frootc_to_litter_patch      , & ! Output: [real(r8) (:) ]  fine root C litterfall (gC/m2/s)                  
          livestemc_to_litter   =>    cnveg_carbonflux_inst%livestemc_to_litter_patch   , & ! Output: [real(r8) (:) ]  live stem C litterfall (gC/m2/s)                  
          repr_grainc_to_food   =>    cnveg_carbonflux_inst%repr_grainc_to_food_patch   , & ! Output: [real(r8) (:,:) ]  grain C to food (gC/m2/s)
-         repr_grainc_to_food_perharv => cnveg_carbonflux_inst%repr_grainc_to_food_perharv, & ! Output: [real(r8) (:,:,:) ]  accumulated grain C to food (gC/m2)
+         repr_grainc_to_food_perharv => cnveg_carbonflux_inst%repr_grainc_to_food_perharv, & ! Output: [real(r8) (:,:,:) ]  grain C to food per harvest (gC/m2)
+         repr_grainc_to_food_thisyr => cnveg_carbonflux_inst%repr_grainc_to_food_thisyr, & ! Output: [real(r8) (:,:) ]  grain C to food harvested this calendar year (gC/m2)
          repr_grainc_to_seed   =>    cnveg_carbonflux_inst%repr_grainc_to_seed_patch   , & ! Output: [real(r8) (:,:) ]  grain C to seed (gC/m2/s)
          repr_structurec_to_cropprod => cnveg_carbonflux_inst%repr_structurec_to_cropprod_patch, & ! Output: [real(r8) (:,:) ] reproductive structure C to crop product pool (gC/m2/s)
          repr_structurec_to_litter   => cnveg_carbonflux_inst%repr_structurec_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure C to litter (gC/m2/s)
@@ -2784,6 +2788,8 @@ contains
                           + repr_grainc_to_food_thispool
                      repr_grainc_to_food_perharv(p,h,k) = reproductivec(p,k) &
                          + repr_grainc_to_food_thispool * dt
+                     repr_grainc_to_food_thisyr(p,k) = repr_grainc_to_food_thisyr(p,k) &
+                         + repr_grainc_to_food_perharv(p,h,k)
                      repr_grainn_to_food(p,k) = t1 * reproductiven(p,k) &
                           + npool_to_reproductiven(p,k) - repr_grainn_to_seed(p,k)
                   end do
