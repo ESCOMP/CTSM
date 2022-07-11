@@ -2574,10 +2574,11 @@ use case.)
 
 <!-- added by dmleung to CLM5, 14 Dec 2021 -->
 <!-- manually input clay fraction   -dmleung, 2 Mar 2021 -->
-<entry id="clay_frc" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
-Full pathname of time-invariant clay fraction dataset for calculating dust emission.
-</entry>
+<!-- eliminated per Erik Kluzek's request, dmleung 11 Jul 2022 -->
+<!-- <entry id="clay_frc" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" > -->
+<!-- Full pathname of time-invariant clay fraction dataset for calculating dust emission. -->
+<!-- </entry> -->
 
 <!-- added by dmleung to CLM5, 17 Dec 2021 -->
 <!-- roughness factor f_eff   -dmleung, 22 Apr 2020 -->

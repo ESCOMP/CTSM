@@ -24,14 +24,14 @@ module SoilStateType
 
      ! sand/ clay/ organic matter
      real(r8), pointer :: sandfrac_patch       (:)   ! patch sand fraction
-     real(r8), pointer :: clayfrac_patch       (:)   ! patch clay fraction
+     real(r8), pointer :: clayfrac_patch       (:)   ! patch clay fraction 
      real(r8), pointer :: mss_frc_cly_vld_col  (:)   ! col mass fraction clay limited to 0.20
      real(r8), pointer :: cellorg_col          (:,:) ! col organic matter for gridcell containing column (1:nlevsoi)
      real(r8), pointer :: cellsand_col         (:,:) ! sand value for gridcell containing column (1:nlevsoi)
      real(r8), pointer :: cellclay_col         (:,:) ! clay value for gridcell containing column (1:nlevsoi)
      real(r8), pointer :: bd_col               (:,:) ! col bulk density of dry soil material [kg/m^3] (CN)
      !####################### for new dust emission scheme  -dmleung ############################
-     real(r8), pointer :: clayfrc_patch        (:)   ! alternative clay fraction, 14 dec 2021
+     !real(r8), pointer :: clayfrc_patch        (:)   ! alternative clay fraction, 14 dec 2021; eliminated per Erik Kluzek's request, 11 Jul 2022
      real(r8), pointer :: roughfct_patch       (:)   ! roughness factor, 17 dec 2021
      real(r8), pointer :: rockfrc_patch        (:)   ! GLCNMO rock/bare area fraction, 17 dec 2021
      real(r8), pointer :: vegefrc_patch        (:)   ! GLCNMO shrub/crop area fraction, 17 dec 2021
@@ -139,7 +139,7 @@ contains
     allocate(this%bd_col               (begc:endc,nlevgrnd))            ; this%bd_col               (:,:) = nan
 
     !################ dmleung added 14 Dec 2021 ########################
-    allocate(this%clayfrc_patch        (begp:endp))                     ; this%clayfrc_patch        (:)   = nan
+    !allocate(this%clayfrc_patch        (begp:endp))                     ; this%clayfrc_patch        (:)   = nan  !eliminated per Erik Kluzek's request, dmelung 11 Jul 2022
     allocate(this%roughfct_patch       (begp:endp))                     ; this%roughfct_patch       (:)   = nan
     allocate(this%rockfrc_patch        (begp:endp))                     ; this%rockfrc_patch        (:)   = nan
     allocate(this%vegefrc_patch        (begp:endp))                     ; this%vegefrc_patch        (:)   = nan
