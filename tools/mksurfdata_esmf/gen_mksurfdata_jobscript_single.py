@@ -123,7 +123,8 @@ def main ():
             runfile.write('#PBS -l walltime=1:00:00 \n')
             runfile.write(f"#PBS -A {account} \n")
             runfile.write('#PBS -q casper \n')
-            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=12:mpiprocs={tasks_per_node}:mem=80GB \n")
+            runfile.write(f'#PBS -l select={number_of_nodes}:ncpus=12:' \
+                          f'mpiprocs={tasks_per_node}:mem=80GB \n')
         elif machine == 'izumi':
             attribs = {'mpilib': 'mvapich2'}
             runfile.write('#PBS -l walltime=2:00:00 \n')
@@ -162,7 +163,7 @@ def main ():
                       'on your system and the arguments it requires \n')
         output = f'{executable} {mksurfdata_path} < {namelist_file}'
         runfile.write(f"{output} \n")
-        logger.info(f'run command is {output} ')
+        logger.info('run command is %s', output)
 
     print (f"Successfully created jobscript {jobscript_file}")
     sys.exit(0)

@@ -423,16 +423,21 @@ def main ():
                 rawdata_files[child1.tag] = os.path.join(input_path, item.text)
                 if '%y' not in rawdata_files[child1.tag]:
                     if not os.path.isfile(rawdata_files[child1.tag]):
-                        print(f"WARNING: input data file {rawdata_files[child1.tag]} for {child1.tag} does not exist")
-                        print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+                        print('WARNING: input data file ' \
+                              f'{rawdata_files[child1.tag]} for {child1.tag} ' \
+                              'does not exist')
+                        print('WARNING: run ./download_input_data to try TO ' \
+                              'OBTAIN MISSING FILES')
                         _must_run_download_input_data = True
 
             if item.tag == 'mesh_filename':
                 new_key = f"{child1.tag}_mesh"
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
                 if not os.path.isfile(rawdata_files[new_key]):
-                    print(f"WARNING: input mesh file {rawdata_files[new_key]} does not exist")
-                    print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+                    print('WARNING: input mesh file ' \
+                          f'{rawdata_files[new_key]} does not exist')
+                    print('WARNING: run ./download_input_data to try TO ' \
+                          'OBTAIN MISSING FILES')
                     _must_run_download_input_data = True
 
             if item.tag == 'lake_filename':
@@ -518,17 +523,23 @@ def main ():
                 landuse_input_fnam2 = file2.replace("%y", year_str)
                 landuse_input_fnam3 = file3.replace("%y", year_str)
                 if not os.path.isfile(landuse_input_fname):
-                     print(f"WARNING: landunit_input_fname: {landuse_input_fname} does not exist")
-                     print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
-                     _must_run_download_input_data = True
+                    print('WARNING: landunit_input_fname: ' \
+                          f'{landuse_input_fname} does not exist')
+                    print('WARNING: run ./download_input_data to try TO ' \
+                          'OBTAIN MISSING FILES')
+                    _must_run_download_input_data = True
                 if not os.path.isfile(landuse_input_fnam2):
-                     print(f"WARNING: landunit_input_fnam2: {landuse_input_fnam2} does not exist")
-                     print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
-                     _must_run_download_input_data = True
+                    print('WARNING: landunit_input_fnam2: ' \
+                          f'{landuse_input_fnam2} does not exist')
+                    print('WARNING: run ./download_input_data to try TO ' \
+                          'OBTAIN MISSING FILES')
+                    _must_run_download_input_data = True
                 if not os.path.isfile(landuse_input_fnam3):
-                     print(f"WARNING: landunit_input_fnam3: {landuse_input_fnam3} does not exist")
-                     print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
-                     _must_run_download_input_data = True
+                    print('WARNING: landunit_input_fnam3: ' \
+                          f'{landuse_input_fnam3} does not exist')
+                    print('WARNING: run ./download_input_data to try TO ' \
+                          'OBTAIN MISSING FILES')
+                    _must_run_download_input_data = True
 
                 # -- Each line is written twice in the original perl code:
                 landuse_line = f"{landuse_input_fname:<196}{year_str}\n"
@@ -572,7 +583,7 @@ def main ():
         # In case the "git -C" option is unavailable, as on casper (2022/5/24)
         # Still, this does NOT allow the system test to work on machines
         # without git -C
-        logger.info('git -C option unavailable on casper as of 2022/7/2', e)
+        logger.info('git -C option unavailable on casper as of 2022/7/2 %s', e)
         gitdescribe = subprocess.check_output('git describe', shell=True).strip()
     gitdescribe = gitdescribe.decode('utf-8')
 
@@ -631,12 +642,16 @@ def main ():
         if '%y' in mksrf_fhrvtyp:
             mksrf_fhrvtyp = mksrf_fhrvtyp.replace("%y",str(start_year))
         if not os.path.isfile(mksrf_fvegtyp):
-            print(f"WARNING: input mksrf_fvegtyp file {mksrf_fvegtyp} does not exist")
-            print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+            print('WARNING: input mksrf_fvegtyp file ' \
+                  f'{mksrf_fvegtyp} does not exist')
+            print('WARNING: run ./download_input_data to try TO ' \
+                  'OBTAIN MISSING FILES')
             _must_run_download_input_data = True
         if not os.path.isfile(mksrf_fhrvtyp):
-            print(f"WARNING: input mksrf_fhrvtyp file {mksrf_fhrvtyp} does not exist")
-            print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+            print('WARNING: input mksrf_fhrvtyp file ' \
+                  f'{mksrf_fhrvtyp} does not exist')
+            print('WARNING: run ./download_input_data to try TO ' \
+                  'OBTAIN MISSING FILES')
             _must_run_download_input_data = True
         nlfile.write( f"  mksrf_fvegtyp = \'{mksrf_fvegtyp}\' \n")
         nlfile.write( f"  mksrf_fvegtyp_mesh = \'{mksrf_fvegtyp_mesh}\' \n")
