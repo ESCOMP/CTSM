@@ -1663,11 +1663,6 @@ sub process_namelist_inline_logic {
   #############################################
   setup_logic_rooting_profile($opts,  $nl_flags, $definition, $defaults, $nl);
 
-  #############################################
-  # namelist group: friction_velocity         #
-  #############################################
-  setup_logic_friction_vel($opts,  $nl_flags, $definition, $defaults, $nl);
-
   #############################
   # namelist group: cngeneral #
   #############################
@@ -1686,6 +1681,11 @@ sub process_namelist_inline_logic {
   # namelist group: canopyfluxes_inparm #
   #############################################
   setup_logic_canopyfluxes($opts,  $nl_flags, $definition, $defaults, $nl);
+
+  ##########################################################
+  # namelist group: friction_velocity (after canopyfluxes) #
+  ##########################################################
+  setup_logic_friction_vel($opts,  $nl_flags, $definition, $defaults, $nl);
 
   #############################################
   # namelist group: canopyhydrology_inparm #
@@ -3867,10 +3867,11 @@ sub setup_logic_rooting_profile {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_friction_vel {
-  #
+  # Must be after canopyfluxes so that use_biomass_heat_storagge will be set
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'zetamaxstable' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'zetamaxstable',
+     'use_biomass_heat_storage'=>$nl_flags->{'use_biomass_heat_storage'}, 'phys'=>$nl_flags->{'phys'} );
 }
 
 #-------------------------------------------------------------------------------
@@ -3894,6 +3895,11 @@ sub setup_logic_canopyfluxes {
               'use_fates'=>$nl_flags->{'use_fates'}, 'phys'=>$nl_flags->{'phys'} );
   if ( &value_is_true($nl->get_value('use_biomass_heat_storage') ) && &value_is_true( $nl_flags->{'use_fates'}) ) {
      $log->fatal_error('use_biomass_heat_storage can NOT be set to true when fates is on');
+  }
+  if ( &value_is_true($nl->get_value('use_biomass_heat_storage')) ) {
+     $nl_flags->{'use_biomass_heat_storage'} = ".true.";
+  } else {
+     $nl_flags->{'use_biomass_heat_storage'} = ".false.";
   }
 }
 
