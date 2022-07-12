@@ -1329,12 +1329,7 @@ bioms:   do f = 1, fn
             zeta(p) = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
             if (zeta(p) >= 0._r8) then     !stable
-               ! remove stability cap when biomass heat storage is active 
-               if(use_biomass_heat_storage) then 
-                  zeta(p) = min(100._r8,max(zeta(p),0.01_r8))
-               else
-                  zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
-               endif
+               zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
                um(p) = max(ur(p),0.1_r8)
             else                     !unstable
                zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
