@@ -76,8 +76,10 @@ Script to download any missing input data for mksurfdata_esmf
     return args
 
 def _create_input_data_list(rundir):
-    with open(os.path.join(rundir, 'surfdata.namelist')) as namelist:
-        with open(os.path.join(rundir, '.input_data_list'), 'w') as input_data_list:
+    with open(os.path.join(rundir, 'surfdata.namelist'),
+              encoding='utf-8') as namelist:
+        with open(os.path.join(rundir, '.input_data_list'), 'w',
+                  encoding='utf-8') as input_data_list:
             for line in namelist:
                 if re.search(_FILENAME, line):
                     # Remove quotes from filename, then output this line

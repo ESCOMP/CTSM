@@ -7,22 +7,35 @@ instructions, see README.
 import os
 import sys
 import argparse
+import logging
+
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            os.pardir,
+                            os.pardir,
+                            'python')
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm import add_cime_to_path  # pylint: disable=unused-import
+from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
+from CIME.XML.env_mach_specific import EnvMachSpecific
+from CIME.BuildTools.configure import FakeCase
+
+logger = logging.getLogger(__name__)
 
 def get_parser():
     """
     Get parser object for this script.
     """
+    # set up logging allowing user control
+    setup_logging_pre_config()
+
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
     parser.print_usage = parser.print_help
+    add_logging_args(parser)
 
-    parser.add_argument(
-        '-v', '--verbose',
-        help="increase output verbosity",
-        action="store_true",
-    )
     parser.add_argument(
         "--account",
         help="""account number (default: %(default)s)""",
@@ -82,6 +95,7 @@ def main ():
     # Obtain input args
     # --------------------------
     args = get_parser().parse_args()
+    process_logging_args(args)
     namelist_file = args.namelist_file
     jobscript_file = args.jobscript_file
     number_of_nodes = args.number_of_nodes
@@ -90,25 +104,29 @@ def main ():
     account = args.account
 
     # --------------------------
-    # Write run script
+    # Write run script (part 1)
     # --------------------------
     with open(jobscript_file, "w",encoding='utf-8') as runfile:
         runfile.write('#!/bin/bash \n')
         runfile.write('# Edit the batch directives for your batch system \n')
-        runfile.write('# Below are the batch directives used on cheyenne \n')
+        runfile.write(f'# Below are default batch directives for {machine} \n')
         runfile.write('#PBS -N mksurfdata \n')
         runfile.write('#PBS -j oe \n')
         if machine == 'cheyenne':
+            attribs = {'mpilib': 'default'}
             runfile.write('#PBS -l walltime=30:00 \n')
             runfile.write(f"#PBS -A {account} \n")
             runfile.write('#PBS -q regular \n')
             runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
         elif machine == 'casper':
+            attribs = {'mpilib': 'default'}
             runfile.write('#PBS -l walltime=1:00:00 \n')
             runfile.write(f"#PBS -A {account} \n")
             runfile.write('#PBS -q casper \n')
-            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=12:mpiprocs={tasks_per_node}:mem=80GB \n")
+            runfile.write(f'#PBS -l select={number_of_nodes}:ncpus=12:' \
+                          f'mpiprocs={tasks_per_node}:mem=80GB \n')
         elif machine == 'izumi':
+            attribs = {'mpilib': 'mvapich2'}
             runfile.write('#PBS -l walltime=2:00:00 \n')
             runfile.write('#PBS -q medium \n')
             runfile.write(f'#PBS -l nodes={number_of_nodes}:ppn={tasks_per_node},mem=555GB -r n \n')
@@ -118,22 +136,42 @@ def main ():
 
         runfile.write("\n")
 
-        n_p = int(tasks_per_node) * int(number_of_nodes)
-        mksurfdata_path = './tool_bld/mksurfdata'
+        # --------------------------
+        # Obtain mpirun command from env_mach_specific.xml
+        # --------------------------
+        bld_path = './tool_bld'
+        # Get the ems_file object with standalone_configure=True
+        # and the fake_case object with mpilib=attribs['mpilib']
+        # so as to use the get_mpirun function pointing to fake_case
+        ems_file = EnvMachSpecific(bld_path, standalone_configure=True)
+        fake_case = FakeCase(compiler=None, mpilib=attribs['mpilib'],
+                             debug=False, comp_interface=None)
+        total_tasks = int(tasks_per_node) * int(number_of_nodes)
+        cmd = ems_file.get_mpirun(fake_case, attribs, job='name',
+                                  overrides = {"total_tasks" : total_tasks,})
+        # cmd is a tuple:
+        # cmd[0] contains the mpirun command (eg mpirun, mpiexe, etc) as string
+        # cmd[1] contains a list of strings that we append as options to cmd[0]
+        # The replace function removes unnecessary characters that appear in
+        # some such options
+        executable = f'{cmd[0]} {" ".join(cmd[1])}'.replace('ENV{', ''). \
+                                                    replace('}', '')
 
-        # Run env_mach_specific.sh to control the machine dependent environment
-        # including the paths to compilers and libraries external to cime such
-        # as netcdf
-        runfile.write('. ./tool_bld/.env_mach_specific.sh \n')
+        mksurfdata_path = os.path.join(bld_path, 'mksurfdata')
+        env_mach_path = os.path.join(bld_path, '.env_mach_specific.sh')
+
+        # --------------------------
+        # Write run script (part 2)
+        # --------------------------
+        runfile.write('# Run env_mach_specific.sh to control the machine ' \
+                      'dependent environment including the paths to ' \
+                      'compilers and libraries external to cime such as netcdf')
+        runfile.write(f'\n. {env_mach_path}\n')
         runfile.write('# Edit the mpirun command to use the MPI executable ' \
                       'on your system and the arguments it requires \n')
-        if machine == 'cheyenne':
-            output = f"mpiexec_mpt -p \"%g:\" -np {n_p} {mksurfdata_path} < {namelist_file}"
-        elif machine == 'casper':
-            output = f"mpiexec -np {n_p} {mksurfdata_path} < {namelist_file}"
-        elif machine == 'izumi':
-            output = f"mpiexec --machinefile $PBS_NODEFILE -n {n_p} --prepend-rank {mksurfdata_path} < {namelist_file}"
+        output = f'{executable} {mksurfdata_path} < {namelist_file}'
         runfile.write(f"{output} \n")
+        logger.info('run command is %s', output)
 
     print (f"Successfully created jobscript {jobscript_file}")
     sys.exit(0)

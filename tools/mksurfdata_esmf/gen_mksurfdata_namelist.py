@@ -11,6 +11,7 @@ import argparse
 import textwrap
 import subprocess
 from datetime import datetime
+import netCDF4
 
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                             os.pardir,
@@ -64,47 +65,51 @@ def get_parser():
     parser.add_argument(
         "--res",
         help="""
-            model resolution [default: %(default)s]
+            Model resolution (required) 
             To see available supported resolutions, simply invoke this command
-            with a --res unknown option
+            with a --res unknown option. For custom resolutions, provide a grid
+            name of your choosing to be used in the name of the fsurdat file.
             """,
         action="store",
         dest="res",
-        required=False,
-        default="4x5",
+        required=True,
     )
     parser.add_argument(
         "--model-mesh",
         help="""
             model mesh [default: %(default)s]
-            Ignore the --res option and force the model mesh file to be this input
+            Ignore --res and use --model-mesh to be this file
             """,
         action="store",
         dest="force_model_mesh_file",
         required=False,
-        default="none",
+        default=None,
     )
     parser.add_argument(
         "--model-mesh-nx",
         help="""
             model mesh [default: %(default)s]
-            Required when using --model-mesh; force the model mesh to have this nx
+            Required when using --model-mesh: set nx to the grid's number of
+            columns; expect nx x ny = elementCount for consistency with the
+            model mesh
             """,
         action="store",
         dest="force_model_mesh_nx",
         required=False,
-        default="-999",
+        default=None
     )
     parser.add_argument(
         "--model-mesh-ny",
         help="""
             model mesh [default: %(default)s]
-            Required when using --model-mesh; force the model mesh to have this ny
+            Required when using --model-mesh: set ny to the grid's number of
+            rows; expect nx x ny = elementCount for consistency with the model
+            mesh
             """,
         action="store",
         dest="force_model_mesh_ny",
         required=False,
-        default="-999",
+        default=None
     )
     parser.add_argument(
         "--glc-nec",
@@ -274,8 +279,34 @@ def main ():
     else:
         hires_pft = 'off'
 
-    if force_model_mesh_file != 'none':
-        res = force_model_mesh_nx + 'x' + force_model_mesh_ny
+    if force_model_mesh_file is not None:
+        # open mesh_file to read element_count and, if available, orig_grid_dims
+        mesh_file = netCDF4.Dataset(force_model_mesh_file, 'r')
+        element_count = mesh_file.dimensions['elementCount'].size
+        if 'origGridDims' in mesh_file.variables:
+            orig_grid_dims = mesh_file.variables['origGridDims']
+            if int(force_model_mesh_nx) == orig_grid_dims[0] and \
+               int(force_model_mesh_ny) == orig_grid_dims[1]:
+                mesh_file.close()
+            else:
+                error_msg = 'ERROR: Found variable origGridDims in ' \
+                            f'{force_model_mesh_file} with values ' \
+                            f'{orig_grid_dims[:]} that do not agree with the ' \
+                            'user-entered mesh_nx and mesh_ny values of ' \
+                            f'{[force_model_mesh_nx, force_model_mesh_ny]}.'
+                sys.exit(error_msg)
+        elif force_model_mesh_nx is None or force_model_mesh_ny is None:
+            error_msg = 'ERROR: You set --model-mesh so you MUST ALSO ' \
+                        'SET --model-mesh-nx AND --model-mesh-ny'
+            sys.exit(error_msg)
+
+        # using force_model_mesh_nx and force_model_mesh_ny either from the
+        # mesh file (see previous if statement) or the user-entered values
+        if element_count != int(force_model_mesh_nx) * int(force_model_mesh_ny):
+            error_msg = 'ERROR: The product of ' \
+                        '--model-mesh-nx x --model-mesh-ny must equal ' \
+                        'exactly elementCount in --model-mesh'
+            sys.exit(error_msg)
 
     hostname = os.getenv("HOSTNAME")
     logname = os.getenv("LOGNAME")
@@ -394,16 +425,21 @@ def main ():
                 rawdata_files[child1.tag] = os.path.join(input_path, item.text)
                 if '%y' not in rawdata_files[child1.tag]:
                     if not os.path.isfile(rawdata_files[child1.tag]):
-                        print(f"WARNING: input data file {rawdata_files[child1.tag]} for {child1.tag} does not exist")
-                        print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+                        print('WARNING: input data file ' \
+                              f'{rawdata_files[child1.tag]} for {child1.tag} ' \
+                              'does not exist')
+                        print('WARNING: run ./download_input_data to try TO ' \
+                              'OBTAIN MISSING FILES')
                         _must_run_download_input_data = True
 
             if item.tag == 'mesh_filename':
                 new_key = f"{child1.tag}_mesh"
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
                 if not os.path.isfile(rawdata_files[new_key]):
-                    print(f"WARNING: input mesh file {rawdata_files[new_key]} does not exist")
-                    print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+                    print('WARNING: input mesh file ' \
+                          f'{rawdata_files[new_key]} does not exist')
+                    print('WARNING: run ./download_input_data to try TO ' \
+                          'OBTAIN MISSING FILES')
                     _must_run_download_input_data = True
 
             if item.tag == 'lake_filename':
@@ -433,14 +469,26 @@ def main ():
                     if child2.tag == 'ny':
                         rawdata_files["mksrf_fgrid_mesh_ny"] = child2.text
 
-    if force_model_mesh_file == 'none' and len(model_mesh) == 0:
+    if not model_mesh and force_model_mesh_file is None:
         valid_grids = []
         for child1 in root:  # this is domain tag
             for _, value in child1.attrib.items():
                 valid_grids.append(value)
-        error_msg = f'ERROR: invalid input res {res};' \
-                    f'valid grid values are {valid_grids}'
-        sys.exit(error_msg)
+        if res in valid_grids:
+            error_msg = 'ERROR: You have requested a valid grid for which ' \
+        '../../ccs_config/component_grids_nuopc.xml does not include a mesh ' \
+        'file. For a regular regional or 1x1 grid, you may generate the ' \
+        'fsurdat file using the subset_data tool instead. Alternatively ' \
+        'and definitely for curvilinear grids, you may generate ' \
+        'a mesh file using the workflow currently (2022/7) described in ' \
+        'https://github.com/ESCOMP/CTSM/issues/1773#issuecomment-1163432584' \
+        'TODO Reminder to ultimately place these workflow instructions in ' \
+        "the User's Guide."
+            sys.exit(error_msg)
+        else:
+            error_msg = f'ERROR: invalid input res {res}; ' \
+                        f'valid grid values are {valid_grids}'
+            sys.exit(error_msg)
 
     # Determine num_pft
     if nocrop_flag:
@@ -479,17 +527,23 @@ def main ():
                 landuse_input_fnam2 = file2.replace("%y", year_str)
                 landuse_input_fnam3 = file3.replace("%y", year_str)
                 if not os.path.isfile(landuse_input_fname):
-                     print(f"WARNING: landunit_input_fname: {landuse_input_fname} does not exist")
-                     print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
-                     _must_run_download_input_data = True
+                    print('WARNING: landunit_input_fname: ' \
+                          f'{landuse_input_fname} does not exist')
+                    print('WARNING: run ./download_input_data to try TO ' \
+                          'OBTAIN MISSING FILES')
+                    _must_run_download_input_data = True
                 if not os.path.isfile(landuse_input_fnam2):
-                     print(f"WARNING: landunit_input_fnam2: {landuse_input_fnam2} does not exist")
-                     print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
-                     _must_run_download_input_data = True
+                    print('WARNING: landunit_input_fnam2: ' \
+                          f'{landuse_input_fnam2} does not exist')
+                    print('WARNING: run ./download_input_data to try TO ' \
+                          'OBTAIN MISSING FILES')
+                    _must_run_download_input_data = True
                 if not os.path.isfile(landuse_input_fnam3):
-                     print(f"WARNING: landunit_input_fnam3: {landuse_input_fnam3} does not exist")
-                     print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
-                     _must_run_download_input_data = True
+                    print('WARNING: landunit_input_fnam3: ' \
+                          f'{landuse_input_fnam3} does not exist')
+                    print('WARNING: run ./download_input_data to try TO ' \
+                          'OBTAIN MISSING FILES')
+                    _must_run_download_input_data = True
 
                 # -- Each line is written twice in the original perl code:
                 landuse_line = f"{landuse_input_fname:<196}{year_str}\n"
@@ -533,7 +587,7 @@ def main ():
         # In case the "git -C" option is unavailable, as on casper (2022/5/24)
         # Still, this does NOT allow the system test to work on machines
         # without git -C
-        logger.info('git -C option unavailable on casper as of 2022/7/2', e)
+        logger.info('git -C option unavailable on casper as of 2022/7/2 %s', e)
         gitdescribe = subprocess.check_output('git describe', shell=True).strip()
     gitdescribe = gitdescribe.decode('utf-8')
 
@@ -558,14 +612,14 @@ def main ():
         # -------------------
         # raw input data
         # -------------------
-        if force_model_mesh_file != 'none':
-            mksrf_fgrid_mesh_nx = force_model_mesh_nx
-            mksrf_fgrid_mesh_ny = force_model_mesh_ny
-            mksrf_fgrid_mesh    = force_model_mesh_file
-        else:
+        if force_model_mesh_file is None:
             mksrf_fgrid_mesh_nx = rawdata_files["mksrf_fgrid_mesh_nx"]
             mksrf_fgrid_mesh_ny = rawdata_files["mksrf_fgrid_mesh_ny"]
             mksrf_fgrid_mesh    = rawdata_files["mksrf_fgrid_mesh"]
+        else:
+            mksrf_fgrid_mesh_nx = force_model_mesh_nx
+            mksrf_fgrid_mesh_ny = force_model_mesh_ny
+            mksrf_fgrid_mesh    = force_model_mesh_file
         nlfile.write( f"  mksrf_fgrid_mesh = \'{mksrf_fgrid_mesh}\' \n")
         nlfile.write( f"  mksrf_fgrid_mesh_nx = {mksrf_fgrid_mesh_nx} \n")
         nlfile.write( f"  mksrf_fgrid_mesh_ny = {mksrf_fgrid_mesh_ny} \n")
@@ -592,12 +646,16 @@ def main ():
         if '%y' in mksrf_fhrvtyp:
             mksrf_fhrvtyp = mksrf_fhrvtyp.replace("%y",str(start_year))
         if not os.path.isfile(mksrf_fvegtyp):
-            print(f"WARNING: input mksrf_fvegtyp file {mksrf_fvegtyp} does not exist")
-            print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+            print('WARNING: input mksrf_fvegtyp file ' \
+                  f'{mksrf_fvegtyp} does not exist')
+            print('WARNING: run ./download_input_data to try TO ' \
+                  'OBTAIN MISSING FILES')
             _must_run_download_input_data = True
         if not os.path.isfile(mksrf_fhrvtyp):
-            print(f"WARNING: input mksrf_fhrvtyp file {mksrf_fhrvtyp} does not exist")
-            print(f"WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
+            print('WARNING: input mksrf_fhrvtyp file ' \
+                  f'{mksrf_fhrvtyp} does not exist')
+            print('WARNING: run ./download_input_data to try TO ' \
+                  'OBTAIN MISSING FILES')
             _must_run_download_input_data = True
         nlfile.write( f"  mksrf_fvegtyp = \'{mksrf_fvegtyp}\' \n")
         nlfile.write( f"  mksrf_fvegtyp_mesh = \'{mksrf_fvegtyp_mesh}\' \n")
