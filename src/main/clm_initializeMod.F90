@@ -536,9 +536,9 @@ contains
        ! Remove file if it already exists
        inquire(file=trim(locfn), exist=lexists)
        if (lexists) then
-          open(newunit=iun, file=locfn, status='old', iostat=ioe)
+          open(unit=1234, file=locfn, status='old', iostat=ioe)
           if (ioe == 0) then
-             close(iun, status='delete')
+             close(1234, status='delete')
           end if
        end if
 
