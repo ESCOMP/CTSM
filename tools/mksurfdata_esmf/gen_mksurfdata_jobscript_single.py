@@ -140,12 +140,20 @@ def main ():
         # Obtain mpirun command from env_mach_specific.xml
         # --------------------------
         bld_path = './tool_bld'
+        # Get the ems_file object with standalone_configure=True
+        # and the fake_case object with mpilib=attribs['mpilib']
+        # so as to use the get_mpirun function pointing to fake_case
         ems_file = EnvMachSpecific(bld_path, standalone_configure=True)
         fake_case = FakeCase(compiler=None, mpilib=attribs['mpilib'],
                              debug=False, comp_interface=None)
         total_tasks = int(tasks_per_node) * int(number_of_nodes)
         cmd = ems_file.get_mpirun(fake_case, attribs, job='name',
                                   overrides = {"total_tasks" : total_tasks,})
+        # cmd is a tuple:
+        # cmd[0] contains the mpirun command (eg mpirun, mpiexe, etc) as string
+        # cmd[1] contains a list of strings that we append as options to cmd[0]
+        # The replace function removes unnecessary characters that appear in
+        # some such options
         executable = f'{cmd[0]} {" ".join(cmd[1])}'.replace('ENV{', ''). \
                                                     replace('}', '')
 

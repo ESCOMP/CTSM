@@ -285,16 +285,18 @@ def main ():
         element_count = mesh_file.dimensions['elementCount'].size
         if 'origGridDims' in mesh_file.variables:
             orig_grid_dims = mesh_file.variables['origGridDims']
-            force_model_mesh_nx = orig_grid_dims[0]
-            force_model_mesh_ny = orig_grid_dims[1]
-            mesh_file.close()
-            important_msg = 'Found data for force_model_mesh_nx and ' \
-                            'force_model_mesh_ny in the mesh file so ' \
-                            'IGNORING ANY CORRESPONDING USER-ENTERED VALUES.'
-            logger.info(important_msg)
+            if int(force_model_mesh_nx) == orig_grid_dims[0] and \
+               int(force_model_mesh_ny) == orig_grid_dims[1]:
+                mesh_file.close()
+            else:
+                error_msg = 'ERROR: Found variable origGridDims in ' \
+                            f'{force_model_mesh_file} with values ' \
+                            f'{orig_grid_dims[:]} that do not agree with the ' \
+                            'user-entered mesh_nx and mesh_ny values of ' \
+                            f'{[force_model_mesh_nx, force_model_mesh_ny]}.'
+                sys.exit(error_msg)
         elif force_model_mesh_nx is None or force_model_mesh_ny is None:
-            error_msg = 'ERROR: You set --model-mesh but the file does not ' \
-                        'contain the variable origGridDims, so you MUST ALSO ' \
+            error_msg = 'ERROR: You set --model-mesh so you MUST ALSO ' \
                         'SET --model-mesh-nx AND --model-mesh-ny'
             sys.exit(error_msg)
 
@@ -478,8 +480,10 @@ def main ():
         'file. For a regular regional or 1x1 grid, you may generate the ' \
         'fsurdat file using the subset_data tool instead. Alternatively ' \
         'and definitely for curvilinear grids, you may generate ' \
-        'a mesh file using the workflow currently (2022/7/6) described in ' \
-        'https://github.com/ESCOMP/CTSM/issues/1773#issuecomment-1163432584'
+        'a mesh file using the workflow currently (2022/7) described in ' \
+        'https://github.com/ESCOMP/CTSM/issues/1773#issuecomment-1163432584' \
+        'TODO Reminder to ultimately place these workflow instructions in ' \
+        "the User's Guide."
             sys.exit(error_msg)
         else:
             error_msg = f'ERROR: invalid input res {res}; ' \
