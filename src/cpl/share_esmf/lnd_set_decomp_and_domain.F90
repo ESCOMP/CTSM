@@ -5,7 +5,7 @@ module lnd_set_decomp_and_domain
   use shr_sys_mod  , only : shr_sys_abort
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use spmdMod      , only : masterproc
-  use clm_varctl   , only : iulog
+  use clm_varctl   , only : iulog, inst_suffix
   use abortutils   , only : endrun
 
   implicit none
@@ -378,15 +378,20 @@ contains
     integer                :: srcMaskValue = 0
     integer                :: dstMaskValue = -987987 ! spval for RH mask values
     integer                :: srcTermProcessing_Value = 0
+    integer                :: klen
     real(r8)               :: fminval = 0.001_r8
     real(r8)               :: fmaxval = 1._r8
     logical                :: lexist
     logical                :: checkflag = .false.
-    character(len=CL)      :: flandfrac = './init_generated_files/ctsm_landfrac.nc'
-    character(len=CL)      :: flandfrac_status = './init_generated_files/ctsm_landfrac.status'
+    character(len=CL)      :: flandfrac
+    character(len=CL)      :: flandfrac_status
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
+
+    flandfrac = './init_generated_files/ctsm_landfrac'//trim(inst_suffix)//'.nc'
+    klen = len_trim(flandfrac) - 3 ! remove the .nc
+    flandfrac_status = flandfrac(1:klen)//'.status'
 
     ! Determine if lndfrac/lndmask file exists
     inquire(file=trim(flandfrac), exist=lexist)
@@ -396,7 +401,7 @@ contains
        ! If file exists - read in lndmask and lndfrac
        if (masterproc) then
           write(iulog,*)
-          write(iulog,'(a)')' Reading in land fraction and land mask from ctsm_landfrac.nc'
+          write(iulog,'(a)')' Reading in land fraction and land mask from '//trim(flandfrac)
        end if
        call lnd_set_read_write_landmask(trim(flandfrac), trim(flandfrac_status), .false., .true., &
             lndmask_glob, lndfrac_glob, size(lndmask_glob))

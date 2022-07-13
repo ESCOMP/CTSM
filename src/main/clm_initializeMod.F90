@@ -522,12 +522,24 @@ contains
 
     ! If appropriate, create interpolated initial conditions
     if (nsrest == nsrStartup .and. finidat_interp_source /= ' ') then
-       is_interpolated_start = .true.
 
        ! Check that finidat is not cold start - abort if it is
        if (finidat /= ' ') then
           call endrun(msg='ERROR clm_initializeMod: '//&
                'finidat and finidat_interp_source cannot both be non-blank')
+       end if
+
+       ! Determine name if finidat_interp_dest status file
+       klen = len_trim(finidat_interp_dest) - 3 ! remove the .nc
+       locfn = finidat_interp_dest(1:klen)//'.status'
+
+       ! Remove file if it already exists
+       inquire(file=trim(locfn), exist=lexists)
+       if (lexists) then
+          open(newunit=iun, file=locfn, status='old', iostat=ioe)
+          if (ioe == 0) then
+             close(iun, status='delete')
+          end if
        end if
 
        ! Create new template file using cold start
@@ -547,8 +559,6 @@ contains
        finidat = trim(finidat_interp_dest)
 
        ! Write out finidat status flag
-       klen = len_trim(finidat_interp_dest) - 3 ! remove the .nc
-       locfn = finidat_interp_dest(1:klen)//'.status'
        open (newunit=iun, file=locfn, status='unknown',  iostat=ioe)
        if (ioe /= 0) then
           call endrun(msg='ERROR failed to open file '//trim(locfn))
