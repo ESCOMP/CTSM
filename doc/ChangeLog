@@ -1,4 +1,139 @@
 ===============================================================
+Tag name: ctsm5.1.dev103
+Originator(s): sacks (Bill Sacks)
+Date: Tue Jul 12 22:27:30 MDT 2022
+One-line Summary: Fix accumulation variables when changing model time step
+
+Purpose and description of changes
+----------------------------------
+
+Accumulation variables (e.g., 1-day or 10-day averages) were writing and
+reading their accumulation period (expressed in time steps) to the
+restart file. This caused incorrect behavior when changing the model
+time step relative to what was used to create the initial conditions
+file (typically a 30-minute time step). So, for example, if you are
+using a 15-minute time step with an initial conditions file that
+originated from a run with a 30-minute time step (at some point in its
+history), then an average that was supposed to be 10-day instead becomes
+5-day; an average that was supposed to be 1-day becomes 12-hour, etc.
+(The issue is that the number of time steps in the averaging period was
+staying fixed rather than the actual amount of time staying fixed.)
+
+For our out-of-the-box initial conditions files, this only impacts runs
+that use something other than a 30-minute time step. Typically this
+situation arises in configurations with an active atmospheric model that
+is running at higher resolution than approximately 1 degree. It appears
+that the biggest impacts are on VOC emissions and in BGC runs; we expect
+the impact to be small (but still non-zero) in prescribed phenology (SP)
+runs that don't use VOC emissions.
+
+This tag fixes this issue by no longer writing or reading accumulation
+variables' PERIOD to / from the restart file: this isn't actually needed
+on the restart file.
+
+See some discussion in https://github.com/ESCOMP/CTSM/issues/1789 for
+more details, and see
+https://github.com/ESCOMP/CTSM/pull/1802#issuecomment-1182743649 for
+some discussion of outstanding weirdness that can result for
+accumulation variables when changing the model time step. The summary of
+that comment is: There could be some weirdness at the start of a run,
+but at least for a startup or hybrid run, that weirdness should work
+itself out within about the first averaging period. A branch or restart
+run could have some longer-term potential weirdness, so for now I think
+we should recommend that people NOT change the time step on a branch or
+restart run. With (significant?) additional work, we could probably
+avoid this additional weirdness, but my feeling is that it isn't worth
+the effort right now. In any case, I feel like my proposed fix will
+bring things much closer to being correct than they currently are when
+changing the time step.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1789 (A bug in calculating accumulated fields
+  (24/240 hours averaged) when using a smaller timestep)
+
+Known bugs found since the previous tag (include issue #):
+- ESCOMP/CTSM#1804 (NSTEPS 0 everywhere for accumulation fields on some
+  initial conditions files)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+    Also ran these tests with comparisons against baselines:
+    SMS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.cheyenne_intel.clm-shortts
+    SMS_D_Ld3.f10_f10_mg37.I1850Clm50Sp.cheyenne_intel.clm-shortts
+    SMS_Lm1.f10_f10_mg37.I1850Clm50Sp.cheyenne_intel.clm-shortts    
+
+
+    where 'clm-shortts' was a temporary testmod inheriting from default
+    and adding "./xmlchange ATM_NCPL=96".
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for configurations
+with a time step that is not the standard 30-minute time step.
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Simulations with a time step that is not 30-minutes
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+    
+      Not investigated carefully. There can be substantial differences
+      for VOC emissions, and differences may also be significant in BGC
+      cases. Differences in SP cases appear to be more limited, since it
+      looks like the only differences in SP cases (other than VOC
+      emissions) come from differences in the T10 field (10-day average
+      temperature), which is used in some photosynthesis calculations.
+
+      For I compset configurations in the test suite, the only
+      configurations with time steps differing from 30 minutes are:
+        - mexicocity tests (but for the SP cases in the test suite, the
+          answer changes are diagnostic-only in a couple of fields, and
+          the short tests in the test suite don't produce any CLM
+          history files, so answer changes don't show up)
+        - vancouver tests that are long enough to produce history files
+          so that the diagnostic-only differences show up
+        - USUMB tests
+        - waccmx_offline (but, as with the mexicocity tests, these tests
+          are too short to produce history output)
+      
+      The only specific tests in the test suite with answer changes are:
+      SMS_Ld12_Mmpi-serial.1x1_vancouverCAN.I1PtClm50SpRs.cheyenne_gnu.clm-output_sp_highfreq
+      SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PtClm50SpRs.cheyenne_intel.clm-USUMB_nuopc
+      SMS_D_Vmct_Lm1_Mmpi-serial.CLM_USRDAT.I1PtClm50SpRs.cheyenne_intel.clm-USUMB_mct
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1802
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev102
 Originator(s): sacks (Bill Sacks)
 Date: Mon Jul 11 12:14:48 MDT 2022
