@@ -764,17 +764,6 @@ contains
                data=accum(nf)%nsteps, readvar=readvar)
        end if
 
-       if (accum(nf)%old_name /= "") then
-          varname = trim(accum(nf)%name) // '_PERIOD:' // trim(accum(nf)%old_name) // '_PERIOD'
-       else
-          varname = trim(accum(nf)%name) // '_PERIOD'
-       end if
-       call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_int, &
-            long_name='', units='time steps', &
-            imissing_value=ispval, ifill_value=huge(1), &
-            interpinic_flag='copy', &
-            data=accum(nf)%period, readvar=readvar)
-
     end do
 
   end subroutine accumulRest

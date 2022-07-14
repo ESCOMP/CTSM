@@ -12,9 +12,7 @@ import os
 import sys
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
-_CTSM_PYTHON = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir
-)
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
@@ -122,9 +120,7 @@ class TestSinglePointCase(unittest.TestCase):
             overwrite=self.overwrite,
         )
         single_point.dom_pft = [16, 36, 79]
-        with self.assertRaisesRegex(
-            argparse.ArgumentTypeError, "values for --dompft should*"
-        ):
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, "values for --dompft should*"):
             single_point.check_dom_pft()
 
     def test_check_dom_pft_too_small(self):
@@ -151,9 +147,7 @@ class TestSinglePointCase(unittest.TestCase):
             overwrite=self.overwrite,
         )
         single_point.dom_pft = [16, 36, -1]
-        with self.assertRaisesRegex(
-            argparse.ArgumentTypeError, "values for --dompft should*"
-        ):
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, "values for --dompft should*"):
             single_point.check_dom_pft()
 
     def test_check_dom_pft_numpft(self):

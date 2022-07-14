@@ -74,7 +74,7 @@ from ctsm.ctsm_logging import (
 logger = logging.getLogger(__name__)
 
 ## valid options for resolution and SSP scenarios:
-valid_opts = {
+VALID_OPTS = {
     "res": [
         "512x1024",
         "360x720cru",
@@ -187,7 +187,7 @@ def get_parser():
         action="store",
         dest="ssp_rcp",
         required=False,
-        choices=valid_opts["ssp_rcp"],
+        choices=VALID_OPTS["ssp_rcp"],
         default="hist",
     )
 
@@ -264,7 +264,7 @@ def get_parser():
             """,
         action="store",
         dest="res",
-        choices=valid_opts["res"],
+        choices=VALID_OPTS["res"],
         required=False,
         default="4x5",
     )
@@ -363,7 +363,7 @@ def main():
         glc_flag,
         start_year,
         end_year,
-        hres_flag
+        hres_flag,
     )
 
     logger.info("--------------------------")

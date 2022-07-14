@@ -416,7 +416,6 @@ class NeonSite:
 
                 # --change any config for base_case:
                 # case.set_value("RUN_TYPE","startup")
-
                 print("---- base case setup ------")
                 case.case_setup()
             else:
@@ -519,7 +518,6 @@ class NeonSite:
             case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
             case.set_value("NEONVERSION", version)
-
             if run_type == "ad":
                 case.set_value("CLM_FORCE_COLDSTART", "on")
                 case.set_value("CLM_ACCELERATED_SPINUP", "on")

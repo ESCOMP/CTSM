@@ -23,7 +23,7 @@ env_run.xml --- Sample case runtime environment variables, so build-namelist can
 listDefaultNamelist.pl -- List the files needed, for a list of resolutions,
                           to run CLM that are currently NOT on your machine.
                           This file can then be used by 
-                            cime/scripts/Tools/check_input_data
+                            cime/CIME/Tools/check_input_data
                           to retreive them from the inputdata repository.
                           Setting up cases with create_newcase also does
                           this -- but only for the exact configuration
