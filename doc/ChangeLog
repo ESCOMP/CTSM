@@ -1,4 +1,121 @@
 ===============================================================
+Tag name: ctsm5.1.dev1??
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Wed Jul 13 18:25:01 MDT 2022
+One-line Summary: make interfaces more similar between fsurdat_modifier and subset_data tools
+
+Purpose and description of changes
+----------------------------------
+
+ The tools modify_fsurdat and subset_data have similar options
+ modify_fsurdat: zero_nonveg
+ subset_data: include-nonveg
+ Make more similar and use README file for documenting modify_fsurdat.
+ There's potential for additional changes like this one to be addressed later.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #): #1662
+
+Testing summary:
+----------------
+[... Remove before making master tag.
+
+Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
+However, it occasionally makes sense to do more or less system testing;
+here is guidance on different available levels of system testing:
+    a) no system testing (for use when the only changes are ones that
+                          have absolutely no impact on system runs; this
+                          includes documentation-only tags, tags that
+                          just change the tools or some python code that
+                          does not impact system runs, etc.)
+    b) minimal (for use in rare cases where only a small change with
+                known behavior is added ... eg. a minor bug fix. This
+		might be to just run the "short" test list, or to run
+		a single test. Whatever makes sense for the particular case.)
+    c) python only (for use where the only changes are in the python directory:
+                    run the python testing listed below)
+    d) regular (regular tests on normal machines if CTSM source is modified)
+    e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
+                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.)
+		would be run as well)
+
+In addition, various other tests of the tools, python and perl
+infrastructure should be run when appropriate, as described below.
+
+...]
+
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) -
+
+    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
+     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
+     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
+     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
+     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
+     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
+     separately run the clm_pymods test suite, and you can remove the following line.]
+
+    clm_pymods test suite on cheyenne - 
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename:
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1714
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev103
 Originator(s): sacks (Bill Sacks)
 Date: Tue Jul 12 22:27:30 MDT 2022
