@@ -8,7 +8,7 @@ module CNVegNitrogenStateType
   use landunit_varcon                    , only : istcrop, istsoil 
   use clm_varctl                         , only : iulog
   use clm_varctl                         , only : use_crop
-  use CNSharedParamsMod                  , only : use_fun
+  use CNSharedParamsMod                  , only : use_fun, use_matrixcn
   use decompMod                          , only : bounds_type
   use pftconMod                          , only : npcropmin, noveg, pftcon
   use abortutils                         , only : endrun
@@ -30,45 +30,50 @@ module CNVegNitrogenStateType
   !
   type, public :: cnveg_nitrogenstate_type
 
-     real(r8), pointer :: reproductiven_patch        (:,:) ! (gN/m2) reproductive (e.g., grain) N (crop)
-     real(r8), pointer :: reproductiven_storage_patch(:,:) ! (gN/m2) reproductive (e.g., grain) N storage (crop)
-     real(r8), pointer :: reproductiven_xfer_patch   (:,:) ! (gN/m2) reproductive (e.g., grain) N transfer (crop)
-     real(r8), pointer :: leafn_patch              (:) ! (gN/m2) leaf N 
-     real(r8), pointer :: leafn_storage_patch      (:) ! (gN/m2) leaf N storage
-     real(r8), pointer :: leafn_xfer_patch         (:) ! (gN/m2) leaf N transfer
-     real(r8), pointer :: leafn_storage_xfer_acc_patch (:) ! (gN/m2) Accmulated leaf N transfer
-     real(r8), pointer :: storage_ndemand_patch        (:) ! (gN/m2) N demand during the offset period 
-     real(r8), pointer :: frootn_patch             (:) ! (gN/m2) fine root N
-     real(r8), pointer :: frootn_storage_patch     (:) ! (gN/m2) fine root N storage
-     real(r8), pointer :: frootn_xfer_patch        (:) ! (gN/m2) fine root N transfer
-     real(r8), pointer :: livestemn_patch          (:) ! (gN/m2) live stem N
-     real(r8), pointer :: livestemn_storage_patch  (:) ! (gN/m2) live stem N storage
-     real(r8), pointer :: livestemn_xfer_patch     (:) ! (gN/m2) live stem N transfer
-     real(r8), pointer :: deadstemn_patch          (:) ! (gN/m2) dead stem N
-     real(r8), pointer :: deadstemn_storage_patch  (:) ! (gN/m2) dead stem N storage
-     real(r8), pointer :: deadstemn_xfer_patch     (:) ! (gN/m2) dead stem N transfer
-     real(r8), pointer :: livecrootn_patch         (:) ! (gN/m2) live coarse root N
-     real(r8), pointer :: livecrootn_storage_patch (:) ! (gN/m2) live coarse root N storage
-     real(r8), pointer :: livecrootn_xfer_patch    (:) ! (gN/m2) live coarse root N transfer
-     real(r8), pointer :: deadcrootn_patch         (:) ! (gN/m2) dead coarse root N
-     real(r8), pointer :: deadcrootn_storage_patch (:) ! (gN/m2) dead coarse root N storage
-     real(r8), pointer :: deadcrootn_xfer_patch    (:) ! (gN/m2) dead coarse root N transfer
-     real(r8), pointer :: retransn_patch           (:) ! (gN/m2) plant pool of retranslocated N
-     real(r8), pointer :: npool_patch              (:) ! (gN/m2) temporary plant N pool
-     real(r8), pointer :: ntrunc_patch             (:) ! (gN/m2) patch-level sink for N truncation
-     real(r8), pointer :: cropseedn_deficit_patch  (:) ! (gN/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
-     real(r8), pointer :: seedn_grc                (:) ! (gN/m2) gridcell-level pool for seeding new pFTs via dynamic landcover
+     real(r8), pointer :: reproductiven_patch               (:,:) ! (gN/m2) reproductive (e.g., grain) N (crop)
+     real(r8), pointer :: reproductiven_storage_patch       (:,:) ! (gN/m2) reproductive (e.g., grain) N storage (crop)
+     real(r8), pointer :: reproductiven_xfer_patch          (:,:) ! (gN/m2) reproductive (e.g., grain) N transfer (crop)
+     real(r8), pointer :: leafn_patch                         (:) ! (gN/m2) leaf N 
+     real(r8), pointer :: leafn_storage_patch                 (:) ! (gN/m2) leaf N storage
+     real(r8), pointer :: leafn_xfer_patch                    (:) ! (gN/m2) leaf N transfer
+     real(r8), pointer :: leafn_storage_xfer_acc_patch        (:) ! (gN/m2) Accmulated leaf N transfer
+     real(r8), pointer :: storage_ndemand_patch               (:) ! (gN/m2) N demand during the offset period 
+     real(r8), pointer :: frootn_patch                        (:) ! (gN/m2) fine root N
+     real(r8), pointer :: frootn_storage_patch                (:) ! (gN/m2) fine root N storage
+     real(r8), pointer :: frootn_xfer_patch                   (:) ! (gN/m2) fine root N transfer
+     real(r8), pointer :: livestemn_patch                     (:) ! (gN/m2) live stem N
+     real(r8), pointer :: livestemn_storage_patch             (:) ! (gN/m2) live stem N storage
+     real(r8), pointer :: livestemn_xfer_patch                (:) ! (gN/m2) live stem N transfer
+     real(r8), pointer :: deadstemn_patch                     (:) ! (gN/m2) dead stem N
+     real(r8), pointer :: deadstemn_storage_patch             (:) ! (gN/m2) dead stem N storage
+     real(r8), pointer :: deadstemn_xfer_patch                (:) ! (gN/m2) dead stem N transfer
+     real(r8), pointer :: livecrootn_patch                    (:) ! (gN/m2) live coarse root N
+     real(r8), pointer :: livecrootn_storage_patch            (:) ! (gN/m2) live coarse root N storage
+     real(r8), pointer :: livecrootn_xfer_patch               (:) ! (gN/m2) live coarse root N transfer
+     real(r8), pointer :: deadcrootn_patch                    (:) ! (gN/m2) dead coarse root N
+     real(r8), pointer :: deadcrootn_storage_patch            (:) ! (gN/m2) dead coarse root N storage
+     real(r8), pointer :: deadcrootn_xfer_patch               (:) ! (gN/m2) dead coarse root N transfer
+     real(r8), pointer :: retransn_patch                      (:) ! (gN/m2) plant pool of retranslocated N
+     real(r8), pointer :: npool_patch                         (:) ! (gN/m2) temporary plant N pool
+     real(r8), pointer :: ntrunc_patch                        (:) ! (gN/m2) patch-level sink for N truncation
+     real(r8), pointer :: cropseedn_deficit_patch             (:) ! (gN/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
+     real(r8), pointer :: seedn_grc                           (:) ! (gN/m2) gridcell-level pool for seeding new pFTs via dynamic landcover
+
+     ! Matrix solution variables
+     ! Matrix solution pool for initial state for matrix spinup
 
      ! summary (diagnostic) state variables, not involved in mass balance
-     real(r8), pointer :: dispvegn_patch           (:) ! (gN/m2) displayed veg nitrogen, excluding storage
-     real(r8), pointer :: storvegn_patch           (:) ! (gN/m2) stored vegetation nitrogen
-     real(r8), pointer :: totvegn_patch            (:) ! (gN/m2) total vegetation nitrogen
-     real(r8), pointer :: totvegn_col              (:) ! (gN/m2) total vegetation nitrogen (p2c)
-     real(r8), pointer :: totn_patch               (:) ! (gN/m2) total patch-level nitrogen
-     real(r8), pointer :: totn_p2c_col             (:) ! (gN/m2) totn_patch averaged to col
-     real(r8), pointer :: totn_col                 (:) ! (gN/m2) total column nitrogen, incl veg
-     real(r8), pointer :: totecosysn_col           (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
-     real(r8), pointer :: totn_grc                 (:) ! (gN/m2) total gridcell nitrogen
+     real(r8), pointer :: dispvegn_patch                      (:) ! (gN/m2) displayed veg nitrogen, excluding storage
+     real(r8), pointer :: storvegn_patch                      (:) ! (gN/m2) stored vegetation nitrogen
+     real(r8), pointer :: totvegn_patch                       (:) ! (gN/m2) total vegetation nitrogen
+     real(r8), pointer :: totvegn_col                         (:) ! (gN/m2) total vegetation nitrogen (p2c)
+     real(r8), pointer :: totn_patch                          (:) ! (gN/m2) total patch-level nitrogen
+     real(r8), pointer :: totn_p2c_col                        (:) ! (gN/m2) totn_patch averaged to col
+     real(r8), pointer :: totn_col                            (:) ! (gN/m2) total column nitrogen, incl veg
+     real(r8), pointer :: totecosysn_col                      (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
+     real(r8), pointer :: totn_grc                            (:) ! (gN/m2) total gridcell nitrogen
+
+    ! acc spinup for matrix solution
 
    contains
 
@@ -92,7 +97,7 @@ module CNVegNitrogenStateType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds,                           &
+  subroutine Init(this, bounds,  &
        leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
 
     class(cnveg_nitrogenstate_type)   :: this
@@ -127,44 +132,48 @@ contains
     begc = bounds%begc; endc = bounds%endc
     begg = bounds%begg; endg = bounds%endg
 
-    allocate(this%reproductiven_patch(begp:endp, nrepr)) ; this%reproductiven_patch(:,:) = nan
-    allocate(this%reproductiven_storage_patch(begp:endp, nrepr)) ; this%reproductiven_storage_patch(:,:) = nan
-    allocate(this%reproductiven_xfer_patch(begp:endp, nrepr)) ; this%reproductiven_xfer_patch(:,:) = nan
-    allocate(this%leafn_patch              (begp:endp)) ; this%leafn_patch              (:) = nan
-    allocate(this%leafn_storage_patch      (begp:endp)) ; this%leafn_storage_patch      (:) = nan     
-    allocate(this%leafn_xfer_patch         (begp:endp)) ; this%leafn_xfer_patch         (:) = nan     
-    allocate(this%leafn_storage_xfer_acc_patch  (begp:endp)) ; this%leafn_storage_xfer_acc_patch         (:) = nan
-    allocate(this%storage_ndemand_patch    (begp:endp)) ; this%storage_ndemand_patch    (:) = nan
-    allocate(this%frootn_patch             (begp:endp)) ; this%frootn_patch             (:) = nan
-    allocate(this%frootn_storage_patch     (begp:endp)) ; this%frootn_storage_patch     (:) = nan     
-    allocate(this%frootn_xfer_patch        (begp:endp)) ; this%frootn_xfer_patch        (:) = nan     
-    allocate(this%livestemn_patch          (begp:endp)) ; this%livestemn_patch          (:) = nan
-    allocate(this%livestemn_storage_patch  (begp:endp)) ; this%livestemn_storage_patch  (:) = nan
-    allocate(this%livestemn_xfer_patch     (begp:endp)) ; this%livestemn_xfer_patch     (:) = nan
-    allocate(this%deadstemn_patch          (begp:endp)) ; this%deadstemn_patch          (:) = nan
-    allocate(this%deadstemn_storage_patch  (begp:endp)) ; this%deadstemn_storage_patch  (:) = nan
-    allocate(this%deadstemn_xfer_patch     (begp:endp)) ; this%deadstemn_xfer_patch     (:) = nan
-    allocate(this%livecrootn_patch         (begp:endp)) ; this%livecrootn_patch         (:) = nan
-    allocate(this%livecrootn_storage_patch (begp:endp)) ; this%livecrootn_storage_patch (:) = nan
-    allocate(this%livecrootn_xfer_patch    (begp:endp)) ; this%livecrootn_xfer_patch    (:) = nan
-    allocate(this%deadcrootn_patch         (begp:endp)) ; this%deadcrootn_patch         (:) = nan
-    allocate(this%deadcrootn_storage_patch (begp:endp)) ; this%deadcrootn_storage_patch (:) = nan
-    allocate(this%deadcrootn_xfer_patch    (begp:endp)) ; this%deadcrootn_xfer_patch    (:) = nan
-    allocate(this%retransn_patch           (begp:endp)) ; this%retransn_patch           (:) = nan
-    allocate(this%npool_patch              (begp:endp)) ; this%npool_patch              (:) = nan
-    allocate(this%ntrunc_patch             (begp:endp)) ; this%ntrunc_patch             (:) = nan
-    allocate(this%dispvegn_patch           (begp:endp)) ; this%dispvegn_patch           (:) = nan
-    allocate(this%storvegn_patch           (begp:endp)) ; this%storvegn_patch           (:) = nan
-    allocate(this%totvegn_patch            (begp:endp)) ; this%totvegn_patch            (:) = nan
-    allocate(this%totn_patch               (begp:endp)) ; this%totn_patch               (:) = nan
+    allocate(this%reproductiven_patch             (begp:endp, nrepr)) ; this%reproductiven_patch               (:,:) = nan
+    allocate(this%reproductiven_storage_patch     (begp:endp, nrepr)) ; this%reproductiven_storage_patch       (:,:) = nan
+    allocate(this%reproductiven_xfer_patch        (begp:endp, nrepr)) ; this%reproductiven_xfer_patch          (:,:) = nan
+    allocate(this%leafn_patch                            (begp:endp)) ; this%leafn_patch                         (:) = nan
+    allocate(this%leafn_storage_patch                    (begp:endp)) ; this%leafn_storage_patch                 (:) = nan     
+    allocate(this%leafn_xfer_patch                       (begp:endp)) ; this%leafn_xfer_patch                    (:) = nan     
+    allocate(this%leafn_storage_xfer_acc_patch           (begp:endp)) ; this%leafn_storage_xfer_acc_patch        (:) = nan
+    allocate(this%storage_ndemand_patch                  (begp:endp)) ; this%storage_ndemand_patch               (:) = nan
+    allocate(this%frootn_patch                           (begp:endp)) ; this%frootn_patch                        (:) = nan
+    allocate(this%frootn_storage_patch                   (begp:endp)) ; this%frootn_storage_patch                (:) = nan     
+    allocate(this%frootn_xfer_patch                      (begp:endp)) ; this%frootn_xfer_patch                   (:) = nan     
+    allocate(this%livestemn_patch                        (begp:endp)) ; this%livestemn_patch                     (:) = nan
+    allocate(this%livestemn_storage_patch                (begp:endp)) ; this%livestemn_storage_patch             (:) = nan
+    allocate(this%livestemn_xfer_patch                   (begp:endp)) ; this%livestemn_xfer_patch                (:) = nan
+    allocate(this%deadstemn_patch                        (begp:endp)) ; this%deadstemn_patch                     (:) = nan
+    allocate(this%deadstemn_storage_patch                (begp:endp)) ; this%deadstemn_storage_patch             (:) = nan
+    allocate(this%deadstemn_xfer_patch                   (begp:endp)) ; this%deadstemn_xfer_patch                (:) = nan
+    allocate(this%livecrootn_patch                       (begp:endp)) ; this%livecrootn_patch                    (:) = nan
+    allocate(this%livecrootn_storage_patch               (begp:endp)) ; this%livecrootn_storage_patch            (:) = nan
+    allocate(this%livecrootn_xfer_patch                  (begp:endp)) ; this%livecrootn_xfer_patch               (:) = nan
+    allocate(this%deadcrootn_patch                       (begp:endp)) ; this%deadcrootn_patch                    (:) = nan
+    allocate(this%deadcrootn_storage_patch               (begp:endp)) ; this%deadcrootn_storage_patch            (:) = nan
+    allocate(this%deadcrootn_xfer_patch                  (begp:endp)) ; this%deadcrootn_xfer_patch               (:) = nan
+    allocate(this%retransn_patch                         (begp:endp)) ; this%retransn_patch                      (:) = nan
+    allocate(this%npool_patch                            (begp:endp)) ; this%npool_patch                         (:) = nan
+    allocate(this%ntrunc_patch                           (begp:endp)) ; this%ntrunc_patch                        (:) = nan
+    allocate(this%dispvegn_patch                         (begp:endp)) ; this%dispvegn_patch                      (:) = nan
+    allocate(this%storvegn_patch                         (begp:endp)) ; this%storvegn_patch                      (:) = nan
+    allocate(this%totvegn_patch                          (begp:endp)) ; this%totvegn_patch                       (:) = nan
+    allocate(this%totn_patch                             (begp:endp)) ; this%totn_patch                          (:) = nan
 
-    allocate(this%cropseedn_deficit_patch  (begp:endp)) ; this%cropseedn_deficit_patch  (:) = nan
-    allocate(this%seedn_grc                (begg:endg)) ; this%seedn_grc                (:) = nan
-    allocate(this%totvegn_col              (begc:endc)) ; this%totvegn_col              (:) = nan
-    allocate(this%totn_p2c_col             (begc:endc)) ; this%totn_p2c_col             (:) = nan
-    allocate(this%totn_col                 (begc:endc)) ; this%totn_col                 (:) = nan
-    allocate(this%totecosysn_col           (begc:endc)) ; this%totecosysn_col           (:) = nan
-    allocate(this%totn_grc                 (begg:endg)) ; this%totn_grc                 (:) = nan
+    allocate(this%cropseedn_deficit_patch                (begp:endp)) ; this%cropseedn_deficit_patch             (:) = nan
+    allocate(this%seedn_grc                              (begg:endg)) ; this%seedn_grc                           (:) = nan
+    allocate(this%totvegn_col                            (begc:endc)) ; this%totvegn_col                         (:) = nan
+    allocate(this%totn_p2c_col                           (begc:endc)) ; this%totn_p2c_col                        (:) = nan
+    allocate(this%totn_col                               (begc:endc)) ; this%totn_col                            (:) = nan
+    allocate(this%totecosysn_col                         (begc:endc)) ; this%totecosysn_col                      (:) = nan
+    allocate(this%totn_grc                               (begg:endg)) ; this%totn_grc                            (:) = nan
+
+    ! Matrix solution allocations
+    if ( use_matrixcn )then
+    end if
 
   end subroutine InitAllocate
 
@@ -231,6 +240,10 @@ contains
     call hist_addfld1d (fname='LEAFN_XFER', units='gN/m^2', &
          avgflag='A', long_name='leaf N transfer', &
          ptr_patch=this%leafn_xfer_patch, default='inactive')     
+
+    ! Matrix solution history fields
+    if ( use_matrixcn )then
+    end if
 
     if ( use_fun ) then
        this%leafn_storage_xfer_acc_patch(begp:endp) = spval
@@ -438,65 +451,102 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
           if (patch%itype(p) == noveg) then
-             this%leafn_patch(p) = 0._r8
-             this%leafn_storage_patch(p) = 0._r8
+             this%leafn_patch(p)                           = 0._r8
+             this%leafn_storage_patch(p)                   = 0._r8
+ 
+             ! Matrix solution settings for bare-soil
+             if ( use_matrixcn )then
+             end if
              if (MM_Nuptake_opt .eqv. .true.) then   
-                this%frootn_patch(p) = 0._r8            
-                this%frootn_storage_patch(p) = 0._r8    
+                this%frootn_patch(p)                       = 0._r8            
+                this%frootn_storage_patch(p)               = 0._r8    
+
+                ! Matrix solution settings for bare-soil and flex-CN
+                if ( use_matrixcn )then
+                end if
              end if 
           else
-             this%leafn_patch(p)         = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
-             this%leafn_storage_patch(p) = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+             this%leafn_patch(p)                           = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
+             this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+
+             ! Matrix solution settings
+             if ( use_matrixcn )then
+             end if
              if (MM_Nuptake_opt .eqv. .true.) then  
-                this%frootn_patch(p) = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
-                this%frootn_storage_patch(p) = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
+                this%frootn_patch(p)                       = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
+                this%frootn_storage_patch(p)               = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
+                ! Matrix solution settings for flex-CN
+                if ( use_matrixcn )then
+                end if
              end if 
           end if
 
-          this%leafn_xfer_patch(p)        = 0._r8
+          this%leafn_xfer_patch(p)                         = 0._r8
+          ! Matrix solution settings
+          if ( use_matrixcn )then
+          end if
 
-          this%leafn_storage_xfer_acc_patch(p)        = 0._r8
-          this%storage_ndemand_patch(p)   = 0._r8
+          this%leafn_storage_xfer_acc_patch(p)             = 0._r8
+          this%storage_ndemand_patch(p)                    = 0._r8
 
           if ( use_crop )then
              this%reproductiven_patch(p,:)         = 0._r8
              this%reproductiven_storage_patch(p,:) = 0._r8
              this%reproductiven_xfer_patch(p,:)    = 0._r8
-             this%cropseedn_deficit_patch(p)  = 0._r8
+             this%cropseedn_deficit_patch(p)               = 0._r8
+
+             ! Matrix reproductive pool settings
+             if ( use_matrixcn )then
+             end if
           end if
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
-             this%frootn_patch(p)            = 0._r8
-             this%frootn_storage_patch(p)    = 0._r8
+             this%frootn_patch(p)                          = 0._r8
+             this%frootn_storage_patch(p)                  = 0._r8
+
+             ! Matrix pool settings
+             if ( use_matrixcn )then
+             end if
           end if 
-          this%frootn_xfer_patch(p)       = 0._r8
-          this%livestemn_patch(p)         = 0._r8
-          this%livestemn_storage_patch(p) = 0._r8
-          this%livestemn_xfer_patch(p)    = 0._r8
+          this%frootn_xfer_patch(p)                        = 0._r8
+          this%livestemn_patch(p)                          = 0._r8
+          this%livestemn_storage_patch(p)                  = 0._r8
+          this%livestemn_xfer_patch(p)                     = 0._r8
+
+          ! Matrix pool settings
+          if ( use_matrixcn )then
+          end if
 
           ! tree types need to be initialized with some stem mass so that
           ! roughness length is not zero in canopy flux calculation
 
           if (pftcon%woody(patch%itype(p)) == 1._r8) then
-             this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+             this%deadstemn_patch(p)                       = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+             if ( use_matrixcn )then
+             end if
           else
-             this%deadstemn_patch(p) = 0._r8
+             this%deadstemn_patch(p)                       = 0._r8
+             if ( use_matrixcn )then
+             end if
           end if
 
-          this%deadstemn_storage_patch(p)  = 0._r8
-          this%deadstemn_xfer_patch(p)     = 0._r8
-          this%livecrootn_patch(p)         = 0._r8
-          this%livecrootn_storage_patch(p) = 0._r8
-          this%livecrootn_xfer_patch(p)    = 0._r8
-          this%deadcrootn_patch(p)         = 0._r8
-          this%deadcrootn_storage_patch(p) = 0._r8
-          this%deadcrootn_xfer_patch(p)    = 0._r8
-          this%retransn_patch(p)           = 0._r8
-          this%npool_patch(p)              = 0._r8
-          this%ntrunc_patch(p)             = 0._r8
-          this%dispvegn_patch(p)           = 0._r8
-          this%storvegn_patch(p)           = 0._r8
-          this%totvegn_patch(p)            = 0._r8
-          this%totn_patch(p)               = 0._r8
+          this%deadstemn_storage_patch(p)                  = 0._r8
+          this%deadstemn_xfer_patch(p)                     = 0._r8
+          if ( use_matrixcn )then
+          end if
+
+          this%livecrootn_patch(p)                         = 0._r8
+          this%livecrootn_storage_patch(p)                 = 0._r8
+          this%livecrootn_xfer_patch(p)                    = 0._r8
+          this%deadcrootn_patch(p)                         = 0._r8
+          this%deadcrootn_storage_patch(p)                 = 0._r8
+          this%deadcrootn_xfer_patch(p)                    = 0._r8
+          this%retransn_patch(p)                           = 0._r8
+          this%npool_patch(p)                              = 0._r8
+          this%ntrunc_patch(p)                             = 0._r8
+          this%dispvegn_patch(p)                           = 0._r8
+          this%storvegn_patch(p)                           = 0._r8
+          this%totvegn_patch(p)                            = 0._r8
+          this%totn_patch(p)                               = 0._r8
        end if
     end do
 
@@ -592,7 +642,11 @@ contains
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%leafn_xfer_patch) 
 
-     if ( use_fun ) then
+    ! Matrix restart variables
+    if ( use_matrixcn )then
+    end if
+
+    if ( use_fun ) then
         call restartvar(ncid=ncid, flag=flag, varname='leafn_storage_xfer_acc', xtype=ncd_double,  &
              dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafn_storage_xfer_acc_patch)
@@ -600,7 +654,7 @@ contains
         call restartvar(ncid=ncid, flag=flag, varname='storage_ndemand', xtype=ncd_double,  &
              dim1name='pft', long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%storage_ndemand_patch)
-     end if
+    end if
 
 
     call restartvar(ncid=ncid, flag=flag, varname='frootn', xtype=ncd_double,  &
@@ -662,7 +716,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='deadcrootn_xfer', xtype=ncd_double,  &
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%deadcrootn_xfer_patch) 
-
+ 
     call restartvar(ncid=ncid, flag=flag, varname='retransn', xtype=ncd_double,  &
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%retransn_patch) 
@@ -678,7 +732,7 @@ contains
     if (use_crop) then
        do k = 1, nrepr
           data1dptr => this%reproductiven_patch(:,k)
-          ! e.g., grainn
+          ! e.g., grain-N
           varname = get_repr_rest_fname(k)//'n'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -690,7 +744,7 @@ contains
 
        do k = 1, nrepr
           data1dptr => this%reproductiven_storage_patch(:,k)
-          ! e.g., grainn_storage
+          ! e.g., grain-N storage
           varname = get_repr_rest_fname(k)//'n_storage'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -702,7 +756,7 @@ contains
 
        do k = 1, nrepr
           data1dptr => this%reproductiven_xfer_patch(:,k)
-          ! e.g., grainn_xfer
+          ! e.g., grain-N_xfer
           varname = get_repr_rest_fname(k)//'n_xfer'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -775,65 +829,91 @@ contains
           l = patch%landunit(p)
 
              if (patch%itype(p) == noveg) then
-                this%leafn_patch(p) = 0._r8
-                this%leafn_storage_patch(p) = 0._r8
+                this%leafn_patch(p)                           = 0._r8
+                this%leafn_storage_patch(p)                   = 0._r8
+
+                ! Set matrix solution variables for bare-soil
+                if ( use_matrixcn )then
+                end if
                 if (MM_Nuptake_opt .eqv. .true.) then   
-                   this%frootn_patch(p) = 0._r8            
-                   this%frootn_storage_patch(p) = 0._r8    
+                   this%frootn_patch(p)                       = 0._r8            
+                   this%frootn_storage_patch(p)               = 0._r8    
+                   if ( use_matrixcn )then
+                   end if
                 end if 
              else
-                this%leafn_patch(p)         = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
-                this%leafn_storage_patch(p) = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+                this%leafn_patch(p)                           = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
+                this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+                if ( use_matrixcn )then
+                end if
                 if (MM_Nuptake_opt .eqv. .true.) then  
-                   this%frootn_patch(p) = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
-                   this%frootn_storage_patch(p) = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
+                   this%frootn_patch(p)                       = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
+                   this%frootn_storage_patch(p)               = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
+                   if ( use_matrixcn )then
+                   end if
                 end if 
              end if
    
-             this%leafn_xfer_patch(p)        = 0._r8
+             this%leafn_xfer_patch(p)                         = 0._r8
 
-             this%leafn_storage_xfer_acc_patch(p)        = 0._r8
-             this%storage_ndemand_patch(p)   = 0._r8
+             if ( use_matrixcn )then
+             end if
+
+             this%leafn_storage_xfer_acc_patch(p)             = 0._r8
+             this%storage_ndemand_patch(p)                    = 0._r8
    
              if ( use_crop )then
-                this%reproductiven_patch(p,:)         = 0._r8
-                this%reproductiven_storage_patch(p,:) = 0._r8
-                this%reproductiven_xfer_patch(p,:)    = 0._r8
-                this%cropseedn_deficit_patch(p)  = 0._r8
+                this%reproductiven_patch(p,:)                 = 0._r8
+                this%reproductiven_storage_patch(p,:)         = 0._r8
+                this%reproductiven_xfer_patch(p,:)            = 0._r8
+                this%cropseedn_deficit_patch(p)               = 0._r8
+
+                if ( use_matrixcn )then
+                end if
              end if
              if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
-                this%frootn_patch(p)            = 0._r8
-                this%frootn_storage_patch(p)    = 0._r8
+                this%frootn_patch(p)                          = 0._r8
+                this%frootn_storage_patch(p)                  = 0._r8
+
+                if ( use_matrixcn )then
+                end if
              end if 
-             this%frootn_xfer_patch(p)       = 0._r8
-             this%livestemn_patch(p)         = 0._r8
-             this%livestemn_storage_patch(p) = 0._r8
-             this%livestemn_xfer_patch(p)    = 0._r8
+             this%frootn_xfer_patch(p)                        = 0._r8
+             this%livestemn_patch(p)                          = 0._r8
+             this%livestemn_storage_patch(p)                  = 0._r8
+             this%livestemn_xfer_patch(p)                     = 0._r8
+
+             if ( use_matrixcn )then
+             end if
    
              ! tree types need to be initialized with some stem mass so that
              ! roughness length is not zero in canopy flux calculation
    
              if (pftcon%woody(patch%itype(p)) == 1._r8) then
-                this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+                this%deadstemn_patch(p)                       = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+                if ( use_matrixcn )then
+                end if
              else
-                this%deadstemn_patch(p) = 0._r8
+                this%deadstemn_patch(p)                       = 0._r8
+                if ( use_matrixcn )then
+                end if
              end if
 
-             this%deadstemn_storage_patch(p)  = 0._r8
-             this%deadstemn_xfer_patch(p)     = 0._r8
-             this%livecrootn_patch(p)         = 0._r8
-             this%livecrootn_storage_patch(p) = 0._r8
-             this%livecrootn_xfer_patch(p)    = 0._r8
-             this%deadcrootn_patch(p)         = 0._r8
-             this%deadcrootn_storage_patch(p) = 0._r8
-             this%deadcrootn_xfer_patch(p)    = 0._r8
-             this%retransn_patch(p)           = 0._r8
-             this%npool_patch(p)              = 0._r8
-             this%ntrunc_patch(p)             = 0._r8
-             this%dispvegn_patch(p)           = 0._r8
-             this%storvegn_patch(p)           = 0._r8
-             this%totvegn_patch(p)            = 0._r8
-             this%totn_patch(p)               = 0._r8
+             this%deadstemn_storage_patch(p)                  = 0._r8
+             this%deadstemn_xfer_patch(p)                     = 0._r8
+             this%livecrootn_patch(p)                         = 0._r8
+             this%livecrootn_storage_patch(p)                 = 0._r8
+             this%livecrootn_xfer_patch(p)                    = 0._r8
+             this%deadcrootn_patch(p)                         = 0._r8
+             this%deadcrootn_storage_patch(p)                 = 0._r8
+             this%deadcrootn_xfer_patch(p)                    = 0._r8
+             this%retransn_patch(p)                          = 0._r8
+             this%npool_patch(p)                             = 0._r8
+             this%ntrunc_patch(p)                            = 0._r8
+             this%dispvegn_patch(p)                          = 0._r8
+             this%storvegn_patch(p)                          = 0._r8
+             this%totvegn_patch(p)                           = 0._r8
+             this%totn_patch(p)                              = 0._r8
 
              ! calculate totvegc explicitly so that it is available for the isotope 
              ! code on the first time step.
@@ -898,38 +978,38 @@ contains
     do fi = 1,num_patch
        i = filter_patch(fi)
 
-       this%leafn_patch(i)              = value_patch
-       this%leafn_storage_patch(i)      = value_patch
-       this%leafn_xfer_patch(i)         = value_patch
-       this%leafn_storage_xfer_acc_patch(i) = value_patch
-       this%frootn_patch(i)             = value_patch
-       this%frootn_storage_patch(i)     = value_patch
-       this%frootn_xfer_patch(i)        = value_patch
-       this%livestemn_patch(i)          = value_patch
-       this%livestemn_storage_patch(i)  = value_patch
-       this%livestemn_xfer_patch(i)     = value_patch
-       this%deadstemn_patch(i)          = value_patch
-       this%deadstemn_storage_patch(i)  = value_patch
-       this%deadstemn_xfer_patch(i)     = value_patch
-       this%livecrootn_patch(i)         = value_patch
-       this%livecrootn_storage_patch(i) = value_patch
-       this%livecrootn_xfer_patch(i)    = value_patch
-       this%deadcrootn_patch(i)         = value_patch
-       this%deadcrootn_storage_patch(i) = value_patch
-       this%deadcrootn_xfer_patch(i)    = value_patch
-       this%retransn_patch(i)           = value_patch
-       this%npool_patch(i)              = value_patch
-       this%ntrunc_patch(i)             = value_patch
-       this%dispvegn_patch(i)           = value_patch
-       this%storvegn_patch(i)           = value_patch
-       this%totvegn_patch(i)            = value_patch
-       this%totn_patch(i)               = value_patch
+       this%leafn_patch(i)                            = value_patch
+       this%leafn_storage_patch(i)                    = value_patch
+       this%leafn_xfer_patch(i)                       = value_patch
+       this%leafn_storage_xfer_acc_patch(i)           = value_patch
+       this%frootn_patch(i)                           = value_patch
+       this%frootn_storage_patch(i)                   = value_patch
+       this%frootn_xfer_patch(i)                      = value_patch
+       this%livestemn_patch(i)                        = value_patch
+       this%livestemn_storage_patch(i)                = value_patch
+       this%livestemn_xfer_patch(i)                   = value_patch
+       this%deadstemn_patch(i)                        = value_patch
+       this%deadstemn_storage_patch(i)                = value_patch
+       this%deadstemn_xfer_patch(i)                   = value_patch
+       this%livecrootn_patch(i)                       = value_patch
+       this%livecrootn_storage_patch(i)               = value_patch
+       this%livecrootn_xfer_patch(i)                  = value_patch
+       this%deadcrootn_patch(i)                       = value_patch
+       this%deadcrootn_storage_patch(i)               = value_patch
+       this%deadcrootn_xfer_patch(i)                  = value_patch
+       this%retransn_patch(i)                                            = value_patch
+       this%npool_patch(i)                                               = value_patch
+       this%ntrunc_patch(i)                                              = value_patch
+       this%dispvegn_patch(i)                                            = value_patch
+       this%storvegn_patch(i)                                            = value_patch
+       this%totvegn_patch(i)                                             = value_patch
+       this%totn_patch(i)                                                = value_patch
     end do
 
     if ( use_crop )then
        do fi = 1,num_patch
           i = filter_patch(fi)
-          this%cropseedn_deficit_patch(i)  = value_patch
+          this%cropseedn_deficit_patch(i)                                = value_patch
        end do
 
        do k = 1, nrepr
@@ -945,10 +1025,10 @@ contains
     do fi = 1,num_column
        i = filter_column(fi)
 
-       this%totecosysn_col(i) = value_column
-       this%totvegn_col(i)    = value_column
-       this%totn_p2c_col(i)   = value_column
-       this%totn_col(i)       = value_column
+       this%totecosysn_col(i)                                            = value_column
+       this%totvegn_col(i)                                               = value_column
+       this%totn_p2c_col(i)                                              = value_column
+       this%totn_col(i)                                                  = value_column
     end do
 
   end subroutine SetValues

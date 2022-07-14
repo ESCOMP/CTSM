@@ -13,6 +13,7 @@ from ctsm.git_utils import get_ctsm_git_short_hash
 
 logger = logging.getLogger(__name__)
 
+
 def abort(errmsg):
     """Abort the program with the given error message
 
@@ -40,6 +41,7 @@ def fill_template_file(path_to_template, path_to_final, substitutions):
     final_file_contents = template.substitute(substitutions)
     with open(path_to_final, "w") as final_file:
         final_file.write(final_file_contents)
+
 
 def add_tag_to_filename(filename, tag):
     """

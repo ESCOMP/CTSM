@@ -20,9 +20,7 @@ def get_ctsm_git_short_hash():
         sha (str) : git short hash for ctsm repository
     """
     sha = (
-        subprocess.check_output(
-            ["git", "-C", path_to_ctsm_root(), "rev-parse", "--short", "HEAD"]
-        )
+        subprocess.check_output(["git", "-C", path_to_ctsm_root(), "rev-parse", "--short", "HEAD"])
         .strip()
         .decode()
     )
@@ -59,9 +57,5 @@ def get_ctsm_git_describe():
     Returns:
         label (str) : ouput of running 'git describe' for the CTSM repository
     """
-    label = (
-        subprocess.check_output(["git", "-C", path_to_ctsm_root(), "describe"])
-        .strip()
-        .decode()
-    )
+    label = subprocess.check_output(["git", "-C", path_to_ctsm_root(), "describe"]).strip().decode()
     return label

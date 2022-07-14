@@ -185,6 +185,7 @@ contains
 
     namelist /clm_inparm / &
          deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
+
     ! lake_melt_icealb is of dimension numrad
 
     ! Glacier_mec info
@@ -306,7 +307,6 @@ contains
 #endif
 
     use_init_interp = .false.
-
     if (masterproc) then
 
        ! ----------------------------------------------------------------------
@@ -463,6 +463,7 @@ contains
              call endrun(msg=' ERROR: ozone is not compatible with FATES.'//&
                   errMsg(sourcefile, __LINE__))
           end if
+
        end if
 
        ! If nfix_timeconst is equal to the junk default value, then it was not specified
@@ -537,6 +538,10 @@ contains
        call CNNDynamicsReadNML       ( NLFilename )
        call CNPhenologyReadNML       ( NLFilename )
     end if
+
+    ! ----------------------------------------------------------------------
+    ! Initialize the CN soil matrix namelist items
+    ! ----------------------------------------------------------------------
 
     ! ----------------------------------------------------------------------
     ! consistency checks
@@ -838,6 +843,7 @@ contains
     ! clump decomposition variables
 
     call mpi_bcast (clump_pproc, 1, MPI_INTEGER, 0, mpicom, ier)
+
 
   end subroutine control_spmd
 

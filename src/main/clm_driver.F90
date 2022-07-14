@@ -11,6 +11,7 @@ module clm_driver
   use shr_kind_mod           , only : r8 => shr_kind_r8
   use clm_varctl             , only : iulog, use_fates, use_fates_sp
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
+  use CNSharedParamsMod      , only : use_matrixcn
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
   use clm_varctl             , only : use_soil_moisture_streams
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
@@ -310,7 +311,7 @@ contains
           call get_clump_bounds(nc, bounds_clump)
 
           call t_startf('cninit')
-
+           
           call bgc_vegetation_inst%InitEachTimeStep(bounds_clump, &
                filter(nc)%num_soilc, filter(nc)%soilc)
 
@@ -366,8 +367,8 @@ contains
          canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst, &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst,                  &
          c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,    &
-         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
-         glc_behavior)
+         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
+         soilbiogeochem_carbonflux_inst, ch4_inst, glc_behavior)
     call t_stopf('dyn_subgrid')
 
     ! ============================================================================
@@ -672,7 +673,7 @@ contains
             frictionvel_inst, ch4_inst, energyflux_inst, temperature_inst, &
             water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst, &
-            photosyns_inst, humanindex_inst)
+            photosyns_inst, humanindex_inst, canopystate_inst)
        call t_stopf('bgflux')
 
        ! non-bareground fluxes for all patches except lakes and urban landunits
@@ -1001,6 +1002,8 @@ contains
           call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
                   filter(nc)%num_soilc, filter(nc)%soilc,                       &
                   filter(nc)%num_soilp, filter(nc)%soilp,                       &
+                  filter(nc)%num_actfirec, filter(nc)%actfirec,                 &
+                  filter(nc)%num_actfirep, filter(nc)%actfirep,                 &
                   filter(nc)%num_pcropp, filter(nc)%pcropp, &
                   filter(nc)%num_soilnopcropp, filter(nc)%soilnopcropp, &
                   filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
@@ -1073,7 +1076,10 @@ contains
                filter(nc)%num_allc, filter(nc)%allc, &
                filter(nc)%num_soilc, filter(nc)%soilc, &
                filter(nc)%num_soilp, filter(nc)%soilp, &
+               filter(nc)%num_actfirec, filter(nc)%actfirec,                 &
+               filter(nc)%num_actfirep, filter(nc)%actfirep,                 &
                doalb, crop_inst, &
+               soilstate_inst, soilbiogeochem_state_inst, &
                water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
                water_inst%waterfluxbulk_inst, frictionvel_inst, canopystate_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
