@@ -5,13 +5,15 @@ Run this code by using the following wrapper script:
 The wrapper script includes a full description and instructions.
 """
 
+import os
 import logging
 
 from math import isclose
 import numpy as np
 import xarray as xr
 
-from ctsm.utils import abort
+from ctsm.utils import abort, update_metadata
+from ctsm.git_utils import get_ctsm_git_short_hash
 from ctsm.config_utils import lon_range_0_to_360
 
 logger = logging.getLogger(__name__)
