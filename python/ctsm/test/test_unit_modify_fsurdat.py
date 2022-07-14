@@ -69,7 +69,7 @@ class TestModifyFsurdat(unittest.TestCase):
             lat_2=lat_2,
             landmask_file=None,
             lat_varname=None,
-            lon_varname=None
+            lon_varname=None,
         )
 
         # initialize and then modify the comparison matrices

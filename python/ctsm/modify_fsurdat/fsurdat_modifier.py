@@ -111,29 +111,27 @@ def fsurdat_modifier(cfg_path):
     )
 
     lat_varname = get_config_value(
-        config=config,
-        section=section,
-        item='lat_varname',
-        file_path=cfg_path,
-        can_be_unset=True
+        config=config, section=section, item="lat_varname", file_path=cfg_path, can_be_unset=True
     )
     lon_varname = get_config_value(
-        config=config,
-        section=section,
-        item='lon_varname',
-        file_path=cfg_path,
-        can_be_unset=True
+        config=config, section=section, item="lon_varname", file_path=cfg_path, can_be_unset=True
     )
 
     # Create ModifyFsurdat object
     modify_fsurdat = ModifyFsurdat.init_from_file(
-        fsurdat_in, lnd_lon_1, lnd_lon_2, lnd_lat_1, lnd_lat_2, landmask_file,
-        lat_varname, lon_varname
+        fsurdat_in,
+        lnd_lon_1,
+        lnd_lon_2,
+        lnd_lat_1,
+        lnd_lat_2,
+        landmask_file,
+        lat_varname,
+        lon_varname,
     )
 
     # If output file exists, abort before starting work
     if os.path.exists(fsurdat_out):
-        errmsg = 'Output file already exists: ' + fsurdat_out
+        errmsg = "Output file already exists: " + fsurdat_out
         abort(errmsg)
 
     # not required: user may set these in the .cfg file
@@ -255,4 +253,4 @@ def fsurdat_modifier(cfg_path):
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
     # ----------------------------------------------
-    write_output(modify_fsurdat.file, fsurdat_in, fsurdat_out, 'fsurdat')
+    write_output(modify_fsurdat.file, fsurdat_in, fsurdat_out, "fsurdat")

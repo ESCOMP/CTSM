@@ -23,8 +23,9 @@ class ModifyFsurdat:
     -----------
     """
 
-    def __init__(self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file,
-                 lat_varname, lon_varname):
+    def __init__(
+        self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_varname, lon_varname
+    ):
 
         self.file = my_data
 
@@ -44,31 +45,32 @@ class ModifyFsurdat:
             self.rectangle = landmask_ds.landmask_diff.data
             # CF convention has dimension and coordinate variable names the same
             if lat_varname is None:  # set to default
-                lat_varname = 'lsmlat'
+                lat_varname = "lsmlat"
             if lon_varname is None:  # set to default
-                lon_varname = 'lsmlon'
+                lon_varname = "lsmlon"
             lsmlat = landmask_ds.dims[lat_varname]
             lsmlon = landmask_ds.dims[lon_varname]
 
             for row in range(lsmlat):  # rows from landmask file
                 for col in range(lsmlon):  # cols from landmask file
-                    errmsg = 'landmask_ds.landmask_diff not 0 or 1 at ' + \
-                             f'row, col, value = {row} {col} {self.rectangle[row, col]}'
-                    assert isclose(self.rectangle[row, col], 0, abs_tol=1e-9) \
-                           or \
-                           isclose(self.rectangle[row, col], 1, abs_tol=1e-9), \
-                           errmsg
+                    errmsg = (
+                        "landmask_ds.landmask_diff not 0 or 1 at "
+                        + f"row, col, value = {row} {col} {self.rectangle[row, col]}"
+                    )
+                    assert isclose(self.rectangle[row, col], 0, abs_tol=1e-9) or isclose(
+                        self.rectangle[row, col], 1, abs_tol=1e-9
+                    ), errmsg
 
         self.not_rectangle = np.logical_not(self.rectangle)
 
     @classmethod
-    def init_from_file(cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2,
-                       landmask_file, lat_varname, lon_varname):
+    def init_from_file(
+        cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_varname, lon_varname
+    ):
         """Initialize a ModifyFsurdat object from file fsurdat_in"""
         logger.info("Opening fsurdat_in file to be modified: %s", fsurdat_in)
         my_file = xr.open_dataset(fsurdat_in)
-        return cls(my_file, lon_1, lon_2, lat_1, lat_2, landmask_file,
-                   lat_varname, lon_varname)
+        return cls(my_file, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_varname, lon_varname)
 
     @staticmethod
     def _get_rectangle(lon_1, lon_2, lat_1, lat_2, longxy, latixy):
