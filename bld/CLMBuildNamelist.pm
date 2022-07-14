@@ -3899,7 +3899,7 @@ sub setup_logic_rooting_profile {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_friction_vel {
-  # Must be after canopyfluxes so that use_biomass_heat_storagge will be set
+  # Must be after canopyfluxes so that use_biomass_heat_storage will be set
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'zetamaxstable',
