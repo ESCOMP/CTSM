@@ -75,7 +75,7 @@ from ctsm.ctsm_logging import (
     process_logging_args,
 )
 
-DEFAULTS_FILE = "default_data.cfg"
+DEFAULTS_CONFIG = "tools/site_and_regional/default_data.cfg"
 
 logger = logging.getLogger(__name__)
 
@@ -307,6 +307,16 @@ def get_parser():
             dest="user_mods_dir",
             type=str,
             default="",
+        )
+        cesmroot = path_to_ctsm_root()
+        DEFAULTS_FILE = os.path.join(cesmroot, DEFAULTS_CONFIG)
+        subparser.add_argument(
+            "--file",
+            help="Default configure file to use for default filenames.",
+            action="store",
+            dest="config_file",
+            type=str,
+            default=DEFAULTS_FILE,
         )
         subparser.add_argument(
             "--overwrite",
@@ -588,7 +598,7 @@ def main():
     # parse defaults file
     cesmroot = path_to_ctsm_root()
     defaults = configparser.ConfigParser()
-    defaults.read(os.path.join(cesmroot, "tools/site_and_regional", DEFAULTS_FILE))
+    defaults.read(args.config_file)
 
     # --------------------------------- #
     myname = getuser()
