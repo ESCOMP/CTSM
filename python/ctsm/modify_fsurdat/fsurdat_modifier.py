@@ -65,9 +65,9 @@ def fsurdat_modifier(cfg_path):
     include_nonveg = get_config_value(
         config=config,
         section=section,
-        item='include_nonveg',
+        item="include_nonveg",
         file_path=cfg_path,
-        convert_to_type=bool
+        convert_to_type=bool,
     )
 
     lnd_lat_1 = get_config_value(
