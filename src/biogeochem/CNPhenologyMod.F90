@@ -2239,10 +2239,6 @@ contains
                   crop_inst%gddaccum_thisyr(p, harvest_count(p)) = crop_inst%gddaccum_patch(p)
                   crop_inst%hui_thisyr(p, harvest_count(p)) = hui(p)
                   crop_inst%harvest_reason_thisyr(p, harvest_count(p)) = harvest_reason
-                  do k = repr_grain_min, repr_grain_max
-                     cnveg_carbonflux_inst%repr_grainc_to_food_accum_thisyr(p, harvest_count(p), k) = &
-                        cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p, k)
-                  end do
                endif
 
                croplive(p) = .false.     ! no re-entry in greater if-block
@@ -2536,9 +2532,6 @@ contains
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
       s = sowing_count(p) + 1
-      do k = repr_grain_min, repr_grain_max
-         cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p, k) = 0._r8
-      end do
 
       ! SSR troubleshooting
       if (s < 1) then
@@ -3467,9 +3460,6 @@ contains
                 p = filter_soilp(fp)
                 cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
                      cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) + &
-                     cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,k)
-                cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p,k) = &
-                     cnveg_carbonflux_inst%repr_grainc_to_food_accum_patch(p,k) + &
                      cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,k)
                 cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
                      cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) + &
