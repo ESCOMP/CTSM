@@ -74,8 +74,8 @@ module WaterFluxType
      real(r8), pointer :: qflx_drain_col           (:)   ! col sub-surface runoff (mm H2O /s)
      real(r8), pointer :: qflx_latflow_in_col      (:)   ! col hillslope lateral flow input (mm/s) 
      real(r8), pointer :: qflx_latflow_out_col     (:)   ! col hillslope lateral flow output (mm/s) 
-     real(r8), pointer :: qdischarge_col           (:)   ! col hillslope discharge (m3/s)
-     real(r8), pointer :: qstreamflow_lun          (:)   ! lun stream discharge (m3/s)
+     real(r8), pointer :: volumetric_discharge_col (:)   ! col hillslope discharge (m3/s)
+     real(r8), pointer :: volumetric_streamflow_lun(:)   ! lun stream discharge (m3/s)
      real(r8), pointer :: qflx_drain_perched_col   (:)   ! col sub-surface runoff from perched wt (mm H2O /s)                                                                                                      
      real(r8), pointer :: qflx_top_soil_col        (:)   ! col net water input into soil from top (mm/s)
      real(r8), pointer :: qflx_floodc_col          (:)   ! col flood water flux at column level
@@ -288,10 +288,10 @@ contains
     call AllocateVar1d(var = this%qflx_latflow_out_col, name = 'qflx_latflow_out_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
-    call AllocateVar1d(var = this%qdischarge_col, name = 'qdischarge_col', &
+    call AllocateVar1d(var = this%volumetric_discharge_col, name = 'volumetric_discharge_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
-    call AllocateVar1d(var = this%qstreamflow_lun, name = 'qstreamflow_lun', &
+    call AllocateVar1d(var = this%volumetric_streamflow_lun, name = 'volumetric_streamflow_lun', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_landunit)
     call AllocateVar1d(var = this%qflx_top_soil_col, name = 'qflx_top_soil_col', &
@@ -512,24 +512,24 @@ contains
             l2g_scale_type='natveg', c2l_scale_type='urbanf', &
             ptr_col=this%qflx_latflow_out_col)
 
-       this%qdischarge_col(begc:endc) = spval
+       this%volumetric_discharge_col(begc:endc) = spval
        call hist_addfld1d ( &
-            fname=this%info%fname('QDISCHARGE'),  &
+            fname=this%info%fname('VOLUMETRIC_DISCHARGE'),  &
             units='m3/s',  &
             avgflag='A', &
             long_name=this%info%lname('hillslope discharge from column'), &
             l2g_scale_type='natveg', c2l_scale_type='urbanf', &
-            ptr_col=this%qdischarge_col)
+            ptr_col=this%volumetric_discharge_col)
 
        if (use_hillslope_routing) then
-          this%qstreamflow_lun(begl:endl) = spval
+          this%volumetric_streamflow_lun(begl:endl) = spval
           call hist_addfld1d ( &
-               fname=this%info%fname('QSTREAMFLOW'),  &
+               fname=this%info%fname('VOLUMETRIC_STREAMFLOW'),  &
                units='m3/s',  &
                avgflag='A', &
                long_name=this%info%lname('streamflow discharge'), &
                l2g_scale_type='natveg', &
-               ptr_lunit=this%qstreamflow_lun)
+               ptr_lunit=this%volumetric_streamflow_lun)
        endif
     endif
 
@@ -915,13 +915,13 @@ contains
           this%qflx_surf_col(c)  = 0._r8
           this%qflx_latflow_in_col(c)  = 0._r8
           this%qflx_latflow_out_col(c) = 0._r8
-          this%qdischarge_col(c) = 0._r8
+          this%volumetric_discharge_col(c) = 0._r8
        end if
     end do
     if (use_hillslope_routing) then
        do l = bounds%begl, bounds%endl
           if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-             this%qstreamflow_lun(l) = 0._r8
+             this%volumetric_streamflow_lun(l) = 0._r8
           end if
        end do
     endif

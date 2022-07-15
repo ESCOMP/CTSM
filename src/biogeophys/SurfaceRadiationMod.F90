@@ -899,8 +899,8 @@ contains
           rnir = albd(p,2)*forc_solad_col(c,2) + albi(p,2)*forc_solai(g,2)
           fsr(p) = rvis + rnir
           if (use_SSRE) then
-             rvisSF = albdSF(p,1)*forc_solad(g,1) + albiSF(p,1)*forc_solai(g,1)
-             rnirSF = albdSF(p,2)*forc_solad(g,2) + albiSF(p,2)*forc_solai(g,2)
+             rvisSF = albdSF(p,1)*forc_solad_col(c,1) + albiSF(p,1)*forc_solai(g,1)
+             rnirSF = albdSF(p,2)*forc_solad_col(c,2) + albiSF(p,2)*forc_solai(g,2)
              fsrSF(p) = rvisSF + rnirSF
              ssre_fsr(p) = fsr(p)-fsrSF(p)
           end if
@@ -913,8 +913,8 @@ contains
           fsr_vis_i(p)  = albi(p,1)*forc_solai(g,1)
           fsr_nir_i(p)  = albi(p,2)*forc_solai(g,2)
           if (use_SSRE) then
-             fsrSF_vis_d(p)  = albdSF(p,1)*forc_solad(g,1)
-             fsrSF_nir_d(p)  = albdSF(p,2)*forc_solad(g,2)
+             fsrSF_vis_d(p)  = albdSF(p,1)*forc_solad_col(c,1)
+             fsrSF_nir_d(p)  = albdSF(p,2)*forc_solad_col(c,2)
              fsrSF_vis_i(p)  = albiSF(p,1)*forc_solai(g,1)
              fsrSF_nir_i(p)  = albiSF(p,2)*forc_solai(g,2)
 
@@ -940,8 +940,8 @@ contains
           end if
           if (use_SSRE) then
              if ( is_near_local_noon( grc%londeg(g), deltasec=nint(dtime)/2 ) )then
-                fsrSF_vis_d_ln(p) = albdSF(p,1)*forc_solad(g,1)
-                fsrSF_nir_d_ln(p) = albdSF(p,2)*forc_solad(g,2)
+                fsrSF_vis_d_ln(p) = albdSF(p,1)*forc_solad_col(c,1)
+                fsrSF_nir_d_ln(p) = albdSF(p,2)*forc_solad_col(c,2)
              else
                 fsrSF_vis_d_ln(p) = spval
                 fsrSF_nir_d_ln(p) = spval

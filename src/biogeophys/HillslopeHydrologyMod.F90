@@ -558,27 +558,14 @@ contains
              lun%stream_channel_length(l) = 0.5_r8 * lun%stream_channel_length(l)
           endif
                        
-          ! if missing hillslope information on surface dataset, fill data
-          ! and recalculate hillslope_area
+          ! if missing hillslope information on surface dataset,
+          ! call endrun
           if (sum(hillslope_area) == 0._r8) then
-             do c = lun%coli(l), lun%colf(l)
-                nh = col%hillslope_ndx(c)
-                col%hill_area(c) = (grc%area(g)/real(lun%ncolumns(l),r8))*1.e6_r8 ! km2 to m2
-                col%hill_width(c)    = sqrt(col%hill_area(c))
-                col%hill_slope(c)    = tan((rpi/180.)*col%topo_slope(c))
-                col%hill_aspect(c)   = (rpi/2.) ! east (arbitrarily chosen)
-                if (nh > 0) then
-                   col%hill_elev(c)     = col%topo_std(c) &
-                        *((c-lun%coli(l))/ncol_per_hillslope(nh))
-                   col%hill_distance(c) = sqrt(col%hill_area(c)) &
-                        *((c-lun%coli(l))/ncol_per_hillslope(nh))
-                   pct_hillslope(l,nh)  = 100/nhillslope
-                else
-                   col%hill_elev(c)     = col%topo_std(c)
-                   col%hill_distance(c) = sqrt(col%hill_area(c))
-                endif
-             enddo
-             
+             if (masterproc) then
+                write(iulog,*) 'Problem with input data: nhillcolumns is non-zero, but hillslope area is zero'
+                write(iulog,*) 'Check surface data for gridcell at (lon/lat): ', grc%londeg(g),grc%latdeg(g)
+                call endrun( 'ERROR:: sum of hillslope areas is zero.'//errmsg(sourcefile, __LINE__) )
+             end if
           endif
           
           ! Recalculate column weights using input areas
@@ -1032,14 +1019,14 @@ contains
     !-----------------------------------------------------------------------
     associate(                                                            & 
          stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun            , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
-         qstreamflow             =>    waterfluxbulk_inst%qstreamflow_lun               &  ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
+         volumetric_streamflow             =>    waterfluxbulk_inst%volumetric_streamflow_lun               &  ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
          )
 
       ! Get time step
       dtime = get_step_size_real()
 
       do l = bounds%begl,bounds%endl
-         qstreamflow(l) = 0._r8
+         volumetric_streamflow(l) = 0._r8
          if(lun%itype(l) == istsoil .and. lun%active(l)) then
             ! Streamflow calculated from Manning equation
             if(streamflow_method == streamflow_manning) then
@@ -1051,7 +1038,7 @@ contains
                     /(lun%stream_channel_width(l) + 2*stream_depth)
 
                if(hydraulic_radius <= 0._r8) then
-                  qstreamflow(l) = 0._r8
+                  volumetric_streamflow(l) = 0._r8
                else
                   flow_velocity = (hydraulic_radius)**manning_exponent &
                        * sqrt(lun%stream_channel_slope(l)) &
@@ -1060,15 +1047,15 @@ contains
                   if (stream_depth > lun%stream_channel_depth(l)) then
                      if (overbank_method  == 1) then
                         ! try increasing dynamic slope
-                        qstreamflow(l) = cross_sectional_area * flow_velocity &
+                        volumetric_streamflow(l) = cross_sectional_area * flow_velocity &
                              *(stream_depth/lun%stream_channel_depth(l))
                      else if (overbank_method  == 2) then
                         ! try increasing flow area cross section
                         overbank_area = (stream_depth -lun%stream_channel_depth(l)) * 30._r8 * lun%stream_channel_width(l)
-                        qstreamflow(l) = (cross_sectional_area + overbank_area) * flow_velocity
+                        volumetric_streamflow(l) = (cross_sectional_area + overbank_area) * flow_velocity
                      else if (overbank_method  == 3) then
                         ! try removing all overbank flow instantly
-                        qstreamflow(l) = cross_sectional_area * flow_velocity &
+                        volumetric_streamflow(l) = cross_sectional_area * flow_velocity &
                              + (stream_depth-lun%stream_channel_depth(l)) &
                              *lun%stream_channel_width(l)*lun%stream_channel_length(l)/dtime
                      else
@@ -1078,13 +1065,13 @@ contains
                      endif
                     
                   else
-                     qstreamflow(l) = cross_sectional_area * flow_velocity
+                     volumetric_streamflow(l) = cross_sectional_area * flow_velocity
                   endif
 
                   ! scale streamflow by number of channel reaches
-                  qstreamflow(l) = qstreamflow(l) * lun%stream_channel_number(l)
+                  volumetric_streamflow(l) = volumetric_streamflow(l) * lun%stream_channel_number(l)
 
-                  qstreamflow(l) = max(0._r8,min(qstreamflow(l),stream_water_volume(l)/dtime))
+                  volumetric_streamflow(l) = max(0._r8,min(volumetric_streamflow(l),stream_water_volume(l)/dtime))
                endif
             else
                if (masterproc) then
@@ -1135,7 +1122,7 @@ contains
     !-----------------------------------------------------------------------
     associate( & 
          stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun, & ! Input/Output:  [real(r8) (:)   ] stream water volume (m3)
-         qstreamflow             =>    waterfluxbulk_inst%qstreamflow_lun      ,    & ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
+         volumetric_streamflow             =>    waterfluxbulk_inst%volumetric_streamflow_lun      ,    & ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
          qflx_drain              =>    waterfluxbulk_inst%qflx_drain_col,           & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
          qflx_drain_perched      =>    waterfluxbulk_inst%qflx_drain_perched_col,   & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
          qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col        ,    & ! Input: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
@@ -1166,11 +1153,11 @@ contains
                 endif
              enddo
              stream_water_volume(l) = stream_water_volume(l) &
-                  - qstreamflow(l) * dtime
+                  - volumetric_streamflow(l) * dtime
              
              ! account for negative drainage (via searchforwater in soilhydrology)
              if(stream_water_volume(l) < 0._r8) then
-                qstreamflow(l) = qstreamflow(l) + stream_water_volume(l)/dtime
+                volumetric_streamflow(l) = volumetric_streamflow(l) + stream_water_volume(l)/dtime
                 stream_water_volume(l) = 0._r8
              endif
 

@@ -347,7 +347,7 @@ contains
           g = lun%gridcell(l)
           water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) = &
                water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) &
-               +  water_inst%waterfluxbulk_inst%qstreamflow_lun(l) &
+               +  water_inst%waterfluxbulk_inst%volumetric_streamflow_lun(l) &
                *1e3_r8/(grc%area(g)*1.e6_r8)
        enddo
 

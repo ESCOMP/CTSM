@@ -203,7 +203,7 @@ contains
 
     this%coszen_col(begc:endc) = spval
     call hist_addfld1d (fname='COSZEN', units='none', &
-         avgflag='A', long_name='cosine of solar zenith angle', &
+         avgflag='A', long_name='cosine of solar zenith angle (downscaled if downscaling is activated)', &
          ptr_col=this%coszen_col, default='inactive')
 
     this%albgri_col(begc:endc,:) = spval

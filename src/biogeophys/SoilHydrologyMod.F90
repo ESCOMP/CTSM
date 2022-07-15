@@ -2178,7 +2178,7 @@ contains
           hk_l               =>    soilstate_inst%hk_l_col               , & ! Input:  [real(r8) (:,:) ] hydraulic conductivity (mm/s)                    
           qflx_latflow_out   =>    waterfluxbulk_inst%qflx_latflow_out_col, & ! Output: [real(r8) (:)   ] lateral saturated outflow (mm/s)
           qflx_latflow_in    =>    waterfluxbulk_inst%qflx_latflow_in_col, & ! Output: [real(r8) (:)   ]  lateral saturated inflow (mm/s)
-          qdischarge         =>    waterfluxbulk_inst%qdischarge_col     , & ! Output: [real(r8) (:)   ]  discharge from column (m3/s)
+          volumetric_discharge =>  waterfluxbulk_inst%volumetric_discharge_col , & ! Output: [real(r8) (:)   ]  discharge from column (m3/s)
 
           tdepth             =>    wateratm2lndbulk_inst%tdepth_grc      , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
           tdepth_bankfull    =>    wateratm2lndbulk_inst%tdepthmax_grc   , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
@@ -2224,7 +2224,7 @@ contains
           qflx_latflow_in(c) = 0._r8
           qflx_latflow_out(c) = 0._r8
           qflx_net_latflow(c) = 0._r8
-          qdischarge(c)       = 0._r8
+          volumetric_discharge(c)       = 0._r8
           qflx_latflow_out_vol(c) = 0._r8
       end do
 
@@ -2363,10 +2363,10 @@ contains
             ! include ice impedance in transmissivity
             qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*head_gradient
 
-            ! qdischarge from lowest column is qflx_latflow_out_vol
+            ! volumetric_discharge from lowest column is qflx_latflow_out_vol
             ! scaled by total area of column in gridcell divided by column area
             if (col%cold(c) == ispval) then
-               qdischarge(c) = qflx_latflow_out_vol(c) &
+               volumetric_discharge(c) = qflx_latflow_out_vol(c) &
                     *(grc%area(g)*1.e6_r8*col%wtgcell(c)/col%hill_area(c))
             endif
 
@@ -2394,7 +2394,7 @@ contains
             endif
             ! convert flux to volumetric flow
             qflx_latflow_out_vol(c) = 1.e-3_r8*qflx_latflow_out(c)*(grc%area(g)*1.e6_r8*col%wtgcell(c))
-            qdischarge(c) = qflx_latflow_out_vol(c)
+            volumetric_discharge(c) = qflx_latflow_out_vol(c)
          endif
       enddo
 

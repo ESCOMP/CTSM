@@ -275,19 +275,26 @@ contains
     ! This could operate over a filter like 'allc' in order to just operate over active
     ! points, but I'm not sure that would speed things up much, and would require passing
     ! in this additional filter.
+
     do c = bounds%begc, bounds%endc
        if (.not. this%needs_downscaling_col(c)) then
+          ! For any point that isn't already set to be downscaled, set its topo value to the
+          ! atmosphere's topographic height. This is important for the hillslope block
+          ! below. For non-hillslope columns, this shouldn't matter, but is useful if
+          ! topo_col is written to the history file.
           g = col%gridcell(c)
-          l = col%landunit(c)
-
           this%topo_col(c) = atm_topo(g)
-
-          if (col%is_hillslope_column(c) .and. downscale_hillslope_meteorology) then
-             this%topo_col(c) =  this%topo_col(c) &
-                  + (col%hill_elev(c) - mean_hillslope_elevation(l))
-             this%needs_downscaling_col(c) = .true.
-          endif
        end if
+       ! If needs_downscaling_col was already set, then that implies
+       ! that topo_col was previously set by update_glc2lnd_topo.
+       ! In that case, topo_col should be used as a starting point,
+       ! rather than the atmosphere's topo value.
+       if (col%is_hillslope_column(c) .and. downscale_hillslope_meteorology) then
+          l = col%landunit(c)
+          this%topo_col(c) =  this%topo_col(c) &
+               + (col%hill_elev(c) - mean_hillslope_elevation(l))
+          this%needs_downscaling_col(c) = .true.
+       endif
     end do
 
     call glc_behavior%update_glc_classes(bounds, this%topo_col(begc:endc))
