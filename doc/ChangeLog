@@ -1,4 +1,312 @@
 ===============================================================
+Tag name: ctsm5.1.dev103
+Originator(s): sacks (Bill Sacks)
+Date: Tue Jul 12 22:27:30 MDT 2022
+One-line Summary: Fix accumulation variables when changing model time step
+
+Purpose and description of changes
+----------------------------------
+
+Accumulation variables (e.g., 1-day or 10-day averages) were writing and
+reading their accumulation period (expressed in time steps) to the
+restart file. This caused incorrect behavior when changing the model
+time step relative to what was used to create the initial conditions
+file (typically a 30-minute time step). So, for example, if you are
+using a 15-minute time step with an initial conditions file that
+originated from a run with a 30-minute time step (at some point in its
+history), then an average that was supposed to be 10-day instead becomes
+5-day; an average that was supposed to be 1-day becomes 12-hour, etc.
+(The issue is that the number of time steps in the averaging period was
+staying fixed rather than the actual amount of time staying fixed.)
+
+For our out-of-the-box initial conditions files, this only impacts runs
+that use something other than a 30-minute time step. Typically this
+situation arises in configurations with an active atmospheric model that
+is running at higher resolution than approximately 1 degree. It appears
+that the biggest impacts are on VOC emissions and in BGC runs; we expect
+the impact to be small (but still non-zero) in prescribed phenology (SP)
+runs that don't use VOC emissions.
+
+This tag fixes this issue by no longer writing or reading accumulation
+variables' PERIOD to / from the restart file: this isn't actually needed
+on the restart file.
+
+See some discussion in https://github.com/ESCOMP/CTSM/issues/1789 for
+more details, and see
+https://github.com/ESCOMP/CTSM/pull/1802#issuecomment-1182743649 for
+some discussion of outstanding weirdness that can result for
+accumulation variables when changing the model time step. The summary of
+that comment is: There could be some weirdness at the start of a run,
+but at least for a startup or hybrid run, that weirdness should work
+itself out within about the first averaging period. A branch or restart
+run could have some longer-term potential weirdness, so for now I think
+we should recommend that people NOT change the time step on a branch or
+restart run. With (significant?) additional work, we could probably
+avoid this additional weirdness, but my feeling is that it isn't worth
+the effort right now. In any case, I feel like my proposed fix will
+bring things much closer to being correct than they currently are when
+changing the time step.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1789 (A bug in calculating accumulated fields
+  (24/240 hours averaged) when using a smaller timestep)
+
+Known bugs found since the previous tag (include issue #):
+- ESCOMP/CTSM#1804 (NSTEPS 0 everywhere for accumulation fields on some
+  initial conditions files)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+    Also ran these tests with comparisons against baselines:
+    SMS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.cheyenne_intel.clm-shortts
+    SMS_D_Ld3.f10_f10_mg37.I1850Clm50Sp.cheyenne_intel.clm-shortts
+    SMS_Lm1.f10_f10_mg37.I1850Clm50Sp.cheyenne_intel.clm-shortts    
+
+
+    where 'clm-shortts' was a temporary testmod inheriting from default
+    and adding "./xmlchange ATM_NCPL=96".
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for configurations
+with a time step that is not the standard 30-minute time step.
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Simulations with a time step that is not 30-minutes
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+    
+      Not investigated carefully. There can be substantial differences
+      for VOC emissions, and differences may also be significant in BGC
+      cases. Differences in SP cases appear to be more limited, since it
+      looks like the only differences in SP cases (other than VOC
+      emissions) come from differences in the T10 field (10-day average
+      temperature), which is used in some photosynthesis calculations.
+
+      For I compset configurations in the test suite, the only
+      configurations with time steps differing from 30 minutes are:
+        - mexicocity tests (but for the SP cases in the test suite, the
+          answer changes are diagnostic-only in a couple of fields, and
+          the short tests in the test suite don't produce any CLM
+          history files, so answer changes don't show up)
+        - vancouver tests that are long enough to produce history files
+          so that the diagnostic-only differences show up
+        - USUMB tests
+        - waccmx_offline (but, as with the mexicocity tests, these tests
+          are too short to produce history output)
+      
+      The only specific tests in the test suite with answer changes are:
+      SMS_Ld12_Mmpi-serial.1x1_vancouverCAN.I1PtClm50SpRs.cheyenne_gnu.clm-output_sp_highfreq
+      SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PtClm50SpRs.cheyenne_intel.clm-USUMB_nuopc
+      SMS_D_Vmct_Lm1_Mmpi-serial.CLM_USRDAT.I1PtClm50SpRs.cheyenne_intel.clm-USUMB_mct
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1802
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev102
+Originator(s): sacks (Bill Sacks)
+Date: Mon Jul 11 12:14:48 MDT 2022
+One-line Summary: Fix LILAC interface to PIO
+
+Purpose and description of changes
+----------------------------------
+
+Fixes the LILAC interface to PIO.
+
+This involved splitting shr_pio_mod into two pieces:
+
+(1) Reading configuration files and initializing PIO appropriately
+
+(2) Storing information about PIO (io system descriptors, io types, io
+formats) and providing an interface to query this information
+
+Piece (2) lives in the share code and is used regardless of the driver.
+Piece (1) is driver-specific, so for now we have three versions of that
+piece: one in CMEPS (created by extracting the initialization pieces
+from cmeps/cesm/nuopc_cap_share/shr_pio_mod.F90), one in the cpl7 repo
+(created by extracting the initialization pieces from
+share/src/shr_pio_mod.F90), and one in CTSM's LILAC directory (which is
+essentially identical to the one in the cpl7 repo). Piece (2) – the
+actual share code piece – is used by components (their use statements
+stay exactly as they are now) as well as by piece (1) (which is
+responsible for setting the module-level variables in piece (2)). See
+https://github.com/ESCOMP/CTSM/issues/1759#issuecomment-1171779485 for
+more context.
+
+Much of the work here was in externals:
+https://github.com/ESCOMP/CESM_share/pull/34,
+https://github.com/ESCOMP/CMEPS/pull/306 and
+https://github.com/ESCOMP/CESM_CPL7andDataComps/pull/16. So this PR
+updates those externals to versions with those changes. In addition,
+changes were needed within LILAC - to implement the LILAC version of
+piece (1) described above.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1759 (LILAC test failing in ctsm5.1.dev095 with
+  cime/share/pio update)
+
+Externals issues fixed (include issue #):
+- https://github.com/ESCOMP/CESM_share/issues/33 (ctsm lilac should use
+  old shr_pio_mod.F90)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+  In addition, to verify that the LILAC changes don't change answers, I ran
+  LILACSMOKE_D_Ld2.f10_f10_mg37.I2000Ctsm50NwpSpAsRs.cheyenne_intel.clm-lilac
+  with my changes rebased onto dev097 (in order to avoid recent answer
+  changing tags), with comparisons against dev094 (which was the last
+  time that test passed). It was bit-for-bit.
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- CMEPS: cmeps0.13.63 -> cmeps0.13.68
+- CPL7:  cpl7.0.12 -> cpl7.0.13
+- share: share1.0.11 -> share1.0.12
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1800
+https://github.com/ESCOMP/CESM_share/pull/34
+https://github.com/ESCOMP/CMEPS/pull/306
+https://github.com/ESCOMP/CESM_CPL7andDataComps/pull/16
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev101
+Originator(s): samrabin (Sam Rabin)
+Date: Mon Jul 11 11:48:48 MDT 2022
+One-line Summary: Fix winter wheat sowing window bugs
+
+Purpose and description of changes
+----------------------------------
+
+Fixes problems with winter wheat sowing criteria: The "normal" sowing
+condition for winter wheat only accounted for whether today is on/after
+the first day of the planting window; it did not also require that today
+is on/before the last day of the window. Additionally, the "last chance"
+condition allowed planting anytime on/after the last day of the window.
+See https://github.com/ESCOMP/CTSM/issues/1691 for details.
+
+Winter wheat is not present in our standard surface datasets, so this
+has no impact on typical simulations.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1691 (Problems with winter wheat sowing criteria)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for winter wheat
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only configurations that include winter wheat
+      (this is non-standard, but winter wheat is included in smallville
+      tests, so smallville tests change answers)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      not investigated, but expected to be larger than roundoff/same
+      climate (with possibly large local changes in areas with large
+      amounts of winter wheat)
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1692
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev100
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue Jul  5 17:40:21 MDT 2022
