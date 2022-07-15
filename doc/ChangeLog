@@ -1,4 +1,97 @@
 ===============================================================
+Tag name: ctsm5.1.dev104
+Originator(s): glemieux ((Gregory Lemieux,LBL/NGEET,510-486-5049))
+Date: Fri Jul 15 17:09:00 MDT 2022
+One-line Summary: Update to fates history names and machine configuration
+
+Purpose and description of changes
+----------------------------------
+
+This PR includes a number of minor fixes and updates associated with FATES.
+A duplicate filter for all soils that was introduced during the the initial
+implementation of FATES-SP mode is removed.  A small set of FATES history
+variable names have been updated necessitating an update to the testmod
+user namelists.  The ccs_config and cime externals have been updated to
+include the FATES development workstation, lobata.  The cime tag update
+is necessary to include a fix enabling support for module initilization
+on certain linux distributions (https://github.com/ESMCI/cime/issues/4260).
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+CTSM issues fixed (include CTSM Issue #):
+    Fixes #1794 -- Get lobata in ccs_config and working with NUOPC
+    Fixes #1488 -- Remove all_soil_patches filter and use and filter_inactive_and_active(nc)%soilp in it's place
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+  FATES tests run against fates-sci.1.58.0_api.24.0.0-ctsm5.1.dev100 baseline
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+    NLCOMP and FIELDLIST differences only for FATES testmods only.  All other tests B4B aside from expected failures. 
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+- CIME: cime6.0.27 -> cime6.0.40
+- ccs_config_cesm: ccs_config_cesm0.0.36 -> ccs_config_cesm0.0.38
+- FATES: sci.1.58.0_api.24.0.0 -> sci.1.58.1_api.24.1.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+https://github.com/ESCOMP/CTSM/pull/1515
+https://github.com/NGEET/fates/pull/854
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev103
 Originator(s): sacks (Bill Sacks)
 Date: Tue Jul 12 22:27:30 MDT 2022
