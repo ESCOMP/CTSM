@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev1??
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date: Thu Jul 14 14:06:19 MDT 2022
+Date: Fri Jul 15 19:01:50 MDT 2022
 One-line Summary: make interfaces more similar between fsurdat_modifier and subset_data tools
 
 Purpose and description of changes
@@ -10,8 +10,12 @@ Purpose and description of changes
  The tools modify_fsurdat and subset_data have similar options
  modify_fsurdat: zero_nonveg
  subset_data: include-nonveg
+
+ modify_fsurdat: dom_plant
+ subset_data: dom-pft
+
  Make more similar and use README file for documenting modify_fsurdat.
- There's potential for additional changes like this one to be addressed later.
+ There's potential for additional changes to be addressed later.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
