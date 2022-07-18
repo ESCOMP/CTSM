@@ -1744,14 +1744,6 @@ contains
      real(r8) :: qflx_drain_perched_vol(bounds%begc:bounds%endc)   ! volumetric lateral subsurface flow through active layer [m3/s]
      real(r8) :: qflx_drain_perched_out(bounds%begc:bounds%endc)   ! lateral subsurface flow through active layer [mm/s]
 
-!!$     integer, parameter :: head_gradient_method = 0
-!!$     integer, parameter :: transmissivity_method = 0
-!!$     integer, parameter :: kinematic = 1
-!!$     integer, parameter :: darcy = 0
-!!$     integer, parameter :: uniform_transmissivity = 1
-!!$     integer, parameter :: layersum = 0
-
-     
      associate(                                                            & 
           nbedrock           =>    col%nbedrock                          , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)           
           z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ] layer depth (m)                                 
@@ -1905,11 +1897,11 @@ contains
                             enddo
                          endif
                       endif
-                   else if (transmissivity_method == uniform_transmissivity) then
-                      ! constant conductivity based on shallowest saturated layer hydraulic conductivity
-                      transmis = (1.e-3_r8*hksat(c_src,k_perch(c_src))) &
-                           *(zi(c_src,k_frost(c_src)) - zwt_perched(c_src) )
                    endif
+                else if (transmissivity_method == uniform_transmissivity) then
+                   ! constant conductivity based on shallowest saturated layer hydraulic conductivity
+                   transmis = (1.e-3_r8*hksat(c_src,k_perch(c_src))) &
+                        *(zi(c_src,k_frost(c_src)) - zwt_perched(c_src) )
                 endif
 
                 ! adjust by 'anisotropy factor'
@@ -2119,13 +2111,6 @@ contains
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
      type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
-
-!!$     integer, parameter :: head_gradient_method = 0
-!!$     integer, parameter :: transmissivity_method = 0
-!!$     integer, parameter :: kinematic = 1
-!!$     integer, parameter :: darcy = 0
-!!$     integer, parameter :: uniform_transmissivity = 1
-!!$     integer, parameter :: layersum = 0
 
      !
      ! !LOCAL VARIABLES:

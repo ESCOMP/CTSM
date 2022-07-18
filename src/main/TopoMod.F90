@@ -268,10 +268,6 @@ contains
        enddo
     endif
        
-    ! For any point that isn't downscaled, set its topo value to the atmosphere's
-    ! topographic height. This shouldn't matter, but is useful if topo_col is written to
-    ! the history file.
-    !
     ! This could operate over a filter like 'allc' in order to just operate over active
     ! points, but I'm not sure that would speed things up much, and would require passing
     ! in this additional filter.

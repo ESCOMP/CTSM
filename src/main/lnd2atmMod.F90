@@ -344,11 +344,13 @@ contains
        ! streamflow is volume/time, so sum over landunits (do not weight)
        water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(bounds%begg:bounds%endg) = 0._r8
        do l = bounds%begl, bounds%endl
-          g = lun%gridcell(l)
-          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) = &
-               water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) &
-               +  water_inst%waterfluxbulk_inst%volumetric_streamflow_lun(l) &
-               *1e3_r8/(grc%area(g)*1.e6_r8)
+          if(lun%active(l)) then
+             g = lun%gridcell(l)
+             water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) = &
+                  water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) &
+                  +  water_inst%waterfluxbulk_inst%volumetric_streamflow_lun(l) &
+                  *1e3_r8/(grc%area(g)*1.e6_r8)
+          endif
        enddo
 
        ! If hillslope routing is used, exclude inputs to stream channel from gridcell averages to avoid double counting
@@ -365,7 +367,7 @@ contains
           ! Exclude hillslope columns from gridcell average
           ! hillslope runoff is sent to stream rather than directly
           ! to rof, and is accounted for in qflx_rofliq_stream_grc
-          if (.not. col%is_hillslope_column(c)) then
+          if (col%active(c) .and. .not. col%is_hillslope_column(c)) then
              qflx_surf_col_to_rof(c) = qflx_surf_col_to_rof(c) &
                   + water_inst%waterfluxbulk_inst%qflx_surf_col(c)
              qflx_drain_col_to_rof(c) = qflx_drain_col_to_rof(c) &

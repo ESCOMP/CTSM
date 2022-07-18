@@ -744,7 +744,11 @@ contains
   subroutine HillslopeSetLowlandUplandPfts(bounds,lowland_ivt,upland_ivt)
     !
     ! !DESCRIPTION: 
-    ! Reassign patch weights such that each column has a single pft.
+    ! Reassign patch type of each column based on whether a column
+    ! is identified as a lowland or an upland.
+    ! Assumes each column has a single pft.
+    ! In preparation for this reassignment of patch type, only the 
+    ! first patch was given a non-zero weight in surfrd_hillslope
 
     !
     ! !USES
@@ -767,12 +771,9 @@ contains
 
     do c = bounds%begc, bounds%endc
        if (col%is_hillslope_column(c) .and. col%active(c)) then
-          ! In preparation for this re-weighting of patch type
-          ! only first patch was given a non-zero weight in surfrd_hillslope
           npatches_per_column = 0
           do p = col%patchi(c), col%patchf(c)
-             ! lowland
-             if(col%cold(c) == ispval) then
+             if(col%cold(c) == ispval) then ! lowland
                 patch%itype(p) = lowland_ivt
              else ! upland
                 patch%itype(p) = upland_ivt
@@ -793,8 +794,9 @@ contains
   subroutine HillslopeDominantPft(bounds)
     !
     ! !DESCRIPTION: 
-    ! Reassign patch weights such that each column has a single pft  
-    ! determined by each column's most dominant pft on input dataset.  
+    ! Reassign patch type of each column based on each gridcell's
+    ! most dominant pft on the input dataset. 
+    ! Assumes each column has a single pft.
     ! Best performance when used with n_dom_pfts = 1 (Actually, this
     ! is probably redundant to behavior with n_dom_pts = 1 and pft_distribution_method = pft_standard)
 
@@ -841,10 +843,11 @@ contains
   subroutine HillslopeDominantLowlandPft(bounds)
     !
     ! !DESCRIPTION: 
-    ! Reassign patch weights such that each column has a single, 
-    ! dominant pft.  Use largest weight for lowland, 2nd largest
-    ! weight for uplands
+    ! Reassign patch type of each column based on each gridcell's
+    ! two most dominant pfts on the input dataset. 
     ! Best performance when used with n_dom_pfts = 2
+    ! Assumes each column has a single pft.
+    ! Use largest weight for lowland, 2nd largest weight for uplands
 
     !
     ! !USES
@@ -938,7 +941,7 @@ contains
   subroutine HillslopePftFromFile(bounds,col_pftndx)
     !
     ! !DESCRIPTION: 
-    ! Reassign patch weights using indices from surface data file
+    ! Reassign patch type using indices from surface data file
     ! Assumes one patch per hillslope column
     !
     ! !USES

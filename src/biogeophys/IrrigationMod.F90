@@ -78,7 +78,7 @@ module IrrigationMod
   use abortutils       , only : endrun
   use clm_instur       , only : irrig_method
   use pftconMod        , only : pftcon
-  use clm_varctl       , only : iulog, use_hillslope
+  use clm_varctl       , only : iulog
   use clm_varcon       , only : isecspday, denh2o, spval, ispval
   use clm_varpar       , only : nlevsoi, nlevgrnd
   use clm_time_manager , only : get_step_size
@@ -581,12 +581,6 @@ contains
     if (use_aquifer_layer .and. use_groundwater_irrigation) then
           write(iulog,*) ' ERROR: use_groundwater_irrigation and use_aquifer_layer may not be used simultaneously'
           call endrun(msg=' ERROR: use_groundwater_irrigation and use_aquifer_layer cannot both be set to true' // &
-               errMsg(sourcefile, __LINE__))
-    end if
-
-    if (use_aquifer_layer .and. use_hillslope) then
-          write(iulog,*) ' ERROR: use_hillslope and use_aquifer_layer may not be used simultaneously'
-          call endrun(msg=' ERROR: use_hillslope and use_aquifer_layer cannot both be set to true' // &
                errMsg(sourcefile, __LINE__))
     end if
 

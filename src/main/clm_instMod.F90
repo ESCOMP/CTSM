@@ -297,7 +297,14 @@ contains
 
     call canopystate_inst%Init(bounds)
 
-    if(use_hillslope) then 
+    if(use_hillslope) then
+       ! check compatiblity with use_aquifer_layer
+!!$       if (use_aquifer_layer()) then
+!!$          write(iulog,*) ' ERROR: use_hillslope and use_aquifer_layer may not be used simultaneously'
+!!$          call endrun(msg=' ERROR: use_hillslope and use_aquifer_layer cannot both be set to true' // &
+!!$               errMsg(sourcefile, __LINE__))
+!!$       end if
+       ! Initialize hillslope properties
        call InitHillslope(bounds, fsurdat, glc_behavior)
     endif
 
