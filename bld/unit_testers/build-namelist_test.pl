@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1844;
+my $ntests = 1841;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1254;
 }
@@ -768,21 +768,6 @@ my %failtest = (
                                    },
      "-vic with l_bnd=zeroflux"  =>{ options=>"-vichydro -envxml_dir .",
                                      namelst=>"lower_boundary_condition=2",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm4_5",
-                                   },
-     "-vic with origflag=1"      =>{ options=>"-vichydro -envxml_dir .",
-                                     namelst=>"origflag=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm4_5",
-                                   },
-     "l_bnd=flux with origflag=0"=>{ options=>"-envxml_dir .",
-                                     namelst=>"origflag=0, lower_boundary_condition=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm4_5",
-                                   },
-     "l_bnd=zflux with origflag=0"=>{ options=>"-envxml_dir .",
-                                     namelst=>"origflag=0, lower_boundary_condition=2",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
