@@ -54,6 +54,12 @@ def mesh_mask_modifier(cfg_path):
     landmask_file = get_config_value(
         config=config, section=section, item="landmask_file", file_path=cfg_path
     )
+    lat_dimname = get_config_value(
+        config=config, section=section, item="lat_dimname", file_path=cfg_path
+    )
+    lon_dimname = get_config_value(
+        config=config, section=section, item="lon_dimname", file_path=cfg_path
+    )
     lat_varname = get_config_value(
         config=config, section=section, item="lat_varname", file_path=cfg_path
     )
@@ -63,7 +69,7 @@ def mesh_mask_modifier(cfg_path):
 
     # Create ModifyMeshMask object
     modify_mesh_mask = ModifyMeshMask.init_from_file(
-        mesh_mask_in, landmask_file, lat_varname, lon_varname
+        mesh_mask_in, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname
     )
 
     # If output file exists, abort before starting work

@@ -26,7 +26,7 @@ class ModifyFsurdat:
     """
 
     def __init__(
-        self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_varname, lon_varname
+        self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
     ):
 
         self.file = my_data
@@ -46,12 +46,12 @@ class ModifyFsurdat:
             landmask_ds = xr.open_dataset(landmask_file)
             self.rectangle = landmask_ds.landmask_diff.data
             # CF convention has dimension and coordinate variable names the same
-            if lat_varname is None:  # set to default
-                lat_varname = "lsmlat"
-            if lon_varname is None:  # set to default
-                lon_varname = "lsmlon"
-            lsmlat = landmask_ds.dims[lat_varname]
-            lsmlon = landmask_ds.dims[lon_varname]
+            if lat_dimname is None:  # set to default
+                lat_dimname = "lsmlat"
+            if lon_dimname is None:  # set to default
+                lon_dimname = "lsmlon"
+            lsmlat = landmask_ds.dims[lat_dimname]
+            lsmlon = landmask_ds.dims[lon_dimname]
 
             for row in range(lsmlat):  # rows from landmask file
                 for col in range(lsmlon):  # cols from landmask file
@@ -67,12 +67,12 @@ class ModifyFsurdat:
 
     @classmethod
     def init_from_file(
-        cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_varname, lon_varname
+        cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
     ):
         """Initialize a ModifyFsurdat object from file fsurdat_in"""
         logger.info("Opening fsurdat_in file to be modified: %s", fsurdat_in)
         my_file = xr.open_dataset(fsurdat_in)
-        return cls(my_file, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_varname, lon_varname)
+        return cls(my_file, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname)
 
     @staticmethod
     def _get_rectangle(lon_1, lon_2, lat_1, lat_2, longxy, latixy):

@@ -110,11 +110,11 @@ def fsurdat_modifier(cfg_path):
         can_be_unset=True,
     )
 
-    lat_varname = get_config_value(
-        config=config, section=section, item="lat_varname", file_path=cfg_path, can_be_unset=True
+    lat_dimname = get_config_value(
+        config=config, section=section, item="lat_dimname", file_path=cfg_path, can_be_unset=True
     )
-    lon_varname = get_config_value(
-        config=config, section=section, item="lon_varname", file_path=cfg_path, can_be_unset=True
+    lon_dimname = get_config_value(
+        config=config, section=section, item="lon_dimname", file_path=cfg_path, can_be_unset=True
     )
 
     # Create ModifyFsurdat object
@@ -125,8 +125,8 @@ def fsurdat_modifier(cfg_path):
         lnd_lat_1,
         lnd_lat_2,
         landmask_file,
-        lat_varname,
-        lon_varname,
+        lat_dimname,
+        lon_dimname,
     )
 
     # If output file exists, abort before starting work

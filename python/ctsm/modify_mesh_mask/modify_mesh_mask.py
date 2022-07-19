@@ -27,24 +27,26 @@ class ModifyMeshMask:
     # fill_indianocean_slevis.nc located here as of 2022/06/30:
     # /glade/work/slevis/git/mksurfdata_toolchain/tools/modify_fsurdat/fill_indian_ocean/
     # Read landmask_diff here only for consistency checks
-    def __init__(self, my_data, landmask_file, lat_varname, lon_varname):
+    def __init__(self, my_data, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname):
 
         self.file = my_data
 
         # landmask from user-specified .nc file in the .cfg file
         self._landmask_file = xr.open_dataset(landmask_file)
-        # CF convention has dimension and coordinate variable names the same
-        self.lat_2d = self._landmask_file[lat_varname]
-        self.lon_2d = self._landmask_file[lon_varname]
-        self.lsmlat = self._landmask_file.dims[lat_varname]
-        self.lsmlon = self._landmask_file.dims[lon_varname]
+        assert lat_varname in self._landmask_file.variables
+        assert lon_varname in self._landmask_file.variables
+
+        self.latvar = self._landmask_file[lat_varname]
+        self.lonvar = self._landmask_file[lon_varname]
+        self.lsmlat = self._landmask_file.dims[lat_dimname]
+        self.lsmlon = self._landmask_file.dims[lon_dimname]
 
     @classmethod
-    def init_from_file(cls, file_in, landmask_file, lat_varname, lon_varname):
+    def init_from_file(cls, file_in, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname):
         """Initialize a ModifyMeshMask object from file_in"""
         logger.info("Opening file to be modified: %s", file_in)
         my_file = xr.open_dataset(file_in)
-        return cls(my_file, landmask_file, lat_varname, lon_varname)
+        return cls(my_file, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname)
 
     def set_mesh_mask(self, var):
         """
@@ -90,8 +92,12 @@ class ModifyMeshMask:
                 # All else in this function supports error checking
 
                 # lon and lat from the landmask file
-                lat_new = float(self.lat_2d[row])
-                lon_new = float(self.lon_2d[col])
+                if len(self.latvar.sizes) == 2:
+                    lat_new = float(self.latvar[row,col])
+                    lon_new = float(self.lonvar[row,col])
+                else:
+                    lat_new = float(self.latvar[row])
+                    lon_new = float(self.lonvar[col])
                 # ensure lon range of 0-360 rather than -180 to 180
                 lon_new = lon_range_0_to_360(lon_new)
                 # lon and lat from the mesh file
