@@ -45,7 +45,7 @@ Testing summary:
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    cheyenne - PASS though pylint gave suggestions for 3 lines in subset_data
+    cheyenne - PASS
 
     clm_pymods test suite on cheyenne - PASS
 
