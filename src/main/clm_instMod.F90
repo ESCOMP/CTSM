@@ -8,7 +8,7 @@ module clm_instMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
-  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates, use_hillslope
+  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_crop, snow_cover_fraction_method, paramfile
   use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, no_soil_decomp, century_decomp, decomp_method
@@ -49,7 +49,6 @@ module clm_instMod
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
-  use HillslopeHydrologyMod           , only : InitHillslope
   use InfiltrationExcessRunoffMod     , only : infiltration_excess_runoff_type
   use IrrigationMod                   , only : irrigation_type
   use LakeStateType                   , only : lakestate_type
@@ -296,17 +295,6 @@ contains
     call active_layer_inst%Init(bounds)
 
     call canopystate_inst%Init(bounds)
-
-    if(use_hillslope) then
-       ! check compatiblity with use_aquifer_layer
-!!$       if (use_aquifer_layer()) then
-!!$          write(iulog,*) ' ERROR: use_hillslope and use_aquifer_layer may not be used simultaneously'
-!!$          call endrun(msg=' ERROR: use_hillslope and use_aquifer_layer cannot both be set to true' // &
-!!$               errMsg(sourcefile, __LINE__))
-!!$       end if
-       ! Initialize hillslope properties
-       call InitHillslope(bounds, fsurdat, glc_behavior)
-    endif
 
     call soilstate_inst%Init(bounds)
     call SoilStateInitTimeConst(bounds, soilstate_inst, nlfilename) ! sets hydraulic and thermal soil properties

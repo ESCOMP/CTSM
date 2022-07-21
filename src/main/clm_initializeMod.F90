@@ -166,11 +166,11 @@ contains
     use CNSharedParamsMod             , only : CNParamsSetSoilDepth
     use NutrientCompetitionFactoryMod , only : create_nutrient_competition_method
     use FATESFireFactoryMod           , only : scalar_lightning
-    use HillslopeHydrologyMod         , only : HillslopeSetLowlandUplandPfts,HillslopeDominantPft,HillslopeDominantLowlandPft,HillslopePftFromFile
+    use HillslopeHydrologyMod         , only : InitHillslope
     
     !
     ! !ARGUMENTS
-    integer, intent(in) :: ni, nj                ! global grid sizes
+    integer, intent(in) :: ni, nj         ! global grid sizes
     !
     ! !LOCAL VARIABLES:
     integer            :: c,g,i,j,k,l,n,p ! indices
@@ -276,13 +276,13 @@ contains
     end do
     !$OMP END PARALLEL DO
 
-    ! Modify original patch types for hillslope hydrology
-    if(use_hillslope) then
-
-    endif
-    
     ! Set global seg maps for gridcells, landlunits, columns and patches
     call decompInit_glcp(ni, nj, glc_behavior)
+
+    if(use_hillslope) then
+       ! Initialize hillslope properties
+       call InitHillslope(bounds_proc, fsurdat)
+    endif
 
     ! Set filters
     call allocFilters()

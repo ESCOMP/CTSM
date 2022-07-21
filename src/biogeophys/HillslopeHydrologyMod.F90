@@ -24,8 +24,11 @@ module HillslopeHydrologyMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public hillslope_properties_init
   public InitHillslope
+  public SetHillslopeSoilThickness
   public HillslopeSoilThicknessProfile
   public HillslopeSetLowlandUplandPfts
+  public HillslopeDominantPftIndex
+  public HillslopeTwoLargestPftIndices
   public HillslopeDominantPft
   public HillslopeDominantLowlandPft
   public HillslopePftFromFile
@@ -88,9 +91,6 @@ contains
          hillslope_pft_distribution_method, &
          hillslope_soil_profile_method
     
-!    pft_distribution_method = pft_standard
-!    soil_profile_method     = soil_profile_uniform
-    
     ! Read hillslope hydrology namelist
     if (masterproc) then
        nu_nml = getavu()
@@ -150,8 +150,27 @@ contains
   end subroutine hillslope_properties_init
 
   !-----------------------------------------------------------------------
+  subroutine check_aquifer_layer()
+    !
+    ! !DESCRIPTION:
+    ! Check whether use_hillslope and use_aquifer_layer are both set
+    ! The use of use_hillslope is implied by the call to this function
+    ! in InitHillslope, but explicitly compare here for clarity.
+    !
+    ! !USES:
+    use clm_varctl              , only : use_hillslope
+    use SoilWaterMovementMod    , only : use_aquifer_layer
+    if(use_hillslope .and. use_aquifer_layer()) then
+       write(iulog,*) ' ERROR: use_hillslope and use_aquifer_layer may not be used simultaneously'
+       call endrun(msg=' ERROR: use_hillslope and use_aquifer_layer cannot both be set to true' // &
+            errMsg(sourcefile, __LINE__))
+    end if
 
-  subroutine InitHillslope(bounds,fsurdat,glc_behavior)
+  end subroutine check_aquifer_layer
+
+  !-----------------------------------------------------------------------
+
+  subroutine InitHillslope(bounds,fsurdat)
     !
     ! !DESCRIPTION:
     ! Initialize hillslope geomorphology from input dataset
@@ -161,26 +180,19 @@ contains
     use GridcellType    , only : grc                
     use ColumnType      , only : col                
     use clm_varctl      , only : nhillslope, max_columns_hillslope
-    use clm_varcon      , only : zmin_bedrock, zisoi
-    use clm_varpar      , only : nlevsoi
     use spmdMod         , only : masterproc
     use fileutils       , only : getfil
     use clm_varcon      , only : spval, ispval, grlnd 
     use landunit_varcon , only : istsoil
     use ncdio_pio
-    use initVerticalMod , only : setSoilLayerClass
-    use reweightMod     , only : reweight_wrapup
-    use subgridWeightsMod , only : compute_higher_order_weights
-    use glcBehaviorMod    , only : glc_behavior_type
-    use subgridWeightsMod , only : check_weights
     
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     character(len=*) , intent(in) :: fsurdat    ! surface data file name
-    type(glc_behavior_type), intent(in) :: glc_behavior
     integer,  pointer     :: ihillslope_in(:,:) ! read in - integer
     integer,  pointer     :: ncolumns_hillslope_in(:) ! read in number of columns
+    integer,  allocatable :: ncolumns_hillslope(:)    ! number of hillslope columns
     integer,  allocatable :: hill_ndx(:,:)      ! hillslope index
     integer,  allocatable :: col_ndx(:,:)       ! column index
     integer,  allocatable :: col_dndx(:,:)      ! downhill column index
@@ -211,12 +223,16 @@ contains
 
     !-----------------------------------------------------------------------
 
+    ! consistency check
+    call check_aquifer_layer()
+
     ! Open surface dataset to read in data below 
 
     call getfil (fsurdat, locfn, 0)
     call ncd_pio_openfile (ncid, locfn, 0)
     
     allocate( &
+         ncolumns_hillslope(bounds%begl:bounds%endl),  &
          pct_hillslope(bounds%begl:bounds%endl,nhillslope),  &
          hill_ndx     (bounds%begl:bounds%endl,max_columns_hillslope), &
          col_ndx      (bounds%begl:bounds%endl,max_columns_hillslope), &
@@ -240,6 +256,7 @@ contains
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
+       ncolumns_hillslope(l) = ncolumns_hillslope_in(g)
        ! vegetated landunits having nonzero hillslope columns
        if(lun%itype(l) == istsoil .and. ncolumns_hillslope_in(g) > 0) then
           do c = lun%coli(l), lun%colf(l)
@@ -490,22 +507,6 @@ contains
              col%hill_area(c) = hill_area(l,ci)
              ! azimuth of column
              col%hill_aspect(c) = hill_aspect(l,ci)
-             ! soil thickness of column
-             if (soil_profile_method==soil_profile_from_file) then
-                if ( allocated(hill_bedrock) ) then
-                   do j = 1,nlevsoi
-                      if(zisoi(j-1) > zmin_bedrock) then
-                         if (zisoi(j-1) < hill_bedrock(l,ci) .and. zisoi(j) >= hill_bedrock(l,ci)) then
-                            col%nbedrock(c) = j
-                         end if
-                      endif
-                   enddo
-                else
-                   if (masterproc) then
-                      call endrun( 'ERROR:: soil_profile_method = soil_profile_from_file, but h_bedrock not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-                   end if
-                endif
-             endif
              ! pft index of column
              if ( allocated(hill_pftndx) ) then
                 col_pftndx(c) = hill_pftndx(l,ci)
@@ -560,7 +561,7 @@ contains
                        
           ! if missing hillslope information on surface dataset,
           ! call endrun
-          if (sum(hillslope_area) == 0._r8) then
+          if (ncolumns_hillslope(l) > 0 .and. sum(hillslope_area) == 0._r8) then
              if (masterproc) then
                 write(iulog,*) 'Problem with input data: nhillcolumns is non-zero, but hillslope area is zero'
                 write(iulog,*) 'Check surface data for gridcell at (lon/lat): ', grc%londeg(g),grc%latdeg(g)
@@ -569,6 +570,7 @@ contains
           endif
           
           ! Recalculate column weights using input areas
+          ! The higher order weights will be updated in a subsequent reweight_wrapup call
           do c = lun%coli(l), lun%colf(l)
              nh = col%hillslope_ndx(c)
              if (col%is_hillslope_column(c)) then
@@ -579,25 +581,10 @@ contains
        endif
     enddo ! end of landunit loop
     
-    deallocate(pct_hillslope,hill_ndx,col_ndx,col_dndx, &
+    deallocate(ncolumns_hillslope,pct_hillslope,hill_ndx,col_ndx,col_dndx, &
          hill_slope,hill_area,hill_length, &
          hill_width,hill_height,hill_aspect)
 
-    if(soil_profile_method==soil_profile_from_file) then
-       if ( allocated(hill_bedrock) ) then
-          deallocate(hill_bedrock)
-       endif
-    else if (soil_profile_method==soil_profile_set_lowland_upland &
-         .or. soil_profile_method==soil_profile_linear) then 
-       ! Modify hillslope soil thickness profile
-       call HillslopeSoilThicknessProfile(bounds,&
-            soil_profile_method=soil_profile_method,&
-            soil_depth_lowland_in=8.0_r8,soil_depth_upland_in=8.0_r8)
-    endif
-
-    ! Update layer classes if nbedrock has been modified
-    call setSoilLayerClass(bounds)
-       
     ! Modify pft distributions
     ! this may require modifying subgridMod/natveg_patch_exists
     ! to ensure patch exists in every gridcell
@@ -612,7 +599,7 @@ contains
     else if (pft_distribution_method == pft_lowland_upland) then
        ! example usage: 
        ! upland_ivt  = 13 ! c3 non-arctic grass
-       ! lowland_ivt = 7  ! broadleaf deciduous tree 
+       ! lowland_ivt = 7  ! broadleaf deciduous tree
        call HillslopeSetLowlandUplandPfts(bounds,lowland_ivt=7,upland_ivt=13)
     endif
     
@@ -620,22 +607,111 @@ contains
        deallocate(hill_pftndx)
        deallocate(col_pftndx)
     endif
-
-    ! Update higher order weights and check that weights sum to 1
-    call compute_higher_order_weights(bounds)
-    if (masterproc) then
-       write(iulog,*) 'Checking modified hillslope weights via reweight_wrapup'
-    end if
-
-    ! filters have not been allocated yet!
-    ! can check_weights be called directly here?
-!    call reweight_wrapup(bounds, glc_behavior)
-!    call check_weights(bounds)
-    call check_weights(bounds, active_only=.true.)
     
     call ncd_pio_closefile(ncid)
     
   end subroutine InitHillslope
+
+  !-----------------------------------------------------------------------
+
+  subroutine SetHillslopeSoilThickness(bounds,fsurdat,soil_depth_lowland_in,soil_depth_upland_in)
+    !
+    ! !DESCRIPTION:
+    ! Set hillslope column nbedrock values
+    !
+    ! !USES:
+    use LandunitType    , only : lun
+    use GridcellType    , only : grc
+    use ColumnType      , only : col
+    use clm_varctl      , only : nhillslope, max_columns_hillslope
+    use clm_varcon      , only : zmin_bedrock, zisoi
+    use clm_varpar      , only : nlevsoi
+    use spmdMod         , only : masterproc
+    use fileutils       , only : getfil
+    use clm_varcon      , only : spval, ispval, grlnd
+    use ncdio_pio
+
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    character(len=*) , intent(in) :: fsurdat    ! surface data file name
+    real(r8), intent(in), optional  :: soil_depth_lowland_in
+    real(r8), intent(in), optional  :: soil_depth_upland_in
+    real(r8), pointer     :: fhillslope_in(:,:) ! read in - float
+
+    type(file_desc_t)     :: ncid                 ! netcdf id
+    logical               :: readvar              ! check whether variable on file
+    character(len=256)    :: locfn                ! local filename
+    integer               :: ierr                 ! error code
+    integer               :: c, l, g, j, ci       ! indices
+
+    real(r8)              :: soil_depth_lowland
+    real(r8)              :: soil_depth_upland
+    real(r8), parameter   :: soil_depth_lowland_default = 8.0
+    real(r8), parameter   :: soil_depth_upland_default  = 8.0
+    character(len=*), parameter :: subname = 'SetHillslopeSoilThickness'
+
+    !-----------------------------------------------------------------------
+
+    if(soil_profile_method==soil_profile_from_file) then
+
+       ! Open surface dataset to read in data below
+       call getfil (fsurdat, locfn, 0)
+       call ncd_pio_openfile (ncid, locfn, 0)
+
+       call ncd_io(ncid=ncid, varname='h_bedrock', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
+       if (readvar) then
+          allocate(fhillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
+          if (masterproc) then
+             write(iulog,*) 'h_bedrock found on surface data set'
+           else
+             if (masterproc) then
+                call endrun( 'ERROR:: soil_profile_method = "FromFile", but h_bedrock not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+             end if
+          end if
+          do l = bounds%begl,bounds%endl
+             g = lun%gridcell(l)
+             do c = lun%coli(l), lun%colf(l)
+                if (col%is_hillslope_column(c) .and. col%active(c)) then
+                   ci = c-lun%coli(l)+1
+                   do j = 1,nlevsoi
+                      if(zisoi(j-1) > zmin_bedrock) then
+                         if (zisoi(j-1) < fhillslope_in(g,ci) &
+                              .and. zisoi(j) >= fhillslope_in(g,ci)) then
+                            col%nbedrock(c) = j
+                         end if
+                      endif
+                   enddo
+                endif
+             enddo
+          enddo
+          deallocate(fhillslope_in)
+       end if
+       call ncd_pio_closefile(ncid)
+
+    else if (soil_profile_method==soil_profile_set_lowland_upland &
+         .or. soil_profile_method==soil_profile_linear) then
+
+       if(present(soil_depth_lowland_in)) then
+          soil_depth_lowland = soil_depth_lowland_in
+       else
+          soil_depth_lowland = soil_depth_lowland_default
+       endif
+
+       if(present(soil_depth_upland_in)) then
+          soil_depth_upland = soil_depth_upland_in
+       else
+          soil_depth_upland = soil_depth_upland_default
+       endif
+
+       ! Modify hillslope soil thickness profile
+       call HillslopeSoilThicknessProfile(bounds,&
+            soil_profile_method=soil_profile_method,&
+            soil_depth_lowland_in=soil_depth_lowland,&
+            soil_depth_upland_in=soil_depth_upland)
+    endif
+
+  end subroutine SetHillslopeSoilThickness
 
   !-----------------------------------------------------------------------
   subroutine HillslopeSoilThicknessProfile(bounds,&
@@ -770,7 +846,7 @@ contains
     !------------------------------------------------------------------------
 
     do c = bounds%begc, bounds%endc
-       if (col%is_hillslope_column(c) .and. col%active(c)) then
+       if (col%is_hillslope_column(c)) then
           npatches_per_column = 0
           do p = col%patchi(c), col%patchf(c)
              if(col%cold(c) == ispval) then ! lowland
@@ -791,14 +867,84 @@ contains
   end subroutine HillslopeSetLowlandUplandPfts
 
   !------------------------------------------------------------------------
+  subroutine HillslopeDominantPftIndex(weights,lbound,pindex)
+    !
+    ! !DESCRIPTION:
+    ! Locate each gridcell's most dominant pft on the input dataset.
+    ! This is different than using n_dom_pts = 1, because it is meant
+    ! to be applied only to gridcells having active hillslope hydrology.
+    ! This routine is called from surfrd_hillslope.
+
+    !
+    ! !USES
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(in)  :: weights(:)        ! array of patch weights
+    integer,  intent(in)  :: lbound            ! lower bound of weights
+    integer,  intent(out) :: pindex            ! index of largest weight
+    !
+    ! !LOCAL VARIABLES:
+    integer :: pdom(1)
+
+    !------------------------------------------------------------------------
+
+    pdom = maxloc(weights)
+    pindex = pdom(1) + (lbound - 1)
+
+  end subroutine HillslopeDominantPftIndex
+
+  !------------------------------------------------------------------------
+  subroutine HillslopeTwoLargestPftIndices(weights,lbound,pindex1,pindex2)
+    !
+    ! !DESCRIPTION:
+    ! Locate each gridcell's two most dominant patches on the input dataset.
+    ! This is different than using n_dom_pts = 2, because it is meant
+    ! to be applied only to gridcells having active hillslope hydrology.
+    ! This routine is called from surfrd_hillslope.
+
+    !
+    ! !USES
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(in)  :: weights(:)        ! array of patch weights
+    integer,  intent(in)  :: lbound            ! lower bound of weights
+    integer,  intent(out) :: pindex1           ! index of largest weight
+    integer,  intent(out) :: pindex2           ! index of next largest weight
+    !
+    ! !LOCAL VARIABLES:
+    integer :: pdom(1),psubdom(1)
+    real(r8),allocatable :: mask(:)
+
+    !------------------------------------------------------------------------
+
+    pdom = maxloc(weights)
+    ! create mask to exclude pdom
+    allocate(mask(size(weights)))
+    mask(:) = 1.
+    mask(pdom(1)) = 0.
+    ! check that more than one nonzero patch weight exists,
+    ! if not return identical indices
+    if (sum(mask*weights) > 0) then
+       psubdom = maxloc(mask*weights)
+    else
+       psubdom = pdom
+    endif
+    deallocate(mask)
+
+    pindex1 = pdom(1) + (lbound - 1)
+    pindex2 = psubdom(1) + (lbound - 1)
+
+  end subroutine HillslopeTwoLargestPftIndices
+
+  !------------------------------------------------------------------------
   subroutine HillslopeDominantPft(bounds)
     !
     ! !DESCRIPTION: 
-    ! Reassign patch type of each column based on each gridcell's
+    ! Reassign patch weights of each column based on each gridcell's
     ! most dominant pft on the input dataset. 
     ! Assumes each column has a single pft.
-    ! Best performance when used with n_dom_pfts = 1 (Actually, this
-    ! is probably redundant to behavior with n_dom_pts = 1 and pft_distribution_method = pft_standard)
+    ! If n_dom_pfts = 1 or if HillslopeDominantPftIndex is called
+    ! in surfrd_hillslope, this routine does not act on hillslope columns.
 
     !
     ! !USES
@@ -812,14 +958,14 @@ contains
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: nc,p,pu,pl,l,c    ! indices
-    integer :: pdom(1)
-    real(r8) :: sum_wtcol, sum_wtlun, sum_wtgrc
+    integer :: c                                ! indices
+    integer :: pdom(1)                          ! patch index
+    real(r8) :: sum_wtcol, sum_wtlun, sum_wtgrc ! sum of patch weights
 
     !------------------------------------------------------------------------
 
     do c = bounds%begc,bounds%endc
-       if (col%is_hillslope_column(c) .and. col%active(c)) then
+       if (col%is_hillslope_column(c) .and. (col%npatches(c) > 1)) then
           pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
           pdom = pdom + (col%patchi(c) - 1)
 
@@ -827,11 +973,11 @@ contains
           sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
           sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
 
-          patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
+          patch%wtcol(col%patchi(c):col%patchf(c))   = 0._r8
           patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
           patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
 
-          patch%wtcol(pdom(1)) = sum_wtcol
+          patch%wtcol(pdom(1))   = sum_wtcol
           patch%wtlunit(pdom(1)) = sum_wtlun
           patch%wtgcell(pdom(1)) = sum_wtgrc
        endif
@@ -843,9 +989,10 @@ contains
   subroutine HillslopeDominantLowlandPft(bounds)
     !
     ! !DESCRIPTION: 
-    ! Reassign patch type of each column based on each gridcell's
-    ! two most dominant pfts on the input dataset. 
-    ! Best performance when used with n_dom_pfts = 2
+    ! Reassign patch weights of each column based on each gridcell's
+    ! two most dominant pfts on the input dataset.
+    ! HillslopeTwoLargestPftIndices is called in surfrd_hillslope to
+    ! prepare the patch weights for this routine.
     ! Assumes each column has a single pft.
     ! Use largest weight for lowland, 2nd largest weight for uplands
 
@@ -871,7 +1018,7 @@ contains
     !------------------------------------------------------------------------
 
     do c = bounds%begc,bounds%endc
-       if (col%is_hillslope_column(c) .and. col%active(c)) then
+       if (col%is_hillslope_column(c)) then
           pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
           ! create mask to exclude pdom
           allocate(mask(col%npatches(c)))
@@ -943,6 +1090,8 @@ contains
     ! !DESCRIPTION: 
     ! Reassign patch type using indices from surface data file
     ! Assumes one patch per hillslope column
+    ! In preparation for this reassignment of patch type, only the
+    ! first patch was given a non-zero weight in surfrd_hillslope.
     !
     ! !USES
     use ColumnType      , only : col                
@@ -961,7 +1110,7 @@ contains
     !------------------------------------------------------------------------
 
     do c = bounds%begc, bounds%endc
-       if (col%is_hillslope_column(c) .and. col%active(c)) then
+       if (col%is_hillslope_column(c)) then
           ! In preparation for this re-weighting of patch type
           ! only first patch was given a non-zero weight in surfrd_hillslope
           npatches_per_column = 0

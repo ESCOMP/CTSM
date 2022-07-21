@@ -19,7 +19,7 @@ module initVerticalMod
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_extralakelayers
   use clm_varctl        , only : use_bedrock, rundef
   use clm_varctl        , only : soil_layerstruct_predefined, soil_layerstruct_userdefined
-  use clm_varctl        , only : use_fates
+  use clm_varctl        , only : use_fates, use_hillslope
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
   use landunit_varcon   , only : istdlak, istice
@@ -148,7 +148,9 @@ contains
     
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, thick_wall, thick_roof)
-    use clm_varcon, only : zmin_bedrock
+    use clm_varcon           , only : zmin_bedrock
+    use HillslopeHydrologyMod, only : SetHillslopeSoilThickness
+
     !
     ! !ARGUMENTS:
     type(bounds_type)   , intent(in)    :: bounds
@@ -577,6 +579,13 @@ contains
     end do
 
     deallocate(zbedrock_in)
+
+    ! Set hillslope column bedrock values
+    if(use_hillslope) then
+       call SetHillslopeSoilThickness(bounds,fsurdat, &
+            soil_depth_lowland_in=8.5_r8,&
+            soil_depth_upland_in =2.0_r8)
+    endif
 
     !-----------------------------------------------
     ! Set lake levels and layers (no interfaces)

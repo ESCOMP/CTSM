@@ -759,6 +759,11 @@ Method for calculating transmissivity of hillslope columns
 Method for distributing pfts across hillslope columns
 </entry>
 
+<entry id="hillslope_soil_profile_method" type="char*256" category="physics"
+        group="hillslope_properties_inparm" valid_values="Uniform,FromFile,SetLowlandUpland,Linear">
+Method for distributing soil thickness across hillslope columns
+</entry>
+
 <entry id="use_hydrstress" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the plant hydraulic stress model

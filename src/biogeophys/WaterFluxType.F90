@@ -519,7 +519,7 @@ contains
             avgflag='A', &
             long_name=this%info%lname('hillslope discharge from column'), &
             l2g_scale_type='natveg', c2l_scale_type='urbanf', &
-            ptr_col=this%volumetric_discharge_col)
+            ptr_col=this%volumetric_discharge_col,default='inactive')
 
        if (use_hillslope_routing) then
           this%volumetric_streamflow_lun(begl:endl) = spval
@@ -527,7 +527,7 @@ contains
                fname=this%info%fname('VOLUMETRIC_STREAMFLOW'),  &
                units='m3/s',  &
                avgflag='A', &
-               long_name=this%info%lname('streamflow discharge'), &
+               long_name=this%info%lname('volumetric streamflow from hillslope'), &
                l2g_scale_type='natveg', &
                ptr_lunit=this%volumetric_streamflow_lun)
        endif

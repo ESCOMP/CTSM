@@ -603,6 +603,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hillslope_head_gradient_method              >Darcy</hillslope_head_gradient_method>
 <hillslope_transmissivity_method             >LayerSum</hillslope_transmissivity_method>
 <hillslope_pft_distribution_method           >Standard</hillslope_pft_distribution_method>
+<hillslope_soil_profile_method               >Uniform</hillslope_soil_profile_method>
 <downscale_hillslope_meteorology             >.true.</downscale_hillslope_meteorology>
 
 <!-- Plant hydraulic stress -->

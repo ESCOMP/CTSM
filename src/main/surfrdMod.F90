@@ -766,7 +766,9 @@ contains
     use clm_varpar, only : natpft_size, natpft_lb
     use ncdio_pio,  only : ncd_inqdid, ncd_inqdlen
     use pftconMod , only : noveg
-    use HillslopeHydrologyMod, only : pft_distribution_method, pft_from_file, pft_lowland_upland
+    use HillslopeHydrologyMod, only : pft_distribution_method, pft_from_file, pft_uniform_dominant_pft, pft_lowland_dominant_pft, pft_lowland_upland
+    use HillslopeHydrologyMod, only : HillslopeDominantPftIndex,HillslopeTwoLargestPftIndices
+
     !
     ! !ARGUMENTS:
     integer, intent(in) :: begg, endg
@@ -774,13 +776,13 @@ contains
     integer          ,intent(in)    :: ns     ! domain size
     !
     ! !LOCAL VARIABLES:
-    integer  :: g, nh, m                          ! index
+    integer  :: g, nh, m, n                    ! index
     integer  :: dimid,varid                    ! netCDF id's
     integer  :: ier                            ! error status	
     logical  :: readvar                        ! is variable on dataset
     integer,pointer :: arrayl(:)               ! local array (needed because ncd_io expects a pointer)
     character(len=32) :: subname = 'surfrd_hillslope'  ! subroutine name
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     ! number of hillslopes per landunit
     call ncd_inqdid(ncid,'nhillslope',dimid,readvar) 
@@ -809,18 +811,53 @@ contains
     endif
     deallocate(arrayl)
 
-    ! pft_from_file assumes that 1 pft will exist on each
-    ! hillslope column.  In prepration, set one pft weight
-    ! to 100 and the rest to 0.  This will be reassigned when
-    ! initHillslope is called later.
+    ! pft_from_file and pft_lowland_upland assume that 1 pft
+    ! will exist on each hillslope column.  In prepration, set one
+    ! pft weight to 100 and the rest to 0.  The vegetation type
+    ! (patch%itype) will be reassigned when initHillslope is called later.
     if(pft_distribution_method == pft_from_file .or. &
          pft_distribution_method == pft_lowland_upland) then
        do g = begg, endg
           ! If hillslopes will be used in a gridcell, modify wt_nat_patch, otherwise use original patch distribution
           if(ncolumns_hillslope(g) > 0) then
              ! First patch gets 100% weight; all other natural patches are zeroed out
-             wt_nat_patch(g,:)     = 0._r8
+             wt_nat_patch(g,:)         = 0._r8
              wt_nat_patch(g,natpft_lb) = 100._r8
+          endif
+       enddo
+    endif
+
+    ! pft_uniform_dominant_pft uses the patch with the
+    ! largest weight for all hillslope columns in the gridcell
+    if (pft_distribution_method == pft_uniform_dominant_pft) then
+       do g = begg, endg
+          ! If hillslopes will be used in a gridcell, modify wt_nat_patch,
+          ! otherwise use original patch distribution
+          if(ncolumns_hillslope(g) > 0) then
+             call HillslopeDominantPftIndex(wt_nat_patch(g,:),natpft_lb,m)
+             wt_nat_patch(g,:) = 0._r8
+             wt_nat_patch(g,m) = 100._r8
+          endif
+       enddo
+    endif
+
+    ! pft_lowland_dominant_pft uses the two patches with the
+    ! largest weights for the hillslope columns in the gridcell
+    if (pft_distribution_method == pft_lowland_dominant_pft) then
+       do g = begg, endg
+          ! If hillslopes will be used in a gridcell, modify wt_nat_patch, otherwise use original patch distribution
+          if(ncolumns_hillslope(g) > 0) then
+             call HillslopeTwoLargestPftIndices(wt_nat_patch(g,:),natpft_lb,m,n)
+             ! Preserve the relative weights of the largest and
+             ! next largest weights using arbitrarily chosen values
+             ! (i.e. m should be larger than n)  This will minimize
+             ! memory usage while still allowing HillslopeDominantLowlandPft
+             ! to pick out the two largest patch types.
+             if(m /= n) then
+                wt_nat_patch(g,:) = 0._r8
+                wt_nat_patch(g,m) = 75._r8
+                wt_nat_patch(g,n) = 25._r8
+             endif
           endif
        enddo
     endif
