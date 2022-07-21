@@ -33,8 +33,11 @@ class ModifyMeshMask:
 
         # landmask from user-specified .nc file in the .cfg file
         self._landmask_file = xr.open_dataset(landmask_file)
+
         assert lat_varname in self._landmask_file.variables
         assert lon_varname in self._landmask_file.variables
+        assert lat_dimname in self._landmask_file.dims
+        assert lon_dimname in self._landmask_file.dims
 
         self.latvar = self._landmask_file[lat_varname]
         self.lonvar = self._landmask_file[lon_varname]
