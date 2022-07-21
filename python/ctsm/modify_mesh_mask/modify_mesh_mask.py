@@ -42,7 +42,9 @@ class ModifyMeshMask:
         self.lsmlon = self._landmask_file.dims[lon_dimname]
 
     @classmethod
-    def init_from_file(cls, file_in, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname):
+    def init_from_file(
+        cls, file_in, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname
+    ):
         """Initialize a ModifyMeshMask object from file_in"""
         logger.info("Opening file to be modified: %s", file_in)
         my_file = xr.open_dataset(file_in)
@@ -93,8 +95,8 @@ class ModifyMeshMask:
 
                 # lon and lat from the landmask file
                 if len(self.latvar.sizes) == 2:
-                    lat_new = float(self.latvar[row,col])
-                    lon_new = float(self.lonvar[row,col])
+                    lat_new = float(self.latvar[row, col])
+                    lon_new = float(self.lonvar[row, col])
                 else:
                     lat_new = float(self.latvar[row])
                     lon_new = float(self.lonvar[col])
