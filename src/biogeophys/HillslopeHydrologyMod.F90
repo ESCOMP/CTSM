@@ -831,6 +831,7 @@ contains
     use LandunitType    , only : lun                
     use ColumnType      , only : col                
     use clm_varcon      , only : ispval
+    use clm_varpar      , only : natpft_lb
     use PatchType       , only : patch
     !
     ! !ARGUMENTS:
@@ -849,11 +850,16 @@ contains
        if (col%is_hillslope_column(c)) then
           npatches_per_column = 0
           do p = col%patchi(c), col%patchf(c)
-             if(col%cold(c) == ispval) then ! lowland
+             if(col%cold(c) == ispval) then
+                ! lowland
                 patch%itype(p) = lowland_ivt
-             else ! upland
+             else
+                ! upland
                 patch%itype(p) = upland_ivt
              endif
+             ! update mxy as is done in initSubgridMod.add_patch
+             patch%mxy(p) = patch%itype(p) + (1 - natpft_lb)
+             
              npatches_per_column = npatches_per_column + 1
           enddo
           if (check_npatches) then
