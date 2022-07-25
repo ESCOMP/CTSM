@@ -55,13 +55,13 @@ class ModifyMeshMask:
         # 0 to 360 grid, so make self.lonvar 0 to 360 if not already.
         if self.file["centerCoords"][0, 0] < 0 and lonvar_first >= 0 or \
            self.file["centerCoords"][0, 0] >= 0 and lonvar_first < 0:
-            logger.info(f"first lon_mesh = {self.file['centerCoords'][0, 0].data}")
-            logger.info(f"last lon_mesh = {self.file['centerCoords'][-1, 0].data}")
-            logger.info(f"first lonvar = {lonvar_first}")
-            logger.info(f"last lonvar = {lonvar_last}")
-            logger.info("For consistency in their order, changing lonvar to")
-            logger.info("lon_mesh's convention and then changing any negative")
-            logger.info("longitude values to their corresponding positive values.")
+            logger.info(f"first lon_mesh = {self.file['centerCoords'][0, 0].data} " + \
+                f"last lon_mesh = {self.file['centerCoords'][-1, 0].data}")
+            logger.info(f"first lonvar = {lonvar_first} " + \
+                f"last lonvar = {lonvar_last} " + \
+                "For consistency in their order, changing lonvar to " + \
+                "lon_mesh's convention and later (in set_mesh_mask) " + \
+                "changing any negative longitude values to their corresponding positive values.")
             self._landmask_file = self._landmask_file.roll(lsmlon=self.lsmlon // 2)
         self.lonvar = self._landmask_file[lon_varname][..., :]  # update lonvar
 
@@ -122,9 +122,15 @@ class ModifyMeshMask:
                 if len(self.latvar.sizes) == 2:
                     latvar_scalar = float(self.latvar[row, col])
                     lonvar_scalar = float(self.lonvar[row, col])
-                else:
+                elif len(self.latvar.sizes) == 1:
                     latvar_scalar = float(self.latvar[row])
                     lonvar_scalar = float(self.lonvar[col])
+                else:
+                    errmsg = (
+                        "ERROR: Expecting latvar.sizes == 1 or 2, not "
+                        + f"{len(self.latvar.sizes)}"
+                    )
+                    abort(errmsg)
                 # ensure lon range of 0-360 rather than -180 to 180
                 lonvar_scalar = lon_range_0_to_360(lonvar_scalar)
                 # lon and lat from the mesh file
