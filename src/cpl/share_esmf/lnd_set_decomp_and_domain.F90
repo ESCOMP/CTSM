@@ -4,7 +4,7 @@ module lnd_set_decomp_and_domain
   use shr_kind_mod , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod  , only : shr_sys_abort
   use shr_log_mod  , only : errMsg => shr_log_errMsg
-  use spmdMod      , only : masterproc
+  use spmdMod      , only : masterproc, mpicom
   use clm_varctl   , only : iulog, inst_suffix
   use abortutils   , only : endrun
 
@@ -804,8 +804,11 @@ contains
     integer           :: dimid
     integer           :: iun
     integer           :: ioe
+    integer           :: ier  
     logical           :: lexists
     !-------------------------------------------------------------------------------
+
+    ! TODO: remove status file before writing (unit 9876)
 
     if (write_file) then
 
@@ -813,7 +816,18 @@ contains
           write(iulog,*)
           write(iulog,'(a)') 'lnd_set_decomp_and_domain: writing landmask and landfrac data to landfrac.nc'
           write(iulog,*)
+
+          ! Remove file if it exists
+          inquire(file=trim(flandfrac), exist=lexists)
+          if (lexists) then
+             open(unit=9876, file=flandfrac, status='old', iostat=ioe)
+             if (ioe == 0) then
+                close(9876, status='delete')
+             end if
+          end if
        end if
+       call mpi_barrier(mpicom,ier)
+
        call ncd_pio_createfile(pioid, trim(flandfrac))
        call ncd_defdim (pioid, 'gridcell', gsize, dimid)
        call ncd_defvar(ncid=pioid, varname='landmask', xtype=ncd_int   , dim1name='gridcell')
@@ -822,16 +836,18 @@ contains
        call ncd_io(ncid=pioid, varname='landmask', data=lndmask_glob, flag='write')
        call ncd_io(ncid=pioid, varname='landfrac', data=lndfrac_glob, flag='write')
        call ncd_pio_closefile(pioid)
-       open (newunit=iun, file=flandfrac_status, status='unknown',  iostat=ioe)
-       if (ioe /= 0) then
-          call endrun(msg='ERROR failed to open file '//trim(flandfrac_status)//errMsg(sourcefile, __LINE__))
-       end if
-       write(iun,'(a)')'Successfully wrote out '//trim(flandfrac_status)
-       close(iun)
+
+       call mpi_barrier(mpicom,ier)
        if (masterproc) then
+          open (newunit=iun, file=flandfrac_status, status='unknown',  iostat=ioe)
+          if (ioe /= 0) then
+             call endrun(msg='ERROR failed to open file '//trim(flandfrac_status)//errMsg(sourcefile, __LINE__))
+          end if
+          write(iun,'(a)')'Successfully wrote out '//trim(flandfrac_status)
+          close(iun)
           write(iulog,'(a)')' Successfully wrote land fraction/mask status file '//trim(flandfrac_status)
        end if
-
+          
     else if (read_file) then
 
        if (masterproc) then

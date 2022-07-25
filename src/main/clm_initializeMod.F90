@@ -7,11 +7,11 @@ module clm_initializeMod
   use shr_kind_mod          , only : r8 => shr_kind_r8
   use shr_sys_mod           , only : shr_sys_flush
   use shr_log_mod           , only : errMsg => shr_log_errMsg
-  use spmdMod               , only : masterproc
+  use spmdMod               , only : masterproc, mpicom
   use decompMod             , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
   use abortutils            , only : endrun
   use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch, use_fates_sp
-  use clm_varctl            , only : is_cold_start, is_interpolated_start
+  use clm_varctl            , only : is_cold_start
   use clm_varctl            , only : iulog
   use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
   use clm_varctl            , only : use_soil_moisture_streams
@@ -203,6 +203,7 @@ contains
     integer            :: iun
     integer            :: klen 
     integer            :: ioe
+    integer            :: ier 
     logical            :: lexists
     real(r8), pointer  :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
     character(len=32)  :: subname = 'initialize2' ! subroutine name
@@ -475,7 +476,6 @@ contains
 
     ! Read restart/initial info
     is_cold_start = .false.
-    is_interpolated_start = .false.
     reset_dynbal_baselines_lake_columns = .false.
     if (nsrest == nsrStartup) then
        if (finidat == ' ') then
@@ -534,13 +534,16 @@ contains
        locfn = finidat_interp_dest(1:klen)//'.status'
 
        ! Remove file if it already exists
-       inquire(file=trim(locfn), exist=lexists)
-       if (lexists) then
-          open(unit=1234, file=locfn, status='old', iostat=ioe)
-          if (ioe == 0) then
-             close(1234, status='delete')
+       if (masterproc) then
+          inquire(file=trim(locfn), exist=lexists)
+          if (lexists) then
+             open(unit=9876, file=locfn, status='old', iostat=ioe)
+             if (ioe == 0) then
+                close(9876, status='delete')
+             end if
           end if
        end if
+       call mpi_barrier(mpicom,ier)
 
        ! Create new template file using cold start
        call restFile_write(bounds_proc, finidat_interp_dest, writing_finidat_interp_dest_file=.true.)
@@ -559,13 +562,14 @@ contains
        finidat = trim(finidat_interp_dest)
 
        ! Write out finidat status flag
-       open (newunit=iun, file=locfn, status='unknown',  iostat=ioe)
-       if (ioe /= 0) then
-          call endrun(msg='ERROR failed to open file '//trim(locfn))
-       end if
-       write(iun,'(a)')'Successfully wrote out '//trim(locfn)
-       close(iun)
+       call mpi_barrier(mpicom,ier)
        if (masterproc) then
+          open (newunit=iun, file=locfn, status='unknown',  iostat=ioe)
+          if (ioe /= 0) then
+             call endrun(msg='ERROR failed to open file '//trim(locfn))
+          end if
+          write(iun,'(a)')'Successfully wrote out '//trim(locfn)
+          close(iun)
           write(iulog,'(a)')' Successfully wrote finidat status file '//trim(locfn)
        end if
     end if

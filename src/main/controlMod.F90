@@ -1131,21 +1131,15 @@ contains
        if (trim(initial_source_file) /= trim(finidat)) then
           finidat_interp_source = finidat
           finidat = ' '
-          if (masterproc) then
-             write(iulog,'(a)')' interpolating initial dataset using source file '//trim(finidat_interp_source)
-          end if
+          write(iulog,'(a)')' interpolating initial dataset using source file '//trim(finidat_interp_source)
        else
           finidat = trim(finidat_interp_dest)
-          if (masterproc) then
-             write(iulog,'(a)')' using interpolated initial dataset file '//trim(finidat)
-          end if
+          write(iulog,'(a)')' using interpolated initial dataset file '//trim(finidat)
        end if
     else
        finidat_interp_source = finidat
        finidat = ' '
-       if (masterproc) then
-          write(iulog,'(a)')' interpolating initial dataset using source file '//trim(finidat_interp_source)
-       end if
+       write(iulog,'(a)')' interpolating initial dataset using source file '//trim(finidat_interp_source)
     end if
 
   contains
