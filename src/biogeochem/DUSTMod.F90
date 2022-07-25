@@ -15,7 +15,8 @@ module DUSTMod
   use shr_kind_mod         , only : r8 => shr_kind_r8 
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar           , only : dst_src_nbr, ndst, sz_nbr
+  use clm_varpar           , only : dst_src_nbr, ndst, sz_nbr, &
+                                    natpft_size     ! -dmleung added 24 Jul 2022
   use clm_varcon           , only : grav, spval
   use landunit_varcon      , only : istcrop, istsoil
   use clm_varctl           , only : iulog
@@ -30,6 +31,9 @@ module DUSTMod
   use LandunitType         , only : lun
   use ColumnType           , only : col
   use PatchType            , only : patch
+  use clm_instur           , only : wt_lunit, wt_nat_patch  ! dmleung added 24 Jul 2022
+  use landunit_varcon      , only : istsoil, istcrop        ! dmleung added 24 Jul 2022 (refering to main/landunit_varcon.F90, for wt_lunit, istsoil=1 is nat veg, istcrop=2 is crop)
+  use pftconMod            , only : noveg              ! dmleung added 24 Jul 2022
   !  
   ! !PUBLIC TYPES
   implicit none
@@ -375,6 +379,9 @@ contains
     real(r8) :: wnd_frc_thr_slt     ! [m/s] used for wet fluid threshold friction velocity, dmleung 9 Jun 2021
     !########### added by dmleung 20 Dec 2021 for drag partition effect #################
     real(r8) :: K_length            ! [dimless] normalized mean interobstacle distance, or called gap length (Okin, 2008)
+    !########### added by dmleung 22 Jul 2022 for LUH2 land cover ####################
+    real(r8) :: bare_frc            ! LUH2 bare soil land cover fraction
+    real(r8) :: veg_frc             ! LUH2 natural vegetation + crop land cover fraction
     !    
     ! constants
     !
@@ -629,7 +636,14 @@ contains
             K_length = 2_r8 * (1_r8/lai(p) - 1_r8)   ! Here LAI has to be non-zero to avoid blowup
             ssr(p) = (K_length+f_0*c_e)/(K_length+c_e)
 
-            frc_thr_rgh_fct = (rockfrc(p)*(roughfct(p))**3_r8 + (vegefrc(p)+sparfrc(p))*(ssr(p))**3_r8 )**(0.3333_r8)   ! land cover weighted mean using static GLCNMo bare land fraction LC0, dmleung 20 Dec 2021
+            !frc_thr_rgh_fct = (rockfrc(p)*(roughfct(p))**3_r8 + (vegefrc(p)+sparfrc(p))*(ssr(p))**3_r8 )**(0.3333_r8)   ! land cover weighted mean using static GLCNMo bare land fraction LC0, dmleung 20 Dec 2021i; dmleung commented 24 Jul 2022
+
+            ! dmleung added calculation of LUH2 bare vs veg fraction within a grid 24 Jul 2022
+            bare_frc = wt_lunit(g,istsoil) * wt_nat_patch(g,noveg) 
+            veg_frc = wt_lunit(g,istsoil) * sum(wt_nat_patch(g,(noveg+1):natpft_size)) + wt_lunit(g,istcrop)
+
+            frc_thr_rgh_fct = (bare_frc*(roughfct(p))**3_r8 + veg_frc*(ssr(p))**3_r8 )**(0.3333_r8)   ! land cover weighted mean using LUH2 land cover, dmleung 24 Jul 2022
+
 
             wnd_frc_slt = fv(p) * frc_thr_rgh_fct   ! wnd_frc_slt will be used in the dust emission equation  -dmleung
 
