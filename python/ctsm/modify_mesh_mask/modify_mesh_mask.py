@@ -39,10 +39,28 @@ class ModifyMeshMask:
         assert lat_dimname in self._landmask_file.dims
         assert lon_dimname in self._landmask_file.dims
 
-        self.latvar = self._landmask_file[lat_varname]
-        self.lonvar = self._landmask_file[lon_varname]
+        # latvar, lonvar same as right-hand-sides, which may be 1D or 2D
+        self.latvar = self._landmask_file[lat_varname][:, ...]
+        self.lonvar = self._landmask_file[lon_varname][..., :]
         self.lsmlat = self._landmask_file.dims[lat_dimname]
         self.lsmlon = self._landmask_file.dims[lon_dimname]
+
+        # If self.file["centerCoords"][0, 0] < 0, this suggests a
+        # -180 to 180 grid, so make self.lonvar -180 to 180 if not already.
+        # If self.file["centerCoords"][0, 0] >= 0, this suggests a
+        # 0 to 360 grid, so make self.lonvar 0 to 360 if not already.
+        if self.file["centerCoords"][0, 0] < 0 and self.lonvar[..., 0] >= 0 or \
+           self.file["centerCoords"][0, 0] >= 0 and self.lonvar[..., 0] < 0:
+            logger.info(f"first lon_mesh = {self.file['centerCoords'][0, 0].data}")
+            logger.info(f"last lon_mesh = {self.file['centerCoords'][-1, 0].data}")
+            logger.info(f"first lonvar = {self.lonvar[..., 0].data}")
+            logger.info(f"last lonvar = {self.lonvar[..., -1].data}")
+            logger.info("For consistency in their order, changing lonvar to")
+            logger.info("lon_mesh's convention and then changing any negative")
+            logger.info("longitude values to their corresponding positive values.")
+            self._landmask_file = self._landmask_file.roll(lsmlon=self.lsmlon // 2)
+        self.lonvar = self._landmask_file[lon_varname][..., :]  # update lonvar
+
 
     @classmethod
     def init_from_file(
@@ -98,13 +116,13 @@ class ModifyMeshMask:
 
                 # lon and lat from the landmask file
                 if len(self.latvar.sizes) == 2:
-                    lat_new = float(self.latvar[row, col])
-                    lon_new = float(self.lonvar[row, col])
+                    latvar_scalar = float(self.latvar[row, col])
+                    lonvar_scalar = float(self.lonvar[row, col])
                 else:
-                    lat_new = float(self.latvar[row])
-                    lon_new = float(self.lonvar[col])
+                    latvar_scalar = float(self.latvar[row])
+                    lonvar_scalar = float(self.lonvar[col])
                 # ensure lon range of 0-360 rather than -180 to 180
-                lon_new = lon_range_0_to_360(lon_new)
+                lonvar_scalar = lon_range_0_to_360(lonvar_scalar)
                 # lon and lat from the mesh file
                 lat_mesh = float(self.file["centerCoords"][ncount, 1])
                 lon_mesh = float(self.file["centerCoords"][ncount, 0])
@@ -113,26 +131,26 @@ class ModifyMeshMask:
 
                 errmsg = (
                     "Must be equal: "
-                    " lat_new = "
-                    + str(lat_new)
+                    " latvar_scalar = "
+                    + str(latvar_scalar)
                     + " lat_mesh = "
                     + str(lat_mesh)
                     + " (at ncount = "
                     + str(ncount)
                     + ")"
                 )
-                assert isclose(lat_new, lat_mesh, abs_tol=1e-5), errmsg
+                assert isclose(latvar_scalar, lat_mesh, abs_tol=1e-5), errmsg
                 errmsg = (
                     "Must be equal: "
-                    " lon_new = "
-                    + str(lon_new)
+                    " lonvar_scalar = "
+                    + str(lonvar_scalar)
                     + " lon_mesh = "
                     + str(lon_mesh)
                     + " (at ncount = "
                     + str(ncount)
                     + ")"
                 )
-                assert isclose(lon_new, lon_mesh, abs_tol=1e-5), errmsg
+                assert isclose(lonvar_scalar, lon_mesh, abs_tol=1e-5), errmsg
 
                 # increment counter
                 ncount = ncount + 1
