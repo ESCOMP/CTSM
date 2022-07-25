@@ -11,6 +11,7 @@ from math import isclose
 import numpy as np
 import xarray as xr
 
+from ctsm.utils import abort
 from ctsm.config_utils import lon_range_0_to_360
 
 logger = logging.getLogger(__name__)
@@ -45,16 +46,19 @@ class ModifyMeshMask:
         self.lsmlat = self._landmask_file.dims[lat_dimname]
         self.lsmlon = self._landmask_file.dims[lon_dimname]
 
+        lonvar_first = self.lonvar[..., 0].data.max()
+        lonvar_last = self.lonvar[..., -1].data.max()
+
         # If self.file["centerCoords"][0, 0] < 0, this suggests a
         # -180 to 180 grid, so make self.lonvar -180 to 180 if not already.
         # If self.file["centerCoords"][0, 0] >= 0, this suggests a
         # 0 to 360 grid, so make self.lonvar 0 to 360 if not already.
-        if self.file["centerCoords"][0, 0] < 0 and self.lonvar[..., 0] >= 0 or \
-           self.file["centerCoords"][0, 0] >= 0 and self.lonvar[..., 0] < 0:
+        if self.file["centerCoords"][0, 0] < 0 and lonvar_first >= 0 or \
+           self.file["centerCoords"][0, 0] >= 0 and lonvar_first < 0:
             logger.info(f"first lon_mesh = {self.file['centerCoords'][0, 0].data}")
             logger.info(f"last lon_mesh = {self.file['centerCoords'][-1, 0].data}")
-            logger.info(f"first lonvar = {self.lonvar[..., 0].data}")
-            logger.info(f"last lonvar = {self.lonvar[..., -1].data}")
+            logger.info(f"first lonvar = {lonvar_first}")
+            logger.info(f"last lonvar = {lonvar_last}")
             logger.info("For consistency in their order, changing lonvar to")
             logger.info("lon_mesh's convention and then changing any negative")
             logger.info("longitude values to their corresponding positive values.")
