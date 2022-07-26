@@ -53,18 +53,24 @@ class ModifyMeshMask:
         # -180 to 180 grid, so make self.lonvar -180 to 180 if not already.
         # If self.file["centerCoords"][0, 0] >= 0, this suggests a
         # 0 to 360 grid, so make self.lonvar 0 to 360 if not already.
-        if self.file["centerCoords"][0, 0] < 0 and lonvar_first >= 0 or \
-           self.file["centerCoords"][0, 0] >= 0 and lonvar_first < 0:
-            logger.info(f"first lon_mesh = {self.file['centerCoords'][0, 0].data} " + \
-                f"last lon_mesh = {self.file['centerCoords'][-1, 0].data}")
-            logger.info(f"first lonvar = {lonvar_first} " + \
-                f"last lonvar = {lonvar_last} " + \
-                "For consistency in their order, changing lonvar to " + \
-                "lon_mesh's convention and later (in set_mesh_mask) " + \
-                "changing any negative longitude values to their corresponding positive values.")
+        if (self.file["centerCoords"][0, 0] < 0 <= lonvar_first) or (
+            self.file["centerCoords"][0, 0] >= 0 > lonvar_first
+        ):
+            logger.info(
+                "first lon_mesh = %s, last lon_mesh = %s",
+                self.file["centerCoords"][0, 0].data,
+                self.file["centerCoords"][-1, 0].data,
+            )
+            logger.info("first lonvar = %s, last lonvar = %s.", lonvar_first, lonvar_last)
+            explanation = (
+                "For consistency in their order, changing lonvar to "
+                + "lon_mesh's convention and later (in set_mesh_mask) "
+                + "changing any negative longitude values to their "
+                + "corresponding positive values."
+            )
+            logger.info(explanation)
             self._landmask_file = self._landmask_file.roll(lsmlon=self.lsmlon // 2)
         self.lonvar = self._landmask_file[lon_varname][..., :]  # update lonvar
-
 
     @classmethod
     def init_from_file(
