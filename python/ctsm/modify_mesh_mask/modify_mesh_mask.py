@@ -24,10 +24,11 @@ class ModifyMeshMask:
     """
 
     # The mesh_mask_modifier tool reads landmask, while the modify_fsurdat tool
-    # reads landmask_diff from the landmask file. Sample landmask file:
-    # fill_indianocean_slevis.nc located here as of 2022/06/30:
-    # /glade/work/slevis/git/mksurfdata_toolchain/tools/modify_fsurdat/fill_indian_ocean/
-    # Read landmask_diff here only for consistency checks
+    # reads mod_lnd_props from the landmask file. Sample landmask
+    # file: fill_indianocean_slevis.nc located here as of 2022/7/26:
+    # /glade/work/slevis/git/mksurfdata_toolchain/tools/modify_fsurdat ...
+    # ... /islas_examples/fill_indian_ocean/
+    # Read mod_lnd_props here only for consistency checks
     def __init__(self, my_data, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname):
 
         self.file = my_data
@@ -90,7 +91,7 @@ class ModifyMeshMask:
 
         # Initialize
         ncount = 0
-        landmask_diff = self._landmask_file.landmask_diff
+        mod_lnd_props = self._landmask_file.mod_lnd_props
         landmask = self._landmask_file.landmask
 
         for row in range(self.lsmlat):  # rows from landmask file
@@ -104,15 +105,15 @@ class ModifyMeshMask:
                     landmask[row, col], 1, abs_tol=1e-9
                 ), errmsg
                 errmsg = (
-                    "landmask_diff not 0 or 1 at row, col, value = "
-                    + f"{row} {col} {landmask_diff[row, col]}"
+                    "mod_lnd_props not 0 or 1 at row, col, value = "
+                    + f"{row} {col} {mod_lnd_props[row, col]}"
                 )
-                assert isclose(landmask_diff[row, col], 0, abs_tol=1e-9) or isclose(
-                    landmask_diff[row, col], 1, abs_tol=1e-9
+                assert isclose(mod_lnd_props[row, col], 0, abs_tol=1e-9) or isclose(
+                    mod_lnd_props[row, col], 1, abs_tol=1e-9
                 ), errmsg
-                if int(landmask_diff[row, col]) == 1:
+                if int(mod_lnd_props[row, col]) == 1:
                     errmsg = (
-                        "landmask should = landmask_diff where the "
+                        "landmask should = mod_lnd_props where the "
                         + f"latter equals 1, but here landmask = 0 at row, col = {row} {col}"
                     )
                     assert int(landmask[row, col]) == 1, errmsg

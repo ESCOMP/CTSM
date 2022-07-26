@@ -44,7 +44,7 @@ class ModifyFsurdat:
             # overwrite self.not_rectangle with data from
             # user-specified .nc file in the .cfg file
             landmask_ds = xr.open_dataset(landmask_file)
-            self.rectangle = landmask_ds.landmask_diff.data
+            self.rectangle = landmask_ds.mod_lnd_props.data
             # CF convention has dimension and coordinate variable names the same
             if lat_dimname is None:  # set to default
                 lat_dimname = "lsmlat"
@@ -56,7 +56,7 @@ class ModifyFsurdat:
             for row in range(lsmlat):  # rows from landmask file
                 for col in range(lsmlon):  # cols from landmask file
                     errmsg = (
-                        "landmask_ds.landmask_diff not 0 or 1 at "
+                        "landmask_ds.mod_lnd_props not 0 or 1 at "
                         + f"row, col, value = {row} {col} {self.rectangle[row, col]}"
                     )
                     assert isclose(self.rectangle[row, col], 0, abs_tol=1e-9) or isclose(
