@@ -1,4 +1,71 @@
 ===============================================================
+Tag name: ctsm5.1.dev105
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Tue Jul 26 23:57:31 MDT 2022
+One-line Summary: make interfaces more similar between fsurdat_modifier and subset_data tools
+
+Purpose and description of changes
+----------------------------------
+
+ The tools modify_fsurdat and subset_data have similar options
+ modify_fsurdat: zero_nonveg
+ subset_data: include-nonveg
+
+ modify_fsurdat: dom_plant
+ subset_data: dom-pft
+
+ Make more similar and use README file for documenting modify_fsurdat.
+ There's potential for additional changes to be addressed later.
+
+ Change name of manage_python_env to py_env_create as agreed in CTSM software meeting
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #): #1662
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+    clm_pymods test suite on cheyenne - PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: 
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1714
+ https://github.com/ESCOMP/ctsm/pull/1799
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev104
 Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Mon Jul 18 15:45:00 MDT 2022
