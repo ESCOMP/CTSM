@@ -22,6 +22,8 @@ I.  General directory structure:
         modify_mesh_mask - Modify mesh_mask file containing the ocean mask. The CTSM points to this
                            file from /ctsm/ccs_config/component_grids_nuopc.xml
 
+        modify_fsurdat --- Modify fsurdat file with idealized/simplified settings
+
         contrib ---------- Miscellaneous tools for pre or post processing of CTSM.
                            Typically these are contributed by anyone who has something
                            they think might be helpful to the community. They may not

@@ -13,7 +13,7 @@ a python environment. Comments in the file tell how to do this.
 You can also use the script in the top level directory to do
 all the conda commands and do this for you.
 
- ../manage_python_env
+ ../py_env_create
  conda activate ctsm_py
 
 Conda requirements files:

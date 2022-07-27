@@ -157,8 +157,8 @@ class TestSysFsurdatModifier(unittest.TestCase):
                         line = "lnd_lon_1 = 295\n"
                     elif re.match(r" *lnd_lon_2 *=", line):
                         line = "lnd_lon_2 = 300\n"
-                    elif re.match(r" *dom_plant *=", line):
-                        line = "dom_plant = 15"
+                    elif re.match(r" *dom_pft *=", line):
+                        line = "dom_pft = 15"
                     elif re.match(r" *lai *=", line):
                         line = "lai = 0 1 2 3 4 5 5 4 3 2 1 0\n"
                     elif re.match(r" *sai *=", line):
@@ -192,8 +192,8 @@ class TestSysFsurdatModifier(unittest.TestCase):
                         line = "lnd_lon_1 = 295\n"
                     elif re.match(r" *lnd_lon_2 *=", line):
                         line = "lnd_lon_2 = 300\n"
-                    elif re.match(r" *dom_plant *=", line):
-                        line = "dom_plant = 1"
+                    elif re.match(r" *dom_pft *=", line):
+                        line = "dom_pft = 1"
                     elif re.match(r" *lai *=", line):
                         line = "lai = 0 1 2 3 4 5 5 4 3 2 1 0\n"
                     elif re.match(r" *sai *=", line):

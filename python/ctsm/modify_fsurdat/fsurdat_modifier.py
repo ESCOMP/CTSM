@@ -65,10 +65,10 @@ def fsurdat_modifier(cfg_path):
         file_path=cfg_path,
         convert_to_type=bool,
     )
-    zero_nonveg = get_config_value(
+    include_nonveg = get_config_value(
         config=config,
         section=section,
-        item="zero_nonveg",
+        item="include_nonveg",
         file_path=cfg_path,
         convert_to_type=bool,
     )
@@ -136,10 +136,10 @@ def fsurdat_modifier(cfg_path):
 
     # not required: user may set these in the .cfg file
     max_pft = int(max(modify_fsurdat.file.lsmpft))
-    dom_plant = get_config_value(
+    dom_pft = get_config_value(
         config=config,
         section=section,
-        item="dom_plant",
+        item="dom_pft",
         file_path=cfg_path,
         allowed_values=range(max_pft + 1),  # integers from 0 to max_pft
         convert_to_type=int,
@@ -223,7 +223,7 @@ def fsurdat_modifier(cfg_path):
     if idealized:
         modify_fsurdat.set_idealized()  # set 2D variables
         # set 3D and 4D variables pertaining to natural vegetation
-        modify_fsurdat.set_dom_plant(dom_plant=0, lai=[], sai=[], hgt_top=[], hgt_bot=[])
+        modify_fsurdat.set_dom_pft(dom_pft=0, lai=[], sai=[], hgt_top=[], hgt_bot=[])
         logger.info("idealized complete")
 
     if max_sat_area is not None:  # overwrite "idealized" value
@@ -238,17 +238,17 @@ def fsurdat_modifier(cfg_path):
         modify_fsurdat.setvar_lev0("SOIL_COLOR", soil_color)
         logger.info("soil_color complete")
 
-    if zero_nonveg:
+    if not include_nonveg:
         modify_fsurdat.zero_nonveg()
         logger.info("zero_nonveg complete")
 
-    # The set_dom_plant call follows zero_nonveg because it modifies PCT_NATVEG
+    # set_dom_pft follows zero_nonveg because it modifies PCT_NATVEG
     # and PCT_CROP in the user-defined rectangle
-    if dom_plant is not None:
-        modify_fsurdat.set_dom_plant(
-            dom_plant=dom_plant, lai=lai, sai=sai, hgt_top=hgt_top, hgt_bot=hgt_bot
+    if dom_pft is not None:
+        modify_fsurdat.set_dom_pft(
+            dom_pft=dom_pft, lai=lai, sai=sai, hgt_top=hgt_top, hgt_bot=hgt_bot
         )
-        logger.info("dom_plant complete")
+        logger.info("dom_pft complete")
 
     # ----------------------------------------------
     # Output the now modified CTSM surface data file

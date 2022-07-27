@@ -56,8 +56,6 @@ class SinglePointCase(BaseCase):
         weight or percentage of each pft.
     num_pft : list
         total number of pfts for surface dataset (if crop 78 pft, else 16 pft)
-    zero_nonveg_landunits : bool
-        flag for setting all non-vegetation landunits to zero
     uni_snow : bool
         flag for creating datasets using uniform snowpack
     saturation_excess : bool
