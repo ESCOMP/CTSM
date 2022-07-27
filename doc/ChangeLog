@@ -10,8 +10,12 @@ Purpose and description of changes
  The tools modify_fsurdat and subset_data have similar options
  modify_fsurdat: zero_nonveg
  subset_data: include-nonveg
+
+ modify_fsurdat: dom_plant
+ subset_data: dom-pft
+
  Make more similar and use README file for documenting modify_fsurdat.
- There's potential for additional changes like this one to be addressed later.
+ There's potential for additional changes to be addressed later.
 
  Change name of manage_python_env to py_env_create as agreed in CTSM software meeting
 
@@ -47,7 +51,7 @@ Testing summary:
 
     clm_pymods test suite on cheyenne - PASS
 
-If the tag used for baseline comparisons was NOT the previous tag, note that here: ctsm5.1.dev103
+If the tag used for baseline comparisons was NOT the previous tag, note that here: 
 
 
 Answer changes
