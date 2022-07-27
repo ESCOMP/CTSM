@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev105
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date: Tue Jul 26 18:46:28 MDT 2022
+Date: Tue Jul 26 23:49:57 MDT 2022
 One-line Summary: make interfaces more similar between fsurdat_modifier and subset_data tools
 
 Purpose and description of changes
@@ -56,6 +56,7 @@ Other details
 -------------
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/1714
+ https://github.com/ESCOMP/ctsm/pull/1799
 
 ===============================================================
 ===============================================================

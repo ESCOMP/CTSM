@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# manage_python_env -- setup the python environment in order to use CTSM python tools
+# py_env_create -- setup the python environment in order to use CTSM python tools
 #
 # Simple bash script to setup the python environment for the user so they can run the CTSM
 # python tools using "conda".
@@ -40,7 +40,7 @@ usage() {
   echo ""
   echo "***********************************************************************"
   echo "usage:"
-  echo "./manage_python_env"
+  echo "./py_env_create"
   echo ""
   echo "valid arguments: "
   echo "[-h|--help]  "

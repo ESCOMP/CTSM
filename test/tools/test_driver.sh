@@ -54,7 +54,7 @@ module load nco
 module load ncl
 
 module load conda
-$CESMDATAROOT/manage_python_env
+$CESMDATAROOT/py_env_create
 conda activate ctsm_py
 
 
@@ -119,7 +119,7 @@ module load openmpi
 module load nco
 module load conda
 module load ncl
-$CESMDATAROOT/manage_python_env
+$CESMDATAROOT/py_env_create
 conda activate ctsm_py
 
 
@@ -220,7 +220,7 @@ module load compiler/intel
 module load tool/nco
 module load tool/netcdf
 module load lang/python
-$CESMDATAROOT/manage_python_env
+$CESMDATAROOT/py_env_create
 conda activate ctsm_py
 
 export NETCDF_DIR=\$NETCDF_PATH
@@ -303,7 +303,7 @@ module load compiler/intel
 module load tool/nco
 module load tool/netcdf
 module load lang/python
-$CESMDATAROOT/manage_python_env
+$CESMDATAROOT/py_env_create
 conda activate ctsm_py
 
 export NETCDF_DIR=\$NETCDF_PATH
