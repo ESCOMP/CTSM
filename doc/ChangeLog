@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev105
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date: Tue Jul 26 23:49:57 MDT 2022
+Date: Tue Jul 26 23:57:31 MDT 2022
 One-line Summary: make interfaces more similar between fsurdat_modifier and subset_data tools
 
 Purpose and description of changes
@@ -12,6 +12,8 @@ Purpose and description of changes
  subset_data: include-nonveg
  Make more similar and use README file for documenting modify_fsurdat.
  There's potential for additional changes like this one to be addressed later.
+
+ Change name of manage_python_env to py_env_create as agreed in CTSM software meeting
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
