@@ -7,8 +7,8 @@ Create anomoly forcing datasets for SSP scenarios that can be used by CESM datm 
 
 load proper modules first, i.e.
 
+../../py_env_create
 conda activate ctsm_py
-(use ../../manage_python_env)
 
 """
 import sys

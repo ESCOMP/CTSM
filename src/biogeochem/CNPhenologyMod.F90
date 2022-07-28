@@ -1892,11 +1892,12 @@ contains
                do_plant_normal = a5tmin(p)   /= spval                  .and. &
                                  a5tmin(p)   <= minplanttemp(ivt(p))   .and. &
                                  jday        >= minplantjday(ivt(p),h) .and. &
+                                 jday        <= maxplantjday(ivt(p),h) .and. &
                                  (gdd020(p)  /= spval                  .and. &
                                  gdd020(p)   >= gddmin(ivt(p)))
                ! If not, but it's the last day of the planting window, what about relaxed rules?
                do_plant_lastchance = (.not. do_plant_normal)               .and. &
-                                     jday       >=  maxplantjday(ivt(p),h) .and. &
+                                     jday       ==  maxplantjday(ivt(p),h) .and. &
                                      gdd020(p)  /= spval                   .and. &
                                      gdd020(p)  >= gddmin(ivt(p))
 
