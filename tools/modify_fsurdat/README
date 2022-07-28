@@ -32,7 +32,7 @@ To run on Cheyenne/Casper/Izumi
 module unload python
 module load conda
 ./py_env_create
-conda activate ctsm_py
+conda activate ctsm_pylib
 (Use "deactivate" to reverse the latter.)
 2) Copy, then modify the configure file named modify_template.cfg, which
 contains all the arguments needed by the script.

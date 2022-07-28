@@ -5,12 +5,12 @@
 #
 # To install this on cheyenne with conda loaded in modules
 # use the top level bash script:
-# ../py_env_create                                        # Do this each time you update your CTSM Version
-# conda activate ctsm_py                                  # Do this anytime you want to run a CTSM python script
+# ../py_env_create                                           # Do this each time you update your CTSM Version
+# conda activate ctsm_pylib                                  # Do this anytime you want to run a CTSM python script
 # Or the individual conda commands:
-# conda create  -n ctsm_py                                # Do this one time for each machine
-# conda install -n ctsm_py --file conda_env_ctsm_py.txt   # Do this each time you update your CTSM Version
-# conda activate ctsm_py                                  # Do this anytime you want to run a CTSM python script
+# conda create  -n ctsm_pylib                                # Do this one time for each machine
+# conda install -n ctsm_pylib --file conda_env_ctsm_py.txt   # Do this each time you update your CTSM Version
+# conda activate ctsm_pylib                                  # Do this anytime you want to run a CTSM python script
 #
 python=3.7.0     # The python version MUST match the python version available on CGD systems through modules exactly
 scipy
