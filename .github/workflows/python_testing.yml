@@ -15,6 +15,7 @@ jobs:
             activate-environment: ctsm_pylib
             environment-file: python/conda_env_ctsm_py.txt
             auto-activate-base: false
+            channels: conda-forge
         - shell: bash -l {0}
           run: |
             conda info
@@ -23,4 +24,5 @@ jobs:
           shell: bash -l {0}
           run: |
               cd python
-              make all
+              make test
+              make lint
