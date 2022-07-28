@@ -16,14 +16,18 @@ jobs:
             environment-file: python/conda_env_ctsm_py.txt
             auto-activate-base: false
             channels: conda-forge
-        - shell: bash -l {0}
+        - name: manage_exernals and LFS
+          shell: bash -l {0}
           run: |
+            git lfs install
             manage_externals/checkout_externals
-            conda info
-            conda list
         - name: Run python tests
           shell: bash -l {0}
           run: |
               cd python
               make test
+        - name: Run pylint
+          shell: bash -l {0}
+          run: |
+              cd python
               make lint
