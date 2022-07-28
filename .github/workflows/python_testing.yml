@@ -18,6 +18,7 @@ jobs:
             channels: conda-forge
         - shell: bash -l {0}
           run: |
+            manage_externals/checkout_externals
             conda info
             conda list
         - name: Run python tests
