@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev1??
 Originator(s): slevis (Samuel Levis, 303-665-1310)
-Date: Thu Jul 14 13:17:56 MDT 2022
+Date: Fri Jul 29 03:49:06 MDT 2022
 One-line Summary: Introduction of modify_meshes tool for use in I-cases and F-cases
 
 Purpose and description of changes
@@ -13,6 +13,8 @@ Purpose and description of changes
  modifications will take effect only if users also modify the mask_mesh
  file which ultimately determines the landmask used by the CTSM.
  Details in the tool's README.
+
+ Adding test_sys_mesh_modifier.py to python system tests.
 
 
 Significant changes to scientifically-supported configurations
@@ -34,9 +36,14 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-
 CTSM issues fixed (include CTSM Issue #): #1644
 
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Adding test_sys_mesh_modifier.py to python system tests. This requires
+ "module load nco" before running "make stest" or "make all" in the /python
+ directory.
 
 Testing summary:
 ----------------
@@ -49,8 +56,7 @@ Testing summary:
     cheyenne - PASS
     clm_pymods test suite on cheyenne - PASS
 
-If the tag used for baseline comparisons was NOT the previous tag, note that here: ctsm5.1.dev103
-
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
 Answer changes
 --------------
