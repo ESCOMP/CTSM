@@ -57,7 +57,8 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         try:
             subprocess.check_call(ncks_cmd, shell=True)
         except subprocess.CalledProcessError as e:
-            sys.exit(f'{e} ERROR using ncks to generate {scrip_file} from {fsurdat_in}')
+            sys.exit(f'{e} ERROR using ncks to generate {scrip_file} from {fsurdat_in}; MOST LIKELY NEED TO INVOKE module load nco')
+        # TODO How to invoke 'module load nco' behind the scenes?
         # TODO How to make the esmf command generic?
         # TODO How to write the PET0 file in /tempdir or suppress entirely?
         esmf_cmd = f'/glade/u/apps/ch/opt/esmf-netcdf/8.0.0/intel/19.0.5/bin/bing/Linux.intel.64.mpiuni.default/ESMF_Scrip2Unstruct {scrip_file} {self._mesh_mask_in} 0'
@@ -67,15 +68,13 @@ class TestSysMeshMaskModifier(unittest.TestCase):
             sys.exit(f'{e} ERROR using esmf to generate {self._mesh_mask_in} from scrip.nc')
 
         # Generate landmask_file from fsurdat_in
-        self._lat_dimname = 'lsmlat'  # same as in fsurdat_in
-        self._lon_dimname = 'lsmlon'  # same as in fsurdat_in
         self._lat_varname = 'LATIXY'  # same as in fsurdat_in
         self._lon_varname = 'LONGXY'  # same as in fsurdat_in
         fsurdat_in_data = xr.open_dataset(fsurdat_in)
         assert self._lat_varname in fsurdat_in_data.variables
         assert self._lon_varname in fsurdat_in_data.variables
-        assert self._lat_dimname in fsurdat_in_data.dims
-        assert self._lon_dimname in fsurdat_in_data.dims
+        self._lat_dimname = fsurdat_in_data[self._lat_varname].dims[0]
+        self._lon_dimname = fsurdat_in_data[self._lat_varname].dims[1]
 
         ncap2_cmd = f"ncap2 -A -v -s 'mod_lnd_props=PFTDATA_MASK' -A -v -s 'landmask=PFTDATA_MASK' -A -v -s {self._lat_varname}={self._lat_varname} -A -v -s {self._lon_varname}={self._lon_varname} {fsurdat_in} {self._landmask_file}"
         try:
