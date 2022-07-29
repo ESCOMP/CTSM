@@ -3582,9 +3582,13 @@ contains
               call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                    xtype=ncd_double,  &
                    dim1name='pft', &
+                   dim2name='mxharvests', &
+                   switchdim=.true., &
                    long_name=get_repr_longname(k)//' C to food per harvest; should only be output annually', &
                    units='gC/m2', &
-                   interpinic_flag='interp', readvar=readvar, data=data2dptr)
+                   readvar=readvar, &
+                   scale_by_thickness=.false., &
+                   interpinic_flag='interp', data=data2dptr)
           end do
        end if
 
