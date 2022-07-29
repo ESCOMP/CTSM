@@ -20,6 +20,10 @@ from ctsm.modify_mesh_mask.mesh_mask_modifier import mesh_mask_modifier
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
 # pylint: disable=invalid-name
+# Allow all the instance attributes that we need
+# pylint: disable=too-many-instance-attributes
+# Allow this due to esmf_cmd
+# pylint: disable=line-too-long
 
 
 class TestSysMeshMaskModifier(unittest.TestCase):
@@ -53,34 +57,44 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         metadata_file = os.path.join(self._tempdir, "metadata.nc")
 
         # Generate mesh_mask_in from fsurdat_in
-        ncks_cmd = f'ncks --rgr infer --rgr scrip={scrip_file} {fsurdat_in} {metadata_file}'
+        ncks_cmd = f"ncks --rgr infer --rgr scrip={scrip_file} {fsurdat_in} {metadata_file}"
         try:
             subprocess.check_call(ncks_cmd, shell=True)
         except subprocess.CalledProcessError as e:
-            sys.exit(f'{e} ERROR using ncks to generate {scrip_file} from {fsurdat_in}; MOST LIKELY NEED TO INVOKE module load nco')
+            err_msg = (
+                f"{e} ERROR using ncks to generate {scrip_file} from "
+                + f"{fsurdat_in}; MOST LIKELY SHOULD INVOKE module load nco"
+            )
+            sys.exit(err_msg)
         # TODO How to invoke 'module load nco' behind the scenes?
         # TODO How to make the esmf command generic?
         # TODO How to write the PET0 file in /tempdir or suppress entirely?
-        esmf_cmd = f'/glade/u/apps/ch/opt/esmf-netcdf/8.0.0/intel/19.0.5/bin/bing/Linux.intel.64.mpiuni.default/ESMF_Scrip2Unstruct {scrip_file} {self._mesh_mask_in} 0'
+        esmf_cmd = f"/glade/u/apps/ch/opt/esmf-netcdf/8.0.0/intel/19.0.5/bin/bing/Linux.intel.64.mpiuni.default/ESMF_Scrip2Unstruct {scrip_file} {self._mesh_mask_in} 0"
         try:
             subprocess.check_call(esmf_cmd, shell=True)
         except subprocess.CalledProcessError as e:
-            sys.exit(f'{e} ERROR using esmf to generate {self._mesh_mask_in} from scrip.nc')
+            sys.exit(f"{e} ERROR using esmf to generate {self._mesh_mask_in} from scrip.nc")
 
         # Generate landmask_file from fsurdat_in
-        self._lat_varname = 'LATIXY'  # same as in fsurdat_in
-        self._lon_varname = 'LONGXY'  # same as in fsurdat_in
+        self._lat_varname = "LATIXY"  # same as in fsurdat_in
+        self._lon_varname = "LONGXY"  # same as in fsurdat_in
         fsurdat_in_data = xr.open_dataset(fsurdat_in)
         assert self._lat_varname in fsurdat_in_data.variables
         assert self._lon_varname in fsurdat_in_data.variables
         self._lat_dimname = fsurdat_in_data[self._lat_varname].dims[0]
         self._lon_dimname = fsurdat_in_data[self._lat_varname].dims[1]
 
-        ncap2_cmd = f"ncap2 -A -v -s 'mod_lnd_props=PFTDATA_MASK' -A -v -s 'landmask=PFTDATA_MASK' -A -v -s {self._lat_varname}={self._lat_varname} -A -v -s {self._lon_varname}={self._lon_varname} {fsurdat_in} {self._landmask_file}"
+        ncap2_cmd = (
+            "ncap2 -A -v -s 'mod_lnd_props=PFTDATA_MASK' "
+            + "-A -v -s 'landmask=PFTDATA_MASK' "
+            + f"-A -v -s {self._lat_varname}={self._lat_varname} "
+            + f"-A -v -s {self._lon_varname}={self._lon_varname} "
+            + f"{fsurdat_in} {self._landmask_file}"
+        )
         try:
             subprocess.check_call(ncap2_cmd, shell=True)
         except subprocess.CalledProcessError as e:
-            sys.exit(f'{e} ERROR using ncap2 to generate {self._landmask_file} from {fsurdat_in}')
+            sys.exit(f"{e} ERROR using ncap2 to generate {self._landmask_file} from {fsurdat_in}")
 
     def tearDown(self):
         """
@@ -111,7 +125,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         # the Mask variable will now equal zeros, not ones
         element_mask_in = mesh_mask_in_data.elementMask
         element_mask_out = mesh_mask_out_data.elementMask
-        self.assertTrue(element_mask_out.equals(element_mask_in-1))
+        self.assertTrue(element_mask_out.equals(element_mask_in - 1))
 
     def _create_config_file(self):
         """
