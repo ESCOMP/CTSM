@@ -16,7 +16,7 @@ module DUSTMod
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar           , only : dst_src_nbr, ndst, sz_nbr, &
-                                    natpft_size     ! -dmleung added 24 Jul 2022
+                                    natpft_lb, natpft_ub, natpft_size     ! -dmleung added 24 Jul 2022
   use clm_varcon           , only : grav, spval
   use landunit_varcon      , only : istcrop, istsoil
   use clm_varctl           , only : iulog
@@ -88,6 +88,8 @@ module DUSTMod
      real(r8), pointer, private :: ssr_patch                 (:)   ! [dimless] integrated shear stress ratiio, defined by Okin (2008) and then integrated by Caroline Pierre et al. (2014)
      real(r8), pointer, private :: lai_patch                 (:)   ! [m2 leaf /m2 land] LAI+SAI for calculating Okin's drag partition, averaged to landunit level
      real(r8), pointer, private :: frc_thr_rghn_fct_patch    (:)   ! [dimless] hybrid drag partition (or called roughness) factor
+     !########### added by dmleung 28 Jul 2022 ########################################################################
+     real(r8), pointer, private :: wnd_frc_thr_std_patch     (:)   ! standardized fluid threshold friction velocity (m/s)
    contains
 
      procedure , public  :: Init
@@ -164,6 +166,8 @@ contains
     allocate(this%ssr_patch                 (begp:endp))        ; this%ssr_patch                 (:)   = nan
     allocate(this%lai_patch                 (begp:endp))        ; this%lai_patch                 (:)   = nan
     allocate(this%frc_thr_rghn_fct_patch    (begp:endp))        ; this%frc_thr_rghn_fct_patch    (:)   = nan
+    !#### added by dmleung 28 Jul 2022 ######################################
+    allocate(this%wnd_frc_thr_std_patch     (begp:endp))        ; this%wnd_frc_thr_std_patch     (:)   = nan
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -292,6 +296,11 @@ contains
     call hist_addfld1d (fname='FRC_THR_RGHN_FCT', units='dimensionless',  &
          avgflag='A', long_name='hybrid drag partition (or roughness) factor', &
          ptr_patch=this%frc_thr_rghn_fct_patch, set_lake=0._r8, set_urb=0._r8)
+    !#####added by dmleung 28 Jul 2022 ########################################
+    this%wnd_frc_thr_std_patch(begp:endp) = spval
+    call hist_addfld1d (fname='WND_FRC_FT_STD', units='m/s',  &
+         avgflag='A', long_name='standardized fluid threshold friction velocity', &
+         ptr_patch=this%wnd_frc_thr_std_patch, set_lake=0._r8, set_urb=0._r8)
     !##########################################################################
 
   end subroutine InitHistory
@@ -455,7 +464,9 @@ contains
          ! added by dmleung 20 Dec 2021
          ssr                 => dust_inst%ssr_patch                  , &
          lai                 => dust_inst%lai_patch                  , &
-         frc_thr_rghn_fct    => dust_inst%frc_thr_rghn_fct_patch       &
+         frc_thr_rghn_fct    => dust_inst%frc_thr_rghn_fct_patch     , &
+         ! added by dmleung 28 Jul 2022
+         wnd_frc_thr_std     => dust_inst%wnd_frc_thr_std_patch       &
          )
 
       ttlai(bounds%begp : bounds%endp) = 0._r8
@@ -557,6 +568,8 @@ contains
          ssr(p) = 0.0_r8
          lai(p) = 0.0_r8
          frc_thr_rghn_fct(p) = 0.0_r8
+         ! dmleung added 28 Jul 2022
+         wnd_frc_thr_std(p) = 0.0_r8
       end do
       do n = 1, ndst
          do fp = 1,num_nolakep
@@ -609,6 +622,7 @@ contains
 
          ! use emission threshold to calculate standardized threshold and dust emission coefficient dmleung 27 Nov 2021
          wnd_frc_thr_slt_std = wnd_frc_thr_slt * sqrt(forc_rho(c) / forc_rho_std) ! standardized soil threshold friction speed -jfk (defined using fluid threshold
+         wnd_frc_thr_std(p) = wnd_frc_thr_slt_std          ! output standardized fluid threshold -dmleung added 28 Jul 2022
          dst_emiss_coeff(p) = Cd0 * exp(-Ce * (wnd_frc_thr_slt_std - wnd_frc_thr_slt_std_min) / wnd_frc_thr_slt_std_min) ! save dust emission coefficient here for all grids, -dml, 1 Mar 2021 
 
          ! framentation exponent dmleung 27 Nov 2021; moved to this block 23 Dec 2021
@@ -640,7 +654,7 @@ contains
 
             ! dmleung added calculation of LUH2 bare vs veg fraction within a grid 24 Jul 2022
             bare_frc = wt_lunit(g,istsoil) * wt_nat_patch(g,noveg) 
-            veg_frc = wt_lunit(g,istsoil) * sum(wt_nat_patch(g,(noveg+1):natpft_size)) + wt_lunit(g,istcrop)
+            veg_frc = wt_lunit(g,istsoil) * sum(wt_nat_patch(g,(noveg+1):natpft_ub)) + wt_lunit(g,istcrop)
 
             frc_thr_rgh_fct = (bare_frc*(roughfct(p))**3_r8 + veg_frc*(ssr(p))**3_r8 )**(0.3333_r8)   ! land cover weighted mean using LUH2 land cover, dmleung 24 Jul 2022
 
