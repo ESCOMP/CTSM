@@ -17,23 +17,15 @@ jobs:
             auto-activate-base: false
             channels: conda-forge
         - name: manage_exernals and LFS
-          shell: bash -l {0}
           run: |
             git lfs install
             manage_externals/checkout_externals
+        - name: chdirectory python
+          run: |
+              cd python
         - name: Run python tests
-          shell: bash -l {0}
           run: |
-              cd python
               make test
-              if [ $? != 0 ]; then
-                 exit 1
-              fi
         - name: Run pylint
-          shell: bash -l {0}
           run: |
-              cd python
               make lint
-              if [ $? != 0 ]; then
-                 exit 1
-              fi
