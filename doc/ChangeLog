@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev1??
 Originator(s): slevis (Samuel Levis, 303-665-1310)
-Date: Fri Jul 29 03:49:06 MDT 2022
+Date: Mon Aug  1 15:17:58 MDT 2022
 One-line Summary: Introduction of modify_meshes tool for use in I-cases and F-cases
 
 Purpose and description of changes
@@ -15,6 +15,9 @@ Purpose and description of changes
  Details in the tool's README.
 
  Adding test_sys_mesh_modifier.py to python system tests.
+
+ Combining /modify_fsurdat and /modify_mesh_mask directories into one
+ directory: /modify_input_files
 
 
 Significant changes to scientifically-supported configurations

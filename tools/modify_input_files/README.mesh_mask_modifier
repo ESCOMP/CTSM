@@ -3,10 +3,10 @@ mesh_mask file and outputs a modified copy of the same file.
 
 Files involved
 --------------
-python/ctsm/mesh_mask_modifier.py
-python/ctsm/modify_mesh_mask.py
-tools/modify_mesh_mask/mesh_mask_modifier
-tools/modify_mesh_mask/modify_template.cfg
+python/ctsm/modify_input_files/mesh_mask_modifier.py
+python/ctsm/modify_input_files/modify_mesh_mask.py
+tools/modify_input_files/mesh_mask_modifier
+tools/modify_input_files/modify_mesh_template.cfg
 
 Instructions
 ------------
@@ -17,7 +17,7 @@ module load conda
 ./py_env_create
 conda activate ctsm_py
 (Use "deactivate" to reverse the latter.)
-2) Copy, then modify the configure file named modify_template.cfg, which
+2) Copy, then modify the configure file named modify_mesh_template.cfg, which
 contains all the arguments needed by the script.
 3) Run the script ./mesh_mask_modifier pointing to the copied/modified
 .cfg file, e.g. modify_users_copy.cfg
@@ -32,11 +32,11 @@ be specified as grassland in a netcdf file. This has been obtained by
 modifying the default land fraction of CESM. An example netcdf file
 containing the masks for such a case is on cheyenne:
 
-/glade/work/slevis/git/mksurfdata_toolchain/tools/modify_fsurdat/fill_indian_ocean/fill_indianocean_slevis.nc
+/glade/work/slevis/git/mksurfdata_toolchain/tools/modify_input_files/islas_examples/modify_mesh_mask/fill_indian_ocean/fill_indianocean_slevis.nc
 
 This contains two arrays:
-- landfrac = the modified land fraction
-- landmask = set to 1 where the new land surface has been specified
+- landmask = the new landmask
+- mod_lnd_props = set to 1 where the new land surface has been specified
 (i.e., where grassland needs to be specified) and zero elsewhere
 
 This use-case requires modification to the fsurdat and mesh files. To
@@ -44,8 +44,8 @@ modify the former, use the modify_fsurdat tool. See that tool for
 instructions. Here are the steps to modify the mesh file:
 
 In your copy of the CTSM (say, ~user/ctsm), go to the appropriate tool:
->>> cd tools/modify_mesh_mask
->>> cp modify_template.cfg modify_fill_indianocean.cfg
+>>> cd tools/modify_input_files
+>>> cp modify_mesh_template.cfg modify_fill_indianocean.cfg
 
 Enter the following (or similar) selections in modify_fill_indianocean.cfg:
 

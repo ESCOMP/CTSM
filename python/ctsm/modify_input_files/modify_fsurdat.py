@@ -1,6 +1,6 @@
 """
 Run this code by using the following wrapper script:
-/tools/modify_fsurdat/fsurdat_modifier
+/tools/modify_input_files/fsurdat_modifier
 
 The wrapper script includes a full description and instructions.
 """

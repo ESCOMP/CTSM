@@ -1,6 +1,6 @@
 """
 Run this code by using the following wrapper script:
-/tools/modify_mesh_mask/mesh_mask_modifier
+/tools/modify_input_files/mesh_mask_modifier
 
 The wrapper script includes a full description and instructions.
 """
@@ -25,9 +25,9 @@ class ModifyMeshMask:
 
     # The mesh_mask_modifier tool reads landmask, while the modify_fsurdat tool
     # reads mod_lnd_props from the landmask file. Sample landmask
-    # file: fill_indianocean_slevis.nc located here as of 2022/7/26:
-    # /glade/work/slevis/git/mksurfdata_toolchain/tools/modify_fsurdat ...
-    # ... /islas_examples/fill_indian_ocean/
+    # file: fill_indianocean_slevis.nc located here as of 2022/8/1:
+    # /glade/work/slevis/git/mksurfdata_toolchain/tools/modify_input_files ...
+    # ... /islas_examples/modify_fsurdat/fill_indian_ocean/
     # Read mod_lnd_props here only for consistency checks
     def __init__(self, my_data, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname):
 

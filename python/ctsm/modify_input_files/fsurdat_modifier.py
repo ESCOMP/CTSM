@@ -1,6 +1,6 @@
 """
 Run this code by using the following wrapper script:
-tools/modify_fsurdat/fsurdat_modifier
+tools/modify_input_files/fsurdat_modifier
 
 The wrapper script includes a full description and instructions.
 """
@@ -17,7 +17,7 @@ from ctsm.ctsm_logging import (
     add_logging_args,
     process_logging_args,
 )
-from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
+from ctsm.modify_input_files.modify_fsurdat import ModifyFsurdat
 
 logger = logging.getLogger(__name__)
 

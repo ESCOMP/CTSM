@@ -15,7 +15,7 @@ import xarray as xr
 
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
-from ctsm.modify_mesh_mask.mesh_mask_modifier import mesh_mask_modifier
+from ctsm.modify_input_files.mesh_mask_modifier import mesh_mask_modifier
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -32,7 +32,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
     def setUp(self):
         """
         Obtain path to the existing:
-        - modify_template.cfg file
+        - modify_mesh_template.cfg file
         - /testinputs directory and fsurdat_in, located in /testinputs
         Make /_tempdir for use by these tests.
         Obtain path and names for the files being created in /_tempdir:
@@ -41,7 +41,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         """
         # Obtain various paths and make /_tempdir
         self._cfg_template_path = os.path.join(
-            path_to_ctsm_root(), "tools/modify_mesh_mask/modify_template.cfg"
+            path_to_ctsm_root(), "tools/modify_input_files/modify_mesh_template.cfg"
         )
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         fsurdat_in = os.path.join(

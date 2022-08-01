@@ -1,6 +1,6 @@
 """
 Run this code by using the following wrapper script:
-tools/modify_mesh_mask/mesh_mask_modifier
+tools/modify_input_files/mesh_mask_modifier
 
 The wrapper script includes a full description and instructions.
 """
@@ -13,7 +13,7 @@ from configparser import ConfigParser
 from ctsm.utils import abort, write_output
 from ctsm.config_utils import get_config_value
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
-from ctsm.modify_mesh_mask.modify_mesh_mask import ModifyMeshMask
+from ctsm.modify_input_files.modify_mesh_mask import ModifyMeshMask
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,5 @@ def mesh_mask_modifier(cfg_path):
 
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
-    # TODO modify_fsurdat could call same write_output function to avoid
-    #      repetition
     # ----------------------------------------------
     write_output(modify_mesh_mask.file, mesh_mask_in, mesh_mask_out, "mesh")
