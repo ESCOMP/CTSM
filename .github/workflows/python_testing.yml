@@ -26,8 +26,14 @@ jobs:
           run: |
               cd python
               make test
+              if [ $? != 0 ]; then
+                 exit 1
+              fi
         - name: Run pylint
           shell: bash -l {0}
           run: |
               cd python
               make lint
+              if [ $? != 0 ]; then
+                 exit 1
+              fi
