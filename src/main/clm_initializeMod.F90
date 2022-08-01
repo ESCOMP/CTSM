@@ -26,7 +26,7 @@ module clm_initializeMod
   use PatchType             , only : patch         ! instance
   use reweightMod           , only : reweight_wrapup
   use filterMod             , only : allocFilters, filter, filter_inactive_and_active
-  use CLMFatesInterfaceMod  , only : CLMFatesGlobals
+  use CLMFatesInterfaceMod  , only : CLMFatesGlobals1,CLMFatesGlobals2
   use CLMFatesInterfaceMod  , only : CLMFatesTimesteps
   use dynSubgridControlMod  , only : dynSubgridControl_init, get_reset_dynbal_baselines
   use SelfTestDriver        , only : self_test_driver
@@ -40,6 +40,7 @@ module clm_initializeMod
   public :: initialize2  ! Phase two initialization
 
   integer :: actual_numcft  ! numcft from sfc dataset
+  integer :: actual_numpft  ! numpft from sfc dataset
 
 !-----------------------------------------------------------------------
 contains
@@ -96,8 +97,16 @@ contains
 
     call control_init(dtime)
     call ncd_pio_init()
-    call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
-    call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
+    call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numpft, actual_numcft)
+
+    ! If fates is on, we override actual_maxsoil_patches. FATES dictates the
+    ! number of patches per column.  We still use numcft from the surface
+    ! file though...
+    if(use_fates) then
+       call CLMFatesGlobals1(actual_numpft, actual_numcft, actual_maxsoil_patches)
+    end if
+
+    call clm_varpar_init(actual_maxsoil_patches, actual_numpft, actual_numcft)
     call decomp_cascade_par_init( NLFilename )
     call clm_varcon_init( IsSimpleBuildTemp() )
     call landunit_varcon_init()
@@ -118,7 +127,9 @@ contains
     ! !USES:
     use clm_varcon                    , only : spval
     use clm_varpar                    , only : natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glc
+    use clm_varpar                    , only : surfpft_lb, surfpft_ub
     use clm_varpar                    , only : nlevsno
+    use clm_varpar                    , only : natpft_size,cft_size
     use clm_varctl                    , only : fsurdat
     use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
     use clm_varctl                    , only : use_cn, use_fates
@@ -198,7 +209,7 @@ contains
     ! Get processor bounds for gridcells
     call get_proc_bounds(bounds_proc)
     begg = bounds_proc%begg; endg = bounds_proc%endg
-    
+
     ! Initialize glc behavior
     call glc_behavior%Init(begg, endg, NLFilename)
 
@@ -210,7 +221,6 @@ contains
     ! Allocate surface grid dynamic memory (just gridcell bounds dependent)
     allocate (wt_lunit     (begg:endg, max_lunit           ))
     allocate (urban_valid  (begg:endg                      ))
-    allocate (wt_nat_patch (begg:endg, natpft_lb:natpft_ub ))
     allocate (wt_cft       (begg:endg, cft_lb:cft_ub       ))
     allocate (fert_cft     (begg:endg, cft_lb:cft_ub       ))
     allocate (irrig_method (begg:endg, cft_lb:cft_ub       ))
@@ -218,7 +228,8 @@ contains
     allocate (topo_glc_mec (begg:endg, maxpatch_glc     ))
     allocate (haslake      (begg:endg                      ))
     allocate (pct_urban_max(begg:endg, numurbl             ))
-
+    allocate (wt_nat_patch (begg:endg, surfpft_lb:surfpft_ub ))
+    
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
     call pftcon%Init()
@@ -226,20 +237,24 @@ contains
     ! Read surface dataset and set up subgrid weight arrays
     call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
 
-    ! Ask Fates to evaluate its own dimensioning needs.
-    ! This determines the total amount of space it requires in its largest
-    ! dimension.  We are currently calling that the "cohort" dimension, but
-    ! it is really a utility dimension that captures the models largest
-    ! size need.
-    ! Sets:
-    !   fates_maxElementsPerPatch
-    !   fates_maxElementsPerSite (where a site is roughly equivalent to a column)
-    ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
-    ! to allocate space)
-    ! This also sets up various global constants in FATES
-    ! ------------------------------------------------------------------------
-    
-    call CLMFatesGlobals()
+    if(use_fates) then
+
+       ! Ask Fates to evaluate its own dimensioning needs.
+       ! This determines the total amount of space it requires in its largest
+       ! dimension.  We are currently calling that the "cohort" dimension, but
+       ! it is really a utility dimension that captures the models largest
+       ! size need.
+       ! Sets:
+       !   fates_maxElementsPerPatch
+       !   fates_maxElementsPerSite (where a site is roughly equivalent to a column)
+       ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
+       ! to allocate space)
+       ! This also sets up various global constants in FATES
+       ! ------------------------------------------------------------------------
+
+       call CLMFatesGlobals2()
+
+    end if
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
     call decompInit_clumps(ni, nj, glc_behavior)
@@ -417,6 +432,7 @@ contains
        if (n_drydep > 0 .and. drydep_method == DD_XLND) then
           ! Must do this also when drydeposition is used so that estimates of monthly
           ! differences in LAI can be computed
+          ! Also do this for FATES see below
           call SatellitePhenologyInit(bounds_proc)
        end if
        if ( use_c14 .and. use_c14_bombspike ) then
@@ -425,12 +441,20 @@ contains
        if ( use_c13 .and. use_c13_timeseries ) then
           call C13_init_TimeSeries()
        end if
-    else
-       call SatellitePhenologyInit(bounds_proc)
+
+    else ! FATES OR Satellite phenology
+
+       ! For SP FATES-SP Initialize SP
+       ! Also for FATES with Dry-Deposition on as well (see above)
+       !if(use_fates_sp .or. (.not.use_cn) .or. (n_drydep > 0 .and.  drydep_method == DD_XLND) )then  !  Replace with this when we have dry-deposition working
+       ! For now don't allow for dry-deposition because of issues in #1044 EBK Jun/17/2022
+       if( use_fates_sp .or. .not. use_fates )then
+          call SatellitePhenologyInit(bounds_proc)
+       end if
 
        ! fates_spitfire_mode is assigned an integer value in the namelist
        ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
-       if (fates_spitfire_mode > scalar_lightning) then
+       if(use_fates .and. (fates_spitfire_mode > scalar_lightning)) then
           call clm_fates%Init2(bounds_proc, NLFilename)
        end if
     end if
@@ -589,19 +613,17 @@ contains
     end if
 
     ! Read monthly vegetation
-    ! Even if CN is on, and dry-deposition is active, read CLMSP annual vegetation
+    ! Even if CN or FATES is on, and dry-deposition is active, read CLMSP annual vegetation
     ! to get estimates of monthly LAI
     if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
        call readAnnualVegetation(bounds_proc, canopystate_inst)
-       if (nsrest == nsrStartup .and. finidat /= ' ') then
-          ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
-          ! This needs to be done even if CN or CNDV is on!
-          call interpMonthlyVeg(bounds_proc, canopystate_inst)
-       end if
+       ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
+       ! This needs to be done even if FATES, CN or CNDV is on!
+       call interpMonthlyVeg(bounds_proc, canopystate_inst)
     ! If fates has satellite phenology enabled, get the monthly veg values
     ! prior to the first call to SatellitePhenology()
     elseif ( use_fates_sp ) then
-          call interpMonthlyVeg(bounds_proc, canopystate_inst)
+       call interpMonthlyVeg(bounds_proc, canopystate_inst)
     end if
 
     ! Determine gridcell averaged properties to send to atm
@@ -639,8 +661,16 @@ contains
           !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
           do nc = 1,nclumps
              call get_clump_bounds(nc, bounds_clump)
-             call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+
+             ! FATES satellite phenology mode needs to include all active and inactive patch-level soil
+             ! filters due to the translation between the hlm pfts and the fates pfts.
+             ! E.g. in FATES, an active PFT vector of 1, 0, 0, 0, 1, 0, 1, 0 would be mapped into
+             ! the host land model as 1, 1, 1, 0, 0, 0, 0.  As such, the 'active' filter would only
+             ! use the first three points, which would incorrectly represent the interpolated values.
+             call SatellitePhenology(bounds_clump, &
+                  filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
                   water_inst%waterdiagnosticbulk_inst, canopystate_inst)
+
           end do
           !$OMP END PARALLEL DO
        end if

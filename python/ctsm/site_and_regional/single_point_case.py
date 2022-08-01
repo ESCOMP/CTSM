@@ -56,8 +56,6 @@ class SinglePointCase(BaseCase):
         weight or percentage of each pft.
     num_pft : list
         total number of pfts for surface dataset (if crop 78 pft, else 16 pft)
-    zero_nonveg_landunits : bool
-        flag for setting all non-vegetation landunits to zero
     uni_snow : bool
         flag for creating datasets using uniform snowpack
     saturation_excess : bool
@@ -136,7 +134,7 @@ class SinglePointCase(BaseCase):
 
         self.create_tag()
         self.check_dom_pft()
-        #self.check_nonveg()
+        # self.check_nonveg()
         self.check_pct_pft()
 
     def create_tag(self):
@@ -303,12 +301,8 @@ class SinglePointCase(BaseCase):
         """
         Create domain file for this SinglePointCase class.
         """
-        logger.info(
-            "----------------------------------------------------------------------"
-        )
-        logger.info(
-            "Creating domain file at %s, %s.", self.plon.__str__(), self.plat.__str__()
-        )
+        logger.info("----------------------------------------------------------------------")
+        logger.info("Creating domain file at %s, %s.", self.plon.__str__(), self.plat.__str__())
 
         # specify files
         fdomain_in = os.path.join(indir, file)
@@ -339,9 +333,7 @@ class SinglePointCase(BaseCase):
         """
         Create landuse file at a single point.
         """
-        logger.info(
-            "----------------------------------------------------------------------"
-        )
+        logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating land use file at %s, %s.",
             self.plon.__str__(),
@@ -368,9 +360,7 @@ class SinglePointCase(BaseCase):
 
         # revert expand dimensions of YEAR
         year = np.squeeze(np.asarray(f_out["YEAR"]))
-        temp_xr = xr.DataArray(
-            year, coords={"time": f_out["time"]}, dims="time", name="YEAR"
-        )
+        temp_xr = xr.DataArray(year, coords={"time": f_out["time"]}, dims="time", name="YEAR")
         temp_xr.attrs["units"] = "unitless"
         temp_xr.attrs["long_name"] = "Year of PFT data"
         f_out["YEAR"] = temp_xr
@@ -388,9 +378,7 @@ class SinglePointCase(BaseCase):
         # write to user_nl_clm data if specified
         if self.create_user_mods:
             with open(os.path.join(user_mods_dir, "user_nl_clm"), "a") as nl_clm:
-                line = "flanduse_timeseries = '${}'".format(
-                    os.path.join(USRDAT_DIR, fluse_out)
-                )
+                line = "flanduse_timeseries = '${}'".format(os.path.join(USRDAT_DIR, fluse_out))
                 self.write_to_file(line, nl_clm)
 
     def modify_surfdata_atpoint(self, f_orig):
@@ -443,11 +431,11 @@ class SinglePointCase(BaseCase):
                     f_mod["PCT_NATVEG"][:, :] = 0
                     f_mod["PCT_CROP"][:, :] = 100
             else:
-                #-- recalculate percentages after zeroing out non-veg landunits
-                #-- so they add up to 100%.
-                tot_pct = f_mod["PCT_CROP"]+f_mod['PCT_NATVEG']
-                f_mod ["PCT_CROP"] = f_mod ["PCT_CROP"]/tot_pct * 100
-                f_mod ["PCT_NATVEG"] = f_mod ["PCT_NATVEG"]/tot_pct * 100
+                # -- recalculate percentages after zeroing out non-veg landunits
+                # -- so they add up to 100%.
+                tot_pct = f_mod["PCT_CROP"] + f_mod["PCT_NATVEG"]
+                f_mod["PCT_CROP"] = f_mod["PCT_CROP"] / tot_pct * 100
+                f_mod["PCT_NATVEG"] = f_mod["PCT_NATVEG"] / tot_pct * 100
 
         else:
             logger.info(
@@ -467,9 +455,7 @@ class SinglePointCase(BaseCase):
         Create surface data file at a single point.
         """
         # pylint: disable=too-many-statements
-        logger.info(
-            "----------------------------------------------------------------------"
-        )
+        logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating surface dataset file at %s, %s",
             self.plon.__str__(),
@@ -538,9 +524,7 @@ class SinglePointCase(BaseCase):
         """
         Create DATM domain file at a single point
         """
-        logger.info(
-            "----------------------------------------------------------------------"
-        )
+        logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating DATM domain file at %s, %s",
             self.plon.__str__(),
@@ -604,12 +588,8 @@ class SinglePointCase(BaseCase):
         """
         # write_to_file surrounds text with newlines
         with open(file, "w") as nl_file:
-            self.write_to_file(
-                "# Change below line if you move the subset data directory", nl_file
-            )
-            self.write_to_file(
-                "./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file
-            )
+            self.write_to_file("# Change below line if you move the subset data directory", nl_file)
+            self.write_to_file("./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file)
             self.write_to_file("./xmlchange PTS_LON={}".format(str(self.plon)), nl_file)
             self.write_to_file("./xmlchange PTS_LAT={}".format(str(self.plat)), nl_file)
             self.write_to_file("./xmlchange MPILIB=mpi-serial", nl_file)
@@ -623,24 +603,16 @@ class SinglePointCase(BaseCase):
         datmfiles - comma-separated list (str) of DATM file names
         file - file connection to user_nl_datm_streams file
         """
-        self.write_to_file(
-            "{}:datafiles={}".format(streamname, ",".join(datmfiles)), file
-        )
+        self.write_to_file("{}:datafiles={}".format(streamname, ",".join(datmfiles)), file)
         self.write_to_file("{}:mapalgo=none".format(streamname), file)
         self.write_to_file("{}:meshfile=none".format(streamname), file)
 
-    def create_datm_at_point(
-        self, datm_tuple: DatmFiles, datm_syr, datm_eyr, datm_streams_file
-    ):
+    def create_datm_at_point(self, datm_tuple: DatmFiles, datm_syr, datm_eyr, datm_streams_file):
         """
         Create all of a DATM dataset at a point.
         """
-        logger.info(
-            "----------------------------------------------------------------------"
-        )
-        logger.info(
-            "Creating DATM files at %s, %s", self.plon.__str__(), self.plat.__str__()
-        )
+        logger.info("----------------------------------------------------------------------")
+        logger.info("Creating DATM files at %s, %s", self.plon.__str__(), self.plat.__str__())
 
         # --  create data files
         infile = []
@@ -689,9 +661,7 @@ class SinglePointCase(BaseCase):
                 precfiles.append(
                     os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fprecip2)
                 )
-                tpqwfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2)
-                )
+                tpqwfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2))
 
         for idx, out_f in enumerate(outfile):
             logger.debug(out_f)

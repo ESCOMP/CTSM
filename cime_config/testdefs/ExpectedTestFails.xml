@@ -39,20 +39,6 @@
 
   <!-- fates test suite failures -->
 
-  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdDefHydro">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>NGEET/fates#795</issue>
-    </phase>
-  </test>
-
-  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdDefHydro">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#1525</issue>
-    </phase>
-  </test>
-
   <test name="ERS_D_Lm12.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesFireLightningPopDens">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
