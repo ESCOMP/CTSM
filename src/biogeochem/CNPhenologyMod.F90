@@ -1810,6 +1810,10 @@ contains
             end do
             do s = 1, mxharvests
                crop_inst%hdates_thisyr(p,s) = -1._r8
+               cnveg_state_inst%gddmaturity_thisyr(p,s) = -1._r8
+               crop_inst%gddaccum_thisyr(p,s) = -1._r8
+               crop_inst%hui_thisyr(p,s) = -1._r8
+               crop_inst%harvest_reason_thisyr(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
                   cnveg_carbonflux_inst%repr_grainc_to_food_perharv(p,s,k) = 0._r8
                end do
@@ -1871,7 +1875,9 @@ contains
                   hdidx(p)       = 0._r8
                   vf(p)          = 0._r8
                   
-                  call PlantCrop(p, leafcn(ivt(p)), jday, crop_inst, cnveg_state_inst, &
+                  call PlantCrop(p, leafcn(ivt(p)), jday, &
+                                 do_plant_normal, do_plant_lastchance, &
+                                 crop_inst, cnveg_state_inst, &
                                  cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
                                  c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
@@ -1902,7 +1908,9 @@ contains
 
                if (do_plant_normal .or. do_plant_lastchance) then
 
-                  call PlantCrop(p, leafcn(ivt(p)), jday, crop_inst, cnveg_state_inst, &
+                  call PlantCrop(p, leafcn(ivt(p)), jday, &
+                                 do_plant_normal, do_plant_lastchance, &
+                                 crop_inst, cnveg_state_inst, &
                                  cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
                                  c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
@@ -2092,6 +2100,10 @@ contains
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                harvest_count(p) = harvest_count(p) + 1
                crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
+               cnveg_state_inst%gddmaturity_thisyr(p,harvest_count(p)) = gddmaturity(p)
+               crop_inst%gddaccum_thisyr(p, harvest_count(p)) = crop_inst%gddaccum_patch(p)
+               crop_inst%hui_thisyr(p, harvest_count(p)) = hui(p)
+               crop_inst%harvest_reason_thisyr(p, harvest_count(p)) = harvest_reason
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = cphase_harvest
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
@@ -2289,7 +2301,8 @@ contains
   end subroutine CropPhenologyInit
 
     !-----------------------------------------------------------------------
-  subroutine PlantCrop(p, leafcn_in, jday, &
+  subroutine PlantCrop(p, leafcn_in, jday, do_plant_normal, &
+       do_plant_lastchance, &
        crop_inst, cnveg_state_inst,                                 &
        cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,            &
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,              &
@@ -2309,6 +2322,8 @@ contains
     integer                , intent(in)    :: p         ! PATCH index running over
     real(r8)               , intent(in)    :: leafcn_in ! leaf C:N (gC/gN) of this patch's vegetation type (pftcon%leafcn(ivt(p)))
     integer                , intent(in)    :: jday      ! julian day of the year
+    logical                , intent(in)    :: do_plant_normal ! Are all the normal requirements for planting met?
+    logical                , intent(in)    :: do_plant_lastchance ! Are the last-chance requirements for planting met?
     type(crop_type)                , intent(inout) :: crop_inst
     type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
@@ -2320,12 +2335,14 @@ contains
     !
     ! LOCAL VARAIBLES:
     integer k              ! grain pool index
+    real(r8) this_sowing_reason ! number representing sowing reason(s)
     !------------------------------------------------------------------------
 
     associate(                                                                     & 
          croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
          sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
+         sowing_reason     =>    crop_inst%sowing_reason_thisyr                  , & ! Output:  [real(r8)  (:) ]  reason for each sowing this year for this patch
          idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting                                   
          leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch       , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer
@@ -2340,6 +2357,17 @@ contains
       harvdate(p)  = NOT_Harvested
       sowing_count(p) = sowing_count(p) + 1
       crop_inst%sdates_thisyr(p,sowing_count(p)) = jday
+
+      this_sowing_reason = 0._r8
+      if (do_plant_prescribed) then
+          this_sowing_reason = 10._r8
+      end if
+      if (do_plant_normal) then
+          this_sowing_reason = this_sowing_reason + 1._r8
+      else if (do_plant_lastchance) then
+          this_sowing_reason = this_sowing_reason + 2._r8
+      end if
+      sowing_reason(p,s) = this_sowing_reason
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
