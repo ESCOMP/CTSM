@@ -150,6 +150,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
+    use clm_varpar, only : mxharvests
     !
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this

@@ -2370,15 +2370,12 @@ contains
       crop_inst%sdates_thisyr(p,sowing_count(p)) = jday
 
       this_sowing_reason = 0._r8
-      if (do_plant_prescribed) then
-          this_sowing_reason = 10._r8
-      end if
       if (do_plant_normal) then
           this_sowing_reason = this_sowing_reason + 1._r8
       else if (do_plant_lastchance) then
           this_sowing_reason = this_sowing_reason + 2._r8
       end if
-      sowing_reason(p,s) = this_sowing_reason
+      sowing_reason(p,sowing_count(p)) = this_sowing_reason
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
