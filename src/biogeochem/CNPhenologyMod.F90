@@ -1703,6 +1703,7 @@ contains
     integer s         ! growing season indices
     integer k         ! grain pool indices
     integer idpp      ! number of days past planting
+    real(r8) harvest_reason
     real(r8) dayspyr  ! days per year in this year
     real(r8) avg_dayspyr ! average number of days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
@@ -1791,6 +1792,9 @@ contains
          bglfr(p) = 0._r8 ! this value changes later in a crop's life cycle
          bgtr(p)  = 0._r8
          lgsf(p)  = 0._r8
+
+         ! Should never be saved as zero, but including this so it's initialized just in case
+         harvest_reason = 0._r8
 
          ! ---------------------------------
          ! from AgroIBIS subroutine planting
@@ -2097,6 +2101,13 @@ contains
                ! changes to the offset subroutine below
 
             else if (hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))) then
+
+               if (hui(p) >= gddmaturity(p)) then
+                  harvest_reason = 1._r8
+               else if (idpp >= mxmat(ivt(p))) then
+                  harvest_reason = 2._r8
+               end if
+
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                harvest_count(p) = harvest_count(p) + 1
                crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
