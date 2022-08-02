@@ -9,7 +9,8 @@ module pftconMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
   use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub, ndecomp_pools
-  use clm_varctl  , only : iulog, use_cndv, use_crop
+  use clm_varctl  , only : iulog, use_cndv, use_crop, use_grainproduct
+  use CropReprPoolsMod, only : repr_structure_min, repr_structure_max
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -136,6 +137,7 @@ module pftconMod
      real(r8), allocatable :: dsladlai      (:)   ! dSLA/dLAI [m^2/gC]
      real(r8), allocatable :: leafcn        (:)   ! leaf C:N [gC/gN]
      real(r8), allocatable :: biofuel_harvfrac (:) ! fraction of stem and leaf cut for harvest, sent to biofuels [unitless]
+     real(r8), allocatable :: repr_structure_harvfrac(:,:) ! fraction of each reproductive structure component that is harvested and sent to the crop products pool [unitless] [0:mxpft, repr_structure_min:repr_structure_max]
      real(r8), allocatable :: flnr          (:)   ! fraction of leaf N in Rubisco [no units]
      real(r8), allocatable :: woody         (:)   ! woody lifeform flag (0 or 1)
      real(r8), allocatable :: lflitcn       (:)   ! leaf litter C:N (gC/gN)
@@ -373,7 +375,8 @@ contains
     allocate( this%slatop        (0:mxpft) )      
     allocate( this%dsladlai      (0:mxpft) )    
     allocate( this%leafcn        (0:mxpft) )  
-    allocate( this%biofuel_harvfrac (0:mxpft) )  
+    allocate( this%biofuel_harvfrac (0:mxpft) )
+    allocate( this%repr_structure_harvfrac (0:mxpft, repr_structure_min:repr_structure_max) )
     allocate( this%flnr          (0:mxpft) )        
     allocate( this%woody         (0:mxpft) )       
     allocate( this%lflitcn       (0:mxpft) )      
@@ -508,13 +511,14 @@ contains
     use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot, use_biomass_heat_storage
     use spmdMod     , only : masterproc
     use CLMFatesParamInterfaceMod, only : FatesReadPFTs
+    use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, decomp_method
     !
     ! !ARGUMENTS:
     class(pftcon_type) :: this
     !
     ! !LOCAL VARIABLES:
     character(len=256) :: locfn                ! local file name
-    integer            :: i,n,m                ! loop indices
+    integer            :: i,n,m,k              ! loop indices
     integer            :: ier                  ! error code
     type(file_desc_t)  :: ncid                 ! pio netCDF file id
     integer            :: dimid                ! netCDF dimension id
@@ -765,11 +769,18 @@ contains
     ! in do-loops. While executing the next few lines, we do not yet have access
     ! to i_litr_min, i_litr_max.
     this%fr_f(:,1) = this%fr_flab
-    this%fr_f(:,2) = this%fr_fcel
-    this%fr_f(:,3) = this%fr_flig
     this%lf_f(:,1) = this%lf_flab
-    this%lf_f(:,2) = this%lf_fcel
-    this%lf_f(:,3) = this%lf_flig
+    if (decomp_method == mimics_decomp) then
+       this%fr_f(:,2) = this%fr_fcel + this%fr_flig
+       this%fr_f(:,3) = 0.0_r8
+       this%lf_f(:,2) = this%lf_fcel + this%lf_flig
+       this%lf_f(:,3) = 0.0_r8
+    else
+       this%fr_f(:,2) = this%fr_fcel
+       this%fr_f(:,3) = this%fr_flig
+       this%lf_f(:,2) = this%lf_fcel
+       this%lf_f(:,3) = this%lf_flig
+    end if
 
     call ncd_io('leaf_long', this%leaf_long, 'read', ncid, readvar=readv, posNOTonfile=.true.)    
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
@@ -1213,6 +1224,27 @@ contains
          this%mergetoclmpft(i) = nc3irrig
        end do
     end if
+
+    ! BUG(wjs, 2022-03-02, ESCOMP/CTSM#1667) Add this to the param file and read it along
+    ! with the other parameters. Until then, this block of code needs to be done after
+    ! npcropmin is set so that we have the correct value of npcropmin below.
+    do k = repr_structure_min, repr_structure_max
+       do i = 0, npcropmin-1
+          this%repr_structure_harvfrac(i,k) = 0._r8
+       end do
+       do i = npcropmin, mxpft
+          ! For now, until we read this from the param file, set it based on
+          ! use_grainproduct. This will facilitate software testing: this keeps the
+          ! operation of the structure pools similar to that of the grain pools for a
+          ! given setup.
+          if (use_grainproduct) then
+             this%repr_structure_harvfrac(i,k) = 1._r8
+          else
+             this%repr_structure_harvfrac(i,k) = 0._r8
+          end if
+       end do
+    end do
+
     !
     ! Do some error checking, but not if fates is on.
     !
@@ -1271,6 +1303,12 @@ contains
              call endrun(msg=' ERROR: biofuel_harvfrac non-zero for a non-prognostic crop PFT.'//&
                   errMsg(sourcefile, __LINE__))
           end if
+          do k = repr_structure_min, repr_structure_max
+             if (i < npcropmin .and. this%repr_structure_harvfrac(i,k) /= 0._r8) then
+                call endrun(msg=' ERROR: repr_structure_harvfrac non-zero for a non-prognostic crop PFT.'//&
+                     errMsg(sourcefile, __LINE__))
+             end if
+          end do
        end do
     end if
 
@@ -1384,6 +1422,7 @@ contains
     deallocate( this%dsladlai)
     deallocate( this%leafcn)
     deallocate( this%biofuel_harvfrac)
+    deallocate( this%repr_structure_harvfrac)
     deallocate( this%flnr)
     deallocate( this%woody)
     deallocate( this%lflitcn)

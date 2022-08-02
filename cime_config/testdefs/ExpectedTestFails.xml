@@ -30,35 +30,14 @@
 
   <!-- aux_clm test suite failures -->
 
-  <test name="SMS.f10_f10_mg37.I2000Clm50BgcCrop.izumi_pgi.clm-crop">
-    <phase name="MODEL_BUILD">
+  <test name="SMS_D.f10_f10_mg37.I2000Clm51BgcCrop.cheyenne_nvhpc.clm-crop">
+    <phase name="RUN">
       <status>FAIL</status>
-      <issue>PGI problems with the nuopc driver</issue>
-    </phase>
-  </test>
-
-  <test name="SMS_D.f10_f10_mg37.I2000Clm51BgcCrop.izumi_pgi.clm-crop">
-    <phase name="MODEL_BUILD">
-      <status>FAIL</status>
-      <issue>PGI problems with the nuopc driver</issue>
+      <issue>#1733</issue>
     </phase>
   </test>
 
   <!-- fates test suite failures -->
-
-  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdDefHydro">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>NGEET/fates#795</issue>
-    </phase>
-  </test>
-
-  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdDefHydro">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#1525</issue>
-    </phase>
-  </test>
 
   <test name="ERS_D_Lm12.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesFireLightningPopDens">
     <phase name="COMPARE_base_rest">

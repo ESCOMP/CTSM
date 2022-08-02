@@ -11,9 +11,12 @@ import logging
 import numpy as np
 import xarray as xr
 
-from ctsm.utils import abort, get_ctsm_git_sha, update_metadata, lon_range_0_to_360
+from ctsm.git_utils import get_ctsm_git_short_hash
+from ctsm.utils import abort, update_metadata
+from ctsm.config_utils import lon_range_0_to_360
 
 logger = logging.getLogger(__name__)
+
 
 class ModifyFsurdat:
     """
@@ -25,29 +28,32 @@ class ModifyFsurdat:
 
         self.file = my_data
 
-        self.not_rectangle = self._get_not_rectangle(
-            lon_1=lon_1, lon_2=lon_2,
-            lat_1=lat_1, lat_2=lat_2,
-            longxy=self.file.LONGXY, latixy=self.file.LATIXY)
+        self.rectangle = self._get_rectangle(
+            lon_1=lon_1,
+            lon_2=lon_2,
+            lat_1=lat_1,
+            lat_2=lat_2,
+            longxy=self.file.LONGXY,
+            latixy=self.file.LATIXY,
+        )
 
         if landmask_file is not None:
             # overwrite self.not_rectangle with data from
             # user-specified .nc file in the .cfg file
             self._landmask_file = xr.open_dataset(landmask_file)
-            rectangle = self._landmask_file.landmask
-            self.not_rectangle = np.logical_not(rectangle)
+            self.rectangle = self._landmask_file.landmask
 
+        self.not_rectangle = np.logical_not(self.rectangle)
 
     @classmethod
     def init_from_file(cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file):
         """Initialize a ModifyFsurdat object from file fsurdat_in"""
-        logger.info( 'Opening fsurdat_in file to be modified: %s', fsurdat_in)
+        logger.info("Opening fsurdat_in file to be modified: %s", fsurdat_in)
         my_file = xr.open_dataset(fsurdat_in)
         return cls(my_file, lon_1, lon_2, lat_1, lat_2, landmask_file)
 
-
     @staticmethod
-    def _get_not_rectangle(lon_1, lon_2, lat_1, lat_2, longxy, latixy):
+    def _get_rectangle(lon_1, lon_2, lat_1, lat_2, longxy, latixy):
         """
         Description
         -----------
@@ -59,11 +65,11 @@ class ModifyFsurdat:
 
         # determine the rectangle(s)
         # TODO This is not really "nearest" for the edges but isel didn't work
-        rectangle_1 = (longxy >= lon_1)
-        rectangle_2 = (longxy <= lon_2)
+        rectangle_1 = longxy >= lon_1
+        rectangle_2 = longxy <= lon_2
         eps = np.finfo(np.float32).eps  # to avoid roundoff issue
-        rectangle_3 = (latixy >= (lat_1 - eps))
-        rectangle_4 = (latixy <= (lat_2 + eps))
+        rectangle_3 = latixy >= (lat_1 - eps)
+        rectangle_4 = latixy <= (lat_2 + eps)
 
         if lon_1 <= lon_2:
             # rectangles overlap
@@ -73,7 +79,7 @@ class ModifyFsurdat:
             union_1 = np.logical_or(rectangle_1, rectangle_2)
 
         if lat_1 < -90 or lat_1 > 90 or lat_2 < -90 or lat_2 > 90:
-            errmsg = 'lat_1 and lat_2 need to be in the range -90 to 90'
+            errmsg = "lat_1 and lat_2 need to be in the range -90 to 90"
             abort(errmsg)
         elif lat_1 <= lat_2:
             # rectangles overlap
@@ -84,10 +90,8 @@ class ModifyFsurdat:
 
         # union rectangles overlap
         rectangle = np.logical_and(union_1, union_2)
-        not_rectangle = np.logical_not(rectangle)
 
-        return not_rectangle
-
+        return rectangle
 
     def write_output(self, fsurdat_in, fsurdat_out):
         """
@@ -105,88 +109,110 @@ class ModifyFsurdat:
 
         # update attributes
         # TODO Better as dictionary?
-        title = 'Modified fsurdat file'
-        summary = 'Modified fsurdat file'
-        contact = 'N/A'
-        data_script = os.path.abspath(__file__) + " -- " + get_ctsm_git_sha()
-        description = 'Modified this file: ' + fsurdat_in
-        update_metadata(self.file, title=title, summary=summary,
-                        contact=contact, data_script=data_script,
-                        description=description)
+        title = "Modified fsurdat file"
+        summary = "Modified fsurdat file"
+        contact = "N/A"
+        data_script = os.path.abspath(__file__) + " -- " + get_ctsm_git_short_hash()
+        description = "Modified this file: " + fsurdat_in
+        update_metadata(
+            self.file,
+            title=title,
+            summary=summary,
+            contact=contact,
+            data_script=data_script,
+            description=description,
+        )
 
         # abort if output file already exists
         file_exists = os.path.exists(fsurdat_out)
         if file_exists:
-            errmsg = 'Output file already exists: ' + fsurdat_out
+            errmsg = "Output file already exists: " + fsurdat_out
             abort(errmsg)
 
         # mode 'w' overwrites file if it exists
-        self.file.to_netcdf(path=fsurdat_out, mode='w',
-                            format="NETCDF3_64BIT")
-        logger.info('Successfully created fsurdat_out: %s', fsurdat_out)
+        self.file.to_netcdf(path=fsurdat_out, mode="w", format="NETCDF3_64BIT")
+        logger.info("Successfully created fsurdat_out: %s", fsurdat_out)
         self.file.close()
 
-
-    def set_dom_nat_pft(self, dom_nat_pft, lai, sai, hgt_top, hgt_bot):
+    def set_dom_pft(self, dom_pft, lai, sai, hgt_top, hgt_bot):
         """
         Description
         -----------
         In rectangle selected by user (or default -90 to 90 and 0 to 360),
-        replace fsurdat file's PCT_NAT_PFT with:
-        - 100 for dom_nat_pft selected by user
-        - 0 for all other non-crop PFTs
+        replace fsurdat file's PCT_NAT_PFT or PCT_CFT with:
+        - 100 for dom_pft selected by user
+        - 0 for all other PFTs/CFTs
         If user has specified lai, sai, hgt_top, hgt_bot, replace these with
-        values selected by the user for dom_nat_pft
+        values selected by the user for dom_pft
 
         Arguments
         ---------
-        dom_nat_pft:
-            (int) User's entry of PFT to be set to 100% everywhere
+        dom_pft:
+            (int) User's entry of PFT/CFT to be set to 100% everywhere
         lai:
-            (float) User's entry of MONTHLY_LAI for their dom_nat_pft
+            (float) User's entry of MONTHLY_LAI for their dom_pft
         sai:
-            (float) User's entry of MONTHLY_SAI for their dom_nat_pft
+            (float) User's entry of MONTHLY_SAI for their dom_pft
         hgt_top:
-            (float) User's entry of MONTHLY_HEIGHT_TOP for their dom_nat_pft
+            (float) User's entry of MONTHLY_HEIGHT_TOP for their dom_pft
         hgt_bot:
-            (float) User's entry of MONTHLY_HEIGHT_BOT for their dom_nat_pft
+            (float) User's entry of MONTHLY_HEIGHT_BOT for their dom_pft
         """
 
-        for pft in self.file.natpft:
-            # initialize 3D variable; set outside the loop below
-            self.setvar_lev1('PCT_NAT_PFT', val=0, lev1_dim=pft)
-        # set 3D variable value for dom_nat_pft
-        self.setvar_lev1('PCT_NAT_PFT', val=100, lev1_dim=dom_nat_pft)
+        # If dom_pft is a cft, add PCT_NATVEG to PCT_CROP in the rectangle
+        # and remove same from PCT_NATVEG, i.e. set PCT_NATVEG = 0.
+        if dom_pft > max(self.file.natpft):  # dom_pft is a cft (crop)
+            self.file["PCT_CROP"] = self.file["PCT_CROP"] + self.file["PCT_NATVEG"].where(
+                self.rectangle, other=0
+            )
+            self.setvar_lev0("PCT_NATVEG", 0)
+
+            for cft in self.file.cft:
+                cft_local = cft - (max(self.file.natpft) + 1)
+                # initialize 3D variable; set outside the loop below
+                self.setvar_lev1("PCT_CFT", val=0, lev1_dim=cft_local)
+
+            # set 3D variable
+            self.setvar_lev1("PCT_CFT", val=100, lev1_dim=dom_pft - (max(self.file.natpft) + 1))
+        else:  # dom_pft is a pft (not a crop)
+            for pft in self.file.natpft:
+                # initialize 3D variable; set outside the loop below
+                self.setvar_lev1("PCT_NAT_PFT", val=0, lev1_dim=pft)
+            # set 3D variable value for dom_pft
+            self.setvar_lev1("PCT_NAT_PFT", val=100, lev1_dim=dom_pft)
 
         # dictionary of 4d variables to loop over
-        vars_4d = {'MONTHLY_LAI': lai,
-                   'MONTHLY_SAI': sai,
-                   'MONTHLY_HEIGHT_TOP': hgt_top,
-                   'MONTHLY_HEIGHT_BOT': hgt_bot}
+        vars_4d = {
+            "MONTHLY_LAI": lai,
+            "MONTHLY_SAI": sai,
+            "MONTHLY_HEIGHT_TOP": hgt_top,
+            "MONTHLY_HEIGHT_BOT": hgt_bot,
+        }
         for var, val in vars_4d.items():
             if val is not None:
-                self.set_lai_sai_hgts(dom_nat_pft=dom_nat_pft,
-                                      var=var, val=val)
+                self.set_lai_sai_hgts(dom_pft=dom_pft, var=var, val=val)
 
-
-    def set_lai_sai_hgts(self, dom_nat_pft, var, val):
+    def set_lai_sai_hgts(self, dom_pft, var, val):
         """
         Description
         -----------
         If user has specified lai, sai, hgt_top, hgt_bot, replace these with
-        values selected by the user for dom_nat_pft. Else do nothing.
+        values selected by the user for dom_pft. Else do nothing.
         """
-        if dom_nat_pft == 0:  # bare soil: var must equal 0
-            val = [0] * 12
-        if len(val) != 12:
-            errmsg = 'Error: Variable should have exactly 12 ' \
-                     'entries in the configure file: ' + var
+        months = int(max(self.file.time))  # 12 months
+        if dom_pft == 0:  # bare soil: var must equal 0
+            val = [0] * months
+        if len(val) != months:
+            errmsg = (
+                "Error: Variable should have exactly "
+                + months
+                + " entries in the configure file: "
+                + var
+            )
             abort(errmsg)
         for mon in self.file.time - 1:  # loop over 12 months
-            # set 4D variable to value for dom_nat_pft
-            self.setvar_lev2(var, val[int(mon)], lev1_dim=dom_nat_pft,
-                             lev2_dim=mon)
-
+            # set 4D variable to value for dom_pft
+            self.setvar_lev2(var, val[int(mon)], lev1_dim=dom_pft, lev2_dim=mon)
 
     def zero_nonveg(self):
         """
@@ -196,22 +222,19 @@ class ModifyFsurdat:
         Set that one to 100%.
         """
 
-        self.setvar_lev0('PCT_NATVEG', 100)
-        self.setvar_lev0('PCT_CROP', 0)
-        self.setvar_lev0('PCT_LAKE', 0)
-        self.setvar_lev0('PCT_WETLAND', 0)
-        self.setvar_lev0('PCT_URBAN', 0)
-        self.setvar_lev0('PCT_GLACIER', 0)
-
+        self.setvar_lev0("PCT_NATVEG", 100)
+        self.setvar_lev0("PCT_CROP", 0)
+        self.setvar_lev0("PCT_LAKE", 0)
+        self.setvar_lev0("PCT_WETLAND", 0)
+        self.setvar_lev0("PCT_URBAN", 0)
+        self.setvar_lev0("PCT_GLACIER", 0)
 
     def setvar_lev0(self, var, val):
         """
         Sets 2d variable var to value val in user-defined rectangle,
         defined as "other" in the function
         """
-        self.file[var] = self.file[var].where(
-            self.not_rectangle, other=val)
-
+        self.file[var] = self.file[var].where(self.not_rectangle, other=val)
 
     def setvar_lev1(self, var, val, lev1_dim):
         """
@@ -219,18 +242,17 @@ class ModifyFsurdat:
         defined as "other" in the function
         """
         self.file[var][lev1_dim, ...] = self.file[var][lev1_dim, ...].where(
-            self.not_rectangle, other=val)
-
+            self.not_rectangle, other=val
+        )
 
     def setvar_lev2(self, var, val, lev1_dim, lev2_dim):
         """
         Sets 4d variable var to value val in user-defined rectangle,
         defined as "other" in the function
         """
-        self.file[var][lev2_dim,lev1_dim, ...] = \
-            self.file[var][lev2_dim,lev1_dim, ...].where(
-            self.not_rectangle, other=val)
-
+        self.file[var][lev2_dim, lev1_dim, ...] = self.file[var][lev2_dim, lev1_dim, ...].where(
+            self.not_rectangle, other=val
+        )
 
     def set_idealized(self):
         """
@@ -264,31 +286,31 @@ class ModifyFsurdat:
         organic = 0
 
         # 2D variables
-        self.setvar_lev0('FMAX', max_sat_area)
-        self.setvar_lev0('STD_ELEV', std_elev)
-        self.setvar_lev0('SLOPE', slope)
-        self.setvar_lev0('zbedrock', zbedrock)
-        self.setvar_lev0('SOIL_COLOR', soil_color)
-        self.setvar_lev0('PFTDATA_MASK', pftdata_mask)
-        self.setvar_lev0('LANDFRAC_PFT', landfrac_pft)
-        self.setvar_lev0('PCT_WETLAND', pct_not_nat_veg)
-        self.setvar_lev0('PCT_CROP', pct_not_nat_veg)
-        self.setvar_lev0('PCT_LAKE', pct_not_nat_veg)
-        self.setvar_lev0('PCT_URBAN', pct_not_nat_veg)
-        self.setvar_lev0('PCT_GLACIER', pct_not_nat_veg)
-        self.setvar_lev0('PCT_NATVEG', pct_nat_veg)
+        self.setvar_lev0("FMAX", max_sat_area)
+        self.setvar_lev0("STD_ELEV", std_elev)
+        self.setvar_lev0("SLOPE", slope)
+        self.setvar_lev0("zbedrock", zbedrock)
+        self.setvar_lev0("SOIL_COLOR", soil_color)
+        self.setvar_lev0("PFTDATA_MASK", pftdata_mask)
+        self.setvar_lev0("LANDFRAC_PFT", landfrac_pft)
+        self.setvar_lev0("PCT_WETLAND", pct_not_nat_veg)
+        self.setvar_lev0("PCT_CROP", pct_not_nat_veg)
+        self.setvar_lev0("PCT_LAKE", pct_not_nat_veg)
+        self.setvar_lev0("PCT_URBAN", pct_not_nat_veg)
+        self.setvar_lev0("PCT_GLACIER", pct_not_nat_veg)
+        self.setvar_lev0("PCT_NATVEG", pct_nat_veg)
 
         for lev in self.file.nlevsoi:
             # set next three 3D variables to values representing loam
-            self.setvar_lev1('PCT_SAND', val=pct_sand, lev1_dim=lev)
-            self.setvar_lev1('PCT_CLAY', val=pct_clay, lev1_dim=lev)
-            self.setvar_lev1('ORGANIC', val=organic, lev1_dim=lev)
+            self.setvar_lev1("PCT_SAND", val=pct_sand, lev1_dim=lev)
+            self.setvar_lev1("PCT_CLAY", val=pct_clay, lev1_dim=lev)
+            self.setvar_lev1("ORGANIC", val=organic, lev1_dim=lev)
 
         for crop in self.file.cft:
             cft_local = crop - (max(self.file.natpft) + 1)
             # initialize 3D variable; set outside the loop below
-            self.setvar_lev1('PCT_CFT', val=0, lev1_dim=cft_local)
+            self.setvar_lev1("PCT_CFT", val=0, lev1_dim=cft_local)
 
         # set 3D variable
         # NB. sum(PCT_CFT) must = 100 even though PCT_CROP = 0
-        self.setvar_lev1('PCT_CFT', val=100, lev1_dim=0)
+        self.setvar_lev1("PCT_CFT", val=100, lev1_dim=0)

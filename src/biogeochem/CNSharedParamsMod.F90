@@ -15,7 +15,9 @@ module CNSharedParamsMod
   type, public  :: CNParamsShareType
       real(r8) :: Q10                   ! temperature dependence
       real(r8) :: minpsi                ! minimum soil water potential for heterotrophic resp	  
-      real(r8) :: cwd_fcel              ! cellulose fraction of coarse woody debris
+      real(r8) :: maxpsi                ! maximum soil water potential for heterotrophic resp
+      real(r8) :: rf_cwdl2              ! respiration fraction in CWD to litter2 transition (frac)
+      real(r8) :: tau_cwd               ! corrected fragmentation rate constant CWD, century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1 (1/0.3) (1/yr)
       real(r8) :: cwd_flig              ! lignin fraction of coarse woody debris
       real(r8) :: froz_q10              ! separate q10 for frozen soil respiration rates
       real(r8) :: decomp_depth_efolding ! e-folding depth for reduction in decomposition (m) 
@@ -33,6 +35,7 @@ module CNSharedParamsMod
 
   ! Public data
 
+  logical, public, parameter :: use_matrixcn = .false.  ! true => use cn matrix solution
   logical, public :: use_fun      = .false.             ! Use the FUN2.0 model
   integer, public :: nlev_soildecomp_standard = 5
   integer, public :: upper_soil_layer = -1              ! Upper soil layer to use for 10-day average in CNPhenology
@@ -96,15 +99,30 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%minpsi=tempr 
 
-    tString='cwd_fcel'
+    tString='maxpsi_hr'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    CNParamsShareInst%cwd_fcel=tempr
+    CNParamsShareInst%maxpsi=tempr
+
+    tString='rf_cwdl2'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    CNParamsShareInst%rf_cwdl2=tempr
+
+    tString='tau_cwd'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    CNParamsShareInst%tau_cwd=tempr
 
     tString='cwd_flig'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%cwd_flig=tempr 
+
+    tString='decomp_depth_efolding'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    CNParamsShareInst%decomp_depth_efolding=tempr
 
     tString='froz_q10'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -149,7 +167,6 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    real(r8) :: decomp_depth_efolding = 0.0_r8
     logical  :: constrain_stress_deciduous_onset = .false.
 
     character(len=32) :: subroutine_name = 'CNParamsReadNamelist'
@@ -162,7 +179,6 @@ contains
     ! ----------------------------------------------------------------------
 
     namelist /bgc_shared/ &
-         decomp_depth_efolding,       &
          constrain_stress_deciduous_onset
 
 
@@ -189,18 +205,15 @@ contains
     end if ! masterproc
 
     ! Broadcast the parameters from master
-    call shr_mpi_bcast ( decomp_depth_efolding, mpicom )
     call shr_mpi_bcast ( constrain_stress_deciduous_onset, mpicom )
 
     ! Save the parameter to the instance
-    CNParamsShareInst%decomp_depth_efolding = decomp_depth_efolding
     CNParamsShareInst%constrain_stress_deciduous_onset = constrain_stress_deciduous_onset
 
     ! Output read parameters to the lnd.log
     if (masterproc) then
        write(iulog,*) 'CN/BGC shared namelist parameters:'
        write(iulog,*)' '
-       write(iulog,*)'  decomp_depth_efolding = ', decomp_depth_efolding
        write(iulog,*)'  constrain_stress_deciduous_onset = ',constrain_stress_deciduous_onset
 
        write(iulog,*)

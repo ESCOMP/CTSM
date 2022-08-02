@@ -165,7 +165,8 @@ contains
   end subroutine SoilBiogeochemCompetitionInit
 
   !-----------------------------------------------------------------------
-   subroutine SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, waterstatebulk_inst, &
+   subroutine SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, &
+                                         p_decomp_cn_gain, pmnf_decomp_cascade, waterstatebulk_inst, &
                                          waterfluxbulk_inst, temperature_inst,soilstate_inst,                          &
                                          cnveg_state_inst,cnveg_carbonstate_inst,                                  &
                                          cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &
@@ -176,11 +177,13 @@ contains
     ! !USES:
     use clm_varctl       , only: cnallocate_carbon_only, iulog
     use clm_varpar       , only: nlevdecomp, ndecomp_cascade_transitions
+    use clm_varpar       , only: i_cop_mic, i_oli_mic
     use clm_varcon       , only: nitrif_n2o_loss_frac
     use CNSharedParamsMod, only: use_fun
     use CNFUNMod         , only: CNFUN
     use subgridAveMod    , only: p2c
     use perf_mod         , only : t_startf, t_stopf
+    use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con,  mimics_decomp, decomp_method
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds
@@ -188,6 +191,8 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)  ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)  ! filter for soil patches
+    real(r8)                                , intent(in)    :: pmnf_decomp_cascade(bounds%begc:,1:,1:)  ! potential mineral N flux from one pool to another (gN/m3/s)
+    real(r8)                                , intent(in)    :: p_decomp_cn_gain(bounds%begc:,1:,1:)  ! C:N ratio of the flux gained by the receiver pool
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterfluxbulk_type)                    , intent(in)    :: waterfluxbulk_inst
     type(temperature_type)                  , intent(in)    :: temperature_inst
@@ -205,9 +210,11 @@ contains
 !
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,p,l,pi,j                                            ! indices
+    integer  :: c,p,l,pi,j,k                                          ! indices
     integer  :: fc                                                    ! filter column index
     logical :: local_use_fun                                          ! local version of use_fun
+    real(r8) :: amnf_immob_vr                                         ! actual mineral N flux from immobilization (gN/m3/s)
+    real(r8) :: n_deficit_vr                                          ! microbial N deficit, vertically resolved (gN/m3/s)
     real(r8) :: compet_plant_no3                                      ! (unitless) relative compettiveness of plants for NO3
     real(r8) :: compet_plant_nh4                                      ! (unitless) relative compettiveness of plants for NH4
     real(r8) :: compet_decomp_no3                                     ! (unitless) relative competitiveness of immobilizers for NO3
@@ -246,6 +253,9 @@ contains
          sminn_vr                     => soilbiogeochem_nitrogenstate_inst%sminn_vr_col                , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral N                
          smin_nh4_vr                  => soilbiogeochem_nitrogenstate_inst%smin_nh4_vr_col             , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral NH4              
          smin_no3_vr                  => soilbiogeochem_nitrogenstate_inst%smin_no3_vr_col             , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral NO3              
+
+         c_overflow_vr                => soilbiogeochem_carbonflux_inst%c_overflow_vr                  , & ! Output: [real(r8) (:,:,:)] (gC/m3/s) vertically-resolved C rejected by microbes that cannot process it
+         cascade_receiver_pool        => decomp_cascade_con%cascade_receiver_pool                      , & ! Input:  [integer (:)     ]  which pool is C added to for a given decomposition step
 
          pot_f_nit_vr                 => soilbiogeochem_nitrogenflux_inst%pot_f_nit_vr_col             , & ! Input:  [real(r8) (:,:) ]  (gN/m3/s) potential soil nitrification flux
          pot_f_denit_vr               => soilbiogeochem_nitrogenflux_inst%pot_f_denit_vr_col           , & ! Input:  [real(r8) (:,:) ]  (gN/m3/s) potential soil denitrification flux
@@ -600,7 +610,13 @@ contains
 
                end if
           
-              
+               if (decomp_method == mimics_decomp) then
+                  ! turn off fpi for MIMICS and only lets plants
+                  ! take up available mineral nitrogen.
+                  ! TODO slevis: -ve or tiny sminn_vr could cause problems
+                  fpi_nh4_vr(c,j) = 1.0_r8
+                  actual_immob_nh4_vr(c,j) = potential_immob_vr(c,j)
+               end if
               
                if(.not.local_use_fun)then
                    sum_no3_demand(c,j) = (plant_ndemand(c)*nuptake_prof(c,j)-smin_nh4_to_plant_vr(c,j)) + &
@@ -693,9 +709,15 @@ contains
                   end if
 
                end if
-
                
-                    
+               if (decomp_method == mimics_decomp) then
+                  ! turn off fpi for MIMICS and only lets plants
+                  ! take up available mineral nitrogen.
+                  ! TODO slevis: -ve or tiny sminn_vr could cause problems
+                  fpi_no3_vr(c,j) = 1.0_r8 - fpi_nh4_vr(c,j)  ! => 0
+                  actual_immob_no3_vr(c,j) = potential_immob_vr(c,j) - &
+                                             actual_immob_nh4_vr(c,j)  ! => 0
+               end if
 
                ! n2o emissions: n2o from nitr is const fraction, n2o from denitr is calculated in nitrif_denitrif
                f_n2o_nit_vr(c,j) = f_nit_vr(c,j) * nitrif_n2o_loss_frac
@@ -789,6 +811,38 @@ contains
                end do
             end do
 
+         end if
+
+         if (decomp_method == mimics_decomp) then
+            do j = 1, nlevdecomp
+               do fc=1,num_soilc
+                  c = filter_soilc(fc)
+
+                  do k = 1, ndecomp_cascade_transitions
+                     if (cascade_receiver_pool(k) == i_cop_mic .or. &
+                         cascade_receiver_pool(k) == i_oli_mic) then
+                        sum_ndemand_vr(c,j) = sum_no3_demand_scaled(c,j) + &
+                                              sum_nh4_demand_scaled(c,j)
+                        if (pmnf_decomp_cascade(c,j,k) > 0.0_r8 .and. &
+                            sum_ndemand_vr(c,j) > 0.0_r8) then
+                           amnf_immob_vr = (sminn_vr(c,j) / dt) * &
+                                           (pmnf_decomp_cascade(c,j,k) / &
+                                            sum_ndemand_vr(c,j))
+                           n_deficit_vr = pmnf_decomp_cascade(c,j,k) - &
+                                          amnf_immob_vr
+                           c_overflow_vr(c,j,k) = &
+                              n_deficit_vr * p_decomp_cn_gain(c,j,cascade_receiver_pool(k))
+                        else  ! not pmnf and sum_ndemand > 0
+                           c_overflow_vr(c,j,k) = 0.0_r8
+                        end if
+                     else  ! not microbes receiving
+                        c_overflow_vr(c,j,k) = 0.0_r8
+                     end if
+                  end do
+               end do
+            end do
+         else  ! not mimics_decomp
+            c_overflow_vr(:,:,:) = 0.0_r8
          end if
 
          if(.not.local_use_fun)then
