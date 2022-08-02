@@ -314,8 +314,9 @@ contains
     use shr_const_mod   , only : SHR_CONST_TKFRZ
     use landunit_varcon , only : istwet, istsoil, istcrop, istice
     use column_varcon   , only : icol_road_perv, icol_road_imperv
-    use clm_varcon      , only : denice, denh2o, bdsno 
+    use clm_varcon      , only : denice, denh2o, bdsno , zisoi
     use clm_varcon      , only : tfrz, aquifer_water_baseline
+    use initVerticalMod , only : find_soil_layer_containing_depth
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(inout) :: this
@@ -328,7 +329,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer            :: c,j,l,nlevs,g 
-    integer            :: nbedrock, n1m
+    integer            :: nbedrock, n05m ! layer containing 0.5 m
     real(r8)           :: ratio
     !-----------------------------------------------------------------------
 
@@ -542,20 +543,19 @@ contains
             l = col%landunit(c)
            if (.not. lun%lakpoi(l)) then  !not lake
               if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-                 n1m=3
-                 do j = 3, nlevsoi ! get layer with 1 m depth
-                    if (col%zi(c,j-1)<=1.0_r8 .and. col%zi(c,j)>1.0_r8) then
-                       n1m=j
-                    end if
-                 end do 
+                 if (zisoi(nlevsoi) >= 0.5_r8) then
+                   call find_soil_layer_containing_depth(0.5_r8,n05m)
+                 else
+                   n05m=nlevsoi-1
+                 endif
                  if (use_bedrock .and. nbedrock<=nlevsoi) then
                     nbedrock = col%nbedrock(c)
                  else
                     nbedrock = nlevsoi
                  endif
                  do j = 2, nlevmaxurbgrnd ! ignore first layer
-                    if (n1m<nbedrock) then ! bedrock below 1 m
-                       if (j >= n1m .and. j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
+                    if (n05m<nbedrock) then ! bedrock below 1 m
+                       if (j >= n05m .and. j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
                           this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exice_bulk_init(c))
                        else
                           this%excess_ice_col(c,j) = 0.0_r8
