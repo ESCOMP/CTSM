@@ -32,9 +32,6 @@ module SoilStateType
      real(r8), pointer :: bd_col               (:,:) ! col bulk density of dry soil material [kg/m^3] (CN)
      !####################### for new dust emission scheme  -dmleung ############################
      real(r8), pointer :: roughfct_patch       (:)   ! roughness factor, 17 dec 2021
-     real(r8), pointer :: rockfrc_patch        (:)   ! GLCNMO rock/bare area fraction, 17 dec 2021
-     real(r8), pointer :: vegefrc_patch        (:)   ! GLCNMO shrub/crop area fraction, 17 dec 2021
-     real(r8), pointer :: sparfrc_patch        (:)   ! GLCNMO sparse vegetation area fraction, 17 dec 2021
      !###########################################################################################
 
      ! hydraulic properties
@@ -139,9 +136,6 @@ contains
 
     !################ dmleung added 14 Dec 2021 ########################
     allocate(this%roughfct_patch       (begp:endp))                     ; this%roughfct_patch       (:)   = nan
-    allocate(this%rockfrc_patch        (begp:endp))                     ; this%rockfrc_patch        (:)   = nan
-    allocate(this%vegefrc_patch        (begp:endp))                     ; this%vegefrc_patch        (:)   = nan
-    allocate(this%sparfrc_patch        (begp:endp))                     ; this%sparfrc_patch        (:)   = nan
     !###################################################################
     allocate(this%hksat_col            (begc:endc,nlevgrnd))            ; this%hksat_col            (:,:) = spval
     allocate(this%hksat_min_col        (begc:endc,nlevgrnd))            ; this%hksat_min_col        (:,:) = spval

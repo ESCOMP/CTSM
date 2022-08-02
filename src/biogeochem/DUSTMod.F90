@@ -457,9 +457,6 @@ contains
          prb_crs_impct_thr   => dust_inst%prb_crs_impct_thr_patch    , &
          ! added by dmleung 17 Dec 2021
          roughfct            => soilstate_inst%roughfct_patch        , &
-         rockfrc             => soilstate_inst%rockfrc_patch         , &
-         vegefrc             => soilstate_inst%vegefrc_patch         , &
-         sparfrc             => soilstate_inst%sparfrc_patch         , &
          ustar               => dust_inst%ustar_patch                , & ! Output friction velocity for SP mode
          ! added by dmleung 20 Dec 2021
          ssr                 => dust_inst%ssr_patch                  , &
@@ -609,7 +606,7 @@ contains
          ! recoded to CLM5 27 Nov 2021
          !#######################################################################################################
 
-         tmp2 = 1.0_r8*sqrt(0.0123_r8 * (dns_slt*grav*140.0e-6_r8 + 5.0e-4_r8/140.0e-6_r8)) ! calculate S&L (2000) scheme here for threshold
+         tmp2 = 1.0_r8*sqrt(0.0123_r8 * (dns_slt*grav*130.0e-6_r8 + 1.65e-4_r8/130.0e-6_r8)) ! calculate S&L (2000) scheme here for threshold; gamma = 1.65e-4 following S&L00, D_p = 127 um ~ 130 um following dmleung's dust paper. As this is a global constant, this line can be put outside the loop to save computational power.
          wnd_frc_thr_dry(p) = tmp2 / sqrt(forc_rho(c))    ! output dry fluid threshold
          wnd_frc_thr_slt = tmp2 / sqrt(forc_rho(c)) * frc_thr_wet_fct !* frc_thr_rgh_fct   ! use as threshold in this module
          wnd_frc_thr_slt_it = B_it * tmp2 / sqrt(forc_rho(c)) ! define impact threshold -dml 9 Jun 2021, recoded to CLM5 27 Nov 2021

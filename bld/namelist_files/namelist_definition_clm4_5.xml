@@ -2579,11 +2579,6 @@ use case.)
 Full pathname of time-invariant roughness factor dataset for calculating drag partition of dust emission.
 </entry>
 
-<!-- manually input GLCNMO land cover area fraction   -dmleung, 7 Jul 2021 -->
-<entry id="lulc_frc" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
-Full pathname of time-invariant GLCNMO LULC area fraction for calculating hybrid drag partition.
-</entry>
 
 
 </namelist_definition>

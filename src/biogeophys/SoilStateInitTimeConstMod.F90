@@ -101,7 +101,7 @@ contains
     use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_fates
     use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct, &
-                                     rough_fct, lulc_frc    ! -dmleung added to CESM2/CLM5 17 Dec 2021
+                                     rough_fct    ! -dmleung added to CESM2/CLM5 17 Dec 2021
     use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice_mec
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
     use fileutils           , only : getfil
@@ -153,9 +153,6 @@ contains
     real(r8) ,pointer  :: clay3d (:,:)                  ! read in - soil texture: percent clay (needs to be a pointer for use in ncdio)
     real(r8) ,pointer  :: organic3d (:,:)               ! read in - organic matter: kg/m3 (needs to be a pointer for use in ncdio)
     real(r8) ,pointer  :: roughfct2d(:)                 ! read in - time-invariant roughness factor,   dmleung added 17 Dec 2021
-    real(r8) ,pointer  :: rockfrc2d(:)                  ! read in - rock area fraction from GLCNMO, dmleung added 17 Dec 2021
-    real(r8) ,pointer  :: vegefrc2d(:)                  ! read in - shrub/crop area fraction from GLCNMO, dmleung added 17 Dec 2021
-    real(r8) ,pointer  :: sparfrc2d(:)                  ! read in - sparse vegetation area fraction from GLCNMO, dmleung added 17 Dec 2021
     character(len=256) :: locfn                         ! local filename
     integer            :: ipedof  
     integer            :: begp, endp
@@ -307,32 +304,15 @@ contains
     ! dmleung added to CESM2/CLM5 17 Dec 2021
     allocate(roughfct2d(begg:endg))                                   ! dmleung, 16 Jul 2020
     ! here to read roughness factor file, 16 Jul 2020
-    write(iulog,*) 'Attempting to read roughness factor data, by dmleung .....'
+    !write(iulog,*) 'Attempting to read roughness factor data, by dmleung .....'
     call getfil (rough_fct, locfn, 0)
     call ncd_pio_openfile (ncid, locfn, 0)
     call ncd_io(ncid=ncid, varname='F_eff', flag='read', data=roughfct2d, dim1name=grlnd, readvar=readvar)
-    !write(iulog,*) 'dimension of roughness = ', shape(roughfct2d)   ! -dml
-    write(iulog,*) 'initialize pft level roughness factor from roughfct2d(g) to roughfct(p)'  
+    !write(iulog,*) 'initialize pft level roughness factor from roughfct2d(g) to roughfct(p)'  
 
     do p = begp,endp
        g = patch%gridcell(p)
        soilstate_inst%roughfct_patch(p) = roughfct2d(g)
-    end do
-
-    ! dmleung added to CESM2/CLM5 17 Dec 2021
-    allocate(rockfrc2d(begg:endg));allocate(vegefrc2d(begg:endg));allocate(sparfrc2d(begg:endg)) !  7 Jul 2021
-    write(iulog,*) 'Attempting to read GLCNMO LULC area fraction data, by dmleung .....'
-    call getfil (lulc_frc, locfn, 0)
-    call ncd_pio_openfile (ncid, locfn, 0)
-    call ncd_io(ncid=ncid, varname='A_r', flag='read', data=rockfrc2d, dim1name=grlnd, readvar=readvar)
-    call ncd_io(ncid=ncid, varname='A_v', flag='read', data=vegefrc2d, dim1name=grlnd, readvar=readvar)
-    call ncd_io(ncid=ncid, varname='A_s', flag='read', data=sparfrc2d, dim1name=grlnd, readvar=readvar)
-
-    do p = begp,endp
-       g = patch%gridcell(p)
-       soilstate_inst%rockfrc_patch(p) = rockfrc2d(g)
-       soilstate_inst%vegefrc_patch(p) = vegefrc2d(g)
-       soilstate_inst%sparfrc_patch(p) = sparfrc2d(g)
     end do
 
     call ncd_pio_closefile(ncid)
