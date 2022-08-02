@@ -13,7 +13,7 @@ import shutil
 
 import xarray as xr
 
-from ctsm.path_utils import path_to_ctsm_root
+from ctsm.path_utils import path_to_ctsm_root, path_to_cime
 from ctsm import unit_testing
 from ctsm.modify_input_files.mesh_mask_modifier import mesh_mask_modifier
 
@@ -55,8 +55,20 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         self._landmask_file = os.path.join(self._tempdir, "landmask.nc")
         scrip_file = os.path.join(self._tempdir, "scrip.nc")
         metadata_file = os.path.join(self._tempdir, "metadata.nc")
+        configure_path = os.path.join(path_to_cime(), "CIME/scripts/configure")
 
-        # Generate mesh_mask_in from fsurdat_in
+        os.chdir(self._tempdir)  # cd to tempdir
+
+        # Run configure to generate .env_mach_specific.sh
+        configure_cmd = f"{configure_path}"
+        try:
+            subprocess.check_call(configure_cmd, shell=False)
+        except subprocess.CalledProcessError as e:
+            sys.exit(f"{e} ERROR using {configure_cmd}")
+
+        # Generate scrip file from fsurdat_in using nco
+        # In the ctsm_py environment this requires running 'module load nco'
+        # interactively
         ncks_cmd = f"ncks --rgr infer --rgr scrip={scrip_file} {fsurdat_in} {metadata_file}"
         try:
             subprocess.check_call(ncks_cmd, shell=True)
@@ -66,14 +78,13 @@ class TestSysMeshMaskModifier(unittest.TestCase):
                 + f"{fsurdat_in}; MOST LIKELY SHOULD INVOKE module load nco"
             )
             sys.exit(err_msg)
-        # TODO How to invoke 'module load nco' behind the scenes?
-        # TODO How to make the esmf command generic?
-        # TODO How to write the PET0 file in /tempdir or suppress entirely?
-        esmf_cmd = f"/glade/u/apps/ch/opt/esmf-netcdf/8.0.0/intel/19.0.5/bin/bing/Linux.intel.64.mpiuni.default/ESMF_Scrip2Unstruct {scrip_file} {self._mesh_mask_in} 0"
+        # Run .env_mach_specific.sh to load esmf and generate mesh_mask_in
+        # Execute two commands at once to preserve the results of the first
+        two_commands = f". {self._tempdir}/.env_mach_specific.sh; ESMF_Scrip2Unstruct {scrip_file} {self._mesh_mask_in} 0"
         try:
-            subprocess.check_call(esmf_cmd, shell=True)
+            subprocess.check_call(two_commands, shell=True)
         except subprocess.CalledProcessError as e:
-            sys.exit(f"{e} ERROR using esmf to generate {self._mesh_mask_in} from scrip.nc")
+            sys.exit(f"{e} ERROR using {two_commands}")
 
         # Generate landmask_file from fsurdat_in
         self._lat_varname = "LATIXY"  # same as in fsurdat_in
@@ -100,6 +111,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.getcwd()  # cd back to the original working directory
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_allInfo(self):
