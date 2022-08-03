@@ -134,34 +134,34 @@ class ModifyFsurdat:
         logger.info("Successfully created fsurdat_out: %s", fsurdat_out)
         self.file.close()
 
-    def set_dom_plant(self, dom_plant, lai, sai, hgt_top, hgt_bot):
+    def set_dom_pft(self, dom_pft, lai, sai, hgt_top, hgt_bot):
         """
         Description
         -----------
         In rectangle selected by user (or default -90 to 90 and 0 to 360),
         replace fsurdat file's PCT_NAT_PFT or PCT_CFT with:
-        - 100 for dom_plant selected by user
+        - 100 for dom_pft selected by user
         - 0 for all other PFTs/CFTs
         If user has specified lai, sai, hgt_top, hgt_bot, replace these with
-        values selected by the user for dom_plant
+        values selected by the user for dom_pft
 
         Arguments
         ---------
-        dom_plant:
+        dom_pft:
             (int) User's entry of PFT/CFT to be set to 100% everywhere
         lai:
-            (float) User's entry of MONTHLY_LAI for their dom_plant
+            (float) User's entry of MONTHLY_LAI for their dom_pft
         sai:
-            (float) User's entry of MONTHLY_SAI for their dom_plant
+            (float) User's entry of MONTHLY_SAI for their dom_pft
         hgt_top:
-            (float) User's entry of MONTHLY_HEIGHT_TOP for their dom_plant
+            (float) User's entry of MONTHLY_HEIGHT_TOP for their dom_pft
         hgt_bot:
-            (float) User's entry of MONTHLY_HEIGHT_BOT for their dom_plant
+            (float) User's entry of MONTHLY_HEIGHT_BOT for their dom_pft
         """
 
-        # If dom_plant is a cft, add PCT_NATVEG to PCT_CROP in the rectangle
+        # If dom_pft is a cft, add PCT_NATVEG to PCT_CROP in the rectangle
         # and remove same from PCT_NATVEG, i.e. set PCT_NATVEG = 0.
-        if dom_plant > max(self.file.natpft):  # dom_plant is a cft (crop)
+        if dom_pft > max(self.file.natpft):  # dom_pft is a cft (crop)
             self.file["PCT_CROP"] = self.file["PCT_CROP"] + self.file["PCT_NATVEG"].where(
                 self.rectangle, other=0
             )
@@ -173,13 +173,13 @@ class ModifyFsurdat:
                 self.setvar_lev1("PCT_CFT", val=0, lev1_dim=cft_local)
 
             # set 3D variable
-            self.setvar_lev1("PCT_CFT", val=100, lev1_dim=dom_plant - (max(self.file.natpft) + 1))
-        else:  # dom_plant is a pft (not a crop)
+            self.setvar_lev1("PCT_CFT", val=100, lev1_dim=dom_pft - (max(self.file.natpft) + 1))
+        else:  # dom_pft is a pft (not a crop)
             for pft in self.file.natpft:
                 # initialize 3D variable; set outside the loop below
                 self.setvar_lev1("PCT_NAT_PFT", val=0, lev1_dim=pft)
-            # set 3D variable value for dom_plant
-            self.setvar_lev1("PCT_NAT_PFT", val=100, lev1_dim=dom_plant)
+            # set 3D variable value for dom_pft
+            self.setvar_lev1("PCT_NAT_PFT", val=100, lev1_dim=dom_pft)
 
         # dictionary of 4d variables to loop over
         vars_4d = {
@@ -190,17 +190,17 @@ class ModifyFsurdat:
         }
         for var, val in vars_4d.items():
             if val is not None:
-                self.set_lai_sai_hgts(dom_plant=dom_plant, var=var, val=val)
+                self.set_lai_sai_hgts(dom_pft=dom_pft, var=var, val=val)
 
-    def set_lai_sai_hgts(self, dom_plant, var, val):
+    def set_lai_sai_hgts(self, dom_pft, var, val):
         """
         Description
         -----------
         If user has specified lai, sai, hgt_top, hgt_bot, replace these with
-        values selected by the user for dom_plant. Else do nothing.
+        values selected by the user for dom_pft. Else do nothing.
         """
         months = int(max(self.file.time))  # 12 months
-        if dom_plant == 0:  # bare soil: var must equal 0
+        if dom_pft == 0:  # bare soil: var must equal 0
             val = [0] * months
         if len(val) != months:
             errmsg = (
@@ -211,8 +211,8 @@ class ModifyFsurdat:
             )
             abort(errmsg)
         for mon in self.file.time - 1:  # loop over 12 months
-            # set 4D variable to value for dom_plant
-            self.setvar_lev2(var, val[int(mon)], lev1_dim=dom_plant, lev2_dim=mon)
+            # set 4D variable to value for dom_pft
+            self.setvar_lev2(var, val[int(mon)], lev1_dim=dom_pft, lev2_dim=mon)
 
     def zero_nonveg(self):
         """
