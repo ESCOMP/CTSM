@@ -710,7 +710,7 @@ contains
                         dke = satw
                      end if
                      fl = (h2osoi_liq(c,j)/(denh2o*dz(c,j))) / (h2osoi_liq(c,j)/(denh2o*dz(c,j)) + &
-                          h2osoi_ice(c,j)/(denice*dz(c,j))+excess_ice(c,j)/(denice*dz))
+                          h2osoi_ice(c,j)/(denice*dz(c,j))+excess_ice(c,j)/(denice*dz(c,j)))
                      dksat = tkmg(c,j)*tkwat**(fl*watsat(c,j))*tkice**((1._r8-fl)*watsat(c,j))
                      thk(c,j) = dke*dksat + (1._r8-dke)*tkdry(c,j)
                   else
