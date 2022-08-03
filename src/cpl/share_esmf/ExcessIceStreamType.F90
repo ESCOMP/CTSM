@@ -124,6 +124,7 @@ contains
         call ESMF_Finalize(endflag=ESMF_END_ABORT)
       end if
       
+      !TODO
       ! Explicitly set current date to a hardcoded constant value. Otherwise
       ! using the real date can cause roundoff differences that are
       ! detrected as issues with exact restart.  EBK M05/20/2017
