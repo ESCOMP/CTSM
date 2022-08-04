@@ -200,6 +200,12 @@ contains
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
     use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
+
+!scs
+    use clm_varctl        , only : use_hillslope
+    use HillslopeHydrologyMod, only : SetHillslopeSoilThickness
+    use initVerticalMod                    , only : setSoilLayerClass
+
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
@@ -268,6 +274,14 @@ contains
          glc_behavior, &
          urbanparams_inst%thick_wall(begl:endl), &
          urbanparams_inst%thick_roof(begl:endl))
+!scs
+    ! Set hillslope column bedrock values
+    if(use_hillslope) then
+       call SetHillslopeSoilThickness(bounds,fsurdat, &
+            soil_depth_lowland_in=8.5_r8,&
+            soil_depth_upland_in =2.0_r8)
+       call setSoilLayerClass(bounds)
+    endif
 
     !-----------------------------------------------
     ! Set cold-start values for snow levels, snow layers and snow interfaces 
