@@ -2814,6 +2814,11 @@ use case.)
 If TRUE turn on the excess ice physics, (Lee et al., 2014; Cai et al., 2020)
 </entry>
 
+<entry id="use_excess_ice_tiles" type="logical" category="clm_physics"
+        group="clm_inparm" valid_values="" >
+If TRUE turn on the excess ice tiling physics, (Lee et al., 2014; Cai et al., 2020)
+</entry>
+
 <entry id="stream_fldfilename_exice" type="char*256(30)" category="datasets"
        input_pathname="abs" group="exice_streams" valid_values="" >
 Filename of input stream data for excess ice data

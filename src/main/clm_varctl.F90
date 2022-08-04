@@ -322,6 +322,7 @@ module clm_varctl
   !excess ice physics switch
   !----------------------------------------------------------
   logical, public :: use_excess_ice = .false. ! true. => use excess ice physics
+  logical, public :: use_excess_ice_tiles = .false. ! true. => use excess ice tiling physics
 
   !----------------------------------------------------------
   ! plant hydraulic stress switch

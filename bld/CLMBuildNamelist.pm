@@ -2164,7 +2164,10 @@ sub setup_logic_soilstate {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock',
               'use_fates'=>$nl_flags->{'use_fates'}, 'vichydro'=>$nl_flags->{'vichydro'} );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice'); # excess ice flag should be read before stream vars
+  add_default($opts, $nl_flags->{'inputdata_rootdir'},
+              $definition, $defaults, $nl, 'use_excess_ice'); # excess ice flags should be read before exice logic is setup
+  add_default($opts, $nl_flags->{'inputdata_rootdir'},
+              $definition, $defaults, $nl, 'use_excess_ice_tiles');
 
   my $var1 = "soil_layerstruct_predefined";
   my $var2 = "soil_layerstruct_userdefined";
@@ -4174,7 +4177,11 @@ sub setup_logic_exice {
   } elsif (defined($use_exice) && (! $opts->{'driver'} eq "nuopc") && value_is_true($use_exice)) {
        $log->fatal_error("nuopc driver is required when use_excess_ice is set to true" );
   }
-
+  my $use_exice_tiles = $nl->get_value( 'use_excess_ice_tiles'               );
+  if ( ! value_is_true($use_exice) && value_is_true($use_exice_tiles)) {
+      $log->fatal_error("cannot have use_excess_ice_tiles without use_excess_ice == true" );
+  }
+    
 
 } # end exice streams
 
