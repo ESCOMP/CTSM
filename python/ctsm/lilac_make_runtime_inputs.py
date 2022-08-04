@@ -202,14 +202,6 @@ def buildnml(cime_path, rundir):
 
     inputdata_path = get_config_value(config, "buildnml_input", "inputdata_path", ctsm_cfg_path)
 
-    # Create init_generated_files directory if not there
-    #
-    # (This is not really connected with other buildnml functionality, but done here to
-    # agree with where it's done in the standard buildnml.)
-    newdir = os.path.join(rundir, "init_generated_files")
-    if not os.path.exists(newdir):
-        os.mkdir(newdir)
-
     # Parse the user_nl_ctsm file
     infile = os.path.join(rundir, ".namelist")
     create_namelist_infile(
