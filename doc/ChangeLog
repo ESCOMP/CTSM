@@ -1,4 +1,110 @@
 ===============================================================
+Tag name: ctsm5.1.dev106
+Originator(s): mvertens (Mariana Vertenstein), sacks (Bill Sacks)
+Date: Thu Aug  4 15:11:31 MDT 2022
+One-line Summary: Reuse some files generated in initialization when rerunning
+
+Purpose and description of changes
+----------------------------------
+
+A new directory is now in your run directory init_generated_files. These
+two run time generated files - finidat_interp_dest.nc and the land
+fraction file ctsm_landfrac.nc (which is new in this PR) - are put in
+that directory when they are created. Then, if they already exist, they
+are reused rather than being regenerated. (Technically, it looks for a
+status file that flags successful creation of this file.) This applies
+when you rerun a startup (non-restart) run a second or subsequent time,
+as is common when doing development and testing.
+
+For tests, theinit_generated_files directory is removed before running,
+so that rerunning a test will do the same thing the second time.
+
+There are occasional, rare cases when a user would need to manually
+remove the init_generated_files directory – e.g., when changing things
+about N dominant landunits or PFTs.
+
+Also, output was cleaned up in a few cases so that it did not span
+multiple lines.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+- If you do a run, then change a runtime parameter that makes the
+  previous finidat_interp_dest.nc file incompatible with the new
+  configuration (e.g., changing N dominant landunits or PFTs) then
+  rerun, you will need to remove the contents of the
+  run/init_generated_files subdirectory before rerunning. (You do *not*
+  need to remove this directory when changing finidat in user_nl_clm: in
+  this specific case, CTSM detects the change and regenerates
+  finidat_interp_dest even if one already exists.)
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Removed finidat_interp_dest from the namelist; it is now hard-coded to
+  finidat_interp_dest.nc. (This seemed not to be used much, if ever, and
+  supporting this would have complicated the logic in this PR.)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Added a new test using a new test type (defined in CIME):
+  REUSEINITFILES. This runs two cases and compares them: the first runs
+  a case as normal; the second copies in the init_generated_files
+  directory from case one and then does a run that uses these saved
+  init_generated_files. This ensures that using the init_generated_files
+  does not change answers.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+    Two tests failed initially due to what appeared to be system issues:
+    - ERP_P36x2_D_Ld5.f10_f10_mg37.I1850Clm45BgcCru.cheyenne_intel.clm-default
+      (runtime error initially, passed upon rerun)
+    - SMS_Ly5_Mmpi-serial.1x1_brazil.IHistClm50BgcQianRs.izumi_intel.clm-newton_krylov_spinup 
+      (build failure initially; passed after removing the build
+      directory, rebuilding and rerunning)
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+    Most FATES tests had baseline comparison failures, just for the
+    field fates_levcdam, but this turned out to be due to an error in
+    the stored baselines for ctsm5.1.dev104 that has now been corrected.
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: cime6.0.40 -> cime6.0.45
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1793
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev105
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
 Date: Tue Jul 26 23:57:31 MDT 2022

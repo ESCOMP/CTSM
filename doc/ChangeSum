@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev106 multiple 08/04/2022 Reuse some files generated in initialization when rerunning
     ctsm5.1.dev105   slevis 07/26/2022 make interfaces more similar between fsurdat_modifier and subset_data tools
     ctsm5.1.dev104 glemieux 07/15/2022 Update to FATES history names and machine configuration
     ctsm5.1.dev103    sacks 07/12/2022 Fix accumulation variables when changing model time step
