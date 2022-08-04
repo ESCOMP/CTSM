@@ -168,6 +168,15 @@
       <option name="comment"  >Include an ERI test with MCT</option>
     </options>
   </test>
+  <test name="SMS_Ld1_D" grid="f10_f10_mg37" compset="I1850Clm51Sp" testmods="clm/ExcessIce">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Include an excess ice test</option>
+    </options>
+  </test>
   <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm50Bgc" testmods="clm/drydepnomegan">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
