@@ -145,7 +145,7 @@ contains
     ! Write out diagnostic info
 
     if (masterproc) then
-       write(iulog,'(a)') 'Successfully wrote out restart data at nstep = ',get_nstep()
+       write(iulog,'(a,i0)') 'Successfully wrote out restart data at nstep = ',get_nstep()
        write(iulog,'(72a1)') ("-",i=1,60)
     end if
     
