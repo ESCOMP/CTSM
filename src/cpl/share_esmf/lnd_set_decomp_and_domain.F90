@@ -808,8 +808,6 @@ contains
     logical           :: lexists
     !-------------------------------------------------------------------------------
 
-    ! TODO: remove status file before writing (unit 9876)
-
     if (write_file) then
 
        if (masterproc) then
