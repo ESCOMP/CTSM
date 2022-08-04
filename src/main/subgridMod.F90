@@ -131,6 +131,7 @@ contains
     !
     ! !USES
     use clm_varpar, only : natpft_lb, natpft_ub
+    use clm_varctl, only : use_excess_ice_tiles
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -154,8 +155,13 @@ contains
 
     if (npatches > 0) then
        ! Assume that the vegetated landunit has one column
-       ncols = 1
+       if (use_excess_ice_tiles) then
+          ncols = 2
+       else
+          ncols = 1
+       endif
        nlunits = 1
+       npatches = ncols*npatches
     else
        ! As noted in natveg_patch_exists, we expect a naturally vegetated landunit in
        ! every grid cell. This means that npatches should be at least 1 in every grid

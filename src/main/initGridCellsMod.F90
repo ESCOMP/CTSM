@@ -216,7 +216,7 @@ contains
     integer , intent(inout) :: pi                ! patch index
     !
     ! !LOCAL VARIABLES:
-    integer  :: m                                ! index
+    integer  :: m,lci                               ! index
     integer  :: npatches                         ! number of patches in landunit
     integer  :: ncols
     integer  :: nlunits
@@ -240,9 +240,9 @@ contains
     if (nlunits > 0) then
        call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
        nlunits_added = nlunits_added + 1
-       
+       do lci = 1,ncols
        ! Assume one column on the landunit
-       call add_column(ci=ci, li=li, ctype=1, wtlunit=1.0_r8)
+       call add_column(ci=ci, li=li, ctype=1, wtlunit=1.0_r8/real(ncols,r8))
        ncols_added = ncols_added + 1
 
        ! For FATES: the total number of patches may not match what is in the surface
@@ -263,6 +263,7 @@ contains
              call add_patch(pi=pi, ci=ci, ptype=m, wtcol=p_wt)
              npatches_added = npatches_added + 1
           end if
+       end do
        end do
 
     end if

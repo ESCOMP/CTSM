@@ -147,6 +147,8 @@ contains
   !------------------------------------------------------------------------------
   subroutine update_lnd2glc(this, bounds, num_do_smb_c, filter_do_smb_c, &
        temperature_inst, waterfluxbulk_inst, topo_inst, init)
+
+    use clm_varctl, only : use_excess_ice_tiles
     !
     ! !DESCRIPTION:
     ! Assign values to lnd2glc+
@@ -204,6 +206,7 @@ contains
       ! Make sure we haven't already assigned the coupling fields for this point
       ! (this could happen, for example, if there were multiple columns in the
       ! istsoil landunit, which we aren't prepared to handle)
+      if (.not. use_excess_ice_tiles) then
       if (fields_assigned(g,n)) then
          write(iulog,*) subname//' ERROR: attempt to assign coupling fields twice for the same index.'
          write(iulog,*) 'One possible cause is having multiple columns in the istsoil landunit,'
@@ -211,7 +214,7 @@ contains
          write(iulog,*) 'g, n = ', g, n
          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
-
+      end if
       ! Send surface temperature, topography, and SMB flux (qice) to coupler.
       ! t_soisno and topo_col are valid even in initialization, so tsrf and topo
       ! are set here regardless of the value of init. But qflx_glcice is not valid
