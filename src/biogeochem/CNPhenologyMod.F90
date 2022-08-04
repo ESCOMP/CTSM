@@ -1703,6 +1703,10 @@ contains
     integer s         ! growing season indices
     integer k         ! grain pool indices
     integer idpp      ! number of days past planting
+    integer kyr       ! current year
+    integer kmo       ! month of year  (1, ..., 12)
+    integer kda       ! day of month   (1, ..., 31)
+    integer   mcsec   ! seconds of day (0, ..., seconds/day)
     real(r8) dayspyr  ! days per year in this year
     real(r8) avg_dayspyr ! average number of days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
@@ -1744,7 +1748,8 @@ contains
          peaklai           =>  cnveg_state_inst%peaklai_patch                  , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
-         idop              =>    cnveg_state_inst%idop_patch                   , & ! Output: [integer  (:) ]  date of planting                                   
+         idop              =>    cnveg_state_inst%idop_patch                   , & ! Output: [integer  (:) ]  date of planting (day of year)
+         iyop              =>    cnveg_state_inst%iyop_patch                   , & ! Output: [integer  (:) ]  year of planting (day of year)
          gddmaturity       =>    cnveg_state_inst%gddmaturity_patch            , & ! Output: [real(r8) (:) ]  gdd needed to harvest                             
          huileaf           =>    cnveg_state_inst%huileaf_patch                , & ! Output: [real(r8) (:) ]  heat unit index needed from planting to leaf emergence
          huigrain          =>    cnveg_state_inst%huigrain_patch               , & ! Output: [real(r8) (:) ]  same to reach vegetative maturity                 
@@ -1773,6 +1778,7 @@ contains
       dayspyr = get_curr_days_per_year()
       avg_dayspyr = get_average_days_per_year()
       jday    = get_prev_calday()
+      call get_curr_date(kyr, kmo, kda, mcsec)
 
       if (use_fertilizer) then
        ndays_on = 20._r8 ! number of days to fertilize
@@ -1809,6 +1815,8 @@ contains
                crop_inst%sdates_thisyr(p,s) = -1._r8
             end do
             do s = 1, mxharvests
+               crop_inst%sdates_perharv(p,s) = -1._r8
+               crop_inst%syears_perharv(p,s) = -1._r8
                crop_inst%hdates_thisyr(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
                   cnveg_carbonflux_inst%repr_grainc_to_food_perharv(p,s,k) = 0._r8
@@ -1828,6 +1836,14 @@ contains
          if (croplive(p) .and. idop(p) <= jday .and. sowing_count(p) == 0) then
              sowing_count(p) = 1
              crop_inst%sdates_thisyr(p,1) = real(idop(p), r8)
+         end if
+         ! Will be needed until we can rely on all restart files including iyop.
+         if (croplive(p) .and. iyop(p) > kyr) then
+             if (idop(p) <= jday) then
+                 iyop(p) = kyr
+             else
+                 iyop(p) = kyr - 1
+             end if
          end if
 
 
@@ -1871,7 +1887,7 @@ contains
                   hdidx(p)       = 0._r8
                   vf(p)          = 0._r8
                   
-                  call PlantCrop(p, leafcn(ivt(p)), jday, crop_inst, cnveg_state_inst, &
+                  call PlantCrop(p, leafcn(ivt(p)), jday, kyr, crop_inst, cnveg_state_inst, &
                                  cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
                                  c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
@@ -1902,7 +1918,7 @@ contains
 
                if (do_plant_normal .or. do_plant_lastchance) then
 
-                  call PlantCrop(p, leafcn(ivt(p)), jday, crop_inst, cnveg_state_inst, &
+                  call PlantCrop(p, leafcn(ivt(p)), jday, kyr, crop_inst, cnveg_state_inst, &
                                  cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
                                  c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
@@ -2091,6 +2107,8 @@ contains
             else if (hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                harvest_count(p) = harvest_count(p) + 1
+               crop_inst%sdates_perharv(p, harvest_count(p)) = real(idop, r8)
+               crop_inst%syears_perharv(p, harvest_count(p)) = real(iyop, r8)
                crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = cphase_harvest
@@ -2289,7 +2307,7 @@ contains
   end subroutine CropPhenologyInit
 
     !-----------------------------------------------------------------------
-  subroutine PlantCrop(p, leafcn_in, jday, &
+  subroutine PlantCrop(p, leafcn_in, jday, kyr, &
        crop_inst, cnveg_state_inst,                                 &
        cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,            &
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,              &
@@ -2309,6 +2327,7 @@ contains
     integer                , intent(in)    :: p         ! PATCH index running over
     real(r8)               , intent(in)    :: leafcn_in ! leaf C:N (gC/gN) of this patch's vegetation type (pftcon%leafcn(ivt(p)))
     integer                , intent(in)    :: jday      ! julian day of the year
+    integer                , intent(in)    :: kyr       ! current year
     type(crop_type)                , intent(inout) :: crop_inst
     type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
@@ -2326,7 +2345,8 @@ contains
          croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
          sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
-         idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting                                   
+         idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting (day of year)
+         iyop              =>    cnveg_state_inst%iyop_patch                     , & ! Output: [integer  (:) ]  year of planting
          leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch       , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer
          crop_seedc_to_leaf =>   cnveg_carbonflux_inst%crop_seedc_to_leaf_patch  , & ! Output: [real(r8) (:) ]  (gC/m2/s) seed source to leaf
@@ -2337,6 +2357,7 @@ contains
       ! for crop maturity - for cold weather constraints
       croplive(p)  = .true.
       idop(p)      = jday
+      iyop(p)      = kyr
       harvdate(p)  = NOT_Harvested
       sowing_count(p) = sowing_count(p) + 1
       crop_inst%sdates_thisyr(p,sowing_count(p)) = jday

@@ -47,6 +47,8 @@ module CropType
      real(r8) :: baset_latvary_intercept
      real(r8) :: baset_latvary_slope
      real(r8), pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year
+     real(r8), pointer :: sdates_perharv          (:,:) ! all actual sowing dates for crops *harvested* this year
+     real(r8), pointer :: syears_perharv          (:,:) ! all actual sowing years for crops *harvested* this year
      real(r8), pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
      integer , pointer :: sowing_count            (:)   ! number of sowing events this year for this patch
      integer , pointer :: harvest_count           (:)   ! number of sowing events this year for this patch
@@ -216,6 +218,8 @@ contains
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = cphase_not_planted
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
     allocate(this%sdates_thisyr(begp:endp,1:mxsowings)) ; this%sdates_thisyr(:,:) = spval
+    allocate(this%sdates_perharv(begp:endp,1:mxharvests)) ; this%sdates_perharv(:,:) = spval
+    allocate(this%syears_perharv(begp:endp,1:mxharvests)) ; this%syears_perharv(:,:) = spval
     allocate(this%hdates_thisyr(begp:endp,1:mxharvests)) ; this%hdates_thisyr(:,:) = spval
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
@@ -276,6 +280,16 @@ contains
     call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxsowings', &
          avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
          ptr_patch=this%sdates_thisyr, default='inactive')
+
+    this%sdates_perharv(begp:endp,:) = spval
+    call hist_addfld2d (fname='SDATES_PERHARV', units='day of year', type2d='mxharvests', &
+         avgflag='I', long_name='actual sowing dates for crops harvested this year; should only be output annually', &
+         ptr_patch=this%sdates_perharv, default='inactive')
+
+    this%syears_perharv(begp:endp,:) = spval
+    call hist_addfld2d (fname='SYEARS_PERHARV', units='year', type2d='mxharvests', &
+         avgflag='I', long_name='actual sowing years for crops harvested this year; should only be output annually', &
+         ptr_patch=this%syears_perharv, default='inactive')
 
     this%hdates_thisyr(begp:endp,:) = spval
     call hist_addfld2d (fname='HDATES', units='day of year', type2d='mxharvests', &
@@ -559,6 +573,16 @@ contains
        ! Read or write variable(s) with mxharvests dimension
        ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02) See note in CallRestartvarDimOK()
        if (CallRestartvarDimOK(ncid, flag, 'mxharvests')) then
+           call restartvar(ncid=ncid, flag=flag, varname='sdates_perharv', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+                long_name='sowing dates for crops harvested in this patch this year', units='day of year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%sdates_perharv)
+           call restartvar(ncid=ncid, flag=flag, varname='syears_perharv', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+                long_name='sowing years for crops harvested in this patch this year', units='year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%syears_perharv)
            call restartvar(ncid=ncid, flag=flag, varname='hdates_thisyr', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
                 long_name='crop harvest dates for this patch this year', units='day of year', &
