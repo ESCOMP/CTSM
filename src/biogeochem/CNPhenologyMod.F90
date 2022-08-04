@@ -1667,6 +1667,7 @@ contains
     ! !USES:
     use clm_time_manager , only : get_prev_calday, get_curr_days_per_year, is_beg_curr_year
     use clm_time_manager , only : get_average_days_per_year
+    use clm_time_manager , only : get_curr_date
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -2107,8 +2108,8 @@ contains
             else if (hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                harvest_count(p) = harvest_count(p) + 1
-               crop_inst%sdates_perharv(p, harvest_count(p)) = real(idop, r8)
-               crop_inst%syears_perharv(p, harvest_count(p)) = real(iyop, r8)
+               crop_inst%sdates_perharv(p, harvest_count(p)) = real(idop(p), r8)
+               crop_inst%syears_perharv(p, harvest_count(p)) = real(iyop(p), r8)
                crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = cphase_harvest
