@@ -201,9 +201,8 @@ contains
     use decompMod                          , only : get_proc_bounds
     use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
 
-!scs
-    use clm_varctl        , only : use_hillslope
-    use HillslopeHydrologyMod, only : SetHillslopeSoilThickness
+    use clm_varctl                         , only : use_hillslope
+    use HillslopeHydrologyMod              , only : SetHillslopeSoilThickness
     use initVerticalMod                    , only : setSoilLayerClass
 
     !
@@ -274,7 +273,7 @@ contains
          glc_behavior, &
          urbanparams_inst%thick_wall(begl:endl), &
          urbanparams_inst%thick_roof(begl:endl))
-!scs
+
     ! Set hillslope column bedrock values
     if(use_hillslope) then
        call SetHillslopeSoilThickness(bounds,fsurdat, &
