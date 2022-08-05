@@ -53,5 +53,7 @@ module clm_instur
   ! (second dimension goes 1:numurbl)
   real(r8), pointer :: pct_urban_max(:,:)
   !-----------------------------------------------------------------------
+  ! excess ice tiling mask
+  integer, pointer :: exice_tile_mask(:) 
 
 end module clm_instur

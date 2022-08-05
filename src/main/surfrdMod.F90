@@ -36,6 +36,7 @@ module surfrdMod
   private :: surfrd_veg_dgvm  ! Read vegetated landunits for DGVM mode
   private :: surfrd_pftformat ! Read crop pfts in file format where they are part of the vegetated land unit
   private :: surfrd_cftformat ! Read crop pfts in file format where they are on their own landunit
+  private :: surfrd_exicetiles! Read excess ice tiling mask
   !
   ! !PRIVATE DATA MEMBERS:
   character(len=*), parameter, private :: sourcefile = &
@@ -722,6 +723,7 @@ contains
     !
     ! !USES:
     use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_pfts
+    use clm_varctl      , only : use_excess_ice_tiles
     use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb, cft_ub
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
@@ -853,6 +855,9 @@ contains
     
     call collapse_to_dominant(wt_nat_patch(begg:endg,:), natpft_lb, natpft_ub, &
          begg, endg, n_dom_pfts)
+    if (use_excess_ice_tiles) then
+       call surfrd_exicetiles(begg, endg, ncid, ns)
+    endif
     
   end subroutine surfrd_veg_all
 
@@ -989,5 +994,42 @@ contains
     call ncd_pio_closefile(ncid_dynuse)
 
   end subroutine surfrd_urbanmask
+
+  subroutine surfrd_exicetiles(begg, endg, ncid, ns)
+  !
+  !
+  use clm_varctl, only : use_excess_ice_tiles
+  use clm_instur, only : exice_tile_mask
+
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: begg, endg
+    type(file_desc_t),intent(inout) :: ncid   ! netcdf id
+    integer          ,intent(in)    :: ns     ! domain size
+
+    !local variables
+    integer  :: ier                            ! error status	
+    logical  :: readvar                        ! is variable on dataset
+    integer,pointer :: arrayl(:)               ! local array (needed because ncd_io expects a pointer)
+    character(len=32) :: subname = 'surfrd_exicetiles'  ! subroutine name
+
+     ! read tile mask
+    if (use_excess_ice_tiles) then
+      allocate(arrayl(begg:endg))
+      call ncd_io(ncid=ncid, varname='TWOTILES', flag='read', data=arrayl, &
+           dim1name=grlnd, readvar=readvar)
+      if (.not. readvar) then
+         call endrun( msg=' ERROR: TWOTILES not on surface data file'//errMsg(sourcefile, __LINE__))
+      else
+        exice_tile_mask(begg:endg) = arrayl(begg:endg)
+        
+      endif
+      deallocate(arrayl)
+    endif
+
+
+
+
+  end subroutine
   
 end module surfrdMod
