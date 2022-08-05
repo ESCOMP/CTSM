@@ -193,6 +193,9 @@ contains
    use clm_varcon      , only : tfrz
    use ColumnType      , only : col
    use LandunitType    , only : lun
+   use GridcellType    , only : grc
+   use clm_varctl      , only : use_excess_ice_tiles
+   use decompMod       , only : bounds_type, get_global_index, subgrid_level_column
    implicit none
    class(excessicestream_type)        :: this
    type(bounds_type),  intent(in)     :: bounds
@@ -201,23 +204,36 @@ contains
    ! !LOCAL VARIABLES:
    integer  :: begc, endc
    integer  :: begg, endg
-   integer  :: c, l, g  !counters
+   integer  :: c, l, l1, g !counters
+   integer  :: gix, gix1    ! global index values
    
    exice_bulk_init(bounds%begc:bounds%endc)=0.0_r8
 
    do c = bounds%begc,bounds%endc
       g = col%gridcell(c)
       l = col%landunit(c)
-      if ((.not. lun%lakpoi(l)) .and. (.not. lun%urbpoi(l)) .and. (.not. lun%itype(l) == istwet) .and. (.not. lun%itype(l) == istice)) then  !not lake
-         if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+      if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
             exice_bulk_init(c)=this%exice_bulk(g)
          else 
             exice_bulk_init(c) = 0.0_r8
          endif
-      else
-         exice_bulk_init(c)=0.0_r8
-      endif
    enddo
+   
+   if (use_excess_ice_tiles) then
+      do g = bounds%begg,bounds%endg
+          l = grc%landunit_indices(istsoil,g)
+          if (lun%ncolumns(l) == 2) then
+            c=lun%coli(l)
+            exice_bulk_init(c)=this%exice_bulk(g)*0.3_r8
+            c=lun%colf(l)
+            exice_bulk_init(c)=this%exice_bulk(g)*1.7_r8
+            !call endrun(msg=' CONDITION WORKS '//errMsg(sourcefile, __LINE__))
+          endif
+      enddo
+   endif
+
+
+
 
   end subroutine CalcExcessIce
 
