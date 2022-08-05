@@ -1854,6 +1854,10 @@ contains
                  iyop(p) = kyr - 1
              end if
          end if
+         ! Will be needed until we can rely on all restart files including sowing_reason_patch.
+         if (croplive(p) .and. crop_inst%sowing_reason_patch(p) < 0) then
+            crop_inst%sowing_reason_patch(p) = 0
+         endif
 
 
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
@@ -2133,6 +2137,8 @@ contains
                cnveg_state_inst%gddmaturity_thisyr(p,harvest_count(p)) = gddmaturity(p)
                crop_inst%gddaccum_thisyr(p, harvest_count(p)) = crop_inst%gddaccum_patch(p)
                crop_inst%hui_thisyr(p, harvest_count(p)) = hui(p)
+               crop_inst%sowing_reason_perharv(p, harvest_count(p)) = real(crop_inst%sowing_reason_patch(p), r8)
+               crop_inst%sowing_reason_patch(p) = -1
                crop_inst%harvest_reason_thisyr(p, harvest_count(p)) = harvest_reason
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = cphase_harvest
@@ -2398,6 +2404,7 @@ contains
           this_sowing_reason = this_sowing_reason + 2._r8
       end if
       sowing_reason(p,sowing_count(p)) = this_sowing_reason
+      crop_inst%sowing_reason_patch(p) = this_sowing_reason
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
