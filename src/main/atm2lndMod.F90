@@ -13,7 +13,8 @@ module atm2lndMod
   use clm_varpar     , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon     , only : rair, grav, cpair, hfus, tfrz, denh2o, spval
   use clm_varcon     , only : wv_to_dair_weight_ratio
-  use clm_varctl     , only : iulog, use_c13, use_cn, use_lch4, iulog
+  use clm_varpar     , only : nlevgrnd
+  use clm_varctl     , only : iulog, use_c13, use_cn, use_lch4, iulog, use_excess_ice_tiles
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use atm2lndType    , only : atm2lnd_type
@@ -24,7 +25,9 @@ module atm2lndMod
   use landunit_varcon, only : istice
   use WaterType      , only : water_type
   use Wateratm2lndBulkType, only : wateratm2lndbulk_type
-  !
+!  use waterstatebulk_inst      , only : excess_ice_col
+!  use waterdiagnosticbulk_inst , only : snow_depth_col
+    !
   ! !PUBLIC TYPES:
   implicit none
   private
@@ -91,7 +94,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine downscale_forcings(bounds, &
-       topo_inst, atm2lnd_inst, wateratm2lndbulk_inst, eflx_sh_precip_conversion)
+       topo_inst, atm2lnd_inst, wateratm2lndbulk_inst, eflx_sh_precip_conversion, waterstatebulk_inst, waterdiagnosticbulk_inst)
     !
     ! !DESCRIPTION:
     ! Downscale atmospheric forcing fields from gridcell to column.
@@ -110,18 +113,28 @@ contains
     ! (rain vs. snow partitioning) is adjusted everywhere.
     !
     ! !USES:
-    use clm_varcon      , only : rair, cpair, grav
-    use QsatMod         , only : Qsat
+    use clm_varcon               , only : rair, cpair, grav, denice
+    use clm_varpar               , only : nlevgrnd
+    use QsatMod                  , only : Qsat
+    use ColumnType      , only : col
+    use LandunitType    , only : lun
+    use GridcellType    , only : grc
+    use WaterStateBulkType       , only : waterstatebulk_type
+    use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
+    use clm_varctl               , only : use_excess_ice_tiles
+    use landunit_varcon          , only : istsoil
     !
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in)    :: bounds  
     class(topo_type)   , intent(in)    :: topo_inst
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst
     type(wateratm2lndbulk_type) , intent(inout) :: wateratm2lndbulk_inst
+    type(waterstatebulk_type)      ,  intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type) ,  intent(inout) :: waterdiagnosticbulk_inst
     real(r8)           , intent(out)   :: eflx_sh_precip_conversion(bounds%begc:) ! sensible heat flux from precipitation conversion (W/m**2) [+ to atm]
     !
     ! !LOCAL VARIABLES:
-    integer :: g, l, c, fc         ! indices
+    integer :: g, l, c, fc, c1, c2         ! indices
     integer :: clo, cc
     type(filter_col_type) :: downscale_filter_c
 
@@ -131,6 +144,7 @@ contains
     real(r8) :: tbot_g, pbot_g, thbot_g, qbot_g, qs_g, rhos_g
     real(r8) :: tbot_c, pbot_c, thbot_c, qbot_c, qs_c, rhos_c
     real(r8) :: rhos_c_estimate, rhos_g_estimate
+    real(r8) :: SnowDepthTreshold !m
 
     character(len=*), parameter :: subname = 'downscale_forcings'
     !-----------------------------------------------------------------------
@@ -159,7 +173,15 @@ contains
          forc_th_c    => atm2lnd_inst%forc_th_downscaled_col       , & ! Output: [real(r8) (:)]  atmospheric potential temperature (Kelvin)
          forc_q_c     => wateratm2lndbulk_inst%forc_q_downscaled_col        , & ! Output: [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
          forc_pbot_c  => atm2lnd_inst%forc_pbot_downscaled_col     , & ! Output: [real(r8) (:)]  atmospheric pressure (Pa)               
-         forc_rho_c   => atm2lnd_inst%forc_rho_downscaled_col        & ! Output: [real(r8) (:)]  atmospheric density (kg/m**3)           
+         forc_rho_c   => atm2lnd_inst%forc_rho_downscaled_col      , & ! Output: [real(r8) (:)]  atmospheric density (kg/m**3)           
+
+         forc_rain_c               => wateratm2lndbulk_inst%forc_rain_downscaled_col    , & ! Output: [real(r8) (:)]  rain rate [mm/s]
+         forc_snow_c               => wateratm2lndbulk_inst%forc_snow_downscaled_col    , & ! Output: [real(r8) (:)]  snow rate [mm/s]
+
+
+         ! Column-level state fields for snow redistribution
+         snow_depth   => waterdiagnosticbulk_inst%snow_depth_col        , & ! Input: [real(r8) (:)   ] snow height (m)  
+         excess_ice   => waterstatebulk_inst%excess_ice_col               & ! Input:  [real(r8) (:,:) ]  excess ice (kg/m2) (new) (1:nlevgrnd)                        
          )
       
       ! Initialize column forcing (needs to be done for ALL active columns)
@@ -249,6 +271,36 @@ contains
 
       call partition_precip(bounds, atm2lnd_inst, wateratm2lndbulk_inst, &
            eflx_sh_precip_conversion(bounds%begc:bounds%endc))
+            
+     !Horizontal snow redistribution based on excess ice and snow 
+      SnowDepthTreshold = 0.05_r8
+      if (use_excess_ice_tiles) then 
+         do g = bounds%begg,bounds%endg
+            l = grc%landunit_indices(istsoil,g)            
+            if (lun%ncolumns(l) == 2) then
+               c1=lun%coli(l)
+               c2=lun%colf(l)
+               if ((sum(excess_ice(c1,1:nlevgrnd))/ denice + snow_depth(c1)) &
+                  - (sum(excess_ice(c2,1:nlevgrnd))/ denice + snow_depth(c2)) &
+                  > SnowDepthTreshold) then
+                  !Scale snow forcing. For now assumes equal sizes of the two tiles
+                  forc_snow_c(c1) = 0.0_r8
+                  forc_snow_c(c2) = forc_snow_c(c2) * 2.0_r8
+                  !call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                  !msg=errMsg(sourcefile, __LINE__))
+               elseif ((sum(excess_ice(c2,1:nlevgrnd))/ denice + snow_depth(c2)) &
+                  - (sum(excess_ice(c1,1:nlevgrnd))/ denice + snow_depth(c1)) &
+                  > SnowDepthTreshold) then
+                  forc_snow_c(c1) = forc_snow_c(c1) * 2.0_r8
+                  forc_snow_c(c2) = 0.0_r8
+                  !call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                  !msg=errMsg(sourcefile, __LINE__))
+               endif
+            endif
+         enddo
+      endif 
+
+
 
       call downscale_longwave(bounds, downscale_filter_c, topo_inst, atm2lnd_inst)
 

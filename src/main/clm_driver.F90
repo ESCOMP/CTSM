@@ -498,7 +498,9 @@ contains
 
        call downscale_forcings(bounds_clump, &
             topo_inst, atm2lnd_inst, water_inst%wateratm2lndbulk_inst, &
-            eflx_sh_precip_conversion = energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc))
+            eflx_sh_precip_conversion = energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc), &
+            waterstatebulk_inst = water_inst%waterstatebulk_inst, &
+            waterdiagnosticbulk_inst= water_inst%waterdiagnosticbulk_inst)
 
        call set_atm2lnd_water_tracers(bounds_clump, &
             filter(nc)%num_allc, filter(nc)%allc, &
