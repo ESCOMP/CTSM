@@ -132,6 +132,7 @@ contains
     ! !USES
     use clm_varpar, only : natpft_lb, natpft_ub
     use clm_varctl, only : use_excess_ice_tiles
+    use clm_instur, only : exice_tile_mask
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -155,7 +156,7 @@ contains
 
     if (npatches > 0) then
        ! Assume that the vegetated landunit has one column
-       if (use_excess_ice_tiles) then
+       if (use_excess_ice_tiles .and. exice_tile_mask(gi) == 1) then
           ncols = 2
        else
           ncols = 1
