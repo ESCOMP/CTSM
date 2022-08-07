@@ -1667,7 +1667,7 @@ contains
     ! !USES:
     use clm_time_manager , only : get_prev_calday, get_curr_days_per_year, is_beg_curr_year
     use clm_time_manager , only : get_average_days_per_year
-    use clm_time_manager , only : get_curr_date
+    use clm_time_manager , only : get_prev_date
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1780,7 +1780,7 @@ contains
       dayspyr = get_curr_days_per_year()
       avg_dayspyr = get_average_days_per_year()
       jday    = get_prev_calday()
-      call get_curr_date(kyr, kmo, kda, mcsec)
+      call get_prev_date(kyr, kmo, kda, mcsec)
 
       if (use_fertilizer) then
        ndays_on = 20._r8 ! number of days to fertilize
