@@ -42,6 +42,7 @@ module CropType
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
      real(r8), pointer :: vf_patch                (:)   ! patch vernalization factor for cereal
      real(r8), pointer :: cphase_patch            (:)   ! phenology phase (see cphase_* constants above for possible values)
+     integer , pointer :: sowing_reason_patch     (:)   ! reason for most recent sowing of this patch
      real(r8), pointer :: latbaset_patch          (:)   ! Latitude vary baset for hui (degree C)
      character(len=20) :: baset_mapping
      real(r8) :: baset_latvary_intercept
@@ -50,10 +51,13 @@ module CropType
      integer , pointer :: rx_sdates_thisyr        (:,:) ! all prescribed sowing dates for this patch this year
      real(r8), pointer :: rx_cultivar_gdds_thisyr (:,:) ! all cultivar GDD targets for this patch this year
      real(r8), pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year
+     real(r8), pointer :: sdates_perharv          (:,:) ! all actual sowing dates for crops *harvested* this year
+     real(r8), pointer :: syears_perharv          (:,:) ! all actual sowing years for crops *harvested* this year
      real(r8), pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
      real(r8), pointer :: gddaccum_thisyr         (:,:) ! accumulated GDD at harvest for this patch this year
      real(r8), pointer :: hui_thisyr              (:,:) ! accumulated heat unit index at harvest for this patch this year
      real(r8), pointer :: sowing_reason_thisyr    (:,:) ! reason for each sowing for this patch this year
+     real(r8), pointer :: sowing_reason_perharv   (:,:) ! reason for each sowing of crops *harvested* this year
      real(r8), pointer :: harvest_reason_thisyr   (:,:) ! reason for each harvest for this patch this year
      integer , pointer :: sowing_count            (:)   ! number of sowing events this year for this patch
      integer , pointer :: harvest_count           (:)   ! number of sowing events this year for this patch
@@ -221,15 +225,19 @@ contains
     allocate(this%gddtsoi_patch  (begp:endp)) ; this%gddtsoi_patch  (:) = spval
     allocate(this%vf_patch       (begp:endp)) ; this%vf_patch       (:) = 0.0_r8
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = cphase_not_planted
+    allocate(this%sowing_reason_patch (begp:endp)) ; this%sowing_reason_patch (:) = -1
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
     allocate(this%next_rx_sdate(begp:endp)) ; this%next_rx_sdate(:) = -1
     allocate(this%rx_sdates_thisyr(begp:endp,1:mxsowings)) ; this%rx_sdates_thisyr(:,:) = -1
     allocate(this%rx_cultivar_gdds_thisyr(begp:endp,1:mxsowings)) ; this%rx_cultivar_gdds_thisyr(:,:) = spval
     allocate(this%sdates_thisyr(begp:endp,1:mxsowings)) ; this%sdates_thisyr(:,:) = spval
+    allocate(this%sdates_perharv(begp:endp,1:mxharvests)) ; this%sdates_perharv(:,:) = spval
+    allocate(this%syears_perharv(begp:endp,1:mxharvests)) ; this%syears_perharv(:,:) = spval
     allocate(this%hdates_thisyr(begp:endp,1:mxharvests)) ; this%hdates_thisyr(:,:) = spval
     allocate(this%gddaccum_thisyr(begp:endp,1:mxharvests)) ; this%gddaccum_thisyr(:,:) = spval
     allocate(this%hui_thisyr(begp:endp,1:mxharvests)) ; this%hui_thisyr(:,:) = spval
     allocate(this%sowing_reason_thisyr(begp:endp,1:mxsowings)) ; this%sowing_reason_thisyr(:,:) = spval
+    allocate(this%sowing_reason_perharv(begp:endp,1:mxharvests)) ; this%sowing_reason_perharv(:,:) = spval
     allocate(this%harvest_reason_thisyr(begp:endp,1:mxharvests)) ; this%harvest_reason_thisyr(:,:) = spval
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
@@ -294,6 +302,16 @@ contains
          avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
          ptr_patch=this%sdates_thisyr, default='inactive')
 
+    this%sdates_perharv(begp:endp,:) = spval
+    call hist_addfld2d (fname='SDATES_PERHARV', units='day of year', type2d='mxharvests', &
+         avgflag='I', long_name='actual sowing dates for crops harvested this year; should only be output annually', &
+         ptr_patch=this%sdates_perharv, default='inactive')
+
+    this%syears_perharv(begp:endp,:) = spval
+    call hist_addfld2d (fname='SYEARS_PERHARV', units='year', type2d='mxharvests', &
+         avgflag='I', long_name='actual sowing years for crops harvested this year; should only be output annually', &
+         ptr_patch=this%syears_perharv, default='inactive')
+
     this%hdates_thisyr(begp:endp,:) = spval
     call hist_addfld2d (fname='HDATES', units='day of year', type2d='mxharvests', &
          avgflag='I', long_name='actual crop harvest dates; should only be output annually', &
@@ -310,9 +328,14 @@ contains
          ptr_patch=this%hui_thisyr, default='inactive')
 
     this%sowing_reason_thisyr(begp:endp,:) = spval
-    call hist_addfld2d (fname='SOWING_REASON_PERHARV', units='unitless', type2d='mxsowings', &
+    call hist_addfld2d (fname='SOWING_REASON', units='unitless', type2d='mxsowings', &
          avgflag='I', long_name='Reason for each crop sowing; should only be output annually', &
          ptr_patch=this%sowing_reason_thisyr, default='inactive')
+
+    this%sowing_reason_perharv(begp:endp,:) = spval
+    call hist_addfld2d (fname='SOWING_REASON_PERHARV', units='unitless', type2d='mxharvests', &
+         avgflag='I', long_name='Reason for sowing of each crop harvested this year; should only be output annually', &
+         ptr_patch=this%sowing_reason_perharv, default='inactive')
 
     this%harvest_reason_thisyr(begp:endp,:) = spval
     call hist_addfld2d (fname='HARVEST_REASON_PERHARV', units='unitless', type2d='mxharvests', &
@@ -569,6 +592,11 @@ contains
                                    ! the crop phases
        end if
 
+       call restartvar(ncid=ncid, flag=flag,  varname='sowing_reason_patch',xtype=ncd_int, &
+            dim1name='pft', long_name='sowing reason for this patch', &
+            units='none', &
+            interpinic_flag='interp', readvar=readvar, data=this%sowing_reason_patch)
+
        ! Read or write variable(s) with mxsowings dimension
        ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02) See note in CallRestartvarDimOK()
        if (CallRestartvarDimOK(ncid, flag, 'mxsowings')) then
@@ -596,6 +624,16 @@ contains
        ! Read or write variable(s) with mxharvests dimension
        ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02) See note in CallRestartvarDimOK()
        if (CallRestartvarDimOK(ncid, flag, 'mxharvests')) then
+           call restartvar(ncid=ncid, flag=flag, varname='sdates_perharv', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+                long_name='sowing dates for crops harvested in this patch this year', units='day of year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%sdates_perharv)
+           call restartvar(ncid=ncid, flag=flag, varname='syears_perharv', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+                long_name='sowing years for crops harvested in this patch this year', units='year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%syears_perharv)
            call restartvar(ncid=ncid, flag=flag, varname='hdates_thisyr', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
                 long_name='crop harvest dates for this patch this year', units='day of year', &
@@ -616,6 +654,11 @@ contains
                 long_name='reason for each sowing for this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%sowing_reason_thisyr)
+           call restartvar(ncid=ncid, flag=flag, varname='sowing_reason_perharv', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+                long_name='reason for sowing of each crop harvested this year', units='unitless', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%sowing_reason_perharv)
            call restartvar(ncid=ncid, flag=flag, varname='harvest_reason_thisyr', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
                 long_name='reason for each harvest for this patch this year', units='unitless', &
