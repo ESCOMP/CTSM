@@ -1830,6 +1830,7 @@ contains
             harvest_count(p) = 0
             do s = 1, mxsowings
                crop_inst%sdates_thisyr(p,s) = -1._r8
+               crop_inst%sowing_reason_thisyr(p,s) = -1._r8
             end do
             do s = 1, mxharvests
                crop_inst%sdates_perharv(p,s) = -1._r8
@@ -1838,6 +1839,7 @@ contains
                cnveg_state_inst%gddmaturity_thisyr(p,s) = -1._r8
                crop_inst%gddaccum_thisyr(p,s) = -1._r8
                crop_inst%hui_thisyr(p,s) = -1._r8
+               crop_inst%sowing_reason_perharv = -1._r8
                crop_inst%harvest_reason_thisyr(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
                   cnveg_carbonflux_inst%repr_grainc_to_food_perharv(p,s,k) = 0._r8
