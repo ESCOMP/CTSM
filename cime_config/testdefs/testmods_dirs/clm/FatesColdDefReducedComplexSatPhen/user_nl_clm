@@ -1,2 +1,2 @@
-use_fates_sp = .true.
-fates_spitfire_mode = 0
+hist_mfilt        = 365
+hist_nhtfrq       = -24
