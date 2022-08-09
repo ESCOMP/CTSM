@@ -385,18 +385,6 @@ contains
        hill_height(l,:) = fhillslope_in(g,:)
     enddo
 
-    call ncd_io(ncid=ncid, varname='h_bedrock', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (readvar) then
-       allocate(hill_bedrock (bounds%begl:bounds%endl,max_columns_hillslope), stat=ierr)
-       if (masterproc) then
-          write(iulog,*) 'h_bedrock found on surface data set'
-       end if
-       do l = bounds%begl,bounds%endl
-          g = lun%gridcell(l)
-          hill_bedrock(l,:) = fhillslope_in(g,:)
-       enddo
-    end if
-
     deallocate(fhillslope_in)
     
     allocate(ihillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
@@ -659,9 +647,9 @@ contains
        call getfil (fsurdat, locfn, 0)
        call ncd_pio_openfile (ncid, locfn, 0)
 
+       allocate(fhillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
        call ncd_io(ncid=ncid, varname='h_bedrock', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
        if (readvar) then
-          allocate(fhillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
           if (masterproc) then
              write(iulog,*) 'h_bedrock found on surface data set'
            else
