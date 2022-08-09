@@ -35,6 +35,7 @@ module CNVegStateType
      real(r8) , pointer :: hdidx_patch                 (:)     ! patch cold hardening index?
      real(r8) , pointer :: cumvd_patch                 (:)     ! patch cumulative vernalization d?ependence?
      real(r8) , pointer :: gddmaturity_patch           (:)     ! patch growing degree days (gdd) needed to harvest (ddays)
+     real(r8) , pointer :: gddmaturity_thisyr          (:,:)   ! all at-harvest values of the above for this patch this year
      real(r8) , pointer :: huileaf_patch               (:)     ! patch heat unit index needed from planting to leaf emergence
      real(r8) , pointer :: huigrain_patch              (:)     ! patch heat unit index needed to reach vegetative maturity
      real(r8) , pointer :: aleafi_patch                (:)     ! patch saved leaf allocation coefficient from phase 2
@@ -55,7 +56,8 @@ module CNVegStateType
      real(r8) , pointer :: htmx_patch                  (:)     ! patch max hgt attained by a crop during yr (m)
      integer  , pointer :: peaklai_patch               (:)     ! patch 1: max allowed lai; 0: not at max
 
-     integer  , pointer :: idop_patch                  (:)     ! patch date of planting
+     integer  , pointer :: idop_patch                  (:)     ! patch date of planting (day of year)
+     integer  , pointer :: iyop_patch                  (:)     ! patch year of planting
 
      real(r8) , pointer :: lgdp_col                    (:)     ! col gdp limitation factor for fire occurrence (0-1)
      real(r8) , pointer :: lgdp1_col                   (:)     ! col gdp limitation factor for fire spreading (0-1)
@@ -149,6 +151,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
+    use clm_varpar, only : mxharvests
     !
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this
@@ -207,6 +210,7 @@ contains
     allocate(this%hdidx_patch         (begp:endp))                   ; this%hdidx_patch         (:)   = nan
     allocate(this%cumvd_patch         (begp:endp))                   ; this%cumvd_patch         (:)   = nan
     allocate(this%gddmaturity_patch   (begp:endp))                   ; this%gddmaturity_patch   (:)   = spval
+    allocate(this%gddmaturity_thisyr  (begp:endp,1:mxharvests))      ; this%gddmaturity_thisyr  (:,:) = spval
     allocate(this%huileaf_patch       (begp:endp))                   ; this%huileaf_patch       (:)   = nan
     allocate(this%huigrain_patch      (begp:endp))                   ; this%huigrain_patch      (:)   = 0.0_r8
     allocate(this%aleafi_patch        (begp:endp))                   ; this%aleafi_patch        (:)   = nan
@@ -228,6 +232,7 @@ contains
     allocate(this%peaklai_patch       (begp:endp))                   ; this%peaklai_patch       (:)   = 0
 
     allocate(this%idop_patch          (begp:endp))                   ; this%idop_patch          (:)   = huge(1)
+    allocate(this%iyop_patch          (begp:endp))                   ; this%iyop_patch          (:)   = huge(1)
 
     allocate(this%lgdp_col            (begc:endc))                   ;
     allocate(this%lgdp1_col           (begc:endc))                   ;
@@ -313,6 +318,12 @@ contains
        call hist_addfld1d (fname='GDDHARV', units='ddays', &
             avgflag='A', long_name='Growing degree days (gdd) needed to harvest', &
             ptr_patch=this%gddmaturity_patch, default='inactive')
+       
+       ! Per harvest
+       this%gddmaturity_thisyr(begp:endp,:) = spval
+       call hist_addfld2d (fname='GDDHARV_PERHARV', units='ddays', type2d='mxharvests', &
+            avgflag='I', long_name='Growing degree days (gdd) needed to harvest; should only be output annually', &
+            ptr_patch=this%gddmaturity_thisyr, default='inactive')
     end if
 
     this%lfc2_col(begc:endc) = spval
@@ -803,6 +814,10 @@ contains
             dim1name='pft', long_name='Date of planting', units='jday', nvalid_range=(/1,366/), &
             interpinic_flag='interp', readvar=readvar, data=this%idop_patch)
 
+       call restartvar(ncid=ncid, flag=flag,  varname='iyop', xtype=ncd_int,  &
+            dim1name='pft', long_name='Year of planting', units='year', &
+            interpinic_flag='interp', readvar=readvar, data=this%iyop_patch)
+
        call restartvar(ncid=ncid, flag=flag,  varname='aleaf', xtype=ncd_double,  &
             dim1name='pft', long_name='leaf allocation coefficient', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%aleaf_patch)
@@ -842,6 +857,16 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='grain_flag', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%grain_flag_patch)
+       
+       ! Read or write variable(s) with mxharvests dimension
+       ! BACKWARDS_COMPATIBILITY(ssr, 2022-03-31) See note in CallRestartvarDimOK()
+       if (CallRestartvarDimOK(ncid, flag, 'mxharvests')) then
+          call restartvar(ncid=ncid, flag=flag, varname='gddmaturity_thisyr', xtype=ncd_double,  &
+               dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+               long_name='crop harvest dates for this patch this year', units='day of year', &
+               scale_by_thickness=.false., &
+               interpinic_flag='interp', readvar=readvar, data=this%gddmaturity_thisyr)
+       end if
     end if
     if ( flag == 'read' .and. num_reseed_patch > 0 )then
        if ( masterproc ) write(iulog, *) 'Reseed dead plants for CNVegState'
