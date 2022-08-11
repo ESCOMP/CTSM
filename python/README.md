@@ -7,13 +7,20 @@ all` from this directory.
 
 ## Python environment
 
-One way to get a python environment for this to work together on cheyenne is to use
-
-ncar\_pylib
-
 Another way is to use the file conda\_env\_ctsm\_py.txt to setup
-a python environment. Comments in the file tell how to do this
-on cheyenne.
+a python environment. Comments in the file tell how to do this.
+
+You can also use the script in the top level directory to do
+all the conda commands and do this for you.
+
+ ../py_env_create
+ conda activate ctsm_py
+
+Conda requirements files:
+
+conda_env_ctsm_py.txt --------- Standard conda environment to use for most machines
+conda_env_ctsm_py_cgd.txt ----- Standard conda environment for CGD machines
+conda_env_ctsm_py_latest.txt -- Test environment with latest versions that work
 
 ## Unit and system tests
 
