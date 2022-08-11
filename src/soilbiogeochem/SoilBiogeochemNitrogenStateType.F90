@@ -9,7 +9,7 @@ module SoilBiogeochemNitrogenStateType
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
   use clm_varctl                         , only : use_nitrif_denitrif
   use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method, use_soil_matrixcn
@@ -154,7 +154,7 @@ contains
     !
     ! !USES:
     use clm_varpar , only : ndecomp_cascade_transitions, ndecomp_pools
-    use clm_varpar , only : nlevdecomp, nlevdecomp_full, nlevgrnd
+    use clm_varpar , only : nlevdecomp, nlevdecomp_full
     use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
     use decompMod  , only : bounds_type
     !
@@ -176,7 +176,7 @@ contains
     begc = bounds%begc; endc = bounds%endc
 
     if ( nlevdecomp_full > 1 ) then
-       this%decomp_soiln_vr_col(begc:endc,:) = spval
+       this%decomp_soiln_vr_col(begc:endc,1:nlevdecomp_full) = spval
        call hist_addfld2d (fname='SOILN_vr', units='gN/m^3',  type2d='levdcmp', &
             avgflag='A', long_name='SOIL N (vertically resolved)', &
             ptr_col=this%decomp_soiln_vr_col)
@@ -193,7 +193,7 @@ contains
     end if
     do l  = 1, ndecomp_pools
        if ( nlevdecomp_full > 1 ) then
-          data2dptr => this%decomp_npools_vr_col(:,:,l)
+          data2dptr => this%decomp_npools_vr_col(:,1:nlevdecomp_full,l)
           fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_vr'
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N (vertically resolved)'
           call hist_addfld2d (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
@@ -257,18 +257,18 @@ contains
 
     if (use_nitrif_denitrif) then
        if ( nlevdecomp_full > 1 ) then
-          data2dptr => this%smin_no3_vr_col(begc:endc,1:nlevsoi)
-          call hist_addfld_decomp (fname='SMIN_NO3'//trim(vr_suffix), units='gN/m^3',  type2d='levsoi', &
+          data2dptr => this%smin_no3_vr_col(begc:endc,1:nlevdecomp_full)
+          call hist_addfld_decomp (fname='SMIN_NO3'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
                avgflag='A', long_name='soil mineral NO3 (vert. res.)', &
                ptr_col=data2dptr)
 
-          data2dptr => this%smin_nh4_vr_col(begc:endc,1:nlevsoi)
-          call hist_addfld_decomp (fname='SMIN_NH4'//trim(vr_suffix), units='gN/m^3',  type2d='levsoi', &
+          data2dptr => this%smin_nh4_vr_col(begc:endc,1:nlevdecomp_full)
+          call hist_addfld_decomp (fname='SMIN_NH4'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
                avgflag='A', long_name='soil mineral NH4 (vert. res.)', &
                ptr_col=data2dptr)
 
-          data2dptr => this%sminn_vr_col(begc:endc,1:nlevsoi)
-          call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levsoi', &
+          data2dptr => this%sminn_vr_col(begc:endc,1:nlevdecomp_full)
+          call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
                avgflag='A', long_name='soil mineral N', &
                ptr_col=data2dptr)
 
@@ -284,8 +284,8 @@ contains
        endif
     else
        if ( nlevdecomp_full > 1 ) then
-          data2dptr => this%sminn_vr_col(begc:endc,1:nlevsoi) 
-          call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3', type2d='levsoi', &
+          data2dptr => this%sminn_vr_col(begc:endc,1:nlevdecomp_full)
+          call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3', type2d='levdcmp', &
                avgflag='A', long_name='soil mineral N', &
                ptr_col=data2dptr)
        end if
