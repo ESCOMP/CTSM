@@ -5,7 +5,7 @@ module SoilBiogeochemCarbonStateType
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi, zsoi, c3_r2
   use clm_varctl                         , only : iulog, spinup_state, use_fates
   use landunit_varcon                    , only : istcrop, istsoil
@@ -159,8 +159,8 @@ contains
     if (carbon_type == 'c12') then
 
        if ( nlevdecomp_full > 1 ) then
-          this%decomp_soilc_vr_col(begc:endc,:) = spval
-          call hist_addfld2d (fname='SOILC_vr', units='gC/m^3',  type2d='levsoi', &
+          this%decomp_soilc_vr_col(begc:endc,1:nlevdecomp_full) = spval
+          call hist_addfld2d (fname='SOILC_vr', units='gC/m^3',  type2d='levdcmp', &
                avgflag='A', long_name='SOIL C (vertically resolved)', &
                ptr_col=this%decomp_soilc_vr_col)
        end if
@@ -168,10 +168,10 @@ contains
        this%decomp_cpools_col(begc:endc,:) = spval
        do l  = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
-             data2dptr => this%decomp_cpools_vr_col(:,1:nlevsoi,l)
+             data2dptr => this%decomp_cpools_vr_col(:,1:nlevdecomp_full,l)
              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
              longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
-             call hist_addfld2d (fname=fieldname, units='gC/m^3',  type2d='levsoi', &
+             call hist_addfld2d (fname=fieldname, units='gC/m^3',  type2d='levdcmp', &
                   avgflag='A', long_name=longname, &
                   ptr_col=data2dptr)
           endif
@@ -256,8 +256,8 @@ contains
     if ( carbon_type == 'c13' ) then
 
        if ( nlevdecomp_full > 1 ) then
-          this%decomp_soilc_vr_col(begc:endc,:) = spval
-          call hist_addfld2d (fname='C13_SOILC_vr', units='gC13/m^3',  type2d='levsoi', &
+          this%decomp_soilc_vr_col(begc:endc,1:nlevdecomp_full) = spval
+          call hist_addfld2d (fname='C13_SOILC_vr', units='gC13/m^3',  type2d='levdcmp', &
                avgflag='A', long_name='C13 SOIL C (vertically resolved)', &
                ptr_col=this%decomp_soilc_vr_col, default='inactive')
        end if
@@ -265,10 +265,10 @@ contains
        this%decomp_cpools_vr_col(begc:endc,:,:) = spval
        do l = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
-             data2dptr => this%decomp_cpools_vr_col(:,1:nlevsoi,l)
+             data2dptr => this%decomp_cpools_vr_col(:,1:nlevdecomp_full,l)
              fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
              longname =  'C13 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
-             call hist_addfld2d (fname=fieldname, units='gC13/m^3',  type2d='levsoi', &
+             call hist_addfld2d (fname=fieldname, units='gC13/m^3',  type2d='levdcmp', &
                   avgflag='A', long_name=longname, &
                   ptr_col=data2dptr, default='inactive')
           endif
@@ -341,8 +341,8 @@ contains
     if ( carbon_type == 'c14' ) then
 
        if ( nlevdecomp_full > 1 ) then
-          this%decomp_soilc_vr_col(begc:endc,:) = spval
-          call hist_addfld2d (fname='C14_SOILC_vr', units='gC14/m^3',  type2d='levsoi', &
+          this%decomp_soilc_vr_col(begc:endc,1:nlevdecomp_full) = spval
+          call hist_addfld2d (fname='C14_SOILC_vr', units='gC14/m^3',  type2d='levdcmp', &
                avgflag='A', long_name='C14 SOIL C (vertically resolved)', &
                ptr_col=this%decomp_soilc_vr_col)
        end if
@@ -350,10 +350,10 @@ contains
        this%decomp_cpools_vr_col(begc:endc,:,:) = spval
        do l = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
-             data2dptr => this%decomp_cpools_vr_col(:,1:nlevsoi,l)
+             data2dptr => this%decomp_cpools_vr_col(:,1:nlevdecomp_full,l)
              fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
              longname =  'C14 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
-             call hist_addfld2d (fname=fieldname, units='gC14/m^3',  type2d='levsoi', &
+             call hist_addfld2d (fname=fieldname, units='gC14/m^3',  type2d='levdcmp', &
                   avgflag='A', long_name=longname, ptr_col=data2dptr, default='inactive')
           endif
 
