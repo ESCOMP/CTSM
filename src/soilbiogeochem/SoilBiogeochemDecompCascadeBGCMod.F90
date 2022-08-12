@@ -17,7 +17,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use spmdMod                            , only : masterproc
   use abortutils                         , only : endrun
   use CNSharedParamsMod                  , only : CNParamsShareInst, nlev_soildecomp_standard 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, InitSoilTransfer, use_soil_matrixcn
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilStateType                      , only : soilstate_type
@@ -500,6 +500,8 @@ contains
          cascade_donor_pool(i_cwdl3) = i_cwd
          cascade_receiver_pool(i_cwdl3) = i_lig_lit
       end if
+ 
+      if(use_soil_matrixcn) call InitSoilTransfer()
 
       deallocate(params_inst%bgc_initial_Cstocks)
 
@@ -516,7 +518,7 @@ contains
     !  written by C. Koven based on original CLM4 decomposition cascade
     !
     ! !USES:
-    use clm_time_manager , only : get_average_days_per_year
+    use clm_time_manager , only : get_average_days_per_year, get_step_size
     use shr_const_mod    , only : SHR_CONST_PI
     use clm_varcon       , only : secspday
     !
@@ -545,6 +547,7 @@ contains
     real(r8):: froz_q10                     ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
     real(r8):: decomp_depth_efolding        ! (meters) e-folding depth for reduction in decomposition [
     integer :: c, fc, j, k, l
+    real(r8):: dt                           ! decomposition time step
     real(r8):: catanf                       ! hyperbolic temperature function from CENTURY
     real(r8):: catanf_30                    ! reference rate at 30C
     real(r8):: t1                           ! temperature argument
@@ -582,7 +585,7 @@ contains
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
-         spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
+         spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8) (:)     ]  factor for AD spinup associated with each pool           
          )
 
       mino2lim = CNParamsShareInst%mino2lim
@@ -593,6 +596,7 @@ contains
       endif
 
       days_per_year = get_average_days_per_year()
+      dt = real( get_step_size(), r8 )
 
       ! set "Q10" parameter
       Q10 = CNParamsShareInst%Q10
@@ -891,6 +895,13 @@ contains
                decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_cwd(c)
             end if
+            ! Above into soil matrix
+            if(use_soil_matrixcn)then
+               ! same for cwd but only if fates is not enabled; fates handles CWD
+               ! on its own structure
+               if (.not. use_fates) then
+               end if
+            end if !use_soil_matrixcn
          end do
       end do
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
