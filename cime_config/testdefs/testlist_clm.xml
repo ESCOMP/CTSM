@@ -2298,13 +2298,13 @@
     </options>
   </test>
 -->
-  <test name="SMS_Ld30" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
+  <test name="SMS_Lm1" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefBasic">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
-      <option name="comment">Temporary smoke test.  This test should be removed once the ERS version of this test passes COMPARE_base_rest</option>
+      <option name="comment">Smoke test that uses just the FATES SP compset.</option>
     </options>
   </test>
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
