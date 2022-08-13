@@ -3294,27 +3294,20 @@ contains
     if (mode == 'define' .and. tape(t)%ntimes == 1) then
 
        if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, dim1name='lon', &
-              long_name='coordinate longitude', units='degrees_east', &
-              ncid=nfid(t), missing_value=spval, fill_value=spval)
           ! 2D lat/lon vars
-          call ncd_defvar(varname='longxy', xtype=tape(t)%ncprec, &
+          call ncd_defvar(varname='LONGXY', xtype=tape(t)%ncprec, &
                dim1name='lon', dim2name='lat', &
-               long_name='longitude', units='degrees east', ncid=nfid(t))
-          call ncd_defvar(varname='latixy', xtype=tape(t)%ncprec, &
+               long_name='coordinate longitude', units='degrees east', ncid=nfid(t), &
+               missing_value=spval, fill_value=spval)
+          call ncd_defvar(varname='LATIXY', xtype=tape(t)%ncprec, &
                dim1name='lon', dim2name='lat', &
-               long_name='latitude', units='degrees north', ncid=nfid(t))
+               long_name='coordinate latitude', units='degrees north', ncid=nfid(t), &
+               missing_value=spval, fill_value=spval)
        else
           call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, &
               dim1name=grlnd, &
               long_name='coordinate longitude', units='degrees_east', ncid=nfid(t), &
               missing_value=spval, fill_value=spval)
-       end if
-       if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, dim1name='lat', &
-              long_name='coordinate latitude', units='degrees_north', &
-              ncid=nfid(t), missing_value=spval, fill_value=spval)
-       else
           call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, &
               dim1name=grlnd, &
               long_name='coordinate latitude', units='degrees_north', ncid=nfid(t), &
@@ -3381,16 +3374,9 @@ contains
        ! Most of this is constant and only needs to be done on tape(t)%ntimes=1
        ! But, some may change for dynamic PATCH mode for example
 
-       if (ldomain%isgrid2d) then
-          call ncd_io(varname='lon', data=lon1d, ncid=nfid(t), flag='write')
-          call ncd_io(varname='lat', data=lat1d, ncid=nfid(t), flag='write')
-          ! 2D lat/lon vars
-          call ncd_io(varname='longxy', data=ldomain%lonc, dim1name=grlnd, ncid=nfid(t), flag='write')
-          call ncd_io(varname='latixy', data=ldomain%latc, dim1name=grlnd, ncid=nfid(t), flag='write')
-       else
-          call ncd_io(varname='lon', data=ldomain%lonc, dim1name=grlnd, ncid=nfid(t), flag='write')
-          call ncd_io(varname='lat', data=ldomain%latc, dim1name=grlnd, ncid=nfid(t), flag='write')
-       end if
+       ! 2D lat/lon vars
+       call ncd_io(varname='LONGXY', data=ldomain%lonc, dim1name=grlnd, ncid=nfid(t), flag='write')
+       call ncd_io(varname='LATIXY', data=ldomain%latc, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='area'    , data=ldomain%area, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='landfrac', data=ldomain%frac, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='landmask', data=ldomain%mask, dim1name=grlnd, ncid=nfid(t), flag='write')
