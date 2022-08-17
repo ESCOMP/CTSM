@@ -2042,7 +2042,7 @@ contains
                             if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                             croplive(p) = .false.
                             cphase(p) = 4._r8
-                            if (tlai(p) > 0._r8) then ! plant had emerged before rotation
+                            if (deadstemc(p) > 0._r8) then ! plant had emerged before rotation
                                offset2_flag(p) = 1._r8
                             else      ! plant never emerged from ground
                                crop_seedc_to_leaf(p) = crop_seedc_to_leaf(p) - leafc_xfer(p)/dt
@@ -2070,6 +2070,12 @@ contains
 
                          ! only begin to test for offset critical temperature once past the summer sol
                          if (ws_flag == 0._r8 .and. t_ref24(p) < crit_temp(ivt(p))) then
+                             ! harvest crop if maturity has not been reached by
+                             ! now
+                             if (grainc(p) > 0._r8) then
+                                harvest_flag(p) = 1._r8
+                                storage_flag(p) = 1._r8
+                             end if
                              offset_flag(p) = 1._r8
                              !storage_flag(p) = 0._r8
                              offset_counter(p) = ndays_off * secspday
