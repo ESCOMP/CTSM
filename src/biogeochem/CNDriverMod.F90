@@ -40,7 +40,7 @@ module CNDriverMod
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
   use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
-
+  use ActiveLayerMod                  , only : active_layer_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -93,11 +93,11 @@ contains
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst,            &
        soilbiogeochem_state_inst,                                                          &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
+       active_layer_inst,                                                                  &
        atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,    &
        wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst,            &
        dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,                   &
-       nutrient_competition_method, cnfire_method, frictionvel_inst)
-
+       nutrient_competition_method, cnfire_method, dribble_crophrv_xsmrpool_2atm, frictionvel_inst)
     !
     ! !DESCRIPTION:
     ! The core CN code is executed here. Calculates fluxes for maintenance
@@ -170,6 +170,7 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(active_layer_type)                 , intent(in)    :: active_layer_inst
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)                   , intent(in)    :: waterdiagnosticbulk_inst
@@ -187,6 +188,7 @@ contains
     type(frictionvel_type)                  , intent(inout) :: frictionvel_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     class(cnfire_method_type)               , intent(inout) :: cnfire_method
+    logical                                 , intent(in)    :: dribble_crophrv_xsmrpool_2atm
     !
     ! !LOCAL VARIABLES:
     real(r8):: cn_decomp_pools(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
@@ -203,12 +205,7 @@ contains
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
 
-    !real(r8) , intent(in)    :: rootfr_patch(bounds%begp:, 1:)          
-    !integer  , intent(in)    :: altmax_lastyear_indx_col(bounds%begc:)  ! frost table depth (m)
-
     associate(                                                                    &
-         crootfr_patch             => soilstate_inst%crootfr_patch              , & ! fraction of roots for carbon in each soil layer  (nlevgrnd)
-         altmax_lastyear_indx_col  => canopystate_inst%altmax_lastyear_indx_col , & ! frost table depth (m)
          laisun                    => canopystate_inst%laisun_patch             , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index        
          laisha                    => canopystate_inst%laisha_patch             , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index        
          frac_veg_nosno            => canopystate_inst%frac_veg_nosno_patch     , & ! Input:  [integer  (:)   ]  fraction of vegetation not covered by snow (0 OR 1) [-]
@@ -319,10 +316,10 @@ contains
     call t_startf('SoilBiogeochem')
     if (use_century_decomp) then
        call decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
-            canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+            soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     else
        call decomp_rate_constants_cn(bounds, num_soilc, filter_soilc, &
-            canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+            soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     end if
 
     ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)
@@ -335,7 +332,7 @@ contains
 
     ! calculate vertical profiles for distributing soil and litter C and N (previously subroutine decomp_vertprofiles called from CNDecompAlloc)
     call SoilBiogeochemVerticalProfile(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         canopystate_inst, soilstate_inst,soilbiogeochem_state_inst)
+         active_layer_inst, soilstate_inst,soilbiogeochem_state_inst)
 
     ! calculate nitrification and denitrification rates (previously subroutine nitrif_denitrif called from CNDecompAlloc)
     if (use_nitrif_denitrif) then 
@@ -569,16 +566,16 @@ contains
     ! Update all prognostic carbon state variables (except for gap-phase mortality and fire fluxes)
     call CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
          crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-         soilbiogeochem_carbonflux_inst)
+         soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
     if ( use_c13 ) then
        call CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
             crop_inst, c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
-            c13_soilbiogeochem_carbonflux_inst)
+            c13_soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
     end if
     if ( use_c14 ) then
        call CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
             crop_inst, c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
-            c14_soilbiogeochem_carbonflux_inst)
+            c14_soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
     end if
 
     ! Update all prognostic nitrogen state variables (except for gap-phase mortality and fire fluxes)
@@ -608,7 +605,7 @@ contains
     call t_startf('SoilBiogeochemLittVertTransp')
 
     call SoilBiogeochemLittVertTransp(bounds, num_soilc, filter_soilc,            &
-         canopystate_inst, soilbiogeochem_state_inst,                             &
+         active_layer_inst, soilbiogeochem_state_inst,                             &
          soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,         &
          c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst, &
          c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst, &

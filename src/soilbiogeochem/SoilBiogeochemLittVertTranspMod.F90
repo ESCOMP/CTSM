@@ -9,7 +9,7 @@ module SoilBiogeochemLittVertTranspMod
   use clm_varcon                         , only : secspday
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
-  use CanopyStateType                    , only : canopystate_type
+  use ActiveLayerMod                     , only : active_layer_type
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
@@ -88,7 +88,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SoilBiogeochemLittVertTransp(bounds, num_soilc, filter_soilc,      &
-       canopystate_inst, soilbiogeochem_state_inst,                     &
+       active_layer_inst, soilbiogeochem_state_inst,                     &
        soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst, &
        c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst, &
        c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst, &
@@ -113,7 +113,7 @@ contains
     type(bounds_type)                       , intent(in)    :: bounds 
     integer                                 , intent(in)    :: num_soilc        ! number of soil columns in filter
     integer                                 , intent(in)    :: filter_soilc(:)  ! filter for soil columns
-    type(canopystate_type)                  , intent(in)    :: canopystate_inst
+    type(active_layer_type)                 , intent(in)    :: active_layer_inst
     type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
@@ -165,8 +165,8 @@ contains
          is_cwd           => decomp_cascade_con%is_cwd                  ,  & ! Input:  [logical (:)    ]  TRUE => pool is a cwd pool                                
          spinup_factor    => decomp_cascade_con%spinup_factor           ,  & ! Input:  [real(r8) (:)   ]  spinup accelerated decomposition factor, used to accelerate transport as well
 
-         altmax           => canopystate_inst%altmax_col                ,  & ! Input:  [real(r8) (:)   ]  maximum annual depth of thaw                             
-         altmax_lastyear  => canopystate_inst%altmax_lastyear_col       ,  & ! Input:  [real(r8) (:)   ]  prior year maximum annual depth of thaw                  
+         altmax           => active_layer_inst%altmax_col               ,  & ! Input:  [real(r8) (:)   ]  maximum annual depth of thaw                             
+         altmax_lastyear  => active_layer_inst%altmax_lastyear_col      ,  & ! Input:  [real(r8) (:)   ]  prior year maximum annual depth of thaw                  
 
          som_adv_coef     => soilbiogeochem_state_inst%som_adv_coef_col ,  & ! Output: [real(r8) (:,:) ]  SOM advective flux (m/s)                               
          som_diffus_coef  => soilbiogeochem_state_inst%som_diffus_coef_col & ! Output: [real(r8) (:,:) ]  SOM diffusivity due to bio/cryo-turbation (m2/s)       

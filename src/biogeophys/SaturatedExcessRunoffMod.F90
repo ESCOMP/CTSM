@@ -339,7 +339,7 @@ contains
     character(len=*), parameter :: subname = 'ComputeFsatTopmodel'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(fsat) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(fsat) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          frost_table      =>    soilhydrology_inst%frost_table_col  , & ! Input:  [real(r8) (:)   ]  frost table depth (m)
@@ -391,7 +391,7 @@ contains
     character(len=*), parameter :: subname = 'ComputeFsatVic'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(fsat) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(fsat) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          b_infil          =>    soilhydrology_inst%b_infil_col      , & ! Input:  [real(r8) (:)   ]  VIC b infiltration parameter

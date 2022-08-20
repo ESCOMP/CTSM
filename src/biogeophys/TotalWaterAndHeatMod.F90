@@ -7,7 +7,6 @@ module TotalWaterAndHeatMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod       , only : r8 => shr_kind_r8
-  use shr_log_mod        , only : errMsg => shr_log_errMsg
   use decompMod          , only : bounds_type
   use clm_varcon         , only : cpice, cpliq, denh2o, tfrz, hfus
   use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb
@@ -119,7 +118,7 @@ contains
     character(len=*), parameter :: subname = 'ComputeWaterMassNonLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(water_mass) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(water_mass) == (/bounds%endc/)), sourcefile, __LINE__)
 
     call ComputeLiqIceMassNonLake( &
          bounds = bounds, &
@@ -170,7 +169,7 @@ contains
     character(len=*), parameter :: subname = 'ComputeWaterMassLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(water_mass) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(water_mass) == (/bounds%endc/)), sourcefile, __LINE__)
 
     call ComputeLiqIceMassLake( &
          bounds = bounds, &
@@ -226,8 +225,8 @@ contains
     character(len=*), parameter :: subname = 'ComputeLiqIceMassNonLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(liquid_mass) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ice_mass) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(liquid_mass) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ice_mass) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          snl          =>    col%snl                        , & ! Input:  [integer  (:)   ]  negative number of snow layers
@@ -346,8 +345,8 @@ contains
     character(len=*), parameter :: subname = 'AccumulateSoilLiqIceMassNonLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(liquid_mass) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ice_mass) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(liquid_mass) == [bounds%endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ice_mass) == [bounds%endc]), sourcefile, __LINE__)
 
     associate( &
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
@@ -415,8 +414,8 @@ contains
     character(len=*), parameter :: subname = 'ComputeLiqIceMassLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(liquid_mass) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ice_mass) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(liquid_mass) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ice_mass) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          snl          =>    col%snl                        , & ! Input:  [integer  (:)   ]  negative number of snow layers
@@ -513,9 +512,9 @@ contains
     character(len=*), parameter :: subname = 'ComputeHeatNonLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(heat) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(heat_liquid) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cv_liquid) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(heat) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(heat_liquid) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cv_liquid) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          snl          => col%snl, & ! number of snow layers
@@ -712,9 +711,9 @@ contains
     character(len=*), parameter :: subname = 'AccumulateSoilHeatNonLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(heat) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(heat_liquid) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cv_liquid) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(heat) == [bounds%endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(heat_liquid) == [bounds%endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cv_liquid) == [bounds%endc]), sourcefile, __LINE__)
 
     associate( &
          dz           => col%dz, &  ! layer depth (m)
@@ -837,9 +836,9 @@ contains
     character(len=*), parameter :: subname = 'ComputeHeatLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(heat) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(heat_liquid) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cv_liquid) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(heat) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(heat_liquid) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cv_liquid) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          snl          => col%snl, & ! number of snow layers
@@ -983,10 +982,10 @@ contains
     character(len=*), parameter :: subname = 'AdjustDeltaHeatForDeltaLiq'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(delta_liq) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(liquid_water_temp1) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(liquid_water_temp2) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(delta_heat) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(delta_liq) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(liquid_water_temp1) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(liquid_water_temp2) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(delta_heat) == (/bounds%endg/)), sourcefile, __LINE__)
 
     do g = bounds%begg, bounds%endg
        if (delta_liq(g) /= 0._r8) then

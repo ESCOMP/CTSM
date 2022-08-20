@@ -82,7 +82,7 @@ contains
   !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
-  function create_cnfire_method( NLFilename ) result(cnfire_method)
+  subroutine create_cnfire_method( NLFilename, cnfire_method )
     !
     ! !DESCRIPTION:
     ! Create and return an object of cnfire_method_type. The particular type
@@ -98,7 +98,7 @@ contains
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
-    class(cnfire_method_type), allocatable :: cnfire_method  ! function result
+    class(cnfire_method_type), allocatable, intent(inout) :: cnfire_method
     !
     ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'create_cnfire_method'
@@ -107,11 +107,11 @@ contains
     select case (trim(fire_method))
        
     case ("nofire")
-       allocate(cnfire_method, source=cnfire_nofire_type())
+       allocate(cnfire_nofire_type :: cnfire_method)
     case ("li2014qianfrc")
-       allocate(cnfire_method, source=cnfire_li2014_type())
+       allocate(cnfire_li2014_type :: cnfire_method)
     case ("li2016crufrc")
-       allocate(cnfire_method, source=cnfire_li2016_type())
+       allocate(cnfire_li2016_type :: cnfire_method)
 
     case default
        write(iulog,*) subname//' ERROR: unknown method: ', fire_method
@@ -120,6 +120,6 @@ contains
     end select
     call cnfire_method%CNFireReadNML( NLFilename )
 
-  end function create_cnfire_method
+  end subroutine create_cnfire_method
 
 end module CNFireFactoryMod

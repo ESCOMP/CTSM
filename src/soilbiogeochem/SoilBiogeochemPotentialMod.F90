@@ -99,9 +99,9 @@ contains
    
     begc = bounds%begc; endc = bounds%endc
 
-    SHR_ASSERT_ALL((ubound(cn_decomp_pools)     == (/endc,nlevdecomp,ndecomp_pools/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(p_decomp_cpool_loss) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(pmnf_decomp_cascade) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cn_decomp_pools)     == (/endc,nlevdecomp,ndecomp_pools/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(p_decomp_cpool_loss) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(pmnf_decomp_cascade) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
 
     associate(                                                                                                          & 
          cascade_donor_pool               => decomp_cascade_con%cascade_donor_pool                                 , & ! Input:  [integer  (:)     ]  which pool is C taken from for a given decomposition step

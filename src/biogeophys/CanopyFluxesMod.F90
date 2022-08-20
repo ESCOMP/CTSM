@@ -19,9 +19,9 @@ module CanopyFluxesMod
   use clm_varcon            , only : namep 
   use pftconMod             , only : pftcon
   use decompMod             , only : bounds_type
+  use ActiveLayerMod        , only : active_layer_type
   use PhotosynthesisMod     , only : Photosynthesis, PhotoSynthesisHydraulicStress, PhotosynthesisTotal, Fractionation
   use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
-  use EDBtranMod            , only : btran_ed
   use SoilMoistStressMod    , only : calc_effective_soilporosity, calc_volumetric_h2oliq
   use SoilMoistStressMod    , only : calc_root_moist_stress, set_perchroot_opt
   use SimpleMathMod         , only : array_div_vector
@@ -181,7 +181,7 @@ contains
 
   !------------------------------------------------------------------------------
   subroutine CanopyFluxes(bounds,  num_exposedvegp, filter_exposedvegp,                  &
-       clm_fates, nc, atm2lnd_inst, canopystate_inst,                                    &
+       clm_fates, nc, active_layer_inst, atm2lnd_inst, canopystate_inst,                 &
        energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst,   &
        temperature_inst, waterfluxbulk_inst, waterstatebulk_inst,                        &
        waterdiagnosticbulk_inst, wateratm2lndbulk_inst, ch4_inst, ozone_inst,            &
@@ -225,7 +225,6 @@ contains
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
-    use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
     use HumanIndexMod      , only : all_human_stress_indices, fast_human_stress_indices, &
                                     Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                     swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
@@ -238,6 +237,7 @@ contains
     integer                                , intent(in)            :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
     type(hlm_fates_interface_type)         , intent(inout)         :: clm_fates
     integer                                , intent(in)            :: nc ! clump index
+    type(active_layer_type)                , intent(in)            :: active_layer_inst
     type(atm2lnd_type)                     , intent(in)            :: atm2lnd_inst
     type(canopystate_type)                 , intent(inout)         :: canopystate_inst
     type(energyflux_type)                  , intent(inout)         :: energyflux_inst
@@ -399,7 +399,6 @@ contains
     integer  :: filterc_tmp(bounds%endp-bounds%begp+1)   ! temporary variable
     integer  :: ft                                       ! plant functional type index
     real(r8) :: h2ocan                                   ! total canopy water (mm H2O)
-    real(r8) :: temprootr
     real(r8) :: dt_veg_temp(bounds%begp:bounds%endp)
     integer  :: iv
     logical  :: is_end_day                               ! is end of current day
@@ -407,8 +406,8 @@ contains
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(downreg_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(leafn_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(downreg_patch) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(leafn_patch) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                               & 
          soilresis            => soilstate_inst%soilresis_col              , & ! Input:  [real(r8) (:)   ]  soil evaporative resistance
@@ -470,8 +469,6 @@ contains
          laisha                 => canopystate_inst%laisha_patch                , & ! Input:  [real(r8) (:)   ]  shaded leaf area                                                      
          displa                 => canopystate_inst%displa_patch                , & ! Input:  [real(r8) (:)   ]  displacement height (m)                                               
          htop                   => canopystate_inst%htop_patch                  , & ! Input:  [real(r8) (:)   ]  canopy top(m)                                                         
-         altmax_lastyear_indx   => canopystate_inst%altmax_lastyear_indx_col    , & ! Input:  [integer  (:)   ]  prior year maximum annual depth of thaw                                
-         altmax_indx            => canopystate_inst%altmax_indx_col             , & ! Input:  [integer  (:)   ]  maximum annual depth of thaw
          dleaf_patch            => canopystate_inst%dleaf_patch                 , & ! Output: [real(r8) (:)   ]  mean leaf diameter for this patch/pft
          
          watsat                 => soilstate_inst%watsat_col                    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)   (constant)                     
@@ -479,12 +476,11 @@ contains
          watopt                 => soilstate_inst%watopt_col                    , & ! Input:  [real(r8) (:,:) ]  btran parameter for btran=1                      (constant)                                      
          eff_porosity           => soilstate_inst%eff_porosity_col              , & ! Output: [real(r8) (:,:) ]  effective soil porosity
          soilbeta               => soilstate_inst%soilbeta_col                  , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               
-         rootr                  => soilstate_inst%rootr_patch                   , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer                      
 
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
          forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Input:  [real(r8) (:)   ]  observational height of wind at patch level [m]                          
          z0mg                   => frictionvel_inst%z0mg_col                    , & ! Input:  [real(r8) (:)   ]  roughness length of ground, momentum [m]                              
-         zetamax                => frictionvel_parms_inst%zetamaxstable         , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
+         zetamax                => frictionvel_inst%zetamaxstable               , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                                        
          z0mv                   => frictionvel_inst%z0mv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, momentum [m]                        
          z0hv                   => frictionvel_inst%z0hv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, sensible heat [m]                   
@@ -701,7 +697,7 @@ contains
             nlevgrnd = nlevgrnd,               &
             fn = fn,                           &
             filterp = filterp,                 &
-            canopystate_inst=canopystate_inst, &
+            active_layer_inst=active_layer_inst, &
             energyflux_inst=energyflux_inst,   &
             soilstate_inst=soilstate_inst,     &
             temperature_inst=temperature_inst, &
@@ -787,7 +783,7 @@ contains
 
          ! Initialize Monin-Obukhov length and wind speed
 
-         call MoninObukIni(ur(p), thv(c), dthv(p), zldis(p), z0mv(p), um(p), obu(p))
+         call frictionvel_inst%MoninObukIni(ur(p), thv(c), dthv(p), zldis(p), z0mv(p), um(p), obu(p))
 
       end do
 
@@ -805,15 +801,10 @@ contains
          ! Determine friction velocity, and potential temperature and humidity
          ! profiles of the surface boundary layer
 
-         call FrictionVelocity (begp, endp, fn, filterp, &
+         call frictionvel_inst%FrictionVelocity (begp, endp, fn, filterp, &
               displa(begp:endp), z0mv(begp:endp), z0hv(begp:endp), z0qv(begp:endp), &
               obu(begp:endp), itlef+1, ur(begp:endp), um(begp:endp), ustar(begp:endp), &
-              temp1(begp:endp), temp2(begp:endp), temp12m(begp:endp), temp22m(begp:endp), fm(begp:endp), &
-              frictionvel_inst)
-
-         
-
-
+              temp1(begp:endp), temp2(begp:endp), temp12m(begp:endp), temp22m(begp:endp), fm(begp:endp))
 
          do f = 1, fn
             p = filterp(f)

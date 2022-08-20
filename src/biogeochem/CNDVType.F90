@@ -469,8 +469,8 @@ contains
     begp = bounds%begp; endp = bounds%endp
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(t_a10_patch)   == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_ref2m_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(t_a10_patch)   == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_ref2m_patch) == (/endp/)), sourcefile, __LINE__)
 
     dtime = get_step_size()
     nstep = get_nstep()

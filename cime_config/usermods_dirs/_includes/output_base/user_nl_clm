@@ -29,7 +29,7 @@ hist_dov2xy(1) = .true.
 hist_nhtfrq(1) = 0
 hist_type1d_pertape(1) = ' '
 hist_fexcl1 += 'PCT_GLC_MEC','PCT_NAT_PFT'
-hist_fincl1 += 'EFLX_LH_TOT_ICE', 'FIRE_ICE', 'FLDS_ICE', 'FSH_ICE', 'FSNO_ICE', 'FSR_ICE', 'QFLX_SUB_SNOW_ICE', 'QRUNOFF_ICE', 'QSNOFRZ_ICE', 'QSNOMELT_ICE', 'RAIN_ICE', 'SNOW_ICE', 'SNOWICE_ICE', 'SNOWLIQ_ICE', 'SNOTXMASS_ICE', 'TG_ICE', 'TOPO_COL_ICE', 'TSA_ICE', 'TSOI_ICE'
+hist_fincl1 += 'EFLX_LH_TOT_ICE', 'FIRE_ICE', 'FLDS_ICE', 'FSH_ICE', 'FSNO_ICE', 'FSR_ICE', 'QFLX_SOLIDEVAP_FROM_TOP_LAYER_ICE', 'QRUNOFF_ICE', 'QSNOFRZ_ICE', 'QSNOMELT_ICE', 'RAIN_ICE', 'SNOW_ICE', 'SNOWICE_ICE', 'SNOWLIQ_ICE', 'SNOTXMASS_ICE', 'TG_ICE', 'TOPO_COL_ICE', 'TSA_ICE', 'TSOI_ICE'
 
 ! h1 stream (monthly average, finest sub-grid)
 ! Emon, Lmon 

@@ -83,7 +83,7 @@ contains
     character(len=*), parameter :: subname = 'dynHarvest_init'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     allocate(harvest(bounds%begg:bounds%endg),stat=ier)
     if (ier /= 0) then
@@ -146,7 +146,7 @@ contains
     character(len=*), parameter :: subname = 'dynHarvest_interp'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     call dynHarvest_file%time_info%set_current_year()
 

@@ -23,7 +23,6 @@ module unittestWaterTypeFactory
 
 #include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use shr_log_mod, only : errMsg => shr_log_errMsg
   use clm_varpar, only : nlevsoi, nlevgrnd, nlevsno
   use ColumnType, only : col
   use WaterType, only : water_type, water_params_type
@@ -123,10 +122,10 @@ contains
     real(r8) :: l_t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd)
 
     if (present(t_soisno_col)) then
-       SHR_ASSERT_ALL((ubound(t_soisno_col) == [bounds%endc, nlevgrnd]), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL_FL((ubound(t_soisno_col) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
     end if
     if (present(watsat_col)) then
-       SHR_ASSERT_ALL((ubound(watsat_col) == [bounds%endc, nlevgrnd]), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL_FL((ubound(watsat_col) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
     end if
 
     if (present(enable_consistency_checks)) then

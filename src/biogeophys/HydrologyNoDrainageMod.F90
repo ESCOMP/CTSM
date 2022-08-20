@@ -392,9 +392,18 @@ contains
          
       endif
 
+      ! BUG(wjs, 2019-09-16, ESCOMP/ctsm#762) This is needed so that we can test the
+      ! tracerization of the following snow stuff without having tracerized everything
+      ! before this point.  Remove this block once code before this point is fully
+      ! tracerized.
+      if (water_inst%DoConsistencyCheck()) then
+         call water_inst%ResetCheckedTracers(bounds)
+         call water_inst%TracerConsistencyCheck(bounds, 'HydrologyNoDrainage: before SnowCapping')
+      end if
+
       ! Snow capping
       call SnowCapping(bounds, num_nolakec, filter_nolakec, num_snowc, filter_snowc, &
-           aerosol_inst, b_waterflux_inst, b_waterstate_inst, topo_inst)
+           topo_inst, aerosol_inst, water_inst)
 
       ! Natural compaction and metamorphosis.
       call SnowCompaction(bounds, num_snowc, filter_snowc, &
@@ -403,20 +412,29 @@ contains
 
       ! Combine thin snow elements
       call CombineSnowLayers(bounds, num_snowc, filter_snowc, &
-           aerosol_inst, temperature_inst, b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst)
+           aerosol_inst, temperature_inst, water_inst)
 
       ! Divide thick snow elements
       call DivideSnowLayers(bounds, num_snowc, filter_snowc, &
-           aerosol_inst, temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, is_lake=.false.)
+           aerosol_inst, temperature_inst, water_inst, is_lake=.false.)
 
       ! Set empty snow layers to zero
       call ZeroEmptySnowLayers(bounds, num_snowc, filter_snowc, &
-           col, b_waterstate_inst, temperature_inst)
+           col, water_inst, temperature_inst)
        
       ! Build new snow filter
 
       call BuildSnowFilter(bounds, num_nolakec, filter_nolakec, &
            num_snowc, filter_snowc, num_nosnowc, filter_nosnowc)
+
+      ! TODO(wjs, 2019-09-16) Eventually move this down, merging this with later tracer
+      ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
+      ! module, remember to also remove 'use perf_mod' at the top.
+      if (water_inst%DoConsistencyCheck()) then
+         call t_startf("tracer_consistency_check")
+         call water_inst%TracerConsistencyCheck(bounds, 'HydrologyNoDrainage: after main snow code')
+         call t_stopf("tracer_consistency_check")
+      end if
 
       ! For columns where snow exists, accumulate 'time-covered-by-snow' counters.
       ! Otherwise, re-zero counter, since it is bareland

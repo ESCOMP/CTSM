@@ -44,7 +44,6 @@ contains
     use BareGroundFluxesMod               , only : readParams_BareGroundFluxes            => readParams
     use LakeFluxesMod                     , only : readParams_LakeFluxes                  => readParams
     use CanopyFluxesMod                   , only : readParams_CanopyFluxes                => readParams
-    use CanopyTemperatureMod              , only : readParams_CanopyTemperature           => readParams
     use CanopyHydrologyMod                , only : readParams_CanopyHydrology             => readParams
     use SoilHydrologyMod                  , only : readParams_SoilHydrology               => readParams
     use SaturatedExcessRunoffMod          , only : readParams_SaturatedExcessRunoff       => readParams
@@ -111,7 +110,6 @@ contains
     call readParams_BareGroundFluxes ( ncid )
     call readParams_LakeFluxes ( ncid )
     call readParams_CanopyFluxes ( ncid )
-    call readParams_CanopyTemperature ( ncid )
     call readParams_CanopyHydrology ( ncid )
     call readParams_SoilHydrology ( ncid )
     call readParams_SaturatedExcessRunoff ( ncid )

@@ -132,8 +132,8 @@ contains
     ! !LOCAL VARIABLES:
     integer :: g    ! index
 !-----------------------------------------------------------------------
-    SHR_ASSERT_ALL((ubound(wt_cft) == (/endg, cftsize/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_nat_patch) == (/endg, nc3crop+cftsize-1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(wt_cft) == (/endg, cftsize/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(wt_nat_patch) == (/endg, nc3crop+cftsize-1/)), sourcefile, __LINE__)
 
     do g = begg, endg
        if ( wt_lunit(g,istcrop) > 0.0_r8 )then
@@ -186,7 +186,7 @@ contains
     real(r8) :: residual(max_lunit)  ! Array of wt_lunit residuals (fraction)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(wt_lunit) == (/endg, max_lunit/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(wt_lunit) == (/endg, max_lunit/)), sourcefile, __LINE__)
 
     toosmall_any = toosmall_soil + toosmall_crop + toosmall_glacier + &
                    toosmall_lake + toosmall_wetland + toosmall_urban
@@ -267,7 +267,7 @@ contains
 
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(weight) == (/endg, upper_bound/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(weight) == (/endg, upper_bound/)), sourcefile, __LINE__)
 
     ! Find the top N dominant pfts or landunits to collapse the data to
     ! n_dominant < 0 is not allowed (error check in controlMod.F90)
@@ -352,7 +352,7 @@ contains
 
     if (cft_size > 0) then  ! The opposite applies only if use_fates
 
-       SHR_ASSERT_ALL((ubound(crop_var) == (/endg, cft_lb+cft_size-1/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL_FL((ubound(crop_var) == (/endg, cft_lb+cft_size-1/)), sourcefile, __LINE__)
 
        do g = begg, endg
           do m = cft_lb, cft_ub
@@ -406,8 +406,8 @@ contains
 
     if (cftsize > 0) then  ! The opposite applies only if use_fates
 
-       SHR_ASSERT_ALL((ubound(wt_cft)   == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
-       SHR_ASSERT_ALL((ubound(fert_cft) == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL_FL((ubound(wt_cft)   == (/endg, cft_lb+cftsize-1/)), sourcefile, __LINE__)
+       SHR_ASSERT_ALL_FL((ubound(fert_cft) == (/endg, cft_lb+cftsize-1/)), sourcefile, __LINE__)
 
        TotalSum = 1.0_r8
        if ( present(sumto) ) TotalSum = sumto  ! e.g. sumto(g) may = 100._r8

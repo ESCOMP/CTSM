@@ -167,9 +167,6 @@ module ch4Mod
      real(r8), pointer, private :: qflx_surf_lag_col          (:)   ! col time-lagged surface runoff (mm H2O /s)
      real(r8), pointer, private :: finundated_lag_col         (:)   ! col time-lagged fractional inundated area
      real(r8), pointer, private :: layer_sat_lag_col          (:,:) ! col Lagged saturation status of soil layer in the unsaturated zone (1 = sat)
-     real(r8), pointer, private :: zwt0_col                   (:)   ! col coefficient for determining finundated (m)
-     real(r8), pointer, private :: f0_col                     (:)   ! col maximum inundated fraction for a gridcell (for methane code)
-     real(r8), pointer, private :: p3_col                     (:)   ! col coefficient for determining finundated (m)
      real(r8), pointer, private :: pH_col                     (:)   ! col pH values for methane production
      !
      real(r8), pointer, private :: dyn_ch4bal_adjustments_col (:)   ! adjustments to each column made in this timestep via dynamic column area adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level) (g C / m^2)
@@ -317,9 +314,6 @@ contains
     allocate(this%qflx_surf_lag_col          (begc:endc))            ;  this%qflx_surf_lag_col          (:)   = nan 
     allocate(this%finundated_lag_col         (begc:endc))            ;  this%finundated_lag_col         (:)   = nan
     allocate(this%layer_sat_lag_col          (begc:endc,1:nlevgrnd)) ;  this%layer_sat_lag_col          (:,:) = nan
-    allocate(this%zwt0_col                   (begc:endc))            ;  this%zwt0_col                   (:)   = nan
-    allocate(this%f0_col                     (begc:endc))            ;  this%f0_col                     (:)   = nan
-    allocate(this%p3_col                     (begc:endc))            ;  this%p3_col                     (:)   = nan
     allocate(this%pH_col                     (begc:endc))            ;  this%pH_col                     (:)   = nan
     allocate(this%ch4_surf_flux_tot_col      (begc:endc))            ;  this%ch4_surf_flux_tot_col      (:)   = nan
     allocate(this%dyn_ch4bal_adjustments_col (begc:endc))            ; this%dyn_ch4bal_adjustments_col  (:)   = nan
@@ -754,46 +748,23 @@ contains
     ! !LOCAL VARIABLES:
     integer               :: j ,g, l,c,p ! indices
     type(file_desc_t)     :: ncid        ! netcdf id
-    real(r8)     ,pointer :: zwt0_in (:) ! read in - zwt0 
-    real(r8)     ,pointer :: f0_in (:)   ! read in - f0 
-    real(r8)     ,pointer :: p3_in (:)   ! read in - p3 
     real(r8)     ,pointer :: pH_in (:)   ! read in - pH 
     character(len=256)    :: locfn       ! local file name
     logical               :: readvar     ! If read variable from file or not
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(cellorg_col) == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cellorg_col) == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
 
     !----------------------------------------
     ! Initialize time constant variables
     !----------------------------------------
 
-    allocate(zwt0_in (bounds%begg:bounds%endg))
-    allocate(f0_in   (bounds%begg:bounds%endg))
-    allocate(p3_in   (bounds%begg:bounds%endg))
     if (usephfact) allocate(ph_in(bounds%begg:bounds%endg))
 
     ! Methane code parameters for finundated
 
     call getfil( fsurdat, locfn, 0 ) 
     call ncd_pio_openfile (ncid, trim(locfn), 0)
-    if ( finundation_mtd == finundation_mtd_zwt_inversion ) then
-       call ncd_io(ncid=ncid, varname='ZWT0', flag='read', data=zwt0_in, dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) then
-          call endrun(msg=' ERROR: Running with CH4 Model but ZWT0 not on surfdata file'//&
-               errMsg(sourcefile, __LINE__))
-       end if
-       call ncd_io(ncid=ncid, varname='F0', flag='read', data=f0_in, dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) then
-          call endrun(msg=' ERROR: Running with CH4 Model but F0 not on surfdata file'//&
-               errMsg(sourcefile, __LINE__))
-       end if
-       call ncd_io(ncid=ncid, varname='P3', flag='read', data=p3_in, dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) then
-          call endrun(msg=' ERROR: Running with CH4 Model but P3 not on surfdata file'//&
-               errMsg(sourcefile, __LINE__))
-       end if
-    end if
 
     ! pH factor for methane model
     if (usephfact) then
@@ -805,18 +776,14 @@ contains
     end if
     call ncd_pio_closefile(ncid)
 
-    do c = bounds%begc, bounds%endc
-       g = col%gridcell(c)
+    if ( usephfact )then
+       do c = bounds%begc, bounds%endc
+          g = col%gridcell(c)
 
-       if (finundation_mtd == finundation_mtd_ZWT_inversion ) then
-          this%zwt0_col(c)  = zwt0_in(g)
-          this%f0_col(c)    = f0_in(g)
-          this%p3_col(c)    = p3_in(g)
-       end if
-       if (usephfact) this%pH_col(c) = pH_in(g)
-    end do
+          this%pH_col(c) = pH_in(g)
+       end do
+    end if
 
-    deallocate(zwt0_in, f0_in, p3_in)
     if (usephfact) deallocate(pH_in)
 
     !----------------------------------------
@@ -1689,7 +1656,7 @@ contains
     real(r8) :: rootfraction(bounds%begp:bounds%endp, 1:nlevgrnd) 
     real(r8) :: fsat_bef(bounds%begc:bounds%endc)      ! finundated from previous timestep
     real(r8) :: errch4                                 ! g C / m^2
-    real(r8) :: zwt_actual
+    !real(r8) :: zwt_actual
     real(r8) :: qflxlags                               ! Time to lag qflx_surf_lag (s)
     real(r8) :: redoxlag                               ! Redox time lag 
     real(r8) :: redoxlag_vertical                      ! Vertical redox lag time 
@@ -1703,10 +1670,10 @@ contains
     character(len=32) :: subname='ch4'                 ! subroutine name
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bgnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(annsum_npp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(agnpp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bgnpp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(annsum_npp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rr) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                                 & 
          dz                   =>   col%dz                                    , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevsoi)       
@@ -1719,8 +1686,8 @@ contains
          forc_pco2            =>   atm2lnd_inst%forc_pco2_grc                , & ! Input:  [real(r8) (:)   ]  CO2 partial pressure (Pa)                         
          forc_pch4            =>   atm2lnd_inst%forc_pch4_grc                , & ! Input:  [real(r8) (:)   ]  CH4 partial pressure (Pa)                         
 
-         zwt                  =>   soilhydrology_inst%zwt_col                , & ! Input:  [real(r8) (:)   ]  water table depth (m) 
-         zwt_perched          =>   soilhydrology_inst%zwt_perched_col        , & ! Input:  [real(r8) (:)   ]  perched water table depth (m)                     
+         !zwt                  =>   soilhydrology_inst%zwt_col                , & ! Input:  [real(r8) (:)   ]  water table depth (m) 
+         !zwt_perched          =>   soilhydrology_inst%zwt_perched_col        , & ! Input:  [real(r8) (:)   ]  perched water table depth (m)                     
 
          rootfr               =>   soilstate_inst%rootfr_patch               , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer  (nlevgrnd)
          rootfr_col           =>   soilstate_inst%rootfr_col                 , & ! Output: [real(r8) (:,:) ]  fraction of roots in each soil layer  (nlevgrnd) (p2c)
@@ -1731,9 +1698,6 @@ contains
          qflx_surf            =>   waterfluxbulk_inst%qflx_surf_col              , & ! Input:  [real(r8) (:)   ]  total surface runoff (mm H2O /s)
 
          conc_o2_sat          =>   ch4_inst%conc_o2_sat_col                  , & ! Input:  [real(r8) (:,:) ]  O2 conc  in each soil layer (mol/m3) (nlevsoi)  
-         zwt0                 =>   ch4_inst%zwt0_col                         , & ! Input:  [real(r8) (:)   ]  decay factor for finundated (m)                   
-         f0                   =>   ch4_inst%f0_col                           , & ! Input:  [real(r8) (:)   ]  maximum gridcell fractional inundated area        
-         p3                   =>   ch4_inst%p3_col                           , & ! Input:  [real(r8) (:)   ]  coefficient for qflx_surf_lag for finunated (s/mm)
          totcolch4_bef        =>   ch4_inst%totcolch4_bef_col                , & ! Input:  [real(r8) (:)   ]  total methane in soil column, start of timestep (g C / m^2)
 
          grnd_ch4_cond_patch  =>   ch4_inst%grnd_ch4_cond_patch              , & ! Input:  [real(r8) (:)   ]  tracer conductance for boundary layer [m/s]       
@@ -1850,21 +1814,7 @@ contains
                                waterdiagnosticbulk_inst, qflx_surf_lag(begc:endc), finundated(begc:endc) )
       else
 
-         ! Calculate finundated with ZWT inversion from surface dataset
-         do fc = 1, num_soilc
-            c = filter_soilc(fc)
-            if (zwt0(c) > 0._r8) then
-               if (zwt_perched(c) < z(c,nlevsoi)-1.e-5_r8 .and. zwt_perched(c) < zwt(c)) then
-                  zwt_actual = zwt_perched(c)
-               else
-                  zwt_actual = zwt(c)
-               end if
-               finundated(c) = f0(c) * exp(-zwt_actual/zwt0(c)) + p3(c)*qflx_surf_lag(c)
-            else
-               finundated(c) = p3(c)*qflx_surf_lag(c)
-            end if
-   
-         end do
+         call endrun( "ERROR:: finundation method MUST now use a streams file to run, it can no longer read from the fsurdat file" )
       end if
 
       ! Calculate finundated before snow and lagged version of finundated
@@ -2344,8 +2294,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(rr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(rr) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                                    & 
          wtcol          =>    patch%wtcol                                         , & ! Input:  [real(r8) (:)    ]  weight (relative to column)                       
@@ -2662,7 +2612,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                          & 
          h2osoi_vol => waterstatebulk_inst%h2osoi_vol_col , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
@@ -2830,8 +2780,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(annsum_npp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(annsum_npp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                              & 
          z             =>    col%z                                        , & ! Input:  [real(r8) (:,:)  ]  layer depth (m) (-nlevsno+1:nlevsoi)            
@@ -2843,7 +2793,7 @@ contains
          t_soisno      =>    temperature_inst%t_soisno_col                , & ! Input:  [real(r8) (:,:)  ]  soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
 
          watsat        =>    soilstate_inst%watsat_col                    , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water at saturation (porosity)   
-         rootr         =>    soilstate_inst%rootr_patch                   , & ! Input:  [real(r8) (:,:)  ]  effective fraction of roots in each soil layer  (nlevgrnd)
+         rootr         =>    soilstate_inst%rootr_patch                   , & ! Input:  [real(r8) (:,:)  ]  effective fraction of roots in each soil layer (SMS method only) (nlevgrnd)
          rootfr        =>    soilstate_inst%rootfr_patch                  , & ! Input:  [real(r8) (:,:)  ]  fraction of roots in each soil layer  (nlevsoi) 
 
          h2osoi_vol    =>    waterstatebulk_inst%h2osoi_vol_col               , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
@@ -3063,7 +3013,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                      & 
          z            =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  soil layer depth (m)                            
@@ -3260,7 +3210,7 @@ contains
     character(len=32) :: subname='ch4_tran' ! subroutine name
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                 & 
          z             =>    col%z                           , & ! Input:  [real(r8) (:,:) ]  soil layer depth (m)                            
@@ -3600,17 +3550,18 @@ contains
                   end if
 
                   ! Now add new h2osfc form
-                  if (.not. lake .and. sat == 1 .and. frac_h2osfc(c) > 0._r8 .and. t_h2osfc(c) >= tfrz) then
-                     t_soisno_c = t_h2osfc(c) - tfrz
-                     ponddiff = (d_con_w(s,1) + d_con_w(s,2)*t_soisno_c + d_con_w(s,3)*t_soisno_c**2) * 1.e-9_r8 &
-                          * scale_factor_liqdiff
-                     pondz = h2osfc(c) / 1000._r8 / frac_h2osfc(c) ! Assume all h2osfc corresponds to sat area
-                     ! mm      /  mm/m
-                     pondres = pondres + pondz / ponddiff
-                  else if (.not. lake .and. sat == 1 .and. frac_h2osfc(c) > 0._r8 .and. &
-                       h2osfc(c)/frac_h2osfc(c) > capthick) then ! Assuming short-circuit logic will avoid FPE here.
-                     ! assume surface ice is impermeable
-                     pondres = 1/smallnumber
+                  if (.not. lake .and. sat == 1 .and. frac_h2osfc(c) > 0._r8) then
+                     if (t_h2osfc(c) >= tfrz) then
+                        t_soisno_c = t_h2osfc(c) - tfrz
+                        ponddiff = (d_con_w(s,1) + d_con_w(s,2)*t_soisno_c + d_con_w(s,3)*t_soisno_c**2) * 1.e-9_r8 &
+                             * scale_factor_liqdiff
+                        pondz = h2osfc(c) / 1000._r8 / frac_h2osfc(c) ! Assume all h2osfc corresponds to sat area
+                        ! mm      /  mm/m
+                        pondres = pondres + pondz / ponddiff
+                     else if (h2osfc(c)/frac_h2osfc(c) > capthick) then
+                        ! assume surface ice is impermeable
+                        pondres = 1/smallnumber
+                     end if
                   end if
 
                   spec_grnd_cond(c,s) = 1._r8/(1._r8/grnd_ch4_cond(c) + snowres(c) + pondres)
@@ -3980,7 +3931,7 @@ contains
     integer  :: fc       ! filter column index
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                          & 
          watsat     => soilstate_inst%watsat_col      , & ! Input:  [real(r8) (:,:)  ] volumetric soil water at saturation (porosity)   
@@ -4053,8 +4004,8 @@ contains
     real(r8):: secsperyear
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bgnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(agnpp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bgnpp) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                           & 
          somhr          =>    soilbiogeochem_carbonflux_inst%somhr_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) soil organic matter heterotrophic respiration
@@ -4157,7 +4108,7 @@ contains
     character(len=*), parameter       :: subname = 'ch4_totcolch4'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(totcolch4) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(totcolch4) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          dz             =>   col%dz                      , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevsoi)       

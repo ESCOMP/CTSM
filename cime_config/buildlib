@@ -32,6 +32,7 @@ def _main_func():
         lnd_root = case.get_value("COMP_ROOT_DIR_LND")
         gmake_j = case.get_value("GMAKE_J")
         gmake = case.get_value("GMAKE")
+        driver = case.get_value("COMP_INTERFACE").lower()
 
         #-------------------------------------------------------
         # create Filepath file
@@ -51,8 +52,10 @@ def _main_func():
                      os.path.join(lnd_root,"src","fates","biogeophys"),
                      os.path.join(lnd_root,"src","fates","biogeochem"),
                      os.path.join(lnd_root,"src","fates","fire"),
+                     os.path.join(lnd_root,"src","fates","parteh"),
                      os.path.join(lnd_root,"src","utils"),
-                     os.path.join(lnd_root,"src","cpl")]
+                     os.path.join(lnd_root,"src","cpl"),
+                     os.path.join(lnd_root,"src","cpl",driver)]
             with open(filepath_file, "w") as filepath:
                 filepath.write("\n".join(paths))
                 filepath.write("\n")

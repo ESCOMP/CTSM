@@ -9,7 +9,6 @@ module LakeTemperatureMod
   !
   ! !USES
   use shr_kind_mod      , only : r8 => shr_kind_r8
-  use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use ch4Mod            , only : ch4_type
   use EnergyFluxType    , only : energyflux_type
@@ -1108,9 +1107,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(cv)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(tk)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(tktopsoillay) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(cv)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(tk)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(tktopsoillay) == (/bounds%endc/)),           sourcefile, __LINE__)
 
      associate(                                           & 
           snl         => col%snl                        , & ! Input:  [integer (:)]  number of snow layers                    
@@ -1298,9 +1297,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(cv)      == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(cv_lake) == (/bounds%endc, nlevlak/)),  errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(lhabs)   == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(cv)      == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(cv_lake) == (/bounds%endc, nlevlak/)),  sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(lhabs)   == (/bounds%endc/)),           sourcefile, __LINE__)
 
      associate(                                                   & 
           dz_lake         => col%dz_lake                        , & ! Input:  [real(r8)  (:,:) ] lake layer thickness (m)              

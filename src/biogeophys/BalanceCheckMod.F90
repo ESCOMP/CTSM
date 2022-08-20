@@ -315,10 +315,10 @@ contains
           qflx_snwcp_discarded_liq =>   waterflux_inst%qflx_snwcp_discarded_liq_col, & ! Input:  [real(r8) (:)   ]  excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]`
           qflx_snwcp_discarded_ice =>   waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Input:  [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]`
           qflx_evap_tot           =>    waterflux_inst%qflx_evap_tot_col        , & ! Input:  [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
-          qflx_dew_snow           =>    waterflux_inst%qflx_dew_snow_col        , & ! Input:  [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
-          qflx_sub_snow           =>    waterflux_inst%qflx_sub_snow_col        , & ! Input:  [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
-          qflx_evap_grnd          =>    waterflux_inst%qflx_evap_grnd_col       , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
-          qflx_dew_grnd           =>    waterflux_inst%qflx_dew_grnd_col        , & ! Input:  [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
+          qflx_soliddew_to_top_layer    => waterflux_inst%qflx_soliddew_to_top_layer_col   , & ! Input:  [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]
+          qflx_solidevap_from_top_layer => waterflux_inst%qflx_solidevap_from_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]
+          qflx_liqevap_from_top_layer   => waterflux_inst%qflx_liqevap_from_top_layer_col  , & ! Input:  [real(r8) (:)   ]  rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
+          qflx_liqdew_to_top_layer      => waterflux_inst%qflx_liqdew_to_top_layer_col     , & ! Input:  [real(r8) (:)   ]  rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
           qflx_prec_grnd          =>    waterdiagnosticbulk_inst%qflx_prec_grnd_col, & ! Input:  [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
           qflx_snow_h2osfc        =>    waterflux_inst%qflx_snow_h2osfc_col     , & ! Input:  [real(r8) (:)   ]  snow falling on surface water (mm/s)
           qflx_h2osfc_to_ice      =>    waterflux_inst%qflx_h2osfc_to_ice_col   , & ! Input:  [real(r8) (:)   ]  conversion of h2osfc to ice             
@@ -490,18 +490,19 @@ contains
              ! only created if h2osno > 10mm).
 
              if (col%snl(c) < 0) then
-                snow_sources(c) = qflx_prec_grnd(c) + qflx_dew_snow(c) + qflx_dew_grnd(c)
-                snow_sinks(c)  = qflx_sub_snow(c) + qflx_evap_grnd(c) + qflx_snow_drain(c) &
-                     + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
+                snow_sources(c) = qflx_prec_grnd(c) + qflx_soliddew_to_top_layer(c) &
+                     + qflx_liqdew_to_top_layer(c)
+                snow_sinks(c)  = qflx_solidevap_from_top_layer(c) + qflx_liqevap_from_top_layer(c) &
+                     + qflx_snow_drain(c) + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
                      + qflx_snwcp_discarded_ice(c) + qflx_snwcp_discarded_liq(c) &
                      + qflx_sl_top_soil(c)
 
                 if (lun%itype(l) == istdlak) then 
                    snow_sources(c) = qflx_snow_grnd_col(c) &
                         + frac_sno_eff(c) * (qflx_liq_grnd_col(c) &
-                        +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) 
-                   snow_sinks(c)   = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c) ) &
-                        + qflx_snwcp_ice(c) + qflx_snwcp_liq(c)  &
+                        +  qflx_soliddew_to_top_layer(c) + qflx_liqdew_to_top_layer(c) ) 
+                   snow_sinks(c)   = frac_sno_eff(c) * (qflx_solidevap_from_top_layer(c) &
+                        + qflx_liqevap_from_top_layer(c) ) + qflx_snwcp_ice(c) + qflx_snwcp_liq(c)  &
                         + qflx_snwcp_discarded_ice(c) + qflx_snwcp_discarded_liq(c)  &
                         + qflx_snow_drain(c)  + qflx_sl_top_soil(c)
                 endif
@@ -511,9 +512,10 @@ contains
                       lun%itype(l) == istice_mec) then
                    snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
                           + frac_sno_eff(c) * (qflx_liq_grnd_col(c) &
-                          +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) + qflx_h2osfc_to_ice(c)
-                   snow_sinks(c) = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c)) &
-                          + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
+                          + qflx_soliddew_to_top_layer(c) + qflx_liqdew_to_top_layer(c) ) &
+                          + qflx_h2osfc_to_ice(c)
+                   snow_sinks(c) = frac_sno_eff(c) * (qflx_solidevap_from_top_layer(c) &
+                          + qflx_liqevap_from_top_layer(c)) + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
                           + qflx_snwcp_discarded_ice(c) + qflx_snwcp_discarded_liq(c) &
                           + qflx_snow_drain(c) + qflx_sl_top_soil(c)
                 endif
@@ -556,11 +558,11 @@ contains
                  write(iulog,*)'qflx_prec_grnd     = ',qflx_prec_grnd(indexc)*dtime
                  write(iulog,*)'qflx_snow_grnd_col = ',qflx_snow_grnd_col(indexc)*dtime
                  write(iulog,*)'qflx_liq_grnd_col  = ',qflx_liq_grnd_col(indexc)*dtime
-                 write(iulog,*)'qflx_sub_snow      = ',qflx_sub_snow(indexc)*dtime
+                 write(iulog,*)'qflx_solidevap_from_top_layer = ',qflx_solidevap_from_top_layer(indexc)*dtime
                  write(iulog,*)'qflx_snow_drain    = ',qflx_snow_drain(indexc)*dtime
-                 write(iulog,*)'qflx_evap_grnd     = ',qflx_evap_grnd(indexc)*dtime
-                 write(iulog,*)'qflx_dew_snow      = ',qflx_dew_snow(indexc)*dtime
-                 write(iulog,*)'qflx_dew_grnd      = ',qflx_dew_grnd(indexc)*dtime
+                 write(iulog,*)'qflx_liqevap_from_top_layer = ',qflx_liqevap_from_top_layer(indexc)*dtime
+                 write(iulog,*)'qflx_soliddew_to_top_layer  = ',qflx_soliddew_to_top_layer(indexc)*dtime
+                 write(iulog,*)'qflx_liqdew_to_top_layer    = ',qflx_liqdew_to_top_layer(indexc)*dtime
                  write(iulog,*)'qflx_snwcp_ice     = ',qflx_snwcp_ice(indexc)*dtime
                  write(iulog,*)'qflx_snwcp_liq     = ',qflx_snwcp_liq(indexc)*dtime
                  write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice(indexc)*dtime

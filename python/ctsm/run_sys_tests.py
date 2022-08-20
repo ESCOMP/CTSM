@@ -66,6 +66,7 @@ def main(cime_path):
                   suite_name=args.suite_name, testfile=args.testfile, testlist=args.testname,
                   suite_compilers=args.suite_compiler,
                   testid_base=args.testid_base, testroot_base=args.testroot_base,
+                  rerun_existing_failures=args.rerun_existing_failures,
                   compare_name=args.compare, generate_name=args.generate,
                   baseline_root=args.baseline_root,
                   walltime=args.walltime, queue=args.queue,
@@ -78,6 +79,7 @@ def run_sys_tests(machine, cime_path,
                   suite_name=None, testfile=None, testlist=None,
                   suite_compilers=None,
                   testid_base=None, testroot_base=None,
+                  rerun_existing_failures=False,
                   compare_name=None, generate_name=None,
                   baseline_root=None,
                   walltime=None, queue=None,
@@ -103,6 +105,9 @@ def run_sys_tests(machine, cime_path,
         not provided, will be generated automatically)
     testroot_base (str): path to the directory that will contain the testroot (if not
         provided, will be determined based on machine defaults)
+    rerun_existing_failures (bool): if True, add the '--use-existing' option to create_test
+        If specified, then --testid-base should also be specified. This also implies
+        skip_testroot_creation.
     compare_name (str): if not None, baseline name to compare against
     generate_name (str): if not None, baseline name to generate
     baseline_root (str): path in which baselines should be compared and generated (if not
@@ -127,7 +132,7 @@ def run_sys_tests(machine, cime_path,
     if testroot_base is None:
         testroot_base = _get_testroot_base(machine)
     testroot = _get_testroot(testroot_base, testid_base)
-    if not skip_testroot_creation:
+    if not (skip_testroot_creation or rerun_existing_failures):
         _make_testroot(testroot, testid_base, dry_run)
     print("Testroot: {}\n".format(testroot))
     if not skip_git_status:
@@ -141,6 +146,7 @@ def run_sys_tests(machine, cime_path,
                                              account=machine.account,
                                              walltime=walltime,
                                              queue=queue,
+                                             rerun_existing_failures=rerun_existing_failures,
                                              extra_create_test_args=extra_create_test_args)
     if suite_name:
         if not dry_run:
@@ -258,6 +264,18 @@ or tests listed individually on the command line (via the -t/--testname argument
                         'for non-supported machines, it must be provided.\n'
                         'Default for this machine: {}'.format(default_machine.scratch_dir))
 
+    parser.add_argument('--rerun-existing-failures', action='store_true',
+                        help='Rerun failed tests from the last PEND or FAIL state.\n'
+                        'This triggers the --use-existing option to create_test.\n'
+                        'To use this option, provide the same options to run_sys_tests\n'
+                        'as in the initial run, but also adding --testid-base\n'
+                        'corresponding to the base testid used initially.\n'
+                        '(However, many of the arguments to create_test are ignored,\n'
+                        'so it is not important for all of the options to exactly match\n'
+                        'those in the initial run.)\n'
+                        'This option implies --skip-testroot-creation (that option does not\n'
+                        'need to be specified separately if using --rerun-existing-failures).')
+
     if default_machine.baseline_dir:
         baseline_root_default_msg = 'Default for this machine: {}'.format(
             default_machine.baseline_dir)
@@ -341,6 +359,8 @@ or tests listed individually on the command line (via the -t/--testname argument
 def _check_arg_validity(args):
     if args.suite_compiler and not args.suite_name:
         raise RuntimeError('--suite-compiler can only be specified if using --suite-name')
+    if args.rerun_existing_failures and not args.testid_base:
+        raise RuntimeError('With --rerun-existing-failures, must also specify --testid-base')
 
 def _get_testid_base(machine_name):
     """Returns a base testid based on the current date and time and the machine name"""
@@ -403,12 +423,21 @@ def _record_git_status(testroot, dry_run):
 
     if not dry_run:
         git_status_filepath = os.path.join(testroot, 'SRCROOT_GIT_STATUS')
+        if os.path.exists(git_status_filepath):
+            # If we're reusing an existing directory, it could happen that
+            # SRCROOT_GIT_STATUS already exists. It's still helpful to record the current
+            # SRCROOT_GIT_STATUS information, but we don't want to clobber the old. So
+            # make a new file with a date/time-stamp.
+            now = datetime.now()
+            now_str = now.strftime("%m%d-%H%M%S")
+            git_status_filepath = git_status_filepath + '_' + now_str
         with open(git_status_filepath, 'w') as git_status_file:
             git_status_file.write("SRCROOT: {}\n".format(ctsm_root))
             git_status_file.write(output)
 
 def _get_create_test_args(compare_name, generate_name, baseline_root,
                           account, walltime, queue,
+                          rerun_existing_failures,
                           extra_create_test_args):
     args = []
     if compare_name:
@@ -423,6 +452,11 @@ def _get_create_test_args(compare_name, generate_name, baseline_root,
         args.extend(['--walltime', walltime])
     if queue:
         args.extend(['--queue', queue])
+    if rerun_existing_failures:
+        # In addition to --use-existing, we also need --allow-baseline-overwrite in this
+        # case; otherwise, create_test throws an error saying that the baseline
+        # directories already exist.
+        args.extend(['--use-existing', '--allow-baseline-overwrite'])
     args.extend(extra_create_test_args.split())
     return args
 

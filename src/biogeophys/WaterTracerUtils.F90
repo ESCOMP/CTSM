@@ -161,9 +161,9 @@ contains
     !-----------------------------------------------------------------------
 
     num = size(bulk_val)
-    SHR_ASSERT((size(bulk_source) == num), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((size(tracer_source) == num), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((size(tracer_val) == num), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(bulk_source) == num), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(tracer_source) == num), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(tracer_val) == num), sourcefile, __LINE__)
 
     do fn = 1, num_pts
        n = filter_pts(fn)
@@ -206,10 +206,10 @@ contains
     !-----------------------------------------------------------------------
 
     num = size(bulk_val)
-    SHR_ASSERT((size(bulk_source) == num), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((size(tracer_source) == num), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((size(tracer_val) == num), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((size(mask_array) == num), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(bulk_source) == num), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(tracer_source) == num), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(tracer_val) == num), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(mask_array) == num), sourcefile, __LINE__)
 
     do fn = 1, num_pts
        n = filter_pts(fn)
@@ -307,7 +307,7 @@ contains
     !-----------------------------------------------------------------------
 
     num = size(bulk)
-    SHR_ASSERT((size(tracer) == num), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(tracer) == num), sourcefile, __LINE__)
     do i = 1, num
        tracer(i) = bulk(i) * ratio
     end do
@@ -346,8 +346,8 @@ contains
     character(len=*), parameter :: subname = 'CompareBulkToTracer'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(bulk) == [bounds_end]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tracer) == [bounds_end]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(bulk) == [bounds_end]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tracer) == [bounds_end]), sourcefile, __LINE__)
 
     arrays_equal = .true.
     do i = bounds_beg, bounds_end
@@ -413,8 +413,8 @@ contains
     character(len=*), parameter :: subname = 'SetTracerToBulkTimesRatio'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(bulk) == [bounds_end]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tracer) == [bounds_end]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(bulk) == [bounds_end]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tracer) == [bounds_end]), sourcefile, __LINE__)
 
     do i = bounds_beg, bounds_end
        if (.not. shr_infnan_isnan(bulk(i))) then

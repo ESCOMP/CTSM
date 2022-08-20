@@ -23,6 +23,7 @@ module EDBGCDynMod
   use SoilHydrologyType               , only : soilhydrology_type
   use TemperatureType                 , only : temperature_type
   use WaterFluxBulkType                   , only : waterfluxbulk_type
+  use ActiveLayerMod                  , only : active_layer_type
   use atm2lndType                     , only : atm2lnd_type
   use SoilStateType                   , only : soilstate_type
   use ch4Mod                          , only : ch4_type
@@ -47,7 +48,7 @@ contains
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
        c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst,            &
        c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst,            &
-       atm2lnd_inst, waterfluxbulk_inst,                                      &
+       active_layer_inst, atm2lnd_inst, waterfluxbulk_inst,                                &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst)
     !
     ! !DESCRIPTION:
@@ -101,7 +102,8 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
-    type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst 
+    type(active_layer_type)                 , intent(in)    :: active_layer_inst
+    type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
     type(waterfluxbulk_type)                    , intent(in)    :: waterfluxbulk_inst
     type(canopystate_type)                  , intent(in)    :: canopystate_inst
     type(soilstate_type)                    , intent(in)    :: soilstate_inst
@@ -122,12 +124,7 @@ contains
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
 
-    !real(r8) , intent(in)    :: rootfr_patch(bounds%begp:, 1:)          
-    !integer  , intent(in)    :: altmax_lastyear_indx_col(bounds%begc:)  ! frost table depth (m)
-
     associate(                                                                    &
-         rootfr_patch              => soilstate_inst%rootfr_patch               , & ! fraction of roots in each soil layer  (nlevgrnd)
-         altmax_lastyear_indx_col  => canopystate_inst%altmax_lastyear_indx_col , & ! frost table depth (m)
          laisun                    => canopystate_inst%laisun_patch             , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index        
          laisha                    => canopystate_inst%laisha_patch             , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index        
          frac_veg_nosno            => canopystate_inst%frac_veg_nosno_patch     , & ! Input:  [integer  (:)   ]  fraction of vegetation not covered by snow (0 OR 1) [-]
@@ -184,10 +181,10 @@ contains
 
     if (use_century_decomp) then
        call decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
-            canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+            soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     else
        call decomp_rate_constants_cn(bounds, num_soilc, filter_soilc, &
-            canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+            soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     end if
 
     ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)
@@ -235,7 +232,7 @@ contains
     ! Update all prognostic carbon state variables (except for gap-phase mortality and fire fluxes)
     call CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
          crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-         soilbiogeochem_carbonflux_inst)
+         soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm=.False.)
 
     call t_stopf('BNGCUpdate1')
 
@@ -246,7 +243,7 @@ contains
     call t_startf('SoilBiogeochemLittVertTransp')
 
     call SoilBiogeochemLittVertTransp(bounds, num_soilc, filter_soilc,            &
-         canopystate_inst, soilbiogeochem_state_inst,                             &
+         active_layer_inst, soilbiogeochem_state_inst,                            &
          soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,         &
          c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst, &
          c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst, &

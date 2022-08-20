@@ -7,7 +7,6 @@ module SoilWaterMovementMod
   ! module contains different subroutines to couple soil and root water interactions
   !
   ! created by Jinyun Tang, Mar 12, 2014
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_sys_mod         , only : shr_sys_flush
  
@@ -375,7 +374,7 @@ contains
     !-----------------------------------------------------------------------   
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(baseflow_sink)  == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(baseflow_sink)  == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
 
 !this is just a placeholder for now
     baseflow_sink = 0.
@@ -573,8 +572,6 @@ contains
          qflx_infl         =>    waterfluxbulk_inst%qflx_infl_col       , & ! Input:  [real(r8) (:)   ]  infiltration (mm H2O /s)                          
 
          qflx_rootsoi_col  =>    waterfluxbulk_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:,:) ]  vegetation/soil water exchange (mm H2O/s) (+ = to atm)
-         qflx_tran_veg_col =>    waterfluxbulk_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
-         rootr_col         =>    soilstate_inst%rootr_col           , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
          t_soisno          =>    temperature_inst%t_soisno_col        & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
          )
 
@@ -2153,7 +2150,6 @@ contains
     !
     ! !USES:
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
     use clm_varpar     , only : nlevurb
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_varctl     , only : iulog
@@ -2177,11 +2173,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(a)    == (/ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(b)    == (/ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c)    == (/ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(r)    == (/ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(u)    == (/ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(a)    == (/ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(b)    == (/ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c)    == (/ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(r)    == (/ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(u)    == (/ubj/)), sourcefile, __LINE__)
 
     ! Solve the matrix
 

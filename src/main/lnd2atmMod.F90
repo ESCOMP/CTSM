@@ -8,7 +8,6 @@ module lnd2atmMod
 #include "shr_assert.h"
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
-  use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_megan_mod        , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod    , only : shr_fire_emis_mechcomps_n
   use shr_fan_mod          ,   only : shr_fan_to_atm
@@ -194,7 +193,7 @@ contains
     real(r8), parameter :: convertgC2kgCO2 = 1.0e-3_r8 * (amCO2/amC)
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(net_carbon_exchange_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(net_carbon_exchange_grc) == (/bounds%endg/)), sourcefile, __LINE__)
 
     call handle_ice_runoff(bounds, water_inst%waterfluxbulk_inst, glc_behavior, &
          melt_non_icesheet_ice_runoff = lnd2atm_inst%params%melt_non_icesheet_ice_runoff, &
@@ -477,9 +476,9 @@ contains
     character(len=*), parameter :: subname = 'handle_ice_runoff'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(qflx_ice_runoff_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_liq_from_ice_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eflx_sh_ice_to_liq_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(qflx_ice_runoff_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qflx_liq_from_ice_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eflx_sh_ice_to_liq_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     do c = bounds%begc, bounds%endc
        if (col%active(c)) then

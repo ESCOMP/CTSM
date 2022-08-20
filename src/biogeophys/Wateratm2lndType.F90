@@ -8,7 +8,6 @@ module Wateratm2lndType
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
   use clm_varcon     , only : spval
@@ -364,10 +363,10 @@ contains
       real(r8) :: bulk_not_downscaled_col(bounds%begc:bounds%endc)
       real(r8) :: tracer_not_downscaled_col(bounds%begc:bounds%endc)
 
-      SHR_ASSERT_ALL((ubound(bulk_not_downscaled) == [bounds%endg]), errMsg(sourcefile, __LINE__))
-      SHR_ASSERT_ALL((ubound(tracer_not_downscaled) == [bounds%endg]), errMsg(sourcefile, __LINE__))
-      SHR_ASSERT_ALL((ubound(bulk_downscaled) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-      SHR_ASSERT_ALL((ubound(tracer_downscaled) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+      SHR_ASSERT_ALL_FL((ubound(bulk_not_downscaled) == [bounds%endg]), sourcefile, __LINE__)
+      SHR_ASSERT_ALL_FL((ubound(tracer_not_downscaled) == [bounds%endg]), sourcefile, __LINE__)
+      SHR_ASSERT_ALL_FL((ubound(bulk_downscaled) == [bounds%endc]), sourcefile, __LINE__)
+      SHR_ASSERT_ALL_FL((ubound(tracer_downscaled) == [bounds%endc]), sourcefile, __LINE__)
 
       associate( &
            begc => bounds%begc, &

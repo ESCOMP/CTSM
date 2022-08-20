@@ -13,7 +13,7 @@ module surfrdMod
   use clm_varpar      , only : nlevsoifl
   use landunit_varcon , only : numurbl
   use clm_varcon      , only : grlnd
-  use clm_varctl      , only : iulog, scmlat, scmlon, single_column
+  use clm_varctl      , only : iulog
   use clm_varctl      , only : use_cndv, use_crop
   use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
@@ -677,13 +677,13 @@ contains
     real(r8),pointer :: array2D(:,:)                 ! local array
     character(len=32) :: subname = 'surfrd_cftformat'! subroutine name
 !-----------------------------------------------------------------------
-    SHR_ASSERT_ALL((lbound(wt_cft)          == (/begg, cft_lb/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_cft, dim=1)   == (/endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_cft, dim=2)   >= (/cftsize+1-cft_lb/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((lbound(fert_cft)        == (/begg, cft_lb/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fert_cft, dim=1) == (/endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fert_cft, dim=2) >= (/cftsize+1-cft_lb/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_nat_patch)    >= (/endg,natpft_size-1+natpft_lb/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((lbound(wt_cft)          == (/begg, cft_lb/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(wt_cft, dim=1)   == (/endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(wt_cft, dim=2)   >= (/cftsize+1-cft_lb/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((lbound(fert_cft)        == (/begg, cft_lb/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fert_cft, dim=1) == (/endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fert_cft, dim=2) >= (/cftsize+1-cft_lb/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(wt_nat_patch)    >= (/endg,natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
     call check_dim(ncid, 'cft',    cftsize)
     call check_dim(ncid, 'natpft', natpft_size)
@@ -746,7 +746,7 @@ contains
     logical  :: readvar                        ! is variable on dataset
     character(len=32) :: subname = 'surfrd_pftformat'! subroutine name
 !-----------------------------------------------------------------------
-    SHR_ASSERT_ALL((ubound(wt_nat_patch) == (/endg, natpft_size-1+natpft_lb/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(wt_nat_patch) == (/endg, natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
     call check_dim(ncid, 'natpft', natpft_size)
     ! If cft_size == 0, then we expect to be running with a surface dataset

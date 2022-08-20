@@ -1,0 +1,4 @@
+orb_eccen = 0.
+orb_mvelp = 0.
+orb_obliq = 0.
+orb_mode = "fixed_parameters"
