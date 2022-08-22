@@ -92,9 +92,7 @@ module clm_varctl
   character(len=fname_len), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=fname_len), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
-  character(len=fname_len), public :: clay_frc   = ' '        ! alternative clay fraction, dmleung, added 14 Dec 2021
   character(len=fname_len), public :: rough_fct   = ' '       ! roughness factor, dmleung, added 17 Dec 2021
-  character(len=fname_len), public :: lulc_frc   = ' '        ! LULC area fraction, dmleung, added 17 Dec 2021
 
   !----------------------------------------------------------
   ! Flag to read ndep rather than obtain it from coupler

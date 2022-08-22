@@ -264,8 +264,7 @@ contains
 
     ! dust emission, dmleung 14 Dec 2021
     namelist /clm_inparm/  &
-         clay_frc, &            !-dmleung 14 Dec 2021
-         rough_fct, lulc_frc    !-dmleung 17 Dec 2021
+         rough_fct    !-dmleung 17 Dec 2021
 
     ! ----------------------------------------------------------------------
     ! Default values
@@ -611,9 +610,7 @@ contains
     call mpi_bcast (fsnowaging,  len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
 
     ! initialize input data for new dust emission module dmleung 14 Dec 2021
-    call mpi_bcast (clay_frc, len(clay_frc), MPI_CHARACTER, 0, mpicom, ier)  ! added by dmleung, 14 Dec 2021
     call mpi_bcast (rough_fct, len(rough_fct), MPI_CHARACTER, 0, mpicom, ier)! added by dmleung, 17 Dec 2021
-    call mpi_bcast (lulc_frc, len(lulc_frc), MPI_CHARACTER, 0, mpicom, ier)  ! added by dmleung, 17 Dec 2021
 
     ! Irrigation
     call mpi_bcast(irrigate, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -833,20 +830,10 @@ contains
        write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
     end if
     !##### for dmleung's input data for new dust emission module #####
-    if (clay_frc == ' ') then     ! -dml, 2 Mar 2021, added 14 Dec 2021
-       write(iulog,*) '   clay_frc surface dataset not set'
-    else
-       write(iulog,*) '   surface data   = ',trim(clay_frc)
-    end if
-    if (rough_fct == ' ') then    ! -dmleung, 17 Dec 2020
+    if (rough_fct == ' ') then    ! -dmleung, 17 Dec 2021
        write(iulog,*) '   rough_fct surface dataset not set'
     else
        write(iulog,*) '   surface data   = ',trim(rough_fct)
-    end if
-    if (lulc_frc == ' ') then     ! -dmleung, 17 Dec 2021
-       write(iulog,*) '   lulc_frc surface dataset not set'
-    else
-       write(iulog,*) '   surface data   = ',trim(lulc_frc)
     end if
     !#################################################################
     if (use_cn) then
