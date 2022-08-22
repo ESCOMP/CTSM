@@ -401,7 +401,7 @@ contains
        bsw = soilstate_inst%bsw_col(c,1)
        theta = min(theta, 0.98_r8*thetasat)
        infiltr_m_s = max(waterfluxbulk_inst%qflx_infl_col(c), 0.0) * 1e-3 
-       evap_m_s = waterfluxbulk_inst%qflx_evap_grnd_col(c) * 1e-3
+       evap_m_s = waterfluxbulk_inst%qflx_liqevap_from_top_layer_col(c) * 1e-3
        runoff_m_s = max(waterfluxbulk_inst%qflx_surf_col(c), 0.0) * 1e-3
        if (runoff_m_s > 1.0_r8) then
           runoff_m_s = 0.0_r8
