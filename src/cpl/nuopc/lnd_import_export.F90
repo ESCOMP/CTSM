@@ -536,7 +536,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, Sa_tbot   , atm2lnd_inst%forc_t_not_downscaled_grc(begg:), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, Sa_o3     , atm2lnd_inst%forc_ozone_grc(begg:), rc=rc)
+    call state_getimport_1d(importState, Sa_o3     , atm2lnd_inst%forc_o3_grc(begg:), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, Faxa_rainc, forc_rainc(begg:), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return

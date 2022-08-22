@@ -89,7 +89,7 @@ module atm2lndType
      real(r8), pointer :: forc_po2_240_patch            (:)   => null() ! 10-day mean O2 partial pressure (Pa)
      real(r8), pointer :: forc_aer_grc                  (:,:) => null() ! aerosol deposition array
      real(r8), pointer :: forc_pch4_grc                 (:)   => null() ! CH4 partial pressure (Pa)
-     real(r8), pointer :: forc_ozone_grc                (:)   => null() ! Ozone partial pressure (mol/mol)
+     real(r8), pointer :: forc_o3_grc                   (:)   => null() ! ozone partial pressure (mol/mol)
 
      real(r8), pointer :: forc_t_not_downscaled_grc     (:)   => null() ! not downscaled atm temperature (Kelvin)
      real(r8), pointer :: forc_th_not_downscaled_grc    (:)   => null() ! not downscaled atm potential temperature (Kelvin)

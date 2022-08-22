@@ -40,11 +40,11 @@ module OzoneMod
      ! NOTE(wjs, 2014-09-29) tlai_old_patch really belongs alongside tlai_patch in
      ! CanopyStateType.  But there are problems with any way I can think to implement
      ! that:
-     ! 
+     !
      ! - Updating tlai_old from a call in clm_driver, just before tlai is updated: This
      !   is problematic to do correctly because tlai is updated in different places
      !   depending on whether you're using SP, CN or ED.
-     ! 
+     !
      ! - Updating tlai_old within each routine that updates tlai: This feels fragile,
      !   since it depends on each scheme remembering to do this update at the correct
      !   time.
@@ -71,11 +71,11 @@ module OzoneMod
      procedure, private, nopass :: CalcOzoneUptakeOnePoint
 
      ! Original ozone stress functions from Danica Lombardozzi 2015
-     procedure, private         :: CalcOzoneStressLombardozzi2015           ! Stress parameterization 
-     procedure, private, nopass :: CalcOzoneStressLombardozzi2015OnePoint   ! Ozone stress calculation for single point 
+     procedure, private         :: CalcOzoneStressLombardozzi2015           ! Stress parameterization
+     procedure, private, nopass :: CalcOzoneStressLombardozzi2015OnePoint   ! Ozone stress calculation for single point
 
-     ! Ozone stress functions from Stefanie Falk 
-     procedure, private         :: CalcOzoneStressFalk          ! Stress parameterization 
+     ! Ozone stress functions from Stefanie Falk
+     procedure, private         :: CalcOzoneStressFalk          ! Stress parameterization
      procedure, private, nopass :: CalcOzoneStressFalkOnePoint  ! Ozone stress calculation for single point
 
   end type ozone_type
@@ -86,7 +86,7 @@ module OzoneMod
 
   ! TODO(wjs, 2014-09-29) This parameter will eventually become a spatially-varying
   ! value, obtained from ATM
-  real(r8), parameter :: forc_ozone = 100._r8 * 1.e-9_r8  ! ozone partial pressure [mol/mol]
+  !real(r8), parameter :: forc_ozone = 100._r8 * 1.e-9_r8  ! ozone partial pressure [mol/mol]
 
   ! TODO(wjs, 2014-09-29) The following parameters should eventually be moved to the
   ! params file. Parameters differentiated on veg type should be put on the params file
@@ -102,9 +102,9 @@ module OzoneMod
   real(r8), parameter :: o3_flux_threshold = 0.8_r8
 
   ! o3 intercepts and slopes for photosynthesis
-  real(r8), parameter :: needleleafPhotoInt   = 0.8390_r8  ! units = unitless 
+  real(r8), parameter :: needleleafPhotoInt   = 0.8390_r8  ! units = unitless
   real(r8), parameter :: needleleafPhotoSlope = 0._r8      ! units = per mmol m^-2
-  real(r8), parameter :: broadleafPhotoInt    = 0.8752_r8  ! units = unitless  
+  real(r8), parameter :: broadleafPhotoInt    = 0.8752_r8  ! units = unitless
   real(r8), parameter :: broadleafPhotoSlope  = 0._r8      ! units = per mmol m^-2
   real(r8), parameter :: nonwoodyPhotoInt     = 0.8021_r8  ! units = unitless
   real(r8), parameter :: nonwoodyPhotoSlope   = -0.0009_r8 ! units = per mmol m^-2
@@ -116,10 +116,10 @@ module OzoneMod
   real(r8), parameter :: broadleafCondSlope   = 0._r8      ! units = per mmol m^-2
   real(r8), parameter :: nonwoodyCondInt      = 0.7511_r8  ! units = unitless
   real(r8), parameter :: nonwoodyCondSlope    = 0._r8      ! units = per mmol m^-2
-  
+
   ! Data is currently only available for broadleaf species (Dec 2020)
   ! o3 intercepts and slopes for JmaxO3/Jmax0
-  real(r8), parameter :: needleleafJmaxInt   = 1._r8                ! units = unitless 
+  real(r8), parameter :: needleleafJmaxInt   = 1._r8                ! units = unitless
   real(r8), parameter :: needleleafJmaxSlope = 0._r8                ! units = per mmol m^-2
   real(r8), parameter :: broadleafJmaxInt    = 1._r8                ! units = unitless
   real(r8), parameter :: broadleafJmaxSlope  = -0.0037_r8           ! units = per mmol m^-2
@@ -144,19 +144,19 @@ contains
     !
     ! !USES:
    use clm_varctl   , only : use_luna
-    ! 
+    !
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
-    character(len=*),  intent(in)    :: o3_veg_stress_method 
+    character(len=*),  intent(in)    :: o3_veg_stress_method
     !-----------------------------------------------------------------------
 
-    if (o3_veg_stress_method=='stress_lombardozzi2015') then 
+    if (o3_veg_stress_method=='stress_lombardozzi2015') then
        this%stress_method = stress_method_lombardozzi2015
-    else if (o3_veg_stress_method=='stress_falk') then 
+    else if (o3_veg_stress_method=='stress_falk') then
        this%stress_method = stress_method_falk
        if (.not. use_luna ) call endrun(' use_luna=.true. is required when o3_veg_stress_method = stress_falk.')
-    else 
+    else
        call endrun('unknown ozone stress method')
     end if
 
@@ -280,7 +280,7 @@ contains
        call hist_addfld1d (fname='O3COEFJMAXSUN', units='unitless', &
             avgflag='A', long_name='ozone coefficient for maximum electron transport rate sunlit leaves', &
             ptr_patch=this%o3coefjmaxsun_patch, l2g_scale_type='veg')
-    else 
+    else
        call endrun('unknown ozone stress method')
     end if
 
@@ -349,7 +349,7 @@ contains
          dim1name='pft', &
          long_name='ozone uptake for sunlit leaves', units='mmol m^-3', &
          readvar=readvar, interpinic_flag='interp', data=this%o3uptakesun_patch)
-         
+
   end subroutine Restart
 
   ! ========================================================================
@@ -358,7 +358,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CalcOzoneUptake(this, bounds, num_exposedvegp, filter_exposedvegp, &
-       forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
+       forc_pbot, forc_th, rssun, rssha, rb, ram, tlai, ozone_atm)
     !
     ! !DESCRIPTION:
     ! Calculate ozone uptake.
@@ -375,6 +375,7 @@ contains
     real(r8) , intent(in) :: rb( bounds%begp: )        ! boundary layer resistance (s/m)
     real(r8) , intent(in) :: ram( bounds%begp: )       ! aerodynamical resistance (s/m)
     real(r8) , intent(in) :: tlai( bounds%begp: )      ! one-sided leaf area index, no burying by snow
+    real(r8) , intent(in) :: ozone_atm( bounds%begc: ) ! ozone partial pressure (mol/mol)
     !
     ! !LOCAL VARIABLES:
     integer  :: fp             ! filter index
@@ -405,14 +406,14 @@ contains
 
          ! Ozone uptake for shaded leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=ozone_atm, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssha(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesha(p))
 
          ! Ozone uptake for sunlit leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=ozone_atm, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssun(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesun(p))
@@ -670,7 +671,7 @@ contains
 
   end subroutine CalcOzoneStressLombardozzi2015OnePoint
 
-  
+
   !-----------------------------------------------------------------------
   subroutine CalcOzoneStressFalk(this, bounds, &
        num_exposedvegp, filter_exposedvegp, &
@@ -683,7 +684,7 @@ contains
     !
     ! !USES:
     use LunaMod        , only : is_time_to_run_LUNA
-    !   
+    !
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
@@ -698,16 +699,16 @@ contains
 
     character(len=*), parameter :: subname = 'CalcOzoneStressFalk'
     !-----------------------------------------------------------------------
-    
-    if (is_time_to_run_LUNA()) then 
-      
+
+    if (is_time_to_run_LUNA()) then
+
       associate( &
          o3uptakesha => this%o3uptakesha_patch                 , & ! Input:  [real(r8) (:)] ozone dose
          o3uptakesun => this%o3uptakesun_patch                 , & ! Input:  [real(r8) (:)] ozone dose
          o3coefjmaxsha => this%o3coefjmaxsha_patch             , & ! Output: [real(r8) (:)] ozone coef jmax sha
          o3coefjmaxsun => this%o3coefjmaxsun_patch               & ! Output: [real(r8) (:)] ozone coef jmax sun
          )
-      
+
       do fp = 1, num_exposedvegp
          p = filter_exposedvegp(fp)
 
@@ -734,7 +735,7 @@ contains
 
       end associate
 
-   end if 
+   end if
 
   end subroutine CalcOzoneStressFalk
 
@@ -750,13 +751,13 @@ contains
     integer  , intent(in)        :: pft_type   ! vegetation type, for indexing into pftvarcon arrays
     real(r8) , intent(in)        :: o3uptake   ! ozone entering the leaf
     real(r8) , intent(inout)     :: o3coefjmax ! ozone coefficient for max. electron transport rate
-    !    
+    !
     ! !LOCAL VARIABLES:
     real(r8) :: jmaxInt        ! intercept for max. electron transport rate
     real(r8) :: jmaxSlope      ! slope for max. electron transport rate
     character(len=*), parameter :: subname = 'CalcOzoneStressFalkOnePoint'
     !-----------------------------------------------------------------------
-   
+
     if (o3uptake == 0._r8) then
        o3coefjmax = 1._r8
     else
@@ -776,7 +777,7 @@ contains
           jmaxSlope  = needleleafJmaxSlope
        end if
        ! Apply parameter values to compute o3 coefficients
-       o3coefjmax = max(0._r8, min(1._r8, jmaxInt  + jmaxSlope  * o3uptake)) 
+       o3coefjmax = max(0._r8, min(1._r8, jmaxInt  + jmaxSlope  * o3uptake))
     end if
 
   end subroutine CalcOzoneStressFalkOnePoint
