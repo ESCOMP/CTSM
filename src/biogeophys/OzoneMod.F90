@@ -375,7 +375,7 @@ contains
     real(r8) , intent(in) :: rb( bounds%begp: )        ! boundary layer resistance (s/m)
     real(r8) , intent(in) :: ram( bounds%begp: )       ! aerodynamical resistance (s/m)
     real(r8) , intent(in) :: tlai( bounds%begp: )      ! one-sided leaf area index, no burying by snow
-    real(r8) , intent(in) :: forc_o3( bounds%begc: )   ! ozone partial pressure (mol/mol)
+    real(r8) , intent(in) :: forc_o3( bounds%begg: )   ! ozone partial pressure (mol/mol)
     !
     ! !LOCAL VARIABLES:
     integer  :: fp             ! filter index
@@ -388,7 +388,7 @@ contains
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(forc_pbot) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(forc_th) == (/bounds%endc/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(forc_o3) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(forc_o3) == (/bounds%endg/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(rssun) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(rssha) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(rb) == (/bounds%endp/)), sourcefile, __LINE__)
@@ -404,17 +404,18 @@ contains
       do fp = 1, num_exposedvegp
          p = filter_exposedvegp(fp)
          c = patch%column(p)
+         g = patch%gridcell(p)
 
          ! Ozone uptake for shaded leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_o3, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssha(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesha(p))
 
          ! Ozone uptake for sunlit leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_o3, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssun(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesun(p))

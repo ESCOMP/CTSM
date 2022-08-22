@@ -80,7 +80,7 @@ module OzoneBaseMod
        real(r8) , intent(in) :: rb( bounds%begp: )        ! boundary layer resistance (s/m)
        real(r8) , intent(in) :: ram( bounds%begp: )       ! aerodynamical resistance (s/m)
        real(r8) , intent(in) :: tlai( bounds%begp: )      ! one-sided leaf area index, no burying by snow
-       real(r8) , intent(in) :: forc_o3( bounds%begc: )  ! atmospheric ozone (mol/mol)
+       real(r8) , intent(in) :: forc_o3( bounds%begg: )   ! atmospheric ozone (mol/mol)
      end subroutine CalcOzoneUptake_interface
 
      subroutine CalcOzoneStress_interface(this, bounds, &
