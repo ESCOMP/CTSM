@@ -406,14 +406,14 @@ contains
 
          ! Ozone uptake for shaded leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=ozone_atm, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=ozone_atm(c), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssha(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesha(p))
 
          ! Ozone uptake for sunlit leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=ozone_atm, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=ozone_atm(c), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssun(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesun(p))
