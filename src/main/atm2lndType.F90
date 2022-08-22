@@ -483,6 +483,7 @@ contains
     allocate(this%forc_po2_grc                  (begg:endg))        ; this%forc_po2_grc                  (:)   = ival
     allocate(this%forc_aer_grc                  (begg:endg,14))     ; this%forc_aer_grc                  (:,:) = ival
     allocate(this%forc_pch4_grc                 (begg:endg))        ; this%forc_pch4_grc                 (:)   = ival
+    allocate(this%forc_o3_grc                   (begg:endg))        ; this%forc_o3_grc                   (:)   = ival
     if(use_luna)then
      allocate(this%forc_pco2_240_patch          (begp:endp))        ; this%forc_pco2_240_patch           (:)   = ival
      allocate(this%forc_po2_240_patch           (begp:endp))        ; this%forc_po2_240_patch            (:)   = ival
@@ -553,6 +554,10 @@ contains
     call hist_addfld1d (fname='ATM_TOPO', units='m', &
          avgflag='A', long_name='atmospheric surface height', &
          ptr_lnd=this%forc_topo_grc)
+
+    call hist_addfld1d (fname='ATM_O3', units='mol/mol', &
+         avgflag='A', long_name='atmospheric ozone partial pressure', &
+         ptr_lnd=this%forc_o3_grc)
 
     this%forc_solar_grc(begg:endg) = spval
     call hist_addfld1d (fname='FSDS', units='W/m^2',  &
@@ -1000,6 +1005,7 @@ contains
     deallocate(this%forc_po2_grc)
     deallocate(this%forc_aer_grc)
     deallocate(this%forc_pch4_grc)
+    deallocate(this%forc_o3_grc)
 
     ! atm->lnd not downscaled
     deallocate(this%forc_t_not_downscaled_grc)

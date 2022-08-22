@@ -1598,8 +1598,7 @@ bioms:   do f = 1, fn
               rssha     = photosyns_inst%rssha_patch(bounds%begp:bounds%endp), &
               rb        = frictionvel_inst%rb1_patch(bounds%begp:bounds%endp), &
               ram       = frictionvel_inst%ram1_patch(bounds%begp:bounds%endp), &
-              tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp),
-              ozone_atm = atm2lnd_inst%forc_o3_grc(bounds%begc:bounds%endc))
+              tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp))
 
          !---------------------------------------------------------
          !update Vc,max and Jmax by LUNA model

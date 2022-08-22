@@ -86,7 +86,7 @@ module OzoneMod
 
   ! TODO(wjs, 2014-09-29) This parameter will eventually become a spatially-varying
   ! value, obtained from ATM
-  !real(r8), parameter :: forc_ozone = 100._r8 * 1.e-9_r8  ! ozone partial pressure [mol/mol]
+  real(r8), parameter :: forc_ozone = 100._r8 * 1.e-9_r8  ! ozone partial pressure [mol/mol]
 
   ! TODO(wjs, 2014-09-29) The following parameters should eventually be moved to the
   ! params file. Parameters differentiated on veg type should be put on the params file
@@ -358,7 +358,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CalcOzoneUptake(this, bounds, num_exposedvegp, filter_exposedvegp, &
-       forc_pbot, forc_th, rssun, rssha, rb, ram, tlai, ozone_atm)
+       forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
     !
     ! !DESCRIPTION:
     ! Calculate ozone uptake.
@@ -375,7 +375,7 @@ contains
     real(r8) , intent(in) :: rb( bounds%begp: )        ! boundary layer resistance (s/m)
     real(r8) , intent(in) :: ram( bounds%begp: )       ! aerodynamical resistance (s/m)
     real(r8) , intent(in) :: tlai( bounds%begp: )      ! one-sided leaf area index, no burying by snow
-    real(r8) , intent(in) :: ozone_atm( bounds%begc: ) ! ozone partial pressure (mol/mol)
+    !real(r8) , intent(in) :: ozone_atm( bounds%begc: ) ! ozone partial pressure (mol/mol)
     !
     ! !LOCAL VARIABLES:
     integer  :: fp             ! filter index
@@ -388,7 +388,7 @@ contains
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(forc_pbot) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(forc_th) == (/bounds%endc/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(ozone_atm) == (/bounds%endc/)), sourcefile, __LINE__)
+    !SHR_ASSERT_ALL_FL((ubound(ozone_atm) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(rssun) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(rssha) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(rb) == (/bounds%endp/)), sourcefile, __LINE__)
@@ -407,14 +407,14 @@ contains
 
          ! Ozone uptake for shaded leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=ozone_atm(c), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssha(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesha(p))
 
          ! Ozone uptake for sunlit leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=ozone_atm(c), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssun(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesun(p))
