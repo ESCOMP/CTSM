@@ -94,7 +94,7 @@ contains
   end subroutine Restart
 
   subroutine CalcOzoneUptake(this, bounds, num_exposedvegp, filter_exposedvegp, &
-       forc_pbot, forc_th, rssun, rssha, rb, ram, tlai, foc_o3)
+       forc_pbot, forc_th, rssun, rssha, rb, ram, tlai, forc_o3)
 
     class(ozone_off_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
