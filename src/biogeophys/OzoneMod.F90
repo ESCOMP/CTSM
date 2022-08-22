@@ -381,6 +381,7 @@ contains
     integer  :: fp             ! filter index
     integer  :: p              ! patch index
     integer  :: c              ! column index
+    integer  :: g              ! gridcell index
 
     character(len=*), parameter :: subname = 'CalcOzoneUptake'
     !-----------------------------------------------------------------------
