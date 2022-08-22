@@ -172,6 +172,7 @@ contains
     use clm_varcon          , only : secspday, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_fates
     use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct_predefined
+    use clm_varctl          , only : rough_fct    ! -dmleung added to CESM2/CLM5 17 Dec 2021
     use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
     use fileutils           , only : getfil
@@ -220,6 +221,7 @@ contains
     real(r8) ,pointer  :: sand3d (:,:)                  ! read in - soil texture: percent sand (needs to be a pointer for use in ncdio)
     real(r8) ,pointer  :: clay3d (:,:)                  ! read in - soil texture: percent clay (needs to be a pointer for use in ncdio)
     real(r8) ,pointer  :: organic3d (:,:)               ! read in - organic matter: kg/m3 (needs to be a pointer for use in ncdio)
+    real(r8) ,pointer  :: roughfct2d(:)                 ! read in - time-invariant roughness factor,   dmleung added 17 Dec 2021
     character(len=256) :: locfn                         ! local filename
     integer            :: ipedof  
     integer            :: begp, endp
@@ -368,6 +370,25 @@ contains
     ! Close file
 
     call ncd_pio_closefile(ncid)
+
+    !############ subsection for input data for new dust emission scheme ##############
+
+    ! dmleung added to CESM2/CLM5 17 Dec 2021
+    allocate(roughfct2d(begg:endg))                                   ! dmleung, 16 Jul 2020
+    ! here to read roughness factor file, 16 Jul 2020
+    !write(iulog,*) 'Attempting to read roughness factor data, by dmleung .....'
+    call getfil (rough_fct, locfn, 0)
+    call ncd_pio_openfile (ncid, locfn, 0)
+    call ncd_io(ncid=ncid, varname='F_eff', flag='read', data=roughfct2d, dim1name=grlnd, readvar=readvar)
+    !write(iulog,*) 'initialize pft level roughness factor from roughfct2d(g) to roughfct(p)'  
+
+    do p = begp,endp
+       g = patch%gridcell(p)
+       soilstate_inst%roughfct_patch(p) = roughfct2d(g)
+    end do
+
+    call ncd_pio_closefile(ncid)
+    !##################################################################################
 
     ! --------------------------------------------------------------------
     ! get original soil depths to be used in interpolation of sand and clay
@@ -702,7 +723,8 @@ contains
     do c = begc,endc
        g = col%gridcell(c)
 
-       soilstate_inst%gwc_thr_col(c) = 0.17_r8 + 0.14_r8 * clay3d(g,1) * 0.01_r8
+       soilstate_inst%gwc_thr_col(c) = 0.01_r8*(0.17_r8*clay3d(g,1) + 0.0014_r8*clay3d(g,1)*clay3d(g,1))  !Fecan et al. (1999) -jfk, dmleung coded 27 Nov 2021 for CLM clay fraction
+       !soilstate_inst%gwc_thr_col(c) = 0.17_r8 + 0.14_r8 * clay3d(g,1) * 0.01_r8 -dmleung commented 27 Nov 2021
        soilstate_inst%mss_frc_cly_vld_col(c) = min(clay3d(g,1) * 0.01_r8, 0.20_r8)
     end do
 

@@ -140,6 +140,14 @@ contains
          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
     do g = bounds%begg,bounds%endg
+       !#####added by dmleung to avoid negative eflx_lwrad_out_grc(g) 11 Dec 2021 ###################
+       if (lnd2atm_inst%eflx_lwrad_out_grc(g) < 0) then
+          write(iulog,*) 'FIRE = ', lnd2atm_inst%eflx_lwrad_out_grc(g)
+          write(iulog,*) 'gridcell index = ', g
+          !write(iulog,*) 'sb constant = ', sb
+          lnd2atm_inst%eflx_lwrad_out_grc(g) = 100_r8
+       end if
+       !##### should not be here but I am not sure why sometimes LW radiation is negative yet #######
        lnd2atm_inst%t_rad_grc(g) = sqrt(sqrt(lnd2atm_inst%eflx_lwrad_out_grc(g)/sb))
     end do
 
