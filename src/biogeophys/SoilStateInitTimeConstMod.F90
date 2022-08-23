@@ -374,20 +374,27 @@ contains
     !############ subsection for input data for new dust emission scheme ##############
 
     ! dmleung added to CESM2/CLM5 17 Dec 2021
-    allocate(roughfct2d(begg:endg))                                   ! dmleung, 16 Jul 2020
-    ! here to read roughness factor file, 16 Jul 2020
-    !write(iulog,*) 'Attempting to read roughness factor data, by dmleung .....'
-    call getfil (rough_fct, locfn, 0)
-    call ncd_pio_openfile (ncid, locfn, 0)
-    call ncd_io(ncid=ncid, varname='F_eff', flag='read', data=roughfct2d, dim1name=grlnd, readvar=readvar)
-    !write(iulog,*) 'initialize pft level roughness factor from roughfct2d(g) to roughfct(p)'  
+    if (rough_fct /= ' ') then
+       allocate(roughfct2d(begg:endg))                                   ! dmleung, 16 Jul 2020
+       ! here to read roughness factor file, 16 Jul 2020
+       !write(iulog,*) 'Attempting to read roughness factor data, by dmleung .....'
+       call getfil (rough_fct, locfn, 0)
+       call ncd_pio_openfile (ncid, locfn, 0)
+       call ncd_io(ncid=ncid, varname='F_eff', flag='read', data=roughfct2d, dim1name=grlnd, readvar=readvar)
+       !write(iulog,*) 'initialize pft level roughness factor from roughfct2d(g) to roughfct(p)'  
+   
+       do p = begp,endp
+          g = patch%gridcell(p)
+          soilstate_inst%roughfct_patch(p) = roughfct2d(g)
+       end do
 
-    do p = begp,endp
-       g = patch%gridcell(p)
-       soilstate_inst%roughfct_patch(p) = roughfct2d(g)
-    end do
+       call ncd_pio_closefile(ncid)
+    else
+       do p = begp,endp
+          soilstate_inst%roughfct_patch(p) = 1.0_r8
+       end do
 
-    call ncd_pio_closefile(ncid)
+    end if
     !##################################################################################
 
     ! --------------------------------------------------------------------
