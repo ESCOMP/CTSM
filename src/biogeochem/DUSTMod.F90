@@ -251,7 +251,7 @@ contains
          avgflag='A', long_name='sd of wind velocity at saltation level', &
          ptr_patch=this%u_sd_slt_patch, set_lake=0._r8, set_urb=0._r8)
     this%stblty_patch(begp:endp) = spval
-    call hist_addfld1d (fname='ZETA', units='',  &
+    call hist_addfld1d (fname='ZETAOBU', units='',  &
          avgflag='A', long_name='stability parameter', &
          ptr_patch=this%stblty_patch, set_lake=0._r8, set_urb=0._r8)
     this%u_fld_thr_patch(begp:endp) = spval
@@ -263,7 +263,7 @@ contains
          avgflag='A', long_name='impact threshold velocity at saltation level', &
          ptr_patch=this%u_impct_thr_patch, set_lake=0._r8, set_urb=0._r8)
     this%thr_crs_rate_patch(begp:endp) = spval
-    call hist_addfld1d (fname='ALPHA', units='',  &
+    call hist_addfld1d (fname='ALPHA_TC_RATE', units='',  &
          avgflag='A', long_name='threshold crossing rate', &
          ptr_patch=this%thr_crs_rate_patch, set_lake=0._r8, set_urb=0._r8)
     this%prb_crs_fld_thr_patch(begp:endp) = spval
@@ -279,10 +279,11 @@ contains
          avgflag='A', long_name='intermittency factor', &
          ptr_patch=this%intrmtncy_fct_patch, set_lake=0._r8, set_urb=0._r8)
     !#####added by dmleung 2 Dec 2021 #########################################
-    this%ustar_patch(begp:endp) = spval
-    call hist_addfld1d (fname='USTAR', units='m/s',  &
-         avgflag='A', long_name='friction velocity', &
-         ptr_patch=this%ustar_patch, set_lake=0._r8, set_urb=0._r8)
+    ! This is already output as FV in FrictionVelocityMod
+    !this%ustar_patch(begp:endp) = spval
+    !call hist_addfld1d (fname='USTAR', units='m/s',  &
+         !avgflag='A', long_name='friction velocity', &
+         !ptr_patch=this%ustar_patch, set_lake=0._r8, set_urb=0._r8)
     !#####added by dmleung 20 Dec 2021 ########################################
     this%ssr_patch(begp:endp) = spval
     call hist_addfld1d (fname='SSR', units='m/s',  &
