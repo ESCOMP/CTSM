@@ -231,12 +231,12 @@ contains
             ptr_patch=this%ram1_patch, default='inactive')
     end if
 
-    if (use_cn) then
+    !if (use_cn) then
        this%fv_patch(begp:endp) = spval
        call hist_addfld1d (fname='FV', units='m/s', &
             avgflag='A', long_name='friction velocity', &
             ptr_patch=this%fv_patch)
-    end if
+    !end if
 
        call hist_addfld1d (fname='RAH1', units='s/m', &
             avgflag='A', long_name='aerodynamical resistance ', &
