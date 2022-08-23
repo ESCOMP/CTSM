@@ -912,9 +912,9 @@ contains
     write(iulog,*) '   Threshold above which the model keeps the urban landunits =', toosmall_urban
     !##### for dmleung's input data for new dust emission module #####
     if (rough_fct == ' ') then    ! -dmleung, 17 Dec 2021
-       write(iulog,*) '   rough_fct surface dataset not set'
+       write(iulog,*) '   rough_fct surface roughness dataset not set'
     else
-       write(iulog,*) '   surface data   = ',trim(rough_fct)
+       write(iulog,*) '   surface roughness data   = ',trim(rough_fct)
     end if
     !#################################################################
     if (use_cn) then
