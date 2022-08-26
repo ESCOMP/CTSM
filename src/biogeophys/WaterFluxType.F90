@@ -419,6 +419,7 @@ contains
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
+    begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
     this%qflx_through_liq_patch(begp:endp) = spval

@@ -735,6 +735,7 @@ contains
     real(r8)              :: soil_depth_upland
     real(r8), parameter   :: soil_depth_lowland_default = 8.0
     real(r8), parameter   :: soil_depth_upland_default  = 8.0
+    real(r8), parameter   :: toosmall_distance  = 1e-6
 
     character(len=*), parameter :: subname = 'HillslopeSoilThicknessProfile'
 
@@ -780,8 +781,13 @@ contains
        do l = bounds%begl,bounds%endl
           min_hill_dist = minval(col%hill_distance(lun%coli(l):lun%colf(l)))
           max_hill_dist = maxval(col%hill_distance(lun%coli(l):lun%colf(l)))
-          m = (soil_depth_lowland - soil_depth_upland)/ &
-               (max_hill_dist - min_hill_dist)
+
+          if(abs(max_hill_dist - min_hill_dist) > toosmall_distance) then
+             m = (soil_depth_lowland - soil_depth_upland)/ &
+                  (max_hill_dist - min_hill_dist)
+          else
+             m = 0._r8
+          endif
           b = soil_depth_upland
           
           do c =  lun%coli(l), lun%colf(l)
