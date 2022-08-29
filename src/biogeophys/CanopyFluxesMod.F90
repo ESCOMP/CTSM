@@ -1599,7 +1599,7 @@ bioms:   do f = 1, fn
               rb        = frictionvel_inst%rb1_patch(bounds%begp:bounds%endp), &
               ram       = frictionvel_inst%ram1_patch(bounds%begp:bounds%endp), &
               tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp), &
-              forc_o3   = atm2lnd_inst%forc_o3_grc(bounds%begc:bounds%endc))
+              forc_o3   = atm2lnd_inst%forc_o3_grc(bounds%begg:bounds%endg))
 
          !---------------------------------------------------------
          !update Vc,max and Jmax by LUNA model
