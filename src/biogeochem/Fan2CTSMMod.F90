@@ -392,6 +392,25 @@ contains
           end if
           ns%fan_grz_fract_col(c) = 1.0_r8 ! for crops handled by handle_storage
        end if
+       !----------------------------------------------------------------------
+       ! NOTE: Hack to set some failing points to zero, see below...
+       ! EBK: 08/30/2022
+       !----------------------------------------------------------------------
+       if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
+          if (isnan(nf%nh3_stores_col(c) ) ) then
+             nf%nh3_stores_col(c) = 0.0_r8
+          end if
+          if (isnan(nf%nh3_barns_col(c) ) .or. (nf%nh3_barns_col(c) > 9.99e99_r8) ) then
+             nf%nh3_barns_col(c) = 0.0_r8
+          end if
+          if (isnan(nf%manure_n_appl_col(c) ) ) then
+             nf%manure_n_appl_col(c) = 0.0_r8
+          end if
+          if (isnan(nf%manure_n_mix_col(c) ) ) then
+             nf%manure_n_mix_col(c) = 0.0_r8
+          end if
+       end if
+       !----------------------------------------------------------------------
 
        watertend = waterstatebulk_inst%h2osoi_tend_tsl_col(c) * 1e-3 ! to m/s
        
@@ -474,6 +493,7 @@ contains
        if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
           if (any(isnan(fluxes_tmp))) then
              fluxes_tmp = 0.0_r8
+             fluxes = 0.0_r8
           end if
        end if
        !----------------------------------------------------------------------
@@ -542,6 +562,7 @@ contains
        if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
           if (any(isnan(fluxes_tmp))) then
              fluxes_tmp = 0.0_r8
+             fluxes = 0.0_r8
           end if
        end if
        !----------------------------------------------------------------------
@@ -647,6 +668,7 @@ contains
        if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
           if (any(isnan(fluxes_tmp))) then
              fluxes_tmp = 0.0_r8
+             fluxes = 0.0_r8
           end if
        end if
        !----------------------------------------------------------------------
