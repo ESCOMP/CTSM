@@ -460,6 +460,23 @@ contains
           fluxes_tmp = fluxes_tmp + sum(fluxes(:,1:num_cls_grz), dim=2)
           n_residual_total = n_residual_total + n_residual
        end do
+       !----------------------------------------------------------------------
+       ! NOTE: Hack to set some failing points to zero
+       ! Thare are three points that are failing (in the f19 grid) and give fluxes of NaN's, set
+       ! these points to zero, so that the model will work for other points.
+       ! Once, we get the model updated to a current verion we will examine
+       ! these points in detail, and figure out why they aren't working and fix
+       ! FAN so they do work.
+       ! This will need to be changed when g no longer has a global index.
+       ! EBK: 08/30/2022
+       !----------------------------------------------------------------------
+       !
+       if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
+          if (any(isnan(fluxes_tmp))) then
+             fluxes_tmp = 0.0_r8
+          end if
+       end if
+       !----------------------------------------------------------------------
        fluxes_tmp = fluxes_tmp / num_substeps
 
        ns%tan_g1_col(c) = tanpools(1)
@@ -631,6 +648,10 @@ contains
             + nf%nh3_grz_col(c) + nf%nh3_stores_col(c) +  nf%nh3_barns_col(c)
        if (nf%nh3_total_col(c) < -1e15) then
           call endrun(msg='ERROR: FAN, negative total emission')
+       end if
+       if ( (g == 3687) .or. (g == 4043) .or. (g == 4047) )then
+           write(iulog, *) 'g=', g, ' c=', c, 'nh3_total_col=', nf%nh3_total_col(c), 'fert=', nf%nh3_fert_col(c), &
+             'app=', nf%nh3_manure_app_col(c), 'grz=', nf%nh3_grz_col(c), 'stores=', nf%nh3_stores_col(c), 'barns=', nf%nh3_barns_col(c)
        end if
     end do
 
