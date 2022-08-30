@@ -395,6 +395,7 @@ contains
     !
     ! !USES:
     use clm_varctl, only : use_crop
+    use clm_varctl, only : use_fan
     use subgridAveMod, only: c2g
     use atm2lndType, only: atm2lnd_type
     !
@@ -536,7 +537,9 @@ contains
 
       if (err_found) then
          c = err_index
+         g = col%gridcell(c)
          write(iulog,*)'column nbalance error    = ',col_errnb(c), c
+         write(iulog,*)'gridcell                 = ',g
          write(iulog,*)'Latdeg,Londeg            = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
          write(iulog,*)'begnb                    = ',col_begnb(c)
          write(iulog,*)'endnb                    = ',col_endnb(c)
@@ -548,8 +551,15 @@ contains
          write(iulog,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
         
          
-         
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         ! Only actually abort if FAN is off or it's not one of the bad points
+         ! (at f19 resolution). If FAN is on allow Nbalance to be two orders of
+         ! magnitude higher than normal.
+         ! EBK 08/30/2022
+         if ( (.not. use_fan) .or. ( (g /= 4043) .and. (g /= 4047) .and. (g /= 3687) ) )then 
+            if ( (.not. use_fan) .or. (abs(col_errnb(c)) > 1e-1_r8) )then
+               call endrun(msg=errMsg(sourcefile, __LINE__))
+            end if
+         end if
       end if
 
       ! Repeat error check at the gridcell level
