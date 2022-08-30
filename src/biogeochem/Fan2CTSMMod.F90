@@ -535,6 +535,16 @@ contains
           fluxes_tmp = fluxes_tmp + sum(fluxes(:,1:num_cls_slr), dim=2)
           n_residual_total = n_residual_total + n_residual
        end do
+       !----------------------------------------------------------------------
+       ! NOTE: Hack to set some failing points to zero, see above...
+       ! EBK: 08/30/2022
+       !----------------------------------------------------------------------
+       if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
+          if (any(isnan(fluxes_tmp))) then
+             fluxes_tmp = 0.0_r8
+          end if
+       end if
+       !----------------------------------------------------------------------
        fluxes_tmp = fluxes_tmp / num_substeps
 
        ns%tan_s0_col(c) = tanpools(1)
@@ -630,6 +640,16 @@ contains
           n_residual_total = n_residual_total + n_residual
           nf%nh3_otherfert_col(c) = nf%nh3_otherfert_col(c) + fluxes(iflx_air, 1) / num_substeps
        end do
+       !----------------------------------------------------------------------
+       ! NOTE: Hack to set some failing points to zero, see above...
+       ! EBK: 08/30/2022
+       !----------------------------------------------------------------------
+       if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
+          if (any(isnan(fluxes_tmp))) then
+             fluxes_tmp = 0.0_r8
+          end if
+       end if
+       !----------------------------------------------------------------------
 
        ns%tan_f1_col(c) = tanpools(1)
        ns%tan_f2_col(c) = tanpools(2)
