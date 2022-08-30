@@ -557,7 +557,7 @@ contains
 
     call hist_addfld1d (fname='ATM_O3', units='mol/mol', &
          avgflag='A', long_name='atmospheric ozone partial pressure', &
-         ptr_lnd=this%forc_o3_grc)
+         ptr_lnd=this%forc_o3_grc, default = 'inactive')
 
     this%forc_solar_grc(begg:endg) = spval
     call hist_addfld1d (fname='FSDS', units='W/m^2',  &

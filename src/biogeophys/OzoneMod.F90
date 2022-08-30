@@ -84,10 +84,6 @@ module OzoneMod
   integer, parameter :: stress_method_lombardozzi2015 = 1
   integer, parameter :: stress_method_falk = 2
 
-  ! TODO(wjs, 2014-09-29) This parameter will eventually become a spatially-varying
-  ! value, obtained from ATM
-  !real(r8), parameter :: forc_ozone = 100._r8 * 1.e-9_r8  ! ozone partial pressure [mol/mol]
-
   ! TODO(wjs, 2014-09-29) The following parameters should eventually be moved to the
   ! params file. Parameters differentiated on veg type should be put on the params file
   ! with a pft dimension.
