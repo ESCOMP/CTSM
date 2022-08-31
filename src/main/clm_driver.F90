@@ -1042,7 +1042,7 @@ contains
           ! ============================================================================
           ! Update crop calendars
           ! ============================================================================
-          call cropcal_interp(bounds_clump, filter(nc)%num_pcropp, filter(nc)%pcropp, crop_inst)
+          call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, filter_inactive_and_active(nc)%pcropp, crop_inst)
 !          write(iulog,*) 'Exited cropcal_interp() in clm_drv()'
        end if
 

@@ -572,7 +572,7 @@ contains
       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
       do nc = 1,nclumps
          call get_clump_bounds(nc, bounds_clump)
-         call cropcal_interp(bounds_clump, filter(nc)%num_pcropp, filter(nc)%pcropp, crop_inst)
+         call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, filter_inactive_and_active(nc)%pcropp, crop_inst)
 !         write(iulog,*) 'Exited cropcal_interp() in initialize2()'
       end do
       !$OMP END PARALLEL DO
