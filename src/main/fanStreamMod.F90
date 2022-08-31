@@ -360,7 +360,11 @@ contains
    ig = 0
    do g = bounds%begg,bounds%endg
       ig = ig+1
-      atm2lnd_inst%forc_ndep_sgrz_grc(g) = sdat_sgrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
+      if ( sdat_ngrz%avs(1)%rAttr(1,ig) < 9.e99_r8 )then
+         atm2lnd_inst%forc_ndep_sgrz_grc(g) = sdat_sgrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
+      else
+         atm2lnd_inst%forc_ndep_sgrz_grc(g) = 0.0_r8
+      end if
    end do
 
    call shr_strdata_advance(sdat_ngrz, mcdate, sec, mpicom, 'clmfanngrz')
@@ -368,7 +372,11 @@ contains
    ig = 0
    do g = bounds%begg,bounds%endg
       ig = ig+1
-      atm2lnd_inst%forc_ndep_ngrz_grc(g) = sdat_ngrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
+      if ( sdat_ngrz%avs(1)%rAttr(1,ig) < 9.e99_r8 )then
+         atm2lnd_inst%forc_ndep_ngrz_grc(g) = sdat_ngrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
+      else
+         atm2lnd_inst%forc_ndep_ngrz_grc(g) = 0.0_r8
+      end if
    end do
    
    call shr_strdata_advance(sdat_urea, mcdate, sec, mpicom, 'clmfanurea')
