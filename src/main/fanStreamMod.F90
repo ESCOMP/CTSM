@@ -328,6 +328,7 @@ contains
    use clm_time_manager, only : get_curr_date, get_days_per_year
    use clm_varcon      , only : secspday
    use atm2lndType     , only : atm2lnd_type
+   use shr_infnan_mod  , only : isinf => shr_infnan_isinf
    !
    ! Arguments
    type(bounds_type) , intent(in)    :: bounds  
@@ -360,10 +361,10 @@ contains
    ig = 0
    do g = bounds%begg,bounds%endg
       ig = ig+1
-      if ( sdat_ngrz%avs(1)%rAttr(1,ig) < 9.e99_r8 )then
-         atm2lnd_inst%forc_ndep_sgrz_grc(g) = sdat_sgrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
-      else
+      if ( isinf(sdat_ngrz%avs(1)%rAttr(1,ig)) )then
          atm2lnd_inst%forc_ndep_sgrz_grc(g) = 0.0_r8
+      else
+         atm2lnd_inst%forc_ndep_sgrz_grc(g) = sdat_sgrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
       end if
    end do
 
@@ -372,10 +373,10 @@ contains
    ig = 0
    do g = bounds%begg,bounds%endg
       ig = ig+1
-      if ( sdat_ngrz%avs(1)%rAttr(1,ig) < 9.e99_r8 )then
-         atm2lnd_inst%forc_ndep_ngrz_grc(g) = sdat_ngrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
-      else
+      if ( isinf(sdat_ngrz%avs(1)%rAttr(1,ig)) )then
          atm2lnd_inst%forc_ndep_ngrz_grc(g) = 0.0_r8
+      else
+         atm2lnd_inst%forc_ndep_ngrz_grc(g) = sdat_ngrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
       end if
    end do
    
