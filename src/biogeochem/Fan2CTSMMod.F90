@@ -913,6 +913,7 @@ contains
              if (crop_man_is4crop_area) then
                 invscale = 1.0_r8
              else
+                if ( lun%wtgcell(l) < 1.e-14_r8 ) cycle   ! Ignore if landunit is very tiny
                 invscale = 1.0_r8 / lun%wtgcell(l)
              end if
 
@@ -950,6 +951,10 @@ contains
                 write(iulog, *) 'flux:', flux_avail_rum, ndep_sgrz_grc(g), (1.0_r8 - max_grazing_fract) * kg_to_g * invscale
                 call endrun(msg='negat flux_avail for ruminants')
              end if
+             if (flux_avail_rum > 9.e99_r8 ) then 
+                write(iulog, *) 'flux:', flux_avail_rum, ndep_sgrz_grc(g), (1.0_r8 - max_grazing_fract) * kg_to_g * invscale
+                call endrun(msg='Infinite flux_avail for ruminants')
+             end if
 
              ! Ruminants
              call eval_fluxes_storage(flux_avail_rum, 'open', &
@@ -961,6 +966,10 @@ contains
                 call endrun(msg='eval_fluxes_storage failed for ruminants')
              end if
 
+             if (flux_avail_mg > 9.e99_r8 ) then 
+                write(iulog, *) 'flux:', flux_avail_mg, ndep_sgrz_grc(g), (1.0_r8 - max_grazing_fract) * kg_to_g * invscale
+                call endrun(msg='Infinite flux_avail for livestock')
+             end if
              ! Others
              call eval_fluxes_storage(flux_avail_mg, 'closed', &
                   t_ref2m(col%patchi(c)), u10(col%patchi(c)), &
@@ -997,7 +1006,7 @@ contains
           end do ! column
        end if ! land unit not ispval
 
-       if (col_grass /= ispval) then
+       if (col_grass /= ispval .and. (col%wtgcell(col_grass) > 1.e-14_r8) ) then
           n_manure_spread_col(col_grass) = n_manure_spread_col(col_grass) &
                + flux_grass_spread / col%wtgcell(col_grass)
           tan_manure_spread_col(col_grass) = tan_manure_spread_col(col_grass) &
