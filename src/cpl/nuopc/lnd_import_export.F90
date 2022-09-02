@@ -22,6 +22,7 @@ module lnd_import_export
   use shr_megan_mod           , only : shr_megan_readnl, shr_megan_mechcomps_n
   use nuopc_shr_methods       , only : chkerr
   use lnd_import_export_utils , only : check_for_errors, check_for_nans
+  use diurnalOzoneStreamMod   , only : dO3_init
 
   implicit none
   private ! except
@@ -311,7 +312,7 @@ contains
     end if
     if (send_lnd2glc) then
        ! lnd->glc states from land all lnd->glc elevation classes (1:glc_nec) plus bare land (index 0).
-       ! The following puts all of the elevation class fields as an! undistributed dimension in 
+       ! The following puts all of the elevation class fields as an! undistributed dimension in
        ! the export state field
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, Sl_tsrf_elev  , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, Sl_topo_elev  , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
@@ -713,7 +714,7 @@ contains
 
     ! input/output variables
     type(ESMF_GridComp)                         :: gcomp
-    type(bounds_type)           , intent(in)    :: bounds      
+    type(bounds_type)           , intent(in)    :: bounds
     logical                     , intent(in)    :: glc_present
     logical                     , intent(in)    :: rof_prognostic
     type(waterlnd2atmbulk_type) , intent(inout) :: waterlnd2atmbulk_inst
@@ -759,7 +760,7 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_snowh  , waterlnd2atmbulk_inst%h2osno_grc(begg:), &
             init_spval=.false., rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return       
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_avsdr  , lnd2atm_inst%albd_grc(begg:,1), &
             init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return

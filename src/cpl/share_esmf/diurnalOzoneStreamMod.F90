@@ -76,7 +76,7 @@ contains
        write(stream_varnames(n),'(a,i0)') dO3String,n
     end do
 
-    ! Read lai_streams namelist
+    ! Read dO3_streams namelist
     if (masterproc) then
        open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
        call find_nlgroup_name(nu_nml, 'dO3_streams', status=nml_error)
