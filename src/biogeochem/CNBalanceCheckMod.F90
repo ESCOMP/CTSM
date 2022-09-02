@@ -538,19 +538,19 @@ contains
       if (err_found) then
          c = err_index
          g = col%gridcell(c)
-         write(iulog,*)'column nbalance error    = ',col_errnb(c), c
-         write(iulog,*)'gridcell                 = ',g
-         write(iulog,*)'Latdeg,Londeg            = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
-         write(iulog,*)'begnb                    = ',col_begnb(c)
-         write(iulog,*)'endnb                    = ',col_endnb(c)
-         write(iulog,*)'delta store              = ',col_endnb(c)-col_begnb(c)
-         write(iulog,*)'input mass               = ',col_ninputs(c)*dt
-         write(iulog,*)'output mass              = ',col_noutputs(c)*dt
-         write(iulog,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
-         write(iulog,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-         write(iulog,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
-        
-         
+         write(iulog,*)'column nbalance error     = ',col_errnb(c), c
+         write(iulog,*)'gridcell                  = ',g
+         write(iulog,*)'Latdeg,Londeg             = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+         write(iulog,*)'begnb                     = ',col_begnb(c)
+         write(iulog,*)'endnb                     = ',col_endnb(c)
+         write(iulog,*)'delta store               = ',col_endnb(c)-col_begnb(c)
+         write(iulog,*)'input mass                = ',col_ninputs(c)*dt
+         write(iulog,*)'output mass               = ',col_noutputs(c)*dt
+         write(iulog,*)'net flux                  = ',(col_ninputs(c)-col_noutputs(c))*dt
+         write(iulog,*)'inputs,ffix,nfix,ndep,fan = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt, &
+                        ndep_to_sminn(c)*dt, fan_totnin(c)*dt
+         write(iulog,*)'outputs,ffix,nfix,ndep,fan= ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt, &
+                        f_n2o_nit(c)*dt, fan_totnout(c)*dt
          call endrun(msg=errMsg(sourcefile, __LINE__))
          ! Only actually abort if FAN is off or it's not one of the bad points
          ! (at f19 resolution). If FAN is on allow Nbalance to be two orders of
