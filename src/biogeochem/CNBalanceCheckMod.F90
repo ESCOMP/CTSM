@@ -487,6 +487,7 @@ contains
          if (use_crop) then
             col_ninputs(c) = col_ninputs(c) + fert_to_sminn(c) + soyfixn_to_sminn(c)
          end if
+         col_ninputs(c) = col_ninputs(c) + fan_totnin(c)
 
          col_ninputs_partial(c) = col_ninputs(c)
 
@@ -511,12 +512,11 @@ contains
          end if
 
          col_noutputs(c) = col_noutputs(c) - som_n_leached(c)
-         col_ninputs_partial(c) = col_ninputs(c) + fan_totnin(c)
+         col_noutputs(c) = col_noutputs(c) + fan_totnout(c)
 
          col_noutputs_partial(c) = col_noutputs(c) - &
                                    wood_harvestn(c) - &
-                                   grainn_to_cropprodn(c) + &
-                                   fan_totnout(c)
+                                   grainn_to_cropprodn(c)
 
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
@@ -551,15 +551,16 @@ contains
          write(iulog,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
         
          
+         call endrun(msg=errMsg(sourcefile, __LINE__))
          ! Only actually abort if FAN is off or it's not one of the bad points
          ! (at f19 resolution). If FAN is on allow Nbalance to be two orders of
          ! magnitude higher than normal.
          ! EBK 08/30/2022
-         if ( (.not. use_fan) .or. ( (g /= 4043) .and. (g /= 4047) .and. (g /= 3687) ) )then 
-            if ( (.not. use_fan) .or. (abs(col_errnb(c)) > 1e-1_r8) )then
-               call endrun(msg=errMsg(sourcefile, __LINE__))
-            end if
-         end if
+         !if ( (.not. use_fan) .or. ( (g /= 4043) .and. (g /= 4047) .and. (g /= 3687) ) )then 
+         !   if ( (.not. use_fan) .or. (abs(col_errnb(c)) > 1e-1_r8) )then
+         !      call endrun(msg=errMsg(sourcefile, __LINE__))
+         !   end if
+         !end if
       end if
 
       ! Repeat error check at the gridcell level

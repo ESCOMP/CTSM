@@ -396,20 +396,20 @@ contains
        ! NOTE: Hack to set some failing points to zero, see below...
        ! EBK: 08/30/2022
        !----------------------------------------------------------------------
-       if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
-          if (isnan(nf%nh3_stores_col(c) ) ) then
-             nf%nh3_stores_col(c) = 0.0_r8
-          end if
-          if (isnan(nf%nh3_barns_col(c) ) .or. (nf%nh3_barns_col(c) > 9.99e99_r8) ) then
-             nf%nh3_barns_col(c) = 0.0_r8
-          end if
-          if (isnan(nf%manure_n_appl_col(c) ) ) then
-             nf%manure_n_appl_col(c) = 0.0_r8
-          end if
-          if (isnan(nf%manure_n_mix_col(c) ) ) then
-             nf%manure_n_mix_col(c) = 0.0_r8
-          end if
-       end if
+       !if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
+       !   if (isnan(nf%nh3_stores_col(c) ) ) then
+       !      nf%nh3_stores_col(c) = 0.0_r8
+       !   end if
+       !   if (isnan(nf%nh3_barns_col(c) ) .or. (nf%nh3_barns_col(c) > 9.99e99_r8) ) then
+       !      nf%nh3_barns_col(c) = 0.0_r8
+       !   end if
+       !   if (isnan(nf%manure_n_appl_col(c) ) ) then
+       !      nf%manure_n_appl_col(c) = 0.0_r8
+       !   end if
+       !   if (isnan(nf%manure_n_mix_col(c) ) ) then
+       !      nf%manure_n_mix_col(c) = 0.0_r8
+       !   end if
+       !end if
        !----------------------------------------------------------------------
 
        watertend = waterstatebulk_inst%h2osoi_tend_tsl_col(c) * 1e-3 ! to m/s
@@ -490,12 +490,12 @@ contains
        ! EBK: 08/30/2022
        !----------------------------------------------------------------------
        !
-       if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
-          if (any(isnan(fluxes_tmp))) then
-             fluxes_tmp = 0.0_r8
-             fluxes = 0.0_r8
-          end if
-       end if
+       !if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
+       !   if (any(isnan(fluxes_tmp))) then
+       !      fluxes_tmp = 0.0_r8
+       !      fluxes = 0.0_r8
+       !   end if
+       !end if
        !----------------------------------------------------------------------
        fluxes_tmp = fluxes_tmp / num_substeps
 
@@ -559,12 +559,12 @@ contains
        ! NOTE: Hack to set some failing points to zero, see above...
        ! EBK: 08/30/2022
        !----------------------------------------------------------------------
-       if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
-          if (any(isnan(fluxes_tmp))) then
-             fluxes_tmp = 0.0_r8
-             fluxes = 0.0_r8
-          end if
-       end if
+       !if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
+       !   if (any(isnan(fluxes_tmp))) then
+       !      fluxes_tmp = 0.0_r8
+       !      fluxes = 0.0_r8
+       !   end if
+       !end if
        !----------------------------------------------------------------------
        fluxes_tmp = fluxes_tmp / num_substeps
 
@@ -665,12 +665,12 @@ contains
        ! NOTE: Hack to set some failing points to zero, see above...
        ! EBK: 08/30/2022
        !----------------------------------------------------------------------
-       if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
-          if (any(isnan(fluxes_tmp))) then
-             fluxes_tmp = 0.0_r8
-             fluxes = 0.0_r8
-          end if
-       end if
+       !if ( (g == 4043) .or. (g == 4047) .or. (g == 3687) )then
+       !   if (any(isnan(fluxes_tmp))) then
+       !      fluxes_tmp = 0.0_r8
+       !      fluxes = 0.0_r8
+       !   end if
+       !end if
        !----------------------------------------------------------------------
 
        ns%tan_f1_col(c) = tanpools(1)
@@ -691,10 +691,10 @@ contains
        if (nf%nh3_total_col(c) < -1e15) then
           call endrun(msg='ERROR: FAN, negative total emission')
        end if
-       if ( (g == 3687) .or. (g == 4043) .or. (g == 4047) )then
-           write(iulog, *) 'g=', g, ' c=', c, 'nh3_total_col=', nf%nh3_total_col(c), 'fert=', nf%nh3_fert_col(c), &
-             'app=', nf%nh3_manure_app_col(c), 'grz=', nf%nh3_grz_col(c), 'stores=', nf%nh3_stores_col(c), 'barns=', nf%nh3_barns_col(c)
-       end if
+       !if ( (g == 3687) .or. (g == 4043) .or. (g == 4047) )then
+       !    write(iulog, *) 'g=', g, ' c=', c, 'nh3_total_col=', nf%nh3_total_col(c), 'fert=', nf%nh3_fert_col(c), &
+       !      'app=', nf%nh3_manure_app_col(c), 'grz=', nf%nh3_grz_col(c), 'stores=', nf%nh3_stores_col(c), 'barns=', nf%nh3_barns_col(c)
+       !end if
     end do
 
     if (do_balance_checks) then
@@ -913,7 +913,7 @@ contains
              if (crop_man_is4crop_area) then
                 invscale = 1.0_r8
              else
-                if ( lun%wtgcell(l) < 1.e-14_r8 ) cycle   ! Ignore if landunit is very tiny
+                !if ( lun%wtgcell(l) < 1.e-14_r8 ) cycle   ! Ignore if landunit is very tiny
                 invscale = 1.0_r8 / lun%wtgcell(l)
              end if
 
@@ -951,10 +951,6 @@ contains
                 write(iulog, *) 'flux:', flux_avail_rum, ndep_sgrz_grc(g), (1.0_r8 - max_grazing_fract) * kg_to_g * invscale
                 call endrun(msg='negat flux_avail for ruminants')
              end if
-             if (flux_avail_rum > 9.e99_r8 ) then 
-                write(iulog, *) 'flux:', flux_avail_rum, ndep_sgrz_grc(g), (1.0_r8 - max_grazing_fract) * kg_to_g * invscale
-                call endrun(msg='Infinite flux_avail for ruminants')
-             end if
 
              ! Ruminants
              call eval_fluxes_storage(flux_avail_rum, 'open', &
@@ -966,10 +962,6 @@ contains
                 call endrun(msg='eval_fluxes_storage failed for ruminants')
              end if
 
-             if (flux_avail_mg > 9.e99_r8 ) then 
-                write(iulog, *) 'flux:', flux_avail_mg, ndep_sgrz_grc(g), (1.0_r8 - max_grazing_fract) * kg_to_g * invscale
-                call endrun(msg='Infinite flux_avail for livestock')
-             end if
              ! Others
              call eval_fluxes_storage(flux_avail_mg, 'closed', &
                   t_ref2m(col%patchi(c)), u10(col%patchi(c)), &
@@ -1006,7 +998,8 @@ contains
           end do ! column
        end if ! land unit not ispval
 
-       if (col_grass /= ispval .and. (col%wtgcell(col_grass) > 1.e-14_r8) ) then
+       !if (col_grass /= ispval .and. (col%wtgcell(col_grass) > 1.e-14_r8) ) then
+       if (col_grass /= ispval )then
           n_manure_spread_col(col_grass) = n_manure_spread_col(col_grass) &
                + flux_grass_spread / col%wtgcell(col_grass)
           tan_manure_spread_col(col_grass) = tan_manure_spread_col(col_grass) &
