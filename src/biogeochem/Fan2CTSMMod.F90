@@ -913,7 +913,7 @@ contains
              if (crop_man_is4crop_area) then
                 invscale = 1.0_r8
              else
-                !if ( lun%wtgcell(l) < 1.e-14_r8 ) cycle   ! Ignore if landunit is very tiny
+                if ( lun%wtgcell(l) < 1.e-14_r8 ) cycle   ! Ignore if landunit is very tiny
                 invscale = 1.0_r8 / lun%wtgcell(l)
              end if
 
@@ -998,8 +998,7 @@ contains
           end do ! column
        end if ! land unit not ispval
 
-       !if (col_grass /= ispval .and. (col%wtgcell(col_grass) > 1.e-14_r8) ) then
-       if (col_grass /= ispval )then
+       if (col_grass /= ispval .and. (col%wtgcell(col_grass) > 1.e-14_r8) ) then
           n_manure_spread_col(col_grass) = n_manure_spread_col(col_grass) &
                + flux_grass_spread / col%wtgcell(col_grass)
           tan_manure_spread_col(col_grass) = tan_manure_spread_col(col_grass) &
