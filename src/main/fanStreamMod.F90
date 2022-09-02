@@ -362,7 +362,7 @@ contains
    do g = bounds%begg,bounds%endg
       ig = ig+1
       if ( isinf(sdat_ngrz%avs(1)%rAttr(1,ig)) )then
-         atm2lnd_inst%forc_ndep_sgrz_grc(g) = 0.0_r8
+         atm2lnd_inst%forc_ndep_sgrz_grc(g) = 9.0e99_r8
       else
          atm2lnd_inst%forc_ndep_sgrz_grc(g) = sdat_sgrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
       end if
@@ -374,7 +374,7 @@ contains
    do g = bounds%begg,bounds%endg
       ig = ig+1
       if ( isinf(sdat_ngrz%avs(1)%rAttr(1,ig)) )then
-         atm2lnd_inst%forc_ndep_ngrz_grc(g) = 0.0_r8
+         atm2lnd_inst%forc_ndep_ngrz_grc(g) = 9.0e99_r8
       else
          atm2lnd_inst%forc_ndep_ngrz_grc(g) = sdat_ngrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
       end if
