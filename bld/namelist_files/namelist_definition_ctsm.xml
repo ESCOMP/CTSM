@@ -1810,7 +1810,7 @@ Mapping method from LAI input file to the model resolution
 <!-- ========================================================================================  -->
 
 <!-- diurnal ozone anomaly -->
-<entry id="use_dO3_streams" type="logical" category="physics"
+<entry id="use_do3_streams" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on reading in of diurnal ozone anomaly file. Used to convert >daily ozone to sub-daily
 </entry>
