@@ -2726,8 +2726,8 @@ sub setup_logic_do_transient_urban {
    # for them to be unset if that will be their final state):
    # - flanduse_timeseries
    #
-   # NOTE(kwo, 2021-08-11) I based this function on setup_logic_do_transient_lakes. 
-   # As in NOTE(wjs, 2020-08-23) I'm not sure if all of the checks here are truly important 
+   # NOTE(kwo, 2021-08-11) I based this function on setup_logic_do_transient_lakes.
+   # As in NOTE(wjs, 2020-08-23) I'm not sure if all of the checks here are truly important
    # for transient urban (in particular, my guess is that collapse_urban could probably be done with transient
    # urban - as well as transient pfts and transient crops for that matter), but some of
    # the checks probably are needed, and it seems best to keep transient urban consistent
@@ -3669,11 +3669,9 @@ sub setup_logic_dry_deposition {
                      "   Use the '--no-drydep' option when '-bgc fates' is activated");
     }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_list');
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_method');
   } else {
-    if ( defined($nl->get_value('drydep_list')) ||
-         defined($nl->get_value('drydep_method')) ) {
-      $log->fatal_error("drydep_list or drydep_method defined, but drydep option NOT set");
+    if ( defined($nl->get_value('drydep_list')) ) {
+      $log->fatal_error("drydep_list defined, but drydep option NOT set");
     }
   }
 }
