@@ -1,0 +1,3 @@
+! Explicitly add a file to start from
+use_init_interp = TRUE
+finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c180715.nc'
