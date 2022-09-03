@@ -30,6 +30,13 @@
 
   <!-- aux_clm test suite failures -->
 
+  <test name="SMS_P1440x2_D_Ld3.f19_f19_mg16.IHistClm50BgcCropGs.cheyenne_intel.clm-fanFull2009Start">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>Threaded issues with FAN</issue>
+    </phase>
+  </test>
+
   <test name="ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianGs.cheyenne_gnu.clm-monthly">
     <phase name="RUN">
       <status>FAIL</status>
