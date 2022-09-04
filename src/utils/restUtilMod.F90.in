@@ -120,7 +120,7 @@ contains
 
     call shr_string_listGetName(varname, 1, primary_varname)
     if (flag == 'read') then
-       call find_var_on_file(ncid, varname, my_varname)
+       call find_var_on_file(ncid, varname, is_dim=.false., varname_on_file=my_varname)
        if ((my_varname /= primary_varname) .and. masterproc) then
           write(iulog,*) 'Restart file backwards compatibility: Translating: ', &
                trim(my_varname), ' => ', trim(primary_varname)
@@ -256,7 +256,7 @@ contains
 
     call shr_string_listGetName(varname, 1, primary_varname)
     if (flag == 'read') then
-       call find_var_on_file(ncid, varname, my_varname)
+       call find_var_on_file(ncid, varname, is_dim=.false., varname_on_file=my_varname)
        if ((my_varname /= primary_varname) .and. masterproc) then
           write(iulog,*) 'Restart file backwards compatibility: Translating: ', &
                trim(my_varname), ' => ', trim(primary_varname)
@@ -405,7 +405,7 @@ contains
 
     call shr_string_listGetName(varname, 1, primary_varname)
     if (flag == 'read') then
-       call find_var_on_file(ncid, varname, my_varname)
+       call find_var_on_file(ncid, varname, is_dim=.false., varname_on_file=my_varname)
        if ((my_varname /= primary_varname) .and. masterproc) then
           write(iulog,*) 'Restart file backwards compatibility: Translating: ', &
                trim(my_varname), ' => ', trim(primary_varname)

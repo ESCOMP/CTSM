@@ -20,6 +20,7 @@ module BalanceCheckMod
   use SoilHydrologyType  , only : soilhydrology_type
   use SurfaceAlbedoType  , only : surfalb_type
   use WaterStateType     , only : waterstate_type
+  use LakestateType      , only : lakestate_type
   use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
   use WaterDiagnosticType, only : waterdiagnostic_type
   use Wateratm2lndType   , only : wateratm2lnd_type
@@ -122,7 +123,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       water_inst, soilhydrology_inst, &
+       water_inst, soilhydrology_inst, lakestate_inst, &
        use_aquifer_layer)
     !
     ! !DESCRIPTION:
@@ -136,6 +137,7 @@ contains
     integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
     type(water_type)          , intent(inout) :: water_inst
+    type(lakestate_type)      , intent(in)    :: lakestate_inst
     type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
     logical                   , intent(in)    :: use_aquifer_layer    ! whether an aquifer layer is used in this run
     !
@@ -150,6 +152,7 @@ contains
             num_nolakec, filter_nolakec, &
             num_lakec, filter_lakec, &
             soilhydrology_inst, &
+            lakestate_inst, &
             water_inst%bulk_and_tracers(i)%waterstate_inst, &
             water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
             water_inst%bulk_and_tracers(i)%waterbalance_inst, &
@@ -161,7 +164,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       soilhydrology_inst, waterstate_inst, waterdiagnostic_inst, waterbalance_inst, &
+       soilhydrology_inst, lakestate_inst, waterstate_inst, & 
+       waterdiagnostic_inst, waterbalance_inst, &
        use_aquifer_layer)
     !
     ! !DESCRIPTION:
@@ -175,6 +179,7 @@ contains
     integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
     type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
+    type(lakestate_type)      , intent(in)    :: lakestate_inst
     class(waterstate_type)    , intent(inout) :: waterstate_inst
     class(waterdiagnostic_type), intent(in)   :: waterdiagnostic_inst
     class(waterbalance_type)  , intent(inout) :: waterbalance_inst
@@ -210,8 +215,8 @@ contains
          water_mass = begwb(bounds%begc:bounds%endc))
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
-         waterstate_inst, &
-         subtract_dynbal_baselines = .false., &
+         waterstate_inst, lakestate_inst, &
+         add_lake_water_and_subtract_dynbal_baselines = .false., &
          water_mass = begwb(bounds%begc:bounds%endc))
 
     call waterstate_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
@@ -335,6 +340,7 @@ contains
           qflx_sfc_irrig          =>    waterflux_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
           qflx_glcice_dyn_water_flux => waterflux_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
 
+          dhsdt_canopy            =>    energyflux_inst%dhsdt_canopy_patch      , & ! Input:  [real(r8) (:)   ]  change in heat content of canopy (W/m**2) [+ to atm]
           eflx_lwrad_out          =>    energyflux_inst%eflx_lwrad_out_patch    , & ! Input:  [real(r8) (:)   ]  emitted infrared (longwave) radiation (W/m**2)
           eflx_lwrad_net          =>    energyflux_inst%eflx_lwrad_net_patch    , & ! Input:  [real(r8) (:)   ]  net infrared (longwave) rad (W/m**2) [+ = to atm]
           eflx_sh_tot             =>    energyflux_inst%eflx_sh_tot_patch       , & ! Input:  [real(r8) (:)   ]  total sensible heat flux (W/m**2) [+ to atm]
@@ -611,7 +617,7 @@ contains
 
              if (.not. lun%urbpoi(l)) then
                 errseb(p) = sabv(p) + sabg_chk(p) + forc_lwrad(c) - eflx_lwrad_out(p) &
-                     - eflx_sh_tot(p) - eflx_lh_tot(p) - eflx_soil_grnd(p)
+                     - eflx_sh_tot(p) - eflx_lh_tot(p) - eflx_soil_grnd(p) - dhsdt_canopy(p)
              else
                 errseb(p) = sabv(p) + sabg(p) &
                      - eflx_lwrad_net(p) &
@@ -697,6 +703,7 @@ contains
               write(iulog,*)'eflx_sh_tot    = ' ,eflx_sh_tot(indexp)
               write(iulog,*)'eflx_lh_tot    = ' ,eflx_lh_tot(indexp)
               write(iulog,*)'eflx_soil_grnd = ' ,eflx_soil_grnd(indexp)
+              write(iulog,*)'dhsdt_canopy   = ' ,dhsdt_canopy(indexp)
               write(iulog,*)'fsa fsr = '        ,fsa(indexp),    fsr(indexp)
               write(iulog,*)'fabd fabi = '      ,fabd(indexp,:), fabi(indexp,:)
               write(iulog,*)'albd albi = '      ,albd(indexp,:), albi(indexp,:)

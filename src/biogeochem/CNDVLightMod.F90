@@ -72,8 +72,9 @@ contains
          slatop        =>    pftcon%slatop                          , & ! Input:  specific leaf area at top of canopy, projected area basis (m2/gC)
          dsladlai      =>    pftcon%dsladlai                        , & ! Input:  dSLA/dLAI, projected area basis (m2/gC)           
          woody         =>    pftcon%woody                           , & ! Input:  woody patch or not                  
-         tree          =>    pftcon%tree                            , & ! Input:  tree patch or not                    
-         
+         is_tree       =>    pftcon%is_tree                         , & ! Input:  tree patch or not
+         is_shrub      =>    pftcon%is_shrub                        , & ! Input:  shrub patch or not
+
          deadstemc     =>    cnveg_carbonstate_inst%deadstemc_patch , & ! Input:  [real(r8) (:) ]  (gC/m2) dead stem C                               
          leafcmax      =>    cnveg_carbonstate_inst%leafcmax_patch  , & ! Input:  [real(r8) (:) ]  (gC/m2) leaf C storage                            
 
@@ -132,11 +133,11 @@ contains
          fpc_inc(p) = max(0._r8, fpcgrid(p) - fpcgrid_old)
 
          if (woody(ivt(p)) == 1._r8) then
-            if (tree(ivt(p)) == 1) then
+            if (is_tree(ivt(p))) then
                numtrees(g) = numtrees(g) + 1
                fpc_tree_total(g) = fpc_tree_total(g) + fpcgrid(p)
                fpc_inc_tree(g) = fpc_inc_tree(g) + fpc_inc(p)
-            else ! if shrubs
+            else if (is_shrub(ivt(p))) then
                fpc_shrub_total(g) = fpc_shrub_total(g) + fpcgrid(p)
             end if
          else    ! if grass
@@ -162,7 +163,7 @@ contains
 
          ! light competition
 
-         if (woody(ivt(p))==1._r8 .and. tree(ivt(p))==1._r8) then
+         if (woody(ivt(p))==1._r8 .and. is_tree(ivt(p))) then
 
             if (fpc_tree_total(g) > fpc_tree_max) then
 
@@ -200,7 +201,7 @@ contains
 
             end if
 
-         else if (woody(ivt(p))==1._r8 .and. tree(ivt(p))==0._r8) then ! shrub
+         else if (woody(ivt(p))==1._r8 .and. is_shrub(ivt(p))) then ! shrub
 
             if (fpc_shrub_total(g) > fpc_shrub_max(g)) then
 

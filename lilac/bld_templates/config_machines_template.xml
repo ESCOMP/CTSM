@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+
+<!-- This is a partial cime machine port which should be able to get
+     through the case.build step. Trying to get further than that will
+     cause problems, because various directory paths won't be set up
+     properly.
+
+     If you are looking at the template file: Variable names prefixed
+     with a dollar sign will be replaced with machine-specific values. A
+     double dollar sign gets replaced with a single dollar sign, so
+     something like $$MYVAR refers to the MYVAR cime variable.
+     -->
+
+<config_machines version="2.0">
+  <machine MACH="ctsm_build">
+
+    <!-- Text description of the machine -->
+    <DESC>Temporary build information for a CTSM build</DESC>
+
+    <!-- OS: the operating system of this machine. Passed to cppflags for
+         compiled programs as -DVALUE  recognized are LINUX, AIX, Darwin, CNL -->
+    <OS>$OS</OS>
+
+    <!-- COMPILERS: compilers supported on this machine, comma seperated list, first is default -->
+    <COMPILERS>$COMPILER</COMPILERS>
+
+    <!-- MPILIBS: mpilibs supported on this machine, comma seperated list,
+         first is default, mpi-serial is assumed and not required in
+         this list.
+
+         It appears that the particular value is not important here: all
+         that matters is that we're self-consistent. (See
+         https://github.com/ESMCI/cime/issues/3537)
+    -->
+    <MPILIBS>mpich</MPILIBS>
+
+    <!-- CIME_OUTPUT_ROOT: Base directory for case output,
+         the case/bld and case/run directories are written below here -->
+    <CIME_OUTPUT_ROOT>$CIME_OUTPUT_ROOT</CIME_OUTPUT_ROOT>
+
+    <!-- DIN_LOC_ROOT: location of the inputdata data directory
+         inputdata is downloaded automatically on a case by case basis as
+         long as the user has write access to this directory. -->
+    <DIN_LOC_ROOT>$$CIME_OUTPUT_ROOT/inputdata</DIN_LOC_ROOT>
+
+    <!-- DIN_LOC_ROOT_CLMFORC: override of DIN_LOC_ROOT specific to CLM
+         forcing data -->
+    <DIN_LOC_ROOT_CLMFORC>$$CIME_OUTPUT_ROOT/inputdata</DIN_LOC_ROOT_CLMFORC>
+
+    <!-- DOUT_S_ROOT: root directory of short term archive files, short term
+      archiving moves model output data out of the run directory, but
+      keeps it on disk-->
+    <DOUT_S_ROOT>$$CIME_OUTPUT_ROOT/archive/$$CASE</DOUT_S_ROOT>
+
+    <!-- GMAKE: gnu compatible make tool, default is 'gmake' -->
+    <GMAKE>$GMAKE</GMAKE>
+
+    <!-- GMAKE_J: optional number of threads to pass to the gmake flag -->
+    <GMAKE_J>$GMAKE_J</GMAKE_J>
+
+    <!-- BATCH_SYSTEM: batch system used on this machine,
+         supported values are: none, cobalt, lsf, pbs, slurm.
+
+         This is irrelevant for this build-only port.
+    -->
+    <BATCH_SYSTEM>none</BATCH_SYSTEM>
+
+    <!-- SUPPORTED_BY: contact information for support for this system
+      this field is not used in code -->
+    <SUPPORTED_BY>CTSM</SUPPORTED_BY>
+
+    <!-- MAX_TASKS_PER_NODE: maximum number of threads*tasks per shared
+         memory node on this machine, should always be >=
+         MAX_MPITASKS_PER_NODE.
+
+         This is irrelevant for this build-only port.
+    -->
+    <MAX_TASKS_PER_NODE>$MAX_MPITASKS_PER_NODE</MAX_TASKS_PER_NODE>
+
+    <!-- MAX_MPITASKS_PER_NODE: number of physical PES per shared node
+         on this machine, in practice the MPI tasks per node will not
+         exceed this value.
+    -->
+    <MAX_MPITASKS_PER_NODE>$MAX_MPITASKS_PER_NODE</MAX_MPITASKS_PER_NODE>
+
+    <!-- mpirun: The mpi exec to start a job on this machine, supported values
+         are values listed in MPILIBS above, default and mpi-serial.
+
+         This is irrelevant for this build-only port.
+    -->
+    <mpirun mpilib="default">
+      <!-- name of the exectuable used to launch mpi jobs -->
+      <executable>mpirun</executable>
+      <!-- arguments to the mpiexec command, the name attribute here is ignored-->
+      <arguments>
+        <arg name="anum_tasks"> -np $$TOTALPES</arg>
+        <arg name="labelstdout">-prepend-rank</arg>
+      </arguments>
+    </mpirun>
+
+    <!-- module system: allowed module_system type values are:
+         module  http://www.tacc.utexas.edu/tacc-projects/mclay/lmod
+         soft http://www.mcs.anl.gov/hs/software/systems/softenv/softenv-intro.html
+         none
+
+         For this build-only port, we don't specify a module system:
+         instead, we assume that the user has loaded all relevant
+         modules prior to starting the build. (Similarly, we assume that
+         the user has set all relevant environment variables, so don't
+         specify any environment variables here.)
+      -->
+    <module_system type="none"/>
+
+  </machine>
+</config_machines>

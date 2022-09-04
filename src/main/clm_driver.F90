@@ -59,7 +59,7 @@ module clm_driver
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
   use FanStreamMod           , only : fanstream_interp
-  use ch4Mod                 , only : ch4, ch4_init_balance_check
+  use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
   use DUSTMod                , only : DustDryDep, DustEmission
   use VOCEmissionMod         , only : VOCEmission
   !
@@ -319,6 +319,12 @@ contains
                c14_soilbiogeochem_carbonstate_inst, &
                soilbiogeochem_nitrogenstate_inst)
        end if
+       if (use_lch4) then
+          call ch4_init_gridcell_balance_check(bounds_clump, &
+               filter(nc)%num_nolakec, filter(nc)%nolakec, &
+               filter(nc)%num_lakec, filter(nc)%lakec, &
+               ch4_inst)
+       end if
        call t_stopf('begcnbal_grc')
 
     end do
@@ -333,7 +339,7 @@ contains
     call t_startf('dyn_subgrid')
     call dynSubgrid_driver(bounds_proc,                                               &
          urbanparams_inst, soilstate_inst, water_inst,                       &
-         temperature_inst, energyflux_inst,          &
+         temperature_inst, energyflux_inst, lakestate_inst, &
          canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst, &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst,                  &
          c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,    &
@@ -379,7 +385,7 @@ contains
        call BeginWaterBalance(bounds_clump,                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
             filter(nc)%num_lakec, filter(nc)%lakec,           &
-            water_inst, soilhydrology_inst, &
+            water_inst, soilhydrology_inst, lakestate_inst, &
             use_aquifer_layer = use_aquifer_layer())
 
        call t_stopf('begwbal')
@@ -398,7 +404,7 @@ contains
        end if
 
        if (use_lch4) then
-          call ch4_init_balance_check(bounds_clump, &
+          call ch4_init_column_balance_check(bounds_clump, &
                filter(nc)%num_nolakec, filter(nc)%nolakec, &
                filter(nc)%num_lakec, filter(nc)%lakec, &
                ch4_inst)
@@ -602,6 +608,7 @@ contains
        call BiogeophysPreFluxCalcs(bounds_clump,                                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                       &
             filter(nc)%num_nolakep, filter(nc)%nolakep,                       &
+            filter(nc)%num_urbanc, filter(nc)%urbanc,                         &
             clm_fates,                                                        &
             atm2lnd_inst, canopystate_inst, energyflux_inst, frictionvel_inst, &
             soilstate_inst, temperature_inst, &
@@ -627,6 +634,7 @@ contains
        ! Determine fluxes
        ! ============================================================================
 
+       call t_startf('bgp_fluxes')
        call t_startf('bgflux')
 
        ! Bareground fluxes for all patches except lakes and urban landunits
@@ -709,6 +717,19 @@ contains
             humanindex_inst)
        call t_stopf('bgplake')
 
+       call frictionvel_inst%SetActualRoughnessLengths( &
+            bounds = bounds_clump, &
+            num_exposedvegp = filter(nc)%num_exposedvegp, &
+            filter_exposedvegp = filter(nc)%exposedvegp, &
+            num_noexposedvegp = filter(nc)%num_noexposedvegp, &
+            filter_noexposedvegp = filter(nc)%noexposedvegp, &
+            num_urbanp = filter(nc)%num_urbanp, &
+            filter_urbanp = filter(nc)%urbanp, &
+            num_lakep = filter(nc)%num_lakep, &
+            filter_lakep = filter(nc)%lakep)
+
+       call t_stopf('bgp_fluxes')
+
        if (irrigate) then
 
           ! ============================================================================
@@ -781,6 +802,7 @@ contains
        call t_startf('soiltemperature')
        call SoilTemperature(bounds_clump,                                                      &
             filter(nc)%num_urbanl  , filter(nc)%urbanl,                                        &
+            filter(nc)%num_urbanc  , filter(nc)%urbanc,                                        &
             filter(nc)%num_nolakec , filter(nc)%nolakec,                                       &
             atm2lnd_inst, urbanparams_inst, canopystate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst, &
@@ -952,7 +974,10 @@ contains
           call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
                   filter(nc)%num_soilc, filter(nc)%soilc,                       &
                   filter(nc)%num_soilp, filter(nc)%soilp,                       &
-                  filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,              &
+                  filter(nc)%num_pcropp, filter(nc)%pcropp, &
+                  filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
+                  filter(nc)%num_noexposedvegp, filter(nc)%noexposedvegp, &
+                  doalb,              &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -961,7 +986,8 @@ contains
                active_layer_inst, &
                atm2lnd_inst, water_inst%waterstatebulk_inst, &
                water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst,      &
-               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
+               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
+               soil_water_retention_curve, crop_inst, ch4_inst, &
                photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
                nutrient_competition_method, fireemis_inst, frictionvel_inst)
           call t_stopf('ecosysdyn')

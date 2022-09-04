@@ -12,7 +12,7 @@ module WaterStateBulkType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type
-  use clm_varpar     , only : nlevgrnd, nlevsno   
+  use clm_varpar     , only : nlevmaxurbgrnd, nlevsno
   use clm_varcon     , only : spval
   use clm_varctl     , only : use_fan
   use WaterStateType , only : waterstate_type
@@ -108,8 +108,6 @@ contains
     if (use_fan) then
        allocate(this%h2osoi_tend_tsl_col(begc:endc)); this%h2osoi_tend_tsl_col(:) = nan
     end if
-
-
 
   end subroutine InitBulkAllocate
 
@@ -224,7 +222,7 @@ contains
     logical  :: readvar
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevgrnd/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevmaxurbgrnd/)) , sourcefile, __LINE__)
 
     call this%restart (bounds, ncid, flag=flag, &
          watsat_col=watsat_col(bounds%begc:bounds%endc,:)) 

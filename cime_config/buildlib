@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-build clm library
+build ctsm library
 """
 import sys, os
 
@@ -21,6 +21,65 @@ from CIME.utils import run_cmd, expect
 logger = logging.getLogger(__name__)
 
 ###############################################################################
+def _write_ctsm_mk(gmake, gmake_opts, makefile, exeroot, libroot):
+    """Writes a ctsm.mk file in exeroot.
+
+    This file can be included by atmosphere model builds outside of cime.
+    """
+
+    cime_output_file = os.path.join(exeroot, 'cime_variables.mk')
+    # Set MODEL=driver because some link flags are set differently when MODEL=driver, and
+    # those are the ones we want here.
+    cmd = ("{gmake} write_include_and_link_flags OUTPUT_FILE={cime_output_file} "
+           "MODEL=driver {gmake_opts} -f {makefile} ").format(
+               gmake=gmake, cime_output_file=cime_output_file, gmake_opts=gmake_opts, makefile=makefile)
+    rc, out, err = run_cmd(cmd)
+    logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n"%(cmd,out,err))
+    expect(rc == 0, "Command %s failed with rc=%s" % (cmd, rc))
+
+    ctsm_mk_path = os.path.join(exeroot, 'ctsm.mk')
+    with open(ctsm_mk_path, 'w') as ctsm_mk:
+        ctsm_mk.write("""
+# ======================================================================
+# Include this file to get makefile variables needed to include / link
+# LILAC/CTSM in an atmosphere model's build
+#
+# Variables of interest are:
+# - CTSM_INCLUDES: add this to the compilation line
+# - CTSM_LIBS: add this to the link line
+# ======================================================================
+
+# ======================================================================
+# The following CIME variables are meant for internal use, and generally
+# should not be included directly in an atmosphere model's build.
+# ======================================================================
+
+""")
+        with open(cime_output_file) as infile:
+            ctsm_mk.write(infile.read())
+
+    ctsm_bld_dir = os.path.abspath(os.path.join(libroot, os.pardir))
+    with open(ctsm_mk_path, 'a') as ctsm_mk:
+        ctsm_mk.write("""
+# ======================================================================
+# The following settings are meant for internal use, and generally
+# should not be included directly in an atmosphere model's build.
+# NOTE: clm library name and subdirectory will eventually need to
+#       be updated to ctsm.
+# ======================================================================
+
+CTSM_BLD_DIR   = {ctsm_bld_dir}
+CTSM_INC       = $(CTSM_BLD_DIR)/clm/obj
+
+# ======================================================================
+# The following settings should be included in an atmosphere model's build.
+# ======================================================================
+
+CTSM_INCLUDES = $(CIME_ESMF_F90COMPILEPATHS) -I$(CIME_CSM_SHR_INCLUDE) -I$(CTSM_INC)
+CTSM_LIBS = -L$(CTSM_BLD_DIR)/lib -lclm $(CIME_ULIBS) $(CIME_SLIBS) $(CIME_MLIBS) $(CIME_F90_LDFLAGS)
+""".format(ctsm_bld_dir=ctsm_bld_dir))
+
+###############################################################################
 def _main_func():
 ###############################################################################
 
@@ -29,24 +88,35 @@ def _main_func():
     with Case(caseroot) as case:
 
         casetools = case.get_value("CASETOOLS")
+        makefile = os.path.join(casetools, "Makefile")
         lnd_root = case.get_value("COMP_ROOT_DIR_LND")
         gmake_j = case.get_value("GMAKE_J")
         gmake = case.get_value("GMAKE")
+        gmake_opts = get_standard_makefile_args(case)
         driver = case.get_value("COMP_INTERFACE").lower()
+        lilac_mode = case.get_value("LILAC_MODE")
+
+        if lilac_mode == 'on':
+            driver = "lilac"
 
         #-------------------------------------------------------
         # create Filepath file
         #-------------------------------------------------------
+        compname = case.get_value("COMP_LND")
         filepath_file = os.path.join(bldroot,"Filepath")
         if not os.path.isfile(filepath_file):
             caseroot = case.get_value("CASEROOT")
-            paths = [os.path.join(caseroot,"SourceMods","src.clm"),
+            expect( ((compname == "clm") or (compname == "ctsm")), "Unexpected COMP_LND name: %s" % (compname))
+
+            paths = [os.path.join(caseroot,"SourceMods","src."+compname),
+                     os.path.join(lnd_root,"src","cpl",driver),
                      os.path.join(lnd_root,"src","main"),
                      os.path.join(lnd_root,"src","biogeophys"),
                      os.path.join(lnd_root,"src","biogeochem"),
                      os.path.join(lnd_root,"src","soilbiogeochem"),
                      os.path.join(lnd_root,"src","dyn_subgrid"),
                      os.path.join(lnd_root,"src","init_interp"),
+                     os.path.join(lnd_root,"src","self_tests"),
                      os.path.join(lnd_root,"src","fates"),
                      os.path.join(lnd_root,"src","fates","main"),
                      os.path.join(lnd_root,"src","fates","biogeophys"),
@@ -55,7 +125,14 @@ def _main_func():
                      os.path.join(lnd_root,"src","fates","parteh"),
                      os.path.join(lnd_root,"src","utils"),
                      os.path.join(lnd_root,"src","cpl"),
-                     os.path.join(lnd_root,"src","cpl",driver)]
+                     os.path.join(lnd_root,"src","cpl","utils")]
+
+            if lilac_mode == 'on':
+                paths.append(os.path.join(lnd_root,"lilac","src"))
+                # If we want to build with a real river model (e.g., MOSART), we'll need
+                # to use its directories in place of stub_rof
+                paths.append(os.path.join(lnd_root,"lilac","stub_rof"))
+
             with open(filepath_file, "w") as filepath:
                 filepath.write("\n".join(paths))
                 filepath.write("\n")
@@ -64,15 +141,25 @@ def _main_func():
         # create the library in libroot
         #-------------------------------------------------------
 
-        complib = os.path.join(libroot,"libclm.a")
-        makefile = os.path.join(casetools, "Makefile")
+        complib = os.path.join(libroot,"lib%s.a"%(compname))
 
-        cmd = "{} complib -j {} MODEL=clm COMPLIB={} -f {} {}" \
-              .format(gmake, gmake_j, complib, makefile, get_standard_makefile_args(case))
+        cmd = "{} complib -j {} MODEL={} COMPLIB={} -f {} {}" \
+              .format(gmake, gmake_j, compname, complib, makefile, gmake_opts)
 
         rc, out, err = run_cmd(cmd)
         logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n"%(cmd,out,err))
         expect(rc == 0, "Command %s failed with rc=%s" % (cmd, rc))
+
+        # ------------------------------------------------------------------------
+        # for lilac usage, we need a file containing some Makefile variables (for the atmosphere model's build)
+        # ------------------------------------------------------------------------
+
+        if lilac_mode == 'on':
+            _write_ctsm_mk(gmake=gmake,
+                           gmake_opts=gmake_opts,
+                           makefile=makefile,
+                           exeroot=case.get_value("EXEROOT"),
+                           libroot=libroot)
 
 ###############################################################################
 

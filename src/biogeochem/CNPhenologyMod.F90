@@ -776,7 +776,7 @@ contains
 
                ! if this is the end of the offset_period, reset phenology
                ! flags and indices
-               if (offset_counter(p) == 0.0_r8) then
+               if (offset_counter(p) < dt/2._r8) then
                   ! this code block was originally handled by call cn_offset_cleanup(p)
                   ! inlined during vectorization
 
@@ -801,7 +801,7 @@ contains
 
                ! if this is the end of the onset period, reset phenology
                ! flags and indices
-               if (onset_counter(p) == 0.0_r8) then
+               if (onset_counter(p) < dt/2._r8) then
                   ! this code block was originally handled by call cn_onset_cleanup(p)
                   ! inlined during vectorization
 
@@ -1096,7 +1096,7 @@ contains
 
                ! if this is the end of the offset_period, reset phenology
                ! flags and indices
-               if (offset_counter(p) == 0._r8) then
+               if (offset_counter(p) < dt/2._r8) then
                   ! this code block was originally handled by call cn_offset_cleanup(p)
                   ! inlined during vectorization
                   offset_flag(p) = 0._r8
@@ -1117,7 +1117,7 @@ contains
 
                ! if this is the end of the onset period, reset phenology
                ! flags and indices
-               if (onset_counter(p) == 0.0_r8) then
+               if (onset_counter(p) < dt/2._r8) then
                   ! this code block was originally handled by call cn_onset_cleanup(p)
                   ! inlined during vectorization
                   onset_flag(p) = 0._r8
@@ -2300,7 +2300,7 @@ contains
             ! The transfer rate is a linearly decreasing function of time,
             ! going to zero on the last timestep of the onset period
 
-            if (onset_counter(p) == dt) then
+            if (abs(onset_counter(p) - dt) <= dt/2._r8) then
                t1 = 1.0_r8 / dt
             else
                t1 = 2.0_r8 / (onset_counter(p))
@@ -2445,7 +2445,7 @@ contains
          ! only calculate fluxes during offset period
          if (offset_flag(p) == 1._r8) then
 
-            if (offset_counter(p) == dt) then
+            if (abs(offset_counter(p) - dt) <= dt/2._r8) then
                t1 = 1.0_r8 / dt
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
                
@@ -2769,11 +2769,12 @@ contains
             if (CNratio_floating .eqv. .true.) then    
                if (livestemc(p) == 0.0_r8) then    
                    ntovr = 0.0_r8    
+                   livestemn_to_deadstemn(p) = 0.0_r8 
                 else    
                    ntovr = ctovr * (livestemn(p) / livestemc(p))   
+                   livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p)) 
                 end if   
 
-                livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
             end if    
             
             livestemn_to_retransn(p)  = ntovr - livestemn_to_deadstemn(p)
@@ -2788,19 +2789,15 @@ contains
             if (CNratio_floating .eqv. .true.) then    
               if (livecrootc(p) == 0.0_r8) then    
                   ntovr = 0.0_r8    
+                  livecrootn_to_deadcrootn(p) = 0.0_r8 
                else    
                   ntovr = ctovr * (livecrootn(p) / livecrootc(p))   
+                   livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p)) 
                end if   
 
-               livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
             end if    
             
             livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
-            if(use_fun)then
-               !TURNED OFF FLUXES TO CORRECT N ACCUMULATION ISSUE. RF. Oct 2015. 
-               livecrootn_to_retransn(p) = 0.0_r8
-               livestemn_to_retransn(p)  = 0.0_r8
-            endif
 
          end if
 

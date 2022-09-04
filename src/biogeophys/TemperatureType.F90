@@ -7,8 +7,8 @@ module TemperatureType
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop
-  use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevlak, nlevurb
+  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_biomass_heat_storage
+  use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevurb, nlevmaxurbgrnd
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
   use LandunitType    , only : lun
@@ -22,6 +22,7 @@ module TemperatureType
   type, public :: temperature_type
 
      ! Temperatures
+     real(r8), pointer :: t_stem_patch             (:)   ! patch stem temperatu\re (Kelvin)
      real(r8), pointer :: t_veg_patch              (:)   ! patch vegetation temperature (Kelvin)
      real(r8), pointer :: t_skin_patch             (:)   ! patch skin temperature (Kelvin)
      real(r8), pointer :: t_veg_day_patch          (:)   ! patch daytime  accumulative vegetation temperature (Kelvinx*nsteps), LUNA specific, from midnight to current step
@@ -116,7 +117,7 @@ module TemperatureType
      real(r8), pointer    :: xmf_h2osfc_col        (:)   ! latent heat of phase change of surface water
      real(r8), pointer    :: fact_col              (:,:) ! used in computing tridiagonal matrix
      real(r8), pointer    :: c_h2osfc_col          (:)   ! heat capacity of surface water
-
+     
    contains
 
      procedure, public  :: Init
@@ -192,6 +193,7 @@ contains
     begg = bounds%begg; endg= bounds%endg
 
     ! Temperatures
+    allocate(this%t_stem_patch             (begp:endp))                      ; this%t_stem_patch             (:)   = nan
     allocate(this%t_veg_patch              (begp:endp))                      ; this%t_veg_patch              (:)   = nan
     allocate(this%t_skin_patch             (begp:endp))                      ; this%t_skin_patch             (:)   = nan
     if(use_luna) then
@@ -204,8 +206,8 @@ contains
     endif
     allocate(this%t_h2osfc_col             (begc:endc))                      ; this%t_h2osfc_col             (:)   = nan
     allocate(this%t_h2osfc_bef_col         (begc:endc))                      ; this%t_h2osfc_bef_col         (:)   = nan
-    allocate(this%t_ssbef_col              (begc:endc,-nlevsno+1:nlevgrnd))  ; this%t_ssbef_col              (:,:) = nan
-    allocate(this%t_soisno_col             (begc:endc,-nlevsno+1:nlevgrnd))  ; this%t_soisno_col             (:,:) = nan
+    allocate(this%t_ssbef_col              (begc:endc,-nlevsno+1:nlevmaxurbgrnd))  ; this%t_ssbef_col              (:,:) = nan
+    allocate(this%t_soisno_col             (begc:endc,-nlevsno+1:nlevmaxurbgrnd))  ; this%t_soisno_col             (:,:) = nan
     allocate(this%t_lake_col               (begc:endc,1:nlevlak))            ; this%t_lake_col               (:,:) = nan
     allocate(this%t_grnd_col               (begc:endc))                      ; this%t_grnd_col               (:)   = nan
     allocate(this%t_grnd_r_col             (begc:endc))                      ; this%t_grnd_r_col             (:)   = nan
@@ -268,7 +270,7 @@ contains
     allocate(this%liquid_water_temp2_grc   (begg:endg))                      ; this%liquid_water_temp2_grc   (:)   = nan
 
     ! flags
-    allocate(this%imelt_col                (begc:endc,-nlevsno+1:nlevgrnd))  ; this%imelt_col                (:,:) = huge(1)
+    allocate(this%imelt_col                (begc:endc,-nlevsno+1:nlevmaxurbgrnd))  ; this%imelt_col                (:,:) = huge(1)
 
     ! emissivities
     allocate(this%emv_patch                (begp:endp))                      ; this%emv_patch                (:)   = nan
@@ -276,7 +278,7 @@ contains
 
     allocate(this%xmf_col                  (begc:endc))                      ; this%xmf_col                  (:)   = nan
     allocate(this%xmf_h2osfc_col           (begc:endc))                      ; this%xmf_h2osfc_col           (:)   = nan
-    allocate(this%fact_col                 (begc:endc, -nlevsno+1:nlevgrnd)) ; this%fact_col                 (:,:) = nan
+    allocate(this%fact_col                 (begc:endc, -nlevsno+1:nlevmaxurbgrnd)) ; this%fact_col                 (:,:) = nan
     allocate(this%c_h2osfc_col             (begc:endc))                      ; this%c_h2osfc_col             (:)   = nan
 
   end subroutine InitAllocate
@@ -387,6 +389,13 @@ contains
     call hist_addfld1d (fname='TREFMXAV_U', units='K',  &
          avgflag='A', long_name='Urban daily maximum of average 2-m temperature', &
          ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval, default='inactive')
+
+    if (use_biomass_heat_storage) then 
+       this%t_stem_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TSTEM', units='K',  &
+            avgflag='A', long_name='stem temperature', &
+            ptr_patch=this%t_stem_patch, default='active')
+    endif
 
     this%t_veg_patch(begp:endp) = spval
     call hist_addfld1d (fname='TV', units='K',  &
@@ -620,7 +629,6 @@ contains
             ptr_patch=this%t_veg10_night_patch, default='inactive')
     endif
 
-
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -672,7 +680,7 @@ contains
       do c = bounds%begc,bounds%endc
          l = col%landunit(c)
 
-         this%t_soisno_col(c,-nlevsno+1:nlevgrnd) = spval
+         this%t_soisno_col(c,-nlevsno+1:nlevmaxurbgrnd) = spval
 
          ! Snow level temperatures - all land points
          if (snl(c) < 0) then
@@ -791,6 +799,8 @@ contains
             this%t_veg_patch(p)   = 283._r8
          end if
 
+         this%t_stem_patch(p)   = this%t_veg_patch(p)
+
          if (use_vancouver) then
             this%t_ref2m_patch(p) = 297.56
          else if (use_mexicocity) then
@@ -889,6 +899,11 @@ contains
          dim1name='pft', &
          long_name='vegetation temperature', units='K', &
          interpinic_flag='interp', readvar=readvar, data=this%t_veg_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='T_STEM', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='stem temperature', units='K', &
+         interpinic_flag='interp', readvar=readvar, data=this%t_stem_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='TH2OSFC', xtype=ncd_double,  &
          dim1name='column', &

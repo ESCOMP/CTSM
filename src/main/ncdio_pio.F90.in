@@ -33,7 +33,8 @@ module ncdio_pio
   use pio            , only : pio_put_att, pio_put_var, pio_read_darray, pio_real, pio_seterrorhandling
   use pio            , only : pio_setframe, pio_unlimited, pio_write, pio_write_darray, var_desc_t
   use pio            , only : pio_iotask_rank, PIO_REARR_SUBSET, PIO_REARR_BOX
-  use pio            , only : pio_inq_vartype
+  use pio            , only : pio_inq_vartype, pio_real
+  use array_utils    , only : convert_to_logical
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -43,8 +44,10 @@ module ncdio_pio
   ! !PUBLIC MEMBER FUNCTIONS:
   !
   public :: check_var          ! determine if variable is on netcdf file
+  public :: check_dim          ! determine if dimension is on netcdf file
+  public :: check_var_or_dim   ! determine if variable or dimension is on netcdf file
   public :: check_att          ! check if attribute is on file
-  public :: check_dim          ! validity check on dimension
+  public :: check_dim_size     ! validity check on dimension
   public :: ncd_pio_openfile   ! open a file
   public :: ncd_pio_createfile ! create a new file
   public :: ncd_pio_closefile  ! close a file
@@ -63,6 +66,7 @@ module ncdio_pio
   public :: ncd_defvar         ! define variables
   public :: ncd_inqvid         ! inquire variable id
   public :: ncd_inqvname       ! inquire variable name
+  public :: ncd_inqvtype       ! inquire variable type
   public :: ncd_inqvdims       ! inquire variable ndims
   public :: ncd_inqvdids       ! inquire variable dimids
   public :: ncd_inqvdlen       ! inquire variable dimension size
@@ -137,6 +141,12 @@ module ncdio_pio
      module procedure ncd_inqvdname_byDesc
      module procedure ncd_inqvdname_byName
   end interface
+
+  interface read_darray_dispatcher
+     !TYPE int,double,logical
+     !DIMS 1,2,3
+     module procedure read_darray_{TYPE}_dispatcher_{DIMS}
+  end interface read_darray_dispatcher
 
   private :: ncd_getiodesc      ! obtain iodesc
   private :: scam_field_offsets ! get offset to proper lat/lon gridcell for SCAM
@@ -224,7 +234,7 @@ contains
   end subroutine ncd_pio_closefile
 
   !-----------------------------------------------------------------------
-  subroutine ncd_pio_createfile(file, fname, avoid_pnetcdf)
+  subroutine ncd_pio_createfile(file, fname)
     !
     ! !DESCRIPTION:
     ! Create a new NetCDF file with PIO
@@ -236,34 +246,12 @@ contains
     class(file_desc_t), intent(inout) :: file    ! PIO file descriptor
     character(len=*) ,  intent(in)    :: fname   ! File name to create
 
-    ! BUG(wjs, 2014-10-20, bugz 1730) Workaround for
-    ! http://bugs.cgd.ucar.edu/show_bug.cgi?id=1730
-    logical, intent(in), optional     :: avoid_pnetcdf
     !
     ! !LOCAL VARIABLES:
-    logical :: l_avoid_pnetcdf  ! local version of avoid_pnetcdf
-    integer :: my_io_type
     integer :: ierr
     !-----------------------------------------------------------------------
 
-    l_avoid_pnetcdf = .false.
-    if (present(avoid_pnetcdf)) then
-       l_avoid_pnetcdf = avoid_pnetcdf
-    end if
-
-    my_io_type = io_type
-    if (l_avoid_pnetcdf) then
-       if (my_io_type == pio_iotype_pnetcdf) then
-          my_io_type = pio_iotype_netcdf
-          if(pio_iotask_rank(pio_subsystem)==0 .and. masterproc) then
-             write(iulog,*) 'Workaround for bugz 1730: creating'
-             write(iulog,*) trim(fname)
-             write(iulog,*) 'with type netcdf instead of pnetcdf'
-          end if
-       end if
-    end if
-
-    ierr = pio_createfile(pio_subsystem, file, my_io_type, fname, ior(PIO_CLOBBER,io_netcdf_format))
+    ierr = pio_createfile(pio_subsystem, file, io_type, fname, ior(PIO_CLOBBER,io_netcdf_format))
 
     if(ierr/= PIO_NOERR) then
        call shr_sys_abort( ' ncd_pio_createfile ERROR: Failed to open file to write: '//trim(fname))
@@ -274,21 +262,22 @@ contains
   end subroutine ncd_pio_createfile
 
   !-----------------------------------------------------------------------
-  subroutine check_var(ncid, varname, vardesc, readvar, print_err )
+  subroutine check_var(ncid, varname, readvar, vardesc, print_err )
     !
     ! !DESCRIPTION:
     ! Check if variable is on netcdf file
     !
     ! !ARGUMENTS:
-    class(file_desc_t) , intent(inout)  :: ncid      ! PIO file descriptor
-    character(len=*)   , intent(in)     :: varname   ! Varible name to check
-    type(Var_desc_t)   , intent(out)    :: vardesc   ! Output variable descriptor
-    logical            , intent(out)    :: readvar   ! If variable exists or not
-    logical, optional  , intent(in)     :: print_err ! If should print about error
+    class(file_desc_t) , intent(inout)          :: ncid    ! PIO file descriptor
+    character(len=*)   , intent(in)             :: varname ! Varible name to check
+    logical            , intent(out)            :: readvar ! If variable exists or not
+    type(Var_desc_t)   , optional, intent(out)  :: vardesc ! Output variable descriptor (if desired)
+    logical            , optional, intent(in)   :: print_err ! If should print about error
     !
     ! !LOCAL VARIABLES:
     integer :: ret     ! return value
     logical :: log_err ! if should log error
+    type(Var_desc_t) :: vardesc_local
     character(len=*),parameter :: subname='check_var' ! subroutine name
     !-----------------------------------------------------------------------
 
@@ -300,7 +289,10 @@ contains
     end if
     readvar = .true.
     call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
-    ret = PIO_inq_varid (ncid, varname, vardesc)
+    ret = PIO_inq_varid (ncid, varname, vardesc_local)
+    if (present(vardesc)) then
+       vardesc = vardesc_local
+    end if
     if (ret /= PIO_noerr) then
        readvar = .false.
        if (masterproc .and. log_err) &
@@ -309,6 +301,52 @@ contains
     call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
 
   end subroutine check_var
+
+  !-----------------------------------------------------------------------
+  subroutine check_dim(ncid, dimname, dimexist)
+    !
+    ! !DESCRIPTION:
+    ! Check if dimension is on netcdf file
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(inout) :: ncid     ! PIO file descriptor
+    character(len=*)   , intent(in)    :: dimname  ! dimension name
+    logical            , intent(out)   :: dimexist ! if this dimension exists or not
+    !
+    ! !LOCAL VARIABLES:
+    integer :: dimid
+
+    character(len=*), parameter :: subname = 'check_dim'
+    !-----------------------------------------------------------------------
+
+    call ncd_inqdid(ncid, dimname, dimid, dimexist)
+
+  end subroutine check_dim
+
+  !-----------------------------------------------------------------------
+  subroutine check_var_or_dim(ncid, name, is_dim, exists)
+    !
+    ! !DESCRIPTION:
+    ! Check if variable or dimension is on netcdf file
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(inout) :: ncid   ! PIO file descriptor
+    character(len=*)   , intent(in)    :: name   ! variable or dimension name to check
+    logical            , intent(in)    :: is_dim ! if true, check for dimension; if false, check for variable
+    logical            , intent(out)   :: exists ! whether the given variable or dimension exists on file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'check_var_or_dim'
+    !-----------------------------------------------------------------------
+
+    if (is_dim) then
+       call check_dim(ncid, name, exists)
+    else
+       call check_var(ncid, name, exists, print_err=.false.)
+    end if
+
+  end subroutine check_var_or_dim
 
   !-----------------------------------------------------------------------
   subroutine check_att(ncid, varid, attrib, att_found)
@@ -343,7 +381,7 @@ contains
   end subroutine check_att
 
   !-----------------------------------------------------------------------
-  subroutine check_dim(ncid, dimname, value, msg)
+  subroutine check_dim_size(ncid, dimname, value, msg)
     !
     ! !DESCRIPTION:
     ! Validity check on dimension
@@ -358,7 +396,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: dimid, dimlen    ! temporaries
     integer :: status           ! error code
-    character(len=*),parameter :: subname='check_dim' ! subroutine name
+    character(len=*),parameter :: subname='check_dim_size' ! subroutine name
     !-----------------------------------------------------------------------
 
     status = pio_inq_dimid (ncid, trim(dimname), dimid)
@@ -372,7 +410,7 @@ contains
        call shr_sys_abort(errMsg(sourcefile, __LINE__))
     end if
 
-  end subroutine check_dim
+  end subroutine check_dim_size
 
   !-----------------------------------------------------------------------
   subroutine ncd_redef(ncid)
@@ -591,6 +629,28 @@ contains
   end subroutine ncd_inqvid
 
   !-----------------------------------------------------------------------
+  subroutine ncd_inqvtype(ncid, vardesc, vartype)
+    !
+    ! !DESCRIPTION:
+    ! Inquire variable type
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(in)  :: ncid      ! netcdf file id
+    type(var_desc_t)   , intent(in)  :: vardesc   ! variable descriptor
+    integer            , intent(out) :: vartype   ! type of var in file (ncd_int, ncd_float, ncd_double, etc.)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: status
+
+    character(len=*), parameter :: subname = 'ncd_inqvtype'
+    !-----------------------------------------------------------------------
+
+    vartype = -9999
+    status = pio_inq_vartype(ncid, vardesc, vartype)
+
+  end subroutine ncd_inqvtype
+
+  !-----------------------------------------------------------------------
   subroutine ncd_inqvdims(ncid,ndims,vardesc)
     !
     ! !DESCRIPTION:
@@ -727,7 +787,7 @@ contains
     integer, parameter :: error_variable_not_found = 11
     !-----------------------------------------------------------------------
 
-    call check_var(ncid, varname, vardesc, readvar)
+    call check_var(ncid, varname, readvar, vardesc=vardesc)
     if (readvar) then
        call ncd_inqvdlen_byDesc(ncid, vardesc, dimnum, dlen, err_code)
     else
@@ -816,7 +876,7 @@ contains
     character(len=*), parameter :: subname = 'ncd_inqvdname_byName'
     !-----------------------------------------------------------------------
 
-    call check_var(ncid, varname, vardesc, readvar)
+    call check_var(ncid, varname, readvar, vardesc=vardesc)
     if (readvar) then
        call ncd_inqvdname_byDesc(ncid, vardesc, dimnum, dname, err_code)
     else
@@ -1321,7 +1381,8 @@ contains
              call scam_field_offsets(ncid,'undefined', vardesc,&
                   start, count, found=found, posNOTonfile=posNOTonfile)
              if ( found )then
-                status = pio_get_var(ncid, varid, start, count, idata1d)
+                status = pio_inq_varndims(ncid, vardesc, ndims)
+                status = pio_get_var(ncid, varid, start(1:ndims), count(1:ndims), idata1d)
              else
                 status = pio_get_var(ncid, varid, idata1d)
              end if
@@ -1437,7 +1498,8 @@ contains
              call scam_field_offsets(ncid,'undefined', vardesc,&
                   start, count, found=found, posNOTonfile=posNOTonfile)
              if ( found )then
-                status = pio_get_var(ncid, varid, start, count, data)
+                status = pio_inq_varndims(ncid, vardesc, ndims)
+                status = pio_get_var(ncid, varid, start(1:ndims), count(1:ndims), data)
              else
                 status = pio_get_var(ncid, varid, data)
              end if
@@ -1541,38 +1603,36 @@ contains
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 
 #if ({DIMS}==0)
+       start(1) = 1 ; count(1) = len(data)
+       do m = 1,len(data)
+          tmpString(m:m) = data(m:m)
+       end do
        if (present(nt)) then
-          do m = 1,len(data)
-             tmpString(m:m) = data(m:m)
-          end do
-          start(1) = 1 ; count(1) = len(data)
           start(2) = nt; count(2) = 1
           if ( count(1) > size(tmpString) )then
              call shr_sys_abort( subname//' ERROR: input string size is too large:'//&
                      errMsg(sourcefile, __LINE__))
           end if
-          status = pio_put_var(ncid, varid, start, count, ival=tmpString(1:count(1)))
-       else
-          status = pio_put_var(ncid, varid, data )
        end if
+       status = pio_put_var(ncid, varid, start, count, ival=tmpString(1:count(1)))
 #elif ({DIMS}==1)
+       start(1) = 1 ; count(1) = len(data)
+       start(2) = 1 ; count(2) = size(data)
        if (present(nt)) then
-          start(1) = 1 ; count(1) = len(data)
-          start(2) = 1 ; count(2) = size(data)
           start(3) = nt; count(3) = 1
           status = pio_put_var(ncid, varid, start, count, data)
        else
-          status = pio_put_var(ncid, varid, data)
+          status = pio_put_var(ncid, varid, start, count, data)
        end if
 #elif ({DIMS}==2)
+       start(1) = 1  ; count(1) = len(data)
+       start(2) = 1  ; count(2) = size(data,dim=1)
+       start(3) = 1  ; count(3) = size(data,dim=2)
        if (present(nt)) then
-          start(1) = 1  ; count(1) = len(data)
-          start(2) = 1  ; count(2) = size(data,dim=1)
-          start(3) = 1  ; count(3) = size(data,dim=2)
           start(4) = nt ; count(4) = 1
           status = pio_put_var(ncid, varid, start, count, data)
        else
-          status = pio_put_var(ncid, varid, data)
+          status = pio_put_var(ncid, varid, start, count, data)
        end if
 #endif
 
@@ -1616,6 +1676,7 @@ contains
     integer                , pointer :: idata(:)   ! Temporary integer data to send to file
     type(iodesc_plus_type) , pointer :: iodesc_plus
     type(var_desc_t)                 :: vardesc
+    integer                          :: oldhandle  ! previous value of pio_error_handle
     character(len=*),parameter       :: subname='ncd_io_1d_{TYPE}' ! subroutine name
     !-----------------------------------------------------------------------
 
@@ -1641,7 +1702,6 @@ contains
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
-          call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
           if (single_column) then
              start(:) = 1 ; count(:) = 1
              call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
@@ -1658,6 +1718,7 @@ contains
                    start(2) = nt ; count(2) = 1
                 end if
              end if
+             call pio_seterrorhandling(ncid, PIO_BCAST_ERROR, oldhandle)
 #if ({ITYPE}==TYPELOGICAL)
              allocate(idata(size(data)))
              status = pio_get_var(ncid, varid, start(1:n), count(1:n), idata)
@@ -1673,6 +1734,8 @@ contains
                 call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
                 // errMsg(sourcefile, __LINE__))
              end if
+             call pio_seterrorhandling(ncid, oldhandle)
+
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
              status = pio_inq_vardimid(ncid, vardesc, dids(1:ndims))
@@ -1694,25 +1757,11 @@ contains
              if (present(nt)) then
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
-#if ({ITYPE}==TYPELOGICAL)
-             allocate(idata(size(data)))
-             call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
-             data = (idata == 1)
-             if ( any(idata /= 0 .and. idata /= 1) )then
-                call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(sourcefile, __LINE__))
-             end if
-             deallocate( idata )
-#else
-             call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
-             call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
-#endif
-             if ( status /= PIO_NOERR ) then
-                call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
-                // errMsg(sourcefile, __LINE__))
-             end if
+             call read_darray_dispatcher(ncid, vardesc, iodesc_plus%iodesc, varname, xtype, data)
+
           end if
        end if
-       call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
+
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
@@ -1893,29 +1942,28 @@ contains
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
              status = pio_inq_vartype(ncid, vardesc, xtype)
-             if (present(switchdim)) then
-                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                     xtype, iodnum, switchdim=.true.)
-             else
-                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                     xtype, iodnum)
-             end if
-             iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
              if (present(switchdim)) then
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status)
+                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                     xtype, iodnum, switchdim=.true.)
+                iodesc_plus => iodesc_list(iodnum)
+                call read_darray_dispatcher(ncid, vardesc, iodesc_plus%iodesc, varname, xtype, temp)
                 do j = lb2,ub2
-                do i = lb1,ub1
-                   data(i,j) = temp(j,i)
-                end do
+                   do i = lb1,ub1
+                      data(i,j) = temp(j,i)
+                   end do
                 end do
              else
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
+                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                     xtype, iodnum)
+                iodesc_plus => iodesc_list(iodnum)
+                call read_darray_dispatcher(ncid, vardesc, iodesc_plus%iodesc, varname, xtype, data)
+
              end if
           end if
-#if ({ITYPE}!=TYPEINT)
+#if ({ITYPE}==TYPEDOUBLE)
           if ( present(cnvrtnan2fill) )then
              do j = lb2,ub2
              do i = lb1,ub1
@@ -2011,7 +2059,6 @@ contains
     end if
 
   end subroutine ncd_io_2d_{TYPE}
-
   !-----------------------------------------------------------------------
 
   !TYPE int,double
@@ -2107,7 +2154,8 @@ contains
              if (present(nt)) then
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
-             call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
+             call read_darray_dispatcher(ncid, vardesc, iodesc_plus%iodesc, varname, xtype, data)
+
           end if
        end if
        if (present(readvar)) readvar = varpresent
@@ -2149,6 +2197,158 @@ contains
     endif
 
   end subroutine ncd_io_3d_{TYPE}
+
+  !-----------------------------------------------------------------------
+  !TYPE int,double,logical
+  !DIMS 1,2,3
+  subroutine read_darray_{TYPE}_dispatcher_{DIMS}(ncid, vardesc, iodesc, varname, xtype, data)
+    !
+    ! !DESCRIPTION:
+    ! Dispatch to the appropriate read_darray routine based on xtype (the type of var in file)
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t), intent(inout) :: ncid
+    type(var_desc_t), intent(inout) :: vardesc
+    type(io_desc_t), intent(inout) :: iodesc
+    character(len=*), intent(in) :: varname
+    integer, intent(in) :: xtype
+    {VTYPE}, pointer :: data{DIMSTR}
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'read_darray_{TYPE}_dispatcher_{DIMS}'
+    !-----------------------------------------------------------------------
+
+    select case (xtype)
+    case (PIO_INT)
+       call read_darray_{TYPE}_from_int_{DIMS}(ncid, vardesc, iodesc, varname, data)
+    case (PIO_REAL)
+       call read_darray_{TYPE}_from_real_{DIMS}(ncid, vardesc, iodesc, varname, data)
+    case (PIO_DOUBLE)
+       call read_darray_{TYPE}_from_double_{DIMS}(ncid, vardesc, iodesc, varname, data)
+    case default
+       write(iulog,*) subname//' ERROR: unrecognized type in read: ', xtype
+       call shr_sys_abort(' ERROR: unrecognized type in read '//errMsg(sourcefile, __LINE__))
+    end select
+
+  end subroutine read_darray_{TYPE}_dispatcher_{DIMS}
+
+
+  !------------------------------------------------------------------------
+  !TYPE int,double,logical
+  !DIMS 1,2,3
+  subroutine read_darray_{TYPE}_from_double_{DIMS}(ncid, vardesc, iodesc, varname, data)
+    class(file_desc_t), intent(inout) :: ncid
+    type(var_desc_t), intent(inout) :: vardesc
+    type(io_desc_t), intent(inout) :: iodesc
+    {VTYPE}, pointer :: data{DIMSTR}
+    character(len=*), intent(in) :: varname
+    integer :: status
+
+    real(R8), allocatable :: ddata{DIMSTR}
+    integer :: oldhandle
+
+    call pio_seterrorhandling(ncid, PIO_BCAST_ERROR, oldhandle)
+#if({ITYPE}==TYPEDOUBLE)
+    call pio_read_darray(ncid, vardesc, iodesc, data, status)
+    if ( status /= PIO_NOERR ) then
+       call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
+            // errMsg(sourcefile, __LINE__))
+    end if
+#else
+    allocate(ddata({REPEAT: size(data,#)}))
+    call pio_read_darray(ncid, vardesc, iodesc, ddata, status)
+    if ( status /= PIO_NOERR ) then
+       call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
+            // errMsg(sourcefile, __LINE__))
+    end if
+#if({ITYPE}==TYPEINT)
+    data = int(ddata)
+#elif({ITYPE}==TYPELOGICAL)
+    call convert_to_logical(ddata, data)
+#else
+    call shr_sys_abort(' ERROR: unhandled type'//errMsg(sourcefile, __LINE__))
+#endif
+    deallocate(ddata)
+#endif
+    call pio_seterrorhandling(ncid, oldhandle)
+  end subroutine read_darray_{TYPE}_from_double_{DIMS}
+
+  !------------------------------------------------------------------------
+  !TYPE int,double,logical
+  !DIMS 1,2,3
+  subroutine read_darray_{TYPE}_from_int_{DIMS}(ncid, vardesc, iodesc, varname, data)
+    class(file_desc_t), intent(inout) :: ncid
+    type(var_desc_t), intent(inout) :: vardesc
+    type(io_desc_t), intent(inout) :: iodesc
+    character(len=*), intent(in) :: varname
+    {VTYPE}, pointer :: data{DIMSTR}
+    integer :: status
+
+    integer, allocatable :: idata{DIMSTR}
+    integer :: oldhandle
+
+    call pio_seterrorhandling(ncid, PIO_BCAST_ERROR, oldhandle)
+#if({ITYPE}==TYPEINT)
+    call pio_read_darray(ncid, vardesc, iodesc, data, status)
+    if ( status /= PIO_NOERR ) then
+       call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
+            // errMsg(sourcefile, __LINE__))
+    end if
+#else
+    allocate(idata({REPEAT: size(data,#)}))
+    call pio_read_darray(ncid, vardesc, iodesc, idata, status)
+    if ( status /= PIO_NOERR ) then
+       call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
+            // errMsg(sourcefile, __LINE__))
+    end if
+#if({ITYPE}==TYPEDOUBLE)
+    data = real(idata, kind=R8)
+#elif({ITYPE}==TYPELOGICAL)
+    call convert_to_logical(idata, data)
+#else
+    call shr_sys_abort(' ERROR: unhandled type'//errMsg(sourcefile, __LINE__))
+#endif
+    deallocate(idata)
+#endif
+    call pio_seterrorhandling(ncid, oldhandle)
+  end subroutine read_darray_{TYPE}_from_int_{DIMS}
+
+  !------------------------------------------------------------------------
+  !TYPE int,double,logical
+  !DIMS 1,2,3
+  subroutine read_darray_{TYPE}_from_real_{DIMS}(ncid, vardesc, iodesc, varname, data)
+    class(file_desc_t), intent(inout) :: ncid
+    type(var_desc_t), intent(inout) :: vardesc
+    type(io_desc_t), intent(inout) :: iodesc
+    character(len=*), intent(in) :: varname
+    {VTYPE}, pointer :: data{DIMSTR}
+
+    integer :: status
+    real(r4), allocatable :: rdata{DIMSTR}
+    integer :: oldhandle
+
+    call pio_seterrorhandling(ncid, PIO_BCAST_ERROR, oldhandle)
+
+    allocate(rdata({REPEAT: size(data,#)}))
+    call pio_read_darray(ncid, vardesc, iodesc, rdata, status)
+    if ( status /= PIO_NOERR ) then
+       call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
+            // errMsg(sourcefile, __LINE__))
+    end if
+#if({ITYPE}==TYPEDOUBLE)
+    data = real(rdata, kind=R8)
+#elif({ITYPE}==TYPEINT)
+    data = int(rdata)
+#elif({ITYPE}==TYPELOGICAL)
+    call convert_to_logical(rdata, data)
+#else
+    call shr_sys_abort(' ERROR: unhandled type'//errMsg(sourcefile, __LINE__))
+#endif
+    deallocate(rdata)
+    call pio_seterrorhandling(ncid, oldhandle)
+
+  end subroutine read_darray_{TYPE}_from_real_{DIMS}
 
   !------------------------------------------------------------------------
 
