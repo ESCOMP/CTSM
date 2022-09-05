@@ -513,15 +513,16 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_P1440x2_D_Ld3" grid="f19_f19_mg16" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009Start">
+  <test name="SMS_Vmct_P1440x2_D_Ld3" grid="f19_f19_mg16" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Threaded test with DEBUG and FAN on, we expect this to fail</option>
     </options>
   </test>
-  <test name="ERP_D" grid="f19_f19_mg16" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009Start">
+  <test name="ERP_D_Vmct" grid="f19_f19_mg16" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu"   category="aux_clm"/>
@@ -532,7 +533,7 @@
       <option name="comment"  >Restart test with processor count change with FAN on and DEBUG</option>
     </options>
   </test>
-  <test name="SMS_Lm9" grid="f19_f19_mg16" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009StartMonthly">
+  <test name="SMS_Lm9_Vmct" grid="f19_f19_mg16" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009StartMonthly">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu"   category="aux_clm"/>
@@ -543,7 +544,7 @@
       <option name="comment"  >Longer production smoke test with FAN on</option>
     </options>
   </test>
-  <test name="SMS_Lm9" grid="1x1_smallvilleIA" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009StartMonthly">
+  <test name="SMS_Lm9_Vmct" grid="1x1_smallvilleIA" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009StartMonthly">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="intel" category="aux_clm"/>
@@ -553,7 +554,7 @@
       <option name="comment"  >Longer single point case with FAN on</option>
     </options>
   </test>
-  <test name="ERS_D" grid="1x1_smallvilleIA" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009Start">
+  <test name="ERS_D_Vmct" grid="1x1_smallvilleIA" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
