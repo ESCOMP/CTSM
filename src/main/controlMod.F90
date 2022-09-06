@@ -448,12 +448,6 @@ contains
                    errMsg(sourcefile, __LINE__))
           end if
 
-! Remove this check ??? the conditional will alway be false when n_drydep>0
-!          if ( n_drydep > 0 .and. drydep_method /= DD_XLND ) then
-!             call endrun(msg=' ERROR: dry deposition via ML Welsey is not compatible with FATES.'//&
-!                   errMsg(sourcefile, __LINE__))
-!          end if
-
           if( use_luna ) then
              call endrun(msg=' ERROR: luna is not compatible with FATES.'//&
                   errMsg(sourcefile, __LINE__))
