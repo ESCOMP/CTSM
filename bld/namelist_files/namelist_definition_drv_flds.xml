@@ -71,6 +71,15 @@
     List of species that undergo dry deposition.
   </entry>
 
+  <entry id="dep_data_file"
+         type="char*500"
+         input_pathname="abs"
+         category="dry_deposition"
+         group="drydep_inparm"
+         valid_values="" >
+    Full pathname of file containing gas phase deposition data including effective
+    Henry's law coefficients.
+  </entry>
 
   <!-- ========================================================================================  -->
   <!-- Fire emissions fluxes                                                                     -->
