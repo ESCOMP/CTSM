@@ -18,7 +18,7 @@ module lnd_import_export
   use glc2lndMod              , only : glc2lnd_type
   use domainMod               , only : ldomain
   use spmdMod                 , only : masterproc
-  use seq_drydep_mod          , only : seq_drydep_readnl, n_drydep
+  use shr_drydep_mod          , only : shr_drydep_readnl, n_drydep
   use shr_megan_mod           , only : shr_megan_readnl, shr_megan_mechcomps_n
   use nuopc_shr_methods       , only : chkerr
   use lnd_import_export_utils , only : check_for_errors, check_for_nans
@@ -235,7 +235,7 @@ contains
     ! The following namelist reads should always be called regardless of the send_to_atm value
 
     ! Dry Deposition velocities from land - ALSO initialize drydep here
-    call seq_drydep_readnl("drv_flds_in", drydep_nflds)
+    call shr_drydep_readnl("drv_flds_in", drydep_nflds)
 
     ! Fire emissions fluxes from land
     call shr_fire_emis_readnl('drv_flds_in', emis_nflds)
