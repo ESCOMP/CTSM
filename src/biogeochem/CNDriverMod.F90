@@ -109,7 +109,7 @@ contains
     ! stays synchronized with albedo calculations.
     !
     ! !USES:
-    use clm_varpar                        , only: nlevgrnd, nlevdecomp_full 
+    use clm_varpar                        , only: nlevdecomp_full
     use clm_varpar                        , only: nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
     use subgridAveMod                     , only: p2c
     use CropType                          , only: crop_type

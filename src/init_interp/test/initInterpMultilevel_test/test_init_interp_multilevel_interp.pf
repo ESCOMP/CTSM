@@ -39,29 +39,37 @@ contains
     class(TestInitInterpMultilevelInterp), intent(inout) :: this
   end subroutine tearDown
 
-  function create_interpolator_no_levclasses(coordinates_source, coordinates_dest) &
+  function create_interpolator_no_levclasses(coordinates_source, coordinates_dest, &
+       dzsoi_source, dzsoi_dest) &
        result(interpolator)
     ! Arguments:
     type(interp_multilevel_interp_type) :: interpolator  ! function result
     real(r8), intent(in) :: coordinates_source(:)  ! coordinates in source data for index_dest
     real(r8), intent(in) :: coordinates_dest(:)    ! coordinates in dest data for index_dest
+    real(r8), intent(in) :: dzsoi_source(:)         ! dzsoi in source data for index_dest
+    real(r8), intent(in) :: dzsoi_dest(:)           ! dzsoi in dest data for index_dest
     !-----------------------------------------------------------------------
 
     interpolator = create_multilevel_interp_no_levclasses( &
          coordinates_source = coordinates_source, &
          coordinates_dest = coordinates_dest, &
+         dzsoi_source = dzsoi_source, &
+         dzsoi_dest = dzsoi_dest, &
          index_dest = index_dest, &
          npts_dest = npts_dest)
 
   end function create_interpolator_no_levclasses
 
   function create_interpolator_with_levclasses(coordinates_source, coordinates_dest, &
+       dzsoi_source, dzsoi_dest, &
        level_classes_source, level_classes_dest) &
        result(interpolator)
     ! Arguments:
     type(interp_multilevel_interp_type) :: interpolator  ! function result
     real(r8), intent(in) :: coordinates_source(:)   ! coordinates in source data for index_dest
     real(r8), intent(in) :: coordinates_dest(:)     ! coordinates in dest data for index_dest
+    real(r8), intent(in) :: dzsoi_source(:)         ! dzsoi in source data for index_dest
+    real(r8), intent(in) :: dzsoi_dest(:)           ! dzsoi in dest data for index_dest
     integer , intent(in) :: level_classes_source(:) ! class indices in source data for index_dest
     integer , intent(in) :: level_classes_dest(:)   ! class indices in dest data for index_dest
     !-----------------------------------------------------------------------
@@ -69,6 +77,8 @@ contains
     interpolator = create_multilevel_interp_with_levclasses( &
          coordinates_source = coordinates_source, &
          coordinates_dest = coordinates_dest, &
+         dzsoi_source = dzsoi_source, &
+         dzsoi_dest = dzsoi_dest, &
          level_classes_source = level_classes_source, &
          level_classes_dest = level_classes_dest, &
          index_dest = index_dest, &
@@ -89,12 +99,16 @@ contains
     real(r8) :: data_dest(3) = 0._r8
     real(r8), parameter :: data_source(3) = [11._r8, 12._r8, 13._r8]
     real(r8), parameter :: coordinates(3) = [1._r8, 2._r8, 3._r8]
+    ! The dzsoi_* values have no effect when scale_by_thickness = .false.
+    real(r8), parameter :: dzsoi(3)       = [1._r8, 2._r8, 3._r8]
 
     interpolator = create_interpolator_no_levclasses( &
          coordinates_source = coordinates, &
-         coordinates_dest   = coordinates)
+         coordinates_dest   = coordinates, &
+         dzsoi_source       = dzsoi, &
+         dzsoi_dest         = dzsoi)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(data_source, data_dest)
 
@@ -114,18 +128,93 @@ contains
     real(r8), parameter :: data_source(5) = [11._r8, 12._r8, 13._r8, 14._r8, 15._r8]
     real(r8), parameter :: coordinates_source(5) = [21._r8, 22._r8, 23._r8, 24._r8, 25._r8]
     real(r8), parameter :: coordinates_dest(3) = [21.5_r8, 22.75_r8, 24.5_r8]
+    ! The dzsoi_* values have no effect when scale_by_thickness = .false.
+    real(r8), parameter :: dzsoi_source(5)     = [1._r8, 2._r8, 3._r8, 4._r8, 5._r8]
+    real(r8), parameter :: dzsoi_dest(3)       = [1._r8, 2._r8, 3._r8]
 
     interpolator = create_interpolator_no_levclasses( &
          coordinates_source = coordinates_source, &
-         coordinates_dest   = coordinates_dest)
+         coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     data_dest_expected = [11.5_r8, 12.75_r8, 14.5_r8]
 
     @assertEqual(data_dest_expected, data_dest, tolerance=tol)
 
   end subroutine allWithinBounds_interpolates
+
+  @Test
+  subroutine allWithinBounds_scaledInterp(this)
+    ! Similar to subroutine allWithinBounds_interpolates but with
+    ! scale_by_thickness=.true. to scale the interpolation according to
+    ! soil layer thickness, dzsoi.
+    !
+    ! In particular here we test:
+    ! 1st layer copying to 1st layer of same thickness dzsoi (no scaling)
+    ! 2nd layer copying to 2nd layer of half the thickness (scale * 0.5)
+    ! 2nd + 3rd layers interpolating to 3rd layer
+
+    class(TestInitInterpMultilevelInterp), intent(inout) :: this
+    type(interp_multilevel_interp_type) :: interpolator
+    real(r8) :: data_dest(3) = 0._r8
+    real(r8) :: data_dest_expected(3)
+    real(r8), parameter :: data_source(3)        = [1._r8, 1._r8, 1.5_r8]
+    real(r8), parameter :: coordinates_source(3) = [0.1_r8, 1.5_r8, 2.75_r8]
+    real(r8), parameter :: coordinates_dest(3)   = [0.5_r8, 1.25_r8, 2.5_r8]
+    real(r8), parameter :: dzsoi_source(3)       = [1._r8, 1._r8, 1.5_r8]
+    real(r8), parameter :: dzsoi_dest(3)         = [1._r8, 0.5_r8, 2._r8]
+
+    interpolator = create_interpolator_no_levclasses( &
+         coordinates_source = coordinates_source, &
+         coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest)
+
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.true.)
+
+    data_dest_expected = [1._r8, 0.5_r8, 2._r8]
+
+    @assertEqual(data_dest_expected, data_dest, tolerance=tol)
+
+  end subroutine allWithinBounds_scaledInterp
+
+  @Test
+  subroutine greaterThanLastLevel_scaledInterp(this)
+    ! Similar to subroutine allWithinBounds_scaledInterp but with
+    ! last level destination depth greater than last level source depth as in
+    ! subroutine greaterThanLastLevel_copiesLastLevel.
+    !
+    ! In particular here we test:
+    ! 1st layer copying to 1st layer of same thickness dzsoi (no scaling)
+    ! 2nd layer copying to 2nd layer of half the thickness (scale * 0.5)
+    ! 2nd layer copying to 3rd layer of double the thickness (scale * 2)
+
+    class(TestInitInterpMultilevelInterp), intent(inout) :: this
+    type(interp_multilevel_interp_type) :: interpolator
+    real(r8) :: data_dest(3) = 0._r8
+    real(r8) :: data_dest_expected(3)
+    real(r8), parameter :: data_source(2)        = [1._r8, 1._r8]
+    real(r8), parameter :: coordinates_source(2) = [0.8_r8, 1.5_r8]
+    real(r8), parameter :: coordinates_dest(3)   = [0.5_r8, 1.25_r8, 2.5_r8]
+    real(r8), parameter :: dzsoi_source(2)       = [1._r8, 1._r8]
+    real(r8), parameter :: dzsoi_dest(3)         = [1._r8, 0.5_r8, 2._r8]
+
+    interpolator = create_interpolator_no_levclasses( &
+         coordinates_source = coordinates_source, &
+         coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest)
+
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.true.)
+
+    data_dest_expected = [1._r8, 0.5_r8, 2._r8]
+
+    @assertEqual(data_dest_expected, data_dest, tolerance=tol)
+
+  end subroutine greaterThanLastLevel_scaledInterp
 
   @Test
   subroutine greaterThanLastLevel_copiesLastLevel(this)
@@ -137,12 +226,17 @@ contains
     real(r8), parameter :: data_source(3) = [11._r8, 12._r8, 13._r8]
     real(r8), parameter :: coordinates_source(3) = [21._r8, 22._r8, 23._r8]
     real(r8), parameter :: coordinates_dest(1) = [24._r8]
+    ! The dzsoi_* values have no effect when scale_by_thickness = .false.
+    real(r8), parameter :: dzsoi_source(3)     = [1._r8, 2._r8, 3._r8]
+    real(r8), parameter :: dzsoi_dest(1)       = [1._r8]
 
     interpolator = create_interpolator_no_levclasses( &
          coordinates_source = coordinates_source, &
-         coordinates_dest   = coordinates_dest)
+         coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(data_source(3), data_dest)
 
@@ -158,12 +252,17 @@ contains
     real(r8), parameter :: data_source(3) = [11._r8, 12._r8, 13._r8]
     real(r8), parameter :: coordinates_source(3) = [21._r8, 22._r8, 23._r8]
     real(r8), parameter :: coordinates_dest(1) = [20._r8]
+    ! The dzsoi_* values have no effect when scale_by_thickness = .false.
+    real(r8), parameter :: dzsoi_source(3)     = [1._r8, 2._r8, 3._r8]
+    real(r8), parameter :: dzsoi_dest(1)       = [1._r8]
 
     interpolator = create_interpolator_no_levclasses( &
          coordinates_source = coordinates_source, &
-         coordinates_dest   = coordinates_dest)
+         coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(data_source(1), data_dest)
 
@@ -180,13 +279,18 @@ contains
     real(r8) :: data_source(0)
     real(r8) :: coordinates_source(0)
     real(r8), parameter :: coordinates_dest(1) = [20._r8]
+    ! The dzsoi_* values have no effect when scale_by_thickness = .false.
+    real(r8) :: dzsoi_source(0)
+    real(r8), parameter :: dzsoi_dest(1) = [1._r8]
 
     interpolator = create_interpolator_no_levclasses( &
          coordinates_source = coordinates_source, &
-         coordinates_dest   = coordinates_dest)
+         coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest)
 
     data_dest(1) = data_orig
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(data_orig, data_dest)
   end subroutine noSourceLevels_leavesDestinationUnchanged
@@ -206,17 +310,22 @@ contains
     real(r8), parameter :: data_source(3) = [11._r8, 12._r8, 13._r8]
     real(r8), parameter :: coordinates_source(3) = [21._r8, 22._r8, 23._r8]
     real(r8), parameter :: coordinates_dest(1) = [22._r8]
+    ! The dzsoi_* values have no effect when scale_by_thickness = .false.
+    real(r8), parameter :: dzsoi_source(3)     = [1._r8, 2._r8, 3._r8]
+    real(r8), parameter :: dzsoi_dest(1)       = [1._r8]
     integer, parameter :: level_classes_source(3) = [2, 2, 2]
     integer, parameter :: level_classes_dest(1) = [1]
 
     interpolator = create_interpolator_with_levclasses( &
          coordinates_source = coordinates_source, &
          coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest, &
          level_classes_source = level_classes_source, &
          level_classes_dest   = level_classes_dest)
 
     data_dest(1) = data_orig
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(data_orig, data_dest)
 
@@ -233,6 +342,9 @@ contains
     real(r8), parameter :: data_source(3) = [11._r8, 12._r8, 13._r8]
     real(r8), parameter :: coordinates_source(3) = [21._r8, 22._r8, 23._r8]
     real(r8), parameter :: coordinates_dest(1) = [22._r8]
+    ! The dzsoi_* values have no effect when scale_by_thickness = .false.
+    real(r8), parameter :: dzsoi_source(3)     = [1._r8, 2._r8, 3._r8]
+    real(r8), parameter :: dzsoi_dest(1)       = [1._r8]
     ! Note that some source classes are 1, some are ispval (so that there is at least one
     ! level whose class is the same as the destination class: both are ispval)
     integer, parameter :: level_classes_source(3) = [1, ispval, 1]
@@ -241,11 +353,13 @@ contains
     interpolator = create_interpolator_with_levclasses( &
          coordinates_source = coordinates_source, &
          coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest, &
          level_classes_source = level_classes_source, &
          level_classes_dest   = level_classes_dest)
 
     data_dest(1) = data_orig
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(data_orig, data_dest)
   end subroutine destLevelIsSpval_leavesDestinationUnchanged
@@ -260,6 +374,8 @@ contains
     real(r8) :: data_dest_expected(2)
     real(r8), parameter :: data_source(4) =          [11._r8, 62._r8, 13._r8, 64._r8]
     real(r8), parameter :: coordinates_source(4) =   [21._r8, 22._r8, 23._r8, 24._r8]
+    ! The dzsoi_* values have no effect when scale_by_thickness = .false.
+    real(r8), parameter :: dzsoi_source(4) = [1._r8, 2._r8, 3._r8, 4._r8]
     integer , parameter :: level_classes_source(4) = [1     , 2     , 1     , 2]
     ! The destination points are constructed so that the points fall exactly at one of
     ! the source coordinates, but from the wrong class. So, if classes were not
@@ -267,15 +383,18 @@ contains
     ! matching coordinates_dest; with classes, however, we need to interpolate from the
     ! two adjacent points.
     real(r8), parameter :: coordinates_dest(2)   = [22._r8, 23._r8]
+    real(r8), parameter :: dzsoi_dest(2)         = [1._r8 , 2._r8]
     integer , parameter :: level_classes_dest(2) = [1     , 2]
     
     interpolator = create_interpolator_with_levclasses( &
          coordinates_source = coordinates_source, &
          coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest, &
          level_classes_source = level_classes_source, &
          level_classes_dest   = level_classes_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     data_dest_expected = [12._r8, 63._r8]
 
@@ -293,6 +412,8 @@ contains
     interpolator = create_interpolator_with_levclasses( &
          coordinates_source = [1._r8, 2._r8, 1.5_r8, 3._r8], &
          coordinates_dest = [1._r8], &
+         dzsoi_source     = [1._r8, 2._r8, 3._r8, 4._r8], &
+         dzsoi_dest       = [1._r8], &
          level_classes_source = [1,1,ispval,1], &
          level_classes_dest = [1])
 
@@ -312,13 +433,18 @@ contains
     real(r8), parameter :: data_source(3) = [11._r8, 12._r8, 13._r8]
     real(r8), parameter :: coordinates_source(3) = [21._r8, 22._r8, 23._r8]
     real(r8), parameter :: coordinates_dest(1) = [22._r8]
+    ! The dzsoi_* values have no effect when scale_by_thickness = .false.
+    real(r8), parameter :: dzsoi_source(3)     = [1._r8, 2._r8, 3._r8]
+    real(r8), parameter :: dzsoi_dest(1)       = [1._r8]
 
     interpolator = create_interpolator_no_levclasses( &
          coordinates_source = coordinates_source, &
-         coordinates_dest   = coordinates_dest)
+         coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest)
 
     data_dest(1) = spval
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(spval, data_dest)
   end subroutine destIsSpval_leavesDestinationUnchanged
@@ -334,16 +460,21 @@ contains
     ! coordinates_source are unevenly spaced to make sure we don't accidentally use
     ! coordinates corresponding to the spval points:
     real(r8), parameter :: coordinates_source(4) = [21._r8, 22.4_r8, 23.9_r8, 24._r8]
+    ! The dzsoi_* values have no effect when scale_by_thickness = .false.
+    real(r8), parameter :: dzsoi_source(4) = [1._r8, 2._r8, 3._r8, 4._r8]
     ! Note that the destination level falls in between the two source levels that have
     ! spval - these should be ignored and the interpolation should instead use the other
     ! points:
     real(r8), parameter :: coordinates_dest(1) = [22.5_r8]
+    real(r8), parameter :: dzsoi_dest(1) = [1._r8]
 
     interpolator = create_interpolator_no_levclasses( &
          coordinates_source = coordinates_source, &
-         coordinates_dest   = coordinates_dest)
+         coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     data_dest_expected(1) = 12.5_r8
     @assertEqual(data_dest_expected, data_dest, tolerance=tol)

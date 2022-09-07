@@ -28,7 +28,6 @@ contains
     ! Convert the input data from the mediator to the land model
     !-------------------------------------------------------------------------
 
-    use clm_varctl, only: co2_ppmv
     use clm_varcon, only: rair, o2_molar_const
     use QSatMod, only: QSat
 
@@ -74,7 +73,6 @@ contains
             (forc_pbot - 0.378_r8 * atm2lnd_inst%forc_vp_grc(g)) / (rair * forc_t)
 
        atm2lnd_inst%forc_po2_grc(g) = o2_molar_const * forc_pbot
-       atm2lnd_inst%forc_pco2_grc(g) = co2_ppmv * 1.e-6_r8 * forc_pbot
 
        atm2lnd_inst%forc_wind_grc(g) = sqrt(atm2lnd_inst%forc_u_grc(g)**2 + atm2lnd_inst%forc_v_grc(g)**2)
 
@@ -85,15 +83,6 @@ contains
        wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
 
        call QSat(forc_t, forc_pbot, qsat_kg_kg)
-
-       ! modify specific humidity if precip occurs
-       if (1==2) then
-          if ((forc_rainc(g) + forc_rainl(g)) > 0._r8) then
-             forc_q = 0.95_r8 * qsat_kg_kg
-            !forc_q = qsat_kg_kg
-             wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
-          endif
-       endif
 
        wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat_kg_kg)
     end do

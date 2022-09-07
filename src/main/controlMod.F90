@@ -19,7 +19,7 @@ module controlMod
   use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max
-  use clm_varpar                       , only: maxpatch_glcmec, numrad, nlevsno
+  use clm_varpar                       , only: maxpatch_glc, numrad, nlevsno
   use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
@@ -191,7 +191,7 @@ contains
 
     ! Glacier_mec info
     namelist /clm_inparm/ &    
-         maxpatch_glcmec, glc_do_dynglacier, &
+         maxpatch_glc, glc_do_dynglacier, &
          glc_snow_persistence_max_days, &
          nlevsno, h2osno_max
 
@@ -220,13 +220,15 @@ contains
 
     ! FATES Flags
     namelist /clm_inparm/ fates_paramfile, use_fates,   &
-          use_fates_spitfire, use_fates_logging,        &
+          fates_spitfire_mode, use_fates_logging,       &
           use_fates_planthydro, use_fates_ed_st3,       &
+          use_fates_cohort_age_tracking,                &
           use_fates_ed_prescribed_phys,                 &
           use_fates_inventory_init,                     &
+          use_fates_fixed_biogeog,                      &
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode
-
+    
 
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
@@ -351,8 +353,8 @@ contains
           call apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
        end if
 
-       if (maxpatch_glcmec <= 0) then
-          call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &
+       if (maxpatch_glc <= 0) then
+          call endrun(msg=' ERROR: maxpatch_glc must be at least 1 ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
@@ -445,11 +447,6 @@ contains
                    errMsg(sourcefile, __LINE__))
           end if
           
-          if( use_lch4 ) then
-             call endrun(msg=' ERROR: use_lch4 (methane) and use_fates cannot both be set to true.'//&
-                   errMsg(sourcefile, __LINE__))
-          end if
-
           if ( n_drydep > 0 .and. drydep_method /= DD_XLND ) then
              call endrun(msg=' ERROR: dry deposition via ML Welsey is not compatible with FATES.'//&
                    errMsg(sourcefile, __LINE__))
@@ -709,12 +706,14 @@ contains
 
     call mpi_bcast (use_fates, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (use_fates_spitfire, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (fates_spitfire_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_fates_logging, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_cohort_age_tracking, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_st3, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_prescribed_phys,  1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_inventory_init, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_fixed_biogeog, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -804,7 +803,7 @@ contains
     call mpi_bcast (h2osno_max, 1, MPI_REAL8, 0, mpicom, ier)
 
     ! glacier_mec variables
-    call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (maxpatch_glc, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (glc_do_dynglacier, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_snow_persistence_max_days, 1, MPI_INTEGER, 0, mpicom, ier)
 
@@ -976,7 +975,7 @@ contains
     write(iulog,*) '   Number of snow layers =', nlevsno
     write(iulog,*) '   Max snow depth (mm) =', h2osno_max
 
-    write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
+    write(iulog,*) '   glc number of elevation classes =', maxpatch_glc
     if (glc_do_dynglacier) then
        write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'
     else
@@ -1064,14 +1063,16 @@ contains
     write(iulog, *) '  ED/FATES: '
     write(iulog, *) '    use_fates = ', use_fates
     if (use_fates) then
-       write(iulog, *) '    use_fates_spitfire = ', use_fates_spitfire
+       write(iulog, *) '    fates_spitfire_mode = ', fates_spitfire_mode
        write(iulog, *) '    use_fates_logging = ', use_fates_logging
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
        write(iulog, *) '    fates_parteh_mode = ', fates_parteh_mode
        write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
+       write(iulog, *) '    use_fates_cohort_age_tracking = ', use_fates_cohort_age_tracking
        write(iulog, *) '    use_fates_ed_st3 = ',use_fates_ed_st3
        write(iulog, *) '    use_fates_ed_prescribed_phys = ',use_fates_ed_prescribed_phys
        write(iulog, *) '    use_fates_inventory_init = ',use_fates_inventory_init
+       write(iulog, *) '    use_fates_fixed_biogeog = ', use_fates_fixed_biogeog
        write(iulog, *) '    fates_inventory_ctrl_filename = ',fates_inventory_ctrl_filename
     end if
   end subroutine control_print

@@ -20,7 +20,7 @@ module decompInitMod
   use glcBehaviorMod  , only : glc_behavior_type
   use decompMod
   use mct_mod         , only : mct_gsMap_init, mct_gsMap_ngseg, mct_gsMap_nlseg, mct_gsmap_gsize
-  use FatesInterfaceMod, only : fates_maxElementsPerSite
+  use FatesInterfaceTypesMod, only : fates_maxElementsPerSite
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -428,7 +428,7 @@ contains
   end subroutine decompInit_ocn
 
   !------------------------------------------------------------------------------
-  subroutine decompInit_clumps(lns,lni,lnj,glc_behavior)
+  subroutine decompInit_clumps(lni,lnj,glc_behavior)
     !
     ! !DESCRIPTION:
     ! This subroutine initializes the land surface decomposition into a clump
@@ -441,7 +441,7 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    integer , intent(in) :: lns,lni,lnj ! land domain global size
+    integer , intent(in) :: lni,lnj ! land domain global size
     type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
@@ -590,7 +590,7 @@ contains
   end subroutine decompInit_clumps
 
   !------------------------------------------------------------------------------
-  subroutine decompInit_glcp(lns,lni,lnj,glc_behavior)
+  subroutine decompInit_glcp(lni,lnj,glc_behavior)
     !
     ! !DESCRIPTION:
     ! Determine gsMaps for landunits, columns, patches and cohorts
@@ -602,7 +602,7 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    integer , intent(in) :: lns,lni,lnj ! land domain global size
+    integer , intent(in) :: lni,lnj ! land domain global size
     type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:

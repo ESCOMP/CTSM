@@ -228,7 +228,7 @@ contains
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, c_to_b
     use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
     use clm_varcon         , only : c14ratio
-    use clm_varcon         , only : c_water, c_dry_biomass
+    use clm_varcon         , only : c_water, c_dry_biomass, c_to_b
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
@@ -447,6 +447,7 @@ contains
          is_shrub               => pftcon%is_shrub                              , & ! Input:  shrub patch or not
          dleaf                  => pftcon%dleaf                                 , & ! Input:  characteristic leaf dimension (m)
          dbh_param              => pftcon%dbh                                   , & ! Input:  diameter at brest height (m)
+         slatop                 => pftcon%slatop                                , & ! SLA at top of canopy [m^2/gC]
          fbw                    => pftcon%fbw                                   , & ! Input:  fraction of biomass that is water
          nstem                  => pftcon%nstem                                 , & ! Input:  stem number density (#ind/m2)
          rstem_per_dbh          => pftcon%rstem_per_dbh                         , & ! Input:  stem resistance per stem diameter (s/m**2)
@@ -711,7 +712,7 @@ bioms:   do f = 1, fn
             ! leaf and stem surface area
             sa_leaf(p) = elai(p)
             ! double in spirit of full surface area for sensible heat
-            sa_leaf(p) = 2.*sa_leaf(p)
+            sa_leaf(p) = 2._r8*sa_leaf(p)
 
             ! Surface area for stem
             sa_stem(p) = nstem(patch%itype(p))*(htop(p)*shr_const_pi*dbh(p))
@@ -724,21 +725,21 @@ bioms:   do f = 1, fn
             ! (set surface area for stem, and fraction absorbed by stem to zero)
             if(.not.(is_tree(patch%itype(p)) .or. is_shrub(patch%itype(p))) &
                  .or. dbh(p) < min_stem_diameter) then
-               frac_rad_abs_by_stem(p) = 0.0
-               sa_stem(p) = 0.0
+               frac_rad_abs_by_stem(p) = 0.0_r8
+               sa_stem(p) = 0.0_r8
             endif
-
-            ! cross-sectional area of stems
-            carea_stem = shr_const_pi * (dbh(p)*0.5)**2
 
             ! if using Satellite Phenology mode, calculate leaf and stem biomass
             if(.not. use_cn) then
-               ! boreal needleleaf lma*c2b ~ 0.25 kg dry mass/m2(leaf)
-               leaf_biomass(p) = 0.25_r8 * max(0.01_r8, sa_leaf(p)) &
-                    / (1.-fbw(patch%itype(p)))
+               ! 2gbiomass/gC * (1/SLA) * 1e-3 = kg dry mass/m2(leaf)
+               leaf_biomass(p) = (1.e-3_r8*c_to_b/slatop(patch%itype(p))) &
+                    * max(0.01_r8, 0.5_r8*sa_leaf(p)) &
+                    / (1._r8-fbw(patch%itype(p)))
+               ! cross-sectional area of stems
+               carea_stem = shr_const_pi * (dbh(p)*0.5_r8)**2
                stem_biomass(p) = carea_stem * htop(p) * k_cyl_vol &
                     * nstem(patch%itype(p)) * wood_density(patch%itype(p)) &
-                    /(1.-fbw(patch%itype(p)))
+                    /(1._r8-fbw(patch%itype(p)))
             endif
 
             ! internal longwave fluxes between leaf and stem
@@ -751,10 +752,10 @@ bioms:   do f = 1, fn
             ! lma_dry has units of kg dry mass/m2 here
             ! (Appendix B of Bonan et al., GMD, 2018) 
 
-            cp_leaf(p)  = leaf_biomass(p) * (c_dry_biomass*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*c_water)
+            cp_leaf(p)  = leaf_biomass(p) * (c_dry_biomass*(1._r8-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*c_water)
 
             ! cp-stem will have units J/k/ground_area
-            cp_stem(p) = stem_biomass(p) * (c_dry_biomass*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*c_water)
+            cp_stem(p) = stem_biomass(p) * (c_dry_biomass*(1._r8-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*c_water)
             ! adjust for departure from cylindrical stem model
             cp_stem(p) = k_cyl_vol * cp_stem(p)
 
@@ -1346,13 +1347,13 @@ bioms:   do f = 1, fn
          ! Test for convergence
 
          itlef = itlef+1
-         num_iter(p) = itlef
          if (itlef > itmin) then
             do f = 1, fn
                p = filterp(f)
                dele(p) = abs(efe(p)-efeb(p))
                efeb(p) = efe(p)
                det(p)  = max(del(p),del2(p))
+               num_iter(p) = itlef
             end do
             fnold = fn
             fn = 0
@@ -1394,7 +1395,7 @@ bioms:   do f = 1, fn
                dt_stem(p) = (frac_rad_abs_by_stem(p)*(sabv(p) + air(p) + bir(p)*ts_ini(p)**4 &
                     + cir(p)*lw_grnd) - eflx_sh_stem(p) &
                     + lw_leaf(p)- lw_stem(p))/(cp_stem(p)/dtime &
-                    - frac_rad_abs_by_stem(p)*bir(p)*4.*ts_ini(p)**3)
+                    - frac_rad_abs_by_stem(p)*bir(p)*4._r8*ts_ini(p)**3)
             else
                dt_stem(p) = 0._r8
             endif
@@ -1539,7 +1540,8 @@ bioms:   do f = 1, fn
          
          call clm_fates%wrap_accumulatefluxes(nc,fn,filterp(1:fn))
          call clm_fates%wrap_hydraulics_drive(bounds,nc,soilstate_inst, &
-               waterstatebulk_inst,waterdiagnosticbulk_inst,waterfluxbulk_inst,solarabs_inst,energyflux_inst)
+               waterstatebulk_inst,waterdiagnosticbulk_inst,waterfluxbulk_inst, &
+               fn, filterp, solarabs_inst,energyflux_inst)
 
       else
 
@@ -1548,16 +1550,16 @@ bioms:   do f = 1, fn
          call PhotosynthesisTotal(fn, filterp, &
               atm2lnd_inst, canopystate_inst, photosyns_inst)
          
-         ! Calculate ozone stress. This needs to be done after rssun and rsshade are
-         ! computed by the Photosynthesis routine. However, Photosynthesis also uses the
-         ! ozone stress computed here. Thus, the ozone stress computed in timestep i is
-         ! applied in timestep (i+1).
+         ! Calculate ozone uptake. This needs to be done after rssun and rsshade are
+         ! computed by the Photosynthesis routine. The updated ozone uptake computed here
+         ! will be used in the next time step to calculate ozone stress for the next time
+         ! step's photosynthesis calculations.
          
          ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) The following dummy variable assignment is
          ! needed with pgi 14.7 on yellowstone; without it, forc_pbot_downscaled_col gets
          ! resized inappropriately in the following subroutine call, due to a compiler bug.
          dummy_to_make_pgi_happy = ubound(atm2lnd_inst%forc_pbot_downscaled_col, 1)
-         call ozone_inst%CalcOzoneStress( &
+         call ozone_inst%CalcOzoneUptake( &
               bounds, fn, filterp, &
               forc_pbot = atm2lnd_inst%forc_pbot_downscaled_col(bounds%begc:bounds%endc), &
               forc_th   = atm2lnd_inst%forc_th_downscaled_col(bounds%begc:bounds%endc), &
@@ -1566,7 +1568,7 @@ bioms:   do f = 1, fn
               rb        = frictionvel_inst%rb1_patch(bounds%begp:bounds%endp), &
               ram       = frictionvel_inst%ram1_patch(bounds%begp:bounds%endp), &
               tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp))
-         
+
          !---------------------------------------------------------
          !update Vc,max and Jmax by LUNA model
          if(use_luna)then
