@@ -8,7 +8,7 @@ module CNBalanceCheckMod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use shr_infnan_mod                  , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
-  use decompMod                       , only : bounds_type
+  use decompMod                       , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use abortutils                      , only : endrun
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
   use clm_time_manager                , only : get_step_size_real
@@ -306,7 +306,7 @@ contains
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 
       ! Repeat error check at the gridcell level
@@ -378,7 +378,7 @@ contains
          write(iulog,*)'dwt_seedc_to_deadstem_grc =', dwt_seedc_to_deadstem_grc(g) * dt
          write(iulog,*)'--- Outputs ---'
          write(iulog,*)'-1*som_c_leached_grc    = ', som_c_leached_grc(g) * dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate
@@ -537,9 +537,7 @@ contains
 
       if (err_found) then
          c = err_index
-         g = col%gridcell(c)
          write(iulog,*)'column nbalance error     = ',col_errnb(c), c
-         write(iulog,*)'gridcell                  = ',g
          write(iulog,*)'Latdeg,Londeg             = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
          write(iulog,*)'begnb                     = ',col_begnb(c)
          write(iulog,*)'endnb                     = ',col_endnb(c)
@@ -551,16 +549,7 @@ contains
                         ndep_to_sminn(c)*dt, fan_totnin(c)*dt
          write(iulog,*)'outputs,ffix,nfix,ndep,fan= ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt, &
                         f_n2o_nit(c)*dt, fan_totnout(c)*dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
-         ! Only actually abort if FAN is off or it's not one of the bad points
-         ! (at f19 resolution). If FAN is on allow Nbalance to be two orders of
-         ! magnitude higher than normal.
-         ! EBK 08/30/2022
-         !if ( (.not. use_fan) .or. ( (g /= 4043) .and. (g /= 4047) .and. (g /= 3687) ) )then 
-         !   if ( (.not. use_fan) .or. (abs(col_errnb(c)) > 1e-1_r8) )then
-         !      call endrun(msg=errMsg(sourcefile, __LINE__))
-         !   end if
-         !end if
+         call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 
       ! Repeat error check at the gridcell level
@@ -634,7 +623,7 @@ contains
          write(iulog,*) 'grc_noutputs_partial     =', grc_noutputs_partial(g) * dt
          write(iulog,*) 'dwt_conv_nflux_grc       =', dwt_conv_nflux_grc(g) * dt
          write(iulog,*) 'product_loss_grc         =', product_loss_grc(g) * dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate

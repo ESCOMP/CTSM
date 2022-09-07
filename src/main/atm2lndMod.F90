@@ -15,7 +15,7 @@ module atm2lndMod
   use clm_varcon     , only : wv_to_dair_weight_ratio
   use clm_varctl     , only : iulog, use_c13, use_cn, use_lch4, iulog
   use abortutils     , only : endrun
-  use decompMod      , only : bounds_type
+  use decompMod      , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use atm2lndType    , only : atm2lnd_type
   use TopoMod        , only : topo_type
   use filterColMod   , only : filter_col_type
@@ -556,7 +556,8 @@ contains
                if (abs((newsum_lwrad_g(g) / sum_wts_g(g)) - forc_lwrad_g(g)) > 1.e-8_r8) then
                   write(iulog,*) 'g, newsum_lwrad_g, sum_wts_g, forc_lwrad_g: ', &
                        g, newsum_lwrad_g(g), sum_wts_g(g), forc_lwrad_g(g)
-                  call endrun(msg=' ERROR: Energy conservation error downscaling longwave'//&
+                  call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                       msg=' ERROR: Energy conservation error downscaling longwave'//&
                        errMsg(sourcefile, __LINE__))
                end if
             end if
@@ -707,7 +708,8 @@ contains
                 write(iulog,*) 'forc_pbot_c, forc_pbot_g = ', forc_pbot_c(c), forc_pbot_g(g)
                 write(iulog,*) 'forc_rho_c, forc_rho_g = ', forc_rho_c(c), forc_rho_g(g)
                 write(iulog,*) 'forc_lwrad_c, forc_lwrad_g = ', forc_lwrad_c(c), forc_lwrad_g(g)
-                call endrun(msg=errMsg(sourcefile, __LINE__))
+                call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                     msg=errMsg(sourcefile, __LINE__))
              end if  ! inequal
           end if  ! urbpoi
        end if  ! active

@@ -363,7 +363,10 @@ case $hostname in
   if [ interactive = "YES" ]; then
      REGRID_PROC=1
   fi
-  esmfvers=8.2.0.b06
+  if [ "$verbose" = "YES" ]; then
+     echo "Number of processors to regrid with = $REGRID_PROC"
+  fi
+  esmfvers=8.2.0b13
   intelvers=19.1.1
   module purge
   module load intel/$intelvers
@@ -372,19 +375,23 @@ case $hostname in
   module load nco
 
   if [[ $REGRID_PROC > 1 ]]; then
-     mpi=mpi
+     mpi=mpt
      module load mpt/2.22
   else
-     mpi=uni
+     mpi=mpiuni
   fi
 # module load esmf-${esmfvers}-ncdfio-${mpi}-O
   module use /glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/$intelvers
-  module load esmf-${esmfvers}-ncdfio-mpt-g
+  module load esmf-${esmfvers}-ncdfio-${mpi}-g
   if [ -z "$ESMFBIN_PATH" ]; then
      ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
   fi
   if [ -z "$MPIEXEC" ]; then
      MPIEXEC="mpiexec_mpt -np $REGRID_PROC"
+  fi
+  if [ "$verbose" = "YES" ]; then
+     echo "list of modules"
+     module list
   fi
   ;;
 

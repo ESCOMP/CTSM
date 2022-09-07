@@ -9,7 +9,7 @@ module dynSubgridDriverMod
   ! dynamic landunits).
   !
   ! !USES:
-  use decompMod                    , only : bounds_type, BOUNDS_LEVEL_PROC, BOUNDS_LEVEL_CLUMP
+  use decompMod                    , only : bounds_type, bounds_level_proc, bounds_level_clump
   use decompMod                    , only : get_proc_clumps, get_clump_bounds
   use dynSubgridControlMod         , only : get_flanduse_timeseries
   use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops, get_do_transient_lakes
@@ -96,7 +96,7 @@ contains
     character(len=*), parameter :: subname = 'dynSubgrid_init'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds_proc%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     nclumps = get_proc_clumps()
 
@@ -219,7 +219,7 @@ contains
     character(len=*), parameter :: subname = 'dynSubgrid_driver'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds_proc%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     nclumps = get_proc_clumps()
 
@@ -344,7 +344,7 @@ contains
     character(len=*), parameter :: subname = 'dynSubgrid_wrapup_weight_changes'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds_clump%level == BOUNDS_LEVEL_CLUMP, subname // ': argument must be CLUMP-level bounds')
+    SHR_ASSERT(bounds_clump%level == bounds_level_clump, subname // ': argument must be CLUMP-level bounds')
 
     call update_landunit_weights(bounds_clump)
 

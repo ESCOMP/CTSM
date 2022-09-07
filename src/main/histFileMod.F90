@@ -12,11 +12,11 @@ module histFileMod
   use shr_sys_mod    , only : shr_sys_flush
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
-  use clm_varctl     , only : iulog, use_vertsoilc, use_fates, compname
+  use clm_varctl     , only : iulog, use_fates, compname, use_cn, use_crop
   use clm_varcon     , only : spval, ispval
-  use clm_varcon     , only : grlnd, nameg, namel, namec, namep, nameCohort
-  use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type
-  use GetGlobalValuesMod , only : GetGlobalIndexArray
+  use clm_varcon     , only : grlnd, nameg, namel, namec, namep
+  use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type, get_global_index_array
+  use decompMod      , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column
   use GridcellType   , only : grc
   use LandunitType   , only : lun
   use ColumnType     , only : col
@@ -29,7 +29,7 @@ module histFileMod
   use FatesLitterMod    , only : ncwd
   use PRTGenericMod     , only : num_elements_fates  => num_elements
   use FatesInterfaceTypesMod , only : numpft_fates => numpft
-  use ncdio_pio 
+  use ncdio_pio
 
   !
   implicit none
@@ -44,7 +44,7 @@ module histFileMod
   integer , public, parameter :: max_flds = 2500        ! max number of history fields
   integer , public, parameter :: max_namlen = 64        ! maximum number of characters for field name
   integer , public, parameter :: scale_type_strlen = 32 ! maximum number of characters for scale types
-  integer , private, parameter :: avgflag_strlen = 3 ! maximum number of characters for avgflag
+  integer , private, parameter :: avgflag_strlen = 10   ! maximum number of characters for avgflag
   integer , private, parameter :: hist_dim_name_length = 16 ! lenngth of character strings in dimension names
 
   ! Possible ways to treat multi-layer snow fields at times when no snow is present in a
@@ -164,6 +164,7 @@ module histFileMod
   private :: hfields_1dinfo            ! Define/output 1d subgrid info if appropriate
   private :: hist_update_hbuf_field_1d ! Updates history buffer for specific field and tape
   private :: hist_update_hbuf_field_2d ! Updates history buffer for specific field and tape
+  private :: calc_weight_local_time    ! Calculate weight for time interpolation for local time flag
   private :: hist_set_snow_field_2d    ! Set values in history field dimensioned by levsno
   private :: list_index                ! Find index of field in exclude list
   private :: set_hist_filename         ! Determine history dataset filenames
@@ -333,6 +334,8 @@ contains
     integer width_col_sum  ! widths of columns summed, including spaces
     character(len=3) str_width_col(ncol)  ! string version of width_col
     character(len=3) str_w_col_sum  ! string version of width_col_sum
+    character(len=7) file_identifier  ! fates identifier used in file_name
+    character(len=23) file_name  ! master_list_file.rst with or without fates
     character(len=99) fmt_txt  ! format statement
     character(len=*),parameter :: subname = 'CLM_hist_printflds'
     !-----------------------------------------------------------------------
@@ -377,14 +380,29 @@ contains
 
        ! Open master_list_file
        master_list_file = getavu()  ! get next available file unit number
-       open(unit = master_list_file, file = 'master_list_file.rst',  &
-            status = 'new', action = 'write', form = 'formatted')
+       if (use_fates) then
+          file_identifier = 'fates'
+       else
+          file_identifier = 'nofates'
+       end if
+       file_name = 'master_list_' // trim(file_identifier) // '.rst'
+       open(unit = master_list_file, file = file_name,  &
+            status = 'replace', action = 'write', form = 'formatted')
 
        ! File title
        fmt_txt = '(a)'
-       write(master_list_file,fmt_txt) '==================='
-       write(master_list_file,fmt_txt) 'CTSM History Fields'
-       write(master_list_file,fmt_txt) '==================='
+       write(master_list_file,fmt_txt) '============================='
+       write(master_list_file,fmt_txt) 'CTSM History Fields (' // trim(file_identifier) // ')'
+       write(master_list_file,fmt_txt) '============================='
+       write(master_list_file,*)
+
+       ! A warning message and flags from the current CTSM case
+       write(master_list_file,fmt_txt) 'CAUTION: Not all variables are relevant / present for all CTSM cases.'
+       write(master_list_file,fmt_txt) 'Key flags used in this CTSM case:'
+       fmt_txt = '(a,l)'
+       write(master_list_file,fmt_txt) 'use_cn = ', use_cn
+       write(master_list_file,fmt_txt) 'use_crop = ', use_crop
+       write(master_list_file,fmt_txt) 'use_fates = ', use_fates
        write(master_list_file,*)
 
        ! Table header
@@ -1286,7 +1304,9 @@ contains
     !
     ! !USES:
     use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
-    use decompMod       , only : BOUNDS_LEVEL_PROC
+    use decompMod       , only : bounds_level_proc
+    use clm_varcon      , only : degpsec, isecspday
+    use clm_time_manager, only : get_curr_date
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
@@ -1315,9 +1335,20 @@ contains
     integer j
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_1d'
     integer k_offset                    ! offset for mapping sliced subarray pointers when outputting variables in PFT/col vector form
+    integer :: year                      ! year (0, ...) for nstep
+    integer :: month                     ! month (1, ..., 12) for nstep
+    integer :: day                       ! day of month (1, ..., 31) for nstep
+    integer :: secs                      ! seconds into current date for nstep
+    integer :: local_secpl               ! seconds into current date in local time
+    integer :: tod                       ! Desired local solar time of output in seconds
+    integer :: weight                    ! Weight for linear interpolation in time for local time avgflag
+    integer, allocatable :: grid_index(:)             ! Grid cell index for longitude
+    integer, allocatable :: tods(:)
+    character(len=1) :: avgflag_trim     ! first character of avgflag
+
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_proc, sourcefile, __LINE__)
 
     avgflag        =  tape(t)%hlist(f)%avgflag
     nacs           => tape(t)%hlist(f)%nacs
@@ -1333,6 +1364,8 @@ contains
     l2g_scale_type =  tape(t)%hlist(f)%field%l2g_scale_type
     hpindex        =  tape(t)%hlist(f)%field%hpindex
     field          => clmptr_rs(hpindex)%ptr
+
+    call get_curr_date (year, month, day, secs)
 
     ! set variables to check weights when allocate all pfts
 
@@ -1419,7 +1452,8 @@ contains
     if (map2gcell) then  ! Map to gridcell
 
        ! note that in this case beg1d = begg and end1d=endg
-       select case (avgflag)
+       avgflag_trim = avgflag(1:1)
+       select case (avgflag_trim)
        case ('I') ! Instantaneous
           do k = beg1d_out, end1d_out
              if (field_gcell(k) /= spval) then
@@ -1429,7 +1463,7 @@ contains
              end if
              nacs(k,1) = 1
           end do
-       case ('A', 'SUM') ! Time average / sum
+       case ('A', 'S') ! Time average / sum
           do k = beg1d_out, end1d_out
              if (field_gcell(k) /= spval) then
                 if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
@@ -1459,6 +1493,22 @@ contains
              endif
              nacs(k,1) = 1
           end do
+       case ('L') ! Local solar time
+          read(avgflag(2:6), *) tod
+          do k = beg1d_out, end1d_out
+             if (field_gcell(k) /= spval) then
+                local_secpl = secs + grc%londeg(k)/degpsec
+                local_secpl = mod(local_secpl,isecspday)
+                weight = calc_weight_local_time(local_secpl, tod)
+                if (weight > 0) then
+                   if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
+                   hbuf(k,1) = hbuf(k,1) + field_gcell(k)*real(weight)
+                   nacs(k,1) = nacs(k,1) + weight
+                end if
+              else
+                 if (nacs(k,1) == 0) hbuf(k,1) = spval
+              end if
+          end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -1467,22 +1517,29 @@ contains
 
     else  ! Do not map to gridcell
 
+       allocate( grid_index(beg1d:end1d) )
+
        ! For data defined on the pft, col or landunit, we need to check if a point is active
        ! to determine whether that point should be assigned spval
        if (type1d == namep) then
           check_active = .true.
           active => patch%active
+          grid_index = patch%gridcell
        else if (type1d == namec) then
           check_active = .true.
           active => col%active
+          grid_index = col%gridcell
        else if (type1d == namel) then
           check_active = .true.
           active =>lun%active
+          grid_index = lun%gridcell
        else
           check_active = .false.
        end if
 
-       select case (avgflag)
+       avgflag_trim = avgflag(1:1)
+
+       select case (avgflag_trim)
        case ('I') ! Instantaneous
           do k = beg1d,end1d
              valid = .true.
@@ -1500,7 +1557,7 @@ contains
              end if
              nacs(k,1) = 1
           end do
-       case ('A', 'SUM') ! Time average / sum
+       case ('A', 'S') ! Time average / sum
           ! create mappings for array slice pointers (which go from 1 to size(field) rather than beg1d to end1d)
           if ( end1d .eq. ubound(field,1) ) then
              k_offset = 0
@@ -1560,6 +1617,36 @@ contains
              end if
              nacs(k,1) = 1
           end do
+       case ('L') ! Local solar time
+          read(avgflag(2:6), *) tod
+          if ( end1d .eq. ubound(field,1) ) then
+             k_offset = 0
+          else
+             k_offset = 1 - beg1d
+          endif
+             do k = beg1d, end1d
+                valid = .true.
+                if (check_active) then
+                   if (.not. active(k)) then
+                      valid = .false.
+                   else
+                      local_secpl = secs + grc%londeg(grid_index(k))/degpsec
+                   end if
+                else
+                   local_secpl = secs + grc%londeg(k)/degpsec
+                end if
+                local_secpl = mod(local_secpl,isecspday)
+                if (valid) then
+                   weight = calc_weight_local_time(local_secpl, tod)
+                   if (weight > 0 .and. field(k+k_offset) /= spval) then
+                      if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
+                      hbuf(k,1) = hbuf(k,1) + field(k+k_offset)*real(weight)
+                      nacs(k,1) = nacs(k,1) + weight
+                   end if
+                else
+                   if (nacs(k,1) == 0) hbuf(k,1) = spval
+                end if
+             end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -1580,8 +1667,10 @@ contains
     !
     ! !USES:
     use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
-    use decompMod       , only : BOUNDS_LEVEL_PROC
+    use decompMod       , only : bounds_level_proc
     use clm_varctl      , only : iulog
+    use clm_varcon      , only : degpsec, isecspday
+    use clm_time_manager, only : get_curr_date
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
@@ -1613,9 +1702,20 @@ contains
                                         !(this refers to a point being active, NOT a history field being active)
     real(r8), allocatable :: field_gcell(:,:) ! gridcell level field (used if mapping to gridcell is done)
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
+    integer :: year                      ! year (0, ...) for nstep
+    integer :: month                     ! month (1, ..., 12) for nstep
+    integer :: day                       ! day of month (1, ..., 31) for nstep
+    integer :: secs                      ! seconds into current date for nstep
+    integer :: local_secpl               ! seconds into current date in local time
+    integer :: tod                       ! Desired local solar time of output in seconds
+    integer :: weight                    ! Weight for linear interpolation in time for local time avgflag
+    integer, allocatable :: grid_index(:)             ! Grid cell index for longitude
+    integer, allocatable :: tods(:)
+    character(len=1) :: avgflag_trim     ! first character of avgflag
+
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_proc, sourcefile, __LINE__)
 
     avgflag             =  tape(t)%hlist(f)%avgflag
     nacs                => tape(t)%hlist(f)%nacs
@@ -1632,6 +1732,7 @@ contains
     no_snow_behavior    =  tape(t)%hlist(f)%field%no_snow_behavior
     hpindex             =  tape(t)%hlist(f)%field%hpindex
 
+    call get_curr_date (year, month, day, secs)
 
     if (no_snow_behavior /= no_snow_unset) then
        ! For multi-layer snow fields, build a special output variable that handles
@@ -1652,7 +1753,7 @@ contains
        call hist_set_snow_field_2d(field, clmptr_ra(hpindex)%ptr, no_snow_behavior, type1d, &
             beg1d, end1d)
     else
-   
+
        field => clmptr_ra(hpindex)%ptr(:,1:num2d)
        field_allocated = .false.
     end if
@@ -1739,8 +1840,9 @@ contains
 
     if (map2gcell) then  ! Map to gridcell
 
+       avgflag_trim = avgflag(1:1)
        ! note that in this case beg1d = begg and end1d=endg
-       select case (avgflag)
+       select case (avgflag_trim)
        case ('I') ! Instantaneous
           do j = 1,num2d
              do k = beg1d_out, end1d_out
@@ -1752,7 +1854,7 @@ contains
                 nacs(k,j) = 1
              end do
           end do
-       case ('A', 'SUM') ! Time average / sum
+       case ('A', 'S') ! Time average / sum
           do j = 1,num2d
              do k = beg1d_out, end1d_out
                 if (field_gcell(k,j) /= spval) then
@@ -1788,6 +1890,24 @@ contains
                 nacs(k,j) = 1
              end do
           end do
+       case ('L') ! Local solar time
+          read(avgflag(2:6), *) tod
+          do j = 1,num2d
+             do k = beg1d_out, end1d_out
+                if (field_gcell(k,j) /= spval) then
+                   local_secpl = secs + grc%londeg(k)/degpsec
+                   local_secpl = mod(local_secpl,isecspday)
+                   weight = calc_weight_local_time(local_secpl, tod)
+                   if (weight > 0) then
+                      if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
+                      hbuf(k,j) = hbuf(k,j) + field_gcell(k,j)*real(weight)
+                      nacs(k,j) = nacs(k,j) + weight
+                   end if
+                else
+                   if (nacs(k,j) == 0) hbuf(k,j) = spval
+                end if
+             end do
+          end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -1801,12 +1921,18 @@ contains
        if (type1d == namep) then
           check_active = .true.
           active => patch%active
+          allocate(grid_index(bounds%begg:bounds%endg) )
+          grid_index = patch%gridcell
        else if (type1d == namec) then
           check_active = .true.
           active => col%active
+          allocate(grid_index(bounds%begg:bounds%endg) )
+          grid_index = col%gridcell
        else if (type1d == namel) then
           check_active = .true.
           active =>lun%active
+          allocate(grid_index(bounds%begg:bounds%endg) )
+          grid_index = lun%gridcell
        else
           check_active = .false.
        end if
@@ -1814,8 +1940,8 @@ contains
        ! Note that since field points to an array section the
        ! bounds are field(1:end1d-beg1d+1, num2d) - therefore
        ! need to do the shifting below
-
-       select case (avgflag)
+       avgflag_trim = avgflag(1:1)
+       select case (avgflag_trim)
        case ('I') ! Instantaneous
           do j = 1,num2d
              do k = beg1d,end1d
@@ -1835,7 +1961,7 @@ contains
                 nacs(k,j) = 1
              end do
           end do
-       case ('A', 'SUM') ! Time average / sum
+       case ('A', 'S') ! Time average / sum
           do j = 1,num2d
              do k = beg1d,end1d
                 valid = .true.
@@ -1895,6 +2021,33 @@ contains
                 nacs(k,j) = 1
              end do
           end do
+       case ('L') ! Local solar time
+          read(avgflag(2:6), *) tod
+          do j = 1,num2d
+             do k = beg1d, end1d
+                valid = .true.
+                if (check_active) then
+                   if (.not. active(k)) then
+                      valid = .false.
+                   else
+                      local_secpl = secs + grc%londeg(grid_index(k))/degpsec
+                   end if
+                else
+                   local_secpl = secs + grc%londeg(k)/degpsec
+                end if
+                local_secpl = mod(local_secpl,isecspday)
+                if (valid) then
+                   weight = calc_weight_local_time(local_secpl, tod)
+                   if (weight > 0 .and. field(k-beg1d+1,j) /= spval) then
+                      if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
+                      hbuf(k,j) = hbuf(k,j) + field(k-beg1d+1,j)*real(weight)
+                      nacs(k,j) = nacs(k,j) + weight
+                   end if
+                else
+                   if (nacs(k,j) == 0) hbuf(k,j) = spval
+                end if
+             end do
+          end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -1906,6 +2059,43 @@ contains
     end if
 
   end subroutine hist_update_hbuf_field_2d
+
+  !-----------------------------------------------------------------------
+  function calc_weight_local_time(local_secpl, tod) result(weight)
+    !
+    ! !DESCRIPTION:
+    ! Calculates weight for linear intepolation in time for local time
+    ! average flag
+    !
+    ! !USES:
+    use clm_varcon      , only : isecspday
+    use clm_time_manager, only : get_step_size
+    !
+    ! !ARGUMENTS:
+    integer                :: weight       ! function result
+    integer, intent(inout) :: local_secpl  ! seconds into current date in local time
+    integer, intent(in)    :: tod          ! Desired local solar time of output in seconds
+
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'calc_weight_local_time'
+    integer :: dtime                       ! timestep size [seconds]
+    !-----------------------------------------------------------------------
+
+    weight = 0
+    dtime = get_step_size()
+
+    if (tod < dtime .and. local_secpl > isecspday-dtime ) then
+       local_secpl = local_secpl - isecspday
+    end if
+    if (local_secpl >= tod - dtime .and. local_secpl < tod ) then
+       weight = dtime-tod+local_secpl
+    else if (local_secpl >= tod .and. local_secpl < tod + dtime ) then
+       weight = dtime+tod-local_secpl
+    end if
+
+  end function calc_weight_local_time
 
   !-----------------------------------------------------------------------
   subroutine hist_set_snow_field_2d (field_out, field_in, no_snow_behavior, type1d, beg1d, end1d)
@@ -2039,7 +2229,7 @@ contains
        nacs      => tape(t)%hlist(f)%nacs
        hbuf      => tape(t)%hlist(f)%hbuf
 
-       if (avgflag == 'A') then
+       if (avgflag == 'A' .or. avgflag(1:1) == 'L') then
           aflag = .true.
        else
           aflag = .false.
@@ -2049,6 +2239,8 @@ contains
           do k = beg1d, end1d
              if (aflag .and. nacs(k,j) /= 0) then
                 hbuf(k,j) = hbuf(k,j) / float(nacs(k,j))
+             elseif (avgflag(1:1) == 'L' .and. nacs(k,j) == 0) then
+                hbuf(k,j) = spval
              end if
           end do
        end do
@@ -2246,7 +2438,7 @@ contains
     call ncd_defdim(lnfid, 'string_length', hist_dim_name_length, strlen_dimid)
     call ncd_defdim(lnfid, 'scale_type_string_length', scale_type_strlen, dimid)
     call ncd_defdim( lnfid, 'levdcmp', nlevdecomp_full, dimid)
-    
+
 
     if(use_fates)then
        call ncd_defdim(lnfid, 'fates_levscag', nlevsclass * nlevage, dimid)
@@ -2262,6 +2454,7 @@ contains
        call ncd_defdim(lnfid, 'fates_levscpf', nlevsclass*numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levcapf', nlevcoage*numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levcan', nclmax, dimid)
+       call ncd_defdim(lnfid, 'fates_levleaf', nlevleaf, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlf', nlevleaf * nclmax, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlfpf', nlevleaf * nclmax * numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levelem', num_elements_fates, dimid)
@@ -2400,7 +2593,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine htape_timeconst3D(t, &
-       bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode)
+       bounds, watsat_col, sucsat_col, bsw_col, hksat_col, &
+       cellsand_col, cellclay_col, mode)
     !
     ! !DESCRIPTION:
     ! Write time constant 3D variables to history tapes.
@@ -2411,7 +2605,7 @@ contains
     !
     ! !USES:
     use subgridAveMod  , only : c2g
-    use clm_varpar     , only : nlevgrnd ,nlevlak, nlevmaxurbgrnd
+    use clm_varpar     , only : nlevgrnd ,nlevlak, nlevmaxurbgrnd, nlevsoi
     use shr_string_mod , only : shr_string_listAppend
     use domainMod      , only : ldomain
     !
@@ -2422,6 +2616,8 @@ contains
     real(r8)          , intent(in) :: sucsat_col( bounds%begc:,1: )
     real(r8)          , intent(in) :: bsw_col( bounds%begc:,1: )
     real(r8)          , intent(in) :: hksat_col( bounds%begc:,1: )
+    real(r8)          , intent(in) :: cellsand_col( bounds%begc:,1: )
+    real(r8)          , intent(in) :: cellclay_col( bounds%begc:,1: )
     character(len=*)  , intent(in) :: mode ! 'define' or 'write'
     !
     ! !LOCAL VARIABLES:
@@ -2467,7 +2663,14 @@ contains
     character(len=*),parameter :: varnamesl(nfldsl) = (/ &
                                                           'ZLAKE ', &
                                                           'DZLAKE' &
-                                                          /)
+                                                      /)
+    real(r8), pointer :: histit(:,:)      ! temporary
+    real(r8), pointer :: histot(:,:)
+    integer, parameter :: nfldst = 2
+    character(len=*),parameter :: varnamest(nfldst) = (/ &
+                                                          'PCT_SAND ', &
+                                                          'PCT_CLAY '  &
+                                                      /)
     ! Scale type for subgrid averaging of landunits to grid cells, for lake fields
     character(len=scale_type_strlen) :: l2g_scale_typel(nfldsl) = [ &
          'lake', &  ! ZLAKE
@@ -2475,10 +2678,12 @@ contains
          ]
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col)   == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sucsat_col)   == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bsw_col)      == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hksat_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cellsand_col) == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cellclay_col) == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
 
     !-------------------------------------------------------------------------------
     !***      Non-time varying 3D fields                    ***
@@ -2672,6 +2877,85 @@ contains
 
     end if  ! (define/write mode
 
+    if (mode == 'define') then
+       do ifld = 1,nfldst
+          ! Field indices MUST match varnamest array order above!
+          if (ifld == 1) then
+             long_name='percent sand'; units = 'percent'
+          else if (ifld == 2) then
+             long_name='percent clay'; units = 'percent'
+          else
+             call endrun(msg=' ERROR: bad 3D time-constant field index'//errMsg(sourcefile, __LINE__))
+          end if
+          if (tape(t)%dov2xy) then
+             if (ldomain%isgrid2d) then
+                call ncd_defvar(ncid=nfid(t), varname=trim(varnamest(ifld)), xtype=tape(t)%ncprec,&
+                     dim1name='lon', dim2name='lat', dim3name='levsoi', &
+                     long_name=long_name, units=units, missing_value=spval, fill_value=spval)
+             else
+                call ncd_defvar(ncid=nfid(t), varname=trim(varnamest(ifld)), xtype=tape(t)%ncprec, &
+                     dim1name=grlnd, dim2name='levsoi', &
+                     long_name=long_name, units=units, missing_value=spval, fill_value=spval)
+             end if
+          else
+             call ncd_defvar(ncid=nfid(t), varname=trim(varnamest(ifld)), xtype=tape(t)%ncprec, &
+                  dim1name=namec, dim2name='levsoi', &
+                  long_name=long_name, units=units, missing_value=spval, fill_value=spval)
+          end if
+          call shr_string_listAppend(TimeConst3DVars,varnamest(ifld))
+       end do
+
+    else if (mode == 'write') then
+
+       allocate(histit(bounds%begc:bounds%endc,nlevsoi), stat=ier)
+       if (ier /= 0) then
+          write(iulog,*) trim(subname),' ERROR: allocation error for histit'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+
+       ! Write time constant fields
+
+       if (tape(t)%dov2xy) then
+          allocate(histot(bounds%begg:bounds%endg,nlevsoi), stat=ier)
+          if (ier /= 0) then
+             write(iulog,*)  trim(subname),' ERROR: allocation error for histot'
+             call endrun(msg=errMsg(sourcefile, __LINE__))
+          end if
+       end if
+
+       do ifld = 1,nfldst
+          histit(:,:) = spval
+          do lev = 1,nlevsoi
+             do c = bounds%begc,bounds%endc
+                ! Field indices MUST match varnamesl array order above!
+                if (ifld ==1) histit(c,lev) = cellsand_col(c,lev) 
+                if (ifld ==2) histit(c,lev) = cellclay_col(c,lev)
+             end do
+          end do
+          if (tape(t)%dov2xy) then
+             histot(:,:) = spval
+             call c2g(bounds, nlevsoi, &
+                  histit(bounds%begc:bounds%endc, :), &
+                  histot(bounds%begg:bounds%endg, :), &
+                  c2l_scale_type='unity', l2g_scale_type='veg')
+             if (ldomain%isgrid2d) then
+                call ncd_io(varname=trim(varnamest(ifld)), dim1name=grlnd, &
+                     data=histot, ncid=nfid(t), flag='write')
+             else
+                call ncd_io(varname=trim(varnamest(ifld)), dim1name=grlnd, &
+                     data=histot, ncid=nfid(t), flag='write')
+             end if
+          else
+             call ncd_io(varname=trim(varnamest(ifld)), dim1name=namec,  &
+                  data=histit, ncid=nfid(t), flag='write')
+          end if
+       end do
+
+       if (tape(t)%dov2xy) deallocate(histot)
+       deallocate(histit)
+
+    end if  ! (define/write mode
+
   end subroutine htape_timeconst3D
 
   !-----------------------------------------------------------------------
@@ -2680,6 +2964,7 @@ contains
     ! !DESCRIPTION:
     ! Write time constant values to primary history tape.
     use clm_time_manager, only : get_step_size
+    use SoilBiogeochemDecompCascadeConType, only : decomp_method, no_soil_decomp
     ! Issue the required netcdf wrapper calls to define the history file
     ! contents.
     !
@@ -2708,6 +2993,7 @@ contains
     use FatesInterfaceTypesMod, only : fates_hdim_levfuel
     use FatesInterfaceTypesMod, only : fates_hdim_levcwdsc
     use FatesInterfaceTypesMod, only : fates_hdim_levcan
+    !use FatesInterfaceTypesMod, only : fates_hdim_levleaf
     use FatesInterfaceTypesMod, only : fates_hdim_canmap_levcnlf
     use FatesInterfaceTypesMod, only : fates_hdim_lfmap_levcnlf
     use FatesInterfaceTypesMod, only : fates_hdim_canmap_levcnlfpf
@@ -2791,8 +3077,11 @@ contains
                   long_name='FATES pft index of the combined pft-size class dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_scmap_levscpf',xtype=ncd_int, dim1name='fates_levscpf', &
                   long_name='FATES size index of the combined pft-size class dimension', units='-', ncid=nfid(t))
+             ! Units are dash here with units of yr added to the long name so
+             ! that postprocessors (like ferret) won't get confused with what
+             ! the time coordinate is. EBK Nov/3/2021 (see #1540)
              call ncd_defvar(varname='fates_levcacls', xtype=tape(t)%ncprec, dim1name='fates_levcacls', &
-                  long_name='FATES cohort age class lower bound', units='years', ncid=nfid(t))
+                  long_name='FATES cohort age class lower bound (yr)', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_pftmap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
                   long_name='FATES pft index of the combined pft-cohort age class dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_camap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
@@ -2809,6 +3098,8 @@ contains
                   long_name='FATES cwd size class', ncid=nfid(t))
              call ncd_defvar(varname='fates_levcan',xtype=ncd_int, dim1name='fates_levcan', &
                   long_name='FATES canopy level', ncid=nfid(t))
+             call ncd_defvar(varname='fates_levleaf',xtype=ncd_int, dim1name='fates_levleaf', &
+                  long_name='FATES leaf+stem level', units='VAI', ncid=nfid(t))
              call ncd_defvar(varname='fates_canmap_levcnlf',xtype=ncd_int, dim1name='fates_levcnlf', &
                   long_name='FATES canopy level of combined canopy-leaf dimension', ncid=nfid(t))
              call ncd_defvar(varname='fates_lfmap_levcnlf',xtype=ncd_int, dim1name='fates_levcnlf', &
@@ -2844,7 +3135,7 @@ contains
           call ncd_io(varname='levgrnd', data=zsoi, ncid=nfid(t), flag='write')
           call ncd_io(varname='levsoi', data=zsoi(1:nlevsoi), ncid=nfid(t), flag='write')
           call ncd_io(varname='levlak' , data=zlak, ncid=nfid(t), flag='write')
-          if (use_vertsoilc) then
+          if ( decomp_method /= no_soil_decomp )then
              call ncd_io(varname='levdcmp', data=zsoi, ncid=nfid(t), flag='write')
           else
              zsoi_1d(1) = 1._r8
@@ -2865,6 +3156,7 @@ contains
              call ncd_io(varname='fates_levfuel',data=fates_hdim_levfuel, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levcwdsc',data=fates_hdim_levcwdsc, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levcan',data=fates_hdim_levcan, ncid=nfid(t), flag='write')
+             !call ncd_io(varname='fates_levleaf',data=fates_hdim_levleaf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_canmap_levcnlf',data=fates_hdim_canmap_levcnlf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_lfmap_levcnlf',data=fates_hdim_lfmap_levcnlf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_canmap_levcnlfpf',data=fates_hdim_canmap_levcnlfpf, ncid=nfid(t), flag='write')
@@ -3175,7 +3467,7 @@ contains
 
        if (mode == 'define') then
 
-          select case (avgflag)
+          select case (avgflag(1:1))
           case ('A')
              avgstr = 'mean'
           case ('I')
@@ -3184,8 +3476,10 @@ contains
              avgstr = 'maximum'
           case ('M')
              avgstr = 'minimum'
-          case ('SUM')
+          case ('S')
              avgstr = 'sum'
+          case ('L')
+             avgstr = 'local solar time'
           case default
              write(iulog,*) trim(subname),' ERROR: unknown time averaging flag (avgflag)=',avgflag
              call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -3282,7 +3576,7 @@ contains
     ! Write/define 1d info for history tape.
     !
     ! !USES:
-    use decompMod   , only : ldecomp
+    use decompMod   , only : gindex_global
     use domainMod   , only : ldomain, ldomain
     !
     ! !ARGUMENTS:
@@ -3294,6 +3588,7 @@ contains
     integer :: k                         ! 1d index
     integer :: g,c,l,p                   ! indices
     integer :: ier                       ! errir status
+    integer :: gindex                    ! global gridcell index
     real(r8), pointer :: rgarr(:)        ! temporary
     real(r8), pointer :: rcarr(:)        ! temporary
     real(r8), pointer :: rlarr(:)        ! temporary
@@ -3302,7 +3597,7 @@ contains
     integer , pointer :: icarr(:)        ! temporary
     integer , pointer :: ilarr(:)        ! temporary
     integer , pointer :: iparr(:)        ! temporary
-    type(file_desc_t), pointer :: ncid            ! netcdf file
+    type(file_desc_t), pointer :: ncid   ! netcdf file
     type(bounds_type) :: bounds
     character(len=*),parameter :: subname = 'hfields_1dinfo'
 !-----------------------------------------------------------------------
@@ -3463,11 +3758,13 @@ contains
        call ncd_io(varname='grid1d_lon', data=grc%londeg, dim1name=nameg, ncid=ncid, flag='write')
        call ncd_io(varname='grid1d_lat', data=grc%latdeg, dim1name=nameg, ncid=ncid, flag='write')
        do g = bounds%begg,bounds%endg
-         igarr(g)= mod(ldecomp%gdc2glo(g)-1,ldomain%ni) + 1
+         gindex = gindex_global(g-bounds%begg+1)
+         igarr(g)= mod(gindex-1,ldomain%ni) + 1
        enddo
        call ncd_io(varname='grid1d_ixy', data=igarr      , dim1name=nameg, ncid=ncid, flag='write')
        do g = bounds%begg,bounds%endg
-         igarr(g)= (ldecomp%gdc2glo(g) - 1)/ldomain%ni + 1
+         gindex = gindex_global(g-bounds%begg+1)
+         igarr(g)= (gindex-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='grid1d_jxy', data=igarr      , dim1name=nameg, ncid=ncid, flag='write')
 
@@ -3482,14 +3779,17 @@ contains
        enddo
        call ncd_io(varname='land1d_lat', data=rlarr, dim1name=namel, ncid=ncid, flag='write')
        do l= bounds%begl,bounds%endl
-         ilarr(l) = mod(ldecomp%gdc2glo(lun%gridcell(l))-1,ldomain%ni) + 1
+         gindex = gindex_global(lun%gridcell(l)-bounds%begg+1)
+         ilarr(l) = mod(gindex-1,ldomain%ni) + 1
        enddo
        call ncd_io(varname='land1d_ixy', data=ilarr, dim1name=namel, ncid=ncid, flag='write')
        do l = bounds%begl,bounds%endl
-         ilarr(l) = (ldecomp%gdc2glo(lun%gridcell(l))-1)/ldomain%ni + 1
+         gindex = gindex_global(lun%gridcell(l)-bounds%begg+1)
+         ilarr(l) = (gindex-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='land1d_jxy'      , data=ilarr        , dim1name=namel, ncid=ncid, flag='write')
-       ilarr = GetGlobalIndexArray(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, clmlevel=nameg)
+       ilarr = get_global_index_array(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, &
+            subgrid_level=subgrid_level_gridcell)
        call ncd_io(varname='land1d_gi'       , data=ilarr, dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_wtgcell'  , data=lun%wtgcell , dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_ityplunit', data=lun%itype   , dim1name=namel, ncid=ncid, flag='write')
@@ -3506,16 +3806,20 @@ contains
        enddo
        call ncd_io(varname='cols1d_lat', data=rcarr, dim1name=namec, ncid=ncid, flag='write')
        do c = bounds%begc,bounds%endc
-         icarr(c) = mod(ldecomp%gdc2glo(col%gridcell(c))-1,ldomain%ni) + 1
+         gindex = gindex_global(col%gridcell(c)-bounds%begg+1)
+         icarr(c) = mod(gindex-1,ldomain%ni) + 1
        enddo
        call ncd_io(varname='cols1d_ixy', data=icarr, dim1name=namec, ncid=ncid, flag='write')
        do c = bounds%begc,bounds%endc
-         icarr(c) = (ldecomp%gdc2glo(col%gridcell(c))-1)/ldomain%ni + 1
+         gindex = gindex_global(col%gridcell(c)-bounds%begg+1)
+         icarr(c) = (gindex-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='cols1d_jxy'    , data=icarr         ,dim1name=namec, ncid=ncid, flag='write')
-       icarr = GetGlobalIndexArray(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=nameg)
+       icarr = get_global_index_array(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, &
+            subgrid_level=subgrid_level_gridcell)
        call ncd_io(varname='cols1d_gi'     , data=icarr, dim1name=namec, ncid=ncid, flag='write')
-       icarr = GetGlobalIndexArray(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=namel)
+       icarr = get_global_index_array(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, &
+            subgrid_level=subgrid_level_landunit)
        call ncd_io(varname='cols1d_li', data=icarr            , dim1name=namec, ncid=ncid, flag='write')
 
        call ncd_io(varname='cols1d_wtgcell', data=col%wtgcell , dim1name=namec, ncid=ncid, flag='write')
@@ -3540,19 +3844,24 @@ contains
        enddo
        call ncd_io(varname='pfts1d_lat', data=rparr, dim1name=namep, ncid=ncid, flag='write')
        do p = bounds%begp,bounds%endp
-         iparr(p) = mod(ldecomp%gdc2glo(patch%gridcell(p))-1,ldomain%ni) + 1
+         gindex = gindex_global(patch%gridcell(p)-bounds%begg+1)
+         iparr(p) = mod(gindex-1,ldomain%ni) + 1
        enddo
        call ncd_io(varname='pfts1d_ixy', data=iparr, dim1name=namep, ncid=ncid, flag='write')
        do p = bounds%begp,bounds%endp
-         iparr(p) = (ldecomp%gdc2glo(patch%gridcell(p))-1)/ldomain%ni + 1
+         gindex = gindex_global(patch%gridcell(p)-bounds%begg+1)
+         iparr(p) = (gindex-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='pfts1d_jxy'      , data=iparr        , dim1name=namep, ncid=ncid, flag='write')
 
-       iparr = GetGlobalIndexArray(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=nameg)
+       iparr = get_global_index_array(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+            subgrid_level=subgrid_level_gridcell)
        call ncd_io(varname='pfts1d_gi'       , data=iparr, dim1name=namep, ncid=ncid, flag='write')
-       iparr = GetGlobalIndexArray(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namel)
+       iparr = get_global_index_array(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+            subgrid_level=subgrid_level_landunit)
        call ncd_io(varname='pfts1d_li'       , data=iparr, dim1name=namep, ncid=ncid, flag='write')
-       iparr = GetGlobalIndexArray(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namec)
+       iparr = get_global_index_array(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+            subgrid_level=subgrid_level_column)
        call ncd_io(varname='pfts1d_ci'  , data=iparr              , dim1name=namep, ncid=ncid, flag='write')
 
        call ncd_io(varname='pfts1d_wtgcell'  , data=patch%wtgcell , dim1name=namep, ncid=ncid, flag='write')
@@ -3581,7 +3890,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine hist_htapes_wrapup( rstwr, nlend, bounds, &
-       watsat_col, sucsat_col, bsw_col, hksat_col)
+       watsat_col, sucsat_col, bsw_col, hksat_col, cellsand_col, cellclay_col)
     !
     ! !DESCRIPTION:
     ! Write history tape(s)
@@ -3607,7 +3916,7 @@ contains
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
     use clm_varcon      , only : secspday
     use perf_mod        , only : t_startf, t_stopf
-    use clm_varpar      , only : nlevgrnd, nlevmaxurbgrnd
+    use clm_varpar      , only : nlevgrnd, nlevmaxurbgrnd, nlevsoi
     !
     ! !ARGUMENTS:
     logical, intent(in) :: rstwr    ! true => write restart file this step
@@ -3617,6 +3926,8 @@ contains
     real(r8)          , intent(in) :: sucsat_col( bounds%begc:,1: )
     real(r8)          , intent(in) :: bsw_col( bounds%begc:,1: )
     real(r8)          , intent(in) :: hksat_col( bounds%begc:,1: )
+    real(r8)          , intent(in) :: cellsand_col( bounds%begc:,1: )
+    real(r8)          , intent(in) :: cellclay_col( bounds%begc:,1: )
     !
     ! !LOCAL VARIABLES:
     integer :: t                          ! tape index
@@ -3640,10 +3951,12 @@ contains
     character(len=*),parameter :: subname = 'hist_htapes_wrapup'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col)    == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sucsat_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bsw_col)       == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hksat_col)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cellsand_col)  == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cellclay_col)  == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
 
     ! get current step
 
@@ -3716,7 +4029,8 @@ contains
              ! Define 3D time-constant field variables on first history tapes
              if ( do_3Dtconst) then
                 call htape_timeconst3D(t, &
-                     bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='define')
+                     bounds, watsat_col, sucsat_col, bsw_col, hksat_col, &
+                     cellsand_col, cellclay_col, mode='define')
                 TimeConst3DVars_Filename = trim(locfnh(t))
              end if
 
@@ -3735,7 +4049,8 @@ contains
           ! Write 3D time constant history variables to first history tapes
           if ( do_3Dtconst .and. tape(t)%ntimes == 1 )then
              call htape_timeconst3D(t, &
-                  bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='write')
+                  bounds, watsat_col, sucsat_col, bsw_col, hksat_col, &
+                  cellsand_col, cellclay_col, mode='write')
              do_3Dtconst = .false.
           end if
 
@@ -4678,7 +4993,7 @@ contains
    end function getname
 
    !-----------------------------------------------------------------------
-   character(len=1) function getflag (inname)
+   character(len=avgflag_strlen) function getflag (inname)
      !
      ! !DESCRIPTION:
      ! Retrieve flag portion of inname. If an averaging flag separater character
@@ -4703,7 +5018,7 @@ contains
      getflag = ' '
      do i = 1,length
         if (inname(i:i) == ':') then
-           getflag = inname(i+1:i+1)
+           getflag = trim(inname(i+1:length))
            exit
         end if
      end do
@@ -5139,6 +5454,8 @@ contains
        num2d = nlevage*numpft_fates
     case ('fates_levcan')
        num2d = nclmax
+    case ('fates_levleaf')
+       num2d = nlevleaf
     case ('fates_levcnlf')
        num2d = nlevleaf * nclmax
     case ('fates_levcnlfpf')
@@ -5186,7 +5503,7 @@ contains
 
     ! History buffer pointer
     hpindex = pointer_index()
-   
+
 
     if (present(ptr_lnd)) then
        l_type1d = grlnd
@@ -5546,6 +5863,8 @@ contains
     ! Returns true if the given avgflag is a valid option, false if not
     !
     ! !USES:
+    use clm_varcon      , only : isecspday
+    use clm_time_manager, only : get_step_size
     !
     ! !ARGUMENTS:
     logical :: valid  ! function result
@@ -5555,6 +5874,8 @@ contains
     ! !LOCAL VARIABLES:
 
     character(len=*), parameter :: subname = 'avgflag_valid'
+    integer :: tod                      ! Desired local solar time of output in seconds
+    integer :: dtime                    ! timestep size [seconds]
     !-----------------------------------------------------------------------
 
     ! This initial check is mainly here to catch the possibility that someone has added a
@@ -5568,6 +5889,22 @@ contains
          avgflag == 'X' .or. avgflag == 'M' .or. &
          avgflag == 'SUM') then
        valid = .true.
+    else if (avgflag(1:1) == 'L') then
+       dtime = get_step_size()
+       if ( len_trim(avgflag) < 6 )then
+          valid = .false.
+       else
+          read(avgflag(2:6), *) tod
+          if (tod >= 0 .and. tod <= isecspday) then
+             valid = .true.
+             if(tod < dtime .or. isecspday - tod <= dtime) then
+                write(iulog,*) 'Warning: Local time history output ', avgflag, ' is closer than ', &
+                   'dtime to midnight! This is problematic particularly for daily output.'
+             end if
+          else
+             valid = .false.
+          end if
+       end if
     else
        valid = .false.
     end if

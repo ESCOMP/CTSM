@@ -110,9 +110,6 @@ with open(rawdatafile, 'r') as t1:
        if x[0].strip() == 'mksrf_fvic':
           fvic = x[1].strip()
           fvic = fvic.strip("'")
-       if x[0].strip() == 'mksrf_fch4':
-          fch4 = x[1].strip()
-          fch4 = fch4.strip("'")
        if x[0].strip() == 'mksrf_furban':
           furban = x[1].strip()
           furban = furban.strip("'")
@@ -340,23 +337,6 @@ if create_surfdata:
    f2['Ws']    =  np.asarray(r2['Ws'])
    f2['Dsmax'] =  np.asarray(r2['Dsmax'])
    f2['Ds']    =  np.asarray(r2['Ds'])
-   r1.close() ; r2.close()
-
-  #--  Methane
-   r1  = xr.open_dataset(fch4)
-   # create 1d variables
-   lon0=np.asarray(r1['LONGXY'][0,:])
-   lon=xr.DataArray(lon0,name='lon',dims='lon',coords={'lon':lon0})
-   lat0=np.asarray(r1['LATIXY'][:,0])
-   lat=xr.DataArray(lat0,name='lat',dims='lat',coords={'lat':lat0})
-   r1['lon'] = lon
-   r1['lat'] = lat
-   r1=r1.rename({'lsmlon':'lon','lsmlat':'lat'})
-   # extract gridcell closest to plon/plat (this file is [0,360]
-   r2  = r1.sel(lon=plon,lat=plat,method='nearest')
-   f2['P3']   =  np.asarray(r2['P3'])
-   f2['ZWT0'] =  np.asarray(r2['ZWT0'])
-   f2['F0']   =  np.asarray(r2['F0'])
    r1.close() ; r2.close()
 
    #--  Soil Color
