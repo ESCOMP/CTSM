@@ -19,15 +19,13 @@ module FanStreamMod
   use spmdMod     , only: mpicom, masterproc, comp_id, iam
   use clm_varctl  , only: iulog
   use abortutils  , only: endrun
-  use fileutils   , only: getavu, relavu
-  use decompMod   , only: bounds_type, ldecomp, gsmap_lnd_gdc2glo 
+  use decompMod   , only: bounds_type
   use domainMod   , only: ldomain
   use ndepStreamMod, only: clm_domain_mct
 
   ! !PUBLIC TYPES:
   implicit none
   private
-  save
 
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: fanstream_init     ! position datasets for dynamic ndep2
@@ -80,12 +78,13 @@ contains
    ! Initialize data stream information.  
    !
    ! Uses:
-   use clm_varctl       , only : inst_name
-   use clm_time_manager , only : get_calendar
-   use ncdio_pio        , only : pio_subsystem
-   use shr_pio_mod      , only : shr_pio_getiotype
-   use shr_nl_mod       , only : shr_nl_find_group_name
-   use shr_log_mod      , only : errMsg => shr_log_errMsg
+   use clm_varctl                , only : inst_name
+   use clm_time_manager          , only : get_calendar
+   use ncdio_pio                 , only : pio_subsystem
+   use shr_pio_mod               , only : shr_pio_getiotype
+   use shr_nl_mod                , only : shr_nl_find_group_name
+   use shr_log_mod               , only : errMsg => shr_log_errMsg
+   use lnd_set_decomp_and_domain , only : gsmap_global
    !
    ! arguments
    implicit none
@@ -124,7 +123,7 @@ contains
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
+        gsmap=gsmap_global, ggrid=dom_clm,          &
         nxg=ldomain%ni, nyg=ldomain%nj,             &
         yearFirst=stream_year_first_fan,          &
         yearLast=stream_year_last_fan,            &
@@ -162,7 +161,7 @@ contains
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
+        gsmap=gsmap_global, ggrid=dom_clm,          &
         nxg=ldomain%ni, nyg=ldomain%nj,             &
         yearFirst=stream_year_first_fan,          &
         yearLast=stream_year_last_fan,            &
@@ -200,7 +199,7 @@ contains
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
+        gsmap=gsmap_global, ggrid=dom_clm,          &
         nxg=ldomain%ni, nyg=ldomain%nj,             &
         yearFirst=stream_year_first_fan,          &
         yearLast=stream_year_last_fan,            &
@@ -232,7 +231,7 @@ contains
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
+        gsmap=gsmap_global, ggrid=dom_clm,          &
         nxg=ldomain%ni, nyg=ldomain%nj,             &
         yearFirst=stream_year_first_fan,          &
         yearLast=stream_year_last_fan,            &
@@ -264,7 +263,7 @@ contains
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
+        gsmap=gsmap_global, ggrid=dom_clm,          &
         nxg=ldomain%ni, nyg=ldomain%nj,             &
         yearFirst=stream_year_first_fan,          &
         yearLast=stream_year_last_fan,            &
@@ -292,7 +291,7 @@ contains
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
+        gsmap=gsmap_global, ggrid=dom_clm,          &
         nxg=ldomain%ni, nyg=ldomain%nj,             &
         yearFirst=stream_year_first_fan,          &
         yearLast=stream_year_last_fan,            &
