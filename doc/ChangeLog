@@ -16,19 +16,21 @@ Significant changes to scientifically-supported configurations
 
 [X] clm5_1
 
-[ ] clm5_0
+[X] clm5_0
 
-[ ] ctsm5_0-nwp
+[X] ctsm5_0-nwp
 
-[ ] clm4_5
+[X] clm4_5
 
 
 Bugs fixed or introduced
 ------------------------
 
-CTSM issues fixed (include CTSM Issue #): #1822
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1822 (seq_drydep_mod should be replaced by shr_drydep_mod)
 
-Known bugs introduced in this tag (include issue #): #1844
+Known bugs introduced in this tag (include issue #):
+- ESCOMP/CTSM#1844 (Create new auxiliary history file for cplhist test with ndep data)
 
 
 Notes of particular relevance for users
@@ -40,6 +42,10 @@ You will need to either use an older version of CTSM or use an updated version o
 Testing summary:
 ----------------
 
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- OK
@@ -47,14 +53,14 @@ Testing summary:
 
     Two expected fails on cheyenne, one new expected fail due to issue just introduced (#1844)
 
-    FAIL SMS_D_Ld1_PS.f09_g17.I1850Clm50BgcSpinup.cheyenne_intel.clm-cplhist RU time=62 (EXPECTED FAILURE)
+    FAIL SMS_D_Ld1_PS.f09_g17.I1850Clm50BgcSpinup.cheyenne_intel.clm-cplhist RUN time=62 (EXPECTED FAILURE)
     FAIL SMS_D.f10_f10_mg37.I2000Clm51BgcCrop.cheyenne_nvhpc.clm-crop RUN time=12 (EXPECTED FAILURE)
 
 
 Answer changes
 --------------
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: YES
 
   Summarize any changes to answers, i.e.,
     - what code configurations: almost all configurations due to major change on CDEPS side to coszen angle time
