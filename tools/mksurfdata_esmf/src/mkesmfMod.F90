@@ -63,7 +63,7 @@ contains
          dstMaskValues=(/dstMaskValue/), &
          srcTermProcessing=srcTermProcessing_Value, &
          ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, &
-         dstFracField= dstFracField, rc=rc)
+         dstFracField= dstFracField, checkFlag=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
 
@@ -119,7 +119,7 @@ contains
          dstMaskValues=(/dstMaskValue/), &
          srcTermProcessing=srcTermProcessing_Value, &
          ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, &
-         dstFracField= dstFracField, rc=rc)
+         dstFracField= dstFracField, checkFlag=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
 

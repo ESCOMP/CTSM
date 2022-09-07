@@ -147,7 +147,7 @@ contains
     call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
          regridmethod=ESMF_REGRIDMETHOD_CONSERVE, srcTermProcessing=srcTermProcessing_Value, &
          ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, &
-         dstFracField= field_dstfrac, rc=rc)
+         dstFracField= field_dstfrac, checkFlag=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
 

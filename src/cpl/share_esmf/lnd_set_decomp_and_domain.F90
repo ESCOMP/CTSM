@@ -396,7 +396,8 @@ contains
          srcMaskValues=(/srcMaskValue/), dstMaskValues=(/dstMaskValue/), &
          regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=ESMF_NORMTYPE_DSTAREA, &
          srcTermProcessing=srcTermProcessing_Value, &
-         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
+         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, &
+         checkFlag=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! fill in values for field_mask with mask on mask mesh

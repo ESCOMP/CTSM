@@ -143,7 +143,8 @@ contains
     end if
     call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
          regridmethod=ESMF_REGRIDMETHOD_CONSERVE, srcTermProcessing=srcTermProcessing_Value, &
-         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
+         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, &
+         checkFlag=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     if (root_task) then
        write(ndiag,'(a)') subname//' finished creating a routehandle '
