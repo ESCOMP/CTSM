@@ -553,7 +553,7 @@
       <option name="comment"  >Longer production smoke test with FAN on</option>
     </options>
   </test>
-  <test name="SMS_Lm9_Vmct" grid="1x1_smallvilleIA" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009StartMonthly">
+  <test name="SMS_Lm9_Vmct" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/fanFull2009StartMonthly">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="intel" category="aux_clm"/>
@@ -563,7 +563,7 @@
       <option name="comment"  >Longer single point case with FAN on</option>
     </options>
   </test>
-  <test name="ERS_D_Vmct" grid="1x1_smallvilleIA" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009Start">
+  <test name="ERS_D_Vmct" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/fanFull2009Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
