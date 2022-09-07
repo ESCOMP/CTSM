@@ -553,24 +553,24 @@
       <option name="comment"  >Longer production smoke test with FAN on</option>
     </options>
   </test>
-  <test name="SMS_Lm9_Vmct" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/fanFull2009StartMonthly">
+  <test name="SMS_Lm9_Vmct" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropRs" testmods="clm/fanFull2009StartMonthly">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
-      <option name="comment"  >Longer single point case with FAN on</option>
+      <option name="comment"  >Longer single point case with FAN on, not using Qian dataset since starts in 2009 five years after last Qian data</option>
     </options>
   </test>
-  <test name="ERS_D_Vmct" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/fanFull2009Start">
+  <test name="ERS_D_Vmct" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropRs" testmods="clm/fanFull2009Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
-      <option name="comment"  >Single point restart test with DEBUG and FAN on</option>
+      <option name="comment"  >Single point restart test with DEBUG and FAN on, not using Qian dataset since starts in 2009 five years after last Qian data</option>
     </options>
   </test>
   <test name="ERP_D_P36x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN">
