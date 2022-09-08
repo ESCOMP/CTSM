@@ -9,12 +9,13 @@ module FanStreamMod
   ! uses:
   use ESMF
   use dshr_strdata_mod , only : shr_strdata_type
-  use shr_kind_mod     , only: r8 => shr_kind_r8, CL => shr_kind_cl
+  use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl
   use clm_varcon       , only : ispval
-  use spmdMod          , only: mpicom, masterproc, comp_id, iam
-  use clm_varctl       , only: iulog
-  use abortutils       , only: endrun
-  use decompMod        , only: bounds_type
+  use shr_log_mod      , only : errMsg => shr_log_errMsg
+  use spmdMod          , only : mpicom, masterproc, comp_id, iam
+  use clm_varctl       , only : iulog
+  use abortutils       , only : endrun
+  use decompMod        , only : bounds_type
 
   !
   implicit none
@@ -26,7 +27,7 @@ module FanStreamMod
   public :: set_bcast_fanstream_pars  ! Set teh namelist parameters for the FAN streams
 
   ! Private module data
-  type(shr_strdata_type)  :: sdat                ! input data streams
+  type(shr_strdata_type)  :: sdat_fan            ! input data streams
   integer :: stream_year_first_fan = ispval      ! first year in stream to use
   integer :: stream_year_last_fan = ispval       ! last year in stream to use
   integer :: model_year_align_fan = ispval       ! align year to align model years with FAN streams
@@ -83,10 +84,8 @@ contains
    use ncdio_pio                 , only : pio_subsystem
    use shr_pio_mod               , only : shr_pio_getiotype
    use shr_nl_mod                , only : shr_nl_find_group_name
-   use shr_log_mod               , only : errMsg => shr_log_errMsg
    use lnd_comp_shr              , only : mesh, model_clock
    use dshr_strdata_mod          , only : shr_strdata_init_from_inline, shr_strdata_print
-   use dshr_strdata_mod          , only : shr_strdata_advance
    use dshr_methods_mod          , only : dshr_fldbun_getfldptr
    !
    ! Arguments:
@@ -98,8 +97,8 @@ contains
    integer            :: nu_nml    ! unit for namelist file
    integer            :: nml_error ! namelist i/o error flag
    integer            :: rc        ! error code
-   character(len=16), allocatable :: stream_varnames(:) ! array of stream field names
-   character(len=80) :: streamvar, streamvar2           ! Specific stream variable names
+   character(len=16) :: stream_varnames(6)     ! array of stream field names
+   character(len=80) :: streamvar, streamvar2  ! Specific stream variable names
    character(*), parameter :: subName = "('fanstream_init')"
    !-----------------------------------------------------------------------
 
@@ -108,7 +107,6 @@ contains
       call endrun(msg=subName//'ERROR stream_year_first_fan not set at '//errMsg(sourcefile, __LINE__))
    end if
 
-   allocate(stream_varnames(6))
    if (crop_manure_per_crop) then
       streamvar  = 'manure_sgrz_crop'
       streamvar2 = 'manure_ngrz_crop'
@@ -116,8 +114,7 @@ contains
       streamvar  = 'manure_sgrz'
       streamvar2 = 'manure_ngrz'
    end if
-   else
-   stream_varnames = (/
+   stream_varnames = (/ &
         'manure_grz',   &
         streamvar,      &
         streamvar2,     &
@@ -136,14 +133,14 @@ contains
       write(iulog,*) ' '
    endif
    !
-   ! Initialize the cdeps data type sdat
-   call shr_strdata_init_from_inline(sdat, &
+   ! Initialize the cdeps data type sdat_fan
+   call shr_strdata_init_from_inline(sdat_fan, &
               my_task             = iam, &
               logunit             = iulog, &
               compname            = 'LND', &
               model_clock         = model_clock, &
               model_mesh          = mesh, &
-              stream_meshfile     = "filethisin" &
+              stream_meshfile     = "filethisin", &
               stream_lev_dimname  = 'null', &
               stream_mapalgo      = fan_mapalgo, &
               stream_filenames    = (/trim(stream_fldFileName_fan)/), &
@@ -163,7 +160,7 @@ contains
    end if
 
    if (masterproc) then
-      call shr_strdata_print(sdat_grz,'CLMFAN data')
+      call shr_strdata_print(sdat_fan,'CLMFAN data')
    endif
 
  end subroutine fanstream_init
@@ -180,6 +177,7 @@ contains
    use clm_varcon      , only : secspday
    use atm2lndType     , only : atm2lnd_type
    use shr_infnan_mod  , only : isinf => shr_infnan_isinf
+   use dshr_strdata_mod, only : shr_strdata_advance
    !
    ! Arguments
    type(bounds_type) , intent(in)    :: bounds  
@@ -203,7 +201,7 @@ contains
    mcdate = year*10000 + mon*100 + day
    dayspyr = get_days_per_year( )
 
-   call shr_strdata_advance(sdat, ymd=mcdate, tod=sec, logunit=iulog, istr='clmfan', rc=rc)
+   call shr_strdata_advance(sdat_fan, ymd=mcdate, tod=sec, logunit=iulog, istr='clmfan', rc=rc)
    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
       call ESMF_Finalize(endflag=ESMF_END_ABORT)
    end if
@@ -211,7 +209,7 @@ contains
    ig = 0
    do g = bounds%begg,bounds%endg
       ig = ig+1
-!     atm2lnd_inst%forc_ndep_grz_grc(g) = sdat%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
+!     atm2lnd_inst%forc_ndep_grz_grc(g) = sdat_fan%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
    end do
 
  end subroutine fanstream_interp
