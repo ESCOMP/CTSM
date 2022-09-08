@@ -1665,7 +1665,7 @@ sub process_namelist_inline_logic {
   ##################################
   # namelist group: dO3_streams  #
   ##################################
-  setup_logic_dO3_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_do3_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ##########################################
   # namelist group: soil_moisture_streams  #
@@ -3830,12 +3830,12 @@ sub setup_logic_lai_streams {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_dO3_streams {
+sub setup_logic_do3_streams {
   # input file for creating diurnal ozone from >daily data
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_dO3_streams');
-      if ( &value_is_true( $nl->get_value('use_dO3_streams') ) ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_do3_streams');
+      if ( &value_is_true( $nl->get_value('use_do3_streams') ) ) {
           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_dO3',
                       'hgrid'=>"360x720cru" );
           if ($opts->{'driver'} eq "nuopc" ) {
@@ -3843,9 +3843,9 @@ sub setup_logic_dO3_streams {
                           'hgrid'=>"360x720cru" );
           }
       } else {
-         if ( defined($nl->get_value('stream_fldfilename_dO3'))) {
-             $log->fatal_error("One of the dO3 streams namelist items (stream_fldfilename_dO3, " .
-                                " is defined, but use_dO3_streams option NOT set to true");
+         if ( defined($nl->get_value('stream_fldfilename_do3'))) {
+             $log->fatal_error("One of the do3 streams namelist items (stream_fldfilename_do3, " .
+                                " is defined, but use_do3_streams option NOT set to true");
          }
       }
 }

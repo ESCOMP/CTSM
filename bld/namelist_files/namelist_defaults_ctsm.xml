@@ -1556,13 +1556,13 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 
-<!-- dO3 streams namelist defaults -->
-<use_dO3_streams        >.false.</use_dO3_streams>
+<!-- do3 streams namelist defaults -->
+<use_do3_streams        >.false.</use_do3_streams>
 
-<stream_fldfilename_dO3 hgrid="360x720cru"       >/glade/work/afoster/ozone_damage_files/diurnal_factor_O3surface_ssp370_2015-2024_c20220502.nc </stream_fldfilename_dO3>
-<stream_meshfile_dO3    hgrid="360x720cru"       >$DIN_LOC_ROOT/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc</stream_meshfile_dO3>
+<stream_fldfilename_do3 hgrid="360x720cru"       >/glade/work/afoster/ozone_damage_files/diurnal_factor_O3surface_ssp370_2015-2024_c20220502.nc </stream_fldfilename_do3>
+<stream_meshfile_do3    hgrid="360x720cru"       >$DIN_LOC_ROOT/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc</stream_meshfile_do3>
 
-<dO3_mapalgo>bilinear</dO3__mapalgo>
+<do3_mapalgo>bilinear</do3_mapalgo>
 
 <!-- lightning streams namelist defaults -->
 

@@ -1815,18 +1815,18 @@ Mapping method from LAI input file to the model resolution
 Toggle to turn on reading in of diurnal ozone anomaly file. Used to convert >daily ozone to sub-daily
 </entry>
 
-<entry id="stream_fldfilename_dO3" type="char*256(30)" category="datasets"
-       input_pathname="abs" group="dO3_streams" valid_values="" >
+<entry id="stream_fldfilename_do3" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="do3_streams" valid_values="" >
 Filename of input stream data for diurnal ozone anomaly
 </entry>
 
-<entry id="stream_meshfile_dO3" type="char*256" category="datasets"
-       input_pathname="abs" group="dO3_streams" valid_values="" >
+<entry id="stream_meshfile_do3" type="char*256" category="datasets"
+       input_pathname="abs" group="do3_streams" valid_values="" >
 Filename of mesh file for diurnal ozone anomaly file
 </entry>
 
-<entry id="dO3_mapalgo" type="char*256" category="datasets"
-       group="dO3_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+<entry id="do3_mapalgo" type="char*256" category="datasets"
+       group="do3_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
 Mapping method from diurnal ozone input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor

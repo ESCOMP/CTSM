@@ -92,7 +92,7 @@ contains
     endif
     call shr_mpi_bcast(stream_fldFileName_dO3 , mpicom)
     call shr_mpi_bcast(stream_meshfile_dO3    , mpicom)
-    call shr_mpi_bcast(dO3_tintalgo           , mpicom)
+    call shr_mpi_bcast(dO3_mapalgo            , mpicom)
 
     if (masterproc) then
        write(iulog,*)
@@ -118,14 +118,14 @@ contains
          stream_filenames    = (/trim(stream_fldfilename_dO3)/), &
          stream_fldlistFile  = stream_varnames,                  &
          stream_fldListModel = stream_varnames,                  &
-         stream_yearFirst    = 'null',                           &
-         stream_yearLast     = 'null',                           &
-         stream_yearAlign    = 'null',                           &
-         stream_offset       = 'null',                           &
+         stream_yearFirst    = 1,                                &
+         stream_yearLast     = 1,                                &
+         stream_yearAlign    = 1,                                &
+         stream_offset       = 0,                                &
          stream_taxmode      = 'null',                           &
-         stream_dtlimit      = 'null',                           &
+         stream_dtlimit      = 0.0_r8,                           &
          stream_tintalgo     = 'null',                           &
-         stream_name         = 'dO3 data',                       &
+         stream_name         = 'do3 data',                       &
          rc                  = rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
