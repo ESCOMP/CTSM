@@ -100,7 +100,7 @@ contains
    integer            :: nml_error ! namelist i/o error flag
    integer            :: rc        ! error code
    character(len=16) :: stream_varnames(6)     ! array of stream field names
-   character(len=80) :: streamvar, streamvar2  ! Specific stream variable names
+   character(len=16) :: streamvar, streamvar2  ! Specific stream variable names
    character(*), parameter :: subName = "('fanstream_init')"
    !-----------------------------------------------------------------------
 
@@ -117,12 +117,12 @@ contains
       streamvar2 = 'manure_ngrz'
    end if
    stream_varnames = (/ &
-        'manure_grz',   &
+        'manure_grz      ',   &
         streamvar,      &
         streamvar2,     &
-        'fract_urea',   &
-        'fract_nitr',   &
-        'soilph    '    &
+        'fract_urea      ',   &
+        'fract_nitr      ',   &
+        'soilph          '    &
    /)
    
    if (masterproc) then
