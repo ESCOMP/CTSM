@@ -1,4 +1,84 @@
 ===============================================================
+Tag name: ctsm5.1.dev108
+Originator(s): adrifoster (Adrianna Foster)
+Date: Thu Sep  8 08:22:38 MDT 2022
+One-line Summary: Connect ozone from atmosphere
+
+Purpose and description of changes
+----------------------------------
+
+Allow atmospheric input of ozone partial pressure (monthly, mol/mol) to CTSM and
+use this ozone in the OzoneMod module.
+
+Specific notes: Add ozone to atm2lndType and also add as an output history variable (ATM_O3).
+Read in O3 in lnd_import_export. Connect to the OzoneMod module:
+in CalcOzoneUptakeOnePoint we now use this input ozone, rather than a static parameter.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#270 (Receive ozone from atmosphere)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): Note that
+currently ozone is used as an interpolated monthly variable, and is not yet
+downscaled to the sub-daily scale. This will be done in a susequent PR.
+
+Changes to the datasets (e.g., parameter, surface or initial files): New ozone
+input files used in DATM mode to drive OzoneMod
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+  All pass with only FIELDLIST diffs except for O3 tests, which have BASELINE DIFFs and NLCOMP fails.
+  This makes sense because we are using different ozone values to drive the OzoneMod:
+
+  ERP_D_Ld5_P48x1.f10_f10_mg37.I2000Clm50Sp.izumi_nag.clm-o3lombardozzi2015
+  ERP_P72x2_Ly3.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_intel.clm-irrig_o3falk_reduceOutput
+
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: when o3_veg_stress_method = 'stress_falk' or 'stress_lombardozzi2015' in user_nl_clm
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/1837
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev107
 Originator(s): adrifoster (Adrianna Foster)
 Date: Wed Sep  7 14:40:33 MDT 2022
