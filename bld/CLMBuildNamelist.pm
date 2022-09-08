@@ -3836,10 +3836,10 @@ sub setup_logic_do3_streams {
 
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_do3_streams');
       if ( &value_is_true( $nl->get_value('use_do3_streams') ) ) {
-          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_dO3',
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_do3',
                       'hgrid'=>"360x720cru" );
           if ($opts->{'driver'} eq "nuopc" ) {
-              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_dO3',
+              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_do3',
                           'hgrid'=>"360x720cru" );
           }
       } else {
