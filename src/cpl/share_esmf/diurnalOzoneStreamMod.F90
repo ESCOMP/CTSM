@@ -105,7 +105,7 @@ contains
        write(iulog,*)
     endif
 
-    ! Initialize the cdeps data type sdat_lai
+    ! Initialize the cdeps data type sdat_dO3
     call shr_strdata_init_from_inline(sdat_dO3,                  &
          my_task             = iam,                              &
          logunit             = iulog,                            &

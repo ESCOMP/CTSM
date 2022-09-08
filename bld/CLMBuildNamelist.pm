@@ -3836,12 +3836,15 @@ sub setup_logic_do3_streams {
 
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_do3_streams');
       if ( &value_is_true( $nl->get_value('use_do3_streams') ) ) {
+          if ($opts->{'driver'} ne "nuopc") {
+            $log->fatal_error("Cannot use do3_streams=.true. with MCT.");
+          }
           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_do3',
                       'hgrid'=>"360x720cru" );
-          if ($opts->{'driver'} eq "nuopc" ) {
-              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_do3',
-                          'hgrid'=>"360x720cru" );
-          }
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_do3',
+                      'hgrid'=>"360x720cru" );
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'do3_mapalgo',
+                      'hgrid'=>$nl_flags->{'res'} );
       } else {
          if ( defined($nl->get_value('stream_fldfilename_do3'))) {
              $log->fatal_error("One of the do3 streams namelist items (stream_fldfilename_do3, " .
@@ -4231,7 +4234,7 @@ sub write_output_files {
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
                cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
-               surfacealbedo_inparm water_tracers_inparm);
+               surfacealbedo_inparm water_tracers_inparm do3_streams);
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
   #             finidat_consistency_checks dynpft_consistency_checks);
