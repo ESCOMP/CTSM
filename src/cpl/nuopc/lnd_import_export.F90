@@ -18,7 +18,7 @@ module lnd_import_export
   use glc2lndMod              , only : glc2lnd_type
   use domainMod               , only : ldomain
   use spmdMod                 , only : masterproc
-  use seq_drydep_mod          , only : seq_drydep_readnl, n_drydep
+  use shr_drydep_mod          , only : shr_drydep_readnl, n_drydep
   use shr_megan_mod           , only : shr_megan_readnl, shr_megan_mechcomps_n
   use nuopc_shr_methods       , only : chkerr
   use lnd_import_export_utils , only : check_for_errors, check_for_nans
@@ -94,6 +94,7 @@ module lnd_import_export
   character(*), parameter :: Faxa_dstdry         = 'Faxa_dstdry'
   character(*), parameter :: Sa_methane          = 'Sa_methaneaxa_ndep'
   character(*), parameter :: Faxa_ndep           = 'Faxa_ndep'
+  character(*), parameter :: Sa_o3               = 'Sa_o3'
   character(*), parameter :: Sa_co2prog          = 'Sa_co2prog'
   character(*), parameter :: Sa_co2diag          = 'Sa_co2diag'
   character(*), parameter :: Flrr_flood          = 'Flrr_flood'
@@ -235,7 +236,7 @@ contains
     ! The following namelist reads should always be called regardless of the send_to_atm value
 
     ! Dry Deposition velocities from land - ALSO initialize drydep here
-    call seq_drydep_readnl("drv_flds_in", drydep_nflds)
+    call shr_drydep_readnl("drv_flds_in", drydep_nflds)
 
     ! Fire emissions fluxes from land
     call shr_fire_emis_readnl('drv_flds_in', emis_nflds)
@@ -351,6 +352,7 @@ contains
     call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_swvdr   )
     call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_swndf   )
     call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_swvdf   )
+    call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_o3        )
 
     ! from atm - black carbon deposition fluxes (3)
     ! (1) => bcphidry, (2) => bcphodry, (3) => bcphiwet
@@ -534,6 +536,8 @@ contains
     call state_getimport_1d(importState, Sa_pbot   , atm2lnd_inst%forc_pbot_not_downscaled_grc(begg:), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, Sa_tbot   , atm2lnd_inst%forc_t_not_downscaled_grc(begg:), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, Sa_o3     , atm2lnd_inst%forc_o3_grc(begg:), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, Faxa_rainc, forc_rainc(begg:), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return

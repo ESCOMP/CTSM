@@ -3674,11 +3674,10 @@ sub setup_logic_dry_deposition {
                      "   Use the '--no-drydep' option when '-bgc fates' is activated");
     }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_list');
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_method');
+    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dep_data_file');
   } else {
-    if ( defined($nl->get_value('drydep_list')) ||
-         defined($nl->get_value('drydep_method')) ) {
-      $log->fatal_error("drydep_list or drydep_method defined, but drydep option NOT set");
+    if ( defined($nl->get_value('drydep_list')) ) {
+      $log->fatal_error("drydep_list defined, but drydep option NOT set");
     }
   }
 }
