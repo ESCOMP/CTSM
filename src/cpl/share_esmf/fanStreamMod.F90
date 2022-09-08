@@ -48,6 +48,8 @@ contains
     ! Set the FAN stream namelist parameters
     !
     !-----------------------------------------------------------------------
+    ! uses:
+    use shr_mpi_mod, only : shr_mpi_bcast
     ! Arguments:
     integer, intent(in) :: str_yr_first, str_yr_last, mdl_yr_align
     ! whether manure_sgrz and manure_ngrz are per crop or land area:
