@@ -3,4 +3,4 @@
 ! reducedOutput testmod
 o3_veg_stress_method    = 'stress_falk'
 hist_fincl1 += 'O3UPTAKESUN', 'O3UPTAKESHA', 'ATM_O3'
-hist_fincl2 += 'O3UPTAKESUN', 'O3UPTAKESHA', 'ATM_O3'
+hist_fincl2 += 'O3UPTAKESUN', 'O3UPTAKESHA'
