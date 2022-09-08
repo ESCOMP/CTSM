@@ -26,7 +26,7 @@ module diurnalOzoneStreamMod
   ! !PRIVATE MEMBER DATA:
   integer, allocatable        :: g_to_ig(:)         ! Array matching gridcell index to data index
   type(shr_strdata_type)      :: sdat_dO3           ! diurnal ozone anomaly input data stream
-  character(*), parameter     :: dO3String = "dO3_" ! base string for field string
+  character(*), parameter     :: dO3String = "do3_" ! base string for field string
   integer     , parameter     :: numdO3Fields = 16  ! number of fields to build field string
   character(len=CS)           :: stream_varnames(numdO3Fields)
 
@@ -79,14 +79,14 @@ contains
     ! Read dO3_streams namelist
     if (masterproc) then
        open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
-       call find_nlgroup_name(nu_nml, 'dO3_streams', status=nml_error)
+       call find_nlgroup_name(nu_nml, 'do3_streams', status=nml_error)
        if (nml_error == 0) then
           read(nu_nml, nml=dO3_streams,iostat=nml_error)
           if (nml_error /= 0) then
-             call endrun(subname // ':: ERROR reading dO3_streams namelist')
+             call endrun(subname // ':: ERROR reading do3_streams namelist')
           end if
        else
-          call endrun(subname // ':: ERROR finding dO3_streams namelist')
+          call endrun(subname // ':: ERROR finding do3_streams namelist')
        end if
        close(nu_nml)
     endif
@@ -96,9 +96,9 @@ contains
 
     if (masterproc) then
        write(iulog,*)
-       write(iulog,'(a)') 'dO3_stream settings:'
-       write(iulog,'(a,a)' ) '  stream_fldFileName_dO3 = ',trim(stream_fldFileName_dO3)
-       write(iulog,'(a,a)' ) '  stream_meshfile_dO3    = ',trim(stream_meshfile_dO3)
+       write(iulog,'(a)') 'do3_stream settings:'
+       write(iulog,'(a,a)' ) '  stream_fldFileName_do3 = ',trim(stream_fldFileName_dO3)
+       write(iulog,'(a,a)' ) '  stream_meshfile_do3    = ',trim(stream_meshfile_dO3)
        do n = 1,numdO3Fields
           write(iulog,'(a,a)' ) '  stream_varname         = ',trim(stream_varnames(n))
        end do
