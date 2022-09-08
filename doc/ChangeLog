@@ -32,7 +32,7 @@ Bugs fixed or introduced
 ------------------------
 
 CTSM issues fixed (include CTSM Issue #):
-- Resolves ESCOMP/CTSM#270 (Receive ozone from atmosphere)
+- Partially addresses ESCOMP/CTSM#270 (Receive ozone from atmosphere)
 
 
 Notes of particular relevance for users
