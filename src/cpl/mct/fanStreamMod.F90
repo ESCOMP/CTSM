@@ -324,7 +324,7 @@ contains
  subroutine fanstream_interp(bounds, atm2lnd_inst)
 
    !-----------------------------------------------------------------------
-   use clm_time_manager, only : get_curr_date, get_days_per_year
+   use clm_time_manager, only : get_curr_date, get_curr_days_per_year
    use clm_varcon      , only : secspday
    use atm2lndType     , only : atm2lnd_type
    use shr_infnan_mod  , only : isinf => shr_infnan_isinf
@@ -345,7 +345,7 @@ contains
 
    call get_curr_date(year, mon, day, sec)
    mcdate = year*10000 + mon*100 + day
-   dayspyr = get_days_per_year( )
+   dayspyr = get_curr_days_per_year( )
 
    call shr_strdata_advance(sdat_grz, mcdate, sec, mpicom, 'clmfangrz')
 

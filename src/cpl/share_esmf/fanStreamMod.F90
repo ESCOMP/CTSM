@@ -175,7 +175,7 @@ contains
    ! Interpoalte the FAN data to the current simulation time
    !
    !-----------------------------------------------------------------------
-   use clm_time_manager, only : get_curr_date, get_days_per_year
+   use clm_time_manager, only : get_curr_date, get_curr_days_per_year
    use clm_varcon      , only : secspday
    use atm2lndType     , only : atm2lnd_type
    use shr_infnan_mod  , only : isinf => shr_infnan_isinf
@@ -201,7 +201,7 @@ contains
 
    call get_curr_date(year, mon, day, sec)
    mcdate = year*10000 + mon*100 + day
-   dayspyr = get_days_per_year( )
+   dayspyr = get_curr_days_per_year( )
 
    call shr_strdata_advance(sdat_fan, ymd=mcdate, tod=sec, logunit=iulog, istr='clmfan', rc=rc)
    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
