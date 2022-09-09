@@ -7,6 +7,7 @@ list(APPEND clm_sources
   BalanceCheckMod.F90
   CanopyStateType.F90
   EnergyFluxType.F90
+  FrictionVelocityMod.F90
   GlacierSurfaceMassBalanceMod.F90
   HumanIndexMod.F90
   InfiltrationExcessRunoffMod.F90
