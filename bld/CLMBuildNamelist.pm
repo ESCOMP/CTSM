@@ -91,7 +91,7 @@ OPTIONS
                                 sp    = Satellite Phenology (SP)
                                     This toggles off the namelist variable: use_cn
                                 bgc   = Carbon Nitrogen with methane, nitrification, vertical soil C,
-                                        CENTURY decomposition
+                                        CENTURY or MIMICS decomposition
                                     This toggles on the namelist variables:
                                           use_cn, use_lch4, use_nitrif_denitrif
                                 fates = FATES/Ecosystem Demography with below ground BGC
@@ -750,7 +750,7 @@ sub setup_cmdl_fates_mode {
 
     $var = "use_fates";
     if ( &value_is_true($nl_flags->{$var}) ) {
-      # This section is a place-holder to test for modules that are not allowed with ED
+      # This section is a place-holder to test for modules that are not allowed with FATES
       # the defaults which are set in the logic section of the namelist builder will
       # automatically set these correctly (well that is the assumption), but here we
       # want to set a catch to fail and warn users if they explicitly set incompatible user namelist
@@ -783,7 +783,7 @@ sub setup_cmdl_fates_mode {
        # dis-allow fates specific namelist items with non-fates runs
        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                       "use_fates_cohort_age_tracking",
-                      "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging","fates_parteh_mode" );
+                      "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging","fates_parteh_mode","use_fates_tree_damage" );
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
@@ -861,7 +861,6 @@ sub setup_cmdl_bgc {
      $log->fatal_error("The namelist variable use_fates is inconsistent with the -bgc option");
   }
 
-
   # Now set use_cn and use_fates
   foreach $var ( "use_cn", "use_fates" ) {
      $val = $nl_flags->{$var};
@@ -873,19 +872,37 @@ sub setup_cmdl_bgc {
      }
   }
   #
+  # Set FATES-SP mode
+  #
+  if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_sp', 'use_fates'=>$nl_flags->{'use_fates'} );
+     if ( &value_is_true($nl->get_value('use_fates_sp')) ) {
+        $nl_flags->{'use_fates_sp'} = ".true.";
+     } else {
+        $nl_flags->{'use_fates_sp'} = ".false.";
+     }
+  } else {
+     $nl_flags->{'use_fates_sp'} = ".false.";
+  }
+  #
   # Determine Soil decomposition method
   #
   my $var = "soil_decomp_method";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-              'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+              'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'},
+              'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
   my $soil_decomp_method = remove_leading_and_trailing_quotes( $nl->get_value( $var ) );
 
-  if ( &value_is_true($nl_flags->{'use_cn'}) ||  &value_is_true($nl_flags->{'use_fates'}))  {
+  if (      &value_is_true($nl_flags->{'use_cn'}) ) {
      if ( $soil_decomp_method eq "None" ) {
-        $log->fatal_error("$var must NOT be None if use_cn or use_fates are on");
+        $log->fatal_error("$var must NOT be None if use_cn is on");
+     }
+  } elsif ( &value_is_true($nl_flags->{'use_fates'}) && (not &value_is_true($nl_flags->{'use_fates_sp'}))  )  {
+     if ( $soil_decomp_method eq "None" ) {
+        $log->fatal_error("$var must NOT be None if use_fates is on and use_fates_sp is not TRUE");
      }
   } elsif ( $soil_decomp_method ne "None" ) {
-     $log->fatal_error("$var must be None if use_cn or use_fates are not");
+     $log->fatal_error("$var must be None if use_cn and use_fates are off");
   }
   #
   # Soil decomposition control variables, methane and Nitrification-Denitrification
@@ -909,6 +926,12 @@ sub setup_cmdl_bgc {
         $var = "use_nitrif_denitrif";
         if ( ! &value_is_true($nl_flags->{$var}) ) {
            $log->warning("$var normally use_nitrif_denitrif should only be FALSE if FATES is on, it has NOT been validated for being off for BGC mode" );
+        }
+     }
+     # if MIMICS is on and use_fates = .true. then use_lch4 must = .true.
+     if ( (! &value_is_true($nl_flags->{'use_lch4'})) && &value_is_true($nl_flags->{'use_fates'}) ) {
+        if ( $soil_decomp_method eq "MIMICSWieder2015" ) {
+           $log->warning("If MIMICS is on and use_fates = .true. then use_lch4 must be .true. and currently it's not" );
         }
      }
   }
@@ -1153,7 +1176,7 @@ sub setup_cmdl_spinup {
      $log->fatal_error("$var has an invalid value ($val). Valid values are: @valid_values");
   }
   if ( $nl_flags->{'bgc_spinup'} eq "on" && (not &value_is_true( $nl_flags->{'use_cn'} ))  && (not &value_is_true($nl_flags->{'use_fates'})) ) {
-     $log->fatal_error("$var can not be '$nl_flags->{'bgc_spinup'}' if neither CN nor ED is turned on (use_cn=$nl_flags->{'use_cn'}, use_fates=$nl_flags->{'use_fates'}).");
+     $log->fatal_error("$var can not be '$nl_flags->{'bgc_spinup'}' if neither CN nor FATES is turned on (use_cn=$nl_flags->{'use_cn'}, use_fates=$nl_flags->{'use_fates'}).");
   }
   if ( $nl->get_value("spinup_state") eq 0 && $nl_flags->{'bgc_spinup'} eq "on" ) {
      $log->fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
@@ -2038,6 +2061,10 @@ sub setup_logic_subgrid {
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_lake');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_wetland');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_urban');
+
+   if ( &value_is_true($nl_flags->{'use_fates'}) && $nl->get_value('n_dom_pfts') != 0 ) {
+      $log->fatal_error( "FATES and n_dom_pfts can NOT be set at the same time" );
+   }
 }
 
 #-------------------------------------------------------------------------------
@@ -2285,7 +2312,14 @@ sub setup_logic_surface_dataset {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
                  'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
-                 'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
+                 'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'}, 'nofail'=>1 );
+     if ( ! defined($nl->get_value($var) ) ) {
+        $log->verbose_message( "Exact match of $var NOT found, searching for version with irrigate true" );
+     }
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
+                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.",
+                 'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'} );
   }
 }
 
@@ -2470,6 +2504,7 @@ sub setup_logic_dynamic_subgrid {
    setup_logic_do_transient_pfts($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_transient_crops($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_transient_lakes($opts, $nl_flags, $definition, $defaults, $nl);
+   setup_logic_do_transient_urban($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_harvest($opts, $nl_flags, $definition, $defaults, $nl);
 
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_dynbal_baselines');
@@ -2595,7 +2630,7 @@ sub setup_logic_do_transient_crops {
       # In principle, use_fates should be compatible with
       # do_transient_crops. However, this hasn't been tested, so to be safe,
       # we are not allowing this combination for now.
-      $cannot_be_true = "$var has not been tested with ED, so for now these two options cannot be combined";
+      $cannot_be_true = "$var has not been tested with FATES, so for now these two options cannot be combined";
    }
 
    if ($cannot_be_true) {
@@ -2698,6 +2733,69 @@ sub setup_logic_do_transient_lakes {
    }
 }
 
+sub setup_logic_do_transient_urban {
+   #
+   # Set do_transient_urban default value, and perform error checking on do_transient_urban
+   #
+   # Assumes the following are already set in the namelist (although it's okay
+   # for them to be unset if that will be their final state):
+   # - flanduse_timeseries
+   #
+   # NOTE(kwo, 2021-08-11) I based this function on setup_logic_do_transient_lakes.
+   # As in NOTE(wjs, 2020-08-23) I'm not sure if all of the checks here are truly important
+   # for transient urban (in particular, my guess is that collapse_urban could probably be done with transient
+   # urban - as well as transient pfts and transient crops for that matter), but some of
+   # the checks probably are needed, and it seems best to keep transient urban consistent
+   # with other transient areas in this respect.
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   my $var = 'do_transient_urban';
+
+   # cannot_be_true will be set to a non-empty string in any case where
+   # do_transient_urban should not be true; if it turns out that
+   # do_transient_urban IS true in any of these cases, a fatal error will be
+   # generated
+   my $cannot_be_true = "";
+
+   my $n_dom_pfts = $nl->get_value( 'n_dom_pfts' );
+   my $n_dom_landunits = $nl->get_value( 'n_dom_landunits' );
+   my $toosmall_soil = $nl->get_value( 'toosmall_soil' );
+   my $toosmall_crop = $nl->get_value( 'toosmall_crop' );
+   my $toosmall_glacier = $nl->get_value( 'toosmall_glacier' );
+   my $toosmall_lake = $nl->get_value( 'toosmall_lake' );
+   my $toosmall_wetland = $nl->get_value( 'toosmall_wetland' );
+   my $toosmall_urban = $nl->get_value( 'toosmall_urban' );
+
+   if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
+      $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
+   }
+
+   if (!$cannot_be_true) {
+      # Note that, if the variable cannot be true, we don't call add_default
+      # - so that we don't clutter up the namelist with variables that don't
+      # matter for this case
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+   }
+
+   # Make sure the value is false when it needs to be false - i.e., that the
+   # user hasn't tried to set a true value at an inappropriate time.
+
+   if (&value_is_true($nl->get_value($var)) && $cannot_be_true) {
+      $log->fatal_error($cannot_be_true);
+   }
+
+   # if do_transient_urban is .true. and any of these (n_dom_* or toosmall_*)
+   # are > 0 or collapse_urban = .true., then give fatal error
+   if (&value_is_true($nl->get_value($var))) {
+      if (&value_is_true($nl->get_value('collapse_urban'))) {
+         $log->fatal_error("$var cannot be combined with collapse_urban");
+      }
+      if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
+         $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
+   }
+}
+
 sub setup_logic_do_harvest {
    #
    # Set do_harvest default value, and perform error checking on do_harvest
@@ -2776,7 +2874,6 @@ sub setup_logic_bgc_shared {
   if ( $nl_flags->{'bgc_mode'} ne "sp" ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'constrain_stress_deciduous_onset', 'phys'=>$physv->as_string() );
   }
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'decomp_depth_efolding', 'phys'=>$physv->as_string() );
 }
 
 #-------------------------------------------------------------------------------
@@ -3082,25 +3179,11 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
       # TODO(bja, 2015-04) make this depend on > clm 5.0 and bgc mode at some point.
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'MM_Nuptake_opt',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'downreg_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'plant_ndemand_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'substrate_term_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nscalar_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'temp_scalar_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CNratio_floating',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reduce_dayl_factor',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'vcmax_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CN_residual_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CN_partition_opt',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CN_evergreen_phenology_opt',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
@@ -3724,12 +3807,15 @@ sub setup_logic_dry_deposition {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ($opts->{'drydep'} ) {
+    if ( &value_is_true( $nl_flags->{'use_fates'}) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+       $log->warning("DryDeposition can NOT be on when FATES is also on unless FATES-SP mode is on.\n" .
+                     "   Use the '--no-drydep' option when '-bgc fates' is activated");
+    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_list');
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_method');
+    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dep_data_file');
   } else {
-    if ( defined($nl->get_value('drydep_list')) ||
-         defined($nl->get_value('drydep_method')) ) {
-      $log->fatal_error("drydep_list or drydep_method defined, but drydep option NOT set");
+    if ( defined($nl->get_value('drydep_list')) ) {
+      $log->fatal_error("drydep_list defined, but drydep option NOT set");
     }
   }
 }
@@ -3769,7 +3855,7 @@ sub setup_logic_megan {
 
   if ($nl_flags->{'megan'} ) {
     if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
-       $log->fatal_error("MEGAN can NOT be on when ED is also on.\n" .
+       $log->warning("MEGAN can NOT be on when FATES is also on.\n" .
                    "   Use the '-no-megan' option when '-bgc fates' is activated");
     }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_specifier');
@@ -4169,15 +4255,9 @@ sub setup_logic_fates {
 
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
-        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_sp', 'use_fates'=>$nl_flags->{'use_fates'} );
-        if ( &value_is_true($nl->get_value('use_fates_sp')) ) {
-           $nl_flags->{'use_fates_sp'} = ".true.";
-        } else {
-           $nl_flags->{'use_fates_sp'} = ".false.";
-        }
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                        "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp",
-                       "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking" );
+                       "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage" );
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
                       'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
@@ -4232,6 +4312,9 @@ sub setup_logic_misc {
       }
    }
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_run_ncdiopio_tests');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_use_second_grain_pool');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_use_repr_structure_pool');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_no_crop_seed_replenishment');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_master_list_file');
 }
 
@@ -4512,7 +4595,7 @@ sub check_input_files {
                 my $pathname = $nl->get_variable_value($group, $var);
                 # Need to strip the quotes
                 $pathname =~ s/['"]//g;
-
+                next if ($pathname =~ /UNSET$/);
                 if ($input_pathname_type eq 'abs') {
                     if ($inputdata_rootdir) {
                         if ( $pathname !~ /^\s*$/ ) {   # If pathname isn't blank or null

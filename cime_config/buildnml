@@ -9,7 +9,7 @@ _CIMEROOT = os.environ.get("CIMEROOT")
 if _CIMEROOT is None:
     raise SystemExit("ERROR: must set CIMEROOT environment variable")
 
-_LIBDIR = os.path.join(_CIMEROOT, "scripts", "Tools")
+_LIBDIR = os.path.join(_CIMEROOT, "CIME", "Tools")
 sys.path.append(_LIBDIR)
 
 from standard_script_setup          import *
@@ -50,8 +50,6 @@ def buildnml(case, caseroot, compname):
     clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
     comp_atm = case.get_value("COMP_ATM")
     lnd_grid = case.get_value("LND_GRID")
-    lnd_domain_path = case.get_value("LND_DOMAIN_PATH")
-    lnd_domain_file = case.get_value("LND_DOMAIN_FILE")
     ninst_lnd = case.get_value("NINST_LND")
     rundir = case.get_value("RUNDIR")
     run_type = case.get_value("RUN_TYPE")
@@ -63,6 +61,11 @@ def buildnml(case, caseroot, compname):
     cism_use_antarctica = case.get_value("CISM_USE_ANTARCTICA")
     mask = case.get_value("MASK_GRID")
     driver = case.get_value("COMP_INTERFACE").lower()
+
+    # Create init_generated_files directory if not there
+    newdir = os.path.join(rundir,"init_generated_files")
+    if not os.path.exists(newdir):
+        os.mkdir(newdir)
 
     # -----------------------------------------------------
     # Error checking
@@ -176,6 +179,8 @@ def buildnml(case, caseroot, compname):
     if driver == "nuopc":
         lndfrac_setting = " "
     else:
+        lnd_domain_path = case.get_value("LND_DOMAIN_PATH")
+        lnd_domain_file = case.get_value("LND_DOMAIN_FILE")
         lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
         lndfrac_setting = "-lnd_frac "+lndfrac_file
 

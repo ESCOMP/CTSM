@@ -93,13 +93,13 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o, frac_dst)
       write(6,*) 'tdomain%ns   = ', tdomain%ns
       write(6,*) 'size(urbn_o) = ', size(urbn_o)
       write(6,*) 'ldomain%ns   = ', ldomain%ns
-      stop
+      call abort()
    end if
    if (size(frac_dst) /= ldomain%ns) then
       write(6,*) subname//' ERROR: array size inconsistencies'
       write(6,*) 'size(frac_dst) = ', size(frac_dst)
       write(6,*) 'ldomain%ns   = ', ldomain%ns
-      stop
+      call abort()
    end if
    
    ! Error checks for domain and map consistencies
@@ -119,7 +119,7 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o, frac_dst)
       if ((urbn_o(no)) > 100.000001_r8) then
          write (6,*) 'MKURBAN error: urban = ',urbn_o(no), &
               ' greater than 100.000001 for column, row = ',no
-         stop
+         call abort()
       end if
    enddo
 
@@ -191,7 +191,7 @@ subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, n
       write(6,*) subname//' ERROR: array size inconsistencies'
       write(6,*) 'size(frac_dst) = ', size(frac_dst)
       write(6,*) 'ldomain%ns   = ', ldomain%ns
-      stop
+      call abort()
    end if
 
    ! -----------------------------------------------------------------

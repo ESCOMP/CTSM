@@ -25,6 +25,7 @@ module histFileMod
   use EDTypesMod     , only : nlevleaf
   use FatesInterfaceTypesMod , only : nlevsclass, nlevage, nlevcoage
   use FatesInterfaceTypesMod , only : nlevheight
+  use FatesInterfaceTypesMod , only : nlevdamage
   use EDTypesMod        , only : nfsc
   use FatesLitterMod    , only : ncwd
   use PRTGenericMod     , only : num_elements_fates  => num_elements
@@ -193,7 +194,7 @@ module histFileMod
      character(len=max_chars)  :: units        ! units
      character(len=hist_dim_name_length) :: type1d                ! pointer to first dimension type from data type (nameg, etc)
      character(len=hist_dim_name_length) :: type1d_out            ! hbuf first dimension type from data type (nameg, etc)
-     character(len=hist_dim_name_length) :: type2d                ! hbuf second dimension type ["levgrnd","levlak","numrad","ltype","natpft","cft","glc_nec","elevclas","subname(n)"]
+     character(len=hist_dim_name_length) :: type2d                ! hbuf second dimension type ["levgrnd","levlak","numrad","ltype","natpft","cft","glc_nec","elevclas","subname(n)","mxsowings","mxharvests"]
      integer :: beg1d                          ! on-node 1d clm pointer start index
      integer :: end1d                          ! on-node 1d clm pointer end index
      integer :: num1d                          ! size of clm pointer first dimension (all nodes)
@@ -1271,7 +1272,7 @@ contains
     integer :: num2d               ! size of second dimension (e.g. number of vertical levels)
     integer :: numdims             ! number of dimensions
     character(len=*),parameter :: subname = 'hist_update_hbuf'
-    character(len=hist_dim_name_length) :: type2d     ! hbuf second dimension type ["levgrnd","levlak","numrad","ltype","natpft","cft","glc_nec","elevclas","subname(n)"]
+    character(len=hist_dim_name_length) :: type2d     ! hbuf second dimension type ["levgrnd","levlak","numrad","ltype","natpft","cft","glc_nec","elevclas","subname(n)","mxsowings","mxharvests"]
     !-----------------------------------------------------------------------
 
     do t = 1,ntapes
@@ -2279,7 +2280,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevmaxurbgrnd, numrad, nlevcan, nvegwcs,nlevsoi
-    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc, nlevdecomp_full
+    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc, nlevdecomp_full, mxsowings, mxharvests
     use landunit_varcon , only : max_lunit
     use clm_varctl      , only : caseid, ctitle, fsurdat, finidat, paramfile
     use clm_varctl      , only : version, hostname, username, conventions, source
@@ -2420,6 +2421,8 @@ contains
     call ncd_defdim(lnfid, 'ltype', max_lunit, dimid)
     call ncd_defdim(lnfid, 'nlevcan',nlevcan, dimid)
     call ncd_defdim(lnfid, 'nvegwcs',nvegwcs, dimid)
+    call ncd_defdim(lnfid, 'mxsowings' , mxsowings , dimid)
+    call ncd_defdim(lnfid, 'mxharvests' , mxharvests , dimid)
     call htape_add_ltype_metadata(lnfid)
     call htape_add_ctype_metadata(lnfid)
     call ncd_defdim(lnfid, 'natpft', natpft_size, dimid)
@@ -2457,6 +2460,9 @@ contains
        call ncd_defdim(lnfid, 'fates_levleaf', nlevleaf, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlf', nlevleaf * nclmax, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlfpf', nlevleaf * nclmax * numpft_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levcdsc', nlevdamage * nlevsclass, dimid)
+       call ncd_defdim(lnfid, 'fates_levcdpf', nlevdamage * nlevsclass * numpft_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levcdam', nlevdamage, dimid)
        call ncd_defdim(lnfid, 'fates_levelem', num_elements_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levelpft', num_elements_fates * numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levelcwd', num_elements_fates * ncwd, dimid)
@@ -2928,7 +2934,7 @@ contains
           do lev = 1,nlevsoi
              do c = bounds%begc,bounds%endc
                 ! Field indices MUST match varnamesl array order above!
-                if (ifld ==1) histit(c,lev) = cellsand_col(c,lev) 
+                if (ifld ==1) histit(c,lev) = cellsand_col(c,lev)
                 if (ifld ==2) histit(c,lev) = cellclay_col(c,lev)
              end do
           end do
@@ -2991,9 +2997,10 @@ contains
     use FatesInterfaceTypesMod, only : fates_hdim_agmap_levagepft
     use FatesInterfaceTypesMod, only : fates_hdim_pftmap_levagepft
     use FatesInterfaceTypesMod, only : fates_hdim_levfuel
+    use FatesInterfaceTypesMod, only : fates_hdim_levdamage
     use FatesInterfaceTypesMod, only : fates_hdim_levcwdsc
     use FatesInterfaceTypesMod, only : fates_hdim_levcan
-    !use FatesInterfaceTypesMod, only : fates_hdim_levleaf
+    use FatesInterfaceTypesMod, only : fates_hdim_levleaf
     use FatesInterfaceTypesMod, only : fates_hdim_canmap_levcnlf
     use FatesInterfaceTypesMod, only : fates_hdim_lfmap_levcnlf
     use FatesInterfaceTypesMod, only : fates_hdim_canmap_levcnlfpf
@@ -3008,6 +3015,11 @@ contains
     use FatesInterfaceTypesMod, only : fates_hdim_agemap_levelage
     use FatesInterfaceTypesMod, only : fates_hdim_agmap_levagefuel
     use FatesInterfaceTypesMod, only : fates_hdim_fscmap_levagefuel
+    use FatesInterfaceTypesMod, only : fates_hdim_scmap_levcdsc
+    use FatesInterfaceTypesMod, only : fates_hdim_cdmap_levcdsc
+    use FatesInterfaceTypesMod, only : fates_hdim_scmap_levcdpf
+    use FatesInterfaceTypesMod, only : fates_hdim_cdmap_levcdpf
+    use FatesInterfaceTypesMod, only : fates_hdim_pftmap_levcdpf
 
 
     !
@@ -3124,8 +3136,18 @@ contains
                    long_name='FATES age-class map into patch age x fuel size', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_fscmap_levagefuel', xtype=ncd_int, dim1name='fates_levagefuel', &
                    long_name='FATES fuel size-class map into patch age x fuel size', units='-', ncid=nfid(t))
-
-
+             call ncd_defvar(varname='fates_cdmap_levcdsc',xtype=ncd_int, dim1name='fates_levcdsc', &
+                  long_name='FATES damage index of the combined damage-size dimension', ncid=nfid(t))
+             call ncd_defvar(varname='fates_scmap_levcdsc',xtype=ncd_int, dim1name='fates_levcdsc', &
+                  long_name='FATES size index of the combined damage-size dimension', ncid=nfid(t))
+             call ncd_defvar(varname='fates_cdmap_levcdpf',xtype=ncd_int, dim1name='fates_levcdpf', &
+                  long_name='FATES damage index of the combined damage-size-PFT dimension', ncid=nfid(t))
+             call ncd_defvar(varname='fates_scmap_levcdpf',xtype=ncd_int, dim1name='fates_levcdpf', &
+                  long_name='FATES size index of the combined damage-size-PFT dimension', ncid=nfid(t))
+             call ncd_defvar(varname='fates_pftmap_levcdpf',xtype=ncd_int, dim1name='fates_levcdpf', &
+                  long_name='FATES pft index of the combined damage-size-PFT dimension', ncid=nfid(t))
+             call ncd_defvar(varname='fates_levcdam', xtype=tape(t)%ncprec, dim1name='fates_levcdam', &
+                  long_name='FATES damage class lower bound', units='unitless', ncid=nfid(t))
 
           end if
 
@@ -3154,9 +3176,10 @@ contains
              call ncd_io(varname='fates_levheight',data=fates_hdim_levheight, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levpft',data=fates_hdim_levpft, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levfuel',data=fates_hdim_levfuel, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_levcdam',data=fates_hdim_levdamage, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levcwdsc',data=fates_hdim_levcwdsc, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levcan',data=fates_hdim_levcan, ncid=nfid(t), flag='write')
-             !call ncd_io(varname='fates_levleaf',data=fates_hdim_levleaf, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_levleaf',data=fates_hdim_levleaf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_canmap_levcnlf',data=fates_hdim_canmap_levcnlf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_lfmap_levcnlf',data=fates_hdim_lfmap_levcnlf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_canmap_levcnlfpf',data=fates_hdim_canmap_levcnlfpf, ncid=nfid(t), flag='write')
@@ -3169,6 +3192,11 @@ contains
              call ncd_io(varname='fates_agmap_levagepft',data=fates_hdim_agmap_levagepft, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_agmap_levagefuel',data=fates_hdim_agmap_levagefuel, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_fscmap_levagefuel',data=fates_hdim_fscmap_levagefuel, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_scmap_levcdsc',data=fates_hdim_scmap_levcdsc, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_cdmap_levcdsc',data=fates_hdim_cdmap_levcdsc, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_scmap_levcdpf',data=fates_hdim_scmap_levcdpf, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_cdmap_levcdpf',data=fates_hdim_cdmap_levcdpf, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_pftmap_levcdpf',data=fates_hdim_pftmap_levcdpf, ncid=nfid(t), flag='write')
           end if
 
        endif
@@ -4142,7 +4170,7 @@ contains
     use clm_varctl      , only : nsrest, caseid, inst_suffix, nsrStartup, nsrBranch
     use fileutils       , only : getfil
     use domainMod       , only : ldomain
-    use clm_varpar      , only : nlevgrnd, nlevlak, numrad, nlevdecomp_full
+    use clm_varpar      , only : nlevgrnd, nlevlak, numrad, nlevdecomp_full, mxsowings, mxharvests
     use clm_time_manager, only : is_restart
     use restUtilMod     , only : iflag_skip
     use pio
@@ -5348,7 +5376,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, nlevcan, nvegwcs,nlevsoi
-    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc
+    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc, mxsowings, mxharvests
     use landunit_varcon , only : max_lunit
     !
     ! !ARGUMENTS:
@@ -5428,6 +5456,10 @@ contains
        num2d = numrad
     case ('levdcmp')
        num2d = nlevdecomp_full
+    case ('mxsowings')
+       num2d = mxsowings
+    case ('mxharvests')
+       num2d = mxharvests
     case ('fates_levscls')
        num2d = nlevsclass
     case('fates_levcacls')
@@ -5460,6 +5492,12 @@ contains
        num2d = nlevleaf * nclmax
     case ('fates_levcnlfpf')
        num2d = nlevleaf * nclmax * numpft_fates
+    case ('fates_levcdsc')
+       num2d = nlevdamage * nlevsclass
+    case ('fates_levcdpf')
+       num2d = nlevdamage * nlevsclass * numpft_fates
+    case ('fates_levcdam')
+       num2d = nlevdamage
     case ('ltype')
        num2d = max_lunit
     case ('natpft')
@@ -5497,7 +5535,7 @@ contains
     case default
        write(iulog,*) trim(subname),' ERROR: unsupported 2d type ',type2d, &
           ' currently supported types for multi level fields are: ', &
-          '[levgrnd,levsoi,levlak,numrad,levdcmp,levtrc,ltype,natpft,cft,glc_nec,elevclas,levsno,nvegwcs]'
+          '[levgrnd,levsoi,levlak,numrad,levdcmp,levtrc,ltype,natpft,cft,glc_nec,elevclas,levsno,nvegwcs,mxsowings,mxharvests]'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end select
 

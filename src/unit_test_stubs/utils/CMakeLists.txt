@@ -11,6 +11,7 @@ list(APPEND clm_sources "${clm_genf90_sources}")
 list(APPEND clm_sources
   fanStreamMod.F90
   restUtilMod_stub.F90
+  perfMod_stub.F90
   spmdMod_stub.F90
   clmfates_paraminterfaceMod_stub.F90
   )

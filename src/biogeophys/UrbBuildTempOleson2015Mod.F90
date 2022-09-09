@@ -329,7 +329,8 @@ contains
 
     eflx_building     => energyflux_inst%eflx_building_lun , & ! Output:  [real(r8) (:)]  building heat flux from change in interior building air temperature (W/m**2)
     eflx_urban_ac     => energyflux_inst%eflx_urban_ac_lun , & ! Output:  [real(r8) (:)]  urban air conditioning flux (W/m**2)
-    eflx_urban_heat   => energyflux_inst%eflx_urban_heat_lun & ! Output:  [real(r8) (:)]  urban heating flux (W/m**2)
+    eflx_urban_heat   => energyflux_inst%eflx_urban_heat_lun,& ! Output:  [real(r8) (:)]  urban heating flux (W/m**2)
+    eflx_ventilation  => energyflux_inst%eflx_ventilation_lun & ! Output: [real(r8) (:)]  sensible heat flux from building ventilation (W/m**2)
     )
 
     ! Get step size
@@ -899,6 +900,14 @@ contains
            write (iulog,*) 'clm model is stopping'
            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          end if
+
+         ! Sensible heat flux from ventilation. It is added as a flux to the canyon floor in SoilTemperatureMod.
+         ! Note that we multiply it here by wtlunit_roof which converts it from W/m2 of building area to W/m2
+         ! of urban area. eflx_urban_ac and eflx_urban_heat are treated similarly below. This flux is balanced
+         ! by an equal and opposite flux into/out of the building and so has a net effect of zero on the energy balance
+         ! of the urban landunit.
+         eflx_ventilation(l) = wtlunit_roof(l) * ( - ht_roof(l)*(vent_ach/3600._r8) &
+                               * rho_dair(l) * cpair * (taf(l) - t_building(l)) )
        end if
     end do
 

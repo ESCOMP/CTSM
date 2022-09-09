@@ -12,7 +12,8 @@ module dynSubgridDriverMod
   use decompMod                    , only : bounds_type, bounds_level_proc, bounds_level_clump
   use decompMod                    , only : get_proc_clumps, get_clump_bounds
   use dynSubgridControlMod         , only : get_flanduse_timeseries
-  use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops, get_do_transient_lakes
+  use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops, get_do_transient_lakes, &
+                                            get_do_transient_urban
   use dynSubgridControlMod         , only : get_do_harvest
   use dynPriorWeightsMod           , only : prior_weights_type
   use dynPatchStateUpdaterMod      , only : patch_state_updater_type
@@ -21,6 +22,7 @@ module dynSubgridDriverMod
   use dyncropFileMod               , only : dyncrop_init, dyncrop_interp
   use dynHarvestMod                , only : dynHarvest_init, dynHarvest_interp
   use dynlakeFileMod               , only : dynlake_init, dynlake_interp
+  use dynurbanFileMod              , only : dynurban_init, dynurban_interp
   use dynLandunitAreaMod           , only : update_landunit_weights
   use subgridWeightsMod            , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
   use reweightMod                  , only : reweight_wrapup
@@ -32,6 +34,7 @@ module dynSubgridDriverMod
   use SoilBiogeochemCarbonFluxType , only : soilBiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+  use SoilBiogeochemNitrogenFluxType, only : soilbiogeochem_nitrogenflux_type
   use ch4Mod,                        only : ch4_type
   use EnergyFluxType               , only : energyflux_type
   use PhotosynthesisMod            , only : photosyns_type
@@ -128,6 +131,11 @@ contains
         call dynlake_init(bounds_proc, dynlake_filename=get_flanduse_timeseries())
     end if
     
+    ! Initialize stuff for prescribed transient urban
+    if (get_do_transient_urban()) then
+        call dynurban_init(bounds_proc, dynurban_filename=get_flanduse_timeseries())
+    end if
+
     ! ------------------------------------------------------------------------
     ! Set initial subgrid weights for aspects that are read from file. This is relevant
     ! for cold start and use_init_interp-based initialization.
@@ -145,6 +153,9 @@ contains
        call dynlake_interp(bounds_proc)
     end if
     
+    if (get_do_transient_urban()) then
+       call dynurban_interp(bounds_proc)
+    end if
     
     ! (We don't bother calling dynHarvest_interp, because the harvest information isn't
     ! needed until the run loop. Harvest has nothing to do with subgrid weights, and in
@@ -170,8 +181,8 @@ contains
        canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,          &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,       &
-       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
-       glc_behavior)
+       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
+       soilbiogeochem_carbonflux_inst, ch4_inst, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Update subgrid weights for prescribed transient PFTs, CNDV, and/or dynamic
@@ -207,6 +218,7 @@ contains
     type(soilbiogeochem_carbonstate_type), intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type), intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenstate_type), intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_nitrogenflux_type), intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(ch4_type)                       , intent(inout) :: ch4_inst
     type(glc_behavior_type)              , intent(in)    :: glc_behavior
@@ -261,6 +273,10 @@ contains
 	
     if (get_do_transient_lakes()) then
        call dynlake_interp(bounds_proc)
+    end if
+
+    if (get_do_transient_urban()) then
+       call dynurban_interp(bounds_proc)
     end if
     ! ==========================================================================
     ! Do land cover change that does not require I/O
@@ -319,7 +335,8 @@ contains
                canopystate_inst, photosyns_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-               soilbiogeochem_nitrogenstate_inst, ch4_inst, soilbiogeochem_state_inst)
+               soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, ch4_inst, &
+               soilbiogeochem_state_inst)
        end if
 
     end do

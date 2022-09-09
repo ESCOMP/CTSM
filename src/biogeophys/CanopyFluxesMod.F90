@@ -617,6 +617,7 @@ contains
         bsha                    => energyflux_inst%bsha_patch                       ! Output: [real(r8) (:)   ]  sunlit canopy transpiration wetness factor (0 to 1)
       end if
 
+      
       ! Determine step size
 
       dtime = get_step_size_real()
@@ -631,7 +632,7 @@ contains
 
       fn = num_exposedvegp
       filterp(1:fn) = filter_exposedvegp(1:fn)
-
+      
       ! -----------------------------------------------------------------
       ! Time step initialization of photosynthesis variables
       ! -----------------------------------------------------------------
@@ -1597,7 +1598,8 @@ bioms:   do f = 1, fn
               rssha     = photosyns_inst%rssha_patch(bounds%begp:bounds%endp), &
               rb        = frictionvel_inst%rb1_patch(bounds%begp:bounds%endp), &
               ram       = frictionvel_inst%ram1_patch(bounds%begp:bounds%endp), &
-              tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp))
+              tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp),  &
+	      forc_o3   = atm2lnd_inst%forc_o3_grc(bounds%begg:bounds%endg))
 
          !---------------------------------------------------------
          !update Vc,max and Jmax by LUNA model

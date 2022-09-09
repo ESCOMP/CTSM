@@ -1,5 +1,5 @@
 This points to an alternate params file with
-rf_cwdl2_bgc = 0.5
+rf_cwdl2     = 0.5
 rf_cwdl3_bgc = 0.5
 while by default these parameters equal zero.
 

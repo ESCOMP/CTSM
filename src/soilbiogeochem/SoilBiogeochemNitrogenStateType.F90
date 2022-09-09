@@ -12,7 +12,7 @@ module SoilBiogeochemNitrogenStateType
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
   use clm_varctl                         , only : use_nitrif_denitrif, use_fan
-  use SoilBiogeochemDecompCascadeConType , only : century_decomp, decomp_method
+  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method, use_soil_matrixcn
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
   use landunit_varcon                    , only : istcrop, istsoil 
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
@@ -20,6 +20,7 @@ module SoilBiogeochemNitrogenStateType
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -28,6 +29,7 @@ module SoilBiogeochemNitrogenStateType
   type, public :: soilbiogeochem_nitrogenstate_type
 
      real(r8), pointer :: decomp_npools_vr_col         (:,:,:) ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools
+
      real(r8), pointer :: decomp_soiln_vr_col          (:,:)   ! col (gN/m3) vertically-resolved decomposing total soil N pool
 
      real(r8), pointer :: sminn_vr_col                 (:,:)   ! col (gN/m3) vertically-resolved soil mineral N
@@ -76,6 +78,7 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: ntrunc_col                   (:)     ! col (gN/m2) column-level sink for N truncation
      real(r8), pointer :: cwdn_col                     (:)     ! col (gN/m2) Diagnostic: coarse woody debris N
      real(r8), pointer :: totlitn_col                  (:)     ! col (gN/m2) total litter nitrogen
+     real(r8), pointer :: totmicn_col                  (:)     ! col (gN/m2) total microbial nitrogen
      real(r8), pointer :: totsomn_col                  (:)     ! col (gN/m2) total soil organic matter nitrogen
      real(r8), pointer :: totlitn_1m_col               (:)     ! col (gN/m2) total litter nitrogen to 1 meter
      real(r8), pointer :: totsomn_1m_col               (:)     ! col (gN/m2) total soil organic matter nitrogen to 1 meter
@@ -86,6 +89,8 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: dyn_no3bal_adjustments_col (:) ! (gN/m2) NO3 adjustments to each column made in this timestep via dynamic column area adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level)
      real(r8), pointer :: dyn_nh4bal_adjustments_col (:) ! (gN/m2) NH4 adjustments to each column made in this timestep via dynamic column adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level)
      real(r8)          :: totvegcthresh                  ! threshold for total vegetation carbon to zero out decomposition pools
+
+     ! Matrix-cn
 
    contains
 
@@ -151,6 +156,7 @@ contains
     allocate(this%sminn_col            (begc:endc))                   ; this%sminn_col            (:)   = nan
     allocate(this%ntrunc_col           (begc:endc))                   ; this%ntrunc_col           (:)   = nan
     allocate(this%totlitn_col          (begc:endc))                   ; this%totlitn_col          (:)   = nan
+    allocate(this%totmicn_col          (begc:endc))                   ; this%totmicn_col          (:)   = nan
     allocate(this%totsomn_col          (begc:endc))                   ; this%totsomn_col          (:)   = nan
     allocate(this%totlitn_1m_col       (begc:endc))                   ; this%totlitn_1m_col       (:)   = nan
     allocate(this%totsomn_1m_col       (begc:endc))                   ; this%totsomn_1m_col       (:)   = nan
@@ -159,9 +165,13 @@ contains
     allocate(this%dyn_nh4bal_adjustments_col (begc:endc)) ; this%dyn_nh4bal_adjustments_col (:) = nan
     allocate(this%decomp_npools_col    (begc:endc,1:ndecomp_pools))   ; this%decomp_npools_col    (:,:) = nan
     allocate(this%decomp_npools_1m_col (begc:endc,1:ndecomp_pools))   ; this%decomp_npools_1m_col (:,:) = nan
+    if(use_soil_matrixcn)then
+    end if
 
     allocate(this%decomp_npools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools));
     this%decomp_npools_vr_col(:,:,:)= nan
+    if(use_soil_matrixcn)then
+    end if
     allocate(this%decomp_soiln_vr_col(begc:endc,1:nlevdecomp_full))
     this%decomp_soiln_vr_col(:,:)= nan
 
@@ -238,8 +248,12 @@ contains
     if ( nlevdecomp_full > 1 ) then
        this%decomp_npools_vr_col(begc:endc,:,:) = spval
        this%decomp_npools_1m_col(begc:endc,:) = spval
+       if(use_soil_matrixcn)then
+       end if
     end if
     this%decomp_npools_col(begc:endc,:) = spval
+    if(use_soil_matrixcn)then
+    end if
     do l  = 1, ndecomp_pools
        if ( nlevdecomp_full > 1 ) then
           data2dptr => this%decomp_npools_vr_col(:,:,l)
@@ -248,6 +262,8 @@ contains
           call hist_addfld2d (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
                ptr_col=data2dptr)
+          if(use_soil_matrixcn)then
+          end if
        endif
 
        data1dptr => this%decomp_npools_col(:,l)
@@ -256,6 +272,10 @@ contains
        call hist_addfld1d (fname=fieldname, units='gN/m^2', &
             avgflag='A', long_name=longname, &
             ptr_col=data1dptr)
+       if(nlevdecomp_full .eq. 1)then
+          if(use_soil_matrixcn)then
+          end if
+       end if
 
        if ( nlevdecomp_full > 1 ) then
           data1dptr => this%decomp_npools_1m_col(:,l)
@@ -339,6 +359,11 @@ contains
     call hist_addfld1d (fname='TOTLITN', units='gN/m^2', &
          avgflag='A', long_name='total litter N', &
          ptr_col=this%totlitn_col)
+
+    this%totmicn_col(begc:endc) = spval
+    call hist_addfld1d (fname='TOTMICN', units='gN/m^2', &
+         avgflag='A', long_name='total microbial N', &
+         ptr_col=this%totmicn_col)
 
     this%totsomn_col(begc:endc) = spval
     call hist_addfld1d (fname='TOTSOMN', units='gN/m^2', &
@@ -506,6 +531,10 @@ contains
 
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
+       ! matrix-spinup
+       if(use_soil_matrixcn)then
+       end if
+
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
           ! column nitrogen state variables
@@ -514,15 +543,28 @@ contains
           do j = 1, nlevdecomp
              do k = 1, ndecomp_pools
                 this%decomp_npools_vr_col(c,j,k) = decomp_cpools_vr_col(c,j,k) / decomp_cascade_con%initial_cn_ratio(k)
-             end do
+                if(use_soil_matrixcn)then
+                end if
+            end do
+            if(use_soil_matrixcn)then
+            end if
+
              this%sminn_vr_col(c,j) = 0._r8
              this%ntrunc_vr_col(c,j) = 0._r8
           end do
+
+          if(use_soil_matrixcn)then
+          end if
+ 
           if ( nlevdecomp > 1 ) then
              do j = nlevdecomp+1, nlevdecomp_full
                 do k = 1, ndecomp_pools
                    this%decomp_npools_vr_col(c,j,k) = 0._r8
+                   if(use_soil_matrixcn)then
+                   end if
                 end do
+                if(use_soil_matrixcn)then
+                end if
                 this%sminn_vr_col(c,j) = 0._r8
                 this%ntrunc_vr_col(c,j) = 0._r8
              end do
@@ -530,6 +572,8 @@ contains
           do k = 1, ndecomp_pools
              this%decomp_npools_col(c,k)    = decomp_cpools_col(c,k)    / decomp_cascade_con%initial_cn_ratio(k)
              this%decomp_npools_1m_col(c,k) = decomp_cpools_1m_col(c,k) / decomp_cascade_con%initial_cn_ratio(k)
+             if(use_soil_matrixcn)then
+             end if
           end do
 
           if (use_nitrif_denitrif) then
@@ -541,6 +585,7 @@ contains
              this%smin_no3_col(c) = 0._r8
           end if
           this%totlitn_col(c)    = 0._r8
+          this%totmicn_col(c)    = 0._r8
           this%totsomn_col(c)    = 0._r8
           this%totlitn_1m_col(c) = 0._r8
           this%totsomn_1m_col(c) = 0._r8
@@ -612,11 +657,12 @@ contains
 
     !
     ! !LOCAL VARIABLES:
-    integer            :: i,j,k,l,c
+    integer            :: i,j,k,l,c,fc
     logical            :: readvar
     integer            :: idata
     logical            :: exit_spinup = .false.
     logical            :: enter_spinup = .false.
+    logical            :: found = .false.
     real(r8)           :: m          ! multiplier for the exit_spinup code
     real(r8), pointer  :: ptr2d(:,:) ! temp. pointers for slicing larger arrays
     real(r8), pointer  :: ptr1d(:)   ! temp. pointers for slicing larger arrays
@@ -627,6 +673,7 @@ contains
     integer            :: restart_file_spinup_state 
     ! flags for comparing the model and restart decomposition cascades
     integer            :: decomp_cascade_state, restart_file_decomp_cascade_state 
+    integer            :: i_decomp,j_decomp,i_lev,j_lev
     !------------------------------------------------------------------------
 
     ! sminn
@@ -655,7 +702,15 @@ contains
                errMsg(sourcefile, __LINE__))
        end if
     end do
-
+    if(flag=='write')then
+       if(use_soil_matrixcn)then
+       end if
+    end if
+    if(use_soil_matrixcn)then
+       if(flag=='read')then
+       end if
+    end if
+          
     ptr2d => this%ntrunc_vr_col
     call restartvar(ncid=ncid, flag=flag, varname="col_ntrunc_vr", xtype=ncd_double,  &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
@@ -770,6 +825,8 @@ contains
 
     if (decomp_method == century_decomp ) then
        decomp_cascade_state = 1
+    else if (decomp_method == mimics_decomp ) then
+       decomp_cascade_state = 2
     else
        decomp_cascade_state = 0
     end if
@@ -931,6 +988,7 @@ contains
           this%smin_nh4_col(i) = value_column
        end if
        this%totlitn_col(i)     = value_column
+       this%totmicn_col(i)     = value_column
        this%totsomn_col(i)     = value_column
        this%totsomn_1m_col(i)  = value_column
        this%totlitn_1m_col(i)  = value_column
@@ -976,6 +1034,8 @@ contains
           i = filter_column(fi)
           this%decomp_npools_col(i,k)    = value_column
           this%decomp_npools_1m_col(i,k) = value_column
+          if(use_soil_matrixcn)then
+          end if
        end do
     end do
 
@@ -985,9 +1045,15 @@ contains
           do fi = 1,num_column
              i = filter_column(fi)
              this%decomp_npools_vr_col(i,j,k) = value_column
+             if(use_soil_matrixcn)then
+             end if
           end do
        end do
     end do
+
+    ! Set values for the matrix solution
+    if(use_soil_matrixcn)then
+    end if
 
   end subroutine SetValues
 
@@ -1033,6 +1099,8 @@ contains
       do fc = 1,num_allc
          c = filter_allc(fc)
          this%decomp_npools_col(c,l) = 0._r8
+         if(use_soil_matrixcn)then
+         end if
       end do
       do j = 1, nlevdecomp
          do fc = 1,num_allc
@@ -1040,6 +1108,8 @@ contains
             this%decomp_npools_col(c,l) = &
                  this%decomp_npools_col(c,l) + &
                  this%decomp_npools_vr_col(c,j,l) * dzsoi_decomp(j)
+            if(use_soil_matrixcn)then
+            end if
          end do
       end do
    end do
@@ -1146,6 +1216,22 @@ contains
       end if
    end do
    
+   ! total microbial nitrogen (TOTMICN)
+   do fc = 1,num_allc
+      c = filter_allc(fc)
+      this%totmicn_col(c) = 0._r8
+   end do
+   do l = 1, ndecomp_pools
+      if ( decomp_cascade_con%is_microbe(l) ) then
+         do fc = 1,num_allc
+            c = filter_allc(fc)
+            this%totmicn_col(c) = &
+                 this%totmicn_col(c) + &
+                 this%decomp_npools_col(c,l)
+         end do
+      end if
+   end do
+
    ! total soil organic matter nitrogen (TOTSOMN)
    do fc = 1,num_allc
       c = filter_allc(fc)

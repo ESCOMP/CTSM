@@ -15,9 +15,8 @@ module lnd2atmType
   use clm_varctl    , only : iulog, use_lch4, use_fan
   use shr_megan_mod , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod,only : shr_fire_emis_mechcomps_n
-  use seq_drydep_mod, only : n_drydep, drydep_method, DD_XLND
+  use shr_drydep_mod, only : n_drydep
   use shr_fan_mod,    only : shr_fan_to_atm
-  
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -68,8 +67,8 @@ module lnd2atmType
 
      procedure, public  :: Init
      procedure, private :: ReadNamelist
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
 
   end type lnd2atm_type
   !------------------------------------------------------------------------
@@ -109,13 +108,13 @@ contains
   subroutine Init(this, bounds, NLFilename)
 
     class(lnd2atm_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     character(len=*), intent(in) :: NLFilename ! Namelist filename
 
     call this%InitAllocate(bounds)
     call this%ReadNamelist(NLFilename)
     call this%InitHistory(bounds)
-    
+
   end subroutine Init
 
   !------------------------------------------------------------------------
@@ -126,7 +125,7 @@ contains
     !
     ! !ARGUMENTS:
     class (lnd2atm_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     real(r8) :: ival  = 0.0_r8  ! initial value
@@ -173,7 +172,7 @@ contains
        allocate(this%fireztop_grc(begg:endg))
        this%fireztop_grc = ival
     endif
-    if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
+    if ( n_drydep > 0 )then
        allocate(this%ddvel_grc(begg:endg,1:n_drydep)); this%ddvel_grc(:,:)=ival
     end if
 
@@ -250,7 +249,7 @@ contains
     !
     ! !ARGUMENTS:
     class(lnd2atm_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer  :: begc, endc

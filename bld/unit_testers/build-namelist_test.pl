@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1875;
+my $ntests = 1877;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1275;
 }
@@ -462,7 +462,7 @@ foreach my $options (
                       "-bgc bgc -use_case 1850-2100_SSP3-7.0_transient -namelist '&a start_ymd=20701029/'",
                       "-bgc fates  -use_case 2000_control -no-megan",
                       "-bgc fates  -use_case 20thC_transient -no-megan",
-                      "-bgc fates  -use_case 1850_control -no-megan -namelist '&a use_fates_sp=T/'",
+                      "-bgc fates  -use_case 1850_control -no-megan -namelist \"&a use_fates_sp=T, soil_decomp_method='None'/\"",
                       "-bgc sp  -use_case 2000_control -res 0.9x1.25 -namelist '&a use_soil_moisture_streams = T/'",
                       "-bgc bgc -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19101023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
@@ -973,6 +973,11 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
+     "useFATESWn_dom_pft"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"n_dom_pfts = 1",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
      "useFATESWbMH"              =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_biomass_heat_storage=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1014,6 +1019,11 @@ my %failtest = (
                                      phys=>"clm4_5",
                                    },
      "useMEGANwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -megan",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm4_5",
+                                   },
+     "useDRYDEPwithFATES"        =>{ options=>"--bgc fates --envxml_dir . --no-megan --drydep",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
