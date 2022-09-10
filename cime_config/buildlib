@@ -133,6 +133,10 @@ def _main_func():
                 # to use its directories in place of stub_rof
                 paths.append(os.path.join(lnd_root,"lilac","stub_rof"))
 
+                # Add path needed for shr_fan_mod.F90, which is under cmeps
+                cmeps_root = os.path.normpath( os.path.join(_CIMEROOT,os.pardir, "components", "cmeps") )
+                paths.append(os.path.join(cmeps_root,"cesm","nuopc_cap_share"))
+
             if (driver == 'lilac' or driver == 'nuopc'):
                 paths.append(os.path.join(lnd_root,"src","cpl","share_esmf"))
 
