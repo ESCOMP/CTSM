@@ -29,8 +29,9 @@ module DiurnalOzoneType
   
      contains
        ! Public routines
-       procedure, public :: Init
-       procedure, public :: Interp
+       procedure, public  :: Init
+       procedure, private :: InitAllocate
+       procedure, public  :: Interp
 
     end type diurnal_ozone_anom_type
   
@@ -46,35 +47,67 @@ module DiurnalOzoneType
   contains
   
     ! ========================================================================
-    ! Infrastructure routines (initialization, restart, etc.)
+    ! Infrastructure routines (initialization, etc.)
     ! ========================================================================
   
     !-----------------------------------------------------------------------
-    subroutine Init(this)
+    subroutine Init(this, bounds, nsec)
       !
-      ! !DESCRIPTION:
+      ! DESCRIPTION:
       ! Initialize ozone data structure
       !
       !
       ! !ARGUMENTS:
       class(diurnal_ozone_anom_type), intent(inout) :: this
+      type(bounds_type),              intent(in)    :: bounds 
+      integer,                        intent(in)    :: nsec
       !-----------------------------------------------------------------------
-  
+
       if (atm_ozone_frequency_val == atm_ozone_frequency_unset) then
-         this%ozone_input_frequency = ozone_frequency_unset
+        this%ozone_input_frequency = ozone_frequency_unset
       else if (atm_ozone_frequency_val == atm_ozone_frequency_subdaily) then
-         this%ozone_input_frequency = ozone_frequency_subdaily
+        this%ozone_input_frequency = ozone_frequency_subdaily
       else if (atm_ozone_frequency_val == atm_ozone_frequency_multiday_average) then
         this%ozone_input_frequency = ozone_frequency_multiday_average
       else
-         call endrun('unknown ozone frequency')
+        call endrun('unknown ozone frequency')
       end if
+
+      call this%InitAllocate(bounds, nsec)
   
     end subroutine Init
   
   
     !-----------------------------------------------------------------------
+    subroutine InitAllocate(this, bounds, nsec)
+      !
+      ! !DESCRIPTION:
+      ! Allocate module variables and data structures
+      !
+      ! !USES:
+      use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
+      !
+      ! !ARGUMENTS:
+      class(diurnal_ozone_anom_type), intent(inout) :: this
+      type(bounds_type),              intent(in)    :: bounds
+      integer,                        intent(in)    :: nsec 
+      !
+      ! LOCAL VARIABLES:
+      integer  :: begp, endp
+      integer  :: begc, endc
+      integer  :: begg, endg
+      !---------------------------------------------------------------------
 
-  
+      begp = bounds%begp; endp = bounds%endp
+      begc = bounds%begc; endc = bounds%endc
+      begg = bounds%begg; endg = bounds%endg
+
+      allocate(this%o3_anomaly_grc(begc:endc,1:nsec))
+      this%o3_anomaly_grc(:,:) = nan
+
+      end subroutine InitAllocate
+
+  !-----------------------------------------------------------------------
+
   end module DiurnalOzoneType
   
