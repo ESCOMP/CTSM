@@ -566,6 +566,57 @@
       <option name="comment"  >Single point restart test with DEBUG and FAN on, not using Qian dataset since starts in 2009 five years after last Qian data</option>
     </options>
   </test>
+  <test name="SMS_P1440x2_D_Ld3" grid="f19_f19_mg16" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009Start">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >NUOPC Threaded test with DEBUG and FAN on, we expect this to fail</option>
+    </options>
+  </test>
+  <test name="ERP_D" grid="f19_f19_mg16" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009Start">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="gnu"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >NUOPC Restart test with processor count change with FAN on and DEBUG</option>
+    </options>
+  </test>
+  <test name="SMS_Lm9" grid="f19_f19_mg16" compset="IHistClm51BgcCrop" testmods="clm/fanFull2009StartMonthly">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="gnu"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:40:00</option>
+      <option name="comment"  >NUOPC Longer production smoke test with FAN on</option>
+    </options>
+  </test>
+  <test name="SMS_Lm9" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropRs" testmods="clm/fanFull2009StartMonthly">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="izumi"    compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:20:00</option>
+      <option name="comment"  >NUOPC Longer single point case with FAN on, not using Qian dataset since starts in 2009 five years after last Qian data</option>
+    </options>
+  </test>
+  <test name="ERS_D" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropRs" testmods="clm/fanFull2009Start">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:20:00</option>
+      <option name="comment"  >NUOPC Single point restart test with DEBUG and FAN on, not using Qian dataset since starts in 2009 five years after last Qian data</option>
+    </options>
+  </test>
   <test name="ERP_D_P36x2_Ld3" grid="f10_f10_mg37" compset="I1850Clm51BgcCrop" testmods="clm/mimics">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
