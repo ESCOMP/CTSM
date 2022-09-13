@@ -24,7 +24,7 @@ module OzoneMod
   use PatchType              , only : patch
   use pftconMod              , only : pftcon
   use shr_ozone_coupling_mod , only : atm_ozone_frequency_multiday_average, shr_ozone_coupling_readnl
-  use DiurnalOzoneType       , only : diurnal_ozone_anom_type
+  use diurnalOzoneType       , only : diurnal_ozone_anom_type
 
   implicit none
   save
