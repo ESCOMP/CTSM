@@ -33,6 +33,8 @@ module FanStreamMod
   integer :: model_year_align_fan = ispval       ! align year to align model years with FAN streams
   character(len=CL)  :: stream_fldFileName_fan   ! FAN stream filename
   character(len=CL)  :: fan_mapalgo = 'bilinear' ! FAN stream mapping algorithm
+  integer, parameter :: nFields = 6
+  character(len=16)  :: stream_varnames(nFields) ! array of stream field names
   logical :: crop_manure_per_crop                ! If manure is per crop or per land area, changes the variables read in
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -99,12 +101,10 @@ contains
    integer            :: nu_nml    ! unit for namelist file
    integer            :: nml_error ! namelist i/o error flag
    integer            :: rc        ! error code
-   character(len=16) :: stream_varnames(6)     ! array of stream field names
-   character(len=16) :: streamvar, streamvar2  ! Specific stream variable names
+   character(len=16)  :: streamvar, streamvar2    ! Specific stream variable names
    character(*), parameter :: subName = "('fanstream_init')"
    !-----------------------------------------------------------------------
 
-   call endrun(msg=subName//'ERROR FAN is not configured for NUOPC driver yet'//errMsg(sourcefile, __LINE__))
    if (stream_year_first_fan == ispval) then
       call endrun(msg=subName//'ERROR stream_year_first_fan not set at '//errMsg(sourcefile, __LINE__))
    end if
@@ -179,6 +179,7 @@ contains
    use clm_varcon      , only : secspday
    use atm2lndType     , only : atm2lnd_type
    use shr_infnan_mod  , only : isinf => shr_infnan_isinf
+   use dshr_methods_mod, only : dshr_fldbun_getfldptr
    use dshr_strdata_mod, only : shr_strdata_advance
    !
    ! Arguments
@@ -194,10 +195,9 @@ contains
    integer :: mcdate  ! Current model date (yyyymmdd)
    integer :: dayspyr ! days per year
    integer :: rc      ! error code
+   real(r8), pointer :: dataptr1d(:)  ! Temporary data array to put stream data into
    character(*), parameter :: subName = "('fanstream_interp')"
    !-----------------------------------------------------------------------
-
-   call endrun(msg=subName//'ERROR FAN is not configured for NUOPC driver yet'//errMsg(sourcefile, __LINE__))
 
    call get_curr_date(year, mon, day, sec)
    mcdate = year*10000 + mon*100 + day
@@ -208,10 +208,56 @@ contains
       call ESMF_Finalize(endflag=ESMF_END_ABORT)
    end if
 
-   ig = 0
-   do g = bounds%begg,bounds%endg
-      ig = ig+1
-!     atm2lnd_inst%forc_ndep_grz_grc(g) = sdat_fan%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
+   do n = 1, nFields
+       call dshr_fldbun_getFldPtr(this%sdat_urbantv%pstrm(1)%fldbun_model, trim(stream_varnames(n)), &
+            fldptr1=dataptr1d, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       end if
+       select case trim(stream_varnames(n))
+       case( 'manure_grz')
+          atm2lnd_inst%forc_grz_grc(:) = dataprt1d(:) / (secspday * dayspyr)
+       case( 'manure_sgrz_crop')
+          do g = bounds%begg,bounds%endg
+             if ( isinf(dataprt1d(g) ) then
+                atm2lnd_inst%forc_ndep_sgrz_grc(g) = 9.0e99_r8
+             else
+                atm2lnd_inst%forc_ndep_sgrz_grc(g) = dataprt1d(g) / (secspday * dayspyr)
+             end if
+          end do
+       case( 'manure_ngrz_crop')
+          do g = bounds%begg,bounds%endg
+             if ( isinf(dataprt1d(g) ) then
+                atm2lnd_inst%forc_ndep_ngrz_grc(g) = 9.0e99_r8
+             else
+                atm2lnd_inst%forc_ndep_ngrz_grc(g) = dataprt1d(g) / (secspday * dayspyr)
+             end if
+          end do
+       case( 'manure_sgrz'     )
+          do g = bounds%begg,bounds%endg
+             if ( isinf(dataprt1d(g) ) then
+                atm2lnd_inst%forc_ndep_sgrz_grc(g) = 9.0e99_r8
+             else
+                atm2lnd_inst%forc_ndep_sgrz_grc(g) = dataprt1d(g) / (secspday * dayspyr)
+             end if
+          end do
+       case( 'manure_ngrz'     )
+          do g = bounds%begg,bounds%endg
+             if ( isinf(dataprt1d(g) ) then
+                atm2lnd_inst%forc_ndep_ngrz_grc(g) = 9.0e99_r8
+             else
+                atm2lnd_inst%forc_ndep_ngrz_grc(g) = dataprt1d(g) / (secspday * dayspyr)
+             end if
+          end do
+       case( 'fract_urea'      )
+          atm2lnd_inst%forc_ndep_urea_grc(:) = dataprt1d(:)
+       case( 'fract_nitr'      )
+          atm2lnd_inst%forc_ndep_nitr_grc(:) = dataprt1d(:)
+       case( 'soilph'          )
+          atm2lnd_inst%forc_soilph_grc(:) = dataptr1d(:)
+       case default
+          call endrun(msg=subName//'ERROR FAN stream variable is not handled'//trim(stream_varnames(n))//errMsg(sourcefile, __LINE__))
+       end select
    end do
 
  end subroutine fanstream_interp
