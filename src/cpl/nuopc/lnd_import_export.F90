@@ -61,6 +61,7 @@ module lnd_import_export
   integer                :: drydep_nflds     ! number of dry deposition velocity fields lnd-> atm
   integer                :: megan_nflds      ! number of MEGAN voc fields from lnd-> atm
   integer                :: emis_nflds       ! number of fire emission fields from lnd-> atm
+  character(len=cx)      :: fan_fields       ! List of NH3 emission fields from lnd->atm
 
   logical                :: flds_co2a        ! use case
   logical                :: flds_co2b        ! use case
@@ -131,6 +132,7 @@ module lnd_import_export
   character(*), parameter :: Fall_fco2_lnd  = 'Fall_fco2_lnd'
   character(*), parameter :: Sl_ddvel       = 'Sl_ddvel'
   character(*), parameter :: Fall_voc       = 'Fall_voc'
+  character(*), parameter :: Fall_fan       = 'Fall_FANflxnh3'
   character(*), parameter :: Fall_fire      = 'Fall_fire'
   character(*), parameter :: Sl_fztop       = 'Sl_fztop'
   character(*), parameter :: Flrl_rofsur    = 'Flrl_rofsur'
@@ -158,6 +160,7 @@ contains
 
     use shr_carma_mod     , only : shr_carma_readnl
     use shr_ndep_mod      , only : shr_ndep_readnl
+    use shr_fan_mod       , only : shr_fan_readnl
     use shr_fire_emis_mod , only : shr_fire_emis_readnl
     use clm_varctl        , only : ndep_from_cpl
     use controlMod        , only : NLFilename
@@ -179,6 +182,7 @@ contains
     integer           :: n, num
     logical           :: send_co2_to_atm = .false.
     logical           :: recv_co2_fr_atm = .false.
+    logical           :: fan_have_fields              ! .true. if FAN coupled to atmosphere
 
     character(len=*), parameter :: subname='(lnd_import_export:advertise_fields)'
     !-------------------------------------------------------------------------------
@@ -248,6 +252,9 @@ contains
     ! TODO: is the following correct - the CARMA field exchange is very confusing in mct
     call shr_carma_readnl('drv_flds_in', carma_fields)
 
+    ! FAN model NH3 emissions from land
+    call shr_fan_readnl(nlfilename='drv_flds_in', fan_fields=fan_fields, have_fields=fan_have_fields)
+
     ! export to atm
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, trim(flds_scalar_name))
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
@@ -288,6 +295,9 @@ contains
        end if
        if (carma_fields /= ' ') then
           call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_soilw) ! optional for carma
+       end if
+       if (fan_have_fields) then
+          call fldlist_add(fldsFrLnd_num, fldsFrLnd, Fall_fan)
        end if
     end if
 
@@ -824,6 +834,11 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        if (fldchk(exportState, Sl_soilw)) then
           call state_setexport_1d(exportState, Sl_soilw, waterlnd2atmbulk_inst%h2osoi_vol_grc(begg:,1), &
+               init_spval=.true., rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end if
+       if (fldchk(exportState, Fall_fan)) then
+          call state_setexport_1d(exportState, Fall_fan, lnd2atm_inst%flux_nh3_grc(begg:), &
                init_spval=.true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
