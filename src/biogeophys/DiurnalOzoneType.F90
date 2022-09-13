@@ -13,7 +13,8 @@ module DiurnalOzoneType
     use clm_varctl             , only : iulog
     use abortutils             , only : endrun
     use shr_ozone_coupling_mod , only : atm_ozone_frequency_unset, atm_ozone_frequency_subdaily, & 
-                                        atm_ozone_frequency_multiday_average
+                                        atm_ozone_frequency_multiday_average,                    &
+                                        shr_ozone_coupling_readnl
     implicit none
     save
     private
@@ -31,7 +32,7 @@ module DiurnalOzoneType
        ! Public routines
        procedure, public  :: Init
        procedure, private :: InitAllocate
-       procedure, public  :: Interp
+       !procedure, public  :: Interp - will add this eventually
 
     end type diurnal_ozone_anom_type
   
@@ -57,11 +58,16 @@ module DiurnalOzoneType
       ! Initialize ozone data structure
       !
       !
-      ! !ARGUMENTS:
+      ! ARGUMENTS:
       class(diurnal_ozone_anom_type), intent(inout) :: this
       type(bounds_type),              intent(in)    :: bounds 
       integer,                        intent(in)    :: nsec
+
+      ! Local variables
+      integer  :: atom_ozone_frequency_val
       !-----------------------------------------------------------------------
+
+      call shr_ozone_coupling_readnl("drv_flds_in", atm_ozone_frequency_val)
 
       if (atm_ozone_frequency_val == atm_ozone_frequency_unset) then
         this%ozone_input_frequency = ozone_frequency_unset
