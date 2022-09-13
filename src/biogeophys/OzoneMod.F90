@@ -158,7 +158,7 @@ contains
     ! read what atm ozone frequency we have 
     call shr_ozone_coupling_readnl("drv_flds_in", atm_ozone_frequency_val)
     this%atm_ozone_freq = atm_ozone_frequency_val
-    
+
     if (o3_veg_stress_method=='stress_lombardozzi2015') then
        this%stress_method = stress_method_lombardozzi2015
     else if (o3_veg_stress_method=='stress_falk') then
@@ -423,14 +423,14 @@ contains
 
          ! Ozone uptake for shaded leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_o3, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssha(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesha(p))
 
          ! Ozone uptake for sunlit leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_o3, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssun(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesun(p))

@@ -76,16 +76,12 @@ module DiurnalOzoneType
       integer,                        intent(in)    :: nsec 
       !
       ! LOCAL VARIABLES:
-      integer  :: begp, endp
-      integer  :: begc, endc
       integer  :: begg, endg
       !---------------------------------------------------------------------
 
-      begp = bounds%begp; endp = bounds%endp
-      begc = bounds%begc; endc = bounds%endc
       begg = bounds%begg; endg = bounds%endg
 
-      allocate(this%o3_anomaly_grc(begc:endc,1:nsec))
+      allocate(this%o3_anomaly_grc(begg:endg,1:nsec))
       this%o3_anomaly_grc(:,:) = nan
 
       end subroutine InitAllocate
