@@ -15,7 +15,7 @@ module diurnalOzoneStreamMod
    use clm_varctl            , only : iulog
    use abortutils            , only : endrun
    use decompMod             , only : bounds_type
-   use diurnalOzoneType      , only : diurnal_ozone_anom_type
+   use DiurnalOzoneType      , only : diurnal_ozone_anom_type
 
    !
    ! PUBLIC TYPES:
