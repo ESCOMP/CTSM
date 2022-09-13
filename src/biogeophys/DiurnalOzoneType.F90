@@ -23,7 +23,6 @@ module DiurnalOzoneType
        private
        ! Private data members
        integer                       :: ntimes = 24
-       real(r8),         allocatable :: sec(:)                 ! seconds of day (size ntimes)
        real(r8), public, allocatable :: o3_anomaly_grc(:,:)    ! o3 anomaly data [grc, ntimes]
   
      contains

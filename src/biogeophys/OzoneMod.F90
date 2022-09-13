@@ -23,10 +23,7 @@ module OzoneMod
   use abortutils             , only : endrun
   use PatchType              , only : patch
   use pftconMod              , only : pftcon
-  use shr_ozone_coupling_mod , only : atm_ozone_frequency_unset,            &
-                                      atm_ozone_frequency_subdaily,         & 
-                                      atm_ozone_frequency_multiday_average, &
-                                      shr_ozone_coupling_readnl
+  use shr_ozone_coupling_mod , only : atm_ozone_frequency_multiday_average, shr_ozone_coupling_readnl
   use DiurnalOzoneType       , only : diurnal_ozone_anom_type
 
   implicit none
@@ -60,7 +57,7 @@ module OzoneMod
      !   solution, but we don't have any precedent for using getters and setters for data
      !   arrays.
      real(r8), pointer             :: tlai_old_patch(:)  ! tlai from last time step
-     type(diurnal_ozone_anom_type) :: diurnalOzoneAnomInst
+     !type(diurnal_ozone_anom_type) :: diurnalOzoneAnomInst
 
    contains
      ! Public routines
@@ -161,9 +158,9 @@ contains
     call shr_ozone_coupling_readnl("drv_flds_in", atm_ozone_frequency_val)
     this%atm_ozone_freq = atm_ozone_frequency_val
 
-    if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average) then 
-      this%diurnalOzoneAnomInst%Init(bounds)
-    end if
+    !if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average) then 
+    !  this%diurnalOzoneAnomInst%Init(bounds)
+    !end if
 
     if (o3_veg_stress_method=='stress_lombardozzi2015') then
        this%stress_method = stress_method_lombardozzi2015
