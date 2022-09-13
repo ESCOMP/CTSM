@@ -46,7 +46,7 @@ module diurnalOzoneStreamMod
       use lnd_comp_shr     , only : mesh, model_clock
       use dshr_strdata_mod , only : shr_strdata_init_from_inline, shr_strdata_print
       use dshr_strdata_mod , only : shr_strdata_advance
-      use dshr_methods_mod , only : dshr_field_getfldptr
+      use dshr_methods_mod , only : dshr_fldbun_getfldptr
 
       !
       ! ARGUMENTS:
