@@ -50,8 +50,8 @@ module diurnalOzoneStreamMod
 
       !
       ! ARGUMENTS:
-      type(diurnal_ozone_anom_type), intent(in) :: diurnalOzoneAnomInst ! instance of diurnal ozone anomaly type
-      type(bounds_type),             intent(in) :: bounds               ! bounds
+      type(diurnal_ozone_anom_type), intent(inout) :: diurnalOzoneAnomInst ! instance of diurnal ozone anomaly type
+      type(bounds_type),             intent(in)    :: bounds               ! bounds
       !
       ! !LOCAL VARIABLES:
       type(shr_strdata_type)      :: sdat_dO3                              ! input data stream
@@ -161,7 +161,7 @@ module diurnalOzoneStreamMod
       end if
 
       ! Get pointer for stream data that is time and spatially interpolated to model time and grid
-      call dshr_fldbun_getFldPtr(sdat_do3%pstrm(1)%fldbun_model, trim(stream_var_name), fldptr2=dataptr2d, rc=rc)
+      call dshr_fldbun_getFldPtr(sdat_dO3%pstrm(1)%fldbun_model, trim(stream_var_name), fldptr2=dataptr2d, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
          call ESMF_Finalize(endflag=ESMF_END_ABORT)
       end if

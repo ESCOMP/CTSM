@@ -21,9 +21,9 @@ module DiurnalOzoneType
     type, public :: diurnal_ozone_anom_type
        private
        ! Private data members
-       integer               :: ntimes 
-       real(r8), allocatable :: sec(:)                 ! seconds of day (size ntimes)
-       real(r8), allocatable :: o3_anomaly_grc(:,:)    ! o3 anomaly data [grc, ntimes]
+       integer                       :: ntimes 
+       real(r8),         allocatable :: sec(:)                 ! seconds of day (size ntimes)
+       real(r8), public, allocatable :: o3_anomaly_grc(:,:)    ! o3 anomaly data [grc, ntimes]
   
      contains
        ! Public routines
