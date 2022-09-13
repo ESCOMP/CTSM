@@ -107,9 +107,7 @@ module diurnalOzoneStreamMod
          write(iulog,'(a)') 'do3_stream settings:'
          write(iulog,'(a,a)' ) '  stream_fldFileName_do3 = ',trim(stream_fldFileName_dO3)
          write(iulog,'(a,a)' ) '  stream_meshfile_do3    = ',trim(stream_meshfile_dO3)
-         do n = 1,numdO3Fields
-            write(iulog,'(a,a)' ) '  stream_varname         = ',trim(stream_varnames(n))
-         end do
+         write(iulog,'(a,a)' ) '  stream varname         = ',trim(stream_var_name)
          write(iulog,*)
       endif
 
