@@ -12,6 +12,7 @@ module DiurnalOzoneType
     use clm_varcon             , only : spval
     use clm_varctl             , only : iulog
     use abortutils             , only : endrun
+    use diurnalOzoneStreamMod  , only : read_O3_stream
 
     implicit none
     save
@@ -21,7 +22,7 @@ module DiurnalOzoneType
     type, public :: diurnal_ozone_anom_type
        private
        ! Private data members
-       integer                       :: ntimes 
+       integer                       :: ntimes = 24
        real(r8),         allocatable :: sec(:)                 ! seconds of day (size ntimes)
        real(r8), public, allocatable :: o3_anomaly_grc(:,:)    ! o3 anomaly data [grc, ntimes]
   
@@ -29,6 +30,7 @@ module DiurnalOzoneType
        ! Public routines
        procedure, public  :: Init
        procedure, private :: InitAllocate
+       procedure, private :: ReadInStream
        !procedure, public  :: Interp - will add this eventually
 
     end type diurnal_ozone_anom_type
@@ -44,7 +46,7 @@ module DiurnalOzoneType
     ! ========================================================================
   
     !-----------------------------------------------------------------------
-    subroutine Init(this, bounds, nsec)
+    subroutine Init(this, bounds, ntimes)
       !
       ! DESCRIPTION:
       ! Initialize ozone data structure
@@ -53,16 +55,17 @@ module DiurnalOzoneType
       ! ARGUMENTS:
       class(diurnal_ozone_anom_type), intent(inout) :: this
       type(bounds_type),              intent(in)    :: bounds 
-      integer,                        intent(in)    :: nsec
+      integer,                        intent(in)    :: ntimes
       !-----------------------------------------------------------------------
 
       call this%InitAllocate(bounds, nsec)
+      call this%ReadInStream(bounds)
   
     end subroutine Init
   
   
     !-----------------------------------------------------------------------
-    subroutine InitAllocate(this, bounds, nsec)
+    subroutine InitAllocate(this, bounds, ntimes)
       !
       ! !DESCRIPTION:
       ! Allocate module variables and data structures
@@ -73,7 +76,7 @@ module DiurnalOzoneType
       ! !ARGUMENTS:
       class(diurnal_ozone_anom_type), intent(inout) :: this
       type(bounds_type),              intent(in)    :: bounds
-      integer,                        intent(in)    :: nsec 
+      integer,                        intent(in)    :: ntimes 
       !
       ! LOCAL VARIABLES:
       integer  :: begg, endg
@@ -81,12 +84,30 @@ module DiurnalOzoneType
 
       begg = bounds%begg; endg = bounds%endg
 
-      allocate(this%o3_anomaly_grc(begg:endg,1:nsec))
-      this%o3_anomaly_grc(:,:) = nan
+      allocate(this%o3_anomaly_grc(begg:endg,1:ntimes)); this%o3_anomaly_grc(:,:) = nan
 
       end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
+
+  subroutine ReadInStream(this, bounds)
+    !
+    ! DESCRIPTION:
+    ! Read in stream data from 
+    !
+    ! !USES:
+    use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
+    !
+    ! !ARGUMENTS:
+    class(diurnal_ozone_anom_type), intent(inout) :: this
+    type(bounds_type),              intent(in)    :: bounds
+    !---------------------------------------------------------------------
+
+    read_O3_stream(this, bounds)
+
+    end subroutine ReadInStream
+  
+    !-----------------------------------------------------------------------
 
   end module DiurnalOzoneType
   

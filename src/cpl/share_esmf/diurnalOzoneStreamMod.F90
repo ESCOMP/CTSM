@@ -23,7 +23,7 @@ module diurnalOzoneStreamMod
    private
 
    ! PUBLIC MEMBER FUNCTIONS:
-   public :: dO3_init    ! position dataset for diurnal ozone anomaly
+   public :: read_O3_stream    ! position dataset for diurnal ozone anomaly
 
    character(len=*), parameter :: sourcefile = &
       __FILE__
@@ -33,7 +33,7 @@ module diurnalOzoneStreamMod
 
    !==============================================================================
 
-   subroutine dO3_init(diurnalOzoneAnomInst, bounds)
+   subroutine read_O3_stream(diurnalOzoneAnomInst, bounds)
       !
       ! Initialize data stream information for LAI.
       !
@@ -184,7 +184,7 @@ module diurnalOzoneStreamMod
          end do
       end do
 
-   end subroutine dO3_init
+   end subroutine read_O3_stream
 
 !==============================================================================
 
