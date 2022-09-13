@@ -398,6 +398,12 @@ contains
          tlai_old    => this%tlai_old_patch                     & ! Output: [real(r8) (:)] tlai from last time step
          )
 
+      if (this%flag == 'multiday_average') then
+          call o3DiurnalAnomolyInst%interp(forc_o3, forc_o3_down)
+      else
+          forc_o3_down => forc_o3
+      end if
+
       do fp = 1, num_exposedvegp
          p = filter_exposedvegp(fp)
          c = patch%column(p)
@@ -405,14 +411,14 @@ contains
 
          ! Ozone uptake for shaded leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=forc_o3_down(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssha(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesha(p))
 
          ! Ozone uptake for sunlit leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=forc_o3_down(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssun(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesun(p))
