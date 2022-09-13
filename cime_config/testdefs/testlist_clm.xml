@@ -617,6 +617,16 @@
       <option name="comment"  >NUOPC Single point restart test with DEBUG and FAN on, not using Qian dataset since starts in 2009 five years after last Qian data</option>
     </options>
   </test>
+  <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/fanFull2009Start--clm/NEON/KONA">
+    <machines>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment"  >Add at one test of a NEON AG site with FAN on</option>
+    </options>
+  </test>
   <test name="ERP_D_P36x2_Ld3" grid="f10_f10_mg37" compset="I1850Clm51BgcCrop" testmods="clm/mimics">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
