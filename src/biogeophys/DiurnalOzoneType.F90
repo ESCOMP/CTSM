@@ -46,7 +46,7 @@ module DiurnalOzoneType
     ! ========================================================================
   
     !-----------------------------------------------------------------------
-    subroutine Init(this, bounds, ntimes)
+    subroutine Init(this, bounds)
       !
       ! DESCRIPTION:
       ! Initialize ozone data structure
@@ -55,17 +55,16 @@ module DiurnalOzoneType
       ! ARGUMENTS:
       class(diurnal_ozone_anom_type), intent(inout) :: this
       type(bounds_type),              intent(in)    :: bounds 
-      integer,                        intent(in)    :: ntimes
       !-----------------------------------------------------------------------
 
-      call this%InitAllocate(bounds, nsec)
+      call this%InitAllocate(bounds)
       call this%ReadInStream(bounds)
   
     end subroutine Init
   
   
     !-----------------------------------------------------------------------
-    subroutine InitAllocate(this, bounds, ntimes)
+    subroutine InitAllocate(this, bounds)
       !
       ! !DESCRIPTION:
       ! Allocate module variables and data structures
@@ -76,7 +75,6 @@ module DiurnalOzoneType
       ! !ARGUMENTS:
       class(diurnal_ozone_anom_type), intent(inout) :: this
       type(bounds_type),              intent(in)    :: bounds
-      integer,                        intent(in)    :: ntimes 
       !
       ! LOCAL VARIABLES:
       integer  :: begg, endg
@@ -84,7 +82,7 @@ module DiurnalOzoneType
 
       begg = bounds%begg; endg = bounds%endg
 
-      allocate(this%o3_anomaly_grc(begg:endg,1:ntimes)); this%o3_anomaly_grc(:,:) = nan
+      allocate(this%o3_anomaly_grc(begg:endg,1:this%ntimes)); this%o3_anomaly_grc(:,:) = nan
 
       end subroutine InitAllocate
 

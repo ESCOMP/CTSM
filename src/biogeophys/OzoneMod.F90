@@ -162,7 +162,7 @@ contains
     this%atm_ozone_freq = atm_ozone_frequency_val
 
     if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average) then 
-      this%diurnalOzoneAnomInst%Init
+      this%diurnalOzoneAnomInst%Init(bounds)
     end if
 
     if (o3_veg_stress_method=='stress_lombardozzi2015') then
