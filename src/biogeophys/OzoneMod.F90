@@ -15,14 +15,18 @@ module OzoneMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use decompMod   , only : bounds_type
-  use clm_varcon  , only : spval
-  use clm_varctl  , only : iulog
-  use OzoneBaseMod, only : ozone_base_type
-  use abortutils  , only : endrun
-  use PatchType   , only : patch
-  use pftconMod   , only : pftcon
+  use shr_kind_mod           , only : r8 => shr_kind_r8
+  use decompMod              , only : bounds_type
+  use clm_varcon             , only : spval
+  use clm_varctl             , only : iulog
+  use OzoneBaseMod           , only : ozone_base_type
+  use abortutils             , only : endrun
+  use PatchType              , only : patch
+  use pftconMod              , only : pftcon
+  use shr_ozone_coupling_mod , only : atm_ozone_frequency_unset,            &
+                                      atm_ozone_frequency_subdaily,         & 
+                                      atm_ozone_frequency_multiday_average, &
+                                      shr_ozone_coupling_readnl
 
   implicit none
   save
@@ -33,6 +37,7 @@ module OzoneMod
      private
      ! Private data members
      integer :: stress_method  ! Which ozone stress parameterization we're using in this run
+     integer :: atm_ozone_freq ! Which ozone input frequency are we receiving?
 
      real(r8), pointer :: o3uptakesha_patch(:) ! ozone dose, shaded leaves (mmol O3/m^2)
      real(r8), pointer :: o3uptakesun_patch(:) ! ozone dose, sunlit leaves (mmol O3/m^2)
@@ -145,8 +150,15 @@ contains
     class(ozone_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
     character(len=*),  intent(in)    :: o3_veg_stress_method
-    !-----------------------------------------------------------------------
 
+    ! Local variables
+    integer                          :: atm_ozone_frequency_val
+    !-----------------------------------------------------------------------
+    
+    ! read what atm ozone frequency we have 
+    call shr_ozone_coupling_readnl("drv_flds_in", atm_ozone_frequency_val)
+    this%atm_ozone_freq = atm_ozone_frequency_val
+    
     if (o3_veg_stress_method=='stress_lombardozzi2015') then
        this%stress_method = stress_method_lombardozzi2015
     else if (o3_veg_stress_method=='stress_falk') then
