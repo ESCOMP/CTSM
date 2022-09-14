@@ -53,6 +53,7 @@ contains
     ! uses:
     use shr_mpi_mod, only : shr_mpi_bcast
     ! Arguments:
+    implicit none
     integer, intent(in) :: str_yr_first, str_yr_last, mdl_yr_align
     ! whether manure_sgrz and manure_ngrz are per crop or land area:
     logical, intent(in) :: crop_man_is_percrop 
@@ -183,6 +184,7 @@ contains
    use dshr_strdata_mod, only : shr_strdata_advance
    !
    ! Arguments
+   implicit none
    type(bounds_type) , intent(in)    :: bounds  
    type(atm2lnd_type), intent(inout) :: atm2lnd_inst
    !
@@ -209,56 +211,58 @@ contains
    end if
 
    do n = 1, nFields
-       call dshr_fldbun_getFldPtr(this%sdat_urbantv%pstrm(1)%fldbun_model, trim(stream_varnames(n)), &
+       dataptr1d => NULL()
+       call dshr_fldbun_getFldPtr(sdat_fan%pstrm(1)%fldbun_model, trim(stream_varnames(n)), &
             fldptr1=dataptr1d, rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
           call ESMF_Finalize(endflag=ESMF_END_ABORT)
        end if
-       select case trim(stream_varnames(n))
+       select case( trim(stream_varnames(n)) )
        case( 'manure_grz')
-          atm2lnd_inst%forc_grz_grc(:) = dataprt1d(:) / (secspday * dayspyr)
+          atm2lnd_inst%forc_ndep_grz_grc(bounds%begg:) = dataptr1d(:) / (secspday * dayspyr)
        case( 'manure_sgrz_crop')
           do g = bounds%begg,bounds%endg
-             if ( isinf(dataprt1d(g) ) then
+             if ( isinf(dataptr1d(g)) ) then
                 atm2lnd_inst%forc_ndep_sgrz_grc(g) = 9.0e99_r8
              else
-                atm2lnd_inst%forc_ndep_sgrz_grc(g) = dataprt1d(g) / (secspday * dayspyr)
+                atm2lnd_inst%forc_ndep_sgrz_grc(g) = dataptr1d(g) / (secspday * dayspyr)
              end if
           end do
        case( 'manure_ngrz_crop')
           do g = bounds%begg,bounds%endg
-             if ( isinf(dataprt1d(g) ) then
+             if ( isinf(dataptr1d(g)) ) then
                 atm2lnd_inst%forc_ndep_ngrz_grc(g) = 9.0e99_r8
              else
-                atm2lnd_inst%forc_ndep_ngrz_grc(g) = dataprt1d(g) / (secspday * dayspyr)
+                atm2lnd_inst%forc_ndep_ngrz_grc(g) = dataptr1d(g) / (secspday * dayspyr)
              end if
           end do
        case( 'manure_sgrz'     )
           do g = bounds%begg,bounds%endg
-             if ( isinf(dataprt1d(g) ) then
+             if ( isinf(dataptr1d(g)) ) then
                 atm2lnd_inst%forc_ndep_sgrz_grc(g) = 9.0e99_r8
              else
-                atm2lnd_inst%forc_ndep_sgrz_grc(g) = dataprt1d(g) / (secspday * dayspyr)
+                atm2lnd_inst%forc_ndep_sgrz_grc(g) = dataptr1d(g) / (secspday * dayspyr)
              end if
           end do
        case( 'manure_ngrz'     )
           do g = bounds%begg,bounds%endg
-             if ( isinf(dataprt1d(g) ) then
+             if ( isinf(dataptr1d(g)) ) then
                 atm2lnd_inst%forc_ndep_ngrz_grc(g) = 9.0e99_r8
              else
-                atm2lnd_inst%forc_ndep_ngrz_grc(g) = dataprt1d(g) / (secspday * dayspyr)
+                atm2lnd_inst%forc_ndep_ngrz_grc(g) = dataptr1d(g) / (secspday * dayspyr)
              end if
           end do
        case( 'fract_urea'      )
-          atm2lnd_inst%forc_ndep_urea_grc(:) = dataprt1d(:)
+          atm2lnd_inst%forc_ndep_urea_grc(bounds%begg:) = dataptr1d(:)
        case( 'fract_nitr'      )
-          atm2lnd_inst%forc_ndep_nitr_grc(:) = dataprt1d(:)
+          atm2lnd_inst%forc_ndep_nitr_grc(bounds%begg:) = dataptr1d(:)
        case( 'soilph'          )
-          atm2lnd_inst%forc_soilph_grc(:) = dataptr1d(:)
+          atm2lnd_inst%forc_soilph_grc(bounds%begg:) = dataptr1d(:)
        case default
           call endrun(msg=subName//'ERROR FAN stream variable is not handled'//trim(stream_varnames(n))//errMsg(sourcefile, __LINE__))
        end select
    end do
+   dataptr1d => NULL()
 
  end subroutine fanstream_interp
     
