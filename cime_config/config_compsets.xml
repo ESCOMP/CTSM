@@ -42,6 +42,12 @@
   </compset>
 
   <compset>
+    <alias>I1PtClm51BgcCrop</alias>
+    <lname>2000_DATM%1PT_CLM51%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
+
+  <compset>
     <alias>IHist1PtClm51Bgc</alias>
     <lname>HIST_DATM%1PT_CLM51%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>

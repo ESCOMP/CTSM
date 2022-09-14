@@ -617,7 +617,7 @@
       <option name="comment"  >NUOPC Single point restart test with DEBUG and FAN on, not using Qian dataset since starts in 2009 five years after last Qian data</option>
     </options>
   </test>
-  <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/fanFull2009Start--clm/NEON/KONA">
+  <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51BgcCrop" testmods="clm/fanFull2009Start--clm/NEON/KONA">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
