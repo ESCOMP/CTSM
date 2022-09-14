@@ -10,10 +10,17 @@ from datetime import datetime
 from CIME.test_utils import get_tests_from_xml  # pylint: disable=import-error
 from CIME.cs_status_creator import create_cs_status  # pylint: disable=import-error
 
-from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
+from ctsm.ctsm_logging import (
+    setup_logging_pre_config,
+    add_logging_args,
+    process_logging_args,
+)
 from ctsm.machine_utils import get_machine_name
-from ctsm.machine import (create_machine, get_possibly_overridden_mach_value,
-                          CREATE_TEST_QUEUE_UNSPECIFIED)
+from ctsm.machine import (
+    create_machine,
+    get_possibly_overridden_mach_value,
+    CREATE_TEST_QUEUE_UNSPECIFIED,
+)
 from ctsm.machine_defaults import MACHINE_DEFAULTS
 from ctsm.os_utils import make_link
 from ctsm.path_utils import path_to_ctsm_root
@@ -28,11 +35,12 @@ _NUM_COMPILER_CHARS = 3
 _NICE_LEVEL = 19
 
 # Extra arguments for the cs.status.fails command
-_CS_STATUS_FAILS_EXTRA_ARGS = '--fails-only --count-performance-fails'
+_CS_STATUS_FAILS_EXTRA_ARGS = "--fails-only --count-performance-fails"
 
 # ========================================================================
 # Public functions
 # ========================================================================
+
 
 def main(cime_path):
     """Main function called when run_sys_tests is run from the command-line
@@ -46,48 +54,67 @@ def main(cime_path):
     setup_logging_pre_config()
     args = _commandline_args()
     process_logging_args(args)
-    logger.info('Running on machine: %s', args.machine_name)
+    logger.info("Running on machine: %s", args.machine_name)
     if args.job_launcher_nobatch:
         job_launcher_type = JOB_LAUNCHER_NOBATCH
     else:
         job_launcher_type = None
-    machine = create_machine(machine_name=args.machine_name,
-                             job_launcher_type=job_launcher_type,
-                             defaults=MACHINE_DEFAULTS,
-                             account=args.account,
-                             job_launcher_queue=args.job_launcher_queue,
-                             job_launcher_walltime=args.job_launcher_walltime,
-                             job_launcher_nice_level=_NICE_LEVEL,
-                             job_launcher_extra_args=args.job_launcher_extra_args)
+    machine = create_machine(
+        machine_name=args.machine_name,
+        job_launcher_type=job_launcher_type,
+        defaults=MACHINE_DEFAULTS,
+        account=args.account,
+        job_launcher_queue=args.job_launcher_queue,
+        job_launcher_walltime=args.job_launcher_walltime,
+        job_launcher_nice_level=_NICE_LEVEL,
+        job_launcher_extra_args=args.job_launcher_extra_args,
+    )
     logger.debug("Machine info: %s", machine)
 
-    run_sys_tests(machine=machine, cime_path=cime_path,
-                  skip_testroot_creation=args.skip_testroot_creation,
-                  skip_git_status=args.skip_git_status,
-                  dry_run=args.dry_run,
-                  suite_name=args.suite_name, testfile=args.testfile, testlist=args.testname,
-                  suite_compilers=args.suite_compiler,
-                  testid_base=args.testid_base, testroot_base=args.testroot_base,
-                  rerun_existing_failures=args.rerun_existing_failures,
-                  compare_name=args.compare, generate_name=args.generate,
-                  baseline_root=args.baseline_root,
-                  walltime=args.walltime, queue=args.queue,
-                  retry=args.retry,
-                  extra_create_test_args=args.extra_create_test_args)
+    run_sys_tests(
+        machine=machine,
+        cime_path=cime_path,
+        skip_testroot_creation=args.skip_testroot_creation,
+        skip_git_status=args.skip_git_status,
+        dry_run=args.dry_run,
+        suite_name=args.suite_name,
+        testfile=args.testfile,
+        testlist=args.testname,
+        suite_compilers=args.suite_compiler,
+        testid_base=args.testid_base,
+        testroot_base=args.testroot_base,
+        rerun_existing_failures=args.rerun_existing_failures,
+        compare_name=args.compare,
+        generate_name=args.generate,
+        baseline_root=args.baseline_root,
+        walltime=args.walltime,
+        queue=args.queue,
+        retry=args.retry,
+        extra_create_test_args=args.extra_create_test_args,
+    )
 
-def run_sys_tests(machine, cime_path,
-                  skip_testroot_creation=False,
-                  skip_git_status=False,
-                  dry_run=False,
-                  suite_name=None, testfile=None, testlist=None,
-                  suite_compilers=None,
-                  testid_base=None, testroot_base=None,
-                  rerun_existing_failures=False,
-                  compare_name=None, generate_name=None,
-                  baseline_root=None,
-                  walltime=None, queue=None,
-                  retry=None,
-                  extra_create_test_args=''):
+
+def run_sys_tests(
+    machine,
+    cime_path,
+    skip_testroot_creation=False,
+    skip_git_status=False,
+    dry_run=False,
+    suite_name=None,
+    testfile=None,
+    testlist=None,
+    suite_compilers=None,
+    testid_base=None,
+    testroot_base=None,
+    rerun_existing_failures=False,
+    compare_name=None,
+    generate_name=None,
+    baseline_root=None,
+    walltime=None,
+    queue=None,
+    retry=None,
+    extra_create_test_args="",
+):
     """Implementation of run_sys_tests command
 
     Exactly one of suite_name, testfile or testlist should be provided
@@ -129,9 +156,11 @@ def run_sys_tests(machine, cime_path,
     testlist: list of strings giving test names to run
 
     """
-    num_provided_options = ((suite_name is not None) +
-                            (testfile is not None) +
-                            (testlist is not None and len(testlist) > 0))
+    num_provided_options = (
+        (suite_name is not None)
+        + (testfile is not None)
+        + (testlist is not None and len(testlist) > 0)
+    )
     if num_provided_options != 1:
         raise RuntimeError("Exactly one of suite_name, testfile or testlist must be provided")
 
@@ -144,12 +173,15 @@ def run_sys_tests(machine, cime_path,
         _make_testroot(testroot, testid_base, dry_run)
     else:
         if not os.path.exists(testroot):
-            raise RuntimeError("testroot directory does NOT exist as expected when a rerun" +
-                               " option is used: directory expected = "+testroot )
+            raise RuntimeError(
+                "testroot directory does NOT exist as expected when a rerun"
+                + " option is used: directory expected = "
+                + testroot
+            )
     print("Testroot: {}\n".format(testroot))
-    retry_final = get_possibly_overridden_mach_value(machine,
-                                                     varname='create_test_retry',
-                                                     value=retry)
+    retry_final = get_possibly_overridden_mach_value(
+        machine, varname="create_test_retry", value=retry
+    )
     # Note the distinction between a queue of None and a queue of
     # CREATE_TEST_QUEUE_UNSPECIFIED in the following: If queue is None (meaning that the
     # user hasn't specified a '--queue' argument to run_sys_tests), then we'll use the
@@ -159,58 +191,68 @@ def run_sys_tests(machine, cime_path,
     # (It's also possible for the machine object to specify a queue of
     # CREATE_TEST_QUEUE_UNSPECIFIED, which means that we won't use a '--queue' argument to
     # create_test unless the user specifies a '--queue' argument to run_sys_tests.)
-    queue_final = get_possibly_overridden_mach_value(machine,
-                                                     varname='create_test_queue',
-                                                     value=queue)
+    queue_final = get_possibly_overridden_mach_value(
+        machine, varname="create_test_queue", value=queue
+    )
     if queue_final == CREATE_TEST_QUEUE_UNSPECIFIED:
         queue_final = None
     if not skip_git_status:
         _record_git_status(testroot, retry_final, dry_run)
 
-    baseline_root_final = get_possibly_overridden_mach_value(machine,
-                                                             varname='baseline_dir',
-                                                             value=baseline_root)
-    create_test_args = _get_create_test_args(compare_name=compare_name,
-                                             generate_name=generate_name,
-                                             baseline_root=baseline_root_final,
-                                             account=machine.account,
-                                             walltime=walltime,
-                                             queue=queue_final,
-                                             retry=retry_final,
-                                             rerun_existing_failures=rerun_existing_failures,
-                                             extra_create_test_args=extra_create_test_args)
+    baseline_root_final = get_possibly_overridden_mach_value(
+        machine, varname="baseline_dir", value=baseline_root
+    )
+    create_test_args = _get_create_test_args(
+        compare_name=compare_name,
+        generate_name=generate_name,
+        baseline_root=baseline_root_final,
+        account=machine.account,
+        walltime=walltime,
+        queue=queue_final,
+        retry=retry_final,
+        rerun_existing_failures=rerun_existing_failures,
+        extra_create_test_args=extra_create_test_args,
+    )
     if suite_name:
         if not dry_run:
             _make_cs_status_for_suite(testroot, testid_base)
-        _run_test_suite(cime_path=cime_path,
-                        suite_name=suite_name,
-                        suite_compilers=suite_compilers,
-                        machine=machine,
-                        testid_base=testid_base, testroot=testroot,
-                        create_test_args=create_test_args,
-                        dry_run=dry_run)
+        _run_test_suite(
+            cime_path=cime_path,
+            suite_name=suite_name,
+            suite_compilers=suite_compilers,
+            machine=machine,
+            testid_base=testid_base,
+            testroot=testroot,
+            create_test_args=create_test_args,
+            dry_run=dry_run,
+        )
     else:
         if not dry_run:
             _make_cs_status_non_suite(testroot, testid_base)
         if testfile:
-            test_args = ['--testfile', os.path.abspath(testfile)]
+            test_args = ["--testfile", os.path.abspath(testfile)]
         elif testlist:
             test_args = testlist
         else:
             raise RuntimeError("None of suite_name, testfile or testlist were provided")
-        _run_create_test(cime_path=cime_path,
-                         test_args=test_args, machine=machine,
-                         testid=testid_base, testroot=testroot,
-                         create_test_args=create_test_args,
-                         dry_run=dry_run)
+        _run_create_test(
+            cime_path=cime_path,
+            test_args=test_args,
+            machine=machine,
+            testid=testid_base,
+            testroot=testroot,
+            create_test_args=create_test_args,
+            dry_run=dry_run,
+        )
+
 
 # ========================================================================
 # Private functions
 # ========================================================================
 
+
 def _commandline_args():
-    """Parse and return command-line arguments
-    """
+    """Parse and return command-line arguments"""
 
     description = """
 Driver for running CTSM system tests
@@ -236,157 +278,211 @@ or tests listed individually on the command line (via the -t/--testname argument
 """
 
     parser = argparse.ArgumentParser(
-        description=description,
-        formatter_class=argparse.RawTextHelpFormatter)
+        description=description, formatter_class=argparse.RawTextHelpFormatter
+    )
 
     machine_name = get_machine_name()
 
-    default_machine = create_machine(machine_name,
-                                     defaults=MACHINE_DEFAULTS,
-                                     allow_missing_entries=True)
+    default_machine = create_machine(
+        machine_name, defaults=MACHINE_DEFAULTS, allow_missing_entries=True
+    )
 
     tests_to_run = parser.add_mutually_exclusive_group(required=True)
 
-    tests_to_run.add_argument('-s', '--suite-name',
-                              help='Name of test suite to run')
+    tests_to_run.add_argument("-s", "--suite-name", help="Name of test suite to run")
 
-    tests_to_run.add_argument('-f', '--testfile',
-                              help='Path to file listing tests to run')
+    tests_to_run.add_argument("-f", "--testfile", help="Path to file listing tests to run")
 
-    tests_to_run.add_argument('-t', '--testname', '--testnames', nargs='+',
-                              help='One or more test names to run (space-delimited)')
+    tests_to_run.add_argument(
+        "-t",
+        "--testname",
+        "--testnames",
+        nargs="+",
+        help="One or more test names to run (space-delimited)",
+    )
 
     compare = parser.add_mutually_exclusive_group(required=True)
 
-    compare.add_argument('-c', '--compare', metavar='COMPARE_NAME',
-                         help='Baseline name (often tag) to compare against\n'
-                         '(required unless --skip-compare is given)')
+    compare.add_argument(
+        "-c",
+        "--compare",
+        metavar="COMPARE_NAME",
+        help="Baseline name (often tag) to compare against\n"
+        "(required unless --skip-compare is given)",
+    )
 
-    compare.add_argument('--skip-compare', action='store_true',
-                         help='Do not compare against baselines')
+    compare.add_argument(
+        "--skip-compare", action="store_true", help="Do not compare against baselines"
+    )
 
     generate = parser.add_mutually_exclusive_group(required=True)
 
-    generate.add_argument('-g', '--generate', metavar='GENERATE_NAME',
-                          help='Baseline name (often tag) to generate\n'
-                          '(required unless --skip-generate is given)')
+    generate.add_argument(
+        "-g",
+        "--generate",
+        metavar="GENERATE_NAME",
+        help="Baseline name (often tag) to generate\n" "(required unless --skip-generate is given)",
+    )
 
-    generate.add_argument('--skip-generate', action='store_true',
-                          help='Do not generate baselines')
+    generate.add_argument("--skip-generate", action="store_true", help="Do not generate baselines")
 
-    parser.add_argument('--suite-compiler', '--suite-compilers', nargs='+',
-                        help='Compiler(s) from the given test suite for which tests are run\n'
-                        'Only valid in conjunction with -s/--suite-name;\n'
-                        'if not specified, use all compilers defined for this suite and machine\n')
+    parser.add_argument(
+        "--suite-compiler",
+        "--suite-compilers",
+        nargs="+",
+        help="Compiler(s) from the given test suite for which tests are run\n"
+        "Only valid in conjunction with -s/--suite-name;\n"
+        "if not specified, use all compilers defined for this suite and machine\n",
+    )
 
-    parser.add_argument('--account',
-                        help='Account number to use for job submission.\n'
-                        'This is needed on some machines; if not provided explicitly,\n'
-                        'the script will attempt to guess it using the same rules as in CIME.\n'
-                        'Default for this machine: {}'.format(default_machine.account))
+    parser.add_argument(
+        "--account",
+        help="Account number to use for job submission.\n"
+        "This is needed on some machines; if not provided explicitly,\n"
+        "the script will attempt to guess it using the same rules as in CIME.\n"
+        "Default for this machine: {}".format(default_machine.account),
+    )
 
-    parser.add_argument('--testid-base',
-                        help='Base string used for the test id.\n'
-                        'Default is to auto-generate this with a date and time stamp.')
+    parser.add_argument(
+        "--testid-base",
+        help="Base string used for the test id.\n"
+        "Default is to auto-generate this with a date and time stamp.",
+    )
 
-    parser.add_argument('--testroot-base',
-                        help='Path in which testroot should be put.\n'
-                        'For supported machines, this can be left out;\n'
-                        'for non-supported machines, it must be provided.\n'
-                        'Default for this machine: {}'.format(default_machine.scratch_dir))
+    parser.add_argument(
+        "--testroot-base",
+        help="Path in which testroot should be put.\n"
+        "For supported machines, this can be left out;\n"
+        "for non-supported machines, it must be provided.\n"
+        "Default for this machine: {}".format(default_machine.scratch_dir),
+    )
 
-    parser.add_argument('--rerun-existing-failures', action='store_true',
-                        help='Rerun failed tests from the last PEND or FAIL state.\n'
-                        'This triggers the --use-existing option to create_test.\n'
-                        'To use this option, provide the same options to run_sys_tests\n'
-                        'as in the initial run, but also adding --testid-base\n'
-                        'corresponding to the base testid used initially.\n'
-                        '(However, many of the arguments to create_test are ignored,\n'
-                        'so it is not important for all of the options to exactly match\n'
-                        'those in the initial run.)\n'
-                        'This option implies --skip-testroot-creation (that option does not\n'
-                        'need to be specified separately if using --rerun-existing-failures).')
+    parser.add_argument(
+        "--rerun-existing-failures",
+        action="store_true",
+        help="Rerun failed tests from the last PEND or FAIL state.\n"
+        "This triggers the --use-existing option to create_test.\n"
+        "To use this option, provide the same options to run_sys_tests\n"
+        "as in the initial run, but also adding --testid-base\n"
+        "corresponding to the base testid used initially.\n"
+        "(However, many of the arguments to create_test are ignored,\n"
+        "so it is not important for all of the options to exactly match\n"
+        "those in the initial run.)\n"
+        "This option implies --skip-testroot-creation (that option does not\n"
+        "need to be specified separately if using --rerun-existing-failures).",
+    )
 
     if default_machine.baseline_dir:
-        baseline_root_default_msg = 'Default for this machine: {}'.format(
-            default_machine.baseline_dir)
+        baseline_root_default_msg = "Default for this machine: {}".format(
+            default_machine.baseline_dir
+        )
     else:
         baseline_root_default_msg = "Default for this machine: use cime's default"
-    parser.add_argument('--baseline-root',
-                        help='Path in which baselines should be compared and generated.\n' +
-                        baseline_root_default_msg)
+    parser.add_argument(
+        "--baseline-root",
+        help="Path in which baselines should be compared and generated.\n"
+        + baseline_root_default_msg,
+    )
 
-    parser.add_argument('--walltime',
-                        help='Walltime for each test.\n'
-                        'If running a test suite, you can generally leave this unset,\n'
-                        'because it is set in the file defining the test suite.\n'
-                        'For other uses, providing this helps decrease the time spent\n'
-                        'waiting in the queue.')
+    parser.add_argument(
+        "--walltime",
+        help="Walltime for each test.\n"
+        "If running a test suite, you can generally leave this unset,\n"
+        "because it is set in the file defining the test suite.\n"
+        "For other uses, providing this helps decrease the time spent\n"
+        "waiting in the queue.",
+    )
 
-    parser.add_argument('--queue',
-                        help='Queue to which tests are submitted.\n'
-                        'The special value "{}" means do not add a --queue option to create_test,\n'
-                        'instead allowing CIME to pick an appropriate queue for each test\n'
-                        'using its standard mechanisms.\n'
-                        'Default for this machine: {}'.format(
-                            CREATE_TEST_QUEUE_UNSPECIFIED, default_machine.create_test_queue))
+    parser.add_argument(
+        "--queue",
+        help="Queue to which tests are submitted.\n"
+        'The special value "{}" means do not add a --queue option to create_test,\n'
+        "instead allowing CIME to pick an appropriate queue for each test\n"
+        "using its standard mechanisms.\n"
+        "Default for this machine: {}".format(
+            CREATE_TEST_QUEUE_UNSPECIFIED, default_machine.create_test_queue
+        ),
+    )
 
-    parser.add_argument('--retry', type=int,
-                        help='Argument to create_test: Number of times to retry failed tests.\n'
-                        'Default for this machine: {}'.format(
-                            default_machine.create_test_retry))
+    parser.add_argument(
+        "--retry",
+        type=int,
+        help="Argument to create_test: Number of times to retry failed tests.\n"
+        "Default for this machine: {}".format(default_machine.create_test_retry),
+    )
 
-    parser.add_argument('--extra-create-test-args', default='',
-                        help='String giving extra arguments to pass to create_test\n'
-                        '(To allow the argument parsing to accept this, enclose the string\n'
-                        'in quotes, with a leading space, as in " --my-arg foo".)')
+    parser.add_argument(
+        "--extra-create-test-args",
+        default="",
+        help="String giving extra arguments to pass to create_test\n"
+        "(To allow the argument parsing to accept this, enclose the string\n"
+        'in quotes, with a leading space, as in " --my-arg foo".)',
+    )
 
-    parser.add_argument('--job-launcher-nobatch', action='store_true',
-                        help='Run create_test on the login node, even if this machine\n'
-                        'is set up to submit create_test to a compute node by default.')
+    parser.add_argument(
+        "--job-launcher-nobatch",
+        action="store_true",
+        help="Run create_test on the login node, even if this machine\n"
+        "is set up to submit create_test to a compute node by default.",
+    )
 
-    parser.add_argument('--job-launcher-queue',
-                        help='Queue to which the create_test command is submitted.\n'
-                        'Only applies on machines for which we submit the create_test command\n'
-                        'rather than running it on the login node.\n'
-                        'Default for this machine: {}'.format(
-                            default_machine.job_launcher.get_queue()))
+    parser.add_argument(
+        "--job-launcher-queue",
+        help="Queue to which the create_test command is submitted.\n"
+        "Only applies on machines for which we submit the create_test command\n"
+        "rather than running it on the login node.\n"
+        "Default for this machine: {}".format(default_machine.job_launcher.get_queue()),
+    )
 
-    parser.add_argument('--job-launcher-walltime',
-                        help='Walltime for the create_test command.\n'
-                        'Only applies on machines for which we submit the create_test command\n'
-                        'rather than running it on the login node.\n'
-                        'Default for this machine: {}'.format(
-                            default_machine.job_launcher.get_walltime()))
+    parser.add_argument(
+        "--job-launcher-walltime",
+        help="Walltime for the create_test command.\n"
+        "Only applies on machines for which we submit the create_test command\n"
+        "rather than running it on the login node.\n"
+        "Default for this machine: {}".format(default_machine.job_launcher.get_walltime()),
+    )
 
-    parser.add_argument('--job-launcher-extra-args',
-                        help='Extra arguments for the command that launches the\n'
-                        'create_test command.\n'
-                        '(To allow the argument parsing to accept this, enclose the string\n'
-                        'in quotes, with a leading space, as in " --my-arg foo".)\n'
-                        'Default for this machine: {}'.format(
-                            default_machine.job_launcher.get_extra_args()))
+    parser.add_argument(
+        "--job-launcher-extra-args",
+        help="Extra arguments for the command that launches the\n"
+        "create_test command.\n"
+        "(To allow the argument parsing to accept this, enclose the string\n"
+        'in quotes, with a leading space, as in " --my-arg foo".)\n'
+        "Default for this machine: {}".format(default_machine.job_launcher.get_extra_args()),
+    )
 
-    parser.add_argument('--skip-testroot-creation', action='store_true',
-                        help='Do not create the directory that will hold the tests.\n'
-                        'This should be used if the desired testroot directory already exists.')
+    parser.add_argument(
+        "--skip-testroot-creation",
+        action="store_true",
+        help="Do not create the directory that will hold the tests.\n"
+        "This should be used if the desired testroot directory already exists.",
+    )
 
-    parser.add_argument('--skip-git-status', action='store_true',
-                        help='Skip printing git and manage_externals status,\n'
-                        'both to screen and to the SRCROOT_GIT_STATUS file in TESTROOT.\n'
-                        'This printing can often be helpful, but this option can be used to\n'
-                        'avoid extraneous output, to reduce the time needed to run this script,\n'
-                        'or if git or manage_externals are currently broken in your sandbox.\n')
+    parser.add_argument(
+        "--skip-git-status",
+        action="store_true",
+        help="Skip printing git and manage_externals status,\n"
+        "both to screen and to the SRCROOT_GIT_STATUS file in TESTROOT.\n"
+        "This printing can often be helpful, but this option can be used to\n"
+        "avoid extraneous output, to reduce the time needed to run this script,\n"
+        "or if git or manage_externals are currently broken in your sandbox.\n",
+    )
 
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Print what would happen, but do not run any commands.\n'
-                        '(Generally should be run with --verbose.)\n')
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print what would happen, but do not run any commands.\n"
+        "(Generally should be run with --verbose.)\n",
+    )
 
-    parser.add_argument('--machine-name', default=machine_name,
-                        help='Name of machine for which create_test is run.\n'
-                        'This typically is not needed, but can be provided\n'
-                        'for the sake of testing this script.\n'
-                        'Defaults to current machine: {}'.format(machine_name))
+    parser.add_argument(
+        "--machine-name",
+        default=machine_name,
+        help="Name of machine for which create_test is run.\n"
+        "This typically is not needed, but can be provided\n"
+        "for the sake of testing this script.\n"
+        "Defaults to current machine: {}".format(machine_name),
+    )
 
     add_logging_args(parser)
 
@@ -396,32 +492,40 @@ or tests listed individually on the command line (via the -t/--testname argument
 
     return args
 
+
 def _check_arg_validity(args):
     if args.suite_compiler and not args.suite_name:
-        raise RuntimeError('--suite-compiler can only be specified if using --suite-name')
+        raise RuntimeError("--suite-compiler can only be specified if using --suite-name")
     if args.rerun_existing_failures and not args.testid_base:
-        raise RuntimeError('With --rerun-existing-failures, must also specify --testid-base')
+        raise RuntimeError("With --rerun-existing-failures, must also specify --testid-base")
+
 
 def _get_testid_base(machine_name):
     """Returns a base testid based on the current date and time and the machine name"""
     now = datetime.now()
     now_str = now.strftime("%m%d-%H%M%S")
     machine_start = machine_name[0:2]
-    return '{}{}'.format(now_str, machine_start)
+    return "{}{}".format(now_str, machine_start)
+
 
 def _get_testroot_base(machine):
     scratch_dir = machine.scratch_dir
     if scratch_dir is None:
-        raise RuntimeError('For a machine without a default specified for the scratch directory, '
-                           'must specify --testroot-base')
+        raise RuntimeError(
+            "For a machine without a default specified for the scratch directory, "
+            "must specify --testroot-base"
+        )
     return scratch_dir
+
 
 def _get_testroot(testroot_base, testid_base):
     """Get the path to the test root, given a base test id"""
     return os.path.join(testroot_base, _get_testdir_name(testid_base))
 
+
 def _get_testdir_name(testid_base):
-    return 'tests_{}'.format(testid_base)
+    return "tests_{}".format(testid_base)
+
 
 def _make_testroot(testroot, testid_base, dry_run):
     """Make the testroot directory at the given location, as well as a link in the current
@@ -434,38 +538,41 @@ def _make_testroot(testroot, testid_base, dry_run):
         os.makedirs(testroot)
         make_link(testroot, _get_testdir_name(testid_base))
 
+
 def _record_git_status(testroot, retry, dry_run):
     """Record git status and related information to stdout and a file"""
-    output = ''
+    output = ""
     ctsm_root = path_to_ctsm_root()
 
     output += "create_test --retry: {}\n\n".format(retry)
 
-    current_hash = subprocess.check_output(['git', 'show', '--no-patch',
-                                            '--format=format:%h (%an, %ad) %s\n', 'HEAD'],
-                                           cwd=ctsm_root,
-                                           universal_newlines=True)
+    current_hash = subprocess.check_output(
+        ["git", "show", "--no-patch", "--format=format:%h (%an, %ad) %s\n", "HEAD"],
+        cwd=ctsm_root,
+        universal_newlines=True,
+    )
     output += "Current hash: {}".format(current_hash)
-    git_status = subprocess.check_output(['git', '-c', 'color.ui=always',
-                                          'status', '--short', '--branch'],
-                                         cwd=ctsm_root,
-                                         universal_newlines=True)
+    git_status = subprocess.check_output(
+        ["git", "-c", "color.ui=always", "status", "--short", "--branch"],
+        cwd=ctsm_root,
+        universal_newlines=True,
+    )
     output += git_status
-    if git_status.count('\n') == 1:
+    if git_status.count("\n") == 1:
         # Only line in git status is the branch info
         output += "(clean sandbox)\n"
-    manic = os.path.join('manage_externals', 'checkout_externals')
-    manage_externals_status = subprocess.check_output([manic, '--status', '--verbose'],
-                                                      cwd=ctsm_root,
-                                                      universal_newlines=True)
-    output += 72*'-' + '\n' + 'manage_externals status:' + '\n'
+    manic = os.path.join("manage_externals", "checkout_externals")
+    manage_externals_status = subprocess.check_output(
+        [manic, "--status", "--verbose"], cwd=ctsm_root, universal_newlines=True
+    )
+    output += 72 * "-" + "\n" + "manage_externals status:" + "\n"
     output += manage_externals_status
-    output += 72*'-' + '\n'
+    output += 72 * "-" + "\n"
 
     print(output)
 
     if not dry_run:
-        git_status_filepath = os.path.join(testroot, 'SRCROOT_GIT_STATUS')
+        git_status_filepath = os.path.join(testroot, "SRCROOT_GIT_STATUS")
         if os.path.exists(git_status_filepath):
             # If we're reusing an existing directory, it could happen that
             # SRCROOT_GIT_STATUS already exists. It's still helpful to record the current
@@ -473,117 +580,159 @@ def _record_git_status(testroot, retry, dry_run):
             # make a new file with a date/time-stamp.
             now = datetime.now()
             now_str = now.strftime("%m%d-%H%M%S")
-            git_status_filepath = git_status_filepath + '_' + now_str
-        with open(git_status_filepath, 'w') as git_status_file:
-            git_status_file.write(' '.join(sys.argv) + '\n\n')
+            git_status_filepath = git_status_filepath + "_" + now_str
+        with open(git_status_filepath, "w") as git_status_file:
+            git_status_file.write(" ".join(sys.argv) + "\n\n")
             git_status_file.write("SRCROOT: {}\n".format(ctsm_root))
             git_status_file.write(output)
 
-def _get_create_test_args(compare_name, generate_name, baseline_root,
-                          account, walltime, queue, retry,
-                          rerun_existing_failures,
-                          extra_create_test_args):
+
+def _get_create_test_args(
+    compare_name,
+    generate_name,
+    baseline_root,
+    account,
+    walltime,
+    queue,
+    retry,
+    rerun_existing_failures,
+    extra_create_test_args,
+):
     args = []
     if compare_name:
-        args.extend(['--compare', compare_name])
+        args.extend(["--compare", compare_name])
     if generate_name:
-        args.extend(['--generate', generate_name])
+        args.extend(["--generate", generate_name])
     if baseline_root:
-        args.extend(['--baseline-root', baseline_root])
+        args.extend(["--baseline-root", baseline_root])
     if account:
-        args.extend(['--project', account])
+        args.extend(["--project", account])
     if walltime:
-        args.extend(['--walltime', walltime])
+        args.extend(["--walltime", walltime])
     if queue:
-        args.extend(['--queue', queue])
-    args.extend(['--retry', str(retry)])
+        args.extend(["--queue", queue])
+    args.extend(["--retry", str(retry)])
     if rerun_existing_failures:
         # In addition to --use-existing, we also need --allow-baseline-overwrite in this
         # case; otherwise, create_test throws an error saying that the baseline
         # directories already exist.
-        args.extend(['--use-existing', '--allow-baseline-overwrite'])
+        args.extend(["--use-existing", "--allow-baseline-overwrite"])
     args.extend(extra_create_test_args.split())
     return args
 
+
 def _make_cs_status_for_suite(testroot, testid_base):
     """Makes a cs.status file that can be run for the entire test suite"""
-    testid_pattern = testid_base + '_' + _NUM_COMPILER_CHARS*'?'
+    testid_pattern = testid_base + "_" + _NUM_COMPILER_CHARS * "?"
     # The basic cs.status just aggregates results from all of the individual create_tests
-    create_cs_status(test_root=testroot,
-                     test_id=testid_pattern,
-                     extra_args=_cs_status_xfail_arg(),
-                     filename='cs.status')
+    create_cs_status(
+        test_root=testroot,
+        test_id=testid_pattern,
+        extra_args=_cs_status_xfail_arg(),
+        filename="cs.status",
+    )
     # cs.status.fails additionally filters the results so that only failures are shown
-    create_cs_status(test_root=testroot,
-                     test_id=testid_pattern,
-                     extra_args=(_CS_STATUS_FAILS_EXTRA_ARGS + ' ' + _cs_status_xfail_arg()),
-                     filename='cs.status.fails')
+    create_cs_status(
+        test_root=testroot,
+        test_id=testid_pattern,
+        extra_args=(_CS_STATUS_FAILS_EXTRA_ARGS + " " + _cs_status_xfail_arg()),
+        filename="cs.status.fails",
+    )
+
 
 def _make_cs_status_non_suite(testroot, testid_base):
     """Makes a cs.status file for a single run of create_test - not a whole test suite"""
-    create_cs_status(test_root=testroot,
-                     test_id=testid_base,
-                     extra_args=(_CS_STATUS_FAILS_EXTRA_ARGS + ' ' + _cs_status_xfail_arg()),
-                     filename='cs.status.fails')
+    create_cs_status(
+        test_root=testroot,
+        test_id=testid_base,
+        extra_args=(_CS_STATUS_FAILS_EXTRA_ARGS + " " + _cs_status_xfail_arg()),
+        filename="cs.status.fails",
+    )
+
 
 def _cs_status_xfail_arg():
     """Returns a string giving the argument to cs_status that will point to CTSM's
     expected fails xml file
     """
     ctsm_root = path_to_ctsm_root()
-    xfail_path = os.path.join(ctsm_root, 'cime_config', 'testdefs', 'ExpectedTestFails.xml')
+    xfail_path = os.path.join(ctsm_root, "cime_config", "testdefs", "ExpectedTestFails.xml")
     return "--expected-fails-file {}".format(xfail_path)
 
-def _run_test_suite(cime_path, suite_name, suite_compilers,
-                    machine, testid_base, testroot, create_test_args,
-                    dry_run):
+
+def _run_test_suite(
+    cime_path,
+    suite_name,
+    suite_compilers,
+    machine,
+    testid_base,
+    testroot,
+    create_test_args,
+    dry_run,
+):
     if not suite_compilers:
         suite_compilers = _get_compilers_for_suite(suite_name, machine.name)
     for compiler in suite_compilers:
-        test_args = ['--xml-category', suite_name,
-                     '--xml-machine', machine.name,
-                     '--xml-compiler', compiler]
-        testid = testid_base + '_' + compiler[0:_NUM_COMPILER_CHARS]
-        _run_create_test(cime_path=cime_path,
-                         test_args=test_args, machine=machine,
-                         testid=testid, testroot=testroot,
-                         create_test_args=create_test_args,
-                         dry_run=dry_run)
+        test_args = [
+            "--xml-category",
+            suite_name,
+            "--xml-machine",
+            machine.name,
+            "--xml-compiler",
+            compiler,
+        ]
+        testid = testid_base + "_" + compiler[0:_NUM_COMPILER_CHARS]
+        _run_create_test(
+            cime_path=cime_path,
+            test_args=test_args,
+            machine=machine,
+            testid=testid,
+            testroot=testroot,
+            create_test_args=create_test_args,
+            dry_run=dry_run,
+        )
+
 
 def _get_compilers_for_suite(suite_name, machine_name):
-    test_data = get_tests_from_xml(
-        xml_machine=machine_name,
-        xml_category=suite_name)
+    test_data = get_tests_from_xml(xml_machine=machine_name, xml_category=suite_name)
     if not test_data:
-        raise RuntimeError('No tests found for suite {} on machine {}'.format(
-            suite_name, machine_name))
-    compilers = sorted({one_test['compiler'] for one_test in test_data})
+        raise RuntimeError(
+            "No tests found for suite {} on machine {}".format(suite_name, machine_name)
+        )
+    compilers = sorted({one_test["compiler"] for one_test in test_data})
     logger.info("Running with compilers: %s", compilers)
     return compilers
 
+
 def _run_create_test(cime_path, test_args, machine, testid, testroot, create_test_args, dry_run):
-    create_test_cmd = _build_create_test_cmd(cime_path=cime_path,
-                                             test_args=test_args,
-                                             testid=testid,
-                                             testroot=testroot,
-                                             create_test_args=create_test_args)
-    stdout_path = os.path.join(testroot,
-                               'STDOUT.{}'.format(testid))
-    stderr_path = os.path.join(testroot,
-                               'STDERR.{}'.format(testid))
-    machine.job_launcher.run_command(create_test_cmd,
-                                     stdout_path=stdout_path,
-                                     stderr_path=stderr_path,
-                                     dry_run=dry_run)
+    create_test_cmd = _build_create_test_cmd(
+        cime_path=cime_path,
+        test_args=test_args,
+        testid=testid,
+        testroot=testroot,
+        create_test_args=create_test_args,
+    )
+    stdout_path = os.path.join(testroot, "STDOUT.{}".format(testid))
+    stderr_path = os.path.join(testroot, "STDERR.{}".format(testid))
+    machine.job_launcher.run_command(
+        create_test_cmd,
+        stdout_path=stdout_path,
+        stderr_path=stderr_path,
+        dry_run=dry_run,
+    )
+
 
 def _build_create_test_cmd(cime_path, test_args, testid, testroot, create_test_args):
     """Builds and returns the create_test command
 
     This is a list, where each element of the list is one argument
     """
-    command = [os.path.join(cime_path, 'scripts', 'create_test'),
-               '--test-id', testid,
-               '--output-root', testroot]
+    command = [
+        os.path.join(cime_path, "scripts", "create_test"),
+        "--test-id",
+        testid,
+        "--output-root",
+        testroot,
+    ]
     command.extend(test_args)
     command.extend(create_test_args)
     return command

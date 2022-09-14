@@ -84,10 +84,15 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds)
 
+    use clm_varctl     , only : use_fates, use_fates_sp
     class(vocemis_type) :: this
     type(bounds_type), intent(in)    :: bounds  
 
     if ( shr_megan_mechcomps_n > 0) then
+       if ( use_fates .and. (.not. use_fates_sp) ) then
+           call endrun( msg='ERROR: MEGAN currently does NOT work with FATES outside of FATES-SP mode (see github issue #115)'//&
+                     errMsg(sourcefile, __LINE__))
+       end if
        call this%InitAllocate(bounds) 
        call this%InitHistory(bounds)
        call this%InitCold(bounds)

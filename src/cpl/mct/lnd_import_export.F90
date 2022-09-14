@@ -224,7 +224,7 @@ contains
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use seq_flds_mod       , only : seq_flds_l2x_fields
     use clm_varctl         , only : iulog
-    use seq_drydep_mod     , only : n_drydep
+    use shr_drydep_mod     , only : n_drydep
     use shr_megan_mod      , only : shr_megan_mechcomps_n
     use shr_fire_emis_mod  , only : shr_fire_emis_mechcomps_n
     use lnd_import_export_utils, only : check_for_nans
