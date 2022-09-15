@@ -563,6 +563,7 @@ contains
          avgflag='A', long_name='atmospheric incident solar radiation received from atmosphere (pre-downscaling)', &
          ptr_lnd=this%forc_solar_not_downscaled_grc)
 
+    this%forc_o3_grc(begg:endg) = spval
     call hist_addfld1d (fname='ATM_O3', units='mol/mol', &
          avgflag='A', long_name='atmospheric ozone partial pressure', &
          ptr_lnd=this%forc_o3_grc, default = 'inactive')
