@@ -1,32 +1,47 @@
 #!/usr/bin/env python3
-
-import sys, os, shutil
+"""
+gen_mksurfdata_namelist.py generates a namelist for use with the mksurfdata
+executable. For detailed instructions, see README.
+"""
+import os
+import sys
 import xml.etree.ElementTree as ET
 import logging
-import argparse, textwrap
+import argparse
+import textwrap
 import subprocess
 from datetime import datetime
+import netCDF4
+
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            os.pardir,
+                            os.pardir,
+                            'python')
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 
 logger = logging.getLogger(__name__)
 
-# valid options for SSP scenarios and pft years:
-valid_opts = {"ssp-rcp": ["none","SSP1-2.6","SSP3-7.0","SSP5-3.4","SSP2-4.5","SSP1-1.9","SSP4-3.4","SSP4-6.0","SSP5-8.5"]}
+# valid options for SSP/RCP scenarios
+valid_opts = {'ssp-rcp': ['SSP1-2.6', 'SSP3-7.0', 'SSP5-3.4', 'SSP2-4.5',
+                          'SSP1-1.9', 'SSP4-3.4', 'SSP4-6.0', 'SSP5-8.5',
+                          'none']}
 
 def get_parser():
     """
     Get parser object for this script.
     """
+    # set up logging allowing user control
+    setup_logging_pre_config()
+
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
     parser.print_usage = parser.print_help
+    add_logging_args(parser)
 
-    parser.add_argument(
-        '-v', '--verbose',
-        help="increase output verbosity",
-        action="store_true",
-    )
     parser.add_argument(
         "--start-year",
         help = textwrap.dedent('''\
@@ -50,47 +65,51 @@ def get_parser():
     parser.add_argument(
         "--res",
         help="""
-            model resolution [default: %(default)s]
+            Model resolution (required) 
             To see available supported resolutions, simply invoke this command
-            with a --res unknown opion
+            with a --res unknown option. For custom resolutions, provide a grid
+            name of your choosing to be used in the name of the fsurdat file.
             """,
         action="store",
         dest="res",
-        required=False,
-        default="4x5",
+        required=True,
     )
     parser.add_argument(
         "--model-mesh",
         help="""
             model mesh [default: %(default)s]
-            Ignore the --res option and force the model mesh file to be this input
+            Ignore --res and use --model-mesh to be this file
             """,
         action="store",
         dest="force_model_mesh_file",
         required=False,
-        default="none",
+        default=None,
     )
     parser.add_argument(
         "--model-mesh-nx",
         help="""
             model mesh [default: %(default)s]
-            Ignore the --res option and force the model mesh to have this nx 
+            Required when using --model-mesh: set nx to the grid's number of
+            columns; expect nx x ny = elementCount for consistency with the
+            model mesh
             """,
         action="store",
         dest="force_model_mesh_nx",
         required=False,
-        default="-999",
+        default=None
     )
     parser.add_argument(
         "--model-mesh-ny",
         help="""
             model mesh [default: %(default)s]
-            Ignore the --res option and force the model mesh to have this ny 
+            Required when using --model-mesh: set ny to the grid's number of
+            rows; expect nx x ny = elementCount for consistency with the model
+            mesh
             """,
         action="store",
         dest="force_model_mesh_ny",
         required=False,
-        default="-999",
+        default=None
     )
     parser.add_argument(
         "--glc-nec",
@@ -129,7 +148,8 @@ def get_parser():
     parser.add_argument(
         "--rawdata-dir",
         help="""
-            /path/of/root/of/input/data',
+            /path/of/root/of/input/data
+            on izumi use /fs/cgd/csm/inputdata
             [default: %(default)s]
             """,
         action="store",
@@ -238,8 +258,11 @@ def get_parser():
     return parser
 
 def main ():
-
+    """
+    See docstring at the top.
+    """
     args = get_parser().parse_args()
+    process_logging_args(args)
 
     start_year = args.start_year
     end_year = args.end_year
@@ -263,8 +286,9 @@ def main ():
            (start_year == 2005 and end_year == 2005):
             hires_pft = 'on'
         else:
-            print(f"ERROR: for --hires_pft you must set both start-year & end-year to 1850 or to 2005")
-            sys.exit(5)
+            error_msg = 'ERROR: for --hires_pft you must set both start-year ' \
+                        'and end-year to 1850 or to 2005'
+            sys.exit(error_msg)
     else:
         hires_pft = 'off'
 
@@ -275,24 +299,52 @@ def main ():
 
     verbose = args.verbose
 
-    if force_model_mesh_file != 'none':
-        res = force_model_mesh_nx + 'x' + force_model_mesh_ny
+    if force_model_mesh_file is not None:
+        # open mesh_file to read element_count and, if available, orig_grid_dims
+        mesh_file = netCDF4.Dataset(force_model_mesh_file, 'r')
+        element_count = mesh_file.dimensions['elementCount'].size
+        if 'origGridDims' in mesh_file.variables:
+            orig_grid_dims = mesh_file.variables['origGridDims']
+            if int(force_model_mesh_nx) == orig_grid_dims[0] and \
+               int(force_model_mesh_ny) == orig_grid_dims[1]:
+                mesh_file.close()
+            else:
+                error_msg = 'ERROR: Found variable origGridDims in ' \
+                            f'{force_model_mesh_file} with values ' \
+                            f'{orig_grid_dims[:]} that do not agree with the ' \
+                            'user-entered mesh_nx and mesh_ny values of ' \
+                            f'{[force_model_mesh_nx, force_model_mesh_ny]}.'
+                sys.exit(error_msg)
+        elif force_model_mesh_nx is None or force_model_mesh_ny is None:
+            error_msg = 'ERROR: You set --model-mesh so you MUST ALSO ' \
+                        'SET --model-mesh-nx AND --model-mesh-ny'
+            sys.exit(error_msg)
+
+        # using force_model_mesh_nx and force_model_mesh_ny either from the
+        # mesh file (see previous if statement) or the user-entered values
+        if element_count != int(force_model_mesh_nx) * int(force_model_mesh_ny):
+            error_msg = 'ERROR: The product of ' \
+                        '--model-mesh-nx x --model-mesh-ny must equal ' \
+                        'exactly elementCount in --model-mesh'
+            sys.exit(error_msg)
 
     hostname = os.getenv("HOSTNAME")
     logname = os.getenv("LOGNAME")
-    if args.verbose:
-        print (f"hostname is {hostname}")
-        print (f"logname is {logname}")
+
+    logger.info('hostname is %s', hostname)
+    logger.info('logname is %s', logname)
 
     if ssp_rcp == 'none':
         if int(start_year) > 2015:
-            print(f"ERROR: if start-year is > 2015 must add an --ssp_rcp argument that is not 'none")
-            print(f"  valid opts for ssp-rcp are {valid_opts}")
-            sys.exit(10)
+            error_msg = 'ERROR: if start-year > 2015 must add an --ssp_rcp ' \
+                        'argument that is not none: valid opts for ssp-rcp ' \
+                        f'are {valid_opts}'
+            sys.exit(error_msg)
         elif int(end_year) > 2015:
-            print(f"ERROR: if end-year is > 2015 must add an --ssp-rcp argument that is not 'none")
-            print(f"  valid opts for ssp-rcp are {valid_opts}")
-            sys.exit(10)
+            error_msg = 'ERROR: if end-year > 2015 must add an --ssp-rcp ' \
+                        'argument that is not none: valid opts for ssp-rcp ' \
+                        f'are {valid_opts}'
+            sys.exit(error_msg)
 
     pft_years_ssp = "-999"
 
@@ -316,12 +368,12 @@ def main ():
         pft_years = "-999"
         pft_years_ssp = "2016-2100"
     else:
-        print (f"start_year is {start_year} and end_year is {end_year}")
-        print (f"ERROR: start and end years should be between 850 and 2105 or pot_veg flag needs to be set")
-        sys.exit(10)
+        error_msg = f'ERROR: start_year is {start_year} and end_year is ' \
+                    f'{end_year}; start/end years should be between 850 and ' \
+                     ' 2105 or pot_veg flag must be set'
+        sys.exit(error_msg)
 
-    if verbose:
-        print (f"pft_years = {pft_years}")
+    logger.info('pft_years = %s', pft_years)
 
     # Create land-use txt file for a transient case.
     # Determine the run type and if a transient run create output landuse txt file
@@ -329,8 +381,7 @@ def main ():
         run_type = "transient"
     else:
         run_type = "timeslice"
-    if verbose:
-        print(f"run_type  = {run_type}")
+    logger.info('run_type  = %s', run_type)
 
     # error check on glc_nec
     if (glc_nec <= 0) or (glc_nec >= 100):
@@ -349,10 +400,13 @@ def main ():
     rawdata_files = {}
 
     # determine input rawdata
-    tree1 = ET.parse('./gen_mksurfdata_namelist.xml')
+    _must_run_download_input_data = False
+    tool_path = os.path.dirname(os.path.abspath(__file__))
+    xml_path = os.path.join(tool_path, 'gen_mksurfdata_namelist.xml')
+    tree1 = ET.parse(xml_path)
     root = tree1.getroot()
-    root.tag
-    root.attrib
+    logger.info('root.tag: %s', root.tag)
+    logger.info('root.attrib: %s', root.attrib)
     for child1 in root:
         max_match_num = -1
         max_match_child = None
@@ -375,15 +429,15 @@ def main ():
             # For years greater than 2015 - mksrf_fvegtyp_ssp must have a match
             if start_year <= 2015:
                 if 'mksrf_fvegtyp_ssp' not in child1.tag:
-                    print (f"ERROR: {child1.tag} has no matches")
-                    sys.exit(15)
+                    error_msg = f'ERROR: {child1.tag} has no matches'
+                    sys.exit(error_msg)
                 else:
                     continue
             else:
                 # For years less than 2015 - mksrf_fvegtyp must have a match
                 if 'mksrf_fvegtyp' not in child1.tag:
-                    print (f"ERROR: {child1.tag} has no matches")
-                    sys.exit(15)
+                    error_msg = f'ERROR: {child1.tag} has no matches'
+                    sys.exit(error_msg)
                 else:
                     continue
 
@@ -392,15 +446,22 @@ def main ():
                 rawdata_files[child1.tag] = os.path.join(input_path, item.text)
                 if '%y' not in rawdata_files[child1.tag]:
                     if not os.path.isfile(rawdata_files[child1.tag]):
-                        print(f"ERROR: input data file {rawdata_files[child1.tag]} for {child1.tag} does not exist")
-                        sys.exit(20)
+                        print('WARNING: input data file ' \
+                              f'{rawdata_files[child1.tag]} for {child1.tag} ' \
+                              'does not exist')
+                        print('WARNING: run ./download_input_data to try TO ' \
+                              'OBTAIN MISSING FILES')
+                        _must_run_download_input_data = True
 
             if item.tag == 'mesh_filename':
                 new_key = f"{child1.tag}_mesh"
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
                 if not os.path.isfile(rawdata_files[new_key]):
-                    print(f"ERROR: input mesh file {rawdata_files[new_key]} does not exist")
-                    sys.exit(30)
+                    print('WARNING: input mesh file ' \
+                          f'{rawdata_files[new_key]} does not exist')
+                    print('WARNING: run ./download_input_data to try TO ' \
+                          'OBTAIN MISSING FILES')
+                    _must_run_download_input_data = True
 
             if item.tag == 'lake_filename':
                 new_key = f"{child1.tag}_lake"
@@ -415,53 +476,69 @@ def main ():
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
 
     # determine output mesh
-    tree2 = ET.parse('../../ccs_config/component_grids_nuopc.xml')
+    xml_path = os.path.join(tool_path, '../../ccs_config/component_grids_nuopc.xml')
+    tree2 = ET.parse(xml_path)
     root = tree2.getroot()
     model_mesh = ""
     for child1 in root:  # this is domain tag
-        for name, value in child1.attrib.items():
+        for _, value in child1.attrib.items():
             if value == res:
                 for child2 in child1:
                     if child2.tag == 'mesh':
                         model_mesh = child2.text
-                        rawdata_files["mksrf_fgrid_mesh"] = os.path.join(input_path,model_mesh.strip('$DIN_LOC_ROOT/'))
+                        rawdata_files['mksrf_fgrid_mesh'] = \
+                            os.path.join(input_path,
+                                         model_mesh.strip('$DIN_LOC_ROOT/'))
                     if child2.tag == 'nx':
                         rawdata_files["mksrf_fgrid_mesh_nx"] = child2.text
                     if child2.tag == 'ny':
                         rawdata_files["mksrf_fgrid_mesh_ny"] = child2.text
 
-    if force_model_mesh_file == 'none' and len(model_mesh) == 0:
-        print (f"ERROR: input res {res} is invalid")
+    if not model_mesh and force_model_mesh_file is None:
         valid_grids = []
         for child1 in root:  # this is domain tag
-            for name, value in child1.attrib.items():
+            for _, value in child1.attrib.items():
                 valid_grids.append(value)
-        print (f"valid grid values are {valid_grids}")
-        sys.exit(40)
+        if res in valid_grids:
+            error_msg = 'ERROR: You have requested a valid grid for which ' \
+        '../../ccs_config/component_grids_nuopc.xml does not include a mesh ' \
+        'file. For a regular regional or 1x1 grid, you may generate the ' \
+        'fsurdat file using the subset_data tool instead. Alternatively ' \
+        'and definitely for curvilinear grids, you may generate ' \
+        'a mesh file using the workflow currently (2022/7) described in ' \
+        'https://github.com/ESCOMP/CTSM/issues/1773#issuecomment-1163432584' \
+        'TODO Reminder to ultimately place these workflow instructions in ' \
+        "the User's Guide."
+            sys.exit(error_msg)
+        else:
+            error_msg = f'ERROR: invalid input res {res}; ' \
+                        f'valid grid values are {valid_grids}'
+            sys.exit(error_msg)
 
     # Determine num_pft
     if nocrop_flag:
         num_pft = "16"
     else:
         num_pft = "78"
-    if verbose:
-        print (f"num_pft is {num_pft}")
+    logger.info('num_pft is %s', num_pft)
 
     # Write out if surface dataset will be created
-    if verbose:
-        if nosurfdata_flag:
-            print(f"surface dataset will not be created")
-        else:
-            print(f"surface dataset will be created")
+    if nosurfdata_flag:
+        logger.info('surface dataset will not be created')
+    else:
+        logger.info('surface dataset will be created')
 
     if run_type == 'transient':
         if ssp_rcp == 'none':
-            landuse_fname = f"landuse_timeseries_hist_{num_pft}pfts_simyr{start_year}-{end_year}.txt"
+            landuse_fname = \
+ f"landuse_timeseries_hist_{num_pft}pfts_simyr{start_year}-{end_year}.txt"
         else:
-            landuse_fname = f"landuse_timeseries_{ssp_rcp}_{num_pft}pfts_CMIP6_simyr{start_year}-{end_year}.txt"
+            landuse_fname = \
+ f"landuse_timeseries_{ssp_rcp}_{num_pft}pfts_CMIP6_simyr{start_year}-{end_year}.txt"
 
         with open(landuse_fname, "w", encoding='utf-8') as landuse_file:
             for year in range(start_year, end_year + 1):
+                year_str = str(year)
                 if year <= 2015:
                     file1 = rawdata_files["mksrf_fvegtyp"]
                     file2 = rawdata_files["mksrf_fvegtyp_urban"]
@@ -471,28 +548,37 @@ def main ():
                     file2 = rawdata_files["mksrf_fvegtyp_ssp_urban"]
                     file3 = rawdata_files["mksrf_fvegtyp_ssp_lake"]
 
-                landuse_input_fname = file1.replace("%y",str(year))
-                landuse_input_fnam2 = file2.replace("%y",str(year))
-                landuse_input_fnam3 = file3.replace("%y",str(year))
+                landuse_input_fname = file1.replace("%y", year_str)
+                landuse_input_fnam2 = file2.replace("%y", year_str)
+                landuse_input_fnam3 = file3.replace("%y", year_str)
                 if not os.path.isfile(landuse_input_fname):
-                     print(f"ERROR: landunit_input_fname: {landuse_input_fname} does not exist")
-                     sys.exit(60)
+                    print('WARNING: landunit_input_fname: ' \
+                          f'{landuse_input_fname} does not exist')
+                    print('WARNING: run ./download_input_data to try TO ' \
+                          'OBTAIN MISSING FILES')
+                    _must_run_download_input_data = True
                 if not os.path.isfile(landuse_input_fnam2):
-                     print(f"ERROR: landunit_input_fnam2: {landuse_input_fnam2} does not exist")
-                     sys.exit(60)
+                    print('WARNING: landunit_input_fnam2: ' \
+                          f'{landuse_input_fnam2} does not exist')
+                    print('WARNING: run ./download_input_data to try TO ' \
+                          'OBTAIN MISSING FILES')
+                    _must_run_download_input_data = True
                 if not os.path.isfile(landuse_input_fnam3):
-                     print(f"ERROR: landunit_input_fnam3: {landuse_input_fnam3} does not exist")
-                     sys.exit(60)
+                    print('WARNING: landunit_input_fnam3: ' \
+                          f'{landuse_input_fnam3} does not exist')
+                    print('WARNING: run ./download_input_data to try TO ' \
+                          'OBTAIN MISSING FILES')
+                    _must_run_download_input_data = True
 
                 # -- Each line is written twice in the original perl code:
-                landuse_line = f"{landuse_input_fname:<196}{str(year)}\n"
-                landuse_lin2 = f"{landuse_input_fnam2:<196}{str(year)}\n"
-                landuse_lin3 = f"{landuse_input_fnam3:<196}{str(year)}\n"
+                landuse_line = f"{landuse_input_fname:<196}{year_str}\n"
+                landuse_lin2 = f"{landuse_input_fnam2:<196}{year_str}\n"
+                landuse_lin3 = f"{landuse_input_fnam3:<196}{year_str}\n"
                 landuse_file.write(landuse_line)
                 landuse_file.write(landuse_line)
                 landuse_file.write(landuse_lin2)
                 landuse_file.write(landuse_lin3)
-                logger.debug(f"year : {year}")
+                logger.debug('year : %s', year_str)
                 logger.debug(landuse_line)
         print(f"Successfully created input landuse file {landuse_fname}")
     else:
@@ -504,26 +590,40 @@ def main ():
     else:
         ssp_rcp_name = ssp_rcp
     if int(end_year) == int(start_year):
-        nlfname = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.namelist"
-        fsurdat = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.nc"
-        fsurlog = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.log"
-        fdyndat = ""
+        fdyndat = ''
+        prefix = \
+ f'surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.'
     else:
-        nlfname = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.namelist"
-        fsurdat = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.nc"
-        fsurlog = f"surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.log"
-        fdyndat = f"landuse.timeseries_{res}_{ssp_rcp_name}_{num_pft}_CMIP6_{start_year}-{end_year}_c{time_stamp}.nc"
+        fdyndat = \
+ f'landuse.timeseries_{res}_{ssp_rcp_name}_{num_pft}_CMIP6_{start_year}-{end_year}_c{time_stamp}.nc'
+        prefix = \
+ f'surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.'
 
-    gitdescribe = subprocess.check_output('git describe', shell=True).strip()
+    nlfname = f'{prefix}namelist'
+    fsurdat = f'{prefix}nc'
+    fsurlog = f'{prefix}log'
+
+    git_desc_cmd = f'git -C {tool_path} describe'
+    try:
+        # The "git -C" option permits a system test to run this tool from
+        # elsewhere while running the git command from the tool_path
+        gitdescribe = subprocess.check_output(git_desc_cmd, shell=True).strip()
+    except subprocess.CalledProcessError as e:
+        # In case the "git -C" option is unavailable, as on casper (2022/5/24)
+        # Still, this does NOT allow the system test to work on machines
+        # without git -C
+        logger.info('git -C option unavailable on casper as of 2022/7/2 %s', e)
+        gitdescribe = subprocess.check_output('git describe', shell=True).strip()
     gitdescribe = gitdescribe.decode('utf-8')
 
     # The below two overrides are only used for testing an validation
     # it takes a long time to generate the mapping files
     # from 1km to the following two resolutions since the output mesh has so few points
     if res == "10x15":
-        mksrf_ftopostats_override = os.path.join(input_path,"lnd","clm2","rawdata","surfdata_topo_10x15_c220303.nc")
-        if args.verbose:
-            print (f"will override mksrf_ftopostats with = {mksrf_ftopostats_override}")
+        mksrf_ftopostats_override = os.path.join(input_path, 'lnd', 'clm2',
+            'rawdata', 'surfdata_topo_10x15_c220303.nc')
+        logger.info('will override mksrf_ftopostats with = %s',
+                    mksrf_ftopostats_override)
     else:
         mksrf_ftopostats_override = ""
 
@@ -537,14 +637,14 @@ def main ():
         # -------------------
         # raw input data
         # -------------------
-        if force_model_mesh_file != 'none':
+        if force_model_mesh_file is None:
+            mksrf_fgrid_mesh_nx = rawdata_files["mksrf_fgrid_mesh_nx"]
+            mksrf_fgrid_mesh_ny = rawdata_files["mksrf_fgrid_mesh_ny"]
+            mksrf_fgrid_mesh    = rawdata_files["mksrf_fgrid_mesh"]
+        else:
             mksrf_fgrid_mesh_nx = force_model_mesh_nx
             mksrf_fgrid_mesh_ny = force_model_mesh_ny
             mksrf_fgrid_mesh    = force_model_mesh_file
-        else:
-            mksrf_fgrid_mesh_nx = rawdata_files["mksrf_fgrid_mesh_nx"] 
-            mksrf_fgrid_mesh_ny = rawdata_files["mksrf_fgrid_mesh_ny"] 
-            mksrf_fgrid_mesh    = rawdata_files["mksrf_fgrid_mesh"] 
         nlfile.write( f"  mksrf_fgrid_mesh = \'{mksrf_fgrid_mesh}\' \n")
         nlfile.write( f"  mksrf_fgrid_mesh_nx = {mksrf_fgrid_mesh_nx} \n")
         nlfile.write( f"  mksrf_fgrid_mesh_ny = {mksrf_fgrid_mesh_ny} \n")
@@ -571,11 +671,17 @@ def main ():
         if '%y' in mksrf_fhrvtyp:
             mksrf_fhrvtyp = mksrf_fhrvtyp.replace("%y",str(start_year))
         if not os.path.isfile(mksrf_fvegtyp):
-            print(f"ERROR: input mksrf_fvegtyp file {mksrf_fvegtyp} does not exist")
-            sys.exit(20)
+            print('WARNING: input mksrf_fvegtyp file ' \
+                  f'{mksrf_fvegtyp} does not exist')
+            print('WARNING: run ./download_input_data to try TO ' \
+                  'OBTAIN MISSING FILES')
+            _must_run_download_input_data = True
         if not os.path.isfile(mksrf_fhrvtyp):
-            print(f"ERROR: input mksrf_fhrvtyp file {mksrf_fhrvtyp} does not exist")
-            sys.exit(20)
+            print('WARNING: input mksrf_fhrvtyp file ' \
+                  f'{mksrf_fhrvtyp} does not exist')
+            print('WARNING: run ./download_input_data to try TO ' \
+                  'OBTAIN MISSING FILES')
+            _must_run_download_input_data = True
         nlfile.write( f"  mksrf_fvegtyp = \'{mksrf_fvegtyp}\' \n")
         nlfile.write( f"  mksrf_fvegtyp_mesh = \'{mksrf_fvegtyp_mesh}\' \n")
         nlfile.write( f"  mksrf_fhrvtyp = \'{mksrf_fhrvtyp}\' \n")
@@ -593,7 +699,7 @@ def main ():
         # output data files
         # -------------------
         if nosurfdata_flag:
-            nlfile.write(f"  fsurdat = \' \' \n")
+            nlfile.write("  fsurdat = \' \' \n")
         else:
             nlfile.write(f"  fsurdat = \'{fsurdat}'\n")
         nlfile.write(f"  fsurlog = \'{fsurlog}\' \n")
@@ -613,6 +719,11 @@ def main ():
         nlfile.write(f"  gitdescribe = \'{gitdescribe}\' \n")
 
         nlfile.write("/ \n")
+
+    if _must_run_download_input_data:
+        temp_nlfname = 'surfdata.namelist'
+        os.rename(nlfname, temp_nlfname)
+        nlfname = temp_nlfname
 
     print (f"Successfully created input namelist file {nlfname}")
     sys.exit(0)

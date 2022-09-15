@@ -129,7 +129,7 @@ program mksurfdata
   integer                         :: ier,rcode               ! error status
 
   ! dynamic land use
-  integer                         :: nfdyn                   ! unit numbers
+  integer                         :: nfdyn, nfpio            ! unit numbers
   integer                         :: ntim                    ! time sample for dynamic land use
   integer                         :: year                    ! year for dynamic land use
   integer                         :: year2                   ! year for dynamic land use for harvest file
@@ -228,7 +228,22 @@ program mksurfdata
   ! the following returns pio_iosystem
   call pio_init(iam, mpicom, max(1,petcount/stride), 0, stride, PIO_REARR_SUBSET, pio_iosystem)
 
-  pio_iotype = PIO_IOTYPE_PNETCDF
+  ! Open txt file
+  if (root_task) then
+     write(ndiag,*)' Opening file and reading pio_iotype from txt file with the same name'
+     open (newunit=nfpio, file='pio_iotype.txt', status='old', &
+           form='formatted', action='read', iostat=ier)
+     if (ier /= 0) then
+        call shr_sys_abort(subname//" failed to open file pio_iotype.txt")
+     end if
+     read(nfpio,*)  ! skip file header
+     read(nfpio, '(i)', iostat=ier) pio_iotype
+     if (ier /= 0) then
+        call shr_sys_abort(subname//" failed to read file pio_iotype.txt")
+     end if
+  end if
+  call mpi_bcast(pio_iotype, 1, MPI_INTEGER, 0, mpicom, ier)
+
   pio_ioformat = PIO_64BIT_DATA
 
   call ESMF_LogWrite("finished initializing PIO", ESMF_LOGMSG_INFO)
