@@ -242,19 +242,6 @@ def get_parser():
         dest="potveg_flag",
         default=False,
     )
-    parser.add_argument(
-        "--merge_gis",
-        help="""
-        If you want to use the glacier dataset that merges in
-        the Greenland Ice Sheet data that CISM uses (typically
-        used only if consistency with CISM is important)
-        [default: %(default)s]
-        """,
-        action="store",
-        dest="merge_gis",
-        choices=["on","off"],
-        default="off",
-    )
     return parser
 
 def main ():
@@ -279,7 +266,6 @@ def main ():
     glc_flag = args.glc_flag
     potveg = args.potveg_flag
     glc_nec = args.glc_nec
-    merge_gis = args.merge_gis
 
     if args.hres_pft:
         if (start_year == 1850 and end_year == 1850) or \
@@ -393,7 +379,6 @@ def main ():
                       'pft_years':pft_years,
                       'pft_years_ssp':pft_years_ssp,
                       'ssp_rcp':ssp_rcp,
-                      'mergeGIS':merge_gis,
                       'res':res}
 
     # create dictionary for raw data files names
