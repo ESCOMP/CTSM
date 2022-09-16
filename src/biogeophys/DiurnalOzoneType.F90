@@ -12,7 +12,6 @@ module DiurnalOzoneType
     use clm_varcon             , only : spval
     use clm_varctl             , only : iulog
     use abortutils             , only : endrun
-    use diurnalOzoneStreamMod  , only : read_O3_stream
 
     implicit none
     save
@@ -29,7 +28,6 @@ module DiurnalOzoneType
        ! Public routines
        procedure, public  :: Init
        procedure, private :: InitAllocate
-       procedure, private :: ReadInStream
        !procedure, public  :: Interp - will add this eventually
 
     end type diurnal_ozone_anom_type
@@ -57,8 +55,7 @@ module DiurnalOzoneType
       !-----------------------------------------------------------------------
 
       call this%InitAllocate(bounds)
-      call this%ReadInStream(bounds)
-  
+
     end subroutine Init
   
   
@@ -86,25 +83,6 @@ module DiurnalOzoneType
       end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
-
-  subroutine ReadInStream(this, bounds)
-    !
-    ! DESCRIPTION:
-    ! Read in stream data from 
-    !
-    ! !USES:
-    use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
-    !
-    ! !ARGUMENTS:
-    class(diurnal_ozone_anom_type), intent(inout) :: this
-    type(bounds_type),              intent(in)    :: bounds
-    !---------------------------------------------------------------------
-
-    read_O3_stream(this, bounds)
-
-    end subroutine ReadInStream
-  
-    !-----------------------------------------------------------------------
 
   end module DiurnalOzoneType
   
