@@ -132,7 +132,7 @@ module lnd_import_export
   character(*), parameter :: Fall_fco2_lnd  = 'Fall_fco2_lnd'
   character(*), parameter :: Sl_ddvel       = 'Sl_ddvel'
   character(*), parameter :: Fall_voc       = 'Fall_voc'
-  character(*), parameter :: Fall_fan       = 'Fall_FANflxnh3'
+  character(*), parameter :: Fall_fan       = 'Fall_FAN_nh3'
   character(*), parameter :: Fall_fire      = 'Fall_fire'
   character(*), parameter :: Sl_fztop       = 'Sl_fztop'
   character(*), parameter :: Flrl_rofsur    = 'Flrl_rofsur'

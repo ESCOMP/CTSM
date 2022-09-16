@@ -32,6 +32,7 @@ module FanStreamMod
   integer :: stream_year_last_fan = ispval       ! last year in stream to use
   integer :: model_year_align_fan = ispval       ! align year to align model years with FAN streams
   character(len=CL)  :: stream_fldFileName_fan   ! FAN stream filename
+  character(len=CL)  :: stream_meshFile_fan      ! FAN mesh filename
   character(len=CL)  :: fan_mapalgo = 'bilinear' ! FAN stream mapping algorithm
   integer, parameter :: nFields = 6
   character(len=16)  :: stream_varnames(nFields) ! array of stream field names
@@ -44,7 +45,7 @@ contains
 
   !==============================================================================
 
-  subroutine set_bcast_fanstream_pars(str_yr_first, str_yr_last, mdl_yr_align, mapalgo, str_filename, crop_man_is_percrop)
+  subroutine set_bcast_fanstream_pars(str_yr_first, str_yr_last, mdl_yr_align, mapalgo, str_filename, str_meshname, crop_man_is_percrop)
     !-----------------------------------------------------------------------
     !    
     ! Set the FAN stream namelist parameters
@@ -57,13 +58,14 @@ contains
     integer, intent(in) :: str_yr_first, str_yr_last, mdl_yr_align
     ! whether manure_sgrz and manure_ngrz are per crop or land area:
     logical, intent(in) :: crop_man_is_percrop 
-    character(len=*), intent(in) :: str_filename, mapalgo
+    character(len=*), intent(in) :: str_filename, str_meshname, mapalgo
     !-----------------------------------------------------------------------
 
     stream_year_first_fan = str_yr_first
     stream_year_last_fan = str_yr_last
     model_year_align_fan = mdl_yr_align
     stream_fldFileName_fan = str_filename
+    stream_meshFile_fan = str_meshname
     crop_manure_per_crop = crop_man_is_percrop
     fan_mapalgo = mapalgo
 
@@ -71,6 +73,7 @@ contains
     call shr_mpi_bcast(stream_year_last_fan, mpicom)
     call shr_mpi_bcast(model_year_align_fan, mpicom)
     call shr_mpi_bcast(stream_fldFileName_fan, mpicom)
+    call shr_mpi_bcast(stream_meshFile_fan, mpicom)
     call shr_mpi_bcast(crop_manure_per_crop, mpicom)
     call shr_mpi_bcast(fan_mapalgo, mpicom)
     
@@ -133,6 +136,8 @@ contains
       write(iulog,*) '  stream_year_last_fan   = ',stream_year_last_fan   
       write(iulog,*) '  model_year_align_fan   = ',model_year_align_fan   
       write(iulog,*) '  stream_fldFileName_fan = ',stream_fldFileName_fan
+      write(iulog,*) '  stream_meshFile_fan    = ',stream_meshFile_fan
+      write(iulog,*) '  stream_varnames        = ',stream_varnames
       write(iulog,*) ' '
    endif
    !
@@ -143,7 +148,7 @@ contains
               compname            = 'LND', &
               model_clock         = model_clock, &
               model_mesh          = mesh, &
-              stream_meshfile     = "filethisin", &
+              stream_meshfile     = stream_meshFile_fan, &
               stream_lev_dimname  = 'null', &
               stream_mapalgo      = fan_mapalgo, &
               stream_filenames    = (/trim(stream_fldFileName_fan)/), &

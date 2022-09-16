@@ -1722,6 +1722,11 @@ Simulation year that aligns with stream_year_first_fan value
 Filename of input stream data for FAN Nitrogen (manure) Deposition
 </entry>
 
+<entry id="stream_meshfile_fan" type="char*256" category="datasets"
+       input_pathname="abs" group="fan_nml" valid_values="" >
+Stream meshfile for FAN Nitrogen (manure) Deposition data
+</entry>
+
 <entry id="fan_mapalgo" type="char*256" category="datasets"
        group="fan_nml" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
 Mapping method from FAN Nitrogen (manure) deposition input file to the model resolution
