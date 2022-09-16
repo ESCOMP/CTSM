@@ -254,8 +254,23 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/rawdata/mksrf_vocef_0.5x0.5_simyr2000.c110531.nc</mksrf_fvocef>
 
 <!-- urban -->
-<mksrf_furban   hgrid="3x3min"   lmask="nomask"
->lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c120621.nc</mksrf_furban>
+<mksrf_furban   hgrid="3x3min"   ssp_rcp="hist" lmask="nomask"
+>/glade/p/cgd/tss/people/oleson/Dynamic_Urban_Data/GaoOneil/PCTURB_GRID/Historical/urban_properties_GaoOneil_05deg_ThreeClass_2000_c20220910.nc</mksrf_furban>
+ 
+<mksrf_furban   hgrid="3x3min"   ssp_rcp="SSP1-2.6" lmask="nomask"
+>/glade/p/cgd/tss/people/oleson/Dynamic_Urban_Data/GaoOneil/PCTURB_GRID/HistoricalPlusSSP5/urban_properties_GaoOneil_05deg_ThreeClass_ssp1_2000_c20220910.nc</mksrf_furban>
+ 
+<mksrf_furban   hgrid="3x3min"   ssp_rcp="SSP2-4.5" lmask="nomask"
+>/glade/p/cgd/tss/people/oleson/Dynamic_Urban_Data/GaoOneil/PCTURB_GRID/HistoricalPlusSSP5/urban_properties_GaoOneil_05deg_ThreeClass_ssp2_2000_c20220910.nc</mksrf_furban>
+ 
+<mksrf_furban   hgrid="3x3min"   ssp_rcp="SSP3-7.0" lmask="nomask"
+>/glade/p/cgd/tss/people/oleson/Dynamic_Urban_Data/GaoOneil/PCTURB_GRID/HistoricalPlusSSP5/urban_properties_GaoOneil_05deg_ThreeClass_ssp3_2000_c20220910.nc</mksrf_furban>
+ 
+<mksrf_furban   hgrid="3x3min"   ssp_rcp="SSP4-3.4" lmask="nomask"
+>/glade/p/cgd/tss/people/oleson/Dynamic_Urban_Data/GaoOneil/PCTURB_GRID/HistoricalPlusSSP5/urban_properties_GaoOneil_05deg_ThreeClass_ssp4_2000_c20220910.nc</mksrf_furban>
+ 
+<mksrf_furban   hgrid="3x3min"   ssp_rcp="SSP5-8.5" lmask="nomask"
+>/glade/p/cgd/tss/people/oleson/Dynamic_Urban_Data/GaoOneil/PCTURB_GRID/HistoricalPlusSSP5/urban_properties_GaoOneil_05deg_ThreeClass_ssp5_2000_c20220910.nc</mksrf_furban>
 
 <mksrf_furban   hgrid="3x3min"   lmask="nomask" sim_year="PtVg"
 >lnd/clm2/rawdata/mksrf_urban_0.05x0.05_zerourbanpct.c181014.nc</mksrf_furban>

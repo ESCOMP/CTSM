@@ -283,6 +283,11 @@ contains
        write(iulog, *) 'dzsoi_decomp: ',dzsoi_decomp
     end if
 
+    if (nlevurb == ispval) then
+       call shr_sys_abort(' ERROR nlevurb has not been defined '//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
     if (nlevurb > 0) then
        allocate(zurb_wall(bounds%begl:bounds%endl,nlevurb),    &
             zurb_roof(bounds%begl:bounds%endl,nlevurb),    &
