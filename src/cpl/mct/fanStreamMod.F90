@@ -49,16 +49,18 @@ contains
 
   !==============================================================================
 
-  subroutine set_bcast_fanstream_pars(str_yr_first, str_yr_last, mdl_yr_align, mapalgo, str_filename, crop_man_is_percrop)
+  subroutine set_bcast_fanstream_pars(str_yr_first, str_yr_last, mdl_yr_align, mapalgo, str_filename, &
+       dummy_mesh, crop_man_is_percrop)
     integer, intent(in) :: str_yr_first, str_yr_last, mdl_yr_align
     ! whether manure_sgrz and manure_ngrz are per crop or land area:
     logical, intent(in) :: crop_man_is_percrop 
-    character(len=*), intent(in) :: str_filename, mapalgo
+    character(len=*), intent(in) :: str_filename, dummy_mesh, mapalgo
 
     stream_year_first_fan = str_yr_first
     stream_year_last_fan = str_yr_last
     model_year_align_fan = mdl_yr_align
     stream_fldFileName_fan = str_filename
+    ! Note dummy_mesh file is ignored
     crop_manure_per_crop = crop_man_is_percrop
     fan_mapalgo = mapalgo
 
