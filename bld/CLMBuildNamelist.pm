@@ -3327,6 +3327,9 @@ sub setup_logic_fan {
 		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
        #}
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_fan');
+       if ($opts->{'driver'} eq "nuopc" ) {
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_fan');
+       }
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_crop',
 		   'fan_mode'=>$fan_mode);
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_veg',

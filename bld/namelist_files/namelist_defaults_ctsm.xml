@@ -1557,6 +1557,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_last_fan    sim_year="constant" sim_year_range="2000-2100" >2010</stream_year_last_fan>
 
 <stream_fldfilename_fan>lnd/clm2/paramdata/FAN_nitrogen_soilph_fv1.9x2.5_simyr2010_c20190905.nc</stream_fldfilename_fan>
+<stream_meshfile_fan   >share/meshes/fv1.9x2.5_141008_ESMFmesh_c20191001.nc</stream_meshfile_fan>
 
 <fan_mapalgo                               >bilinear</fan_mapalgo>
 

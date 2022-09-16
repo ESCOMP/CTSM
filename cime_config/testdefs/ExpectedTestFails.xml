@@ -37,6 +37,13 @@
     </phase>
   </test>
 
+  <test name="SMS_P1440x2_D_Ld3.f19_f19_mg16.IHistClm51BgcCrop.cheyenne_intel.clm-fanFull2009Start">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>Threaded issues with FAN</issue>
+    </phase>
+  </test>
+
   <!-- fates test suite failures -->
 
   <test name="SMS_D.f10_f10_mg37.I2000Clm51BgcCrop.cheyenne_nvhpc.clm-crop">

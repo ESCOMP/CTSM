@@ -144,11 +144,12 @@ contains
     integer :: stream_year_last_fan       ! last year in stream to use
     integer :: model_year_align_fan       ! align stream_year_firstndep2 with 
     character(len=CL)  :: stream_fldFileName_fan
+    character(len=CL)  :: stream_meshFile_fan
     character(len=CL)  :: fan_mapalgo
 
     namelist /fan_nml/ fan_to_bgc_crop, fan_to_bgc_veg, stream_year_first_fan,  &
          stream_year_last_fan, model_year_align_fan, fan_mapalgo, stream_fldFileName_fan, &
-         fract_spread_grass, nh4_ads_coef
+         stream_meshFile_fan, fract_spread_grass, nh4_ads_coef
 
     if (.not. use_fan) return
     
@@ -169,7 +170,7 @@ contains
     end if
     
     call set_bcast_fanstream_pars(stream_year_first_fan, stream_year_last_fan, &
-         model_year_align_fan, fan_mapalgo, stream_fldFileName_fan, crop_man_is4crop_area)
+         model_year_align_fan, fan_mapalgo, stream_fldFileName_fan, stream_meshFile_fan, crop_man_is4crop_area)
 
     call shr_mpi_bcast(fan_to_bgc_crop, mpicom)
     call shr_mpi_bcast(fan_to_bgc_veg, mpicom)
