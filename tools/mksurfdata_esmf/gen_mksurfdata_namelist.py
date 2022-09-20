@@ -431,6 +431,9 @@ def main ():
                         print('WARNING: run ./download_input_data to try TO ' \
                               'OBTAIN MISSING FILES')
                         _must_run_download_input_data = True
+                else:
+                   rawdata_files[child1.tag] = rawdata_files[child1.tag]. \
+                                               replace("%y",str(start_year))
 
             if item.tag == 'mesh_filename':
                 new_key = f"{child1.tag}_mesh"
