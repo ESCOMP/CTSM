@@ -248,7 +248,7 @@ version of the raw dataset will probably go away.
 
     <!-- Historical period from 1850 to 2015 -->
     <entry pft_years="1850-2015" >
-      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c20220305/mksrf_landuse_ctsm52_histLUH2_%y.c220305.nc</data_filename>
+      <data_filename>/glade/p/cesm/sdwg_dev/thesis/data/cesm_tools/surfacedata/ctsm52finalrawdata/globalctsm52nrhistLUH2deg025_220918/mksrf_landuse_ctsm52_nrhistLUH2_%y.c220918.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>/glade/p/cgd/tss/people/slevis/transient_lake_data/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
       <urban_filename>/glade/p/cgd/tss/people/slevis/transient_urban_data/05deg_%y_NoAdjust.cdf5.c20220325.nc</urban_filename>
