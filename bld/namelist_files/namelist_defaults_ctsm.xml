@@ -1725,7 +1725,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_last_urbantv  sim_year="constant" sim_year_range="1850-2000" >2106</stream_year_last_urbantv>
 
 <stream_fldfilename_urbantv phys="clm5_1"  hgrid="0.9x1.25"
->/glade/p/cgd/tss/people/oleson/urban_sfcdata/Feddema_urban_data_080410/HIGH_RES_VERSION2/URBAN_PROPERTIES_THESIS_TOOL/JUN_22_2018/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c200605.nc</stream_fldfilename_urbantv>
+>/glade/p/cgd/tss/people/oleson/urban_sfcdata/Feddema_urban_data_080410/HIGH_RES_VERSION2/URBAN_PROPERTIES_THESIS_TOOL/JUN_22_2018/CTSM52_tbuildmax_OlesonFeddema_2020_0.9x1.25_simyr1849-2106_c200605.nc</stream_fldfilename_urbantv>
 <stream_meshfile_urbantv    phys="clm5_1"  hgrid="0.9x1.25"
 >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1_ESMFmesh_cdf5_100621.nc</stream_meshfile_urbantv>
 
