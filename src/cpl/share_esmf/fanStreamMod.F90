@@ -1,5 +1,7 @@
 module FanStreamMod
 
+#include "shr_assert.h"
+
   !----------------------------------------------------------------------- 
   ! Contains methods for reading in FAN nitrogen deposition (in the form of
   ! manure) data file
@@ -205,6 +207,8 @@ contains
    real(r8), pointer :: dataptr1d(:)  ! Temporary data array to put stream data into
    character(*), parameter :: subName = "('fanstream_interp')"
    !-----------------------------------------------------------------------
+   SHR_ASSERT_FL( (lbound(atm2lnd_inst%forc_ndep_grz_grc,1) == bounds%begg ), sourcefile, __LINE__)
+   SHR_ASSERT_FL( (ubound(atm2lnd_inst%forc_ndep_grz_grc,1) == bounds%endg ), sourcefile, __LINE__)
 
    call get_curr_date(year, mon, day, sec)
    mcdate = year*10000 + mon*100 + day
@@ -224,13 +228,15 @@ contains
        end if
        select case( trim(stream_varnames(n)) )
        case( 'manure_grz')
-          atm2lnd_inst%forc_ndep_grz_grc(bounds%begg:) = dataptr1d(:) / (secspday * dayspyr)
+          do g = bounds%begg,bounds%endg
+             atm2lnd_inst%forc_ndep_grz_grc(g) = dataptr1d(g-bounds%begg+1) / (secspday * dayspyr)
+          end do
        case( 'manure_sgrz_crop')
           do g = bounds%begg,bounds%endg
              if ( isinf(dataptr1d(g)) ) then
                 atm2lnd_inst%forc_ndep_sgrz_grc(g) = 9.0e99_r8
              else
-                atm2lnd_inst%forc_ndep_sgrz_grc(g) = dataptr1d(g) / (secspday * dayspyr)
+                atm2lnd_inst%forc_ndep_sgrz_grc(g) = dataptr1d(g-bounds%begg+1) / (secspday * dayspyr)
              end if
           end do
        case( 'manure_ngrz_crop')
@@ -238,7 +244,7 @@ contains
              if ( isinf(dataptr1d(g)) ) then
                 atm2lnd_inst%forc_ndep_ngrz_grc(g) = 9.0e99_r8
              else
-                atm2lnd_inst%forc_ndep_ngrz_grc(g) = dataptr1d(g) / (secspday * dayspyr)
+                atm2lnd_inst%forc_ndep_ngrz_grc(g) = dataptr1d(g-bounds%begg+1) / (secspday * dayspyr)
              end if
           end do
        case( 'manure_sgrz'     )
@@ -246,7 +252,7 @@ contains
              if ( isinf(dataptr1d(g)) ) then
                 atm2lnd_inst%forc_ndep_sgrz_grc(g) = 9.0e99_r8
              else
-                atm2lnd_inst%forc_ndep_sgrz_grc(g) = dataptr1d(g) / (secspday * dayspyr)
+                atm2lnd_inst%forc_ndep_sgrz_grc(g) = dataptr1d(g-bounds%begg+1) / (secspday * dayspyr)
              end if
           end do
        case( 'manure_ngrz'     )
@@ -254,15 +260,21 @@ contains
              if ( isinf(dataptr1d(g)) ) then
                 atm2lnd_inst%forc_ndep_ngrz_grc(g) = 9.0e99_r8
              else
-                atm2lnd_inst%forc_ndep_ngrz_grc(g) = dataptr1d(g) / (secspday * dayspyr)
+                atm2lnd_inst%forc_ndep_ngrz_grc(g) = dataptr1d(g-bounds%begg+1) / (secspday * dayspyr)
              end if
           end do
        case( 'fract_urea'      )
-          atm2lnd_inst%forc_ndep_urea_grc(bounds%begg:) = dataptr1d(:)
+          do g = bounds%begg,bounds%endg
+             atm2lnd_inst%forc_ndep_urea_grc(g) = dataptr1d(g-bounds%begg+1)
+          end do
        case( 'fract_nitr'      )
-          atm2lnd_inst%forc_ndep_nitr_grc(bounds%begg:) = dataptr1d(:)
+          do g = bounds%begg,bounds%endg
+             atm2lnd_inst%forc_ndep_nitr_grc(g) = dataptr1d(g-bounds%begg+1)
+          end do
        case( 'soilph'          )
-          atm2lnd_inst%forc_soilph_grc(bounds%begg:) = dataptr1d(:)
+          do g = bounds%begg,bounds%endg
+             atm2lnd_inst%forc_soilph_grc(g)= dataptr1d(g-bounds%begg+1)
+          end do
        case default
           call endrun(msg=subName//'ERROR FAN stream variable is not handled'//trim(stream_varnames(n))//errMsg(sourcefile, __LINE__))
        end select
