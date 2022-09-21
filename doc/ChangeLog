@@ -1,4 +1,80 @@
 ===============================================================
+Tag name: ctsm5.1.dev109
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Wed Sep 21 17:40:43 MDT 2022
+One-line Summary: If not MIMICS, do not output certain MIMICS history fields
+
+Purpose and description of changes
+----------------------------------
+
+ Surrounded the "MIC" variables with mimics if-statements to prevent
+ from sending to history when not mimics. The MICC_HR fields are already
+ inactive, so nothing will appear different in history for these. The
+ TOTMIC* fields are active, so they will stop appearing in history when
+ not mimics.
+
+ In SoilBiogeochemCarbonFluxType.F90 T_SCALAR is Century-specific, so
+ I put a corresponding if-statement around that one.
+
+ We could stop sending to history a few more fields when mimics is off,
+ but they would require if-statements while looping through
+ ndecomp_cascade_transitions or ndecomp_pools. All such fields are
+ already "inactive" in SoilBiogeochemCarbonFluxType.F90.
+
+ The test-suite with all those fields changed to "active" PASSed.
+ So not adding if statements for those.
+
+ Other checks:
+ - I looked at MICC_HR in a CENTURY simulation and in a MIMICS
+ simulation and it looked the same: Zeros over land and 1e36 over ocean.
+ - The rest of the "inactive" variables are valid variables for both
+ CENTURY and MIMICS.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #): #1737
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+  any other testing (give details below): See description text at top.
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO (but field lists differ)
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1745
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev108
 Originator(s): adrifoster (Adrianna Foster)
 Date: Thu Sep  8 08:22:38 MDT 2022
