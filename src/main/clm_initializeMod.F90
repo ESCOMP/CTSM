@@ -145,7 +145,7 @@ contains
     use ch4varcon                     , only : ch4conrd
     use UrbanParamsType               , only : UrbanInput, IsSimpleBuildTemp
     use shr_orb_mod                   , only : shr_orb_decl
-    use seq_drydep_mod                , only : n_drydep, drydep_method, DD_XLND
+    use shr_drydep_mod                , only : n_drydep
     use accumulMod                    , only : print_accum_fields
     use clm_time_manager              , only : get_step_size_real, get_curr_calday
     use clm_time_manager              , only : get_curr_date, get_nstep, advance_timestep
@@ -201,9 +201,9 @@ contains
     logical            :: reset_dynbal_baselines_lake_columns
     integer            :: begg, endg
     integer            :: iun
-    integer            :: klen 
+    integer            :: klen
     integer            :: ioe
-    integer            :: ier 
+    integer            :: ier
     logical            :: lexists
     real(r8), pointer  :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
     character(len=32)  :: subname = 'initialize2' ! subroutine name
@@ -234,7 +234,7 @@ contains
     allocate (haslake      (begg:endg                      ))
     allocate (pct_urban_max(begg:endg, numurbl             ))
     allocate (wt_nat_patch (begg:endg, surfpft_lb:surfpft_ub ))
-    
+
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
     call pftcon%Init()
@@ -338,7 +338,7 @@ contains
 
     ! Pass model timestep info to FATES
     call CLMFatesTimesteps()
-    
+
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
     call t_startf('init_orbd')
     calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
@@ -434,7 +434,7 @@ contains
 
        ! NOTE(wjs, 2016-02-23) Maybe the rest of the body of this conditional should also
        ! be moved into bgc_vegetation_inst%Init2
-       if (n_drydep > 0 .and. drydep_method == DD_XLND) then
+       if (n_drydep > 0) then
           ! Must do this also when drydeposition is used so that estimates of monthly
           ! differences in LAI can be computed
           ! Also do this for FATES see below
@@ -451,7 +451,7 @@ contains
 
        ! For SP FATES-SP Initialize SP
        ! Also for FATES with Dry-Deposition on as well (see above)
-       !if(use_fates_sp .or. (.not.use_cn) .or. (n_drydep > 0 .and.  drydep_method == DD_XLND) )then  !  Replace with this when we have dry-deposition working
+       !if(use_fates_sp .or. (.not.use_cn) .or. (n_drydep > 0) )then  !  Replace with this when we have dry-deposition working
        ! For now don't allow for dry-deposition because of issues in #1044 EBK Jun/17/2022
        if( use_fates_sp .or. .not. use_fates )then
           call SatellitePhenologyInit(bounds_proc)
@@ -660,7 +660,7 @@ contains
     ! Read monthly vegetation
     ! Even if CN or FATES is on, and dry-deposition is active, read CLMSP annual vegetation
     ! to get estimates of monthly LAI
-    if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
+    if ( n_drydep > 0 ) then
        call readAnnualVegetation(bounds_proc, canopystate_inst)
        ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
        ! This needs to be done even if FATES, CN or CNDV is on!

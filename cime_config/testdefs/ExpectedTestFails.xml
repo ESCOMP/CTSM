@@ -37,6 +37,13 @@
     </phase>
   </test>
 
+  <test name="SMS_D_Ld1_PS.f09_g17.I1850Clm50BgcSpinup.cheyenne_intel.clm-cplhist">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#1844</issue>
+    </phase>
+  </test>
+
   <!-- fates test suite failures -->
 
   <test name="ERS_D_Lm12.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesFireLightningPopDens">
