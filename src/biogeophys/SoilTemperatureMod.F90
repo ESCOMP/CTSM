@@ -79,6 +79,7 @@ module SoilTemperatureMod
   private :: PhaseChangeH2osfc   ! When surface water freezes move ice to bottom snow layer
   private :: PhaseChange_beta    ! Calculation of the phase change within snow and soil layers
   private :: BuildingHAC         ! Building Heating and Cooling for simpler method (introduced in CLM4.5)
+  private :: LateralHeatFlux     ! Lateral heat flux between sub-grid permafrost tiles   
 
   real(r8), private, parameter :: thin_sfclayer = 1.0e-6_r8   ! Threshold for thin surface layer
   character(len=*), parameter, private :: sourcefile = &
@@ -2955,5 +2956,89 @@ end subroutine SetMatrix_Snow
   end subroutine BuildingHAC
 
   !-----------------------------------------------------------------------
+
+  subroutine LateralHeatFlux(bounds, num_nolakec, filter_nolakec, &
+   tk, cv, &
+   temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst)
+
+   !Need: soiltemp, excess ice, vertical coordinates, geometry, heat capacity, thermal conductivity
+
+   ! DESCRIPTION:
+   !     Calculate lateral heat flux from subgrid permafrost tiles. 
+   !     Based on Smith et al. 2022/Aas et al., 2019.
+   ! USES:
+   use clm_varpar      , only : nlevsno, nlevsoi, nlevmaxurbgrnd
+   use clm_varcon      , only : denice, tfrz 
+   use landunit_varcon , only : istice, istwet
+   use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
+   use clm_varctl      , only : iulog
+   use GridcellType    , only : grc
+
+   implicit none
+   ! ARGUMENTS:
+   type(bounds_type)      , intent(in)    :: bounds 
+   integer                , intent(in)    :: num_nolakec                      ! number of column non-lake points in column filter
+   integer                , intent(in)    :: filter_nolakec(:)                ! column filter for non-lake points
+   real(r8)               , intent(out)   :: cv( bounds%begc: , -nlevsno+1: ) ! heat capacity [J/(m2 K)                              ] [col, lev]
+   real(r8)               , intent(out)   :: tk( bounds%begc: , -nlevsno+1: ) ! thermal conductivity at the layer interface [W/(m K) ] [col, lev]
+   type(temperature_type) , intent(in)    :: temperature_inst
+   type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+   type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
+   
+   !
+   ! !LOCAL VARIABLES:
+   integer  :: l,c,j,g                   ! indices
+   integer  :: c1,c2                     ! indeces for tiles
+   integer  :: fc                        ! lake filtered column indices
+   real(r8) :: dx,dl                     ! tile geometry parameters  [m]
+   real(r8) :: deltaz                    ! difference in heigt between tiles [m]
+   real(r8) :: A1, A2                    ! Areas of representative permafrost tiles [m]
+   real(r8) :: TL1ZTOP, TL1ZBOT
+   real(r8) :: TL2ZTOP, TL2ZBOT
+   real(r8) :: dzhhf                     ! Thickness of sub-layer used in lateral heat flux calculation
+   real(r8) :: dztl2tl1                  ! Elevation difference between top of tile 2 compared to tile 1 
+   !-----------------------------------------------------------------------
+
+   ! Declare variables, including new tiling parameters
+   ! Declare uses
+   ! Arguments
+
+   ! Loop through grid cells
+   ! Loop through Land units
+   ! Loop through vertial layers (and sub-layers). 
+   
+   j1=1
+   j2=1
+
+      do jsum = 2,nlevmaxurbgrnd*2 !could instead use while (j1<=nsoil .and. j2<=nsoil)
+         !Update tlntop/tlnbot
+         
+         dzhhf = min(tl1zbot,tl2zbot)-max(tl1ztop,tl2ztop)
+
+         !calculate flux, based on dzhhf interface thickness
+         
+
+         !update index
+         if (lt1zbot < tl2zbot) then 
+            j1=j1+1
+            if (j1 > nlevmaxurbgrnd) then
+               j1 = nlevmaxurbgrnd
+               j2 = j2 + 1
+            endif
+         else 
+            j2=j2+1
+            if (j2 > nlevmaxurbgrnd) then
+               j2 = nlevmaxurbgrnd
+               j1 = j1 + 1
+            endif
+         endif
+
+      enddo
+   ! Calculate heat flux
+   ! Update temperatures based on heat fluxes
+   ! Output lateral heat flux (per layer or pr column)
+
+  end subroutine LateralHeatFlux
+
 
 end module SoilTemperatureMod
