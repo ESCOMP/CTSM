@@ -297,6 +297,11 @@
   </compset>
 
   <compset>
+    <alias>IHistClm51BgcCropRs</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM51%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
     <alias>IHistClm50Sp</alias>
     <lname>HIST_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
     <science_support grid="f09_g17"/>
