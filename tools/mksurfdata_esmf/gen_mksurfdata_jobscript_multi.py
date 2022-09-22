@@ -171,7 +171,7 @@ def main ():
         "T42_res"              : ['T42'],
         "nldas_res"            : ['0.125nldas2'],
         "5x5_amazon_res"       : ['5x5_amazon'],
-        "ne16np4_res"          : ['ne120np4'],
+        "ne16np4_res"          : ['ne16np4'],
         "ne120np4_res"         : ['ne120np4'],
     }
 
