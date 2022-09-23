@@ -196,7 +196,7 @@ def main ():
                   "crop-global-SSP3-7.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP3-7.0 --res", "future_res"),
                   "crop-global-SSP4-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-3.4 --res", "future_res"),
                   "crop-global-SSP4-6.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-6.0 --res", "future_res"),
-                  "crop-global-SSP5-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-3.4 --res", "future_res"),
+                  "crop-global-SSP5-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-3.4 --res", "future_res"),
                   "crop-global-SSP5-8.5"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-8.5 --res", "future_res")
                   }
 
