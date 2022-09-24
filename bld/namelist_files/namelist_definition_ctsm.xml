@@ -8,16 +8,6 @@
 <!-- CLM Namelist -->
 <!-- ========================================================================================  -->
 
-<entry id="finidat_interp_dest" 
-       type="char*256" 
-       category="datasets"
-       input_pathname="abs" 
-       group="clm_inparm" 
-       valid_values="" >
-If use_init_interp is set to .true., interpinic will be called to interpolate
-the file given by finidat, creating the output file specified by finidat_interp_dest.
-</entry>
-
 <entry id="finidat" 
        type="char*256" 
        category="datasets"

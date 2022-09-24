@@ -1300,6 +1300,7 @@
   <test name="SMS_D_Ld1_PS" grid="f09_g17" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2527,6 +2528,17 @@
         <options>
           <option name="wallclock">02:00:00</option>
           <option name="comment">Ensure that it works to have a crop reproductive structure pool, and that we can get bit-for-bit identical answers when using that pool compared to a run with a single reproductive grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code). Compared to the Clm50 test, this Clm45 test exercises code in NutrientCompetitionCLM45defaultMod and use_grainproduct false. Need two years because this test starts from a non-crop finidat, so there is no crop growth in the first year.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+
+  <test name="REUSEINITFILES_D_Ld1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+        <options>
+          <option name="wallclock">0:20:00</option>
+          <option name="comment">Make sure that a rerun with already-generated initialization files is bit-for-bit</option>
         </options>
       </machine>
     </machines>
