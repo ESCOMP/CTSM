@@ -217,6 +217,10 @@ class LILACSMOKE(SystemTestsCommon):
             symlink_force(os.path.join(self._runtime_inputs_dir(), file_to_link),
                           os.path.join(rundir, file_to_link))
 
+        init_generated_files_dir = os.path.join(rundir, "init_generated_files")
+        if not os.path.exists(init_generated_files_dir):
+            os.mkdir(init_generated_files_dir)
+
     def _cmpgen_namelists(self):
         """Redoes the namelist comparison & generation with appropriate namelists
 
