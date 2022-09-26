@@ -1,6 +1,7 @@
 # Software Design Documentation
 
 <span style="font-size:larger;"><b>Project Name</b></span>
+<!-- Note you can add this to an issue or pull request in github. That is the normal usage of this template. -->
 
 **Date:**: 
 
@@ -49,7 +50,6 @@ References, links to additional documentation
 
 ## Review Sign-off
 ---------------------------------------
-* Team lead:
-* Sponsor:
+* Reviewer(s):
 
 *Sign-off Completed on YYYY-MM-DD*
