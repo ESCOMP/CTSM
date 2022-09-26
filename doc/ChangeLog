@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev110
 Originator(s): slevis (Samuel Levis, 303-665-1310)
-Date: Mon Sep 26 11:08:46 MDT 2022
+Date: Mon Sep 26 11:44:52 MDT 2022
 One-line Summary: Introduction of modify_meshes tool for use in I-cases and F-cases
 
 Purpose and description of changes
@@ -39,7 +39,8 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-CTSM issues fixed (include CTSM Issue #): #1644
+CTSM issues fixed (include CTSM Issue #): 
+  Fixes #1644 -- Prospective new tool for user to easily modify ocn/lnd mask in their CESM cases
 
 Notes of particular relevance for developers:
 ---------------------------------------------
@@ -72,7 +73,7 @@ Other details
 -------------
 
 Pull Requests that document the changes (include PR ids):
- https://github.com/ESCOMP/CTSM/pull/1677
+ https://github.com/ESCOMP/CTSM/pull/1677 -- Modify mesh mask with new mesh_mask_modifier tool
 
 ===============================================================
 ===============================================================
