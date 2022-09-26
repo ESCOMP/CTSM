@@ -1,6 +1,6 @@
 """
 Run this code by using the following wrapper script:
-/tools/modify_fsurdat/fsurdat_modifier
+/tools/modify_input_files/fsurdat_modifier
 
 The wrapper script includes a full description and instructions.
 """
@@ -8,11 +8,12 @@ The wrapper script includes a full description and instructions.
 import os
 import logging
 
+from math import isclose
 import numpy as np
 import xarray as xr
 
-from ctsm.git_utils import get_ctsm_git_short_hash
 from ctsm.utils import abort, update_metadata
+from ctsm.git_utils import get_ctsm_git_short_hash
 from ctsm.config_utils import lon_range_0_to_360
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,9 @@ class ModifyFsurdat:
     -----------
     """
 
-    def __init__(self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file):
+    def __init__(
+        self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
+    ):
 
         self.file = my_data
 
@@ -40,17 +43,36 @@ class ModifyFsurdat:
         if landmask_file is not None:
             # overwrite self.not_rectangle with data from
             # user-specified .nc file in the .cfg file
-            self._landmask_file = xr.open_dataset(landmask_file)
-            self.rectangle = self._landmask_file.landmask
+            landmask_ds = xr.open_dataset(landmask_file)
+            self.rectangle = landmask_ds.mod_lnd_props.data
+            # CF convention has dimension and coordinate variable names the same
+            if lat_dimname is None:  # set to default
+                lat_dimname = "lsmlat"
+            if lon_dimname is None:  # set to default
+                lon_dimname = "lsmlon"
+            lsmlat = landmask_ds.dims[lat_dimname]
+            lsmlon = landmask_ds.dims[lon_dimname]
+
+            for row in range(lsmlat):  # rows from landmask file
+                for col in range(lsmlon):  # cols from landmask file
+                    errmsg = (
+                        "landmask_ds.mod_lnd_props not 0 or 1 at "
+                        + f"row, col, value = {row} {col} {self.rectangle[row, col]}"
+                    )
+                    assert isclose(self.rectangle[row, col], 0, abs_tol=1e-9) or isclose(
+                        self.rectangle[row, col], 1, abs_tol=1e-9
+                    ), errmsg
 
         self.not_rectangle = np.logical_not(self.rectangle)
 
     @classmethod
-    def init_from_file(cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file):
+    def init_from_file(
+        cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
+    ):
         """Initialize a ModifyFsurdat object from file fsurdat_in"""
         logger.info("Opening fsurdat_in file to be modified: %s", fsurdat_in)
         my_file = xr.open_dataset(fsurdat_in)
-        return cls(my_file, lon_1, lon_2, lat_1, lat_2, landmask_file)
+        return cls(my_file, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname)
 
     @staticmethod
     def _get_rectangle(lon_1, lon_2, lat_1, lat_2, longxy, latixy):

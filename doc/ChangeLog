@@ -1,4 +1,82 @@
 ===============================================================
+Tag name: ctsm5.1.dev110
+Originator(s): slevis (Samuel Levis, 303-665-1310)
+Date: Mon Sep 26 17:31:22 MDT 2022
+One-line Summary: Introduction of modify_meshes tool for use in I-cases and F-cases
+
+Purpose and description of changes
+----------------------------------
+
+ Merging the modify_meshes tool to main. This tool is a follow-up to the
+ modify_fsurdat tool for I- and F-cases where users are adding land to
+ areas that by default were expected as ocean. In such cases, fsurdat
+ modifications will take effect only if users also modify the mask_mesh
+ file which ultimately determines the landmask used by the CTSM.
+ Details in the tool's README.
+
+ Adding test_sys_mesh_modifier.py to python system tests.
+
+ Combining /modify_fsurdat and /modify_mesh_mask directories into one
+ directory: /modify_input_files
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #): 
+  Fixes #1644 -- Prospective new tool for user to easily modify ocn/lnd mask in their CESM cases
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Adding test_sys_mesh_modifier.py to python system tests. This requires
+ "module load nco" before running "make stest" or "make all" in the /python
+ directory.
+
+Testing summary:
+----------------
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+    izumi - mostly PASS if approp. environment is loaded, but one test fails
+            because it requires "module load nco"
+    clm_pymods on cheyenne - PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/1677 -- Modify mesh mask with new mesh_mask_modifier tool
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev109
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
 Date: Mon Sep 26 10:46:33 MDT 2022

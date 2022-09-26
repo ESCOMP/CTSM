@@ -20,10 +20,10 @@ max_sat_area (user sets FMAX value)    cap-saturation (sets FMAX to zero)
 
 Files involved
 --------------
-python/ctsm/fsurdat_modifier.py
-python/ctsm/modify_fsurdat.py
-tools/modify_fsurdat/fsurdat_modifier
-tools/modify_fsurdat/modify_template.cfg
+python/ctsm/modify_input_files/fsurdat_modifier.py
+python/ctsm/modify_input_files/modify_fsurdat.py
+tools/modify_input_files/fsurdat_modifier
+tools/modify_input_files/modify_fsurdat_template.cfg
 
 Instructions
 ------------
@@ -34,10 +34,10 @@ module load conda
 ./py_env_create
 conda activate ctsm_py
 (Use "deactivate" to reverse the latter.)
-2) Copy, then modify the configure file named modify_template.cfg, which
+2) Copy, then modify the configure file named modify_fsurdat_template.cfg, which
 contains all the arguments needed by the script.
 3) Run the script ./fsurdat_modifier pointing to the copied/modified .cfg file,
 e.g. modify_users_copy.cfg
 ./fsurdat_modifier modify_users_copy.cfg
-See modify_template.cfg for required and optional settings.
+See modify_fsurdat_template.cfg for required and optional settings.
 4) Use the --verbose option to see progress output on your screen
