@@ -48,7 +48,7 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
 
     def _create_config_file(self):
         cfg_template_path = os.path.join(self._ctsm_root,
-            'tools/modify_fsurdat/modify_template.cfg')
+            'tools/modify_input_files/modify_fsurdat_template.cfg')
 
         with open (self._cfg_file_path,'w') as cfg_out:
             with open (cfg_template_path,'r') as cfg_in:
@@ -64,7 +64,7 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
 
     def _run_modify_fsurdat(self):
         tool_path = os.path.join(self._ctsm_root,
-                                 'tools/modify_fsurdat/fsurdat_modifier')
+                                 'tools/modify_input_files/fsurdat_modifier')
         # Need to specify a specific python version that has the required
         # dependencies
         python_path = _get_python_path()
