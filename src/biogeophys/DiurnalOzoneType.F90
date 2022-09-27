@@ -84,5 +84,44 @@ module DiurnalOzoneType
 
   !-----------------------------------------------------------------------
 
+  !-----------------------------------------------------------------------
+  subroutine Interp(this, bounds, forc_o3, forc_o3_down)
+    !
+    ! !DESCRIPTION:
+    ! Allocate module variables and data structures
+    !
+    ! !USES:
+    use shr_infnan_mod,    only : nan => shr_infnan_nan, assignment(=)
+    use clm_time_manager , only : get_curr_time
+    !
+    ! !ARGUMENTS:
+    class(diurnal_ozone_anom_type), intent(in)  :: this   
+    type(bounds_type),              intent(in)  :: bounds                       
+    real(r8),                       intent(in)  :: forc_o3( bounds%begg: )      ! ozone partial pressure (mol/mol)
+    real(r8),                       intent(out) :: forc_o3_down( bounds%begg: ) ! ozone partial pressure, downscaled (mol/mol)
+    !
+    ! LOCAL VARIABLES:
+    integer :: j     ! time stamp to grab
+    integer :: yr    ! year
+    integer :: mon   ! month
+    integer :: day   ! day of month
+    integer :: tod   ! time of day (seconds past 0Z)
+    integer :: begg, endg
+    !-----------------------------------------------------------------------
+
+    begg = bounds%begg; endg = bounds%endg
+
+    ! Get current date/time - we really only need seconds
+    call get_curr_date(yr, mon, day, tod)
+
+    !! interpolate here!
+   
+    ! apply anomaly
+    forc_o3_down(begg:endg) = forc_o3(begg:eng)*this%o3_anomaly_grc(begg:endg, j)
+
+    end subroutine Interp
+
+  !-----------------------------------------------------------------------
+
   end module DiurnalOzoneType
   

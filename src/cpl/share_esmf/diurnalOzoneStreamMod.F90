@@ -23,7 +23,7 @@ module diurnalOzoneStreamMod
    private
 
    ! PUBLIC MEMBER FUNCTIONS:
-   public :: read_O3_stream    ! position dataset for diurnal ozone anomaly
+   public :: read_O3_stream    ! read dataset for diurnal ozone anomaly
 
    character(len=*), parameter :: sourcefile = &
       __FILE__
@@ -166,7 +166,7 @@ module diurnalOzoneStreamMod
          call ESMF_Finalize(endflag=ESMF_END_ABORT)
       end if
 
-      ! Check that inner most dimension of dataptr2d is equal to nlevsoi
+      ! Check that inner most dimension of dataptr2d is equal to nlevsec
       if (size(dataptr2d,dim=1) /= nlevsec) then
          if (masterproc) then
             write(iulog,*) 'ERROR: dataptr2d(dim=1) = ',size(dataptr2d,dim=1),&
