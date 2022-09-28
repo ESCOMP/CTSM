@@ -1,0 +1,41 @@
+# -*- mode: makefile -*-
+
+ifndef CIMEROOT
+  $(error Must set variable CIMEROOT)
+endif
+
+CIMEROOT_ABSPATH := $(realpath $(CIMEROOT))
+
+TEST_ROOT=$(shell pwd)
+
+CESM_CMAKE_UTILS=$(CIMEROOT_ABSPATH)/externals/CMake
+GENF90=$(CIMEROOT_ABSPATH)/externals/genf90
+
+DEBUG_CMAKE=
+#DEBUG_CMAKE=--debug-output --trace
+
+config : clean
+	mkdir -p build
+	cp CESM_Macros.cmake build/
+	cd build && cmake \
+		$(DEBUG_CMAKE) \
+		-Wdev \
+		-DENABLE_GENF90=ON \
+		-DCMAKE_PROGRAM_PATH=$(GENF90) \
+		-DCMAKE_BUILD_TYPE=CESM_DEBUG \
+		-DCESM_CMAKE_MODULE_DIRECTORY=$(CESM_CMAKE_UTILS) \
+		$(TEST_ROOT)
+
+test : all
+	@if [ -d ./build ]; then \
+		$(MAKE) --directory=build $@; \
+	fi
+
+all : 
+	@if [ -d ./build ]; then \
+		$(MAKE) --directory=build $@; \
+	fi
+
+
+clean :
+	rm -rf *~ build
