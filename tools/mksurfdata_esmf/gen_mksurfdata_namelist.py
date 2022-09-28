@@ -437,6 +437,11 @@ def main ():
                         print('WARNING: run ./download_input_data to try TO ' \
                               'OBTAIN MISSING FILES')
                         _must_run_download_input_data = True
+                elif 'urban_properties' in rawdata_files[child1.tag]:
+                   # Time-slice cases pull urban_properties from the transient
+                   # urban_properties data files
+                   rawdata_files[child1.tag] = rawdata_files[child1.tag]. \
+                                               replace("%y",str(start_year))
 
             if item.tag == 'mesh_filename':
                 new_key = f"{child1.tag}_mesh"

@@ -1,3 +1,13 @@
+=======
+Purpose
+=======
+This tool is intended to generate fsurdat files (surface datasets) for the
+CTSM. It can generate global, regional, and single-point fsurdat files, as long
+as a mesh file is available for the grid.
+
+The subset_data tool allows users to make fsurdat files from existing fsurdat
+files when a mesh file is unavailable. Generally, users should consider the
+subset_data tool for generating regional and single-point fsurdat files.
 ===================
 Build Requirements:
 ===================
@@ -70,13 +80,17 @@ Running for a single submission:
 # to generate your target jobscript (again --help for instructions):
 > ./gen_mksurfdata_jobscript_single.py --number-of-nodes 24 --tasks-per-node 12 --namelist-file target.namelist
 > qsub mksurfdata_jobscript_single
+# Read note about regional grids below.
 
 =======================
 Running for the generation of multiple datasets
 =======================
-# Note that gen_mksurfdata_jobscript_multi.py runs ./gen_mksurfdata_namelist.py
+# Notes:
+# - gen_mksurfdata_jobscript_multi.py runs ./gen_mksurfdata_namelist.py for you
+# - The regional grid 5x5_amazon may fail with 24 nodes.
+#   Task geometry that worked: #PBS -l select=4:ncpus=36:mpiprocs=4
 > ./gen_mksurfdata_jobscript_multi.py --help
-> ./gen_mksurfdata_jobscript_multi.py --number-of-nodes 24 --tasks-per-node 12 --scenario all
+> ./gen_mksurfdata_jobscript_multi.py --number-of-nodes 24 --scenario all
 > qsub mksurfdata_jobscript_multi
 
 ================
