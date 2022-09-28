@@ -21,14 +21,15 @@ module DiurnalOzoneType
     type, public :: diurnal_ozone_anom_type
        private
        ! Private data members
-       integer                       :: ntimes = 24
-       real(r8), public, allocatable :: o3_anomaly_grc(:,:)    ! o3 anomaly data [grc, ntimes]
+       integer                       :: ntimes               ! size of time dimension
+       real(r8), public, allocatable :: o3_anomaly_grc(:,:)  ! o3 anomaly data [grc, ntimes]
+       real(r8), public, allocatable :: time_arr(:)          ! time dimension (units = seconds of day) 
   
      contains
        ! Public routines
        procedure, public  :: Init
        procedure, private :: InitAllocate
-       !procedure, public  :: Interp - will add this eventually
+       procedure, public  :: Interp
 
     end type diurnal_ozone_anom_type
   
@@ -43,17 +44,22 @@ module DiurnalOzoneType
     ! ========================================================================
   
     !-----------------------------------------------------------------------
-    subroutine Init(this, bounds)
+    subroutine Init(this, bounds, n)
       !
       ! DESCRIPTION:
-      ! Initialize ozone data structure
+      ! Initialize ozone anomaly data structures
       !
       !
       ! ARGUMENTS:
       class(diurnal_ozone_anom_type), intent(inout) :: this
-      type(bounds_type),              intent(in)    :: bounds 
+      type(bounds_type),              intent(in)    :: bounds
+      integer,                        intent(in)    :: n
       !-----------------------------------------------------------------------
 
+      ! set ntimes from input
+      this%ntimes = n
+
+      ! allocate arrays
       call this%InitAllocate(bounds)
 
     end subroutine Init
@@ -79,45 +85,61 @@ module DiurnalOzoneType
       begg = bounds%begg; endg = bounds%endg
 
       allocate(this%o3_anomaly_grc(begg:endg,1:this%ntimes)); this%o3_anomaly_grc(:,:) = nan
+      allocate(this%time_arr(1:this%ntimes)); this%time_arr(:) = nan
 
       end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
-  subroutine Interp(this, bounds, forc_o3, forc_o3_down)
+  subroutine Interp(this, forc_o3, forc_o3_down)
     !
     ! !DESCRIPTION:
-    ! Allocate module variables and data structures
+    ! Downscale/interpolate multi-day ozone data to subdaily
     !
     ! !USES:
-    use shr_infnan_mod,    only : nan => shr_infnan_nan, assignment(=)
     use clm_time_manager , only : get_curr_time
     !
     ! !ARGUMENTS:
-    class(diurnal_ozone_anom_type), intent(in)  :: this   
-    type(bounds_type),              intent(in)  :: bounds                       
+    class(diurnal_ozone_anom_type), intent(in)  :: this                      
     real(r8),                       intent(in)  :: forc_o3( bounds%begg: )      ! ozone partial pressure (mol/mol)
     real(r8),                       intent(out) :: forc_o3_down( bounds%begg: ) ! ozone partial pressure, downscaled (mol/mol)
     !
     ! LOCAL VARIABLES:
-    integer :: j     ! time stamp to grab
+    integer :: i     ! looping index
     integer :: yr    ! year
     integer :: mon   ! month
     integer :: day   ! day of month
     integer :: tod   ! time of day (seconds past 0Z)
-    integer :: begg, endg
     !-----------------------------------------------------------------------
-
-    begg = bounds%begg; endg = bounds%endg
 
     ! Get current date/time - we really only need seconds
     call get_curr_date(yr, mon, day, tod)
 
-    !! interpolate here!
-   
-    ! apply anomaly
-    forc_o3_down(begg:endg) = forc_o3(begg:eng)*this%o3_anomaly_grc(begg:endg, j)
+    ! find the time interval we are in
+    do i = 1, this%ntimes 
+      if (real(tod) <= this%time_arr(i)) then 
+        exit
+      end if
+    end do
+
+    ! interpolate, checking for edge cases
+    if (i == 1) then 
+      ! wrap around to front
+      forc_o3_down(:) = forc_o3(:)*((this%o3_anomaly_grc(:,this%ntimes)*            &
+        (this%time_arr(i) - real(tod)) +                                            &
+        this%o3_anomaly_grc(:,i)*((86400.0 - this%time_arr(this%ntimes)) + real(tod)))/   &
+        (this%time_arr(i) + (86400.0 - this%time_arr(this%ntimes))))
+    else 
+      ! interpolate normally
+      forc_o3_down(:) = forc_o3(:)*((this%o3_anomaly_grc(:,i-1)*        &
+        (this%time_arr(i) - real(tod)) +                                &
+        this%o3_anomaly_grc(:,i)*(real(tod) - this%time_arr(i-1)))/     &
+        (this%time_arr(i) - this%time_arr(i-1)))
+    end if 
+
+
+  
 
     end subroutine Interp
 

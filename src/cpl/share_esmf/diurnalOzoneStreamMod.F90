@@ -47,6 +47,7 @@ module diurnalOzoneStreamMod
       use dshr_strdata_mod , only : shr_strdata_init_from_inline, shr_strdata_print
       use dshr_strdata_mod , only : shr_strdata_advance
       use dshr_methods_mod , only : dshr_fldbun_getfldptr
+      use ncdio_pio        , only : file_desc_t, ncd_pio_openfile, ncd_io
 
       !
       ! ARGUMENTS:
@@ -55,7 +56,9 @@ module diurnalOzoneStreamMod
       !
       ! !LOCAL VARIABLES:
       type(shr_strdata_type)      :: sdat_dO3                              ! input data stream
+      type(file_desc_t)           :: ncid                                  ! netcdf file id
       real(r8), pointer           :: dataptr2d(:,:)                        ! first dimension is level, second is data on that level
+      real(r8), pointer           :: secs(:)                               ! time-of-day (units = seconds) dimension on file
       integer                     :: ig, g, j                              ! indices
       integer                     :: nu_nml                                ! unit for namelist file
       integer                     :: nml_error                             ! namelist i/o error flag
@@ -65,11 +68,12 @@ module diurnalOzoneStreamMod
       integer                     :: sec                                   ! seconds into current date for nstep+1
       integer                     :: mcdate                                ! current model date (yyyymmdd)
       integer                     :: rc                                    ! error code
-      integer, parameter          :: nlevsec = 24                          ! number of hours in day
+      integer                     :: nlevsec                               ! dimension of 'secs' variable
       integer, allocatable        :: g_to_ig(:)                            ! array matching gridcell index to data index
+      logical                     :: readvar 
       character(len=CL)           :: stream_fldFileName_dO3 = ' '          ! diurnal ozone stream filename to read
       character(len=CL)           :: stream_meshfile_dO3 = ' '             ! diurnal ozone stream meshfile
-      character(len=CL)           :: dO3_mapalgo = 'bilinear'              ! mapping alogrithm
+      character(len=CL)           :: dO3_mapalgo = ' '                     ! mapping alogrithm
       character(len=CL)           :: stream_lev_dimname = 'sec'            ! name of vertical layer dimension
       character(*), parameter     :: stream_var_name = "O3_diurnal_factor" ! base string for field string
       character(len=*), parameter :: subName = "('dO3_init')"
@@ -166,22 +170,31 @@ module diurnalOzoneStreamMod
          call ESMF_Finalize(endflag=ESMF_END_ABORT)
       end if
 
-      ! Check that inner most dimension of dataptr2d is equal to nlevsec
-      if (size(dataptr2d,dim=1) /= nlevsec) then
-         if (masterproc) then
-            write(iulog,*) 'ERROR: dataptr2d(dim=1) = ',size(dataptr2d,dim=1),&
-                 ' and  nlevsec = ',nlevsec,' must match '
-         end if
-         call endrun(trim(subname) // &
-              ' ERROR:: The input diurnal ozone anomaly stream does not have levels equal to nlevsec')
+      ! set the nlevsec size
+      nlevsec = size(dataptr2d, dim=1)
+
+      ! read in the seconds array as well
+      allocate(secs(nlevsec))
+      call ncd_pio_openfile(ncid, trim(stream_fldFileName_dO3), 0)
+      call ncd_io(ncid=ncid, varname=trim(stream_lev_dimname), flag='read', data=secs, readvar=readvar)
+      if (.not. readvar) then
+         call endrun(msg=' ERROR: secs NOT on diurnal ozone file'//errMsg(sourcefile, __LINE__))
       end if
+
+      ! initialize arrays
+      call diurnalOzoneAnomInst%Init(bounds, nlevsec)
       
-      ! Set the diurnal ozone anomaly
+      ! set the diurnal ozone anomaly
       do g = bounds%begg, bounds%endg
          ig = g_to_ig(g)
          do j = 1, nlevsec
             diurnalOzoneAnomInst%o3_anomaly_grc(g,j) = dataptr2d(j,ig)
          end do
+      end do
+
+      ! set the seconds array
+      do j = 1, nlevsec
+         diurnalOzoneAnomInst%time_arr(j) = secs(j)
       end do
 
    end subroutine read_O3_stream

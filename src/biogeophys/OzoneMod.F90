@@ -162,7 +162,7 @@ contains
     ! if we have multi-day average input ozone, we need to convert to sub-daily using
     ! an input anomaly file
     if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average) then 
-      call this%diurnalOzoneAnomInst%Init(bounds)
+      ! initialize and read in data for diurnal O3 anomaly stream
       call read_O3_stream(this%diurnalOzoneAnomInst, bounds)
     end if
 
@@ -393,10 +393,11 @@ contains
     real(r8) , intent(in) :: forc_o3( bounds%begg: )   ! ozone partial pressure (mol/mol)
     !
     ! !LOCAL VARIABLES:
-    integer  :: fp             ! filter index
-    integer  :: p              ! patch index
-    integer  :: c              ! column index
-    integer  :: g              ! gridcell index
+    real(r8), pointer :: forc_o3_down( bounds%begg: ) ! downscaled ozone partial pressure (mol/mol)
+    integer           :: fp                           ! filter index
+    integer           :: p                            ! patch index
+    integer           :: c                            ! column index
+    integer           :: g                            ! gridcell index
 
     character(len=*), parameter :: subname = 'CalcOzoneUptake'
     !-----------------------------------------------------------------------
@@ -417,11 +418,11 @@ contains
          tlai_old    => this%tlai_old_patch                     & ! Output: [real(r8) (:)] tlai from last time step
          )
 
-     !if (this%flag == 'multiday_average') then
-     !     call o3DiurnalAnomolyInst%interp(forc_o3, forc_o3_down)
-      !else
-      !    forc_o3_down => forc_o3
-      !end if
+    if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average) then
+      call this%diurnalOzoneAnomInst%Interp(forc_o3, forc_o3_down)
+    else
+      forc_o3_down = forc_o3
+    end if
 
       do fp = 1, num_exposedvegp
          p = filter_exposedvegp(fp)
