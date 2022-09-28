@@ -171,7 +171,7 @@ def main ():
         "T42_res"              : ['T42'],
         "nldas_res"            : ['0.125nldas2'],
         "5x5_amazon_res"       : ['5x5_amazon'],
-        "ne16np4_res"          : ['ne120np4'],
+        "ne16np4_res"          : ['ne16np4'],
         "ne120np4_res"         : ['ne120np4'],
     }
 
@@ -196,9 +196,14 @@ def main ():
                   "crop-global-SSP3-7.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP3-7.0 --res", "future_res"),
                   "crop-global-SSP4-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-3.4 --res", "future_res"),
                   "crop-global-SSP4-6.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-6.0 --res", "future_res"),
-                  "crop-global-SSP5-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-3.4 --res", "future_res"),
+                  "crop-global-SSP5-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-3.4 --res", "future_res"),
                   "crop-global-SSP5-8.5"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-8.5 --res", "future_res")
                   }
+
+    # --------------------------
+    # TODO Here, reuse code from gen_mksurfdata_jobscript_single.py
+    # that's found in the section titled "Obtain mpirun command ..."
+    # --------------------------
 
     # --------------------------
     # Write run script
@@ -210,7 +215,7 @@ def main ():
         runfile.write('#PBS -N mksurfdata \n')
         runfile.write('#PBS -j oe \n')
         runfile.write('#PBS -q regular \n')
-        runfile.write('#PBS -l walltime=30:00 \n')
+        runfile.write('#PBS -l walltime=12:00:00 \n')
         runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
         runfile.write("\n")
 
@@ -219,7 +224,7 @@ def main ():
         # Run env_mach_specific.sh to control the machine dependent
         # environment including the paths to compilers and libraries
         # external to cime such as netcdf
-        runfile.write('. ./.env_mach_specific.sh \n')
+        runfile.write('. ./tool_bld/.env_mach_specific.sh \n')
         for target in target_list:
             res_set = dataset_dict[target][1]
             for res in resolution_dict[res_set]:
@@ -236,7 +241,7 @@ def main ():
                 output = run_cmd.stdout.decode('utf-8').strip()
                 namelist = output.split(' ')[-1]
                 print (f"generated namelist {namelist}")
-                output = f"mpiexec_mpt -p \"%g:\" -np {n_p} ./tool_bld/mksurfdata < {namelist}"
+                output = f"mpiexec_mpt -p \"%g:\" -np {n_p} omplace -tm open64 ./tool_bld/mksurfdata < {namelist}"
                 runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")
