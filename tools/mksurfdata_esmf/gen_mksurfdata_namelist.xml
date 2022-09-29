@@ -65,16 +65,21 @@
   <!-- lakes and wetlands -->
   <!-- ======================== -->
 
-  <mksrf_flakwat>
+  <mksrf_fpctlak>
     <entry>
-      <data_filename>/glade/p/cgd/tss/people/slevis/transient_lake_data/mksurf_LakePnDepth_3x3min_simyr2017_MODISgrid.cdf5.c200305.nc</data_filename>
+      <data_filename>/glade/p/cgd/tss/people/slevis/transient_lake_data/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
-    <entry pft_years="1850">
+  </mksrf_fpctlak>
+
+  <mksrf_flakdep>
+    <entry>
+      <!-- NB slevis 20220928 -->
+      <!-- lake depth files for 1850, 1900, 2017 contain identical depths -->
       <data_filename>/glade/p/cgd/tss/people/slevis/transient_lake_data/mksurf_LakePnDepth_3x3min_simyr1850_MODISgrid.cdf5.c200304.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
-  </mksrf_flakwat>
+  </mksrf_flakdep>
 
   <mksrf_fwetlnd>
     <entry>

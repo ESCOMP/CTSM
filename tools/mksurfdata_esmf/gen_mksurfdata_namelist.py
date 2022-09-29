@@ -437,9 +437,10 @@ def main ():
                         print('WARNING: run ./download_input_data to try TO ' \
                               'OBTAIN MISSING FILES')
                         _must_run_download_input_data = True
-                elif 'urban_properties' in rawdata_files[child1.tag]:
-                   # Time-slice cases pull urban_properties from the transient
-                   # urban_properties data files
+                elif 'urban_properties' in rawdata_files[child1.tag] or \
+                     'lake' in rawdata_files[child1.tag]:
+                   # Time-slice cases pull urban_properties and %lake from the
+                   # corresponding transient files
                    rawdata_files[child1.tag] = rawdata_files[child1.tag]. \
                                                replace("%y",str(start_year))
 

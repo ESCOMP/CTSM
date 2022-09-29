@@ -22,8 +22,10 @@ program mksurfdata
   !    mksrf_fglacierregion_mesh - Mesh for mksrf_fglacierregion
   !    mksrf_flai                - Leaf Area Index dataset
   !    mksrf_flai_mesh           - Mesh for mksrf_flai
-  !    mksrf_flakwat             - Lake water dataset
-  !    mksrf_flakwat_mesh        - Mesh for mksrf_flakwat
+  !    mksrf_fpctlak             - Percent lake dataset
+  !    mksrf_fpctlak_mesh        - Mesh for mksrf_fpctlak
+  !    mksrf_flakdep             - Lake depth dataset
+  !    mksrf_flakdep_mesh        - Mesh for mksrf_flakdep
   !    mksrf_fwetlnd             - Wetland water dataset
   !    mksrf_fwetlnd_mesh        - Mesh for mksrf_fwetlnd
   !    mksrf_fmax                - Max fractional saturated area dataset
@@ -106,7 +108,7 @@ program mksurfdata
   use mksoildepthMod     , only : mksoildepth
   use mksoilcolMod       , only : mksoilcol
   use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, mkurban_topo, numurbl, update_max_array_urban
-  use mklanwatMod        , only : mklakwat, mkwetlnd, update_max_array_lake
+  use mklanwatMod        , only : mkpctlak, mklakdep, mkwetlnd, update_max_array_lake
   use mkutilsMod         , only : normalize_classes_by_gcell, chkerr
   use mkfileMod          , only : mkfile_define_dims, mkfile_define_atts, mkfile_define_vars
   use mkfileMod          , only : mkfile_output
@@ -426,15 +428,18 @@ program mksurfdata
   end if
 
   ! -----------------------------------
-  ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
+  ! Make inland water [pctlak, pctwet]
   ! -----------------------------------
   ! LAKEDEPTH is written out in the subroutine
   ! Need to keep pctlak and pctwet external for use below
   allocate ( pctlak(lsize_o)) ; pctlak(:) = spval
   allocate ( pctlak_max(lsize_o)) ; pctlak_max(:) = spval
-  call mklakwat(mksrf_flakwat_mesh, mksrf_flakwat, mesh_model, pctlak, pioid, &
-                fsurdat, rc=rc, do_depth=.true.)
-  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklatwat')
+  call mkpctlak(mksrf_fpctlak_mesh, mksrf_fpctlak, mesh_model, pctlak, pioid, &
+                rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpctlak')
+  call mklakdep(mksrf_flakdep_mesh, mksrf_flakdep, mesh_model, pioid, fsurdat, &
+                rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklakdep')
 
   allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
   allocate ( pctwet_orig(lsize_o)) ; pctwet_orig(:) = spval
@@ -922,9 +927,9 @@ program mksurfdata
         call pio_syncfile(pioid)
 
         ! Create pctlak data at model resolution (use original mapping file from lake data)
-        call mklakwat(mksrf_flakwat_mesh, flakname, mesh_model, pctlak, pioid, &
-                      fsurdat, rc=rc)
-        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklakwat')
+        call mkpctlak(mksrf_fpctlak_mesh, flakname, mesh_model, pctlak, pioid, &
+                      rc=rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpctlak')
         call pio_syncfile(pioid)
 
         call mkurban(mksrf_furban_mesh, furbname, mesh_model, pcturb, &
