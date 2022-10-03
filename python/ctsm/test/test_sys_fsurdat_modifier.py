@@ -15,7 +15,7 @@ import xarray as xr
 
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
-from ctsm.modify_fsurdat.fsurdat_modifier import fsurdat_modifier
+from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -28,7 +28,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
     def setUp(self):
         """
         Obtain path to the existing:
-        - modify_template.cfg file
+        - modify_fsurdat_template.cfg file
         - /testinputs directory and fsurdat_in, located in /testinputs
         Make /_tempdir for use by these tests.
         Obtain path and names for the files being created in /_tempdir:
@@ -36,7 +36,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         - fsurdat_out.nc
         """
         self._cfg_template_path = os.path.join(
-            path_to_ctsm_root(), "tools/modify_fsurdat/modify_template.cfg"
+            path_to_ctsm_root(), "tools/modify_input_files/modify_fsurdat_template.cfg"
         )
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._fsurdat_in = os.path.join(
