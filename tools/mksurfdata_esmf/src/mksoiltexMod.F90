@@ -77,7 +77,7 @@ contains
     real(r4), allocatable  :: cfrag_o(:,:)  ! output grid: coarse fragments (vol% > 2 mm)
     real(r4), allocatable  :: bulk_o(:,:)  ! output grid: bulk density (g cm-3)
     real(r4), allocatable  :: phaq_o(:,:)  ! output grid: soil pH measured in H2O (unitless)
-    real(r4), allocatable  :: organic_o(:,:)  ! output grid: organic matter (kg m-3) TODO Rm before merging PR #1732
+    real(r4), allocatable  :: organic_o(:,:)  ! output grid: organic matter (kg m-3)
     integer                :: n_mapunits
     integer                :: lookup_index
     integer                :: SCID
@@ -91,7 +91,7 @@ contains
     type(var_desc_t)       :: pio_varid_cfrag
     type(var_desc_t)       :: pio_varid_bulk
     type(var_desc_t)       :: pio_varid_phaq
-    type(var_desc_t)       :: pio_varid_organic  ! TODO Rm bef merging PR #1732
+    type(var_desc_t)       :: pio_varid_organic
     integer                :: starts(3)     ! starting indices for reading lookup table
     integer                :: counts(3)     ! dimension counts for reading lookup table
     integer                :: srcTermProcessing_Value = 0
@@ -119,7 +119,7 @@ contains
     allocate(cfrag_o(ns_o,nlevsoi)) ; cfrag_o(:,:) = spval
     allocate(bulk_o(ns_o,nlevsoi)) ; bulk_o(:,:) = spval
     allocate(phaq_o(ns_o,nlevsoi)) ; phaq_o(:,:) = spval
-    allocate(organic_o(ns_o,nlevsoi)) ; organic_o(:,:) = spval  ! TODO Rm bef merging PR #1732
+    allocate(organic_o(ns_o,nlevsoi)) ; organic_o(:,:) = spval
 
     !---------------------------------
     ! Determine mapunits on output grid
@@ -368,15 +368,14 @@ contains
 
           ! Same algorithm for orgc_o as for sand_o
           ! organic_o OPTION 2 (commented out)
-          ! TODO Rm organic before merging PR #1732 UNLESS we opt for OPTION 2
           ! Calculate from multiple input variables to get the output variable
           orgc_o(no,1) = orgc_i(1,1,lookup_index)
-          organic_o(no,1) = orgc_i(1,1,lookup_index) * bulk_i(1,1,lookup_index) * float(100 - cfrag_i(1,1,lookup_index)) * 0.01_r4 / 0.58_r4  ! TODO Remove?
+!         organic_o(no,1) = orgc_i(1,1,lookup_index) * bulk_i(1,1,lookup_index) * float(100 - cfrag_i(1,1,lookup_index)) * 0.01_r4 / 0.58_r4
           if (orgc_o(no,1) < 0._r4) then
              do l = 2,n_scid
                 if (orgc_i(1,l,lookup_index) >= 0._r4) then
                    orgc_o(no,1) = orgc_i(1,l,lookup_index)
-                   organic_o(no,1) = orgc_i(1,l,lookup_index) * bulk_i(1,l,lookup_index) * float(100 - cfrag_i(1,l,lookup_index)) * 0.01_r4 / 0.58_r4  ! TODO Rm?
+!                  organic_o(no,1) = orgc_i(1,l,lookup_index) * bulk_i(1,l,lookup_index) * float(100 - cfrag_i(1,l,lookup_index)) * 0.01_r4 / 0.58_r4
                    exit
                 end if
              end do
@@ -385,13 +384,13 @@ contains
              if (int(orgc_o(no,1)) == -4) then  ! sand dunes
                 write(6,'(a,i8)')'WARNING: changing orgc_o from -4 to 1 at no = ', no
                 orgc_o(no,:) = 1._r4
-                write(6,'(a,i8)')'WARNING: changing organic_o from -4 to 1 at no = ', no  ! TODO Remove?
-                organic_o(no,:) = 1._r4  ! TODO Remove?
+!               write(6,'(a,i8)')'WARNING: changing organic_o from -4 to 1 at no = ', no
+!               organic_o(no,:) = 1._r4
              else
                 write(6,'(a,i8,a,i8)')'WARNING: changing orgc_o from ',int(orgc_o(no,1)),' to 0 at no = ',no
                 orgc_o(no,:) = 0._r4
-                write(6,'(a,i8,a,i8)')'WARNING: changing organic_o from ',int(organic_o(no,1)),' to 0 at no = ', no  ! TODO Remove?
-                organic_o(no,:) = 0._r4  ! TODO Remove?
+!               write(6,'(a,i8,a,i8)')'WARNING: changing organic_o from ',int(organic_o(no,1)),' to 0 at no = ', no
+!               organic_o(no,:) = 0._r4
              end if
           end if
           if (orgc_o(no,1) < 0._r4) then
@@ -400,10 +399,10 @@ contains
           end if
           do l = 2,nlay
              orgc_o(no,l) = orgc_i(l,1,lookup_index)
-             organic_o(no,l) = orgc_i(l,1,lookup_index) * bulk_i(l,1,lookup_index) * float(100 - cfrag_i(l,1,lookup_index)) * 0.01_r4 / 0.58_r4  ! TODO Rm?
+!            organic_o(no,l) = orgc_i(l,1,lookup_index) * bulk_i(l,1,lookup_index) * float(100 - cfrag_i(l,1,lookup_index)) * 0.01_r4 / 0.58_r4
              if (orgc_o(no,l) < 0._r4) then
                 orgc_o(no,l) = orgc_o(no,l-1)
-                organic_o(no,l) = organic_o(no,l-1)  ! TODO Remove?
+!               organic_o(no,l) = organic_o(no,l-1)
              end if
           end do
 
@@ -497,12 +496,22 @@ contains
              end if
           end do
 
-          ! TODO Rm organic before merging PR #1732 UNLESS we opt for OPTION 2
-          ! organic_o OPTION 1: as we plan to calculate organic in the CTSM
-!         do l = 1, nlay
-!            organic_o(no,l) = orgc_o(no,l) * bulk_o(no,l) * &
-!                              (100._r4 - cfrag_o(no,l)) * 0.01_r4 / 0.58_r4
-!         end do
+          ! ---------------------------------------------------------------
+          ! organic_o OPTION 1, as we plan to calculate organic in the CTSM
+          ! ---------------------------------------------------------------
+          ! Calculate organic from orgc_o, cfrag_o, and bulk_o, i.e. after
+          ! these terms have been regridded. The plan is to move this
+          ! calculation step from here to the CTSM. This approach keeps
+          ! ORGC the same in fsurdat as in the raw data.
+          ! Alternative approach considered but not selected: Regrid organic_i
+          ! (calculated from orgc_i, cfrag_i, and bulk_i) to organic_o. This
+          ! approach first calculates organic_i and then regrids to organic_o
+          ! rather than regridding all the terms first and then calculating
+          ! organic_o. Commented out code above belongs to that option.
+          do l = 1, nlay
+             organic_o(no,l) = orgc_o(no,l) * bulk_o(no,l) * &
+                               (100._r4 - cfrag_o(no,l)) * 0.01_r4 / 0.58_r4
+          end do
 
        end if
 
@@ -516,7 +525,6 @@ contains
     call mkfile_output(pioid_o,  mesh_o,  'PCT_CLAY', clay_o, lev1name='nlevsoi', rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error calling mkfile_output')
 
-    ! TODO Rm ORGANIC before merging PR #1732
     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil organic matter"
     call mkfile_output(pioid_o,  mesh_o,  'ORGANIC', organic_o, lev1name='nlevsoi', rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error calling mkfile_output')

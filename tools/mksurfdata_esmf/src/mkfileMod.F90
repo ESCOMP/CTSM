@@ -275,7 +275,7 @@ contains
             long_name='soil texture map units', units='unitless')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='ORGANIC', xtype=PIO_REAL, &
-            lev1name='nlevsoi', &  ! TODO Rm ORGANIC before merging PR #1732
+            lev1name='nlevsoi', &
             long_name='organic matter density at soil levels', &
             units='kg/m3 (assumed carbon content 0.58 gC per gOM)')
        call mkpio_def_spatial_var(pioid=pioid, varname='ORGC', xtype=PIO_REAL, &
