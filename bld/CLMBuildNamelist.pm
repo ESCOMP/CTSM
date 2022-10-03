@@ -2645,6 +2645,13 @@ sub setup_logic_do_transient_lakes {
 
    my $var = 'do_transient_lakes';
 
+   # Start by assuming a default value of '.true.'. Then check a number of
+   # conditions under which do_transient_lakes cannot be true. Under these
+   # conditions: (1) set default value to '.false.'; (2) make sure that the
+   # value is indeed false (e.g., that the user didn't try to set it to true).
+
+   my $default_val = ".true.";
+
    # cannot_be_true will be set to a non-empty string in any case where
    # do_transient_lakes should not be true; if it turns out that
    # do_transient_lakes IS true in any of these cases, a fatal error will be
@@ -2668,7 +2675,7 @@ sub setup_logic_do_transient_lakes {
       # Note that, if the variable cannot be true, we don't call add_default
       # - so that we don't clutter up the namelist with variables that don't
       # matter for this case
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, var=>$default_val);
    }
 
    # Make sure the value is false when it needs to be false - i.e., that the
@@ -2708,6 +2715,13 @@ sub setup_logic_do_transient_urban {
 
    my $var = 'do_transient_urban';
 
+   # Start by assuming a default value of '.true.'. Then check a number of
+   # conditions under which do_transient_urban cannot be true. Under these
+   # conditions: (1) set default value to '.false.'; (2) make sure that the
+   # value is indeed false (e.g., that the user didn't try to set it to true).
+
+   my $default_val = ".true.";
+
    # cannot_be_true will be set to a non-empty string in any case where
    # do_transient_urban should not be true; if it turns out that
    # do_transient_urban IS true in any of these cases, a fatal error will be
@@ -2731,7 +2745,7 @@ sub setup_logic_do_transient_urban {
       # Note that, if the variable cannot be true, we don't call add_default
       # - so that we don't clutter up the namelist with variables that don't
       # matter for this case
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, val=>$default_val);
    }
 
    # Make sure the value is false when it needs to be false - i.e., that the
