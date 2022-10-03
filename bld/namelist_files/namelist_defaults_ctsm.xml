@@ -599,6 +599,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_hydrstress phys="clm5_0"  use_fates=".false." configuration="clm">.true.</use_hydrstress>
 <use_hydrstress phys="clm5_1"  use_fates=".false." configuration="clm">.true.</use_hydrstress>
 
+<!-- flow of agricultural nitrogen (fan) model -->
+<use_fan>.false.</use_fan>
+<use_fan fan_mode='atm'>.true.</use_fan>
+<use_fan fan_mode='on'>.true.</use_fan>
+<use_fan fan_mode='soil'>.true.</use_fan>
+<use_fan fan_mode='full'>.true.</use_fan>
+
+
 <!-- General CN options -->
 <!-- Turn this on all of the time, eventually this namelist item should be removed -->
 <dribble_crophrv_xsmrpool_2atm use_crop=".true.">.true.</dribble_crophrv_xsmrpool_2atm>
@@ -1519,6 +1527,59 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <ndepmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</ndepmapalgo>
+
+<!--KO-->
+<!-- FAN Nitrogen (manure) deposition streams namelist defaults -->
+<stream_year_first_fan   sim_year="2000" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="2000" >2010</stream_year_last_fan>
+
+<stream_year_first_fan   sim_year="1850" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="1850" >2010</stream_year_last_fan>
+
+<stream_year_first_fan   sim_year="1000" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="1000" >2010</stream_year_last_fan>
+
+<model_year_align_fan                    >2010</model_year_align_fan>
+
+<stream_year_first_fan   sim_year="constant" sim_year_range="1000-1002" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="constant" sim_year_range="1000-1002" >2010</stream_year_last_fan>
+
+<stream_year_first_fan   sim_year="constant" sim_year_range="1000-1004" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="constant" sim_year_range="1000-1004" >2010</stream_year_last_fan>
+
+<stream_year_first_fan   sim_year="constant" sim_year_range="1850-2000" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="constant" sim_year_range="1850-2000" >2010</stream_year_last_fan>
+
+<stream_year_first_fan   sim_year="constant" sim_year_range="1850-2100" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="constant" sim_year_range="1850-2100" >2010</stream_year_last_fan>
+
+<stream_year_first_fan   sim_year="constant" sim_year_range="2000-2100" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="constant" sim_year_range="2000-2100" >2010</stream_year_last_fan>
+
+<stream_fldfilename_fan>lnd/clm2/paramdata/FAN_nitrogen_soilph_fv1.9x2.5_simyr2010_c20190905.nc</stream_fldfilename_fan>
+<stream_meshfile_fan   >share/meshes/fv1.9x2.5_141008_ESMFmesh_c20191001.nc</stream_meshfile_fan>
+
+<fan_mapalgo                               >bilinear</fan_mapalgo>
+
+<fan_mapalgo   hgrid="1x1_brazil"          >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="1x1_mexicocityMEX"   >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="1x1_vancouverCAN"    >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="1x1_urbanc_alpha"    >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="1x1_camdenNJ"        >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="1x1_asphaltjungleNJ" >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="1x1_tropicAtl"       >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="5x5_amazon"          >nn</fan_mapalgo>
+
+<fan_to_bgc_crop fan_mode="soil">.true.</fan_to_bgc_crop>
+<fan_to_bgc_crop fan_mode="full">.true.</fan_to_bgc_crop>
+<fan_to_bgc_crop fan_mode="atm">.false.</fan_to_bgc_crop>
+<fan_to_bgc_crop fan_mode="on">.false.</fan_to_bgc_crop>
+<fan_to_bgc_veg>.false.</fan_to_bgc_veg>
+<fract_spread_grass fan_mode="on">1.0</fract_spread_grass>
+<fract_spread_grass fan_mode="soil">0.0</fract_spread_grass>
+<fract_spread_grass fan_mode="full">0.0</fract_spread_grass>
+<fract_spread_grass fan_mode="atm">1.0</fract_spread_grass>
+<nh4_ads_coef>1.0</nh4_ads_coef>
 
 <!-- Soilm moisture streams namelist defaults -->
 <!-- This is if you want to prescribe the soil moisture from input datasets rather than model it -->

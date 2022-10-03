@@ -7,7 +7,7 @@ Module HydrologyNoDrainageMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
-  use clm_varctl        , only : iulog, use_vichydro, use_fates
+  use clm_varctl        , only : iulog, use_vichydro, use_fates, use_fan
   use clm_varcon        , only : denh2o, denice, rpi, spval
   use CLMFatesInterfaceMod, only : hlm_fates_interface_type
   use atm2lndType       , only : atm2lnd_type
@@ -203,6 +203,7 @@ contains
     real(r8) :: rwat(bounds%begc:bounds%endc) ! soil water wgted by depth to maximum depth of 0.5 m
     real(r8) :: swat(bounds%begc:bounds%endc) ! same as rwat but at saturation
     real(r8) :: rz(bounds%begc:bounds%endc)   ! thickness of soil layers contributing to rwat (m)
+    real(r8) :: h2osoi_liq_saved(bounds%begc:bounds%endc) ! h2osoi_liq_col in topmost layer before calling SoilWater
     real(r8) :: tsw                           ! volumetric soil water to 0.5 m
     real(r8) :: stsw                          ! volumetric soil water to 0.5 m at saturation
     real(r8) :: fracl                         ! fraction of soil layer contributing to 10cm total soil water
@@ -339,13 +340,27 @@ contains
       call Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
            filter_hydrologyc, soilstate_inst, canopystate_inst, b_waterflux_inst, energyflux_inst)
       
+      if ( use_fan ) then 
+         call t_startf("store_tsl_moisture")
+         ! save the h2osoi_liq in top layer before evaluating the soilwater movement
+         call store_tsl_moisture(b_waterstate_inst, filter_hydrologyc, num_hydrologyc) 
+         call t_stopf("store_tsl_moisture")
+      end if
+
       if ( use_fates ) then
          call clm_fates%ComputeRootSoilFlux(bounds, num_hydrologyc, filter_hydrologyc, soilstate_inst, b_waterflux_inst)
       end if
-      
+
       call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
            soilhydrology_inst, soilstate_inst, b_waterflux_inst, b_waterstate_inst, temperature_inst, &
            canopystate_inst, energyflux_inst, soil_water_retention_curve)
+
+      if ( use_fan ) then 
+         call t_startf("eval_tsl_moist_tend")
+         ! use the saved value to calculate the tendency
+         call eval_tsl_moist_tend(b_waterstate_inst , filter_hydrologyc, num_hydrologyc)
+         call t_stopf("eval_tsl_moist_tend")
+      end if
 
       if (use_vichydro) then
          ! mapping soilmoist from CLM to VIC layers for runoff calculations
@@ -502,6 +517,7 @@ contains
       ! Calculate temperature of near-surface soil layer
       ! Calculate soil temperature and total water (liq+ice) in top 10cm of soil
       ! Calculate soil temperature and total water (liq+ice) in top 17cm of soil
+
       do fc = 1, num_nolakec
          c = filter_nolakec(fc)
          l = col%landunit(c)
@@ -719,9 +735,50 @@ contains
       end do
 
     end associate
-
     end associate
 
+  contains
+    
+    ! Subroutines for storing the time derivative of top most soil layer moisture. This is
+    ! used for diagnosing the downwards moisture flux within FAN.
+
+    subroutine store_tsl_moisture(waterstatebulk_inst, filter, num_fc)
+      ! Store the soil water within topmost layer before evaluating soil moisture
+      ! transport.
+      type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
+      integer, intent(in) :: filter(:)
+      integer, intent(in) :: num_fc
+
+      integer :: fc, c
+
+      do fc = 1, num_fc
+         c = filter(fc)
+         h2osoi_liq_saved(c) = waterstatebulk_inst%h2osoi_liq_col(c,1)
+      end do
+
+    end subroutine store_tsl_moisture
+
+    subroutine eval_tsl_moist_tend(waterstatebulk_inst, filter, num_fc)
+      ! Evaluate the time derivative of soil liquid water due to percolation as required
+      ! in FAN.
+      type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
+      integer, intent(in) :: filter(:)
+      integer, intent(in) :: num_fc
+
+      integer :: fc, c
+
+      associate(h2osoi_tend_tsl => waterstatebulk_inst%h2osoi_tend_tsl_col, &
+           h2osoi_liq => waterstatebulk_inst%h2osoi_liq_col)
+
+      do fc = 1, num_fc
+         c = filter(fc)
+         h2osoi_tend_tsl(c) = (h2osoi_liq(c,1) - h2osoi_liq_saved(c)) / dtime
+      end do
+
+      end associate
+
+    end subroutine eval_tsl_moist_tend
+    
   end subroutine HydrologyNoDrainage
 
 end Module HydrologyNoDrainageMod

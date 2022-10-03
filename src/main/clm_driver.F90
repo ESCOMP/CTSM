@@ -12,7 +12,7 @@ module clm_driver
   use clm_varctl             , only : iulog, use_fates, use_fates_sp
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use CNSharedParamsMod      , only : use_matrixcn
-  use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
+  use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl, use_fan
   use clm_varctl             , only : use_soil_moisture_streams
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
@@ -59,6 +59,7 @@ module clm_driver
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
+  use FanStreamMod           , only : fanstream_interp
   use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
   use DUSTMod                , only : DustDryDep, DustEmission
   use VOCEmissionMod         , only : VOCEmission
@@ -455,6 +456,10 @@ contains
     ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
     else if (fates_spitfire_mode > scalar_lightning) then
        call clm_fates%InterpFileInputs(bounds_proc)
+    end if
+
+    if (use_fan) then
+       call fanstream_interp(bounds_proc, atm2lnd_inst)
     end if
 
     ! Get time varying urban data
@@ -1019,8 +1024,7 @@ contains
                water_inst%wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
                soil_water_retention_curve, crop_inst, ch4_inst, &
                photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
-               nutrient_competition_method, fireemis_inst)
-
+               nutrient_competition_method, fireemis_inst, frictionvel_inst)
           call t_stopf('ecosysdyn')
 
        end if
@@ -1305,6 +1309,7 @@ contains
          water_inst, &
          energyflux_inst, solarabs_inst, drydepvel_inst,       &
          vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
+         soilbiogeochem_nitrogenflux_inst, &
          lnd2atm_inst, &
          net_carbon_exchange_grc = net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
     deallocate(net_carbon_exchange_grc)

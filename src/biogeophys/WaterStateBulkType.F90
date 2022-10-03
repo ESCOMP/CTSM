@@ -14,6 +14,7 @@ module WaterStateBulkType
   use decompMod      , only : bounds_type
   use clm_varpar     , only : nlevmaxurbgrnd, nlevsno
   use clm_varcon     , only : spval
+  use clm_varctl     , only : use_fan
   use WaterStateType , only : waterstate_type
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
@@ -27,6 +28,7 @@ module WaterStateBulkType
 
      real(r8), pointer :: snow_persistence_col   (:)   ! col length of time that ground has had non-zero snow thickness (sec)
      real(r8), pointer :: int_snow_col           (:)   ! col integrated snowfall (mm H2O)
+     real(r8), pointer :: h2osoi_tend_tsl_col    (:)   ! col moisture tendency due to vertical movement at topmost layer (m3/m3/s) 
 
    contains
 
@@ -103,6 +105,9 @@ contains
 
     allocate(this%snow_persistence_col   (begc:endc))                     ; this%snow_persistence_col   (:)   = nan
     allocate(this%int_snow_col           (begc:endc))                     ; this%int_snow_col           (:)   = nan   
+    if (use_fan) then
+       allocate(this%h2osoi_tend_tsl_col(begc:endc)); this%h2osoi_tend_tsl_col(:) = nan
+    end if
 
   end subroutine InitBulkAllocate
 
@@ -157,6 +162,14 @@ contains
          long_name=this%info%lname('Length of time of continuous snow cover (nat. veg. landunits only)'), &
          ptr_col=this%snow_persistence_col, l2g_scale_type='natveg') 
 
+    if (use_fan) then
+       this%h2osoi_tend_tsl_col(begc:endc) = spval
+       call hist_addfld1d ( &
+         fname='SOILWATERTEND_TSL',  units='kg/m2/s', &
+         avgflag='A', long_name='Tendency of soil water in the topmost soil layer', &
+         ptr_col=this%h2osoi_tend_tsl_col, l2g_scale_type='veg', &
+         default='inactive')
+    end if
 
   end subroutine InitBulkHistory
 
@@ -181,8 +194,9 @@ contains
     do c = bounds%begc,bounds%endc
        this%int_snow_col(c)           = h2osno_input_col(c) 
        this%snow_persistence_col(c)   = 0._r8
+       if (use_fan) this%h2osoi_tend_tsl_col(c) = 0._r8
     end do
-
+    
   end subroutine InitBulkCold
 
   !------------------------------------------------------------------------

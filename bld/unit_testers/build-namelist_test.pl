@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1846;
+my $ntests = 1877;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1254;
+   $ntests += 1275;
 }
 plan( tests=>$ntests );
 
@@ -280,9 +280,9 @@ my $options = "-co2_ppmv 250 ";
    }
    &cleanup();
 
-print "\n==================================================\n";
-print "Test drydep, fire_emis and megan namelists  \n";
-print "==================================================\n";
+print "\n=============================================================\n";
+print "Test fan, drydep, fire_emis and megan driver fields namelists  \n";
+print "===============================================================\n";
 
 # drydep and megan namelists
 $phys = "clm5_0";
@@ -290,7 +290,8 @@ $mode = "-phys $phys";
 &make_config_cache($phys);
 my @mfiles = ( "lnd_in", "drv_flds_in", $tempfile );
 my $mfiles = NMLTest::CompFiles->new( $cwd, @mfiles );
-foreach my $options ( "-drydep", "-megan", "-drydep -megan", "-fire_emis", "-drydep -megan -fire_emis" ) {
+foreach my $options ( "-drydep", "-megan", "-drydep -megan", "-fire_emis", "-drydep -megan -fire_emis", 
+                      "-fan full -bgc bgc -crop" ) {
    &make_env_run();
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
@@ -328,6 +329,7 @@ foreach my $driver ( "mct", "nuopc" ) {
                          "-res 1x1_brazil",
                          "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                          "-envxml_dir . -infile myuser_nl_clm",
+                         "-fan on -bgc bgc -crop", "-fan atm -bgc cn -crop", "-fan soil -bgc bgc -crop ",
                          "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
                          "-clm_start_type branch -namelist '&a nrevsn=\"thing.nc\",use_init_interp=T/'",
                          "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
@@ -513,6 +515,21 @@ my %failtest = (
                                    },
      "startup without interp"    =>{ options=>"-clm_start_type startup -envxml_dir . -bgc sp -sim_year 1850",
                                      namelst=>"use_init_interp=.false., start_ymd=19200901",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "bad_fan_mode"              =>{ options=>" -envxml_dir . -fan zztop",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "fan_wo_crop"               =>{ options=>" -envxml_dir . -fan on -bgc bgc",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "fan_w_fates"               =>{ options=>" -envxml_dir . -fan on -bgc fates",
+                                     namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },

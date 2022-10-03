@@ -12,10 +12,11 @@ module lnd2atmType
   use decompMod     , only : bounds_type
   use clm_varpar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon    , only : spval
-  use clm_varctl    , only : iulog, use_lch4
+  use clm_varctl    , only : iulog, use_lch4, use_fan
   use shr_megan_mod , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod,only : shr_fire_emis_mechcomps_n
   use shr_drydep_mod, only : n_drydep
+  use shr_fan_mod,    only : shr_fan_to_atm
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -58,6 +59,8 @@ module lnd2atmType
      real(r8), pointer :: fireflx_grc        (:,:) => null() ! Wild Fire Emissions
      real(r8), pointer :: fireztop_grc       (:)   => null() ! Wild Fire Emissions vertical distribution top
      real(r8), pointer :: ch4_surf_flux_tot_grc(:) => null() ! net CH4 flux (kg C/m**2/s) [+ to atm]
+     real(r8), pointer :: flux_nh3_grc       (:)   => null() ! gross NH3 emission (gN/m2/s) [+ to atm]
+     
      ! lnd->rof
 
    contains
@@ -154,6 +157,12 @@ contains
     allocate(this%flxdst_grc         (begg:endg,1:ndst))     ; this%flxdst_grc         (:,:) =ival
     allocate(this%ch4_surf_flux_tot_grc(begg:endg))          ; this%ch4_surf_flux_tot_grc(:) =ival
 
+    if (shr_fan_to_atm) then
+       if (.not. use_fan) then
+          call endrun(msg="ERROR fan_to_atm is on but use_fan is off")
+       end if
+       allocate(this%flux_nh3_grc       (begg:endg))            ; this%flux_nh3_grc       (:)   =ival
+    end if
     if (shr_megan_mechcomps_n>0) then
        allocate(this%flxvoc_grc(begg:endg,1:shr_megan_mechcomps_n));  this%flxvoc_grc(:,:)=ival
     endif
@@ -290,6 +299,12 @@ contains
             ptr_lnd=this%nem_grc)
     end if
 
+    if (shr_fan_to_atm) then
+       this%flux_nh3_grc(begg:endg) = 0.0_r8
+       call hist_addfld1d (fname='NH3_TO_COUPLER', units='gN/m2/s', &
+            avgflag='A', long_name='Gridcell gross NH3 emission passed to coupler', &
+            ptr_lnd=this%flux_nh3_grc)
+    end if
   end subroutine InitHistory
 
 end module lnd2atmType

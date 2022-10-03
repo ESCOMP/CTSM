@@ -12,19 +12,32 @@ module CNNDynamicsMod
   use clm_varctl                      , only : use_nitrif_denitrif, nfix_timeconst
   use subgridAveMod                   , only : p2c
   use atm2lndType                     , only : atm2lnd_type
+  use Wateratm2lndBulkType            , only : wateratm2lndbulk_type
   use CNVegStateType                  , only : cnveg_state_type
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
+  use CNVegCarbonStateType            , only : cnveg_carbonstate_type
+  use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
+  use TemperatureType                 , only : temperature_type
+  use FrictionVelocityMod             , only : frictionvel_type
+  use clm_varctl                      , only : iulog
+  use shr_infnan_mod                  , only : isnan => shr_infnan_isnan
   use CNVegNitrogenStateType	      , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType	      , only : cnveg_nitrogenflux_type
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
-  use WaterFluxBulkType                   , only : waterfluxbulk_type
+  use WaterStateBulkType              , only : waterstatebulk_type
+  use WaterFluxBulkType               , only : waterfluxbulk_type
+  use SoilStateType                   , only : soilstate_type
+  use WaterDiagnosticBulkType         , only : waterdiagnosticbulk_type
+  use WaterFluxBulkType               , only : waterfluxbulk_type
   use CropType                        , only : crop_type
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
   use perf_mod                        , only : t_startf, t_stopf
+  use FanMod
+  use clm_varctl                      , only: use_fan
+
   !
   implicit none
   private
@@ -44,6 +57,7 @@ module CNNDynamicsMod
      real(r8) :: freelivfix_slope_wET   ! slope of line of free living fixation with annual ET
   end type params_type
   type(params_type) :: params_inst
+  
   !-----------------------------------------------------------------------
 
 contains
@@ -113,42 +127,69 @@ contains
 
   end subroutine CNNDynamicsReadNML
 
-  !-----------------------------------------------------------------------
-  subroutine CNNDeposition( bounds, &
-       atm2lnd_inst, soilbiogeochem_nitrogenflux_inst )
+  subroutine CNNDeposition(bounds, num_soilc, filter_soilc, &
+       atm2lnd_inst, wateratm2lndbulk_inst, &
+       soilbiogeochem_nitrogenflux_inst, cnveg_carbonstate_inst, &
+       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, &
+       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+       waterstatebulk_inst, soilstate_inst, temperature_inst, &
+       waterfluxbulk_inst, frictionvel_inst)
     !
     ! !DESCRIPTION:
-    ! On the radiation time step, update the nitrogen deposition rate
-    ! from atmospheric forcing. For now it is assumed that all the atmospheric
-    ! N deposition goes to the soil mineral N pool.
-    ! This could be updated later to divide the inputs between mineral N absorbed
+    ! On the radiation time step, update the nitrogen deposition rate from
+    ! atmospheric forcing and if enabled, call FAN to evaluate NH3 volatilization from
+    ! fertilizers and manure.
+    !
+    ! For now it is assumed that all the atmospheric N deposition goes to the soil mineral
+    ! N pool.  This could be updated later to divide the inputs between mineral N absorbed
     ! directly into the canopy and mineral N entering the soil pool.
     !
     ! !USES:
+    use Fan2ctsmMod
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds  
+    integer                  , intent(in)    :: num_soilc       ! number of soil columns in filter
+    integer                  , intent(in)    :: filter_soilc(:) ! filter for soil columns
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
+    type(wateratm2lndbulk_type), intent(in)  :: wateratm2lndbulk_inst
     type(soilbiogeochem_nitrogenflux_type) , intent(inout) :: soilbiogeochem_nitrogenflux_inst
-    !
-    ! !LOCAL VARIABLES:
-    integer :: g,c                    ! indices
-    !-----------------------------------------------------------------------
+    type(cnveg_carbonstate_type)           , intent(inout) :: cnveg_carbonstate_inst
+    type(cnveg_nitrogenstate_type)         , intent(inout) :: cnveg_nitrogenstate_inst
+    type(cnveg_nitrogenflux_type)          , intent(inout) :: cnveg_nitrogenflux_inst
+    type(soilbiogeochem_nitrogenstate_type), intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_carbonflux_type)   , intent(inout) :: soilbiogeochem_carbonflux_inst
+    type(waterstatebulk_type)              , intent(in)    :: waterstatebulk_inst
+    type(soilstate_type)                   , intent(in)    :: soilstate_inst
+    type(temperature_type)                 , intent(inout) :: temperature_inst
+    type(waterfluxbulk_type)               , intent(in)    :: waterfluxbulk_inst
+    type(frictionvel_type)                 , intent(inout) :: frictionvel_inst
+
+    integer :: c, g
     
-    associate(                                                                & 
-         forc_ndep     =>  atm2lnd_inst%forc_ndep_grc ,                       & ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)
-         ndep_to_sminn =>  soilbiogeochem_nitrogenflux_inst%ndep_to_sminn_col & ! Output: [real(r8) (:)]  atmospheric N deposition to soil mineral N (gN/m2/s)
+    associate(                                                                &
+         ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)
+         forc_ndep     =>  atm2lnd_inst%forc_ndep_grc ,                       &
+         ! Output: [real(r8) (:)]  atmospheric N deposition to soil mineral N (gN/m2/s)
+         ndep_to_sminn =>  soilbiogeochem_nitrogenflux_inst%ndep_to_sminn_col & 
          )
-      
       ! Loop through columns
       do c = bounds%begc, bounds%endc
          g = col%gridcell(c)
          ndep_to_sminn(c) = forc_ndep(g)
-
       end do
-
     end associate
-
+    
+    if (use_fan) then
+       call fan_eval(bounds, num_soilc, filter_soilc, &
+            atm2lnd_inst, wateratm2lndbulk_inst, &
+            cnveg_nitrogenflux_inst, &
+            soilbiogeochem_nitrogenflux_inst, &
+            soilbiogeochem_nitrogenstate_inst, &
+            waterstatebulk_inst, soilstate_inst, temperature_inst, &
+            waterfluxbulk_inst, frictionvel_inst)
+    end if
+    
   end subroutine CNNDeposition
 
   !-----------------------------------------------------------------------
@@ -259,7 +300,9 @@ contains
  
   !-----------------------------------------------------------------------
   subroutine CNNFert(bounds, num_soilc, filter_soilc, &
+       num_pcropp, filter_pcropp, &
        cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst)
+    use Fan2CTSMMod, only : fan_to_sminn, fan_to_bgc_crop
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update the nitrogen fertilizer for crops
@@ -271,24 +314,51 @@ contains
     type(bounds_type)                      , intent(in)    :: bounds  
     integer                                , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                                , intent(in)    :: filter_soilc(:) ! filter for soil columns
-    type(cnveg_nitrogenflux_type)          , intent(in)    :: cnveg_nitrogenflux_inst
+    integer                                , intent(in)    :: num_pcropp      ! number of prognostic crop pathches
+    integer                                , intent(in)    :: filter_pcropp(:)! filter for prognostic crop patches
+    type(cnveg_nitrogenflux_type)          , intent(inout) :: cnveg_nitrogenflux_inst
     type(soilbiogeochem_nitrogenflux_type) , intent(inout) :: soilbiogeochem_nitrogenflux_inst 
     !
     ! !LOCAL VARIABLES:
-    integer :: c,fc                 ! indices
+    integer :: c,fc, p, fp                 ! indices
+    real(r8) :: manure_col(bounds%begc:bounds%endc)
+    
     !-----------------------------------------------------------------------
 
     associate(                                                                  &   
-         fert          =>    cnveg_nitrogenflux_inst%fert_patch ,               & ! Input:  [real(r8) (:)]  nitrogen fertilizer rate (gN/m2/s)                
+         synthfert     =>    cnveg_nitrogenflux_inst%synthfert_patch ,          & ! Input:  [real(r8) (:)]  nitrogen fertilizer rate (gN/m2/s)
+         manure        =>    cnveg_nitrogenflux_inst%manure_patch ,             & ! Input:  [real(r8) (:)]  manure nitrogen rate (gN/m2/s)
+         totalfert     =>    cnveg_nitrogenflux_inst%nfertilization_patch,      & ! Input:  [real(r8) (:)]  manure nitrogen rate (gN/m2/s)                
          fert_to_sminn =>    soilbiogeochem_nitrogenflux_inst%fert_to_sminn_col & ! Output: [real(r8) (:)]                                                    
          )
+
+      if (.not. fan_to_bgc_crop) then
+         ! => Crop columns/patches are not handled by FAN. Use synthfert directly and add
+         ! the default CLM manure. No N input to non-crop columns in this case.
+         call p2c(bounds, num_soilc, filter_soilc, &
+              synthfert(bounds%begp:bounds%endp), &
+              fert_to_sminn(bounds%begc:bounds%endc))
+         call p2c(bounds, num_soilc, filter_soilc, &
+              manure(bounds%begp:bounds%endp), &
+              manure_col(bounds%begc:bounds%endc))
+         ! Add the manure N processed above:
+         do fc = 1, num_soilc
+            c = filter_soilc(fc)
+            fert_to_sminn(c) = fert_to_sminn(c) + manure_col(c)
+         end do
+         ! Add up synthetic fertilizer and manure to the nfertilization output variable.
+         do fp = 1, num_pcropp
+            p = filter_pcropp(fp)
+            totalfert(p) = synthfert(p) + manure(p)
+         end do
+      end if
+
+      ! if fan_to_bgc_crop == .true., FAN fills in the fert_to_sminn and totalfert for
+      ! crops. It might also fill in the non-crop columns if enabled.
+      call fan_to_sminn(bounds, filter_soilc, num_soilc, soilbiogeochem_nitrogenflux_inst, totalfert)
       
-      call p2c(bounds, num_soilc, filter_soilc, &
-           fert(bounds%begp:bounds%endp), &
-           fert_to_sminn(bounds%begc:bounds%endc))
-
     end associate
-
+    
   end subroutine CNNFert
 
   !-----------------------------------------------------------------------

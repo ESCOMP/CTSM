@@ -120,6 +120,7 @@ contains
     use LunaMod                          , only : LunaReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
+    use Fan2CTSMMod                      , only : fan_readnml
     use landunit_varcon                  , only : max_lunit
     !
     ! ARGUMENTS
@@ -251,6 +252,8 @@ contains
     namelist /clm_inparm/ use_biomass_heat_storage
 
     namelist /clm_inparm/ use_hydrstress
+
+    namelist /clm_inparm/ use_fan
 
     namelist /clm_inparm/ use_dynroot
 
@@ -510,7 +513,7 @@ contains
     call UrbanReadNML           ( NLFilename )
     call HumanIndexReadNML      ( NLFilename )
     call LunaReadNML            ( NLFilename )
-
+    
     ! ----------------------------------------------------------------------
     ! Broadcast all control information if appropriate
     ! ----------------------------------------------------------------------
@@ -533,6 +536,10 @@ contains
        call CNPhenologyReadNML       ( NLFilename )
     end if
 
+    if ( use_fan ) then
+       call fan_readnml ( NLFilename )
+    end if
+    
     ! ----------------------------------------------------------------------
     ! Initialize the CN soil matrix namelist items
     ! ----------------------------------------------------------------------
@@ -740,6 +747,8 @@ contains
     call mpi_bcast (use_biomass_heat_storage, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (use_fan, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -1001,6 +1010,7 @@ contains
     write(iulog,*) '   user-defined soil layer structure = ', soil_layerstruct_userdefined
     write(iulog,*) '   user-defined number of soil layers = ', soil_layerstruct_userdefined_nlevsoi
     write(iulog,*) '   plant hydraulic stress = ', use_hydrstress
+    write(iulog,*) '   FAN = ', use_fan
     write(iulog,*) '   dynamic roots          = ', use_dynroot
     if (nsrest == nsrContinue) then
        write(iulog,*) 'restart warning:'

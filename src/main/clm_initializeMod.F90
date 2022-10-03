@@ -133,7 +133,7 @@ contains
     use clm_varctl                    , only : fsurdat
     use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
     use clm_varctl                    , only : use_cn, use_fates
-    use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
+    use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode, use_fan
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
     use landunit_varcon               , only : landunit_varcon_init, max_lunit, numurbl
     use pftconMod                     , only : pftcon
@@ -162,6 +162,7 @@ contains
     use restFileMod                   , only : restFile_getfile, restFile_open, restFile_close
     use restFileMod                   , only : restFile_read, restFile_write
     use ndepStreamMod                 , only : ndep_init, ndep_interp
+    use FanStreamMod                  , only : fanstream_init, fanstream_interp
     use LakeCon                       , only : LakeConInit
     use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg, SatellitePhenology
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
@@ -629,6 +630,12 @@ contains
           call ndep_interp(bounds_proc, atm2lnd_inst)
        end if
        call t_stopf('init_ndep')
+       if ( use_fan ) then
+          call t_startf('init_ndep2')
+          call fanstream_init(bounds_proc, NLFilename)
+          call fanstream_interp(bounds_proc, atm2lnd_inst)
+          call t_stopf('init_ndep2')
+       end if
     end if
 
     ! Initialize active history fields.

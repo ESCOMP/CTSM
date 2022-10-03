@@ -9,6 +9,7 @@ sourcelist_to_parent(clm_genf90_sources)
 list(APPEND clm_sources "${clm_genf90_sources}")
 
 list(APPEND clm_sources
+  fanStreamMod.F90
   restUtilMod_stub.F90
   perfMod_stub.F90
   spmdMod_stub.F90

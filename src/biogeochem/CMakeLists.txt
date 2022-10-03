@@ -15,6 +15,8 @@ list(APPEND clm_sources
   CNVegNitrogenFluxType.F90
   CNCIsoAtmTimeSeriesReadMod.F90
   CNVegComputeSeedMod.F90
+  Fan2CTSMMod.F90
+  FanMod.F90
   SpeciesBaseType.F90
   SpeciesIsotopeType.F90
   SpeciesNonIsotopeType.F90

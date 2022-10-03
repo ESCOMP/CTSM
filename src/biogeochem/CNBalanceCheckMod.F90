@@ -406,6 +406,7 @@ contains
     !
     ! !USES:
     use clm_varctl, only : use_crop
+    use clm_varctl, only : use_fan
     use subgridAveMod, only: c2g
     use atm2lndType, only: atm2lnd_type
     !
@@ -463,6 +464,9 @@ contains
          f_n2o_nit           => soilbiogeochem_nitrogenflux_inst%f_n2o_nit_col           , & ! Input:  [real(r8) (:) ]  (gN/m2/s) flux of N2o from nitrification 
          som_n_leached       => soilbiogeochem_nitrogenflux_inst%som_n_leached_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total SOM N loss from vertical transport
 
+         fan_totnin          => soilbiogeochem_nitrogenflux_inst%fan_totnin_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total N input into the FAN pools
+         fan_totnout         => soilbiogeochem_nitrogenflux_inst%fan_totnout_col         , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total N output from the FAN pools
+      
          col_fire_nloss      => cnveg_nitrogenflux_inst%fire_nloss_col                   , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total column-level fire N loss 
          wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
          crop_harvestn_to_cropprodn => cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) crop harvest N to 1-year crop product pool
@@ -494,6 +498,7 @@ contains
          if (use_crop) then
             col_ninputs(c) = col_ninputs(c) + fert_to_sminn(c) + soyfixn_to_sminn(c)
          end if
+         col_ninputs(c) = col_ninputs(c) + fan_totnin(c)
 
          col_ninputs_partial(c) = col_ninputs(c)
 
@@ -518,6 +523,7 @@ contains
          end if
 
          col_noutputs(c) = col_noutputs(c) - som_n_leached(c)
+         col_noutputs(c) = col_noutputs(c) + fan_totnout(c)
 
          col_noutputs_partial(c) = col_noutputs(c) - &
                                    wood_harvestn(c) - &
@@ -542,16 +548,18 @@ contains
 
       if (err_found) then
          c = err_index
-         write(iulog,*)'column nbalance error    = ',col_errnb(c), c
-         write(iulog,*)'Latdeg,Londeg            = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
-         write(iulog,*)'begnb                    = ',col_begnb(c)
-         write(iulog,*)'endnb                    = ',col_endnb(c)
-         write(iulog,*)'delta store              = ',col_endnb(c)-col_begnb(c)
-         write(iulog,*)'input mass               = ',col_ninputs(c)*dt
-         write(iulog,*)'output mass              = ',col_noutputs(c)*dt
-         write(iulog,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
-         write(iulog,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-         write(iulog,*)'outputs,lch,roff,dnit    = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+         write(iulog,*)'column nbalance error     = ',col_errnb(c), c
+         write(iulog,*)'Latdeg,Londeg             = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+         write(iulog,*)'begnb                     = ',col_begnb(c)
+         write(iulog,*)'endnb                     = ',col_endnb(c)
+         write(iulog,*)'delta store               = ',col_endnb(c)-col_begnb(c)
+         write(iulog,*)'input mass                = ',col_ninputs(c)*dt
+         write(iulog,*)'output mass               = ',col_noutputs(c)*dt
+         write(iulog,*)'net flux                  = ',(col_ninputs(c)-col_noutputs(c))*dt
+         write(iulog,*)'inputs,ffix,nfix,ndep,fan = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt, &
+                        ndep_to_sminn(c)*dt, fan_totnin(c)*dt
+         write(iulog,*)'outputs,ffix,nfix,ndep,fan= ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt, &
+                        f_n2o_nit(c)*dt, fan_totnout(c)*dt
          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 

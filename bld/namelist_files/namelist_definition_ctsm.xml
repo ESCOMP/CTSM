@@ -730,6 +730,11 @@ LUNA: Leaf Utilization of Nitrogen for Assimilation
 Toggle to turn on the plant hydraulic stress model
 </entry>
 
+<entry id="use_fan" type="logical" category="physics"
+        group="clm_inparm" valid_values="">
+Toggle to turn on the Flow of Agricultural Nitrogen (FAN) model
+</entry>
+
 <entry id="lnc_opt" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".false.">
 How LUNA and Photosynthesis (if needed) will get Leaf nitrogen content
@@ -1693,6 +1698,65 @@ Mapping method from Nitrogen deposition input file to the model resolution
     copy     = copy using the same indices
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- FAN Namelist (only used when bgc=cn/cndv and use_fan=.true.)                 -->
+<!-- ========================================================================================  -->
+
+<entry id="stream_year_first_fan" type="integer" category="datasets"
+       group="fan_nml" valid_values="" >
+First year to loop over for FAN Nitrogen (manure) Deposition data
+</entry>
+
+<entry id="stream_year_last_fan" type="integer" category="datasets"
+       group="fan_nml" valid_values="" >
+Last year to loop over for FAN Nitrogen (manure) Deposition data
+</entry>
+
+<entry id="model_year_align_fan" type="integer" category="datasets"
+       group="fan_nml" valid_values="" >
+Simulation year that aligns with stream_year_first_fan value
+</entry>
+
+<entry id="stream_fldfilename_fan" type="char*256" category="datasets"
+       input_pathname="abs" group="fan_nml" valid_values="" >
+Filename of input stream data for FAN Nitrogen (manure) Deposition
+</entry>
+
+<entry id="stream_meshfile_fan" type="char*256" category="datasets"
+       input_pathname="abs" group="fan_nml" valid_values="" >
+Stream meshfile for FAN Nitrogen (manure) Deposition data
+</entry>
+
+<entry id="fan_mapalgo" type="char*256" category="datasets"
+       group="fan_nml" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+Mapping method from FAN Nitrogen (manure) deposition input file to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    nnoni    = nearest neighbor on the "i" (longitude) axis
+    nnonj    = nearest neighbor on the "j" (latitude) axis
+    spval    = set to special value
+    copy     = copy using the same indices
+</entry>
+
+<entry id="fan_to_bgc_crop" type="logical" category="physics"
+       group="fan_nml" valid_values="" >
+Toggle to connect the FAN N pools to soil biogeochemistry for CROP VEGETATION columns
+</entry>
+
+<entry id="fan_to_bgc_veg" type="logical" category="physics"
+       group="fan_nml" valid_values="" >
+Toggle to connect the FAN N pools to soil biogeochemistry for NATIVE VEGETATION columns
+</entry>
+
+<entry id="fract_spread_grass" type="real" category="physics"
+       group="fan_nml" valid_values="" >
+Fraction of manure N produced in crop columns but spread on native vegetation columns (grasslands)
+</entry>
+
+<entry id="nh4_ads_coef" type="real" category="physics"
+       group="fan_nml" valid_values="">
+  Adsorption coefficient for ammonium in FAN. Must be >= 0, 0 means no adsorption.
+</entry>
 <!-- ========================================================================================  -->
 <!-- finundated stream -->
 <!-- ========================================================================================  -->

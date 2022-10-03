@@ -57,7 +57,8 @@ module clm_cpl_indices
   integer, public ::index_l2x_Fall_flxvoc     ! MEGAN fluxes
   integer, public ::index_l2x_Fall_flxfire    ! Fire fluxes
   integer, public ::index_l2x_Sl_ztopfire     ! Top of fire emissions (m)
-
+  integer, public ::index_l2x_Fall_flxnh3     ! FAN flux
+  
   ! In the following, index 0 is bare land, other indices are glc elevation classes
   integer, allocatable, public ::index_l2x_Sl_tsrf(:)   ! glc MEC temperature
   integer, allocatable, public ::index_l2x_Sl_topo(:)   ! glc MEC topo height
@@ -139,6 +140,7 @@ contains
     use shr_drydep_mod , only: drydep_fields_token, n_drydep
     use shr_megan_mod  , only: shr_megan_fields_token, shr_megan_mechcomps_n
     use shr_fire_emis_mod,only: shr_fire_emis_fields_token, shr_fire_emis_ztop_token, shr_fire_emis_mechcomps_n
+    use shr_fan_mod,      only: shr_fan_fields_token, shr_fan_to_atm
     use clm_varctl     , only:  ndep_from_cpl
     use glc_elevclass_mod, only: glc_get_num_elevation_classes, glc_elevclass_as_string
     !
@@ -228,6 +230,14 @@ contains
        index_l2x_Sl_ztopfire = 0
     endif
 
+    ! FAN fluxes
+    if (shr_fan_to_atm) then
+       index_l2x_Fall_flxnh3 = mct_avect_indexra(l2x,trim(shr_fan_fields_token))
+    else
+       index_l2x_Fall_flxnh3 = 0
+    end if
+    
+    
     !-------------------------------------------------------------
     ! drv -> clm
     !-------------------------------------------------------------

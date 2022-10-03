@@ -15,7 +15,7 @@ module CNVegNitrogenFluxType
   use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
   use CropReprPoolsMod                   , only : get_repr_rest_fname, get_repr_longname
   use LandunitType                       , only : lun                
-  use ColumnType                         , only : col                
+  use ColumnType                         , only	 : col                
   use PatchType                          , only : patch                
   use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   ! 
@@ -168,7 +168,10 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: deadstemn_storage_to_xfer_patch           (:)     ! patch dead stem N shift storage to transfer (gN/m2/s)
      real(r8), pointer :: livecrootn_storage_to_xfer_patch          (:)     ! patch live coarse root N shift storage to transfer (gN/m2/s)
      real(r8), pointer :: deadcrootn_storage_to_xfer_patch          (:)     ! patch dead coarse root N shift storage to transfer (gN/m2/s)
-     real(r8), pointer :: fert_patch                                (:)     ! patch applied fertilizer (gN/m2/s)
+     real(r8), pointer :: synthfert_patch                           (:)     ! patch applied synthetic fertilizer (gN/m2/s)
+     real(r8), pointer :: manure_patch                              (:)     ! patch applied manure (gN/m2/s)
+     real(r8), pointer :: nfertilization_patch                      (:)     ! patch applied total (synth. + manure) fertilizer (gN/m2/s)
+     
      real(r8), pointer :: fert_counter_patch                        (:)     ! patch >0 fertilize; <=0 not
      real(r8), pointer :: soyfixn_patch                             (:)     ! patch soybean fixed N (gN/m2/s)
 
@@ -443,7 +446,9 @@ contains
     allocate(this%reproductiven_xfer_to_reproductiven_patch(begp:endp, nrepr))
     this%reproductiven_xfer_to_reproductiven_patch(:,:) = nan
     allocate(this%reproductiven_storage_to_xfer_patch(begp:endp, nrepr)) ; this%reproductiven_storage_to_xfer_patch     (:,:) = nan
-    allocate(this%fert_patch                                (begp:endp)) ; this%fert_patch                                (:) = nan
+    allocate(this%synthfert_patch                           (begp:endp)) ; this%synthfert_patch                           (:) = nan
+    allocate(this%manure_patch                              (begp:endp)) ; this%manure_patch                              (:) = nan
+    allocate(this%nfertilization_patch                      (begp:endp)) ; this%nfertilization_patch                      (:) = nan
     allocate(this%fert_counter_patch                        (begp:endp)) ; this%fert_counter_patch                        (:) = nan
     allocate(this%soyfixn_patch                             (begp:endp)) ; this%soyfixn_patch                             (:) = nan
 
@@ -959,10 +964,18 @@ contains
          ptr_patch=this%fire_nloss_patch)
 
     if (use_crop) then
-       this%fert_patch(begp:endp) = spval
+       this%nfertilization_patch(begp:endp) = spval
        call hist_addfld1d (fname='NFERTILIZATION', units='gN/m^2/s', &
-            avgflag='A', long_name='fertilizer added', &
-            ptr_patch=this%fert_patch)
+            avgflag='A', long_name='Total fertilizer N added', &
+            ptr_patch=this%nfertilization_patch)
+       this%manure_patch(begp:endp) = spval
+       call hist_addfld1d (fname='NMANURE', units='gN/m^2/s', &
+            avgflag='A', long_name='Manure N added according to CLM default', &
+            ptr_patch=this%manure_patch, default='inactive')
+       this%synthfert_patch(begp:endp) = spval
+       call hist_addfld1d (fname='NSYNTHFERT', units='gN/m^2/s', &
+            avgflag='A', long_name='Syntheric fertilizer N added', &
+            ptr_patch=this%synthfert_patch, default='inactive')
     end if
 
     if (use_crop .and. .not. use_fun) then
@@ -1267,14 +1280,15 @@ contains
     !-----------------------------------------------
     ! initialize nitrogen flux variables
     !-----------------------------------------------
-
     do p = bounds%begp,bounds%endp
        l = patch%landunit(p)
 
        if ( use_crop )then
-          this%fert_counter_patch(p)  = spval
-          this%fert_patch(p)          = 0._r8 
-          this%soyfixn_patch(p)       = 0._r8 
+          this%fert_counter_patch(p)   = spval
+          this%nfertilization_patch(p) = 0._r8
+          this%synthfert_patch(p)      = 0._r8
+          this%manure_patch(p)         = 0._r8
+          this%soyfixn_patch(p)        = 0._r8 
        end if
 
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -1358,10 +1372,20 @@ contains
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%fert_counter_patch)
 
-       call restartvar(ncid=ncid, flag=flag, varname='fert', xtype=ncd_double,  &
+       call restartvar(ncid=ncid, flag=flag, varname='synthfert', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%fert_patch)
+            interpinic_flag='interp', readvar=readvar, data=this%synthfert_patch)
+
+       call restartvar(ncid=ncid, flag=flag, varname='manure', xtype=ncd_double,  &
+            dim1name='pft', &
+            long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%manure_patch)
+
+       call restartvar(ncid=ncid, flag=flag, varname='nfertilization', xtype=ncd_double,  &
+            dim1name='pft', &
+            long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%nfertilization_patch)
     end if
 
     if (use_crop) then

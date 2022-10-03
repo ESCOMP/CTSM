@@ -10,7 +10,7 @@ module atm2lndType
   use shr_log_mod   , only : errMsg => shr_log_errMsg
   use clm_varpar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon    , only : rair, grav, cpair, hfus, tfrz, spval
-  use clm_varctl    , only : iulog, use_c13, use_cn, use_lch4, use_cndv, use_fates, use_luna
+  use clm_varctl    , only : iulog, use_c13, use_cn, use_lch4, use_cndv, use_fates, use_luna, use_fan
   use decompMod     , only : bounds_type
   use abortutils    , only : endrun
   use PatchType     , only : patch
@@ -84,6 +84,15 @@ module atm2lndType
      real(r8), pointer :: forc_solai_grc                (:,:) => null() ! diffuse radiation (numrad) (vis=forc_solsd, nir=forc_solld)
      real(r8), pointer :: forc_solar_grc                (:)   => null() ! incident solar radiation
      real(r8), pointer :: forc_ndep_grc                 (:)   => null() ! nitrogen deposition rate (gN/m2/s)
+     ! FAN manure N streams: all-grazing, seasonal-grazing, no-grazing
+     real(r8), pointer :: forc_ndep_grz_grc             (:)   => null() ! FAN nitrogen deposition rate (gN/m2/s)
+     real(r8), pointer :: forc_ndep_sgrz_grc            (:)   => null() ! FAN nitrogen deposition rate (gN/m2/s)
+     real(r8), pointer :: forc_ndep_ngrz_grc            (:)   => null() ! FAN nitrogen deposition rate (gN/m2/s)
+     ! FAN urea and nitrate N and soil pH
+     real(r8), pointer :: forc_ndep_urea_grc            (:)   => null() ! FAN nitrogen deposition, urea fertilizer fraction
+     real(r8), pointer :: forc_ndep_nitr_grc            (:)   => null() ! FAN nitrogen deposition, nitrate fertilizer fraction
+     real(r8), pointer :: forc_soilph_grc          (:)   => null() ! FAN soil pH
+
      real(r8), pointer :: forc_pc13o2_grc               (:)   => null() ! C13O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2_grc                  (:)   => null() ! O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2_240_patch            (:)   => null() ! 10-day mean O2 partial pressure (Pa)
@@ -479,6 +488,14 @@ contains
     allocate(this%forc_solai_grc                (begg:endg,numrad)) ; this%forc_solai_grc                (:,:) = ival
     allocate(this%forc_solar_grc                (begg:endg))        ; this%forc_solar_grc                (:)   = ival
     allocate(this%forc_ndep_grc                 (begg:endg))        ; this%forc_ndep_grc                 (:)   = ival
+    if ( use_fan ) then
+       allocate(this%forc_ndep_grz_grc          (begg:endg))        ; this%forc_ndep_grz_grc             (:)   = ival
+       allocate(this%forc_ndep_sgrz_grc         (begg:endg))        ; this%forc_ndep_sgrz_grc            (:)   = ival
+       allocate(this%forc_ndep_ngrz_grc         (begg:endg))        ; this%forc_ndep_ngrz_grc            (:)   = ival
+       allocate(this%forc_ndep_urea_grc         (begg:endg))        ; this%forc_ndep_urea_grc            (:)   = ival
+       allocate(this%forc_ndep_nitr_grc         (begg:endg))        ; this%forc_ndep_nitr_grc            (:)   = ival
+       allocate(this%forc_soilph_grc            (begg:endg))        ; this%forc_soilph_grc               (:)   = ival
+    end if
     allocate(this%forc_pc13o2_grc               (begg:endg))        ; this%forc_pc13o2_grc               (:)   = ival
     allocate(this%forc_po2_grc                  (begg:endg))        ; this%forc_po2_grc                  (:)   = ival
     allocate(this%forc_aer_grc                  (begg:endg,14))     ; this%forc_aer_grc                  (:,:) = ival
@@ -1001,6 +1018,14 @@ contains
     deallocate(this%forc_solai_grc)
     deallocate(this%forc_solar_grc)
     deallocate(this%forc_ndep_grc)
+    if (use_fan) then
+       deallocate(this%forc_ndep_grz_grc)
+       deallocate(this%forc_ndep_sgrz_grc)
+       deallocate(this%forc_ndep_ngrz_grc)
+       deallocate(this%forc_ndep_nitr_grc)
+       deallocate(this%forc_ndep_urea_grc)
+       deallocate(this%forc_soilph_grc)
+    end if
     deallocate(this%forc_pc13o2_grc)
     deallocate(this%forc_po2_grc)
     deallocate(this%forc_aer_grc)

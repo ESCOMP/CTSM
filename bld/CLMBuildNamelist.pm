@@ -20,6 +20,7 @@
 # 2012-07-01  Kluzek           Add some common CESM namelist options
 # 2013-12     Andre            Refactor everything into subroutines
 # 2013-12     Muszala          Add Ecosystem Demography functionality
+# 2016-09-20  Oleson           Add ndep2 and ndep3 streams capability
 #--------------------------------------------------------------------------------------------
 
 package CLMBuildNamelist;
@@ -161,6 +162,11 @@ OPTIONS
                               (can ONLY be turned on when BGC type is 'bgc')
                               This turns on the namelist variable: use_cndv
                               (Deprecated, this will be removed)
+     -fan "mode"              Set how and if FAN is run: atm|soil|full|on|off
+                              If "on", FAN is enabled but not connected to atmosphere or
+                              soil biogeochemistry. If "full", both connections are
+                              active. The soil and atmosphere coupling can be enabled
+                              selectively with the "soil" and "atm" modes.
      -fire_emis               Produce a fire_emis_nl namelist that will go into the
                               "drv_flds_in" file for the driver to pass fire emissions to the atm.
                               (Note: buildnml copies the file for use by the driver)
@@ -268,6 +274,7 @@ sub process_commandline {
                chk_res               => undef,
                note                  => undef,
                drydep                => 0,
+	       fan                   => "default",
                lilac                 => 0,
                output_reals_filename => undef,
                fire_emis             => 0,
@@ -297,6 +304,7 @@ sub process_commandline {
              "clm_usr_name=s"            => \$opts{'clm_usr_name'},
              "envxml_dir=s"              => \$opts{'envxml_dir'},
              "drydep!"                   => \$opts{'drydep'},
+             "fan=s"                     => \$opts{'fan'},
              "lilac!"                    => \$opts{'lilac'},
              "fire_emis!"                => \$opts{'fire_emis'},
              "ignore_warnings!"          => \$opts{'ignore_warnings'},
@@ -514,7 +522,8 @@ sub read_namelist_defaults {
                             "$cfgdir/namelist_files/namelist_defaults_ctsm.xml",
                             "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                             "$cfgdir/namelist_files/namelist_defaults_fire_emis.xml",
-                            "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
+                            "$cfgdir/namelist_files/namelist_defaults_drydep.xml",
+			    "$cfgdir/namelist_files/namelist_defaults_fan.xml" );
 
   # Add the location of the use case defaults files to the options hash
   $opts->{'use_case_dir'} = "$cfgdir/namelist_files/use_cases";
@@ -1548,6 +1557,7 @@ sub process_namelist_inline_logic {
   setup_logic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fertilizer($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_grainproduct($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_fan($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_soilstate($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_surface_dataset($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -1606,6 +1616,11 @@ sub process_namelist_inline_logic {
   # namelist group: ndepdyn_nml #
   ###############################
   setup_logic_nitrogen_deposition($opts,  $nl_flags, $definition, $defaults, $nl);
+
+  ################################
+  # namelist group: fan_nml #
+  ################################
+  # setup_logic_fan_nml($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 
   ##################################
   # namelist group: cnmresp_inparm #
@@ -3279,6 +3294,64 @@ sub setup_logic_fertilizer {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_fan {
+  #
+  # Flags to control FAN (Flow of Agricultural Nitrogen) nitrogen deposition (manure and fertilizer)
+  #
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+   my $fan_mode = $opts->{'fan'};
+
+   if ($fan_mode eq 'default') { $fan_mode = 'off'; }
+
+   if (!($fan_mode =~ /atm|soil|full|on|off/)) {
+       $log->fatal_error("fan_mode not one of atm, soil, full, on, off\n" );
+   }
+
+   if ( !($fan_mode eq 'off') ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fan',
+	          'fan_mode'=>$fan_mode );
+
+       $nl_flags->{'use_fan'} = $nl->get_value('use_fan');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_nh3_to_atm',
+	          'fan_mode'=>$fan_mode);
+       $nl_flags->{'fan_nh3_to_atm'} = $nl->get_value('fan_nh3_to_atm');
+
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_mapalgo');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_fan', 
+		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_fan', 
+		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+       # Set align year, if first and last years are different
+       #if ( $nl->get_value('stream_year_first_fan') != $nl->get_value('stream_year_last_fan') ) {
+	   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_fan', 
+		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+       #}
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_fan');
+       if ($opts->{'driver'} eq "nuopc" ) {
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_fan');
+       }
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_crop',
+		   'fan_mode'=>$fan_mode);
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_veg',
+		   'fan_mode'=>$fan_mode);
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fract_spread_grass',
+		   'fan_mode'=>$fan_mode);
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nh4_ads_coef',
+		   'fan_mode'=>$fan_mode);
+   } else {
+       $nl_flags->{'use_fan'} = ".false.";
+   }
+   
+   if ( &value_is_true( $nl_flags->{'use_ed'} ) && &value_is_true( $nl_flags->{'use_fan'} ) ) {
+       $log->fatal_error("Cannot turn use_fan on when use_ed is on\n" );
+   }
+   if ( !&value_is_true( $nl_flags->{'use_crop'} ) && &value_is_true( $nl_flags->{'use_fan'} ) ) {
+       $log->fatal_error("Cannot turn use_fan on when use_crop is off\n" );
+   }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_grainproduct {
   #
   # Flags to control 1-year grain product pool
@@ -3458,6 +3531,79 @@ sub setup_logic_nitrogen_deposition {
     }
   }
 }
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_fan_nml {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  #
+  # Nitrogen deposition2 for bgc=CN
+  #
+
+  if ( $nl_flags->{'bgc_mode'} ne "none" && value_is_true( $nl_flags->{'use_fan'} ) ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_mapalgo', 'phys'=>$nl_flags->{'phys'}, 
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'hgrid'=>$nl_flags->{'res'},
+                'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_fan', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_fan', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+
+    # Set align year, if first and last years are different
+    if ( $nl->get_value('stream_year_first_fan') != $nl->get_value('stream_year_last_fan') ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_fan', 'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    }
+
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_fan', 'phys'=>$nl_flags->{'phys'},
+                'bgc'=>$nl_flags->{'bgc_mode'},
+                'hgrid'=>"360x720cru" );
+
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_crop',
+		'use_cn'=>$nl_flags->{'use_cn'}, 'use_ed'=>$nl_flags->{'use_ed'} );
+    $nl_flags->{'fan_to_bgc_crop'} = $nl->get_value('fan_to_bgc_crop');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_veg',
+		'use_cn'=>$nl_flags->{'use_cn'}, 'use_ed'=>$nl_flags->{'use_ed'} );
+    $nl_flags->{'use_veg'} = $nl->get_value('fan_to_bgc_veg');
+    
+    
+  } elsif ( $nl_flags->{'bgc_mode'} =~/cn|bgc/ && value_is_true( $nl_flags->{'use_fan'} ) ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_mapalgo', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
+                'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_fan', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_fan', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    # Set align year, if first and last years are different
+    if ( $nl->get_value('stream_year_first_fan') != $nl->get_value('stream_year_last_fan') ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_fan', 'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    }
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_fan', 'phys'=>$nl_flags->{'phys'},
+                'use_cn'=>$nl_flags->{'use_cn'},
+                'hgrid'=>"360x720cru" );
+  } else {
+    # If bgc is NOT CN/CNDV then make sure none of the fan settings are set!
+    if ( value_is_true( $nl_flags->{'use_fan'} ) ) { 
+      if ( defined($nl->get_value('stream_year_first_fan')) ||
+           defined($nl->get_value('stream_year_last_fan'))  ||
+           defined($nl->get_value('model_year_align_fan'))  ||
+           defined($nl->get_value('stream_fldfilename_fan'))
+         ) {
+        fatal_error("When bgc is NOT CN or CNDV none of: stream_year_first_fan," .
+                    "stream_year_last_fan, model_year_align_fan, nor stream_fldfilename_fan" .
+                    " can be set!\n");
+      }
+    }
+  }
+}
+
 
 #-------------------------------------------------------------------------------
 
@@ -4225,6 +4371,9 @@ sub write_output_files {
   push @groups, "ch4finundated";
   push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
+  if ( &value_is_true($nl_flags->{'use_fan'}) ) {
+    push @groups, "fan_nml";
+  }
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";
   }
@@ -4236,6 +4385,9 @@ sub write_output_files {
 
   # Drydep, fire-emission or MEGAN namelist for driver
   @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm);
+  if ( &value_is_true($nl_flags->{'use_fan'}) ) {
+    push @groups, "fan_inparm";
+  }
   $outfile = "$opts->{'dir'}/drv_flds_in";
   $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
   $log->verbose_message("Writing @groups namelists to $outfile");
@@ -4321,8 +4473,8 @@ sub add_default {
 
   # check whether the variable has a value in the namelist object -- if so then skip to end
   my $val = $nl->get_variable_value($group, $var);
-  if (! defined $val) {
 
+  if (! defined $val) {
     # Look for a specified value in the options hash
 
     if (defined $settings{'val'}) {
@@ -4859,6 +5011,7 @@ sub version {
 
 sub main {
   my %nl_flags;
+    
   $nl_flags{'cfgdir'} = dirname(abs_path($0));
 
   my %opts = process_commandline(\%nl_flags);
@@ -4873,6 +5026,7 @@ sub main {
   my $definition = read_namelist_definition($cfgdir, \%opts, \%nl_flags);
   my $defaults   = read_namelist_defaults($cfgdir, \%opts, \%nl_flags, $cfg);
 
+  
   # List valid values if asked for
   list_options(\%opts, $definition, $defaults);
 

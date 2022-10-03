@@ -1177,7 +1177,8 @@ contains
             soilbiogeochem_nitrogenstate_inst%totmicn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%totsomn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%sminn_col(c)   + &
-            soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
+            soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)  + &
+            soilbiogeochem_nitrogenstate_inst%fan_totn_col(c)
 
     end do
 

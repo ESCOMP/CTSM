@@ -10,9 +10,10 @@ module lnd2atmMod
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
   use shr_megan_mod        , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod    , only : shr_fire_emis_mechcomps_n
+  use shr_fan_mod          , only : shr_fan_to_atm
   use clm_varpar           , only : numrad, ndst, nlevgrnd, nlevmaxurbgrnd !ndst = number of dust bins.
   use clm_varcon           , only : rair, grav, cpair, hfus, tfrz, spval
-  use clm_varctl           , only : iulog, use_lch4
+  use clm_varctl           , only : iulog, use_lch4, use_fan
   use shr_drydep_mod       , only : n_drydep
   use decompMod            , only : bounds_type
   use subgridAveMod        , only : p2g, c2g
@@ -37,6 +38,7 @@ module lnd2atmMod
   use LandunitType         , only : lun
   use GridcellType         , only : grc
   use landunit_varcon      , only : istice
+  use SoilBiogeochemNitrogenFluxType, only : SoilBiogeochem_nitrogenflux_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -151,6 +153,7 @@ contains
        water_inst, &
        energyflux_inst, solarabs_inst, drydepvel_inst,  &
        vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
+       sbgc_nf_inst, &
        lnd2atm_inst, &
        net_carbon_exchange_grc)
     !
@@ -175,6 +178,7 @@ contains
     type(dust_type)             , intent(in)    :: dust_inst
     type(ch4_type)              , intent(in)    :: ch4_inst
     type(glc_behavior_type)     , intent(in)    :: glc_behavior
+    type(SoilBiogeochem_nitrogenflux_type), intent(in) :: sbgc_nf_inst
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst
     real(r8)                    , intent(in)    :: net_carbon_exchange_grc( bounds%begg: )  ! net carbon exchange between land and atmosphere, positive for source (gC/m2/s)
     !
@@ -331,6 +335,14 @@ contains
          dust_inst%flx_mss_vrt_dst_patch(bounds%begp:bounds%endp, :), &
          lnd2atm_inst%flxdst_grc        (bounds%begg:bounds%endg, :), &
          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+
+    ! nh3 flux
+    if (shr_fan_to_atm) then
+       call c2g(bounds,     &
+            sbgc_nf_inst%nh3_total_col (bounds%begc:bounds%endc), &
+            lnd2atm_inst%flux_nh3_grc  (bounds%begg:bounds%endg), &
+            c2l_scale_type= 'unity', l2g_scale_type='unity')
+    end if
 
     !----------------------------------------------------
     ! lnd -> rof
