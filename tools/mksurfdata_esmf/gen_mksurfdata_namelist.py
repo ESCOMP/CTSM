@@ -196,7 +196,19 @@ def get_parser():
             [default: %(default)s]
             """,
         action="store_true",
-        dest="hres_flag",
+        dest="hres_pft",
+        default=False,
+    )
+    parser.add_argument(
+        "--hires_soitex",
+        help="""
+            If you want to use the high-resolution soil texture dataset rather
+            than the default lower resolution dataset.
+            (Low resolution is 5x5min, high resolution 30-second)
+            [default: %(default)s]
+            """,
+        action="store_true",
+        dest="hres_soitex",
         default=False,
     )
     parser.add_argument(
@@ -230,19 +242,6 @@ def get_parser():
         dest="potveg_flag",
         default=False,
     )
-    parser.add_argument(
-        "--merge_gis",
-        help="""
-        If you want to use the glacier dataset that merges in
-        the Greenland Ice Sheet data that CISM uses (typically
-        used only if consistency with CISM is important)
-        [default: %(default)s]
-        """,
-        action="store",
-        dest="merge_gis",
-        choices=["on","off"],
-        default="off",
-    )
     return parser
 
 def main ():
@@ -267,8 +266,8 @@ def main ():
     glc_flag = args.glc_flag
     potveg = args.potveg_flag
     glc_nec = args.glc_nec
-    merge_gis = args.merge_gis
-    if args.hres_flag:
+
+    if args.hres_pft:
         if (start_year == 1850 and end_year == 1850) or \
            (start_year == 2005 and end_year == 2005):
             hires_pft = 'on'
@@ -278,6 +277,13 @@ def main ():
             sys.exit(error_msg)
     else:
         hires_pft = 'off'
+
+    if args.hres_soitex:
+        hires_soitex = 'on'
+    else:
+        hires_soitex = 'off'
+
+    verbose = args.verbose
 
     if force_model_mesh_file is not None:
         # open mesh_file to read element_count and, if available, orig_grid_dims
@@ -369,10 +375,10 @@ def main ():
 
     # create attribute list for parsing xml file
     attribute_list = {'hires_pft':hires_pft,
+                      'hires_soitex':hires_soitex,
                       'pft_years':pft_years,
                       'pft_years_ssp':pft_years_ssp,
                       'ssp_rcp':ssp_rcp,
-                      'mergeGIS':merge_gis,
                       'res':res}
 
     # create dictionary for raw data files names
@@ -431,9 +437,10 @@ def main ():
                         print('WARNING: run ./download_input_data to try TO ' \
                               'OBTAIN MISSING FILES')
                         _must_run_download_input_data = True
-                elif 'urban_properties' in rawdata_files[child1.tag]:
-                   # Time-slice cases pull urban_properties from the transient
-                   # urban_properties data files
+                elif 'urban_properties' in rawdata_files[child1.tag] or \
+                     'lake' in rawdata_files[child1.tag]:
+                   # Time-slice cases pull urban_properties and %lake from the
+                   # corresponding transient files
                    rawdata_files[child1.tag] = rawdata_files[child1.tag]. \
                                                replace("%y",str(start_year))
 
@@ -453,6 +460,10 @@ def main ():
 
             if item.tag == 'urban_filename':
                 new_key = f"{child1.tag}_urban"
+                rawdata_files[new_key] = os.path.join(input_path, item.text)
+
+            if item.tag == 'lookup_filename':
+                new_key = f"{child1.tag}_lookup"
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
 
     # determine output mesh

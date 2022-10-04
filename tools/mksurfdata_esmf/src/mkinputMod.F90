@@ -44,13 +44,11 @@ module mkinputMod
   character(CX) , public    :: mksrf_fhrvtyp                = ' ' ! harvest data file name
   character(CX) , public    :: mksrf_fhrvtyp_mesh           = ' ' ! harvest mesh file name
 
-  character(CX) , public    :: mksrf_forganic               = ' ' ! organic matter data file name
-  character(CX) , public    :: mksrf_forganic_mesh          = ' ' ! organic matter mesh file name
-
   character(CX) , public    :: mksrf_fsoicol                = ' ' ! soil color data file name
   character(CX) , public    :: mksrf_fsoicol_mesh           = ' ' ! soil color mesh file name
 
-  character(CX) , public    :: mksrf_fsoitex                = ' ' ! soil texture data file name
+  character(CX) , public    :: mksrf_fsoitex                = ' ' ! soil texture mapunit data file name
+  character(CX) , public    :: mksrf_fsoitex_lookup         = ' ' ! soil texture lookup data file name
   character(CX) , public    :: mksrf_fsoitex_mesh           = ' ' ! soil texture mesh file name
 
   character(CX) , public    :: mksrf_fmax                   = ' ' ! fmax data file name
@@ -68,8 +66,10 @@ module mkinputMod
   character(CX) , public    :: mksrf_fgdp                   = ' ' ! gdp data file names
   character(CX) , public    :: mksrf_fgdp_mesh              = ' ' ! gdp mesh file names
 
-  character(CX) , public    :: mksrf_flakwat                = ' ' ! inland lake data file name
-  character(CX) , public    :: mksrf_flakwat_mesh           = ' ' ! inland lake mesh file name
+  character(CX) , public    :: mksrf_fpctlak                = ' ' ! percent lake data file name
+  character(CX) , public    :: mksrf_fpctlak_mesh           = ' ' ! percent lake file name
+  character(CX) , public    :: mksrf_flakdep                = ' ' ! lake depth data file name
+  character(CX) , public    :: mksrf_flakdep_mesh           = ' ' ! lake depth file name
 
   character(CX) , public    :: mksrf_fwetlnd                = ' ' ! inland wetlands data file name
   character(CX) , public    :: mksrf_fwetlnd_mesh           = ' ' ! inland wetlands mesh file name
@@ -136,15 +136,16 @@ contains
          mksrf_fhrvtyp,             &
          mksrf_fhrvtyp_mesh,        &
          mksrf_fsoitex,             &
+         mksrf_fsoitex_lookup,      &
          mksrf_fsoitex_mesh,        &
-         mksrf_forganic,            &
-         mksrf_forganic_mesh,       &
          mksrf_fsoicol,             &
          mksrf_fsoicol_mesh,        &
          mksrf_fvocef,              &
          mksrf_fvocef_mesh,         &
-         mksrf_flakwat,             &
-         mksrf_flakwat_mesh,        &
+         mksrf_fpctlak,             &
+         mksrf_fpctlak_mesh,        &
+         mksrf_flakdep,             &
+         mksrf_flakdep_mesh,        &
          mksrf_fwetlnd,             &
          mksrf_fwetlnd_mesh,        &
          mksrf_fglacier,            &
@@ -224,13 +225,11 @@ contains
     call mpi_bcast (mksrf_fhrvtyp_mesh, len(mksrf_fhrvtyp_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_fsoitex, len(mksrf_fsoitex), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (mksrf_fsoitex_lookup, len(mksrf_fsoitex_lookup), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fsoitex_mesh, len(mksrf_fsoitex_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_fmax, len(mksrf_fmax), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fmax_mesh, len(mksrf_fmax_mesh), MPI_CHARACTER, 0, mpicom, ier)
-
-    call mpi_bcast (mksrf_forganic, len(mksrf_forganic), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (mksrf_forganic_mesh, len(mksrf_forganic_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_fsoicol, len(mksrf_fsoicol), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fsoicol_mesh, len(mksrf_fsoicol_mesh), MPI_CHARACTER, 0, mpicom, ier)
@@ -247,8 +246,10 @@ contains
     call mpi_bcast (mksrf_fgdp, len(mksrf_fgdp), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fgdp_mesh, len(mksrf_fgdp_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
-    call mpi_bcast (mksrf_flakwat, len(mksrf_flakwat), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (mksrf_flakwat_mesh, len(mksrf_flakwat_mesh), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (mksrf_fpctlak, len(mksrf_fpctlak), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (mksrf_fpctlak_mesh, len(mksrf_fpctlak_mesh), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (mksrf_flakdep, len(mksrf_flakdep), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (mksrf_flakdep_mesh, len(mksrf_flakdep_mesh), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_fwetlnd, len(mksrf_fwetlnd), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fwetlnd_mesh, len(mksrf_fwetlnd_mesh), MPI_CHARACTER, 0, mpicom, ier)
@@ -341,17 +342,17 @@ contains
        write(ndiag,'(a)')' PFTs from:                  '//trim(mksrf_fvegtyp)
        write(ndiag,'(a)')' mesh for pft                '//trim(mksrf_fvegtyp_mesh)
        write(ndiag,*)
-       write(ndiag,'(a)')' inland lake from:           '//trim(mksrf_flakwat)
-       write(ndiag,'(a)')' mesh for lake water         '//trim(mksrf_flakwat_mesh)
+       write(ndiag,'(a)')' percent lake from:          '//trim(mksrf_fpctlak)
+       write(ndiag,'(a)')' mesh for percent lake       '//trim(mksrf_fpctlak_mesh)
+       write(ndiag,'(a)')' lake depth from:            '//trim(mksrf_flakdep)
+       write(ndiag,'(a)')' mesh for lake depth         '//trim(mksrf_flakdep_mesh)
        write(ndiag,*)
        write(ndiag,'(a)')' inland wetland from:        '//trim(mksrf_fwetlnd)
        write(ndiag,'(a)')' mesh for wetland            '//trim(mksrf_fwetlnd_mesh)
        write(ndiag,*)
-       write(ndiag,'(a)')' soil texture from:          '//trim(mksrf_fsoitex)
+       write(ndiag,'(a)')' soil texture mapunits from: '//trim(mksrf_fsoitex)
+       write(ndiag,'(a)')' soil texture (sand/clay, orgc) lookup: '//trim(mksrf_fsoitex_lookup)
        write(ndiag,'(a)')' mesh for soil texture       '//trim(mksrf_fsoitex_mesh)
-       write(ndiag,*)
-       write(ndiag,'(a)')' soil organic from:          '//trim(mksrf_forganic)
-       write(ndiag,'(a)')' mesh for soil organic       '//trim(mksrf_forganic_mesh)
        write(ndiag,*)
        write(ndiag,'(a)')' soil color from:            '//trim(mksrf_fsoicol)
        write(ndiag,'(a)')' mesh for soil color         '//trim(mksrf_fsoicol_mesh)

@@ -33,25 +33,26 @@ module mksoiltexMod
 contains
 !=================================================================================
 
-  subroutine mksoiltex(file_mesh_i, file_data_i, mesh_o, pioid_o, pctlnd_pft_o, rc)
+  subroutine mksoiltex(file_mesh_i, file_mapunit_i, file_lookup_i, mesh_o, pioid_o, pctlnd_pft_o, rc)
     !
-    ! make %sand and %clay from IGBP soil data, which includes
-    ! igbp soil 'mapunits' and their corresponding textures
+    ! make %sand, %clay, organic carbon content, coarse fragments, bulk density,
+    ! and pH measured in H2O
     !
     ! input/output variables
-    character(len=*)  , intent(in)    :: file_mesh_i ! input mesh file name
-    character(len=*)  , intent(in)    :: file_data_i ! input data file name
-    type(ESMF_Mesh)   , intent(in)    :: mesh_o      ! output mesh
+    character(len=*)  , intent(in)    :: file_mesh_i     ! input mesh/grid file name
+    character(len=*)  , intent(in)    :: file_mapunit_i  ! input mapunit file name
+    character(len=*)  , intent(in)    :: file_lookup_i   ! input data file name
+    type(ESMF_Mesh)   , intent(in)    :: mesh_o          ! output mesh
     type(file_desc_t) , intent(inout) :: pioid_o
     real(r8)          , intent(in)    :: pctlnd_pft_o(:) ! PFT data: % of gridcell for PFTs
     integer           , intent(out)   :: rc
 
     ! local variables
     type(ESMF_RouteHandle) :: routehandle
+    type(ESMF_Grid)        :: grid_i
     type(ESMF_Mesh)        :: mesh_i
     type(ESMF_Field)       :: field_i
     type(ESMF_Field)       :: field_o
-    type(ESMF_Field)       :: field_dstfrac
     type(file_desc_t)      :: pioid_i
     type(var_desc_t)       :: pio_varid
     integer                :: pio_vartype
@@ -59,27 +60,42 @@ contains
     integer                :: ni,no
     integer                :: ns_i, ns_o
     integer                :: k,l,m,n
-    integer                :: nlay         ! number of soil layers
+    integer                :: nlay          ! number of soil layers
+    integer                :: n_scid
     integer , allocatable  :: mask_i(:)
-    real(r4), allocatable  :: rmask_i(:)
-    real(r8), allocatable  :: frac_o(:)
-    real(r4), allocatable  :: sand_i(:,:)  ! input grid: percent sand
-    real(r4), allocatable  :: clay_i(:,:)  ! input grid: percent clay
-    real(r4), allocatable  :: mapunit_i(:) ! input grid: igbp soil mapunits
-    real(r8), allocatable  :: sand_o(:,:)  ! % sand (output grid)
-    real(r8), allocatable  :: clay_o(:,:)  ! % clay (output grid)
-    integer , allocatable  :: mapunit_o(:)
     real(r4), pointer      :: dataptr(:)
-    real(r8), pointer      :: dataptr_r8(:)
-    real(r4)               :: sumtex
-    integer                :: mapunit      ! temporary igbp soil mapunit
-    integer, allocatable   :: soil_i(:)
-    integer, allocatable   :: soil_o(:)
-    integer                :: rcode, ier   ! error status
+    integer                :: mapunit       ! temporary igbp soil mapunit
+    integer,  allocatable  :: sand_i(:,:,:) ! input grid: percent sand
+    integer,  allocatable  :: clay_i(:,:,:) ! input grid: percent clay
+    integer,  allocatable  :: cfrag_i(:,:,:)  ! input grid: coarse fragments (vol% > 2 mm)
+    real(r4), allocatable  :: bulk_i(:,:,:)  ! input grid: bulk density (g cm-3)
+    real(r4), allocatable  :: orgc_i(:,:,:)  ! input grid: organic carbon content (gC kg-1)
+    real(r4), allocatable  :: phaq_i(:,:,:)  ! input grid: soil pH measured in H2O (unitless)
+    real(r4), allocatable  :: sand_o(:,:)   ! output grid: % sand
+    real(r4), allocatable  :: clay_o(:,:)   ! output grid: % clay
+    real(r4), allocatable  :: orgc_o(:,:)  ! output grid: organic carbon content (gC kg-1)
+    real(r4), allocatable  :: cfrag_o(:,:)  ! output grid: coarse fragments (vol% > 2 mm)
+    real(r4), allocatable  :: bulk_o(:,:)  ! output grid: bulk density (g cm-3)
+    real(r4), allocatable  :: phaq_o(:,:)  ! output grid: soil pH measured in H2O (unitless)
+    real(r4), allocatable  :: organic_o(:,:)  ! output grid: organic matter (kg m-3)
+    integer                :: n_mapunits
+    integer                :: lookup_index
+    integer                :: SCID
+    real(r4), allocatable  :: mapunit_i(:)  ! input grid: igbp soil mapunits
+    integer , allocatable  :: mapunit_o(:)  ! output grid: igbp soil mapunits
+    integer , allocatable  :: MapUnits(:)
+    integer , allocatable  :: mapunit_lookup(:)
+    type(var_desc_t)       :: pio_varid_sand
+    type(var_desc_t)       :: pio_varid_clay
+    type(var_desc_t)       :: pio_varid_orgc
+    type(var_desc_t)       :: pio_varid_cfrag
+    type(var_desc_t)       :: pio_varid_bulk
+    type(var_desc_t)       :: pio_varid_phaq
+    type(var_desc_t)       :: pio_varid_organic
+    integer                :: starts(3)     ! starting indices for reading lookup table
+    integer                :: counts(3)     ! dimension counts for reading lookup table
     integer                :: srcTermProcessing_Value = 0
-    integer, parameter     :: nlsm=4       ! number of soil textures
-    character(len=38)      :: soil(0:nlsm) ! name of each soil texture
-    character(len=38)      :: typ          ! soil texture based on ...
+    integer                :: rcode, ier    ! error status
     character(len=*), parameter :: subname = 'mksoiltex'
     !-----------------------------------------------------------------------
 
@@ -87,9 +103,10 @@ contains
        write(ndiag,*)
        write(ndiag,'(1x,80a1)') ('=',k=1,80)
        write(ndiag,*)
-       write(ndiag,'(a)') 'Attempting to make %sand and %clay .....'
-       write(ndiag,'(a)') ' Input file is '//trim(file_data_i)
-       write(ndiag,'(a)') ' Input mesh file is '//trim(file_mesh_i)
+       write(ndiag,'(a)') 'Attempting to make %sand, %clay, orgc, cfrag, bulk, phaq .....'
+       write(ndiag,'(a)') ' Input mapunit file is '//trim(file_mapunit_i)
+       write(ndiag,'(a)') ' Input lookup table file is '//trim(file_lookup_i)
+       write(ndiag,'(a)') ' Input mesh/grid file is '//trim(file_mesh_i)
     end if
 
     ! Determine ns_o and allocate output data
@@ -98,237 +115,436 @@ contains
     allocate(mapunit_o(ns_o))      ; mapunit_o(:) = 0
     allocate(sand_o(ns_o,nlevsoi)) ; sand_o(:,:) = spval
     allocate(clay_o(ns_o,nlevsoi)) ; clay_o(:,:) = spval
+    allocate(orgc_o(ns_o,nlevsoi)) ; orgc_o(:,:) = spval
+    allocate(cfrag_o(ns_o,nlevsoi)) ; cfrag_o(:,:) = spval
+    allocate(bulk_o(ns_o,nlevsoi)) ; bulk_o(:,:) = spval
+    allocate(phaq_o(ns_o,nlevsoi)) ; phaq_o(:,:) = spval
+    allocate(organic_o(ns_o,nlevsoi)) ; organic_o(:,:) = spval
 
-    ! Open input data file
-    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_data_i))
-    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_data_i), pio_nowrite)
+    !---------------------------------
+    ! Determine mapunits on output grid
+    !---------------------------------
 
-    ! Read in input mesh
-    call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
-    mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
+    ! Determine input mesh
+    if (trim(file_mesh_i) == trim(file_mapunit_i)) then
+       ! input format is GRIDSPEC and read in grid and then create mesh
+       if (root_task) write(ndiag,*)"reading grid_i and then creating mesh_i in "//trim(subname)
+       call ESMF_VMLogMemInfo("Before create read in grid_i in "//trim(subname))
+       grid_i = ESMF_GridCreate(filename=trim(file_mesh_i), &
+            fileformat=ESMF_FILEFORMAT_GRIDSPEC, addCornerStagger=.true., addmask=.true., varname='MU', rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_VMLogMemInfo("Before create mesh_i in "//trim(subname))
+       mesh_i = esmf_meshcreate(grid_i, rc=rc) 
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_VMLogMemInfo("After create mesh_i in "//trim(subname))
+    else
+       ! Read in mesh directly 
+       if (root_task) write(ndiag,*)"reading mesh_i directly in "//trim(subname)
+       mesh_i = ESMF_MeshCreate(filename=trim(file_mesh_i), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
 
-    ! Determine ns_i
+    ! Determine ns_i (use the distgrid to the number of elements)
     call ESMF_MeshGet(mesh_i, numOwnedElements=ns_i, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Get the landmask from the file and reset the mesh mask based on that
-    allocate(rmask_i(ns_i), stat=ier)
+    ! Read in mapunit data
+    if (root_task) write(ndiag,*)"Reading in mapunit data in "//trim(subname)
+    call ESMF_VMLogMemInfo("Before pio_openfile for "//trim(file_mapunit_i))
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_mapunit_i), pio_nowrite)
+    allocate(mapunit_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
+    call mkpio_get_rawdata(pioid_i, 'MU', mesh_i, mapunit_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
+    call pio_closefile(pioid_i)
+
+    ! Set mesh mask to zero where the mapunit values are 0
+    if (root_task) write(ndiag,*)"Setting mask in mesh where mapunit data is 0 "//trim(subname)
     allocate(mask_i(ns_i), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid_i, 'LANDMASK', mesh_i, rmask_i, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
     do ni = 1,ns_i
-       if (rmask_i(ni) > 0._r4) then
-          mask_i(ni) = 1
-       else
+       if (mapunit_i(ni) == 0.) then
           mask_i(ni) = 0
        end if
     end do
     call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    ! Read in mapunit data
-    allocate(mapunit_i(ns_i), stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    call mkpio_get_rawdata(pioid_i, 'MAPUNITS', mesh_i, mapunit_i, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
-
-    ! Set mapunit values to zero where the input mask is 0
-    do ni = 1,ns_i
-       mapunit_i(ni) = mapunit_i(ni) * mask_i(ni)
-    end do
-
-    ! Determine mapunit_value_max (set it as a module variable so that it can be
-    ! accessible to gen_dominant_mapunit)
-    rcode = pio_inq_dimid  (pioid_i, 'max_value_mapunit', dimid)
-    rcode = pio_inq_dimlen (pioid_i, dimid, mapunit_value_max)
-
      ! Create ESMF fields that will be used below
     field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     field_o = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    field_dstfrac = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Create a route handle
+    if (root_task) write(ndiag,*)" before route handle creation "//trim(subname)
     call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
          regridmethod=ESMF_REGRIDMETHOD_CONSERVE, srcTermProcessing=srcTermProcessing_Value, &
-         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, &
-         dstFracField= field_dstfrac, rc=rc)
+         ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regridstore in "//trim(subname))
-
-    ! Determin frac_o
-    call ESMF_FieldGet(field_dstfrac, farrayptr=dataptr_r8, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    allocate(frac_o(ns_o))
-    frac_o(:) = dataptr_r8(:)
+    if (root_task) write(ndiag,*)" after route handle creation "//trim(subname)
 
     ! Create a dynamic mask object
     ! The dynamic mask object further holds a pointer to the routine that will be called in order to
     ! handle dynamically masked elements - in this case its DynMaskProc (see below)
+    if (root_task) write(ndiag,*)" before call to dynamic mask set creation "//trim(subname)
     call ESMF_DynamicMaskSetR4R8R4(dynamicMask, dynamicMaskRoutine=get_dominant_mapunit,  &
          handleAllElements=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (root_task) write(ndiag,*)" after call to dynamic mask set creation "//trim(subname)
 
-    ! Determine dominant soil color in the field regrid call below
+    ! Determine values in field_i
     call ESMF_FieldGet(field_i, farrayptr=dataptr, rc=rc)
     dataptr(:) = real(mapunit_i(:), kind=r4)
+
+    ! Determine mapunit_value_max (set it as a module variable so that it can be
+    ! accessible to gen_dominant_mapunit) - this is needed in the dynamic mask routine
+    mapunit_value_max = maxval(dataptr)
+
+    ! Determine values in field_o
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     dataptr(:) = 0._r4
 
+    ! Determine mapunit_o
     call ESMF_FieldRegrid(field_i, field_o, routehandle=routehandle, dynamicMask=dynamicMask, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     do no = 1,ns_o
        mapunit_o(no) = int(dataptr(no))
     end do
 
-    ! Get dimensions from input file and allocate memory for sand_i and clay_i
-    rcode = pio_inq_dimid  (pioid_i, 'number_of_layers', dimid)
-    rcode = pio_inq_dimlen (pioid_i, dimid, nlay)
-    allocate(sand_i(mapunit_value_max,nlay), stat=ier)
-    if (ier/=0) call shr_sys_abort()
-    allocate(clay_i(mapunit_value_max,nlay), stat=ier)
-    if (ier/=0) call shr_sys_abort()
-
-    ! read in sand_i and clay_i (they will read in total on all processors)
-    rcode = pio_inq_varid(pioid_i, 'PCT_SAND', pio_varid)
-    rcode = pio_get_var(pioid_i, pio_varid, sand_i)
-    rcode = pio_inq_varid(pioid_i, 'PCT_CLAY', pio_varid)
-    rcode = pio_get_var(pioid_i, pio_varid, clay_i)
-
-    ! Set soil texture as follows:
-    ! a. Use dominant igbp soil mapunit based on area of overlap unless 'no data' is dominant
-    ! b. If this has no data, use loam for soil texture
-
     do no = 1,ns_o
-       if (mapunit_o(no) > 0) then
-          ! valid value is obtained
-          if (mapunit_o(no) > mapunit_value_max) then
-             write(6,*)'mapunit_o is out of bounds ',mapunit_o(no)
-             ! call shr_sys_abort("mapunit_o is out of bounds")
-          end if
-          do l = 1, nlay
-             sand_o(no,l) = sand_i(mapunit_o(no),l)
-             clay_o(no,l) = clay_i(mapunit_o(no),l)
-          end do
-       else
-          ! use loam
-          do l = 1, nlay
-             sand_o(no,l) = 43.
-             clay_o(no,l) = 18.
-          end do
+       if (mapunit_o(no) > mapunit_value_max) then
+          write(6,*)'mapunit_o is out of bounds ',mapunit_o(no)
+          ! call shr_sys_abort("mapunit_o is out of bounds")
        end if
     end do
 
-    ! Define the model surface types: 0:4
-    soil(0) = 'no soil: ocean, glacier, lake, no data'
-    soil(1) = 'clays                                 '
-    soil(2) = 'sands                                 '
-    soil(3) = 'loams                                 '
-    soil(4) = 'silts                                 '
-
-    ! input grid: determine soil_i for global area comparison
-    allocate(soil_i(ns_i))
-    do l = 1, nlay
-       do ni = 1,ns_i
-          mapunit = nint(mapunit_i(ni))
-          if (mapunit==0) then
-             typ = 'no soil: ocean, glacier, lake, no data'
-          else if (clay_i(mapunit,l) >= 40.) then
-             typ = 'clays'
-          else if (sand_i(mapunit,l) >= 50.) then
-             typ = 'sands'
-          else if (clay_i(mapunit,l)+sand_i(mapunit,l) < 50.) then
-             if (rmask_i(ni) /= 0.) then
-                typ = 'silts'
-             else
-                typ = 'no soil: ocean, glacier, lake, no data'
-             end if
-          else
-             typ = 'loams'
-          end if
-          do m = 0, nlsm
-             if (typ == soil(m)) go to 101
-          end do
-          write (6,*) 'MKSOILTEX error: sand = ',sand_i(mapunit,l), &
-               ' clay = ',clay_i(mapunit,l),' not assigned to soil type for input grid lon,lat,layer = ',ni,l
-          call shr_sys_abort()
-101       continue
-          soil_i(ni) = m  ! allocate memory for this
-       end do
-    end do
-
-    ! output grid: determine soil_o for global area comparison
-    allocate(soil_o(ns_o))
-    do l = 1, nlay
-       do no = 1,ns_o
-          if (clay_o(no,l)==0. .and. sand_o(no,l)==0.) then
-             typ = 'no soil: ocean, glacier, lake, no data'
-          else if (clay_o(no,l) >= 40.) then
-             typ = 'clays'
-          else if (sand_o(no,l) >= 50.) then
-             typ = 'sands'
-          else if (clay_o(no,l)+sand_o(no,l) < 50.) then
-             typ = 'silts'
-          else
-             typ = 'loams'
-          end if
-          do m = 0, nlsm
-             if (typ == soil(m)) go to 102
-          end do
-          write (6,*) 'MKSOILTEX error: sand = ',sand_o(no,l), &
-               ' clay = ',clay_o(no,l), ' not assigned to soil type for output grid lon,lat,layer = ',no,l
-          call shr_sys_abort()
-102       continue
-          soil_o(no) = m
-       end do
-    end do
-
-    ! Compare global areas
-    if (root_task) then
-       write (ndiag,'(a)') 'The following table of soil texture classes is for comparison only.'
-       write (ndiag,'(a)') 'The actual data is continuous %sand, %silt and %clay not textural classes'
-    end if
-    call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
-         0, nlsm, soil_i, soil_o, 'soil texture class',  ndiag, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    ! Adjust pct sand and pct clay to be nearest integers and to be loam if pctlnd_pft is < 1.e-6
-    ! Truncate all percentage fields on output grid. This is needed to insure that wt is zero
-    ! (not a very small number such as 1e-16) where it really should be zero
-    do no = 1,ns_o
-       do k = 1,nlevsoi
-          sand_o(no,k) = float(nint(sand_o(no,k)))
-          clay_o(no,k) = float(nint(clay_o(no,k)))
-       end do
-       if (pctlnd_pft_o(no) < 1.e-6_r8) then
-          sand_o(no,:) = 43._r8
-          clay_o(no,:) = 18._r8
-       end if
-    end do
-
-    ! Write out fields
-    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
+    ! Write out mapunit_o
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out mapunits "
     call mkfile_output(pioid_o,  mesh_o,  'mapunits', mapunit_o,  rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for mapunits')
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error calling mkfile_output for mapunits')
+    call pio_syncfile(pioid_o)
+
+    !---------------------------------
+    ! Determine %sand, %clay, orgc, cfrag, bulk, phaq on output grid using
+    ! mapunits
+    !---------------------------------
+
+    rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_lookup_i), pio_nowrite)
+
+    rcode = pio_inq_dimid  (pioid_i, 'MapUnit', dimid)
+    rcode = pio_inq_dimlen (pioid_i, dimid, n_mapunits)
+
+    rcode = pio_inq_dimid  (pioid_i, 'soil_layer', dimid)
+    rcode = pio_inq_dimlen (pioid_i, dimid, nlay)
+
+    rcode = pio_inq_dimid  (pioid_i, 'SCID', dimid)
+    rcode = pio_inq_dimlen (pioid_i, dimid, n_scid)
+
+    ! Read In MapUnits from the input file
+    allocate(MapUnits(n_mapunits), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    rcode = pio_inq_varid(pioid_i, 'MapUnit', pio_varid)
+    rcode = pio_get_var(pioid_i, pio_varid, MapUnits)
+
+    ! Determine the mapunit lookup index from the value of the MapUnit variable
+    mapunit_value_max = maxval(MapUnits)
+    allocate(mapunit_lookup(mapunit_value_max))
+    mapunit_lookup(:) = -999
+    do n = 1,size(MapUnits)
+       mapunit_lookup(MapUnits(n)) = n
+    end do
+
+    allocate(sand_i(nlay,n_scid,n_mapunits), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(clay_i(nlay,n_scid,n_mapunits), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(orgc_i(nlay,n_scid,n_mapunits), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(cfrag_i(nlay,n_scid,n_mapunits), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(bulk_i(nlay,n_scid,n_mapunits), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+    allocate(phaq_i(nlay,n_scid,n_mapunits), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+
+    ! Get dimensions from input file and allocate memory for sand_i, clay_i,
+    ! organic carbon content, coarse fragments, bulk density, pH measured in H2O
+    rcode = pio_inq_varid(pioid_i, 'PCT_SAND', pio_varid_sand)
+    rcode = pio_inq_varid(pioid_i, 'PCT_CLAY', pio_varid_clay)
+    rcode = pio_inq_varid(pioid_i, 'ORGC', pio_varid_orgc)
+    rcode = pio_inq_varid(pioid_i, 'CFRAG', pio_varid_cfrag)
+    rcode = pio_inq_varid(pioid_i, 'BULK', pio_varid_bulk)
+    rcode = pio_inq_varid(pioid_i, 'PHAQ', pio_varid_phaq)
+
+    rcode = pio_get_var(pioid_i, pio_varid_sand, sand_i)
+    rcode = pio_get_var(pioid_i, pio_varid_clay, clay_i)
+    rcode = pio_get_var(pioid_i, pio_varid_orgc, orgc_i)
+    rcode = pio_get_var(pioid_i, pio_varid_cfrag, cfrag_i)
+    rcode = pio_get_var(pioid_i, pio_varid_bulk, bulk_i)
+    rcode = pio_get_var(pioid_i, pio_varid_phaq, phaq_i)
+
+    do no = 1,ns_o
+
+       if (pctlnd_pft_o(no) < 1.e-6_r8 .or. mapunit_o(no) == 0) then
+
+          ! Set sand and clay to loam if pctlnd_pft is < 1.e-6 or mapunit is 0
+          sand_o(no,:) = 43._r4
+          clay_o(no,:) = 18._r4
+          orgc_o(no,:) = 0._r4
+          cfrag_o(no,:) = 0._r4
+          bulk_o(no,:) = 1.5_r4  ! TODO Ok as a fill value?
+          phaq_o(no,:) = 7._r4
+          organic_o(no,:) = 0._r4  ! TODO Rm bef merging PR #1732
+
+       else
+
+          ! Determine lookup_index
+          lookup_index = mapunit_lookup(mapunit_o(no))
+
+          ! Determine top soil layer sand_o
+          ! If less than 0 search within the SCID array for the first index
+          ! that gives a value greater than or  equal to 0
+          ! Then determine the other soil layers
+          sand_o(no,1) = float(sand_i(1,1,lookup_index))
+          if (sand_o(no,1) < 0._r4) then
+             do l = 2,n_scid
+                if (float(sand_i(1,l,lookup_index)) >= 0._r4) then
+                   sand_o(no,1) = float(sand_i(1,l,lookup_index))
+                   exit
+                end if
+             end do
+          end if
+          if (sand_o(no,1) < 0._r4) then
+             if (int(sand_o(no,1)) == -4) then
+                write(6,'(a,i8)')'WARNING: changing sand_o from -4 to 99% at no = ',no
+                sand_o(no,:) = 99._r4
+             else
+                write(6,'(a,i8,a,i8)')'WARNING: changing sand_o from ',int(sand_o(no,1)),' to 43 at no = ',no
+                sand_o(no,:) = 43._r4
+             end if
+          end if
+          do l = 2,nlay
+             sand_o(no,l) = float(sand_i(l,1,lookup_index))
+             if (sand_o(no,l) < 0._r4) then
+                sand_o(no,l) = sand_o(no,l-1)
+             end if
+          end do
+
+          ! Same algorithm for clay_o as for sand_o
+          clay_o(no,1) = float(clay_i(1,1,lookup_index))
+          if (clay_o(no,1) < 0._r4) then
+             do l = 2,n_scid
+                if (float(clay_i(1,l,lookup_index)) >= 0._r4) then
+                   clay_o(no,1) = float(clay_i(1,l,lookup_index))
+                   exit
+                end if
+             end do
+          end if
+          if (clay_o(no,1) < 0._r4) then
+             if (int(clay_o(no,1)) == -4) then
+                write(6,'(a,i8)')'WARNING: changing clay_o from -4 to 1% at no = ',no
+                clay_o(no,:) = 1._r4
+             else
+                write(6,'(a,i8,a,i8)')'WARNING: changing clay_o from ',int(clay_o(no,1)),' to 18 at no = ',no
+                clay_o(no,:) = 18._r4
+             end if
+          end if
+          if (clay_o(no,1) < 0._r4) then
+             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
+             call shr_sys_abort('could not find a value >= 0 for clay_i') 
+          end if
+          do l = 2,nlay
+             clay_o(no,l) = float(clay_i(l,1,lookup_index))
+             if (clay_o(no,l) < 0._r4) then
+                clay_o(no,l) = clay_o(no,l-1)
+             end if
+          end do
+
+          ! Same algorithm for orgc_o as for sand_o
+          ! organic_o OPTION 2 (commented out)
+          ! Calculate from multiple input variables to get the output variable
+          orgc_o(no,1) = orgc_i(1,1,lookup_index)
+!         organic_o(no,1) = orgc_i(1,1,lookup_index) * bulk_i(1,1,lookup_index) * float(100 - cfrag_i(1,1,lookup_index)) * 0.01_r4 / 0.58_r4
+          if (orgc_o(no,1) < 0._r4) then
+             do l = 2,n_scid
+                if (orgc_i(1,l,lookup_index) >= 0._r4) then
+                   orgc_o(no,1) = orgc_i(1,l,lookup_index)
+!                  organic_o(no,1) = orgc_i(1,l,lookup_index) * bulk_i(1,l,lookup_index) * float(100 - cfrag_i(1,l,lookup_index)) * 0.01_r4 / 0.58_r4
+                   exit
+                end if
+             end do
+          end if
+          if (orgc_o(no,1) < 0._r4) then
+             if (int(orgc_o(no,1)) == -4) then  ! sand dunes
+                write(6,'(a,i8)')'WARNING: changing orgc_o from -4 to 1 at no = ', no
+                orgc_o(no,:) = 1._r4
+!               write(6,'(a,i8)')'WARNING: changing organic_o from -4 to 1 at no = ', no
+!               organic_o(no,:) = 1._r4
+             else
+                write(6,'(a,i8,a,i8)')'WARNING: changing orgc_o from ',int(orgc_o(no,1)),' to 0 at no = ',no
+                orgc_o(no,:) = 0._r4
+!               write(6,'(a,i8,a,i8)')'WARNING: changing organic_o from ',int(organic_o(no,1)),' to 0 at no = ', no
+!               organic_o(no,:) = 0._r4
+             end if
+          end if
+          if (orgc_o(no,1) < 0._r4) then
+             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
+             call shr_sys_abort('could not find a value >= 0 for orgc_i')
+          end if
+          do l = 2,nlay
+             orgc_o(no,l) = orgc_i(l,1,lookup_index)
+!            organic_o(no,l) = orgc_i(l,1,lookup_index) * bulk_i(l,1,lookup_index) * float(100 - cfrag_i(l,1,lookup_index)) * 0.01_r4 / 0.58_r4
+             if (orgc_o(no,l) < 0._r4) then
+                orgc_o(no,l) = orgc_o(no,l-1)
+!               organic_o(no,l) = organic_o(no,l-1)
+             end if
+          end do
+
+          ! Same algorithm for cfrag_o as for sand_o
+          cfrag_o(no,1) = float(cfrag_i(1,1,lookup_index))
+          if (cfrag_o(no,1) < 0._r4) then
+             do l = 2,n_scid
+                if (float(cfrag_i(1,l,lookup_index)) >= 0._r4) then
+                   cfrag_o(no,1) = float(cfrag_i(1,l,lookup_index))
+                   exit
+                end if
+             end do
+          end if
+          if (cfrag_o(no,1) < 0._r4) then
+             if (int(cfrag_o(no,1)) == -4) then  ! sand dunes
+                write(6,'(a,i8)')'WARNING: changing cfrag_o from -4 to 1 at no = ',no
+                cfrag_o(no,:) = 1._r4
+             else
+                write(6,'(a,i8,a,i8)')'WARNING: changing cfrag_o from ',int(cfrag_o(no,1)),' to 0 at no = ',no
+                cfrag_o(no,:) = 0._r4
+             end if
+          end if
+          if (cfrag_o(no,1) < 0._r4) then
+             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
+             call shr_sys_abort('could not find a value >= 0 for cfrag_i')
+          end if
+          do l = 2,nlay
+             cfrag_o(no,l) = float(cfrag_i(l,1,lookup_index))
+             if (cfrag_o(no,l) < 0._r4) then
+                cfrag_o(no,l) = cfrag_o(no,l-1)
+             end if
+          end do
+
+          ! Same algorithm for bulk_o as for sand_o
+          bulk_o(no,1) = bulk_i(1,1,lookup_index)
+          if (bulk_o(no,1) < 0._r4) then
+             do l = 2,n_scid
+                if (bulk_i(1,l,lookup_index) >= 0._r4) then
+                   bulk_o(no,1) = bulk_i(1,l,lookup_index)
+                   exit
+                end if
+             end do
+          end if
+          if (bulk_o(no,1) < 0._r4) then
+             if (int(bulk_o(no,1)) == -4) then  ! sand dunes
+                write(6,'(a,i8)')'WARNING: changing bulk_o from -4 to 1 at no = ',no
+                bulk_o(no,:) = 1.5_r4  ! TODO Ok for sand dunes?
+             else
+                write(6,'(a,i8,a,i8)')'WARNING: changing bulk_o from ',int(bulk_o(no,1)),' to 0 at no = ',no
+                bulk_o(no,:) = 1.5_r4  ! TODO Ok for -7?
+             end if
+          end if
+          if (bulk_o(no,1) < 0._r4) then
+             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
+             call shr_sys_abort('could not find a value >= 0 for bulk_i')
+          end if
+          do l = 2,nlay
+             bulk_o(no,l) = bulk_i(l,1,lookup_index)
+             if (bulk_o(no,l) < 0._r4) then
+                bulk_o(no,l) = bulk_o(no,l-1)
+             end if
+          end do
+
+          ! Same algorithm for phaq_o as for sand_o
+          phaq_o(no,1) = phaq_i(1,1,lookup_index)
+          if (phaq_o(no,1) < 0._r4) then
+             do l = 2,n_scid
+                if (phaq_i(1,l,lookup_index) >= 0._r4) then
+                   phaq_o(no,1) = phaq_i(1,l,lookup_index)
+                   exit
+                end if
+             end do
+          end if
+          if (phaq_o(no,1) < 0._r4) then
+             if (int(phaq_o(no,1)) == -4) then  ! sand dunes
+                write(6,'(a,i8)')'WARNING: changing phaq_o from -4 to 1 at no = ',no
+                phaq_o(no,:) = 7._r4
+             else
+                write(6,'(a,i8,a,i8)')'WARNING: changing phaq_o from ',int(phaq_o(no,1)),' to 0 at no = ',no
+                phaq_o(no,:) = 7._r4
+             end if
+          end if
+          if (phaq_o(no,1) < 0._r4) then
+             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
+             call shr_sys_abort('could not find a value >= 0 for phaq_i')
+          end if
+          do l = 2,nlay
+             phaq_o(no,l) = phaq_i(l,1,lookup_index)
+             if (phaq_o(no,l) < 0._r4) then
+                phaq_o(no,l) = phaq_o(no,l-1)
+             end if
+          end do
+
+          ! ---------------------------------------------------------------
+          ! organic_o OPTION 1, as we plan to calculate organic in the CTSM
+          ! ---------------------------------------------------------------
+          ! Calculate organic from orgc_o, cfrag_o, and bulk_o, i.e. after
+          ! these terms have been regridded. The plan is to move this
+          ! calculation step from here to the CTSM. This approach keeps
+          ! ORGC the same in fsurdat as in the raw data.
+          ! Alternative approach considered but not selected: Regrid organic_i
+          ! (calculated from orgc_i, cfrag_i, and bulk_i) to organic_o. This
+          ! approach first calculates organic_i and then regrids to organic_o
+          ! rather than regridding all the terms first and then calculating
+          ! organic_o. Commented out code above belongs to that option.
+          do l = 1, nlay
+             organic_o(no,l) = orgc_o(no,l) * bulk_o(no,l) * &
+                               (100._r4 - cfrag_o(no,l)) * 0.01_r4 / 0.58_r4
+          end do
+
+       end if
+
+    end do
 
     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent sand"
     call mkfile_output(pioid_o,  mesh_o,  'PCT_SAND', sand_o, lev1name='nlevsoi', rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error calling mkfile_output')
 
     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil percent clay"
     call mkfile_output(pioid_o,  mesh_o,  'PCT_CLAY', clay_o, lev1name='nlevsoi', rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error calling mkfile_output')
+
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil organic matter"
+    call mkfile_output(pioid_o,  mesh_o,  'ORGANIC', organic_o, lev1name='nlevsoi', rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error calling mkfile_output')
+
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil organic carbon content"
+    call mkfile_output(pioid_o,  mesh_o,  'ORGC', orgc_o, lev1name='nlevsoi', rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error calling mkfile_output')
+
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out coarse fragments in soil"
+    call mkfile_output(pioid_o,  mesh_o,  'CFRAG', cfrag_o, lev1name='nlevsoi', rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error calling mkfile_output')
+
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil bulk density"
+    call mkfile_output(pioid_o,  mesh_o,  'BULK', bulk_o, lev1name='nlevsoi', rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error calling mkfile_output')
+
+    if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil pH measured in H2O"
+    call mkfile_output(pioid_o,  mesh_o,  'PHAQ', phaq_o, lev1name='nlevsoi', rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error calling mkfile_output')
+
     call pio_syncfile(pioid_o)
 
     ! Release memory
@@ -339,7 +555,7 @@ contains
     call ESMF_VMLogMemInfo("After destroy operations in "//trim(subname))
 
     if (root_task) then
-       write (ndiag,'(a)') 'Successfully made %sand and %clay'
+       write(ndiag,'(a)') 'Successfully made %sand, %clay, orgc, cfrag, bulk, phaq .....'
     end if
 
   end subroutine mksoiltex

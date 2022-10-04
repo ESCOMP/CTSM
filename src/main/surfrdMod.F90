@@ -800,7 +800,7 @@ contains
     ! Necessary for the initialisation of the lake land units
     !
     ! !USES:
-     use clm_instur           , only : haslake
+     use clm_instur           , only : pct_lake_max
      use dynSubgridControlMod , only : get_flanduse_timeseries
      use clm_varctl           , only : fname_len
      use fileutils            , only : getfil
@@ -836,9 +836,9 @@ contains
     call ncd_pio_openfile (ncid_dynuse, trim(locfn), 0)
 
     ! read the lakemask
-    call ncd_io(ncid=ncid_dynuse, varname='HASLAKE'  , flag='read', data=haslake, &
+    call ncd_io(ncid=ncid_dynuse, varname='PCT_LAKE_MAX'  , flag='read', data=pct_lake_max, &
            dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( msg=' ERROR: HASLAKE is not on landuse.timeseries file'//errMsg(sourcefile, __LINE__))
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_LAKE_MAX is not on landuse.timeseries file'//errMsg(sourcefile, __LINE__))
 
     ! close landuse_timeseries file again
     call ncd_pio_closefile(ncid_dynuse)

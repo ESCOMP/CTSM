@@ -568,11 +568,11 @@ contains
     !
     ! !DESCRIPTION:
     ! Returns true if a land unit for lakes should be created in memory
-    ! which is defined for gridcells which will grow lake, given by haslake
+    ! which is defined for gridcells which will grow lake, given by pct_lake_max
     ! 
     ! !USES:
     use dynSubgridControlMod , only : get_do_transient_lakes
-    use clm_instur           , only : haslake
+    use clm_instur           , only : pct_lake_max
     !
     ! !ARGUMENTS:
     logical :: exists  ! function result
@@ -584,10 +584,10 @@ contains
     !-----------------------------------------------------------------------
 
     if (get_do_transient_lakes()) then
-       ! To support dynamic landunits, we initialise a lake land unit in each grid cell in which there are lakes. 
-       ! This is defined by the haslake variable
+       ! To support dynamic landunits, we initialise a lake land unit in
+       ! each grid cell in which there are lakes as defined by pct_lake_max
        
-       if (haslake(gi)) then
+       if (pct_lake_max(gi) > 0._r8) then
             exists = .true.
        else
             exists = .false.
