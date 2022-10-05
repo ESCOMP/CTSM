@@ -25,10 +25,6 @@ module CNNDynamicsMod
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
   use perf_mod                        , only : t_startf, t_stopf
-  ! SSR troubleshooting
-  use abortutils                      , only : endrun
-  use shr_log_mod                     , only : errMsg => shr_log_errMsg
-  use clm_varctl     , only : iulog
   !
   implicit none
   private
@@ -49,9 +45,6 @@ module CNNDynamicsMod
   end type params_type
   type(params_type) :: params_inst
 
-  ! SSR troubleshooting
-  character(len=*), parameter, private :: sourcefile = &
-  __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -405,11 +398,6 @@ contains
                ! Beth's ac_gdd (base 5C) similar to my hui=gddplant (base 10
                ! for soy) 
                ! Ranges below are not firm. Are they lit. based or tuning based?
-
-               ! SSR troubleshooting
-               if (gddmaturity(p) == 0.0) then
-                  call endrun(msg=errMsg(sourcefile, __LINE__))
-               end if
 
                GDDfrac = hui(p) / gddmaturity(p)
 

@@ -1853,12 +1853,6 @@ contains
 
          s = sowing_count(p)
 
-         ! SSR troubleshooting
-         if (s<0) then
-             write(iulog,*) 'CropPhenology(): s < 0'
-             call endrun(msg=errMsg(sourcefile, __LINE__))
-         end if
-
          ! Get next sowing date
          if (s < mxsowings) then
              next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,s+1)
@@ -2226,12 +2220,6 @@ contains
                   onset_counter(p) = dt
                     fert_counter(p)  = ndays_on * secspday
                     if (ndays_on .gt. 0) then
-                       
-                       ! SSR troubleshooting
-                       if (fert_counter(p)==0) then
-                          call endrun(msg=errMsg(sourcefile, __LINE__))
-                       end if
-
                        fert(p) = (manunitro(ivt(p)) * 1000._r8 + fertnitro(p))/ fert_counter(p)
                     else
                        fert(p) = 0._r8
@@ -2283,11 +2271,6 @@ contains
                   crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
                   leafc_xfer(p) = 0._r8
 
-                  ! SSR troubleshooting
-                  if (leafcn(ivt(p)) == 0.0) then
-                     call endrun(msg=errMsg(sourcefile, __LINE__))
-                  end if
-
                   leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
                   if (use_c13) then
                      c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
@@ -2306,12 +2289,6 @@ contains
 
             else if (hui(p) >= huigrain(p) .and. cphase(p) >= cphase_leafemerge) then
                cphase(p) = cphase_grainfill
-
-               ! SSR troubleshooting
-               if (leaf_long(ivt(p))*dayspyr*secspday == 0.0) then
-                  call endrun(msg=errMsg(sourcefile, __LINE__))
-               end if
-
                bglfr(p) = 1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)
             else
                 cphase(p) = cphase_planted
@@ -2336,12 +2313,6 @@ contains
             crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
             onset_counter(p) = 0._r8
             leafc_xfer(p) = 0._r8
-            
-            ! SSR troubleshooting
-            if (leafcn(ivt(p)) == 0.0) then
-               call endrun(msg=errMsg(sourcefile, __LINE__))
-            end if
-
             leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
             if (use_c13) then
                c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
@@ -2563,14 +2534,6 @@ contains
       harvdate(p)  = NOT_Harvested
       s = sowing_count(p) + 1
 
-      ! SSR troubleshooting
-      if (s < 1) then
-         write(iulog,*) 'PlantCrop(): s < 1'
-         call endrun(msg=errMsg(sourcefile, __LINE__))
-      else if (s > mxsowings) then
-         write(iulog,*) 'PlantCrop(): s > mxsowings'
-      end if
-
       sowing_count(p) = s
       if (s < mxsowings) then
          next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, s+1)
@@ -2589,11 +2552,6 @@ contains
           this_sowing_reason = this_sowing_reason + 2._r8
       end if
       sowing_reason(p,s) = this_sowing_reason
-
-      ! SSR troubleshooting
-      if (leafcn_in == 0.0) then
-         call endrun(msg=errMsg(sourcefile, __LINE__))
-      end if
 
       this_sowing_reason = 0._r8
       if (do_plant_normal) then

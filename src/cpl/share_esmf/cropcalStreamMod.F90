@@ -91,7 +91,7 @@ contains
     stream_meshfile_cropcal    = ''
     stream_fldFileName_sdate = ''
     stream_fldFileName_cultivar_gdds = ''
-    ! SSR TODO: Make below work with arbitrary # of growing seasons per year
+    ! Will need modification to work with mxsowings > 1
     ncft = mxpft - npcropmin + 1 ! Ignores generic crops
     allocate(stream_varnames_sdate(ncft))
     allocate(stream_varnames_cultivar_gdds(ncft))
@@ -255,7 +255,6 @@ contains
     use CropType        , only : crop_type
     use PatchType       , only : patch
     use dshr_methods_mod , only : dshr_fldbun_getfldptr
-!    use clm_time_manager , only : get_curr_date ! SSR troubleshooting
     !
     ! !ARGUMENTS:
     implicit none
@@ -267,7 +266,6 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ivt, p, ip, ig
     integer :: nc, fp
-!    integer :: yr, mon, day, tod, ymd, c, g ! SSR troubleshooting
     integer           :: n, g
     integer           :: lsize
     integer           :: rc
