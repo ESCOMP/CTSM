@@ -44,7 +44,6 @@ module CNNDynamicsMod
      real(r8) :: freelivfix_slope_wET   ! slope of line of free living fixation with annual ET
   end type params_type
   type(params_type) :: params_inst
-
   !-----------------------------------------------------------------------
 
 contains
@@ -331,8 +330,6 @@ contains
     real(r8):: GDDfracthreshold3, GDDfracthreshold4
     !-----------------------------------------------------------------------
 
-!    write(iulog,*) 'Entering CNSoyfix()'
-
     associate(                                                                      & 
          wf               =>  waterdiagnosticbulk_inst%wf_col                      ,         & ! Input:  [real(r8) (:) ]  soil water as frac. of whc for top 0.5 m          
 
@@ -438,8 +435,6 @@ contains
            soyfixn_to_sminn(bounds%begc:bounds%endc))
 
     end associate
-
-!    write(iulog,*) 'Exiting CNSoyfix()'
 
   end subroutine CNSoyfix
 

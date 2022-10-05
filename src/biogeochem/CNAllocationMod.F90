@@ -362,7 +362,6 @@ contains
           else if (crop_phase(p) == cphase_grainfill) then
              aroot(p) = max(0._r8, min(1._r8, arooti(ivt(p)) - &
                   (arooti(ivt(p)) - arootf(ivt(p))) * min(1._r8, hui(p)/gddmaturity(p))))
-
              if (astemi(p) > astemf(ivt(p))) then
                 astem(p) = max(0._r8, max(astemf(ivt(p)), astem(p) * &
                      (1._r8 - min((hui(p)-                 &
