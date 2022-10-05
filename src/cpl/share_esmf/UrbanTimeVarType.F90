@@ -81,9 +81,9 @@ contains
           l2g_scale_type='unity')
     ! ! Cathy [dev]
     ! call hist_addfld1d (fname='P_AC', units='unitless',      &
-          avgflag='A', long_name='prescribed air-conditioning ownership rate (decimal)',   &
-          ptr_lunit=this%p_ac, default='inactive', set_nourb=spval, &
-          l2g_scale_type='unity')
+    !     avgflag='A', long_name='prescribed air-conditioning ownership rate (decimal)',   &
+    !     ptr_lunit=this%p_ac, default='inactive', set_nourb=spval, &
+    !     l2g_scale_type='unity')
 
   end subroutine Init
 
