@@ -1,4 +1,76 @@
 ===============================================================
+Tag name: ctsm5.1.dev111
+Originator(s): jedwards (Jim Edwards), wwieder (Will Wieder), sacks (Bill Sacks)
+Date: Wed Oct  5 13:05:52 MDT 2022
+One-line Summary: Fixes for NEON cases
+
+Purpose and description of changes
+----------------------------------
+
+Two sets of fixes for NEON cases:
+
+(1) Fixes for leap year handling when there are discrepancies between
+the model and the DATM forcing data in terms of whether the current year
+is a leap year. This involved updates to the share and cdeps externals
+from Jim Edwards.
+
+(2) Other fixes for NEON cases from Will Wieder, as documented in
+https://github.com/ESCOMP/CTSM/issues/1860
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1858 (calendar error in ESMF)
+- Resolves ESCOMP/CTSM#1860 (run_neon not working as expected)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for NEON cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NEON cases
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      larger than roundoff
+
+   In testing, answer changes only show up in SMS_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.izumi_nag.clm-default--clm-NEON-NIWO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cdeps: cdeps0.12.63 -> cdeps0.12.65
+- share: share1.0.12 -> share1.0.13
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1862
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev110
 Originator(s): slevis (Samuel Levis, 303-665-1310)
 Date: Mon Sep 26 17:31:22 MDT 2022
