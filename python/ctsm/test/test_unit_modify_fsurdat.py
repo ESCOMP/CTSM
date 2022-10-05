@@ -11,7 +11,7 @@ import xarray as xr
 
 from ctsm import unit_testing
 from ctsm.config_utils import lon_range_0_to_360
-from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
+from ctsm.modify_input_files.modify_fsurdat import ModifyFsurdat
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -68,6 +68,8 @@ class TestModifyFsurdat(unittest.TestCase):
             lat_1=lat_1,
             lat_2=lat_2,
             landmask_file=None,
+            lat_dimname=None,
+            lon_dimname=None,
         )
 
         # initialize and then modify the comparison matrices

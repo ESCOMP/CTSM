@@ -1,20 +1,23 @@
 """
 Run this code by using the following wrapper script:
-tools/modify_fsurdat/fsurdat_modifier
+tools/modify_input_files/fsurdat_modifier
 
 The wrapper script includes a full description and instructions.
 """
 
+import os
 import logging
 import argparse
 from configparser import ConfigParser
+
+from ctsm.utils import abort, write_output
 from ctsm.config_utils import get_config_value
 from ctsm.ctsm_logging import (
     setup_logging_pre_config,
     add_logging_args,
     process_logging_args,
 )
-from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
+from ctsm.modify_input_files.modify_fsurdat import ModifyFsurdat
 
 logger = logging.getLogger(__name__)
 
@@ -107,10 +110,29 @@ def fsurdat_modifier(cfg_path):
         can_be_unset=True,
     )
 
+    lat_dimname = get_config_value(
+        config=config, section=section, item="lat_dimname", file_path=cfg_path, can_be_unset=True
+    )
+    lon_dimname = get_config_value(
+        config=config, section=section, item="lon_dimname", file_path=cfg_path, can_be_unset=True
+    )
+
     # Create ModifyFsurdat object
     modify_fsurdat = ModifyFsurdat.init_from_file(
-        fsurdat_in, lnd_lon_1, lnd_lon_2, lnd_lat_1, lnd_lat_2, landmask_file
+        fsurdat_in,
+        lnd_lon_1,
+        lnd_lon_2,
+        lnd_lat_1,
+        lnd_lat_2,
+        landmask_file,
+        lat_dimname,
+        lon_dimname,
     )
+
+    # If output file exists, abort before starting work
+    if os.path.exists(fsurdat_out):
+        errmsg = "Output file already exists: " + fsurdat_out
+        abort(errmsg)
 
     # not required: user may set these in the .cfg file
     max_pft = int(max(modify_fsurdat.file.lsmpft))
@@ -231,4 +253,4 @@ def fsurdat_modifier(cfg_path):
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
     # ----------------------------------------------
-    modify_fsurdat.write_output(fsurdat_in, fsurdat_out)
+    write_output(modify_fsurdat.file, fsurdat_in, fsurdat_out, "fsurdat")

@@ -1,4 +1,230 @@
 ===============================================================
+Tag name: ctsm5.1.dev111
+Originator(s): jedwards (Jim Edwards), wwieder (Will Wieder), sacks (Bill Sacks)
+Date: Wed Oct  5 13:05:52 MDT 2022
+One-line Summary: Fixes for NEON cases
+
+Purpose and description of changes
+----------------------------------
+
+Two sets of fixes for NEON cases:
+
+(1) Fixes for leap year handling when there are discrepancies between
+the model and the DATM forcing data in terms of whether the current year
+is a leap year. This involved updates to the share and cdeps externals
+from Jim Edwards.
+
+(2) Other fixes for NEON cases from Will Wieder, as documented in
+https://github.com/ESCOMP/CTSM/issues/1860
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1858 (calendar error in ESMF)
+- Resolves ESCOMP/CTSM#1860 (run_neon not working as expected)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for NEON cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NEON cases
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      larger than roundoff
+
+   In testing, answer changes only show up in SMS_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.izumi_nag.clm-default--clm-NEON-NIWO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cdeps: cdeps0.12.63 -> cdeps0.12.65
+- share: share1.0.12 -> share1.0.13
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1862
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev110
+Originator(s): slevis (Samuel Levis, 303-665-1310)
+Date: Mon Sep 26 17:31:22 MDT 2022
+One-line Summary: Introduction of modify_meshes tool for use in I-cases and F-cases
+
+Purpose and description of changes
+----------------------------------
+
+ Merging the modify_meshes tool to main. This tool is a follow-up to the
+ modify_fsurdat tool for I- and F-cases where users are adding land to
+ areas that by default were expected as ocean. In such cases, fsurdat
+ modifications will take effect only if users also modify the mask_mesh
+ file which ultimately determines the landmask used by the CTSM.
+ Details in the tool's README.
+
+ Adding test_sys_mesh_modifier.py to python system tests.
+
+ Combining /modify_fsurdat and /modify_mesh_mask directories into one
+ directory: /modify_input_files
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #): 
+  Fixes #1644 -- Prospective new tool for user to easily modify ocn/lnd mask in their CESM cases
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Adding test_sys_mesh_modifier.py to python system tests. This requires
+ "module load nco" before running "make stest" or "make all" in the /python
+ directory.
+
+Testing summary:
+----------------
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+    izumi - mostly PASS if approp. environment is loaded, but one test fails
+            because it requires "module load nco"
+    clm_pymods on cheyenne - PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/1677 -- Modify mesh mask with new mesh_mask_modifier tool
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev109
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Mon Sep 26 10:46:33 MDT 2022
+One-line Summary: If not MIMICS, do not output certain MIMICS history fields
+
+Purpose and description of changes
+----------------------------------
+
+ Surrounded the "MIC" variables with mimics if-statements to prevent
+ from sending to history when not mimics. The MICC_HR fields are already
+ inactive, so nothing will appear different in history for these. The
+ TOTMIC* fields are active, so they will stop appearing in history when
+ not mimics.
+
+ In SoilBiogeochemCarbonFluxType.F90 T_SCALAR is Century-specific, so
+ I put a corresponding if-statement around that one.
+
+ We could stop sending to history a few more fields when mimics is off,
+ but they would require if-statements while looping through
+ ndecomp_cascade_transitions or ndecomp_pools. All such fields are
+ already "inactive" in SoilBiogeochemCarbonFluxType.F90.
+
+ The test-suite with all those fields changed to "active" PASSed.
+ So not adding if statements for those.
+
+ Other checks:
+ - I looked at MICC_HR in a CENTURY simulation and in a MIMICS
+ simulation and it looked the same: Zeros over land and 1e36 over ocean.
+ - The rest of the "inactive" variables are valid variables for both
+ CENTURY and MIMICS.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #): #1737
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+  any other testing (give details below): See description text at top.
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO (but field lists differ)
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1745
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev108
 Originator(s): adrifoster (Adrianna Foster)
 Date: Thu Sep  8 08:22:38 MDT 2022
