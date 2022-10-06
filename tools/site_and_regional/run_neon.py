@@ -273,9 +273,9 @@ def get_parser(args, description, valid_neon_sites):
 
     if args.run_length == "0Y":
         if args.run_type == "ad":
-            run_length = "200Y"
+            run_length = "100Y"
         elif args.run_type == "postad":
-            run_length = "50Y"
+            run_length = "100Y"
         else:
             # The transient run length is set by cdeps atm buildnml to the last date of the available tower data
             # this value is not used
@@ -416,7 +416,6 @@ class NeonSite:
 
                 # --change any config for base_case:
                 # case.set_value("RUN_TYPE","startup")
-
                 print("---- base case setup ------")
                 case.case_setup()
             else:
@@ -519,12 +518,12 @@ class NeonSite:
             case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
             case.set_value("NEONVERSION", version)
-
             if run_type == "ad":
                 case.set_value("CLM_FORCE_COLDSTART", "on")
                 case.set_value("CLM_ACCELERATED_SPINUP", "on")
                 case.set_value("RUN_REFDATE", "0018-01-01")
                 case.set_value("RUN_STARTDATE", "0018-01-01")
+                case.set_value("RESUBMIT", 1)
             else:
                 case.set_value("CLM_FORCE_COLDSTART", "off")
                 case.set_value("CLM_ACCELERATED_SPINUP", "off")
@@ -545,6 +544,7 @@ class NeonSite:
                 case.set_value("DATM_YR_START", self.start_year)
                 case.set_value("DATM_YR_END", self.end_year)
                 case.set_value("CALENDAR", "GREGORIAN")
+                case.set_value("RESUBMIT", 0)
             else:
                 # for the spinup we want the start and end on year boundaries
                 if self.start_month == 1:
@@ -557,6 +557,11 @@ class NeonSite:
                     case.set_value("DATM_YR_END", self.end_year)
                 else:
                     case.set_value("DATM_YR_END", self.end_year - 1)
+            
+            # Let's no be so clevar with start / end dates
+            #case.set_value("DATM_YR_ALIGN", int(args.start_date[0:4]))
+            #case.set_value("DATM_YR_START", int(args.start_date[0:4]))
+            #case.set_value("DATM_YR_END", int(args.end_date[0:4]))
 
             if not rundir:
                 rundir = case.get_value("RUNDIR")
