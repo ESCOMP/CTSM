@@ -60,7 +60,7 @@ contains
     character(len=*)  , intent(in) :: NLFilename   ! Namelist filename
     !
     ! !LOCAL VARIABLES:
-    integer		:: begl, endl
+    integer		:: begl, endl                       ! Cathy: beginning and ending landunit index, from src/main/decompMod
     !---------------------------------------------------------------------
 
     begl = bounds%begl; endl = bounds%endl
@@ -75,6 +75,7 @@ contains
     call this%urbantv_interp(bounds)
 
     ! Add history fields
+    ! Cathy: the subroutine is in scr/main/histFileMod.F90
     call hist_addfld1d (fname='TBUILD_MAX', units='K',      &
           avgflag='A', long_name='prescribed maximum interior building temperature',   &
           ptr_lunit=this%t_building_max, default='inactive', set_nourb=spval, &
@@ -290,14 +291,17 @@ contains
           ! do n = isturb_MIN,isturb_MAX
           ! Cathy [dev]
           do n = 1,3
-             if (stream_varnames(lun%itype(l)) == stream_varnames(n)) then
+             ! Cathy [orig]
+             ! if (stream_varnames(lun%itype(l)) == stream_varnames(n)) then
+             ! Cathy [dev.01]
+             if (stream_varnames((lun%itype(l)-6)) == stream_varnames(n)) then
                 this%t_building_max(l) = dataptr2d(ig,n)
                 ! ! Cathy [dev]
                 ! this%p_ac(l) = dataptr2d(ig,n) ! ???
              end if
           end do
        else
-          this%t_building_max(l) = spval
+          this%t_building_max(l) = spval ! Cathy: special value for real data, set to 1.e36 in src/main/clm_varcon
           ! ! Cathy [dev]
           ! this%p_ac(l) = spval
        end if
