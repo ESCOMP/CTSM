@@ -1724,6 +1724,8 @@ contains
     logical do_plant_normal ! are the normal planting rules defined and satisfied?
     logical do_plant_lastchance ! if not the above, what about relaxed rules for the last day of the planting window?
     logical do_plant_prescribed ! is today the prescribed sowing date?
+    logical do_plant  ! are we planting in this time step for any reason?
+    logical did_plant ! did we plant the crop in this time step?
     logical allow_unprescribed_planting ! should crop be allowed to be planted according to sowing window rules?
     logical do_harvest    ! Are harvest conditions satisfied?
     logical force_harvest ! Should we harvest today no matter what?
@@ -1885,6 +1887,52 @@ contains
             crop_inst%sowing_reason_patch(p) = 0
          endif
 
+         ! This is outside the croplive check to allow for using CLM sowing
+         ! dates with externally-prescribed GDD maturity requirements
+         !
+         ! Only allow sowing according to normal "window" rules if not using prescribed
+         ! sowing dates at all, or if this cell had no values in the prescribed sowing
+         ! date file.
+         allow_unprescribed_planting = (.not. use_cropcal_rx_sdates) .or. crop_inst%rx_sdates_thisyr(p,1)<0
+         if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
+            ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
+            !
+            ! Are all the normal requirements for planting met?
+            do_plant_normal = allow_unprescribed_planting           .and. &
+                              a5tmin(p)   /= spval                  .and. &
+                              a5tmin(p)   <= minplanttemp(ivt(p))   .and. &
+                              jday        >= minplantjday(ivt(p),h) .and. &
+                              jday        <= maxplantjday(ivt(p),h) .and. &
+                              (gdd020(p)  /= spval                  .and. &
+                              gdd020(p)   >= gddmin(ivt(p)))
+            ! If not, but it's the last day of the planting window, what about relaxed rules?
+            do_plant_lastchance = allow_unprescribed_planting           .and. &
+                                  (.not. do_plant_normal)               .and. &
+                                  jday       ==  maxplantjday(ivt(p),h) .and. &
+                                  gdd020(p)  /= spval                   .and. &
+                                  gdd020(p)  >= gddmin(ivt(p))
+         else ! not winter cereal... slevis: added distinction between NH and SH
+            ! slevis: The idea is that jday will equal idop sooner or later in the year
+            !         while the gdd part is either true or false for the year.
+            ! Are all the normal requirements for planting met?
+            do_plant_normal = allow_unprescribed_planting               .and. &
+                              t10(p) /= spval .and. a10tmin(p) /= spval .and. &
+                              t10(p)     > planttemp(ivt(p))            .and. &
+                              a10tmin(p) > minplanttemp(ivt(p))         .and. &
+                              jday       >= minplantjday(ivt(p),h)      .and. &
+                              jday       <= maxplantjday(ivt(p),h)      .and. &
+                              gdd820(p)  /= spval                       .and. &
+                              gdd820(p)  >= gddmin(ivt(p))
+            ! If not, but it's the last day of the planting window, what about relaxed rules?
+            do_plant_lastchance = allow_unprescribed_planting    .and. &
+                                  (.not. do_plant_normal)        .and. &
+                                  jday == maxplantjday(ivt(p),h) .and. &
+                                  gdd820(p) > 0._r8 .and. &
+                                  gdd820(p) /= spval
+         end if
+         do_plant = do_plant_prescribed .or. do_plant_normal .or. do_plant_lastchance
+         did_plant = .false.
+
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
          if ( (.not. croplive(p)) .and. s == 0 ) then
 
@@ -1903,83 +1951,25 @@ contains
             !         According to Chris Kucharik, the dataset of
             !         xinpdate was generated from a previous model run at 0.5 deg resolution
 
+            if (do_plant) then
 
-            ! Only allow sowing according to normal "window" rules if not using prescribed
-            ! sowing dates at all, or if this cell had no values in the prescribed sowing
-            ! date file.
-            allow_unprescribed_planting = (.not. use_cropcal_rx_sdates) .or. crop_inst%rx_sdates_thisyr(p,1)<0
-
-            ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
-
-            if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
-
-               ! Are all the normal requirements for planting met?
-               do_plant_normal = allow_unprescribed_planting           .and. &
-                                 a5tmin(p)   /= spval                  .and. &
-                                 a5tmin(p)   <= minplanttemp(ivt(p))   .and. &
-                                 jday        >= minplantjday(ivt(p),h) .and. &
-                                 jday        <= maxplantjday(ivt(p),h) .and. &
-                                 (gdd020(p)  /= spval                  .and. &
-                                 gdd020(p)   >= gddmin(ivt(p)))
-               ! If not, but it's the last day of the planting window, what about relaxed rules?
-               do_plant_lastchance = allow_unprescribed_planting           .and. &
-                                     (.not. do_plant_normal)               .and. &
-                                     jday       ==  maxplantjday(ivt(p),h) .and. &
-                                     gdd020(p)  /= spval                   .and. &
-                                     gdd020(p)  >= gddmin(ivt(p))
-
-               if (do_plant_prescribed .or. do_plant_normal .or. do_plant_lastchance) then
-
+               if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
                   cumvd(p)       = 0._r8
                   hdidx(p)       = 0._r8
                   vf(p)          = 0._r8
-
-                  call PlantCrop(p, leafcn(ivt(p)), jday, kyr, do_plant_normal, &
-                                 do_plant_lastchance, do_plant_prescribed,  &
-                                 temperature_inst, crop_inst, cnveg_state_inst, &
-                                 cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
-                                 cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
-                                 c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
-                  do_plant_prescribed = .false.
-
-               else
-                  gddmaturity(p) = 0._r8
                end if
 
-            else ! not winter cereal... slevis: added distinction between NH and SH
-               ! slevis: The idea is that jday will equal idop sooner or later in the year
-               !         while the gdd part is either true or false for the year.
+               call PlantCrop(p, leafcn(ivt(p)), jday, kyr, do_plant_normal, &
+                              do_plant_lastchance, do_plant_prescribed,  &
+                              temperature_inst, crop_inst, cnveg_state_inst, &
+                              cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+                              cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+                              c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
+               did_plant = .true.
 
-               ! Are all the normal requirements for planting met?
-               do_plant_normal = allow_unprescribed_planting               .and. &
-                                 t10(p) /= spval .and. a10tmin(p) /= spval .and. &
-                                 t10(p)     > planttemp(ivt(p))            .and. &
-                                 a10tmin(p) > minplanttemp(ivt(p))         .and. &
-                                 jday       >= minplantjday(ivt(p),h)      .and. &
-                                 jday       <= maxplantjday(ivt(p),h)      .and. &
-                                 gdd820(p)  /= spval                       .and. &
-                                 gdd820(p)  >= gddmin(ivt(p))
-               ! If not, but it's the last day of the planting window, what about relaxed rules?
-               do_plant_lastchance = allow_unprescribed_planting    .and. &
-                                     (.not. do_plant_normal)        .and. &
-                                     jday == maxplantjday(ivt(p),h) .and. &
-                                     gdd820(p) > 0._r8 .and. &
-                                     gdd820(p) /= spval
-
-               if (do_plant_prescribed .or. do_plant_normal .or. do_plant_lastchance) then
-
-                   call PlantCrop(p, leafcn(ivt(p)), jday, kyr, do_plant_normal, &
-                                 do_plant_lastchance, do_plant_prescribed,  &
-                                 temperature_inst, crop_inst, cnveg_state_inst, &
-                                 cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
-                                 cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
-                                 c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
-                  do_plant_prescribed = .false.
-
-               else
-                  gddmaturity(p) = 0._r8
-               end if
-            end if ! crop patch distinction
+            else
+               gddmaturity(p) = 0._r8
+            end if
 
             ! crop phenology (gdd thresholds) controlled by gdd needed for
             ! maturity (physiological) which is based on the average gdd
@@ -2124,7 +2114,7 @@ contains
                 force_harvest = .true.
                 fake_harvest = .true.
                 harvest_reason = 3._r8
-            else if (do_plant_prescribed) then
+            else if (do_plant .and. .not. did_plant) then
                 ! Today was supposed to be the planting day, but the previous crop still hasn't been harvested.
                 do_harvest = .true.
                 force_harvest = .true.
