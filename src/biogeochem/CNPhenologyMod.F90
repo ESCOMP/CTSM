@@ -1684,8 +1684,8 @@ contains
     use clm_varcon       , only : spval, secspday
     use clm_varctl       , only : use_fertilizer 
     use clm_varctl       , only : use_c13, use_c14
-    use clm_varctl       , only : use_cropcal_streams
     use clm_varcon       , only : c13ratio, c14ratio
+    use clm_varctl       , only : use_cropcal_rx_sdates, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
@@ -1907,7 +1907,7 @@ contains
             ! Only allow sowing according to normal "window" rules if not using prescribed
             ! sowing dates at all, or if this cell had no values in the prescribed sowing
             ! date file.
-            allow_unprescribed_planting = (.not. use_cropcal_streams) .or. crop_inst%rx_sdates_thisyr(p,1)<0
+            allow_unprescribed_planting = (.not. use_cropcal_rx_sdates) .or. crop_inst%rx_sdates_thisyr(p,1)<0
 
             ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
 
@@ -2108,13 +2108,13 @@ contains
             force_harvest = .false.
             fake_harvest = .false.
             sown_today = .false.
-            if (use_cropcal_streams .and. s > 0) then
+            if (use_cropcal_rx_sdates .and. s > 0) then
                 sown_today = crop_inst%sdates_thisyr(p,s) == real(jday, r8)
             end if
 
             ! TEMPORARY? GGCMI seasons often much longer than CLM mxmat.
             mxmat = pftcon%mxmat(ivt(p))
-            if (use_cropcal_streams .and. .not. generate_crop_gdds) then
+            if (use_cropcal_rx_cultivar_gdds) then
                 mxmat = 999
             end if
 
@@ -2132,8 +2132,8 @@ contains
 
             ! If generate_crop_gdds and this patch has prescribed sowing inputs
             else if (generate_crop_gdds .and. crop_inst%rx_sdates_thisyr(p,1) .gt. 0) then
-               if (.not. use_cropcal_streams) then 
-                  write(iulog,*) 'If using generate_crop_gdds, you must set use_cropcal_streams to true.'
+               if (.not. use_cropcal_rx_sdates) then 
+                  write(iulog,*) 'If using generate_crop_gdds, you must specify stream_fldFileName_sdate'
                   call endrun(msg=errMsg(sourcefile, __LINE__))
                endif
                if (next_rx_sdate(p) >= 0) then

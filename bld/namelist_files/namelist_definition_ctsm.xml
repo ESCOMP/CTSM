@@ -1829,12 +1829,6 @@ Mapping method from LAI input file to the model resolution
 <!-- ========================================================================================  -->
 
 <!-- Crop calendars -->
-<entry id="use_cropcal_streams" type="logical" category="physics"
-        group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on use of crop calendar streams in place of CFT-specific sowing windows and harvest criteria.
-(EXPERIMENTAL and NOT tested)
-</entry>
-
 <entry id="stream_year_first_cropcal" type="integer" category="datasets"
        group="cropcal_streams" valid_values="" >
 First year to loop over for crop calendar data

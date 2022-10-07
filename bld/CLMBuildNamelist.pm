@@ -3802,35 +3802,26 @@ sub setup_logic_lai_streams {
 sub setup_logic_cropcal_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_cropcal_streams');
-
-  if ( ! &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl->get_value('use_cropcal_streams'))  ) {
-    $log->verbose_message("use_crop set to true, so use_cropcal_streams will have no effect.");
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal',
+              'sim_year'=>$nl_flags->{'sim_year'},
+              'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal',
+              'sim_year'=>$nl_flags->{'sim_year'},
+              'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  # Set align year, if first and last years are different
+  if ( $nl->get_value('stream_year_first_cropcal') !=
+      $nl->get_value('stream_year_last_cropcal') ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                'model_year_align_cropcal', 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
   }
-
-  if ( &value_is_true($nl->get_value('use_cropcal_streams')) ) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_cropcal_streams');
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal',
-                'sim_year'=>$nl_flags->{'sim_year'},
-                'sim_year_range'=>$nl_flags->{'sim_year_range'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal',
-                'sim_year'=>$nl_flags->{'sim_year'},
-                'sim_year_range'=>$nl_flags->{'sim_year_range'});
-    # Set align year, if first and last years are different
-    if ( $nl->get_value('stream_year_first_cropcal') !=
-        $nl->get_value('stream_year_last_cropcal') ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                  'model_year_align_cropcal', 'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-    }
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_sdate',
-                'hgrid'=>"360x720cru" );
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_cultivar_gdds',
-                'hgrid'=>"360x720cru" );
-    if ($opts->{'driver'} eq "nuopc" ) {
-        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_cropcal',
-                    'hgrid'=>"360x720cru" );
-    }
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_sdate',
+              'hgrid'=>"360x720cru" );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_cultivar_gdds',
+              'hgrid'=>"360x720cru" );
+  if ($opts->{'driver'} eq "nuopc" ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_cropcal',
+                  'hgrid'=>"360x720cru" );
   }
 }
 
