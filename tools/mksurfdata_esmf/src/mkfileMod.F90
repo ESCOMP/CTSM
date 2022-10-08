@@ -604,10 +604,7 @@ contains
     end if
 
     call mkpio_def_spatial_var(pioid=pioid, varname='LANDFRAC_PFT', xtype=xtype, &
-         long_name='land fraction from pft dataset', units='unitless')
-
-    call mkpio_def_spatial_var(pioid=pioid, varname='PFTDATA_MASK', xtype=PIO_INT, &
-         long_name='land mask from pft dataset, indicative of real/fake points', units='unitless')
+         long_name='land fraction from pft dataset (DIFF FROM landfrac USED IN SIMULATION, SHOWN IN HISTORY)', units='unitless')
 
     if (.not. dynlanduse) then
        call mkpio_def_spatial_var(pioid=pioid, varname='PCT_NATVEG', xtype=xtype, &

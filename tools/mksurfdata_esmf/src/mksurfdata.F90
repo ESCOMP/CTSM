@@ -145,7 +145,6 @@ program mksurfdata
   ! pct vegetation data
   real(r8), allocatable           :: landfrac_pft(:)         ! PFT data: % land per gridcell
   real(r8), allocatable           :: pctlnd_pft(:)           ! PFT data: % of gridcell for PFTs
-  integer , allocatable           :: pftdata_mask(:)         ! mask indicating real or fake land type
   type(pct_pft_type), allocatable :: pctnatpft(:)            ! % of grid cell that is nat veg, and breakdown into PFTs
   type(pct_pft_type), allocatable :: pctcft(:)               ! % of grid cell that is crop, and breakdown into CFTs
 
@@ -376,13 +375,12 @@ program mksurfdata
 
   ! -----------------------------------
   ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
-  ! Make landfrac_pft and pftdata_mask
+  ! Make landfrac_pft
   ! -----------------------------------
   ! Determine fractional land from pft dataset
   allocate(pctlnd_pft(lsize_o)); pctlnd_pft(:) = spval
   allocate(pctnatpft(lsize_o)) ;
   allocate(pctcft(lsize_o))    ;
-  allocate(pftdata_mask(lsize_o))  ; pftdata_mask(:) = -999
   allocate(landfrac_pft(lsize_o))  ; landfrac_pft(:) = spval
   call mkpft( mksrf_fvegtyp_mesh, mksrf_fvegtyp, mesh_model, &
        pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
@@ -400,16 +398,8 @@ program mksurfdata
         call pctcft(n)%set_pct_l2g(0._r8)
      end if
      landfrac_pft(n) = pctlnd_pft(n)/100._r8
-     if (pctlnd_pft(n) < 1.e-6_r8) then
-        pftdata_mask(n) = 0
-     else
-        pftdata_mask(n) = 1
-     end if
   end do
   if (fsurdat /= ' ') then
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land mask from pft dataset"
-     call mkfile_output(pioid,  mesh_model, 'PFTDATA_MASK', pftdata_mask, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land fraction  from pft dataset"
      call mkfile_output(pioid,  mesh_model, 'LANDFRAC_PFT', landfrac_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
@@ -789,12 +779,6 @@ program mksurfdata
      rcode = pio_inq_varid(pioid, 'cft', pio_varid)
      rcode = pio_put_var(pioid, pio_varid, (/(n,n=cft_lb,cft_ub)/))
 
-     ! Write out PFTDATA_MASK
-     ! pftdata_mask was calculated ABOVE
-     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land mask (calculated in furdata calc)"
-     call mkfile_output(pioid,  mesh_model, 'PFTDATA_MASK', pftdata_mask, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
-
      ! Write out LANDFRAC_PFT
      ! landfrac_pft was calculated ABOVE
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land fraction calculated in fsurdata calc)"
@@ -1097,10 +1081,8 @@ program mksurfdata
 
          ! Assume wetland, glacier and/or lake when dataset landmask implies ocean
          ! (assume medium soil color (15) and loamy texture).
-         ! Also set pftdata_mask here
 
          if (pctlnd_pft(n) < 1.e-6_r8) then
-            pftdata_mask(n)  = 0
             if (pctgla(n) < 1.e-6_r8) then
                 pctwet(n)    = 100._r8 - pctlak(n)
                 pctgla(n)    = 0._r8
@@ -1110,8 +1092,6 @@ program mksurfdata
             pcturb(n)        = 0._r8
             call pctnatpft(n)%set_pct_l2g(0._r8)
             call pctcft(n)%set_pct_l2g(0._r8)
-         else
-            pftdata_mask(n) = 1
          end if
 
          ! Make sure sum of all land cover types except natural vegetation does
@@ -1265,7 +1245,7 @@ program mksurfdata
 
       ! Make sure that there is no vegetation outside the pft mask
       do n = 1,ns_o
-         if (pftdata_mask(n) == 0 .and. (pctnatpft(n)%get_pct_l2g() > 0 .or. pctcft(n)%get_pct_l2g() > 0)) then
+         if (pctlnd_pft(n) < 1.e-6_r8 .and. (pctnatpft(n)%get_pct_l2g() > 0 .or. pctcft(n)%get_pct_l2g() > 0)) then
             write (6,*)'vegetation found outside the pft mask at n=',n
             write (6,*)'pctnatveg,pctcrop=', pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
             call shr_sys_abort()
