@@ -9,11 +9,13 @@ module CNVegCarbonFluxType
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, i_litr_min, i_litr_max, i_cwdl2
+  use clm_varpar                         , only : nvegcpool
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, i_litr_min, i_litr_max
   use clm_varcon                         , only : spval, dzsoi_decomp
-  use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop
+  use clm_varctl                         , only : use_cndv, use_c13, use_c14, use_nitrif_denitrif, use_crop
+  use CNSharedParamsMod                  , only : use_matrixcn
   use clm_varctl                         , only : use_grainproduct
   use clm_varctl                         , only : iulog
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
@@ -26,6 +28,7 @@ module CNVegCarbonFluxType
   use AnnualFluxDribbler                 , only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use dynSubgridControlMod               , only : get_for_testing_allow_non_annual_changes
   use abortutils                         , only : endrun
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -338,9 +341,6 @@ module CNVegCarbonFluxType
      real(r8), pointer :: nbp_grc        (:) ! (gC/m2/s) net biome production, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for sink (same as net carbon exchange between land and atmosphere)
      real(r8), pointer :: nee_grc        (:) ! (gC/m2/s) net ecosystem exchange of carbon, includes fire and hrv_xsmrpool, excludes landuse and harvest flux, positive for source 
 
-     ! Plant C to N ratios
-     real(r8), pointer :: ligninNratioAvg_col(:)  ! Average of leaf, fine root, and CWD lignin to N ratio
-
      ! Dynamic landcover fluxnes
      real(r8), pointer :: landuseflux_grc(:) ! (gC/m2/s) dwt_conv_cflux+product_closs
      real(r8), pointer :: npp_Nactive_patch                         (:)     ! C used by mycorrhizal uptake    (gC/m2/s)
@@ -359,11 +359,14 @@ module CNVegCarbonFluxType
      real(r8), pointer :: npp_Nfix_patch                            (:)     ! C used by Symbiotic BNF         (gC/m2/s)
      real(r8), pointer :: npp_Nretrans_patch                        (:)     ! C used by retranslocation       (gC/m2/s)
      real(r8), pointer :: npp_Nuptake_patch                         (:)     ! Total C used by N uptake in FUN (gC/m2/s)
-     real(r8), pointer :: npp_growth_patch                         (:)     ! Total C u for growth in FUN      (gC/m2/s)   
+     real(r8), pointer :: npp_growth_patch                          (:)     ! Total C u for growth in FUN      (gC/m2/s)   
      real(r8), pointer :: leafc_change_patch                        (:)     ! Total used C from leaves        (gC/m2/s)
      real(r8), pointer :: soilc_change_patch                        (:)     ! Total used C from soil          (gC/m2/s)
- 
-!     real(r8), pointer :: soilc_change_col                          (:)     ! Total used C from soil          (gC/m2/s)
+     integer,  pointer :: actpatch_fire                             (:)      ! Patch indices with fire in current time step
+     integer           :: num_actpatch_fire                                  ! Number of patches with fire in current time step
+
+     ! Matrix solution arrays for C flux index
+     ! Matrix variables
 
      ! Objects that help convert once-per-year dynamic land cover changes into fluxes
      ! that are dribbled throughout the year
@@ -373,6 +376,7 @@ module CNVegCarbonFluxType
    contains
 
      procedure , public  :: Init   
+     procedure , private :: InitTransfer
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory
      procedure , private :: InitCold
@@ -401,11 +405,23 @@ contains
 
     this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
     call this%InitAllocate ( bounds, carbon_type)
+    if(use_matrixcn)then
+       call this%InitTransfer ()
+    end if
     call this%InitHistory ( bounds, carbon_type )
     call this%InitCold (bounds )
 
   end subroutine Init
 
+  subroutine InitTransfer (this)
+    !
+    ! Set up the transfer indices for the matrix solution
+    !
+    ! !AGRUMENTS:
+    class (cnveg_carbonflux_type) :: this
+    
+  end subroutine InitTransfer 
+    
   !------------------------------------------------------------------------
   subroutine InitAllocate(this, bounds, carbon_type)
     !
@@ -709,8 +725,6 @@ contains
     allocate(this%annsum_npp_col          (begc:endc)) ; this%annsum_npp_col          (:) = nan
     allocate(this%lag_npp_col             (begc:endc)) ; this%lag_npp_col             (:) = spval
 
-    allocate(this%ligninNratioAvg_col     (begc:endc)) ; this%ligninNratioAvg_col     (:) = nan
-
     allocate(this%nep_col                 (begc:endc)) ; this%nep_col                 (:) = nan
     allocate(this%nbp_grc                 (begg:endg)) ; this%nbp_grc                 (:) = nan
     allocate(this%nee_grc                 (begg:endg)) ; this%nee_grc                 (:) = nan
@@ -734,6 +748,9 @@ contains
     allocate(this%npp_growth_patch       (begp:endp)) ; this%npp_growth_patch       (:) = nan
     allocate(this%leafc_change_patch      (begp:endp)) ; this%leafc_change_patch      (:) = nan
     allocate(this%soilc_change_patch      (begp:endp)) ; this%soilc_change_patch      (:) = nan
+    ! Allocate Matrix data
+    if(use_matrixcn)then
+    end if
 
     ! Construct restart field names consistently to what is done in SpeciesNonIsotope &
     ! SpeciesIsotope, to aid future migration to that infrastructure
@@ -3379,6 +3396,8 @@ contains
        ! WW should these be considered spval or 0?
        if (lun%ifspecial(l)) then
           this%availc_patch(p)                = spval
+          if(use_matrixcn)then
+          end if
           this%xsmrpool_recover_patch(p)      = spval
           this%excess_cflux_patch(p)          = spval
           this%plant_calloc_patch(p)          = spval
@@ -3391,6 +3410,8 @@ contains
        end if
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%availc_patch(p)                = 0._r8
+          if(use_matrixcn)then
+          end if
           this%xsmrpool_recover_patch(p)      = 0._r8
           this%excess_cflux_patch(p)          = 0._r8
           this%prev_leafc_to_litter_patch(p)  = 0._r8
@@ -3439,18 +3460,16 @@ contains
 
        if (lun%ifspecial(l)) then
           this%annsum_npp_col(c) = spval
-          this%ligninNratioAvg_col(c) = spval
        end if
 
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%annsum_npp_col(c) = 0._r8   
-          this%ligninNratioAvg_col(c) = 0._r8
        end if
     end do
 
     ! initialize fields for special filters
 
-    call this%SetValues (&
+    call this%SetValues (nvegcpool=nvegcpool, &
          num_patch=num_special_patch, filter_patch=special_patch, value_patch=0._r8, &
          num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
@@ -3514,7 +3533,7 @@ contains
 
        do k = 1, nrepr
           data1dptr => this%reproductivec_xfer_to_reproductivec_patch(:,k)
-          ! e.g., grainc_xfer_to_grainc
+          ! e.g., grain-C xfer to grainc
           varname = get_repr_rest_fname(k)//'c_xfer_to_'//get_repr_rest_fname(k)//'c'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -3531,7 +3550,7 @@ contains
 
        do k = repr_grain_min, repr_grain_max
           data1dptr => this%repr_grainc_to_food_patch(:,k)
-          ! e.g., grainc_to_food
+          ! e.g., grain-C to food
           varname = get_repr_rest_fname(k)//'c_to_food'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -3543,7 +3562,7 @@ contains
             
        do k = 1, nrepr
           data1dptr => this%cpool_to_reproductivec_patch(:,k)
-          ! e.g., cpool_to_grainc
+          ! e.g., -C-pool to grain-C
           varname = 'cpool_to_'//get_repr_rest_fname(k)//'c'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -3670,11 +3689,6 @@ contains
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%annsum_npp_col) 
 
-    call restartvar(ncid=ncid, flag=flag, varname='ligninNratioAvg', xtype=ncd_double,  &
-         dim1name='column', &
-         long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%ligninNratioAvg_col)
-
     call restartvar(ncid=ncid, flag=flag, varname='tempsum_litfall', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
@@ -3719,7 +3733,7 @@ contains
   end subroutine RestartAllIsotopes
 
   !-----------------------------------------------------------------------
-  subroutine SetValues ( this, &
+  subroutine SetValues ( this, nvegcpool, &
        num_patch, filter_patch, value_patch, &
        num_column, filter_column, value_column)
     !
@@ -3729,6 +3743,7 @@ contains
     ! !ARGUMENTS:
     class (cnveg_carbonflux_type) :: this
     integer , intent(in) :: num_patch
+    integer , intent(in) :: nvegcpool
     integer , intent(in) :: filter_patch(:)
     real(r8), intent(in) :: value_patch
     integer , intent(in) :: num_column
@@ -3913,6 +3928,9 @@ contains
 
        this%crop_seedc_to_leaf_patch(i)                  = value_patch
        this%crop_harvestc_to_cropprodc_patch(i)          = value_patch
+       !   Matrix
+       if(use_matrixcn)then
+       end if
     end do
 
     do k = 1, nrepr
@@ -3923,6 +3941,10 @@ contains
           this%reproductive_xsmr_patch(i,k)  = value_patch
        end do
     end do
+
+    ! Set Matrix elements
+    if(use_matrixcn)then
+    end if
 
     if ( use_crop )then
        do fi = 1,num_patch
@@ -4108,7 +4130,6 @@ contains
        bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, isotope, &
        soilbiogeochem_hr_col, soilbiogeochem_cwdhr_col, soilbiogeochem_lithr_col, &
        soilbiogeochem_decomp_cascade_ctransfer_col, &
-       soilbiogeochem_cwdc_col, soilbiogeochem_cwdn_col, &
        product_closs_grc)
     !
     ! !DESCRIPTION:
@@ -4119,8 +4140,8 @@ contains
     use clm_varcon                         , only: secspday
     use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
     use subgridAveMod                      , only: p2c, c2g
-    use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con, mimics_decomp, decomp_method
-    use CNSharedParamsMod                  , only: use_fun, CNParamsShareInst
+    use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con
+    use CNSharedParamsMod                  , only: use_fun
     !
     ! !ARGUMENTS:
     class(cnveg_carbonflux_type)   :: this
@@ -4134,8 +4155,6 @@ contains
     real(r8)          , intent(in) :: soilbiogeochem_cwdhr_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_lithr_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_decomp_cascade_ctransfer_col(bounds%begc:,1:)
-    real(r8)          , intent(in) :: soilbiogeochem_cwdc_col(bounds%begc:)
-    real(r8)          , intent(in) :: soilbiogeochem_cwdn_col(bounds%begc:)
     real(r8)          , intent(in) :: product_closs_grc(bounds%begg:)
     !
     ! !LOCAL VARIABLES:
@@ -4143,13 +4162,6 @@ contains
     integer  :: fp,fc           ! lake filter indices
     real(r8) :: nfixlags, dtime ! temp variables for making lagged npp
     real(r8) :: maxdepth        ! depth to integrate soil variables
-    real(r8) :: ligninNratio_cwd  ! lignin to N ratio of CWD
-    real(r8) :: ligninNratio_leaf_patch(bounds%begp:bounds%endp)  ! lignin to N ratio of leaves, patch level
-    real(r8) :: ligninNratio_froot_patch(bounds%begp:bounds%endp)  ! lignin to N ratio of fine roots, patch level
-    real(r8) :: ligninNratio_leaf_col(bounds%begc:bounds%endc)  ! lignin to N ratio of leaves, column level
-    real(r8) :: ligninNratio_froot_col(bounds%begc:bounds%endc)  ! lignin to N ratio of fine roots, column level
-    real(r8) :: leafc_to_litter_col(bounds%begc:bounds%endc)  ! leaf C to litter C, column level
-    real(r8) :: frootc_to_litter_col(bounds%begc:bounds%endc)  ! fine root C to litter C, column level
     real(r8) :: nep_grc(bounds%begg:bounds%endg)        ! nep_col averaged to gridcell
     real(r8) :: fire_closs_grc(bounds%begg:bounds%endg) ! fire_closs_col averaged to gridcell
     real(r8) :: hrv_xsmrpool_to_atm_grc(bounds%begg:bounds%endg) ! hrv_xsmrpool_to_atm_col averaged to gridcell (gC/m2/s)
@@ -4539,17 +4551,6 @@ contains
             this%hrv_gresp_storage_to_litter_patch(p)      + &
             this%hrv_gresp_xfer_to_litter_patch(p)
 
-       if (decomp_method == mimics_decomp) then
-          ! Calculate ligninNratio for leaves and fine roots
-          associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
-            ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
-                                         pftcon%lflitcn(ivt(p)) * &
-                                         this%leafc_to_litter_patch(p)
-            ligninNratio_froot_patch(p) = pftcon%fr_flig(ivt(p)) * &
-                                          pftcon%frootcn(ivt(p)) * &
-                                          this%frootc_to_litter_patch(p)
-          end associate
-       end if
     end do  ! end of patches loop
 
     !------------------------------------------------
@@ -4593,39 +4594,6 @@ contains
     call p2c(bounds, num_soilc, filter_soilc, &
          this%gpp_patch(bounds%begp:bounds%endp), &
          this%gpp_col(bounds%begc:bounds%endc))
-
-    if (decomp_method == mimics_decomp) then
-       call p2c(bounds, num_soilc, filter_soilc, &
-            ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
-            ligninNratio_leaf_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            ligninNratio_froot_patch(bounds%begp:bounds%endp), &
-            ligninNratio_froot_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            this%leafc_to_litter_patch(bounds%begp:bounds%endp), &
-            leafc_to_litter_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            this%frootc_to_litter_patch(bounds%begp:bounds%endp), &
-            frootc_to_litter_col(bounds%begc:bounds%endc))
-
-       ! Calculate ligninNratioAve
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
-          if (soilbiogeochem_cwdn_col(c) > 0._r8) then
-             ligninNratio_cwd = CNParamsShareInst%cwd_flig * &
-                (soilbiogeochem_cwdc_col(c) / soilbiogeochem_cwdn_col(c)) * &
-                soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2)
-          else
-             ligninNratio_cwd = 0._r8
-          end if
-          this%ligninNratioAvg_col(c) = &
-             (ligninNratio_leaf_col(c) + ligninNratio_froot_col(c) + &
-              ligninNratio_cwd) / &
-              max(1.0e-3_r8, leafc_to_litter_col(c) + &
-                             frootc_to_litter_col(c) + &
-                             soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2))
-       end do
-    end if
 
     ! this code is to calculate an exponentially-relaxed npp value for use in NDynamics code
 

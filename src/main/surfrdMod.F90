@@ -14,7 +14,7 @@ module surfrdMod
   use landunit_varcon , only : numurbl
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog
-  use clm_varctl      , only : use_cndv, use_crop
+  use clm_varctl      , only : use_cndv, use_crop, use_fates
   use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types
   use surfrdUtilsMod  , only : collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
@@ -252,7 +252,7 @@ contains
 
 !-----------------------------------------------------------------------
 
-  subroutine surfrd_get_num_patches (lfsurdat, actual_maxsoil_patches, actual_numcft)
+  subroutine surfrd_get_num_patches (lfsurdat, actual_maxsoil_patches, actual_numpft, actual_numcft)
     !
     ! !DESCRIPTION:
     ! Read maxsoil_patches and numcft from the surface dataset
@@ -264,17 +264,25 @@ contains
     character(len=*), intent(in) :: lfsurdat  ! surface dataset filename
     integer, intent(out) :: actual_maxsoil_patches  ! value from surface dataset
     integer, intent(out) :: actual_numcft           ! cft value from sfc dataset
+    integer, intent(out) :: actual_numpft           ! pft value from sfc dataset
+    
     !
     ! !LOCAL VARIABLES:
     character(len=256):: locfn                ! local file name
     type(file_desc_t) :: ncid                 ! netcdf file id
     integer :: dimid                          ! netCDF dimension id
     logical :: cft_dim_exists                 ! dimension exists on dataset
+    integer :: check_numpft                   ! Surface dataset count of numpft, should
+                                              ! match maxsoil_patches - actual_numcft
     character(len=32) :: subname = 'surfrd_get_num_patches'  ! subroutine name
     !-----------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*) 'Attempting to read maxsoil_patches and numcft from the surface data .....'
+       if(use_fates)then
+          write(iulog,*) 'Attempting to read numcft from the surface data .....'
+       else
+          write(iulog,*) 'Attempting to read maxsoil_patches and numcft from the surface data .....'
+       end if
        if (lfsurdat == ' ') then
           write(iulog,*)'lfsurdat must be specified'
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -285,15 +293,28 @@ contains
     call getfil( lfsurdat, locfn, 0 )
     call ncd_pio_openfile (ncid, trim(locfn), 0)
 
-    ! Read maxsoil_patches and numcft
-    call ncd_inqdlen(ncid, dimid, actual_maxsoil_patches, 'lsmpft')
+    ! Read numcft
     call ncd_inqdid(ncid, 'cft', dimid, cft_dim_exists)
     if ( cft_dim_exists ) then
        call ncd_inqdlen(ncid, dimid, actual_numcft, 'cft')
     else
        actual_numcft = 0
     end if
+    
+    ! Read maxsoil_patches
+    call ncd_inqdlen(ncid, dimid, actual_maxsoil_patches, 'lsmpft')
+    actual_numpft = actual_maxsoil_patches - actual_numcft
 
+    call ncd_inqdlen(ncid, dimid, check_numpft, 'natpft')
+
+    if(check_numpft.ne.actual_numpft)then
+       write(iulog,*)'the sum of the cftdim and the natpft dim should match the lsmpft dim in the surface file'
+       write(iulog,*)'natpft: ',check_numpft
+       write(iulog,*)'lsmpft: ',actual_maxsoil_patches
+       write(iulog,*)'cft: ',actual_numcft
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+    
     if ( masterproc )then
        write(iulog,*) 'Successfully read maxsoil_patches and numcft from the surface data'
        write(iulog,*)
@@ -498,7 +519,7 @@ contains
 
   end subroutine surfrd_special
 
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
   subroutine surfrd_cftformat( ncid, begg, endg, wt_cft, fert_cft, cftsize, natpft_size )
     !
     ! !DESCRIPTION:
@@ -506,7 +527,7 @@ contains
     !     crop landunit and read in as Crop Function Types.
     ! !USES:
     use clm_instur      , only : wt_nat_patch, irrig_method
-    use clm_varpar      , only : cft_size, cft_lb, natpft_lb
+    use clm_varpar      , only : cft_size, cft_lb, natpft_lb, cft_ub, natpft_ub
     use IrrigationMod   , only : irrig_method_unset
     ! !ARGUMENTS:
     implicit none
@@ -532,7 +553,7 @@ contains
 
     call check_dim_size(ncid, 'cft',    cftsize)
     call check_dim_size(ncid, 'natpft', natpft_size)
-
+    
     call ncd_io(ncid=ncid, varname='PCT_CFT', flag='read', data=wt_cft, &
             dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( msg=' ERROR: PCT_CFT NOT on surfdata file'//errMsg(sourcefile, __LINE__))
@@ -567,10 +588,113 @@ contains
     if (.not. readvar) call endrun( msg=' ERROR: PCT_NAT_PFT NOT on surfdata file'//errMsg(sourcefile, __LINE__))
     wt_nat_patch(begg:,natpft_lb:natpft_size-1+natpft_lb) = array2D(begg:,:)
     deallocate( array2D )
+ 
 
   end subroutine surfrd_cftformat
 
-!-----------------------------------------------------------------------
+  subroutine surfrd_wtfates( ncid, begg, endg )
+
+    !--------------------------------------------------------------------------
+    !     This routine evaluates the natural and crop functional
+    !     type fractions in the surface file and returns them to
+    !     a single, concatenated vector.  These weights
+    !     are only used for a satellite phenology run.
+    !     Note that FATES will actually allocate a different number of patches
+    !     and will use a mapping table to connect its own pft and cft
+    !     definitions to those it finds in the surface file.
+    !--------------------------------------------------------------------------
+    
+    ! !USES:
+    use clm_instur      , only : wt_nat_patch, wt_lunit
+    use clm_varpar      , only : cft_size, surfpft_lb, surfpft_ub
+    use landunit_varcon , only : istsoil, istcrop
+    
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t), intent(inout) :: ncid         ! netcdf id
+    integer          , intent(in)    :: begg, endg
+
+    !
+    ! !LOCAL VARIABLES:
+    logical  :: readvar                              ! is variable on dataset
+    real(r8),pointer :: array2d_pft(:,:)                 ! local array
+    real(r8),pointer :: array2d_cft(:,:)                 ! local array
+    integer :: g,p
+    integer :: cft_dimlen,natpft_dimlen,dimid
+    
+    character(len=32) :: subname = 'surfrd_fates'! subroutine name
+    
+    call ncd_inqdlen(ncid, dimid, cft_dimlen, 'cft')
+    call ncd_inqdlen(ncid, dimid, natpft_dimlen, 'natpft')
+
+    ! double check that cft_dimlen+natpft_dimlen = natpft_size
+    if((cft_dimlen+natpft_dimlen).ne.(surfpft_ub-surfpft_lb+1))then
+       call endrun( msg=' ERROR: PCT+CFT dimlen does not match array size for wt_nat_patch when fates is on'//errMsg(sourcefile, __LINE__))
+    end if
+    
+    allocate( array2d_cft(begg:endg,1:cft_dimlen) )
+    allocate( array2d_pft(begg:endg,1:natpft_dimlen) )
+    
+    call ncd_io(ncid=ncid, varname='PCT_CFT', flag='read', data=array2d_cft, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_CFT NOT on surfdata file'//errMsg(sourcefile, __LINE__))
+    
+    call ncd_io(ncid=ncid, varname='PCT_NAT_PFT', flag='read', data=array2d_pft, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_NAT_PFT NOT on surfdata file'//errMsg(sourcefile, __LINE__))
+
+    ! In fates, all the weights in both the cft and pfts go into this array
+    ! It is only used by SP mode, and it can choose what PFTs to align with
+    
+    wt_nat_patch(begg:,0:natpft_dimlen-1) = array2d_pft(begg:,:)
+    wt_nat_patch(begg:,natpft_dimlen:natpft_dimlen+cft_dimlen-1) = array2d_cft(begg:,:)
+
+    if(.false.)then
+       ! Scale the weights by the lu weights from the dataset
+       do g = begg, endg
+          
+          if((wt_lunit(g,istsoil)+wt_lunit(g,istcrop))>0._r8)then
+             do p = 0,natpft_dimlen-1
+                wt_nat_patch(g,p) = wt_nat_patch(g,p) * wt_lunit(g,istsoil)/(wt_lunit(g,istsoil)+wt_lunit(g,istcrop))
+             end do
+             do p = natpft_dimlen,natpft_dimlen+cft_dimlen-1
+                wt_nat_patch(g,p) = wt_nat_patch(g,p) * wt_lunit(g,istcrop)/(wt_lunit(g,istsoil)+wt_lunit(g,istcrop))
+             end do
+          else
+             wt_nat_patch(g,:) = 0._r8
+             wt_nat_patch(g,0) = 100._r8
+          end if
+       end do
+       ! Add the crop weight to the natveg weight and zero the crop weight
+       wt_lunit(begg:,istsoil) = wt_lunit(begg:,istsoil) + wt_lunit(begg:,istcrop)
+       wt_lunit(begg:,istcrop) = 0._r8
+       
+    else
+       ! Legacy method
+       do g = begg, endg
+          if ( wt_lunit(g,istcrop) > 0.0_r8 )then
+             ! Move CFT over to PFT and do weighted average of the crop and soil parts
+             wt_nat_patch(g,0:natpft_dimlen-1) = wt_nat_patch(g,0:natpft_dimlen-1) * wt_lunit(g,istsoil)
+             wt_nat_patch(g,natpft_dimlen:natpft_dimlen+cft_dimlen-1)       = &
+                  wt_nat_patch(g,natpft_dimlen:natpft_dimlen+cft_dimlen-1) * wt_lunit(g,istcrop)
+             wt_lunit(g,istsoil) = (wt_lunit(g,istsoil) + wt_lunit(g,istcrop)) ! Add crop landunit to soil landunit
+             wt_nat_patch(g,:)   =  wt_nat_patch(g,:) / wt_lunit(g,istsoil)
+             wt_lunit(g,istcrop) = 0.0_r8                ! Zero out crop CFT's
+          else
+             wt_nat_patch(g,natpft_dimlen:natpft_dimlen+cft_dimlen-1) = 0.0_r8    ! Make sure generic crops are zeroed out
+          end if
+       end do
+       
+    end if
+    
+    deallocate(array2d_cft,array2d_pft)
+    
+
+  end subroutine surfrd_wtfates
+
+  
+  !-----------------------------------------------------------------------
+  
   subroutine surfrd_pftformat( begg, endg, ncid )
     !
     ! !DESCRIPTION:
@@ -594,6 +718,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(wt_nat_patch) == (/endg, natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
     call check_dim_size(ncid, 'natpft', natpft_size)
+    
     ! If cft_size == 0, then we expect to be running with a surface dataset
     ! that does
     ! NOT have a PCT_CFT array (or CONST_FERTNITRO_CFT array), and thus does not have a 'cft' dimension.
@@ -629,7 +754,7 @@ contains
     call ncd_io(ncid=ncid, varname='PCT_NAT_PFT', flag='read', data=wt_nat_patch, &
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( msg=' ERROR: PCT_NAT_PFT NOT on surfdata file'//errMsg(sourcefile, __LINE__))
-
+       
   end subroutine surfrd_pftformat
 
 !-----------------------------------------------------------------------
@@ -644,6 +769,7 @@ contains
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
     use surfrdUtilsMod  , only : convert_cft_to_pft
+
     !
     ! !ARGUMENTS:
     implicit none
@@ -660,7 +786,8 @@ contains
     real(r8),pointer :: array2DCFT(:,:)              ! local 2D array for CFTs
     real(r8),pointer :: array2DFERT(:,:)             ! local 2D array for fertilizer
     character(len=32) :: subname = 'surfrd_veg_all'  ! subroutine name
-!-----------------------------------------------------------------------
+
+    !-----------------------------------------------------------------------
     !
     ! Read in variables that are handled the same for all formats
     !
@@ -681,6 +808,7 @@ contains
 
     deallocate(arrayl)
 
+    
     ! Check the file format for CFT's and handle accordingly
     if ( actual_numcft > 0 ) then
        if ( create_crop_landunit )then
@@ -701,12 +829,12 @@ contains
           if ( use_fates ) then
              if ( masterproc ) write(iulog,*) "WARNING: When fates is on we allow new CFT based surface datasets ", &
                                               "to be used with create_crop_land FALSE"
-             cftsize = 2
-             allocate(array2DCFT (begg:endg,cft_lb:cftsize-1+cft_lb))
-             allocate(array2DFERT(begg:endg,cft_lb:cftsize-1+cft_lb))
-             call surfrd_cftformat( ncid, begg, endg, array2DCFT, array2DFERT, cftsize, natpft_size-cftsize ) ! Read crops in as CFT's
-             call convert_cft_to_pft( begg, endg, cftsize, array2DCFT )                          ! Convert from CFT to natural veg. landunit
-             fert_cft(begg:,cft_lb:) = 0.0_r8
+
+             call surfrd_wtfates( ncid, begg, endg )
+             ! Set the weighting on the crop patches to zero
+             fert_cft(begg:,cft_lb:cft_ub) = 0.0_r8
+             wt_cft(begg:,cft_lb:cft_ub) = 0.0_r8
+
           else
              call endrun( msg=' ERROR: New format surface datasets require create_crop_landunit TRUE'//errMsg(sourcefile, __LINE__))
           end if
@@ -729,27 +857,30 @@ contains
                ' must also have a separate crop landunit, and vice versa)'//&
                errMsg(sourcefile, __LINE__))
     end if
+    
     ! Convert from percent to fraction
     wt_lunit(begg:endg,istsoil) = wt_lunit(begg:endg,istsoil) / 100._r8
     wt_lunit(begg:endg,istcrop) = wt_lunit(begg:endg,istcrop) / 100._r8
     wt_nat_patch(begg:endg,:)   = wt_nat_patch(begg:endg,:) / 100._r8
-    wt_cft(begg:endg,:) = wt_cft(begg:endg,:) / 100._r8
+    wt_cft(begg:endg,:)         = wt_cft(begg:endg,:) / 100._r8
 
     ! Check sum of vegetation adds to 1
     call check_sums_equal_1(wt_nat_patch, begg, 'wt_nat_patch', subname)
+
     ! if ( use_fates ) wt_cft = 0 because called convert_cft_to_pft, else...
     if ( .not. use_fates ) then
        ! Check sum of vegetation adds to 1
        call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
     end if
+
     ! Call collapse_crop_types: allows need to maintain only 78-pft input data
     ! For use_crop = .false. collapsing 78->16 pfts or 16->16 or some new
-    !    configuration
+       !    configuration
     ! For use_crop = .true. most likely collapsing 78 to the list of crops for
     !    which the CLM includes parameterizations
     ! The call collapse_crop_types also appears in subroutine dyncrop_interp
     call collapse_crop_types(wt_cft(begg:endg,:), fert_cft(begg:endg,:), cft_size, begg, endg, verbose=.true.)
-
+    
     ! Collapse crop variables as needed
     ! The call to collapse_crop_var also appears in subroutine dyncrop_interp
     ! - fert_cft TODO Is this call redundant because it simply sets the crop
@@ -762,8 +893,10 @@ contains
     ! - Pfts could be up to 14 before collapsing if create_crop_landunit = .T.
     ! - Pfts could be up to 16 before collapsing if create_crop_landunit = .F.
     ! TODO Add the same call to subroutine dynpft_interp for transient runs
+    
     call collapse_to_dominant(wt_nat_patch(begg:endg,:), natpft_lb, natpft_ub, &
-                              begg, endg, n_dom_pfts)
+         begg, endg, n_dom_pfts)
+    
   end subroutine surfrd_veg_all
 
   !-----------------------------------------------------------------------

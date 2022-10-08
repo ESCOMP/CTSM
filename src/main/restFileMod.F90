@@ -145,7 +145,7 @@ contains
     ! Write out diagnostic info
 
     if (masterproc) then
-       write(iulog,*) 'Successfully wrote out restart data at nstep = ',get_nstep()
+       write(iulog,'(a,i0)') 'Successfully wrote out restart data at nstep = ',get_nstep()
        write(iulog,'(72a1)') ("-",i=1,60)
     end if
     
@@ -397,7 +397,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*) 'Successfully wrote local restart file ',trim(file)
+       write(iulog,'(a)') 'Successfully wrote local restart file ',trim(file)
        write(iulog,'(72a1)') ("-",i=1,60)
        write(iulog,*)
     end if
@@ -431,7 +431,7 @@ contains
 
        write(nio,'(a)') fnamer
        call relavu( nio )
-       write(iulog,*)'Successfully wrote local restart pointer file'
+       write(iulog,'(a)')'Successfully wrote local restart pointer file'
     end if
 
   end subroutine restFile_write_pfile
@@ -455,8 +455,7 @@ contains
 
        if (masterproc) then	
           write(iulog,*)
-          write(iulog,*)'restFile_open: writing restart dataset at ',&
-               trim(file), ' at nstep = ',get_nstep()
+          write(iulog,'(a,i0)')'restFile_open: writing restart dataset '//trim(file)//' at nstep = ',get_nstep()
           write(iulog,*)
        end if
        call ncd_pio_createfile(ncid, trim(file))
@@ -796,7 +795,8 @@ contains
        if ( use_fates ) call check_dim_size(ncid, nameCohort  , numCohort, msg=msg)
     end if
     msg = 'You can deal with this mismatch by rerunning with ' // &
-         'use_init_interp = .true. in user_nl_clm'
+         'use_init_interp = .true. in user_nl_clm and '// &
+         'remove the init_generated_files/ directory in your run directory'
     call check_dim_size(ncid, 'levsno'  , nlevsno, msg=msg)
     call check_dim_size(ncid, 'levgrnd' , nlevgrnd, msg=msg)
     call check_dim_size(ncid, 'levlak'  , nlevlak)

@@ -63,9 +63,7 @@ def get_config_value(
     try:
         val = config.get(section, item)
     except configparser.NoSectionError:
-        abort(
-            "ERROR: Config file {} must contain section '{}'".format(file_path, section)
-        )
+        abort("ERROR: Config file {} must contain section '{}'".format(file_path, section))
     except configparser.NoOptionError:
         abort(
             "ERROR: Config file {} must contain item '{}' in section '{}'".format(
@@ -74,9 +72,7 @@ def get_config_value(
         )
 
     if val == _CONFIG_PLACEHOLDER:
-        abort(
-            "Error: {} needs to be specified in config file {}".format(item, file_path)
-        )
+        abort("Error: {} needs to be specified in config file {}".format(item, file_path))
 
     val = _handle_config_value(
         var=val,
