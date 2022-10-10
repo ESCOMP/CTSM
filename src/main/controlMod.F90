@@ -230,7 +230,8 @@ contains
           use_fates_sp,                                 &
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode,                            &
-          use_fates_tree_damage
+          use_fates_tree_damage,                        &
+          use_fates_hydrohard,use_fates_frosthard
 
    ! Ozone vegetation stress method
    namelist / clm_inparam / o3_veg_stress_method
@@ -706,6 +707,8 @@ contains
     call mpi_bcast (fates_spitfire_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_fates_logging, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_hydrohard, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_frosthard, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_tree_damage, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_cohort_age_tracking, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_st3, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1050,6 +1053,8 @@ contains
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
        write(iulog, *) '    fates_parteh_mode = ', fates_parteh_mode
        write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
+       write(iulog, *) '    use_fates_hydrohard = ', use_fates_hydrohard
+       write(iulog, *) '    use_fates_frosthard = ', use_fates_frosthard
        write(iulog, *) '    use_fates_tree_damage = ', use_fates_tree_damage
        write(iulog, *) '    use_fates_cohort_age_tracking = ', use_fates_cohort_age_tracking
        write(iulog, *) '    use_fates_ed_st3 = ',use_fates_ed_st3

@@ -52,6 +52,8 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_spitfire_mode
    use clm_varctl        , only : use_fates_tree_damage
    use clm_varctl        , only : use_fates_planthydro
+   use clm_varctl        , only : use_fates_hydrohard
+   use clm_varctl        , only : use_fates_frosthard
    use clm_varctl        , only : use_fates_cohort_age_tracking
    use clm_varctl        , only : use_fates_ed_st3
    use clm_varctl        , only : use_fates_ed_prescribed_phys
@@ -349,6 +351,8 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_logging
      integer                                        :: pass_ed_prescribed_phys
      integer                                        :: pass_planthydro
+     integer                                        :: pass_hydrohard
+     integer                                        :: pass_frosthard
      integer                                        :: pass_inventory_init
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
@@ -463,6 +467,20 @@ module CLMFatesInterfaceMod
            pass_planthydro = 0
         end if
         call set_fates_ctrlparms('use_planthydro',ival=pass_planthydro)
+        
+        if(use_fates_hydrohard) then
+           pass_hydrohard = 1
+        else
+           pass_hydrohard = 0
+        end if
+        call set_fates_ctrlparms('use_hydrohard',ival=pass_hydrohard)
+
+        if(use_fates_frosthard) then
+           pass_frosthard = 1
+        else
+           pass_frosthard = 0
+        end if
+        call set_fates_ctrlparms('use_frosthard',ival=pass_frosthard)
 
         if(use_fates_cohort_age_tracking) then
            pass_cohort_age_tracking = 1
@@ -973,6 +991,23 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in(s)%bsw_sisl(1:nlevsoil)    = soilstate_inst%bsw_col(c,1:nlevsoil)
             this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) =  waterstatebulk_inst%h2osoi_liq_col(c,1:nlevsoil)
          end if
+
+         if (use_fates_hydrohard .or. use_fates_frosthard) then
+            this%fates(nc)%bc_in(s)%temp24_si = &
+               atm2lnd_inst%temp24_patch(col%patchi(c))  
+
+            this%fates(nc)%bc_in(s)%t_mean_5yr_si = &
+               atm2lnd_inst%t_mean_5yr_patch(col%patchi(c))  
+
+            this%fates(nc)%bc_in(s)%t_min_yr_inst_si = &
+               atm2lnd_inst%t_min_yr_inst_patch(col%patchi(c))  
+
+            this%fates(nc)%bc_in(s)%tmin24_si = &
+               atm2lnd_inst%tmin24_patch(col%patchi(c))
+
+            this%fates(nc)%bc_in(s)%dayl_si = grc%dayl(col%gridcell(c)) 
+            this%fates(nc)%bc_in(s)%prev_dayl_si = grc%prev_dayl(col%gridcell(c))  
+         endif
 
          ! get the harvest data, which is by gridcell
          ! for now there is one veg column per gridcell, so store all harvest data in each site
