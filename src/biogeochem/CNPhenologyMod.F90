@@ -1861,7 +1861,7 @@ contains
              next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,s+1)
          end if
 
-         do_plant_prescribed = next_rx_sdate(p) == jday
+         do_plant_prescribed = next_rx_sdate(p) == jday .and. sowing_count(p) < mxsowings
          
          ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-18)
          ! When resuming from a run with old code, may need to manually set these.
@@ -1894,7 +1894,10 @@ contains
          ! sowing dates at all, or if this cell had no values in the prescribed sowing
          ! date file.
          allow_unprescribed_planting = (.not. use_cropcal_rx_sdates) .or. crop_inst%rx_sdates_thisyr(p,1)<0
-         if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
+         if (sowing_count(p) == mxsowings) then
+            do_plant_normal = .false.
+            do_plant_lastchance = .false.
+         else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
             ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
             !
             ! Are all the normal requirements for planting met?
