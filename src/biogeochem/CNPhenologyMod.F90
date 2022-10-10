@@ -130,6 +130,7 @@ module CNPhenologyMod
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
 
   logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
+  logical,  public :: use_mxmat = .true.           ! If true, ignore crop maximum growing season length
   logical          :: ignore_rx_crop_gdds = .false. ! Troubleshooting
 
   ! Constants for seasonal decidious leaf onset and offset
@@ -174,7 +175,7 @@ contains
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
                            min_critical_dayl_method, generate_crop_gdds, &
-                           ignore_rx_crop_gdds
+                           use_mxmat, ignore_rx_crop_gdds
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -199,6 +200,7 @@ contains
     call shr_mpi_bcast (onset_thresh_depends_on_veg, mpicom)
     call shr_mpi_bcast (min_critical_dayl_method,     mpicom)
     call shr_mpi_bcast (generate_crop_gdds,          mpicom)
+    call shr_mpi_bcast (use_mxmat,                   mpicom)
     call shr_mpi_bcast (ignore_rx_crop_gdds,         mpicom)
 
     if (      min_critical_dayl_method == "DependsOnLat"       )then
@@ -2107,7 +2109,9 @@ contains
 
             ! TEMPORARY? GGCMI seasons often much longer than CLM mxmat.
             mxmat = pftcon%mxmat(ivt(p))
-            if (use_cropcal_rx_cultivar_gdds) then
+            if (use_mxmat .and. generate_crop_gdds) then
+               call endrun(msg="If setting generate_crop_gdds to .true., you must set use_mxmat to .false.")
+            else if (.not. use_mxmat) then
                 mxmat = 999
             end if
 

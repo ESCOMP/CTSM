@@ -1138,6 +1138,11 @@ Phenology onset depends on the vegetation type
 Set to .true. in order to override crop harvesting logic and to instead harvest the day before the next sowing date. Used to generate growing-degree day outputs that can be used with an external script to generate new GDD requirement ("cultivar") files.
 </entry>
 
+<entry id="use_mxmat" type="logical" category="physics"
+        group="cnphenology" valid_values="" value=".true.">
+Set to .true. in order to ignore crop PFT parameter for maximum growing season length (mxmat). Must be set to .false. when generate_crop_gdds is .true.
+</entry>
+
 <entry id="ignore_rx_crop_gdds" type="logical" category="physics"
         group="cnphenology" valid_values="" value=".false.">
 Set to .true. in order to override prescribed crop GDD requirements and instead use default CLM values/logic. For troubleshooting purposes only.

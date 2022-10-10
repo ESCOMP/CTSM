@@ -561,6 +561,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <onset_thresh_depends_on_veg                                    >.false.</onset_thresh_depends_on_veg>
 <min_critical_dayl_method                                       >Constant</min_critical_dayl_method>
 <generate_crop_gdds                                             >.false.</generate_crop_gdds>
+<use_mxmat                                                      >.false.</use_mxmat>
 <ignore_rx_crop_gdds                                            >.false.</ignore_rx_crop_gdds>
 <min_crop_gdd_target                                            >1.d00</min_crop_gdd_target>
 
