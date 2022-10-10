@@ -29,11 +29,6 @@ module cropcalStreamMod
   public :: cropcal_advance ! Advance the crop calendar streams (outside of a Open-MP threading loop)
   public :: cropcal_interp  ! interpolates between two years of crop calendar data
 
-!  ! !PUBLIC MEMBER DATA
-!  logical, public, save :: use_cropcal_rx_sdates = .false.
-!  logical, public, save :: use_cropcal_rx_cultivar_gdds = .false.
-!  logical, public, save :: use_cropcal_streams = .false.
-
   ! !PRIVATE MEMBER DATA:
   integer, allocatable        :: g_to_ig(:)         ! Array matching gridcell index to data index
   type(shr_strdata_type)      :: sdat_cropcal_sdate           ! sdate input data stream
