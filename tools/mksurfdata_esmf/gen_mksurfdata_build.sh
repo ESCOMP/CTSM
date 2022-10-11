@@ -106,10 +106,10 @@ echo "Run cime configure for machine $MACH..."
 # You can specify the non-default compiler and mpi-library by adding --compiler and --mpilib settings
 if [ -z "$COMPILER" ] || [ -z "$MPILIB" ]; then
   echo "configure for the default MPI-library and compiler..."
-  $cwd/../../cime/tools/configure --macros-format CMake --machine $MACH
+  $cwd/../../cime/CIME/scripts/configure --macros-format CMake --machine $MACH
 else
   echo "configure for the specific MPILIB=$MPILIB and COMPILER=$COMPILER..."
-  $cwd/../../cime/tools/configure --macros-format CMake --machine $MACH --compiler $COMPILER --mpilib $MPILIB
+  $cwd/../../cime/CIME/scripts/configure --macros-format CMake --machine $MACH --compiler $COMPILER --mpilib $MPILIB
 fi
 
 if [ $? != 0 ]; then
