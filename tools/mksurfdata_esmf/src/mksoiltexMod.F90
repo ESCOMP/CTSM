@@ -234,6 +234,18 @@ contains
     ! Determine %sand, %clay, orgc, cfrag, bulk, phaq on output grid using
     ! mapunits
     !---------------------------------
+    if (root_task) then
+       write(ndiag,'(a)') 'WARNING: assigning       sand_o = -4 to 99%'
+       write(ndiag,'(a)') 'WARNING: assigning other sand_o <  0 to 43%'
+       write(ndiag,'(a)') 'WARNING: assigning       clay_o = -4 to 1%'
+       write(ndiag,'(a)') 'WARNING: assigning other clay_o <  0 to 18%'
+       write(ndiag,'(a)') 'WARNING: assigning       orgc_o = -4 to 1'
+       write(ndiag,'(a)') 'WARNING: assigning other orgc_o <  0 to 0'
+!      write(ndiag,'(a)') 'WARNING: same warnings for organic_o as for orgc_o'
+       write(ndiag,'(a)') 'WARNING: same warnings for cfrag_o as for orgc_o'
+       write(ndiag,'(a)') 'WARNING: assigning bulk_o < 0 to 1.5'
+       write(ndiag,'(a)') 'WARNING: assigning phaq_o < 0 to 7'
+    end if
 
     rcode = pio_openfile(pio_iosystem, pioid_i, pio_iotype, trim(file_lookup_i), pio_nowrite)
 
@@ -300,7 +312,7 @@ contains
           cfrag_o(no,:) = 0._r4
           bulk_o(no,:) = 1.5_r4  ! TODO Ok as a fill value?
           phaq_o(no,:) = 7._r4
-          organic_o(no,:) = 0._r4  ! TODO Rm bef merging PR #1732
+          organic_o(no,:) = 0._r4
 
        else
 
@@ -322,10 +334,8 @@ contains
           end if
           if (sand_o(no,1) < 0._r4) then
              if (int(sand_o(no,1)) == -4) then
-                write(6,'(a,i8)')'WARNING: changing sand_o from -4 to 99% at no = ',no
                 sand_o(no,:) = 99._r4
              else
-                write(6,'(a,i8,a,i8)')'WARNING: changing sand_o from ',int(sand_o(no,1)),' to 43 at no = ',no
                 sand_o(no,:) = 43._r4
              end if
           end if
@@ -348,10 +358,8 @@ contains
           end if
           if (clay_o(no,1) < 0._r4) then
              if (int(clay_o(no,1)) == -4) then
-                write(6,'(a,i8)')'WARNING: changing clay_o from -4 to 1% at no = ',no
                 clay_o(no,:) = 1._r4
              else
-                write(6,'(a,i8,a,i8)')'WARNING: changing clay_o from ',int(clay_o(no,1)),' to 18 at no = ',no
                 clay_o(no,:) = 18._r4
              end if
           end if
@@ -382,14 +390,10 @@ contains
           end if
           if (orgc_o(no,1) < 0._r4) then
              if (int(orgc_o(no,1)) == -4) then  ! sand dunes
-                write(6,'(a,i8)')'WARNING: changing orgc_o from -4 to 1 at no = ', no
                 orgc_o(no,:) = 1._r4
-!               write(6,'(a,i8)')'WARNING: changing organic_o from -4 to 1 at no = ', no
 !               organic_o(no,:) = 1._r4
              else
-                write(6,'(a,i8,a,i8)')'WARNING: changing orgc_o from ',int(orgc_o(no,1)),' to 0 at no = ',no
                 orgc_o(no,:) = 0._r4
-!               write(6,'(a,i8,a,i8)')'WARNING: changing organic_o from ',int(organic_o(no,1)),' to 0 at no = ', no
 !               organic_o(no,:) = 0._r4
              end if
           end if
@@ -418,10 +422,8 @@ contains
           end if
           if (cfrag_o(no,1) < 0._r4) then
              if (int(cfrag_o(no,1)) == -4) then  ! sand dunes
-                write(6,'(a,i8)')'WARNING: changing cfrag_o from -4 to 1 at no = ',no
                 cfrag_o(no,:) = 1._r4
              else
-                write(6,'(a,i8,a,i8)')'WARNING: changing cfrag_o from ',int(cfrag_o(no,1)),' to 0 at no = ',no
                 cfrag_o(no,:) = 0._r4
              end if
           end if
@@ -448,10 +450,8 @@ contains
           end if
           if (bulk_o(no,1) < 0._r4) then
              if (int(bulk_o(no,1)) == -4) then  ! sand dunes
-                write(6,'(a,i8)')'WARNING: changing bulk_o from -4 to 1 at no = ',no
                 bulk_o(no,:) = 1.5_r4  ! TODO Ok for sand dunes?
              else
-                write(6,'(a,i8,a,i8)')'WARNING: changing bulk_o from ',int(bulk_o(no,1)),' to 0 at no = ',no
                 bulk_o(no,:) = 1.5_r4  ! TODO Ok for -7?
              end if
           end if
@@ -478,10 +478,8 @@ contains
           end if
           if (phaq_o(no,1) < 0._r4) then
              if (int(phaq_o(no,1)) == -4) then  ! sand dunes
-                write(6,'(a,i8)')'WARNING: changing phaq_o from -4 to 1 at no = ',no
                 phaq_o(no,:) = 7._r4
              else
-                write(6,'(a,i8,a,i8)')'WARNING: changing phaq_o from ',int(phaq_o(no,1)),' to 0 at no = ',no
                 phaq_o(no,:) = 7._r4
              end if
           end if
