@@ -46,7 +46,7 @@
 
   <!-- fates test suite failures -->
 
-  <test name="ERS_D_Lm12.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesFireLightningPopDens">
+  <test name="ERS_Lm12.1x1_brazil.I2000Clm50FatesCruRsGs.cheyenne_intel.clm-FatesFireLightningPopDens">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>#667</issue>
