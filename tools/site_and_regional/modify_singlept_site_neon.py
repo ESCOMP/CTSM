@@ -682,7 +682,7 @@ def main():
         print("Updating PCT_NAT_PFT")
         #print (f2.PCT_NAT_PFT)
         print(f2.PCT_NAT_PFT.values[0])
-        f2.PCT_NAT_PFT.values[0] = [[100.0]]
+        #f2.PCT_NAT_PFT.values[0] = [[100.0]]
         print(f2.PCT_NAT_PFT[0].values)
 
     out_dir = args.out_dir

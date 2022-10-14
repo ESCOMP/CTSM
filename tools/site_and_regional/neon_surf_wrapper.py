@@ -98,7 +98,7 @@ def main():
         pft = row['pft']
         print ("Now processing site :", site)
         command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),'--site',site,'--dompft',str(pft),'--crop',
-                '--create-surface','--uniform-snowpack','--cap-saturation','--verbose']
+                '--create-surface','--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
         execute(command)
 
         command = ['./modify_singlept_site_neon.py','--neon_site',site, '--surf_dir',
