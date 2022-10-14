@@ -19,7 +19,6 @@ set(SRCFILES mkagfirepkmonthMod.F90
              mkinputMod.F90
              mklaiMod.F90
              mklanwatMod.F90
-             mkorganicMod.F90
              mkpeatMod.F90
              mkpioMod.F90
              mkpftMod.F90

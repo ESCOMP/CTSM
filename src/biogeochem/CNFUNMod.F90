@@ -26,6 +26,7 @@ module CNFUNMod
   use pftconMod                       , only : pftcon, npcropmin
   use decompMod                       , only : bounds_type
   use clm_varctl                      , only : use_nitrif_denitrif,use_flexiblecn
+  use CNSharedParamsMod               , only : use_matrixcn
   use abortutils                      , only : endrun
   use CNVegstateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
@@ -567,6 +568,8 @@ module CNFUNMod
          livestemn              => cnveg_nitrogenstate_inst%livestemn_patch             , & ! Input:   [real(r8)  (:)]
          !   (gN/m2) live stem N
          livecrootn             => cnveg_nitrogenstate_inst%livecrootn_patch            , & ! Input:   [real(r8)  (:)]
+         !   (gN/m2) retranslocation N
+         retransn               => cnveg_nitrogenstate_inst%retransn_patch              , & ! Input:   [real(r8)  (:)]
          !   (gN/m2) live coarse root N
          leafn_storage_xfer_acc => cnveg_nitrogenstate_inst%leafn_storage_xfer_acc_patch, & ! Output:  [real(r8)  (:)]
          !   Accmulated leaf N transfer (gC/m2)
@@ -1448,7 +1451,12 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       Npassive(p)               = n_passive_acc(p)/dt
       Nfix(p)                   = n_fix_acc_total(p)/dt                   
       retransn_to_npool(p)      = n_retrans_acc_total(p)/dt
-      free_retransn_to_npool(p) = free_nretrans(p)/dt
+      ! Without matrix solution
+      if(.not. use_matrixcn)then
+         free_retransn_to_npool(p) = free_nretrans(p)/dt
+      ! With matrix solution (when it comes in)
+      else
+      end if
       ! this is the N that comes off leaves. 
       Nretrans(p)               = retransn_to_npool(p) + free_retransn_to_npool(p)
       

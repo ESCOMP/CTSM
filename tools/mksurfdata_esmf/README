@@ -1,12 +1,21 @@
+=======
+Purpose
+=======
+This tool is intended to generate fsurdat files (surface datasets) for the
+CTSM. It can generate global, regional, and single-point fsurdat files, as long
+as a mesh file is available for the grid.
+
+The subset_data tool allows users to make fsurdat files from existing fsurdat
+files when a mesh file is unavailable. Generally, users should consider the
+subset_data tool for generating regional and single-point fsurdat files.
 ===================
 Build Requirements:
 ===================
 
 mksurfdata_esmf is a distributed memory parallel program (using Message Passing
-Interface -- MPI) that utilizes
-both ESMF (Earth System Modelling Framework) for regridding as well as Parallel
-I/O (PIO) and NetCDF output. As
-such libraries must be built for the following:
+Interface -- MPI) that utilizes both ESMF (Earth System Modelling Framework)
+for regridding as well as PIO (Parallel I/O) and NetCDF output. As
+such, libraries must be built for the following:
 
 1) MPI
 2) NetCDF
@@ -15,22 +24,22 @@ such libraries must be built for the following:
 
 In addition for the build: python, bash-shell, CMake and GNU-Make are required
 
-These libraries need to be built such that they can all work together in the same executable. Hence, the above
-order may be required in building them.
+These libraries need to be built such that they can all work together in the
+same executable. Hence, the above order may be required in building them.
 
 =========================================
 Use cime to manage the build requirements
 =========================================
 
-For users working on cime machines you can use the build
-script to build the tool for you. On other machines you'll need to do a port to cime
-and tell how to build for that machine. That's talked about in the cime documentation.
+For users working on cime machines you can use the build script to build the
+tool. On other machines you'll need to do a port to cime and tell how to build
+for that machine. That's talked about in the cime documentation.
 And you'll have to make some modifications to the build script.
 
 https://github.com/ESMCI/cime/wiki/Porting-Overview
 
-Machines that already run CTSM or CESM have been ported to cime. So if you can run the model
-on your machine you will be able to build the tool there.
+Machines that already run CTSM or CESM have been ported to cime. So if you can
+run the model on your machine, you will be able to build the tool there.
 
 To get a list of the machines that have been ported to cime: 
 
@@ -38,12 +47,13 @@ cd ../../cime/scripts  # assumes we are in tools/mksurfdata_esmf
 ./query_config --machines
 
 NOTE:
-In addition to having a port to cime, the machine also needs to have PIO built and able
-to be referenced with the env variable PIO which will need to be in the porting instructions
-for the machine. Currently an independent PIO library is not available on cime ported machines.
+In addition to having a port to cime, the machine also needs to have PIO built
+and able to be referenced with the env variable PIO which will need to be in
+the porting instructions for the machine. Currently an independent PIO library
+is not available on cime ported machines.
 
 =======================
-building the executable (working in tools/mksurfdata_esmf)
+Building the executable (working in tools/mksurfdata_esmf)
 =======================
 
 > ./gen_mksurfdata_build.sh      # For machines with a cime build
@@ -53,7 +63,7 @@ building the executable (working in tools/mksurfdata_esmf)
 # a default value does get set for other machines.
 
 =======================
-running for a single submission:
+Running for a single submission:
 =======================
 # to generate your target namelist:
 > ./gen_mksurfdata_namelist.py --help
@@ -70,13 +80,17 @@ running for a single submission:
 # to generate your target jobscript (again --help for instructions):
 > ./gen_mksurfdata_jobscript_single.py --number-of-nodes 24 --tasks-per-node 12 --namelist-file target.namelist
 > qsub mksurfdata_jobscript_single
+# Read note about regional grids below.
 
 =======================
-running for the generation of multiple datasets
+Running for the generation of multiple datasets
 =======================
-# Note that gen_mksurfdata_jobscript_multi.py runs ./gen_mksurfdata_namelist.py
+# Notes:
+# - gen_mksurfdata_jobscript_multi.py runs ./gen_mksurfdata_namelist.py for you
+# - The regional grid 5x5_amazon may fail with 24 nodes.
+#   Task geometry that worked: #PBS -l select=4:ncpus=36:mpiprocs=4
 > ./gen_mksurfdata_jobscript_multi.py --help
-> ./gen_mksurfdata_jobscript_multi.py --number-of-nodes 24 --tasks-per-node 12 --scenario all
+> ./gen_mksurfdata_jobscript_multi.py --number-of-nodes 24 --scenario all
 > qsub mksurfdata_jobscript_multi
 
 ================
@@ -88,6 +102,7 @@ slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
 ------------------------------------------------------------
 REMEMBER TO compare against existing fsurdat files in
 /glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/release-clm5.0.18
+0) New 30-sec raw data for soil texture fails. Try requesting more mem.
 1) Soil color & texture and ag fire peak month outputs too high in .log
    TODO? Change frac_o from always 1.
 2) Pct lake has chged in the .log bc the old diagnostic omitted mask_i frac_o

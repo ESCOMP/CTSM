@@ -135,8 +135,10 @@ contains
     ! Raw data file names
     str = get_filename(mksrf_fgrid_mesh)
     rcode = pio_put_att(pioid, pio_global, 'Input_grid_dataset', trim(str))
-    str = get_filename(mksrf_flakwat)
-    rcode = pio_put_att(pioid, pio_global, 'Inland_lake_raw_data_file_name', trim(str))
+    str = get_filename(mksrf_fpctlak)
+    rcode = pio_put_att(pioid, pio_global, 'Percent_lake_raw_data_file_name', trim(str))
+    str = get_filename(mksrf_flakdep)
+    rcode = pio_put_att(pioid, pio_global, 'Lake_depth_raw_data_file_name', trim(str))
     str = get_filename(mksrf_fwetlnd)
     rcode = pio_put_att(pioid, pio_global, 'Inland_wetland_raw_data_file_name', trim(str))
     str = get_filename(mksrf_fglacier)
@@ -167,8 +169,10 @@ contains
     ! Mesh file names
     str = get_filename(mksrf_fvegtyp_mesh)
     rcode = pio_put_att(pioid, pio_global, 'mesh_pft_file_name', trim(str))
-    str = get_filename(mksrf_flakwat_mesh)
-    rcode = pio_put_att(pioid, pio_global, 'mesh_lakwat_file', trim(str))
+    str = get_filename(mksrf_fpctlak_mesh)
+    rcode = pio_put_att(pioid, pio_global, 'mesh_pctlak_file', trim(str))
+    str = get_filename(mksrf_flakdep_mesh)
+    rcode = pio_put_att(pioid, pio_global, 'mesh_lakdep_file', trim(str))
     str = get_filename(mksrf_fwetlnd_mesh)
     rcode = pio_put_att(pioid, pio_global, 'mesh_wetlnd_file', trim(str))
     str = get_filename(mksrf_fglacier_mesh)
@@ -179,8 +183,6 @@ contains
     rcode = pio_put_att(pioid, pio_global, 'mesh_soil_texture_file', trim(str))
     str = get_filename(mksrf_fsoicol_mesh)
     rcode = pio_put_att(pioid, pio_global, 'mesh_soil_color_file', trim(str))
-    str = get_filename(mksrf_forganic_mesh)
-    rcode = pio_put_att(pioid, pio_global, 'mesh_soil_organic_file', trim(str))
     str = get_filename(mksrf_furban_mesh)
     rcode = pio_put_att(pioid, pio_global, 'mesh_urban_file', trim(str))
     str = get_filename(mksrf_fmax_mesh)
@@ -216,11 +218,11 @@ contains
        str = get_filename(mksrf_fsoicol)
        rcode = pio_put_att(pioid, pio_global, 'soil_color_raw_data_file_name', trim(str))
        str = get_filename(mksrf_fsoitex)
-       rcode = pio_put_att(pioid, pio_global, 'soil_texture_raw_data_file_name', trim(str))
+       rcode = pio_put_att(pioid, pio_global, 'soil_texture_mapunit_raw_data_file_name', trim(str))
+       str = get_filename(mksrf_fsoitex_lookup)
+       rcode = pio_put_att(pioid, pio_global, 'soil_texture_lookup_raw_data_file_name', trim(str))
        str = get_filename(mksrf_fmax)
        rcode = pio_put_att(pioid, pio_global, 'fmax_raw_data_file_name', trim(str))
-       str = get_filename(mksrf_forganic)
-       rcode = pio_put_att(pioid, pio_global, 'organic_matter_raw_data_file_name', trim(str))
        str = get_filename(mksrf_fvocef)
        rcode = pio_put_att(pioid, pio_global, 'VOC_EF_raw_data_file_name', trim(str))
     end if
@@ -261,21 +263,36 @@ contains
        call mkpio_def_spatial_var(pioid=pioid, varname='SOIL_COLOR', xtype=PIO_INT, &
             long_name='soil color', units='unitless')
 
-       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_SAND', xtype=xtype, &
+       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_SAND', xtype=PIO_REAL, &
             lev1name='nlevsoi', &
             long_name='percent sand', units='unitless')
 
-       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_CLAY', xtype=xtype, &
+       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_CLAY', xtype=PIO_REAL, &
             lev1name='nlevsoi', &
             long_name='percent clay', units='unitless')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='mapunits', xtype=PIO_INT, &
             long_name='soil texture map units', units='unitless')
 
-       call mkpio_def_spatial_var(pioid=pioid, varname='ORGANIC', xtype=xtype, &
+       call mkpio_def_spatial_var(pioid=pioid, varname='ORGANIC', xtype=PIO_REAL, &
             lev1name='nlevsoi', &
             long_name='organic matter density at soil levels', &
             units='kg/m3 (assumed carbon content 0.58 gC per gOM)')
+       call mkpio_def_spatial_var(pioid=pioid, varname='ORGC', xtype=PIO_REAL, &
+            lev1name='nlevsoi', &
+            long_name='soil organic carbon', units='gC/kg soil')
+
+       call mkpio_def_spatial_var(pioid=pioid, varname='BULK', xtype=PIO_REAL, &
+            lev1name='nlevsoi', &
+            long_name='bulk density', units='g cm-3')
+
+       call mkpio_def_spatial_var(pioid=pioid, varname='CFRAG', xtype=PIO_REAL, &
+            lev1name='nlevsoi', &
+            long_name='coarse fragments', units='vol% > 2 mm')
+
+       call mkpio_def_spatial_var(pioid=pioid, varname='PHAQ', xtype=PIO_REAL, &
+            lev1name='nlevsoi', &
+            long_name='pH measured in water', units='unitless')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='FMAX', xtype=xtype, &
             long_name='maximum fractional saturated area', units='unitless')
@@ -587,10 +604,7 @@ contains
     end if
 
     call mkpio_def_spatial_var(pioid=pioid, varname='LANDFRAC_PFT', xtype=xtype, &
-         long_name='land fraction from pft dataset', units='unitless')
-
-    call mkpio_def_spatial_var(pioid=pioid, varname='PFTDATA_MASK', xtype=PIO_INT, &
-         long_name='land mask from pft dataset, indicative of real/fake points', units='unitless')
+         long_name='land fraction from pft dataset (DIFF FROM landfrac USED IN SIMULATION, SHOWN IN HISTORY)', units='unitless')
 
     if (.not. dynlanduse) then
        call mkpio_def_spatial_var(pioid=pioid, varname='PCT_NATVEG', xtype=xtype, &

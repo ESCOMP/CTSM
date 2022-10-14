@@ -1,4 +1,6 @@
 ./xmlchange NEONSITE=GUAN
 ./xmlchange PTS_LON=293.13112
 ./xmlchange PTS_LAT=17.96882
-./xmlchange RUN_STARTDATE=2018-06-01
+./xmlchange RUN_STARTDATE=2019-01-01
+./xmlchange DATM_YR_ALIGN=2019,DATM_YR_START=2019 
+./xmlchange STOP_N=39
