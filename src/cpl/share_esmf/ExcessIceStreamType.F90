@@ -96,6 +96,7 @@ contains
       
       if (masterproc) then
         write(iulog,*) '  stream_varnames                  = ',stream_varnames
+        write(iulog,*) '  Values will be used if the variable is not on the initial conditions dataset'
       end if
 
       call shr_strdata_init_from_inline(sdat_exice,                                    &

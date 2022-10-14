@@ -14,6 +14,7 @@ module WaterStateType
   use decompMod      , only : bounds_type
   use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_gridcell
   use clm_varctl     , only : use_bedrock, use_excess_ice, iulog
+  use spmdMod        , only : masterproc
   use clm_varctl     , only : use_fates_planthydro
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevmaxurbgrnd, nlevsno   
   use clm_varcon     , only : spval
@@ -712,6 +713,9 @@ contains
             units='kg/m2', scale_by_thickness=.true., &
             interpinic_flag='interp', readvar=readvar, data=this%excess_ice_col)
        if (flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
+          if (masterproc) then
+             write(iulog,*) 'Excess ice data is read from the stream and not from restart file!'
+          endif
           do c = bounds%begc,bounds%endc
           l = col%landunit(c)
           if (.not. lun%lakpoi(l)) then  !not lake
