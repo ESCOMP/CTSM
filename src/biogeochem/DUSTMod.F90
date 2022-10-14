@@ -31,8 +31,8 @@ module DUSTMod
   use LandunitType         , only : lun
   use ColumnType           , only : col
   use PatchType            , only : patch
-  use clm_instur           , only : wt_lunit, wt_nat_patch  ! dmleung added 24 Jul 2022
-  use landunit_varcon      , only : istsoil, istcrop        ! dmleung added 24 Jul 2022 (refering to main/landunit_varcon.F90, for wt_lunit, istsoil=1 is nat veg, istcrop=2 is crop)
+  !use clm_instur           , only : wt_lunit, wt_nat_patch  ! dmleung added 24 Jul 2022
+  !use landunit_varcon      , only : istsoil, istcrop        ! dmleung added 24 Jul 2022 (refering to main/landunit_varcon.F90, for wt_lunit, istsoil=1 is nat veg, istcrop=2 is crop)
   use pftconMod            , only : noveg              ! dmleung added 24 Jul 2022
   !  
   ! !PUBLIC TYPES
@@ -345,6 +345,9 @@ contains
     ! !USES
     use shr_const_mod, only : SHR_CONST_RHOFW
     use subgridaveMod, only : p2g
+    !use clm_instur           , only : wt_lunit, wt_nat_patch  ! dmleung added 24 Jul 2022
+    !use landunit_varcon      , only : istsoil, istcrop        ! dmleung added 24 Jul 2022 (refering to main/landunit_varcon.F90, for wt_lunit, istsoil=1 is nat veg, istcrop=2 is crop)
+    use pftconMod            , only : noveg              ! dmleung added 24 Jul 2022
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                      
@@ -540,6 +543,8 @@ contains
          end if
       end do
 
+      ! dmleung add output for bare_frc and veg_frc here if wanted !!!!!!!!!----------------------
+
       ! reset history output variables before next if-statement to avoid output = inf
 
       do fp = 1,num_nolakep
@@ -654,11 +659,21 @@ contains
             !frc_thr_rgh_fct = (rockfrc(p)*(roughfct(p))**3_r8 + (vegefrc(p)+sparfrc(p))*(ssr(p))**3_r8 )**(0.3333_r8)   ! land cover weighted mean using static GLCNMo bare land fraction LC0, dmleung 20 Dec 2021i; dmleung commented 24 Jul 2022
 
             ! dmleung added calculation of LUH2 bare vs veg fraction within a grid 24 Jul 2022
-            bare_frc = wt_lunit(g,istsoil) * wt_nat_patch(g,noveg) 
-            veg_frc = wt_lunit(g,istsoil) * sum(wt_nat_patch(g,(noveg+1):natpft_ub)) + wt_lunit(g,istcrop)
+            !bare_frc = wt_lunit(g,istsoil) * wt_nat_patch(g,noveg) 
+            !veg_frc = wt_lunit(g,istsoil) * sum(wt_nat_patch(g,(noveg+1):natpft_ub)) + wt_lunit(g,istcrop)
 
-            frc_thr_rgh_fct = (bare_frc*(roughfct(p))**3_r8 + veg_frc*(ssr(p))**3_r8 )**(0.3333_r8)   ! land cover weighted mean using LUH2 land cover, dmleung 24 Jul 2022
+            !frc_thr_rgh_fct = (bare_frc*(roughfct(p))**3_r8 + veg_frc*(ssr(p))**3_r8 )**(0.3333_r8)   ! land cover weighted mean using LUH2 land cover, dmleung 24 Jul 2022
 
+            ! dmleung added calculation of LUH2 bare vs veg fraction within a grid 6 Oct 2022
+            if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+               if (patch%itype(p) == noveg) then
+                  frc_thr_rgh_fct = roughfct(p)
+               else 
+                  frc_thr_rgh_fct = ssr(p)
+               end if
+            else 
+               frc_thr_rgh_fct = 1.0_r8
+            end if
 
             wnd_frc_slt = fv(p) * frc_thr_rgh_fct   ! wnd_frc_slt will be used in the dust emission equation  -dmleung
 
