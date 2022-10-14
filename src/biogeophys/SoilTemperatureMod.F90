@@ -700,7 +700,6 @@ contains
                   col%itype(c) /= icol_roof .and. col%itype(c) /= icol_road_imperv) .or. &
                   (col%itype(c) == icol_road_imperv .and. j > nlev_improad(l))) then
 
-                !TODO recalculate watsat and satw to have excess ice included
                   satw = (h2osoi_liq(c,j)/denh2o + h2osoi_ice(c,j)/denice +excess_ice(c,j)/denice)/(dz(c,j)*watsat(c,j))
                   satw = min(1._r8, satw)
                   if (satw > .1e-6_r8) then

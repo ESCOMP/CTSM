@@ -289,7 +289,7 @@ contains
       data2dptr => this%excess_ice_col(begc:endc,1:nlevsoi)
       call hist_addfld2d (fname='EXCESS_ICE',  units='kg/m2', type2d='levsoi', &
            avgflag='A', long_name='excess soil ice (vegetated landunits only)', &
-           ptr_col=this%excess_ice_col, l2g_scale_type='veg')
+           ptr_col=this%excess_ice_col, l2g_scale_type='veg', default = 'inactive')
     end if
 
     ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water
