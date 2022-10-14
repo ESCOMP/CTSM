@@ -21,7 +21,7 @@ additional mode combination configuration.
 (4) Update the fates externals tag to incorporate a fix a vegetation temperature exact restart 
 issue discovered while implementing (1) above.
 
-(5) Truncate all testmods starting the "Fates" to mitigate running over the limits on the length 
+(5) Truncate all testmods starting with "Fates" to mitigate running over the limits on the length 
 of testnames, typically when specifying custom `test_id` using `run_sys_test`.
 
 (6) Updates the expected failures list.
