@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-    ctsm5.1.dev112 multiple 10/14/2022 Rework fates test definitions and add new fates tests
+    ctsm5.1.dev112 multiple 10/15/2022 Rework fates test definitions and add new fates tests
     ctsm5.1.dev111 multiple 10/05/2022 Fixes for NEON cases
     ctsm5.1.dev110   slevis 09/26/2022 Introduction of modify_meshes tool for use in I-cases and F-cases
     ctsm5.1.dev109   slevis 09/26/2022 If not MIMICS, do not output certain MIMICS history fields

@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev112
 Originator(s): adrifoster (Adrianna Foster), glemieux (Gregory Lemieux, LBL/NGEET)
-Date: Thu 14 Oct 2022 16:20:00 MDT
+Date: Sat Oct 15 16:26:28 MDT 2022
 One-line Summary: Rework fates test definitions and add new fates tests
 
 Purpose and description of changes
@@ -66,6 +66,10 @@ Testing summary:
 ----------------
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
