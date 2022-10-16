@@ -1,4 +1,185 @@
 ===============================================================
+Tag name: ctsm5.1.dev112
+Originator(s): adrifoster (Adrianna Foster), glemieux (Gregory Lemieux, LBL/NGEET)
+Date: Sat Oct 15 16:26:28 MDT 2022
+One-line Summary: Rework fates test definitions and add new fates tests
+
+Purpose and description of changes
+----------------------------------
+
+This tag includes a number of updates to the fates test definitions and test list to gain more coverage:
+
+(1) Reorder and update the fates test definitions so that fates satellite phenology mode
+can be configured for cases using a compset.
+
+(2) Add a long-term exact restart test to catch issues that may arise due to updates to
+fates procedure calls during end of year simulation dates.  
+
+(3) Add a no-competition + fixed biogeography, non-satellite phenology test definition to provide
+additional mode combination configuration.
+
+(4) Update the fates externals tag to incorporate a fix a vegetation temperature exact restart 
+issue discovered while implementing (1) above.
+
+(5) Truncate all testmods starting with "Fates" to mitigate running over the limits on the length 
+of testnames, typically when specifying custom `test_id` using `run_sys_test`.
+
+(6) Updates the expected failures list.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+  Fixes #1839 - Add more FATES tests that are longer than one year
+  Fixes #1817 - Make sure at least one test running FatesSp just uses the compset and not a test-mod directory
+  Fixes #1551 - Add FATES NoComp + FixedBiogeog regression test to the fates category of tests
+
+Externals issues fixed (include issue #):
+  FATES#908 - Bareground area_pft not being carried over during restarts
+  FATES#911 - 24-hr running mean vegetation temperature is not b4b on threaded exact restart SatPhen test
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+  FATES#897 is still unresolved, but is now covered by this updated test list.
+  FATES#701 was reopened
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+  FATES tests run against both fates-sci.1.58.1_api.24.1.0-ctsm5.1.dev111 to check the
+  fates update against the previous baseline is in line with expected DIFFs and 
+  fates-sci.1.59.7_api.24.1.0-ctsm5.1.dev111.
+  
+Answer changes
+--------------
+
+Changes answers relative to baseline: 
+  Yes, for fates run modes only due non-b4b updates in multiple fates tags.  These
+  include both software bug fixes and answer changing science updates.
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates
+
+Pull Requests that document the changes (include PR ids):
+  
+  https://github.com/ESCOMP/CTSM/pull/1827
+  https://github.com/ESCOMP/CTSM/pull/1849
+  
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev111
+Originator(s): jedwards (Jim Edwards), wwieder (Will Wieder), sacks (Bill Sacks)
+Date: Wed Oct  5 13:05:52 MDT 2022
+One-line Summary: Fixes for NEON cases
+
+Purpose and description of changes
+----------------------------------
+
+Two sets of fixes for NEON cases:
+
+(1) Fixes for leap year handling when there are discrepancies between
+the model and the DATM forcing data in terms of whether the current year
+is a leap year. This involved updates to the share and cdeps externals
+from Jim Edwards.
+
+(2) Other fixes for NEON cases from Will Wieder, as documented in
+https://github.com/ESCOMP/CTSM/issues/1860
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1858 (calendar error in ESMF)
+- Resolves ESCOMP/CTSM#1860 (run_neon not working as expected)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for NEON cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NEON cases
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      larger than roundoff
+
+   In testing, answer changes only show up in SMS_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.izumi_nag.clm-default--clm-NEON-NIWO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cdeps: cdeps0.12.63 -> cdeps0.12.65
+- share: share1.0.12 -> share1.0.13
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1862
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev110
 Originator(s): slevis (Samuel Levis, 303-665-1310)
 Date: Mon Sep 26 17:31:22 MDT 2022
