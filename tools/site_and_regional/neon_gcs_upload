@@ -147,7 +147,7 @@ def main(description):
                         logger.warning("Could not find file {}".format(finidat_file))
                         continue
                     newfile = basefile.replace(".postad.",".{}.".format(filedatestamp))
-                    upload_blob("neon-prod-ncar", finidat_file, newfile)
+                    upload_blob("neon-ncar-artifacts", finidat_file, newfile)
                 
         if upload_history:
             logger.info("Upload history for {}".format(site))
@@ -159,7 +159,7 @@ def main(description):
                 archive_dir = os.path.join(case.get_value("DOUT_S_ROOT"),"lnd","hist")
                 for histfile in glob.iglob(archive_dir + "/*.h1.*"):
                     newfile = os.path.basename(histfile)
-                    upload_blob("neon-prod-ncar", histfile, os.path.join("NEON","archive",site,"lnd","hist",newfile))
+                    upload_blob("neon-ncar-artifacts", histfile, os.path.join("NEON","archive",site,"lnd","hist",newfile))
                         
                 
 
