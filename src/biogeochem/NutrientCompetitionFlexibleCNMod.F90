@@ -247,8 +247,6 @@ contains
 
     ! -----------------------------------------------------------------------
 
-!    write(iulog,*) 'Entering calc_plant_cn_alloc() (NutrientCompetitionFlexibleCNMod.F90)'
-
     SHR_ASSERT_ALL_FL((ubound(fpg_col) == (/bounds%endc/)) , sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(this%actual_storage_leafcn) >= (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((lbound(this%actual_storage_leafcn) <= (/bounds%begp/)), sourcefile, __LINE__)
@@ -730,8 +728,6 @@ contains
       end do ! end patch loop
 
     end associate
-
-!    write(iulog,*) 'Exiting calc_plant_cn_alloc() (NutrientCompetitionFlexibleCNMod.F90)'
 
   end subroutine calc_plant_cn_alloc
 
@@ -1250,8 +1246,6 @@ contains
     character(len=*), parameter :: subname = "calc_plant_nitrogen_demand"
     ! -----------------------------------------------------------------------
 
-!    write(iulog,*) 'Entering calc_plant_nitrogen_demand() (NutrientCompetitionFlexibleCNMod.F90)'
-
     SHR_ASSERT_ALL_FL((ubound(this%actual_leafcn) >= (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((lbound(this%actual_leafcn) <= (/bounds%begp/)), sourcefile, __LINE__)
 
@@ -1470,8 +1464,6 @@ contains
       end do
 
     end associate
-
-!    write(iulog,*) 'Exiting calc_plant_nitrogen_demand() (NutrientCompetitionFlexibleCNMod.F90)'
 
   end subroutine calc_plant_nitrogen_demand
 

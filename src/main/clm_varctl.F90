@@ -306,7 +306,9 @@ module clm_varctl
   ! crop calendar streams switch for CropPhenology
   !----------------------------------------------------------
 
-  logical, public :: use_cropcal_streams = .false. ! true => read crop calendar streams for use in CropPhenology.F90
+  logical, public :: use_cropcal_streams = .false.
+  logical, public :: use_cropcal_rx_sdates = .false.
+  logical, public :: use_cropcal_rx_cultivar_gdds = .false.
 
   !----------------------------------------------------------
   ! biomass heat storage switch

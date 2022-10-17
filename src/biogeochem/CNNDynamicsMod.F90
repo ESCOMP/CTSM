@@ -25,10 +25,6 @@ module CNNDynamicsMod
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
   use perf_mod                        , only : t_startf, t_stopf
-  ! SSR troubleshooting
-  use abortutils                      , only : endrun
-  use shr_log_mod                     , only : errMsg => shr_log_errMsg
-  use clm_varctl     , only : iulog
   !
   implicit none
   private
@@ -48,10 +44,6 @@ module CNNDynamicsMod
      real(r8) :: freelivfix_slope_wET   ! slope of line of free living fixation with annual ET
   end type params_type
   type(params_type) :: params_inst
-
-  ! SSR troubleshooting
-  character(len=*), parameter, private :: sourcefile = &
-  __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -338,8 +330,6 @@ contains
     real(r8):: GDDfracthreshold3, GDDfracthreshold4
     !-----------------------------------------------------------------------
 
-!    write(iulog,*) 'Entering CNSoyfix()'
-
     associate(                                                                      & 
          wf               =>  waterdiagnosticbulk_inst%wf_col                      ,         & ! Input:  [real(r8) (:) ]  soil water as frac. of whc for top 0.5 m          
 
@@ -406,11 +396,6 @@ contains
                ! for soy) 
                ! Ranges below are not firm. Are they lit. based or tuning based?
 
-               ! SSR troubleshooting
-               if (gddmaturity(p) == 0.0) then
-                  call endrun(msg=errMsg(sourcefile, __LINE__))
-               end if
-
                GDDfrac = hui(p) / gddmaturity(p)
 
                if (GDDfrac <= GDDfracthreshold1) then
@@ -450,8 +435,6 @@ contains
            soyfixn_to_sminn(bounds%begc:bounds%endc))
 
     end associate
-
-!    write(iulog,*) 'Exiting CNSoyfix()'
 
   end subroutine CNSoyfix
 

@@ -18,7 +18,6 @@ module cropcalStreamMod
   use spmdMod         , only : masterproc, mpicom, comp_id
   use ncdio_pio
   use mct_mod
-!  use GridcellType                    , only : grc ! SSR troubleshooting
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -31,7 +30,6 @@ module cropcalStreamMod
 
   ! !PRIVATE MEMBER DATA:
   integer, allocatable    :: g_to_ig(:)         ! Array matching gridcell index to data index
-  ! SSR TODO: Make this work with mxsowings > 1
   type(shr_strdata_type)  :: sdat_sdate        ! sowing date input data stream
   type(shr_strdata_type)  :: sdat_cultivar_gdds ! cultivar growing-degree days stream
 
@@ -76,7 +74,6 @@ contains
     character(len=CL)  :: cropcal_mapalgo  = 'nn'      ! Mapping alogrithm
     character(len=CL)  :: cropcal_tintalgo = 'nearest' ! Time interpolation alogrithm
     
-    ! SSR TODO: Make this work with mxsowings > 1
     character(len=CXX) :: fldList_sdate1                  ! field string for 1st sowing dates
     character(len=CXX) :: fldList_cultivar_gdds1          ! field string for 1st cultivar GDD targets
     
@@ -132,7 +129,7 @@ contains
     call clm_domain_mct (bounds, dom_clm)
 
     ! create the field list for these cropcal fields...use in shr_strdata_create
-    ! SSR TODO: Make this work with mxsowings > 1
+    ! Will need modification to work with mxsowings > 1
     fldList_sdate1 = shr_string_listCreateField( cft_ub, "sdate1", cft_lb )
     fldList_cultivar_gdds1 = shr_string_listCreateField( cft_ub, "gdd1", cft_lb )
 
@@ -225,7 +222,7 @@ contains
     call get_curr_date(year, mon, day, sec)
     mcdate = year*10000 + mon*100 + day
 
-    ! SSR TODO: Make this work with mxsowings > 1
+    ! Will need modification to work with mxsowings > 1
     call shr_strdata_advance(sdat_sdate, mcdate, sec, mpicom, 'cropcaldyn')
     call shr_strdata_advance(sdat_cultivar_gdds, mcdate, sec, mpicom, 'cropcaldyn')
 
@@ -251,7 +248,6 @@ contains
     use PatchType       , only : patch
     use filterMod       , only : filter
     use decompMod       , only : get_proc_clumps
-!    use clm_time_manager , only : get_curr_date ! SSR troubleshooting
     !
     ! !ARGUMENTS:
     implicit none
@@ -263,24 +259,19 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ivt, p, ip, ig
     integer :: nc, fp
-!    integer :: yr, mon, day, tod, ymd, c, g ! SSR troubleshooting
     character(len=CL)  :: stream_var_name_sdate1
     character(len=CL)  :: stream_var_name_cultivar_gdds1
     !-----------------------------------------------------------------------
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
 
-    ! SSR TODO: Make this work with mxsowings > 1
+    ! Will need modification to work with mxsowings > 1
     SHR_ASSERT_FL( (lbound(sdat_sdate%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(sdat_sdate%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (lbound(sdat_cultivar_gdds%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(sdat_cultivar_gdds%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
 
-    ! SSR troubleshooting
-!    call get_curr_date( yr, mon, day, tod )
-!    ymd = yr*10000 + mon*100 + day
-
-    ! SSR TODO: Make this work with mxsowings > 1
+    ! Will need modification to work with mxsowings > 1
     do fp = 1, num_pcropp
        p = filter_pcropp(fp)
        ivt = patch%itype(p)
@@ -288,7 +279,6 @@ contains
        write(stream_var_name_sdate1,"(i6)") ivt
        write(stream_var_name_cultivar_gdds1,"(i6)") ivt
        
-       ! SSR TODO: Add check that variable exists in netCDF
        stream_var_name_sdate1 = 'sdate1_'//trim(adjustl(stream_var_name_sdate1))
        ip = mct_aVect_indexRA(sdat_sdate%avs(1),trim(stream_var_name_sdate1))
        if (ivt /= noveg) then
@@ -296,7 +286,6 @@ contains
           crop_inst%rx_sdates_thisyr(p,1) = sdat_sdate%avs(1)%rAttr(ip,ig)
        endif
 
-       ! SSR TODO: Add check that variable exists in netCDF
        stream_var_name_cultivar_gdds1 = 'gdd1_'//trim(adjustl(stream_var_name_cultivar_gdds1))
        ip = mct_aVect_indexRA(sdat_cultivar_gdds%avs(1),trim(stream_var_name_cultivar_gdds1))
        if (ivt /= noveg) then
@@ -306,10 +295,6 @@ contains
 
        ! Only for first sowing date of the year
        crop_inst%next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
-!       ! SSR troubleshooting
-!       c = patch%column(p)
-!       g = patch%gridcell(p)
-!       write(iulog,'(I8,A,F8.3,A,F8.3,A,I4,A,I7)') ymd,' (',grc%londeg(g),',',grc%latdeg(g),') crop ',ivt,' read rx_sdate ',crop_inst%rx_sdates_thisyr(p,1)
 
     end do
 

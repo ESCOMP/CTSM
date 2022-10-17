@@ -130,6 +130,7 @@ module CNPhenologyMod
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
 
   logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
+  logical,  public :: use_mxmat = .true.           ! If true, ignore crop maximum growing season length
   logical          :: ignore_rx_crop_gdds = .false. ! Troubleshooting
 
   ! Constants for seasonal decidious leaf onset and offset
@@ -174,7 +175,7 @@ contains
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
                            min_critical_dayl_method, generate_crop_gdds, &
-                           ignore_rx_crop_gdds
+                           use_mxmat, ignore_rx_crop_gdds
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -199,6 +200,7 @@ contains
     call shr_mpi_bcast (onset_thresh_depends_on_veg, mpicom)
     call shr_mpi_bcast (min_critical_dayl_method,     mpicom)
     call shr_mpi_bcast (generate_crop_gdds,          mpicom)
+    call shr_mpi_bcast (use_mxmat,                   mpicom)
     call shr_mpi_bcast (ignore_rx_crop_gdds,         mpicom)
 
     if (      min_critical_dayl_method == "DependsOnLat"       )then
@@ -1684,8 +1686,8 @@ contains
     use clm_varcon       , only : spval, secspday
     use clm_varctl       , only : use_fertilizer 
     use clm_varctl       , only : use_c13, use_c14
-    use clm_varctl       , only : use_cropcal_streams
     use clm_varcon       , only : c13ratio, c14ratio
+    use clm_varctl       , only : use_cropcal_rx_sdates, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
@@ -1724,6 +1726,8 @@ contains
     logical do_plant_normal ! are the normal planting rules defined and satisfied?
     logical do_plant_lastchance ! if not the above, what about relaxed rules for the last day of the planting window?
     logical do_plant_prescribed ! is today the prescribed sowing date?
+    logical do_plant  ! are we planting in this time step for any reason?
+    logical did_plant ! did we plant the crop in this time step?
     logical allow_unprescribed_planting ! should crop be allowed to be planted according to sowing window rules?
     logical do_harvest    ! Are harvest conditions satisfied?
     logical force_harvest ! Should we harvest today no matter what?
@@ -1750,6 +1754,7 @@ contains
          a10tmin           =>    temperature_inst%t_a10min_patch               , & ! Input:  [real(r8) (:) ]  10-day running mean of min 2-m temperature        
          gdd020            =>    temperature_inst%gdd020_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd0                                
          gdd820            =>    temperature_inst%gdd820_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd8                                
+
          fertnitro         =>    crop_inst%fertnitro_patch                     , & ! Input:  [real(r8) (:) ]  fertilizer nitrogen
          hui               =>    crop_inst%hui_patch                           , & ! Input:  [real(r8) (:) ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
          leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature              
@@ -1853,18 +1858,12 @@ contains
 
          s = sowing_count(p)
 
-         ! SSR troubleshooting
-         if (s<0) then
-             write(iulog,*) 'CropPhenology(): s < 0'
-             call endrun(msg=errMsg(sourcefile, __LINE__))
-         end if
-
          ! Get next sowing date
          if (s < mxsowings) then
              next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,s+1)
          end if
 
-         do_plant_prescribed = next_rx_sdate(p) == jday
+         do_plant_prescribed = next_rx_sdate(p) == jday .and. sowing_count(p) < mxsowings
          
          ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-18)
          ! When resuming from a run with old code, may need to manually set these.
@@ -1890,6 +1889,55 @@ contains
             crop_inst%sowing_reason_patch(p) = 0
          endif
 
+         ! This is outside the croplive check to allow for using CLM sowing
+         ! dates with externally-prescribed GDD maturity requirements
+         !
+         ! Only allow sowing according to normal "window" rules if not using prescribed
+         ! sowing dates at all, or if this cell had no values in the prescribed sowing
+         ! date file.
+         allow_unprescribed_planting = (.not. use_cropcal_rx_sdates) .or. crop_inst%rx_sdates_thisyr(p,1)<0
+         if (sowing_count(p) == mxsowings) then
+            do_plant_normal = .false.
+            do_plant_lastchance = .false.
+         else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
+            ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
+            !
+            ! Are all the normal requirements for planting met?
+            do_plant_normal = allow_unprescribed_planting           .and. &
+                              a5tmin(p)   /= spval                  .and. &
+                              a5tmin(p)   <= minplanttemp(ivt(p))   .and. &
+                              jday        >= minplantjday(ivt(p),h) .and. &
+                              jday        <= maxplantjday(ivt(p),h) .and. &
+                              (gdd020(p)  /= spval                  .and. &
+                              gdd020(p)   >= gddmin(ivt(p)))
+            ! If not, but it's the last day of the planting window, what about relaxed rules?
+            do_plant_lastchance = allow_unprescribed_planting           .and. &
+                                  (.not. do_plant_normal)               .and. &
+                                  jday       ==  maxplantjday(ivt(p),h) .and. &
+                                  gdd020(p)  /= spval                   .and. &
+                                  gdd020(p)  >= gddmin(ivt(p))
+         else ! not winter cereal... slevis: added distinction between NH and SH
+            ! slevis: The idea is that jday will equal idop sooner or later in the year
+            !         while the gdd part is either true or false for the year.
+            ! Are all the normal requirements for planting met?
+            do_plant_normal = allow_unprescribed_planting               .and. &
+                              t10(p) /= spval .and. a10tmin(p) /= spval .and. &
+                              t10(p)     > planttemp(ivt(p))            .and. &
+                              a10tmin(p) > minplanttemp(ivt(p))         .and. &
+                              jday       >= minplantjday(ivt(p),h)      .and. &
+                              jday       <= maxplantjday(ivt(p),h)      .and. &
+                              gdd820(p)  /= spval                       .and. &
+                              gdd820(p)  >= gddmin(ivt(p))
+            ! If not, but it's the last day of the planting window, what about relaxed rules?
+            do_plant_lastchance = allow_unprescribed_planting    .and. &
+                                  (.not. do_plant_normal)        .and. &
+                                  jday == maxplantjday(ivt(p),h) .and. &
+                                  gdd820(p) > 0._r8 .and. &
+                                  gdd820(p) /= spval
+         end if
+         do_plant = do_plant_prescribed .or. do_plant_normal .or. do_plant_lastchance
+         did_plant = .false.
+
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
          if ( (.not. croplive(p)) .and. s == 0 ) then
 
@@ -1908,83 +1956,25 @@ contains
             !         According to Chris Kucharik, the dataset of
             !         xinpdate was generated from a previous model run at 0.5 deg resolution
 
+            if (do_plant) then
 
-            ! Only allow sowing according to normal "window" rules if not using prescribed
-            ! sowing dates at all, or if this cell had no values in the prescribed sowing
-            ! date file.
-            allow_unprescribed_planting = (.not. use_cropcal_streams) .or. crop_inst%rx_sdates_thisyr(p,1)<0
-
-            ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
-
-            if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
-
-               ! Are all the normal requirements for planting met?
-               do_plant_normal = allow_unprescribed_planting           .and. &
-                                 a5tmin(p)   /= spval                  .and. &
-                                 a5tmin(p)   <= minplanttemp(ivt(p))   .and. &
-                                 jday        >= minplantjday(ivt(p),h) .and. &
-                                 jday        <= maxplantjday(ivt(p),h) .and. &
-                                 (gdd020(p)  /= spval                  .and. &
-                                 gdd020(p)   >= gddmin(ivt(p)))
-               ! If not, but it's the last day of the planting window, what about relaxed rules?
-               do_plant_lastchance = allow_unprescribed_planting           .and. &
-                                     (.not. do_plant_normal)               .and. &
-                                     jday       ==  maxplantjday(ivt(p),h) .and. &
-                                     gdd020(p)  /= spval                   .and. &
-                                     gdd020(p)  >= gddmin(ivt(p))
-
-               if (do_plant_prescribed .or. do_plant_normal .or. do_plant_lastchance) then
-
+               if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
                   cumvd(p)       = 0._r8
                   hdidx(p)       = 0._r8
                   vf(p)          = 0._r8
-
-                  call PlantCrop(p, leafcn(ivt(p)), jday, kyr, do_plant_normal, &
-                                 do_plant_lastchance, do_plant_prescribed,  &
-                                 temperature_inst, crop_inst, cnveg_state_inst, &
-                                 cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
-                                 cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
-                                 c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
-                  do_plant_prescribed = .false.
-
-               else
-                  gddmaturity(p) = 0._r8
                end if
 
-            else ! not winter cereal... slevis: added distinction between NH and SH
-               ! slevis: The idea is that jday will equal idop sooner or later in the year
-               !         while the gdd part is either true or false for the year.
+               call PlantCrop(p, leafcn(ivt(p)), jday, kyr, do_plant_normal, &
+                              do_plant_lastchance, do_plant_prescribed,  &
+                              temperature_inst, crop_inst, cnveg_state_inst, &
+                              cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+                              cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+                              c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
+               did_plant = .true.
 
-               ! Are all the normal requirements for planting met?
-               do_plant_normal = allow_unprescribed_planting               .and. &
-                                 t10(p) /= spval .and. a10tmin(p) /= spval .and. &
-                                 t10(p)     > planttemp(ivt(p))            .and. &
-                                 a10tmin(p) > minplanttemp(ivt(p))         .and. &
-                                 jday       >= minplantjday(ivt(p),h)      .and. &
-                                 jday       <= maxplantjday(ivt(p),h)      .and. &
-                                 gdd820(p)  /= spval                       .and. &
-                                 gdd820(p)  >= gddmin(ivt(p))
-               ! If not, but it's the last day of the planting window, what about relaxed rules?
-               do_plant_lastchance = allow_unprescribed_planting    .and. &
-                                     (.not. do_plant_normal)        .and. &
-                                     jday == maxplantjday(ivt(p),h) .and. &
-                                     gdd820(p) > 0._r8 .and. &
-                                     gdd820(p) /= spval
-
-               if (do_plant_prescribed .or. do_plant_normal .or. do_plant_lastchance) then
-
-                   call PlantCrop(p, leafcn(ivt(p)), jday, kyr, do_plant_normal, &
-                                 do_plant_lastchance, do_plant_prescribed,  &
-                                 temperature_inst, crop_inst, cnveg_state_inst, &
-                                 cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
-                                 cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
-                                 c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
-                  do_plant_prescribed = .false.
-
-               else
-                  gddmaturity(p) = 0._r8
-               end if
-            end if ! crop patch distinction
+            else
+               gddmaturity(p) = 0._r8
+            end if
 
             ! crop phenology (gdd thresholds) controlled by gdd needed for
             ! maturity (physiological) which is based on the average gdd
@@ -2113,13 +2103,15 @@ contains
             force_harvest = .false.
             fake_harvest = .false.
             sown_today = .false.
-            if (use_cropcal_streams .and. s > 0) then
+            if (use_cropcal_rx_sdates .and. s > 0) then
                 sown_today = crop_inst%sdates_thisyr(p,s) == real(jday, r8)
             end if
 
             ! TEMPORARY? GGCMI seasons often much longer than CLM mxmat.
             mxmat = pftcon%mxmat(ivt(p))
-            if (use_cropcal_streams .and. .not. generate_crop_gdds) then
+            if (use_mxmat .and. generate_crop_gdds) then
+               call endrun(msg="If setting generate_crop_gdds to .true., you must set use_mxmat to .false.")
+            else if (.not. use_mxmat) then
                 mxmat = 999
             end if
 
@@ -2129,7 +2121,7 @@ contains
                 force_harvest = .true.
                 fake_harvest = .true.
                 harvest_reason = 3._r8
-            else if (do_plant_prescribed) then
+            else if (do_plant .and. .not. did_plant) then
                 ! Today was supposed to be the planting day, but the previous crop still hasn't been harvested.
                 do_harvest = .true.
                 force_harvest = .true.
@@ -2137,8 +2129,8 @@ contains
 
             ! If generate_crop_gdds and this patch has prescribed sowing inputs
             else if (generate_crop_gdds .and. crop_inst%rx_sdates_thisyr(p,1) .gt. 0) then
-               if (.not. use_cropcal_streams) then 
-                  write(iulog,*) 'If using generate_crop_gdds, you must set use_cropcal_streams to true.'
+               if (.not. use_cropcal_rx_sdates) then 
+                  write(iulog,*) 'If using generate_crop_gdds, you must specify stream_fldFileName_sdate'
                   call endrun(msg=errMsg(sourcefile, __LINE__))
                endif
                if (next_rx_sdate(p) >= 0) then
@@ -2226,12 +2218,6 @@ contains
                   onset_counter(p) = dt
                     fert_counter(p)  = ndays_on * secspday
                     if (ndays_on .gt. 0) then
-                       
-                       ! SSR troubleshooting
-                       if (fert_counter(p)==0) then
-                          call endrun(msg=errMsg(sourcefile, __LINE__))
-                       end if
-
                        fert(p) = (manunitro(ivt(p)) * 1000._r8 + fertnitro(p))/ fert_counter(p)
                     else
                        fert(p) = 0._r8
@@ -2283,11 +2269,6 @@ contains
                   crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
                   leafc_xfer(p) = 0._r8
 
-                  ! SSR troubleshooting
-                  if (leafcn(ivt(p)) == 0.0) then
-                     call endrun(msg=errMsg(sourcefile, __LINE__))
-                  end if
-
                   leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
                   if (use_c13) then
                      c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
@@ -2306,12 +2287,6 @@ contains
 
             else if (hui(p) >= huigrain(p) .and. cphase(p) >= cphase_leafemerge) then
                cphase(p) = cphase_grainfill
-
-               ! SSR troubleshooting
-               if (leaf_long(ivt(p))*dayspyr*secspday == 0.0) then
-                  call endrun(msg=errMsg(sourcefile, __LINE__))
-               end if
-
                bglfr(p) = 1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)
             else
                 cphase(p) = cphase_planted
@@ -2336,12 +2311,6 @@ contains
             crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
             onset_counter(p) = 0._r8
             leafc_xfer(p) = 0._r8
-            
-            ! SSR troubleshooting
-            if (leafcn(ivt(p)) == 0.0) then
-               call endrun(msg=errMsg(sourcefile, __LINE__))
-            end if
-
             leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
             if (use_c13) then
                c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
@@ -2499,6 +2468,7 @@ contains
 
     ! !USES:
     use clm_varctl       , only : use_c13, use_c14
+    use clm_varctl       , only : use_cropcal_rx_cultivar_gdds
     use clm_varcon       , only : c13ratio, c14ratio
     use clm_varpar       , only : mxsowings
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
@@ -2507,7 +2477,6 @@ contains
     use pftconMod        , only : nirrig_trp_corn, nirrig_sugarcane, nirrig_trp_soybean
     use pftconMod        , only : nirrig_cotton, nirrig_rice
     use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
-
     !
     ! !ARGUMENTS:
     integer                , intent(in)    :: p         ! PATCH index running over
@@ -2563,14 +2532,6 @@ contains
       harvdate(p)  = NOT_Harvested
       s = sowing_count(p) + 1
 
-      ! SSR troubleshooting
-      if (s < 1) then
-         write(iulog,*) 'PlantCrop(): s < 1'
-         call endrun(msg=errMsg(sourcefile, __LINE__))
-      else if (s > mxsowings) then
-         write(iulog,*) 'PlantCrop(): s > mxsowings'
-      end if
-
       sowing_count(p) = s
       if (s < mxsowings) then
          next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, s+1)
@@ -2589,11 +2550,6 @@ contains
           this_sowing_reason = this_sowing_reason + 2._r8
       end if
       sowing_reason(p,s) = this_sowing_reason
-
-      ! SSR troubleshooting
-      if (leafcn_in == 0.0) then
-         call endrun(msg=errMsg(sourcefile, __LINE__))
-      end if
 
       this_sowing_reason = 0._r8
       if (do_plant_normal) then
@@ -2629,7 +2585,7 @@ contains
       endif
 
       ! set GDD target
-      if (do_plant_prescribed .and. (.not. generate_crop_gdds) .and. (.not. ignore_rx_crop_gdds) .and. crop_inst%rx_cultivar_gdds_thisyr(p,s) .ge. 0._r8) then
+      if (use_cropcal_rx_cultivar_gdds .and. (.not. ignore_rx_crop_gdds) .and. crop_inst%rx_cultivar_gdds_thisyr(p,s) .ge. 0._r8) then
          gdd_target = crop_inst%rx_cultivar_gdds_thisyr(p,s)
 
          ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator

@@ -240,7 +240,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: fc,c,p  ! indices
     !-----------------------------------------------------------------------
-    
+
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(patcharr) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(colarr) == (/bounds%endc/)), sourcefile, __LINE__)

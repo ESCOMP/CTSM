@@ -561,6 +561,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <onset_thresh_depends_on_veg                                    >.false.</onset_thresh_depends_on_veg>
 <min_critical_dayl_method                                       >Constant</min_critical_dayl_method>
 <generate_crop_gdds                                             >.false.</generate_crop_gdds>
+<use_mxmat                                                      >.false.</use_mxmat>
 <ignore_rx_crop_gdds                                            >.false.</ignore_rx_crop_gdds>
 <min_crop_gdd_target                                            >1.d00</min_crop_gdd_target>
 
@@ -1560,7 +1561,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 
 <!-- crop calendar streams namelist defaults -->
-<use_cropcal_streams    >.false.</use_cropcal_streams>
 <stream_year_first_cropcal  >1850</stream_year_first_cropcal>
 <stream_year_last_cropcal   >2100</stream_year_last_cropcal>
 <model_year_align_cropcal   >1850</model_year_align_cropcal>
