@@ -1,2 +1,0 @@
-use_z0mg_2d = .true.
-fsurdat = ' /glade/p/cesm/lmwg_dev/oleson/Z0_RonnieMeier/surfdata_360x720cru_16pfts_Irrig_CMIP6_simyr2000_c210624_2D.nc'
