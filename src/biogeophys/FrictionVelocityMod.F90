@@ -13,7 +13,7 @@ module FrictionVelocityMod
   use decompMod               , only : bounds_type
   use abortutils              , only : endrun
   use clm_varcon              , only : spval
-  use clm_varctl              , only : use_cn, use_luna, z0param_method, use_z0mg_2d, use_z0m_snowmelt
+  use clm_varctl              , only : use_cn, use_luna, z0param_method, use_z0m_snowmelt
   use LandunitType            , only : lun
   use ColumnType              , only : col
   use PatchType               , only : patch
@@ -95,7 +95,6 @@ module FrictionVelocityMod
      procedure, private :: InitCold
      procedure, private :: ReadNamelist
      procedure, private :: ReadParams
-     procedure, private :: ReadZ0M
      procedure, private, nopass :: StabilityFunc1        ! Stability function for rib < 0.
      procedure, private, nopass :: StabilityFunc2        ! Stability function for rib < 0.
 
@@ -121,10 +120,6 @@ contains
     call this%ReadNamelist(NLFilename)
     call this%ReadParams(params_ncid)
  
-    if(use_z0mg_2d) then            
-        call this%ReadZ0M(bounds)
-    end if
-
   end subroutine Init
 
   !------------------------------------------------------------------------
@@ -414,57 +409,6 @@ contains
 
   end subroutine ReadParams
 
-  !-----------------------------------------------------------------------
-  subroutine ReadZ0M(this, bounds)
-    !
-    ! !DESCRIPTION:
-    ! Initialize module time constant variables
-    !
-    ! !USES:
-    use shr_log_mod, only : errMsg => shr_log_errMsg
-    use fileutils  , only : getfil
-    use ncdio_pio  , only : file_desc_t, ncd_defvar, ncd_io, ncd_pio_openfile, ncd_pio_closefile
-    use spmdMod    , only : masterproc
-    use clm_varcon , only : grlnd    
-    use clm_varctl , only : fsurdat
-    use ncdio_pio  , only : ncd_io  
-    use clm_varctl     , only : iulog
-    
-    !
-    ! !ARGUMENTS:
-    class(frictionvel_type) :: this    
-    type(bounds_type), intent(in) :: bounds  
-    !
-    ! !LOCAL VARIABLES:
-    integer            :: c,g          ! indices
-    type(file_desc_t)  :: ncid         ! netcdf id
-    character(len=256) :: locfn        ! local filename
-    integer            :: ier          ! error status
-    logical            :: readvar 
-    real(r8), pointer  :: z0mg2d (:)   ! read in - ground z0m
-    !---------------------------------------------------------------------
-
-    ! Allocate module variable for ground z0m
-
-
-    call getfil (fsurdat, locfn, 0)
-    call ncd_pio_openfile (ncid, locfn, 0)
-
-
-    allocate(z0mg2d(bounds%begg:bounds%endg)) 
-    call ncd_io(ncid=ncid, varname='Z0MG_2D', flag='read', data=z0mg2d, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       call endrun(msg=' ERROR: Z0MG_2D NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
-    end if
-    write(iulog,*) 'Writing z0mg2d'
-    do c = bounds%begc, bounds%endc
-       g = col%gridcell(c)
-       this%z0mg_2D_col(c) = max(1.e-4_r8,z0mg2d(g))
-    end do
-    deallocate(z0mg2d)
-
-  end subroutine ReadZ0M
-
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
     ! 
@@ -637,12 +581,7 @@ contains
                 z0mg(c) = this%zsno
              end if                    
           else
-             if(use_z0mg_2d) then
-                z0mg(c) = z0mg_2D(c)
-             else
-                z0mg(c) = this%zlnd
-             end if
-                  
+             z0mg(c) = this%zlnd
           end if
        case ('Meier2022')           ! Bare ground and ice have a different value
           l = col%landunit(c)
@@ -664,9 +603,6 @@ contains
 
              
           else
-             if(use_z0mg_2d) then
-                z0mg(c) = z0mg_2D(c)
-             else
                 z0mg(c) = this%zlnd
                
              end if                   

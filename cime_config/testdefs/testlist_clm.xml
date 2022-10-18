@@ -1315,24 +1315,6 @@
       <option name="comment"  >Exact restart short DEBUG SP test with Meier surface roughness</option>
     </options>
   </test>
-  <test name="ERP_D_Ly3" grid="f09_f09_mg17" compset="I2000Clm51Bgc" testmods="clm/Meier2022_surf_rough_all_f09NonCrop">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Exact restart DEBUG on test with Meier surface roughness at f09</option>
-    </options>
-  </test>
-  <test name="SMS" grid="hcru_hcru" compset="I2000Clm51Bgc" testmods="clm/Meier2022_surf_rough_all_hcruNonCrop">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Short production test with Meier surface roughness at half degree</option>
-    </options>
-  </test>
   <test name="ERS_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>

@@ -202,7 +202,7 @@ contains
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
-         z0param_method, use_z0m_snowmelt, use_z0mg_2d
+         z0param_method, use_z0m_snowmelt
     
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -784,7 +784,6 @@ contains
     call mpi_bcast (snow_cover_fraction_method , len(snow_cover_fraction_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (z0param_method , len(z0param_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_z0m_snowmelt, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_z0mg_2d, 1, MPI_LOGICAL, 0, mpicom, ier)    
     call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (scmlat, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (scmlon, 1, MPI_REAL8,0, mpicom, ier)
