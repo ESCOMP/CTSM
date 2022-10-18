@@ -485,7 +485,11 @@ contains
           ! roughness length is not zero in canopy flux calculation
 
           if (pftcon%woody(patch%itype(p)) == 1._r8) then
-             this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+             if (patch%itype(p) < npcropmin) then
+                this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+             else
+                this%deadstemn_patch(p) =  0._r8
+             end if
           else
              this%deadstemn_patch(p) = 0._r8
           end if
@@ -805,7 +809,11 @@ contains
              ! roughness length is not zero in canopy flux calculation
    
              if (pftcon%woody(patch%itype(p)) == 1._r8) then
-                this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+                if (patch%itype(p) < npcropmin) then   
+                   this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+                else
+                   this%deadstemn_patch(p) = 0._r8  
+                end if
              else
                 this%deadstemn_patch(p) = 0._r8
              end if

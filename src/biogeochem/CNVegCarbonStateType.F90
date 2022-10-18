@@ -956,14 +956,14 @@ contains
                 this%leafc_storage_patch(p)  = 0._r8
                 this%frootc_patch(p)         = 0._r8            
                 this%frootc_storage_patch(p) = 0._r8   
-                if (pftcon%perennial(patch%itype(p)) == 1._r8 .and. pftcon%woody(patch%itype(p)) == 1._r8) then
-                   this%leafc_patch(p)          = 0._r8
-                   this%leafc_storage_patch(p)  = cnvegcstate_const%initial_vegC * ratio
-                   this%frootc_patch(p)         = 0._r8
-                   this%frootc_storage_patch(p) = cnvegcstate_const%initial_vegC * ratio
-                   this%deadstemc_soy_patch(p)  = 0._r8
-                   this%deadstemc_storage_soy_patch(p) = 0._r8
-                end if
+!                if (pftcon%perennial(patch%itype(p)) == 1._r8 .and. pftcon%woody(patch%itype(p)) == 1._r8) then
+!                   this%leafc_patch(p)          = 0._r8
+!                   this%leafc_storage_patch(p)  = cnvegcstate_const%initial_vegC * ratio
+!                   this%frootc_patch(p)         = 0._r8
+!                   this%frootc_storage_patch(p) = cnvegcstate_const%initial_vegC * ratio
+!                   this%deadstemc_soy_patch(p)  = 0._r8
+!                   this%deadstemc_storage_soy_patch(p) = 0._r8
+!                end if
              else
                 this%leafc_patch(p)          = 0._r8
                 this%leafc_storage_patch(p)  = cnvegcstate_const%initial_vegC * ratio   
@@ -988,7 +988,7 @@ contains
              if (patch%itype(p) < npcropmin)then ! (added by O.Dombrowski)
                 this%deadstemc_patch(p) = 0.1_r8 * ratio
              else
-                this%deadstemc_patch(p) = 0.1_r8 ! (added by O.Dombrowski)
+                this%deadstemc_patch(p) = 0._r8 ! (added by O.Dombrowski)
              end if
           else
              this%deadstemc_patch(p) = 0._r8 
@@ -1418,8 +1418,8 @@ contains
                      this%deadstemc_storage_soy_patch(i) = 0._r8
                    end if
                    l = patch%landunit(i)
-                   if (lun%itype(l) == istsoil  .or. patch%itype(i) == nc3crop .or. patch%itype(i) == nc3irrig .or. &
-                      (lun%itype(l) == istcrop .and. pftcon%perennial(patch%itype(i)) == 1._r8)) then ! (added by O.Dombrowski)
+                   if (lun%itype(l) == istsoil  .or. patch%itype(i) == nc3crop .or. patch%itype(i) == nc3irrig) then!.or. &
+!                      (lun%itype(l) == istcrop .and. pftcon%perennial(patch%itype(i)) == 1._r8)) then ! (added by O.Dombrowski)
                       if ( present(num_reseed_patch) ) then
                          num_reseed_patch = num_reseed_patch + 1
                          filter_reseed_patch(num_reseed_patch) = i
@@ -1458,9 +1458,11 @@ contains
                       this%livestemc_xfer_patch(i)    = 0._r8 
 
                       if (pftcon%woody(patch%itype(i)) == 1._r8) then
-                         this%deadstemc_patch(i) = 0.1_r8 * ratio
-                      else
-                         this%deadstemc_patch(i) = 0._r8 
+                         if (patch%itype(p) < npcropmin) then
+                            this%deadstemc_patch(i) = 0.1_r8 * ratio
+                         else
+                            this%deadstemc_patch(i) = 0._r8 
+                         end if
                       end if
                       this%deadstemc_storage_patch(i)  = 0._r8 
                       this%deadstemc_xfer_patch(i)     = 0._r8 
@@ -2548,7 +2550,7 @@ contains
                this%dispvegc_patch(p)       + &
                this%grainc_patch(p)
        end if
-
+       
        ! total vegetation carbon, excluding cpool (TOTVEGC)
        this%totvegc_patch(p) = &
             this%dispvegc_patch(p) + &
@@ -2600,6 +2602,7 @@ contains
             soilbiogeochem_totlitc_col(c)   + &
             soilbiogeochem_totsomc_col(c)   + &
             soilbiogeochem_ctrunc_col(c)
+
     end do
 
   end subroutine Summary_carbonstate

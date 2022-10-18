@@ -4569,8 +4569,7 @@ contains
        ! total ecosystem respiration, autotrophic + heterotrophic (ER)
        this%er_col(c) = &
             this%ar_col(c) + &
-            soilbiogeochem_hr_col(c)
-       
+            soilbiogeochem_hr_col(c) 
        ! coarse woody debris heterotrophic respiration
        this%cwdc_hr_col(c) = 0._r8
 

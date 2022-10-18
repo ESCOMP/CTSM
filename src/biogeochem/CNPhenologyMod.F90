@@ -1631,9 +1631,11 @@ contains
          crop_seedc_to_leaf  =>   cnveg_carbonflux_inst%crop_seedc_to_leaf_patch, & ! Output: [real(r8) (:) ]  (gC/m2/s) seed source to leaf
          crop_seedc_to_froot =>  cnveg_carbonflux_inst%crop_seedc_to_froot_patch, & ! Output: [real(r8) (:) ] (gC/m2/s) seed source to fine root
          crop_seedc_to_deadstem  =>   cnveg_carbonflux_inst%crop_seedc_to_deadstem_patch, & ! Output: [real(r8) (:) ]  (gC/m2/s) seed source to deadstem                                             
+         cropseedc_deficit     =>    cnveg_carbonstate_inst%cropseedc_deficit_patch    , & ! Output:  [real(r8) (:) ]  (gC/m2) crop seed C deficit
          crop_seedn_to_leaf  =>  cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch, & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to leaf
          crop_seedn_to_froot =>  cnveg_nitrogenflux_inst%crop_seedn_to_froot_patch, & ! Output: [real(r8) (:) ] (gN/m2/s) seed source to fine root
          crop_seedn_to_deadstem => cnveg_nitrogenflux_inst%crop_seedn_to_deadstem_patch, & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to deadstem
+         cropseedn_deficit     =>    cnveg_nitrogenstate_inst%cropseedn_deficit_patch    , & ! Output:  [real(r8) (:) ]  (gN/m2) crop seed N deficit
          cphase            =>    crop_inst%cphase_patch                        , & ! Output: [real(r8) (:)]   phenology phase
          fert_counter      =>    cnveg_nitrogenflux_inst%fert_counter_patch    , & ! Output: [real(r8) (:) ]  >0 fertilize; <=0 not (seconds)
          fert              =>    cnveg_nitrogenflux_inst%fert_patch              & ! Output: [real(r8) (:) ]  (gN/m2/s) fertilizer applied each timestep 
@@ -1676,7 +1678,7 @@ contains
                     deadstemc_storage_soy(p) = deadstemc_storage(p)
                     deadstemn_soy(p) = deadstemn(p)
                     deadstemn_storage_soy(p) = deadstemn_storage(p)
-                    write(iulog,*) 'deadstem C and N in display and storage are:',deadstemc_soy(p),deadstemn_soy(p),deadstemc_storage_soy(p),deadstemn_storage_soy(p)
+                    
                  end if
 
                  if (season_decid(ivt(p)) == 1._r8) then
@@ -1728,6 +1730,7 @@ contains
                             gdd820(p) > 0._r8                          .and. &
                             gdd820(p) /= spval )) then
 
+                         
                           ! impose limit on growing season length needed
                           ! for crop maturity - for cold weather constraints
                           croplive(p)  = .true.
@@ -1749,18 +1752,15 @@ contains
                           frootc_xfer(p) = leafc_xfer(p) ! assign same amount of leafc to fine roots
                           leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
                           frootn_xfer(p) = frootc_xfer(p) / frootcn(ivt(p)) 
-                          crop_seedc_to_leaf(c) = crop_seedc_to_leaf(c) + leafc_xfer(p)/dt
-                          crop_seedc_to_froot(c) = crop_seedc_to_froot(c) + frootc_xfer(p)/dt
-                          crop_seedn_to_leaf(c) = crop_seedn_to_leaf(c) + leafn_xfer(p)/dt
-                          crop_seedn_to_froot(c) = crop_seedn_to_froot(c) + frootn_xfer(p)/dt
+                          cropseedc_deficit(p) = cropseedc_deficit(p) - leafc_xfer(p) - frootc_xfer(p)
+                          cropseedn_deficit(p) = cropseedn_deficit(p) - leafn_xfer(p) - frootn_xfer(p)
                           !for woody crops like fruit trees, assign 10% of initial C to deadstem
                           if (woody(ivt(p)) == 1._r8) then
                              deadstemc_xfer(p) = 0.1_r8*leafc_xfer(p)
                              deadstemn_xfer(p) = deadstemc_xfer(p)/deadwdcn(ivt(p))
-                             crop_seedc_to_deadstem(c) = crop_seedc_to_deadstem(c) + deadstemc_xfer(p)/dt
-                             crop_seedn_to_deadstem(c) = crop_seedn_to_deadstem(c) + deadstemn_xfer(p)/dt
+                             cropseedc_deficit(p) = cropseedc_deficit(p) - deadstemc_xfer(p)
+                             cropseedn_deficit(p) = cropseedn_deficit(p) - deadstemn_xfer(p)
                           end if   
-                      
                        end if
 
 
@@ -2042,7 +2042,7 @@ contains
                             if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                             croplive(p) = .false.
                             cphase(p) = 4._r8
-                            if (deadstemc(p) > 0._r8) then ! plant had emerged before rotation
+                            if (tlai(p) > 0._r8) then ! plant had emerged before rotation
                                offset2_flag(p) = 1._r8
                             else      ! plant never emerged from ground
                                crop_seedc_to_leaf(p) = crop_seedc_to_leaf(p) - leafc_xfer(p)/dt
@@ -2070,17 +2070,13 @@ contains
 
                          ! only begin to test for offset critical temperature once past the summer sol
                          if (ws_flag == 0._r8 .and. t_ref24(p) < crit_temp(ivt(p))) then
-                             ! harvest crop if maturity has not been reached by
-                             ! now
-                             if (grainc(p) > 0._r8) then
-                                harvest_flag(p) = 1._r8
-                                storage_flag(p) = 1._r8
-                             end if
                              offset_flag(p) = 1._r8
                              !storage_flag(p) = 0._r8
                              offset_counter(p) = ndays_off * secspday
                              prev_leafc_to_litter(p) = 0._r8
                              prev_frootc_to_litter(p) = 0._r8
+                             ! harvest grainc if crop not harvested yet
+                             if (grainc(p) > 0._r8) harvest_flag(p) = 1._r8
                          end if
                        end if ! dormant_flag == 1
                     end if ! season_decid
@@ -3276,8 +3272,10 @@ contains
            if (perennial(ivt(p)) == 1._r8) then
               if (grainc(p) > 0._r8) then
                  t1 = 1.0_r8 / dt
-                 ! send grainc to food product pool, no replenishment of
-                 ! seedpool needed for perennial crops 
+                 ! replenish seed deficit (needed to balance seedc used for orchard establishment
+                 grainc_to_seed(p) = t1 * min(-cropseedc_deficit(p), grainc(p))
+                 grainn_to_seed(p) = t1 * min(-cropseedn_deficit(p), grainn(p))
+                 ! send remaining grainc to food product pool 
                  grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p)
                  grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p)
                  

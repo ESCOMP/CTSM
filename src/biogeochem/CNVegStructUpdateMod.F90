@@ -196,12 +196,20 @@ contains
 
                else
                   !correct height calculation if doing accelerated spinup
-                  if (spinup_state == 2) then
-                    htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(ivt(p)) * taper(ivt(p)))/ &
-                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
+                  if (spinup_state == 2) then                    
+                    if (perennial(ivt(p)) == 1._r8 .and. dormant_flag(p) == 1._r8 .and.  deadstemc(p)== 0._r8) then
+                        htop(p) =  0.01_r8                    
+                    else
+                       htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(ivt(p)) * taper(ivt(p)))/ &
+                            (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
+                    end if
                   else
-                    htop(p) = ((3._r8 * deadstemc(p) * taper(ivt(p)) * taper(ivt(p)))/ &
-                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
+                    if (perennial(ivt(p)) == 1._r8 .and. dormant_flag(p) == 1._r8 .and.  deadstemc(p)== 0._r8) then
+                        htop(p) = 0.01_r8
+                    else
+                       htop(p) = ((3._r8 * deadstemc(p) * taper(ivt(p)) * taper(ivt(p)))/ &
+                            (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
+                    end if
                   end if
 
                endif
