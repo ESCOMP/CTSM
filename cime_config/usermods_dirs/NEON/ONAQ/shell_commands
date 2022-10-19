@@ -1,8 +1,8 @@
+#!/bin/bash
 ./xmlchange NEONSITE=ONAQ
 ./xmlchange PTS_LON=276.49815
 ./xmlchange PTS_LAT=35.68839
-./xmlchange RUN_STARTDATE=2018-01-01
-./xmlchange DATM_YR_ALIGN=2018,DATM_YR_START=2018,DATM_YR_END=2019
-./xmlchange STOP_N=24
-
-
+./xmlchange DATM_YR_END=2019
+if   [ "`./xmlquery CLM_NML_USE_CASE --value`" =~ "*_transient"  ]; then
+  ./xmlchange STOP_N=24
+fi
