@@ -918,13 +918,16 @@ bioms:   do f = 1, fn
             call endrun(msg = 'unknown z0param_method', additional_msg = errMsg(sourcefile, __LINE__))
           end select
 
-          ! Update the forcing heights
-          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
-          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c) + displa(p)
-          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c) + displa(p)
-
           z0hv(p)   = z0mv(p)
           z0qv(p)   = z0mv(p)
+
+          ! Update the forcing heights
+          ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+          if (z0param_method == 'Meier2022') then
+             forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mv(p) + displa(p)
+             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hv(p) + displa(p)
+             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qv(p) + displa(p)
+          end if
 
       end do
 
@@ -1390,7 +1393,12 @@ bioms:   do f = 1, fn
             if (zeta(p) >= 0._r8) then     !stable
                ! remove stability cap when biomass heat storage is active 
                if(use_biomass_heat_storage) then 
-                  zeta(p) = min(100._r8,max(zeta(p),0.01_r8))
+                  ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+                  if (z0param_method == 'Meier2022') then
+                     zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
+                  else
+                     zeta(p) = min(100._r8,max(zeta(p),0.01_r8))
+                  end if
                else
                   zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
                endif
@@ -1398,7 +1406,7 @@ bioms:   do f = 1, fn
             else                     !unstable
                zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
                if ( ustar(p)*thvstar > 0.0d00 )then
-                  write(iulog,*) 'ustar*thvstart is positive and has to be negative'
+                  write(iulog,*) 'ustar*thvstar is positive and has to be negative'
                   write(iulog,*) 'p = ', p
                   write(iulog,*) '-grav*ustar(p)*thvstar*zii/thv(c) = ', -grav*ustar(p)*thvstar*zii/thv(c)
                   write(iulog,*) 'ustar = ', ustar(p)

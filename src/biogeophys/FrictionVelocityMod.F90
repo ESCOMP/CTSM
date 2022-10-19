@@ -555,7 +555,7 @@ contains
 
          frac_veg_nosno   =>    canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)   ] fraction of vegetation not covered by snow (0 OR 1) [-]
          frac_sno         =>    waterdiagnosticbulk_inst%frac_sno_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
-         snomelt_accum    =>    waterfluxbulk_inst%qflx_snomelt_accum_col , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)       
+         snomelt_accum    =>    waterdiagnosticbulk_inst%snomelt_accum_col , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)       
          urbpoi           =>    lun%urbpoi                            , & ! Input:  [logical  (:)   ] true => landunit is an urban point
          z_0_town         =>    lun%z_0_town                          , & ! Input:  [real(r8) (:)   ] momentum roughness length of urban landunit (m)
          z_d_town         =>    lun%z_d_town                          , & ! Input:  [real(r8) (:)   ] displacement height of urban landunit (m)
@@ -576,7 +576,11 @@ contains
        case ('ZengWang2007')
           if (frac_sno(c) > 0._r8) then
              if(use_z0m_snowmelt) then
-                z0mg(c) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8
+                if ( snomelt_accum(c) < 1.e-5_r8 )then
+                    z0mg(c) = exp(1.4_r8 * -rpi/2.0_r8 -0.31_r8) / 1000._r8 
+                else
+                    z0mg(c) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8 
+                end if
              else
                 z0mg(c) = this%zsno
              end if                    
@@ -595,13 +599,9 @@ contains
                 end if
              else
                 z0mg(c) = this%zsno
-
-
              end if                    
           else if (lun%itype(l) == istice) then
              z0mg(c) = this%zglc
-
-             
           else
              z0mg(c) = this%zlnd
           end if
@@ -639,17 +639,17 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           if (frac_veg_nosno(p) == 0) then
              forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
-             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c) + displa(p)
-             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c) + displa(p)
+             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg(c) + displa(p)
+             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg(c) + displa(p)
           else
-             forc_hgt_u_patch(p) = forc_hgt_u(g) + z0m(p) + displa(p)
-             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0m(p) + displa(p)
-             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0m(p) + displa(p)
+             forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mv(p) + displa(p)
+             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hv(p) + displa(p)
+             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qv(p) + displa(p)
           end if
        else if (lun%itype(l) == istwet .or. lun%itype(l) == istice) then
-          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c)
-          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c)
-          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c)
+          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
+          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg(c) + displa(p)
+          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg(c) + displa(p)
        else if (urbpoi(l)) then
           forc_hgt_u_patch(p) = forc_hgt_u(g) + z_0_town(l) + z_d_town(l)
           forc_hgt_t_patch(p) = forc_hgt_t(g) + z_0_town(l) + z_d_town(l)

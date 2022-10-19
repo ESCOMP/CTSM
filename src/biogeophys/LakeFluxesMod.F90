@@ -170,7 +170,6 @@ contains
     real(r8) :: ur(bounds%begp:bounds%endp)        ! wind speed at reference height [m/s]
     real(r8) :: ustar(bounds%begp:bounds%endp)     ! friction velocity [m/s]
     real(r8) :: wc                                 ! convective velocity [m/s]
-    real(r8) :: zeta                               ! dimensionless height used in Monin-Obukhov theory
     real(r8) :: zldis(bounds%begp:bounds%endp)     ! reference height "minus" zero displacement height [m]
     real(r8) :: displa(bounds%begp:bounds%endp)    ! displacement (always zero) [m]
     real(r8) :: u2m                                ! 2 m wind speed (m/s)
@@ -228,8 +227,7 @@ contains
          
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col         , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col         , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)  
-         snomelt_accum    =>    waterfluxbulk_inst%qflx_snomelt_accum_col  , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)       
-         
+         snomelt_accum    =>    waterdiagnosticbulk_inst%snomelt_accum_col , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)       
          t_skin_patch     =>    temperature_inst%t_skin_patch           , & ! Output: [real(r8) (:)   ]  patch skin temperature (K)
 
          t_lake           =>    temperature_inst%t_lake_col            , & ! Input:  [real(r8) (:,:) ]  lake temperature (Kelvin)                       
@@ -240,6 +238,7 @@ contains
          forc_hgt_t_patch =>    frictionvel_inst%forc_hgt_t_patch      , & ! Input:  [real(r8) (:)   ]  observational height of temperature at pft level [m]
          forc_hgt_q_patch =>    frictionvel_inst%forc_hgt_q_patch      , & ! Input:  [real(r8) (:)   ]  observational height of specific humidity at pft level [m]
          zetamax          =>    frictionvel_inst%zetamaxstable         , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
+         zeta             =>    frictionvel_inst%zeta_patch            , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter
          ram1             =>    frictionvel_inst%ram1_patch            , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                    
 
          q_ref2m          =>    waterdiagnosticbulk_inst%q_ref2m_patch          , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)      
@@ -366,7 +365,11 @@ contains
 
             case ('ZengWang2007')
                if(use_z0m_snowmelt) then
-                  z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8 
+                  if ( snomelt_accum(c) < 1.e-5_r8 ) then
+                     z0mg(p) = exp(1.4_r8 * -rpi/2.0_r8 -0.31_r8) / 1000._r8
+                  else
+                     z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8 
+                  end if
                else
                   z0mg(p) = params_inst%zsno
                end if                      
@@ -377,9 +380,17 @@ contains
 
          ! Surface temperature and fluxes
 
-         forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(p)
-         forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(p)
-         forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(p)
+         ! Update forcing heights for updated roughness lengths
+         ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+         if (z0param_method == 'Meier2022') then
+            forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(p)
+            forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg(p)
+            forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg(p)
+         else
+            forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(p)
+            forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(p)
+            forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(p)
+         end if
 
          ! Find top layer
          jtop(c) = snl(c) + 1
@@ -543,17 +554,17 @@ contains
             qstar = temp2(p)*dqh(p)
 
             thvstar=tstar*(1._r8+0.61_r8*forc_q(c)) + 0.61_r8*forc_th(c)*qstar
-            zeta=zldis(p)*vkc * grav*thvstar/(ustar(p)**2*thv(c))
+            zeta(p)=zldis(p)*vkc * grav*thvstar/(ustar(p)**2*thv(c))
 
-            if (zeta >= 0._r8) then     !stable
-               zeta = min(zetamax,max(zeta,0.01_r8))
+            if (zeta(p) >= 0._r8) then     !stable
+               zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
                um(p) = max(ur(p),0.1_r8)
             else                     !unstable
-               zeta = max(-100._r8,min(zeta,-0.01_r8))
+               zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
                wc = beta1*(-grav*ustar(p)*thvstar*zii/thv(c))**0.333_r8
                um(p) = sqrt(ur(p)*ur(p)+wc*wc)
             end if
-            obu(p) = zldis(p)/zeta
+            obu(p) = zldis(p)/zeta(p)
 
             if (obuold(p)*obu(p) < 0._r8) nmozsgn(p) = nmozsgn(p)+1
 
@@ -617,6 +628,14 @@ contains
                end select
 
                z0qg(p) = z0hg(p)
+            end if
+
+            ! Update forcing heights for updated roughness lengths
+            ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+            if (z0param_method == 'Meier2022') then
+               forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(p)
+               forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg(p)
+               forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg(p)
             end if
 
          end do   ! end of filtered pft loop

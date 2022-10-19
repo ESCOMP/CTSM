@@ -1,5 +1,5 @@
 z0param_method = 'Meier2022'
 use_z0m_snowmelt = .true.
-calc_human_stress_indices = 'NONE'   ! Currently dies when turned on because of a negative humidity (about -31) in Wet Bulb calculation
+use_z0mg_2d = .false.
 paramfile = '$DIN_LOC_ROOT/lnd/clm2/paramdata/ctsm51_params.RMz0.c220304.nc'
 

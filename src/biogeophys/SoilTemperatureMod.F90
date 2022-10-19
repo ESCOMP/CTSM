@@ -1114,7 +1114,7 @@ contains
          qflx_snofrz_lyr  =>    waterfluxbulk_inst%qflx_snofrz_lyr_col  , & ! Output: [real(r8) (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
          qflx_snofrz      =>    waterfluxbulk_inst%qflx_snofrz_col      , & ! Output: [real(r8) (:)   ] column-integrated snow freezing rate (positive definite) [kg m-2 s-1]
          qflx_snomelt     =>    waterfluxbulk_inst%qflx_snomelt_col     , & ! Output: [real(r8) (:)   ] snow melt (mm H2O /s)
-         qflx_snomelt_accum =>    waterfluxbulk_inst%qflx_snomelt_accum_col  , & ! Output: [real(r8) (:)   ] accumulated snow melt (m)         
+         snomelt_accum    =>    waterdiagnosticbulk_inst%snomelt_accum_col , & ! Output: [real(r8) (:)   ] accumulated snow melt (m)         
          qflx_snomelt_lyr =>    waterfluxbulk_inst%qflx_snomelt_lyr_col , & ! Output: [real(r8) (:)   ] snow melt in each layer (mm H2O /s)
          
          eflx_snomelt     =>    energyflux_inst%eflx_snomelt_col    , & ! Output: [real(r8) (:)   ] snow melt heat flux (W/m**2)
@@ -1382,7 +1382,7 @@ contains
                      if (imelt(c,j) == 1 .AND. j < 1) then
                         qflx_snomelt_lyr(c,j) = max(0._r8,(wice0(c,j)-h2osoi_ice(c,j)))/dtime
                         qflx_snomelt(c)       = qflx_snomelt(c) + qflx_snomelt_lyr(c,j)
-                        qflx_snomelt_accum(c)   = qflx_snomelt_accum(c) + qflx_snomelt_lyr(c,j) * dtime/1000._r8  
+                        snomelt_accum(c)      = snomelt_accum(c) + qflx_snomelt_lyr(c,j) * dtime/1000._r8  
                      endif
 
                      ! layer freezing mass flux (positive):
