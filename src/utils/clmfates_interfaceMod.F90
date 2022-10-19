@@ -1014,6 +1014,8 @@ module CLMFatesInterfaceMod
       ! ---------------------------------------------------------------------------------
       call fates_hist%flush_hvars(nc,upfreq_in=1)
 
+      call fates_hist%flush_hvars(nc,upfreq_in=5)
+      
 
       ! ---------------------------------------------------------------------------------
       ! Part II: Call the FATES model now that input boundary conditions have been
@@ -1088,7 +1090,8 @@ module CLMFatesInterfaceMod
       ! ---------------------------------------------------------------------------------
       call fates_hist%update_history_dyn( nc,                    &
                                           this%fates(nc)%nsites, &
-                                          this%fates(nc)%sites)
+                                          this%fates(nc)%sites,  &
+                                          this%fates(nc)%bc_in)
 
       if (masterproc) then
          write(iulog, *) 'clm: leaving fates model', bounds_clump%begg, &
@@ -1659,12 +1662,13 @@ module CLMFatesInterfaceMod
                ! ------------------------------------------------------------------------
                call fates_hist%flush_hvars(nc,upfreq_in=1)
                do s = 1,this%fates(nc)%nsites
-                  call fates_hist%zero_site_hvars(this%fates(nc)%sites(s),     &
+                  call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
                      upfreq_in=1)
                end do
-               call fates_hist%update_history_dyn( nc, &
-                                                   this%fates(nc)%nsites,                 &
-                                                   this%fates(nc)%sites)
+               call fates_hist%update_history_dyn( nc,                     &
+                                                   this%fates(nc)%nsites,  &
+                                                   this%fates(nc)%sites,   &
+                                                   this%fates(nc)%bc_in)
 
 
             end if
@@ -1831,12 +1835,13 @@ module CLMFatesInterfaceMod
            ! ------------------------------------------------------------------------
             call fates_hist%flush_hvars(nc,upfreq_in=1)
             do s = 1,this%fates(nc)%nsites
-               call fates_hist%zero_site_hvars(this%fates(nc)%sites(s),        &
+               call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
                   upfreq_in=1)
             end do
-            call fates_hist%update_history_dyn( nc, &
-                this%fates(nc)%nsites,                 &
-                this%fates(nc)%sites)
+            call fates_hist%update_history_dyn( nc,                     &
+                this%fates(nc)%nsites,                                  &
+                this%fates(nc)%sites,                                   &
+                this%fates(nc)%bc_in(s)) 
 
 
 
