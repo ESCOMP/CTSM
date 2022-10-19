@@ -147,7 +147,7 @@ def main(description):
                         logger.warning("Could not find file {}".format(finidat_file))
                         continue
                     newfile = basefile.replace(".postad.",".{}.".format(filedatestamp))
-                    upload_blob("neon-ncar-artifacts", finidat_file, newfile)
+                    upload_blob("neon-ncar-artifacts", finidat_file, os.path.join("NEON","lnd","ctsm","initdata",newfile) )
                 
         if upload_history:
             logger.info("Upload history for {}".format(site))
