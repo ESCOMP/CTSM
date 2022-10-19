@@ -2745,7 +2745,7 @@ module CLMFatesInterfaceMod
    use FatesIOVariableKindMod, only : site_can_r8, site_cnlf_r8, site_cnlfpft_r8
    use FatesIOVariableKindMod, only : site_height_r8, site_elem_r8, site_elpft_r8
    use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8, site_agefuel_r8
-   use FatesIOVariableKindMod, only : site_cdpf_r8, site_cdsc_r8
+   use FatesIOVariableKindMod, only : site_cdpf_r8, site_cdsc_r8, site_clscpf_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -2844,7 +2844,7 @@ module CLMFatesInterfaceMod
 
         case(site_soil_r8, site_size_pft_r8, site_size_r8, site_pft_r8, &
              site_age_r8, site_height_r8, site_coage_r8,site_coage_pft_r8, &
-             site_fuel_r8, site_cwdsc_r8, &
+             site_fuel_r8, site_cwdsc_r8, site_clscpf_r8, &
              site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, &
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
              site_elcwd_r8, site_elage_r8, site_agefuel_r8, &
@@ -3227,6 +3227,10 @@ module CLMFatesInterfaceMod
 
    fates%cdam_begin = 1
    fates%cdam_end = nlevdamage
+
+   fates%clscpf_begin = 1
+   fates%clscpf_end = numpft_fates * nlevsclass * nclmax
+   
    
    call t_stopf('fates_hlm2fatesbnds')
 
