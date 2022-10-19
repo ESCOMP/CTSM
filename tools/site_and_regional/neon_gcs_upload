@@ -121,9 +121,6 @@ def main(description):
     from there, 
     """
 
-    #if not os.path.isfile(os.path.join(os.getenv("HOME"),".aws","credentials")):
-    #    raise FileNotFoundError("User account must have valid aws credentials to run this script.")
-
     cesmroot = path_to_ctsm_root()
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.environ["HOME"],'.uploadGCSkey.json')
     #os.path.join(os.environ["HOME"],"gcwriter")
