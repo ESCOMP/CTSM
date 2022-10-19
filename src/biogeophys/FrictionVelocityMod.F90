@@ -603,9 +603,7 @@ contains
 
              
           else
-                z0mg(c) = this%zlnd
-               
-             end if                   
+             z0mg(c) = this%zlnd
           end if
        end select
             
