@@ -1,7 +1,9 @@
+#!/bin/bash
 ./xmlchange NEONSITE=YELL
 ./xmlchange PTS_LON=249.45803999999998
 ./xmlchange PTS_LAT=44.95597
-./xmlchange RUN_STARTDATE=2019-01-01
-./xmlchange DATM_YR_ALIGN=2019,DATM_YR_START=2019
-./xmlchange STOP_N=39
-# ./xmlchange RUN_STARTDATE=2018-08-01
+./xmlchange DATM_YR_ALIGN=2019,DATM_YR_START=2019 
+if   [ "`./xmlquery CLM_NML_USE_CASE --value`" =~ "*_transient"  ]; then
+  ./xmlchange RUN_STARTDATE=2019-01-01
+  ./xmlchange STOP_N=39
+fi
