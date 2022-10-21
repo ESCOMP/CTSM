@@ -34,14 +34,15 @@ STARTDATE="2004-01-01"
 NYEARS=1
 
 # Set directories
-export CCLM2ROOT=$PWD # code base directory on project where this script is located
+export CLMROOT=$PWD # CLM code base directory on $PROJECT where this script is located
+export CCLM2ROOT=$CLMROOT/.. # CCLM2 code base directory on $PROJECT where CLM and OASIS are located
 export CASEDIR=$SCRATCH/CCLM2_cases/$CASENAME # case directory on scratch
 export CESMDATAROOT=/project/sm61/shared # downloaded inputdata to reuse, includes preprocessed EURO-CORDEX files
 
 # Log output (use "tee" to send output to both screen and $outfile)
 logfile=$SCRATCH/CCLM2_logs/${CASENAME}_mylogfile.log
 mkdir -p "$(dirname "$logfile")" && touch "$logfile" # create parent/child directories and logfile
-cp $CCLM2ROOT/$BASH_SOURCE $SCRATCH/CCLM2_logs/${CASENAME}_myjobscipt.sh # copy this script to logs
+cp $CLMROOT/$BASH_SOURCE $SCRATCH/CCLM2_logs/${CASENAME}_myjobscipt.sh # copy this script to logs
 print_log() {
     output="$1"
     echo "${output}" | tee -a $logfile
@@ -91,7 +92,7 @@ print_log $LD_LIBRARY_PATH
 
 print_log "*** Creating CASE: ${CASENAME} ***"
 
-cd $CCLM2ROOT/cime/scripts
+cd $CLMROOT/cime/scripts
 ./create_newcase --case $CASEDIR --compset $COMPSET --res $RES --mach $MACH --compiler $COMPILER --driver $DRIVER --project $PROJECT --run-unsupported | tee -a $logfile
 
 
