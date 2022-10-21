@@ -1,3 +1,5 @@
+.ipynb_checkpoints*
+
 # directories checked out by manage_externals, and other files created
 # by manage_externals
 manage_externals.log
