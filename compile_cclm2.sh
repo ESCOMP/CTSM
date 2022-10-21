@@ -252,11 +252,11 @@ print_log "*** Running case.setup ***"
 
 if [[ $COMPILER =~ "oasis" ]]; then
     print_log "*** Adding OASIS routines ***"
-    ln -sf $CCLM2ROOT/cesm2_oas/src/oas/* SourceMods/src.drv
+    ln -sf $CCLM2ROOT/cesm2_oas/src/oas/* SourceMods/src.drv/
     rm SourceMods/src.drv/oas_clm_vardef.F90
-    ln -sf $CCLM2ROOT/cesm2_oas/src/drv/* SourceMods/src.drv
-    ln -sf $CCLM2ROOT/cesm2_oas/src/oas/oas_clm_vardef.F90 SourceMods/src.share/.
-    ln -sf $CCLM2ROOT/cesm2_oas/src/datm/* SourceMods/src.datm
+    ln -sf $CCLM2ROOT/cesm2_oas/src/drv/* SourceMods/src.drv/
+    ln -sf $CCLM2ROOT/cesm2_oas/src/oas/oas_clm_vardef.F90 SourceMods/src.share/
+    ln -sf $CCLM2ROOT/cesm2_oas/src/datm/* SourceMods/src.datm/
 fi
 
 
