@@ -1,11 +1,16 @@
+#!/bin/bash
 ./xmlchange CLM_USRDAT_NAME=NEON
-./xmlchange RUN_STARTDATE=2018-01-01
 ./xmlchange CLM_NML_USE_CASE=1850-2100_SSP3-7.0_transient
 ./xmlchange CCSM_CO2_PPMV=408.83
 ./xmlchange DATM_PRESAERO=SSP3-7.0
 ./xmlchange DATM_PRESNDEP=SSP3-7.0
 ./xmlchange DATM_PRESO3=SSP3-7.0
 ./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2021,DATM_YR_START=2018
+if   [ "`./xmlquery CASE --value`" =~ "*transient"  ]; then
+  ./xmlchange DATM_YR_END=2022
+  ./xmlchange RUN_STARTDATE=2018-01-01
+  ./xmlchange STOP_N=51
+fi
 
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
 ./xmlchange PIO_TYPENAME=netcdf

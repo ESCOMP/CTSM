@@ -539,10 +539,12 @@ class NeonSite:
                     if not self.set_ref_case(case):
                         return
                 case.set_value("STOP_OPTION", "nmonths")
-                case.set_value("STOP_N", self.diff_month())
-                case.set_value("DATM_YR_ALIGN", self.start_year)
-                case.set_value("DATM_YR_START", self.start_year)
-                case.set_value("DATM_YR_END", self.end_year)
+                # Hard wire the with usermods for now
+                # TODO this wil have to be fixed when we get new NEON data
+                #case.set_value("STOP_N", self.diff_month())
+                #case.set_value("DATM_YR_ALIGN", self.start_year)
+                #case.set_value("DATM_YR_START", self.start_year)
+                #case.set_value("DATM_YR_END", self.end_year)
                 case.set_value("CALENDAR", "GREGORIAN")
                 case.set_value("RESUBMIT", 0)
             else:
@@ -558,7 +560,7 @@ class NeonSite:
                 else:
                     case.set_value("DATM_YR_END", self.end_year - 1)
             
-            # Let's no be so clevar with start / end dates
+            # Let's no be so clever with start / end dates
             #case.set_value("DATM_YR_ALIGN", int(args.start_date[0:4]))
             #case.set_value("DATM_YR_START", int(args.start_date[0:4]))
             #case.set_value("DATM_YR_END", int(args.end_date[0:4]))
