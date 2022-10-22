@@ -4,7 +4,7 @@
 ./xmlchange PTS_LON=271.83897
 ./xmlchange PTS_LAT=31.8531
 ./xmlchange DATM_YR_ALIGN=2021,DATM_YR_START=2021
-if   [ "`./xmlquery CLM_NML_USE_CASE --value`" =~ "*_transient"  ]; then
+if  [[ `./xmlquery CLM_NML_USE_CASE --value` =~ .+_transient  ]]; then
   ./xmlchange RUN_STARTDATE=2021-01-01
   ./xmlchange STOP_N=15
 fi

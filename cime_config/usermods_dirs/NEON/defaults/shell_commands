@@ -6,7 +6,7 @@
 ./xmlchange DATM_PRESNDEP=SSP3-7.0
 ./xmlchange DATM_PRESO3=SSP3-7.0
 ./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2021,DATM_YR_START=2018
-if   [ "`./xmlquery CASE --value`" =~ "*transient"  ]; then
+if  [[ `./xmlquery CASE --value` =~ .+_transient  ]]; then
   ./xmlchange DATM_YR_END=2022
   ./xmlchange RUN_STARTDATE=2018-01-01
   ./xmlchange STOP_N=51
