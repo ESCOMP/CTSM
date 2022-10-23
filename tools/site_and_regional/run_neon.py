@@ -550,7 +550,7 @@ class NeonSite:
                 case.set_value("CALENDAR", "GREGORIAN")
                 case.set_value("RESUBMIT", 0)
             # Turning all this off for usermod controsl over start, align, and end year
-            #else:
+            else:
                 # for the spinup we want the start and end on year boundaries
                 #if self.start_month == 1:
                 #    case.set_value("DATM_YR_ALIGN", self.start_year)
@@ -558,10 +558,10 @@ class NeonSite:
                 #elif self.start_year + 1 <= self.end_year:
                 #    case.set_value("DATM_YR_ALIGN", self.start_year + 1)
                 #    case.set_value("DATM_YR_START", self.start_year + 1)
-                #if self.end_month == 12:
-                #    case.set_value("DATM_YR_END", self.end_year)
-                #else:
-                #    case.set_value("DATM_YR_END", self.end_year - 1)
+                if self.end_month == 12:
+                    case.set_value("DATM_YR_END", self.end_year)
+                else:
+                    case.set_value("DATM_YR_END", self.end_year - 1)
             
             # Let's no be so clever with start / end dates
             #case.set_value("DATM_YR_ALIGN", int(args.start_date[0:4]))
