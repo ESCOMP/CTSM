@@ -514,7 +514,6 @@ class NeonSite:
         with Case(case_root, read_only=False) as case:
             # in order to avoid the complication of leap years we always set the run_length in units of days.
             case.set_value("STOP_OPTION", "ndays")
-            case.set_value("STOP_N", run_length)
             case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
             case.set_value("NEONVERSION", version)
@@ -524,6 +523,8 @@ class NeonSite:
                 case.set_value("RUN_REFDATE", "0018-01-01")
                 case.set_value("RUN_STARTDATE", "0018-01-01")
                 case.set_value("RESUBMIT", 1)
+                case.set_value("STOP_N", run_length)
+
             else:
                 case.set_value("CLM_FORCE_COLDSTART", "off")
                 case.set_value("CLM_ACCELERATED_SPINUP", "off")
@@ -531,6 +532,7 @@ class NeonSite:
 
             if run_type == "postad":
                 self.set_ref_case(case)
+                case.set_value("STOP_N", run_length)
 
             if run_type == "transient":
                 if self.finidat:
@@ -547,18 +549,19 @@ class NeonSite:
                 #case.set_value("DATM_YR_END", self.end_year)
                 case.set_value("CALENDAR", "GREGORIAN")
                 case.set_value("RESUBMIT", 0)
-            else:
+            # Turning all this off for usermod controsl over start, align, and end year
+            #else:
                 # for the spinup we want the start and end on year boundaries
-                if self.start_month == 1:
-                    case.set_value("DATM_YR_ALIGN", self.start_year)
-                    case.set_value("DATM_YR_START", self.start_year)
-                elif self.start_year + 1 <= self.end_year:
-                    case.set_value("DATM_YR_ALIGN", self.start_year + 1)
-                    case.set_value("DATM_YR_START", self.start_year + 1)
-                if self.end_month == 12:
-                    case.set_value("DATM_YR_END", self.end_year)
-                else:
-                    case.set_value("DATM_YR_END", self.end_year - 1)
+                #if self.start_month == 1:
+                #    case.set_value("DATM_YR_ALIGN", self.start_year)
+                #    case.set_value("DATM_YR_START", self.start_year)
+                #elif self.start_year + 1 <= self.end_year:
+                #    case.set_value("DATM_YR_ALIGN", self.start_year + 1)
+                #    case.set_value("DATM_YR_START", self.start_year + 1)
+                #if self.end_month == 12:
+                #    case.set_value("DATM_YR_END", self.end_year)
+                #else:
+                #    case.set_value("DATM_YR_END", self.end_year - 1)
             
             # Let's no be so clever with start / end dates
             #case.set_value("DATM_YR_ALIGN", int(args.start_date[0:4]))
