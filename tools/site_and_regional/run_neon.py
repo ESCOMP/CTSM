@@ -83,7 +83,7 @@ from ctsm.download_utils import download_file
 import CIME.build as build
 from standard_script_setup import *
 from CIME.case import Case
-from CIME.utils import safe_copy, expect, symlink_force
+from CIME.utils import safe_copy, expect, symlink_force, run_cmd_no_fail
 from argparse import RawTextHelpFormatter
 from CIME.locked_files import lock_file, unlock_file
 
@@ -511,10 +511,12 @@ class NeonSite:
                     case_root, keepexe=True, user_mods_dirs=user_mods_dirs
                 )
 
+        print("---- Before Case----")
         with Case(case_root, read_only=False) as case:
-            # in order to avoid the complication of leap years we always set the run_length in units of days.
-            case.set_value("STOP_OPTION", "ndays")
-            case.set_value("REST_OPTION", "end")
+            if run_type is not"transient":
+                 # in order to avoid the complication of leap years we always set the run_length in units of days.
+                 case.set_value("STOP_OPTION", "ndays")
+                 case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
             case.set_value("NEONVERSION", version)
             if run_type == "ad":
@@ -534,49 +536,44 @@ class NeonSite:
                 self.set_ref_case(case)
                 case.set_value("STOP_N", run_length)
 
+            # For transient cases STOP will be set in the user_mod_directory
             if run_type == "transient":
                 if self.finidat:
                     case.set_value("RUN_TYPE", "startup")
                 else:
                     if not self.set_ref_case(case):
                         return
-                case.set_value("STOP_OPTION", "nmonths")
-                # Hard wire the with usermods for now
-                # TODO this wil have to be fixed when we get new NEON data
-                #case.set_value("STOP_N", self.diff_month())
-                #case.set_value("DATM_YR_ALIGN", self.start_year)
-                #case.set_value("DATM_YR_START", self.start_year)
-                #case.set_value("DATM_YR_END", self.end_year)
                 case.set_value("CALENDAR", "GREGORIAN")
                 case.set_value("RESUBMIT", 0)
             # Turning all this off for usermod controsl over start, align, and end year
             else:
                 # for the spinup we want the start and end on year boundaries
-                #if self.start_month == 1:
-                #    case.set_value("DATM_YR_ALIGN", self.start_year)
-                #    case.set_value("DATM_YR_START", self.start_year)
-                #elif self.start_year + 1 <= self.end_year:
-                #    case.set_value("DATM_YR_ALIGN", self.start_year + 1)
-                #    case.set_value("DATM_YR_START", self.start_year + 1)
                 if self.end_month == 12:
                     case.set_value("DATM_YR_END", self.end_year)
                 else:
                     case.set_value("DATM_YR_END", self.end_year - 1)
             
-            # Let's no be so clever with start / end dates
-            #case.set_value("DATM_YR_ALIGN", int(args.start_date[0:4]))
-            #case.set_value("DATM_YR_START", int(args.start_date[0:4]))
-            #case.set_value("DATM_YR_END", int(args.end_date[0:4]))
-
             if not rundir:
                 rundir = case.get_value("RUNDIR")
 
+            print("---- modify_user_nl----")
             self.modify_user_nl(case_root, run_type, rundir)
 
+            # Run the shell_commands again, now that more settings are there
+            #print("---- shell_commands ---")
+            #run_cmd_no_fail( "./shell_commands" )
+            #casedir = case.get_value("CASEROOT")
+            #envrunfilename = os.path.join( casedir, "env_run.xml" )
+            #print( envrunfilename )
+            #case.invalidate( envrunfilename )
+
+            print("---- create_namelists ---")
             case.create_namelists()
             # explicitly run check_input_data
+            print("---- check_input ---")
             case.check_all_input_data()
             if not setup_only:
+                print("---- submit ---")
                 case.submit(no_batch=no_batch)
 
     def set_ref_case(self, case):
