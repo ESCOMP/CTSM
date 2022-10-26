@@ -511,7 +511,6 @@ class NeonSite:
                     case_root, keepexe=True, user_mods_dirs=user_mods_dirs
                 )
 
-        print("---- Before Case----")
         with Case(case_root, read_only=False) as case:
             if run_type is not"transient":
                  # in order to avoid the complication of leap years we always set the run_length in units of days.
@@ -556,24 +555,12 @@ class NeonSite:
             if not rundir:
                 rundir = case.get_value("RUNDIR")
 
-            print("---- modify_user_nl----")
             self.modify_user_nl(case_root, run_type, rundir)
 
-            # Run the shell_commands again, now that more settings are there
-            #print("---- shell_commands ---")
-            #run_cmd_no_fail( "./shell_commands" )
-            #casedir = case.get_value("CASEROOT")
-            #envrunfilename = os.path.join( casedir, "env_run.xml" )
-            #print( envrunfilename )
-            #case.invalidate( envrunfilename )
-
-            print("---- create_namelists ---")
             case.create_namelists()
             # explicitly run check_input_data
-            print("---- check_input ---")
             case.check_all_input_data()
             if not setup_only:
-                print("---- submit ---")
                 case.submit(no_batch=no_batch)
 
     def set_ref_case(self, case):
@@ -786,7 +773,10 @@ def main(description):
     # -- so no need to define a base_case for every site.
 
     res = "CLM_USRDAT"
-    compset = "I1PtClm51Bgc"
+    if run_type == "transient":
+       compset = "IHist1PtClm51Bgc"
+    else:
+       compset = "I1PtClm51Bgc"
 
     # --  Looping over neon sites
 
