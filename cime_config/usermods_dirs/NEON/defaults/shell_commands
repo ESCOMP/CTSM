@@ -6,9 +6,14 @@
 ./xmlchange DATM_PRESNDEP=SSP3-7.0
 ./xmlchange DATM_PRESO3=SSP3-7.0
 ./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2021,DATM_YR_START=2018
-if  [[ `./xmlquery CLM_NML_USE_CASE --value` =~ .+_transient  ]]; then
+use_case=`./xmlquery CLM_NML_USE_CASE --value`
+compset=`./xmlquery COMPSET --value`
+# For a transient case run the whole length and don't cycle
+if  [[ $compset =~ ^HIST ]]; then
   ./xmlchange DATM_YR_END=2022
   ./xmlchange RUN_STARTDATE=2018-01-01
+  # Number of months that can be run for the full transient case
+  ./xmlchange STOP_OPTION="nmonths"
   ./xmlchange STOP_N=51
 fi
 

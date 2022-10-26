@@ -4,7 +4,8 @@
 ./xmlchange PTS_LON=293.13112
 ./xmlchange PTS_LAT=17.96882
 ./xmlchange DATM_YR_ALIGN=2019,DATM_YR_START=2019 
-if  [[ `./xmlquery CLM_NML_USE_CASE --value` =~ .+_transient  ]]; then
+# Different default start date and number of months to run for transient case
+if  [[ $compset =~ ^HIST ]]; then
   ./xmlchange RUN_STARTDATE=2019-01-01
   ./xmlchange STOP_N=39
 fi
