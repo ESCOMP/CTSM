@@ -54,11 +54,11 @@ To remove NPL from your environment on Cheyenne/Casper:
 # -- standard libraries
 import os
 import logging
-import argparse
 import textwrap
 import configparser
 
 from getpass import getuser
+import argparse
 from argparse import ArgumentParser
 
 # -- import local classes for this script
@@ -156,7 +156,7 @@ def get_parser():
         dest="dom_pft",
         type=int,
         default=None,
-        nargs='*',
+        nargs="*",
     )
     pt_parser.add_argument(
         "--pctpft",
@@ -165,7 +165,7 @@ def get_parser():
         dest="pct_pft",
         type=float,
         default=None,
-        nargs='*',
+        nargs="*",
     )
     # -- region-specific parser options
     rg_parser.add_argument(
@@ -262,7 +262,7 @@ def get_parser():
         subparser.add_argument(
             "--datm-syr",
             help="Start year for creating DATM forcing at single point/region. [default: %("
-                 "default)s]",
+            "default)s]",
             action="store",
             dest="datm_syr",
             required=False,
@@ -272,7 +272,7 @@ def get_parser():
         subparser.add_argument(
             "--datm-eyr",
             help="End year for creating DATM forcing at single point/region. "
-                 "[default: %(default)s]",
+            "[default: %(default)s]",
             action="store",
             dest="datm_eyr",
             required=False,
@@ -325,6 +325,7 @@ def get_parser():
     )
     return parser
 
+
 def setup_user_mods(user_mods_dir, cesmroot):
     """
     Sets up the user mods files and directories
@@ -338,14 +339,16 @@ def setup_user_mods(user_mods_dir, cesmroot):
         for line in basefile:
             user_file.write(line)
 
-    nl_datm_base = os.path.join(cesmroot, "components/cdeps/datm/cime_config"
-                                          "/user_nl_datm_streams")
+    nl_datm_base = os.path.join(
+        cesmroot, "components/cdeps/datm/cime_config" "/user_nl_datm_streams"
+    )
     nl_datm = os.path.join(user_mods_dir, "user_nl_datm_streams")
-    with open(nl_datm_base, "r") as base_file, open(nl_datm, 'w') as user_file:
+    with open(nl_datm_base, "r") as base_file, open(nl_datm, "w") as user_file:
         for line in base_file:
             user_file.write(line)
 
-def determine_num_pft (crop):
+
+def determine_num_pft(crop):
     """
     A simple function to determine the number of pfts.
 
@@ -379,7 +382,7 @@ def setup_files(args, defaults, cesmroot):
         setup_user_mods(args.user_mods_dir, cesmroot)
 
     # DATM data
-    datm_type = 'datm_gswp3'
+    datm_type = "datm_gswp3"
     dir_output_datm = "datmdata"
     dir_input_datm = defaults.get(datm_type, "dir")
     if args.create_datm:
@@ -433,22 +436,22 @@ def subset_point(args, file_dict: dict):
 
     # --  Create SinglePoint Object
     single_point = SinglePointCase(
-        plat = args.plat,
-        plon = args.plon,
-        site_name = args.site_name,
-        create_domain = args.create_domain,
-        create_surfdata = args.create_surfdata,
-        create_landuse = args.create_landuse,
-        create_datm = args.create_datm,
-        create_user_mods = args.create_user_mods,
-        dom_pft = args.dom_pft,
-        pct_pft = args.pct_pft,
-        num_pft = num_pft,
-        include_nonveg = args.include_nonveg,
-        uni_snow = args.uni_snow,
-        cap_saturation = args.cap_saturation,
-        out_dir = args.out_dir,
-        overwrite = args.overwrite,
+        plat=args.plat,
+        plon=args.plon,
+        site_name=args.site_name,
+        create_domain=args.create_domain,
+        create_surfdata=args.create_surfdata,
+        create_landuse=args.create_landuse,
+        create_datm=args.create_datm,
+        create_user_mods=args.create_user_mods,
+        dom_pft=args.dom_pft,
+        pct_pft=args.pct_pft,
+        num_pft=num_pft,
+        include_nonveg=args.include_nonveg,
+        uni_snow=args.uni_snow,
+        cap_saturation=args.cap_saturation,
+        out_dir=args.out_dir,
+        overwrite=args.overwrite,
     )
 
     logger.debug(single_point)
@@ -459,13 +462,15 @@ def subset_point(args, file_dict: dict):
 
     # --  Create CTSM surface data file
     if single_point.create_surfdata:
-        single_point.create_surfdata_at_point(file_dict["fsurf_dir"], file_dict["fsurf_in"],
-                                              args.user_mods_dir)
+        single_point.create_surfdata_at_point(
+            file_dict["fsurf_dir"], file_dict["fsurf_in"], args.user_mods_dir
+        )
 
     # --  Create CTSM transient landuse data file
     if single_point.create_landuse:
-        single_point.create_landuse_at_point(file_dict["fluse_dir"], file_dict["fluse_in"],
-                                             args.user_mods_dir)
+        single_point.create_landuse_at_point(
+            file_dict["fluse_dir"], file_dict["fluse_in"], args.user_mods_dir
+        )
 
     # --  Create single point atmospheric forcing data
     if single_point.create_datm:
@@ -474,8 +479,9 @@ def subset_point(args, file_dict: dict):
 
         # subset the DATM data
         nl_datm = os.path.join(args.user_mods_dir, "user_nl_datm_streams")
-        single_point.create_datm_at_point(file_dict['datm_tuple'], args.datm_syr, args.datm_eyr,
-                                          nl_datm)
+        single_point.create_datm_at_point(
+            file_dict["datm_tuple"], args.datm_syr, args.datm_eyr, nl_datm
+        )
 
     # -- Write shell commands
     if single_point.create_user_mods:
@@ -517,16 +523,18 @@ def subset_region(args, file_dict: dict):
 
     # --  Create CTSM surface data file
     if region.create_surfdata:
-        region.create_surfdata_at_reg(file_dict["fsurf_dir"], file_dict["fsurf_in"],
-                                      args.user_mods_dir)
+        region.create_surfdata_at_reg(
+            file_dict["fsurf_dir"], file_dict["fsurf_in"], args.user_mods_dir
+        )
 
     if region.create_mesh:
         region.create_mesh_at_reg (file_dict["mesh_dir"], file_dict["mesh_surf"])
 
     # --  Create CTSM transient landuse data file
     if region.create_landuse:
-        region.create_landuse_at_reg(file_dict["fluse_dir"], file_dict["fluse_in"],
-                                     args.user_mods_dir)
+        region.create_landuse_at_reg(
+            file_dict["fluse_dir"], file_dict["fluse_in"], args.user_mods_dir
+        )
 
 
     # -- Write shell commands
@@ -561,20 +569,29 @@ def main():
     # --------------------------------- #
     # print help and exit when no option is chosen
     if args.run_type != "point" and args.run_type != "region":
-        err_msg = textwrap.dedent('''\
+        err_msg = textwrap.dedent(
+            """\
                 \n ------------------------------------
                 \n Must supply a positional argument: 'point' or 'region'.
-                '''
-                )
+                """
+        )
         raise parser.error(err_msg)
 
-    if not any([args.create_surfdata, args.create_domain, args.create_landuse, args.create_datm]):
-        err_msg = textwrap.dedent('''\
+    if not any(
+        [
+            args.create_surfdata,
+            args.create_domain,
+            args.create_landuse,
+            args.create_datm,
+        ]
+    ):
+        err_msg = textwrap.dedent(
+            """\
                 \n ------------------------------------
                 \n Must supply one of:
                 \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n
-                '''
-                )
+                """
+        )
         raise parser.error(err_msg)
 
     # --------------------------------- #

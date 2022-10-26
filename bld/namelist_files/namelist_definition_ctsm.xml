@@ -8,16 +8,6 @@
 <!-- CLM Namelist -->
 <!-- ========================================================================================  -->
 
-<entry id="finidat_interp_dest" 
-       type="char*256" 
-       category="datasets"
-       input_pathname="abs" 
-       group="clm_inparm" 
-       valid_values="" >
-If use_init_interp is set to .true., interpinic will be called to interpolate
-the file given by finidat, creating the output file specified by finidat_interp_dest.
-</entry>
-
 <entry id="finidat" 
        type="char*256" 
        category="datasets"
@@ -645,6 +635,12 @@ Functionally Assembled Terrestrial Ecosystem Simulator (FATES)
 <entry id="fates_parteh_mode" type="integer" category="physics"
         group="clm_inparm" valid_values="1,2">
 Switch deciding which nutrient model to use in FATES.
+(Only relevant if FATES is on)
+</entry>
+
+<entry id="use_fates_tree_damage" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false."> 
+Toggle to turn on the tree damage module in FATES
 (Only relevant if FATES is on)
 </entry>
 
@@ -2124,7 +2120,7 @@ Command line arguement for biogeochemistry mode for CLM4.5
         Nitrification/De-nitrification
         Methane model
         Vertically resolved Carbon
-   fates = FATES/ED ecosystem demography model with below ground BGC:
+   fates = FATES Functionally Assembled Terrestrial Ecosystem Simulator (ecosystem demography model with below ground BGC):
 </entry>
 
 <!-- ========================================================================================  -->

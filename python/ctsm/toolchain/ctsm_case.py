@@ -18,6 +18,7 @@ from ctsm.git_utils import get_ctsm_git_describe
 # -- import local classes for this script
 logger = logging.getLogger(__name__)
 
+
 class CtsmCase:
     """
     A class to encapsulate different ctsm cases.
@@ -69,8 +70,8 @@ class CtsmCase:
         Build the namelist/control file for a ctsm
         case.
     """
-    # pylint: disable=too-many-instance-attributes
 
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(
         self,
@@ -83,7 +84,7 @@ class CtsmCase:
         glc_flag,
         start_year,
         end_year,
-        hres_flag
+        hres_flag,
     ):
         self.res = res
         self.glc_nec = glc_nec
@@ -96,10 +97,9 @@ class CtsmCase:
         self.end_year = end_year
         self.hres_flag = hres_flag
         self.lu_fname = None
-        self.namelist_fname =None
-        self.ssp_val=None
-        self.rcp_val=None
-
+        self.namelist_fname = None
+        self.ssp_val = None
+        self.rcp_val = None
 
         # -- check if end year value is a valid value
         self.check_endyear()
@@ -114,9 +114,7 @@ class CtsmCase:
         return (
             str(self.__class__)
             + "\n"
-            + "\n".join(
-                (str(key) + " = " + str(value) for key, value in self.__dict__.items())
-            )
+            + "\n".join((str(key) + " = " + str(value) for key, value in self.__dict__.items()))
         )
 
     def check_endyear(self):
@@ -152,8 +150,7 @@ class CtsmCase:
             self.num_pft = "78"
         else:
             self.num_pft = "16"
-        logger.debug(" crop_flag = %s => num_pft = %i",
-                     self.crop_flag.__str__(), self.num_pft)
+        logger.debug(" crop_flag = %s => num_pft = %i", self.crop_flag.__str__(), self.num_pft)
 
     def build_landuse_filename(self):
         """
@@ -179,7 +176,7 @@ class CtsmCase:
         Create land-use txt file for a transient case.
         """
         self.build_landuse_filename()
-        with open(self.lu_fname, "w", encoding='utf-8') as lu_file:
+        with open(self.lu_fname, "w", encoding="utf-8") as lu_file:
 
             for year in range(self.start_year, self.end_year + 1):
 
@@ -200,9 +197,7 @@ class CtsmCase:
                     self.decode_ssp_rcp()
                     lu_input_fname = os.path.join(
                         self.input_path,
-                        "pftcftdynharv.0.25x0.25."
-                        + self.ssp_rcp
-                        + ".simyr2016-2100.c181217",
+                        "pftcftdynharv.0.25x0.25." + self.ssp_rcp + ".simyr2016-2100.c181217",
                         "mksrf_landuse_SSP"
                         + self.ssp_val
                         + "RCP"
@@ -229,7 +224,7 @@ class CtsmCase:
                 logger.debug("year : %s", year)
                 logger.debug(lu_line)
 
-        print ("Successfully created land use file : ", self.lu_fname, ".")
+        print("Successfully created land use file : ", self.lu_fname, ".")
         print("-------------------------------------------------------")
 
     def build_namelist_filename(self):
@@ -265,7 +260,7 @@ class CtsmCase:
             self.create_landuse_file()
 
         self.build_namelist_filename()
-        with open(self.namelist_fname, "w", encoding='utf-8') as namelist_file:
+        with open(self.namelist_fname, "w", encoding="utf-8") as namelist_file:
 
             label = get_ctsm_git_describe()
 
@@ -283,10 +278,7 @@ class CtsmCase:
             nl_template = (
                 "&clmexp\n"
                 "nglcec           = " + self.glc_nec + "\n"
-                "mksrf_fsoitex    = "
-                + self.input_path
-                + "mksrf_soitex.10level.c201018.nc"
-                + "\n"
+                "mksrf_fsoitex    = " + self.input_path + "mksrf_soitex.10level.c201018.nc" + "\n"
                 "mksrf_forganic   = "
                 + self.input_path
                 + "mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc"
@@ -296,10 +288,7 @@ class CtsmCase:
                 + "mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc"
                 + "\n"
                 "mksrf_fwetlnd    = " + self.input_path + "mksrf_lanwat.050425.nc" + "\n"
-                "mksrf_fmax       = "
-                + self.input_path
-                + "mksrf_fmax_3x3min_USGS_c120911.nc"
-                + "\n"
+                "mksrf_fmax       = " + self.input_path + "mksrf_fmax_3x3min_USGS_c120911.nc" + "\n"
                 "mksrf_fglacier   = "
                 + self.input_path
                 + "mksrf_glacier_3x3min_simyr2000.c120926.nc"
@@ -308,10 +297,7 @@ class CtsmCase:
                 + self.input_path
                 + "mksrf_vocef_0.5x0.5_simyr2000.c110531.nc"
                 + "\n"
-                "mksrf_furbtopo   = "
-                + self.input_path
-                + "mksrf_topo.10min.c080912.nc"
-                + "\n"
+                "mksrf_furbtopo   = " + self.input_path + "mksrf_topo.10min.c080912.nc" + "\n"
                 "mksrf_fgdp       = "
                 + self.input_path
                 + "mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc"

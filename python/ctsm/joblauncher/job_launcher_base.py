@@ -11,11 +11,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class JobLauncherBase(object):
     """Base class for job launchers. Not meant to be instantiated directly"""
 
-    def __init__(self, queue=None, walltime=None, account=None,
-                 required_args=None, extra_args=None):
+    def __init__(
+        self,
+        queue=None,
+        walltime=None,
+        account=None,
+        required_args=None,
+        extra_args=None,
+    ):
         """Initialize a job launcher object.
 
         Note that some of these arguments (e.g., queue and walltime) aren't needed by some
@@ -109,13 +116,16 @@ class JobLauncherBase(object):
         raise NotImplementedError
 
     def __repr__(self):
-        return (type(self).__name__ +
-                "(queue='{queue}', "
-                "walltime='{walltime}', "
-                "account='{account}', "
-                "required_args='{required_args}', "
-                "extra_args='{extra_args}')".format(queue=self._queue,
-                                                    walltime=self._walltime,
-                                                    account=self._account,
-                                                    required_args=self._required_args,
-                                                    extra_args=self._extra_args))
+        return (
+            type(self).__name__ + "(queue='{queue}', "
+            "walltime='{walltime}', "
+            "account='{account}', "
+            "required_args='{required_args}', "
+            "extra_args='{extra_args}')".format(
+                queue=self._queue,
+                walltime=self._walltime,
+                account=self._account,
+                required_args=self._required_args,
+                extra_args=self._extra_args,
+            )
+        )

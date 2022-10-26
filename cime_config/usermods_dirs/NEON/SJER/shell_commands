@@ -1,4 +1,8 @@
 ./xmlchange NEONSITE=SJER
 ./xmlchange PTS_LON=240.267
 ./xmlchange PTS_LAT=37.107117
-./xmlchange RUN_STARTDATE=2018-09-01
+./xmlchange RUN_STARTDATE=2019-01-01
+./xmlchange DATM_YR_ALIGN=2019,DATM_YR_START=2019
+./xmlchange STOP_N=39
+
+#./xmlchange RUN_STARTDATE=2018-09-01
