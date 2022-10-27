@@ -1286,8 +1286,6 @@ contains
   end subroutine clm_orbital_update
 
   subroutine CheckImport(gcomp, rc)
-!    use NUOPC
-!    use ESMF
     type(ESMF_GridComp) :: gcomp
     integer, intent(out) :: rc
     character(len=*) , parameter :: subname = "("//__FILE__//":CheckImport)"
