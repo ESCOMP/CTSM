@@ -1863,6 +1863,7 @@ contains
              next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,s+1)
          end if
 
+         ! CropType->InitAllocate() initializes next_rx_sdate to -1. It's only changed from that, by cropCalStreamMod->cropcal_interp(),  when use_cropcal_rx_sdates is true. So if not using prescribed sowing dates, this boolean will always be false, because jday can never be -1.
          do_plant_prescribed = next_rx_sdate(p) == jday .and. sowing_count(p) < mxsowings
          
          ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-18)
