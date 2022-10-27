@@ -337,7 +337,8 @@ contains
    
              ! Sanity check: Should only read in valid values
              if (crop_inst%rx_sdates_thisyr(p,1) > 365) then
-                 write(iulog,'(a,i0,a,i0)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed sowing date ',crop_inst%rx_sdates_thisyr(p,1)
+                 write(iulog,'(a,i0,a,i0)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed sowing date ',&
+                                            crop_inst%rx_sdates_thisyr(p,1)
                  call ESMF_Finalize(endflag=ESMF_END_ABORT)
              end if
    
@@ -409,7 +410,8 @@ contains
    
              ! Sanity check: Try to catch uninitialized values
              if (crop_inst%rx_cultivar_gdds_thisyr(p,1) > 1000000._r8) then
-                 write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) HUGE ',crop_inst%rx_cultivar_gdds_thisyr(p,1)
+                 write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) HUGE ',&
+                                               crop_inst%rx_cultivar_gdds_thisyr(p,1)
                  call ESMF_Finalize(endflag=ESMF_END_ABORT)
              end if
           else

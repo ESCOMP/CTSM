@@ -2585,13 +2585,15 @@ contains
       endif
 
       ! set GDD target
-      if (use_cropcal_rx_cultivar_gdds .and. (.not. ignore_rx_crop_gdds) .and. crop_inst%rx_cultivar_gdds_thisyr(p,s) .ge. 0._r8) then
+      if (use_cropcal_rx_cultivar_gdds .and. (.not. ignore_rx_crop_gdds) &
+       .and. crop_inst%rx_cultivar_gdds_thisyr(p,s) .ge. 0._r8) then
          gdd_target = crop_inst%rx_cultivar_gdds_thisyr(p,s)
 
          ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
          ! Just manually set a minimum of 1.0
          if (gdd_target < gddmin(ivt(p))) then
-            write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gdd_target ',gdd_target,'; using gddmin(ivt(p)) instead (',gddmin(ivt(p)),')'
+            write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gdd_target ',gdd_target,'; using gddmin(ivt(p)) instead (',&
+                           gddmin(ivt(p)),')'
          endif
          gdd_target = max(gdd_target, gddmin(ivt(p)))
 
@@ -2622,7 +2624,8 @@ contains
          ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
          ! Just manually set a minimum of 1.0
          if (gddmaturity(p) < gddmin(ivt(p))) then
-            write(iulog,*) 'Some patch with ivt ',ivt(p),' has calculated gddmaturity ',gddmaturity(p),'; using gddmin(ivt(p)) instead (',gddmin(ivt(p)),')'
+            write(iulog,*) 'Some patch with ivt ',ivt(p),' has calculated gddmaturity ',gddmaturity(p),&
+                           '; using gddmin(ivt(p)) instead (',gddmin(ivt(p)),')'
          endif
          gddmaturity(p) = max(gddmaturity(p), gddmin(ivt(p)))
       endif
