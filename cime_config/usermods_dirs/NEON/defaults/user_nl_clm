@@ -20,15 +20,6 @@
 
 flanduse_timeseries = ' '   ! This isn't needed for a non transient case, but will be once we start using transient compsets
 fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/NEON/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_${NEONSITE}_c221014.nc"
-model_year_align_urbantv = 2018
-stream_year_first_urbantv = 2018
-stream_year_last_urbantv = 2022
-stream_year_first_ndep = 2018
-model_year_align_ndep = 2018
-stream_year_last_ndep = 2022
-model_year_align_popdens = 2018
-stream_year_first_popdens = 2018
-stream_year_last_popdens = 2022
 
 stream_fldfilename_lightng = '$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_NEONarea_c210625.nc'
 !stream_fldfilename_ndep = '$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_2018-2030_monthly_c210826.nc'
