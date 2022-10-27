@@ -265,12 +265,6 @@
   </compset>
 
   <compset>
-     <alias>I1850Clm51Bgc</alias>
-     <lname>1850_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
-   </compset>
-
-
-  <compset>
      <alias>I1850Clm51SpNoAnthro</alias>
      <lname>1850_DATM%GSWP3v1_CLM51%SP-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
    </compset>
