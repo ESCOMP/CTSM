@@ -1730,7 +1730,7 @@ contains
     logical do_harvest    ! Are harvest conditions satisfied?
     logical force_harvest ! Should we harvest today no matter what?
     logical fake_harvest  ! Dealing with incorrect Dec. 31 planting
-    logical sown_today    ! Was the crop sown today?
+    logical did_plant_prescribed_today    ! Was the crop sown today?
     logical is_day_before_next_sowing ! Is tomorrow a prescribed sowing day?
     !------------------------------------------------------------------------
 
@@ -2100,9 +2100,9 @@ contains
             do_harvest = .false.
             force_harvest = .false.
             fake_harvest = .false.
-            sown_today = .false.
+            did_plant_prescribed_today = .false.
             if (use_cropcal_rx_sdates .and. s > 0) then
-                sown_today = crop_inst%sdates_thisyr_patch(p,s) == real(jday, r8)
+                did_plant_prescribed_today = crop_inst%sdates_thisyr_patch(p,s) == real(jday, r8)
             end if
 
             ! TEMPORARY? GGCMI seasons often much longer than CLM mxmat.
@@ -2170,7 +2170,7 @@ contains
 
                endif
 
-            else if (sown_today) then
+            else if (did_plant_prescribed_today) then
                ! Do not harvest on the day this growing season began;
                ! would create challenges for postprocessing.
                do_harvest = .false.
