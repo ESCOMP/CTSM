@@ -1890,8 +1890,7 @@ contains
             crop_inst%sowing_reason_patch(p) = 0
          endif
 
-         ! This is outside the croplive check to allow for using CLM sowing
-         ! dates with externally-prescribed GDD maturity requirements
+         ! This is outside the croplive check so that the "harvest if planting conditions were met today" conditional works.
          !
          ! Only allow sowing according to normal "window" rules if not using prescribed
          ! sowing dates at all, or if this cell had no values in the prescribed sowing
