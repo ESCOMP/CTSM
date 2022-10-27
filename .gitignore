@@ -106,6 +106,7 @@ unit_test_build
 /tools/mkmapdata/map*.nc
 
 # run_neon output directories
+/tools/site_and_regional/listing.csv
 /tools/site_and_regional/????/
 /tools/site_and_regional/????.ad/
 /tools/site_and_regional/????.postad/
