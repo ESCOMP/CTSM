@@ -333,19 +333,19 @@ contains
              n = ivt - npcropmin + 1
              ! vegetated pft
              ig = g_to_ig(patch%gridcell(p))
-             crop_inst%rx_sdates_thisyr(p,1) = dataptr2d_sdate(ig,n)
+             crop_inst%rx_sdates_thisyr_patch(p,1) = dataptr2d_sdate(ig,n)
    
              ! Sanity check: Should only read in valid values
-             if (crop_inst%rx_sdates_thisyr(p,1) > 365) then
+             if (crop_inst%rx_sdates_thisyr_patch(p,1) > 365) then
                  write(iulog,'(a,i0,a,i0)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed sowing date ',&
-                                            crop_inst%rx_sdates_thisyr(p,1)
+                                            crop_inst%rx_sdates_thisyr_patch(p,1)
                  call ESMF_Finalize(endflag=ESMF_END_ABORT)
              end if
    
              ! Only for first sowing date of the year
              ! The conditional here is to ensure nothing weird happens if it's called incorrectly on day 365
-             if (crop_inst%sdates_thisyr(p,1) <= 0) then
-                 crop_inst%next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
+             if (crop_inst%sdates_thisyr_patch(p,1) <= 0) then
+                 crop_inst%next_rx_sdate_patch(p) = crop_inst%rx_sdates_thisyr_patch(p,1)
              end if
          else
              write(iulog,'(a,i0)') 'cropcal_interp(), rx_sdates: Crop patch has ivt ',ivt
@@ -406,12 +406,12 @@ contains
                  call ESMF_Finalize(endflag=ESMF_END_ABORT)
              end if
 
-             crop_inst%rx_cultivar_gdds_thisyr(p,1) = dataptr2d_cultivar_gdds(ig,n)
+             crop_inst%rx_cultivar_gdds_thisyr_patch(p,1) = dataptr2d_cultivar_gdds(ig,n)
    
              ! Sanity check: Try to catch uninitialized values
-             if (crop_inst%rx_cultivar_gdds_thisyr(p,1) > 1000000._r8) then
+             if (crop_inst%rx_cultivar_gdds_thisyr_patch(p,1) > 1000000._r8) then
                  write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) HUGE ',&
-                                               crop_inst%rx_cultivar_gdds_thisyr(p,1)
+                                               crop_inst%rx_cultivar_gdds_thisyr_patch(p,1)
                  call ESMF_Finalize(endflag=ESMF_END_ABORT)
              end if
           else

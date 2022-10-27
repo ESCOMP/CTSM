@@ -1761,7 +1761,7 @@ contains
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
-         next_rx_sdate     =>    crop_inst%next_rx_sdate                       , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
+         next_rx_sdate     =>    crop_inst%next_rx_sdate_patch                 , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
          sowing_count      =>    crop_inst%sowing_count                        , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
          harvest_count     =>    crop_inst%harvest_count                       , & ! Inout:  [integer  (:) ]  number of harvest events this year for this patch
          peaklai           =>  cnveg_state_inst%peaklai_patch                  , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
@@ -1830,37 +1830,37 @@ contains
          ! Second condition ensures everything is correctly set when resuming from a run with old code
          ! OR starting a run mid-year without any restart file OR handling a new crop column that just
          ! came into existence (and not at the year boundary for some reason).
-         if ( is_beg_curr_year() .or. crop_inst%sdates_thisyr(p,1) == spval ) then
+         if ( is_beg_curr_year() .or. crop_inst%sdates_thisyr_patch(p,1) == spval ) then
             sowing_count(p) = 0
             harvest_count(p) = 0
             do s = 1, mxsowings
-               crop_inst%sdates_thisyr(p,s) = -1._r8
-               crop_inst%sowing_reason_thisyr(p,s) = -1._r8
+               crop_inst%sdates_thisyr_patch(p,s) = -1._r8
+               crop_inst%sowing_reason_thisyr_patch(p,s) = -1._r8
             end do
             do s = 1, mxharvests
-               crop_inst%sdates_perharv(p,s) = -1._r8
-               crop_inst%syears_perharv(p,s) = -1._r8
-               crop_inst%hdates_thisyr(p,s) = -1._r8
+               crop_inst%sdates_perharv_patch(p,s) = -1._r8
+               crop_inst%syears_perharv_patch(p,s) = -1._r8
+               crop_inst%hdates_thisyr_patch(p,s) = -1._r8
                cnveg_state_inst%gddmaturity_thisyr(p,s) = -1._r8
-               crop_inst%gddaccum_thisyr(p,s) = -1._r8
-               crop_inst%hui_thisyr(p,s) = -1._r8
-               crop_inst%sowing_reason_perharv = -1._r8
-               crop_inst%harvest_reason_thisyr(p,s) = -1._r8
+               crop_inst%gddaccum_thisyr_patch(p,s) = -1._r8
+               crop_inst%hui_thisyr_patch(p,s) = -1._r8
+               crop_inst%sowing_reason_perharv_patch = -1._r8
+               crop_inst%harvest_reason_thisyr_patch(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
-                  cnveg_carbonflux_inst%repr_grainc_to_food_perharv(p,s,k) = 0._r8
+                  cnveg_carbonflux_inst%repr_grainc_to_food_perharv_patch(p,s,k) = 0._r8
                end do
             end do
             do k = repr_grain_min, repr_grain_max
-               cnveg_carbonflux_inst%repr_grainc_to_food_thisyr(p,k) = 0._r8
+               cnveg_carbonflux_inst%repr_grainc_to_food_thisyr_patch(p,k) = 0._r8
             end do
-            next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
+            next_rx_sdate(p) = crop_inst%rx_sdates_thisyr_patch(p,1)
          end if
 
          s = sowing_count(p)
 
          ! Get next sowing date
          if (s < mxsowings) then
-             next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,s+1)
+             next_rx_sdate(p) = crop_inst%rx_sdates_thisyr_patch(p,s+1)
          end if
 
          ! CropType->InitAllocate() initializes next_rx_sdate to -1. It's only changed from that, by cropCalStreamMod->cropcal_interp(),  when use_cropcal_rx_sdates is true. So if not using prescribed sowing dates, this boolean will always be false, because jday can never be -1.
@@ -1875,7 +1875,7 @@ contains
          ! Once removed, can also remove the "Instead, always harvest the day before idop" bit.
          if (croplive(p) .and. idop(p) <= jday .and. sowing_count(p) == 0) then
              sowing_count(p) = 1
-             crop_inst%sdates_thisyr(p,1) = real(idop(p), r8)
+             crop_inst%sdates_thisyr_patch(p,1) = real(idop(p), r8)
          end if
          ! Will be needed until we can rely on all restart files including iyop.
          if (croplive(p) .and. iyop(p) > kyr) then
@@ -1895,7 +1895,7 @@ contains
          ! Only allow sowing according to normal "window" rules if not using prescribed
          ! sowing dates at all, or if this cell had no values in the prescribed sowing
          ! date file.
-         allow_unprescribed_planting = (.not. use_cropcal_rx_sdates) .or. crop_inst%rx_sdates_thisyr(p,1)<0
+         allow_unprescribed_planting = (.not. use_cropcal_rx_sdates) .or. crop_inst%rx_sdates_thisyr_patch(p,1)<0
          if (sowing_count(p) == mxsowings) then
             do_plant_normal = .false.
             do_plant_lastchance = .false.
@@ -2104,7 +2104,7 @@ contains
             fake_harvest = .false.
             sown_today = .false.
             if (use_cropcal_rx_sdates .and. s > 0) then
-                sown_today = crop_inst%sdates_thisyr(p,s) == real(jday, r8)
+                sown_today = crop_inst%sdates_thisyr_patch(p,s) == real(jday, r8)
             end if
 
             ! TEMPORARY? GGCMI seasons often much longer than CLM mxmat.
@@ -2128,7 +2128,7 @@ contains
                 harvest_reason = 4._r8
 
             ! If generate_crop_gdds and this patch has prescribed sowing inputs
-            else if (generate_crop_gdds .and. crop_inst%rx_sdates_thisyr(p,1) .gt. 0) then
+            else if (generate_crop_gdds .and. crop_inst%rx_sdates_thisyr_patch(p,1) .gt. 0) then
                if (.not. use_cropcal_rx_sdates) then 
                   write(iulog,*) 'If using generate_crop_gdds, you must specify stream_fldFileName_sdate'
                   call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -2162,7 +2162,7 @@ contains
                   ! WARNING: This implementation assumes that sowing dates don't change over time!
                   ! In order to avoid this, you'd have to read this year's AND next year's prescribed
                   ! sowing dates.
-                  if (crop_inst%rx_sdates_thisyr(p,1) == 1) then
+                  if (crop_inst%rx_sdates_thisyr_patch(p,1) == 1) then
                       do_harvest = jday == dayspyr
                   end if
 
@@ -2187,7 +2187,7 @@ contains
                ! WARNING: This implementation assumes that all patches use prescribed sowing dates.
                if (use_cropcal_streams) then
                   is_day_before_next_sowing = (jday == next_rx_sdate(p) - 1) .or. \
-                                              (crop_inst%sdates_thisyr(p,1) == 1 .and. \
+                                              (crop_inst%sdates_thisyr_patch(p,1) == 1 .and. \
                                                jday == dayspyr)
                else
                   is_day_before_next_sowing = .false.
@@ -2243,15 +2243,15 @@ contains
                if (.not. fake_harvest) then
                   if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                   harvest_count(p) = harvest_count(p) + 1
-                  crop_inst%sdates_perharv(p, harvest_count(p)) = real(idop(p), r8)
-                  crop_inst%syears_perharv(p, harvest_count(p)) = real(iyop(p), r8)
-                  crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
+                  crop_inst%sdates_perharv_patch(p, harvest_count(p)) = real(idop(p), r8)
+                  crop_inst%syears_perharv_patch(p, harvest_count(p)) = real(iyop(p), r8)
+                  crop_inst%hdates_thisyr_patch(p, harvest_count(p)) = real(jday, r8)
                   cnveg_state_inst%gddmaturity_thisyr(p,harvest_count(p)) = gddmaturity(p)
-                  crop_inst%gddaccum_thisyr(p, harvest_count(p)) = crop_inst%gddaccum_patch(p)
-                  crop_inst%hui_thisyr(p, harvest_count(p)) = hui(p)
-                  crop_inst%sowing_reason_perharv(p, harvest_count(p)) = real(crop_inst%sowing_reason_patch(p), r8)
+                  crop_inst%gddaccum_thisyr_patch(p, harvest_count(p)) = crop_inst%gddaccum_patch(p)
+                  crop_inst%hui_thisyr_patch(p, harvest_count(p)) = hui(p)
+                  crop_inst%sowing_reason_perharv_patch(p, harvest_count(p)) = real(crop_inst%sowing_reason_patch(p), r8)
                   crop_inst%sowing_reason_patch(p) = -1
-                  crop_inst%harvest_reason_thisyr(p, harvest_count(p)) = harvest_reason
+                  crop_inst%harvest_reason_thisyr_patch(p, harvest_count(p)) = harvest_reason
                endif
 
                croplive(p) = .false.     ! no re-entry in greater if-block
@@ -2507,9 +2507,9 @@ contains
          ivt               =>    patch%itype                                     , & ! Input:  [integer  (:) ]  patch vegetation type
          croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
-         next_rx_sdate     =>    crop_inst%next_rx_sdate                         , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
+         next_rx_sdate     =>    crop_inst%next_rx_sdate_patch                   , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
          sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
-         sowing_reason     =>    crop_inst%sowing_reason_thisyr                  , & ! Output:  [real(r8)  (:) ]  reason for each sowing this year for this patch
+         sowing_reason     =>    crop_inst%sowing_reason_thisyr_patch            , & ! Output:  [real(r8)  (:) ]  reason for each sowing this year for this patch
          gddmaturity       =>    cnveg_state_inst%gddmaturity_patch            , & ! Output: [real(r8) (:) ]  gdd needed to harvest
          idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting
          iyop              =>    cnveg_state_inst%iyop_patch                     , & ! Output: [integer  (:) ]  year of planting
@@ -2534,11 +2534,11 @@ contains
 
       sowing_count(p) = s
       if (s < mxsowings) then
-         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, s+1)
+         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr_patch(p, s+1)
       else
          next_rx_sdate(p) = -1
       endif
-      crop_inst%sdates_thisyr(p,s) = real(jday, r8)
+      crop_inst%sdates_thisyr_patch(p,s) = real(jday, r8)
 
       this_sowing_reason = 0._r8
       if (do_plant_prescribed) then
@@ -2586,8 +2586,8 @@ contains
 
       ! set GDD target
       if (use_cropcal_rx_cultivar_gdds .and. (.not. ignore_rx_crop_gdds) &
-       .and. crop_inst%rx_cultivar_gdds_thisyr(p,s) .ge. 0._r8) then
-         gdd_target = crop_inst%rx_cultivar_gdds_thisyr(p,s)
+       .and. crop_inst%rx_cultivar_gdds_thisyr_patch(p,s) .ge. 0._r8) then
+         gdd_target = crop_inst%rx_cultivar_gdds_thisyr_patch(p,s)
 
          ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
          ! Just manually set a minimum of 1.0
@@ -2974,8 +2974,8 @@ contains
          frootc_to_litter      =>    cnveg_carbonflux_inst%frootc_to_litter_patch      , & ! Output: [real(r8) (:) ]  fine root C litterfall (gC/m2/s)                  
          livestemc_to_litter   =>    cnveg_carbonflux_inst%livestemc_to_litter_patch   , & ! Output: [real(r8) (:) ]  live stem C litterfall (gC/m2/s)                  
          repr_grainc_to_food   =>    cnveg_carbonflux_inst%repr_grainc_to_food_patch   , & ! Output: [real(r8) (:,:) ]  grain C to food (gC/m2/s)
-         repr_grainc_to_food_perharv => cnveg_carbonflux_inst%repr_grainc_to_food_perharv, & ! Output: [real(r8) (:,:,:) ]  grain C to food per harvest (gC/m2)
-         repr_grainc_to_food_thisyr => cnveg_carbonflux_inst%repr_grainc_to_food_thisyr, & ! Output: [real(r8) (:,:) ]  grain C to food harvested this calendar year (gC/m2)
+         repr_grainc_to_food_perharv => cnveg_carbonflux_inst%repr_grainc_to_food_perharv_patch, & ! Output: [real(r8) (:,:,:) ]  grain C to food per harvest (gC/m2)
+         repr_grainc_to_food_thisyr => cnveg_carbonflux_inst%repr_grainc_to_food_thisyr_patch, & ! Output: [real(r8) (:,:) ]  grain C to food harvested this calendar year (gC/m2)
          repr_grainc_to_seed   =>    cnveg_carbonflux_inst%repr_grainc_to_seed_patch   , & ! Output: [real(r8) (:,:) ]  grain C to seed (gC/m2/s)
          repr_structurec_to_cropprod => cnveg_carbonflux_inst%repr_structurec_to_cropprod_patch, & ! Output: [real(r8) (:,:) ] reproductive structure C to crop product pool (gC/m2/s)
          repr_structurec_to_litter   => cnveg_carbonflux_inst%repr_structurec_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure C to litter (gC/m2/s)
