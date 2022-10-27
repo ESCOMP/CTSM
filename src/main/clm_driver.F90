@@ -479,7 +479,6 @@ contains
             canopystate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, &
             energyflux_inst)
-!       write(iulog,*) 'Exited clm_drv_init() in clm_drv()'
 
        call topo_inst%UpdateTopo(bounds_clump, &
             filter(nc)%num_icec, filter(nc)%icec, &
@@ -1043,7 +1042,6 @@ contains
           ! Update crop calendars
           ! ============================================================================
           call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, filter_inactive_and_active(nc)%pcropp, crop_inst)
-!          write(iulog,*) 'Exited cropcal_interp() in clm_drv()'
        end if
 
        ! ============================================================================
