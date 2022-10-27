@@ -137,8 +137,8 @@ module CNVegCarbonFluxType
      real(r8), pointer :: frootc_to_litter_patch                    (:)     ! fine root C litterfall (gC/m2/s)
      real(r8), pointer :: livestemc_to_litter_patch                 (:)     ! live stem C litterfall (gC/m2/s)
      real(r8), pointer :: repr_grainc_to_food_patch               (:,:)     ! grain C to food for prognostic crop(gC/m2/s) [patch, repr_grain_min:repr_grain_max]
-     real(r8), pointer :: repr_grainc_to_food_perharv             (:,:,:)   ! grain C to food for prognostic crop accumulated by harvest (gC/m2) [patch, harvest, repr_grain_min:repr_grain_max]
-     real(r8), pointer :: repr_grainc_to_food_thisyr              (:,:)     ! grain C to food for prognostic crop accumulated this calendar year (gC/m2) [patch, repr_grain_min:repr_grain_max]
+     real(r8), pointer :: repr_grainc_to_food_perharv             (:,:,:)   ! grain C to food for prognostic crop accumulated by harvest (gC/m2) [patch, harvest, repr_grain_min:repr_grain_max]. Not per-second because this variable represents an accumulation over each growing season, to be instantaneously at the end of each calendar year, to provide output that's easier to work with.
+     real(r8), pointer :: repr_grainc_to_food_thisyr              (:,:)     ! grain C to food for prognostic crop accumulated this calendar year (gC/m2) [patch, repr_grain_min:repr_grain_max]. Not per-second because this variable represents an accumulation over an entire calendar year, to be saved instantaneously at the end of each calendar year, to provide output that's easier to work with.
      real(r8), pointer :: repr_structurec_to_cropprod_patch       (:,:)     ! reproductive structure C to crop product pool for prognostic crop (gC/m2/s) [patch, repr_structure_min:repr_structure_max]
      real(r8), pointer :: repr_structurec_to_litter_patch         (:,:)     ! reproductive structure C to litter for prognostic crop (gC/m2/s) [patch, repr_structure_min:repr_structure_max]
      
