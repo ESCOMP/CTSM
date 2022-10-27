@@ -2116,7 +2116,7 @@ contains
             end if
 
             if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
-                ! Crop was incorrectly planted in last time step of Dec. 31.
+                ! BACKWARDS_COMPATIBILITY(ssr, 2022-02-03): To get rid of crops incorrectly planted in last time step of Dec. 31. That was fixed in commit dadbc62 ("Call CropPhenology regardless of doalb"), but this handles restart files with the old behavior. fake_harvest ensures that outputs aren't polluted.
                 do_harvest = .true.
                 force_harvest = .true.
                 fake_harvest = .true.
