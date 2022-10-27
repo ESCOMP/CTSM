@@ -337,35 +337,50 @@ class RegionalCase(BaseCase):
             endx = elem_conn[n,:num_elem_conn[n].values].values
             endx[:,] -= 1# convert to zero based index
             endx = [int(xi) for xi in endx]
-
+            #print (endx)
             nlon = node_coords[endx,0].values
             nlat = node_coords[endx,1].values
 
-            l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
-            l2 = np.logical_or(nlat <= self.lat1,nlat >= self.lat2)
-            if np.any(np.logical_or(l1,l2)):
-                pass
-            else:
+            l1 = np.logical_and(nlon > self.lon1,nlon < self.lon2)
+            l2 = np.logical_and(nlat > self.lat1,nlat < self.lat2)
+            if np.any(l1) and np.any(l2):
+            #if np.any(np.logical_or(l1,l2)):
+            #    pass
+            #else:
                 subset_element.append(n)
                 cnt+=1
 
-
+        print (cnt)
         subset_node = []
         conn_dict = {}
         cnt = 1
-
+        print (node_count)
+        print (elem_count)
+        print (node_coords)
         for n in range(node_count):
+            #n = n-1
             nlon = node_coords[n,0].values
             nlat = node_coords[n,1].values
 
-            l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
-            l2 = np.logical_or(nlat <= self.lat1,nlat >= self.lat2)
-            if np.logical_or(l1,l2):
-                conn_dict[n+1] = -9999
-            else:
+            #l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
+            #l2 = np.logical_or(nlat <= self.lat1,nlat >= self.lat2)
+            l1 = np.logical_and(nlon >= self.lon1,nlon <= self.lon2)
+            l2 = np.logical_and(nlat >= self.lat1,nlat <= self.lat2)
+            if np.any(l1) and np.any(l2):
                 subset_node.append(n)
                 conn_dict[n+1] = cnt
                 cnt+=1
+            else:
+                conn_dict[n+1] = -9999
+
+            #if np.logical_or(l1,l2):
+            #    conn_dict[n+1] = -9999
+            #if np.any(l1) and np.any(l2):
+            #else:
+            #    subset_node.append(n)
+            #    conn_dict[n+1] = cnt
+            #    cnt+=1
+        print ('cnt:',cnt)
         return node_coords, subset_element, subset_node, conn_dict
 
 
@@ -374,8 +389,10 @@ class RegionalCase(BaseCase):
         """
         This function writes out the subsetted mesh file.
         """
+        print (len(subset_node))
         corner_pairs = f_in.variables['nodeCoords'][subset_node,]
-
+        print (corner_pairs)
+        #print (corner_pairs.shape())
         dimensions = f_in.dims
         variables  = f_in.variables
         global_attributes  = f_in.attrs
@@ -390,6 +407,7 @@ class RegionalCase(BaseCase):
         for ni in range(elem_count):
             for mi in range(max_node_dim):
                 ndx = int (elem_conn_index[ni,mi])
+                #print ('mi',mi, 'ndx',ndx)
                 elem_conn_out[ni,mi] = conn_dict[ndx]
 
 
@@ -422,6 +440,7 @@ class RegionalCase(BaseCase):
         f_out['numElementConn'] = xr.DataArray(num_elem_conn_out,
                                       dims=('elementCount'),
                                       attrs={'long_name': 'Number of nodes per element'})
+        f_out.numElementConn.encoding = {'dtype': np.int32}
 
         f_out['centerCoords'] = xr.DataArray(center_coords_out,
                                           dims=('elementCount', 'coordDim'),
