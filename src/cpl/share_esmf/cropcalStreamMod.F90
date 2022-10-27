@@ -305,7 +305,6 @@ contains
        ! Starting with npcropmin will skip generic crops
        if (verbose) write(iulog,*) 'cropcal_interp(): Reading sdate file'
        do n = 1, ncft
-          ivt = n + npcropmin - 1
           call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
                fldptr1=dataptr1d_sdate,  rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
