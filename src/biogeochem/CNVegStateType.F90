@@ -35,7 +35,7 @@ module CNVegStateType
      real(r8) , pointer :: hdidx_patch                 (:)     ! patch cold hardening index?
      real(r8) , pointer :: cumvd_patch                 (:)     ! patch cumulative vernalization d?ependence?
      real(r8) , pointer :: gddmaturity_patch           (:)     ! patch growing degree days (gdd) needed to harvest (ddays)
-     real(r8) , pointer :: gddmaturity_thisyr          (:,:)   ! all at-harvest values of the above for this patch this year
+     real(r8) , pointer :: gddmaturity_thisyr          (:,:)   ! all at-harvest values of the above for this patch this year (ddays) [patch, mxharvests]
      real(r8) , pointer :: huileaf_patch               (:)     ! patch heat unit index needed from planting to leaf emergence
      real(r8) , pointer :: huigrain_patch              (:)     ! patch heat unit index needed to reach vegetative maturity
      real(r8) , pointer :: aleafi_patch                (:)     ! patch saved leaf allocation coefficient from phase 2

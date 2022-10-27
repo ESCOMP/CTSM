@@ -48,17 +48,17 @@ module CropType
      real(r8) :: baset_latvary_intercept
      real(r8) :: baset_latvary_slope
      integer , pointer :: next_rx_sdate           (:)   ! prescribed sowing date for the next growing season this year
-     integer , pointer :: rx_sdates_thisyr        (:,:) ! all prescribed sowing dates for this patch this year
-     real(r8), pointer :: rx_cultivar_gdds_thisyr (:,:) ! all cultivar GDD targets for this patch this year
-     real(r8), pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year
-     real(r8), pointer :: sdates_perharv          (:,:) ! all actual sowing dates for crops *harvested* this year
-     real(r8), pointer :: syears_perharv          (:,:) ! all actual sowing years for crops *harvested* this year
-     real(r8), pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
-     real(r8), pointer :: gddaccum_thisyr         (:,:) ! accumulated GDD at harvest for this patch this year
-     real(r8), pointer :: hui_thisyr              (:,:) ! accumulated heat unit index at harvest for this patch this year
-     real(r8), pointer :: sowing_reason_thisyr    (:,:) ! reason for each sowing for this patch this year
-     real(r8), pointer :: sowing_reason_perharv   (:,:) ! reason for each sowing of crops *harvested* this year
-     real(r8), pointer :: harvest_reason_thisyr   (:,:) ! reason for each harvest for this patch this year
+     integer , pointer :: rx_sdates_thisyr        (:,:) ! all prescribed sowing dates for this patch this year (day of year) [patch, mxsowings]
+     real(r8), pointer :: rx_cultivar_gdds_thisyr (:,:) ! all cultivar GDD targets for this patch this year (ddays) [patch, mxsowings]
+     real(r8), pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year (day of year) [patch, mxsowings]
+     real(r8), pointer :: sdates_perharv          (:,:) ! all actual sowing dates for crops *harvested* this year (day of year) [patch, mxharvests]
+     real(r8), pointer :: syears_perharv          (:,:) ! all actual sowing years for crops *harvested* this year (day of year) [patch, mxharvests]
+     real(r8), pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year (day of year) [patch, mxharvests]
+     real(r8), pointer :: gddaccum_thisyr         (:,:) ! accumulated GDD at harvest for this patch this year (ddays) [patch, mxharvests]
+     real(r8), pointer :: hui_thisyr              (:,:) ! accumulated heat unit index at harvest for this patch this year (ddays) [patch, mxharvests]
+     real(r8), pointer :: sowing_reason_thisyr    (:,:) ! reason for each sowing for this patch this year [patch, mxsowings]
+     real(r8), pointer :: sowing_reason_perharv   (:,:) ! reason for each sowing of crops *harvested* this year [patch, mxharvests]
+     real(r8), pointer :: harvest_reason_thisyr   (:,:) ! reason for each harvest for this patch this year [patch, mxharvests]
      integer , pointer :: sowing_count            (:)   ! number of sowing events this year for this patch
      integer , pointer :: harvest_count           (:)   ! number of sowing events this year for this patch
      ! gddaccum tracks the actual growing degree-days accumulated over the growing season.
