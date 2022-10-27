@@ -1143,11 +1143,6 @@ Set to .true. in order to override crop harvesting logic and to instead harvest 
 Set to .true. in order to ignore crop PFT parameter for maximum growing season length (mxmat). Must be set to .false. when generate_crop_gdds is .true.
 </entry>
 
-<entry id="ignore_rx_crop_gdds" type="logical" category="physics"
-        group="cnphenology" valid_values="" value=".false.">
-Set to .true. in order to override prescribed crop GDD requirements and instead use default CLM values/logic. For troubleshooting purposes only.
-</entry>
-
 <entry id="min_crop_gdd_target" type="real" category="physics"
         group="cnphenology" valid_values="" value="1.0d00">
 Set minimum crop GDD requirement. Used only with prescribed GDD inputs from file.
