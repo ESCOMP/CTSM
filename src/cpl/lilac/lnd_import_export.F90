@@ -1,6 +1,7 @@
 module lnd_import_export
 
-  use ESMF
+  use ESMF                  , only : ESMF_State, ESMF_SUCCESS, ESMF_StatePrint, ESMF_LogWrite, ESMF_LOGMSG_INFO, ESMF_LOGMSG_INFO
+  use ESMF                  , only : ESMF_FAILURE
   use shr_kind_mod          , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
   use shr_sys_mod           , only : shr_sys_abort
   use shr_const_mod         , only : fillvalue=>SHR_CONST_SPVAL
@@ -667,6 +668,10 @@ contains
     ! ----------------------------------------------
     ! Get pointer to a state field
     ! ----------------------------------------------
+    use ESMF       , only : ESMF_FieldStatus_Flag, ESMF_Field, ESMF_FieldBundle
+    use ESMF       , only : ESMF_FIELDSTATUS_COMPLETE, ESMF_StateGet
+    use ESMF       , only : ESMF_FieldBundleGet, ESMF_FieldGet
+    use ESMF       , only : operator(/=)
 
     ! input/output variables
     type(ESMF_State),             intent(in)    :: State

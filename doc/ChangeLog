@@ -1,4 +1,78 @@
 ===============================================================
+Tag name: ctsm5.1.dev113
+Originator(s): sacks (Bill Sacks), ekluzek (Erik Kluzek), jedwards (Jim Edwards)
+Date: Fri Oct 28 11:00:26 MDT 2022
+One-line Summary: Fix some compsets; add only clauses for ESMF use statements
+
+Purpose and description of changes
+----------------------------------
+
+(1) Fix I1850Clm51BgcCrop compset (was using CLM50 instead of CLM51)
+- Resolves https://github.com/ESCOMP/CTSM/issues/1882
+
+(2) Change LND_TUNING_MODE for DATM%CPLHIST compsets to use CAM tunings
+    since these cases typically use atmosphere forcings from CAM.
+- Resolves https://github.com/ESCOMP/CTSM/issues/1885
+
+(3) Add "only" clauses to ESMF use statements
+- Resolves https://github.com/ESCOMP/CTSM/issues/1846
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves https://github.com/ESCOMP/CTSM/issues/1882 (I1850Clm51BgcCrop actually uses CLM50)
+- Resolves https://github.com/ESCOMP/CTSM/issues/1885 (CPLHIST compsets should use same land tunings as for CAM compsets)
+- Resolves https://github.com/ESCOMP/CTSM/issues/1846 (Add "only" clause to a problematic use statement in lnd_comp_nuopc for cce compiler)
+
+Known bugs introduced in this tag (include issue #):
+- https://github.com/ESCOMP/CTSM/issues/1887 (Gnu MCT builds will fail starting in ctsm5.1.dev113)
+
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for limited cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+      - Cases with I1850Clm51BgcCrop compset
+      - Cases with DATM%CPLHIST
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Larger than roundoff; may be new climate
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1870
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev112
 Originator(s): adrifoster (Adrianna Foster), glemieux (Gregory Lemieux, LBL/NGEET)
 Date: Sat Oct 15 16:26:28 MDT 2022
