@@ -738,10 +738,6 @@ contains
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
-    if (ier/=0) then
-       write(iulog,*)'update_accum_hist allocation error for rbuf1dp (2)'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    endif
 
     ! Update HUI. This is not standard for accumulation fields,
     ! but HUI needs it because it can be changed outside this
