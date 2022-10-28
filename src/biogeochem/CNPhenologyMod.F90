@@ -1731,7 +1731,7 @@ contains
     logical force_harvest ! Should we harvest today no matter what?
     logical fake_harvest  ! Dealing with incorrect Dec. 31 planting
     logical did_plant_prescribed_today    ! Was the crop sown today?
-    logical is_day_before_next_sowing ! Is tomorrow a prescribed sowing day?
+    logical will_plant_prescribed_tomorrow ! Is tomorrow a prescribed sowing day?
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -2184,19 +2184,19 @@ contains
                ! sowing dates.
                ! WARNING: This implementation assumes that all patches use prescribed sowing dates.
                if (use_cropcal_streams) then
-                  is_day_before_next_sowing = (jday == next_rx_sdate(p) - 1) .or. \
+                  will_plant_prescribed_tomorrow = (jday == next_rx_sdate(p) - 1) .or. \
                                               (crop_inst%sdates_thisyr_patch(p,1) == 1 .and. \
                                                jday == dayspyr)
                else
-                  is_day_before_next_sowing = .false.
+                  will_plant_prescribed_tomorrow = .false.
                end if
-               do_harvest = do_harvest .or. is_day_before_next_sowing
+               do_harvest = do_harvest .or. will_plant_prescribed_tomorrow
 
                if (hui(p) >= gddmaturity(p)) then
                    harvest_reason = 1._r8
                else if (idpp >= mxmat) then
                    harvest_reason = 2._r8
-               else if (is_day_before_next_sowing) then
+               else if (will_plant_prescribed_tomorrow) then
                    harvest_reason = 5._r8
                    force_harvest = .true.
                end if
