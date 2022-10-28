@@ -1161,6 +1161,13 @@ Toggle for vancouver specific logic.
 Toggle for mexico city specific logic.
 </entry>
 
+<entry id="convert_ocean_to_land" type="logical" category="physics"
+       group="clm_inparm" value=".false.">
+If true, any ocean (i.e., wetland) points on the surface dataset are
+converted to bare ground (or whatever vegetation is given in that grid
+cell - but typically this will be bare ground).
+</entry>
+
 <entry id="n_dom_pfts" type="integer" category="physics"
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14" value="0">
