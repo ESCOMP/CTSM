@@ -1533,6 +1533,7 @@ sub process_namelist_inline_logic {
   setup_logic_site_specific($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_lnd_frac($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_co2_type($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_sectorwater($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_start_type($opts, $nl_flags, $nl);
   setup_logic_decomp_performance($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -1726,6 +1727,11 @@ sub process_namelist_inline_logic {
   ########################################
   setup_logic_hydrology_params($opts,  $nl_flags, $definition, $defaults, $nl);
 
+  ######################################
+  # namelist group: sectorwater_inparm #
+  ######################################
+  setup_logic_sectorwater_parameters($opts,  $nl_flags, $definition, $defaults, $nl);
+
   #####################################
   # namelist group: irrigation_inparm #
   #####################################
@@ -1897,6 +1903,21 @@ sub setup_logic_co2_type {
     }
   }
 }
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_sectorwater {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'sectorwater',
+                'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  if ( &value_is_true($nl->get_value('sectorwater') ) ) {
+     $nl_flags->{'sectorwater'} = ".true."
+  } else {
+     $nl_flags->{'sectorwater'} = ".false."
+  }
+}
+
 
 #-------------------------------------------------------------------------------
 
@@ -2203,6 +2224,7 @@ sub setup_logic_demand {
   $settings{'glc_nec'}        = $nl_flags->{'glc_nec'};
   # necessary for demand to be set correctly (flanduse_timeseries requires
   # use_crop, maybe other options require other flags?)!
+  # $settings{'sectorwater'}         = $nl_flags->{'sectorwater'};
   $settings{'irrigate'}            = $nl_flags->{'irrigate'};
   $settings{'use_cn'}              = $nl_flags->{'use_cn'};
   $settings{'use_cndv'}            = $nl_flags->{'use_cndv'};
@@ -2930,6 +2952,26 @@ sub setup_logic_hydrology_params {
   if ( defined($val) ) {
      if ( $lower != 1 && $lower != 2 ) {
         $log->fatal_error("baseflow_scalar is only used for lower_boundary_condition of flux or zero-flux");
+     }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_sectorwater_parameters {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  my $var;
+  foreach $var ("limit_sectorwater_if_rof_enabled") {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+  }
+
+  $var = "sectorwater_river_volume_threshold";
+  if ( &value_is_true($nl->get_value("limit_sectorwater_if_rof_enabled")) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+  } else {
+     if (defined($nl->get_value($var))) {
+        $log->fatal_error("$var can only be set if limit_sectorwater_if_rof_enabled is true");
      }
   }
 }
@@ -4203,7 +4245,7 @@ sub write_output_files {
                soilwater_movement_inparm rooting_profile_inparm
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
-               cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
+               cnprecision_inparm clm_glacier_behavior crop sectorwater_inparm irrigation_inparm
                surfacealbedo_inparm water_tracers_inparm);
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
