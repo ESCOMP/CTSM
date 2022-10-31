@@ -50,6 +50,7 @@ module clm_instMod
   use FrictionVelocityMod             , only : frictionvel_type
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
   use InfiltrationExcessRunoffMod     , only : infiltration_excess_runoff_type
+  use SectorWaterMod                  , only : sectorwater_type
   use IrrigationMod                   , only : irrigation_type
   use LakeStateType                   , only : lakestate_type
   use OzoneBaseMod                    , only : ozone_base_type
@@ -106,6 +107,7 @@ module clm_instMod
   type(frictionvel_type), public          :: frictionvel_inst
   type(glacier_smb_type), public          :: glacier_smb_inst
   type(infiltration_excess_runoff_type), public :: infiltration_excess_runoff_inst
+  type(sectorwater_type), public          :: sectorwater_inst
   type(irrigation_type), public           :: irrigation_inst
   type(lakestate_type), public            :: lakestate_inst
   class(ozone_base_type), public, allocatable :: ozone_inst
@@ -357,6 +359,8 @@ contains
     allocate(soil_water_retention_curve, &
          source=create_soil_water_retention_curve())
 
+    call sectorwater_inst%init(bounds, nlfilename, use_aquifer_layer = use_aquifer_layer())
+    
     call irrigation_inst%init(bounds, nlfilename, soilstate_inst, soil_water_retention_curve, &
          use_aquifer_layer = use_aquifer_layer())
 
