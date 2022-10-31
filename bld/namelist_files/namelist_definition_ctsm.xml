@@ -484,6 +484,25 @@ Irrigation method used if not specified on surface dataset
 If TRUE, irrigation will be active.
 </entry> 
 
+<entry id="sectorwater_river_volume_threshold" type="real" category="clm_physics"
+       group="sectorwater_inparm" valid_values="">
+Threshold for river water volume below which sectoral withdrawal is shut off (as a fraction of available river water), if limit_sectorwater_if_rof_enabled is .true.
+A threshold of 0 means allow all current river water to be used;
+a threshold of 0.1 means allow 90% of the current river volume to be used; etc.
+</entry>
+
+<entry id="limit_sectorwater_if_rof_enabled" type="logical" category="clm_physics"
+       group="sectorwater_inparm" valid_values="" >
+If TRUE, limit sectoral water withdrawal to avoid depleting the river and having negative runoff.
+Only applies if using an active runoff (ROF) model; otherwise, river storage-based limitation
+is turned off regardless of the setting of this namelist variable.
+</entry>
+
+<entry id="sectorwater" type="logical" category="clm_physics"
+       group="clm_inparm"  >
+If TRUE, sector water usage will be active.
+</entry> 
+
 <entry id="crop_fsat_equals_zero" type="logical" category="clm_physics"
        group="clm_inparm"  >
 If TRUE, fsat will be set to zero for crop columns.
@@ -1266,7 +1285,7 @@ Output of "git describe" to give the tag/commit the version being used correspon
 
 <entry id="mksrf_filename" type="char*256" category="mksurfdata"
        group="default_settings" 
-       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fhrvtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic" >
+       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fhrvtyp,mksrf_fsoicol,mksrf_flai,mksrf_fsectorwater,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic" >
 Filename for mksurfdata_map to remap raw data into the output surface dataset
 </entry>
 
@@ -1298,6 +1317,11 @@ Dataset for topography used to define urban threshold
 <entry id="mksrf_flai" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Leaf Area Index dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_fsectorwater" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Sector Water usage dataset for mksurfdata
 </entry>
 
 <entry id="mksrf_fsoitex" type="char*256" category="mksurfdata"
