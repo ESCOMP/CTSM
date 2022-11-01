@@ -11,6 +11,7 @@ module clm_driver
   use shr_kind_mod           , only : r8 => shr_kind_r8
   use clm_varctl             , only : iulog, use_fates, use_fates_sp
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
+  use CNSharedParamsMod      , only : use_matrixcn
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
   use clm_varctl             , only : use_soil_moisture_streams
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
@@ -68,7 +69,7 @@ module clm_driver
   use lnd2atmMod             , only : lnd2atm
   use lnd2glcMod             , only : lnd2glc_type
   !
-  use seq_drydep_mod         , only : n_drydep, drydep_method, DD_XLND
+  use shr_drydep_mod         , only : n_drydep
   use DryDepVelocity         , only : depvel_compute
   !
   use DaylengthMod           , only : UpdateDaylength
@@ -81,6 +82,7 @@ module clm_driver
   use clm_instMod
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
+  use SoilBiogeochemDecompCascadeConType , only : no_soil_decomp, decomp_method
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -220,24 +222,41 @@ contains
 
     ! ============================================================================
     ! Specified phenology
+    ! Done in SP mode, FATES-SP mode and also when dry-deposition is active
     ! ============================================================================
 
     if (use_cn) then
        ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
-       if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
+       ! NOTE: This is also true of FATES below
+       if ( n_drydep > 0 ) then
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
        endif
 
+    elseif(use_fates) then
+
+       ! For FATES-Specified phenology mode interpolate the weights for
+       ! time-interpolation of monthly vegetation data (as in SP mode below)
+       ! Also for FATES with dry-deposition as above need to call CLMSP so that mlaidiff is obtained
+       !if ( use_fates_sp .or. (n_drydep > 0 ) ) then    ! Replace with this when we have dry-deposition working
+       ! For now don't allow for dry-deposition because of issues in #1044 EBK Jun/17/2022
+       if ( use_fates_sp ) then
+          call t_startf('interpMonthlyVeg')
+          call interpMonthlyVeg(bounds_proc, canopystate_inst)
+          call t_stopf('interpMonthlyVeg')
+       end if
+
     else
+
        ! Determine weights for time interpolation of monthly vegetation data.
        ! This also determines whether it is time to read new monthly vegetation and
        ! obtain updated leaf area index [mlai1,mlai2], stem area index [msai1,msai2],
        ! vegetation top [mhvt1,mhvt2] and vegetation bottom [mhvb1,mhvb2]. The
        ! weights obtained here are used in subroutine SatellitePhenology to obtain time
        ! interpolated values.
-       if (doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND ) .or. use_fates_sp) then
+       ! This is also done for FATES-SP mode above
+       if ( doalb .or. ( n_drydep > 0 ) )then
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
@@ -270,7 +289,7 @@ contains
        call active_layer_inst%alt_calc(filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc, &
             temperature_inst)
 
-       if (use_cn) then
+       if (use_cn .and. decomp_method /= no_soil_decomp) then
           call SoilBiogeochemVerticalProfile(bounds_clump                                       , &
                filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc   , &
                filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp   , &
@@ -348,8 +367,8 @@ contains
          canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst, &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst,                  &
          c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,    &
-         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
-         glc_behavior)
+         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
+         soilbiogeochem_carbonflux_inst, ch4_inst, glc_behavior)
     call t_stopf('dyn_subgrid')
 
     ! ============================================================================
@@ -654,7 +673,7 @@ contains
             frictionvel_inst, ch4_inst, energyflux_inst, temperature_inst, &
             water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst, &
-            photosyns_inst, humanindex_inst)
+            photosyns_inst, humanindex_inst, canopystate_inst)
        call t_stopf('bgflux')
 
        ! non-bareground fluxes for all patches except lakes and urban landunits
@@ -983,7 +1002,10 @@ contains
           call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
                   filter(nc)%num_soilc, filter(nc)%soilc,                       &
                   filter(nc)%num_soilp, filter(nc)%soilp,                       &
+                  filter(nc)%num_actfirec, filter(nc)%actfirec,                 &
+                  filter(nc)%num_actfirep, filter(nc)%actfirep,                 &
                   filter(nc)%num_pcropp, filter(nc)%pcropp, &
+                  filter(nc)%num_soilnopcropp, filter(nc)%soilnopcropp, &
                   filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
                   filter(nc)%num_noexposedvegp, filter(nc)%noexposedvegp, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
@@ -991,7 +1013,7 @@ contains
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                soilbiogeochem_state_inst,                                               &
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-               active_layer_inst, &
+               active_layer_inst, clm_fates, &
                atm2lnd_inst, water_inst%waterstatebulk_inst, &
                water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst,      &
                water_inst%wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
@@ -1014,9 +1036,17 @@ contains
 
        if (use_fates_sp.and.doalb) then
           call t_startf('SatellitePhenology')
-          call SatellitePhenology(bounds_clump, filter(nc)%num_all_soil_patches, filter(nc)%all_soil_patches, &
+
+          ! FATES satellite phenology mode needs to include all active and inactive patch-level soil
+          ! filters due to the translation between the hlm pfts and the fates pfts.
+          ! E.g. in FATES, an active PFT vector of 1, 0, 0, 0, 1, 0, 1, 0 would be mapped into
+          ! the host land model as 1, 1, 1, 0, 0, 0, 0.  As such, the 'active' filter would only
+          ! use the first three points, which would incorrectly represent the interpolated values.
+          call SatellitePhenology(bounds_clump, &
+               filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
+
        end if
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
@@ -1054,7 +1084,10 @@ contains
                filter(nc)%num_allc, filter(nc)%allc, &
                filter(nc)%num_soilc, filter(nc)%soilc, &
                filter(nc)%num_soilp, filter(nc)%soilp, &
+               filter(nc)%num_actfirec, filter(nc)%actfirec,                 &
+               filter(nc)%num_actfirep, filter(nc)%actfirep,                 &
                doalb, crop_inst, &
+               soilstate_inst, soilbiogeochem_state_inst, &
                water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
                water_inst%waterfluxbulk_inst, frictionvel_inst, canopystate_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
@@ -1074,7 +1107,7 @@ contains
           ! for leaf photosynthetic acclimation temperature. These
           ! moving averages are updated here
           call clm_fates%WrapUpdateFatesRmean(nc,temperature_inst)
-          
+
           call EDBGCDyn(bounds_clump,                                                              &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
                filter(nc)%num_soilp, filter(nc)%soilp,                                             &
@@ -1082,26 +1115,28 @@ contains
                bgc_vegetation_inst%cnveg_carbonflux_inst, &
                bgc_vegetation_inst%cnveg_carbonstate_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                    &
-               soilbiogeochem_state_inst,                                                          &
+               soilbiogeochem_state_inst, clm_fates,                                               &
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
                c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst,            &
                c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst,            &
                active_layer_inst, atm2lnd_inst, water_inst%waterfluxbulk_inst,                     &
                canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst)
 
-          call EDBGCDynSummary(bounds_clump,                                             &
-                filter(nc)%num_soilc, filter(nc)%soilc,                                  &
-                filter(nc)%num_soilp, filter(nc)%soilp,                                  &
-                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
-                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
-                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-                clm_fates, nc)
-          
+          if ( decomp_method /= no_soil_decomp )then
+             call EDBGCDynSummary(bounds_clump,                                             &
+                   filter(nc)%num_soilc, filter(nc)%soilc,                                  &
+                   filter(nc)%num_soilp, filter(nc)%soilp,                                  &
+                   soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
+                   c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
+                   c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
+                   soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
+                   nc)
+          end if
+
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
                soilbiogeochem_carbonstate_inst)
-          
+
 
           if( is_beg_curr_day() ) then
 
@@ -1123,9 +1158,9 @@ contains
              call setFilters( bounds_clump, glc_behavior )
 
           end if
-          
-    
-          
+
+
+
        end if ! use_fates branch
 
        ! ============================================================================

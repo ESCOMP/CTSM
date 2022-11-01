@@ -1,6 +1,9 @@
 module lnd_shr_methods
 
-  use ESMF
+  use ESMF         , only : ESMF_State, ESMF_MAXSTR, ESMF_StateGet
+  use ESMF         , only : ESMF_LogWrite, ESMF_LOGMSG_ERROR, ESMF_FAILURE
+  use ESMF         , only : ESMF_LOGERR_PASSTHRU, ESMF_LogFoundError
+  use ESMF         , only : ESMF_SUCCESS, ESMF_Field, ESMF_LOGMSG_INFO
   use shr_kind_mod , only : r8 => shr_kind_r8, cl=>shr_kind_cl, cs=>shr_kind_cs
   use shr_sys_mod  , only : shr_sys_abort
 
@@ -93,6 +96,11 @@ contains
     ! abort is true by default and will abort if fldptr is not yet allocated in field
     ! rank returns 0, 1, or 2.  0 means fldptr not allocated and abort=false
     ! ----------------------------------------------
+    use ESMF          , only : ESMF_FieldStatus_Flag, ESMF_Mesh
+    use ESMF          , only : ESMF_FieldGet, ESMF_GEOMTYPE_GRID, ESMF_GEOMTYPE_MESH
+    use ESMF          , only : ESMF_MeshGet, ESMF_GeomType_Flag
+    use ESMF          , only : ESMF_FIELDSTATUS_COMPLETE
+    use ESMF          , only : operator(/=), operator(==)
 
     ! input/output variables
     type(ESMF_Field)  , intent(in)              :: field

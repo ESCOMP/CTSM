@@ -1,5 +1,28 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev113 multiple 10/28/2022 Fix some compsets; add only clauses for ESMF use statements
+    ctsm5.1.dev112 multiple 10/15/2022 Rework fates test definitions and add new fates tests
+    ctsm5.1.dev111 multiple 10/05/2022 Fixes for NEON cases
+    ctsm5.1.dev110   slevis 09/26/2022 Introduction of modify_meshes tool for use in I-cases and F-cases
+    ctsm5.1.dev109   slevis 09/26/2022 If not MIMICS, do not output certain MIMICS history fields
+    ctsm5.1.dev108  afoster 09/08/2022 Connect ozone from atmosphere
+    ctsm5.1.dev107  afoster 09/07/2022 Update Externals
+    ctsm5.1.dev106 multiple 08/04/2022 Reuse some files generated in initialization when rerunning
+    ctsm5.1.dev105   slevis 07/26/2022 make interfaces more similar between fsurdat_modifier and subset_data tools
+    ctsm5.1.dev104 glemieux 07/15/2022 Update to FATES history names and machine configuration
+    ctsm5.1.dev103    sacks 07/12/2022 Fix accumulation variables when changing model time step
+    ctsm5.1.dev102    sacks 07/11/2022 Fix LILAC interface to PIO
+    ctsm5.1.dev101 samrabin 07/11/2022 Fix winter wheat sowing window bugs
+    ctsm5.1.dev100     erik 07/05/2022 Start bringing in matrixcn overall options and sparse matrix multiplier code, misc updates
+    ctsm5.1.dev099   rgknox 06/21/2022 Enabling FATES control over the number of patches on the natural land unit
+    ctsm5.1.dev098 swensosc 05/20/2022 Correct perched water table calculation
+    ctsm5.1.dev097    sacks 05/20/2022 Update ccs_config to fix issue on izumi and maybe elsewhere
+    ctsm5.1.dev096     erik 05/18/2022 Fix a few glitches from the last tag
+    ctsm5.1.dev095     erik 05/09/2022 Turn soil BGC off for FATES-SP mode, externals updates, FatesSP user-mod directory and compset
+    ctsm5.1.dev094   negins 05/06/2022 subset_data allows zeroing out nonveg landunits without any dompft selected
+    ctsm5.1.dev093   slevis 05/03/2022 Modifications for FATES-MIMICS to work
+    ctsm5.1.dev092    sacks 04/29/2022 Refactor NutrientCompetition / CNAllocation to provide hooks for AgSys
+    ctsm5.1.dev091   rgknox 04/22/2022 clm decomp method is now passed to fates to enabled mimics coupling
     ctsm5.1.dev090 samrabin 03/31/2022 Fix misleading name of "gddplant"
     ctsm5.1.dev089    sacks 03/31/2022 For CLM45 apply peaklai to aleaf in grainfill
     ctsm5.1.dev088 samrabin 03/28/2022 Add outputs for annual crop sowing and harvest dates

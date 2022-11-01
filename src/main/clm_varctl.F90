@@ -35,7 +35,6 @@ module clm_varctl
   ! Type of run
   integer, public :: nsrest                = iundef                         
   logical, public :: is_cold_start         = .false.
-  logical, public :: is_interpolated_start = .false. ! True if we're starting from initial conditions that have been run through init_interp
 
   ! Startup from initial conditions
   integer, public, parameter :: nsrStartup  = 0                          
@@ -144,6 +143,11 @@ module clm_varctl
 
   ! If prognostic crops are turned on
   logical, public :: use_crop = .false.
+
+  ! Whether we're using the AgSys crop model
+  ! TODO(wjs, 2022-03-30) Add namelist control of this variable (at which point we'll
+  ! need to remove the 'parameter' attribute)
+  logical, public, parameter :: use_crop_agsys = .false.
 
   ! true => separate crop landunit is not created by default
   logical, public :: create_crop_landunit = .false.     
@@ -254,6 +258,7 @@ module clm_varctl
   integer, public            :: fates_spitfire_mode = 0                
   ! 0 for no fire; 1 for constant ignitions; > 1 for external data (lightning and/or anthropogenic ignitions)
   ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+  logical, public            :: use_fates_tree_damage = .false.        ! true => turn on tree damage module
   logical, public            :: use_fates_logging = .false.            ! true => turn on logging module
   logical, public            :: use_fates_planthydro = .false.         ! true => turn on fates hydro
   logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking

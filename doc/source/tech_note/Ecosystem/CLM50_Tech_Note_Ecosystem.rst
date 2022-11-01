@@ -105,7 +105,9 @@ Vegetated surfaces are comprised of up to 15 possible plant functional
 types (PFTs) plus bare ground (:numref:`Table Plant functional types`). An 
 additional PFT is added if 
 the irrigation model is active and six additional PFTs are added if the 
-crop model is active (Chapter :numref:`rst_Crops and Irrigation`). These 
+crop model is active (Chapter :numref:`rst_Crops and Irrigation`).
+In :numref:`Table Plant functional types`, IVT = 0,14 refers to the index of PCT_NAT_VEG
+on the surface dataset while IVT = 15,18 refers to the index of PCT_CFT on the surface dataset. These
 plant types differ in leaf and stem optical properties that determine reflection,
 transmittance, and absorption of solar radiation (:numref:`Table Plant functional type optical properties`), root
 distribution parameters that control the uptake of water from the soil
@@ -123,45 +125,47 @@ evolve with time if the model is run in transient landcover mode
 
 .. table:: Plant functional types
  
- +--------------------------------------------------------------+-------------------+
- | Plant functional type                                        | Acronym           |
- +==============================================================+===================+
- | Needleleaf evergreen tree – temperate                        | NET Temperate     |
- +--------------------------------------------------------------+-------------------+
- | Needleleaf evergreen tree - boreal                           | NET Boreal        |
- +--------------------------------------------------------------+-------------------+
- | Needleleaf deciduous tree – boreal                           | NDT Boreal        |
- +--------------------------------------------------------------+-------------------+
- | Broadleaf evergreen tree – tropical                          | BET Tropical      |
- +--------------------------------------------------------------+-------------------+
- | Broadleaf evergreen tree – temperate                         | BET Temperate     |
- +--------------------------------------------------------------+-------------------+
- | Broadleaf deciduous tree – tropical                          | BDT Tropical      |
- +--------------------------------------------------------------+-------------------+
- | Broadleaf deciduous tree – temperate                         | BDT Temperate     |
- +--------------------------------------------------------------+-------------------+
- | Broadleaf deciduous tree – boreal                            | BDT Boreal        |
- +--------------------------------------------------------------+-------------------+
- | Broadleaf evergreen shrub - temperate                        | BES Temperate     |
- +--------------------------------------------------------------+-------------------+
- | Broadleaf deciduous shrub – temperate                        | BDS Temperate     |
- +--------------------------------------------------------------+-------------------+
- | Broadleaf deciduous shrub – boreal                           | BDS Boreal        |
- +--------------------------------------------------------------+-------------------+
- | C\ :sub:`3` arctic grass                                     | -                 |
- +--------------------------------------------------------------+-------------------+
- | C\ :sub:`3` grass                                            | -                 |
- +--------------------------------------------------------------+-------------------+
- | C\ :sub:`4` grass                                            | -                 |
- +--------------------------------------------------------------+-------------------+
- | C\ :sub:`3` Unmanaged Rainfed Crop                           | UCrop UIrr        |
- +--------------------------------------------------------------+-------------------+
- | :sup:`1`\ C\ :sub:`3` Unmanaged Irrigated Crop               | UCrop Irr         |
- +--------------------------------------------------------------+-------------------+
- | :sup:`2`\ Managed Rainfed Unirrigated Crops                  | Crop UIrr         |
- +--------------------------------------------------------------+-------------------+
- | :sup:`2`\ Managed Irrigated Crops                            | Crop Irr          |
- +--------------------------------------------------------------+-------------------+
+ +-----+--------------------------------------------------------------+-------------------+
+ | IVT | Plant functional type                                        | Acronym           |
+ +=====+==============================================================+===================+
+ | 0   | Bare Ground                                                  | NET Temperate     |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 1   | Needleleaf evergreen tree – temperate                        | NET Temperate     |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 2   | Needleleaf evergreen tree - boreal                           | NET Boreal        |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 3   | Needleleaf deciduous tree – boreal                           | NDT Boreal        |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 4   | Broadleaf evergreen tree – tropical                          | BET Tropical      |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 5   | Broadleaf evergreen tree – temperate                         | BET Temperate     |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 6   | Broadleaf deciduous tree – tropical                          | BDT Tropical      |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 7   | Broadleaf deciduous tree – temperate                         | BDT Temperate     |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 8   | Broadleaf deciduous tree – boreal                            | BDT Boreal        |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 9   | Broadleaf evergreen shrub - temperate                        | BES Temperate     |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 10  | Broadleaf deciduous shrub – temperate                        | BDS Temperate     |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 11  | Broadleaf deciduous shrub – boreal                           | BDS Boreal        |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 12  | C\ :sub:`3` arctic grass                                     | -                 |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 13  | C\ :sub:`3` grass                                            | -                 |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 14  | C\ :sub:`4` grass                                            | -                 |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 15  | C\ :sub:`3` Unmanaged Rainfed Crop                           | UCrop UIrr        |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 16  | :sup:`1`\ C\ :sub:`3` Unmanaged Irrigated Crop               | UCrop Irr         |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 17  | :sup:`2`\ Managed Rainfed Crop                               | Crop UIrr         |
+ +-----+--------------------------------------------------------------+-------------------+
+ | 18  | :sup:`2`\ Managed Irrigated Crop                             | Crop Irr          |
+ +-----+--------------------------------------------------------------+-------------------+
 
 :sup:`1`\ Only used if irrigation is active (Chapter :numref:`rst_Crops and Irrigation`).
 :sup:`2`\ Only used if crop model is active (see Chapter :numref:`rst_Crops and Irrigation` for list of represented crops).

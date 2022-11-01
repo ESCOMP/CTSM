@@ -157,7 +157,7 @@ managed crop types that are using the same parameter set.
 .. table:: Crop plant functional types (pfts) included in CLM5BGCCROP.
 
  ===  ===========================  ================  ===========================
- ITV  Plant function types (PFTs)  Management Class  Crop Parameters Used       
+ IVT  Plant function types (PFTs)  Management Class  Crop Parameters Used
  ===  ===========================  ================  ===========================
   15  c3 unmanaged rainfed crop    none              not applicable             
   16  c3 unmanaged irrigated crop  none              not applicable             
