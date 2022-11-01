@@ -134,7 +134,7 @@ cime_config/usermods_dirs -------- Directories of sets of user-modification subd
 test/tools/test_driver.sh -- Script for general software testing of 
                              CTSM's offline tools.
 
-tools/mksurfdata_esmf --------- Directory to build program to create surface dataset 
+tools/mksurfdata_map  --------- Directory to build program to create surface dataset 
                                 at any resolution.
 tools/mkprocdata_map ---------- Process history data from unstructed grids to a gridded 
                                 format.
