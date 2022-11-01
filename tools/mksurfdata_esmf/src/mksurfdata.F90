@@ -458,7 +458,7 @@ program mksurfdata
   ! -----------------------------------
   if (fsurdat /= ' ') then
      call mksoiltex( mksrf_fsoitex_mesh, file_mapunit_i=mksrf_fsoitex, file_lookup_i=mksrf_fsoitex_lookup, &
-          mesh_o=mesh_model, pioid_o=pioid, pctlnd_pft_o=pctlnd_pft, rc=rc)
+          mesh_o=mesh_model, pioid_o=pioid, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
   end if
 
@@ -467,7 +467,7 @@ program mksurfdata
   ! -----------------------------------
   if (fsurdat /= ' ') then
      ! SOIL_COLOR and mxsoil_color is written out in the subroutine
-     call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, pctlnd_pft, pioid, rc)
+     call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, pioid, rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilcol')
   end if
 

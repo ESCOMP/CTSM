@@ -29,13 +29,12 @@ module mksoilcolMod
 contains
 !=================================================================================
 
-  subroutine mksoilcol(file_data_i, file_mesh_i, mesh_o, pctlnd_pft_o, pioid_o, rc)
+  subroutine mksoilcol(file_data_i, file_mesh_i, mesh_o, pioid_o, rc)
 
     ! input/output variables
     character(len=*)  , intent(in)    :: file_mesh_i     ! input mesh file name
     character(len=*)  , intent(in)    :: file_data_i     ! input data file name
     type(ESMF_Mesh)   , intent(in)    :: mesh_o          ! model mesho
-    real(r8)          , intent(in)    :: pctlnd_pft_o(:)
     type(file_desc_t) , intent(inout) :: pioid_o
     integer           , intent(out)   :: rc
 
@@ -185,13 +184,6 @@ contains
        end if
     end do
 
-    ! assume medium soil color (15) and loamy texture if pct_lndpft is small
-    do no = 1,ns_o
-       if (pctlnd_pft_o(no) < 1.e-6_r8) then
-          soil_color_o(no) = 15
-       end if
-    end do
-
     ! Write output data
     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out soil color"
     call mkfile_output(pioid_o,  mesh_o, 'SOIL_COLOR', soil_color_o,  rc=rc)
@@ -277,7 +269,7 @@ contains
              soil_color_o = maxindex(1)
           end if
 
-          ! If land but no color, set color to 15 (in older dataset generic soil color 4)
+          ! If no color, set color to 15 (in older dataset generic soil color 4)
           if (num_soilcolors == 8) then
              if (soil_color_o == 0) then
                 soil_color_o = 4
