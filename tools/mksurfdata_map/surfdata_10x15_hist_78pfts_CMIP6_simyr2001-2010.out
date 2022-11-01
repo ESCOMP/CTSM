@@ -1,0 +1,480 @@
+ Attempting to initialize control settings .....
+ Attempting to create surface boundary data .....
+------------------------------------------------------------
+ mksrf_fgrid = 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.25x0.25_noma
+ sk_to_10x15_nomask_aave_da_c200309.nc                                          
+                                                                                
+                    
+ mksrf_gridtype = global
+ Output ALL data in file as 64-bit
+ Set wetland to 0% over land
+In mkpftMod::mkpftInit()...
+ calling domain_read
+ finished domain_read
+ fsurdat is 2d lat/lon grid
+ nlon=           24  nlat=           19
+ (OPNFIL): Successfully opened file 
+ surfdata_10x15_hist_78pfts_CMIP6_simyr2000_c220325.log on unit=           99
+ mksrf_gridtype = global
+ mksrf_fdynuse = landuse_timeseries_hist_78pfts_CMIP6_simyr2001-2010.txt
+ 
+In mkpftMod::mkpft()...
+ Attempting to make PFTs .....
+ Creating surface datasets with extra types for crops; total pfts =          78
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDFRAC
+ domain_read read LANDMASK
+ Open PFT file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.hist
+ simyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_2000.c170629.nc
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.25x0.25_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :     1036800  x         456
+ * number of non-zero elements:      1062720
+ domain_clean: cleaning      1036800
+ Successfully made PFTs
+ 
+ Attempting to make harvest fields .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDFRAC
+ domain_read read LANDMASK
+ Open harvest file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.hist
+ simyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_2000.c170629.nc
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.25x0.25_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :     1036800  x         456
+ * number of non-zero elements:      1062720
+ domain_clean: cleaning      1036800
+ Successfully made harvest and grazing
+ 
+ Attempting to make %lake and %wetland .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+ Open lake file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_LakePnDepth_3x3min_simyr200
+ 4_csplk_c151015.nc
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_3x3min_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :    25920000  x         456
+ * number of non-zero elements:     26051712
+ domain_clean: cleaning     25920000
+ Successfully made %lake
+ 
+ Attempting to make %wetland .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+ domain_clean: cleaning       259200
+ Successfully made %wetland
+ 
+ Attempting to make %glacier .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+ Open glacier file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000.c1
+ 20926.nc
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_3x3min_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :    25920000  x         456
+ * number of non-zero elements:     26051712
+ domain_clean: cleaning     25920000
+ Successfully made %glacier
+ 
+ Attempting to make glacier region .....
+ domain_read_dims_2d read lon and lat dims from lsmlon/lsmlat
+ domain_read initialized domain
+ domain_read read LANDMASK
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_10x10min_nomask_to_10x15_nomask_aave_da_c200206.nc
+ * matrix dimensions rows x cols :     2332800  x         456
+ * number of non-zero elements:      2372160
+ Open glacier region raw data file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_GlacierRegion_10x10min_noma
+ sk_c191120.nc
+ domain_clean: cleaning      2332800
+ Successfully made glacier region
+ 
+ Attempting to make %sand and %clay .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+ Open soil texture file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_5x5min_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :     9331200  x         456
+ * number of non-zero elements:      9410645
+ kmap_max=          350  maxovr=        21876  ns_o=          456  size= 
+      160056
+ domain_clean: cleaning      9331200
+ Successfully made %sand and %clay
+ 
+ Attempting to make soil color classes .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDFRAC
+ domain_read read LANDMASK
+ Open soil color file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MO
+ DIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005.c170623.nc
+ nsoicol =           20
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.25x0.25_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :     1036800  x         456
+ * number of non-zero elements:      1062720
+ domain_clean: cleaning      1036800
+ Successfully made soil color classes
+ 
+ Attempting to make %fmax .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+ Open soil fmax file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_fmax_0.125x0.125_c200220.nc
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.125x0.125_nomask_to_10x15_nomask_aave_da_c200206.nc
+ * matrix dimensions rows x cols :     4147200  x         456
+ * number of non-zero elements:      4199520
+ Successfully made %fmax
+ 
+ domain_clean: cleaning      4147200
+ Attempting to make GDP.....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.5x0.5_nomask_to_10x15_nomask_aave_da_c200206.nc
+ * matrix dimensions rows x cols :      259200  x         456
+ * number of non-zero elements:       272160
+ Open GDP file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_gdp_0.5x0.5_AVHRR_simyr2000
+ .c130228.nc
+ domain_clean: cleaning       259200
+ Successfully made GDP
+ 
+ Attempting to make peat .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.5x0.5_nomask_to_10x15_nomask_aave_da_c200206.nc
+ * matrix dimensions rows x cols :      259200  x         456
+ * number of non-zero elements:       272160
+ Open peat file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_peatf_0.5x0.5_AVHRR_simyr20
+ 00.c130228.nc
+ domain_clean: cleaning       259200
+ Successfully made peat
+ 
+ Attempting to make soildepth .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDFRAC
+ domain_read read LANDMASK
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_5x5min_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :     9331200  x         456
+ * number of non-zero elements:      9410645
+ Open soildepth file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksf_soilthk_5x5min_ORNL-Soil_sim
+ yr1900-2015_c170630.nc
+ domain_clean: cleaning      9331200
+ Successfully made soildepth
+ 
+ Attempting to make agricultural fire peak month data .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.5x0.5_nomask_to_10x15_nomask_aave_da_c200206.nc
+ * matrix dimensions rows x cols :      259200  x         456
+ * number of non-zero elements:       272160
+ Open agricultural fire peak month file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_abm_0.5x0.5_AVHRR_simyr2000
+ .c130201.nc
+ domain_clean: cleaning       259200
+ Successfully made Agricultural fire peak month
+ 
+ Attempting to make %urban .....
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_3x3min_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :    25920000  x         456
+ * number of non-zero elements:     26051712
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+ Open urban file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c
+ 120621.nc
+ Successfully made %urban
+ Attempting to make urban region .....
+ Successfully made urban region
+ 
+ domain_clean: cleaning     25920000
+ Attempting to make elevation .....
+ domain_read_dims_2d read lon and lat dims from lsmlon/lsmlat
+ domain_read initialized domain
+ domain_read read LANDMASK
+ Open elevation file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_topo.10min.c191120.nc
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_10x10min_nomask_to_10x15_nomask_aave_da_c200206.nc
+ * matrix dimensions rows x cols :     2332800  x         456
+ * number of non-zero elements:      2372160
+ domain_clean: cleaning      2332800
+ Successfully made elevation
+ 
+ Attempting to make Topography statistics.....
+ domain_read_dims_1d read 1-d length from num_pixels
+ domain_read initialized domain
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_1km-merge-10min_HYDRO1K-merge-nomask_to_10x15_nomask_aave_da_c130411.nc
+ * matrix dimensions rows x cols :   125599447  x         456
+ * number of non-zero elements:    122939746
+ Open Topography file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_topostats_1km-merge-10min_H
+ YDRO1K-merge-nomask_simyr2000.c130402.nc
+ domain_clean: cleaning    125599447
+ Successfully made Topography statistics
+ 
+ Attempting to make lake parameters.....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_3x3min_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :    25920000  x         456
+ * number of non-zero elements:     26051712
+ Open lake parameter file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_LakePnDepth_3x3min_simyr200
+ 4_csplk_c151015.nc
+ domain_clean: cleaning     25920000
+ Successfully made lake parameters
+ 
+ Attempting to make organic matter dataset .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+ Open soil organic file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRI
+ C-WISE-NCSCD_nlev7_c120830.nc
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_5x5min_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :     9331200  x         456
+ * number of non-zero elements:      9410645
+ Successfully made organic matter, level =            1
+ Successfully made organic matter, level =            2
+ Successfully made organic matter, level =            3
+ Successfully made organic matter, level =            4
+ Successfully made organic matter, level =            5
+ Successfully made organic matter, level =            6
+ Successfully made organic matter, level =            7
+ Successfully made organic matter, level =            8
+ Successfully made organic matter, level =            9
+ Successfully made organic matter, level =           10
+ domain_clean: cleaning      9331200
+ Successfully made organic matter
+ 
+ Attempting to make VOC emission factors .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+ Open VOC file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_vocef_0.5x0.5_simyr2000.c11
+ 0531.nc
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.5x0.5_nomask_to_10x15_nomask_aave_da_c200206.nc
+ * matrix dimensions rows x cols :      259200  x         456
+ * number of non-zero elements:       272160
+ Successfully made VOC Emission Factors
+ 
+ domain_clean: cleaning       259200
+ number of small pft =           86
+ sum over domain of pft            0   3932.29199905904     
+ sum over domain of pft            1   909.024596153512     
+ sum over domain of pft            2   973.723027850118     
+ sum over domain of pft            3   269.403455200423     
+ sum over domain of pft            4   2658.89665175253     
+ sum over domain of pft            5   445.229340567956     
+ sum over domain of pft            6   257.125798503710     
+ sum over domain of pft            7   419.451062133472     
+ sum over domain of pft            8   234.036211115205     
+ sum over domain of pft            9   5.58556530428986     
+ sum over domain of pft           10   581.230649905481     
+ sum over domain of pft           11   1100.77852919594     
+ sum over domain of pft           12   2879.17666579450     
+ sum over domain of pft           13   2748.98202845625     
+ sum over domain of pft           14   5139.83399342131     
+ 
+ sum over domain of cft           15   1.04624621544637     
+ sum over domain of cft           16  0.000000000000000E+000
+ sum over domain of cft           17   82.9361477122869     
+ sum over domain of cft           18   14.2253981273450     
+ sum over domain of cft           19   229.756591935105     
+ sum over domain of cft           20   42.5577528570242     
+ sum over domain of cft           21  0.000000000000000E+000
+ sum over domain of cft           22  0.000000000000000E+000
+ sum over domain of cft           23   46.5714525098901     
+ sum over domain of cft           24   5.47759066566224     
+ sum over domain of cft           25   91.5385509040418     
+ sum over domain of cft           26   6.17064067982832     
+ sum over domain of cft           27  0.000000000000000E+000
+ sum over domain of cft           28  0.000000000000000E+000
+ sum over domain of cft           29   13.7650023385015     
+ sum over domain of cft           30  0.524634713278911     
+ sum over domain of cft           31  0.000000000000000E+000
+ sum over domain of cft           32  0.000000000000000E+000
+ sum over domain of cft           33   22.9921313165774     
+ sum over domain of cft           34   3.33118333327533     
+ sum over domain of cft           35   19.0105408355140     
+ sum over domain of cft           36   5.39765628855873     
+ sum over domain of cft           37   16.3881795005943     
+ sum over domain of cft           38   1.01742205594165     
+ sum over domain of cft           39   30.5568354600251     
+ sum over domain of cft           40   3.78985426282124     
+ sum over domain of cft           41   14.0702842873998     
+ sum over domain of cft           42   5.77589514736935     
+ sum over domain of cft           43   2.09749250692821     
+ sum over domain of cft           44  0.857042828526797     
+ sum over domain of cft           45   172.126691650594     
+ sum over domain of cft           46   17.0916346165378     
+ sum over domain of cft           47   21.5297029184221     
+ sum over domain of cft           48   5.06212910616842     
+ sum over domain of cft           49   22.7155499465891     
+ sum over domain of cft           50   4.54342883691322     
+ sum over domain of cft           51   24.7854574465481     
+ sum over domain of cft           52   2.78972363003253     
+ sum over domain of cft           53   25.5204442800665     
+ sum over domain of cft           54   1.98701697380509     
+ sum over domain of cft           55   28.1438996682068     
+ sum over domain of cft           56   4.02175872839279     
+ sum over domain of cft           57   83.4673124119060     
+ sum over domain of cft           58   14.0862414714413     
+ sum over domain of cft           59   27.3138408198372     
+ sum over domain of cft           60   4.59587408058831     
+ sum over domain of cft           61   140.619366824244     
+ sum over domain of cft           62   70.4360443936198     
+ sum over domain of cft           63   36.1578503164295     
+ sum over domain of cft           64   3.70279637913708     
+ sum over domain of cft           65   7.40223380848299     
+ sum over domain of cft           66   1.14130818231812     
+ sum over domain of cft           67   27.3681924929917     
+ sum over domain of cft           68   7.48616631278411     
+ sum over domain of cft           69   25.7359827309880     
+ sum over domain of cft           70   2.11852148850976     
+ sum over domain of cft           71  0.000000000000000E+000
+ sum over domain of cft           72  0.000000000000000E+000
+ sum over domain of cft           73  0.000000000000000E+000
+ sum over domain of cft           74  0.000000000000000E+000
+ sum over domain of cft           75   84.5493953419104     
+ sum over domain of cft           76   10.7619777837901     
+ sum over domain of cft           77   20.1035279756809     
+ sum over domain of cft           78   3.25973494155435     
+ 
+ Attempting to make percent elevation class 
+ and mean elevation for glaciers .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDMASK
+ Open glacier file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000.c1
+ 20926.nc
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_3x3min_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :    25920000  x         456
+ * number of non-zero elements:     26051712
+   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58  59  60  61  
+ domain_clean: cleaning     25920000
+ Successfully made percent elevation class and mean elevation for glaciers
+ 
+ calling mkurbanpar
+ Attempting to make Urban Parameters .....
+ Open urban parameter file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c
+ 120621.nc
+ Successfully made Urban Parameters
+ 
+ calling mklai
+ Attempting to make LAIs/SAIs/heights .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDFRAC
+ domain_read read LANDMASK
+ Open LAI file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MO
+ DIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.c170413.nc
+ WARNING: mklai(): parameter numpft+1 =           79 
+ does not equal input dataset numpft =           16
+ This inconsistency used to stop the program. Now we allow it 
+ because crop pfts 17-last are assumed to never use satellite lai data.
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.25x0.25_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :     1036800  x         456
+ * number of non-zero elements:      1062720
+ Successfully made LAIs/SAIs/heights for month            1
+ Successfully made LAIs/SAIs/heights for month            2
+ Successfully made LAIs/SAIs/heights for month            3
+ Successfully made LAIs/SAIs/heights for month            4
+ Successfully made LAIs/SAIs/heights for month            5
+ Successfully made LAIs/SAIs/heights for month            6
+ Successfully made LAIs/SAIs/heights for month            7
+ Successfully made LAIs/SAIs/heights for month            8
+ Successfully made LAIs/SAIs/heights for month            9
+ Successfully made LAIs/SAIs/heights for month           10
+ Successfully made LAIs/SAIs/heights for month           11
+ Successfully made LAIs/SAIs/heights for month           12
+ 
+ domain_clean: cleaning      1036800
+------------------------------------------------------------
+  land model surface data set successfully created for grid of size          456
+ creating dynamic land use dataset
+ (OPNFIL): Successfully opened file 
+ landuse_timeseries_hist_78pfts_CMIP6_simyr2001-2010.txt on unit=           98
+ input pft dynamic dataset for year         2001  is : 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.hist
+ simyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_2001.c170629.nc
+ 
+In mkpftMod::mkpft()...
+ Attempting to make PFTs .....
+ Creating surface datasets with extra types for crops; total pfts =          78
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDFRAC
+ domain_read read LANDMASK
+ Open PFT file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.hist
+ simyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_2001.c170629.nc
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.25x0.25_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :     1036800  x         456
+ * number of non-zero elements:      1062720
+ domain_clean: cleaning      1036800
+ Successfully made PFTs
+ 
+ Attempting to make harvest fields .....
+ domain_read_dims_2d read lon and lat dims from lon/lat
+ domain_read initialized domain
+ domain_read read LANDFRAC
+ domain_read read LANDMASK
+ Open harvest file: 
+ /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.hist
+ simyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_2001.c170629.nc
+(gridmap_map_read) reading mapping matrix data...
+(gridmap_map_read) * file name                  : /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.25x0.25_nomask_to_10x15_nomask_aave_da_c200309.nc
+ * matrix dimensions rows x cols :     1036800  x         456
+ * number of non-zero elements:      1062720
+ domain_clean: cleaning      1036800
+ Successfully made harvest and grazing
+ 
+ number of small pft =           87
+ input pft dynamic dataset for year            0  is : 
+ /glade/scratch/keerzhang/archive/BNU_NoAdjust/05deg_2001_new_NoAdjust_c20220215
+ .nc
+ mksrfdat                        
+  error: year for harvest not equal to year for PFT files

@@ -1,0 +1,2 @@
+#! /bin/csh -f
+set CSMDATA = /glade/p/cesm/cseg/inputdata
