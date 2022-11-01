@@ -120,13 +120,6 @@ contains
     call getfil( lfsurdat, locfn, 0 )
     call ncd_pio_openfile (ncid, trim(locfn), 0)
 
-    ! Read in patch mask - this variable is only on the surface dataset - but not
-    ! on the domain dataset
-
-    call ncd_io(ncid=ncid, varname= 'PFTDATA_MASK', flag='read', data=ldomain%pftm, &
-         dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( msg=' ERROR: pftm NOT on surface dataset'//errMsg(sourcefile, __LINE__))
-
     ! Cmopare surfdat_domain attributes to ldomain attributes
 
     call check_var(ncid=ncid, varname='xc', readvar=readvar)

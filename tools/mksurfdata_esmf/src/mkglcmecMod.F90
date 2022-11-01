@@ -590,13 +590,18 @@ contains
     call regrid_rawdata(mesh_i, mesh_o, routehandle, glac_i, glac_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do no = 1,ns_o
-       if (glac_o(no) < 1.) glac_o(no) = 0.
-    enddo
-    do no = 1,ns_o
-       if ((glac_o(no)) > 100.000001_r8) then
-          write (6,*) 'MKGLACIER error: glacier = ',glac_o(no), &
-               ' greater than 100.000001 for column, row = ',no
+       if (glac_o(no) < 1._r8) then
+          glac_o(no) = 0._r8
+       else if ((glac_o(no)) > 101._r8) then
+          write(6,*) 'MKGLACIER error: glacier = ', glac_o(no), &
+               ' > 101 for no = ', no
           call shr_sys_abort()
+       else if ((glac_o(no)) > 100._r8) then
+          if ((glac_o(no)) > 100.000001_r8) then
+             write(6,*) 'MKGLACIER warning: glacier = ', glac_o(no), &
+                ' > 100.000001 for no = ', no, ' Changing glacier > 100 to 100.'
+          end if
+          glac_o(no) = 100._r8
        end if
     enddo
 
