@@ -1080,7 +1080,6 @@ program mksurfdata
          pctgla(n) = float(nint(pctgla(n)))
 
          ! Assume wetland, glacier and/or lake when dataset landmask implies ocean
-         ! (assume medium soil color (15) and loamy texture).
 
          if (pctlnd_pft(n) < 1.e-6_r8) then
             if (pctgla(n) < 1.e-6_r8) then
