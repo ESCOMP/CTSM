@@ -18,7 +18,7 @@ class MeshType:
     An object for describing mesh or grid files.
     """
 
-    def __init__(self, center_lats, center_lons, mesh_name=None, mask=None):
+    def __init__(self, center_lats, center_lons, mask=None, mesh_name=None):
         """
         Construct a mesh object
 

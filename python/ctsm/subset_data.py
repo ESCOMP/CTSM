@@ -520,8 +520,8 @@ def subset_region(args, file_dict: dict):
         region.create_surfdata_at_reg(file_dict["fsurf_dir"], file_dict["fsurf_in"],
                                       args.user_mods_dir)
 
-    if region.create_mesh:
-        region.create_mesh_at_reg (file_dict["mesh_dir"], file_dict["mesh_surf"])
+    #if region.create_mesh:
+    #    region.create_mesh_at_reg (file_dict["mesh_dir"], file_dict["mesh_surf"])
 
     # --  Create CTSM transient landuse data file
     if region.create_landuse:
@@ -542,6 +542,10 @@ def subset_region(args, file_dict: dict):
             raise argparse.ArgumentTypeError(err_msg)
 
         region.write_shell_commands(os.path.join(args.user_mods_dir, "shell_commands"))
+        print ('-----')
+        print (args.user_mods_dir)
+        print ('-----')
+
 
     logger.info("Successfully ran script for a regional case.")
 

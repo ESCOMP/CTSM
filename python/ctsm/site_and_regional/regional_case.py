@@ -15,6 +15,7 @@ from datetime import datetime
 
 # -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
+from ctsm.site_and_regional.mesh_type import MeshType
 from ctsm.utils import add_tag_to_filename
 
 logger = logging.getLogger(__name__)
@@ -218,6 +219,13 @@ class RegionalCase(BaseCase):
         logger.info("fsurf_in:  %s", fsurf_in)
         logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
 
+        self.fsurf_out = os.path.join(self.out_dir, fsurf_out)
+        self.fsurf_out = fsurf_out
+
+        if self.create_mesh:
+            mesh_out = os.path.join(self.out_dir, os.path.splitext(fsurf_out)[0]+'_ESMF_UNSTRUCTURED_MESH.nc')
+            self.mesh = mesh_out
+
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         lat = f_in["lat"]
@@ -244,6 +252,29 @@ class RegionalCase(BaseCase):
             with open(os.path.join(user_mods_dir, "user_nl_clm"), "a") as nl_clm:
                 line = "fsurdat = '${}'".format(os.path.join(USRDAT_DIR, fsurf_out))
                 self.write_to_file(line, nl_clm)
+        if self.create_mesh:
+            print ('creating mesh_file for this surface dataset.')
+            self.extract_mesh_at_reg (f_out)
+
+    def extract_mesh_at_reg (self, ds):
+        """
+        Create Mesh from Surface dataset netcdf file.
+        """
+        logger.info("Creating meshfile for  at region: %s", self.tag)
+
+        lat_name = "lsmlat"
+        lon_name = "lsmlon"
+
+        lats = ds[lat_name]
+        lons = ds[lon_name]
+
+        this_mesh = MeshType(lats, lons)
+        this_mesh.calculate_corners()
+        this_mesh.create_esmf(self.mesh)
+
+        print ("DONE")
+
+
 
     def create_landuse_at_reg(self, indir, file, user_mods_dir):
         """
@@ -493,3 +524,4 @@ class RegionalCase(BaseCase):
             )
             self.write_to_file("./xmlchange ATM_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
             self.write_to_file("./xmlchange LND_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
+            self.write_to_file("./xmlchange MASK_MESH={}".format(str('/glade/p/cesmdata/cseg/inputdata/share/meshes/gx1v6_090205_ESMFmesh.nc')), nl_file)
