@@ -119,8 +119,8 @@ class MeshType:
         elif self.lat_dims == 2:
             # -- 2D mask
             mask = np.ones(
-                center_lats.shape, dtype=np.int8
-            )  # np.ones(tuple(self.center_lats.sizes.values()), dtype=np.int8)  #
+                self.center_lats.shape, dtype=np.int8
+            )
         mask_da = da.from_array(mask)
         self.mask = mask_da
 
@@ -393,7 +393,10 @@ class MeshType:
                 ds_out[var].encoding["_FillValue"] = None
 
         # -- add global attributes
-        ds_out.attrs["title"] = "ESMF unstructured grid file"
+        if self.mesh_name:
+            ds_out.attrs["title"] = "ESMF unstructured grid file  " + self.mesh_name
+        else:
+            ds_out.attrs["title"] = "ESMF unstructured grid file  " 
         ds_out.attrs["gridType"] = "unstructured mesh"
         ds_out.attrs["version"] = "0.9"
         ds_out.attrs["conventions"] = "ESMFMESH"
