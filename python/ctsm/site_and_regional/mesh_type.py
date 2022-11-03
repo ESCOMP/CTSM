@@ -1,9 +1,12 @@
 """
-This module includes the definition and functions for defining a Mesh type.
+This module includes the definition and functions for defining a Grid or Mesh.
+This module enables creating ESMF mesh file (unstructured grid file)for valid 1D or 2D lats and lons.
 """
 import sys
 import logging
+import argparse
 import datetime
+
 import numpy as np
 import xarray as xr
 import pandas as pd
@@ -22,14 +25,39 @@ class MeshType:
         """
         Construct a mesh object
 
-        center_lats :
-            latitudes (either 1D or 2D)
-        center_lons :
-            longitudes (either 1D or 2D)
+        Attributes
+        ----------
+        center_lats : xarray DataArray
+            array of latitudes (either 1D or 2D)
+        center_lons : xarray DataArray
+            array longitudes (either 1D or 2D)
         mesh_name : str or None, optional
             Name of the mesh
         mask : np array or None
             numpy array that include landmask
+
+        Methods
+        -------
+        check_lat_lon_dims:
+            check if dimensions of latitude and longitude is valid.
+
+        create_artificial_mask:
+            create an artificial mask of ones if mask does not exits.
+
+        create_2d_coords:
+            if 1d coords is provided, this method creates 2d coords from 1d coords.
+
+        calculate_corners:
+            calculate corner coordinates for each polygon in the grid
+
+        calculate_node_coords:
+            extract node coordiantes for nodeCoords variable on mesh file
+
+        calculate_elem_conn
+            calculate element connectivity for elementConn variable on mesh file
+
+        create_esmf
+            write mesh file to netcdf file.
         """
 
         self.mesh_name = mesh_name
@@ -46,38 +74,41 @@ class MeshType:
         else:
             self.mask = mask
 
-    def __str__(self):
-        """
-        Converts ingredients of this class to string for printing.
-        """
-        return "{}\n{}".format(
-            str(self.__class__),
-            "\n".join(
-                (
-                    "{} = {}".format(str(key), str(self.__dict__[key]))
-                    for key in sorted(self.__dict__)
-                )
-            ),
-        )
-
     def check_lat_lon_dims(self):
         """
-        Check latitude and longitude dimensions to make sure they are either 1 or 2.
+        Check latitude and longitude dimensions to make sure they are valid.
+
+        -------------
+        Raises:
+            Error (ArgumentTypeError):
+                If the provided latitude has dimension >2.
+            Error (ArgumentTypeError):
+                If the provided longitude has dimension >2.
         """
+
         if self.lat_dims not in [1, 2]:
-            print(
-                "Unrecognized grid! The dimension of latitude should be either 1 or 2 but it is {}.".format(
+            err_msg = """
+                Unrecognized grid! \n
+                The dimension of latitude should be either 1 or 2 but it is {}.
+                """.format(
                     self.lat_dims
                 )
-            )
+            raise argparse.ArgumentTypeError(err_msg)
+
         if self.lon_dims not in [1, 2]:
-            print(
-                "Unrecognized grid! The dimension of longitude should be either 1 or 2 but it is {}.".format(
+            err_msg = """
+                Unrecognized grid! \n
+                The dimension of longitude should be either 1 or 2 but it is {}.
+                """.format(
                     self.lon_dims
                 )
-            )
+            raise argparse.ArgumentTypeError(err_msg)
 
     def create_artificial_mask(self):
+        """
+        create an artificial mask of 1 if no land mask is provided.
+        """
+
         logger.info("Creating an artificial mask for this region...")
 
         if self.lat_dims == 1:
@@ -238,11 +269,14 @@ class MeshType:
             [self.corner_lons.T.reshape((-1,)).T, self.corner_lats.T.reshape((-1,)).T],
             axis=1,
         )
+
+        # -- convert to float32 to find duplicates
         corner_pairs =  corner_pairs.astype(np.float32, copy=False)
 
         # -- remove coordinates that are shared between the elements
         node_coords = dd.from_dask_array(corner_pairs).drop_duplicates().values
         node_coords.compute_chunk_sizes()
+
         # -- check size of unique coordinate pairs
         dims = self.mask.shape
         nlon = dims[0]
@@ -279,6 +313,7 @@ class MeshType:
 
         elem_conn = corners.compute().groupby(["lon", "lat"], sort=False).ngroup() + 1
         elem_conn = da.from_array(elem_conn.to_numpy())
+
         # -- reshape to write to ESMF
         self.elem_conn = elem_conn.T.reshape((4, -1)).T
 
