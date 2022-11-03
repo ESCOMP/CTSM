@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
-from mesh_type import MeshType
-import xarray as xr
 import os
-import argparse
 import sys
+import logging
+import argparse
 import textwrap
+from datetime import datetime
+import xarray as xr
+from mesh_type import MeshType
 
 def get_parser():
     """
@@ -35,6 +37,16 @@ def get_parser():
         dest="output",
         required=False,
     )
+
+    parser.add_argument(
+        "--outdir",
+        help="Output directory (only if name of output mesh is not defined)",
+        action="store",
+        dest="out_dir",
+        type=str,
+        )
+
+
     parser.add_argument(
         "--lat",
         help="Name of latitude varibale on netcdf input file. If none given, looks to find variables that include 'lat'.",
@@ -74,30 +86,32 @@ def get_parser():
         dest="overwrite",
         required=False,
     )
+    parser.add_argument(
+        "-v", "--verbose",
+        help="Increase output verbosity",
+        action="store_true", 
+        dest = "verbose",
+        required = False, 
+    )
+
     return parser
 
-
 def main ():
-    oned = True
-    if oned:
-        ifile = "/glade/scratch/negins/this_region_4x5_new_2/surfdata_4x5_hist_78pfts_CMIP6_simyr1850_275.0-330.0_-40-15_c220705.nc"
-    else:
-        ifile = "/glade/scratch/negins/wrf-ctsm_production/WRF/test/em_real_sim1_noahmp/wrfinput_d01"
-
-    if oned:
-        lat_name = "lsmlat"
-        lon_name = "lsmlon"
-    else:
-        lat_name = "XLAT"
-        lon_name = "XLONG"
 
     parser = get_parser()
     args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(level= logging.DEBUG, format=' %(levelname)-8s :: %(message)s')
+    else:
+        logging.basicConfig(level= logging.INFO, format=' %(levelname)-8s :: %(message)s')
+
 
     nc_file = args.input
     lat_name = args.lat_name
     lon_name = args.lon_name
     mesh_out = args.output
+    out_dir = args.out_dir
     overwrite = args.overwrite
     mask_name = args.mask_name
     area_name = args.area_name
@@ -115,34 +129,70 @@ def main ():
         raise parser.error(err_msg)
 
     if lat_name not in ds.coords and lat_name not in ds.variables :
-        print('Input file does not have variable named {}.'.format(lat_name))
-    else:
-        print (lat_name, "exist in the provided netcdf file with dimension of ", len(ds[lat_name].dims))
+        logging.error('Input file does not have variable named %s',lat_name)
+        sys.exit()
 
-    if lon_name not in ds.coords and lat_name not in ds.variables :
-        print('Input file does not have variable named {}.'.format(lon_name))
     else:
-        print (lat_name, "exist in the provided netcdf file with dimension of ", len(ds[lat_name].dims))
+        logging.debug ("- %s exist in the provided netcdf file with dimension of %s.", lat_name, len(ds[lat_name].dims).__str__())
+
+    if lon_name not in ds.coords and lon_name not in ds.variables :
+        logging.error('Input file does not have variable named %s',lon_name)
+        sys.exit()
+    else:
+        logging.debug ("- %s exist in the provided netcdf file with dimension of %s.", lon_name, len(ds[lon_name].dims).__str__())
 
 
     lats = ds[lat_name]
     lons = ds[lon_name]
 
-    if (len(lats.dims)>3) or (len(lons.dims)>3):
+    if (len(lats.dims)>2) or (len(lons.dims)>2):
         time_dims = [dim for dim in lats.dims if 'time' in dim.lower()]
         if time_dims:
-            print ('time dimension found on lat', time_dims)
+            logging.debug ('- time dimension found on lat {}'.format(time_dims))
+            logging.debug ('- removing time dimensions from lats and lons. ')
             lats = lats [:,:,0]
-            lats = lons [:,:,0]
+            lons = lons [:,:,0]
         else:
-            print ('latitude or longitude has more than 2 dimensions and the third dimension cannot be detected as time.')
+            logging.error ('latitude or longitude has more than 2 dimensions and the third dimension cannot be detected as time.')
+            sys.exit()
 
-    if mesh_out:
-        if os.path.exists(mesh_out):
-            if overwrite:
-                os.remove(mesh_out)
-            else:
-                print ('output meshfile exists, please choose --overwrite to overwrite the mesh file.')
+    today = datetime.today()
+    today_string = today.strftime("%y%m%d")
+
+    if mesh_out and out_dir:
+        logging.error(" Both --outdir and --output cannot be provided at the same time.")
+        err_msg = textwrap.dedent('''
+                \n ------------------------------------
+                \n You have provided both --outdir and --output.
+                \n Please provide only one of these options to proceed:
+                \n --outdir : directory to save mesh file. mesh file name automatically created.
+                \n --output : Absolute or relative path of the ESMF mesh file created.\n
+                '''
+                )
+        raise parser.error(err_msg)
+
+    #-- no file name and output path:
+    if not mesh_out and not out_dir:
+        out_dir = os.path.join(os.getcwd(),'meshes')
+
+    if not mesh_out:
+        #-- make output path if does not exist.
+        if not os.path.isdir(out_dir):
+            os.mkdir(out_dir)
+
+        mesh_out = os.path.join(out_dir,
+                os.path.splitext(nc_file)[0] + "_ESMF_UNSTRUCTURED_MESH"+ "_c"+ today_string+".nc")
+
+    logging.info ('Creating mesh file from : %s', nc_file)
+    logging.info ('Writing mesh file to    : %s', mesh_out)
+
+    # -- exit if mesh_out exists and --overwrite is not specified.
+    if os.path.exists(mesh_out):
+        if overwrite:
+            os.remove(mesh_out)
+        else:
+            logging.error ('output meshfile exists, please choose --overwrite to overwrite the mesh file.')
+            sys.exit()
 
     if mask_name is not None:
         mask = ds[mask_name].values()
@@ -153,7 +203,6 @@ def main ():
     this_mesh = MeshType(lats, lons, mask=None)
     this_mesh.calculate_corners()
     this_mesh.create_esmf(mesh_out, area=None)
-    print ('DONE!')
 
 if __name__ == "__main__":
     main()
