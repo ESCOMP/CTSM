@@ -10,7 +10,6 @@ import argparse
 # -- 3rd party libraries
 import numpy as np
 import xarray as xr
-from tqdm import tqdm
 from datetime import datetime
 
 # -- import local classes for this script
@@ -54,6 +53,11 @@ class RegionalCase(BaseCase):
 
     Methods
     -------
+    create_tag
+        Create a tag for this region which is either
+        region's name or a combination of bounds of this
+        region lat1-lat2_lon1-lon2
+
     check_region_bounds
         Check for the regional bounds
 
@@ -63,20 +67,20 @@ class RegionalCase(BaseCase):
     check_region_lats
         Check for the regional lats
 
-    create_tag
-        Create a tag for this region which is either
-        region's name or a combination of bounds of this
-        region lat1-lat2_lon1-lon2
-
     create_domain_at_reg
         Create domain file at this region
 
     create_surfdata_at_reg
         Create surface dataset at this region
 
+    extract_mesh_at_reg
+        Extract mesh from surface dataset created by create_surfdata_at_reg
+
     create_landuse_at_reg
         Create landuse file at this region
 
+    write_shell_commands(namelist)
+        write out xml commands to a file for usermods (i.e. shell_commands) for regional settings.
     """
 
     def __init__(
@@ -253,7 +257,7 @@ class RegionalCase(BaseCase):
                 line = "fsurdat = '${}'".format(os.path.join(USRDAT_DIR, fsurf_out))
                 self.write_to_file(line, nl_clm)
         if self.create_mesh:
-            print ('creating mesh_file for this surface dataset.')
+            logger.info('creating mesh file from surface_dataset={}'.format(str(str(self.mesh)))
             self.extract_mesh_at_reg (f_out)
 
     def extract_mesh_at_reg (self, ds):
@@ -271,9 +275,6 @@ class RegionalCase(BaseCase):
         this_mesh = MeshType(lats, lons)
         this_mesh.calculate_corners()
         this_mesh.create_esmf(self.mesh)
-
-        print ("DONE")
-
 
 
     def create_landuse_at_reg(self, indir, file, user_mods_dir):
@@ -364,66 +365,58 @@ class RegionalCase(BaseCase):
         subset_element = []
         cnt = 0
 
-        for n in tqdm(range(elem_count)):
+        for n in range(elem_count):
             endx = elem_conn[n,:num_elem_conn[n].values].values
             endx[:,] -= 1# convert to zero based index
             endx = [int(xi) for xi in endx]
-            #print (endx)
+            
             nlon = node_coords[endx,0].values
             nlat = node_coords[endx,1].values
-
-            l1 = np.logical_and(nlon > self.lon1,nlon < self.lon2)
-            l2 = np.logical_and(nlat > self.lat1,nlat < self.lat2)
-            if np.any(l1) and np.any(l2):
-            #if np.any(np.logical_or(l1,l2)):
-            #    pass
-            #else:
+            
+            l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
+            l2 = np.logical_or(nlat <= self.lat1,nlat >= self.lat2)
+                                                                                                                  
+            if np.any(np.logical_or(l1,l2)):
+                pass
+            else:
                 subset_element.append(n)
                 cnt+=1
 
-        print (cnt)
         subset_node = []
         conn_dict = {}
-        cnt = 1
-        print (node_count)
-        print (elem_count)
-        print (node_coords)
+        cnt = 1 
         for n in range(node_count):
-            #n = n-1
             nlon = node_coords[n,0].values
             nlat = node_coords[n,1].values
-
-            #l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
-            #l2 = np.logical_or(nlat <= self.lat1,nlat >= self.lat2)
-            l1 = np.logical_and(nlon >= self.lon1,nlon <= self.lon2)
-            l2 = np.logical_and(nlat >= self.lat1,nlat <= self.lat2)
-            if np.any(l1) and np.any(l2):
-                subset_node.append(n)
-                conn_dict[n+1] = cnt
-                cnt+=1
-            else:
+                
+            l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
+            l2 = np.logical_or(nlat <= self.lat1,nlat >= self.lat2)
+                
+            if np.logical_or(l1,l2):
                 conn_dict[n+1] = -9999
-
-            #if np.logical_or(l1,l2):
-            #    conn_dict[n+1] = -9999
+            else:
+                subset_node.append(n)
+                conn_dict[n+1] = cnt 
+                cnt+=1
+                
+            # -- reverse logic
+            #l1 = np.logical_and(nlon >= self.lon1,nlon <= self.lon2)
+            #l2 = np.logical_and(nlat >= self.lat1,nlat <= self.lat2)
             #if np.any(l1) and np.any(l2):
-            #else:
             #    subset_node.append(n)
             #    conn_dict[n+1] = cnt
             #    cnt+=1
-        print ('cnt:',cnt)
-        return node_coords, subset_element, subset_node, conn_dict
+            #else:
+            #    conn_dict[n+1] = -9999
 
+        return node_coords, subset_element, subset_node, conn_dict
 
 
     def write_mesh (self, f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out):
         """
         This function writes out the subsetted mesh file.
         """
-        print (len(subset_node))
         corner_pairs = f_in.variables['nodeCoords'][subset_node,]
-        print (corner_pairs)
-        #print (corner_pairs.shape())
         dimensions = f_in.dims
         variables  = f_in.variables
         global_attributes  = f_in.attrs
@@ -438,7 +431,6 @@ class RegionalCase(BaseCase):
         for ni in range(elem_count):
             for mi in range(max_node_dim):
                 ndx = int (elem_conn_index[ni,mi])
-                #print ('mi',mi, 'ndx',ndx)
                 elem_conn_out[ni,mi] = conn_dict[ndx]
 
 
@@ -524,4 +516,4 @@ class RegionalCase(BaseCase):
             )
             self.write_to_file("./xmlchange ATM_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
             self.write_to_file("./xmlchange LND_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
-            self.write_to_file("./xmlchange MASK_MESH={}".format(str('/glade/p/cesmdata/cseg/inputdata/share/meshes/gx1v6_090205_ESMFmesh.nc')), nl_file)
+            self.write_to_file("./xmlchange MASK_MESH={}".format(str(str(self.mesh))), nl_file)
