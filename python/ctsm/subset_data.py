@@ -542,10 +542,10 @@ def subset_region(args, file_dict: dict):
             raise argparse.ArgumentTypeError(err_msg)
 
         region.write_shell_commands(os.path.join(args.user_mods_dir, "shell_commands"))
-        print ('-----')
-        print (args.user_mods_dir)
-        print ('-----')
 
+        print ('\nFor running this regional case with the created user_mods : ')
+        print ('./create_newcase --case case --res CLM_USRDAT --compset I2000Clm51BgcCrop',
+                '--run-unsupported --user-mods-dirs ', args.user_mods_dir, '\n\n')
 
     logger.info("Successfully ran script for a regional case.")
 
