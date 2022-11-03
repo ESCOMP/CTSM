@@ -133,14 +133,14 @@ class RegionalCase(BaseCase):
                 str(self.lon1), str(self.lon2), str(self.lat1), str(self.lat2)
             )
 
-    def check_region_bounds (self):
+    def check_region_bounds(self):
         """
         Check for the regional bounds
         """
         self.check_region_lons()
         self.check_region_lats()
 
-    def check_region_lons (self):
+    def check_region_lons(self):
         """
         Check for the regional lon bounds
         """
@@ -159,7 +159,7 @@ class RegionalCase(BaseCase):
             )
             raise argparse.ArgumentTypeError(err_msg)
 
-    def check_region_lats (self):
+    def check_region_lats(self):
         """
         Check for the regional lat bound
         """
@@ -175,7 +175,6 @@ class RegionalCase(BaseCase):
                 self.lat1, self.lat2
             )
             raise argparse.ArgumentTypeError(err_msg)
-
 
     def create_domain_at_reg(self, indir, file):
         """
@@ -227,7 +226,10 @@ class RegionalCase(BaseCase):
         self.fsurf_out = fsurf_out
 
         if self.create_mesh:
-            mesh_out = os.path.join(self.out_dir, os.path.splitext(fsurf_out)[0]+'_ESMF_UNSTRUCTURED_MESH.nc')
+            mesh_out = os.path.join(
+                self.out_dir,
+                os.path.splitext(fsurf_out)[0] + "_ESMF_UNSTRUCTURED_MESH.nc",
+            )
             self.mesh = mesh_out
 
         # create 1d coordinate variables to enable sel() method
@@ -257,10 +259,10 @@ class RegionalCase(BaseCase):
                 line = "fsurdat = '${}'".format(os.path.join(USRDAT_DIR, fsurf_out))
                 self.write_to_file(line, nl_clm)
         if self.create_mesh:
-            logger.info('creating mesh file from surface_dataset={}'.format(str(str(self.mesh)))
-            self.extract_mesh_at_reg (f_out)
+            logger.info("creating mesh file from surface_dataset: %s", wfile)
+            self.extract_mesh_at_reg(f_out)
 
-    def extract_mesh_at_reg (self, ds):
+    def extract_mesh_at_reg(self, ds):
         """
         Create Mesh from Surface dataset netcdf file.
         """
@@ -275,7 +277,6 @@ class RegionalCase(BaseCase):
         this_mesh = MeshType(lats, lons)
         this_mesh.calculate_corners()
         this_mesh.create_esmf(self.mesh)
-
 
     def create_landuse_at_reg(self, indir, file, user_mods_dir):
         """
@@ -319,7 +320,6 @@ class RegionalCase(BaseCase):
                 )
                 self.write_to_file(line, nl_clm)
 
-
     def create_mesh_at_reg(self, mesh_dir, mesh_surf):
         """
         Create a mesh subsetted for the RegionalCase class.
@@ -327,177 +327,213 @@ class RegionalCase(BaseCase):
         logger.info(
             "----------------------------------------------------------------------"
         )
-        logger.info(
-            "Subsetting mesh file for region: %s",
-            self.tag
-        )
+        logger.info("Subsetting mesh file for region: %s", self.tag)
 
         today = datetime.today()
         today_string = today.strftime("%y%m%d")
 
-
         mesh_in = os.path.join(mesh_dir, mesh_surf)
-        mesh_out = os.path.join(self.out_dir, os.path.splitext(mesh_surf)[0]+'_'+self.tag+'_c'+today_string+'.nc')
+        mesh_out = os.path.join(
+            self.out_dir,
+            os.path.splitext(mesh_surf)[0]
+            + "_"
+            + self.tag
+            + "_c"
+            + today_string
+            + ".nc",
+        )
 
         logger.info("mesh_in  :  %s", mesh_in)
         logger.info("mesh_out :  %s", mesh_out)
 
         self.mesh = mesh_out
 
-        node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
+        node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(
+            mesh_in
+        )
 
-        f_in = xr.open_dataset (mesh_in)
-        self.write_mesh (f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out)
+        f_in = xr.open_dataset(mesh_in)
+        self.write_mesh(
+            f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out
+        )
 
-
-    def subset_mesh_at_reg (self, mesh_in):
+    def subset_mesh_at_reg(self, mesh_in):
         """
         This function subsets the mesh based on lat and lon bounds given by RegionalCase class.
         """
-        f_in = xr.open_dataset (mesh_in)
-        elem_count = len (f_in['elementCount'])
-        elem_conn = f_in['elementConn']
-        num_elem_conn = f_in['numElementConn']
-        center_coords = f_in['centerCoords']
-        node_count = len (f_in['nodeCount'])
-        node_coords = f_in['nodeCoords']
+        f_in = xr.open_dataset(mesh_in)
+        elem_count = len(f_in["elementCount"])
+        elem_conn = f_in["elementConn"]
+        num_elem_conn = f_in["numElementConn"]
+        center_coords = f_in["centerCoords"]
+        node_count = len(f_in["nodeCount"])
+        node_coords = f_in["nodeCoords"]
 
         subset_element = []
         cnt = 0
 
         for n in range(elem_count):
-            endx = elem_conn[n,:num_elem_conn[n].values].values
-            endx[:,] -= 1# convert to zero based index
+            endx = elem_conn[n, : num_elem_conn[n].values].values
+            endx[
+                :,
+            ] -= 1  # convert to zero based index
             endx = [int(xi) for xi in endx]
-            
-            nlon = node_coords[endx,0].values
-            nlat = node_coords[endx,1].values
-            
-            l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
-            l2 = np.logical_or(nlat <= self.lat1,nlat >= self.lat2)
-                                                                                                                  
-            if np.any(np.logical_or(l1,l2)):
+
+            nlon = node_coords[endx, 0].values
+            nlat = node_coords[endx, 1].values
+
+            l1 = np.logical_or(nlon <= self.lon1, nlon >= self.lon2)
+            l2 = np.logical_or(nlat <= self.lat1, nlat >= self.lat2)
+
+            if np.any(np.logical_or(l1, l2)):
                 pass
             else:
                 subset_element.append(n)
-                cnt+=1
+                cnt += 1
 
         subset_node = []
         conn_dict = {}
-        cnt = 1 
+        cnt = 1
         for n in range(node_count):
-            nlon = node_coords[n,0].values
-            nlat = node_coords[n,1].values
-                
-            l1 = np.logical_or(nlon <= self.lon1,nlon >= self.lon2)
-            l2 = np.logical_or(nlat <= self.lat1,nlat >= self.lat2)
-                
-            if np.logical_or(l1,l2):
-                conn_dict[n+1] = -9999
+            nlon = node_coords[n, 0].values
+            nlat = node_coords[n, 1].values
+
+            l1 = np.logical_or(nlon <= self.lon1, nlon >= self.lon2)
+            l2 = np.logical_or(nlat <= self.lat1, nlat >= self.lat2)
+
+            if np.logical_or(l1, l2):
+                conn_dict[n + 1] = -9999
             else:
                 subset_node.append(n)
-                conn_dict[n+1] = cnt 
-                cnt+=1
-                
+                conn_dict[n + 1] = cnt
+                cnt += 1
+
             # -- reverse logic
-            #l1 = np.logical_and(nlon >= self.lon1,nlon <= self.lon2)
-            #l2 = np.logical_and(nlat >= self.lat1,nlat <= self.lat2)
-            #if np.any(l1) and np.any(l2):
+            # l1 = np.logical_and(nlon >= self.lon1,nlon <= self.lon2)
+            # l2 = np.logical_and(nlat >= self.lat1,nlat <= self.lat2)
+            # if np.any(l1) and np.any(l2):
             #    subset_node.append(n)
             #    conn_dict[n+1] = cnt
             #    cnt+=1
-            #else:
+            # else:
             #    conn_dict[n+1] = -9999
 
         return node_coords, subset_element, subset_node, conn_dict
 
-
-    def write_mesh (self, f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out):
+    def write_mesh(
+        self, f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out
+    ):
         """
         This function writes out the subsetted mesh file.
         """
-        corner_pairs = f_in.variables['nodeCoords'][subset_node,]
+        corner_pairs = f_in.variables["nodeCoords"][
+            subset_node,
+        ]
         dimensions = f_in.dims
-        variables  = f_in.variables
-        global_attributes  = f_in.attrs
+        variables = f_in.variables
+        global_attributes = f_in.attrs
 
-
-        max_node_dim = len(f_in['maxNodePElement'])
+        max_node_dim = len(f_in["maxNodePElement"])
 
         elem_count = len(subset_element)
         elem_conn_out = np.empty(shape=[elem_count, max_node_dim])
-        elem_conn_index = f_in.variables['elementConn'][subset_element,]
+        elem_conn_index = f_in.variables["elementConn"][
+            subset_element,
+        ]
 
         for ni in range(elem_count):
             for mi in range(max_node_dim):
-                ndx = int (elem_conn_index[ni,mi])
-                elem_conn_out[ni,mi] = conn_dict[ndx]
+                ndx = int(elem_conn_index[ni, mi])
+                elem_conn_out[ni, mi] = conn_dict[ndx]
 
+        num_elem_conn_out = np.empty(
+            shape=[
+                elem_count,
+            ]
+        )
+        num_elem_conn_out[:] = f_in.variables["numElementConn"][
+            subset_element,
+        ]
 
-        num_elem_conn_out = np.empty(shape=[elem_count,])
-        num_elem_conn_out[:] = f_in.variables['numElementConn'][subset_element,]
+        center_coords_out = np.empty(shape=[elem_count, 2])
+        center_coords_out[:, :] = f_in.variables["centerCoords"][subset_element, :]
 
-        center_coords_out = np.empty(shape=[elem_count,2])
-        center_coords_out[:,:]=f_in.variables['centerCoords'][subset_element,:]
+        if "elementMask" in variables:
+            elem_mask_out = np.empty(
+                shape=[
+                    elem_count,
+                ]
+            )
+            elem_mask_out[:] = f_in.variables["elementMask"][
+                subset_element,
+            ]
 
-        if 'elementMask' in variables:
-            elem_mask_out = np.empty(shape=[elem_count,])
-            elem_mask_out[:]=f_in.variables['elementMask'][subset_element,]
-
-        if 'elementArea' in variables:
-            elem_area_out = np.empty(shape=[elem_count,])
-            elem_area_out[:]=f_in.variables['elementArea'][subset_element,]
+        if "elementArea" in variables:
+            elem_area_out = np.empty(
+                shape=[
+                    elem_count,
+                ]
+            )
+            elem_area_out[:] = f_in.variables["elementArea"][
+                subset_element,
+            ]
 
         # -- create output dataset
         f_out = xr.Dataset()
 
-        f_out['nodeCoords'] = xr.DataArray(corner_pairs,
-                                     dims=('nodeCount', 'coordDim'),
-                                     attrs={'units': 'degrees'})
+        f_out["nodeCoords"] = xr.DataArray(
+            corner_pairs, dims=("nodeCount", "coordDim"), attrs={"units": "degrees"}
+        )
 
-        f_out['elementConn'] = xr.DataArray(elem_conn_out,
-                                      dims=('elementCount', 'maxNodePElement'),
-                                      attrs={'long_name': 'Node indices that define the element connectivity'})
-        f_out.elementConn.encoding = {'dtype': np.int32}
+        f_out["elementConn"] = xr.DataArray(
+            elem_conn_out,
+            dims=("elementCount", "maxNodePElement"),
+            attrs={"long_name": "Node indices that define the element connectivity"},
+        )
+        f_out.elementConn.encoding = {"dtype": np.int32}
 
-        f_out['numElementConn'] = xr.DataArray(num_elem_conn_out,
-                                      dims=('elementCount'),
-                                      attrs={'long_name': 'Number of nodes per element'})
-        f_out.numElementConn.encoding = {'dtype': np.int32}
+        f_out["numElementConn"] = xr.DataArray(
+            num_elem_conn_out,
+            dims=("elementCount"),
+            attrs={"long_name": "Number of nodes per element"},
+        )
+        f_out.numElementConn.encoding = {"dtype": np.int32}
 
-        f_out['centerCoords'] = xr.DataArray(center_coords_out,
-                                          dims=('elementCount', 'coordDim'),
-                                          attrs={'units': 'degrees'})
+        f_out["centerCoords"] = xr.DataArray(
+            center_coords_out,
+            dims=("elementCount", "coordDim"),
+            attrs={"units": "degrees"},
+        )
 
+        # -- add mask
+        if "elementMask" in variables:
+            f_out["elementMask"] = xr.DataArray(
+                elem_mask_out, dims=("elementCount"), attrs={"units": "unitless"}
+            )
+            f_out.elementMask.encoding = {"dtype": np.int32}
 
-        #-- add mask
-        if 'elementMask' in variables:
-            f_out['elementMask'] = xr.DataArray(elem_mask_out,
-                                              dims=('elementCount'),
-                                              attrs={'units': 'unitless'})
-            f_out.elementMask.encoding = {'dtype': np.int32}
+        if "elementArea" in variables:
+            f_out["elementArea"] = xr.DataArray(
+                elem_area_out, dims=("elementCount"), attrs={"units": "unitless"}
+            )
 
-        if 'elementArea' in variables:
-            f_out['elementArea'] = xr.DataArray(elem_area_out,
-                                              dims=('elementCount'),
-                                              attrs={'units': 'unitless'})
-
-        #-- setting fill values
+        # -- setting fill values
         for var in variables:
-            if '_FillValue' in f_in[var].encoding:
-                f_out[var].encoding['_FillValue'] = f_in[var].encoding['_FillValue']
+            if "_FillValue" in f_in[var].encoding:
+                f_out[var].encoding["_FillValue"] = f_in[var].encoding["_FillValue"]
             else:
-                f_out[var].encoding['_FillValue'] = None
+                f_out[var].encoding["_FillValue"] = None
 
-        #-- add global attributes
+        # -- add global attributes
         for attr in global_attributes:
-            if attr != 'timeGenerated':
+            if attr != "timeGenerated":
                 f_out.attrs[attr] = global_attributes[attr]
 
-        f_out.attrs = {'title': 'ESMF unstructured grid file for a region',
-                 'created_by': 'subset_data',
-                 'date_created': '{}'.format(datetime.now()),
-                }
+        f_out.attrs = {
+            "title": "ESMF unstructured grid file for a region",
+            "created_by": "subset_data",
+            "date_created": "{}".format(datetime.now()),
+        }
 
         f_out.to_netcdf(mesh_out)
         logger.info("Successfully created file (mesh_out) %s", mesh_out)
@@ -514,6 +550,12 @@ class RegionalCase(BaseCase):
             self.write_to_file(
                 "./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file
             )
-            self.write_to_file("./xmlchange ATM_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
-            self.write_to_file("./xmlchange LND_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
-            self.write_to_file("./xmlchange MASK_MESH={}".format(str(str(self.mesh))), nl_file)
+            self.write_to_file(
+                "./xmlchange ATM_DOMAIN_MESH={}".format(str(self.mesh)), nl_file
+            )
+            self.write_to_file(
+                "./xmlchange LND_DOMAIN_MESH={}".format(str(self.mesh)), nl_file
+            )
+            self.write_to_file(
+                "./xmlchange MASK_MESH={}".format(str(str(self.mesh))), nl_file
+            )
