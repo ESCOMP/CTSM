@@ -18,6 +18,7 @@ Module HydrologyNoDrainageMod
   use SoilStateType     , only : soilstate_type
   use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
+  use SectorWaterMod, only : sectorwater_type
   use IrrigationMod, only : irrigation_type
   use SnowHydrologyMod     , only : UpdateQuantitiesForNewSnow, RemoveSnowFromThawedWetlands, InitializeExplicitSnowPack
   use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
@@ -39,12 +40,121 @@ Module HydrologyNoDrainageMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
+  public  :: CalcAndWithdrawSectorWaterFluxes ! Calculates sectorwal water withdrawal, consumption and return flow fluxes; update the fields which are sent to the routing model through the coupler;
   public  :: CalcAndWithdrawIrrigationFluxes  ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
   public  :: HandleNewSnow                    ! Handle new snow falling on the ground
   public  :: HydrologyNoDrainage              ! Calculates soil/snow hydrology without drainage
   !-----------------------------------------------------------------------
 
 contains
+
+   !-----------------------------------------------------------------------
+   subroutine CalcAndWithdrawSectorWaterFluxes(bounds, soilhydrology_inst, sectorwater_inst, water_inst, volr, rof_prognostic)
+      !
+      ! !DESCRIPTION:
+      ! Calculates sectorwal water withdrawal, consumption and return flow fluxes;
+      ! Updates the fields which are sent to the routing model through the coupler;
+      !
+      ! !USES:
+      use clm_time_manager    , only : is_beg_curr_day
+      !
+      ! !ARGUMENTS:
+      integer  :: g  ! gridcell index
+      type(bounds_type)              , intent(in)    :: bounds
+      type(soilhydrology_type)       , intent(in)    :: soilhydrology_inst
+      type(sectorwater_type)         , intent(inout) :: sectorwater_inst
+      type(water_type)               , intent(inout) :: water_inst
+      
+      ! river water volume (m3) (ignored if rof_prognostic is .false.)
+      real(r8), intent(in) :: volr( bounds%begg: )
+      
+      ! whether we're running with a prognostic ROF component; this is needed to determine
+      ! whether we can limit irrigation based on river volume.
+      logical, intent(in)  :: rof_prognostic
+      
+      ! !LOCAL VARIABLES:
+      integer :: i  ! tracer index
+      
+      character(len=*), parameter :: subname = 'CalcAndWithdrawSectorWaterFluxes'
+      !-----------------------------------------------------------------------
+      
+      ! Read withdrawal and consumption data from input surfdata
+      ! Compute the withdrawal, consumption and return flow (expected and actual)
+      ! To limit computation time, call this subroutine only once a day (we assume uniform demand throughout a day)
+      if (is_beg_curr_day()) then
+         call sectorwater_inst%CalcSectorWaterNeeded(bounds, volr, rof_prognostic)
+      endif
+   
+      ! Here I am not sure why in general it is required to check for isnan
+      ! I know that I had some bug at some point where the coupler was not happy that I was trying to send some NaN values
+      ! So I wrote this as a fix, but I am not sure how it is possible that there is NaN values; a possible explanation is that there is an issue with input data (so I may need to check into this)
+      
+      do g = bounds%begg, bounds%endg
+         if (isnan(sectorwater_inst%dom_withd_actual_grc(g))) then
+            water_inst%waterlnd2atmbulk_inst%qdom_withd_grc(g) = 0._r8
+         else
+            water_inst%waterlnd2atmbulk_inst%qdom_withd_grc(g) = sectorwater_inst%dom_withd_actual_grc(g)
+         endif
+   
+         if (isnan(sectorwater_inst%dom_rf_actual_grc(g))) then
+            water_inst%waterlnd2atmbulk_inst%qdom_rf_grc(g) = 0._r8
+         else
+            water_inst%waterlnd2atmbulk_inst%qdom_rf_grc(g) = sectorwater_inst%dom_rf_actual_grc(g)
+         endif
+   
+         if (isnan(sectorwater_inst%liv_withd_actual_grc(g))) then
+            water_inst%waterlnd2atmbulk_inst%qliv_withd_grc(g) = 0._r8
+         else
+            water_inst%waterlnd2atmbulk_inst%qliv_withd_grc(g) = sectorwater_inst%liv_withd_actual_grc(g)
+         endif
+   
+         if (isnan(sectorwater_inst%liv_rf_actual_grc(g))) then
+            water_inst%waterlnd2atmbulk_inst%qliv_rf_grc(g) = 0._r8
+         else
+            water_inst%waterlnd2atmbulk_inst%qliv_rf_grc(g) = sectorwater_inst%liv_rf_actual_grc(g)
+         endif
+ 
+ 
+         if (isnan(sectorwater_inst%elec_withd_actual_grc(g))) then
+            water_inst%waterlnd2atmbulk_inst%qelec_withd_grc(g) = 0._r8
+         else
+            water_inst%waterlnd2atmbulk_inst%qelec_withd_grc(g) = sectorwater_inst%elec_withd_actual_grc(g)
+         endif
+   
+         if (isnan(sectorwater_inst%elec_rf_actual_grc(g))) then
+            water_inst%waterlnd2atmbulk_inst%qelec_rf_grc(g) = 0._r8
+         else
+            water_inst%waterlnd2atmbulk_inst%qelec_rf_grc(g) = sectorwater_inst%elec_rf_actual_grc(g)
+         endif
+   
+ 
+         if (isnan(sectorwater_inst%mfc_withd_actual_grc(g))) then
+            water_inst%waterlnd2atmbulk_inst%qmfc_withd_grc(g) = 0._r8
+         else
+            water_inst%waterlnd2atmbulk_inst%qmfc_withd_grc(g) = sectorwater_inst%mfc_withd_actual_grc(g)
+         endif
+   
+         if (isnan(sectorwater_inst%mfc_rf_actual_grc(g))) then
+            water_inst%waterlnd2atmbulk_inst%qmfc_rf_grc(g) = 0._r8
+         else
+            water_inst%waterlnd2atmbulk_inst%qmfc_rf_grc(g) = sectorwater_inst%mfc_rf_actual_grc(g)
+         endif
+   
+   
+         if (isnan(sectorwater_inst%min_withd_actual_grc(g))) then
+            water_inst%waterlnd2atmbulk_inst%qmin_withd_grc(g) = 0._r8
+         else
+            water_inst%waterlnd2atmbulk_inst%qmin_withd_grc(g) = sectorwater_inst%min_withd_actual_grc(g)
+         endif
+   
+         if (isnan(sectorwater_inst%min_rf_actual_grc(g))) then
+            water_inst%waterlnd2atmbulk_inst%qmin_rf_grc(g) = 0._r8
+         else
+            water_inst%waterlnd2atmbulk_inst%qmin_rf_grc(g) = sectorwater_inst%min_rf_actual_grc(g)
+         endif
+      end do
+   end subroutine CalcAndWithdrawSectorWaterFluxes
+
 
   !-----------------------------------------------------------------------
   subroutine CalcAndWithdrawIrrigationFluxes(bounds, &
