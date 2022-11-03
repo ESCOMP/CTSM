@@ -1,6 +1,6 @@
 """
 This module includes the definition and functions for defining a Grid or Mesh.
-This module enables creating ESMF mesh file (unstructured grid file)for valid 1D or 2D lats and lons.
+This enables creating ESMF mesh file (unstructured grid file)for valid 1D or 2D lats and lons.
 """
 import sys
 import logging
@@ -13,6 +13,12 @@ import pandas as pd
 import dask.array as da
 import dask.dataframe as dd
 from dask.diagnostics import ProgressBar
+
+# -- libraries for plotting mesh (make_mesh_plot)
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
+import cartopy.feature as cfeature
 
 logger = logging.getLogger(__name__)
 
@@ -409,3 +415,54 @@ class MeshType:
             logger.info("Writing ESMF Mesh file to : %s", mesh_fname)
             ds_out.to_netcdf(mesh_fname)
             logger.info("Successfully created ESMF Mesh file : %s", mesh_fname)
+
+        plot_fname = mesh_fname +'.png'
+        self.make_plot = False
+
+        if self.make_plot:
+            self.make_mesh_plot(plot_fname)
+
+    def make_mesh_plot(self, plot_fname):                                                                                                                                                                  
+        """ 
+        Create an ESMF mesh file for the mesh
+
+        Parameters
+        ----------
+        plot_fname : str
+            The path to write the ESMF meshfile plot
+        """
+        plt.figure(num=None, figsize=(25, 11),  facecolor='w', edgecolor='k')
+        ax = plt.axes(projection=ccrs.PlateCarree())
+
+
+        ax.coastlines()
+        ax.gridlines(color="black", linestyle="dotted")
+        ax.add_feature(cfeature.OCEAN)
+        ax.add_feature(cfeature.BORDERS)
+        ax.add_feature(cfeature.LAND, edgecolor='black')
+        ax.add_feature(cfeature.LAKES, edgecolor='black')
+        ax.add_feature(cfeature.RIVERS)
+
+        x, y = self.node_coords.T
+        print (x.shape)
+        print (y.shape)
+        df = pd.DataFrame({'x':x, 'y':y}, index = [0])
+        grouped_x = df.groupby('x')
+        for name, group in grouped_x:
+            plt.plot (group['x']-180, group['y'],color='black', marker='o')
+        grouped_y = df.groupby('y')
+        for name, group in grouped_y:
+            plt.plot (group['x']-180, group['y'],color='black', marker='o')
+
+        x, y = this_mesh.center_coords.T
+
+        plt.scatter (x-180,y, color='red', marker='x')
+        plt.savefig (plot_fname, bbox_inches='tight')
+
+        logger.info("Successfully created plots for ESMF Mesh file : %s", plot_fname)
+
+
+
+
+
+
