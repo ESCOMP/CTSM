@@ -1,7 +1,7 @@
 """
-This module includes the definition and functions for defining a Mesh type. 
+This module includes the definition and functions for defining a Mesh type.
 """
-
+import sys
 import logging
 import datetime
 import numpy as np
@@ -238,6 +238,7 @@ class MeshType:
             [self.corner_lons.T.reshape((-1,)).T, self.corner_lats.T.reshape((-1,)).T],
             axis=1,
         )
+        corner_pairs =  corner_pairs.astype(np.float32, copy=False)
 
         # -- remove coordinates that are shared between the elements
         node_coords = dd.from_dask_array(corner_pairs).drop_duplicates().values
@@ -247,15 +248,17 @@ class MeshType:
         nlon = dims[0]
         nlat = dims[1]
         elem_conn_size = nlon * nlat + nlon + nlat + 1
+
         self.node_coords = node_coords
 
+        # -- error check to avoid issues later 
         if self.node_coords.shape[0] != elem_conn_size:
             logger.warning(
                 "The size of unique coordinate pairs is {} but expected size is {}!".format(
                     self.node_coords.shape[0], elem_conn_size
                 )
             )
-            sys.exit(2)
+            logger.warning ("This may result your simulation to crash later.")
 
     def calculate_elem_conn(self):
         """
