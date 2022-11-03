@@ -280,6 +280,8 @@ def get_parser(args, description, valid_neon_sites):
             # The transient run length is set by cdeps atm buildnml to the last date of the available tower data
             # this value is not used
             run_length = "4Y"
+    else:
+        run_length = args.run_length
 
     run_length = parse_isoduration(run_length)
     base_case_root = None
