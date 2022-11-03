@@ -271,8 +271,8 @@ class RegionalCase(BaseCase):
         lat_name = "lsmlat"
         lon_name = "lsmlon"
 
-        lats = ds[lat_name]
-        lons = ds[lon_name]
+        lats = ds[lat_name].astype(np.float32)
+        lons = ds[lon_name].astype(np.float32)
 
         this_mesh = MeshType(lats, lons)
         this_mesh.calculate_corners()

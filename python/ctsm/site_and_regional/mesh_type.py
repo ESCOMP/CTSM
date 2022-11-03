@@ -277,7 +277,7 @@ class MeshType:
         )
 
         # -- convert to float32 to find duplicates
-        corner_pairs =  corner_pairs.astype(np.float32, copy=False)
+        ##corner_pairs =  corner_pairs.astype(np.float32, copy=False)
 
         # -- remove coordinates that are shared between the elements
         node_coords = dd.from_dask_array(corner_pairs).drop_duplicates().values
@@ -299,6 +299,36 @@ class MeshType:
                 )
             )
             logger.warning ("This may result your simulation to crash later.")
+
+             # Identify unique nodes
+            #dtr = np.pi/180
+            #index_radius = 1e-6
+            #all_unique_nodes = []
+            #num_all_nodes = corner_pairs.shape[0]
+ 
+            #all_unique_nodes = []    
+            #for i in range(corner_pairs.shape[0]):
+            #    if np.mod(i,100) == 0:
+            #        print('i in num_all_nodes ',i,corner_pairs)
+ 
+            #    dlon = corner_pairs[i+1:,0] - corner_pairs[i,0]
+            #    dlat = corner_pairs[i+1:,1] - corner_pairs[i,1]
+            #    dlon = dtr*dlon
+            #    dlat = dtr*dlat
+            #    dist = np.power(np.sin(dlat/2),2) + (np.cos(dtr*corner_pairs[i+1:,1]) * np.cos(dtr*corner_pairs[i,1]) * np.power(np.sin(dlon/2),2))
+            #    dist = np.arctan2( np.sqrt(dist), np.sqrt(1-dist))
+            #    npoints = np.sum(np.where(dist < index_radius,1,0))
+            #    if npoints < 1:
+            #        all_unique_nodes.append(corner_pairs[i,:])
+ 
+            #node_coords = np.vstack(all_unique_nodes)
+            #self.node_coords = node_coords
+ 
+            #if node_coords.shape[0] != elem_conn_size:
+            #    print ("khar!")
+            #    sys.exit()
+
+
 
     def calculate_elem_conn(self):
         """
