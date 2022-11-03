@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
+"""
+|------------------------------------------------------------------|
+|---------------------  Instructions  -----------------------------|
+|------------------------------------------------------------------|
+This script creates ESMF unstructured GRID (mesh file) from a netcdf
+file with valid lats and lons. Provided lats and lons can be 1D or 2D.
 
+For example for running WRF-CTSM cases, the user can create a mesh
+file for their domain :
+    ./mesh_maker.py --input wrfinput_d01 --output my_region
+        --lat XLAT --lon XLONG --verbose
+
+"""
 import os
 import sys
 import logging
