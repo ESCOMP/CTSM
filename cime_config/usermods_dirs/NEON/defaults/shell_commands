@@ -4,6 +4,7 @@
 ./xmlchange DATM_PRESAERO=SSP3-7.0
 ./xmlchange DATM_PRESNDEP=SSP3-7.0
 ./xmlchange DATM_PRESO3=SSP3-7.0
+./xmlchange MPILIB=mpi-serial
 ./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2021,DATM_YR_START=2018
 compset=`./xmlquery COMPSET --value`
 # For a transient case run the whole length and don't cycle
