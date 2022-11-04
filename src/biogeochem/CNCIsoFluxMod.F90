@@ -18,7 +18,7 @@ module CNCIsoFluxMod
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
-  use clm_varctl                         , only : use_crop, iulog
+  use clm_varctl                         , only : use_crop
   use clm_varctl                         , only : use_grainproduct
   !
   implicit none
@@ -1503,7 +1503,6 @@ contains
                            hrv_livecrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
                       harvest_c_to_cwdc(c,j) = harvest_c_to_cwdc(c,j) + &
                            hrv_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
-
                       ! storage harvest mortality carbon fluxes
                       harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
                            hrv_leafc_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j)

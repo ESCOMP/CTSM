@@ -326,7 +326,7 @@ contains
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        call CNOffsetLitterfall(num_soilp, filter_soilp, &
-            crop_inst,cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+            crop_inst,cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,soilbiogeochem_state_inst,num_soilc, filter_soilc)
 
        call CNBackgroundLitterfall(num_soilp, filter_soilp, &
             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
@@ -339,9 +339,9 @@ contains
 
        ! gather all patch-level litterfall fluxes to the column for litter C and N inputs
 
-       call CNLitterToColumn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            cnveg_state_inst,soilbiogeochem_state_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
-            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, leaf_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full), & 
+       call CNLitterToColumn(bounds, num_soilc, filter_soilc,  &
+            cnveg_state_inst,cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+            leaf_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full), & 
             froot_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full), stem_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full))
     else
        call endrun( 'bad phase' )
@@ -2015,7 +2015,6 @@ contains
                             if (tlai(p) <= 0._r8 .and. harvest_flag(p) == 0._r8) then ! plant never emerged or died
                                croplive(p) = .false.
                                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
-                               write(iulog,*) 'WARNING: croplive is set to false and harvdate to jday:',harvdate(p)
                                crop_seedc_to_leaf(c)   = crop_seedc_to_leaf(c) - leafc_xfer(p)/dt
                                crop_seedc_to_froot(c)  = crop_seedc_to_froot(c) - frootc_xfer(p)/dt
                                crop_seedn_to_leaf(c)   = crop_seedn_to_leaf(c) - leafn_xfer(p)/dt
@@ -3068,7 +3067,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNOffsetLitterfall (num_soilp, filter_soilp, &
-       crop_inst,cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+       crop_inst,cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, soilbiogeochem_state_inst,num_soilc,filter_soilc)
     !
     ! !DESCRIPTION:
     ! Determines the flux of C and N from displayed pools to litter
@@ -3079,6 +3078,7 @@ contains
     use CNSharedParamsMod, only : use_fun
     use clm_varctl       , only : CNratio_floating
     use clm_time_manager , only : get_curr_date, get_curr_calday, get_days_per_year, is_beg_curr_year    
+    use dynHarvestMod    , only : CNHarvestPftToColumn 
     !
     ! !ARGUMENTS:
     integer                       , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -3089,6 +3089,9 @@ contains
     type(cnveg_nitrogenstate_type), intent(in)    :: cnveg_nitrogenstate_inst
     type(cnveg_carbonflux_type)   , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type) , intent(inout) :: cnveg_nitrogenflux_inst
+    type(soilbiogeochem_state_type) , intent(in)  :: soilbiogeochem_state_inst 
+    integer                       , intent(in)    :: num_soilc       ! number of soil columns in filter
+    integer                       , intent(in)    :: filter_soilc(:) ! filter for soil columns
     !
     ! !LOCAL VARIABLES:
     integer :: p, c         ! indices
@@ -3272,12 +3275,12 @@ contains
            if (perennial(ivt(p)) == 1._r8) then
               if (grainc(p) > 0._r8) then
                  t1 = 1.0_r8 / dt
-                 ! replenish seed deficit (needed to balance seedc used for orchard establishment
+                 ! replenish seed deficit (needed to balance seedc used for orchard establishment)
                  grainc_to_seed(p) = t1 * min(-cropseedc_deficit(p), grainc(p))
                  grainn_to_seed(p) = t1 * min(-cropseedn_deficit(p), grainn(p))
                  ! send remaining grainc to food product pool 
-                 grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p)
-                 grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p)
+                 grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) - grainc_to_seed(p)
+                 grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p) - grainn_to_seed(p)
                  
               end if
            end if
@@ -3425,15 +3428,14 @@ contains
          ! lifespan is reached
          ! (introduced in CLM-Palm (Fan et al. 2015), and adopted here by O.Dombrowski)   
          if (offset2_flag(p) == 1._r8 .and. perennial(ivt(p)) == 1._r8) then
-
             ! Apply all harvest at the start of the year, otherwise will get
             ! error because of non zero delta mid-year for dribbler
             ! hrv_xsmrpool_to_atm_c
             if (is_beg_curr_year()) then
-               croplive = .false.
+               croplive(p) = .false.
                t1 = 1.0_r8 / dt
             else
-               croplive = .true.
+               croplive(p) = .true.
                t1 = 0._r8
             end if 
             ! clear-cut carbon fluxes, remove all displayed/storage/transfer pools
@@ -3486,6 +3488,13 @@ contains
             
             ! retransn pools
             hrv_retransn_to_litter(p)                 = retransn(p)                  * t1
+
+            ! summarize all fuxes at orchard rotation to column level (added by O. Dombrowski adapted based on CLM-Palm (Fan et al.(2015))
+            if (.not. croplive(p)) then   
+                call CNHarvestPftToColumn (num_soilc, filter_soilc, &
+                    soilbiogeochem_state_inst, CNVeg_carbonflux_inst, cnveg_nitrogenflux_inst)
+            end if
+
 
          end if ! end orchard rotation
       end do ! end patch loop
@@ -3788,9 +3797,9 @@ contains
   end subroutine CNGrainToProductPools
 
   !-----------------------------------------------------------------------
-  subroutine CNLitterToColumn (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       cnveg_state_inst,soilbiogeochem_state_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
-       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, leaf_prof_patch, froot_prof_patch, stem_prof_patch)
+  subroutine CNLitterToColumn (bounds, num_soilc, filter_soilc, &
+       cnveg_state_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+       leaf_prof_patch, froot_prof_patch, stem_prof_patch)
     !
     ! !DESCRIPTION:
     ! called at the end of cn_phenology to gather all patch-level litterfall fluxes
@@ -3800,20 +3809,14 @@ contains
     use clm_varpar , only : max_patch_per_col,maxpatch_pft, nlevdecomp
     use pftconMod  , only : npcropmin
     use clm_varctl , only : use_grainproduct
-    use dynHarvestMod , only: CNHarvestPftToColumn
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
     integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                         , intent(in)    :: filter_soilc(:) ! filter for soil columns
-    integer                         , intent(in)    :: num_soilp       ! number of soil patches in filter
-    integer                         , intent(in)    :: filter_soilp(:) ! patch filter for soil points
     type(cnveg_state_type)          , intent(in)    :: cnveg_state_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
-    type(cnveg_carbonstate_type)    , intent(in)    :: cnveg_carbonstate_inst
-    type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
-    type(soilbiogeochem_state_type) , intent(in)    :: soilbiogeochem_state_inst
     real(r8)                        , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
     real(r8)                        , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
     real(r8)                        , intent(in)    :: stem_prof_patch(bounds%begp:,1:) 
@@ -4051,12 +4054,6 @@ contains
         end do
 
       end do
-
-      ! summarize all fuxes at orchard rotation to column level (added by O. Dombrowski adapted based on CLM-Palm (Fan et al.(2015))
-      if ( perennial(ivt(p)) == 1._r8 .and. offset2_flag(p) == 1._r8) then
-         call CNHarvestPftToColumn (num_soilc, filter_soilc, &
-              soilbiogeochem_state_inst, CNVeg_carbonflux_inst, cnveg_nitrogenflux_inst)
-      end if
 
     end associate
 

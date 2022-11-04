@@ -83,7 +83,6 @@ contains
        do g = bounds%begg, bounds%endg
           cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_leaf_grc(g) * dt
           cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_deadstem_grc(g) * dt
-          write(iulog,*) 'dwt_seedc is calculated',cs_veg%seedc_grc(g)
        end do
 
     end if
@@ -523,7 +522,6 @@ contains
                  cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%grain_xsmr_patch(p)*dt
               end if
               if (harvdate(p) < 999) then ! beginning at harvest, send to atm
-                 write(iulog,*) 'entering harvdate < 999 in CNCStateUpdate1Mod, date is:', harvdate(p)
                  ! TODO (mv, 11-02-2014) the following lines are why the cf_veg is
                  ! an intent(inout)
                  ! fluxes should not be updated in this module - not sure where
