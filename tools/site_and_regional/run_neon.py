@@ -525,7 +525,7 @@ class NeonSite:
             with Case(base_case_root, read_only=False) as basecase:
                 print("---- cloning the base case in {}".format(case_root))
                 basecase.create_clone(
-                    case_root, keepexe=True, user_mods_dirs=user_mods_dirs
+                    case_root, keepexe=True
                 )
 
         with Case(case_root, read_only=False) as case:
@@ -561,13 +561,6 @@ class NeonSite:
                         return
                 case.set_value("CALENDAR", "GREGORIAN")
                 case.set_value("RESUBMIT", 0)
-            # Turning all this off for usermod controsl over start, align, and end year
-            else:
-                # for the spinup we want the start and end on year boundaries
-                if self.end_month == 12:
-                    case.set_value("DATM_YR_END", self.end_year)
-                else:
-                    case.set_value("DATM_YR_END", self.end_year - 1)
             
             if not rundir:
                 rundir = case.get_value("RUNDIR")
