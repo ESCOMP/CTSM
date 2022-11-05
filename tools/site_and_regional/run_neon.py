@@ -524,6 +524,12 @@ class NeonSite:
             # read_only = False should not be required here
             with Case(base_case_root, read_only=False) as basecase:
                 print("---- cloning the base case in {}".format(case_root))
+                #
+                # EBK: 11/05/2022 -- Note keeping the user_mods_dirs argument is important. Although
+                # it causes some of the user_nl_* files to have duplicated inputs. It also ensures
+                # that the shell_commands file is copied, as well as taking care of the DATM inputs.
+                # See https://github.com/ESCOMP/CTSM/pull/1872#pullrequestreview-1169407493
+                #
                 basecase.create_clone(
                     case_root, keepexe=True, user_mods_dirs=user_mods_dirs
                 )
