@@ -525,7 +525,7 @@ class NeonSite:
             with Case(base_case_root, read_only=False) as basecase:
                 print("---- cloning the base case in {}".format(case_root))
                 basecase.create_clone(
-                    case_root, keepexe=True
+                    case_root, keepexe=True, user_mods_dirs=user_mods_dirs
                 )
 
         with Case(case_root, read_only=False) as case:
