@@ -626,11 +626,11 @@ class NeonSite:
         case.set_value("RUN_REFDATE", refdate)
         if case_root.endswith(".postad"):
             case.set_value("RUN_STARTDATE", refdate)
-        else:
-            case.set_value(
-                "RUN_STARTDATE",
-                "{yr:04d}-{mo:02d}-01".format(yr=self.start_year, mo=self.start_month),
-            )
+        #else:
+            #case.set_value(
+            #    "RUN_STARTDATE",
+            #    "{yr:04d}-{mo:02d}-01".format(yr=self.start_year, mo=self.start_month),
+            #)
         return True
 
     def modify_user_nl(self, case_root, run_type, rundir):
