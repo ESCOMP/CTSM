@@ -388,16 +388,21 @@ contains
          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
-
     call c2g( bounds, &
          water_inst%waterfluxbulk_inst%qflx_sfc_irrig_col (bounds%begc:bounds%endc), &
          water_inst%waterlnd2atmbulk_inst%qirrig_grc(bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
     call c2g( bounds, &
+         water_inst%waterfluxbulk_inst%qflx_sectorwater_col (bounds%begc:bounds%endc), &
+         water_inst%waterlnd2atmbulk_inst%qsectorwater_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+
+    call c2g( bounds, &
          water_inst%waterlnd2atmbulk_inst%qflx_ice_runoff_col(bounds%begc:bounds%endc),  &
          water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+
     do g = bounds%begg, bounds%endg
        water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(g) = &
          water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(g) - &
