@@ -2,6 +2,7 @@
 This module includes the definition and functions for defining a Grid or Mesh.
 This enables creating ESMF mesh file (unstructured grid file)for valid 1D or 2D lats and lons.
 """
+import os
 import sys
 import logging
 import argparse
@@ -19,6 +20,8 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import cartopy.feature as cfeature
+import matplotlib.patches as mpatches
+
 
 logger = logging.getLogger(__name__)
 
@@ -372,7 +375,7 @@ class MeshType:
         # -- calculate element connections
         self.calculate_elem_conn()
 
-        center_coords = da.stack(
+        self.center_coords = da.stack(
             [
                 self.center_lon2d.T.reshape((-1,)).T,
                 self.center_lat2d.T.reshape((-1,)).T,
@@ -404,7 +407,7 @@ class MeshType:
             attrs={"long_name": "Number of nodes per element"},
         )
         ds_out["centerCoords"] = xr.DataArray(
-            center_coords, dims=("elementCount", "coordDim"), attrs={"units": self.unit}
+            self.center_coords, dims=("elementCount", "coordDim"), attrs={"units": self.unit}
         )
 
         # -- add mask
@@ -446,53 +449,114 @@ class MeshType:
             ds_out.to_netcdf(mesh_fname)
             logger.info("Successfully created ESMF Mesh file : %s", mesh_fname)
 
-        plot_fname = mesh_fname +'.png'
-        self.make_plot = False
+        self.make_plot = True
 
         if self.make_plot:
-            self.make_mesh_plot(plot_fname)
+            plot_regional = (
+                os.path.splitext(mesh_fname)[0]
+                + '_regional'
+                + ".png")
 
-    def make_mesh_plot(self, plot_fname):                                                                                                                                                                  
-        """ 
-        Create an ESMF mesh file for the mesh
+            plot_global = (
+                os.path.splitext(mesh_fname)[0]
+                + '_global'
+                + ".png")
+
+            self.make_mesh_plot(plot_regional, plot_global)
+
+
+    def make_mesh_plot(self, plot_regional, plot_global):                                                                                                                                                                  
+        """
+        Create a plot for the ESMF mesh file
 
         Parameters
         ----------
-        plot_fname : str
-            The path to write the ESMF meshfile plot
+        plot_regional : str
+            The path to write the ESMF meshfile regional plot
+        plot_global : str
+            The path to write the ESMF meshfile global plot
         """
-        plt.figure(num=None, figsize=(25, 11),  facecolor='w', edgecolor='k')
+
+        # -- regional plot
+        plt.figure(num=None, figsize=(15, 13),  facecolor='w', edgecolor='k')
         ax = plt.axes(projection=ccrs.PlateCarree())
 
-
-        ax.coastlines()
-        ax.gridlines(color="black", linestyle="dotted")
+        ax.add_feature(cfeature.COASTLINE, edgecolor="black")
+        ax.add_feature(cfeature.BORDERS, edgecolor="black")
         ax.add_feature(cfeature.OCEAN)
         ax.add_feature(cfeature.BORDERS)
         ax.add_feature(cfeature.LAND, edgecolor='black')
         ax.add_feature(cfeature.LAKES, edgecolor='black')
         ax.add_feature(cfeature.RIVERS)
+        ax.gridlines(color="black", linestyle="dotted",  draw_labels=True,)
 
-        x, y = self.node_coords.T
-        print (x.shape)
-        print (y.shape)
-        df = pd.DataFrame({'x':x, 'y':y}, index = [0])
-        grouped_x = df.groupby('x')
+        #-- plot corner coordinates
+        clon, clat = self.node_coords.T.compute()
+        df = pd.DataFrame({'lon':list(clon), 'lat':list(clat)})
+
+        grouped_x = df.groupby('lon')
         for name, group in grouped_x:
-            plt.plot (group['x']-180, group['y'],color='black', marker='o')
-        grouped_y = df.groupby('y')
+            plt.plot (group['lon'], group['lat'],color='black', linewidth =
+                    0.5, transform = ccrs.PlateCarree())
+        grouped_y = df.groupby('lat')
         for name, group in grouped_y:
-            plt.plot (group['x']-180, group['y'],color='black', marker='o')
+            plt.plot (group['lon'], group['lat'],color='black', linewidth =
+                    0.5, transform = ccrs.PlateCarree())
 
-        x, y = this_mesh.center_coords.T
+        #-- plot center coordinates
+        clon, clat = self.center_coords.T.compute()
 
-        plt.scatter (x-180,y, color='red', marker='x')
-        plt.savefig (plot_fname, bbox_inches='tight')
+        plt.scatter (clon,clat, color='tomato', marker='x')
+        lc_colors = {
+            'Corner Coordinates': "black", # value=0
+            'Center Coordinates': "tomato",    # value=1
 
-        logger.info("Successfully created plots for ESMF Mesh file : %s", plot_fname)
+        }
+        labels, handles = zip(*[(k, mpatches.Rectangle((0, 0), 1, 1, facecolor=v)) for k,v in lc_colors.items()])
+
+        ax.legend(handles, labels)
+
+        plt.savefig (plot_regional, bbox_inches='tight')
+
+        logger.info("Successfully created regional plots for ESMF Mesh file : %s", plot_regional)
 
 
+        # -- global plot
+        fig = plt.figure(num=None, figsize=(15, 10),  facecolor='w', edgecolor='k')
 
+        ax = fig.add_subplot(1,1,1, projection=ccrs.Robinson())
 
+        ax.add_feature(cfeature.COASTLINE, edgecolor="black")
+        ax.add_feature(cfeature.BORDERS, edgecolor="black")
+        ax.add_feature(cfeature.OCEAN)
+        ax.add_feature(cfeature.BORDERS)
+        ax.add_feature(cfeature.LAND, edgecolor='black')
+        ax.add_feature(cfeature.LAKES, edgecolor='black')
+        ax.add_feature(cfeature.RIVERS)
+        ax.gridlines(color="black", linestyle="dotted",  draw_labels=True,)
+        ax.set_global()
 
+        #-- plot corner coordinates
+        clon, clat = self.node_coords.T.compute()
+        df = pd.DataFrame({'lon':list(clon), 'lat':list(clat)})
+
+        grouped_x = df.groupby('lon')
+        for name, group in grouped_x:
+            plt.plot (group['lon'], group['lat'],color='black', transform=ccrs.PlateCarree(), linewidth =
+                    0.5)
+        grouped_y = df.groupby('lat')
+        for name, group in grouped_y:
+            plt.plot (group['lon'], group['lat'],color='black', transform=ccrs.PlateCarree(), linewidth =
+                    0.5)
+
+        #-- plot center coordinates
+        clon, clat = self.center_coords.T.compute()
+
+        plt.scatter (clon,clat, color='tomato', marker='o',s = 1, transform=ccrs.PlateCarree())
+
+        ax.legend(handles, labels)
+
+        plt.savefig (plot_global, bbox_inches='tight')
+
+        logger.info("Successfully created regional plots for ESMF Mesh file : %s", plot_global)
 
