@@ -25,6 +25,7 @@ import matplotlib.patches as mpatches
 
 logger = logging.getLogger(__name__)
 
+
 class MeshType:
     """
     An object for describing mesh or grid files.
@@ -100,8 +101,8 @@ class MeshType:
                 Unrecognized grid! \n
                 The dimension of latitude should be either 1 or 2 but it is {}.
                 """.format(
-                    self.lat_dims
-                )
+                self.lat_dims
+            )
             raise argparse.ArgumentTypeError(err_msg)
 
         if self.lon_dims not in [1, 2]:
@@ -109,8 +110,8 @@ class MeshType:
                 Unrecognized grid! \n
                 The dimension of longitude should be either 1 or 2 but it is {}.
                 """.format(
-                    self.lon_dims
-                )
+                self.lon_dims
+            )
             raise argparse.ArgumentTypeError(err_msg)
 
     def create_artificial_mask(self):
@@ -127,9 +128,7 @@ class MeshType:
             mask = np.ones([lons_size, lats_size], dtype=np.int8)
         elif self.lat_dims == 2:
             # -- 2D mask
-            mask = np.ones(
-                self.center_lats.shape, dtype=np.int8
-            )
+            mask = np.ones(self.center_lats.shape, dtype=np.int8)
         mask_da = da.from_array(mask)
         self.mask = mask_da
 
@@ -294,26 +293,26 @@ class MeshType:
 
         self.node_coords = node_coords
 
-        # -- error check to avoid issues later 
+        # -- error check to avoid issues later
         if self.node_coords.shape[0] != elem_conn_size:
             logger.warning(
                 "The size of unique coordinate pairs is {} but expected size is {}!".format(
                     self.node_coords.shape[0], elem_conn_size
                 )
             )
-            logger.warning ("This may result your simulation to crash later.")
+            logger.warning("This may result your simulation to crash later.")
 
-             # Identify unique nodes
-            #dtr = np.pi/180
-            #index_radius = 1e-6
-            #all_unique_nodes = []
-            #num_all_nodes = corner_pairs.shape[0]
- 
-            #all_unique_nodes = []    
-            #for i in range(corner_pairs.shape[0]):
+            # Identify unique nodes
+            # dtr = np.pi/180
+            # index_radius = 1e-6
+            # all_unique_nodes = []
+            # num_all_nodes = corner_pairs.shape[0]
+
+            # all_unique_nodes = []
+            # for i in range(corner_pairs.shape[0]):
             #    if np.mod(i,100) == 0:
             #        print('i in num_all_nodes ',i,corner_pairs)
- 
+
             #    dlon = corner_pairs[i+1:,0] - corner_pairs[i,0]
             #    dlat = corner_pairs[i+1:,1] - corner_pairs[i,1]
             #    dlon = dtr*dlon
@@ -323,15 +322,13 @@ class MeshType:
             #    npoints = np.sum(np.where(dist < index_radius,1,0))
             #    if npoints < 1:
             #        all_unique_nodes.append(corner_pairs[i,:])
- 
-            #node_coords = np.vstack(all_unique_nodes)
-            #self.node_coords = node_coords
- 
-            #if node_coords.shape[0] != elem_conn_size:
+
+            # node_coords = np.vstack(all_unique_nodes)
+            # self.node_coords = node_coords
+
+            # if node_coords.shape[0] != elem_conn_size:
             #    print ("khar!")
             #    sys.exit()
-
-
 
     def calculate_elem_conn(self):
         """
@@ -407,7 +404,9 @@ class MeshType:
             attrs={"long_name": "Number of nodes per element"},
         )
         ds_out["centerCoords"] = xr.DataArray(
-            self.center_coords, dims=("elementCount", "coordDim"), attrs={"units": self.unit}
+            self.center_coords,
+            dims=("elementCount", "coordDim"),
+            attrs={"units": self.unit},
         )
 
         # -- add mask
@@ -435,7 +434,7 @@ class MeshType:
         if self.mesh_name:
             ds_out.attrs["title"] = "ESMF unstructured grid file  " + self.mesh_name
         else:
-            ds_out.attrs["title"] = "ESMF unstructured grid file  " 
+            ds_out.attrs["title"] = "ESMF unstructured grid file  "
         ds_out.attrs["gridType"] = "unstructured mesh"
         ds_out.attrs["version"] = "0.9"
         ds_out.attrs["conventions"] = "ESMFMESH"
@@ -452,20 +451,13 @@ class MeshType:
         self.make_plot = True
 
         if self.make_plot:
-            plot_regional = (
-                os.path.splitext(mesh_fname)[0]
-                + '_regional'
-                + ".png")
+            plot_regional = os.path.splitext(mesh_fname)[0] + "_regional" + ".png"
 
-            plot_global = (
-                os.path.splitext(mesh_fname)[0]
-                + '_global'
-                + ".png")
+            plot_global = os.path.splitext(mesh_fname)[0] + "_global" + ".png"
 
             self.make_mesh_plot(plot_regional, plot_global)
 
-
-    def make_mesh_plot(self, plot_regional, plot_global):                                                                                                                                                                  
+    def make_mesh_plot(self, plot_regional, plot_global):
         """
         Create a plot for the ESMF mesh file
 
@@ -478,85 +470,121 @@ class MeshType:
         """
 
         # -- regional plot
-        plt.figure(num=None, figsize=(15, 13),  facecolor='w', edgecolor='k')
+        plt.figure(num=None, figsize=(15, 13), facecolor="w", edgecolor="k")
         ax = plt.axes(projection=ccrs.PlateCarree())
 
         ax.add_feature(cfeature.COASTLINE, edgecolor="black")
         ax.add_feature(cfeature.BORDERS, edgecolor="black")
         ax.add_feature(cfeature.OCEAN)
         ax.add_feature(cfeature.BORDERS)
-        ax.add_feature(cfeature.LAND, edgecolor='black')
-        ax.add_feature(cfeature.LAKES, edgecolor='black')
+        ax.add_feature(cfeature.LAND, edgecolor="black")
+        ax.add_feature(cfeature.LAKES, edgecolor="black")
         ax.add_feature(cfeature.RIVERS)
-        ax.gridlines(color="black", linestyle="dotted",  draw_labels=True,)
+        ax.gridlines(
+            color="black",
+            linestyle="dotted",
+            draw_labels=True,
+        )
 
-        #-- plot corner coordinates
+        # -- plot corner coordinates
         clon, clat = self.node_coords.T.compute()
-        df = pd.DataFrame({'lon':list(clon), 'lat':list(clat)})
+        df = pd.DataFrame({"lon": list(clon), "lat": list(clat)})
 
-        grouped_x = df.groupby('lon')
+        grouped_x = df.groupby("lon")
         for name, group in grouped_x:
-            plt.plot (group['lon'], group['lat'],color='black', linewidth =
-                    0.5, transform = ccrs.PlateCarree())
-        grouped_y = df.groupby('lat')
+            plt.plot(
+                group["lon"],
+                group["lat"],
+                color="black",
+                linewidth=0.5,
+                transform=ccrs.PlateCarree(),
+            )
+        grouped_y = df.groupby("lat")
         for name, group in grouped_y:
-            plt.plot (group['lon'], group['lat'],color='black', linewidth =
-                    0.5, transform = ccrs.PlateCarree())
+            plt.plot(
+                group["lon"],
+                group["lat"],
+                color="black",
+                linewidth=0.5,
+                transform=ccrs.PlateCarree(),
+            )
 
-        #-- plot center coordinates
+        # -- plot center coordinates
         clon, clat = self.center_coords.T.compute()
 
-        plt.scatter (clon,clat, color='tomato', marker='x')
+        plt.scatter(clon, clat, color="tomato", marker="x")
         lc_colors = {
-            'Corner Coordinates': "black", # value=0
-            'Center Coordinates': "tomato",    # value=1
-
+            "Corner Coordinates": "black",  # value=0
+            "Center Coordinates": "tomato",  # value=1
         }
-        labels, handles = zip(*[(k, mpatches.Rectangle((0, 0), 1, 1, facecolor=v)) for k,v in lc_colors.items()])
+        labels, handles = zip(
+            *[
+                (k, mpatches.Rectangle((0, 0), 1, 1, facecolor=v))
+                for k, v in lc_colors.items()
+            ]
+        )
 
         ax.legend(handles, labels)
 
-        plt.savefig (plot_regional, bbox_inches='tight')
+        plt.savefig(plot_regional, bbox_inches="tight")
 
-        logger.info("Successfully created regional plots for ESMF Mesh file : %s", plot_regional)
-
+        logger.info(
+            "Successfully created regional plots for ESMF Mesh file : %s", plot_regional
+        )
 
         # -- global plot
-        fig = plt.figure(num=None, figsize=(15, 10),  facecolor='w', edgecolor='k')
+        fig = plt.figure(num=None, figsize=(15, 10), facecolor="w", edgecolor="k")
 
-        ax = fig.add_subplot(1,1,1, projection=ccrs.Robinson())
+        ax = fig.add_subplot(1, 1, 1, projection=ccrs.Robinson())
 
         ax.add_feature(cfeature.COASTLINE, edgecolor="black")
         ax.add_feature(cfeature.BORDERS, edgecolor="black")
         ax.add_feature(cfeature.OCEAN)
         ax.add_feature(cfeature.BORDERS)
-        ax.add_feature(cfeature.LAND, edgecolor='black')
-        ax.add_feature(cfeature.LAKES, edgecolor='black')
+        ax.add_feature(cfeature.LAND, edgecolor="black")
+        ax.add_feature(cfeature.LAKES, edgecolor="black")
         ax.add_feature(cfeature.RIVERS)
-        ax.gridlines(color="black", linestyle="dotted",  draw_labels=True,)
+        ax.gridlines(
+            color="black",
+            linestyle="dotted",
+            draw_labels=True,
+        )
         ax.set_global()
 
-        #-- plot corner coordinates
+        # -- plot corner coordinates
         clon, clat = self.node_coords.T.compute()
-        df = pd.DataFrame({'lon':list(clon), 'lat':list(clat)})
+        df = pd.DataFrame({"lon": list(clon), "lat": list(clat)})
 
-        grouped_x = df.groupby('lon')
+        grouped_x = df.groupby("lon")
         for name, group in grouped_x:
-            plt.plot (group['lon'], group['lat'],color='black', transform=ccrs.PlateCarree(), linewidth =
-                    0.5)
-        grouped_y = df.groupby('lat')
+            plt.plot(
+                group["lon"],
+                group["lat"],
+                color="black",
+                transform=ccrs.PlateCarree(),
+                linewidth=0.5,
+            )
+        grouped_y = df.groupby("lat")
         for name, group in grouped_y:
-            plt.plot (group['lon'], group['lat'],color='black', transform=ccrs.PlateCarree(), linewidth =
-                    0.5)
+            plt.plot(
+                group["lon"],
+                group["lat"],
+                color="black",
+                transform=ccrs.PlateCarree(),
+                linewidth=0.5,
+            )
 
-        #-- plot center coordinates
+        # -- plot center coordinates
         clon, clat = self.center_coords.T.compute()
 
-        plt.scatter (clon,clat, color='tomato', marker='o',s = 1, transform=ccrs.PlateCarree())
+        plt.scatter(
+            clon, clat, color="tomato", marker="o", s=1, transform=ccrs.PlateCarree()
+        )
 
         ax.legend(handles, labels)
 
-        plt.savefig (plot_global, bbox_inches='tight')
+        plt.savefig(plot_global, bbox_inches="tight")
 
-        logger.info("Successfully created regional plots for ESMF Mesh file : %s", plot_global)
-
+        logger.info(
+            "Successfully created regional plots for ESMF Mesh file : %s", plot_global
+        )
