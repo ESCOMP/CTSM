@@ -49,7 +49,7 @@ Module HydrologyNoDrainageMod
 contains
 
    !-----------------------------------------------------------------------
-   subroutine CalcAndWithdrawSectorWaterFluxes(bounds, soilhydrology_inst, sectorwater_inst, water_inst, volr, rof_prognostic)
+   subroutine CalcAndWithdrawSectorWaterFluxes(bounds, num_soilp, filter_soilp, num_natvegp, filter_natvegp, soilhydrology_inst, sectorwater_inst, water_inst, volr, rof_prognostic)
       !
       ! !DESCRIPTION:
       ! Calculates sectorwal water withdrawal, consumption and return flow fluxes;
@@ -57,9 +57,18 @@ contains
       !
       ! !USES:
       use clm_time_manager    , only : is_beg_curr_day
+      use ColumnType   , only : col
+      use PatchType    , only : patch
+      use LandunitType , only : lun
+      use landunit_varcon, only : istsoil
+
       !
       ! !ARGUMENTS:
-      integer  :: g  ! gridcell index
+      integer  :: g, p, l, c  ! gridcell index
+      integer                        , intent(in)    :: num_soilp            ! number of points in filter_soilp
+      integer                        , intent(in)    :: filter_soilp(:)      ! patch filter for soil points
+      integer                        , intent(in)    :: num_natvegp          ! number of points in filter_natvegp
+      integer                        , intent(in)    :: filter_natvegp(:)    ! patch filter for natural vegetation points
       type(bounds_type)              , intent(in)    :: bounds
       type(soilhydrology_type)       , intent(in)    :: soilhydrology_inst
       type(sectorwater_type)         , intent(inout) :: sectorwater_inst
@@ -67,10 +76,13 @@ contains
       
       ! river water volume (m3) (ignored if rof_prognostic is .false.)
       real(r8), intent(in) :: volr( bounds%begg: )
+
+      ! gridcell total consumption related to human water usage
+      real(r8), pointer :: total_cons(:)
       
       ! whether we're running with a prognostic ROF component; this is needed to determine
       ! whether we can limit irrigation based on river volume.
-      logical, intent(in)  :: rof_prognostic
+      logical, intent(in) :: rof_prognostic
       
       ! !LOCAL VARIABLES:
       integer :: i  ! tracer index
@@ -78,9 +90,13 @@ contains
       character(len=*), parameter :: subname = 'CalcAndWithdrawSectorWaterFluxes'
       !-----------------------------------------------------------------------
       
+      
       ! Read withdrawal and consumption data from input surfdata
       ! Compute the withdrawal, consumption and return flow (expected and actual)
       ! To limit computation time, call this subroutine only once a day (we assume uniform demand throughout a day)
+
+      allocate(total_cons(bounds%begg:bounds%endg))
+
       if (is_beg_curr_day()) then
          call sectorwater_inst%CalcSectorWaterNeeded(bounds, volr, rof_prognostic)
       endif
@@ -152,7 +168,53 @@ contains
          else
             water_inst%waterlnd2atmbulk_inst%qmin_rf_grc(g) = sectorwater_inst%min_rf_actual_grc(g)
          endif
+
+         if (isnan(sectorwater_inst%dom_cons_actual_grc(g))) then
+            sectorwater_inst%dom_cons_actual_grc(g) = 0._r8
+         endif
+   
+         if (isnan(sectorwater_inst%liv_cons_actual_grc(g))) then
+            sectorwater_inst%liv_cons_actual_grc(g) = 0._r8
+         endif
+   
+         if (isnan(sectorwater_inst%elec_cons_actual_grc(g))) then
+            sectorwater_inst%elec_cons_actual_grc(g) = 0._r8
+         endif
+   
+         if (isnan(sectorwater_inst%mfc_cons_actual_grc(g))) then
+            sectorwater_inst%mfc_cons_actual_grc(g) = 0._r8
+         endif
+   
+         if (isnan(sectorwater_inst%min_cons_actual_grc(g))) then
+            sectorwater_inst%min_cons_actual_grc(g) = 0._r8
+         endif
+         
+         ! Sector water total consumption for the gridcell g:
+         total_cons(g) = sectorwater_inst%dom_cons_actual_grc(g) + sectorwater_inst%liv_cons_actual_grc(g) + sectorwater_inst%elec_cons_actual_grc(g) + &
+                         sectorwater_inst%mfc_cons_actual_grc(g)  + sectorwater_inst%min_cons_actual_grc(g)
+
       end do
+
+      ! Here I am not sure if it is needed to have loop over all tracers (it seems that the tracers mechanism is not maintained anymore)
+      ! So I can just associate : w => water_inst%bulk_and_tracers(1) which correspond to bulk water
+      do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+         associate(w => water_inst%bulk_and_tracers(i))
+
+         do c = bounds%begc,bounds%endc
+            g = col%gridcell(c)
+
+            if (col%lun_itype(c) == istsoil) then
+               w%waterflux_inst%qflx_sectorwater_col(c) = total_cons(g)
+            else
+               w%waterflux_inst%qflx_sectorwater_col(c) = 0._r8
+            end if
+
+         end do
+         end associate
+      end do
+
+   deallocate(total_cons)
+
    end subroutine CalcAndWithdrawSectorWaterFluxes
 
 
