@@ -68,7 +68,7 @@ def get_parser():
 
     parser.add_argument(
         "--lat",
-        help="Name of latitude varibale on netcdf input file. If none given, looks to find variables that include 'lat'.",
+        help="Name of latitude varibale on netcdf input file.",
         action="store",
         dest="lat_name",
         type=str,
@@ -76,7 +76,7 @@ def get_parser():
     )
     parser.add_argument(
         "--lon",
-        help="Name of latitude varibale on netcdf input file. If none given, looks to find variables that include 'lon'.",
+        help="Name of latitude varibale on netcdf input file.",
         action="store",
         dest="lon_name",
         type=str,
