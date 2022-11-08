@@ -459,32 +459,26 @@ class MeshType:
         )
 
         # -- plot corner coordinates
-        clon, clat = self.node_coords.T.compute()
-        df = pd.DataFrame({"lon": list(clon), "lat": list(clat)})
+        clats, clons = self.node_coords.T.compute()
+        elem_conn_vals = self.elem_conn.compute()
+        element_counts = elem_conn_vals.shape[0]
 
-        grouped_x = df.groupby("lon")
-        for name, group in grouped_x:
-            plt.plot(
-                group["lon"],
-                group["lat"],
-                color="black",
-                linewidth=0.5,
-                transform=ccrs.PlateCarree(),
-            )
-        grouped_y = df.groupby("lat")
-        for name, group in grouped_y:
-            plt.plot(
-                group["lon"],
-                group["lat"],
-                color="black",
-                linewidth=0.5,
-                transform=ccrs.PlateCarree(),
-            )
+        for index in range(element_counts):
+            conns = [ int(x)-1 for x in elem_conn_vals[index]]
+
+            lat_corners = clats[conns]
+            lon_corners = clons[conns]
+            poly_corners = np.zeros((len(lat_corners), 2))
+            poly_corners[:,1] = lon_corners
+            poly_corners[:,0] = lat_corners
+            poly = mpatches.Polygon(poly_corners, closed=True, ec='black', lw=1, transform=ccrs.PlateCarree(), zorder =
+                    10, facecolor='none')
+            ax.add_patch(poly)
 
         # -- plot center coordinates
         clon, clat = self.center_coords.T.compute()
 
-        plt.scatter(clon, clat, color="tomato", marker="x")
+        ax.scatter(clon, clat, color="tomato", marker="x", transform=ccrs.PlateCarree(), zorder = 11)
         lc_colors = {
             "Corner Coordinates": "black",  # value=0
             "Center Coordinates": "tomato",  # value=1
@@ -524,33 +518,27 @@ class MeshType:
         ax.set_global()
 
         # -- plot corner coordinates
-        clon, clat = self.node_coords.T.compute()
-        df = pd.DataFrame({"lon": list(clon), "lat": list(clat)})
+        clats, clons = self.node_coords.T.compute()
+        elem_conn_vals = self.elem_conn.compute()
+        element_counts = elem_conn_vals.shape[0]
 
-        grouped_x = df.groupby("lon")
-        for name, group in grouped_x:
-            plt.plot(
-                group["lon"],
-                group["lat"],
-                color="black",
-                transform=ccrs.PlateCarree(),
-                linewidth=0.5,
-            )
-        grouped_y = df.groupby("lat")
-        for name, group in grouped_y:
-            plt.plot(
-                group["lon"],
-                group["lat"],
-                color="black",
-                transform=ccrs.PlateCarree(),
-                linewidth=0.5,
-            )
+        for index in range(element_counts):
+            conns = [ int(x)-1 for x in elem_conn_vals[index]]
+
+            lat_corners = clats[conns]
+            lon_corners = clons[conns]
+            poly_corners = np.zeros((len(lat_corners), 2))
+            poly_corners[:,1] = lon_corners
+            poly_corners[:,0] = lat_corners
+            poly = mpatches.Polygon(poly_corners, closed=True, ec='black', transform=ccrs.PlateCarree(), zorder =
+                    10, facecolor='none', linewidth=0.5)
+            ax.add_patch(poly)
 
         # -- plot center coordinates
         clon, clat = self.center_coords.T.compute()
 
-        plt.scatter(
-            clon, clat, color="tomato", marker="o", s=1, transform=ccrs.PlateCarree()
+        ax.scatter(
+            clon, clat, color="tomato", marker="o", s=1, transform=ccrs.PlateCarree(), zorder = 11
         )
 
         ax.legend(handles, labels)
