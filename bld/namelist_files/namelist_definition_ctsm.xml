@@ -1165,7 +1165,8 @@ Toggle for mexico city specific logic.
        group="clm_inparm" value=".false.">
 If true, any ocean (i.e., wetland) points on the surface dataset are
 converted to bare ground (or whatever vegetation is given in that grid
-cell - but typically this will be bare ground).
+cell - but typically this will be bare ground due to lack of vegetation
+in grid cells with 100% ocean).
 </entry>
 
 <entry id="n_dom_pfts" type="integer" category="physics"
