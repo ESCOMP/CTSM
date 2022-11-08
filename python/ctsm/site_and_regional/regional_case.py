@@ -119,6 +119,7 @@ class RegionalCase(BaseCase):
         self.lon2 = lon2
         self.reg_name = reg_name
         self.create_mesh = create_mesh
+        self.mesh = None
         self.out_dir = out_dir
         self.check_region_bounds()
         self.create_tag()
@@ -225,8 +226,7 @@ class RegionalCase(BaseCase):
         logger.info("fsurf_in:  %s", fsurf_in)
         logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
 
-        self.fsurf_out = os.path.join(self.out_dir, fsurf_out)
-        self.fsurf_out = fsurf_out
+        fsurf_out = os.path.join(self.out_dir, fsurf_out)
 
         if self.create_mesh:
             mesh_out = os.path.join(
@@ -357,7 +357,7 @@ class RegionalCase(BaseCase):
 
         f_in = xr.open_dataset(mesh_in)
         self.write_mesh(
-            f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out
+            f_in, subset_element, subset_node, conn_dict, mesh_out
         )
 
     def subset_mesh_at_reg(self, mesh_in):
@@ -368,7 +368,6 @@ class RegionalCase(BaseCase):
         elem_count = len(f_in["elementCount"])
         elem_conn = f_in["elementConn"]
         num_elem_conn = f_in["numElementConn"]
-        center_coords = f_in["centerCoords"]
         node_count = len(f_in["nodeCount"])
         node_coords = f_in["nodeCoords"]
 
@@ -423,8 +422,9 @@ class RegionalCase(BaseCase):
 
         return node_coords, subset_element, subset_node, conn_dict
 
+    @staticmethod
     def write_mesh(
-        self, f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out
+            f_in, subset_element, subset_node, conn_dict, mesh_out
     ):
         """
         This function writes out the subsetted mesh file.
@@ -432,7 +432,6 @@ class RegionalCase(BaseCase):
         corner_pairs = f_in.variables["nodeCoords"][
             subset_node,
         ]
-        dimensions = f_in.dims
         variables = f_in.variables
         global_attributes = f_in.attrs
 
@@ -444,10 +443,10 @@ class RegionalCase(BaseCase):
             subset_element,
         ]
 
-        for ni in range(elem_count):
-            for mi in range(max_node_dim):
-                ndx = int(elem_conn_index[ni, mi])
-                elem_conn_out[ni, mi] = conn_dict[ndx]
+        for n in range(elem_count):
+            for m in range(max_node_dim):
+                ndx = int(elem_conn_index[n, m])
+                elem_conn_out[n, m] = conn_dict[ndx]
 
         num_elem_conn_out = np.empty(
             shape=[
