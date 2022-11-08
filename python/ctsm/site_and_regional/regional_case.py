@@ -357,7 +357,7 @@ class RegionalCase(BaseCase):
 
         f_in = xr.open_dataset(mesh_in)
         self.write_mesh(
-            f_in, subset_element, subset_node, conn_dict, mesh_out
+            f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out
         )
 
     def subset_mesh_at_reg(self, mesh_in):
@@ -424,8 +424,9 @@ class RegionalCase(BaseCase):
 
     @staticmethod
     def write_mesh(
-            f_in, subset_element, subset_node, conn_dict, mesh_out
+            f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out
     ):
+        # pylint: disable=unused-argument
         """
         This function writes out the subsetted mesh file.
         """
