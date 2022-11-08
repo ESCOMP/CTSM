@@ -6,11 +6,11 @@ This module includes the definition for a RegionalCase classs.
 import logging
 import os
 import argparse
+from datetime import datetime
 
 # -- 3rd party libraries
 import numpy as np
 import xarray as xr
-from datetime import datetime
 
 # -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
@@ -82,6 +82,9 @@ class RegionalCase(BaseCase):
     write_shell_commands(namelist)
         write out xml commands to a file for usermods (i.e. shell_commands) for regional settings.
     """
+
+    # pylint: disable=too-many-instance-attributes
+    # the ones we have are useful
 
     def __init__(
         self,
@@ -262,7 +265,7 @@ class RegionalCase(BaseCase):
             logger.info("creating mesh file from surface_dataset: %s", wfile)
             self.extract_mesh_at_reg(f_out)
 
-    def extract_mesh_at_reg(self, ds):
+    def extract_mesh_at_reg(self, ds_in):
         """
         Create Mesh from Surface dataset netcdf file.
         """
@@ -271,8 +274,8 @@ class RegionalCase(BaseCase):
         lat_name = "lsmlat"
         lon_name = "lsmlon"
 
-        lats = ds[lat_name].astype(np.float32)
-        lons = ds[lon_name].astype(np.float32)
+        lats = ds_in[lat_name].astype(np.float32)
+        lons = ds_in[lon_name].astype(np.float32)
 
         this_mesh = MeshType(lats, lons)
         this_mesh.calculate_corners()
