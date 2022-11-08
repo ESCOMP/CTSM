@@ -60,6 +60,18 @@ class TestUtilsAddTag(unittest.TestCase):
         expect_filename = "domain.lnd.360x720_gswp3.0v1_tag_c221031.nc"
         self.assertEqual(expect_filename, file_out, "Expect filenames to be as expected")
 
+    def testSimpleDomain(self):
+        """Simple test of domain dataset name"""
+
+        file_in = "domain.lnd.fv0.9x1.25_gx1v7.151020.nc"
+        with patch("ctsm.utils.date") as mock_date:
+            mock_date.today.side_effect = self._fake_today
+
+            file_out = utils.add_tag_to_filename(file_in, "tag")
+
+        expect_filename = "domain.lnd.fv0.9x1.25_gx1v7_tag_c221031.nc"
+        self.assertEqual(expect_filename, file_out, "Expect filenames to be as expected")
+
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
     unittest.main()
