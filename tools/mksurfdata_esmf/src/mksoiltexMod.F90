@@ -33,7 +33,7 @@ module mksoiltexMod
 contains
 !=================================================================================
 
-  subroutine mksoiltex(file_mesh_i, file_mapunit_i, file_lookup_i, mesh_o, pioid_o, pctlnd_pft_o, rc)
+  subroutine mksoiltex(file_mesh_i, file_mapunit_i, file_lookup_i, mesh_o, pioid_o, rc)
     !
     ! make %sand, %clay, organic carbon content, coarse fragments, bulk density,
     ! and pH measured in H2O
@@ -44,7 +44,6 @@ contains
     character(len=*)  , intent(in)    :: file_lookup_i   ! input data file name
     type(ESMF_Mesh)   , intent(in)    :: mesh_o          ! output mesh
     type(file_desc_t) , intent(inout) :: pioid_o
-    real(r8)          , intent(in)    :: pctlnd_pft_o(:) ! PFT data: % of gridcell for PFTs
     integer           , intent(out)   :: rc
 
     ! local variables
@@ -291,9 +290,9 @@ contains
 
     do no = 1,ns_o
 
-       if (pctlnd_pft_o(no) < 1.e-6_r8 .or. mapunit_o(no) == 0) then
+       if (mapunit_o(no) == 0) then
 
-          ! Set sand and clay to loam if pctlnd_pft is < 1.e-6 or mapunit is 0
+          ! Set sand and clay to loam if mapunit is 0
           sand_o(no,:) = 43._r4
           clay_o(no,:) = 18._r4
           orgc_o(no,:) = 0._r4

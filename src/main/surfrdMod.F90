@@ -15,7 +15,7 @@ module surfrdMod
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_cndv, use_crop, use_fates
-  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types
+  use surfrdUtilsMod  , only : check_sums_equal_1, apply_convert_ocean_to_land, collapse_crop_types
   use surfrdUtilsMod  , only : collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
   use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim_size, ncd_inqdid, ncd_inqdlen
@@ -70,7 +70,7 @@ contains
     !    o real % abundance PFTs (as a percent of vegetated area)
     !
     ! !USES:
-    use clm_varctl  , only : create_crop_landunit, collapse_urban, &
+    use clm_varctl  , only : create_crop_landunit, convert_ocean_to_land, collapse_urban, &
                              toosmall_soil, toosmall_crop, toosmall_glacier, &
                              toosmall_lake, toosmall_wetland, toosmall_urban, &
                              n_dom_landunits
@@ -192,6 +192,10 @@ contains
     call ncd_pio_closefile(ncid)
 
     call check_sums_equal_1(wt_lunit, begg, 'wt_lunit', subname)
+
+    if (convert_ocean_to_land) then
+       call apply_convert_ocean_to_land(wt_lunit(begg:endg,:), begg, endg)
+    end if
 
     ! if collapse_urban = .true.
     ! collapse urban landunits to the dominant urban landunit

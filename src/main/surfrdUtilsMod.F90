@@ -20,7 +20,8 @@ module surfrdUtilsMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: check_sums_equal_1  ! Confirm that sum(arr(n,:)) == 1 for all n
   public :: renormalize         ! Renormalize an array
-  public :: convert_cft_to_pft  ! Conversion of crop CFT to natural veg PFT:w
+  public :: apply_convert_ocean_to_land ! Apply the conversion of ocean to land points
+  public :: convert_cft_to_pft  ! Conversion of crop CFT to natural veg PFT
   public :: collapse_crop_types ! Collapse unused crop types into types used in this run
   public :: collapse_individual_lunits  ! Collapse landunits by user-defined thresholds
   public :: collapse_to_dominant ! Collapse to dominant pfts or landunits
@@ -111,6 +112,45 @@ contains
     end do
 
   end subroutine renormalize
+
+  !-----------------------------------------------------------------------
+  subroutine apply_convert_ocean_to_land(wt_lunit, begg, endg)
+    !
+    ! !DESCRIPTION:
+    ! Apply the conversion of ocean points to land, by changing all "wetland" points to
+    ! natveg; typically this will result in these points becoming bare ground.
+    !
+    ! The motivation for doing this is to avoid the negative runoff that sometimes comes
+    ! from wetlands.
+    !
+    ! !USES:
+    use landunit_varcon, only : istsoil, istwet, max_lunit
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: begg  ! Beginning grid cell index
+    integer, intent(in) :: endg  ! Ending grid cell index
+    ! This array is modified in-place:
+    real(r8), intent(inout) :: wt_lunit(begg:endg, max_lunit) ! Weights of landunits per grid cell
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g
+
+    character(len=*), parameter :: subname = 'apply_convert_ocean_to_land'
+    !-----------------------------------------------------------------------
+
+    ! BUG(wjs, 2022-10-27, ESCOMP/CTSM#1886) Ideally we would distinguish between ocean
+    ! vs. true wetland points on the surface dataset; for now oceans are included in the
+    ! wetland area on the surface dataset, so we convert all wetlands to land. (Typically
+    ! there are no true/inland wetlands on the surface dataset, so this is currently okay,
+    ! but this would become a problem if we started having inland wetlands on the surface
+    ! dataset again.)
+    do g = begg, endg
+       wt_lunit(g,istsoil) = wt_lunit(g,istsoil) + wt_lunit(g,istwet)
+       wt_lunit(g,istwet) = 0._r8
+    end do
+
+  end subroutine apply_convert_ocean_to_land
+
 
 !-----------------------------------------------------------------------
   subroutine convert_cft_to_pft( begg, endg, cftsize, wt_cft )
