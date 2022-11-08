@@ -318,9 +318,7 @@ class RegionalCase(BaseCase):
         if self.create_user_mods:
             with open(os.path.join(user_mods_dir, "user_nl_clm"), "a") as nl_clm:
                 # line = "landuse = '${}'".format(os.path.join(USRDAT_DIR, fluse_out))
-                line = "flanduse_timeseries = '${}'".format(
-                    os.path.join(USRDAT_DIR, fluse_out)
-                )
+                line = "flanduse_timeseries = '${}'".format(os.path.join(USRDAT_DIR, fluse_out))
                 self.write_to_file(line, nl_clm)
 
     def create_mesh_at_reg(self, mesh_dir, mesh_surf):

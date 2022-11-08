@@ -1,3 +1,7 @@
 ./xmlchange NEONSITE=BARR
 ./xmlchange PTS_LON=203.349781
 ./xmlchange PTS_LAT=71.281711
+./xmlchange RUN_STARTDATE=2019-01-01
+./xmlchange DATM_YR_ALIGN=2019,DATM_YR_START=2019,DATM_YR_END=2022
+./xmlchange STOP_N=39
+

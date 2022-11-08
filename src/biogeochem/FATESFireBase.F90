@@ -11,6 +11,7 @@ module FATESFireBase
   use decompMod                          , only : bounds_type
   use CNVegStateType                     , only : cnveg_state_type
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
+  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
 
   implicit none
   private
@@ -139,11 +140,12 @@ module FATESFireBase
   ! class, but are NOT used in the FATES version
   !-----------------------------------------------------------------------
   subroutine CNFireFluxes (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+      num_actfirec, filter_actfirec, num_actfirep, filter_actfirep, &
       dgvs_inst, cnveg_state_inst,                                                                      &
       cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+      soilbiogeochem_carbonflux_inst,                                       &
       leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch, &
       totsomc_col, decomp_cpools_vr_col, decomp_npools_vr_col, somc_fire_col)
-   !
    ! !DESCRIPTION:
    ! Fire effects routine for coupled carbon-nitrogen code (CN).  (NOT USED FOR FATES)
    !
@@ -160,8 +162,13 @@ module FATESFireBase
    integer                        , intent(in)    :: filter_soilc(:) ! filter for soil columns
    integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
    integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
+   integer                        , intent(out)   :: num_actfirep    ! number of active patches on fire in filter
+   integer                        , intent(out)   :: filter_actfirep(:) ! filter for soil patches
+   integer                        , intent(out)   :: num_actfirec    ! number of active columns on fire in filter
+   integer                        , intent(out)   :: filter_actfirec(:) ! filter for soil columns
    type(dgvs_type)                , intent(inout) :: dgvs_inst
    type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
+   type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst  ! only for matrix_decomp_fire_k: (gC/m3/step) VR deomp. C fire loss in matrix representation
    type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
    type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
    type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst

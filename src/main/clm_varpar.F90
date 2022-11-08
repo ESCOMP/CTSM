@@ -15,7 +15,7 @@ module clm_varpar
   use clm_varctl   , only: soil_layerstruct_predefined
   use clm_varctl   , only: soil_layerstruct_userdefined
   use clm_varctl   , only: soil_layerstruct_userdefined_nlevsoi
-  use clm_varctl   , only: use_fates, use_cn
+  use clm_varctl   , only: use_fates, use_cn, use_fates_sp
 
   !
   ! !PUBLIC TYPES:
@@ -60,10 +60,17 @@ module clm_varpar
   integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
   integer, public, parameter :: nvariants   =   2     ! number of variants of PFT constants
 
-  integer, public :: maxveg           ! # of pfts + cfts
-  integer, public :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
+  ! CN Matrix solution sizes
+  integer, public, parameter :: nvegpool_natveg = 18  ! number of vegetation matrix pool without crop
+  integer, public, parameter :: nvegpool_crop   =  3  ! number of vegetation matrix pool with crop
+  integer, public, parameter :: nveg_retransn   =  1  ! number of vegetation retranslocation pool
+  integer, public :: nvegcpool                        ! number of vegetation C pools
+  integer, public :: nvegnpool                        ! number of vegetation N pools
 
-  integer, public :: maxsoil_patches  ! # of pfts + cfts + bare ground; replaces maxpatch_pft, which is obsolete
+  integer, public :: maxveg                           ! # of pfts + cfts
+  integer, public :: maxpatch_urb= 5                  ! max number of urban patches (columns) in urban landunit
+
+  integer, public :: maxsoil_patches                  ! # of pfts + cfts + bare ground; replaces maxpatch_pft, which is obsolete
 
   ! constants for decomposition cascade
 
@@ -72,13 +79,13 @@ module clm_varpar
   integer, public            :: i_litr3 = -9  ! TEMPORARY FOR CascadeCN TO BUILD
   ! The code currently expects i_litr_min = i_met_lit = 1 and
   !                            i_litr_max = 2 or 3
-  integer, public :: i_litr_min = -9  ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_litr_max = -9  ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_met_lit = -9  ! index of metabolic litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_cop_mic = -9  ! index of copiotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_oli_mic = -9  ! index of oligotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_cwd      = -9  ! index of cwd pool; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_cwdl2 = -9  ! index of cwd to l2 transition; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_litr_min    = -9    ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_litr_max    = -9    ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_met_lit     = -9    ! index of metabolic litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_cop_mic     = -9    ! index of copiotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_oli_mic     = -9    ! index of oligotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_cwd         = -9    ! index of cwd pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_cwdl2       = -9    ! index of cwd to l2 transition; overwritten in SoilBiogeochemDecompCascade*Mod
 
   integer, public :: ndecomp_pools_max
   integer, public :: ndecomp_pools
@@ -90,6 +97,12 @@ module clm_varpar
   integer, public :: natpft_ub          ! In PATCH arrays, upper bound of Patches on the natural veg landunit
   integer, public :: natpft_size        ! Number of Patches on natural veg landunit (including bare ground)
 
+  integer, public :: surfpft_lb         ! Lower bound of PFTs in the surface file
+                                        ! synonymous with natpft_lb for non-fates and fates-sp
+  integer, public :: surfpft_ub         ! Upper bound of PFTs in the surface file
+                                        ! synonymous with natpft_ub for non-fates and fates-sp
+
+  
   ! The following variables pertain to arrays of all PFTs - e.g., those dimensioned (g,
   ! pft_index). These include unused CFTs that are merged into other CFTs. Thus, these
   ! variables do NOT give the actual number of CFTs on the crop landunit - that number
@@ -110,15 +123,19 @@ module clm_varpar
 contains
 
   !------------------------------------------------------------------------------
-  subroutine clm_varpar_init(actual_maxsoil_patches, actual_numcft)
+  subroutine clm_varpar_init(actual_maxsoil_patches, surf_numpft, surf_numcft)
     !
     ! !DESCRIPTION:
     ! Initialize module variables 
     !
     ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: actual_maxsoil_patches  ! value from surface dataset
-    integer, intent(in) :: actual_numcft  ! Actual number of crops
+    integer, intent(in) :: actual_maxsoil_patches  ! Number of soil patches to allocate
+                                                   ! This value comes either from the
+                                                   ! surface dataset (non-fates) or 
+                                                   ! from fates (via its parameter file)
+    integer, intent(in) :: surf_numpft             ! Number of PFTs in the surf dataset
+    integer, intent(in) :: surf_numcft             ! Number of CFTs in the surf dataset
     !
     ! !LOCAL VARIABLES:
     !
@@ -126,37 +143,64 @@ contains
     character(len=32) :: subname = 'clm_varpar_init'  ! subroutine name
     !------------------------------------------------------------------------------
 
-    ! actual_maxsoil_patches and actual_numcft were read directly from the
-    ! surface dataset
-    maxsoil_patches = actual_maxsoil_patches  ! # of patches with bare ground
+    ! actual_maxsoil_patches is either the total number of cfts+pfts in the surface
+    ! file (for non-fates), or the number of patches plus the bareground that
+    ! fates requests.  If this is a fates-sp run, this value will also be the number 
+    ! of cfts+pfts as in a nonfates run
+
+    maxsoil_patches = actual_maxsoil_patches
+    
     maxveg = maxsoil_patches - 1  ! # of patches without bare ground
 
     ! For arrays containing all Patches (natural veg & crop), determine lower and upper bounds
     ! for (1) Patches on the natural vegetation landunit (includes bare ground, and includes
     ! crops if create_crop_landunit=false), and (2) CFTs on the crop landunit (no elements
     ! if create_crop_landunit=false)
+    ! As for when we don't have a crop LU, which is currently when FATES is on...
+    ! These values are used to create the wt_nat_patch array that is used by fates_sp 
+    ! and fixed biogeog. Also, the pft and cft vectors are concatenated into
+    ! the natpft vector (wt_nat_patch), the wt_cft array is unused (size zero)
+    ! The following values should not be used for allocating patch structures
+    ! though.  That should be handled completely by maxoil_patches and maxveg
 
     if (create_crop_landunit) then
-       natpft_size = maxsoil_patches - actual_numcft  ! includes bare ground
-       cft_size    = actual_numcft
-    else
-       natpft_size = maxsoil_patches  ! includes bare ground
+       
+       natpft_size = surf_numpft    ! includes bare ground + natveg pfts
+       cft_size    = surf_numcft
+       natpft_lb   = 0
+       natpft_ub   = natpft_lb + natpft_size - 1
+       cft_lb      = natpft_ub + 1
+       cft_ub      = cft_lb + cft_size - 1
+       surfpft_lb  = natpft_lb
+       surfpft_ub  = natpft_ub
+       
+    else ! only true when FATES is active
+       
+       natpft_size = maxsoil_patches
        cft_size    = 0
+       natpft_lb   = 0
+       natpft_ub   = natpft_lb + natpft_size - 1
+       cft_lb      = 0
+       cft_ub      = 0
+       surfpft_lb  = 0
+       surfpft_ub  = surf_numpft+surf_numcft-1
+       
     end if
-
-    natpft_lb = 0
-    natpft_ub = natpft_lb + natpft_size - 1
-    cft_lb = natpft_ub + 1
-    cft_ub = cft_lb + cft_size - 1
-
+       
+    if(use_fates_sp .and. (natpft_ub .ne. maxveg) ) then
+       write(iulog,*) 'maxveg should match the upper bound for non-fates and fates-sp runs'
+       write(iulog,*) 'the surface dataset PFT+CFT indices (ie lsmft), yours: ',natpft_ub,maxveg
+       call shr_sys_abort(subname//' ERROR: conflict in maxveg and pft bounds')
+    end if
+    
     mxharvests = mxsowings + 1
 
-    ! TODO(wjs, 2015-10-04, bugz 2227) Using actual_numcft in this 'max' gives a significant
+    ! TODO(wjs, 2015-10-04, bugz 2227) Using surf_numcft in this 'max' gives a significant
     ! overestimate of max_patch_per_col when use_crop is true. This should be reworked -
     ! or, better, removed from the code entirely (because it is a maintenance problem, and
     ! I can't imagine that looping idioms that use it help performance that much, and
     ! likely they hurt performance.)
-    max_patch_per_col= max(maxsoil_patches, actual_numcft, maxpatch_urb)
+    max_patch_per_col= max(maxsoil_patches, surf_numcft, maxpatch_urb)
 
     nlevsoifl   =  10
     nlevurb     =  5
@@ -219,7 +263,7 @@ contains
     !
     ! Number of layers for soil decomposition
     !
-    if ( use_cn .or. use_fates )then
+    if ( use_cn .or. (use_fates .and. .not. use_fates_sp) ) then
        ! to set the number of soil levels for the biogeochemistry calculations.
        ! currently it works on nlevsoi and nlevgrnd levels
        nlevdecomp      = nlevsoi
@@ -243,6 +287,13 @@ contains
        write(iulog, '(a, i3)') '    nlevdecomp_full = ', nlevdecomp_full
        write(iulog, '(a, i3)') '    nlevlak = ', nlevlak
        write(iulog, *)
+    end if
+
+    ! CN Matrix settings
+    if (use_crop)then
+       nvegcpool = nvegpool_natveg + nvegpool_crop
+    else
+       nvegcpool = nvegpool_natveg
     end if
 
   end subroutine clm_varpar_init
