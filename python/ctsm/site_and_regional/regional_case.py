@@ -325,9 +325,7 @@ class RegionalCase(BaseCase):
         """
         Create a mesh subsetted for the RegionalCase class.
         """
-        logger.info(
-            "----------------------------------------------------------------------"
-        )
+        logger.info("----------------------------------------------------------------------")
         logger.info("Subsetting mesh file for region: %s", self.tag)
 
         today = datetime.today()
@@ -336,12 +334,7 @@ class RegionalCase(BaseCase):
         mesh_in = os.path.join(mesh_dir, mesh_surf)
         mesh_out = os.path.join(
             self.out_dir,
-            os.path.splitext(mesh_surf)[0]
-            + "_"
-            + self.tag
-            + "_c"
-            + today_string
-            + ".nc",
+            os.path.splitext(mesh_surf)[0] + "_" + self.tag + "_c" + today_string + ".nc",
         )
 
         logger.info("mesh_in  :  %s", mesh_in)
@@ -349,14 +342,10 @@ class RegionalCase(BaseCase):
 
         self.mesh = mesh_out
 
-        node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(
-            mesh_in
-        )
+        node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
 
         f_in = xr.open_dataset(mesh_in)
-        self.write_mesh(
-            f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out
-        )
+        self.write_mesh(f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out)
 
     def subset_mesh_at_reg(self, mesh_in):
         """
@@ -421,9 +410,7 @@ class RegionalCase(BaseCase):
         return node_coords, subset_element, subset_node, conn_dict
 
     @staticmethod
-    def write_mesh(
-            f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out
-    ):
+    def write_mesh(f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out):
         # pylint: disable=unused-argument
         """
         This function writes out the subsetted mesh file.
@@ -545,18 +532,8 @@ class RegionalCase(BaseCase):
         """
         # write_to_file surrounds text with newlines
         with open(namelist, "w") as nl_file:
-            self.write_to_file(
-                "# Change below line if you move the subset data directory", nl_file
-            )
-            self.write_to_file(
-                "./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file
-            )
-            self.write_to_file(
-                "./xmlchange ATM_DOMAIN_MESH={}".format(str(self.mesh)), nl_file
-            )
-            self.write_to_file(
-                "./xmlchange LND_DOMAIN_MESH={}".format(str(self.mesh)), nl_file
-            )
-            self.write_to_file(
-                "./xmlchange MASK_MESH={}".format(str(str(self.mesh))), nl_file
-            )
+            self.write_to_file("# Change below line if you move the subset data directory", nl_file)
+            self.write_to_file("./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file)
+            self.write_to_file("./xmlchange ATM_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
+            self.write_to_file("./xmlchange LND_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
+            self.write_to_file("./xmlchange MASK_MESH={}".format(str(str(self.mesh))), nl_file)

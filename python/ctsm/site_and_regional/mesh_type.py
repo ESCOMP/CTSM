@@ -176,16 +176,12 @@ class MeshType:
         # -- for the edge rows/columns.
 
         padded_lat2d = da.from_array(
-            np.pad(
-                self.center_lat2d.compute(), (1, 1), mode="reflect", reflect_type="odd"
-            )
+            np.pad(self.center_lat2d.compute(), (1, 1), mode="reflect", reflect_type="odd")
         )
 
         # -- pad center_lons for calculating edge grids
         padded_lon2d = da.from_array(
-            np.pad(
-                self.center_lon2d.compute(), (1, 1), mode="reflect", reflect_type="odd"
-            )
+            np.pad(self.center_lon2d.compute(), (1, 1), mode="reflect", reflect_type="odd")
         )
 
         # -- calculate corner lats for each grid
@@ -406,9 +402,7 @@ class MeshType:
         ds_out.attrs["gridType"] = "unstructured mesh"
         ds_out.attrs["version"] = "0.9"
         ds_out.attrs["conventions"] = "ESMFMESH"
-        ds_out.attrs["date_created"] = datetime.datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
+        ds_out.attrs["date_created"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # -- write Xarray dataset to file
         if mesh_fname is not None:
@@ -494,19 +488,14 @@ class MeshType:
             "Center Coordinates": "tomato",  # value=1
         }
         labels, handles = zip(
-            *[
-                (k, mpatches.Rectangle((0, 0), 1, 1, facecolor=v))
-                for k, v in lc_colors.items()
-            ]
+            *[(k, mpatches.Rectangle((0, 0), 1, 1, facecolor=v)) for k, v in lc_colors.items()]
         )
 
         ax.legend(handles, labels)
 
         plt.savefig(plot_regional, bbox_inches="tight")
 
-        logger.info(
-            "Successfully created regional plots for ESMF Mesh file : %s", plot_regional
-        )
+        logger.info("Successfully created regional plots for ESMF Mesh file : %s", plot_regional)
 
         # -- global plot
         fig = plt.figure(num=None, figsize=(15, 10), facecolor="w", edgecolor="k")
@@ -568,6 +557,4 @@ class MeshType:
 
         plt.savefig(plot_global, bbox_inches="tight")
 
-        logger.info(
-            "Successfully created regional plots for ESMF Mesh file : %s", plot_global
-        )
+        logger.info("Successfully created regional plots for ESMF Mesh file : %s", plot_global)

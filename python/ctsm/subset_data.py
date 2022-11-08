@@ -394,33 +394,39 @@ def setup_files(args, defaults, cesmroot):
     # if the crop flag is on - we need to use a different land use and surface data file
     num_pft = determine_num_pft(args.crop_flag)
 
-    fsurf_in = defaults.get("surfdat", "surfdat_"+num_pft+"pft")
-    fluse_in = defaults.get("landuse", "landuse_"+num_pft+"pft")
+    fsurf_in = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
+    fluse_in = defaults.get("landuse", "landuse_" + num_pft + "pft")
 
-    file_dict = {'main_dir': defaults.get("main", "clmforcingindir"),
-                 'fdomain_in': defaults.get("domain", "file"),
-                 'fsurf_dir': os.path.join(defaults.get("main", "clmforcingindir"),
-                                           os.path.join(defaults.get("surfdat", "dir"))),
-                 'mesh_dir': os.path.join(defaults.get("main", "clmforcingindir"),
-                                          defaults.get("surfdat", "mesh_dir")),
-                 'fluse_dir': os.path.join(defaults.get("main", "clmforcingindir"),
-                                           os.path.join(defaults.get("landuse", "dir"))),
-                 'fsurf_in': fsurf_in,
-                 'fluse_in': fluse_in,
-                 'mesh_surf' : defaults.get("surfdat","mesh_surf"),
-                 'datm_tuple': DatmFiles(dir_input_datm,
-                                         dir_output_datm,
-                                         defaults.get(datm_type, "domain"),
-                                         defaults.get(datm_type, 'solardir'),
-                                         defaults.get(datm_type, 'precdir'),
-                                         defaults.get(datm_type, 'tpqwdir'),
-                                         defaults.get(datm_type, 'solartag'),
-                                         defaults.get(datm_type, 'prectag'),
-                                         defaults.get(datm_type, 'tpqwtag'),
-                                         defaults.get(datm_type, 'solarname'),
-                                         defaults.get(datm_type, 'precname'),
-                                         defaults.get(datm_type, 'tpqwname'))
-                 }
+    file_dict = {
+        "main_dir": defaults.get("main", "clmforcingindir"),
+        "fdomain_in": defaults.get("domain", "file"),
+        "fsurf_dir": os.path.join(
+            defaults.get("main", "clmforcingindir"), os.path.join(defaults.get("surfdat", "dir"))
+        ),
+        "mesh_dir": os.path.join(
+            defaults.get("main", "clmforcingindir"), defaults.get("surfdat", "mesh_dir")
+        ),
+        "fluse_dir": os.path.join(
+            defaults.get("main", "clmforcingindir"), os.path.join(defaults.get("landuse", "dir"))
+        ),
+        "fsurf_in": fsurf_in,
+        "fluse_in": fluse_in,
+        "mesh_surf": defaults.get("surfdat", "mesh_surf"),
+        "datm_tuple": DatmFiles(
+            dir_input_datm,
+            dir_output_datm,
+            defaults.get(datm_type, "domain"),
+            defaults.get(datm_type, "solardir"),
+            defaults.get(datm_type, "precdir"),
+            defaults.get(datm_type, "tpqwdir"),
+            defaults.get(datm_type, "solartag"),
+            defaults.get(datm_type, "prectag"),
+            defaults.get(datm_type, "tpqwtag"),
+            defaults.get(datm_type, "solarname"),
+            defaults.get(datm_type, "precname"),
+            defaults.get(datm_type, "tpqwname"),
+        ),
+    }
 
     return file_dict
 
@@ -501,19 +507,19 @@ def subset_region(args, file_dict: dict):
 
     # --  Create Region Object
     region = RegionalCase(
-        lat1 = args.lat1,
-        lat2 = args.lat2,
-        lon1 = args.lon1,
-        lon2 = args.lon2,
-        reg_name = args.reg_name,
-        create_domain = args.create_domain,
-        create_surfdata = args.create_surfdata,
-        create_landuse = args.create_landuse,
-        create_datm = args.create_datm,
-        create_user_mods = args.create_user_mods,
-        create_mesh = args.create_mesh,
-        out_dir = args.out_dir,
-        overwrite = args.overwrite,
+        lat1=args.lat1,
+        lat2=args.lat2,
+        lon1=args.lon1,
+        lon2=args.lon2,
+        reg_name=args.reg_name,
+        create_domain=args.create_domain,
+        create_surfdata=args.create_surfdata,
+        create_landuse=args.create_landuse,
+        create_datm=args.create_datm,
+        create_user_mods=args.create_user_mods,
+        create_mesh=args.create_mesh,
+        out_dir=args.out_dir,
+        overwrite=args.overwrite,
     )
 
     logger.debug(region)
@@ -528,7 +534,7 @@ def subset_region(args, file_dict: dict):
             file_dict["fsurf_dir"], file_dict["fsurf_in"], args.user_mods_dir
         )
 
-    #if region.create_mesh:
+    # if region.create_mesh:
     #    region.create_mesh_at_reg (file_dict["mesh_dir"], file_dict["mesh_surf"])
 
     # --  Create CTSM transient landuse data file
@@ -536,7 +542,6 @@ def subset_region(args, file_dict: dict):
         region.create_landuse_at_reg(
             file_dict["fluse_dir"], file_dict["fluse_in"], args.user_mods_dir
         )
-
 
     # -- Write shell commands
     if region.create_user_mods:
@@ -552,9 +557,13 @@ def subset_region(args, file_dict: dict):
 
         region.write_shell_commands(os.path.join(args.user_mods_dir, "shell_commands"))
 
-        print ('\nFor running this regional case with the created user_mods : ')
-        print ('./create_newcase --case case --res CLM_USRDAT --compset I2000Clm51BgcCrop',
-                '--run-unsupported --user-mods-dirs ', args.user_mods_dir, '\n\n')
+        print("\nFor running this regional case with the created user_mods : ")
+        print(
+            "./create_newcase --case case --res CLM_USRDAT --compset I2000Clm51BgcCrop",
+            "--run-unsupported --user-mods-dirs ",
+            args.user_mods_dir,
+            "\n\n",
+        )
 
     logger.info("Successfully ran script for a regional case.")
 
