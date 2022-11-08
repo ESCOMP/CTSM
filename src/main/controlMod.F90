@@ -245,8 +245,6 @@ contains
 
     namelist /clm_inparm/ use_lai_streams
 
-    namelist /clm_inparm/ use_cropcal_streams
-
     namelist /clm_inparm/ use_bedrock
 
     namelist /clm_inparm/ use_biomass_heat_storage
