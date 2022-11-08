@@ -2183,7 +2183,7 @@ contains
                ! In order to avoid this, you'd have to read this year's AND next year's prescribed
                ! sowing dates.
                ! WARNING: This implementation assumes that all patches use prescribed sowing dates.
-               if (use_cropcal_streams) then
+               if (use_cropcal_rx_sdates) then
                   will_plant_prescribed_tomorrow = (jday == next_rx_sdate(p) - 1) .or. \
                                               (crop_inst%sdates_thisyr_patch(p,1) == 1 .and. \
                                                jday == dayspyr)
