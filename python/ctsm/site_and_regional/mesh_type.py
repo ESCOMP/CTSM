@@ -3,22 +3,20 @@ This module includes the definition and functions for defining a Grid or Mesh.
 This enables creating ESMF mesh file (unstructured grid file)for valid 1D or 2D lats and lons.
 """
 import os
-import sys
 import logging
 import argparse
 import datetime
 
 import numpy as np
 import xarray as xr
-import pandas as pd
 import dask.array as da
 import dask.dataframe as dd
 from dask.diagnostics import ProgressBar
 
 # -- libraries for plotting mesh (make_mesh_plot)
 import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 import cartopy.feature as cfeature
+import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 logger = logging.getLogger(__name__)
