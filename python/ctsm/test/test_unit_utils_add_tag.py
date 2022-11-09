@@ -108,7 +108,8 @@ class TestUtilsAddTag(unittest.TestCase):
             "surfdata_10x15_hist_78pfts_CMIP6_simyr1850_c190214.nc",
             "surfdata_4x5_hist_78pfts_CMIP6_simyr1850_c190214.nc",
             "surfdata_ne0np4.ARCTICGRIS.ne30x8_hist_78pfts_CMIP6_simyr2000_c200426.nc",
-            "surfdata_C96_hist_78pfts_CMIP6_simyr1850_c203171.nc",
+            "surfdata_C96_hist_78pfts_CMIP6_simyr1850_c200317.nc",
+            "surfdata_C96_hist_78pfts_CMIP6_simyr1850_c20221108.nc",
             "surfdata_0.9x1.25_hist_16pfts_nourb_CMIP6_simyrPtVg_c181114.nc",
         ]
         expect_filenames = [
@@ -136,6 +137,7 @@ class TestUtilsAddTag(unittest.TestCase):
             "surfdata_tag_hist_78pfts_CMIP6_simyr1850_c221031.nc",
             "surfdata_tag_hist_78pfts_CMIP6_simyr1850_c221031.nc",
             "surfdata_tag_hist_78pfts_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_78pfts_CMIP6_simyr1850_c221031.nc",
             "surfdata_tag_hist_78pfts_CMIP6_simyr1850_c221031.nc",
             "surfdata_tag_hist_16pfts_nourb_CMIP6_simyrPtVg_c221031.nc",
         ]

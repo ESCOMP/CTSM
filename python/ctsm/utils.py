@@ -77,8 +77,13 @@ def add_tag_to_filename(filename, tag, replace_res=False):
     if basename[cend] == "c":
         cend = cend - 1
     if (basename[cend] != ".") and (basename[cend] != "_"):
-        err_msg = "Trouble figuring out where to add tag to filename: " + filename
-        abort(err_msg)
+        # Check if date stirng at end includes a 4 digit year
+        cend = -12
+        if basename[cend] == "c":
+            cend = cend - 1
+        if (basename[cend] != ".") and (basename[cend] != "_"):
+           err_msg = "Trouble figuring out where to add tag to filename: " + filename
+           abort(err_msg)
     today = date.today()
     today_string = today.strftime("%y%m%d")
     if not replace_res:
