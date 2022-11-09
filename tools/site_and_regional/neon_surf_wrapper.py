@@ -96,8 +96,9 @@ def main():
         lon = row['Lon']
         site = row['Site']
         pft = row['pft']
+        clmsite = "1x1_NEON_"+site
         print ("Now processing site :", site)
-        command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),'--site',site,'--dompft',str(pft),'--crop',
+        command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),'--site',clmsite,'--dompft',str(pft),'--crop',
                 '--create-surface','--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
         execute(command)
 
