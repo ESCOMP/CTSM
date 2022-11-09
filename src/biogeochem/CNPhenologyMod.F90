@@ -2610,15 +2610,7 @@ contains
             gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
          end if
 
-         ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
-         ! Just manually set a minimum of 1.0
-         if (gddmaturity(p) < gddmin(ivt(p))) then
-            write(iulog,*) 'Some patch with ivt ',ivt(p),' has calculated gddmaturity ',gddmaturity(p),&
-                           '; using gddmin(ivt(p)) instead (',gddmin(ivt(p)),')'
-         endif
-         gddmaturity(p) = max(gddmaturity(p), gddmin(ivt(p)))
       endif
-!      write (iulog,'(a,i4,a,f0.0)')  'gddmaturity (ivt ',ivt(p),'): ',gddmaturity(p)
 
     end associate
 
