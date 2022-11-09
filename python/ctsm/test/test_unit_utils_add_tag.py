@@ -47,11 +47,16 @@ class TestUtilsAddTag(unittest.TestCase):
             mock_date.today.side_effect = self._fake_today
 
             landuse_out = utils.add_tag_to_filename(landuse_in, "tag")
+            landuse_out2 = utils.add_tag_to_filename(landuse_in, "tag", replace_res=True)
 
         expect_landuse = (
             "landuse.timeseries_0.9x1.25_hist_78pfts_CMIP6_simyr1850-2015_tag_c221031.nc"
         )
         self.assertEqual(expect_landuse, landuse_out, "Expect filenames to be as expected")
+        expect_landuse2 = (
+            "landuse.timeseries_tag_hist_78pfts_CMIP6_simyr1850-2015_c221031.nc"
+        )
+        self.assertEqual(expect_landuse2, landuse_out2, "Expect filenames to be as expected")
 
     def testSimpleDatmDomain(self):
         """Simple test of datm domain dataset name"""
