@@ -48,6 +48,7 @@ def add_tag_to_filename(filename, tag, replace_res=False):
     """
     Add a tag and replace timetag of a filename
     Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
+    or with 4-digit years YYYYMMDD.
     Add the tag to just before that ending part
     and change the ending part to the current time tag.
 
