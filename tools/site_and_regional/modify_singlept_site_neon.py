@@ -250,8 +250,7 @@ def find_surffile(surf_dir, site_name):
         surf_file (str): name of the surface dataset file
     """
 
-    # sf_name = "surfdata_hist_16pfts_Irrig_CMIP6_simyr2000_"+site_name+"*.nc"
-    sf_name = "surfdata_*hist_78pfts_CMIP6_simyr2000_" + site_name + "*.nc"
+    sf_name = "surfdata_1x1_NEON_"+site_name+"*hist_78pfts_CMIP6_simyr2000_*.nc"
     print (os.path.join(surf_dir , sf_name))
     surf_file = sorted(glob.glob(os.path.join(surf_dir , sf_name)))
 
