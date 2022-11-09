@@ -53,9 +53,7 @@ class TestUtilsAddTag(unittest.TestCase):
             "landuse.timeseries_0.9x1.25_hist_78pfts_CMIP6_simyr1850-2015_tag_c221031.nc"
         )
         self.assertEqual(expect_landuse, landuse_out, "Expect filenames to be as expected")
-        expect_landuse2 = (
-            "landuse.timeseries_tag_hist_78pfts_CMIP6_simyr1850-2015_c221031.nc"
-        )
+        expect_landuse2 = "landuse.timeseries_tag_hist_78pfts_CMIP6_simyr1850-2015_c221031.nc"
         self.assertEqual(expect_landuse2, landuse_out2, "Expect filenames to be as expected")
 
     def testSimpleDatmDomain(self):
@@ -81,6 +79,70 @@ class TestUtilsAddTag(unittest.TestCase):
 
         expect_filename = "domain.lnd.fv0.9x1.25_gx1v7_tag_c221031.nc"
         self.assertEqual(expect_filename, file_out, "Expect filenames to be as expected")
+
+    def testSurfReplaceListDomain(self):
+        """Simple test of list of surface dataset name with replace_res option"""
+
+        files_in = [
+            "surfdata_48x96_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "surfdata_1.9x2.5_hist_16pfts_Irrig_CMIP6_simyr2000_c190304.nc",
+            "surfdata_1.9x2.5_hist_16pfts_Irrig_CMIP6_simyr2000_c190304.nc",
+            "surfdata_4x5_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "surfdata_10x15_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "surfdata_10x15_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "surfdata_0.125nldas2_hist_16pfts_Irrig_CMIP6_simyr2005_c190412.nc",
+            "surfdata_64x128_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c190214.nc",
+            "surfdata_1.9x2.5_hist_78pfts_CMIP6_simyr2000_c190304.nc",
+            "surfdata_0.125x0.125_hist_78pfts_CMIP6_simyr2005_c190624.nc",
+            "surfdata_10x15_hist_78pfts_CMIP6_simyr2000_c190214.nc",
+            "surfdata_4x5_hist_78pfts_CMIP6_simyr2000_c190214.nc",
+            "surfdata_1.9x2.5_hist_16pfts_Irrig_CMIP6_simyr1850_c190304.nc",
+            "surfdata_10x15_hist_16pfts_Irrig_CMIP6_simyr1850_c190214.nc",
+            "surfdata_4x5_hist_16pfts_Irrig_CMIP6_simyr1850_c190214.nc",
+            "surfdata_48x96_hist_78pfts_CMIP6_simyr1850_c190214.nc",
+            "surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr1850_c190214.nc",
+            "surfdata_1.9x2.5_hist_78pfts_CMIP6_simyr1850_c190304.nc",
+            "surfdata_10x15_hist_78pfts_CMIP6_simyr1850_c190214.nc",
+            "surfdata_4x5_hist_78pfts_CMIP6_simyr1850_c190214.nc",
+            "surfdata_0.9x1.25_hist_16pfts_nourb_CMIP6_simyrPtVg_c181114.nc",
+        ]
+        expect_filenames = [
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr2005_c221031.nc",
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_78pfts_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_78pfts_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_78pfts_CMIP6_simyr2005_c221031.nc",
+            "surfdata_tag_hist_78pfts_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_78pfts_CMIP6_simyr2000_c221031.nc",
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr1850_c221031.nc",
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr1850_c221031.nc",
+            "surfdata_tag_hist_16pfts_Irrig_CMIP6_simyr1850_c221031.nc",
+            "surfdata_tag_hist_78pfts_CMIP6_simyr1850_c221031.nc",
+            "surfdata_tag_hist_78pfts_CMIP6_simyr1850_c221031.nc",
+            "surfdata_tag_hist_78pfts_CMIP6_simyr1850_c221031.nc",
+            "surfdata_tag_hist_78pfts_CMIP6_simyr1850_c221031.nc",
+            "surfdata_tag_hist_78pfts_CMIP6_simyr1850_c221031.nc",
+            "surfdata_tag_hist_16pfts_nourb_CMIP6_simyrPtVg_c221031.nc",
+        ]
+        for i, file_in in enumerate(files_in):
+
+            with patch("ctsm.utils.date") as mock_date:
+                mock_date.today.side_effect = self._fake_today
+
+                file_out = utils.add_tag_to_filename(file_in, "tag", replace_res=True)
+
+            self.assertEqual(expect_filenames[i], file_out, "Expect filenames to be as expected")
 
 
 if __name__ == "__main__":
