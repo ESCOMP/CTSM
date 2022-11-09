@@ -84,7 +84,7 @@ def add_tag_to_filename(filename, tag, replace_res=False):
     if not replace_res:
         fname_out = basename[:cend] + "_" + tag + "_c" + today_string + ".nc"
     else:
-        match = re.fullmatch(r"([a-z.]+)_([0-9x.]+)_(.+?)", basename[:cend])
+        match = re.fullmatch(r"([a-z.]+)_([fv0-9x.crunldas]+)_(.+?)", basename[:cend])
         if match is not None:
             fname_out = (
                 match.group(1) + "_" + tag + "_" + match.group(3) + "_c" + today_string + ".nc"
