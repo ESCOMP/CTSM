@@ -535,7 +535,7 @@ class NeonSite:
                 )
 
         with Case(case_root, read_only=False) as case:
-            if run_type is not"transient":
+            if run_type is not "transient":
                  # in order to avoid the complication of leap years we always set the run_length in units of days.
                  case.set_value("STOP_OPTION", "ndays")
                  case.set_value("REST_OPTION", "end")
@@ -567,6 +567,7 @@ class NeonSite:
                         return
                 case.set_value("CALENDAR", "GREGORIAN")
                 case.set_value("RESUBMIT", 0)
+                case.set_value("STOP_OPTION", "nmonths")
             
             if not rundir:
                 rundir = case.get_value("RUNDIR")
@@ -625,11 +626,11 @@ class NeonSite:
         case.set_value("RUN_REFDATE", refdate)
         if case_root.endswith(".postad"):
             case.set_value("RUN_STARTDATE", refdate)
-        else:
-            case.set_value(
-                "RUN_STARTDATE",
-                "{yr:04d}-{mo:02d}-01".format(yr=self.start_year, mo=self.start_month),
-            )
+        #else:
+            #case.set_value(
+            #    "RUN_STARTDATE",
+            #    "{yr:04d}-{mo:02d}-01".format(yr=self.start_year, mo=self.start_month),
+            #)
         return True
 
     def modify_user_nl(self, case_root, run_type, rundir):
