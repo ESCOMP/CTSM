@@ -11,10 +11,10 @@ following:
        based on the downloaded neon data.
        (i.e. modify_singlept_site_neon.py)
 
-Instructions for running on Cheyenne/Casper:
-load the following into your local environment
-    module load python
-    ncar_pylib
+Instructions for running using conda python environments:
+
+../../py_env_create
+conda activate ctsm_py
 
 """
 # TODO

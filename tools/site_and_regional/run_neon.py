@@ -26,14 +26,10 @@ This script will do the following:
     4) Build and submit the case.
  
 -------------------------------------------------------------------
-Instructions for running on Cheyenne/Casper:
- 
-load the following into your local environment
-    module load python
-    ncar_pylib
- 
-To remove NPL from your environment on Cheyenne/Casper:
-    deactivate
+Instructions for running using conda python environments:
+
+../../py_env_create
+conda activate ctsm_py
  
 -------------------------------------------------------------------
 To see the available options:

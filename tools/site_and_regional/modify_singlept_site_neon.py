@@ -16,14 +16,11 @@ This script will do the following:
 - Modify surface dataset with downloaded data.
 
 -------------------------------------------------------------------
-Instructions for running on Cheyenne/Casper:
+Instructions for running using conda python environments:
 
-load the following into your local environment
-    module load python
-    ncar_pylib
+../../py_env_create
+conda activate ctsm_py
 
-To remove NPL from your environment on Cheyenne/Casper:
-    deactivate
 -------------------------------------------------------------------
 To see the available options:
     ./modify_singlept_site_neon.py --help
