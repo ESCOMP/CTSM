@@ -2092,6 +2092,7 @@ contains
      ! !USES:
      use clm_time_manager , only : get_step_size
      use clm_varpar       , only : nlevsoi, nlevgrnd, nlayer, nlayert
+     use clm_varctl       , only : nhillslope
      use clm_varcon       , only : pondmx, watmin,rpi, secspday
      use column_varcon    , only : icol_road_perv
      use abortutils       , only : endrun
@@ -2138,6 +2139,7 @@ contains
      real(r8) :: head_gradient                    ! hydraulic head gradient (m/m)
      real(r8) :: stream_water_depth               ! depth of water in stream channel (m)
      real(r8) :: stream_channel_depth             ! depth of stream channel (m)
+     real(r8) :: available_stream_water           ! stream water (m3)
      real(r8), parameter :: n_baseflow = 1        ! drainage power law exponent
      real(r8), parameter :: k_anisotropic = 1._r8 ! anisotropy scalar
      real(r8) :: qflx_latflow_out_vol(bounds%begc:bounds%endc) ! volumetric lateral flow (m3/s)
@@ -2347,6 +2349,15 @@ contains
             !          qflx_latflow_out_vol(c) = ice_imped(c)*transmis*col%hill_width(c)*head_gradient
             ! include ice impedance in transmissivity
             qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*head_gradient
+
+            ! When head gradient is negative (losing stream channel), 
+            ! limit outflow by available stream channel water
+            if (qflx_latflow_out_vol(c) < 0._r8) then
+               available_stream_water = stream_water_volume(l)/lun%stream_channel_number(l)/nhillslope
+               if(abs(qflx_latflow_out_vol(c))*dtime > available_stream_water) then
+                  qflx_latflow_out_vol(c) = -available_stream_water/dtime
+               endif
+            endif
 
             ! volumetric_discharge from lowest column is qflx_latflow_out_vol
             ! scaled by total area of column in gridcell divided by column area

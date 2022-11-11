@@ -758,6 +758,8 @@ contains
     real(r8) :: norm(numrad)
     real(r8) :: sum_solar(bounds%begg:bounds%endg,numrad)
     real(r8) :: sum_wtgcell(bounds%begg:bounds%endg)
+    real(r8) :: illum_frac(bounds%begg:bounds%endg)
+    real(r8), parameter :: illumination_threshold = 0.05
     logical  :: checkConservation = .true.
 
     character(len=*), parameter :: subname = 'downscale_hillslope_solar'
@@ -778,25 +780,37 @@ contains
       ! Initialize column forcing
       sum_solar(bounds%begg:bounds%endg,1:numrad) = 0._r8
       sum_wtgcell(bounds%begg:bounds%endg) = 0._r8
+      illum_frac(bounds%begg:bounds%endg)  = 0._r8
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
          if (col%is_hillslope_column(c) .and. col%active(c)) then
             if (coszen_grc(g) > 0._r8) then
                forc_solad_col(c,1:numrad)  = forc_solad_grc(g,1:numrad)*(coszen_col(c)/coszen_grc(g))
+               if (coszen_col(c) > 0._r8) then
+                  illum_frac(g) = illum_frac(g) + col%wtgcell(c)
+               endif
             endif
             
             sum_solar(g,1:numrad) = sum_solar(g,1:numrad) + col%wtgcell(c)*forc_solad_col(c,1:numrad)
             sum_wtgcell(g) = sum_wtgcell(g) + col%wtgcell(c)
          end if
       end do
-
+      
+      ! Calculate illuminated fraction of gridcell
+      do g = bounds%begg,bounds%endg
+         if (sum_wtgcell(g) > 0._r8) then
+            illum_frac(g) = illum_frac(g)/sum_wtgcell(g)
+         endif
+      enddo
+      
       ! Normalize column level solar
       do c = bounds%begc,bounds%endc
          if (col%is_hillslope_column(c) .and. col%active(c)) then
             g = col%gridcell(c)
             do n = 1,numrad
                ! absorbed energy is solar flux x area landunit (sum_wtgcell)
-               if(sum_solar(g,n) > 0._r8) then
+               !if(sum_solar(g,n) > 0._r8) then
+               if(sum_solar(g,n) > 0._r8.and.illum_frac(g) > illumination_threshold) then
                   norm(n) = sum_wtgcell(g)*forc_solad_grc(g,n)/sum_solar(g,n)
                   forc_solad_col(c,n)  = forc_solad_col(c,n)*norm(n)
                else

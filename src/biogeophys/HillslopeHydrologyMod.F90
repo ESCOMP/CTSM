@@ -520,6 +520,7 @@ contains
              ! grc%area(g)*1.e6*lun%wtgcell(l)*pct_hillslope(l,nh)*0.01
              ! Number of representative hillslopes per landunit
              ! is the total area divided by individual area
+             ! include factor of 0.5 because a channel is shared by ~2 hillslopes
 
              lun%stream_channel_number(l) = 0._r8
              do nh = 1, nhillslope
@@ -528,23 +529,21 @@ contains
                         *pct_hillslope(l,nh)*0.01/hillslope_area(nh)
 
                    lun%stream_channel_number(l) = lun%stream_channel_number(l) &
-                        + nhill_per_landunit(nh)
+                        + 0.5_r8 * nhill_per_landunit(nh)
                 endif
              enddo
              
              ! Calculate steam channel length
              ! Total length of stream banks is individual widths
-             ! times number of hillslopes per landunit divided
-             ! by 2 to convert from bank length to channel length
-
+             ! times number of hillslopes per landunit 
+             ! include factor of 0.5 because a channel is shared by ~2 hillslopes
              lun%stream_channel_length(l) = 0._r8
              do c = lun%coli(l), lun%colf(l)
                 if(col%cold(c) == ispval) then
                    lun%stream_channel_length(l) = lun%stream_channel_length(l) &
-                        + col%hill_width(c) * nhill_per_landunit(col%hillslope_ndx(c))
+                        + col%hill_width(c) * 0.5_r8 * nhill_per_landunit(col%hillslope_ndx(c))
                 endif
              enddo
-             lun%stream_channel_length(l) = 0.5_r8 * lun%stream_channel_length(l)
           endif
                        
           ! if missing hillslope information on surface dataset,
