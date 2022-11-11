@@ -3003,9 +3003,6 @@ contains
 
                   ! How many harvests have occurred?
                   h = crop_inst%harvest_count(p)
-                  if (h .le. 0) then
-                     call endrun(msg="CNOffsetLitterfall(): Invalid harvest_count")
-                  end if
 
                   ! Replenish the seed deficits from grain, if there is enough available
                   ! grain. (If there is not enough available grain, the seed deficits will
@@ -3033,10 +3030,15 @@ contains
                      repr_grainc_to_food_thispool = cpool_to_reproductivec(p,k) - repr_grainc_to_seed(p,k)
                      repr_grainc_to_food(p,k) = t1 * reproductivec(p,k) &
                           + repr_grainc_to_food_thispool
-                     repr_grainc_to_food_perharv(p,h,k) = reproductivec(p,k) &
-                         + repr_grainc_to_food_thispool * dt
-                     repr_grainc_to_food_thisyr(p,k) = repr_grainc_to_food_thisyr(p,k) &
-                         + repr_grainc_to_food_perharv(p,h,k)
+                     if (reproductivec(p,k) + repr_grainc_to_food_thispool * dt .gt. 0) then
+                         if (h .le. 0) then
+                             call endrun(msg="CNOffsetLitterfall(): Invalid harvest_count")
+                         end if
+                         repr_grainc_to_food_perharv(p,h,k) = reproductivec(p,k) &
+                             + repr_grainc_to_food_thispool * dt
+                         repr_grainc_to_food_thisyr(p,k) = repr_grainc_to_food_thisyr(p,k) &
+                             + repr_grainc_to_food_perharv(p,h,k)
+                     end if
                      repr_grainn_to_food(p,k) = t1 * reproductiven(p,k) &
                           + npool_to_reproductiven(p,k) - repr_grainn_to_seed(p,k)
                   end do
