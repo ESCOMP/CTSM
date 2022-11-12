@@ -134,7 +134,7 @@ contains
     integer           , intent(out)   :: rc
 
     ! local variables:
-    type(ESMF_RouteHandle) :: routehandle               ! nearest neighbor routehandle
+    type(ESMF_RouteHandle) :: routehandle_nonorm
     type(ESMF_Mesh)        :: mesh_i
     type(file_desc_t)      :: pioid_i
     type(var_desc_t)       :: pio_varid
@@ -148,7 +148,7 @@ contains
     integer                :: nlev                      ! number of levels in input file
     integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
-    real(r8), allocatable  :: frac_o(:)
+    real(r8), allocatable  :: frac_o_nonorm(:)
     real(r8), allocatable  :: area_i(:)
     real(r8), allocatable  :: area_o(:)
     real(r8), allocatable  :: data_pctglc_i(:)
@@ -281,11 +281,13 @@ contains
     call mkpio_iodesc_rawdata(mesh_i, 'PCT_GLC_GIC', pioid_i, pio_varid, pio_vartype, pio_iodesc, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    ! Create a route handle between the input and output mesh and get frac_o
-    allocate(frac_o(ns_o),stat=ier)
-    if (ier/=0) call shr_sys_abort(subname//" error in allocating frac_o")
-    call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.true., &
-         routehandle=routehandle, frac_o=frac_o, rc=rc)
+    ! Create a route handle between the input and output mesh and get frac_o_nonorm
+    allocate(frac_o_nonorm(ns_o),stat=ier)
+    if (ier/=0) call shr_sys_abort(subname//" error in allocating frac_o_nonorm")
+    ! Note that norm_by_fracs is false in the following because this routehandle is
+    ! used to map fields that are expressed in terms of % of the grid cell.
+    call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.false., &
+         routehandle=routehandle_nonorm, frac_o=frac_o_nonorm, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
@@ -308,11 +310,11 @@ contains
        data_pctglc_i(:) = data_pctglc_gic_i(:) + data_pctglc_icesheet_i(:)
 
        ! Map level of data to output grid
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, data_pctglc_i, data_pctglc_o, rc=rc)
+       call regrid_rawdata(mesh_i, mesh_o, routehandle_nonorm, data_pctglc_i, data_pctglc_o, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, data_pctglc_gic_i, data_pctglc_gic_o, rc=rc)
+       call regrid_rawdata(mesh_i, mesh_o, routehandle_nonorm, data_pctglc_gic_i, data_pctglc_gic_o, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call regrid_rawdata(mesh_i, mesh_o, routehandle, data_pctglc_icesheet_i, data_pctglc_icesheet_o, rc=rc)
+       call regrid_rawdata(mesh_i, mesh_o, routehandle_nonorm, data_pctglc_icesheet_i, data_pctglc_icesheet_o, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! Compute output variables
@@ -470,7 +472,7 @@ contains
     end if
 
     ! Deallocate dynamic memory
-    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    call ESMF_RouteHandleDestroy(routehandle_nonorm, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
@@ -506,14 +508,14 @@ contains
     integer          , intent(out) :: rc
     !
     ! local variables
-    type(ESMF_RouteHandle) :: routehandle
+    type(ESMF_RouteHandle) :: routehandle_nonorm
     type(ESMF_Mesh)        :: mesh_i
     type(file_desc_t)      :: pioid
     integer                :: ni,no,k
     integer                :: ns_i, ns_o
     integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: frac_i(:)
-    real(r8), allocatable  :: frac_o(:)
+    real(r8), allocatable  :: frac_o_nonorm(:)
     real(r8), allocatable  :: area_i(:)
     real(r8), allocatable  :: area_o(:)
     real(r8), allocatable  :: glac_i(:)            ! input grid: percent glac
@@ -578,18 +580,20 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
-    ! Create a route handle between the input and output mesh and get frac_o
-    allocate(frac_o(ns_o),stat=ier)
+    ! Create a route handle between the input and output mesh and get frac_o_nonorm
+    allocate(frac_o_nonorm(ns_o),stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.true., &
-         routehandle=routehandle, frac_o=frac_o, rc=rc)
+    ! Note that norm_by_fracs is false in the following because this routehandle is
+    ! used to map fields that are expressed in terms of % of the grid cell.
+    call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.false., &
+         routehandle=routehandle_nonorm, frac_o=frac_o_nonorm, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
     ! Area-average percent cover on input grid to output grid (with correction for landmask)
     ! Note that percent cover is in terms of total grid area.
     ! Regrid glac_i to glac_o
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, glac_i, glac_o, rc=rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_nonorm, glac_i, glac_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do no = 1,ns_o
        if (glac_o(no) < 1._r8) then
@@ -608,13 +612,13 @@ contains
     enddo
 
     ! Check global areas
-    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o, &
+    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o_nonorm, &
          glac_i, glac_o, "pct glacier", percent=.true., ndiag=ndiag, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Deallocate dynamic memory
-    deallocate (glac_i, frac_o, mask_i)
-    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    deallocate (glac_i, frac_o_nonorm, mask_i)
+    call ESMF_RouteHandleDestroy(routehandle_nonorm, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()

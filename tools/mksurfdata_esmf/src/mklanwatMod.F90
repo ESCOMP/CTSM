@@ -25,8 +25,8 @@ module mklanwatMod
   public :: mkwetlnd    ! make %wetland
   public :: update_max_array_lake  ! Update the maximum lake percent
 
-  real(r8), allocatable  :: frac_o_mklak(:)
-  type(ESMF_RouteHandle) :: routehandle_mklak
+  real(r8), allocatable  :: frac_o_mklak_nonorm(:)
+  type(ESMF_RouteHandle) :: routehandle_mklak_nonorm
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -114,10 +114,12 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Create a route handle between the input and output mesh
-    if (.not. ESMF_RouteHandleIsCreated(routehandle_mklak)) then
-       allocate(frac_o_mklak(ns_o))
-       call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.true., &
-            routehandle=routehandle_mklak, frac_o=frac_o_mklak, rc=rc)
+    if (.not. ESMF_RouteHandleIsCreated(routehandle_mklak_nonorm)) then
+       allocate(frac_o_mklak_nonorm(ns_o))
+       ! Note that norm_by_fracs is false in the following because this routehandle is
+       ! used to map fields that are expressed in terms of % of the grid cell.
+       call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.false., &
+            routehandle=routehandle_mklak_nonorm, frac_o=frac_o_mklak_nonorm, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
     end if
@@ -138,14 +140,14 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Regrid lake_i to lake_o
-    call regrid_rawdata(mesh_i, mesh_o, routehandle_mklak, lake_i, lake_o, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_mklak_nonorm, lake_i, lake_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do no = 1,ns_o
        if (lake_o(no) < 1.) lake_o(no) = 0.
     enddo
 
     ! Check global areas
-    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o_mklak, &
+    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o_mklak_nonorm, &
          lake_i, lake_o, "pct lake", percent=.true., ndiag=ndiag, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -159,8 +161,8 @@ contains
 
     ! Release memory
     if (mksrf_fdynuse == ' ') then  ! ...else we will reuse it
-       deallocate(frac_o_mklak)
-       call ESMF_RouteHandleDestroy(routehandle_mklak, nogarbage = .true., rc=rc)
+       deallocate(frac_o_mklak_nonorm)
+       call ESMF_RouteHandleDestroy(routehandle_mklak_nonorm, nogarbage = .true., rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     end if
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
@@ -193,9 +195,11 @@ contains
 
     ! local variables
     type(ESMF_Mesh)        :: mesh_i
+    type(ESMF_RouteHandle) :: routehandle
     type(file_desc_t)      :: pioid_i
     integer , allocatable  :: mask_i(:)
     real(r8), allocatable  :: rmask_i(:)
+    real(r8), allocatable  :: frac_o(:)
     real(r8), allocatable  :: lakedepth_i(:) ! iput grid: lake depth (m)
     real(r8), allocatable  :: lakedepth_o(:) ! output grid: lake depth (m)
     integer                :: ni,no,k        ! indices
@@ -254,13 +258,11 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Create a route handle between the input and output mesh
-    if (.not. ESMF_RouteHandleIsCreated(routehandle_mklak)) then
-       allocate(frac_o_mklak(ns_o))
-       call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.true., &
-            routehandle=routehandle_mklak, frac_o=frac_o_mklak, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
-    end if
+    allocate(frac_o(ns_o))
+    call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.true., &
+         routehandle=routehandle, frac_o=frac_o, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
     ! ----------------------------------------
     ! Create lake parameter (lakedepth)
@@ -278,11 +280,11 @@ contains
 
     ! regrid lakedepth_i to lakedepth_o - this also returns lakedepth_i to be used in the global sums below
     allocate (lakedepth_o(ns_o)); lakedepth_o(:) = spval
-    call regrid_rawdata(mesh_i, mesh_o, routehandle_mklak, lakedepth_i, lakedepth_o, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle, lakedepth_i, lakedepth_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regrid_rawdata for lakedepth in "//trim(subname))
     do no = 1,ns_o
-       if (frac_o_mklak(no) == 0._r8) then
+       if (frac_o(no) == 0._r8) then
           lakedepth_o(no) = 10._r8
        end if
     enddo
@@ -300,7 +302,7 @@ contains
     ! Check global areas for lake depth
     call output_diagnostics_continuous(mesh_i, mesh_o, &
          lakedepth_i, lakedepth_o, "lake depth", "m", &
-         ndiag=ndiag, rc=rc, mask_i=mask_i, frac_o=frac_o_mklak)
+         ndiag=ndiag, rc=rc, mask_i=mask_i, frac_o=frac_o)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ----------------------------------------
@@ -310,8 +312,8 @@ contains
     call pio_closefile(pioid_i)
 
     ! Release memory
-    deallocate(frac_o_mklak)
-    call ESMF_RouteHandleDestroy(routehandle_mklak, nogarbage = .true., rc=rc)
+    deallocate(frac_o)
+    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
@@ -339,12 +341,12 @@ contains
     integer           , intent(out)   :: rc
 
     ! local variables
-    type(ESMF_RouteHandle) :: routehandle
+    type(ESMF_RouteHandle) :: routehandle_nonorm
     type(ESMF_Mesh)        :: mesh_i
     type(file_desc_t)      :: pioid_i
     integer , allocatable  :: mask_i(:) 
     real(r8), allocatable  :: rmask_i(:)
-    real(r8), allocatable  :: frac_o(:)
+    real(r8), allocatable  :: frac_o_nonorm(:)
     real(r8), allocatable  :: swmp_i(:)      ! input grid: percent wetland
     integer                :: ni,no,k        ! indices
     integer                :: ns_i,ns_o      ! local sizes
@@ -403,9 +405,11 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Create a route handle between the input and output mesh
-    allocate(frac_o(ns_o))
-    call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.true., &
-         routehandle=routehandle, frac_o=frac_o, rc=rc)
+    allocate(frac_o_nonorm(ns_o))
+    ! Note that norm_by_fracs is false in the following because this routehandle is
+    ! used to map fields that are expressed in terms of % of the grid cell.
+    call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.false., &
+         routehandle=routehandle_nonorm, frac_o=frac_o_nonorm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
@@ -416,7 +420,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! regrid swmp_i to swmp_o - this also returns swmp_i to be used in the global sums below
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, swmp_i, swmp_o, rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_nonorm, swmp_i, swmp_o, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regrid_data for wetland")
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -425,7 +429,7 @@ contains
     enddo
 
     ! Check global areas
-    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o, &
+    call output_diagnostics_area(mesh_i, mesh_o, mask_i, frac_o_nonorm, &
          swmp_i, swmp_o, "pct wetland", percent=.true., ndiag=ndiag, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -433,7 +437,7 @@ contains
     call pio_closefile(pioid_i)
 
     ! Release memory
-    call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+    call ESMF_RouteHandleDestroy(routehandle_nonorm, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()

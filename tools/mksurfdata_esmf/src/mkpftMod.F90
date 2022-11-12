@@ -24,8 +24,8 @@ module mkpftMod
   integer :: m ! index
 
   character(len=35) :: veg(0:maxpft) ! vegetation types
-  real(r8), allocatable :: frac_o(:)
-  type(ESMF_RouteHandle) :: routehandle
+  real(r8), allocatable :: frac_o_nonorm(:)
+  type(ESMF_RouteHandle) :: routehandle_nonorm
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
@@ -250,7 +250,7 @@ contains
     real(r8), allocatable           :: glob_gpft_o(:)     ! output global area pfts
     integer                         :: ier, rcode         ! error status
     real(r8)                        :: relerr = 0.0001_r8 ! max error: sum overlap wts ne 1
-    character(len=*), parameter :: subname = 'mkpf'
+    character(len=*), parameter :: subname = 'mkpft'
     !-----------------------------------------------------------------------
 
     if (root_task) then
@@ -326,13 +326,15 @@ contains
     endif
 
     ! ----------------------------------------
-    ! Create a route handle between the input and output mesh and get frac_o
+    ! Create a route handle between the input and output mesh and get frac_o_nonorm
     ! ----------------------------------------
-    if (.not. ESMF_RouteHandleIsCreated(routehandle)) then
-       allocate(frac_o(ns_o),stat=ier)
+    if (.not. ESMF_RouteHandleIsCreated(routehandle_nonorm)) then
+       allocate(frac_o_nonorm(ns_o),stat=ier)
        if (ier/=0) call shr_sys_abort()
-       call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.true., &
-            routehandle=routehandle, frac_o=frac_o, rc=rc)
+       ! Note that norm_by_fracs is false in the following because this routehandle is
+       ! used to map fields that are expressed in terms of % of the grid cell.
+       call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.false., &
+            routehandle=routehandle_nonorm, frac_o=frac_o_nonorm, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
        call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
     end if
@@ -340,7 +342,7 @@ contains
     ! ----------------------------------------
     ! Determine pctlnd_o(:) (in/out argument)
     ! ----------------------------------------
-    pctlnd_o(:) = frac_o(:) * 100._r8
+    pctlnd_o(:) = frac_o_nonorm(:) * 100._r8
 
     ! ----------------------------------------
     ! Determine pct_nat_pft_o(:,:)
@@ -357,7 +359,7 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Regrid to determine pctnatveg_o
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, pctnatveg_i, pctnatveg_o, rc=rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_nonorm, pctnatveg_i, pctnatveg_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     allocate(pct_nat_pft_i(0:num_natpft,ns_i))
@@ -375,7 +377,7 @@ contains
     end do
 
     ! Readgrid to determine pct_nat_pft_o
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, pct_nat_pft_i, pct_nat_pft_o, 0, num_natpft, rc=rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_nonorm, pct_nat_pft_i, pct_nat_pft_o, 0, num_natpft, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Rescale pct_nat_pft_o
@@ -420,7 +422,7 @@ contains
     if (ier/=0) call shr_sys_abort()
     call mkpio_get_rawdata(pioid, 'PCT_CROP', mesh_i, pctcrop_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, pctcrop_i, pctcrop_o, rc=rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_nonorm, pctcrop_i, pctcrop_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     allocate(pct_cft_i(1:num_cft,ns_i), stat=ier)
@@ -464,7 +466,7 @@ contains
     end do
 
     ! Readgrid pct_cft_i to determine pct_cft_o
-    call regrid_rawdata(mesh_i, mesh_o, routehandle, pct_cft_i, pct_cft_o, 1, num_cft, rc=rc)
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_nonorm, pct_cft_i, pct_cft_o, 1, num_cft, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Rescale pct_nat_pft_o
@@ -538,7 +540,7 @@ contains
     loc_gpft_o(:) = 0.
     do no = 1,ns_o
        do m = 0, numpft_i-1
-          loc_gpft_o(m) = loc_gpft_o(m) + pctpft_o(no,m) * area_o(no) * frac_o(no)
+          loc_gpft_o(m) = loc_gpft_o(m) + pctpft_o(no,m) * area_o(no) * frac_o_nonorm(no)
        end do
     end do
     do m = 0,numpft_i-1
@@ -562,8 +564,8 @@ contains
 
     ! Clean up memory
     if (mksrf_fdynuse == ' ') then  ! ...else we will reuse it
-       deallocate(frac_o)
-       call ESMF_RouteHandleDestroy(routehandle, nogarbage = .true., rc=rc)
+       deallocate(frac_o_nonorm)
+       call ESMF_RouteHandleDestroy(routehandle_nonorm, nogarbage = .true., rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     end if
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
