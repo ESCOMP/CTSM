@@ -226,8 +226,6 @@ class RegionalCase(BaseCase):
         logger.info("fsurf_in:  %s", fsurf_in)
         logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
 
-        fsurf_out = os.path.join(self.out_dir, fsurf_out)
-
         if self.create_mesh:
             mesh_out = os.path.join(
                 self.out_dir,
