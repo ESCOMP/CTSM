@@ -209,6 +209,7 @@ def get_parser(args, description, valid_neon_sites):
         help="""           
                 Start date for running CTSM simulation in ISO format.
                 [default: %(default)s]
+                (currently non-functional)
                 """,
         action="store",
         dest="start_date",
@@ -622,11 +623,7 @@ class NeonSite:
         case.set_value("RUN_REFDATE", refdate)
         if case_root.endswith(".postad"):
             case.set_value("RUN_STARTDATE", refdate)
-        #else:
-            #case.set_value(
-            #    "RUN_STARTDATE",
-            #    "{yr:04d}-{mo:02d}-01".format(yr=self.start_year, mo=self.start_month),
-            #)
+        # NOTE: if start options are set, RUN_STARTDATE should be modified here
         return True
 
     def modify_user_nl(self, case_root, run_type, rundir):
