@@ -257,7 +257,6 @@ contains
   subroutine lnd_set_mesh_for_single_column(scol_lon, scol_lat, mesh, rc)
 
     ! Generate a mesh for single column
-    use netcdf
     use clm_varcon, only : spval
 
     ! input/output variables
