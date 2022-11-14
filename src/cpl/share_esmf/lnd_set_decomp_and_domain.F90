@@ -135,7 +135,6 @@ contains
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
     else if (trim(driver) == 'lilac') then
-       allocate(lndfrac_glob(ni*nj))
        call lnd_set_lndmask_from_fatmlndfrc(lndmask_glob, lndfrac_glob, ni,nj)
     else
        call shr_sys_abort('driver '//trim(driver)//' is not supported, must be lilac or cmeps')
@@ -603,6 +602,9 @@ contains
     allocate(itemp_glob(gsize))
     call ESMF_DistGridGet(distgrid, 0, seqIndexList=gindex, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    allocate(lndmask_glob(gsize)); lndmask_glob(:) = 0
+
     do n = 1,lsize
        lndmask_glob(gindex(n)) = lndmask_loc(n)
     end do
@@ -655,6 +657,7 @@ contains
     if (masterproc) then
        write(iulog,*)'lat/lon grid flag (isgrid2d) is ',isgrid2d
     end if
+    allocate(frac(ni*nj), mask(ni*nj))
 
     if (isgrid2d) then
        ! Grid is 2d
