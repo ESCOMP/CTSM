@@ -134,22 +134,22 @@
     <default_value>UNSET</default_value>
     <values>
       <!-- Use SSP5-8.5 for PI to PDAY so will have data up to the current year available (for WACCM compsets that use PDAY) -->
-      <value compset="^2010_"                       >2010_control</value>
-      <value compset="^2000_"                	    >2000_control</value>
-      <value compset="^1850_"		            >1850_control</value>
+      <value compset="^2010_" >2010_control</value>
+      <value compset="^2000_" >2000_control</value>
+      <value compset="^1850_" >1850_control</value>
       <value compset="^1850_.*_CLM50%[^_]*NOANTHRO" >1850_noanthro_control</value>
-      <value compset="^HIST_"                       >20thC_transient</value>
-      <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
-      <value compset="^SSP126_"	                    >1850-2100_SSP1-2.6_transient</value>
-      <value compset="^SSP370_"	                    >1850-2100_SSP3-7.0_transient</value>
-      <value compset="^SSP534_"	                    >1850-2100_SSP5-3.4_transient</value>
-      <value compset="^SSP245_"	                    >1850-2100_SSP2-4.5_transient</value>
-      <value compset="^SSP119_"	                    >1850-2100_SSP1-1.9_transient</value>
-      <value compset="^SSP434_"	                    >1850-2100_SSP4-3.4_transient</value>
-      <value compset="^SSP460_"	                    >1850-2100_SSP4-6.0_transient</value>
-      <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
-      <value compset="^AMIP_"	                    >20thC_transient</value>
-      <value compset="^PIPD_"                       >1850-2100_SSP5-8.5_transient</value>
+      <value compset="^HIST_"   >20thC_transient</value>
+      <value compset="^SSP585_"	>1850-2100_SSP5-8.5_transient</value>
+      <value compset="^SSP126_"	>1850-2100_SSP1-2.6_transient</value>
+      <value compset="^SSP370_"	>1850-2100_SSP3-7.0_transient</value>
+      <value compset="^SSP534_"	>1850-2100_SSP5-3.4_transient</value>
+      <value compset="^SSP245_"	>1850-2100_SSP2-4.5_transient</value>
+      <value compset="^SSP119_"	>1850-2100_SSP1-1.9_transient</value>
+      <value compset="^SSP434_"	>1850-2100_SSP4-3.4_transient</value>
+      <value compset="^SSP460_"	>1850-2100_SSP4-6.0_transient</value>
+      <value compset="^SSP585_"	>1850-2100_SSP5-8.5_transient</value>
+      <value compset="^AMIP_"   >20thC_transient</value>
+      <value compset="^PIPD_"   >1850-2100_SSP5-8.5_transient</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -157,6 +157,83 @@
       Determines the use-case that will be sent to the CLM build-namelist utility.
       This is normally set by the component set. This is an advanced flag and should only be
       used by expert users.</desc>
+  </entry>
+
+  <entry id="CLM_NDEP_YEAR_FIRST">
+    <type>char</type>
+    <default_value>UNSET</default_value>
+    <values>
+      <value compset="^2010_">2010</value>
+      <value compset="^2000_">2000</value>
+      <value compset="^1850_">1850</value>
+      <value compset="^HIST_">1850</value>
+      <value compset="^SSP"	 >2015</value>
+      <value compset="^AMIP_">1850</value>
+      <value compset="^PIPD_">2015</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Nitrogen deposition data year first</desc>
+  </entry>
+
+  <entry id="CLM_NDEP_YEAR_LAST">
+    <type>char</type>
+    <default_value>UNSET</default_value>
+    <values>
+      <value compset="^2010_">2010</value>
+      <value compset="^2000_">2000</value>
+      <value compset="^1850_">1850</value>
+      <value compset="^HIST_">1850</value>
+      <value compset="^SSP"	 >2015</value>
+      <value compset="^AMIP_">1850</value>
+      <value compset="^PIPD_">2015</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Nitrogen deposition data year first</desc>
+  </entry>
+
+  <entry id="CLM_NDEP_FILENAME">
+    <type>char</type>
+    <default_value>UNSET</default_value>
+    <values>
+      <value compset="^2010_">lnd/clm2/ndepdata/fndep_clm_WACCM6_CMIP6piControl001_y21-50avg_1850monthly_0.95x1.25_c180802.nc</value>
+      <value compset="^2000_">2000</value>
+      <value compset="^1850_">1850</value>
+      <value compset="^HIST_">1850</value>
+      <value compset="^SSP585_"	>lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</value>
+      <value compset="^SSP126_"	>1850-2100_SSP1-2.6_transient</value>
+      <value compset="^SSP370_"	>1850-2100_SSP3-7.0_transient</value>
+      <value compset="^SSP534_"	>1850-2100_SSP5-3.4_transient</value>
+      <value compset="^SSP245_"	>1850-2100_SSP2-4.5_transient</value>
+      <value compset="^SSP119_"	>1850-2100_SSP1-1.9_transient</value>
+      <value compset="^SSP434_"	>1850-2100_SSP4-3.4_transient</value>
+      <value compset="^SSP460_"	>1850-2100_SSP4-6.0_transient</value>
+      <value compset="^SSP585_"	>lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</value>
+      <value compset="^SSP"	 >
+      <value compset="^AMIP_">1850</value>
+      <value compset="^PIPD_">2015</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Nitrogen deposition data year first</desc>
+  </entry>
+
+  <entry id="CLM_NDEP_TAXMODE">
+    <type>char</type>
+    <default_value>UNSET</default_value>
+    <values>
+      <value compset="^2010_">cycle</value>
+      <value compset="^2000_">2000</value>
+      <value compset="^1850_">1850</value>
+      <value compset="^HIST_">1850</value>
+      <value compset="^SSP"	 >2015</value>
+      <value compset="^AMIP_">1850</value>
+      <value compset="^PIPD_">2015</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Nitrogen deposition data year first</desc>
   </entry>
 
   <!-- CLM_BLDNML_OPTS is not additive, we must list all possible combinations -->
