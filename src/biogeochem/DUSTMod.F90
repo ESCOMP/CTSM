@@ -268,11 +268,11 @@ contains
          ptr_patch=this%thr_crs_rate_patch, set_lake=0._r8, set_urb=0._r8)
     this%prb_crs_fld_thr_patch(begp:endp) = spval
     call hist_addfld1d (fname='P_FT', units='',  &
-         avgflag='A', long_name='probability of crossing fluid threshold', &
+         avgflag='A', long_name='probability of winds crossing fluid threshold', &
          ptr_patch=this%prb_crs_fld_thr_patch, set_lake=0._r8, set_urb=0._r8)
     this%prb_crs_impct_thr_patch(begp:endp) = spval
     call hist_addfld1d (fname='P_IT', units='',  &
-         avgflag='A', long_name='probability of crossing impact threshold', &
+         avgflag='A', long_name='probability of winds crossing impact threshold', &
          ptr_patch=this%prb_crs_impct_thr_patch, set_lake=0._r8, set_urb=0._r8)
     this%intrmtncy_fct_patch(begp:endp) = spval
     call hist_addfld1d (fname='ETA', units='',  &
@@ -287,7 +287,7 @@ contains
     !#####added by dmleung 20 Dec 2021 ########################################
     this%ssr_patch(begp:endp) = spval
     call hist_addfld1d (fname='SSR', units='m/s',  &
-         avgflag='A', long_name='Okin-Pierre shear stress ratio', &
+         avgflag='A', long_name='Okin-Pierre vegetation shear stress ratio (drag partition factor)', &
          ptr_patch=this%ssr_patch, set_lake=0._r8, set_urb=0._r8)
     this%lai_patch(begp:endp) = spval
     call hist_addfld1d (fname='LAI', units='m/s',  &
@@ -611,7 +611,7 @@ contains
 
          !#######################################################################################################
          ! calculate Shao & Lu (2000) dust emission threshold scheme here
-         ! use tmp1 from DUSTini for Iversen and White I&W (1982) (75 um is optimal); use tmp2 for S&L (2000) (107 um is optimal)
+         ! use tmp1 from DUSTini for Iversen and White I&W (1982) (75 um is optimal); use tmp2 for S&L (2000) (80 um is optimal)
          ! recoded to CLM5 27 Nov 2021
          !#######################################################################################################
 
@@ -633,8 +633,8 @@ contains
 
          ! framentation exponent dmleung 27 Nov 2021; moved to this block 23 Dec 2021
          frag_expt = (Ca * (wnd_frc_thr_slt_std - wnd_frc_thr_slt_std_min) / wnd_frc_thr_slt_std_min)  ! fragmentation exponent, defined in Kok et al. (2014a) -dmleung 27 Nov 2021
-         if (frag_expt > 3_r8) then   ! set fragmentation exponent to be 3 or 5 at maximum, to avoid local AOD blowup
-            frag_expt = 3_r8
+         if (frag_expt > 5_r8) then   ! set fragmentation exponent to be 3 or 5 at maximum, to avoid local AOD blowup
+            frag_expt = 5_r8
          end if
 
          !################ drag partition effect, and soil friction velocity############################
