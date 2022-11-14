@@ -571,7 +571,7 @@ contains
     end if
 
     ! Check for nans
-    call check_for_nans(output, trim(fldname), bounds%begg)
+    call check_for_nans(output, trim(fldname), bounds%begg, "output")
 
   end subroutine state_getimport
 
@@ -657,7 +657,7 @@ contains
     end if
 
     ! check for nans
-    call check_for_nans(input, trim(fldname), bounds%begg)
+    call check_for_nans(input, trim(fldname), bounds%begg, "input")
 
   end subroutine state_setexport
 
