@@ -1,4 +1,131 @@
 ===============================================================
+Tag name: ctsm5.1.dev114
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)/@wwieder/@olyson/@ka7eh
+Date: Mon Nov 14 14:22:05 MST 2022
+One-line Summary: Some NEON updates fixing AG sites, update MOSART, small fixes
+
+Purpose and description of changes
+----------------------------------
+
+Minor changes to python scripts and usermod_dirs for NEON cases. Also update the lightning mesh file so that it goes with the
+smaller lightning file. Have NEON use new use-cases for 2018 and 2018-PD conditions for CLM. Have NEON
+Agricultural sites run with prognostic crop. Simple fix for warning about NaN's in import/export data from/to coupler.
+
+Also update MOSART with fixed for direct_to_outlet option.
+
+Add error checking in ParitionWoodFluxes.  Fix value of albgrd_col in SurfaceAlbefdoType.F90. 
+Previously, the wrong value (albgri_col) was being set in InitHistory.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+  Fixes #1871 -- Error in NEON surface datasets for AG sites
+  Fixes #1876 -- NEON data in container
+  Fixes #1889 -- NEON AG sites are running without prognostic crop
+  Fixes #1363 -- 2018_control and 2018-PD_transient use-cases for NEON
+  Fixes #1896 -- Improve misleading error message in check_for_nans
+  Fixes #1263 -- Fix partitionWood fluxes
+  Fixes #1788 -- Fix albgrd_col
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   NEON users: use neon_gcs_upload now. Filenames for NEON surface
+     datasets are changed. Start and end of simulations is different
+     for some sites, and managed by the user-mod-directories. The NEON
+     user-mod assumes transient cases will run with a transient compset
+     and the settings are slightly different for transient vs control
+     including pointing to 2018_control or 2018-PD_transient use-cases.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   Add notes to python tools to run using conda environment setup in py_env_create
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   New use cases: 2018_control and 2018-PD_transient
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   New updated NEON surface datasets
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Remove toolchain python scripts as this work was moved over to the ctsm5.2 development
+
+Changes to tests or testing:
+   Add a run_black target to the python directory Makefile to run black and not just do a black check
+   Add python modules needed for neon scripts to conda py_create_env conda environment
+
+Testing summary: regular, tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - OK (NEON tests are different than baseline)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - 
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    Acheyenne -- PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No (other than NEON sites, and if direct_to_outlet turned on in MOSART)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NEON or if bypass_routing_option==direct_to_outlet in MOSART
+    - what platforms/compilers: all
+    - nature of change:
+        NEON AG sites are significantly different
+
+	NEON sites reran and reevaluated
+	MOSART direct_to_outlet option evaluated by @swensosc and @olyson
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): mosart
+   mosart updated from mosart1_0_45 to to mosart1_0_47 (asynchronous changes, and direct_to_outlet fixes)
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1872 -- NEON updates
+   #1814 -- Add error checking in partitionWoodFluxes
+   #1810 -- Fix albdgrd_col value
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev113
 Originator(s): sacks (Bill Sacks), ekluzek (Erik Kluzek), jedwards (Jim Edwards)
 Date: Fri Oct 28 11:00:26 MDT 2022
