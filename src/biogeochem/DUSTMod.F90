@@ -633,8 +633,8 @@ contains
 
          ! framentation exponent dmleung 27 Nov 2021; moved to this block 23 Dec 2021
          frag_expt = (Ca * (wnd_frc_thr_slt_std - wnd_frc_thr_slt_std_min) / wnd_frc_thr_slt_std_min)  ! fragmentation exponent, defined in Kok et al. (2014a) -dmleung 27 Nov 2021
-         if (frag_expt > 5_r8) then   ! set fragmentation exponent to be 3 or 5 at maximum, to avoid local AOD blowup
-            frag_expt = 5_r8
+         if (frag_expt > 5.0_r8) then   ! set fragmentation exponent to be 3 or 5 at maximum, to avoid local AOD blowup
+            frag_expt = 5.0_r8
          end if
 
          !################ drag partition effect, and soil friction velocity############################
