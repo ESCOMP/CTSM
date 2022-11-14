@@ -648,10 +648,11 @@ contains
 
          if (lnd_frc_mbl(p) > 0.0_r8  .AND. tlai_lu(l)<=1_r8) then
             ! vegetation drag partition equation following Gregory Okin (2008) + Caroline Pierre et al. (2014), dmleung 20 Dec 2021
-            lai(p) = tlai_lu(l)       ! LAI+SAI averaged to landunit level; saved for output
-            if (lai(p) < 0.1_r8) then
-               lai(p)  = 0.1_r8   ! setting LAI ~ 0.1 to be a threshold value as computing K involves 1 / LAI
-            end if
+            lai(p) = tlai_lu(l)+0.1_r8       ! LAI+SAI averaged to landunit level; saved for output
+            if (lai(p) > 1_r8) then
+               lai(p)  = 1_r8   ! setting LAI ~ 0.1 to be a min value (since the value goes to infinity when LAI=0)
+            end if              ! and 1 to be a max value as computing K involves 1 / LAI
+
             ! calculate Okin's shear stress ratio (which is drag partition factor) using Pierre's equation   
             K_length = 2_r8 * (1_r8/lai(p) - 1_r8)   ! Here LAI has to be non-zero to avoid blowup
             ssr(p) = (K_length+f_0*c_e)/(K_length+c_e)
@@ -677,13 +678,13 @@ contains
 
             wnd_frc_slt = fv(p) * frc_thr_rgh_fct   ! wnd_frc_slt will be used in the dust emission equation  -dmleung
 
-            frc_thr_rghn_fct(p) = frc_thr_rgh_fct   ! save hybrid drag partition factor, dmleung 20 Dec 2021
+            frc_thr_rghn_fct(p) = frc_thr_rgh_fct   ! save and output hybrid drag partition factor, dmleung 20 Dec 2021
          else
             wnd_frc_slt = fv(p)                     ! The value here is not important since once lnd_frc_mbl(p) <= 0.0_r8 there will be no emission.
-            frc_thr_rghn_fct(p) = 0.0_r8            ! save hybrid drag partition factor, dmleung 20 Dec 2021
+            frc_thr_rghn_fct(p) = 0.0_r8            ! save and output hybrid drag partition factor, dmleung 20 Dec 2021
          end if
 
-         !##########end of drag partition effect #######################################################
+         !########## end of drag partition effect #######################################################
 
          !############ Add Owen effect; if not, comment out this block !-dmleung, 27 Nov 2021 ###########
          ! the following if-block comes from subr. wnd_frc_slt_get 
@@ -855,7 +856,7 @@ contains
                flx_mss_vrt_dst_ttl(p) = flx_mss_vrt_dst_ttl(p) * intrmtncy_fct(p)  ! multiply dust flux by intermittency -dmleung
             end if
 
-            !############### end my subsection here -dmleung ########################################
+            !############### end my intermittency subsection here -dmleung ########################################
 
          end if   ! lnd_frc_mbl > 0.0
 
