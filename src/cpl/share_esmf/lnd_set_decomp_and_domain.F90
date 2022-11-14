@@ -1,6 +1,19 @@
 module lnd_set_decomp_and_domain
 
-  use ESMF
+  use ESMF         , only : ESMF_VM, ESMF_MESH, ESMF_DistGrid, ESMF_Field
+  use ESMF         , only : ESMF_RouteHandle, ESMF_SUCCESS, ESMF_MeshCreate
+  use ESMF         , only : ESMF_FileFormat_ESMFMESH, ESMF_VMLogMemInfo
+  use ESMF         , only : ESMF_FieldCreate, ESMF_FieldRedistStore, ESMF_FieldRedist
+  use ESMF         , only : ESMF_FieldGet, ESMF_GridCreateNoPeriDimUfrm
+  use ESMF         , only : ESMF_FieldRegrid, ESMF_FieldRegridStore
+  use ESMF         , only : ESMF_Grid, ESMF_ARRAY, ESMF_DistGridCreate, ESMF_TYPEKIND_R8
+  use ESMF         , only : ESMF_MESHLOC_ELEMENT, ESMF_FieldCreate, ESMF_STAGGERLOC_CORNER, ESMF_STAGGERLOC_CENTER
+  use ESMF         , only : ESMF_REGRIDMETHOD_CONSERVE, ESMF_NORMTYPE_DSTAREA
+  use ESMF         , only : ESMF_UNMAPPEDACTION_IGNORE, ESMF_TERMORDER_SRCSEQ
+  use ESMF         , only : ESMF_REGION_TOTAL, ESMF_REDUCE_SUM, ESMF_ARRAYCREATE
+  use ESMF         , only : ESMF_MeshGet, ESMF_DistGridGet, ESMF_LOGFOUNDERROR
+  use ESMF         , only : ESMF_LOGERR_PASSTHRU, ESMF_VMAllReduce, ESMF_FieldRegridGetArea
+  use ESMF         , only : ESMF_FieldDestroy
   use shr_kind_mod , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod  , only : shr_sys_abort
   use shr_log_mod  , only : errMsg => shr_log_errMsg
@@ -99,20 +112,23 @@ contains
     if (trim(driver) == 'cmeps') then
        ! Read in mask meshfile if needed
        if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
+#ifdef DEBUG
           call ESMF_VMLogMemInfo("clm: Before lnd mesh create in ")
+#endif
           mesh_maskinput = ESMF_MeshCreate(filename=trim(meshfile_mask), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
+#ifdef DEBUG
           call ESMF_VMLogMemInfo("clm: After lnd mesh create in ")
-          print *,__FILE__,__LINE__
-
+#endif
           ! Determine lndmask_glob and lndfrac_glob
           ! obain land mask and land fraction by mapping ocean mesh conservatively to land mesh
           ! Note that lndmask_glob and lndfrac_loc_input are allocated in lnd_set_lndmask_from_maskmesh
           call lnd_set_lndmask_from_maskmesh(mesh_lndinput, mesh_maskinput, vm, gsize, lndmask_glob, &
                lndfrac_loc_input, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
+#ifdef DEBUG
           call ESMF_VMLogMemInfo("clm: After lnd_set_lndmask_from_maskmesh ")
-          print *,__FILE__,__LINE__
+#endif
        else
           ! obtain land mask from land mesh file - assume that land frac is identical to land mask
           call lnd_set_lndmask_from_lndmesh(mesh_lndinput, vm, gsize, lndmask_glob, rc)
@@ -461,9 +477,6 @@ contains
           write(iulog,*)
           write(iulog,'(a)')' Reading in land fraction and land mask from '//trim(flandfrac)
        end if
-       ! call lnd_set_read_write_landmask(trim(flandfrac), trim(flandfrac_status), .false., .true., &
-       !      lndmask_glob, lndfrac_glob, size(lndmask_glob))
-
     else
 
        ! If file does not exist - compute lndmask and lndfrac and write to output file
@@ -544,9 +557,6 @@ contains
        ! deallocate memory
        deallocate(maskmask_loc)
        deallocate(lndmask_loc)
-
-       ! call lnd_set_read_write_landmask(trim(flandfrac), trim(flandfrac_status), .true., .false., &
-       !      lndmask_glob, lndfrac_glob, size(lndmask_glob))
 
     end if
 
