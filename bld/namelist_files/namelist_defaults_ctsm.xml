@@ -178,10 +178,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <soil_layerstruct_predefined structure="standard" phys="clm5_0" >20SL_8.5m</soil_layerstruct_predefined>
 <soil_layerstruct_predefined structure="standard" phys="clm4_5" >10SL_3.5m</soil_layerstruct_predefined>
 
-<use_bedrock phys="clm5_1"  use_fates =".true.">.false.</use_bedrock>
+<use_bedrock phys="clm5_1"  use_fates =".true.">.true.</use_bedrock>
 <use_bedrock phys="clm5_1"  vichydro ="1"      >.false.</use_bedrock>
 <use_bedrock phys="clm5_1"                     >.true.</use_bedrock>
-<use_bedrock phys="clm5_0"  use_fates =".true.">.false.</use_bedrock>
+<use_bedrock phys="clm5_0"  use_fates =".true.">.true.</use_bedrock>
 <use_bedrock phys="clm5_0"  vichydro ="1"      >.false.</use_bedrock>
 <use_bedrock phys="clm5_0"                     >.true.</use_bedrock>
 <use_bedrock phys="clm4_5"                     >.false.</use_bedrock>
