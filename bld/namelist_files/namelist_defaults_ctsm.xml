@@ -1437,85 +1437,18 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <fsnowaging  >lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
 
 <!-- Nitrogen deposition streams namelist defaults -->
-<stream_year_first_ndep phys="clm4_5"  use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm4_5"  use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_ndep>
-<model_year_align_ndep  phys="clm4_5"  use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_ndep>
-
-<stream_year_first_ndep phys="clm5_0"  use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm5_0"  use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_ndep>
-<model_year_align_ndep  phys="clm5_0"  use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_ndep>
-
-<stream_year_first_ndep phys="clm5_1"  use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm5_1"  use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_ndep>
-<model_year_align_ndep  phys="clm5_1"  use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_ndep>
-
-<stream_year_first_ndep use_cn=".true."   sim_year="2010" >2010</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   sim_year="2010" >2010</stream_year_last_ndep>
-
-<stream_year_first_ndep use_cn=".true."   sim_year="2000" >2000</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   sim_year="2000" >2000</stream_year_last_ndep>
-
-<stream_year_first_ndep use_cn=".true."   sim_year="1000" >2000</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   sim_year="1000" >2000</stream_year_last_ndep>
-
-<stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_last_ndep>
-
-<stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_ndep>
-
-<stream_fldfilename_ndep phys="clm5_1"  hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0"  hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
-
-<stream_meshfile_ndep hgrid="1.9x2.5">share/meshes/fv1.9x2.5_141008_ESMFmesh_c20191001.nc</stream_meshfile_ndep>
-<stream_meshfile_ndep hgrid="0.9x1.25">share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc</stream_meshfile_ndep>
-
 <!-- Only the CMIP6 Tier I Nitogen deposition files are available -->
-<stream_fldfilename_ndep phys="clm5_1"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_1"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP1-2.6-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_1"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_1"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc</stream_fldfilename_ndep>
 
-<stream_fldfilename_ndep phys="clm5_0"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP1-2.6-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc</stream_fldfilename_ndep>
+<ndep_taxmode use_cn=".true.">cycle</ndep_taxmode>
+<ndep_varlist use_cn=".true.">NDEP_month</ndep_varlist>
 
-<stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP1-2.6-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc</stream_fldfilename_ndep>
-
-<ndep_taxmode            phys="clm5_1"  use_cn=".true.">cycle</ndep_taxmode>
-<ndep_varlist            phys="clm5_1"  use_cn=".true.">NDEP_month</ndep_varlist>
-
-<ndep_taxmode            phys="clm5_0"  use_cn=".true.">cycle</ndep_taxmode>
-<ndep_varlist            phys="clm5_0"  use_cn=".true.">NDEP_month</ndep_varlist>
-
-<ndep_taxmode            phys="clm4_5"  use_cn=".true.">cycle</ndep_taxmode>
-<ndep_varlist            phys="clm4_5"  use_cn=".true.">NDEP_month</ndep_varlist>
-
-<ndepmapalgo                use_cn=".true." >bilinear</ndepmapalgo>
-
-<ndepmapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."   hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."  >bilinear</ndepmapalgo>
+<ndepmapalgo use_cn=".true."  hgrid="1x1_brazil"          >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."  hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."  hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."  hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."  hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."  hgrid="5x5_amazon"          >nn</ndepmapalgo>
 
 <!-- Soilm moisture streams namelist defaults -->
 <!-- This is if you want to prescribe the soil moisture from input datasets rather than model it -->

@@ -2,7 +2,7 @@
 
 <namelist_defaults>
 
-<use_case_desc            >Simulate transient land-use, and aerosol deposition changes from 1850 to current day with historical data, and then to 2100 with the CMIP6 SSP1-2.6 scenario</use_case_desc>
+<use_case_desc>Simulate transient land-use, and aerosol deposition changes from 1850 to current day with historical data, and then to 2100 with the CMIP6 SSP1-2.6 scenario</use_case_desc>
 <use_case_desc use_cn=".true." >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to current day with historical data, and then to 2100 with the CMIP6 SSP1-2.6 scenario</use_case_desc>
 
 <!-- Have a minimal list of things set here, sim_year, sim_year_range, and ssp_rcp, other things should be dependent on these and
