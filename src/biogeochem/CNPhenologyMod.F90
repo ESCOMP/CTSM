@@ -326,7 +326,7 @@ contains
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        call CNOffsetLitterfall(num_soilp, filter_soilp, &
-            crop_inst,cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,soilbiogeochem_state_inst,num_soilc, filter_soilc)
+            crop_inst,cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        call CNBackgroundLitterfall(num_soilp, filter_soilp, &
             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
@@ -343,6 +343,11 @@ contains
             cnveg_state_inst,cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
             leaf_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full), & 
             froot_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full), stem_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full))
+
+       call CNRotationToColumn (num_soilc, filter_soilc, &
+            cnveg_state_inst, soilbiogeochem_state_inst, crop_inst, cnveg_carbonflux_inst, & 
+            cnveg_nitrogenflux_inst)
+
     else
        call endrun( 'bad phase' )
     end if
@@ -3067,7 +3072,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNOffsetLitterfall (num_soilp, filter_soilp, &
-       crop_inst,cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, soilbiogeochem_state_inst,num_soilc,filter_soilc)
+       crop_inst,cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
     ! Determines the flux of C and N from displayed pools to litter
@@ -3077,8 +3082,7 @@ contains
     use pftconMod        , only : npcropmin
     use CNSharedParamsMod, only : use_fun
     use clm_varctl       , only : CNratio_floating
-    use clm_time_manager , only : get_curr_date, get_curr_calday, get_days_per_year, is_beg_curr_year    
-    use dynHarvestMod    , only : CNHarvestPftToColumn 
+    use clm_time_manager , only : get_curr_date, get_curr_calday, get_days_per_year, is_beg_curr_year     
     !
     ! !ARGUMENTS:
     integer                       , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -3089,9 +3093,6 @@ contains
     type(cnveg_nitrogenstate_type), intent(in)    :: cnveg_nitrogenstate_inst
     type(cnveg_carbonflux_type)   , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type) , intent(inout) :: cnveg_nitrogenflux_inst
-    type(soilbiogeochem_state_type) , intent(in)  :: soilbiogeochem_state_inst 
-    integer                       , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                       , intent(in)    :: filter_soilc(:) ! filter for soil columns
     !
     ! !LOCAL VARIABLES:
     integer :: p, c         ! indices
@@ -3434,71 +3435,62 @@ contains
             if (is_beg_curr_year()) then
                croplive(p) = .false.
                t1 = 1.0_r8 / dt
+               ! clear-cut carbon fluxes, remove all displayed/storage/transfer pools
+               ! displayed pools
+               hrv_leafc_to_litter(p)               = leafc(p)          * t1
+               hrv_leafn_to_litter(p)               = leafn(p)          * t1
+               hrv_frootc_to_litter(p)              = frootc(p)         * t1
+               hrv_frootn_to_litter(p)              = frootn(p)         * t1
+               hrv_livestemc_to_litter(p)           = livestemc(p)      * t1
+               hrv_livestemn_to_litter(p)           = livestemn(p)      * t1
+               wood_harvestc(p)                     = deadstemc(p)      * t1
+               wood_harvestn(p)                     = deadstemn(p)      * t1
+               hrv_livecrootc_to_litter(p)          = livecrootc(p)     * t1
+               hrv_livecrootn_to_litter(p)          = livecrootn(p)     * t1
+               hrv_deadcrootc_to_litter(p)          = deadcrootc(p)     * t1
+               hrv_deadcrootn_to_litter(p)          = deadcrootn(p)     * t1
+               hrv_xsmrpool_to_atm(p)               = xsmrpool(p)       * t1
+ 
+               ! storage pools
+               hrv_leafc_storage_to_litter(p)               = leafc_storage(p)          * t1
+               hrv_leafn_storage_to_litter(p)               = leafn_storage(p)          * t1
+               hrv_frootc_storage_to_litter(p)              = frootc_storage(p)         * t1
+               hrv_frootn_storage_to_litter(p)              = frootn_storage(p)         * t1
+               hrv_livestemc_storage_to_litter(p)           = livestemc_storage(p)      * t1
+               hrv_livestemn_storage_to_litter(p)           = livestemn_storage(p)      * t1
+               hrv_deadstemc_storage_to_litter(p)           = deadstemc_storage(p)      * t1
+               hrv_deadstemn_storage_to_litter(p)           = deadstemn_storage(p)      * t1
+               hrv_livecrootc_storage_to_litter(p)          = livecrootc_storage(p)     * t1
+               hrv_livecrootn_storage_to_litter(p)          = livecrootn_storage(p)     * t1
+               hrv_deadcrootc_storage_to_litter(p)          = deadcrootc_storage(p)     * t1
+               hrv_deadcrootn_storage_to_litter(p)          = deadcrootn_storage(p)     * t1
+               hrv_gresp_storage_to_litter(p)               = gresp_storage(p)          * t1
+
+               ! transfer pools
+               hrv_leafc_xfer_to_litter(p)               = leafc_xfer(p)                * t1
+               hrv_leafn_xfer_to_litter(p)               = leafn_xfer(p)                * t1
+               hrv_frootc_xfer_to_litter(p)              = frootc_xfer(p)               * t1
+               hrv_frootn_xfer_to_litter(p)              = frootn_xfer(p)               * t1
+               hrv_livestemc_xfer_to_litter(p)           = livestemc_xfer(p)            * t1
+               hrv_livestemn_xfer_to_litter(p)           = livestemn_xfer(p)            * t1
+               hrv_deadstemc_xfer_to_litter(p)           = deadstemc_xfer(p)            * t1
+               hrv_deadstemn_xfer_to_litter(p)           = deadstemn_xfer(p)            * t1
+               hrv_livecrootc_xfer_to_litter(p)          = livecrootc_xfer(p)           * t1
+               hrv_livecrootn_xfer_to_litter(p)          = livecrootn_xfer(p)           * t1
+               hrv_deadcrootc_xfer_to_litter(p)          = deadcrootc_xfer(p)           * t1
+               hrv_deadcrootn_xfer_to_litter(p)          = deadcrootn_xfer(p)           * t1
+               hrv_gresp_xfer_to_litter(p)               = gresp_xfer(p)                * t1
+            
+               ! retransn pools
+               hrv_retransn_to_litter(p)                 = retransn(p)                  * t1
+
             else
                croplive(p) = .true.
-               t1 = 0._r8
-            end if 
-            ! clear-cut carbon fluxes, remove all displayed/storage/transfer pools
-
-
-            ! displayed pools
-            hrv_leafc_to_litter(p)               = leafc(p)          * t1
-            hrv_leafn_to_litter(p)               = leafn(p)          * t1
-            hrv_frootc_to_litter(p)              = frootc(p)         * t1
-            hrv_frootn_to_litter(p)              = frootn(p)         * t1
-            hrv_livestemc_to_litter(p)           = livestemc(p)      * t1
-            hrv_livestemn_to_litter(p)           = livestemn(p)      * t1
-            wood_harvestc(p)                     = deadstemc(p)      * t1
-            wood_harvestn(p)                     = deadstemn(p)      * t1
-            hrv_livecrootc_to_litter(p)          = livecrootc(p)     * t1
-            hrv_livecrootn_to_litter(p)          = livecrootn(p)     * t1
-            hrv_deadcrootc_to_litter(p)          = deadcrootc(p)     * t1
-            hrv_deadcrootn_to_litter(p)          = deadcrootn(p)     * t1
-            hrv_xsmrpool_to_atm(p)               = xsmrpool(p)       * t1
- 
-            ! storage pools
-            hrv_leafc_storage_to_litter(p)               = leafc_storage(p)          * t1
-            hrv_leafn_storage_to_litter(p)               = leafn_storage(p)          * t1
-            hrv_frootc_storage_to_litter(p)              = frootc_storage(p)         * t1
-            hrv_frootn_storage_to_litter(p)              = frootn_storage(p)         * t1
-            hrv_livestemc_storage_to_litter(p)           = livestemc_storage(p)      * t1
-            hrv_livestemn_storage_to_litter(p)           = livestemn_storage(p)      * t1
-            hrv_deadstemc_storage_to_litter(p)           = deadstemc_storage(p)      * t1
-            hrv_deadstemn_storage_to_litter(p)           = deadstemn_storage(p)      * t1
-            hrv_livecrootc_storage_to_litter(p)          = livecrootc_storage(p)     * t1
-            hrv_livecrootn_storage_to_litter(p)          = livecrootn_storage(p)     * t1
-            hrv_deadcrootc_storage_to_litter(p)          = deadcrootc_storage(p)     * t1
-            hrv_deadcrootn_storage_to_litter(p)          = deadcrootn_storage(p)     * t1
-            hrv_gresp_storage_to_litter(p)               = gresp_storage(p)          * t1
-
-            ! transfer pools
-            hrv_leafc_xfer_to_litter(p)               = leafc_xfer(p)                * t1
-            hrv_leafn_xfer_to_litter(p)               = leafn_xfer(p)                * t1
-            hrv_frootc_xfer_to_litter(p)              = frootc_xfer(p)               * t1
-            hrv_frootn_xfer_to_litter(p)              = frootn_xfer(p)               * t1
-            hrv_livestemc_xfer_to_litter(p)           = livestemc_xfer(p)            * t1
-            hrv_livestemn_xfer_to_litter(p)           = livestemn_xfer(p)            * t1
-            hrv_deadstemc_xfer_to_litter(p)           = deadstemc_xfer(p)            * t1
-            hrv_deadstemn_xfer_to_litter(p)           = deadstemn_xfer(p)            * t1
-            hrv_livecrootc_xfer_to_litter(p)          = livecrootc_xfer(p)           * t1
-            hrv_livecrootn_xfer_to_litter(p)          = livecrootn_xfer(p)           * t1
-            hrv_deadcrootc_xfer_to_litter(p)          = deadcrootc_xfer(p)           * t1
-            hrv_deadcrootn_xfer_to_litter(p)          = deadcrootn_xfer(p)           * t1
-            hrv_gresp_xfer_to_litter(p)               = gresp_xfer(p)                * t1
-            
-            ! retransn pools
-            hrv_retransn_to_litter(p)                 = retransn(p)                  * t1
-
-            ! summarize all fuxes at orchard rotation to column level (added by O. Dombrowski adapted based on CLM-Palm (Fan et al.(2015))
-            if (.not. croplive(p)) then   
-                call CNHarvestPftToColumn (num_soilc, filter_soilc, &
-                    soilbiogeochem_state_inst, CNVeg_carbonflux_inst, cnveg_nitrogenflux_inst)
             end if
-
 
          end if ! end orchard rotation
       end do ! end patch loop
-
+    
     end associate 
 
   end subroutine CNOffsetLitterfall
@@ -4058,5 +4050,259 @@ contains
     end associate
 
   end subroutine CNLitterToColumn
+
+  !-----------------------------------------------------------------------
+  subroutine CNRotationToColumn (num_soilc, filter_soilc, &
+       cnveg_state_inst, soilbiogeochem_state_inst, &
+       crop_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+    !
+    ! !DESCRIPTION:
+    ! called at the end of CNPhenology to gather all patch-level orchard rotation litterfall
+    ! fluxes
+    ! to the column level and assign them to the three litter pools
+    !
+    ! !USES:
+    use clm_varpar , only : maxpatch_pft, nlevdecomp
+    use pftconMod  , only : npcropmin
+    !
+    ! !ARGUMENTS:
+    integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
+    integer                         , intent(in)    :: filter_soilc(:) ! soil column filter
+    type(crop_type)                 , intent(inout) :: crop_inst
+    type(cnveg_state_type)          , intent(in)    :: cnveg_state_inst
+    type(soilbiogeochem_state_type) , intent(in)    :: soilbiogeochem_state_inst
+    type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
+    type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc,c,pi,p,j               ! indices
+    !-----------------------------------------------------------------------
+
+    associate(                                                                                                 &
+         ivt                              =>    patch%itype                                                    , & ! Input:  [integer  (:)   ]  pft vegetation type
+         wtcol                            =>    patch%wtcol                                                    , & ! Input:  [real(r8) (:)   ]  pft weight relative to column (0-1)
+
+         perennial                        =>    pftcon%perennial                                               , & ! Input:  binary flag for perennial crop types
+         lf_flab                          =>    pftcon%lf_flab                                                 , & ! Input:  leaf litter labile fraction
+         lf_fcel                          =>    pftcon%lf_fcel                                                 , & ! Input:  leaf litter cellulose fraction
+         lf_flig                          =>    pftcon%lf_flig                                                 , & ! Input:  leaf litter lignin fraction
+         fr_flab                          =>    pftcon%fr_flab                                                 , & ! Input:  fine root litter labile fraction
+         fr_fcel                          =>    pftcon%fr_fcel                                                 , & ! Input:  fine root litter cellulose fraction
+         fr_flig                          =>    pftcon%fr_flig                                                 , & ! Input:  fine root litter lignin fraction
+
+         offset2_flag                     =>    cnveg_state_inst%offset2_flag_patch                            , & ! Input: binary flag for rotation of perennial crop types
+         croplive                         =>    crop_inst%croplive_patch                                       , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
+
+         leaf_prof                        =>    soilbiogeochem_state_inst%leaf_prof_patch                      , & ! Input: [real(r8) (:,:) ]  (1/m) profile of leaves
+         froot_prof                       =>    soilbiogeochem_state_inst%froot_prof_patch                     , & ! Input: [real(r8) (:,:) ]  (1/m) profile of fine roots
+         croot_prof                       =>    soilbiogeochem_state_inst%croot_prof_patch                     , & ! Input: [real(r8) (:,:) ]  (1/m) profile of coarse roots
+         stem_prof                        =>    soilbiogeochem_state_inst%stem_prof_patch                      , & ! Input: [real(r8) (:,:) ]  (1/m) profile of stems
+
+         hrv_leafc_to_litter              =>    cnveg_carbonflux_inst%hrv_leafc_to_litter_patch                , & ! Input: [real(r8) (:)   ]
+         hrv_frootc_to_litter             =>    cnveg_carbonflux_inst%hrv_frootc_to_litter_patch               , & ! Input: [real(r8) (:)   ]
+         hrv_livestemc_to_litter          =>    cnveg_carbonflux_inst%hrv_livestemc_to_litter_patch            , & ! Input: [real(r8) (:)   ]
+         pwood_harvestc                   =>    cnveg_carbonflux_inst%wood_harvestc_patch                      , & ! Input: [real(r8) (:)   ]
+         hrv_livecrootc_to_litter         =>    cnveg_carbonflux_inst%hrv_livecrootc_to_litter_patch           , & ! Input: [real(r8) (:)   ]
+         hrv_deadcrootc_to_litter         =>    cnveg_carbonflux_inst%hrv_deadcrootc_to_litter_patch           , & ! Input: [real(r8) (:)   ]
+         hrv_leafc_storage_to_litter      =>    cnveg_carbonflux_inst%hrv_leafc_storage_to_litter_patch        , & ! Input: [real(r8) (:)   ]
+         hrv_frootc_storage_to_litter     =>    cnveg_carbonflux_inst%hrv_frootc_storage_to_litter_patch       , & ! Input: [real(r8) (:)   ]
+         hrv_livestemc_storage_to_litter  =>    cnveg_carbonflux_inst%hrv_livestemc_storage_to_litter_patch    , & ! Input: [real(r8) (:)   ]
+         hrv_deadstemc_storage_to_litter  =>    cnveg_carbonflux_inst%hrv_deadstemc_storage_to_litter_patch    , & ! Input: [real(r8) (:)   ]
+         hrv_livecrootc_storage_to_litter =>    cnveg_carbonflux_inst%hrv_livecrootc_storage_to_litter_patch   , & ! Input: [real(r8) (:)   ]
+         hrv_deadcrootc_storage_to_litter =>    cnveg_carbonflux_inst%hrv_deadcrootc_storage_to_litter_patch   , & ! Input: [real(r8) (:)   ]
+         hrv_gresp_storage_to_litter      =>    cnveg_carbonflux_inst%hrv_gresp_storage_to_litter_patch        , & ! Input: [real(r8) (:)   ]
+         hrv_leafc_xfer_to_litter         =>    cnveg_carbonflux_inst%hrv_leafc_xfer_to_litter_patch           , & ! Input: [real(r8) (:)   ]
+         hrv_frootc_xfer_to_litter        =>    cnveg_carbonflux_inst%hrv_frootc_xfer_to_litter_patch          , & ! Input: [real(r8) (:)   ]
+         hrv_livestemc_xfer_to_litter     =>    cnveg_carbonflux_inst%hrv_livestemc_xfer_to_litter_patch       , & ! Input: [real(r8) (:)   ]
+         hrv_deadstemc_xfer_to_litter     =>    cnveg_carbonflux_inst%hrv_deadstemc_xfer_to_litter_patch       , & ! Input: [real(r8) (:)   ]
+         hrv_livecrootc_xfer_to_litter    =>    cnveg_carbonflux_inst%hrv_livecrootc_xfer_to_litter_patch      , & ! Input: [real(r8) (:)   ]
+         hrv_deadcrootc_xfer_to_litter    =>    cnveg_carbonflux_inst%hrv_deadcrootc_xfer_to_litter_patch      , & ! Input: [real(r8) (:)   ]
+         hrv_gresp_xfer_to_litter         =>    cnveg_carbonflux_inst%hrv_gresp_xfer_to_litter_patch           , & ! Input: [real(r8) (:)   ]
+         cwood_harvestc                   =>    cnveg_carbonflux_inst%wood_harvestc_col                        , & ! InOut: [real(r8) (:)   ]
+         harvest_c_to_litr_met_c          =>    cnveg_carbonflux_inst%harvest_c_to_litr_met_c_col              , & ! InOut: [real(r8) (:,:) ]  C fluxes associated with harvest to litter metabolic pool (gC/m3/s)
+         harvest_c_to_litr_cel_c          =>    cnveg_carbonflux_inst%harvest_c_to_litr_cel_c_col              , & ! InOut: [real(r8) (:,:) ]  C fluxes associated with harvest to litter cellulose pool (gC/m3/s)
+         harvest_c_to_litr_lig_c          =>    cnveg_carbonflux_inst%harvest_c_to_litr_lig_c_col              , & ! InOut: [real(r8) (:,:) ]  C fluxes associated with harvest to litter lignin pool (gC/m3/s)
+         harvest_c_to_cwdc                =>    cnveg_carbonflux_inst%harvest_c_to_cwdc_col                    , & ! InOut: [real(r8) (:,:) ]  C fluxes associated with harvest to CWD pool (gC/m3/s)
+
+         hrv_leafn_to_litter              =>    cnveg_nitrogenflux_inst%hrv_leafn_to_litter_patch              , & ! Input: [real(r8) (:)   ]
+         hrv_frootn_to_litter             =>    cnveg_nitrogenflux_inst%hrv_frootn_to_litter_patch             , & ! Input: [real(r8) (:)   ]
+         hrv_livestemn_to_litter          =>    cnveg_nitrogenflux_inst%hrv_livestemn_to_litter_patch          , & ! Input: [real(r8) (:)   ]
+         pwood_harvestn                   =>    cnveg_nitrogenflux_inst%wood_harvestn_patch                    , & ! Input: [real(r8) (:)   ]
+         hrv_livecrootn_to_litter         =>    cnveg_nitrogenflux_inst%hrv_livecrootn_to_litter_patch         , & ! Input: [real(r8) (:)   ]
+         hrv_deadcrootn_to_litter         =>    cnveg_nitrogenflux_inst%hrv_deadcrootn_to_litter_patch         , & ! Input: [real(r8) (:)   ]
+         hrv_retransn_to_litter           =>    cnveg_nitrogenflux_inst%hrv_retransn_to_litter_patch           , & ! Input: [real(r8) (:)   ]
+         hrv_leafn_storage_to_litter      =>    cnveg_nitrogenflux_inst%hrv_leafn_storage_to_litter_patch      , & ! Input: [real(r8) (:)   ]
+         hrv_frootn_storage_to_litter     =>    cnveg_nitrogenflux_inst%hrv_frootn_storage_to_litter_patch     , & ! Input: [real(r8) (:)   ]
+         hrv_livestemn_storage_to_litter  =>    cnveg_nitrogenflux_inst%hrv_livestemn_storage_to_litter_patch  , & ! Input: [real(r8) (:)   ]
+         hrv_deadstemn_storage_to_litter  =>    cnveg_nitrogenflux_inst%hrv_deadstemn_storage_to_litter_patch  , & ! Input: [real(r8) (:)   ]
+         hrv_livecrootn_storage_to_litter =>    cnveg_nitrogenflux_inst%hrv_livecrootn_storage_to_litter_patch , & ! Input: [real(r8) (:)   ]
+         hrv_deadcrootn_storage_to_litter =>    cnveg_nitrogenflux_inst%hrv_deadcrootn_storage_to_litter_patch , & ! Input: [real(r8) (:)   ]
+         hrv_leafn_xfer_to_litter         =>    cnveg_nitrogenflux_inst%hrv_leafn_xfer_to_litter_patch         , & ! Input: [real(r8) (:)   ]
+         hrv_frootn_xfer_to_litter        =>    cnveg_nitrogenflux_inst%hrv_frootn_xfer_to_litter_patch        , & ! Input: [real(r8) (:)   ]
+         hrv_livestemn_xfer_to_litter     =>    cnveg_nitrogenflux_inst%hrv_livestemn_xfer_to_litter_patch     , & ! Input: [real(r8) (:)   ]
+         hrv_deadstemn_xfer_to_litter     =>    cnveg_nitrogenflux_inst%hrv_deadstemn_xfer_to_litter_patch     , & ! Input: [real(r8) (:)   ]
+         hrv_livecrootn_xfer_to_litter    =>    cnveg_nitrogenflux_inst%hrv_livecrootn_xfer_to_litter_patch    , & ! Input: [real(r8) (:)   ]
+         hrv_deadcrootn_xfer_to_litter    =>    cnveg_nitrogenflux_inst%hrv_deadcrootn_xfer_to_litter_patch    , & ! Input: [real(r8) (:)   ]
+         cwood_harvestn                   =>    cnveg_nitrogenflux_inst%wood_harvestn_col                      , & ! InOut: [real(r8) (:)   ]
+         harvest_n_to_litr_met_n          =>    cnveg_nitrogenflux_inst%harvest_n_to_litr_met_n_col            , & ! InOut: [real(r8) (:,:) ]  N fluxes associated with harvest to litter metabolic pool (gN/m3/s)
+         harvest_n_to_litr_cel_n          =>    cnveg_nitrogenflux_inst%harvest_n_to_litr_cel_n_col            , & ! InOut: [real(r8) (:,:) ]  N fluxes associated with harvest to litter cellulose pool (gN/m3/s)
+         harvest_n_to_litr_lig_n          =>    cnveg_nitrogenflux_inst%harvest_n_to_litr_lig_n_col            , & ! InOut: [real(r8) (:,:) ]  N fluxes associated with harvest to litter lignin pool (gN/m3/s)
+         harvest_n_to_cwdn                =>    cnveg_nitrogenflux_inst%harvest_n_to_cwdn_col                    & ! InOut: [real(r8) (:,:) ]  N fluxes associated with harvest to CWD pool (gN/m3/s)
+        )
+
+     do j = 1, nlevdecomp
+        do pi = 1,maxpatch_pft
+           do fc = 1,num_soilc
+              c = filter_soilc(fc)
+
+              if (pi <=  col%npatches(c)) then
+                 p = col%patchi(c) + pi - 1
+
+                 if (patch%active(p) .and. (.not. croplive(p)) .and. ivt(p) >= npcropmin .and. perennial(ivt(p)) == 1._r8 .and. offset2_flag(p) == 1._r8) then
+
+                    ! leaf harvest mortality carbon fluxes
+                    harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
+                         hrv_leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                    harvest_c_to_litr_cel_c(c,j) = harvest_c_to_litr_cel_c(c,j) + &
+                         hrv_leafc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                    harvest_c_to_litr_lig_c(c,j) = harvest_c_to_litr_lig_c(c,j) + &
+                         hrv_leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+
+                    ! fine root harvest mortality carbon fluxes
+                    harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
+                         hrv_frootc_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                    harvest_c_to_litr_cel_c(c,j) = harvest_c_to_litr_cel_c(c,j) + &
+                         hrv_frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                    harvest_c_to_litr_lig_c(c,j) = harvest_c_to_litr_lig_c(c,j) + &
+                         hrv_frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
+
+                    ! wood harvest mortality carbon fluxes
+                    harvest_c_to_cwdc(c,j)  = harvest_c_to_cwdc(c,j)  + &
+                         hrv_livestemc_to_litter(p)  * wtcol(p) * stem_prof(p,j)
+                    harvest_c_to_cwdc(c,j) = harvest_c_to_cwdc(c,j) + &
+                         hrv_livecrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
+                    harvest_c_to_cwdc(c,j) = harvest_c_to_cwdc(c,j) + &
+                         hrv_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
+                    ! storage harvest mortality carbon fluxes
+                    harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
+                         hrv_leafc_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
+                    harvest_c_to_litr_met_c(c,j)     = harvest_c_to_litr_met_c(c,j)     + &
+                         hrv_frootc_storage_to_litter(p)     * wtcol(p) * froot_prof(p,j)
+                    harvest_c_to_litr_met_c(c,j)  = harvest_c_to_litr_met_c(c,j) + &
+                         hrv_livestemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j)
+                    harvest_c_to_litr_met_c(c,j)  = harvest_c_to_litr_met_c(c,j) + &
+                         hrv_deadstemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j)
+                    harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
+                         hrv_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j)
+                    harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
+                         hrv_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j)
+                    harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
+                         hrv_gresp_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
+
+                    ! transfer harvest mortality carbon fluxes
+                    harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
+                         hrv_leafc_xfer_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
+                    harvest_c_to_litr_met_c(c,j)     = harvest_c_to_litr_met_c(c,j)     + &
+                         hrv_frootc_xfer_to_litter(p)     * wtcol(p) * froot_prof(p,j)
+                    harvest_c_to_litr_met_c(c,j)  = harvest_c_to_litr_met_c(c,j) + &
+                         hrv_livestemc_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j)
+                    harvest_c_to_litr_met_c(c,j)  = harvest_c_to_litr_met_c(c,j) + &
+                         hrv_deadstemc_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j)
+                    harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
+                         hrv_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
+                    harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
+                         hrv_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
+                    harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
+                         hrv_gresp_xfer_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
+
+                    ! leaf harvest mortality nitrogen fluxes
+                    harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
+                         hrv_leafn_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                    harvest_n_to_litr_cel_n(c,j) = harvest_n_to_litr_cel_n(c,j) + &
+                         hrv_leafn_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                    harvest_n_to_litr_lig_n(c,j) = harvest_n_to_litr_lig_n(c,j) + &
+                         hrv_leafn_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+
+                    ! fine root litter nitrogen fluxes
+                    harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
+                         hrv_frootn_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                    harvest_n_to_litr_cel_n(c,j) = harvest_n_to_litr_cel_n(c,j) + &
+                         hrv_frootn_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                    harvest_n_to_litr_lig_n(c,j) = harvest_n_to_litr_lig_n(c,j) + &
+                         hrv_frootn_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
+
+                    ! wood harvest mortality nitrogen fluxes
+                    harvest_n_to_cwdn(c,j)  = harvest_n_to_cwdn(c,j)  + &
+                         hrv_livestemn_to_litter(p)  * wtcol(p) * stem_prof(p,j)
+                    harvest_n_to_cwdn(c,j) = harvest_n_to_cwdn(c,j) + &
+                         hrv_livecrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
+                    harvest_n_to_cwdn(c,j) = harvest_n_to_cwdn(c,j) + &
+                         hrv_deadcrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
+
+                    ! retranslocated N pool harvest mortality fluxes
+                    harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
+                         hrv_retransn_to_litter(p) * wtcol(p) * leaf_prof(p,j)
+
+                    ! storage harvest mortality nitrogen fluxes
+                    harvest_n_to_litr_met_n(c,j)      = harvest_n_to_litr_met_n(c,j)      + &
+                         hrv_leafn_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
+                    harvest_n_to_litr_met_n(c,j)     = harvest_n_to_litr_met_n(c,j)     + &
+                         hrv_frootn_storage_to_litter(p)     * wtcol(p) * froot_prof(p,j)
+                    harvest_n_to_litr_met_n(c,j)  = harvest_n_to_litr_met_n(c,j) + &
+                         hrv_livestemn_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j)
+                    harvest_n_to_litr_met_n(c,j)  = harvest_n_to_litr_met_n(c,j) + &
+                         hrv_deadstemn_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j)
+                    harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
+                         hrv_livecrootn_storage_to_litter(p) * wtcol(p) * croot_prof(p,j)
+                    harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
+                         hrv_deadcrootn_storage_to_litter(p) * wtcol(p) * croot_prof(p,j)
+
+                    ! transfer harvest mortality nitrogen fluxes
+                    harvest_n_to_litr_met_n(c,j)      = harvest_n_to_litr_met_n(c,j)      + &
+                         hrv_leafn_xfer_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
+                    harvest_n_to_litr_met_n(c,j)     = harvest_n_to_litr_met_n(c,j)     + &
+                         hrv_frootn_xfer_to_litter(p)     * wtcol(p) * froot_prof(p,j)
+                    harvest_n_to_litr_met_n(c,j)  = harvest_n_to_litr_met_n(c,j) + &
+                         hrv_livestemn_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j)
+                    harvest_n_to_litr_met_n(c,j)  = harvest_n_to_litr_met_n(c,j) + &
+                         hrv_deadstemn_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j)
+                    harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
+                         hrv_livecrootn_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
+                    harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
+                         hrv_deadcrootn_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
+
+                 end if
+              end if
+
+           end do
+
+        end do
+     end do
+
+     do pi = 1,maxpatch_pft
+        do fc = 1,num_soilc
+           c = filter_soilc(fc)
+
+           if (pi <=  col%npatches(c)) then
+              p = col%patchi(c) + pi - 1
+
+              if (patch%active(p)) then
+                 ! wood harvest mortality carbon fluxes to product pools
+                 cwood_harvestc(c)  = cwood_harvestc(c)  + &
+                      pwood_harvestc(p)  * wtcol(p)
+
+                 ! wood harvest mortality nitrogen fluxes to product pools
+                 cwood_harvestn(c)  = cwood_harvestn(c)  + &
+                      pwood_harvestn(p)  * wtcol(p)
+              end if
+           end if
+
+        end do
+
+     end do
+
+    end associate
+
+  end subroutine CNRotationToColumn
 
 end module CNPhenologyMod
