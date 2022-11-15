@@ -82,8 +82,6 @@ module DUSTMod
      real(r8), pointer, private :: thr_crs_rate_patch        (:)   ! threshold crossing rate (unitless)
      real(r8), pointer, private :: prb_crs_fld_thr_patch     (:)   ! probability of wind speed crossing fluid threshold
      real(r8), pointer, private :: prb_crs_impct_thr_patch   (:)   ! probability of wind speed crossing impact threshold
-     !########### added by dmleung 17 Dec 2021 ########################################################################
-     real(r8), pointer, private :: ustar_patch               (:)   ! output friction velocity for SP mode (m/s)
      !########### added by dmleung 20 Dec 2021 ########################################################################
      real(r8), pointer, private :: ssr_patch                 (:)   ! [dimless] integrated shear stress ratiio, defined by Okin (2008) and then integrated by Caroline Pierre et al. (2014)
      real(r8), pointer, private :: lai_patch                 (:)   ! [m2 leaf /m2 land] LAI+SAI for calculating Okin's drag partition, averaged to landunit level
@@ -160,8 +158,6 @@ contains
     allocate(this%thr_crs_rate_patch        (begp:endp))        ; this%thr_crs_rate_patch        (:)   = nan
     allocate(this%prb_crs_fld_thr_patch     (begp:endp))        ; this%prb_crs_fld_thr_patch     (:)   = nan
     allocate(this%prb_crs_impct_thr_patch   (begp:endp))        ; this%prb_crs_impct_thr_patch   (:)   = nan
-    !#### added by dmleung 17 Dec 2021 ######################################
-    allocate(this%ustar_patch               (begp:endp))        ; this%ustar_patch               (:)   = nan
     !#### added by dmleung 17 Dec 2021 ######################################
     allocate(this%ssr_patch                 (begp:endp))        ; this%ssr_patch                 (:)   = nan
     allocate(this%lai_patch                 (begp:endp))        ; this%lai_patch                 (:)   = nan
@@ -278,12 +274,6 @@ contains
     call hist_addfld1d (fname='ETA', units='',  &
          avgflag='A', long_name='intermittency factor', &
          ptr_patch=this%intrmtncy_fct_patch, set_lake=0._r8, set_urb=0._r8)
-    !#####added by dmleung 2 Dec 2021 #########################################
-    ! This is already output as FV in FrictionVelocityMod
-    !this%ustar_patch(begp:endp) = spval
-    !call hist_addfld1d (fname='USTAR', units='m/s',  &
-         !avgflag='A', long_name='friction velocity', &
-         !ptr_patch=this%ustar_patch, set_lake=0._r8, set_urb=0._r8)
     !#####added by dmleung 20 Dec 2021 ########################################
     this%ssr_patch(begp:endp) = spval
     call hist_addfld1d (fname='SSR', units='m/s',  &
@@ -402,7 +392,6 @@ contains
     real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
     real(r8), parameter :: flx_mss_fdg_fct = 5.0e-4_r8 ! [frc] Empir. mass flx tuning eflx_lh_vegt
     !real(r8), parameter :: vai_mbl_thr = 0.3_r8        ! [m2 m-2] VAI threshold quenching dust mobilization
-    !real(r8), parameter :: vai_mbl_thr = 0.3_r8        ! [m2 m-2] VAI threshold quenching dust mobilization
     !####### added by dmleung 27 Nov 2021 ###########################################################################
     character(len=*),parameter :: subname = 'DUSTEmission'
     real(r8), parameter :: vai_mbl_thr = 1.0_r8        ! [m2 m-2] new VAI threshold; dmleung suggests 1 or 0.5, and the default 0.3 seems a bit too small -dmleung 27 Nov 2021
@@ -464,7 +453,6 @@ contains
          prb_crs_impct_thr   => dust_inst%prb_crs_impct_thr_patch    , &
          ! added by dmleung 17 Dec 2021
          roughfct            => soilstate_inst%roughfct_patch        , &
-         ustar               => dust_inst%ustar_patch                , & ! Output friction velocity for SP mode
          ! added by dmleung 20 Dec 2021
          ssr                 => dust_inst%ssr_patch                  , &
          lai                 => dust_inst%lai_patch                  , &
@@ -568,8 +556,6 @@ contains
          prb_crs_fld_thr(p) = 0.0_r8
          prb_crs_impct_thr(p) = 0.0_r8
          intrmtncy_fct(p) = 0.0_r8
-         ! dmleung's edit for including friction velcoity for SP mode output, 17 Dec 2021
-         ustar(p) = 0.0_r8
          ! dmleung's edit, 20 Dec 2021
          ssr(p) = 0.0_r8
          lai(p) = 0.0_r8
@@ -701,7 +687,6 @@ contains
 
          ! save soil friction velocity and roughness effect before the if-statement, -dml, 1 Mar 2021, coded to CLM5 27 Nov 2021
          wnd_frc_soil(p) = wnd_frc_slt  ! save soil friction velocity for CLM output, which has drag partition and Owen effect  -dml
-         ustar(p)        = fv(p)        ! save friction velocity for SP mode (use_cn=0) since only CN/BGC mode (use_cn=1) has FV output -dmleung 17 Dec 2021
          ! save land mobile fraction
          lnd_frc_mble(p) = lnd_frc_mbl(p)  ! save land mobile fraction first, before the if-statement, -dml, 1 Mar 2021
          ! only perform the following calculations if lnd_frc_mbl is non-zero 
