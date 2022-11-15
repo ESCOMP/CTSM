@@ -393,10 +393,6 @@ program mksurfdata
         call pctnatpft(n)%set_pct_l2g(0._r8)
         call pctcft(n)%set_pct_l2g(0._r8)
      end if
-     if (pctlnd_pft(n) < 1.e-6_r8) then
-        call pctnatpft(n)%set_pct_l2g(0._r8)
-        call pctcft(n)%set_pct_l2g(0._r8)
-     end if
      landfrac_pft(n) = pctlnd_pft(n)/100._r8
   end do
   if (fsurdat /= ' ') then
@@ -1240,15 +1236,6 @@ program mksurfdata
             call shr_sys_abort()
          end if
 
-      end do
-
-      ! Make sure that there is no vegetation outside the pft mask
-      do n = 1,ns_o
-         if (pctlnd_pft(n) < 1.e-6_r8 .and. (pctnatpft(n)%get_pct_l2g() > 0 .or. pctcft(n)%get_pct_l2g() > 0)) then
-            write (6,*)'vegetation found outside the pft mask at n=',n
-            write (6,*)'pctnatveg,pctcrop=', pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
-            call shr_sys_abort()
-         end if
       end do
 
       ! Make sure that sums at the landunit level all add to 100%

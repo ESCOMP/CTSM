@@ -380,16 +380,14 @@ contains
     call regrid_rawdata(mesh_i, mesh_o, routehandle_nonorm, pct_nat_pft_i, pct_nat_pft_o, 0, num_natpft, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Rescale pct_nat_pft_o
+    ! Rescale pct_nat_pft_o, and set tiny pctnatveg to 0
     do no = 1,ns_o
-       if (pctnatveg_o(no) > 0._r8) then
+       if (pctnatveg_o(no) >= 1.0e-6_r8) then
           do m = 0,num_natpft
              pct_nat_pft_o(m,no) = pct_nat_pft_o(m,no) / (pctnatveg_o(no) * 0.01_r8)
           end do
        else
-          pct_nat_pft_o(0:num_natpft,no) = 0._r8
-       end if
-       if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
+          pctnatveg_o(no) = 0._r8
           pct_nat_pft_o(0,no) = 100._r8
           pct_nat_pft_o(1:num_natpft,no) = 0._r8
        end if
@@ -469,16 +467,14 @@ contains
     call regrid_rawdata(mesh_i, mesh_o, routehandle_nonorm, pct_cft_i, pct_cft_o, 1, num_cft, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Rescale pct_nat_pft_o
+    ! Rescale pct_cft_o, and set tiny pctcrop to 0
     do no = 1,ns_o
-       if (pctcrop_o(no) > 0._r8) then
+       if (pctcrop_o(no) >= 1.0e-6_r8) then
           do m = 1,num_cft
              pct_cft_o(m,no) = pct_cft_o(m,no) / (pctcrop_o(no) * 0.01_r8)
           end do
        else
-          pct_cft_o(1:num_cft,no) = 0._r8
-       end if
-       if (pctlnd_o(no) < 1.0e-6 .or. pctcrop_o(no) < 1.0e-6) then
+          pctcrop_o(no) = 0._r8
           pct_cft_o(1,no) = 100._r8
           pct_cft_o(2:num_cft,no) = 0._r8
        end if
