@@ -1329,7 +1329,7 @@ contains
     use pftconMod              , only : ntmp_soybean, nirrig_tmp_soybean
     use pftconMod              , only : ntrp_soybean, nirrig_trp_soybean
     use clm_varcon             , only : secspday, dzsoi_decomp
-    use clm_varctl             , only : iulog, use_c13, use_c14
+    use clm_varctl             , only : use_c13, use_c14
     use clm_varctl             , only : nscalar_opt, plant_ndemand_opt, substrate_term_opt, temp_scalar_opt
     use clm_varpar             , only : nlevdecomp
     use clm_time_manager       , only : get_step_size,get_curr_calday
@@ -1651,7 +1651,6 @@ contains
                         ! of amount allocated to roots over course of the growing season
 
                         if (peaklai(p) == 1) then ! lai at maximum allowed
-                           write(iulog,*) 'hit peaklai, allocation to leaf is set to small value'
                            arepr(p) = 0._r8
                            aleaf(p) = 1.e-5_r8
                            astem(p) = astem(p)
@@ -1690,8 +1689,7 @@ contains
                                 (huigrain(p)-huileaf(p))),1._r8)**allconss(ivt(p)) )))
                         end if
                        ! If crops have hit peaklai, then set leaf allocation to small value
-                        if (peaklai(p) == 1) then
-                           write(iulog,*) 'hit peaklai, allocation to leaf is set to small value' 
+                        if (peaklai(p) == 1) then 
                            aleaf(p) = 1.e-5_r8
                         else if (aleafi(p) > aleaff(ivt(p))) then
                            fleaf = aleafi(p) * (exp(-bfact(ivt(p))) - &
@@ -1718,7 +1716,6 @@ contains
                        ! small value
                         if (peaklai(p) == 1) then
                            aleaf(p) = 1.e-5_r8
-                           write(iulog,*) 'hit peaklai, allocation to leaf is set to small value'
                         else if (aleafi3(p) > aleaff(ivt(p))) then
                            fleaf = fleafi(ivt(p)) * (exp(-bfact(ivt(p))) - &
                                 exp(-bfact(ivt(p))*(hui(p)-huileaf(p))/(huilfmat(p)-huileaf(p)))) / &

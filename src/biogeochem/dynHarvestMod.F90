@@ -499,7 +499,7 @@ contains
                  p = col%patchi(c) + pi - 1
 
                  if (patch%active(p)) then
-
+                    
                     ! leaf harvest mortality carbon fluxes
                     harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
                          hrv_leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)

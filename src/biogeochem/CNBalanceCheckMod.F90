@@ -105,6 +105,7 @@ contains
        c = filter_soilc(fc)
        col_begcb(c) = totcolc(c)
        col_begnb(c) = totcoln(c)
+    
     end do
 
     end associate
@@ -161,10 +162,9 @@ contains
 
          ! calculate the total column-level carbon storage, for mass conservation check
          col_endcb(c) = totcolc(c)
-
          ! calculate total column-level inputs
          col_cinputs = gpp(c)
-
+         
          ! calculate total column-level outputs
          ! er = ar + hr, col_fire_closs includes patch-level fire losses
          col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + &
@@ -181,7 +181,7 @@ contains
 
          ! subtract leaching flux
          col_coutputs = col_coutputs - som_c_leached(c)
-
+         
          ! calculate the total column-level carbon balance error for this time step
          col_errcb(c) = (col_cinputs - col_coutputs)*dt - &
               (col_endcb(c) - col_begcb(c))

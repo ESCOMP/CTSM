@@ -533,7 +533,7 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep
     use clm_varpar       , only : nlevsno, nlevgrnd
-    use pftconMod        , only : nswheat, nirrig_swheat, ncitrus, nirrig_citrus, ngrapes, nirrig_grapes, pftcon
+    use pftconMod        , only : nswheat, nirrig_swheat, ncitrus, nirrig_citrus, pftcon
     use pftconMod        , only : nwwheat, nirrig_wwheat
     use pftconMod        , only : nsugarcane, nirrig_sugarcane
     use ColumnType       , only : col
@@ -589,7 +589,6 @@ contains
           if ( (trim(this%baset_mapping) == baset_map_latvary) .and. &
              ((ivt == nswheat) .or. (ivt == nirrig_swheat) .or. &
               (ivt == ncitrus) .or. (ivt == nirrig_citrus) .or. & ! added by Olga
-              (ivt == ngrapes) .or. (ivt == nirrig_grapes) .or. & ! added by Olga
               (ivt == nsugarcane) .or. (ivt == nirrig_sugarcane)) ) then
              rbufslp(p) = max(0._r8, min(pftcon%mxtmp(ivt), &
              t_ref2m_patch(p)-(SHR_CONST_TKFRZ + this%latbaset_patch(p)))) &

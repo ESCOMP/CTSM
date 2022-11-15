@@ -2602,7 +2602,6 @@ contains
             soilbiogeochem_totlitc_col(c)   + &
             soilbiogeochem_totsomc_col(c)   + &
             soilbiogeochem_ctrunc_col(c)
-
     end do
 
   end subroutine Summary_carbonstate
