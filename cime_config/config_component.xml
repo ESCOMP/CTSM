@@ -159,6 +159,18 @@
       used by expert users.</desc>
   </entry>
 
+  <entry id="CLM_NDEP_TAXMODE">
+    <!-- For now use cycle for transient cases until CDEPS issue 201 is resolved -->
+    <type>char</type>
+    <default_value>cycle</default_value>
+    <values>
+      <!-- <value compset="^HIST_">limit</value> -->
+      <!-- <value compset="^SSP"  >limit</value> -->
+      <!-- <value compset="^AMIP_">limit</value> -->
+      <!-- <value compset="^PIPD_">limit</value> -->
+    </values>
+  </entry>
+
   <entry id="CLM_NDEP_YEAR_FIRST">
     <type>char</type>
     <default_value>UNSET</default_value>
