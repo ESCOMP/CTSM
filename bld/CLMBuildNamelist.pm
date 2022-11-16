@@ -3396,9 +3396,10 @@ sub setup_logic_nitrogen_deposition {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_ndep'  , 'val'=>$envxml_ref->{'CLM_NDEP_YEAR_LAST'});
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_ndep'  , 'val'=>$envxml_ref->{'CLM_NDEP_YEAR_ALIGN'});
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'val'=>$envxml_ref->{'CLM_NDEP_DATA_FILENAME'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist'           , 'val'=>$envxml_ref->{'CLM_NDEP_DATA_VARLIST'});
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ndep'   , 'val'=>$envxml_ref->{'CLM_NDEP_MESH_FILENAME'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist'           , 'val'=>$envxml_ref->{'CLM_NDEP_DATA_VARLIST'});
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo'            , 'val'=>$envxml_ref->{'CLM_NDEP_MAPALGO'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_tintalgo'          , 'val'=>$envxml_ref->{'CLM_NDEP_TINTALGO'});
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode'           , 'val'=>$envxml_ref->{'CLM_NDEP_TAXMODE'});
   }
 }

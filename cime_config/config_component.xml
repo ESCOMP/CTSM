@@ -136,22 +136,20 @@
     <default_value>UNSET</default_value>
     <values>
       <!-- Use SSP5-8.5 for PI to PDAY so will have data up to the current year available (for WACCM compsets that use PDAY) -->
-      <value compset="^2010_"                       >2010_control</value>
-      <value compset="^2000_"                	    >2000_control</value>
-      <value compset="^1850_"		            >1850_control</value>
-      <value compset="^1850_.*_CLM50%[^_]*NOANTHRO" >1850_noanthro_control</value>
-      <value compset="^HIST_"                       >20thC_transient</value>
-      <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
-      <value compset="^SSP126_"	                    >1850-2100_SSP1-2.6_transient</value>
-      <value compset="^SSP370_"	                    >1850-2100_SSP3-7.0_transient</value>
-      <value compset="^SSP534_"	                    >1850-2100_SSP5-3.4_transient</value>
-      <value compset="^SSP245_"	                    >1850-2100_SSP2-4.5_transient</value>
-      <value compset="^SSP119_"	                    >1850-2100_SSP1-1.9_transient</value>
-      <value compset="^SSP434_"	                    >1850-2100_SSP4-3.4_transient</value>
-      <value compset="^SSP460_"	                    >1850-2100_SSP4-6.0_transient</value>
-      <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
-      <value compset="^AMIP_"	                    >20thC_transient</value>
-      <value compset="^PIPD_"                       >1850-2100_SSP5-8.5_transient</value>
+      <value compset="^2010_">2010_control</value>
+      <value compset="^2000_">2000_control</value>
+      <value compset="^1850_">1850_control</value>
+      <value compset="^1850_.*_CLM50%[^_]*NOANTHRO">1850_noanthro_control</value>
+      <value compset="^HIST_"   >20thC_transient</value>
+      <value compset="^SSP585_"	>1850-2100_SSP5-8.5_transient</value>
+      <value compset="^SSP126_"	>1850-2100_SSP1-2.6_transient</value>
+      <value compset="^SSP370_"	>1850-2100_SSP3-7.0_transient</value>
+      <value compset="^SSP534_"	>1850-2100_SSP5-3.4_transient</value>
+      <value compset="^SSP245_"	>1850-2100_SSP2-4.5_transient</value>
+      <value compset="^SSP119_"	>1850-2100_SSP1-1.9_transient</value>
+      <value compset="^SSP434_"	>1850-2100_SSP4-3.4_transient</value>
+      <value compset="^SSP460_"	>1850-2100_SSP4-6.0_transient</value>
+      <value compset="^SSP585_"	>1850-2100_SSP5-8.5_transient</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -166,12 +164,9 @@
     <default_value>2000</default_value>
     <values>
       <value compset="^1850_">1850</value>
-      <value compset="^2000_">2000</value>
       <value compset="^2010_">2010</value>
       <value compset="^HIST_">1850</value>
-      <value compset="^AMIP_">1850</value>
       <value compset="^SSP"  >2015</value>
-      <value compset="^PIPD_">2015</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -180,15 +175,12 @@
 
   <entry id="CLM_NDEP_YEAR_LAST">
     <type>char</type>
-    <default_value>UNSET</default_value>
+    <default_value>2000</default_value>
     <values>
       <value compset="^2010_">2010</value>
-      <value compset="^2000_">2000</value>
       <value compset="^1850_">1850</value>
-      <value compset="^HIST_">1850</value>
-      <value compset="^SSP"  >2015</value>
-      <value compset="^AMIP_">1850</value>
-      <value compset="^PIPD_">2015</value>
+      <value compset="^HIST_">2015</value>
+      <value compset="^SSP"  >2101</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -200,10 +192,16 @@
     <default_value>1</default_value>
     <values>
       <value compset="^HIST_">1850</value>
-      <value compset="^AMIP_">1850</value>
       <value compset="^SSP"  >2015</value>
-      <value compset="^PIPD_">2015</value>
     </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Nitrogen deposition align CLM_NDEP_YEAR_FIRST with this model year</desc>
+  </entry>
+
+  <entry id="CLM_NDEP_DTLIMIT">
+    <type>real</type>
+    <default_value>1.e30</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Nitrogen deposition align CLM_NDEP_YEAR_FIRST with this model year</desc>
@@ -229,9 +227,8 @@
   </entry>
 
   <entry id="CLM_NDEP_MESH_FILENAME">
-    <!-- Only the CMIP6 Tier I Nitogen deposition files are available -->
     <type>char</type>
-    <default_value>$DIN_LOC_ROOT/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc</default_value>
+    <default_value>${DIN_LOC_ROOT}/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Nitrogen deposition mesh filename (corresponding to the CLM_NDEP_DATA_FILENAME)</desc>
@@ -248,13 +245,12 @@
   <entry id="CLM_NDEP_TAXMODE">
     <type>char</type>
     <default_value>cycle</default_value>
+    <valid_values>cycle,extend,limit</valid_values>
     <values>
       <!-- For now use cycle for transient cases until CDEPS issue 201
            is resolved - then change value to limit -->
       <value compset="^HIST_">cycle</value>
       <value compset="^SSP"  >cycle</value>
-      <value compset="^AMIP_">cycle</value>
-      <value compset="^PIPD_">cycle</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -264,6 +260,7 @@
   <entry id="CLM_NDEP_MAPALGO">
     <type>char</type>
     <default_value>bilinear</default_value>
+    <valid_values>bilinear,nn</valid_values>
     <values>
       <value LND_GRID="1x1_brazil"         >nn</value>
       <value LND_GRID="1x1_mexicocityMEX"  >nn</value>
@@ -275,6 +272,15 @@
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Mapping algorithm to go from data grid to model grid</desc>
+  </entry>
+
+  <entry id="CLM_NDEP_TINTALGO">
+    <type>char</type>
+    <default_value>linear</default_value>
+    <valid_values>linear,nearest,lower,upper</valid_values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Time interpolation method to use for Nitrogen Deposition</desc>
   </entry>
 
   <!-- CLM_BLDNML_OPTS is not additive, we must list all possible combinations -->

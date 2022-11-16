@@ -2,10 +2,17 @@
 ./xmlchange RUN_STARTDATE=2018-01-01
 ./xmlchange CLM_NML_USE_CASE=1850-2100_SSP3-7.0_transient
 ./xmlchange CCSM_CO2_PPMV=408.83
+
 ./xmlchange DATM_PRESAERO=SSP3-7.0
 ./xmlchange DATM_PRESNDEP=SSP3-7.0
 ./xmlchange DATM_PRESO3=SSP3-7.0
 ./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2021,DATM_YR_START=2018
+
+# TOOD: the following CLM_NDEP_XXX variables can be removed once ndep is no longer read in by CLM
+./xmlchange CLM_NDEP_DATA_FILENAME=$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_2018-2030_monthly_c210826.nc
+./xmlchange CLM_NDEP_YEAR_FIRST=2018
+./xmlchange CLM_NDEP_YEAR_LAST=2021
+./xmlchange CLM_NDEP_YEAR_ALIGN=2018
 
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
 ./xmlchange PIO_TYPENAME=netcdf
@@ -13,4 +20,3 @@
 #                 and a value of 2 results in slow I/O.  For point runs like these, a value of 1 results in a crash (PIO bug, probably),
 #                 so we explicitly set a value of 2.
 ./xmlchange PIO_REARRANGER_LND=2
-
