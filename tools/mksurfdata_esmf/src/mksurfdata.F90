@@ -878,26 +878,21 @@ program mksurfdata
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpft')
         call pio_syncfile(pioid)
 
-!       ! Consistency check on input land fraction
-!       ! pctlnd_pft was calculated ABOVE
-!       ! TODO This error check serves no purpose now that mkpft calls
-!       ! create_routehandle_r8 only once and, therefore, doesn't update
-!       ! frac_o and pctlnd_o. Delete? (slevis)
-!       do n = 1,lsize_o
-!          if (pctlnd_pft_dyn(n) /= pctlnd_pft(n)) then
-!             if (root_task) then
-!                write(ndiag,*) subname,' error: pctlnd_pft for dynamics data = ',&
-!                     pctlnd_pft_dyn(n), ' not equal to pctlnd_pft for surface data = ',&
-!                     pctlnd_pft(n),' at n= ',n
-!                if ( trim(fname) == ' ' )then
-!                   write(ndiag,*) ' PFT string = ',trim(string)
-!                else
-!                   write(ndiag,*) ' PFT file = ', fname
-!                end if
-!             end if
-!             call shr_sys_abort()
-!          end if
-!       end do
+        ! Consistency check on input land fraction
+        ! pctlnd_pft was calculated ABOVE
+        do n = 1,lsize_o
+           if (pctlnd_pft_dyn(n) /= pctlnd_pft(n)) then
+              write(ndiag,*) subname,' error: pctlnd_pft for dynamics data = ',&
+                   pctlnd_pft_dyn(n), ' not equal to pctlnd_pft for surface data = ',&
+                   pctlnd_pft(n),' at n= ',n
+              if ( trim(fname) == ' ' )then
+                 write(ndiag,*) ' PFT string = ',trim(string)
+              else
+                 write(ndiag,*) ' PFT file = ', fname
+              end if
+              call shr_sys_abort()
+           end if
+        end do
 
         ! Create harvesting data at model resolution
         ! Output data is written in mkharvest

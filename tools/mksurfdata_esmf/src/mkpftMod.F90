@@ -209,7 +209,7 @@ contains
     character(len=*)  , intent(in)    :: file_mesh_i    ! input mesh file name
     character(len=*)  , intent(in)    :: file_data_i    ! input data file name
     type(ESMF_Mesh)   , intent(in)    :: mesh_o         ! model mesh
-    real(r8)          , intent(inout) :: pctlnd_o(:)    ! output grid:%land/gridcell
+    real(r8)          , intent(out)   :: pctlnd_o(:)    ! output grid:%land/gridcell
     type(pct_pft_type), intent(inout) :: pctnatpft_o(:) ! natural PFT cover
     type(pct_pft_type), intent(inout) :: pctcft_o(:)    ! crop (CFT) cover
 
@@ -234,6 +234,7 @@ contains
     real(r8), allocatable           :: output_pct_cft_o(:,:)
     integer , allocatable           :: mask_i(:)
     real(r8), allocatable           :: frac_i(:)
+    real(r8), allocatable           :: pctlnd_i(:)        ! input  land fraction
     real(r8), allocatable           :: pctnatveg_i(:)     ! input  natural veg percent (% of grid cell)
     real(r8), allocatable           :: pctnatveg_o(:)     ! output natural veg percent (% of grid cell)
     real(r8), allocatable           :: pctcrop_i(:)       ! input  all crop percent (% of grid cell)
@@ -340,9 +341,18 @@ contains
     end if
 
     ! ----------------------------------------
-    ! Determine pctlnd_o(:) (in/out argument)
+    ! Determine pctlnd_o(:)
     ! ----------------------------------------
-    pctlnd_o(:) = frac_o_nonorm(:) * 100._r8
+    allocate(pctlnd_i(ns_i), stat=ier)
+    if (ier/=0) call shr_sys_abort('error allocating pctlnd_i')
+
+    call mkpio_get_rawdata(pioid, 'LANDFRAC', mesh_i, pctlnd_i, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_nonorm, pctlnd_i, pctlnd_o, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    ! Convert from fraction to percent:
+    pctlnd_o(:) = pctlnd_o(:) * 100._r8
 
     ! ----------------------------------------
     ! Determine pct_nat_pft_o(:,:)
