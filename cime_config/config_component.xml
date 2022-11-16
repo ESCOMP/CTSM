@@ -299,6 +299,7 @@
       <value compset="^2010_">2010</value>
       <value compset="^HIST_">1850</value>
       <value compset="^SSP"  >2015</value>
+      <value compset="^1850_.*_CLM50%[^_]*NOANTHRO">1925</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -311,8 +312,9 @@
     <values>
       <value compset="^2010_">2010</value>
       <value compset="^1850_">1850</value>
-      <value compset="^HIST_">2015</value>
+      <value compset="^HIST_">2016</value>
       <value compset="^SSP"  >2100</value>
+      <value compset="^1850_.*_CLM50%[^_]*NOANTHRO">1925</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -336,6 +338,7 @@
     <default_value>$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</default_value>
     <values>
       <value compset="^SSP">$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2018_SSP5_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc</value>
+      <value compset="^1850_.*_CLM50%[^_]*NOANTHRO">$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.no_anthro_zero_hdm_1x1_simyr1925_181113.nc</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -345,6 +348,9 @@
   <entry id="CLM_POPDENS_MESH_FILENAME">
     <type>char</type>
     <default_value>$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0_ESMFmesh_cdf5_100621.nc</default_value>
+    <values>
+      <value compset="^1850_.*_CLM50%[^_]*NOANTHRO">none</value>
+    </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Population density mesh filename (corresponding to the CLM_POPDENS_DATA_FILENAME)</desc>
@@ -376,6 +382,7 @@
       <value LND_GRID="1x1_urbanc_alpha"   >nn</value>
       <value LND_GRID="1x1_asphaltjungleNJ">nn</value>
       <value LND_GRID="5x5_amazon"         >nn</value>
+      <value compset="^1850_.*_CLM50%[^_]*NOANTHRO">nn</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
