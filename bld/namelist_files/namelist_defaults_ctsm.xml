@@ -1436,20 +1436,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <fsnowoptics >lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc</fsnowoptics>
 <fsnowaging  >lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
 
-<!-- Nitrogen deposition streams namelist defaults -->
-<!-- Only the CMIP6 Tier I Nitogen deposition files are available -->
-
-<ndep_taxmode use_cn=".true.">cycle</ndep_taxmode>
-<ndep_varlist use_cn=".true.">NDEP_month</ndep_varlist>
-
-<ndepmapalgo use_cn=".true."  >bilinear</ndepmapalgo>
-<ndepmapalgo use_cn=".true."  hgrid="1x1_brazil"          >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."  hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."  hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."  hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."  hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."  hgrid="5x5_amazon"          >nn</ndepmapalgo>
-
 <!-- Soilm moisture streams namelist defaults -->
 <!-- This is if you want to prescribe the soil moisture from input datasets rather than model it -->
 <use_soil_moisture_streams>.false.</use_soil_moisture_streams>

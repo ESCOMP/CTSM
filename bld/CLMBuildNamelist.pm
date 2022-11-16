@@ -1605,7 +1605,7 @@ sub process_namelist_inline_logic {
   ###############################
   # namelist group: ndepdyn_nml #
   ###############################
-  setup_logic_nitrogen_deposition($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_nitrogen_deposition($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
 
   ##################################
   # namelist group: cnmresp_inparm #
@@ -3385,45 +3385,21 @@ sub setup_logic_c_isotope {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_nitrogen_deposition {
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
   #
   # Nitrogen deposition for bgc=CN
   #
   if ( $nl_flags->{'bgc_mode'} =~/bgc/ ) {
 
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo'            , 'val'=>$envxml_ref->{'CLM_NDEP_MAPALGO'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode'           , 'val'=>$envxml_ref->{'CLM_NDEP_TAXMODE'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist'           , 'val'=>$envxml_ref->{'CLM_NDEP_VARLIST'});
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep' , 'val'=>$envxml_ref->{'CLM_NDEP_YEAR_FIRST'});
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_ndep'  , 'val'=>$envxml_ref->{'CLM_NDEP_YEAR_LAST'});
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_ndep'  , 'val'=>$envxml_ref->{'CLM_NDEP_YEAR_ALIGN'});
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'val'=>$envxml_ref->{'CLM_NDEP_DATA_FILENAME'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist'           , 'val'=>$envxml_ref->{'CLM_NDEP_DATA_VARLIST'});
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ndep'   , 'val'=>$envxml_ref->{'CLM_NDEP_MESH_FILENAME'});
-
-    if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
-        if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
-            $log->warning("Did NOT find the Nitrogen-deposition forcing file (stream_fldfilename_ndep) for this ssp_rcp\n" .
-                          "One way to get around this is to point to a file for another existing ssp_rcp in your user_nl_clm file.\n" .
-                          "If you are running with CAM and WACCM chemistry Nitrogen deposition will come through the coupler.\n" .
-                          "This file won't be used, so it doesn't matter what it points to -- but it's required to point to something.\n" )
-        }
-    }
-
-  } else {
-    # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
-    if ( defined($nl->get_value('stream_year_first_ndep')) ||
-         defined($nl->get_value('stream_year_last_ndep'))  ||
-         defined($nl->get_value('model_year_align_ndep'))  ||
-         defined($nl->get_value('ndep_taxmode'         ))  ||
-         defined($nl->get_value('ndep_varlist'         ))  ||
-         defined($nl->get_value('stream_fldfilename_ndep'))
-       ) {
-      $log->fatal_error("When bgc is NOT CN or CNDV none of: stream_year_first_ndep," .
-                  "stream_year_last_ndep, model_year_align_ndep, ndep_taxmod, " .
-                  "ndep_varlist, nor stream_fldfilename_ndep" .
-                  " can be set!");
-    }
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo'            , 'val'=>$envxml_ref->{'CLM_NDEP_MAPALGO'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode'           , 'val'=>$envxml_ref->{'CLM_NDEP_TAXMODE'});
   }
 }
 
