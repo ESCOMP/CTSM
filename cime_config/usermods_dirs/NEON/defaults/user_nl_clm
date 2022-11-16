@@ -26,14 +26,10 @@ model_year_align_urbantv = 2018
 stream_year_first_urbantv = 2018
 stream_year_last_urbantv = 2021
 
-model_year_align_popdens = 2018
-stream_year_first_popdens = 2018
-stream_year_last_popdens = 2021
-
 stream_fldfilename_lightng = '$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_NEONarea_c210625.nc'
 
 ! h1 output stream
 hist_fincl2 = 'AR','ELAI','FCEV','FCTR','FGEV','FIRA','FSA','FSH','GPP','H2OSOI',
-             'HR','SNOW_DEPTH','TBOT','TSOI','SOILC_vr','FV','NET_NMIN_vr'
+              'HR','SNOW_DEPTH','TBOT','TSOI','SOILC_vr','FV','NET_NMIN_vr'
 hist_mfilt(2) = 48
 hist_nhtfrq(2) = 1
