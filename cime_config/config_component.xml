@@ -159,6 +159,10 @@
       used by expert users.</desc>
   </entry>
 
+   <!-- ================================== -->
+   <!-- NDEP stream functionality -->
+   <!-- ================================== -->
+
   <entry id="CLM_NDEP_YEAR_FIRST">
     <type>char</type>
     <default_value>2000</default_value>
@@ -228,7 +232,7 @@
 
   <entry id="CLM_NDEP_MESH_FILENAME">
     <type>char</type>
-    <default_value>${DIN_LOC_ROOT}/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc</default_value>
+    <default_value>$DIN_LOC_ROOT/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Nitrogen deposition mesh filename (corresponding to the CLM_NDEP_DATA_FILENAME)</desc>
@@ -282,6 +286,112 @@
     <file>env_run.xml</file>
     <desc>Time interpolation method to use for Nitrogen Deposition</desc>
   </entry>
+
+   <!-- ================================== -->
+   <!-- POPDENS stream functionality -->
+   <!-- ================================== -->
+
+  <entry id="CLM_POPDENS_YEAR_FIRST">
+    <type>char</type>
+    <default_value>2000</default_value>
+    <values>
+      <value compset="^1850_">1850</value>
+      <value compset="^2010_">2010</value>
+      <value compset="^HIST_">1850</value>
+      <value compset="^SSP"  >2015</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Population density data year first</desc>
+  </entry>
+
+  <entry id="CLM_POPDENS_YEAR_LAST">
+    <type>char</type>
+    <default_value>2000</default_value>
+    <values>
+      <value compset="^2010_">2010</value>
+      <value compset="^1850_">1850</value>
+      <value compset="^HIST_">2015</value>
+      <value compset="^SSP"  >2100</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Population density data year last</desc>
+  </entry>
+
+  <entry id="CLM_POPDENS_YEAR_ALIGN">
+    <type>char</type>
+    <default_value>1</default_value>
+    <values>
+      <value compset="^HIST_">1850</value>
+      <value compset="^SSP"  >2015</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Population densityalign CLM_POPDENS_YEAR_FIRST with this model year</desc>
+  </entry>
+
+  <entry id="CLM_POPDENS_DATA_FILENAME">
+    <type>char</type>
+    <default_value>$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</default_value>
+    <values>
+      <value compset="^SSP">$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2018_SSP5_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Population density data filename</desc>
+  </entry>
+
+  <entry id="CLM_POPDENS_MESH_FILENAME">
+    <type>char</type>
+    <default_value>$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0_ESMFmesh_cdf5_100621.nc</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Population density mesh filename (corresponding to the CLM_POPDENS_DATA_FILENAME)</desc>
+  </entry>
+
+  <entry id="CLM_POPDENS_TAXMODE">
+    <type>char</type>
+    <default_value>cycle</default_value>
+    <valid_values>cycle,extend,limit</valid_values>
+    <values>
+      <!-- For now use cycle for transient cases until CDEPS issue 201
+           is resolved - then change value to limit -->
+      <value compset="^HIST_">cycle</value>
+      <value compset="^SSP"  >cycle</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Time interpolation mode to determine how to handle data before and after the times in the file</desc>
+  </entry>
+
+  <entry id="CLM_POPDENS_MAPALGO">
+    <type>char</type>
+    <default_value>bilinear</default_value>
+    <valid_values>bilinear,nn</valid_values>
+    <values>
+      <value LND_GRID="1x1_brazil"         >nn</value>
+      <value LND_GRID="1x1_mexicocityMEX"  >nn</value>
+      <value LND_GRID="1x1_vancouverCAN"   >nn</value>
+      <value LND_GRID="1x1_urbanc_alpha"   >nn</value>
+      <value LND_GRID="1x1_asphaltjungleNJ">nn</value>
+      <value LND_GRID="5x5_amazon"         >nn</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Mapping algorithm to go from data grid to model grid</desc>
+  </entry>
+
+  <entry id="CLM_POPDENS_TINTALGO">
+    <type>char</type>
+    <default_value>linear</default_value>
+    <valid_values>linear,nearest,lower,upper</valid_values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Time interpolation method to use for population density</desc>
+  </entry>
+
+   <!-- ================================== -->
 
   <!-- CLM_BLDNML_OPTS is not additive, we must list all possible combinations -->
   <!-- ERROR: the node below is never matched, see bug 2025 -->

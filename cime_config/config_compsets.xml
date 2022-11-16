@@ -34,7 +34,7 @@
     - science_support  (if this compset is supported scientifically with control simulations)
   </help>
 
-<!-- I single point forcing -->
+  <!-- I single point forcing -->
 
   <compset>
     <alias>I1PtClm51Bgc</alias>
@@ -61,7 +61,7 @@
     <lname>2000_DATM%1PT_CLM45%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
-<!-- I CLM50 Compsets -->
+  <!-- I CLM50 Compsets -->
 
   <compset>
     <alias>I2000Clm50Sp</alias>
@@ -243,19 +243,19 @@
   </compset>
 
   <compset>
-     <alias>I1850Clm50Bgc</alias>
-     <lname>1850_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
-   </compset>
+    <alias>I1850Clm50Bgc</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
 
   <compset>
-     <alias>I1850Clm50BgcNoAnthro</alias>
-     <lname>1850_DATM%GSWP3v1_CLM50%BGC-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
-   </compset>
+    <alias>I1850Clm50BgcNoAnthro</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%BGC-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
 
   <compset>
-     <alias>I1850Clm50SpNoAnthro</alias>
-     <lname>1850_DATM%GSWP3v1_CLM50%SP-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
-   </compset>
+    <alias>I1850Clm50SpNoAnthro</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%SP-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
 
   <compset>
     <alias>IHistClm50BgcCrop</alias>
@@ -265,15 +265,15 @@
   </compset>
 
   <compset>
-     <alias>I1850Clm51Bgc</alias>
-     <lname>1850_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
-   </compset>
+    <alias>I1850Clm51Bgc</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
 
 
   <compset>
-     <alias>I1850Clm51SpNoAnthro</alias>
-     <lname>1850_DATM%GSWP3v1_CLM51%SP-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
-   </compset>
+    <alias>I1850Clm51SpNoAnthro</alias>
+    <lname>1850_DATM%GSWP3v1_CLM51%SP-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
 
   <compset>
     <alias>IHistClm51Sp</alias>
@@ -392,14 +392,14 @@
     <lname>2000_DATM%QIA_CLM50%BGCDV-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
-<!-- I cpl history MOAR forcing spinup compsets -->
+  <!-- I cpl history MOAR forcing spinup compsets -->
 
   <compset>
     <alias>I1850Clm50BgcSpinup</alias>
     <lname>1850_DATM%CPLHIST_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
-<!-- I CLM50 NWP Compsets -->
+  <!-- I CLM50 NWP Compsets -->
 
   <!-- GSWP datm forcing, for global runs or regional runs outside the CONUS -->
   <compset>
@@ -426,7 +426,7 @@
     <lname>2000_DATM%NLDAS2_CLM50%NWP-SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
-<!-- I CLM45 Compsets -->
+  <!-- I CLM45 Compsets -->
 
   <compset>
     <alias>I1850Clm45BgcCrop</alias>
@@ -513,7 +513,7 @@
     <lname>2000_DATM%CRUv7_CLM45%SP-VIC_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
-<!-- IG compsets -->
+  <!-- IG compsets -->
 
   <compset>
     <alias>I1850Clm50SpG</alias>
@@ -568,31 +568,31 @@
   <entries>
     <entry id="RUN_STARTDATE">
       <values>
-	<value compset="HIST_"			  >1850-01-01</value>
+	      <value compset="HIST_"			  >1850-01-01</value>
         <value compset="2000_"                    >2000-01-01</value>
         <value compset="2010_"                    >2010-01-01</value>
         <value compset="SSP"			  >2015-01-01</value>
-	<value compset="CLM[45].*_CISM.*_TEST"	  >1980-01-15</value>
-	<value compset="CLM[45]%[^_]*CNDV.*_TEST" >1997-12-31</value>
-	<value grid="a%1x1_mexicocityMEX"	  >1993-12-01</value>
-	<value grid="a%1x1_vancouverCAN"	  >1992-08-12</value>
-	<value grid="a%1x1_urbanc_alpha"	  >0001-08-12</value>
+	      <value compset="CLM[45].*_CISM.*_TEST"	  >1980-01-15</value>
+	      <value compset="CLM[45]%[^_]*CNDV.*_TEST" >1997-12-31</value>
+	      <value grid="a%1x1_mexicocityMEX"	  >1993-12-01</value>
+	      <value grid="a%1x1_vancouverCAN"	  >1992-08-12</value>
+	      <value grid="a%1x1_urbanc_alpha"	  >0001-08-12</value>
       </values>
     </entry>
 
     <entry id="STOP_OPTION">
       <values>
-	<value grid="a%1x1_mexicocityMEX">nsteps</value>
-	<value grid="a%1x1_vancouverCAN" >nsteps</value>
-	<value grid="a%1x1_urbanc_alpha" >nsteps</value>
+	      <value grid="a%1x1_mexicocityMEX">nsteps</value>
+	      <value grid="a%1x1_vancouverCAN" >nsteps</value>
+	      <value grid="a%1x1_urbanc_alpha" >nsteps</value>
       </values>
     </entry>
 
     <entry id="STOP_N">
       <values>
-	<value grid="a%1x1_mexicocityMEX">158</value>
-	<value grid="a%1x1_vancouverCAN" >331</value>
-	<value grid="a%1x1_urbanc_alpha" >22772</value>
+	      <value grid="a%1x1_mexicocityMEX">158</value>
+	      <value grid="a%1x1_vancouverCAN" >331</value>
+	      <value grid="a%1x1_urbanc_alpha" >22772</value>
       </values>
     </entry>
 

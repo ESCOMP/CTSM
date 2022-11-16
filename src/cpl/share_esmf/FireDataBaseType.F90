@@ -8,7 +8,7 @@ module FireDataBaseType
   !
   ! !USES:
   use ESMF
-  use dshr_strdata_mod , only : shr_strdata_type 
+  use dshr_strdata_mod , only : shr_strdata_type
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use clm_varctl       , only : iulog
@@ -30,11 +30,11 @@ module FireDataBaseType
       type(shr_strdata_type)    :: sdat_hdm     ! Human population density input data stream
       real(r8), public, pointer :: forc_lnfm(:) ! Lightning frequency
       type(shr_strdata_type)    :: sdat_lnfm    ! Lightning frequency input data stream
-      
+
       real(r8), public, pointer :: gdp_lf_col(:)   ! col global real gdp data (k US$/capita)
       real(r8), public, pointer :: peatf_lf_col(:) ! col global peatland fraction data (0-1)
       integer , public, pointer :: abm_lf_col(:)   ! col global peak month of crop fire emissions
-      
+
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
@@ -111,7 +111,7 @@ contains
        ! Allocate pop dens forcing data
        allocate( this%forc_hdm(bounds%begg:bounds%endg) )
        this%forc_hdm(bounds%begg:) = nan
-       
+
        ! Allocate real gdp data
        allocate(this%gdp_lf_col(bounds%begc:bounds%endc))
        ! Allocate peatland fraction data
@@ -216,6 +216,7 @@ contains
    call shr_mpi_bcast(stream_fldFileName_popdens , mpicom)
    call shr_mpi_bcast(stream_meshfile_popdens    , mpicom)
    call shr_mpi_bcast(popdens_tintalgo           , mpicom)
+   call shr_mpi_bcast(popdensmapalgo             , mpicom)
 
    if (masterproc) then
       write(iulog,'(a)'   ) ' '
@@ -239,7 +240,7 @@ contains
          model_clock         = model_clock,                          &
          model_mesh          = mesh,                                 &
          stream_meshfile     = trim(stream_meshfile_popdens),        &
-         stream_lev_dimname  = 'null',                               & 
+         stream_lev_dimname  = 'null',                               &
          stream_mapalgo      = trim(popdensmapalgo),                 &
          stream_filenames    = (/trim(stream_fldfilename_popdens)/), &
          stream_fldlistFile  = (/'hdm'/),                            &
@@ -392,7 +393,7 @@ contains
       write(iulog,'(a,i8)') '  model_year_align_lightng   = ',model_year_align_lightng
       write(iulog,'(a,a)' ) '  stream_fldFileName_lightng = ',trim(stream_fldFileName_lightng)
       write(iulog,'(a,a)' ) '  stream_meshfile            = ',trim(stream_meshfile_lightng)
-      write(iulog,'(a,a)' ) '  stream_varnames            = ','lnfm' 
+      write(iulog,'(a,a)' ) '  stream_varnames            = ','lnfm'
       write(iulog,'(a,a)' ) '  time interp algo           = ',trim(lightng_tintalgo)
       write(iulog,'(a,a)' ) '  mapping interp algo        = ',trim(lightngmapalgo)
       write(iulog,'(a)') ' '
@@ -406,7 +407,7 @@ contains
          model_clock         = model_clock,                          &
          model_mesh          = mesh,                                 &
          stream_meshfile     = trim(stream_meshfile_lightng),        &
-         stream_lev_dimname  = 'null',                               & 
+         stream_lev_dimname  = 'null',                               &
          stream_mapalgo      = trim(lightngmapalgo),                 &
          stream_filenames    = (/trim(stream_fldfilename_lightng)/), &
          stream_fldlistFile  = (/'lnfm'/),                           &
@@ -478,7 +479,7 @@ contains
     end do
 
   end subroutine lnfm_interp
-  
+
   !-----------------------------------------------------------------------
   subroutine surfdataread(this, bounds)
    !
@@ -506,18 +507,18 @@ contains
    real(r8), pointer     :: peatf(:)  ! global peatf data (needs to be a pointer for use in ncdio)
    integer,  pointer     :: abm(:)    ! global abm data (needs to be a pointer for use in ncdio)
    !-----------------------------------------------------------------------
- 
+
     ! --------------------------------------------------------------------
     ! Open surface dataset
     ! --------------------------------------------------------------------
- 
+
     call getfil (fsurdat, locfn, 0)
     call ncd_pio_openfile (ncid, locfn, 0)
- 
+
     ! --------------------------------------------------------------------
     ! Read in GDP data
     ! --------------------------------------------------------------------
- 
+
     allocate(gdp(bounds%begg:bounds%endg))
     call ncd_io(ncid=ncid, varname='gdp', flag='read', data=gdp, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
@@ -528,11 +529,11 @@ contains
        this%gdp_lf_col(c) = gdp(g)
     end do
     deallocate(gdp)
- 
+
     ! --------------------------------------------------------------------
     ! Read in peatf data
     ! --------------------------------------------------------------------
- 
+
     allocate(peatf(bounds%begg:bounds%endg))
     call ncd_io(ncid=ncid, varname='peatf', flag='read', data=peatf, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
@@ -543,11 +544,11 @@ contains
        this%peatf_lf_col(c) = peatf(g)
     end do
     deallocate(peatf)
- 
+
     ! --------------------------------------------------------------------
     ! Read in ABM data
     ! --------------------------------------------------------------------
- 
+
     allocate(abm(bounds%begg:bounds%endg))
     call ncd_io(ncid=ncid, varname='abm', flag='read', data=abm, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
@@ -558,16 +559,16 @@ contains
        this%abm_lf_col(c) = abm(g)
     end do
     deallocate(abm)
- 
+
     ! Close file
- 
+
     call ncd_pio_closefile(ncid)
- 
+
     if (masterproc) then
        write(iulog,*) 'Successfully read fmax, soil color, sand and clay boundary data'
        write(iulog,*)
     endif
-    
+
    end subroutine surfdataread
 
 end module FireDataBaseType

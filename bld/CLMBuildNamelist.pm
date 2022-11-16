@@ -1630,7 +1630,7 @@ sub process_namelist_inline_logic {
   #################################
   # namelist group: popd_streams  #
   #################################
-  setup_logic_popd_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_popd_streams($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
 
   ####################################
   # namelist group: urbantv_streams  #
@@ -3477,59 +3477,17 @@ sub setup_logic_canopy {
 
 sub setup_logic_popd_streams {
   # population density streams require CN/BGC
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
   if ( &value_is_true($nl_flags->{'cnfireson'}) ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdensmapalgo', 'hgrid'=>$nl_flags->{'res'},
-                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}, 'cnfireson'=>$nl_flags->{'cnfireson'}  );
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_popdens', 'phys'=>$nl_flags->{'phys'},
-                 'cnfireson'=>$nl_flags->{'cnfireson'}, 'sim_year'=>$nl_flags->{'sim_year'},
-                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_popdens', 'phys'=>$nl_flags->{'phys'},
-                 'cnfireson'=>$nl_flags->{'cnfireson'}, 'sim_year'=>$nl_flags->{'sim_year'},
-                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
-     # Set align year, if first and last years are different
-     if ( $nl->get_value('stream_year_first_popdens') !=
-          $nl->get_value('stream_year_last_popdens') ) {
-        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_popdens', 'sim_year'=>$nl_flags->{'sim_year'},
-                    'sim_year_range'=>$nl_flags->{'sim_year_range'}, 'cnfireson'=>$nl_flags->{'cnfireson'});
-     }
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_popdens', 'phys'=>$nl_flags->{'phys'},
-                 'cnfireson'=>$nl_flags->{'cnfireson'}, 'hgrid'=>"0.5x0.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
-     #
-     # TODO (mvertens, 2021-06-22) the following is needed for MCT since a use case enforces this  - so for now stream_meshfile_popdens will be added to the mct
-     # stream namelist but simply not used
-    if ($opts->{'driver'} eq "nuopc" ) {
-        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_popdens', 'hgrid'=>"0.5x0.5");
-        my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
-        my $default_value = $nl->get_value('stream_meshfile_popdens');
-        my $none_filename = $inputdata_rootdir . '/none';
-        my $none_filename = &quote_string($none_filename);
-        if ($default_value eq $none_filename) {
-            my $var = 'stream_meshfile_popdens';
-            my $group = $definition->get_group_name($var);
-            my $val = "none";
-            $val = &quote_string( $val );
-            $nl->set_variable_value($group, $var, $val);
-        }
-    } else {
-        my $var = 'stream_meshfile_popdens';
-        my $group = $definition->get_group_name($var);
-        my $val = "none";
-        $val = &quote_string( $val );
-        $nl->set_variable_value($group, $var, $val);
-    }
-  } else {
-     # If bgc is NOT CN/CNDV or fire_method==nofire then make sure none of the popdens settings are set
-     if ( defined($nl->get_value('stream_year_first_popdens')) ||
-          defined($nl->get_value('stream_year_last_popdens'))  ||
-          defined($nl->get_value('model_year_align_popdens'))  ||
-          defined($nl->get_value('popdens_tintalgo'        ))  ||
-          defined($nl->get_value('stream_fldfilename_popdens'))   ) {
-        $log->fatal_error("When bgc is SP (NOT CN or BGC) or fire_method==nofire none of: stream_year_first_popdens,\n" .
-                          "stream_year_last_popdens, model_year_align_popdens, popdens_tintalgo nor\n" .
-                          "stream_fldfilename_popdens can be set!");
-     }
+
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_popdens' , 'val'=>$envxml_ref->{'CLM_POPDENS_YEAR_FIRST'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_popdens'  , 'val'=>$envxml_ref->{'CLM_POPDENS_YEAR_LAST'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_popdens'  , 'val'=>$envxml_ref->{'CLM_POPDENS_YEAR_ALIGN'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_popdens', 'val'=>$envxml_ref->{'CLM_POPDENS_DATA_FILENAME'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_popdens'   , 'val'=>$envxml_ref->{'CLM_POPDENS_MESH_FILENAME'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdensmapalgo'            , 'val'=>$envxml_ref->{'CLM_POPDENS_MAPALGO'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdens_tintalgo'          , 'val'=>$envxml_ref->{'CLM_POPDENS_TINTALGO'});
   }
 }
 
