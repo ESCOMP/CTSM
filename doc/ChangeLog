@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev114
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)/@wwieder/@olyson/@ka7eh
-Date: Mon Nov 14 14:22:05 MST 2022
+Date: Mon Nov 14 15:21:50 MST 2022
 One-line Summary: Some NEON updates fixing AG sites, update MOSART, small fixes
 
 Purpose and description of changes
@@ -81,11 +81,12 @@ Testing summary: regular, tools
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    cheyenne - OK (NEON tests are different than baseline)
+    cheyenne - OK (141 NEON tests are different than baseline)
 
   tools-tests (test/tools) (if tools have been changed):
 
-    cheyenne - 
+    cheyenne - OK
+    izumi (NEON) -- OK
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -97,6 +98,7 @@ Testing summary: regular, tools
     izumi ------- OK
 
   any other testing (give details below):
+     run_neon.py ran for all NEON sites ad, post-ad, and transient
 
 Answer changes
 --------------
