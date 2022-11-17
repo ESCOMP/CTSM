@@ -1479,36 +1479,10 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- lightning streams namelist defaults -->
 <!-- ===================================== -->
 
-<light_res    use_cn=".false."                           >none    </light_res>
-<light_res    use_cn=".true." fire_method="nofire"       >none    </light_res>
-<light_res    use_cn=".true." phys="clm4_5"              >94x192  </light_res>
-<light_res    use_cn=".true." phys="clm5_0"              >94x192  </light_res>
-<light_res    use_cn=".true." phys="clm5_1"              >360x720 </light_res>
-
-<light_res    use_fates=".true."                         >none    </light_res>
-<light_res    use_fates=".true." fates_spitfire_mode="0" >none    </light_res>
-<light_res    use_fates=".true." fates_spitfire_mode="1" >none    </light_res>
-<light_res    use_fates=".true." fates_spitfire_mode="2" >360x720 </light_res>
-<light_res    use_fates=".true." fates_spitfire_mode="3" >360x720 </light_res>
-<light_res    use_fates=".true." fates_spitfire_mode="4" >360x720 </light_res>
-<light_res    use_fates=".true." fates_spitfire_mode="5" >360x720 </light_res>
-
-<stream_year_first_lightng >0001</stream_year_first_lightng>
-<stream_year_last_lightng  >0001</stream_year_last_lightng>
-
-<stream_fldfilename_lightng hgrid="94x192"    >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</stream_fldfilename_lightng>
-<stream_meshfile_lightng    hgrid="94x192"    >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62_ESMFmesh_cdf5_110621.nc</stream_meshfile_lightng>
-
-<stream_fldfilename_lightng hgrid="360x720"   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
-<stream_meshfile_lightng    hgrid="360x720"   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720_ESMFmesh_cdf5_150621.nc</stream_meshfile_lightng>
-
-<lightngmapalgo >bilinear</lightngmapalgo>
-<lightngmapalgo hgrid="1x1_brazil"          >nn</lightngmapalgo>
-<lightngmapalgo hgrid="1x1_mexicocityMEX"   >nn</lightngmapalgo>
-<lightngmapalgo hgrid="1x1_vancouverCAN"    >nn</lightngmapalgo>
-<lightngmapalgo hgrid="1x1_urbanc_alpha"    >nn</lightngmapalgo>
-<lightngmapalgo hgrid="1x1_asphaltjungleNJ" >nn</lightngmapalgo>
-<lightngmapalgo hgrid="5x5_amazon"          >nn</lightngmapalgo>
+<light_res    use_cn=".false."                           >none</light_res>
+<light_res    use_cn=".true." fire_method="nofire"       >none</light_res>
+<light_res    use_fates=".true." fates_spitfire_mode="0" >none</light_res>
+<light_res    use_fates=".true." fates_spitfire_mode="1" >none</light_res>
 
 <!-- ===================================== -->
 <!-- Create crop on a separate land-unit -->

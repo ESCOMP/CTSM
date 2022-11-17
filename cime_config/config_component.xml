@@ -397,6 +397,100 @@
     <file>env_run.xml</file>
     <desc>Time interpolation method to use for population density</desc>
   </entry>
+  
+  <!-- ================================== -->
+  <!-- LIGHTNING stream functionality -->
+  <!-- ================================== -->
+
+  <entry id="CLM_LIGHTNG_YEAR_FIRST">
+    <type>char</type>
+    <default_value>0001</default_value>
+    <values>
+      <value compset="^1850_">1850</value>
+      <value compset="^2010_">2010</value>
+      <value compset="^HIST_">1850</value>
+      <value compset="^SSP"  >2015</value>
+      <value compset="^1850_.*_CLM50%[^_]*NOANTHRO">1925</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>lightning data year first</desc>
+  </entry>
+
+  <entry id="CLM_LIGHTNG_YEAR_LAST">
+    <type>char</type>
+    <default_value>0001</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>lightning data year last</desc>
+  </entry>
+
+  <entry id="CLM_LIGHTNG_YEAR_ALIGN">
+    <type>char</type>
+    <default_value>1</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>lightning data CLM_LIGHTNG_YEAR_FIRST with this model year</desc>
+  </entry>
+
+  <entry id="CLM_LIGHTNG_DATA_FILENAME">
+    <type>char</type>
+    <default_value>$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</default_value>
+    <values>
+      <value compset="CLM45%BGC">$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</value>
+      <value compset="CLM50%BGC">$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>lightning data filename</desc>
+  </entry>
+
+  <entry id="CLM_LIGHTNG_MESH_FILENAME">
+    <type>char</type>
+    <default_value>$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720_ESMFmesh_cdf5_150621.nc</default_value>
+    <values>
+      <value compset="CLM45%BGC">$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62_ESMFmesh_cdf5_110621.nc</value>
+      <value compset="CLM50%BGC">$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62_ESMFmesh_cdf5_110621.nc</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>lightning data mesh filename (corresponding to the CLM_LIGHTNG_DATA_FILENAME)</desc>
+  </entry>
+
+  <entry id="CLM_LIGHTNG_TAXMODE">
+    <type>char</type>
+    <default_value>cycle</default_value>
+    <valid_values>cycle,extend,limit</valid_values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Time interpolation mode to determine how to handle data before and after the times in the file</desc>
+  </entry>
+
+  <entry id="CLM_LIGHTNG_MAPALGO">
+    <type>char</type>
+    <valid_values>bilinear,nn</valid_values>
+    <default_value>bilinear</default_value>
+    <values>
+      <value LND_GRID="1x1_brazil"         >nn</value>
+      <value LND_GRID="1x1_mexicocityMEX"  >nn</value>
+      <value LND_GRID="1x1_vancouverCAN"   >nn</value>
+      <value LND_GRID="1x1_urbanc_alpha"   >nn</value>
+      <value LND_GRID="1x1_asphaltjungleNJ">nn</value>
+      <value LND_GRID="5x5_amazon"         >nn</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Mapping algorithm to go from data grid to model grid</desc>
+  </entry>
+
+  <entry id="CLM_LIGHTNG_TINTALGO">
+    <type>char</type>
+    <default_value>linear</default_value>
+    <valid_values>linear,nearest,lower,upper</valid_values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Time interpolation method to use for population density</desc>
+  </entry>
 
   <!-- ================================== -->
   <!-- URBANTV stream functionality -->
