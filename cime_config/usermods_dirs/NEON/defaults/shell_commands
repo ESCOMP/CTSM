@@ -18,6 +18,10 @@
 ./xmlchange CLM_POPDENS_YEAR_LAST=2021
 ./xmlchange CLM_POPDENS_YEAR_ALIGN=2018
 
+./xmlchange CLM_URBANTV_YEAR_FIRST=2018
+./xmlchange CLM_URBANTV_YEAR_LAST=2021
+./xmlchange CLM_URBANTV_YEAR_ALIGN=2018
+
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
 ./xmlchange PIO_TYPENAME=netcdf
 # BD:05/06/2022 - The PIO_REARRANGER_LND value - for global runs, PIO_REARRANGER_LND = 1 is ideal

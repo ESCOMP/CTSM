@@ -398,6 +398,90 @@
     <desc>Time interpolation method to use for population density</desc>
   </entry>
 
+  <!-- ================================== -->
+  <!-- URBANTV stream functionality -->
+  <!-- ================================== -->
+
+  <entry id="CLM_URBANTV_YEAR_FIRST">
+    <type>char</type>
+    <default_value>2000</default_value>
+    <values>
+      <value compset="^1850_">1850</value>
+      <value compset="^2010_">2010</value>
+      <value compset="^HIST_">1850</value>
+      <value compset="^SSP"  >2015</value>
+      <value compset="^1850_.*_CLM50[^_]*NOANTHRO">1850</value>
+      <value compset="^1850_.*_CLM51[^_]*NOANTHRO">1850</value>
+      <value compset="^1850_.*_CLM45[^_]*NOANTHRO">1850</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Population density data year first</desc>
+  </entry>
+
+  <entry id="CLM_URBANTV_YEAR_LAST">
+    <type>char</type>
+    <default_value>2000</default_value>
+    <values>
+      <value compset="^2010_">2010</value>
+      <value compset="^1850_">1850</value>
+      <value compset="^HIST_">2016</value>
+      <value compset="^SSP"  >2106</value>
+      <value compset="^1850_.*_CLM50[^_]*NOANTHRO">1850</value>
+      <value compset="^1850_.*_CLM51[^_]*NOANTHRO">1850</value>
+      <value compset="^1850_.*_CLM45[^_]*NOANTHRO">1850</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Urbantv data year last</desc>
+  </entry>
+
+  <entry id="CLM_URBANTV_YEAR_ALIGN">
+    <type>char</type>
+    <default_value>1</default_value>
+    <values>
+      <value compset="^HIST_">1850</value>
+      <value compset="^SSP"  >2015</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Urbantv align CLM_URBANTV_YEAR_FIRST with this model year</desc>
+  </entry>
+
+  <entry id="CLM_URBANTV_DATA_FILENAME">
+    <type>char</type>
+    <default_value>$DIN_LOC_ROOT/lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>urbantv data filename</desc>
+  </entry>
+
+  <entry id="CLM_URBANTV_MESH_FILENAME">
+    <type>char</type>
+    <default_value>$DIN_LOC_ROOT/lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1_ESMFmesh_cdf5_100621.nc</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>urbantv mesh filename (corresponding to the CLM_URBANTV_DATA_FILENAME)</desc>
+  </entry>
+
+  <entry id="CLM_URBANTV_MAPALGO">
+    <type>char</type>
+    <valid_values>bilinear,nn</valid_values>
+    <default_value>nn</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Mapping algorithm to go from data grid to model grid</desc>
+  </entry>
+
+  <entry id="CLM_URBANTV_TINTALGO">
+    <type>char</type>
+    <valid_values>linear,nearest,lower,upper</valid_values>
+    <default_value>linear</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Time interpolation method to use for urbantv</desc>
+  </entry>
+
    <!-- ================================== -->
 
   <!-- CLM_BLDNML_OPTS is not additive, we must list all possible combinations -->

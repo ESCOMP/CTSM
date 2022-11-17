@@ -953,13 +953,16 @@ sub setup_cmdl_fire_light_res {
   my $var = "light_res";
   my $val = $opts->{$var};
   if ( $val eq "default" ) {
+
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
                  'fates_spitfire_mode'=>$nl->get_value('fates_spitfire_mode'),
                  'use_fates'=>$nl_flags->{'use_fates'}, fire_method=>$nl->get_value('fire_method') );
      $val              = remove_leading_and_trailing_quotes( $nl->get_value($var) );
      $nl_flags->{$var} = $val;
+
   } else {
+
      my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
      if ( defined($fire_method) && $val ne "none" ) {
         if ( $fire_method eq "nofire" ) {
@@ -1004,6 +1007,7 @@ sub setup_cmdl_fire_light_res {
     } else {
        $nl_flags->{$var} = ".false.";
     }
+
   }
 
 #-------------------------------------------------------------------------------
@@ -1635,7 +1639,7 @@ sub process_namelist_inline_logic {
   ####################################
   # namelist group: urbantv_streams  #
   ####################################
-  setup_logic_urbantv_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_urbantv_streams($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
 
   ##################################
   # namelist group: light_streams  #
@@ -3494,28 +3498,17 @@ sub setup_logic_popd_streams {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_urbantv_streams {
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urbantvmapalgo',
-              'hgrid'=>$nl_flags->{'res'} );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_urbantv', 'phys'=>$nl_flags->{'phys'},
-              'sim_year'=>$nl_flags->{'sim_year'},
-              'sim_year_range'=>$nl_flags->{'sim_year_range'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_urbantv', 'phys'=>$nl_flags->{'phys'},
-              'sim_year'=>$nl_flags->{'sim_year'},
-              'sim_year_range'=>$nl_flags->{'sim_year_range'});
-  # Set align year, if first and last years are different
-  if ( $nl->get_value('stream_year_first_urbantv') !=
-       $nl->get_value('stream_year_last_urbantv') ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                 'model_year_align_urbantv', 'sim_year'=>$nl_flags->{'sim_year'},
-                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
-  }
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'phys'=>$nl_flags->{'phys'},
-              'hgrid'=>"0.9x1.25" );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_urbantv' , 'val'=>$envxml_ref->{'CLM_URBANTV_YEAR_FIRST'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_urbantv'  , 'val'=>$envxml_ref->{'CLM_URBANTV_YEAR_LAST'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_urbantv'  , 'val'=>$envxml_ref->{'CLM_URBANTV_YEAR_ALIGN'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'val'=>$envxml_ref->{'CLM_URBANTV_DATA_FILENAME'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urbantvmapalgo'            , 'val'=>$envxml_ref->{'CLM_URBANTV_MAPALGO'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urbantv_tintalgo'          , 'val'=>$envxml_ref->{'CLM_URBANTV_TINTALGO'});
+
   if ($opts->{'driver'} eq "nuopc" ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_urbantv', 'phys'=>$nl_flags->{'phys'},
-                  'hgrid'=>"0.9x1.25" );
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_urbantv', 'val'=>$envxml_ref->{'CLM_URBANTV_MESH_FILENAME'});
   }
 }
 

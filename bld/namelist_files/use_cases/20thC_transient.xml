@@ -2,9 +2,9 @@
 
 <namelist_defaults>
 
-<use_case_desc            >Simulate transient land-use, and aerosol deposition changes from 1850 to 2015</use_case_desc>
-<use_case_desc bgc="cn"   >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2015</use_case_desc>
-<use_case_desc use_cn=".true." >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2015</use_case_desc>
+<use_case_desc                 >Simulate transient land-use, and aerosol deposition changes from 1850 to 2016</use_case_desc>
+<use_case_desc bgc="cn"        >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2016</use_case_desc>
+<use_case_desc use_cn=".true." >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2016</use_case_desc>
 
 <sim_year>1850</sim_year>
 
@@ -14,22 +14,10 @@
 
 <clm_demand >flanduse_timeseries</clm_demand>
 
-<irrigate use_crop=".true." phys="clm5_1"  use_cndv=".false.">.true.</irrigate>
-<irrigate use_crop=".true." phys="clm5_1"  use_cndv=".true." >.false.</irrigate>
-<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false." >.true.</irrigate>
-<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true."  >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm5_1" use_cndv=".false.">.true. </irrigate>
+<irrigate use_crop=".true." phys="clm5_1" use_cndv=".true." >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false.">.true. </irrigate>
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true." >.false.</irrigate>
 <irrigate use_crop=".true." phys="clm4_5">.false.</irrigate>
-
-<stream_year_first_urbantv phys="clm4_5"  >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5"  >2106</stream_year_last_urbantv>
-<model_year_align_urbantv  phys="clm4_5"  >1850</model_year_align_urbantv>
-
-<stream_year_first_urbantv phys="clm5_0"  >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0"  >2106</stream_year_last_urbantv>
-<model_year_align_urbantv  phys="clm5_0"  >1850</model_year_align_urbantv>
-
-<stream_year_first_urbantv phys="clm5_1"  >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_1"  >2106</stream_year_last_urbantv>
-<model_year_align_urbantv  phys="clm5_1"  >1850</model_year_align_urbantv>
 
 </namelist_defaults>
