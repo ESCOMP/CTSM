@@ -8,7 +8,6 @@ You can run this by:
 
 import unittest
 import configparser
-import argparse
 import os
 import sys
 
@@ -40,7 +39,7 @@ class TestSubsetData(unittest.TestCase):
 
     def test_inputdata_setup_files_basic(self):
         """
-        Test 
+        Test
         """
         setup_files(self.args, self.defaults, self.cesmroot)
 
@@ -59,6 +58,7 @@ class TestSubsetData(unittest.TestCase):
         self.args.inputdatadir = "/zztop"
         with self.assertRaisesRegex(SystemExit, "inputdata directory does not exist"):
             setup_files(self.args, self.defaults, self.cesmroot)
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

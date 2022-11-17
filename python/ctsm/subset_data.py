@@ -406,9 +406,9 @@ def setup_files(args, defaults, cesmroot):
     fsurf_in = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
     fluse_in = defaults.get("landuse", "landuse_" + num_pft + "pft")
     if args.inputdatadir == "defaults.cfg":
-       clmforcingindir = defaults.get("main", "clmforcingindir")
+        clmforcingindir = defaults.get("main", "clmforcingindir")
     else:
-       clmforcingindir = args.inputdatadir
+        clmforcingindir = args.inputdatadir
 
     if not os.path.isdir(clmforcingindir):
         logger.info("clmforcingindir does not exist: %s", clmforcingindir)
