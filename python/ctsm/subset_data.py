@@ -67,6 +67,7 @@ from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.args_utils import plon_type, plat_type
 from ctsm.path_utils import path_to_ctsm_root
+from ctsm.utils import abort
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -396,16 +397,20 @@ def setup_files(args, defaults, cesmroot):
 
     fsurf_in = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
     fluse_in = defaults.get("landuse", "landuse_" + num_pft + "pft")
+    clmforcingindir = defaults.get("main", "clmforcingindir")
+    if not os.path.isdir(clmforcingindir):
+        logger.info("clmforcingindir does not exist: %s", clmforcingindir)
+        abort("inputdata directory does not exist")
 
     file_dict = {
-        "main_dir": defaults.get("main", "clmforcingindir"),
+        "main_dir": clmforcingindir,
         "fdomain_in": defaults.get("domain", "file"),
         "fsurf_dir": os.path.join(
-            defaults.get("main", "clmforcingindir"),
+            clmforcingindir,
             os.path.join(defaults.get("surfdat", "dir")),
         ),
         "fluse_dir": os.path.join(
-            defaults.get("main", "clmforcingindir"),
+            clmforcingindir,
             os.path.join(defaults.get("landuse", "dir")),
         ),
         "fsurf_in": fsurf_in,
