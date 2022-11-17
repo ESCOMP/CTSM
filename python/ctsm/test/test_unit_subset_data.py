@@ -52,6 +52,14 @@ class TestSubsetData(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "inputdata directory does not exist"):
             setup_files(self.args, self.defaults, self.cesmroot)
 
+    def test_inputdata_setup_files_bad_inputdata_arg(self):
+        """
+        Test that inputdata directory provided on command line does not exist if it's bad
+        """
+        self.args.inputdatadir = "/zztop"
+        with self.assertRaisesRegex(SystemExit, "inputdata directory does not exist"):
+            setup_files(self.args, self.defaults, self.cesmroot)
+
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
     unittest.main()
