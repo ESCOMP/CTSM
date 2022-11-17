@@ -315,6 +315,14 @@ def get_parser():
             action="store_true",
             dest="overwrite",
         )
+        subparser.add_argument(
+            "--inputdata-dir",
+            help="Top level path to the CESM inputdata directory.",
+            action="store",
+            dest="inputdatadir",
+            type=str,
+            default="defaults.cfg",
+        )
         add_logging_args(subparser)
 
     # -- print help for both subparsers
@@ -397,7 +405,11 @@ def setup_files(args, defaults, cesmroot):
 
     fsurf_in = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
     fluse_in = defaults.get("landuse", "landuse_" + num_pft + "pft")
-    clmforcingindir = defaults.get("main", "clmforcingindir")
+    if args.inputdatadir == "defaults.cfg":
+       clmforcingindir = defaults.get("main", "clmforcingindir")
+    else:
+       clmforcingindir = args.inputdatadir
+
     if not os.path.isdir(clmforcingindir):
         logger.info("clmforcingindir does not exist: %s", clmforcingindir)
         abort("inputdata directory does not exist")
