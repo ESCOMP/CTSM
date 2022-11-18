@@ -7,7 +7,7 @@ module SoilMoistureStreamMod
   ! Read in soil moisture from data stream
   !
   ! !USES:
-  use ESMF
+  use ESMF               , only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_Finalize, ESMF_END_ABORT, ESMF_SUCCESS
   use dshr_strdata_mod   , only : shr_strdata_type, shr_strdata_print
   use dshr_strdata_mod   , only : shr_strdata_init_from_inline, shr_strdata_advance
   use dshr_methods_mod   , only : dshr_fldbun_getfldptr
