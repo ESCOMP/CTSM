@@ -1662,7 +1662,7 @@ sub process_namelist_inline_logic {
   ##################################
   # namelist group: lai_streams  #
   ##################################
-  setup_logic_lai_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_lai_streams($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
 
   ##########################################
   # namelist group: soil_moisture_streams  #
@@ -3394,15 +3394,15 @@ sub setup_logic_nitrogen_deposition {
   #
   if ( $nl_flags->{'bgc_mode'} =~/bgc/ ) {
 
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep' , 'val'=>$envxml_ref->{'CLM_NDEP_YEAR_FIRST'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_ndep'  , 'val'=>$envxml_ref->{'CLM_NDEP_YEAR_LAST'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_ndep'  , 'val'=>$envxml_ref->{'CLM_NDEP_YEAR_ALIGN'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'val'=>$envxml_ref->{'CLM_NDEP_DATA_FILENAME'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ndep'   , 'val'=>$envxml_ref->{'CLM_NDEP_MESH_FILENAME'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist'           , 'val'=>$envxml_ref->{'CLM_NDEP_DATA_VARLIST'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo'            , 'val'=>$envxml_ref->{'CLM_NDEP_MAPALGO'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_tintalgo'          , 'val'=>$envxml_ref->{'CLM_NDEP_TINTALGO'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode'           , 'val'=>$envxml_ref->{'CLM_NDEP_TAXMODE'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep' , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_YEAR_FIRST'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_ndep'  , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_YEAR_LAST'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_ndep'  , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_YEAR_ALIGN'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_DATA_FILENAME'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ndep'   , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_MESH_FILENAME'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist'           , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_DATA_VARLIST'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo'            , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_MAPALGO'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_tintalgo'          , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_TINTALGO'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode'           , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_TAXMODE'});
   }
 }
 
@@ -3483,13 +3483,13 @@ sub setup_logic_popd_streams {
 
   if ( &value_is_true($nl_flags->{'cnfireson'}) ) {
 
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_popdens' , 'val'=>$envxml_ref->{'CLM_POPDENS_YEAR_FIRST'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_popdens'  , 'val'=>$envxml_ref->{'CLM_POPDENS_YEAR_LAST'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_popdens'  , 'val'=>$envxml_ref->{'CLM_POPDENS_YEAR_ALIGN'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_popdens', 'val'=>$envxml_ref->{'CLM_POPDENS_DATA_FILENAME'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_popdens'   , 'val'=>$envxml_ref->{'CLM_POPDENS_MESH_FILENAME'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdensmapalgo'            , 'val'=>$envxml_ref->{'CLM_POPDENS_MAPALGO'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdens_tintalgo'          , 'val'=>$envxml_ref->{'CLM_POPDENS_TINTALGO'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_popdens' , 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_YEAR_FIRST'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_popdens'  , 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_YEAR_LAST'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_popdens'  , 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_YEAR_ALIGN'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_popdens', 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_DATA_FILENAME'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_popdens'   , 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_MESH_FILENAME'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdensmapalgo'            , 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_MAPALGO'});
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdens_tintalgo'          , 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_TINTALGO'});
   }
 }
 
@@ -3498,14 +3498,14 @@ sub setup_logic_popd_streams {
 sub setup_logic_urbantv_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_urbantv' , 'val'=>$envxml_ref->{'CLM_URBANTV_YEAR_FIRST'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_urbantv'  , 'val'=>$envxml_ref->{'CLM_URBANTV_YEAR_LAST'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_urbantv'  , 'val'=>$envxml_ref->{'CLM_URBANTV_YEAR_ALIGN'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'val'=>$envxml_ref->{'CLM_URBANTV_DATA_FILENAME'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urbantvmapalgo'            , 'val'=>$envxml_ref->{'CLM_URBANTV_MAPALGO'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urbantv_tintalgo'          , 'val'=>$envxml_ref->{'CLM_URBANTV_TINTALGO'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_urbantv' , 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_YEAR_FIRST'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_urbantv'  , 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_YEAR_LAST'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_urbantv'  , 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_YEAR_ALIGN'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_DATA_FILENAME'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urbantvmapalgo'            , 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_MAPALGO'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urbantv_tintalgo'          , 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_TINTALGO'});
   if ($opts->{'driver'} eq "nuopc" ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_urbantv', 'val'=>$envxml_ref->{'CLM_URBANTV_MESH_FILENAME'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_urbantv', 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_MESH_FILENAME'});
   }
 }
 
@@ -3516,14 +3516,14 @@ sub setup_logic_lightning_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
   if ( $nl_flags->{'light_res'} ne "none" ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lightng' , 'val'=>$envxml_ref->{'CLM_LIGHTNG_YEAR_FIRST'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lightng'  , 'val'=>$envxml_ref->{'CLM_LIGHTNG_YEAR_LAST'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_lightng'  , 'val'=>$envxml_ref->{'CLM_LIGHTNG_YEAR_ALIGN'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lightng', 'val'=>$envxml_ref->{'CLM_LIGHTNG_DATA_FILENAME'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo'            , 'val'=>$envxml_ref->{'CLM_LIGHTNG_MAPALGO'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightng_tintalgo'          , 'val'=>$envxml_ref->{'CLM_LIGHTNG_TINTALGO'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lightng' , 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_YEAR_FIRST'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lightng'  , 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_YEAR_LAST'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_lightng'  , 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_YEAR_ALIGN'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lightng', 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_DATA_FILENAME'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo'            , 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_MAPALGO'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightng_tintalgo'          , 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_TINTALGO'});
       if ($opts->{'driver'} eq "nuopc" ) {
-          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lightng', 'val'=>$envxml_ref->{'CLM_LIGHTNG_MESH_FILENAME'});
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lightng', 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_MESH_FILENAME'});
       }
   }
 }
@@ -3646,49 +3646,24 @@ sub setup_logic_soilm_streams {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_lai_streams {
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
-
   if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl->get_value('use_lai_streams'))  ) {
     $log->fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
   }
-  if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
 
+  if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
      if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
-                   'hgrid'=>$nl_flags->{'res'} );
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lai',
-                   'sim_year'=>$nl_flags->{'sim_year'},
-                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lai',
-                   'sim_year'=>$nl_flags->{'sim_year'},
-                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
-       # Set align year, if first and last years are different
-       if ( $nl->get_value('stream_year_first_lai') !=
-            $nl->get_value('stream_year_last_lai') ) {
-          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                      'model_year_align_lai', 'sim_year'=>$nl_flags->{'sim_year'},
-                      'sim_year_range'=>$nl_flags->{'sim_year_range'});
-       }
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lai',
-                   'hgrid'=>"360x720cru" );
-       if ($opts->{'driver'} eq "nuopc" ) {
-           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lai',
-                       'hgrid'=>"360x720cru" );
-       }
-     }
-  } else {
-     # If bgc is CN/CNDV then make sure none of the LAI settings are set
-     if ( defined($nl->get_value('stream_year_first_lai')) ||
-          defined($nl->get_value('stream_year_last_lai'))  ||
-          defined($nl->get_value('model_year_align_lai'))  ||
-          defined($nl->get_value('lai_tintalgo'        ))  ||
-          defined($nl->get_value('stream_fldfilename_lai'))   ) {
-        $log->fatal_error("When bgc is NOT SP none of the following can be set: stream_year_first_lai,\n" .
-                          "stream_year_last_lai, model_year_align_lai, lai_tintalgo nor\n" .
-                          "stream_fldfilename_lai (eg. don't use this option with BGC,CN,CNDV nor BGDCV).");
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lai' , 'val'=>$envxml_ref->{'CLM_STREAM_LAI_YEAR_FIRST'});
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lai'  , 'val'=>$envxml_ref->{'CLM_STREAM_LAI_YEAR_LAST'});
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_lai'  , 'val'=>$envxml_ref->{'CLM_STREAM_LAI_YEAR_ALIGN'});
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lai', 'val'=>$envxml_ref->{'CLM_STREAM_LAI_DATA_FILENAME'});
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo'           , 'val'=>$envxml_ref->{'CLM_STREAM_LAI_MAPALGO'});
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_tintalgo'          , 'val'=>$envxml_ref->{'CLM_STREAM_LAI_TINTALGO'});
+         if ($opts->{'driver'} eq "nuopc" ) {
+             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lai', 'val'=>$envxml_ref->{'CLM_STREAM_LAI_MESH_FILENAME'});
+         }
      }
   }
 }

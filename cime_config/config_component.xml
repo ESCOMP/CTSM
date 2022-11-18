@@ -163,7 +163,7 @@
    <!-- NDEP stream functionality -->
    <!-- ================================== -->
 
-  <entry id="CLM_NDEP_YEAR_FIRST">
+  <entry id="CLM_STREAM_NDEP_YEAR_FIRST">
     <type>char</type>
     <default_value>2000</default_value>
     <values>
@@ -177,7 +177,7 @@
     <desc>Nitrogen deposition data year first</desc>
   </entry>
 
-  <entry id="CLM_NDEP_YEAR_LAST">
+  <entry id="CLM_STREAM_NDEP_YEAR_LAST">
     <type>char</type>
     <default_value>2000</default_value>
     <values>
@@ -191,7 +191,7 @@
     <desc>Nitrogen deposition data year last</desc>
   </entry>
 
-  <entry id="CLM_NDEP_YEAR_ALIGN">
+  <entry id="CLM_STREAM_NDEP_YEAR_ALIGN">
     <type>char</type>
     <default_value>1</default_value>
     <values>
@@ -200,18 +200,18 @@
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Nitrogen deposition align CLM_NDEP_YEAR_FIRST with this model year</desc>
+    <desc>Nitrogen deposition align CLM_STREAM_NDEP_YEAR_FIRST with this model year</desc>
   </entry>
 
-  <entry id="CLM_NDEP_DTLIMIT">
+  <entry id="CLM_STREAM_NDEP_DTLIMIT">
     <type>real</type>
     <default_value>1.e30</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Nitrogen deposition align CLM_NDEP_YEAR_FIRST with this model year</desc>
+    <desc>Nitrogen deposition align CLM_STREAM_NDEP_YEAR_FIRST with this model year</desc>
   </entry>
 
-  <entry id="CLM_NDEP_DATA_FILENAME">
+  <entry id="CLM_STREAM_NDEP_DATA_FILENAME">
     <!-- Only the CMIP6 Tier I Nitogen deposition files are available -->
     <type>char</type>
     <default_value>UNSET</default_value>
@@ -230,23 +230,23 @@
     <desc>Nitrogen deposition data filename</desc>
   </entry>
 
-  <entry id="CLM_NDEP_MESH_FILENAME">
+  <entry id="CLM_STREAM_NDEP_MESH_FILENAME">
     <type>char</type>
     <default_value>$DIN_LOC_ROOT/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Nitrogen deposition mesh filename (corresponding to the CLM_NDEP_DATA_FILENAME)</desc>
+    <desc>Nitrogen deposition mesh filename (corresponding to the CLM_STREAM_NDEP_DATA_FILENAME)</desc>
   </entry>
 
-  <entry id="CLM_NDEP_DATA_VARLIST">
+  <entry id="CLM_STREAM_NDEP_DATA_VARLIST">
     <type>char</type>
     <default_value>NDEP_month</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Variable name(s) in CLM_NDEP_DATA_FILENAME</desc>
+    <desc>Variable name(s) in CLM_STREAM_NDEP_DATA_FILENAME</desc>
   </entry>
 
-  <entry id="CLM_NDEP_TAXMODE">
+  <entry id="CLM_STREAM_NDEP_TAXMODE">
     <type>char</type>
     <default_value>cycle</default_value>
     <valid_values>cycle,extend,limit</valid_values>
@@ -261,7 +261,7 @@
     <desc>Time interpolation mode to determine how to handle data before and after the times in the file</desc>
   </entry>
 
-  <entry id="CLM_NDEP_MAPALGO">
+  <entry id="CLM_STREAM_NDEP_MAPALGO">
     <type>char</type>
     <default_value>bilinear</default_value>
     <valid_values>bilinear,nn</valid_values>
@@ -278,7 +278,7 @@
     <desc>Mapping algorithm to go from data grid to model grid</desc>
   </entry>
 
-  <entry id="CLM_NDEP_TINTALGO">
+  <entry id="CLM_STREAM_NDEP_TINTALGO">
     <type>char</type>
     <default_value>linear</default_value>
     <valid_values>linear,nearest,lower,upper</valid_values>
@@ -291,7 +291,7 @@
    <!-- POPDENS stream functionality -->
    <!-- ================================== -->
 
-  <entry id="CLM_POPDENS_YEAR_FIRST">
+  <entry id="CLM_STREAM_POPDENS_YEAR_FIRST">
     <type>char</type>
     <default_value>2000</default_value>
     <values>
@@ -306,7 +306,7 @@
     <desc>Population density data year first</desc>
   </entry>
 
-  <entry id="CLM_POPDENS_YEAR_LAST">
+  <entry id="CLM_STREAM_POPDENS_YEAR_LAST">
     <type>char</type>
     <default_value>2000</default_value>
     <values>
@@ -321,7 +321,7 @@
     <desc>Population density data year last</desc>
   </entry>
 
-  <entry id="CLM_POPDENS_YEAR_ALIGN">
+  <entry id="CLM_STREAM_POPDENS_YEAR_ALIGN">
     <type>char</type>
     <default_value>1</default_value>
     <values>
@@ -330,10 +330,10 @@
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Population densityalign CLM_POPDENS_YEAR_FIRST with this model year</desc>
+    <desc>Population densityalign CLM_STREAM_POPDENS_YEAR_FIRST with this model year</desc>
   </entry>
 
-  <entry id="CLM_POPDENS_DATA_FILENAME">
+  <entry id="CLM_STREAM_POPDENS_DATA_FILENAME">
     <type>char</type>
     <default_value>$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</default_value>
     <values>
@@ -345,7 +345,7 @@
     <desc>Population density data filename</desc>
   </entry>
 
-  <entry id="CLM_POPDENS_MESH_FILENAME">
+  <entry id="CLM_STREAM_POPDENS_MESH_FILENAME">
     <type>char</type>
     <default_value>$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0_ESMFmesh_cdf5_100621.nc</default_value>
     <values>
@@ -353,10 +353,10 @@
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Population density mesh filename (corresponding to the CLM_POPDENS_DATA_FILENAME)</desc>
+    <desc>Population density mesh filename (corresponding to the CLM_STREAM_POPDENS_DATA_FILENAME)</desc>
   </entry>
 
-  <entry id="CLM_POPDENS_MAPALGO">
+  <entry id="CLM_STREAM_POPDENS_MAPALGO">
     <type>char</type>
     <default_value>bilinear</default_value>
     <valid_values>bilinear,nn</valid_values>
@@ -374,7 +374,7 @@
     <desc>Mapping algorithm to go from data grid to model grid</desc>
   </entry>
 
-  <entry id="CLM_POPDENS_TINTALGO">
+  <entry id="CLM_STREAM_POPDENS_TINTALGO">
     <type>char</type>
     <default_value>nearest</default_value>
     <valid_values>linear,nearest,lower,upper</valid_values>
@@ -387,7 +387,7 @@
   <!-- LIGHTNING stream functionality -->
   <!-- ================================== -->
 
-  <entry id="CLM_LIGHTNG_YEAR_FIRST">
+  <entry id="CLM_STREAM_LIGHTNG_YEAR_FIRST">
     <type>char</type>
     <default_value>0001</default_value>
     <group>run_component_ctsm</group>
@@ -395,7 +395,7 @@
     <desc>lightning data year first</desc>
   </entry>
 
-  <entry id="CLM_LIGHTNG_YEAR_LAST">
+  <entry id="CLM_STREAM_LIGHTNG_YEAR_LAST">
     <type>char</type>
     <default_value>0001</default_value>
     <group>run_component_ctsm</group>
@@ -403,15 +403,15 @@
     <desc>lightning data year last</desc>
   </entry>
 
-  <entry id="CLM_LIGHTNG_YEAR_ALIGN">
+  <entry id="CLM_STREAM_LIGHTNG_YEAR_ALIGN">
     <type>char</type>
     <default_value>1</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>lightning data CLM_LIGHTNG_YEAR_FIRST with this model year</desc>
+    <desc>lightning data CLM_STREAM_LIGHTNG_YEAR_FIRST with this model year</desc>
   </entry>
 
-  <entry id="CLM_LIGHTNG_DATA_FILENAME">
+  <entry id="CLM_STREAM_LIGHTNG_DATA_FILENAME">
     <type>char</type>
     <default_value>$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</default_value>
     <values>
@@ -423,7 +423,7 @@
     <desc>lightning data filename</desc>
   </entry>
 
-  <entry id="CLM_LIGHTNG_MESH_FILENAME">
+  <entry id="CLM_STREAM_LIGHTNG_MESH_FILENAME">
     <type>char</type>
     <default_value>$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720_ESMFmesh_cdf5_150621.nc</default_value>
     <values>
@@ -432,10 +432,10 @@
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>lightning data mesh filename (corresponding to the CLM_LIGHTNG_DATA_FILENAME)</desc>
+    <desc>lightning data mesh filename (corresponding to the CLM_STREAM_LIGHTNG_DATA_FILENAME)</desc>
   </entry>
 
-  <entry id="CLM_LIGHTNG_MAPALGO">
+  <entry id="CLM_STREAM_LIGHTNG_MAPALGO">
     <type>char</type>
     <valid_values>bilinear,nn</valid_values>
     <default_value>bilinear</default_value>
@@ -452,7 +452,7 @@
     <desc>Mapping algorithm to go from data grid to model grid</desc>
   </entry>
 
-  <entry id="CLM_LIGHTNG_TINTALGO">
+  <entry id="CLM_STREAM_LIGHTNG_TINTALGO">
     <type>char</type>
     <default_value>linear</default_value>
     <valid_values>linear,nearest,lower,upper</valid_values>
@@ -465,7 +465,7 @@
   <!-- URBANTV stream functionality -->
   <!-- ================================== -->
 
-  <entry id="CLM_URBANTV_YEAR_FIRST">
+  <entry id="CLM_STREAM_URBANTV_YEAR_FIRST">
     <type>char</type>
     <default_value>2000</default_value>
     <values>
@@ -482,7 +482,7 @@
     <desc>Population density data year first</desc>
   </entry>
 
-  <entry id="CLM_URBANTV_YEAR_LAST">
+  <entry id="CLM_STREAM_URBANTV_YEAR_LAST">
     <type>char</type>
     <default_value>2000</default_value>
     <values>
@@ -499,7 +499,7 @@
     <desc>Urbantv data year last</desc>
   </entry>
 
-  <entry id="CLM_URBANTV_YEAR_ALIGN">
+  <entry id="CLM_STREAM_URBANTV_YEAR_ALIGN">
     <type>char</type>
     <default_value>1</default_value>
     <values>
@@ -508,10 +508,10 @@
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Urbantv align CLM_URBANTV_YEAR_FIRST with this model year</desc>
+    <desc>Urbantv align CLM_STREAM_URBANTV_YEAR_FIRST with this model year</desc>
   </entry>
 
-  <entry id="CLM_URBANTV_DATA_FILENAME">
+  <entry id="CLM_STREAM_URBANTV_DATA_FILENAME">
     <type>char</type>
     <default_value>$DIN_LOC_ROOT/lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</default_value>
     <group>run_component_ctsm</group>
@@ -519,15 +519,15 @@
     <desc>urbantv data filename</desc>
   </entry>
 
-  <entry id="CLM_URBANTV_MESH_FILENAME">
+  <entry id="CLM_STREAM_URBANTV_MESH_FILENAME">
     <type>char</type>
     <default_value>$DIN_LOC_ROOT/lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1_ESMFmesh_cdf5_100621.nc</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>urbantv mesh filename (corresponding to the CLM_URBANTV_DATA_FILENAME)</desc>
+    <desc>urbantv mesh filename (corresponding to the CLM_STREAM_URBANTV_DATA_FILENAME)</desc>
   </entry>
 
-  <entry id="CLM_URBANTV_MAPALGO">
+  <entry id="CLM_STREAM_URBANTV_MAPALGO">
     <type>char</type>
     <valid_values>bilinear,nn</valid_values>
     <default_value>nn</default_value>
@@ -536,7 +536,7 @@
     <desc>Mapping algorithm to go from data grid to model grid</desc>
   </entry>
 
-  <entry id="CLM_URBANTV_TINTALGO">
+  <entry id="CLM_STREAM_URBANTV_TINTALGO">
     <type>char</type>
     <valid_values>linear,nearest,lower,upper</valid_values>
     <default_value>linear</default_value>
@@ -545,7 +545,83 @@
     <desc>Time interpolation method to use for urbantv</desc>
   </entry>
 
-   <!-- ================================== -->
+  <!-- ================================== -->
+  <!-- LAI stream functionality -->
+  <!-- ================================== -->
+
+  <entry id="CLM_STREAM_LAI_YEAR_FIRST">
+    <type>char</type>
+    <default_value>2001</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Population density data year first</desc>
+  </entry>
+
+  <entry id="CLM_STREAM_LAI_YEAR_LAST">
+    <type>char</type>
+    <default_value>2013</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Lai data year last</desc>
+  </entry>
+
+  <entry id="CLM_STREAM_LAI_YEAR_ALIGN">
+    <type>char</type>
+    <default_value>2001</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Lai align CLM_STREAM_LAI_YEAR_FIRST with this model year</desc>
+  </entry>
+
+  <entry id="CLM_STREAM_LAI_DATA_FILENAME">
+    <type>char</type>
+    <default_value>$DIN_LOC_ROOT/lnd/clm2/lai_streams/MODISPFTLAI_0.5x0.5_c140711.nc</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>lai data filename</desc>
+  </entry>
+
+  <entry id="CLM_STREAM_LAI_MESH_FILENAME">
+    <type>char</type>
+    <default_value>$DIN_LOC_ROOT/lnd/clm2/lai_streams/MODISPFTLAI_0.5x0_ESMFmesh_cdf5_090621.nc</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>lai mesh filename (corresponding to the CLM_STREAM_LAI_DATA_FILENAME)</desc>
+  </entry>
+
+  <entry id="CLM_STREAM_LAI_MAPALGO">
+    <type>char</type>
+    <valid_values>bilinear,nn</valid_values>
+    <default_value>bilinear</default_value>
+    <values>
+      <value LND_GRID="1x1_brazil"         >nn</value>
+      <value LND_GRID="1x1_mexicocityMEX"  >nn</value>
+      <value LND_GRID="1x1_vancouverCAN"   >nn</value>
+      <value LND_GRID="1x1_urbanc_alpha"   >nn</value>
+      <value LND_GRID="1x1_asphaltjungleNJ">nn</value>
+      <value LND_GRID="5x5_amazon"         >nn</value>
+      <value LND_GRID="1x1_brazil"         >nn</value>
+      <value LND_GRID="1x1_mexicocityMEX"  >nn</value>
+      <value LND_GRID="1x1_vancouverCAN"   >nn</value>
+      <value LND_GRID="1x1_urbanc_alpha"   >nn</value>
+      <value LND_GRID="1x1_asphaltjungleNJ">nn</value>
+      <value LND_GRID="5x5_amazon"         >nn</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Mapping algorithm to go from data grid to model grid</desc>
+  </entry>
+
+  <entry id="CLM_STREAM_LAI_TINTALGO">
+    <type>char</type>
+    <valid_values>linear,nearest,lower,upper</valid_values>
+    <default_value>linear</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Time interpolation method</desc>
+  </entry>
+
+  <!-- ================================== -->
 
   <!-- CLM_BLDNML_OPTS is not additive, we must list all possible combinations -->
   <!-- ERROR: the node below is never matched, see bug 2025 -->

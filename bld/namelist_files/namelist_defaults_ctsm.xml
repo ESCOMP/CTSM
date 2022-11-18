@@ -1436,8 +1436,10 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <fsnowoptics >lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc</fsnowoptics>
 <fsnowaging  >lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
 
-<!-- Soilm moisture streams namelist defaults -->
-<!-- This is if you want to prescribe the soil moisture from input datasets rather than model it -->
+<!-- ===================================== -->
+<!-- Soil moisture streams namelist defaults -->
+<!-- ===================================== -->
+
 <use_soil_moisture_streams>.false.</use_soil_moisture_streams>
 <stream_year_first_soilm  >1997</stream_year_first_soilm>
 <stream_year_last_soilm   >1997</stream_year_last_soilm>
@@ -1452,31 +1454,10 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- LAI streams namelist defaults -->
 <!-- ===================================== -->
 
-<use_lai_streams        >.false.</use_lai_streams>
-<stream_year_first_lai  >2001</stream_year_first_lai>
-<stream_year_last_lai   >2013</stream_year_last_lai>
-<model_year_align_lai   >2001</model_year_align_lai>
-
-<stream_fldfilename_lai hgrid="360x720cru"       >lnd/clm2/lai_streams/MODISPFTLAI_0.5x0.5_c140711.nc</stream_fldfilename_lai>
-<stream_meshfile_lai    hgrid="360x720cru"       >lnd/clm2/lai_streams/MODISPFTLAI_0.5x0_ESMFmesh_cdf5_090621.nc</stream_meshfile_lai>
-
-<lai_mapalgo>bilinear</lai_mapalgo>
-
-<lai_mapalgo  hgrid="1x1_brazil"          >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_mexicocityMEX"   >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_vancouverCAN"    >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_urbanc_alpha"    >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_brazil"          >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_mexicocityMEX"   >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_vancouverCAN"    >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_urbanc_alpha"    >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
+<use_lai_streams>.false.</use_lai_streams>
 
 <!-- ===================================== -->
-<!-- Set light_res variable -->
+<!-- Set lightning toggle variable -->
 <!-- ===================================== -->
 
 <light_res use_cn=".false."                           >none   </light_res>
