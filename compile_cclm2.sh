@@ -54,36 +54,41 @@ print_log "*** Logfile at: ${logfile} ***"
 
 
 #==========================================
-# Load modules
+# Load modules and find spack_oasis
 #==========================================
-# can also be done through $USER/.cime/config_machines.xml
 
-print_log "*** Loading modules ***"
+# print_log "*** Loading modules ***"
 
-module load daint-gpu # use gpu although CLM will run on cpus
+# Load modules: now done through $USER/.cime/config_machines.xml
+#module load daint-gpu # use gpu although CLM will run on cpus
 
-if [ $COMPILER = nvhpc ] ; then
-    module switch PrgEnv-cray PrgEnv-nvidia
-    module load cray-netcdf-hdf5parallel
-    module load cray-hdf5-parallel
-    module load cray-parallel-netcdf
-    spack load netlib-lapack%nvhpc # provides lapack and blas, load if config_compilers has -llapack -lblas
-    #module load cray-libsci # provides lapack and blas, load if config_compilers has -llibsci_gnu (does not work with nvhpc)
-fi
+# nvhpc
+#module switch PrgEnv-cray PrgEnv-nvidia
+#module load cray-netcdf-hdf5parallel
+#module load cray-hdf5-parallel
+#module load cray-parallel-netcdf
+#spack load netlib-lapack%nvhpc # provides lapack and blas, load if config_compilers has -llapack -lblas
+#module load cray-libsci # provides lapack and blas, load if config_compilers has -llibsci_gnu (does not work with nvhpc)
 
-if [ $COMPILER = gnu ] ; then
-    module switch PrgEnv-cray PrgEnv-gnu
-    module switch gcc gcc/9.3.0 # the default version gives an error when building gptl
-    module load cray-netcdf-hdf5parallel
-    module load cray-hdf5-parallel
-    module load cray-parallel-netcdf
-    spack load oasis%gcc
-fi
+# gnu
+#module switch PrgEnv-cray PrgEnv-gnu
+#module switch gcc gcc/9.3.0 # the default version gives an error when building gptl
+#module load cray-netcdf-hdf5parallel
+#module load cray-hdf5-parallel
+#module load cray-parallel-netcdf   
+#spack load oasis%gcc # not needed
+
+#module list | tee -a $logfile
+
+print_log "*** Finding spack_oasis ***"
+
+# Find spack_oasis installation, will be used in .cime/config_compilers.xml
+export OASIS_PATH=$(spack location -i oasis%gcc) # e.g. /project/sm61/psieber/spack-install/oasis/master/gcc/24obfvejulxnpfxiwatzmtcddx62pikc
+print_log "*** OASIS at: ${OASIS_PATH} ***"
+
+print_log "*** LD_LIBRARY_PATH: ${LD_LIBRARY_PATH} ***"
 
 #alias python=python2.7 # currently in .bashrc, but does not work for cray PATH
-
-module list | tee -a $logfile
-print_log $LD_LIBRARY_PATH
 
 
 #==========================================
@@ -291,19 +296,21 @@ print_log "*** Submitting job ***"
 # ./case.submit -a "-C gpu -p normal --ntasks-per-node 12" 
 # or by setting in config_batch.xml
 
-squeue --user=psieber | tee -a $logfile
+squeue --user=$USER | tee -a $logfile
 #less CaseStatus
 
 enddate=`date +'%Y-%m-%d %H:%M:%S'`
 duration=$SECONDS
 print_log "Started at: $startdate"
 print_log "Finished at: $enddate"
-print_log "Duration: $(($duration / 60)) min $(($duration % 60)) sec"
+print_log "Duration to create, setup, build, submit: $(($duration / 60)) min $(($duration % 60)) sec"
+
+print_log "*** Check the job: squeue --user=${USER} ***"
+print_log "*** Check the case: in ${CASEDIR}, run less CaseStatus ***"
 
 
 #==========================================
 # Copy final CaseStatus to logs
-# Copy logfiles to some permanent directory together with output
 #==========================================
 
 # Notes:
