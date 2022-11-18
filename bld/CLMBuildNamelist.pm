@@ -168,7 +168,7 @@ OPTIONS
                               (default is 0) (standard option with land-ice model is 10)
      -glc_use_antarctica      Set defaults appropriate for runs that include Antarctica
      -help [or -h]            Print usage to STDOUT.
-     -light_res <value>       Resolution of lightning dataset to use for CN fire (360x720 or 94x192)
+     -light_res <value>       Resolution of lightning dataset to use for CN fire (none or active)
      -lilac                   If CTSM is being run through LILAC (normally not used)
                               (LILAC is the Lightweight Infrastructure for Land-Atmosphere Coupling)
      -ignore_ic_date          Ignore the date on the initial condition files
@@ -955,10 +955,12 @@ sub setup_cmdl_fire_light_res {
   if ( $val eq "default" ) {
 
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                 'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
+                 'phys'=>$nl_flags->{'phys'},
+                 'use_cn'=>$nl_flags->{'use_cn'},
                  'fates_spitfire_mode'=>$nl->get_value('fates_spitfire_mode'),
-                 'use_fates'=>$nl_flags->{'use_fates'}, fire_method=>$nl->get_value('fire_method') );
-     $val              = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+                 'use_fates'=>$nl_flags->{'use_fates'},
+                 fire_method=>$nl->get_value('fire_method') );
+     $val = remove_leading_and_trailing_quotes( $nl->get_value($var) );
      $nl_flags->{$var} = $val;
 
   } else {
@@ -968,10 +970,6 @@ sub setup_cmdl_fire_light_res {
         if ( $fire_method eq "nofire" ) {
            $log->fatal_error("-$var option used with fire_method='nofire'. -$var can ONLY be used without the nofire option");
          }
-       }
-       my $stream_fldfilename_lightng = remove_leading_and_trailing_quotes( $nl->get_value('stream_fldfilename_lightng') );
-       if ( defined($stream_fldfilename_lightng) && $val ne "none" ) {
-          $log->fatal_error("-$var option used while also explicitly setting stream_fldfilename_lightng filename which is a contradiction. Use one or the other not both.");
        }
        if ( ! &value_is_true($nl->get_value('use_cn')) ) {
           $log->fatal_error("-$var option used CN is NOT on. -$var can only be used when CN is on (with bgc: cn or bgc)");
@@ -1644,7 +1642,7 @@ sub process_namelist_inline_logic {
   ##################################
   # namelist group: light_streams  #
   ##################################
-  setup_logic_lightning_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_lightning_streams($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
 
   #################################
   # namelist group: drydep_inparm #
@@ -3506,7 +3504,6 @@ sub setup_logic_urbantv_streams {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'val'=>$envxml_ref->{'CLM_URBANTV_DATA_FILENAME'});
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urbantvmapalgo'            , 'val'=>$envxml_ref->{'CLM_URBANTV_MAPALGO'});
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urbantv_tintalgo'          , 'val'=>$envxml_ref->{'CLM_URBANTV_TINTALGO'});
-
   if ($opts->{'driver'} eq "nuopc" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_urbantv', 'val'=>$envxml_ref->{'CLM_URBANTV_MESH_FILENAME'});
   }
@@ -3516,41 +3513,18 @@ sub setup_logic_urbantv_streams {
 
 sub setup_logic_lightning_streams {
   # lightning streams require CN/BGC
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
-    if ( $nl_flags->{'light_res'} ne "none" ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo',
-                  'hgrid'=>$nl_flags->{'res'},
-                  'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lightng',
-                  'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lightng',
-                  'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-      # Set align year, if first and last years are different
-      if ( $nl->get_value('stream_year_first_lightng') !=
-           $nl->get_value('stream_year_last_lightng') ) {
-        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_lightng', 'sim_year'=>$nl_flags->{'sim_year'},
-                    'sim_year_range'=>$nl_flags->{'sim_year_range'});
-     }
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lightng',
-                 'hgrid'=>$nl_flags->{'light_res'} );
+  if ( $nl_flags->{'light_res'} ne "none" ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lightng' , 'val'=>$envxml_ref->{'CLM_LIGHTNG_YEAR_FIRST'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lightng'  , 'val'=>$envxml_ref->{'CLM_LIGHTNG_YEAR_LAST'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_lightng'  , 'val'=>$envxml_ref->{'CLM_LIGHTNG_YEAR_ALIGN'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lightng', 'val'=>$envxml_ref->{'CLM_LIGHTNG_DATA_FILENAME'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo'            , 'val'=>$envxml_ref->{'CLM_LIGHTNG_MAPALGO'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightng_tintalgo'          , 'val'=>$envxml_ref->{'CLM_LIGHTNG_TINTALGO'});
       if ($opts->{'driver'} eq "nuopc" ) {
-          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lightng',
-                      'hgrid'=>$nl_flags->{'light_res'} );
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lightng', 'val'=>$envxml_ref->{'CLM_LIGHTNG_MESH_FILENAME'});
       }
-  } else {
-     # If bgc is NOT CN/CNDV then make sure none of the Lightng settings are set
-     if ( defined($nl->get_value('stream_year_first_lightng')) ||
-          defined($nl->get_value('stream_year_last_lightng'))  ||
-          defined($nl->get_value('model_year_align_lightng'))  ||
-          defined($nl->get_value('lightng_tintalgo'        ))  ||
-          defined($nl->get_value('stream_fldfilename_lightng'))   ) {
-        $log->fatal_error("When bgc is SP (NOT CN or BGC or FATES) or fire is turned off none of: stream_year_first_lightng,\n" .
-                          "stream_year_last_lightng, model_year_align_lightng, lightng_tintalgo nor\n" .
-                          "stream_fldfilename_lightng can be set!");
-     }
   }
 }
 

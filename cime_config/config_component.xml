@@ -356,21 +356,6 @@
     <desc>Population density mesh filename (corresponding to the CLM_POPDENS_DATA_FILENAME)</desc>
   </entry>
 
-  <entry id="CLM_POPDENS_TAXMODE">
-    <type>char</type>
-    <default_value>cycle</default_value>
-    <valid_values>cycle,extend,limit</valid_values>
-    <values>
-      <!-- For now use cycle for transient cases until CDEPS issue 201
-           is resolved - then change value to limit -->
-      <value compset="^HIST_">cycle</value>
-      <value compset="^SSP"  >cycle</value>
-    </values>
-    <group>run_component_ctsm</group>
-    <file>env_run.xml</file>
-    <desc>Time interpolation mode to determine how to handle data before and after the times in the file</desc>
-  </entry>
-
   <entry id="CLM_POPDENS_MAPALGO">
     <type>char</type>
     <default_value>bilinear</default_value>
@@ -391,13 +376,13 @@
 
   <entry id="CLM_POPDENS_TINTALGO">
     <type>char</type>
-    <default_value>linear</default_value>
+    <default_value>nearest</default_value>
     <valid_values>linear,nearest,lower,upper</valid_values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Time interpolation method to use for population density</desc>
   </entry>
-  
+
   <!-- ================================== -->
   <!-- LIGHTNING stream functionality -->
   <!-- ================================== -->
@@ -405,13 +390,6 @@
   <entry id="CLM_LIGHTNG_YEAR_FIRST">
     <type>char</type>
     <default_value>0001</default_value>
-    <values>
-      <value compset="^1850_">1850</value>
-      <value compset="^2010_">2010</value>
-      <value compset="^HIST_">1850</value>
-      <value compset="^SSP"  >2015</value>
-      <value compset="^1850_.*_CLM50%[^_]*NOANTHRO">1925</value>
-    </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>lightning data year first</desc>
@@ -455,15 +433,6 @@
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>lightning data mesh filename (corresponding to the CLM_LIGHTNG_DATA_FILENAME)</desc>
-  </entry>
-
-  <entry id="CLM_LIGHTNG_TAXMODE">
-    <type>char</type>
-    <default_value>cycle</default_value>
-    <valid_values>cycle,extend,limit</valid_values>
-    <group>run_component_ctsm</group>
-    <file>env_run.xml</file>
-    <desc>Time interpolation mode to determine how to handle data before and after the times in the file</desc>
   </entry>
 
   <entry id="CLM_LIGHTNG_MAPALGO">

@@ -465,7 +465,7 @@ foreach my $options (
                       "-bgc bgc -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19101023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
                       "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep -fire_emis",
-                      "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
+                      "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res active",
                      ) {
    my $file = $startfile;
    &make_env_run();
@@ -681,7 +681,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "lightres no cn"            =>{ options=>"-bgc sp -envxml_dir . -light_res 360x720",
+     "lightres no cn"            =>{ options=>"-bgc sp -envxml_dir . -light_res active",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
@@ -691,7 +691,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "lightres no fire"          =>{ options=>"-bgc bgc -envxml_dir . -light_res 360x720",
+     "lightres no fire"          =>{ options=>"-bgc bgc -envxml_dir . -light_res active",
                                      namelst=>"fire_method='nofire'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
@@ -701,7 +701,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "lightresnotnone-nofire"    =>{ options=>"-bgc bgc -envxml_dir . -light_res 94x192",
+     "lightresnotnone-nofire"    =>{ options=>"-bgc bgc -envxml_dir . -light_res active",
                                      namelst=>"fire_method='nofire'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
@@ -711,7 +711,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "lightrescontradictlightfil"=>{ options=>"-bgc bgc -envxml_dir . -light_res 360x720",
+     "lightrescontradictlightfil"=>{ options=>"-bgc bgc -envxml_dir . -light_res active",
                                      namelst=>"stream_fldfilename_lightng='build-namelist_test.pl'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
@@ -1509,7 +1509,7 @@ print "==================================================\n";
 foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
-  my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", "-bgc bgc -envxml_dir . -light_res 360x720",
+  my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", "-bgc bgc -envxml_dir . -light_res active",
                      "-bgc sp -envxml_dir . -vichydro", "-bgc bgc -dynamic_vegetation -ignore_warnings",
                      "-bgc bgc -clm_demand flanduse_timeseries -sim_year 1850-2000 -namelist '&a start_ymd=18500101/'",
                      "-bgc bgc -envxml_dir . -namelist '&a use_c13=.true.,use_c14=.true.,use_c14_bombspike=.true./'" );
@@ -1666,4 +1666,3 @@ sub cleanup {
      system( "/bin/rm $tempfile *_in" );
   }
 }
-

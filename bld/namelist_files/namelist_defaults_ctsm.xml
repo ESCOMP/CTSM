@@ -1476,13 +1476,22 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 
 <!-- ===================================== -->
-<!-- lightning streams namelist defaults -->
+<!-- Set light_res variable -->
 <!-- ===================================== -->
 
-<light_res    use_cn=".false."                           >none</light_res>
-<light_res    use_cn=".true." fire_method="nofire"       >none</light_res>
-<light_res    use_fates=".true." fates_spitfire_mode="0" >none</light_res>
-<light_res    use_fates=".true." fates_spitfire_mode="1" >none</light_res>
+<light_res use_cn=".false."                           >none   </light_res>
+<light_res use_cn=".true." fire_method="nofire"       >none   </light_res>
+<light_res use_cn=".true." phys="clm4_5"              >active </light_res>
+<light_res use_cn=".true." phys="clm5_0"              >active </light_res>
+<light_res use_cn=".true." phys="clm5_1"              >active </light_res>
+
+<light_res use_fates=".true."                         >none   </light_res>
+<light_res use_fates=".true." fates_spitfire_mode="0" >none   </light_res>
+<light_res use_fates=".true." fates_spitfire_mode="1" >none   </light_res>
+<light_res use_fates=".true." fates_spitfire_mode="2" >active </light_res>
+<light_res use_fates=".true." fates_spitfire_mode="3" >active </light_res>
+<light_res use_fates=".true." fates_spitfire_mode="4" >active </light_res>
+<light_res use_fates=".true." fates_spitfire_mode="5" >active </light_res>
 
 <!-- ===================================== -->
 <!-- Create crop on a separate land-unit -->
