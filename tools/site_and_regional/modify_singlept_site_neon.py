@@ -150,6 +150,18 @@ def get_parser():
         default="/glade/scratch/" + myname + "/single_point_neon_updated/",
     )
     parser.add_argument(
+        "--inputdata-dir",
+        help="""
+                Directory to write updated single point surface dataset.
+                [default: %(default)s] 
+                """,
+        action="store",
+        dest="inputdatadir",
+        type=str,
+        required=False,
+        default="/glade/p/cesmdata/cseg/inputdata"
+    )
+    parser.add_argument(
         "-d",
         "--debug",
         help="""
@@ -269,7 +281,7 @@ def find_surffile(surf_dir, site_name):
     return surf_file
 
 
-def find_soil_structure(surf_file):
+def find_soil_structure(args, surf_file):
     """
     Function for finding surface dataset soil
     strucutre using surface data metadata.
@@ -298,7 +310,7 @@ def find_soil_structure(surf_file):
     print("------------")
     # print (f1.attrs["Soil_texture_raw_data_file_name"])
 
-    clm_input_dir = "/glade/p/cesmdata/cseg/inputdata/lnd/clm2/rawdata/"
+    clm_input_dir = os.path.join( args.inputdatadir, "lnd/clm2/rawdata/" )
     surf_soildepth_file = os.path.join(
         clm_input_dir, f1.attrs["Soil_texture_raw_data_file_name"]
     )
@@ -534,7 +546,7 @@ def main():
     f1 = xr.open_dataset(surf_file)
 
     # -- Find surface dataset soil depth information
-    soil_bot, soil_top = find_soil_structure(surf_file)
+    soil_bot, soil_top = find_soil_structure(args, surf_file)
 
     # -- Find surface dataset soil levels
     # TODO: how? NS uses metadata on file to find
