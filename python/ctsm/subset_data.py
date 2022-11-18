@@ -390,10 +390,19 @@ def setup_files(args, defaults, cesmroot):
     if args.create_user_mods:
         setup_user_mods(args.user_mods_dir, cesmroot)
 
+    if args.inputdatadir == "defaults.cfg":
+        clmforcingindir = defaults.get("main", "clmforcingindir")
+    else:
+        clmforcingindir = args.inputdatadir
+
+    if not os.path.isdir(clmforcingindir):
+        logger.info("clmforcingindir does not exist: %s", clmforcingindir)
+        abort("inputdata directory does not exist")
+
     # DATM data
     datm_type = "datm_gswp3"
     dir_output_datm = "datmdata"
-    dir_input_datm = defaults.get(datm_type, "dir")
+    dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_type, "dir"))
     if args.create_datm:
         if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
             os.mkdir(os.path.join(args.out_dir, dir_output_datm))
@@ -405,14 +414,6 @@ def setup_files(args, defaults, cesmroot):
 
     fsurf_in = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
     fluse_in = defaults.get("landuse", "landuse_" + num_pft + "pft")
-    if args.inputdatadir == "defaults.cfg":
-        clmforcingindir = defaults.get("main", "clmforcingindir")
-    else:
-        clmforcingindir = args.inputdatadir
-
-    if not os.path.isdir(clmforcingindir):
-        logger.info("clmforcingindir does not exist: %s", clmforcingindir)
-        abort("inputdata directory does not exist")
 
     file_dict = {
         "main_dir": clmforcingindir,
