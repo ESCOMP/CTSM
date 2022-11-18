@@ -257,8 +257,8 @@ contains
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        ncolumns_hillslope(l) = ncolumns_hillslope_in(g)
-       ! vegetated landunits having nonzero hillslope columns
-       if(lun%itype(l) == istsoil .and. ncolumns_hillslope_in(g) > 0) then
+       ! vegetated landunits having nonzero hillslope columns and nonzero weight
+       if(lun%wtgcell(l) > 0._r8 .and. lun%itype(l) == istsoil .and. ncolumns_hillslope_in(g) > 0) then
           do c = lun%coli(l), lun%colf(l)
              col%is_hillslope_column(c) = .true.
           enddo
