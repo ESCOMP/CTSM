@@ -1,4 +1,17 @@
-# CTSM
+# CTSM for CCLM2 (branch release-clm5.0) 
+
+Clone the branch:  
+git clone -b release-clm5.0 https://github.com/pesieber/CTSM.git clm5.0  
+cd clm5.0  
+./manage_externals/checkout_externals  
+
+Note: you may need a fresh clone if you have ran checkout_externals on the main branch before
+(e.g. if you get errors about non-existing xml variable names, this is why...)
+
+Install oasis (required for coupling):   
+spack install oasis@master%gcc@9.3.0 fflags="-ffree-line-length-512"
+
+## CTSM
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3739617.svg)](https://doi.org/10.5281/zenodo.3739617)
 
