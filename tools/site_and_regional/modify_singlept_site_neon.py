@@ -274,10 +274,10 @@ def find_surffile(surf_dir, site_name):
         surf_file = surf_file[0]
     else:
         sys.exit(
-            "Surface data for this site " + site_name + "was not found:" + surf_file,
-            ".",
-            "\n",
-            "Please run ./subset_data.py for this site.",
+            "Surface data for this site " + str(site_name) + " was not found:" + str(surf_dir) + str(sf_name) +
+            "." +
+            "\n" +
+            "Please run ./subset_data.py for this site."
         )
     return surf_file
 
