@@ -477,7 +477,7 @@ sub read_namelist_definition {
 
 sub read_envxml_case_files {
   # read the contents of the env*.xml files in the case directory
-  my ($opts) = @_;
+  my ($opts, $nl) = @_;
 
   my %envxml = ();
   if ( defined($opts->{'envxml_dir'}) ) {
@@ -495,6 +495,10 @@ sub read_envxml_case_files {
       }
       foreach my $attr (keys %envxml) {
           if ( $envxml{$attr} =~ m/\$/ ) {
+             my $subst = $nl->{'inputdata_rootdir'};
+             if (index($envxml{$attr}, 'DIN_LOC_ROOT') != -1) {
+                 $envxml{$attr} =~ s/\$DIN_LOC_ROOT/$subst/g;
+             }
              $envxml{$attr} = SetupTools::expand_xml_var( $envxml{$attr}, \%envxml );
           }
       }
@@ -4248,7 +4252,7 @@ sub expand_xml_variables_in_namelist {
 
    foreach my $group ( $nl->get_group_names() ) {
        foreach my $var ( $nl->get_variable_names($group) ) {
-          my $val    = $nl->get_variable_value($group, $var);
+          my $val = $nl->get_variable_value($group, $var);
           my $newval = SetupTools::expand_xml_var( $val, $xmlvar_ref );
           if ( $newval ne $val ) {
              $nl->set_variable_value($group, $var, $newval);
@@ -4730,7 +4734,7 @@ sub main {
   check_cesm_inputdata(\%opts, \%nl_flags);
 
   # Read in the env_*.xml files
-  my %env_xml    = read_envxml_case_files( \%opts );
+  my %env_xml    = read_envxml_case_files( \%opts, \%nl_flags );
 
   # Process the user inputs
   process_namelist_user_input(\%opts, \%nl_flags, $definition, $defaults, $nl, $cfg, \%env_xml, $physv );

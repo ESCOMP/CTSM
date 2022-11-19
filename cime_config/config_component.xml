@@ -266,12 +266,12 @@
     <default_value>bilinear</default_value>
     <valid_values>bilinear,nn</valid_values>
     <values>
-      <value LND_GRID="1x1_brazil"         >nn</value>
-      <value LND_GRID="1x1_mexicocityMEX"  >nn</value>
-      <value LND_GRID="1x1_vancouverCAN"   >nn</value>
-      <value LND_GRID="1x1_urbanc_alpha"   >nn</value>
-      <value LND_GRID="1x1_asphaltjungleNJ">nn</value>
-      <value LND_GRID="5x5_amazon"         >nn</value>
+      <value grid="_l%1x1_brazil"         >nn</value>
+      <value grid="_l%1x1_mexicocityMEX"  >nn</value>
+      <value grid="_l%1x1_vancouverCAN"   >nn</value>
+      <value grid="_l%1x1_urbanc_alpha"   >nn</value>
+      <value grid="_l%1x1_asphaltjungleNJ">nn</value>
+      <value grid="_l%5x5_amazon"         >nn</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -361,12 +361,12 @@
     <default_value>bilinear</default_value>
     <valid_values>bilinear,nn</valid_values>
     <values>
-      <value LND_GRID="1x1_brazil"         >nn</value>
-      <value LND_GRID="1x1_mexicocityMEX"  >nn</value>
-      <value LND_GRID="1x1_vancouverCAN"   >nn</value>
-      <value LND_GRID="1x1_urbanc_alpha"   >nn</value>
-      <value LND_GRID="1x1_asphaltjungleNJ">nn</value>
-      <value LND_GRID="5x5_amazon"         >nn</value>
+      <value grid="_l%1x1_brazil"         >nn</value>
+      <value grid="_l%1x1_mexicocityMEX"  >nn</value>
+      <value grid="_l%1x1_vancouverCAN"   >nn</value>
+      <value grid="_l%1x1_urbanc_alpha"   >nn</value>
+      <value grid="_l%1x1_asphaltjungleNJ">nn</value>
+      <value grid="_l%5x5_amazon"         >nn</value>
       <value compset="^1850_.*_CLM50%[^_]*NOANTHRO">nn</value>
     </values>
     <group>run_component_ctsm</group>
@@ -440,12 +440,12 @@
     <valid_values>bilinear,nn</valid_values>
     <default_value>bilinear</default_value>
     <values>
-      <value LND_GRID="1x1_brazil"         >nn</value>
-      <value LND_GRID="1x1_mexicocityMEX"  >nn</value>
-      <value LND_GRID="1x1_vancouverCAN"   >nn</value>
-      <value LND_GRID="1x1_urbanc_alpha"   >nn</value>
-      <value LND_GRID="1x1_asphaltjungleNJ">nn</value>
-      <value LND_GRID="5x5_amazon"         >nn</value>
+      <value grid="_l%1x1_brazil"         >nn</value>
+      <value grid="_l%1x1_mexicocityMEX"  >nn</value>
+      <value grid="_l%1x1_vancouverCAN"   >nn</value>
+      <value grid="_l%1x1_urbanc_alpha"   >nn</value>
+      <value grid="_l%1x1_asphaltjungleNJ">nn</value>
+      <value grid="_l%5x5_amazon"         >nn</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -594,18 +594,18 @@
     <valid_values>bilinear,nn</valid_values>
     <default_value>bilinear</default_value>
     <values>
-      <value LND_GRID="1x1_brazil"         >nn</value>
-      <value LND_GRID="1x1_mexicocityMEX"  >nn</value>
-      <value LND_GRID="1x1_vancouverCAN"   >nn</value>
-      <value LND_GRID="1x1_urbanc_alpha"   >nn</value>
-      <value LND_GRID="1x1_asphaltjungleNJ">nn</value>
-      <value LND_GRID="5x5_amazon"         >nn</value>
-      <value LND_GRID="1x1_brazil"         >nn</value>
-      <value LND_GRID="1x1_mexicocityMEX"  >nn</value>
-      <value LND_GRID="1x1_vancouverCAN"   >nn</value>
-      <value LND_GRID="1x1_urbanc_alpha"   >nn</value>
-      <value LND_GRID="1x1_asphaltjungleNJ">nn</value>
-      <value LND_GRID="5x5_amazon"         >nn</value>
+      <value grid="_l%1x1_brazil"         >nn</value>
+      <value grid="_l%1x1_mexicocityMEX"  >nn</value>
+      <value grid="_l%1x1_vancouverCAN"   >nn</value>
+      <value grid="_l%1x1_urbanc_alpha"   >nn</value>
+      <value grid="_l%1x1_asphaltjungleNJ">nn</value>
+      <value grid="_l%5x5_amazon"         >nn</value>
+      <value grid="_l%1x1_brazil"         >nn</value>
+      <value grid="_l%1x1_mexicocityMEX"  >nn</value>
+      <value grid="_l%1x1_vancouverCAN"   >nn</value>
+      <value grid="_l%1x1_urbanc_alpha"   >nn</value>
+      <value grid="_l%1x1_asphaltjungleNJ">nn</value>
+      <value grid="_l%5x5_amazon"         >nn</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
