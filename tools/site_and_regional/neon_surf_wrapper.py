@@ -11,10 +11,10 @@ following:
        based on the downloaded neon data.
        (i.e. modify_singlept_site_neon.py)
 
-Instructions for running on Cheyenne/Casper:
-load the following into your local environment
-    module load python
-    ncar_pylib
+Instructions for running using conda python environments:
+
+../../py_env_create
+conda activate ctsm_py
 
 """
 # TODO
@@ -96,9 +96,10 @@ def main():
         lon = row['Lon']
         site = row['Site']
         pft = row['pft']
+        clmsite = "1x1_NEON_"+site
         print ("Now processing site :", site)
-        command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),'--site',site,'--dompft',str(pft),'--crop',
-                '--create-surface','--uniform-snowpack','--cap-saturation','--verbose']
+        command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),'--site',clmsite,'--dompft',str(pft),'--crop',
+                '--create-surface','--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
         execute(command)
 
         command = ['./modify_singlept_site_neon.py','--neon_site',site, '--surf_dir',

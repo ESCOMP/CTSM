@@ -1,5 +1,16 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev114 multiple 11/19/2022 Some NEON updates fixing AG sites, update MOSART, small fixes
+    ctsm5.1.dev113 multiple 10/28/2022 Fix some compsets; add only clauses for ESMF use statements
+    ctsm5.1.dev112 multiple 10/15/2022 Rework fates test definitions and add new fates tests
+    ctsm5.1.dev111 multiple 10/05/2022 Fixes for NEON cases
+    ctsm5.1.dev110   slevis 09/26/2022 Introduction of modify_meshes tool for use in I-cases and F-cases
+    ctsm5.1.dev109   slevis 09/26/2022 If not MIMICS, do not output certain MIMICS history fields
+    ctsm5.1.dev108  afoster 09/08/2022 Connect ozone from atmosphere
+    ctsm5.1.dev107  afoster 09/07/2022 Update Externals
+    ctsm5.1.dev106 multiple 08/04/2022 Reuse some files generated in initialization when rerunning
+    ctsm5.1.dev105   slevis 07/26/2022 make interfaces more similar between fsurdat_modifier and subset_data tools
+    ctsm5.1.dev104 glemieux 07/15/2022 Update to FATES history names and machine configuration
     ctsm5.1.dev103    sacks 07/12/2022 Fix accumulation variables when changing model time step
     ctsm5.1.dev102    sacks 07/11/2022 Fix LILAC interface to PIO
     ctsm5.1.dev101 samrabin 07/11/2022 Fix winter wheat sowing window bugs

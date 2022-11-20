@@ -5,6 +5,8 @@
 To run all tests (unit tests, system tests and pylint), simply run `make
 all` from this directory.
 
+When you run `make all`, you need to first execute `module load nco`.
+
 ## Python environment
 
 Another way is to use the file conda\_env\_ctsm\_py.txt to setup
@@ -13,7 +15,7 @@ a python environment. Comments in the file tell how to do this.
 You can also use the script in the top level directory to do
 all the conda commands and do this for you.
 
- ../manage_python_env
+ ../py_env_create
  conda activate ctsm_py
 
 Conda requirements files:
@@ -39,10 +41,16 @@ thing, but support different options:
    `make utest` or `make stest`, or they can all be run with `make
    test`.
 
+   When you run `make test` or `make stest`, you need to first execute
+   `module load nco`.
+
 2. via `./run_ctsm_py_tests`
 
    You can specify various arguments to this; run `./run_ctsm_py_tests
    -h` for details
+
+   In any configuration where you run the system tests, you need to
+   first execute `module load nco`.
 
 ## pylint
 
