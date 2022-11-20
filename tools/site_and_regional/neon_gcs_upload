@@ -9,8 +9,7 @@ import os, sys
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..","..",'python'))
 sys.path.insert(1, _CTSM_PYTHON)
 
-import boto3
-from botocore.exceptions   import ClientError
+from google.cloud import storage
 import glob
 import datetime
 from ctsm                  import add_cime_to_path
@@ -60,7 +59,7 @@ def get_parser(args, description, valid_neon_sites):
                         dest="file_date",        
                         required = False,
                         type = datetime.date.fromisoformat,
-                        default = datetime.datetime.strptime("0268-01-01",'%Y-%m-%d'))
+                        default = datetime.datetime.strptime("0318-01-01",'%Y-%m-%d'))
 
 
     parser.add_argument('--upload-finidat',
@@ -97,28 +96,24 @@ def get_parser(args, description, valid_neon_sites):
 
     return neon_sites, args.output_root, args.file_date, args.upload_finidat, args.upload_history
 
-def upload_file(file_name, bucket, object_name=None):
-    """Upload a file to an S3 bucket
+def upload_blob(bucket_name, source_file_name, destination_blob_name):
+    """Uploads a file to the bucket."""
+    # The ID of your GCS bucket
+    # bucket_name = "your-bucket-name"
+    # The path to your file to upload
+    # source_file_name = "local/path/to/file"
+    # The ID of your GCS object
+    # destination_blob_name = "storage-object-name"
 
-    :param file_name: File to upload
-    :param bucket: Bucket to upload to
-    :param object_name: S3 object name. If not specified then file_name is used
-    :return: True if file was uploaded, else False
-    """
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
 
-    # If S3 object_name was not specified, use file_name
-    if object_name is None:
-        object_name = os.path.basename(file_name)
+    blob.upload_from_filename(source_file_name)
 
-    # Upload the file
-    s3_client = boto3.client('s3')
-    try:
-        logger.info("Uploading file {} to {}".format(file_name, object_name))
-        response = s3_client.upload_file(file_name, bucket, object_name)
-    except ClientError as e:
-        logger.error(e)
-        return False
-    return True
+    print(
+        f"File {source_file_name} uploaded to {destination_blob_name}."
+    )
 
 def main(description):
     """
@@ -126,10 +121,10 @@ def main(description):
     from there, 
     """
 
-    if not os.path.isfile(os.path.join(os.getenv("HOME"),".aws","credentials")):
-        raise FileNotFoundError("User account must have valid aws credentials to run this script.")
-
     cesmroot = path_to_ctsm_root()
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.environ["HOME"],'.uploadGCSkey.json')
+    #os.path.join(os.environ["HOME"],"gcwriter")
+
     # Get the list of supported neon sites from usermods
     valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
     valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
@@ -149,8 +144,8 @@ def main(description):
                         logger.warning("Could not find file {}".format(finidat_file))
                         continue
                     newfile = basefile.replace(".postad.",".{}.".format(filedatestamp))
+                    upload_blob("neon-ncar-artifacts", finidat_file, os.path.join("NEON","lnd","ctsm","initdata",newfile) )
                 
-                    upload_file(finidat_file, 'neon-ncar-transfer', os.path.join("NEON","lnd","ctsm","initdata",newfile))
         if upload_history:
             logger.info("Upload history for {}".format(site))
             case_path = os.path.join(output_root, site+".transient")
@@ -161,7 +156,7 @@ def main(description):
                 archive_dir = os.path.join(case.get_value("DOUT_S_ROOT"),"lnd","hist")
                 for histfile in glob.iglob(archive_dir + "/*.h1.*"):
                     newfile = os.path.basename(histfile)
-                    upload_file(histfile, 'neon-ncar-transfer', os.path.join("NEON","archive",site,"lnd","hist",newfile))
+                    upload_blob("neon-ncar-artifacts", histfile, os.path.join("NEON","archive",site,"lnd","hist",newfile))
                         
                 
 
