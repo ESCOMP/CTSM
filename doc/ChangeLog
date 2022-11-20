@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev114
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)/@wwieder/@olyson/@ka7eh
-Date: Wed Nov 16 16:31:14 MST 2022
+Date: Sat Nov 19 18:11:15 MST 2022
 One-line Summary: Some NEON updates fixing AG sites, update MOSART, small fixes
 
 Purpose and description of changes
@@ -10,6 +10,9 @@ Purpose and description of changes
 Minor changes to python scripts and usermod_dirs for NEON cases. Also update the lightning mesh file so that it goes with the
 smaller lightning file. Have NEON use new use-cases for 2018 and 2018-PD conditions for CLM. Have NEON
 Agricultural sites run with prognostic crop. Simple fix for warning about NaN's in import/export data from/to coupler.
+
+Get NEON tests working on izumi, add --inputdata-dir to subset_data and modify_singlept_site_neon.py so they aren't tied
+to only running on cheyenne.
 
 Also update MOSART with fixed for direct_to_outlet option.
 
@@ -45,6 +48,11 @@ CTSM issues fixed (include CTSM Issue #):
   Fixes #1263 -- Fix partitionWood fluxes
   Fixes #1788 -- Fix albgrd_col
   Fixes #1901 -- Fix NEONSITE YELL
+ 
+  Some on #1910 -- add pandas version check to modify_singlept_site_neon.py so will abort cleanly if version not updated
+
+ Known bugs found since the previous tag (include issue #):
+   #1910 -- modify_singlept_site_neon.py has trouble on izumi
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -87,7 +95,9 @@ Testing summary: regular, tools
   tools-tests (test/tools) (if tools have been changed):
 
     cheyenne - OK
-    izumi (NEON) -- OK
+    cheyenne (NEON) - PASS
+    izumi (NEON) -- OK (modify_singlept_site_neon.py test fails due to #1910)
+    izumi -- OK
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
