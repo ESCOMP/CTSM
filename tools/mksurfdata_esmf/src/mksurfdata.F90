@@ -1046,6 +1046,11 @@ program mksurfdata
       ! Normalize land use and make sure things add up to 100% as well as
       ! checking that things are as they should be.
       !
+      ! Coming into this subroutine, landunit areas are expressed as percent of the
+      ! gridcell and are NOT normalized to sum to 100%. Coming out of this subroutine,
+      ! landunit areas are expressed as percent of the land portion of the gridcell and
+      ! ARE normalized to sum to 100%.
+      !
       ! input/output variables:
       integer, intent(in) :: ns_o
 
@@ -1054,48 +1059,22 @@ program mksurfdata
       integer  :: nsmall                      ! number of small PFT values for a single check
       integer  :: nsmall_tot                  ! total number of small PFT values in all grid cells
       real(r8) :: suma                        ! sum for error check
+      real(r8) :: pct_land                    ! area considered to be land (% of grid cell)
+      real(r8) :: frac_land                   ! area considered to be land (fraction of grid cell)
       real(r8) :: new_total_natveg_pct        ! new % veg (% of grid cell, natural veg)
       real(r8), parameter :: tol_loose = 1.e-4_r8               ! tolerance for some 'loose' error checks
       real(r8), parameter :: toosmallPFT = 1.e-10_r8            ! tolerance for PFT's to ignore
-      character(len=32) :: subname = 'normalizencheck_landuse'  ! subroutine name
+      character(len=32) :: subname = 'normalize_and_check_landuse'  ! subroutine name
       !-----------------------------------------------------------------------
 
       do n = 1,ns_o
 
          ! Truncate all percentage fields on output grid. This is needed to
-         ! insure that wt is zero (not a very small number such as
+         ! ensure that wt is zero (not a very small number such as
          ! 1e-16) where it really should be zero
-
          pctlak(n) = float(nint(pctlak(n)))
          pctwet(n) = float(nint(pctwet(n)))
          pctgla(n) = float(nint(pctgla(n)))
-
-         ! Assume wetland, glacier and/or lake when dataset landmask implies ocean
-
-         if (pctlnd_pft(n) < 1.e-6_r8) then
-            if (pctgla(n) < 1.e-6_r8) then
-                pctwet(n)    = 100._r8 - pctlak(n)
-                pctgla(n)    = 0._r8
-            else
-                pctwet(n)    = max(100._r8 - pctgla(n) - pctlak(n), 0.0_r8)
-            end if
-            pcturb(n)        = 0._r8
-            call pctnatpft(n)%set_pct_l2g(0._r8)
-            call pctcft(n)%set_pct_l2g(0._r8)
-         end if
-
-         ! Make sure sum of all land cover types except natural vegetation does
-         ! not exceed 100. If it does, subtract excess from these land cover
-         ! types proportionally.
-
-         suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
-         if (suma > 100._r4) then
-            pctlak(n) = pctlak(n) * 100._r8/suma
-            pctwet(n) = pctwet(n) * 100._r8/suma
-            pcturb(n) = pcturb(n) * 100._r8/suma
-            pctgla(n) = pctgla(n) * 100._r8/suma
-            call pctcft(n)%set_pct_l2g(pctcft(n)%get_pct_l2g() * 100._r8/suma)
-         end if
 
          ! Check preconditions
          if ( pctlak(n) < 0.0_r8 )then
@@ -1124,6 +1103,18 @@ program mksurfdata
             call shr_sys_abort()
          end if
 
+         ! Make sure sum of all land cover types except natural vegetation does
+         ! not exceed 100. If it does, subtract excess from these land cover
+         ! types proportionally.
+         suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
+         if (suma > 100._r4) then
+            pctlak(n) = pctlak(n) * 100._r8/suma
+            pctwet(n) = pctwet(n) * 100._r8/suma
+            pcturb(n) = pcturb(n) * 100._r8/suma
+            pctgla(n) = pctgla(n) * 100._r8/suma
+            call pctcft(n)%set_pct_l2g(pctcft(n)%get_pct_l2g() * 100._r8/suma)
+         end if
+
          suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
          if (suma > (100._r8 + tol_loose)) then
             write(6,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla + pctcrop must be'
@@ -1133,13 +1124,111 @@ program mksurfdata
             call shr_sys_abort()
          end if
 
-         ! Natural vegetated cover is 100% minus the sum of all other landunits
+         ! Determine the percent of each grid cell considered to be land. (See comments in
+         ! https://github.com/ESCOMP/CTSM/issues/1716 for details.)
+         !
+         ! Start by using the land fraction field from the PFT raw data set:
+         pct_land = pctlnd_pft(n)
+         !
+         ! But we don't want to overwrite special landunits or crop with ocean where these
+         ! special landunits extend beyond the PFT data's land fraction. In essence, this
+         ! is saying that we'll let special landunit area grow into the natveg area before
+         ! growing into ocean, but we'll have special landunit area grow into ocean before
+         ! growing into crop or any other special landunit area. (This check of special
+         ! landunit area is particularly important for glaciers, where we can have
+         ! floating ice shelves, so we can have a scenario where pctlnd_pft is 0 but we
+         ! have non-zero glacier cover and we want the final grid cell to be
+         ! glacier-covered.) (We could possibly do better by considering the land mask
+         ! from each special landunit raw dataset, and even better by mapping these
+         ! various notions of land mask onto each other, but that starts to get messy, and
+         ! relies on the trustworthiness of each raw dataset's land mask... this
+         ! formulation seems reasonable enough.)
+         !
+         ! Note that we include pct_crop in the following, but NOT pct_natveg. The
+         ! assumption behind that is that pct_crop is more reliable and/or more important,
+         ! and should not be overwritten, whereas pct_natveg can be overwritten with a
+         ! special landunit. For example, consider a case where the PFT dataset specifies
+         ! 40% land, with 20% crop and 10% natveg (so, implicitly, 10% special landunits).
+         ! If the only special landunit is glacier and it has 15% cover, then we want to
+         ! end up with the glacier overwriting natural veg, so we end up with 20% crop, 5%
+         ! natveg, 15% glacier and 60% ocean. However, if glacier has 30% cover, then we
+         ! will assume that some of that glacier extends over the ocean rather than
+         ! overwriting crop, so we end up with 20% crop, 30% glacier, 50% ocean and 0%
+         ! natveg.
+         !
+         ! Another reason for excluding pct_natveg from the following is more pragmatic:
+         ! Typically, we expect the initial sum of all landunit areas to approximately
+         ! equal pctlnd_pft. This means that, in a coastal grid cell, if we included all
+         ! landunit areas in the following sum, then in many cases we would take the
+         ! final pct_land from the landunit sum rather than from pctlnd_pft. But in this
+         ! scenario where we take pct_land from the landunit sum, it is likely that
+         ! pct_land will vary from year to year on the landuse timeseries file. This
+         ! variation from year to year will cause a renormalization of all landunits,
+         ! leading to changes in the areas of landunits that should really stay fixed
+         ! from one year to the next. By excluding pct_natveg we give more wiggle room:
+         ! it will usually be the case that we take the final pct_land from pctlnd_pft,
+         ! which stays fixed in time, so that the renormalization stays the same from one
+         ! year to the next. The possible downside is that pct_natveg may end up varying
+         ! more than is ideal, but this seems better than letting all of the other
+         ! landunits vary when they should stay fixed.
+         !
+         ! Also, note that this landunit sum agrees with the suma sums elsewhere; this
+         ! agreement may be important in some cases (so that if we changed the set of
+         ! landunits included in the sum here, some other changes may be needed below.)
+         pct_land = max(pct_land, suma)
+         !
+         ! Make sure that we're not ending up with > 100% land area. This can arise if the
+         ! sum of special landunits exceeds 100% by roundoff; also, due to rounding
+         ! errors, pctlnd_pft may slightly differ from 100% when it should really be
+         ! exactly 100%; we want pct_land to be exactly 100% in this case:
+         if (pct_land > (100._r8 - 1.e-4_r8)) then
+            pct_land = 100._r8
+         end if
 
-         new_total_natveg_pct = 100._r8 - suma
-         ! correct for rounding error:
-         new_total_natveg_pct = max(new_total_natveg_pct, 0._r8)
+         if (pct_land < 1.e-6_r8) then
+            ! If we have essentially 0 land area, set land area to exactly 0 and put all
+            ! area in wetlands (to simulate ocean). Note that, based on the formulation
+            ! for pct_land above, this should only arise if the non-natveg landunits
+            ! already have near-zero area, so the zeroing of these other landunits should
+            ! only result in changes near the roundoff level.
+            pct_land = 0._r8
+            frac_land = 0._r8
+            call pctnatpft(n)%set_pct_l2g(0._r8)
+            call pctcft(n)%set_pct_l2g(0._r8)
+            pctlak(n) = 0._r8
+            pcturb(n) = 0._r8
+            pctgla(n) = 0._r8
+            pctwet(n) = 100._r8
+         else
+            ! Fill the rest of the land area with natveg, then renormalize landunits so
+            ! that they are expressed as percent of the land area rather than percent of
+            ! the full gridcell area.
 
-         call pctnatpft(n)%set_pct_l2g(new_total_natveg_pct)
+            ! First fill the rest of the land area with natveg:
+            new_total_natveg_pct = pct_land - suma
+            ! Based on the formulation of pct_land above, pct_land is guaranteed to be at
+            ! least as large as suma. However, correct it just in case there is rounding
+            ! error:
+            new_total_natveg_pct = max(new_total_natveg_pct, 0._r8)
+
+            ! Now renormalize landunit areas so they are expressed as percent of the land
+            ! area rather than percent of the total gridcell area. Note that we have
+            ! already corrected pct_land above so that if it was slightly less than 100
+            ! it was set to exactly 100, so we can check for any values less than 100
+            ! here (rather than having some tolerance):
+            frac_land = pct_land / 100._r8
+            if (pct_land < 100._r8) then
+               new_total_natveg_pct = new_total_natveg_pct / frac_land
+               call pctcft(n)%set_pct_l2g(pctcft(n)%get_pct_l2g() / frac_land)
+               pctlak(n) = pctlak(n) / frac_land
+               pcturb(n) = pcturb(n) / frac_land
+               pctgla(n) = pctgla(n) / frac_land
+               pctwet(n) = pctwet(n) / frac_land
+            end if
+
+            ! Finally, set the actual pct_natveg:
+            call pctnatpft(n)%set_pct_l2g(new_total_natveg_pct)
+         end if
 
          ! Confirm that we have done the rescaling correctly: now the sum of all landunits
          ! should be 100% within tol_loose
