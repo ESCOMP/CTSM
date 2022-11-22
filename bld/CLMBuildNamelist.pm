@@ -4149,13 +4149,40 @@ sub setup_logic_exice {
   # excess ice streams
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
-  my $use_exice = $nl->get_value( 'use_excess_ice'               );
-  if (defined($use_exice) && $opts->{'driver'} eq "nuopc" && value_is_true($use_exice)) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_exice');
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_exice');
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_mapalgo_exice');
-  } elsif (defined($use_exice) && (! $opts->{'driver'} eq "nuopc") && value_is_true($use_exice)) {
-       $log->fatal_error("nuopc driver is required when use_excess_ice is set to true" );
+  my $use_exice = $nl->get_value( 'use_excess_ice' );
+  my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
+  # IF excess ice streams is on
+  if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
+     # Can only be true if excess ice is also on, otherwise fail
+     if (defined($use_exice) && not value_is_true($use_exice)) {
+        $log->fatal_error("use_excess_ice_streams can NOT be TRUE when use_excess_ice is FALSE" );
+     }
+  # Otherwise if ice streams are off
+  } else {
+     my @list = ( "stream_meshfile_exice", "stream_fldfilename_exice" );
+     # fail is excess ice streams files are set
+     foreach my $var ( @list ) {
+        if ( defined($nl->get_value($var)) ) {
+           $log->fatal_error("$var should NOT be set when use_excess_ice_streams=FALSE" );
+        }
+     }
+     # mapalgo can only be none, if excess ice streams are off
+     my $map_algo = $nl->get_value("stream_mapalgo_exice");
+     if ( defined($map_algo) && ($map_algo ne "none") ) {
+        $log->fatal_error("stream_mapalgo_exice can ONLY be none when use_excess_ice_streams=FALSE" );
+     }
+  }
+  # If excess ice is on
+  if (defined($use_exice) && value_is_true($use_exice)) {
+     # IF nuopc driver and excess ice streams are on get the stream defaults
+     if (defined($use_exice_streams) && $opts->{'driver'} eq "nuopc" && value_is_true($use_exice_streams)) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_exice');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_exice');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_mapalgo_exice');
+     # If excess ice streams on, but NOT the NUOPC driver fail
+     } elsif (defined($use_exice_streams) && (! $opts->{'driver'} eq "nuopc") && value_is_true($use_exice_streams)) {
+          $log->fatal_error("nuopc driver is required when use_excess_ice_streams is set to true" );
+     }
   }
 
 
