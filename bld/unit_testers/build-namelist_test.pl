@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1856;
+my $ntests = 1864;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1260;
+   $ntests += 1266;
 }
 plan( tests=>$ntests );
 
@@ -324,6 +324,7 @@ foreach my $driver ( "mct", "nuopc" ) {
                          "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP1-2.6", "-test", "-sim_year 1850",
                          "-namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
                          "-namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
+                         "-namelist '&a use_excess_ice=.true. use_excess_ice_streams=.false./'",
                          "-use_case 1850_control",
                          "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
                          "-res 1x1_brazil",
