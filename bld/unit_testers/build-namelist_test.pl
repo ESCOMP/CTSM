@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1844;
+my $ntests = 1855;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1254;
+   $ntests += 1262;
 }
 plan( tests=>$ntests );
 
@@ -323,6 +323,7 @@ foreach my $driver ( "mct", "nuopc" ) {
                          "-structure fast",
                          "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP1-2.6", "-test", "-sim_year 1850",
                          "-namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
+                         "-namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
                          "-use_case 1850_control",
                          "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
                          "-res 1x1_brazil",
@@ -521,8 +522,28 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
-     "soilm_stream wo use"       =>{ options=>"-res 0.9x1.25 -envxml_dir .",
-                                     namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='missing_file'",
+     "soilm_stream off w file"      =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='file_provided_when_off'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice_stream off w file"  =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_fldfilename_exice='file_provided_when_off'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice_stream off w mesh"  =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_meshfile_exice='file_provided_when_off'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice off, but stream on"  =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_excess_ice=.false., use_excess_ice_streams = .true.,stream_fldfilename_exice='file_provided', stream_meshfile_exice='file_provided'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice stream off, but setmap"=>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_mapalgo_exice='bilinear'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
