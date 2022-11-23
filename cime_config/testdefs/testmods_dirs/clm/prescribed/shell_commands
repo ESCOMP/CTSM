@@ -1,0 +1,2 @@
+./xmlchange  CLM_STREAM_SOILM_TINTALGO=lower
+./xmlchange  CLM_STREAM_LAI_TINTALGO=lower

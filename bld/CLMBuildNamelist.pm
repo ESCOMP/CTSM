@@ -1761,6 +1761,7 @@ sub process_namelist_inline_logic {
   # namelist group: clm_initinterp_inparm #
   #########################################
   setup_logic_initinterp($opts, $nl_flags, $definition, $defaults, $nl);
+
 }
 
 #-------------------------------------------------------------------------------
@@ -1910,14 +1911,15 @@ sub setup_logic_irrigate {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'irrigate',
-                'use_crop'=>$nl_flags->{'use_crop'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
-                'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, );
+              'use_crop'=>$nl_flags->{'use_crop'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
+              'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, );
 
   if ( &value_is_true($nl->get_value('irrigate') ) ) {
-     $nl_flags->{'irrigate'} = ".true."
+      $nl_flags->{'irrigate'} = ".true.";
   } else {
-     $nl_flags->{'irrigate'} = ".false."
+      $nl_flags->{'irrigate'} = ".false.";
   }
+
 }
 
 #-------------------------------------------------------------------------------
@@ -4282,6 +4284,7 @@ sub add_default {
     }
 
     # set the value in the namelist
+    $val =~ s/\s+$//;
     $nl->set_variable_value($group, $var, $val);
   }
   return( 0 );
@@ -4782,12 +4785,13 @@ sub main {
 
   # Process the user inputs
   process_namelist_user_input(\%opts, \%nl_flags, $definition, $defaults, $nl, $cfg, \%env_xml, $physv );
+
   # Get any other defaults needed from the namelist defaults file
   process_namelist_inline_logic(\%opts, \%nl_flags, $definition, $defaults, $nl, \%env_xml, $physv);
 
   # Validate that the entire resultant namelist is valid
   $definition->validate($nl);
-  print "DEBUG: here1\n";
+
   write_output_files(\%opts, \%nl_flags, $defaults, $nl);
   write_output_real_parameter_file(\%opts, \%nl_flags, $definition, $defaults, $nl);
 
