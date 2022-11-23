@@ -35,7 +35,7 @@ module ExcessIceStreamType
 
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public  :: Init            ! Initialize and read data in
-      procedure, private :: UseStreams      ! If streams will be used
+      procedure, public  :: UseStreams      ! If streams will be used
       procedure, public  :: CalcExcessIce   ! Calculate excess ice ammount
 
       ! !PRIVATE MEMBER FUNCTIONS:
@@ -51,6 +51,7 @@ module ExcessIceStreamType
      procedure, private :: ReadNML     ! Read in namelist
   end type streamcontrol_type
 
+  logical :: namelist_read = .false.
   type(streamcontrol_type), private :: control        ! Stream control data
 
   character(len=*), parameter, private :: sourcefile = &
@@ -234,6 +235,9 @@ contains
   class(excessicestream_type) :: this
   !
   ! !LOCAL VARIABLES:
+  if ( .not. read_namelist ) then
+      call endrun(msg=' ERROR UseStreams being called, but namelist has not been read yet'//errMsg(sourcefile, __LINE__))
+  end if
   if ( trim(control%stream_fldFileName_exice) == '' )then
      UseStreams = .false.
   else
@@ -259,6 +263,7 @@ subroutine ReadNML(this, bounds, NLFilename)
   ! local variables
   integer            :: nu_nml    ! unit for namelist file
   integer            :: nml_error ! namelist i/o error flag
+  logical            :: use_excess_ice_streams = .false.         ! logical to turn on use of excess ice streams
   character(len=CL)  :: stream_fldFileName_exice = ' '
   character(len=CL)  :: stream_meshfile_exice = ' '
   character(len=CL)  :: stream_mapalgo_exice = 'bilinear'
@@ -267,7 +272,7 @@ subroutine ReadNML(this, bounds, NLFilename)
   !-----------------------------------------------------------------------
 
   namelist /exice_streams/ &               ! MUST agree with namelist_name above
-       stream_mapalgo_exice,  stream_fldFileName_exice, stream_meshfile_exice
+       stream_mapalgo_exice,  stream_fldFileName_exice, stream_meshfile_exice, use_excess_ice_streams
 
   ! Default values for namelist
 
@@ -286,20 +291,33 @@ subroutine ReadNML(this, bounds, NLFilename)
      close(nu_nml)
   endif
 
+  call shr_mpi_bcast(use_excess_ice_streams   , mpicom)
   call shr_mpi_bcast(stream_mapalgo_exice     , mpicom)
   call shr_mpi_bcast(stream_fldFileName_exice , mpicom)
   call shr_mpi_bcast(stream_meshfile_exice    , mpicom)
 
   if (masterproc) then
      write(iulog,*) ' '
-     write(iulog,*) namelist_name, ' stream settings:'
-     write(iulog,*) '  stream_fldFileName_exice = ',stream_fldFileName_exice
-     write(iulog,*) '  stream_meshfile_exice    = ',stream_meshfile_exice
-     write(iulog,*) '  stream_mapalgo_exice     = ',stream_mapalgo_exice
+     if ( use_excess_ice_streams ) then
+        write(iulog,*) 'excess ice streams are enabled: '
+        write(iulog,*) namelist_name, ' stream settings:'
+        write(iulog,*) '  stream_fldFileName_exice = ',stream_fldFileName_exice
+        write(iulog,*) '  stream_meshfile_exice    = ',stream_meshfile_exice
+        write(iulog,*) '  stream_mapalgo_exice     = ',stream_mapalgo_exice
+        if ( trim(stream_fldFileName_exice) == '' )then
+            call endrun(msg=' ERROR excess ice streams are on, but stream_fldFileName_exice is NOT set'//errMsg(sourcefile, __LINE__))
+        end if
+     else
+        write(iulog,*) 'excess ice streams are off'
+        if ( trim(stream_fldFileName_exice) /= '' )then
+            call endrun(msg=' ERROR excess ice streams are off, but stream_fldFileName_exice is set'//errMsg(sourcefile, __LINE__))
+        end if
+     end if
   endif
   this%stream_fldFileName_exice = stream_fldFileName_exice
   this%stream_meshfile_exice    = stream_meshfile_exice
   this%stream_mapalgo_exice     = stream_mapalgo_exice
+  namelist_read                 = .true.
 
 end subroutine ReadNML
 
