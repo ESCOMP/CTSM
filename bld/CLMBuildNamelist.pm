@@ -1611,7 +1611,7 @@ sub process_namelist_inline_logic {
   ###############################
   # namelist group: ndepdyn_nml #
   ###############################
-  setup_logic_nitrogen_deposition($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
+  setup_logic_nitrogen_deposition_streams($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
 
   ##################################
   # namelist group: cnmresp_inparm #
@@ -1671,7 +1671,7 @@ sub process_namelist_inline_logic {
   ##########################################
   # namelist group: soil_moisture_streams  #
   ##########################################
-  setup_logic_soilm_streams($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_soilm_streams($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
 
   ##################################
   # namelist group: bgc_shared
@@ -1912,6 +1912,7 @@ sub setup_logic_irrigate {
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'irrigate',
                 'use_crop'=>$nl_flags->{'use_crop'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
                 'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, );
+
   if ( &value_is_true($nl->get_value('irrigate') ) ) {
      $nl_flags->{'irrigate'} = ".true."
   } else {
@@ -3390,23 +3391,50 @@ sub setup_logic_c_isotope {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_nitrogen_deposition {
+sub setup_logic_nitrogen_deposition_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
-
   #
   # Nitrogen deposition for bgc=CN
   #
   if ( $nl_flags->{'bgc_mode'} =~/bgc/ ) {
 
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep' , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_YEAR_FIRST'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_ndep'  , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_YEAR_LAST'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_ndep'  , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_YEAR_ALIGN'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_DATA_FILENAME'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ndep'   , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_MESH_FILENAME'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist'           , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_DATA_VARLIST'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo'            , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_MAPALGO'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_tintalgo'          , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_TINTALGO'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode'           , 'val'=>$envxml_ref->{'CLM_STREAM_NDEP_TAXMODE'});
+      my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
+      my ($var_nml, $var_xml)  = ('stream_year_first_ndep', 'CLM_STREAM_NDEP_YEAR_FIRST');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+      my ($var_nml, $var_xml)  = ('stream_year_last_ndep', 'CLM_STREAM_NDEP_YEAR_LAST');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+      my ($var_nml, $var_xml) = ('model_year_align_ndep', 'CLM_STREAM_NDEP_YEAR_ALIGN');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+      my ($var_nml, $var_xml) = ('stream_fldfilename_ndep', 'CLM_STREAM_NDEP_DATA_FILENAME');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+      my ($var_nml, $var_xml) = ('stream_meshfile_ndep', 'CLM_STREAM_NDEP_MESH_FILENAME');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+      my ($var_nml, $var_xml) = ('ndep_varlist', 'CLM_STREAM_NDEP_DATA_VARLIST');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+      my ($var_nml, $var_xml) = ('ndep_mapalgo', 'CLM_STREAM_NDEP_MAPALGO');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+      my ($var_nml, $var_xml) = ('ndep_tintalgo', 'CLM_STREAM_NDEP_TINTALGO');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+      my ($var_nml, $var_xml) = ('ndep_taxmode', 'CLM_STREAM_NDEP_TAXMODE');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub add_stream_default {
+  my ($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, $check_char) = @_;
+
+  my $val_xml = $envxml_ref->{$var_xml};
+  add_default($opts,  $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, 'val'=>$val_xml);
+  if ($check_char) {
+      if ($nl->get_value($var_nml) ne "'$val_xml'"){
+          $log->fatal_error("\n $var_nml can only be set via the xml variable $var_xml, it CANNOT be set in user_nl_clm");
+      }
+  } else {
+      if ($nl->get_value($var_nml) ne $val_xml) {
+          $log->fatal_error("\n $var_nml can only be set via the xml variable $var_xml, it CANNOT be set in user_nl_clm");
+      }
   }
 }
 
@@ -3486,14 +3514,21 @@ sub setup_logic_popd_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
   if ( &value_is_true($nl_flags->{'cnfireson'}) ) {
-
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_popdens' , 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_YEAR_FIRST'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_popdens'  , 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_YEAR_LAST'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_popdens'  , 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_YEAR_ALIGN'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_popdens', 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_DATA_FILENAME'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_popdens'   , 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_MESH_FILENAME'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdensmapalgo'            , 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_MAPALGO'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdens_tintalgo'          , 'val'=>$envxml_ref->{'CLM_STREAM_POPDENS_TINTALGO'});
+      my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
+      my ($var_nml, $var_xml)  = ('stream_year_first_popdens', 'CLM_STREAM_POPDENS_YEAR_FIRST');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+      my ($var_nml, $var_xml)  = ('stream_year_last_popdens', 'CLM_STREAM_POPDENS_YEAR_LAST');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+      my ($var_nml, $var_xml)  = ('model_year_align_popdens', 'CLM_STREAM_POPDENS_YEAR_ALIGN');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+      my ($var_nml, $var_xml)  = ('stream_fldfilename_popdens', 'CLM_STREAM_POPDENS_DATA_FILENAME');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+      my ($var_nml, $var_xml)  = ('stream_meshfile_popdens', 'CLM_STREAM_POPDENS_MESH_FILENAME');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+      my ($var_nml, $var_xml)  = ('popdensmapalgo', 'CLM_STREAM_POPDENS_MAPALGO');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+      my ($var_nml, $var_xml)  = ('popdens_tintalgo', 'CLM_STREAM_POPDENS_TINTALGO');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
   }
 }
 
@@ -3502,15 +3537,23 @@ sub setup_logic_popd_streams {
 sub setup_logic_urbantv_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_urbantv' , 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_YEAR_FIRST'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_urbantv'  , 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_YEAR_LAST'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_urbantv'  , 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_YEAR_ALIGN'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_DATA_FILENAME'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urbantvmapalgo'            , 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_MAPALGO'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urbantv_tintalgo'          , 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_TINTALGO'});
+  my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
+  my ($var_nml, $var_xml)  = ('stream_year_first_urbantv', 'CLM_STREAM_URBANTV_YEAR_FIRST');
+  add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+  my ($var_nml, $var_xml)  = ('stream_year_last_urbantv', 'CLM_STREAM_URBANTV_YEAR_LAST');
+  add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+  my ($var_nml, $var_xml)  = ('model_year_align_urbantv', 'CLM_STREAM_URBANTV_YEAR_ALIGN');
+  add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+  my ($var_nml, $var_xml)  = ('stream_fldfilename_urbantv', 'CLM_STREAM_URBANTV_DATA_FILENAME');
+  add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
   if ($opts->{'driver'} eq "nuopc" ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_urbantv', 'val'=>$envxml_ref->{'CLM_STREAM_URBANTV_MESH_FILENAME'});
+      my ($var_nml, $var_xml)  = ('stream_meshfile_urbantv', 'CLM_STREAM_URBANTV_MESH_FILENAME');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
   }
+  my ($var_nml, $var_xml)  = ('urbantvmapalgo', 'CLM_STREAM_URBANTV_MAPALGO');
+  add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+  my ($var_nml, $var_xml)  = ('urbantv_tintalgo', 'CLM_STREAM_URBANTV_TINTALGO');
+  add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
 }
 
 #-------------------------------------------------------------------------------
@@ -3520,15 +3563,23 @@ sub setup_logic_lightning_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
   if ( $nl_flags->{'light_res'} ne "none" ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lightng' , 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_YEAR_FIRST'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lightng'  , 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_YEAR_LAST'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_lightng'  , 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_YEAR_ALIGN'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lightng', 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_DATA_FILENAME'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo'            , 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_MAPALGO'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightng_tintalgo'          , 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_TINTALGO'});
+      my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
+      my ($var_nml, $var_xml)  = ('stream_year_first_lightng', 'CLM_STREAM_LIGHTNG_YEAR_FIRST');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+      my ($var_nml, $var_xml)  = ('stream_year_last_lightng', 'CLM_STREAM_LIGHTNG_YEAR_LAST');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+      my ($var_nml, $var_xml)  = ('model_year_align_lightng', 'CLM_STREAM_LIGHTNG_YEAR_ALIGN');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+      my ($var_nml, $var_xml)  = ('stream_fldfilename_lightng', 'CLM_STREAM_LIGHTNG_DATA_FILENAME');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
       if ($opts->{'driver'} eq "nuopc" ) {
-          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lightng', 'val'=>$envxml_ref->{'CLM_STREAM_LIGHTNG_MESH_FILENAME'});
+          my ($var_nml, $var_xml)  = ('stream_meshfile_lightng', 'CLM_STREAM_LIGHTNG_MESH_FILENAME');
+          add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
       }
+      my ($var_nml, $var_xml)  = ('lightngmapalgo', 'CLM_STREAM_LIGHTNG_MAPALGO');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+      my ($var_nml, $var_xml)  = ('lightng_tintalgo', 'CLM_STREAM_LIGHTNG_TINTALGO');
+      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
   }
 }
 
@@ -3604,46 +3655,33 @@ sub setup_logic_megan {
 
 sub setup_logic_soilm_streams {
   # prescribed soil moisture streams require clm4_5/clm5_0/clm5_1
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_soil_moisture_streams');
+
       if ( &value_is_true( $nl->get_value('use_soil_moisture_streams') ) ) {
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_tintalgo',
-                     'hgrid'=>$nl_flags->{'res'} );
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_offset',
-                     'hgrid'=>$nl_flags->{'res'} );
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_soilm', 'phys'=>$nl_flags->{'phys'},
-                     'sim_year'=>$nl_flags->{'sim_year'},
-                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_soilm', 'phys'=>$nl_flags->{'phys'},
-                     'sim_year'=>$nl_flags->{'sim_year'},
-                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
-         # Set align year, if first and last years are different
-         if ( $nl->get_value('stream_year_first_soilm') !=
-              $nl->get_value('stream_year_last_soilm') ) {
-              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                          'model_year_align_soilm', 'sim_year'=>$nl_flags->{'sim_year'},
-                          'sim_year_range'=>$nl_flags->{'sim_year_range'});
-         }
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_soilm', 'phys'=>$nl_flags->{'phys'},
-                     'hgrid'=>$nl_flags->{'res'} );
-         if ( ($opts->{'use_case'} =~ /_transient$/) &&
-              (remove_leading_and_trailing_quotes($nl->get_value("soilm_tintalgo")) eq "linear") ) {
-             $log->warning("For a transient case, soil moisture streams, should NOT use soilm_tintalgo='linear'" .
-                           " since vegetated areas could go from missing to not missing or vice versa" );
-         }
-      } else {
-         if ( defined($nl->get_value('stream_year_first_soilm')) ||
-              defined($nl->get_value('model_year_align_soilm')) ||
-              defined($nl->get_value('stream_fldfilename_soilm')) ||
-              defined($nl->get_value('soilm_tintalgo')) ||
-              defined($nl->get_value('soilm_offset')) ||
-              defined($nl->get_value('stream_year_last_soilm')) ) {
-             $log->fatal_error("One of the soilm streams namelist items (stream_year_first_soilm, " .
-                                " model_year_align_soilm, stream_fldfilename_soilm, stream_fldfilename_soilm)" .
-                                " soilm_tintalgo soilm_offset" .
-                                " is defined, but use_soil_moisture_streams option NOT set to true");
-         }
+          my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
+          my ($var_nml, $var_xml)  = ('stream_year_first_soilm', 'CLM_STREAM_SOILM_YEAR_FIRST');
+          add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+          my ($var_nml, $var_xml)  = ('stream_year_last_soilm', 'CLM_STREAM_SOILM_YEAR_LAST');
+          add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+          my ($var_nml, $var_xml)  = ('model_year_align_soilm', 'CLM_STREAM_SOILM_YEAR_ALIGN');
+          add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+          my ($var_nml, $var_xml)  = ('stream_fldfilename_soilm', 'CLM_STREAM_SOILM_DATA_FILENAME');
+          add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+          if ($opts->{'driver'} eq "nuopc" ) {
+              my ($var_nml, $var_xml)  = ('stream_meshfile_soilm', 'CLM_STREAM_SOILM_MESH_FILENAME');
+              add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+          }
+          my ($var_nml, $var_xml)  = ('soilm_mapalgo', 'CLM_STREAM_SOILM_MAPALGO');
+          add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+          my ($var_nml, $var_xml)  = ('soilm_tintalgo', 'CLM_STREAM_SOILM_TINTALGO');
+          add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+          if ( ($opts->{'use_case'} =~ /_transient$/) &&
+               (remove_leading_and_trailing_quotes($nl->get_value("soilm_tintalgo")) eq "linear") ) {
+              $log->warning("For a transient case, soil moisture streams, should NOT use soilm_tintalgo='linear'" .
+                            " since vegetated areas could go from missing to not missing or vice versa" );
+          }
       }
 }
 
@@ -3659,15 +3697,21 @@ sub setup_logic_lai_streams {
 
   if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
      if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lai' , 'val'=>$envxml_ref->{'CLM_STREAM_LAI_YEAR_FIRST'});
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lai'  , 'val'=>$envxml_ref->{'CLM_STREAM_LAI_YEAR_LAST'});
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_lai'  , 'val'=>$envxml_ref->{'CLM_STREAM_LAI_YEAR_ALIGN'});
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lai', 'val'=>$envxml_ref->{'CLM_STREAM_LAI_DATA_FILENAME'});
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo'           , 'val'=>$envxml_ref->{'CLM_STREAM_LAI_MAPALGO'});
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_tintalgo'          , 'val'=>$envxml_ref->{'CLM_STREAM_LAI_TINTALGO'});
-         if ($opts->{'driver'} eq "nuopc" ) {
-             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lai', 'val'=>$envxml_ref->{'CLM_STREAM_LAI_MESH_FILENAME'});
-         }
+         my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
+         my ($var_nml, $var_xml)  = ('stream_year_first_lai', 'CLM_STREAM_LAI_YEAR_FIRST');
+         add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+         my ($var_nml, $var_xml)  = ('stream_year_last_lai', 'CLM_STREAM_LAI_YEAR_LAST');
+         add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+         my ($var_nml, $var_xml)  = ('model_year_align_lai', 'CLM_STREAM_LAI_YEAR_ALIGN');
+         add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
+         my ($var_nml, $var_xml)  = ('stream_fldfilename_lai', 'CLM_STREAM_LAI_DATA_FILENAME');
+         add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+         my ($var_nml, $var_xml)  = ('stream_meshfile_lai', 'CLM_STREAM_LAI_MESH_FILENAME');
+         add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+         my ($var_nml, $var_xml)  = ('laimapalgo', 'CLM_STREAM_LAI_MAPALGO');
+         add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+         my ($var_nml, $var_xml)  = ('lai_tintalgo', 'CLM_STREAM_LAI_TINTALGO');
+         add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
      }
   }
 }
@@ -4743,6 +4787,7 @@ sub main {
 
   # Validate that the entire resultant namelist is valid
   $definition->validate($nl);
+  print "DEBUG: here1\n";
   write_output_files(\%opts, \%nl_flags, $defaults, $nl);
   write_output_real_parameter_file(\%opts, \%nl_flags, $definition, $defaults, $nl);
 
