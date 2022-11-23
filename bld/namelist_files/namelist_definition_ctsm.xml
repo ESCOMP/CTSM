@@ -1682,7 +1682,7 @@ Colon delimited list of variables to read from the streams file for nitrogen dep
 (Normally just read the single variable NDEP_year or NDEP_month)
 </entry>
 
-<entry id="ndepmapalgo" type="char*256" category="datasets"
+<entry id="ndep_mapalgo" type="char*256" category="datasets"
        group="ndepdyn_nml" valid_values="bilinear,nn" >
 Mapping method from Nitrogen deposition input file to the model resolution
     bilinear = bilinear interpolation
@@ -1705,35 +1705,48 @@ mesh filename of input stream data for finundated inversion of observed (from Pr
 to hydrologic variables (either TWS or ZWT)
 </entry>
 
+<!-- ========================================================================================  -->
 <!-- Prescribed soil moisture -->
+<!-- ========================================================================================  -->
+
 <entry id="use_soil_moisture_streams" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on use of input prescribed soil moisture streams rather than have CLM prognose it (EXPERIMENTAL)
 </entry>
 
 <entry id="stream_year_first_soilm" type="integer" category="datasets"
-       group="soil_moisture_streams" valid_values="" >
+       group="soil_moisture_streams" >
 First year to loop over for prescribed soil moisture streams data
 </entry>
 
 <entry id="stream_year_last_soilm" type="integer" category="datasets"
-       group="soil_moisture_streams" valid_values="" >
+       group="soil_moisture_streams" >
 Last year to loop over for prescribed soil moisture streams data
 </entry>
 
 <entry id="model_year_align_soilm" type="integer" category="datasets"
-       group="soil_moisture_streams" valid_values="" >
+       group="soil_moisture_streams" >
 Simulation year that aligns with stream_year_first_soilm value
 </entry>
 
 <entry id="stream_fldfilename_soilm" type="char*256(30)" category="datasets"
-       input_pathname="abs" group="soil_moisture_streams" valid_values="" >
+       input_pathname="abs" group="soil_moisture_streams" >
 Filename of input stream data for prescribed soil moisture streams data
 </entry>
 
+<entry id="stream_meshfile_soilm" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="soil_moisture_streams">
+mesh filename of input stream data for prescribed soil moisture streams data
+</entry>
+
 <entry id="soilm_tintalgo" type="char*256" category="datasets"
-       group="soil_moisture_streams" valid_values="linear,nearest,lower,upper" >
+       group="soil_moisture_streams" >
 Time interpolation method to use for prescribed soil moisture streams data
+</entry>
+
+<entry id="soilm_mapalgo" type="char*256" category="datasets"
+       group="soil_moisture_streams">
+Mapping method from stream input file to the model resolution
 </entry>
 
 <entry id="soilm_offset" type="integer" category="datasets"
@@ -1761,44 +1774,40 @@ Toggle to turn on use of LAI streams in place of the LAI on the surface dataset 
 </entry>
 
 <entry id="stream_year_first_lai" type="integer" category="datasets"
-       group="lai_streams" valid_values="" >
+       group="lai_streams" >
 First year to loop over for LAI data
 </entry>
 
 <entry id="stream_year_last_lai" type="integer" category="datasets"
-       group="lai_streams" valid_values="" >
+       group="lai_streams" >
 Last year to loop over for LAI data
 </entry>
 
 <entry id="model_year_align_lai" type="integer" category="datasets"
-       group="lai_streams" valid_values="" >
+       group="lai_streams" >
 Simulation year that aligns with stream_year_first_lai value
 </entry>
 
 <entry id="stream_fldfilename_lai" type="char*256(30)" category="datasets"
-       input_pathname="abs" group="lai_streams" valid_values="" >
+       input_pathname="abs" group="lai_streams" >
 Filename of input stream data for LAI
 </entry>
 
 <entry id="stream_meshfile_lai" type="char*256" category="datasets"
-       input_pathname="abs" group="lai_streams" valid_values="" >
-Filename of input stream data for LAI
+       input_pathname="abs" group="lai_streams">
+Mesh file of input stream data for LAI
 </entry>
 
 <entry id="lai_tintalgo" type="char*80" category="datasets"
-       group="lai_streams" valid_values="linear,nearest,lower,upper" >
+       group="lai_streams">
 Time interpolation method to use with LAI streams
 </entry>
 
 <entry id="lai_mapalgo" type="char*256" category="datasets"
-       group="lai_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+       group="lai_streams">
 Mapping method from LAI input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
-    nnoni    = nearest neighbor on the "i" (longitude) axis
-    nnonj    = nearest neighbor on the "j" (latitude) axis
-    spval    = set to special value
-    copy     = copy using the same indices
 </entry>
 
 <!-- ========================================================================================  -->

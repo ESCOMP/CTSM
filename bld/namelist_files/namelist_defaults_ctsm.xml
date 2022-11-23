@@ -1441,14 +1441,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- ===================================== -->
 
 <use_soil_moisture_streams>.false.</use_soil_moisture_streams>
-<stream_year_first_soilm  >1997</stream_year_first_soilm>
-<stream_year_last_soilm   >1997</stream_year_last_soilm>
-<model_year_align_soilm   >1997</model_year_align_soilm>
-
-<stream_fldfilename_soilm hgrid="0.9x1.25">lnd/clm2/prescribed_data/LFMIP-pdLC-SST.H2OSOI.0.9x1.25.20levsoi.natveg.climo1980-2014.MONS_c190709.nc</stream_fldfilename_soilm>
-
-<soilm_tintalgo>linear</soilm_tintalgo>
-<soilm_offset  >0</soilm_offset>
 
 <!-- ===================================== -->
 <!-- LAI streams namelist defaults -->
@@ -1457,7 +1449,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <use_lai_streams>.false.</use_lai_streams>
 
 <!-- ===================================== -->
-<!-- Set lightning toggle variable -->
+<!-- Set lightning toggle variable for strams -->
 <!-- ===================================== -->
 
 <light_res use_cn=".false."                           >none   </light_res>
@@ -1503,7 +1495,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- Performance issues                         -->
 <!-- =========================================  -->
 
-<nsegspc                   >35</nsegspc>
+<nsegspc>35</nsegspc>
 
 <!-- =========================================  -->
 <!-- Mapping Data                               -->

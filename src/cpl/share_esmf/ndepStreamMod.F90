@@ -8,7 +8,7 @@ module ndepStreamMod
   !
   ! !USES
   use ESMF             , only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_Finalize, ESMF_END_ABORT
-  use dshr_strdata_mod , only : shr_strdata_type 
+  use dshr_strdata_mod , only : shr_strdata_type
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl, CS => shr_kind_cs
   use spmdMod          , only : mpicom, masterproc, iam
   use decompMod        , only : bounds_type
@@ -61,7 +61,7 @@ contains
     integer                 :: stream_year_last_ndep  ! last year in stream to use
     integer                 :: model_year_align_ndep  ! align stream_year_firstndep with
     real(r8)                :: ndep_dtlimit = 1.0e30_r8
-    character(len=CL)       :: ndepmapalgo = 'bilinear'
+    character(len=CL)       :: ndep_mapalgo = 'bilinear'
     character(len=CL)       :: ndep_tintalgo = 'linear'
     character(len=CS)       :: ndep_taxmode = 'extend'
     character(len=CL)       :: ndep_varlist = 'NDEP_year'
@@ -77,7 +77,7 @@ contains
          stream_year_first_ndep,  &
          stream_year_last_ndep,   &
          model_year_align_ndep,   &
-         ndepmapalgo,             &
+         ndep_mapalgo,            &
          ndep_taxmode,            &
          ndep_varlist,            &
          ndep_tintalgo,           &
@@ -111,6 +111,7 @@ contains
     call shr_mpi_bcast(model_year_align_ndep  , mpicom)
     call shr_mpi_bcast(ndep_varlist           , mpicom)
     call shr_mpi_bcast(ndep_taxmode           , mpicom)
+    call shr_mpi_bcast(ndep_mapalgo           , mpicom)
     call shr_mpi_bcast(ndep_tintalgo          , mpicom)
     call shr_mpi_bcast(stream_fldFileName_ndep, mpicom)
     call shr_mpi_bcast(stream_meshfile_ndep   , mpicom)
@@ -146,8 +147,8 @@ contains
          model_clock         = model_clock,                       &
          model_mesh          = mesh,                              &
          stream_meshfile     = trim(stream_meshfile_ndep),        &
-         stream_lev_dimname  = 'null',                            & 
-         stream_mapalgo      = trim(ndepmapalgo),                 &
+         stream_lev_dimname  = 'null',                            &
+         stream_mapalgo      = trim(ndep_mapalgo),                &
          stream_filenames    = (/trim(stream_fldfilename_ndep)/), &
          stream_fldlistFile  = stream_varnames,                   &
          stream_fldListModel = stream_varnames,                   &
