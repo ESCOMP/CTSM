@@ -1,10 +1,11 @@
 #! /bin/bash
 
 # Script to compile CLM with case-specific settings
-# For standalone CLM or coupling with COSMO
-# Domain can be EURO-CORDEX or global
+# For standalone CLM or coupling with COSMO (for coupling set COMPILER=MY_COMPILER-oasis)
+# Domain can be global or EURO-CORDEX (set DOMAIN=eur, requires domain and mapping files) 
 
 set -e # failing commands will cause the shell script to exit
+
 
 #==========================================
 # Case settings
@@ -16,17 +17,17 @@ date=`date +'%Y%m%d-%H%M'` # get current date and time
 startdate=`date +'%Y-%m-%d %H:%M:%S'`
 
 COMPSET=I2000Clm50Sp # for CCLM2
-RES=hcru_hcru # for CCLM2
-DOMAIN=eur # EURO-CORDEX for CCLM2, glob otherwise
-CODE=clm5.0 # clm5.0_features for Ronny's version, CTSMdev for latest 
-COMPILER=gnu-oasis # setting to gnu-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
-DRIVER=mct # using nuopc requires ESMF installation
-EXP=cclm2_test_${date} # case name
+RES=hcru_hcru # hcru_hcru for CCLM2-0.44, f09_g17 to test glob (inputdata downloaded)
+DOMAIN=eur # eur for CCLM2 (EURO-CORDEX), glob otherwise
+CODE=clm5.0 # clm5.0 for official release, clm5.0_features for Ronny's version, CTSMdev for latest 
+COMPILER=gnu # setting to gnu-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
+DRIVER=mct # default is mct, using nuopc requires ESMF installation
+EXP=cclm2_${date} # custom case name
 CASENAME=$CODE.$COMPILER.$COMPSET.$RES.$DOMAIN.$EXP
 MACH=pizdaint
 QUEUE=normal # USER_REQUESTED_QUEUE, overrides default JOB_QUEUE
-WALLTIME="1:30:00" # USER_REQUESTED_WALLTIME, overrides default JOB_WALLCLOCK_TIME
-PROJECT=sm61
+WALLTIME="01:00:00" # USER_REQUESTED_WALLTIME, overrides default JOB_WALLCLOCK_TIME
+PROJ=sm61
 NTASKS=24
 NSUBMIT=0 # partition into smaller chunks, excludes the first submission
 let "NCORES = $NTASKS * 12"
@@ -35,9 +36,10 @@ NYEARS=1
 
 # Set directories
 export CLMROOT=$PWD # CLM code base directory on $PROJECT where this script is located
-export CCLM2ROOT=$CLMROOT/.. # CCLM2 code base directory on $PROJECT where CLM and OASIS are located
+export CCLM2ROOT=$CLMROOT/.. # CCLM2 code base directory on $PROJECT where CLM, OASIS and COSMO are located
 export CASEDIR=$SCRATCH/CCLM2_cases/$CASENAME # case directory on scratch
-export CESMDATAROOT=/project/sm61/shared # downloaded inputdata to reuse, includes preprocessed EURO-CORDEX files
+export CESMDATAROOT=$SCRATCH/CCLM2_inputdata # inputdata directory on scratch (to reuse, includes downloads and preprocessed EURO-CORDEX files)
+export CESMOUTPUTROOT=$SCRATCH/CCLM2_output/$CASENAME # output directory on scratch
 
 # Log output (use "tee" to send output to both screen and $outfile)
 logfile=$SCRATCH/CCLM2_logs/${CASENAME}_mylogfile.log
@@ -52,43 +54,34 @@ print_log "*** Case at: ${CASEDIR} ***"
 print_log "*** Case settings: compset ${COMPSET}, resolution ${RES}, domain ${DOMAIN}, compiler ${COMPILER} ***"
 print_log "*** Logfile at: ${logfile} ***"
 
+# Sync inputdata on scratch because scratch will be cleaned every month (change inputfiles on $PROJECT!)
+print_log "*** Syncing inputdata on scratch  ***"
+rsync -rv --ignore-existing /project/$PROJ/shared/CCLM2_inputdata $CESMDATAROOT | tee -a $logfile
+
 
 #==========================================
 # Load modules and find spack_oasis
 #==========================================
 
-# print_log "*** Loading modules ***"
-
 # Load modules: now done through $USER/.cime/config_machines.xml
-#module load daint-gpu # use gpu although CLM will run on cpus
-
-# nvhpc
-#module switch PrgEnv-cray PrgEnv-nvidia
-#module load cray-netcdf-hdf5parallel
-#module load cray-hdf5-parallel
-#module load cray-parallel-netcdf
-#spack load netlib-lapack%nvhpc # provides lapack and blas, load if config_compilers has -llapack -lblas
-#module load cray-libsci # provides lapack and blas, load if config_compilers has -llibsci_gnu (does not work with nvhpc)
-
-# gnu
-#module switch PrgEnv-cray PrgEnv-gnu
-#module switch gcc gcc/9.3.0 # the default version gives an error when building gptl
-#module load cray-netcdf-hdf5parallel
-#module load cray-hdf5-parallel
-#module load cray-parallel-netcdf   
-#spack load oasis%gcc # not needed
+# print_log "*** Loading modules ***"
+# daint-gpu (although CLM will run on cpus)
+# PrgEnv-xxx, switch compiler version if needed
+# cray-mpich
+# cray-netcdf-hdf5parallel
+# cray-hdf5-parallel
+# cray-parallel-netcdf
 
 #module list | tee -a $logfile
 
-print_log "*** Finding spack_oasis ***"
-
-# Find spack_oasis installation, will be used in .cime/config_compilers.xml
-export OASIS_PATH=$(spack location -i oasis%gcc) # e.g. /project/sm61/psieber/spack-install/oasis/master/gcc/24obfvejulxnpfxiwatzmtcddx62pikc
-print_log "*** OASIS at: ${OASIS_PATH} ***"
+# Find spack_oasis installation (used in .cime/config_compilers.xml)
+if [[ $COMPILER =~ "oasis" ]]; then
+    print_log "*** Finding spack_oasis ***"
+    export OASIS_PATH=$(spack location -i oasis%gcc) # e.g. /project/sm61/psieber/spack-install/oasis/master/gcc/24obfvejulxnpfxiwatzmtcddx62pikc
+    print_log "*** OASIS at: ${OASIS_PATH} ***"
+fi
 
 print_log "*** LD_LIBRARY_PATH: ${LD_LIBRARY_PATH} ***"
-
-#alias python=python2.7 # currently in .bashrc, but does not work for cray PATH
 
 
 #==========================================
@@ -98,7 +91,7 @@ print_log "*** LD_LIBRARY_PATH: ${LD_LIBRARY_PATH} ***"
 print_log "*** Creating CASE: ${CASENAME} ***"
 
 cd $CLMROOT/cime/scripts
-./create_newcase --case $CASEDIR --compset $COMPSET --res $RES --mach $MACH --compiler $COMPILER --driver $DRIVER --project $PROJECT --run-unsupported | tee -a $logfile
+./create_newcase --case $CASEDIR --compset $COMPSET --res $RES --mach $MACH --compiler $COMPILER --driver $DRIVER --project $PROJ --run-unsupported | tee -a $logfile
 
 
 #==========================================
@@ -140,8 +133,8 @@ fi
 ./xmlchange NTASKS_ROF=-$NTASKS
 ./xmlchange NTASKS_LND=-$NTASKS 
 
-# If parallel netcdf is used
-./xmlchange PIO_VERSION="2" # 1 is default in clm5.0, 2 is default in CTSMdev
+# If parallel netcdf is used, PIO_VERSION="2" (have not gotten this to work!)
+#./xmlchange PIO_VERSION="1" # 1 is default in clm5.0, 2 is default in CTSMdev
 
 # Activate debug mode (env_build.xml)
 #./xmlchange DEBUG=TRUE
@@ -220,7 +213,7 @@ domainfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/domain/domain.lnd.360x720_crunce
 EOF
 fi
 
-# GLOB surfdata and params: default
+# GLOB surfdata and params: default, downloaded in check input data phase if needed
 
 # These namelist options are available in Ronny's code
 if [ $CODE == clm5.0_features ]; then
@@ -251,6 +244,9 @@ fi
 print_log "*** Running case.setup ***"
 ./case.setup -r | tee -a $logfile
 
+#print_log "*** Downloading missing inputdata (if needed) ***"
+#print_log "*** Consider transferring new data to PROJECT, e.g. rsync -rv --ignore-existing ${SCRATCH}/CCLM2_inputdata /project/${PROJ}/shared/CCLM2_inputdata ***"
+#./check_input_data --download
 
 #==========================================
 # For OASIS coupling: before building, add the additional routines for OASIS interface in your CASEDIR on scratch
@@ -307,6 +303,7 @@ print_log "Duration to create, setup, build, submit: $(($duration / 60)) min $((
 
 print_log "*** Check the job: squeue --user=${USER} ***"
 print_log "*** Check the case: in ${CASEDIR}, run less CaseStatus ***"
+print_log "*** Output at: ${CESMOUTPUTROOT}, run less CaseStatus ***"
 
 
 #==========================================
