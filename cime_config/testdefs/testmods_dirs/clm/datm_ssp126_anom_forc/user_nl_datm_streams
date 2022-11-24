@@ -1,0 +1,22 @@
+Anomaly.Forcing.Temperature:year_first=2015
+Anomaly.Forcing.Temperature:year_last=2100
+Anomaly.Forcing.Temperature:year_align=2015
+Anomaly.Forcing.Temperature:meshfile =$DIN_LOC_ROOT/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc
+! List of Data types to use
+! Remove the variables you do NOT want to include in the Anomaly forcing:
+!     pr is preciptiation
+!     tas is temperature
+!     huss is humidity
+!     uas and vas are U and V winds
+!     rsds is solare
+!     rlds is LW down
+Anomaly.Forcing.Temperature:datavars = pr    Faxa_prec_af, \
+                                       tas   Sa_tbot_af, \
+                                       ps    Sa_pbot_af, \
+                                       huss  Sa_shum_af, \
+                                       uas   Sa_u_af, \
+                                       vas Sa_v_af, \
+                                       rsds  Faxa_swdn_af, \
+                                       rlds  Faxa_lwdn_af
+Anomaly.Forcing.Temperature:datafiles =$DIN_LOC_ROOT/atm/datm7/anomaly_forcing/CMIP6-SSP1-2.6/af.allvars.CESM.SSP1-2.6.2015-2100_c20220628.nc
+

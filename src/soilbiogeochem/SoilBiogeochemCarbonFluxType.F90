@@ -9,10 +9,11 @@ module SoilBiogeochemCarbonFluxType
   use pftconMod                          , only : pftcon
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use ch4varcon                          , only : allowlakeprod
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, century_decomp, mimics_decomp, decomp_method, use_soil_matrixcn
   use PatchType                          , only : patch
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   use clm_varctl                         , only : use_fates
   
   ! 
@@ -20,6 +21,8 @@ module SoilBiogeochemCarbonFluxType
   implicit none
   private
   !
+ 
+
   type, public :: soilbiogeochem_carbonflux_type
 
      ! fire fluxes
@@ -37,13 +40,13 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: rf_decomp_cascade_col                     (:,:,:) ! (frac) respired fraction in decomposition step
      real(r8), pointer :: pathfrac_decomp_cascade_col               (:,:,:) ! (frac) what fraction of C passes from donor to receiver pool through a given transition
      real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate coefficient for decomposition (1./sec)
-     real(r8), pointer :: hr_vr_col                                 (:,:)   ! (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
-     real(r8), pointer :: o_scalar_col                              (:,:)   ! fraction by which decomposition is limited by anoxia
-     real(r8), pointer :: w_scalar_col                              (:,:)   ! fraction by which decomposition is limited by moisture availability
-     real(r8), pointer :: t_scalar_col                              (:,:)   ! fraction by which decomposition is limited by temperature
-     real(r8), pointer :: som_c_leached_col                         (:)     ! (gC/m^2/s) total SOM C loss from vertical transport 
-     real(r8), pointer :: decomp_cpools_leached_col                 (:,:)   ! (gC/m^2/s) C loss from vertical transport from each decomposing C pool 
-     real(r8), pointer :: decomp_cpools_transport_tendency_col      (:,:,:) ! (gC/m^3/s) C tendency due to vertical transport in decomposing C pools 
+     real(r8), pointer :: hr_vr_col                                 (:,:)   !  (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
+     real(r8), pointer :: o_scalar_col                              (:,:)   !  fraction by which decomposition is limited by anoxia
+     real(r8), pointer :: w_scalar_col                              (:,:)   !  fraction by which decomposition is limited by moisture availability
+     real(r8), pointer :: t_scalar_col                              (:,:)   !  fraction by which decomposition is limited by temperature
+     real(r8), pointer :: som_c_leached_col                         (:)     !  (gC/m^2/s) total SOM C loss from vertical transport 
+     real(r8), pointer :: decomp_cpools_leached_col                 (:,:)   !  (gC/m^2/s) C loss from vertical transport from each decomposing C pool 
+     real(r8), pointer :: decomp_cpools_transport_tendency_col      (:,:,:) !  (gC/m^3/s) C tendency due to vertical transport in decomposing C pools 
 
      ! nitrif_denitrif
      real(r8), pointer :: phr_vr_col                                (:,:)   ! (gC/m3/s) potential hr (not N-limited) 
@@ -91,6 +94,8 @@ contains
    end subroutine Init
 
    !------------------------------------------------------------------------
+   
+   !------------------------------------------------------------------------
    subroutine InitAllocate(this, bounds)
      !
      ! !ARGUMENTS:
@@ -98,8 +103,9 @@ contains
      type(bounds_type), intent(in)    :: bounds 
      !
      ! !LOCAL VARIABLES:
-     integer           :: begp,endp
-     integer           :: begc,endc
+     integer           :: begp,endp            ! Begin and end patch
+     integer           :: begc,endc            ! Begin and end column
+     integer           :: Ntrans,Ntrans_diag   ! N trans size for matrix solution
      !------------------------------------------------------------------------
 
      begp = bounds%begp; endp = bounds%endp
@@ -156,7 +162,9 @@ contains
      allocate(this%lithr_col               (begc:endc)) ; this%lithr_col               (:) = nan
      allocate(this%somhr_col               (begc:endc)) ; this%somhr_col               (:) = nan
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
-
+  
+     if(use_soil_matrixcn)then
+     end if
      if ( use_fates ) then
         ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
 
@@ -229,10 +237,12 @@ contains
              avgflag='A', long_name='total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
-        this%michr_col(begc:endc) = spval
-        call hist_addfld1d (fname='MICC_HR', units='gC/m^2/s', &
+        if (decomp_method == mimics_decomp) then
+           this%michr_col(begc:endc) = spval
+           call hist_addfld1d (fname='MICC_HR', units='gC/m^2/s', &
              avgflag='A', long_name='microbial C heterotrophic respiration: donor-pool based, so expect zero with MIMICS', &
              ptr_col=this%michr_col, default='inactive')
+        end if
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='CWDC_HR', units='gC/m^2/s', &
@@ -385,10 +395,12 @@ contains
         end do
 
         if ( nlevdecomp_full > 1 ) then  
-           data2dptr => this%t_scalar_col(begc:endc,1:nlevsoi)
-           call hist_addfld_decomp (fname='T_SCALAR', units='unitless',  type2d='levsoi', &
+           if (decomp_method == century_decomp) then
+              data2dptr => this%t_scalar_col(begc:endc,1:nlevsoi)
+              call hist_addfld_decomp (fname='T_SCALAR', units='unitless',  type2d='levsoi', &
                 avgflag='A', long_name='temperature inhibition of decomposition', &
                 ptr_col=data2dptr)
+           end if
 
            data2dptr => this%w_scalar_col(begc:endc,1:nlevsoi)
            call hist_addfld_decomp (fname='W_SCALAR', units='unitless',  type2d='levsoi', &
@@ -446,10 +458,12 @@ contains
              avgflag='A', long_name='C13 total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
-        this%michr_col(begc:endc) = spval
-        call hist_addfld1d (fname='C13_MICC_HR', units='gC13/m^2/s', &
+        if (decomp_method == mimics_decomp) then
+           this%michr_col(begc:endc) = spval
+           call hist_addfld1d (fname='C13_MICC_HR', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 microbial heterotrophic respiration', &
              ptr_col=this%michr_col, default='inactive')
+        end if
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_CWDC_HR', units='gC/m^2/s', &
@@ -525,10 +539,12 @@ contains
              avgflag='A', long_name='C14 total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
-        this%michr_col(begc:endc) = spval
-        call hist_addfld1d (fname='C14_MICC_HR', units='gC13/m^2/s', &
+        if (decomp_method == mimics_decomp) then
+           this%michr_col(begc:endc) = spval
+           call hist_addfld1d (fname='C14_MICC_HR', units='gC13/m^2/s', &
              avgflag='A', long_name='C14 microbial heterotrophic respiration', &
              ptr_col=this%michr_col, default='inactive')
+        end if
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_CWDC_HR', units='gC/m^2/s', &
@@ -751,6 +767,7 @@ contains
        end do
     end do
 
+
     do k = 1, ndecomp_pools
        do fi = 1,num_column
           i = filter_column(fi)
@@ -767,6 +784,9 @@ contains
        end do
     end do
 
+    ! for matrix 
+    if(use_soil_matrixcn)then
+    end if
     do j = 1, nlevdecomp_full
        do fi = 1,num_column
           i = filter_column(fi)
@@ -889,28 +909,28 @@ contains
     end do
 
     ! soil organic matter heterotrophic respiration 
-    associate(is_soil => decomp_cascade_con%is_soil) ! TRUE => pool is a soil pool  
-      do k = 1, ndecomp_cascade_transitions
-         if ( is_soil(decomp_cascade_con%cascade_donor_pool(k)) ) then
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               this%somhr_col(c) = this%somhr_col(c) + this%decomp_cascade_hr_col(c,k)
-            end do
-         end if
-      end do
-    end associate
+       associate(is_soil => decomp_cascade_con%is_soil) ! TRUE => pool is a soil pool  
+         do k = 1, ndecomp_cascade_transitions
+            if ( is_soil(decomp_cascade_con%cascade_donor_pool(k)) ) then
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  this%somhr_col(c) = this%somhr_col(c) + this%decomp_cascade_hr_col(c,k)
+               end do
+            end if
+         end do
+       end associate
 
     ! litter heterotrophic respiration (LITHR)
-    associate(is_litter => decomp_cascade_con%is_litter) ! TRUE => pool is a litter pool
-      do k = 1, ndecomp_cascade_transitions
-         if ( is_litter(decomp_cascade_con%cascade_donor_pool(k)) ) then
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               this%lithr_col(c) = this%lithr_col(c) + this%decomp_cascade_hr_col(c,k)
-            end do
-         end if
-      end do
-    end associate
+       associate(is_litter => decomp_cascade_con%is_litter) ! TRUE => pool is a litter pool
+         do k = 1, ndecomp_cascade_transitions
+            if ( is_litter(decomp_cascade_con%cascade_donor_pool(k)) ) then
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  this%lithr_col(c) = this%lithr_col(c) + this%decomp_cascade_hr_col(c,k)
+               end do
+            end if
+         end do
+       end associate
 
     ! coarse woody debris heterotrophic respiration (CWDHR)
     associate(is_cwd => decomp_cascade_con%is_cwd)  ! TRUE => pool is a cwd pool
@@ -937,8 +957,8 @@ contains
     end associate
 
     ! total heterotrophic respiration (HR)
-    do fc = 1,num_soilc
-       c = filter_soilc(fc)
+       do fc = 1,num_soilc
+          c = filter_soilc(fc)
        
           this%hr_col(c) = &
                this%michr_col(c) + &
@@ -946,7 +966,7 @@ contains
                this%lithr_col(c) + &
                this%somhr_col(c)
        
-    end do
+       end do
 
     ! Calculate ligninNratio
     ! FATES does its own calculation

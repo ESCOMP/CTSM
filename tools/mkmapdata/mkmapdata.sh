@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 #----------------------------------------------------------------------
 #
 # mkmapdata.sh
@@ -39,10 +40,18 @@ default_res="10x15"
 #----------------------------------------------------------------------
 # SET SOME DEFAULTS -- if not set via env variables outside
 
+hostname=`hostname`
 case $hostname in
 
   ##cheyenne
   cheyenne* | r* )
+  if [ -z "$CSMDATA" ]; then
+     CSMDATA=/glade/p/cesm/cseg/inputdata
+  fi
+  ;;
+
+  ##casper
+  casper* | crthc* )
   if [ -z "$CSMDATA" ]; then
      CSMDATA=/glade/p/cesm/cseg/inputdata
   fi
@@ -56,6 +65,14 @@ case $hostname in
   ;;
 
 esac
+
+if [[ -z ${CSMDATA} ]]; then
+    echo "CSMDATA path not known for host ${hostname}. Set manually before calling mkmapdata.sh. E.g., bash: export CSMDATA=/path/to/csmdata"
+    exit 7
+elif [[ ! -d "${CSMDATA}" ]]; then
+    echo "CSMDATA not found: ${CSMDATA}"
+    exit 8
+fi
 
 #----------------------------------------------------------------------
 # Usage subroutine
@@ -348,7 +365,6 @@ done
 # Determine supported machine specific stuff
 #----------------------------------------------------------------------
 
-hostname=`hostname`
 if [ -n "$NERSC_HOST" ]; then
    hostname=$NERSC_HOST
 fi
@@ -395,9 +411,9 @@ case $hostname in
   fi
   ;;
 
-  ## DAV
-  pronghorn* | casper* )
-  . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
+  ## Casper
+  casper* | crthc* )
+  . /glade/u/apps/dav/opt/lmod/8.1.7/lmod/8.1.7/init/bash
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=8
   fi
@@ -495,8 +511,8 @@ if [ ! -x "$ESMF_REGRID" ]; then
     exit 1
 fi
 
-# Remove previous log files
-rm PET*.Log
+# Remove previous log files, if any
+rm PET*.Log ||:
 
 #
 # Now run the mapping for each file, checking that input files exist

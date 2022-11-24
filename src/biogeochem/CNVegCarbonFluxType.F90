@@ -9,11 +9,13 @@ module CNVegCarbonFluxType
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
+  use clm_varpar                         , only : nvegcpool
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, i_litr_min, i_litr_max
   use clm_varcon                         , only : spval, dzsoi_decomp
-  use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop
+  use clm_varctl                         , only : use_cndv, use_c13, use_c14, use_nitrif_denitrif, use_crop
+  use CNSharedParamsMod                  , only : use_matrixcn
   use clm_varctl                         , only : use_grainproduct
   use clm_varctl                         , only : iulog
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
@@ -26,6 +28,7 @@ module CNVegCarbonFluxType
   use AnnualFluxDribbler                 , only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use dynSubgridControlMod               , only : get_for_testing_allow_non_annual_changes
   use abortutils                         , only : endrun
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -356,11 +359,14 @@ module CNVegCarbonFluxType
      real(r8), pointer :: npp_Nfix_patch                            (:)     ! C used by Symbiotic BNF         (gC/m2/s)
      real(r8), pointer :: npp_Nretrans_patch                        (:)     ! C used by retranslocation       (gC/m2/s)
      real(r8), pointer :: npp_Nuptake_patch                         (:)     ! Total C used by N uptake in FUN (gC/m2/s)
-     real(r8), pointer :: npp_growth_patch                         (:)     ! Total C u for growth in FUN      (gC/m2/s)   
+     real(r8), pointer :: npp_growth_patch                          (:)     ! Total C u for growth in FUN      (gC/m2/s)   
      real(r8), pointer :: leafc_change_patch                        (:)     ! Total used C from leaves        (gC/m2/s)
      real(r8), pointer :: soilc_change_patch                        (:)     ! Total used C from soil          (gC/m2/s)
- 
-!     real(r8), pointer :: soilc_change_col                          (:)     ! Total used C from soil          (gC/m2/s)
+     integer,  pointer :: actpatch_fire                             (:)      ! Patch indices with fire in current time step
+     integer           :: num_actpatch_fire                                  ! Number of patches with fire in current time step
+
+     ! Matrix solution arrays for C flux index
+     ! Matrix variables
 
      ! Objects that help convert once-per-year dynamic land cover changes into fluxes
      ! that are dribbled throughout the year
@@ -370,6 +376,7 @@ module CNVegCarbonFluxType
    contains
 
      procedure , public  :: Init   
+     procedure , private :: InitTransfer
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory
      procedure , private :: InitCold
@@ -398,11 +405,23 @@ contains
 
     this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
     call this%InitAllocate ( bounds, carbon_type)
+    if(use_matrixcn)then
+       call this%InitTransfer ()
+    end if
     call this%InitHistory ( bounds, carbon_type )
     call this%InitCold (bounds )
 
   end subroutine Init
 
+  subroutine InitTransfer (this)
+    !
+    ! Set up the transfer indices for the matrix solution
+    !
+    ! !AGRUMENTS:
+    class (cnveg_carbonflux_type) :: this
+    
+  end subroutine InitTransfer 
+    
   !------------------------------------------------------------------------
   subroutine InitAllocate(this, bounds, carbon_type)
     !
@@ -729,6 +748,9 @@ contains
     allocate(this%npp_growth_patch       (begp:endp)) ; this%npp_growth_patch       (:) = nan
     allocate(this%leafc_change_patch      (begp:endp)) ; this%leafc_change_patch      (:) = nan
     allocate(this%soilc_change_patch      (begp:endp)) ; this%soilc_change_patch      (:) = nan
+    ! Allocate Matrix data
+    if(use_matrixcn)then
+    end if
 
     ! Construct restart field names consistently to what is done in SpeciesNonIsotope &
     ! SpeciesIsotope, to aid future migration to that infrastructure
@@ -3374,6 +3396,8 @@ contains
        ! WW should these be considered spval or 0?
        if (lun%ifspecial(l)) then
           this%availc_patch(p)                = spval
+          if(use_matrixcn)then
+          end if
           this%xsmrpool_recover_patch(p)      = spval
           this%excess_cflux_patch(p)          = spval
           this%plant_calloc_patch(p)          = spval
@@ -3386,6 +3410,8 @@ contains
        end if
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%availc_patch(p)                = 0._r8
+          if(use_matrixcn)then
+          end if
           this%xsmrpool_recover_patch(p)      = 0._r8
           this%excess_cflux_patch(p)          = 0._r8
           this%prev_leafc_to_litter_patch(p)  = 0._r8
@@ -3443,7 +3469,7 @@ contains
 
     ! initialize fields for special filters
 
-    call this%SetValues (&
+    call this%SetValues (nvegcpool=nvegcpool, &
          num_patch=num_special_patch, filter_patch=special_patch, value_patch=0._r8, &
          num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
@@ -3507,7 +3533,7 @@ contains
 
        do k = 1, nrepr
           data1dptr => this%reproductivec_xfer_to_reproductivec_patch(:,k)
-          ! e.g., grainc_xfer_to_grainc
+          ! e.g., grain-C xfer to grainc
           varname = get_repr_rest_fname(k)//'c_xfer_to_'//get_repr_rest_fname(k)//'c'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -3524,7 +3550,7 @@ contains
 
        do k = repr_grain_min, repr_grain_max
           data1dptr => this%repr_grainc_to_food_patch(:,k)
-          ! e.g., grainc_to_food
+          ! e.g., grain-C to food
           varname = get_repr_rest_fname(k)//'c_to_food'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -3536,7 +3562,7 @@ contains
             
        do k = 1, nrepr
           data1dptr => this%cpool_to_reproductivec_patch(:,k)
-          ! e.g., cpool_to_grainc
+          ! e.g., -C-pool to grain-C
           varname = 'cpool_to_'//get_repr_rest_fname(k)//'c'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -3707,7 +3733,7 @@ contains
   end subroutine RestartAllIsotopes
 
   !-----------------------------------------------------------------------
-  subroutine SetValues ( this, &
+  subroutine SetValues ( this, nvegcpool, &
        num_patch, filter_patch, value_patch, &
        num_column, filter_column, value_column)
     !
@@ -3717,6 +3743,7 @@ contains
     ! !ARGUMENTS:
     class (cnveg_carbonflux_type) :: this
     integer , intent(in) :: num_patch
+    integer , intent(in) :: nvegcpool
     integer , intent(in) :: filter_patch(:)
     real(r8), intent(in) :: value_patch
     integer , intent(in) :: num_column
@@ -3901,6 +3928,9 @@ contains
 
        this%crop_seedc_to_leaf_patch(i)                  = value_patch
        this%crop_harvestc_to_cropprodc_patch(i)          = value_patch
+       !   Matrix
+       if(use_matrixcn)then
+       end if
     end do
 
     do k = 1, nrepr
@@ -3911,6 +3941,10 @@ contains
           this%reproductive_xsmr_patch(i,k)  = value_patch
        end do
     end do
+
+    ! Set Matrix elements
+    if(use_matrixcn)then
+    end if
 
     if ( use_crop )then
        do fi = 1,num_patch

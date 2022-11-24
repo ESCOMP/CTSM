@@ -13,6 +13,8 @@ module lnd_comp_nuopc
   use NUOPC_Model            , only : model_label_DataInitialize => label_DataInitialize
   use NUOPC_Model            , only : model_label_SetRunClock    => label_SetRunClock
   use NUOPC_Model            , only : model_label_Finalize       => label_Finalize
+  use NUOPC_Model            , only : label_CheckImport
+
   use NUOPC_Model            , only : NUOPC_ModelGet
   use shr_kind_mod           , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod            , only : shr_sys_abort
@@ -52,7 +54,8 @@ module lnd_comp_nuopc
   private :: ModelFinalize       ! Finalize the model
   private :: clm_orbital_init    ! Initialize the orbital information
   private :: clm_orbital_update  ! Update the orbital information
-
+  private :: CheckImport
+  
   !--------------------------------------------------------------------------
   ! Private module data
   !--------------------------------------------------------------------------
@@ -128,6 +131,10 @@ contains
     ! attach specializing method(s)
     call NUOPC_CompSpecialize(gcomp, specLabel=model_label_Advance, &
          specRoutine=ModelAdvance, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call NUOPC_CompSpecialize(gcomp, specLabel=label_CheckImport, &
+         specRoutine=CheckImport, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_MethodRemove(gcomp, label=model_label_SetRunClock, rc=rc)
@@ -419,7 +426,7 @@ contains
     ! call NUOPC_CompAttributeGet(gcomp, name='scol_spval', value=cvalue, rc=rc)
     ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
     ! read(cvalue,*) scol_spval
-
+    scol_valid = .true.
     if (scol_lon > scol_spval .and. scol_lat > scol_spval) then
        single_column = (trim(single_column_lnd_domainfile) /= 'UNSET')
 
@@ -987,6 +994,7 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+    if (.not. scol_valid) return
 
     ! query the Component for its clocks
     call NUOPC_ModelGet(gcomp, driverClock=dclock, modelClock=mclock, rc=rc)
@@ -1266,4 +1274,77 @@ contains
 
   end subroutine clm_orbital_update
 
+  subroutine CheckImport(gcomp, rc)
+    use NUOPC
+    use ESMF
+    type(ESMF_GridComp) :: gcomp
+    integer, intent(out) :: rc
+    character(len=*) , parameter :: subname = "("//__FILE__//":CheckImport)"
+    
+    ! This is the routine that enforces the explicit time dependence on the
+    ! import fields. This simply means that the timestamps on the Fields in the
+    ! importState are checked against the currentTime on the Component's 
+    ! internalClock. Consequenty, this model starts out with forcing fields
+    ! at the current time as it does its forward step from currentTime to 
+    ! currentTime + timeStep.
+    
+    ! local variables
+    type(ESMF_Clock)              :: clock
+    type(ESMF_Time)               :: time
+    type(ESMF_State)              :: importState
+    logical                       :: allCurrent
+    type(ESMF_Field), allocatable :: fieldList(:)
+    integer                       :: i
+    character(ESMF_MAXSTR)        :: fieldName
+    character(ESMF_MAXSTR)        :: name
+    character(ESMF_MAXSTR)        :: valueString
+
+    rc = ESMF_SUCCESS
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    if (single_column .and. .not. scol_valid) then
+       RETURN
+    end if
+    ! The remander of this should be equivalent to the NUOPC internal routine
+    ! from NUOPC_ModeBase.F90
+
+    ! query the component for info
+    call NUOPC_CompGet(gcomp, name=name, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    
+    ! query the Component for its clock and importState
+    call ESMF_GridCompGet(gcomp, clock=clock, importState=importState, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! get the current time out of the clock
+    call ESMF_ClockGet(clock, currTime=time, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    
+    ! check that Fields in the importState show correct timestamp
+    allCurrent = NUOPC_IsAtTime(importState, time, fieldList=fieldList, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+      
+    if (.not.allCurrent) then
+      !TODO: introduce and use INCOMPATIBILITY return codes!!!!
+      do i=1, size(fieldList)
+        call ESMF_FieldGet(fieldList(i), name=fieldName, rc=rc)
+        if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+        call NUOPC_GetAttribute(fieldList(i), name="StandardName", &
+             value=valueString, rc=rc)
+        if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+        call ESMF_LogWrite(trim(name)//": Field '"//trim(fieldName)//&
+          "' in the importState is not at the expected time. StandardName: "&
+          //trim(valueString), ESMF_LOGMSG_WARNING)
+      enddo
+      deallocate(fieldList)
+      call ESMF_LogSetError(ESMF_RC_ARG_BAD, &
+        msg="NUOPC INCOMPATIBILITY DETECTED: Import Fields not at current time", &
+        line=__LINE__, file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    endif
+    
+  end subroutine CheckImport
 end module lnd_comp_nuopc
