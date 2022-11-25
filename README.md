@@ -11,6 +11,10 @@ Note: you may need a fresh clone if you have ran checkout_externals on the main 
 Install oasis (required for coupling):   
 spack install oasis@master%gcc@9.3.0 fflags="-ffree-line-length-512"
 
+Copy CCLM2_inputdata to your $SCRATCH (2 alternatives, depending on access)  
+cp -r /project/sm61/shared/CCLM2_inputdata $SCRATCH/.  
+cp -r /scratch/snx3000/psieber/CCLM2_inputdata $SCRATCH/.  
+
 ## CTSM
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3739617.svg)](https://doi.org/10.5281/zenodo.3739617)
