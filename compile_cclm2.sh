@@ -147,10 +147,10 @@ fi
 
 #./xmlchange CLM_NAMELIST_OPTS="use_init_interp=.false. # Ronny sets interp to false, not sure about this
 
-# Domain and mapping files for limited spatial extent (copy from $CESMDATAROOT to scratch for access at runtime?)
+# Domain and mapping files for limited spatial extent
 if [ $DOMAIN == eur ]; then
     ./xmlchange LND_DOMAIN_PATH="$CESMDATAROOT/CCLM2_EUR_inputdata/domain"
-    ./xmlchange LND_DOMAIN_FILE="domain.lnd.360x720_cruncep.100429.nc"
+    ./xmlchange LND_DOMAIN_FILE="domain_EU-CORDEX_0.5.nc"
     ./xmlchange LND2ROF_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_nomask_to_0.5x0.5_nomask_aave_da_c130103.nc"
     ./xmlchange ROF2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_0.5x0.5_nomask_to_360x720_nomask_aave_da_c120830.nc"
     ./xmlchange LND2GLC_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
@@ -202,6 +202,7 @@ print_log "h3: selected variables, 6-hourly values (-6), daily file (4 vals per 
 '
 
 # EUR surfdata and params: can be exchanged for newer versions
+# fsurdat and paramfile are not domain-specific; can check this later
 if [ $DOMAIN == eur ]; then
 cat > user_nl_clm << EOF
 fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_360x720cru_16pfts_simyr2000_c170428.nc"
@@ -209,7 +210,7 @@ paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.
 EOF
 
 cat > user_nl_datm << EOF
-domainfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/domain/domain.lnd.360x720_cruncep.100429.nc"
+domainfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/domain/domain_EU-CORDEX_0.5.nc"
 EOF
 fi
 
