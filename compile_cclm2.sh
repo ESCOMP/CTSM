@@ -56,7 +56,7 @@ print_log "*** Logfile at: ${logfile} ***"
 
 # Sync inputdata on scratch because scratch will be cleaned every month (change inputfiles on $PROJECT!)
 print_log "*** Syncing inputdata on scratch  ***"
-rsync -rv --ignore-existing /project/$PROJ/shared/CCLM2_inputdata $CESMDATAROOT | tee -a $logfile
+rsync -av /project/$PROJ/shared/CCLM2_inputdata/ $CESMDATAROOT | tee -a $logfile
 
 
 #==========================================
