@@ -235,7 +235,7 @@ contains
   class(excessicestream_type) :: this
   !
   ! !LOCAL VARIABLES:
-  if ( .not. read_namelist ) then
+  if ( .not. namelist_read ) then
       call endrun(msg=' ERROR UseStreams being called, but namelist has not been read yet'//errMsg(sourcefile, __LINE__))
   end if
   if ( trim(control%stream_fldFileName_exice) == '' )then
