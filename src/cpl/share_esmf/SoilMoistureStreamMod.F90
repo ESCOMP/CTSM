@@ -79,6 +79,7 @@ contains
     integer            :: nml_error                  ! namelist i/o error flag
     integer            :: soilm_offset               ! Offset in time for dataset (sec)
     character(len=CL)  :: stream_fldfilename_soilm   ! ustar stream filename to read
+    character(len=CL)  :: stream_meshfile_soilm      ! stream meshfile for stream_fldfilename_soilm
     character(len=CL)  :: soilm_tintalgo = 'linear'  ! Time interpolation alogrithm
     character(len=CL)  :: soilm_mapalgo = 'bilinear'
     real(r8)           :: stream_dtlimit = 15._r8
@@ -98,7 +99,7 @@ contains
          soilm_offset,                 &
          soilm_ignore_data_if_missing, &
          stream_fldfilename_soilm,     &
-         stream_meshfile_ndep
+         stream_meshfile_soilm
 
     ! Default values for namelist
     stream_year_first_soilm      = 1      ! first year in stream to use

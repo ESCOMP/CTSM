@@ -1,6 +1,6 @@
 # This is useful for testing cases that are not set up with
 # out-of-the-box initial conditions files, and would fail if
 # a Cold start wasn't being done
-./xmlchange CLM_FORCE_COLDSTART="on"
-./xmlchange CLM_NDEP_DATA_FILENAME='$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_hist_simyr1850_0.9x1.25_CMIP6alpha01_c170330.nc'
-./xmlchange CLM_NDEP_DATA_VARLIST='NDEP_month'
+./xmlchange CLM_STREAM_NDEP_DATA_FILENAME='$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_hist_simyr1850_0.9x1.25_CMIP6alpha01_c170330.nc'
+./xmlchange CLM_STREAM_NDEP_DATA_VARLIST=NDEP_month
+./xmlchange CLM_STREAM_NDEP_TAXMODE=cycle

@@ -3393,6 +3393,25 @@ sub setup_logic_c_isotope {
 
 #-------------------------------------------------------------------------------
 
+sub add_stream_default {
+  my ($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, $check_char) = @_;
+
+  my $val_xml = $envxml_ref->{$var_xml};
+  add_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, 'val'=>$val_xml);
+  my $val_nml = $nl->get_value($var_nml);
+  if ($check_char) {
+      if ($val_nml ne "'$val_xml'"){
+          $log->fatal_error("\n $var_nml with value $val_nml can only be set via the xml variable $var_xml, it CANNOT be set in user_nl_clm");
+      }
+  } else {
+      if ($val_nml ne $val_xml) {
+          $log->fatal_error("\n $var_nml with value $val_nml can only be set via the xml variable $var_xml, it CANNOT be set in user_nl_clm");
+      }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_nitrogen_deposition_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
   #
@@ -3409,8 +3428,10 @@ sub setup_logic_nitrogen_deposition_streams {
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
       my ($var_nml, $var_xml) = ('stream_fldfilename_ndep', 'CLM_STREAM_NDEP_DATA_FILENAME');
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
-      my ($var_nml, $var_xml) = ('stream_meshfile_ndep', 'CLM_STREAM_NDEP_MESH_FILENAME');
-      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+      if ($opts->{'driver'} eq "nuopc" ) {
+          my ($var_nml, $var_xml) = ('stream_meshfile_ndep', 'CLM_STREAM_NDEP_MESH_FILENAME');
+          add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+      }
       my ($var_nml, $var_xml) = ('ndep_varlist', 'CLM_STREAM_NDEP_DATA_VARLIST');
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
       my ($var_nml, $var_xml) = ('ndep_mapalgo', 'CLM_STREAM_NDEP_MAPALGO');
@@ -3419,24 +3440,6 @@ sub setup_logic_nitrogen_deposition_streams {
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
       my ($var_nml, $var_xml) = ('ndep_taxmode', 'CLM_STREAM_NDEP_TAXMODE');
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
-  }
-}
-
-#-------------------------------------------------------------------------------
-
-sub add_stream_default {
-  my ($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, $check_char) = @_;
-
-  my $val_xml = $envxml_ref->{$var_xml};
-  add_default($opts,  $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, 'val'=>$val_xml);
-  if ($check_char) {
-      if ($nl->get_value($var_nml) ne "'$val_xml'"){
-          $log->fatal_error("\n $var_nml can only be set via the xml variable $var_xml, it CANNOT be set in user_nl_clm");
-      }
-  } else {
-      if ($nl->get_value($var_nml) ne $val_xml) {
-          $log->fatal_error("\n $var_nml can only be set via the xml variable $var_xml, it CANNOT be set in user_nl_clm");
-      }
   }
 }
 
@@ -3538,7 +3541,6 @@ sub setup_logic_popd_streams {
 
 sub setup_logic_urbantv_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
-
   my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
   my ($var_nml, $var_xml)  = ('stream_year_first_urbantv', 'CLM_STREAM_URBANTV_YEAR_FIRST');
   add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
@@ -3708,9 +3710,11 @@ sub setup_logic_lai_streams {
          add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 0);
          my ($var_nml, $var_xml)  = ('stream_fldfilename_lai', 'CLM_STREAM_LAI_DATA_FILENAME');
          add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
-         my ($var_nml, $var_xml)  = ('stream_meshfile_lai', 'CLM_STREAM_LAI_MESH_FILENAME');
-         add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
-         my ($var_nml, $var_xml)  = ('laimapalgo', 'CLM_STREAM_LAI_MAPALGO');
+         if ($opts->{'driver'} eq "nuopc" ) {
+             my ($var_nml, $var_xml)  = ('stream_meshfile_lai', 'CLM_STREAM_LAI_MESH_FILENAME');
+             add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
+         }
+         my ($var_nml, $var_xml)  = ('lai_mapalgo', 'CLM_STREAM_LAI_MAPALGO');
          add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);
          my ($var_nml, $var_xml)  = ('lai_tintalgo', 'CLM_STREAM_LAI_TINTALGO');
          add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $envxml_ref, $var_nml, $var_xml, 1);

@@ -68,7 +68,7 @@ contains
    integer            :: nml_error ! namelist i/o error flag
    type(mct_ggrid)    :: dom_clm   ! domain information
    character(len=CL)  :: stream_fldFileName_ndep
-   character(len=CL)  :: ndepmapalgo = 'bilinear'
+   character(len=CL)  :: ndep_mapalgo = 'bilinear'
    character(len=CL)  :: ndep_tintalgo = 'linear'
    character(len=CS)  :: ndep_taxmode = 'extend'
    character(len=CL)  :: ndep_varlist = 'NDEP_year'
@@ -81,7 +81,7 @@ contains
         stream_year_first_ndep,    &
         stream_year_last_ndep,     &
         model_year_align_ndep,     &
-        ndepmapalgo, ndep_taxmode, &
+        ndep_mapalgo, ndep_taxmode, &
         ndep_varlist,              &
         stream_fldFileName_ndep,   &
         ndep_tintalgo
@@ -114,6 +114,7 @@ contains
    call shr_mpi_bcast(ndep_varlist           , mpicom)
    call shr_mpi_bcast(ndep_taxmode           , mpicom)
    call shr_mpi_bcast(ndep_tintalgo          , mpicom)
+   call shr_mpi_bcast(ndep_mapalgo           , mpicom)
 
    if (masterproc) then
       write(iulog,*) ' '
@@ -125,6 +126,7 @@ contains
       write(iulog,*) '  ndep_varList            = ',ndep_varList
       write(iulog,*) '  ndep_taxmode            = ',ndep_taxmode
       write(iulog,*) '  ndep_tintalgo           = ',ndep_tintalgo
+      write(iulog,*) '  ndep_mapalgo            = ',ndep_mapalgo
       write(iulog,*) ' '
    endif
    ! Read in units
@@ -155,7 +157,7 @@ contains
         fldListFile=ndep_varlist,                  &
         fldListModel=ndep_varlist,                 &
         fillalgo='none',                           &
-        mapalgo=ndepmapalgo,                       &
+        mapalgo=ndep_mapalgo,                      &
         tintalgo=ndep_tintalgo,                    &
         calendar=get_calendar(),                   &
         taxmode=ndep_taxmode                       )

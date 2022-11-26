@@ -97,6 +97,7 @@ contains
     type(mct_ggrid)    :: dom_clm                    ! domain information
     character(len=CL)  :: stream_fldfilename_soilm   ! ustar stream filename to read
     character(len=CL)  :: soilm_tintalgo = 'linear'  ! Time interpolation alogrithm
+    character(len=CL)  :: soilm_mapalgo  = 'none'    ! Spatial interpolation alogrithm
 
     character(*), parameter    :: subName = "('PrescribedSoilMoistureInit')"
     character(*), parameter    :: F00 = "('(PrescribedSoilMoistureInit) ',4a)"
@@ -111,6 +112,7 @@ contains
          stream_year_last_soilm,       &
          model_year_align_soilm,       &
          soilm_tintalgo,               &
+         soilm_mapalgo,                &
          soilm_offset,                 &
          soilm_ignore_data_if_missing, &
          stream_fldfilename_soilm

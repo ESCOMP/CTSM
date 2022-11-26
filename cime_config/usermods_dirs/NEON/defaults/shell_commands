@@ -9,18 +9,18 @@
 ./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2021,DATM_YR_START=2018
 
 # TOOD: the following CLM_NDEP_XXX variables can be removed once ndep is no longer read in by CLM
-./xmlchange CLM_NDEP_DATA_FILENAME=$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_2018-2030_monthly_c210826.nc
-./xmlchange CLM_NDEP_YEAR_FIRST=2018
-./xmlchange CLM_NDEP_YEAR_LAST=2021
-./xmlchange CLM_NDEP_YEAR_ALIGN=2018
+./xmlchange CLM_STREAM_NDEP_DATA_FILENAME=$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_2018-2030_monthly_c210826.nc
+./xmlchange CLM_STREAM_NDEP_YEAR_FIRST=2018
+./xmlchange CLM_STREAM_NDEP_YEAR_LAST=2021
+./xmlchange CLM_STREAM_NDEP_YEAR_ALIGN=2018
 
-./xmlchange CLM_POPDENS_YEAR_FIRST=2018
-./xmlchange CLM_POPDENS_YEAR_LAST=2021
-./xmlchange CLM_POPDENS_YEAR_ALIGN=2018
+./xmlchange CLM_STREAM_POPDENS_YEAR_FIRST=2018
+./xmlchange CLM_STREAM_POPDENS_YEAR_LAST=2021
+./xmlchange CLM_STREAM_POPDENS_YEAR_ALIGN=2018
 
-./xmlchange CLM_URBANTV_YEAR_FIRST=2018
-./xmlchange CLM_URBANTV_YEAR_LAST=2021
-./xmlchange CLM_URBANTV_YEAR_ALIGN=2018
+./xmlchange CLM_STREAM_URBANTV_YEAR_FIRST=2018
+./xmlchange CLM_STREAM_URBANTV_YEAR_LAST=2021
+./xmlchange CLM_STREAM_URBANTV_YEAR_ALIGN=2018
 
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
 ./xmlchange PIO_TYPENAME=netcdf

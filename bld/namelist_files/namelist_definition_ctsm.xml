@@ -1654,12 +1654,12 @@ Simulation year that aligns with stream_year_first_ndep value
 </entry>
 
 <entry id="stream_fldfilename_ndep" type="char*256" category="datasets"
-       input_pathname="abs" group="ndepdyn_nml" valid_values="" >
+       group="ndepdyn_nml" valid_values="" >
 Filename of input stream data for Nitrogen Deposition
 </entry>
 
 <entry id="stream_meshfile_ndep" type="char*256" category="datasets"
-       input_pathname="abs" group="ndepdyn_nml" valid_values="" >
+       group="ndepdyn_nml" valid_values="" >
 Stream meshfile for Nitrogen Deposition data
 </entry>
 
@@ -1730,12 +1730,12 @@ Simulation year that aligns with stream_year_first_soilm value
 </entry>
 
 <entry id="stream_fldfilename_soilm" type="char*256(30)" category="datasets"
-       input_pathname="abs" group="soil_moisture_streams" >
+       group="soil_moisture_streams" >
 Filename of input stream data for prescribed soil moisture streams data
 </entry>
 
 <entry id="stream_meshfile_soilm" type="char*256(30)" category="datasets"
-       input_pathname="abs" group="soil_moisture_streams">
+       group="soil_moisture_streams">
 mesh filename of input stream data for prescribed soil moisture streams data
 </entry>
 
@@ -1789,12 +1789,12 @@ Simulation year that aligns with stream_year_first_lai value
 </entry>
 
 <entry id="stream_fldfilename_lai" type="char*256(30)" category="datasets"
-       input_pathname="abs" group="lai_streams" >
+       group="lai_streams" >
 Filename of input stream data for LAI
 </entry>
 
 <entry id="stream_meshfile_lai" type="char*256" category="datasets"
-       input_pathname="abs" group="lai_streams">
+       group="lai_streams">
 Mesh file of input stream data for LAI
 </entry>
 
@@ -1831,12 +1831,12 @@ Simulation year that aligns with stream_year_first_lightng value
 </entry>
 
 <entry id="stream_fldfilename_lightng" type="char*256" category="datasets"
-       input_pathname="abs" group="light_streams" valid_values="" >
+       group="light_streams" valid_values="" >
 Filename of input stream data for Lightning
 </entry>
 
 <entry id="stream_meshfile_lightng" type="char*256" category="datasets"
-       input_pathname="abs" group="light_streams" valid_values="" >
+       group="light_streams" valid_values="" >
 Stream meshfile for Nitrogen Deposition data
 </entry>
 
@@ -1878,12 +1878,12 @@ Simulation year that aligns with stream_year_first_popdens value
 </entry>
 
 <entry id="stream_fldfilename_popdens" type="char*256" category="datasets"
-       input_pathname="abs" group="popd_streams" valid_values="" >
+       group="popd_streams" valid_values="" >
 Filename of input stream data for human population density
 </entry>
 
 <entry id="stream_meshfile_popdens" type="char*256" category="datasets"
-       input_pathname="abs" group="popd_streams" valid_values="" >
+       group="popd_streams" valid_values="" >
 mesh file for input stream data for human population density
 </entry>
 
@@ -1925,12 +1925,12 @@ Simulation year that aligns with stream_year_first_urbantv value
 </entry>
 
 <entry id="stream_fldfilename_urbantv" type="char*256" category="datasets"
-       input_pathname="abs" group="urbantv_streams" valid_values="" >
+       group="urbantv_streams" valid_values="" >
 Filename of input stream data for urban time varying
 </entry>
 
 <entry id="stream_meshfile_urbantv" type="char*256" category="datasets"
-       input_pathname="abs" group="urbantv_streams" valid_values="" >
+       group="urbantv_streams" valid_values="" >
 mesh filename of input stream data for urban time varying
 </entry>
 

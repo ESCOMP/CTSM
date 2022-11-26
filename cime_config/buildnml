@@ -253,7 +253,7 @@ def buildnml(case, caseroot, compname):
                    %(cmd, _CIMEROOT, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts,
                      nomeg, usecase, lnd_grid, clmusr, start_type, caseroot,
                      configuration, structure,
-                     lndfrac_setting, glc_nec, glc_use_antarctica_flag, ccsm_co2_ppmv, clm_co2_type, config_cache_file, driver, 
+                     lndfrac_setting, glc_nec, glc_use_antarctica_flag, ccsm_co2_ppmv, clm_co2_type, config_cache_file, driver,
                      clm_bldnml_opts, spinup, tuning, gridmask))
 
         rc, out, err = run_cmd(command, from_dir=ctsmconf)
