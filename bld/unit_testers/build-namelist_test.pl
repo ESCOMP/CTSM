@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1864;
+my $ntests = 1865;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1266;
 }
@@ -545,6 +545,11 @@ my %failtest = (
                                    },
      "exice stream off, but setmap"=>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_mapalgo_exice='bilinear'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice stream on, but mct"    =>{ options=>"--res 0.9x1.25 --envxml_dir . --driver mct --lnd_frac $DOMFILE ",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
