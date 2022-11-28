@@ -4175,13 +4175,14 @@ sub setup_logic_exice {
   # If excess ice is on
   if (defined($use_exice) && value_is_true($use_exice)) {
      # IF nuopc driver and excess ice streams are on get the stream defaults
-     if (defined($use_exice_streams) && $opts->{'driver'} eq "nuopc" && value_is_true($use_exice_streams)) {
+     if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_exice');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_exice');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_mapalgo_exice');
-     # If excess ice streams on, but NOT the NUOPC driver fail
-     } elsif (defined($use_exice_streams) && (! $opts->{'driver'} eq "nuopc") && value_is_true($use_exice_streams)) {
+       # If excess ice streams on, but NOT the NUOPC driver fail
+       if ( not $opts->{'driver'} eq "nuopc" ) {
           $log->fatal_error("nuopc driver is required when use_excess_ice_streams is set to true" );
+       }
      }
   }
 
