@@ -201,12 +201,15 @@ print_log "h2: selected variables, daily values (-24), yearly file (365 vals per
 print_log "h3: selected variables, 6-hourly values (-6), daily file (4 vals per file), instantaneous at the output interval (I) by PFT"
 '
 
-# EUR surfdata and params: can be exchanged for newer versions
-# fsurdat and paramfile are not domain-specific; can check this later
+# Params file: can be exchanged for newer versions
+cat > user_nl_clm << EOF
+paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
+EOF
+
+# Surface data (domain-specific)
 if [ $DOMAIN == eur ]; then
 cat > user_nl_clm << EOF
-fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_360x720cru_16pfts_simyr2000_c170428.nc"
-paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
+fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_0.5x0.5_hist_16pfts_Irrig_CMIP6_simyr2000_c190418.nc"
 EOF
 
 cat > user_nl_datm << EOF
@@ -214,9 +217,13 @@ domainfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/domain/domain_EU-CORDEX_0.5.nc"
 EOF
 fi
 
-# GLOB surfdata and params: default, downloaded in check input data phase if needed
+# Specifiy to re-use downloaded files
+if [ $DOMAIN == glob ]; then
+cat > user_nl_clm << EOF
+fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_360x720cru_16pfts_simyr2000_c170428.nc"
+EOF
 
-# These namelist options are available in Ronny's code
+# Namelist options available in Ronny's code
 if [ $CODE == clm5.0_features ]; then
 cat > user_nl_clm << EOF
 use_biomass_heat_storage = .true.
@@ -225,7 +232,7 @@ zetamaxstable = 100.0d00
 EOF
 fi
 
-# These namelist options are available in CTSMdev (?)
+# Namelist options available in CTSMdev (?)
 if [ $CODE == CTSMdev ]; then
 cat > user_nl_clm << EOF
 use_biomass_heat_storage = .true.
