@@ -57,7 +57,9 @@ print_log "*** Logfile at: ${logfile} ***"
 
 # Sync inputdata on scratch because scratch will be cleaned every month (change inputfiles on $PROJECT!)
 print_log "*** Syncing inputdata on scratch  ***"
+
 rsync -rv --ignore-existing /project/$PROJ/CCLM2_inputdata $CESMDATAROOT | tee -a $logfile
+
 
 
 #==========================================
@@ -148,11 +150,10 @@ fi
 
 #./xmlchange CLM_NAMELIST_OPTS="use_init_interp=.false. # Ronny sets interp to false, not sure about this
 
-# Domain and mapping files for limited spatial extent (copy from $CESMDATAROOT to scratch for access at runtime?)
+# Domain and mapping files for limited spatial extent
 if [ $DOMAIN == eur ]; then
     ./xmlchange LND_DOMAIN_PATH="$CESMDATAROOT/CCLM2_EUR_inputdata/domain"
     ./xmlchange LND_DOMAIN_FILE="domain_EU-CORDEX_0.5_correctedlons.nc"
-    #./xmlchange LND_DOMAIN_FILE="domain.lnd.360x720_cruncep.100429.nc"
     ./xmlchange LND2ROF_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_nomask_to_0.5x0.5_nomask_aave_da_c130103.nc"
     ./xmlchange ROF2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_0.5x0.5_nomask_to_360x720_nomask_aave_da_c120830.nc"
     ./xmlchange LND2GLC_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
@@ -182,59 +183,20 @@ print_log "*** Modifying unser_nl_*.xml  ***"
 # hist_type1d_pertape # '' for 2D and no averaging (i.e. PFT output), 'COL' for columns, 'LAND' for land-units, 'GRID' for grid-cells
 
 # Commented out during testing to avoid lots of output
-: '
+
+#rams file: can be exchanged for newer versions
 cat > user_nl_clm << EOF
-hist_fincl1 = 'TG', 'QAF', 'TAF', 'UAF'
-hist_fincl2 = 'QAF', 'TAF', 'UAF', 'VPD_CAN', 'TLAI', 'FCEV', 'FCTR', 'TG', 'TSOI', 'TSOI_10CM', 'TSA', 'Q2M', 'VPD'
-hist_fincl3 = 'QAF', 'TAF', 'UAF', 'VPD_CAN', 'TLAI', 'FCEV', 'FCTR', 'TG', 'TSOI', 'TSOI_10CM', 'TSA', 'Q2M', 'VPD'
-hist_fincl4 = 'QAF', 'TAF', 'UAF', 'VPD_CAN', 'TLAI', 'FCEV', 'FCTR', 'TG', 'TSOI', 'TSOI_10CM', 'TSA', 'Q2M', 'VPD'
-
-hist_nhtfrq = 0, -24, -24, -6 
-hist_mfilt  = 12, 365, 365, 4 
-hist_avgflag_pertape = 'A','M','X','I' 
-hist_dov2xy = .true.,.true.,.true.,.false. 
-hist_type1d_pertape = '','','',''
-EOF
-
-print_log "*** Output frequency and averaging  ***"
-print_log "h0: default + selected variables, monthly values (0), yearly file (12 vals per file), average over the output interval (A)"
-print_log "h1: selected variables, daily values (-24), yearly file (365 vals per file), min over the output interval (M)"
-print_log "h2: selected variables, daily values (-24), yearly file (365 vals per file), max over the output interval (X)"
-print_log "h3: selected variables, 6-hourly values (-6), daily file (4 vals per file), instantaneous at the output interval (I) by PFT"
-'
-
-# EUR surfdata and params: can be exchanged for newer versions
-if [ $DOMAIN == eur ]; then
-cat > user_nl_clm << EOF
-fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_360x720cru_16pfts_simyr2000_c170428.nc"
 paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
 EOF
 
-cat > user_nl_datm << EOF
-domainfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/domain/domain.lnd.360x720_cruncep.100429.nc"
+# Surface data (domain-specific)
+if [ $DOMAIN == eur ]; then
+    cat > user_nl_clm << EOF
+    fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_0.5x0.5_hist_16pfts_Irrig_CMIP6_simyr2000_c190418.nc"
 EOF
-fi
 
-# GLOB surfdata and params: default, downloaded in check input data phase if needed
-
-# These namelist options are available in Ronny's code
-if [ $CODE == clm5.0_features ]; then
-cat > user_nl_clm << EOF
-use_biomass_heat_storage = .true.
-use_individual_pft_soil_column = .true.
-zetamaxstable = 100.0d00
-EOF
-fi
-
-# These namelist options are available in CTSMdev (?)
-if [ $CODE == CTSMdev ]; then
-cat > user_nl_clm << EOF
-use_biomass_heat_storage = .true.
-z0param_method = 'Meier2022'
-zetamaxstable = 100.0d00
-use_z0mg_2d = .true.
-use_z0m_snowmelt = .true.
-flanduse_timeseries=''
+    cat > user_nl_datm << EOF
+    domainfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/domain/domain_EU-CORDEX_0.5.nc"
 EOF
 fi
 
