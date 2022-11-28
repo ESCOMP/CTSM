@@ -17,7 +17,7 @@ module ExcessIceStreamType
   implicit none
   private
 
-  procedure, public  :: UseExcessIceStreams      ! If streams will be used
+  public  :: UseExcessIceStreams      ! If streams will be used
 
   type, public :: excessicestream_type
   contains
@@ -63,6 +63,7 @@ contains
    real(r8)         ,  intent(inout)  :: exice_bulk_init(bounds%begc:bounds%endc) 
    !
    ! !LOCAL VARIABLES:
+   call endrun(msg=' ERROR CalcExcessIce should NOT be called for the MCT driver'//errMsg(sourcefile, __LINE__))
    
   end subroutine CalcExcessIce
 
@@ -91,7 +92,7 @@ subroutine ReadNML(this, bounds, NLFilename)
   !
   ! arguments
   implicit none
-  class(streamcontrol_type)     :: this
+  class(excessicestream_type)   :: this
   type(bounds_type), intent(in) :: bounds
   character(len=*),  intent(in) :: NLFilename   ! Namelist filename
   !
