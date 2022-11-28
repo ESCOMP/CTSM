@@ -19,6 +19,7 @@ startdate=`date +'%Y-%m-%d %H:%M:%S'`
 COMPSET=I2000Clm50Sp # for CCLM2
 RES=hcru_hcru # hcru_hcru for CCLM2-0.44, f09_g17 to test glob (inputdata downloaded)
 DOMAIN=eur # eur for CCLM2 (EURO-CORDEX), glob otherwise
+
 CODE=clm5.0 # clm5.0 for official release, clm5.0_features for Ronny's version, CTSMdev for latest 
 COMPILER=gnu # setting to gnu-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
 DRIVER=mct # default is mct, using nuopc requires ESMF installation
@@ -27,7 +28,7 @@ CASENAME=$CODE.$COMPILER.$COMPSET.$RES.$DOMAIN.$EXP
 MACH=pizdaint
 QUEUE=normal # USER_REQUESTED_QUEUE, overrides default JOB_QUEUE
 WALLTIME="01:00:00" # USER_REQUESTED_WALLTIME, overrides default JOB_WALLCLOCK_TIME
-PROJ=sm61
+PROJ=sm62
 NTASKS=24
 NSUBMIT=0 # partition into smaller chunks, excludes the first submission
 let "NCORES = $NTASKS * 12"
@@ -56,7 +57,7 @@ print_log "*** Logfile at: ${logfile} ***"
 
 # Sync inputdata on scratch because scratch will be cleaned every month (change inputfiles on $PROJECT!)
 print_log "*** Syncing inputdata on scratch  ***"
-rsync -rv --ignore-existing /project/$PROJ/shared/CCLM2_inputdata $CESMDATAROOT | tee -a $logfile
+rsync -rv --ignore-existing /project/$PROJ/CCLM2_inputdata $CESMDATAROOT | tee -a $logfile
 
 
 #==========================================
@@ -150,7 +151,8 @@ fi
 # Domain and mapping files for limited spatial extent (copy from $CESMDATAROOT to scratch for access at runtime?)
 if [ $DOMAIN == eur ]; then
     ./xmlchange LND_DOMAIN_PATH="$CESMDATAROOT/CCLM2_EUR_inputdata/domain"
-    ./xmlchange LND_DOMAIN_FILE="domain.lnd.360x720_cruncep.100429.nc"
+    ./xmlchange LND_DOMAIN_FILE="domain_EU-CORDEX_0.5_correctedlons.nc"
+    #./xmlchange LND_DOMAIN_FILE="domain.lnd.360x720_cruncep.100429.nc"
     ./xmlchange LND2ROF_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_nomask_to_0.5x0.5_nomask_aave_da_c130103.nc"
     ./xmlchange ROF2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_0.5x0.5_nomask_to_360x720_nomask_aave_da_c120830.nc"
     ./xmlchange LND2GLC_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
