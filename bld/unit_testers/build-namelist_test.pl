@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1865;
+my $ntests = 1861;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1266;
+   $ntests += 1263;
 }
 plan( tests=>$ntests );
 
@@ -339,6 +339,10 @@ foreach my $driver ( "mct", "nuopc" ) {
       my $base_options = "-res 0.9x1.25 -envxml_dir . -driver $driver";
       if ( $driver eq "mct" ) {
          $base_options = "$base_options -lnd_frac $DOMFILE";
+         # Skip the MCT test for excess ice streams
+         if ( $options =~ /use_excess_ice_streams=.true./ ) {
+           next;
+         }
       } else {
          $base_options = "$base_options -namelist '&a force_send_to_atm = .false./'";
       }
