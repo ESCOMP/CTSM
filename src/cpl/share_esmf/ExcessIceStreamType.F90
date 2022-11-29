@@ -29,13 +29,14 @@ module ExcessIceStreamType
   implicit none
   private
 
+  public  :: UseExcessIceStreams      ! If streams will be used
+
   type, public :: excessicestream_type
      real(r8), pointer, private :: exice_bulk  (:)         ! excess ice bulk value (-)
   contains
 
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public  :: Init            ! Initialize and read data in
-      procedure, public  :: UseStreams      ! If streams will be used
       procedure, public  :: CalcExcessIce   ! Calculate excess ice ammount
 
       ! !PRIVATE MEMBER FUNCTIONS:
@@ -91,7 +92,7 @@ contains
 
     call this%InitAllocate( bounds )
     call control%ReadNML( bounds, NLFileName )
-    if ( this%useStreams() )then
+    if ( UseExcessIceStreams() )then
       allocate(stream_varnames(1))
             stream_varnames = (/"EXICE"/)
       
@@ -223,7 +224,7 @@ contains
 
   end subroutine CalcExcessIce
 
-  logical function UseStreams(this)
+  logical function UseExcessIceStreams()
   !
   ! !DESCRIPTION:
   ! Return true if
@@ -232,18 +233,17 @@ contains
   !
   ! !ARGUMENTS:
   implicit none
-  class(excessicestream_type) :: this
   !
   ! !LOCAL VARIABLES:
   if ( .not. namelist_read ) then
-      call endrun(msg=' ERROR UseStreams being called, but namelist has not been read yet'//errMsg(sourcefile, __LINE__))
+      call endrun(msg=' ERROR UseExcessIceStreams being called, but namelist has not been read yet'//errMsg(sourcefile, __LINE__))
   end if
   if ( trim(control%stream_fldFileName_exice) == '' )then
-     UseStreams = .false.
+     UseExcessIceStreams = .false.
   else
-     UseStreams = .true.
+     UseExcessIceStreams = .true.
   end if
-end function UseStreams
+end function UseExcessIceStreams
 
 subroutine ReadNML(this, bounds, NLFilename)
   !
