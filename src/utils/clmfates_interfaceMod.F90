@@ -1841,7 +1841,7 @@ module CLMFatesInterfaceMod
             call fates_hist%update_history_dyn( nc,                     &
                 this%fates(nc)%nsites,                                  &
                 this%fates(nc)%sites,                                   &
-                this%fates(nc)%bc_in(s)) 
+                this%fates(nc)%bc_in) 
 
 
 
