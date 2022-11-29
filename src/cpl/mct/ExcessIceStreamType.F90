@@ -63,7 +63,6 @@ contains
    real(r8)         ,  intent(inout)  :: exice_bulk_init(bounds%begc:bounds%endc) 
    !
    ! !LOCAL VARIABLES:
-   call endrun(msg=' ERROR CalcExcessIce should NOT be called for the MCT driver'//errMsg(sourcefile, __LINE__))
    
   end subroutine CalcExcessIce
 
