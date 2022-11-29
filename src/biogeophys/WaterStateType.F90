@@ -590,8 +590,9 @@ contains
     use landunit_varcon  , only : istcrop, istdlak, istsoil  
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_time_manager , only : is_first_step, is_restart
-    use clm_varctl       , only : bound_h2osoi
+    use clm_varctl       , only : bound_h2osoi, nsrest, nsrContinue
     use ncdio_pio        , only : file_desc_t, ncd_double
+    use ExcessIceStreamType, only : UseExcessIceStreams
     use restUtilMod
     !
     ! !ARGUMENTS:
@@ -713,6 +714,14 @@ contains
             units='kg/m2', scale_by_thickness=.true., &
             interpinic_flag='interp', readvar=readvar, data=this%excess_ice_col)
        if (flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
+          if (nsrest == nsrContinue) then
+             call endrun(msg = "On a continue run, excess ice fields MUST be on the restart file "// & 
+             errMsg(sourcefile, __LINE__))
+          else if ( .not. UseExcessIceStreams() )then
+             call endrun(msg = "This input initial conditions file does NOT include excess ice fields" // &
+                         ", and use_excess_ice_streams is off, one or the other needs to be changed  "// & 
+                         errMsg(sourcefile, __LINE__))
+          end if
           if (masterproc) then
              write(iulog,*) 'Excess ice data is read from the stream and not from restart file!'
           endif

@@ -770,9 +770,10 @@ contains
     use spmdMod          , only : masterproc
     use clm_varcon       , only : pondmx, watmin, spval, nameg
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varctl       , only : bound_h2osoi, use_excess_ice
+    use clm_varctl       , only : bound_h2osoi, use_excess_ice, nsrest, nsrContinue
     use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
     use restUtilMod
+    use ExcessIceStreamType, only : UseExcessIceStreams
     !
     ! !ARGUMENTS:
     class(waterdiagnosticbulk_type), intent(inout) :: this
@@ -921,6 +922,14 @@ contains
             units='m', &
             interpinic_flag='interp', readvar=readvar, data=this%exice_subs_tot_col)
        if (flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
+         if (nsrest == nsrContinue) then
+            call endrun(msg = "On a continue run, excess ice fields MUST be on the restart file "// & 
+            errMsg(sourcefile, __LINE__))
+         else if ( .not. UseExcessIceStreams() )then
+            call endrun(msg = "This input initial conditions file does NOT include excess ice fields" // &
+                        ", and use_excess_ice_streams is off, one or the other needs to be changed  "// & 
+                        errMsg(sourcefile, __LINE__))
+         end if
          this%exice_subs_tot_col(bounds%begc:bounds%endc)=0.0_r8
          this%exice_vol_tot_col(bounds%begc:bounds%endc)=0.0_r8
          this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
@@ -931,6 +940,12 @@ contains
             long_name=this%info%lname('vertically averaged volumetric excess ice concentration (veg landunits only)'), &
             units='m3/m3', &
             interpinic_flag='interp', readvar=readvar, data=this%exice_vol_tot_col)
+       if (flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
+         if (nsrest == nsrContinue) then
+            call endrun(msg = "On a continue run, excess ice fields MUST be on the restart file "// & 
+            errMsg(sourcefile, __LINE__))
+         end if
+       end if
     endif
 
   end subroutine RestartBulk
