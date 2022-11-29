@@ -6,7 +6,7 @@ module ExcessIceStreamType
   ! without excess ice streams.
   !
   ! !USES
-  use shr_kind_mod     , only : r8 => shr_kind_r8
+  use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use spmdMod          , only : mpicom, masterproc
   use clm_varctl       , only : iulog
@@ -100,13 +100,15 @@ subroutine ReadNML(this, bounds, NLFilename)
   integer            :: nu_nml    ! unit for namelist file
   integer            :: nml_error ! namelist i/o error flag
   logical            :: use_excess_ice_streams = .false.         ! logical to turn on use of excess ice streams
+  character(len=CL)  :: stream_fldFileName_exice = ' '
+  character(len=CL)  :: stream_mapalgo_exice = 'none'
   character(len=*), parameter :: namelist_name = 'exice_streams'    ! MUST agree with name in namelist and read
   character(len=*), parameter :: subName = "('exice_streams::ReadNML')"
   !-----------------------------------------------------------------------
 
   namelist /exice_streams/ &               ! MUST agree with namelist_name above
-       use_excess_ice_streams
-
+       stream_mapalgo_exice,  stream_fldFileName_exice, use_excess_ice_streams
+  !-----------------------------------------------------------------------
   ! Default values for namelist
 
   ! Read excess ice namelist
@@ -129,6 +131,12 @@ subroutine ReadNML(this, bounds, NLFilename)
   if (masterproc) then
      if ( use_excess_ice_streams ) then
         call endrun(msg=' ERROR excess ice streams can NOT be on for the MCT driver'//errMsg(sourcefile, __LINE__))
+     end if
+     if ( trim(stream_fldFileName_exice) /= ''  ) then
+        call endrun(msg=' ERROR stream_fldFileName_exice can NOT be set for the MCT driver'//errMsg(sourcefile, __LINE__))
+     end if
+     if ( trim(stream_mapalgo_exice) /= 'none'  ) then
+        call endrun(msg=' ERROR stream_mapalgo_exice can only be none for the MCT driver'//errMsg(sourcefile, __LINE__))
      end if
   endif
 
