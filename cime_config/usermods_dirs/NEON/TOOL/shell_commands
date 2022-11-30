@@ -1,8 +1,10 @@
+#!/bin/bash
 ./xmlchange NEONSITE=TOOL
 ./xmlchange PTS_LON=210.629872
 ./xmlchange PTS_LAT=68.66045
-./xmlchange RUN_STARTDATE=2020-01-01
 ./xmlchange DATM_YR_ALIGN=2020,DATM_YR_START=2020
-./xmlchange STOP_N=27
-
-
+# Different default start date and number of months to run for transient case
+if  [[ $compset =~ ^HIST ]]; then
+  ./xmlchange RUN_STARTDATE=2020-01-01
+  ./xmlchange STOP_N=27
+fi

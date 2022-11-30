@@ -188,7 +188,7 @@ contains
          avgflag='A', long_name='cosine of solar zenith angle', &
          ptr_col=this%coszen_col, default='inactive')
 
-    this%albgri_col(begc:endc,:) = spval
+    this%albgrd_col(begc:endc,:) = spval
     call hist_addfld2d (fname='ALBGRD', units='proportion', type2d='numrad', &
          avgflag='A', long_name='ground albedo (direct)', &
          ptr_col=this%albgrd_col, default='inactive')

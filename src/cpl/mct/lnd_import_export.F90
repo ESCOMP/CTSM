@@ -136,7 +136,7 @@ contains
        ! Check for nans from coupler
        !--------------------------
 
-       call check_for_nans(x2l(:,i), fname, begg)
+       call check_for_nans(x2l(:,i), fname, begg, "x2l")
 
     end do
 
@@ -344,7 +344,7 @@ contains
        ! Check for nans to coupler
        !--------------------------
 
-       call check_for_nans(l2x(:,i), fname, begg)
+       call check_for_nans(l2x(:,i), fname, begg, "l2x")
 
     end do
 
