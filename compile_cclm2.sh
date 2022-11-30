@@ -16,7 +16,7 @@ echo "*** Setting up case ***"
 date=`date +'%Y%m%d-%H%M'` # get current date and time
 startdate=`date +'%Y-%m-%d %H:%M:%S'`
 
-COMPSET=I2000Clm50Sp # for CCLM2
+COMPSET=I2000Clm50SpGs # for CCLM2
 RES=hcru_hcru # hcru_hcru for CCLM2-0.44, f09_g17 to test glob (inputdata downloaded)
 DOMAIN=eur # eur for CCLM2 (EURO-CORDEX), glob otherwise
 
