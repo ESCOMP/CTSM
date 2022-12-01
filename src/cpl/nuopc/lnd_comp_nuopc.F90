@@ -4,9 +4,20 @@ module lnd_comp_nuopc
   ! This is the NUOPC cap for CTSM
   !----------------------------------------------------------------------------
 
-  use ESMF
+  use ESMF                   , only : ESMF_SUCCESS, ESMF_GridComp, ESMF_LogWrite, ESMF_LOGMSG_INFO, ESMF_GridCompSetEntryPoint
+  use ESMF                   , only : ESMF_METHOD_INITIALIZE, ESMF_FAILURE, ESMF_Time, ESMF_LogSetError, ESMF_RC_NOT_VALID
+  use ESMF                   , only : ESMF_Clock, ESMF_State, ESMF_Field, ESMF_MAXSTR, ESMF_LOGMSG_WARNING,ESMF_RC_ARG_BAD
+  use ESMF                   , only : ESMF_LOGFOUNDERROR, ESMF_LOGERR_PASSTHRU, ESMF_CALKIND_FLAG, ESMF_TIMEINTERVAL
+  use ESMF                   , only : ESMF_LogSetError, ESMF_FieldGet, ESMF_ClockGet, ESMF_GridCompGet, ESMF_ClockGetNextTime
+  use ESMF                   , only : ESMF_AlarmRingerOff, ESMF_TimeIntervalGet,  ESMF_TimeGet, ESMF_StateGet
+  use ESMF                   , only : ESMF_MethodRemove, ESMF_VM, ESMF_VMGet, ESMF_CALKIND_NOLEAP, ESMF_CALKIND_GREGORIAN
+  use ESMF                   , only : ESMF_ALARMLIST_ALL, ESMF_ALARM, ESMF_ALARMISRINGING,  ESMF_ClockGetAlarm, ESMF_ClockGetAlarmList
+  use ESMF                   , only : ESMF_AlarmSet, ESMF_ClockAdvance
+  use ESMF                   , only : operator(==), operator(+)
+  use ESMF                   , only : ESMF_AlarmIsCreated, ESMF_LOGMSG_ERROR, ESMF_ClockSet
   use NUOPC                  , only : NUOPC_CompDerive, NUOPC_CompSetEntryPoint, NUOPC_CompSpecialize
   use NUOPC                  , only : NUOPC_CompFilterPhaseMap, NUOPC_CompAttributeGet, NUOPC_CompAttributeSet
+  use NUOPC                  , only : NUOPC_CompGet, Nuopc_IsAtTime, Nuopc_GetAttribute
   use NUOPC_Model            , only : model_routine_SS           => SetServices
   use NUOPC_Model            , only : SetVM
   use NUOPC_Model            , only : model_label_Advance        => label_Advance
@@ -1275,8 +1286,6 @@ contains
   end subroutine clm_orbital_update
 
   subroutine CheckImport(gcomp, rc)
-    use NUOPC
-    use ESMF
     type(ESMF_GridComp) :: gcomp
     integer, intent(out) :: rc
     character(len=*) , parameter :: subname = "("//__FILE__//":CheckImport)"

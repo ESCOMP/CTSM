@@ -13,6 +13,8 @@
 # conda activate ctsm_py                                  # Do this anytime you want to run a CTSM python script
 #
 python=3.7.0     # The python version MUST match the python version available on CGD systems through modules exactly
+pandas
+tqdm
 scipy
 netcdf4
 requests

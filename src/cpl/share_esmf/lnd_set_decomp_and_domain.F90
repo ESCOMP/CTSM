@@ -1,6 +1,9 @@
 module lnd_set_decomp_and_domain
 
-  use ESMF
+  use ESMF         , only : ESMF_VM, ESMF_Mesh, ESMF_DistGrid, ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU
+  use ESMF         , only : ESMF_Array, ESMF_ArrayCreate, ESMF_SUCCESS, ESMF_MeshCreate, ESMF_FILEFORMAT_ESMFMESH
+  use ESMF         , only : ESMF_MeshGet, ESMF_DistGridGet, ESMF_Grid, ESMF_Field, ESMF_FieldGet, ESMF_FieldCreate, ESMF_FieldDestroy
+  use ESMF         , only : ESMF_TYPEKIND_R8, ESMF_MESHLOC_ELEMENT, ESMF_VMAllReduce, ESMF_REDUCE_SUM
   use shr_kind_mod , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod  , only : shr_sys_abort
   use shr_log_mod  , only : errMsg => shr_log_errMsg
@@ -42,6 +45,7 @@ contains
     use decompMod     , only : gindex_global, bounds_type, get_proc_bounds
     use clm_varpar    , only : nlevsoi
     use clm_varctl    , only : use_soil_moisture_streams
+    use ESMF          , only : ESMF_DistGridCreate
 
     ! input/output variables
     character(len=*)    , intent(in)    :: driver ! cmeps or lilac
@@ -185,8 +189,8 @@ contains
   subroutine lnd_set_mesh_for_single_column(scol_lon, scol_lat, mesh, rc)
 
     ! Generate a mesh for single column
-    use netcdf
     use clm_varcon, only : spval
+    use ESMF      , only : ESMF_Grid, ESMF_GridCreateNoPeriDimUfrm, ESMF_STAGGERLOC_CENTER, ESMF_STAGGERLOC_CORNER
 
     ! input/output variables
     real(r8)        , intent(in)  :: scol_lon
@@ -347,6 +351,12 @@ contains
     ! landfrac/landmesh file.  If the landfrac/landmask file does
     ! exist then simply read in the global land fraction and land mask
     ! from the file
+
+    ! Uses:
+    use ESMF            , only : ESMF_RouteHandle, ESMF_FieldRegridStore, ESMF_FieldRegrid
+    use ESMF            , only : ESMF_REGRIDMETHOD_CONSERVE, ESMF_NORMTYPE_DSTAREA, ESMF_UNMAPPEDACTION_IGNORE
+    use ESMF            , only : ESMF_TERMORDER_SRCSEQ, ESMF_REGION_TOTAL
+
 
     ! input/out variables
     type(ESMF_Mesh)     , intent(in)  :: mesh_lnd
@@ -662,6 +672,7 @@ contains
     use clm_varcon , only : grlnd
     use fileutils  , only : getfil
     use ncdio_pio  , only : ncd_io, file_desc_t, ncd_pio_openfile, ncd_pio_closefile
+    use ESMF       , only : ESMF_FieldRegridGetArea
 
     ! input/output variables
     type(ESMF_Mesh)   , intent(in)    :: mesh
