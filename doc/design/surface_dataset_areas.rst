@@ -37,3 +37,33 @@ The conversion from percent of the grid cell area to percent of the land area ha
 In grid cells where the estimated land fraction is essentially zero, we set the land cover to wetland, as a rough parameterization of ocean. This situation will only arise if the areas of all landunits on the raw datasets are essentially zero for the given grid cell, so we would have no information to choose any particular land cover for the grid cell. (This wetland area may end up being changed to bare ground at runtime, depending on the value of the ``convert_ocean_to_land`` namelist flag.)
 
 In grid cells where the estimated land fraction is greater than zero, we fill any unclaimed land area with the natural vegetated landunit. We then normalize all landunit areas based on the estimated land fraction so that they now specify areas as percent of the land area rather than as percent of the grid cell.
+
+===================
+ Example scenarios
+===================
+
+The following example scenarios illustrate the operation of ``normalize_and_check_landuse``; in the following, any landunit not explicitly mentioned has 0% area:
+
+(a) With pctlnd_pft = 0% and all initial landunit areas 0%: wetland area = 100%
+
+(b) With pctlnd_pft = 0% and initial glacier area 1%: glacier area = 100%
+
+(c) With pctlnd_pft > 0% and all initial landunit areas 0%: natural vegetated area = 100%
+
+(d) With pctlnd_pft = 40%, initial crop area 20%, natural vegetated area 10%: crop area = 50%, natural vegetated area = 50%
+
+(e) With pctlnd_pft = 40%, initial crop area 20%, natural vegetated area 10%, glacier area 10%: crop area = 50%, natural vegetated area = 25%, glacier area = 25%
+
+(f) With pctlnd_pft = 40%, initial crop area 20%, natural vegetated area 10%, glacier area 15%: crop area = 50%, natural vegetated area = 12.5%, glacier area = 37.5%
+
+(g) With pctlnd_pft = 40%, initial crop area 20%, natural vegetated area 10%, glacier area 20%: crop area = 50%, glacier area = 50%
+
+(h) With pctlnd_pft = 40%, initial crop area 20%, natural vegetated area 10%, glacier area 30%: crop area = 40%, glacier area = 60%
+
+(i) With pctlnd_pft = 40%, initial crop area 0%, natural vegetated area 40%, glacier area 40%: glacier area = 100%
+
+(j) With pctlnd_pft = 2%, initial natural vegetated area 1%, glacier area 1%: natural vegetated area = 50%, glacier area = 50%
+
+(k) With pctlnd_pft = 2%, initial natural vegetated area 0%, glacier area 1%: natural vegetated area = 50%, glacier area = 50%
+
+(l) With pctlnd_pft = 2%, initial natural vegetated area 2%, glacier area 1%: natural vegetated area = 50%, glacier area = 50%
