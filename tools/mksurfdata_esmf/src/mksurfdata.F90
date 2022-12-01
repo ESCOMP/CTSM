@@ -1189,8 +1189,10 @@ program mksurfdata
             ! If we have essentially 0 land area, set land area to exactly 0 and put all
             ! area in wetlands (to simulate ocean). Note that, based on the formulation
             ! for pct_land above, this should only arise if the non-natveg landunits
-            ! already have near-zero area, so the zeroing of these other landunits should
-            ! only result in changes near the roundoff level.
+            ! already have near-zero area (and the natveg landunit should also have
+            ! near-zero area in this case, because its area should be no greater than the
+            ! land fraction from the PFT raw dataset), so the zeroing of these other
+            ! landunits should only result in changes near the roundoff level.
             pct_land = 0._r8
             frac_land = 0._r8
             call pctnatpft(n)%set_pct_l2g(0._r8)
