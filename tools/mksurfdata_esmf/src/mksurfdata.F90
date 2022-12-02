@@ -1008,7 +1008,7 @@ program mksurfdata
      if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CROP_MAX"
      call get_pct_l2g_array(pctcft_max, pctcrop)
      call mkfile_output(pioid, mesh_model, 'PCT_CROP_MAX', pctcrop, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP')
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP_MAX')
 
      if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_URBAN_MAX"
      call mkfile_output(pioid, mesh_model, 'PCT_URBAN_MAX', pcturb_max, rc=rc)
