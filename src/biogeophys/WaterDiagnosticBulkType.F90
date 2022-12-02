@@ -100,6 +100,7 @@ module WaterDiagnosticBulkType
      procedure, private :: InitBulkHistory  
      procedure, private :: InitBulkCold     
      procedure, private :: RestartBackcompatIssue783
+     procedure, private :: RestartExcessIceIssue1787
 
   end type waterdiagnosticbulk_type
 
@@ -785,6 +786,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     logical  :: readvar
+    logical  :: excess_ice_on_restart
     !------------------------------------------------------------------------
 
 
@@ -915,13 +917,18 @@ contains
        ! initialization of these to zero is ok, since they might not be in the restart file
        this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
        this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
+       call this%RestartExcessIceIssue1787( &
+            ncid = ncid, &
+            flag = flag, &
+            writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+            excess_ice_on_restart = excess_ice_on_restart)
        ! have to at least define them 
        call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('SUBSIDENCE'),  &
             dim1name='column', xtype=ncd_double, &
             long_name=this%info%lname('vertically summed volumetric excess ice concentration (veg landunits only)'), &
             units='m', &
             interpinic_flag='interp', readvar=readvar, data=this%exice_subs_tot_col)
-       if (flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
+       if (flag == 'read' .and. ((.not. readvar) .or. (.not. excess_ice_on_restart)) ) then ! when reading restart that does not have excess ice in it
          if (nsrest == nsrContinue) then
             call endrun(msg = "On a continue run, excess ice fields MUST be on the restart file "// & 
             errMsg(sourcefile, __LINE__))
@@ -940,7 +947,7 @@ contains
             long_name=this%info%lname('vertically averaged volumetric excess ice concentration (veg landunits only)'), &
             units='m3/m3', &
             interpinic_flag='interp', readvar=readvar, data=this%exice_vol_tot_col)
-       if (flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
+       if (flag == 'read' .and. ((.not. readvar) .or. (.not. excess_ice_on_restart)) ) then ! when reading restart that does not have excess ice in it
          if (nsrest == nsrContinue) then
             call endrun(msg = "On a continue run, excess ice fields MUST be on the restart file "// & 
             errMsg(sourcefile, __LINE__))
@@ -1040,6 +1047,53 @@ contains
     end if
 
   end subroutine RestartBackcompatIssue783
+
+  !-----------------------------------------------------------------------
+  subroutine RestartExcessIceIssue1787(this, ncid, flag, &
+       writing_finidat_interp_dest_file, excess_ice_on_restart)
+    !
+    ! !DESCRIPTION:
+    !
+    ! !USES:
+    use ncdio_pio        , only : file_desc_t
+    use IssueFixedMetadataHandler, only : write_issue_fixed_metadata, read_issue_fixed_metadata
+    use clm_time_manager , only : is_restart
+    !
+    ! !ARGUMENTS:
+    class(waterdiagnosticbulk_type), intent(inout) :: this
+    type(file_desc_t), intent(inout) :: ncid   ! netcdf id
+    character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
+    logical, intent(in) :: writing_finidat_interp_dest_file ! true if this is a finidat_interp_dest file
+    logical, intent(out) :: excess_ice_on_restart           ! If excess ice is on the restart file
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: attribute_value
+
+    integer, parameter :: issue_num = 1787
+
+    character(len=*), parameter :: subname = 'RestartExcessIceISsue1787'
+    !-----------------------------------------------------------------------
+
+    if (flag == 'define') then
+       call write_issue_fixed_metadata( &
+            ncid = ncid, &
+            writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+            issue_num = issue_num)
+
+    else if (flag == 'read' .and. .not. is_restart()) then
+       call read_issue_fixed_metadata( &
+            ncid = ncid, &
+            issue_num = issue_num, &
+            attribute_value = attribute_value)
+       if (attribute_value == 0) then
+          excess_ice_on_restart = .false.
+       else
+          excess_ice_on_restart = .true.
+       end if
+
+    end if
+
+  end subroutine RestartExcessIceIssue1787
 
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, &
