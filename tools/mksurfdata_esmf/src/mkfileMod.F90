@@ -607,6 +607,17 @@ contains
          long_name='land fraction from pft dataset (DIFF FROM landfrac USED IN SIMULATION, SHOWN IN HISTORY)', units='unitless')
 
     if (.not. dynlanduse) then
+       call mkpio_def_spatial_var(pioid=pioid, varname='LANDFRAC_MKSURFDATA', xtype=xtype, &
+            long_name='land fraction used for renormalization of areas in mksurfdata (DIFF FROM landfrac USED IN SIMULATION)', &
+            units='unitless')
+    else
+       call mkpio_def_spatial_var(pioid=pioid, varname='LANDFRAC_MKSURFDATA', xtype=xtype, &
+            lev1name='time', &
+            long_name='land fraction used for renormalization of areas in mksurfdata (DIFF FROM landfrac USED IN SIMULATION)', &
+            units='unitless')
+    end if
+
+    if (.not. dynlanduse) then
        call mkpio_def_spatial_var(pioid=pioid, varname='PCT_NATVEG', xtype=xtype, &
             long_name='total percent natural vegetation landunit', units='unitless')
     end  if

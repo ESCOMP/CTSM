@@ -172,6 +172,9 @@ program mksurfdata
   real(r8), allocatable           :: pctwet_orig(:)          ! percent wetland of gridcell before dynamic land use adjustments
   real(r8), allocatable           :: pctgla_orig(:)          ! percent glacier of gridcell before dynamic land use adjustments
 
+  ! other variables written to file
+  real(r8), allocatable           :: landfrac_mksurfdata(:)  ! land fraction used for renormalization of areas
+
   ! pio/esmf variables
   type(file_desc_t)               :: pioid
   type(var_desc_t)                :: pio_varid
@@ -595,6 +598,7 @@ program mksurfdata
 
   ! Normalize land use and make sure things add up to 100% as well as
   ! checking that things are as they should be.
+  allocate(landfrac_mksurfdata(lsize_o))
   call normalize_and_check_landuse(lsize_o)
 
   ! Write out sum of PFT's
@@ -692,6 +696,10 @@ program mksurfdata
         call mkfile_output(pioid, mesh_model, 'PCT_CFT', pct_cft, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CFT')
      end if
+
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing LANDFRAC_MKSURFDATA"
+     call mkfile_output(pioid, mesh_model, 'LANDFRAC_MKSURFDATA', landfrac_mksurfdata, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for LANDFRAC_MKSURFDATA')
   end if
 
   ! ----------------------------------------------------------------------
@@ -779,7 +787,7 @@ program mksurfdata
      ! landfrac_pft was calculated ABOVE
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land fraction calculated in fsurdata calc)"
      call mkfile_output(pioid,  mesh_model, 'LANDFRAC_PFT', landfrac_pft, rc=rc)
-     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for LANDFRAC_PFT')
 
      ! -----------------------------------------
      ! Read in each dynamic pft landuse dataset
@@ -992,6 +1000,13 @@ program mksurfdata
            if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CFT')
            call pio_syncfile(pioid)
         end if
+
+        if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing LANDFRAC_MKSURFDATA for year ",year
+        rcode = pio_inq_varid(pioid, 'LANDFRAC_MKSURFDATA', pio_varid)
+        call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
+        call mkfile_output(pioid, mesh_model, 'LANDFRAC_MKSURFDATA', landfrac_mksurfdata, rc=rc)
+        if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for LANDFRAC_MKSURFDATA')
+        call pio_syncfile(pioid)
 
         if (root_task) then
            write(ndiag,'(1x,80a1)') ('=',k=1,80)
@@ -1231,6 +1246,9 @@ program mksurfdata
             ! Finally, set the actual pct_natveg:
             call pctnatpft(n)%set_pct_l2g(new_total_natveg_pct)
          end if
+
+         ! Save landfrac for output to file
+         landfrac_mksurfdata(n) = frac_land
 
          ! Confirm that we have done the rescaling correctly: now the sum of all landunits
          ! should be 100% within tol_loose
