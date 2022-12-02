@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev115   rgknox 12/02/2022 API compatability with FATES V2 nutrient dynamics
     ctsm5.1.dev114 multiple 11/19/2022 Some NEON updates fixing AG sites, update MOSART, small fixes
     ctsm5.1.dev113 multiple 10/28/2022 Fix some compsets; add only clauses for ESMF use statements
     ctsm5.1.dev112 multiple 10/15/2022 Rework fates test definitions and add new fates tests
