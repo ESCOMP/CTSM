@@ -1015,7 +1015,6 @@ module CLMFatesInterfaceMod
       call fates_hist%flush_hvars(nc,upfreq_in=1)
 
       call fates_hist%flush_hvars(nc,upfreq_in=5)
-      
 
       ! ---------------------------------------------------------------------------------
       ! Part II: Call the FATES model now that input boundary conditions have been
