@@ -188,6 +188,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine RestartBulk(this, bounds, ncid, flag, &
+       writing_finidat_interp_dest_file, &
        watsat_col, t_soisno_col, altmax_lastyear_indx)
     ! 
     ! !DESCRIPTION:
@@ -202,6 +203,7 @@ contains
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid                                    ! netcdf id
     character(len=*) , intent(in)    :: flag                                    ! 'read' or 'write'
+    logical          , intent(in)    :: writing_finidat_interp_dest_file        ! true if we are writing a finidat_interp_dest file (ignored for flag=='read')
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)           ! volumetric soil water at saturation (porosity)
     real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     integer          , intent(in)    :: altmax_lastyear_indx(bounds%begc:)      !col active layer index last year
@@ -214,6 +216,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevmaxurbgrnd/)) , sourcefile, __LINE__)
 
     call this%restart (bounds, ncid, flag=flag, &
+         writing_finidat_interp_dest_file=writing_finidat_interp_dest_file, &
          watsat_col=watsat_col(bounds%begc:bounds%endc,:), &
          t_soisno_col=t_soisno_col(bounds%begc:, -nlevsno+1:), &
          altmax_lastyear_indx=altmax_lastyear_indx(bounds%begc:)) 

@@ -580,6 +580,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, &
+       writing_finidat_interp_dest_file, &
        watsat_col, t_soisno_col, altmax_lastyear_indx)
     ! 
     ! !DESCRIPTION:
@@ -603,6 +604,7 @@ contains
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)           ! volumetric soil water at saturation (porosity)
     real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     integer          , intent(in)    :: altmax_lastyear_indx(bounds%begc:)      !col active layer index last year
+    logical          , intent(in)    :: writing_finidat_interp_dest_file        ! true if we are writing a finidat_interp_dest file (ignored for flag=='read')
     !
     ! !LOCAL VARIABLES:
     integer  :: p,c,l,j,nlevs,nbedrock
@@ -610,6 +612,7 @@ contains
     real(r8) :: maxwatsat    ! maximum porosity    
     real(r8) :: excess       ! excess volumetric soil water
     real(r8) :: totwat       ! total soil water (mm)
+    logical :: excess_ice_on_restart ! Excess ice fields are on the restart file
     !------------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevmaxurbgrnd/)) , sourcefile, __LINE__)
@@ -707,13 +710,18 @@ contains
        ! no need to even define the restart vars
        this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
     else
+       call RestartExcessIceIssue( &
+            ncid = ncid, &
+            flag = flag, &
+            writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+            excess_ice_on_restart = excess_ice_on_restart)
        ! have to at least define them 
        call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXCESS_ICE'), xtype=ncd_double,  &
             dim1name='column', dim2name='levtot', switchdim=.true., &
             long_name=this%info%lname('excess soil ice (vegetated landunits only)'), &
             units='kg/m2', scale_by_thickness=.true., &
             interpinic_flag='interp', readvar=readvar, data=this%excess_ice_col)
-       if (flag == 'read' .and. (.not. readvar)) then ! when reading restart that does not have excess ice in it
+       if (flag == 'read' .and. ((.not. readvar) .or. (.not.  excess_ice_on_restart)) ) then ! when reading restart that does not have excess ice in it
           if (nsrest == nsrContinue) then
              call endrun(msg = "On a continue run, excess ice fields MUST be on the restart file "// & 
              errMsg(sourcefile, __LINE__))
