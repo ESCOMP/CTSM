@@ -88,6 +88,8 @@ module restUtilMod
   end interface set_missing_vals_to_constant
   public :: set_missing_vals_to_constant
 
+  public :: RestartExcessIceIssue
+
   private :: missing_field_possibly_abort
   private :: write_interpinic_flag
 
@@ -740,5 +742,54 @@ contains
 
   end subroutine write_interpinic_flag
 
+  !-----------------------------------------------------------------------
+  subroutine RestartExcessIceIssue(ncid, flag, &
+       writing_finidat_interp_dest_file, excess_ice_on_restart)
+    !
+    ! !DESCRIPTION:
+    ! Is excess ice on the originating restart file? This is important to have
+    ! because the init_interp process copies the cold-start values to the
+    ! interpolated file if they aren't there, and we need to know if good values
+    ! exist on the originating restart file.
+    !
+    ! !USES:
+    use ncdio_pio        , only : file_desc_t
+    use IssueFixedMetadataHandler, only : write_issue_fixed_metadata, read_issue_fixed_metadata
+    use clm_time_manager , only : is_restart
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid   ! netcdf id
+    character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
+    logical, intent(in) :: writing_finidat_interp_dest_file ! true if this is a finidat_interp_dest file
+    logical, intent(out) :: excess_ice_on_restart           ! If excess ice is on the restart file
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: attribute_value
+    integer, parameter :: excess_ice_issue = 1787
+
+
+    character(len=*), parameter :: subname = 'RestartExcessIceIssue'
+    !-----------------------------------------------------------------------
+
+    if (flag == 'define') then
+       call write_issue_fixed_metadata( &
+            ncid = ncid, &
+            writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+            issue_num = excess_ice_issue)
+
+    else if (flag == 'read' .and. .not. is_restart()) then
+       call read_issue_fixed_metadata( &
+            ncid = ncid, &
+            issue_num = excess_ice_issue, &
+            attribute_value = attribute_value)
+       if (attribute_value == 0) then
+          excess_ice_on_restart = .false.
+       else
+          excess_ice_on_restart = .true.
+       end if
+
+    end if
+
+  end subroutine RestartExcessIceIssue
 
 end module restUtilMod

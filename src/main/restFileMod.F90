@@ -62,6 +62,7 @@ module restFileMod
 
   ! Issue numbers for issue-fixed metadata
   integer, parameter :: lake_dynbal_baseline_issue = 1140
+  integer, parameter :: excess_ice_issue = 1787
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -604,6 +605,10 @@ contains
          ncid = ncid, &
          writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
          issue_num = lake_dynbal_baseline_issue)
+    call write_issue_fixed_metadata( &
+         ncid = ncid, &
+         writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+         issue_num = excess_ice_issue)
 
   end subroutine restFile_write_issues_fixed
 
