@@ -389,13 +389,7 @@ program mksurfdata
        pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
 
-  ! If have pole points on grid - set south pole to glacier
-  ! north pole is assumed as non-land
   do n = 1,lsize_o
-     if (abs((lat(n) - 90._r8)) < 1.e-6_r8) then
-        call pctnatpft(n)%set_pct_l2g(0._r8)
-        call pctcft(n)%set_pct_l2g(0._r8)
-     end if
      landfrac_pft(n) = pctlnd_pft(n)/100._r8
   end do
   if (fsurdat /= ' ') then
@@ -573,22 +567,9 @@ program mksurfdata
   end if
 
   ! -----------------------------------
-  ! Adjust pctlak, pctwet, pcturb and pctgla
-  ! -----------------------------------
-  do n = 1,lsize_o
-
-     ! If have pole points on grid - set south pole to glacier
-     ! north pole is assumed as non-land
-     if (abs((lat(n) - 90._r8)) < 1.e-6_r8) then
-        pctlak(n) = 0._r8
-        pctwet(n) = 0._r8
-        pcturb(n) = 0._r8
-        pctgla(n) = 100._r8
-     end if
-
-  end do
-
   ! Save special land unit areas of surface dataset
+  ! -----------------------------------
+
   pctwet_orig(:) = pctwet(:)
   pctgla_orig(:) = pctgla(:)
 
@@ -928,22 +909,6 @@ program mksurfdata
         ! in preparation for redoing landunit area normalization
         pctwet(:) = pctwet_orig(:)
         pctgla(:) = pctgla_orig(:)
-
-        ! If have pole points on grid - set south pole to glacier
-        ! north pole is assumed as non-land
-        ! pctlak, pctwet, pcturb and pctgla were calculated ABOVE
-        ! pctnatpft and pctcft were calculated ABOVE
-        do n = 1,lsize_o
-           if (abs(lat(n) - 90._r8) < 1.e-6_r8) then
-              pctlak(n) = 0._r8
-              pctwet(n) = 0._r8
-              pcturb(n) = 0._r8
-              pctgla(n) = 100._r8
-              call pctnatpft(n)%set_pct_l2g(0._r8)
-              call pctcft(n)%set_pct_l2g(0._r8)
-           end if
-
-        end do
 
         ! Normalize land use and make sure things add up to 100% as well as
         ! checking that things are as they should be.
