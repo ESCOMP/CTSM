@@ -70,7 +70,7 @@ class CaseFake:
 
         (since we don't have a real case object to resolve values with)
         """
-        abort("Cannot resolve value with a '$' variable: {}".format(value))
+        abort(f"Cannot resolve value with a '$' variable: {value}")
 
 
 ###############################################################################
@@ -101,7 +101,7 @@ Script to create runtime inputs when running CTSM via LILAC
     # Perform some error checking on arguments
 
     if not os.path.isdir(arguments.rundir):
-        abort("rundir {} does not exist".format(arguments.rundir))
+        abort(f"rundir {arguments.rundir} does not exist")
 
     return arguments
 
@@ -111,7 +111,7 @@ def determine_bldnml_opts(bgc_mode, crop, vichydro):
     ###############################################################################
     """Return a string giving bldnml options, given some other inputs"""
     bldnml_opts = ""
-    bldnml_opts += " -bgc {}".format(bgc_mode)
+    bldnml_opts += f" -bgc {bgc_mode}"
     if bgc_mode == "fates":
         # BUG(wjs, 2020-06-12, ESCOMP/CTSM#115) For now, FATES is incompatible with MEGAN
         bldnml_opts += " -no-megan"
@@ -145,62 +145,78 @@ def buildnml(cime_path, rundir):
     config.read(ctsm_cfg_path)
 
     lnd_domain_file = get_config_value(config, "buildnml_input", "lnd_domain_file", ctsm_cfg_path)
-    fsurdat = get_config_value(
-        config, "buildnml_input", "fsurdat", ctsm_cfg_path, can_be_unset=True
-    )
-    finidat = get_config_value(
-        config, "buildnml_input", "finidat", ctsm_cfg_path, can_be_unset=True
-    )
 
-    ctsm_phys = get_config_value(
-        config,
-        "buildnml_input",
-        "ctsm_phys",
-        ctsm_cfg_path,
-        allowed_values=["clm4_5", "clm5_0", "clm5_1"],
-    )
-    configuration = get_config_value(
-        config,
-        "buildnml_input",
-        "configuration",
-        ctsm_cfg_path,
-        allowed_values=["nwp", "clm"],
-    )
-    structure = get_config_value(
-        config,
-        "buildnml_input",
-        "structure",
-        ctsm_cfg_path,
-        allowed_values=["fast", "standard"],
-    )
-    bgc_mode = get_config_value(
-        config,
-        "buildnml_input",
-        "bgc_mode",
-        ctsm_cfg_path,
-        allowed_values=["sp", "bgc", "cn", "fates"],
-    )
-    crop = get_config_value(
-        config, "buildnml_input", "crop", ctsm_cfg_path, allowed_values=["off", "on"]
-    )
-    vichydro = get_config_value(
-        config,
-        "buildnml_input",
-        "vichydro",
-        ctsm_cfg_path,
-        allowed_values=["off", "on"],
-    )
+    fsurdat = get_config_value(config, "buildnml_input", "fsurdat", ctsm_cfg_path,
+                               can_be_unset=True)
+
+    finidat = get_config_value(config, "buildnml_input", "finidat", ctsm_cfg_path,
+                               can_be_unset=True)
+
+    ctsm_phys = get_config_value(config, "buildnml_input", "ctsm_phys", ctsm_cfg_path,
+                                 allowed_values=["clm4_5", "clm5_0", "clm5_1"])
+
+    configuration = get_config_value(config, "buildnml_input", "configuration", ctsm_cfg_path,
+                                     allowed_values=["nwp", "clm"])
+
+    structure = get_config_value(config, "buildnml_input", "structure", ctsm_cfg_path,
+                                 allowed_values=["fast", "standard"])
+
+    bgc_mode = get_config_value(config, "buildnml_input", "bgc_mode", ctsm_cfg_path,
+                                allowed_values=["sp", "bgc", "cn", "fates"])
+
+    crop = get_config_value(config, "buildnml_input", "crop", ctsm_cfg_path,
+                            allowed_values=["off", "on"])
+
+    vichydro = get_config_value(config, "buildnml_input", "vichydro", ctsm_cfg_path,
+                                allowed_values=["off", "on"])
 
     bldnml_opts = determine_bldnml_opts(bgc_mode=bgc_mode, crop=crop, vichydro=vichydro)
 
     co2_ppmv = get_config_value(config, "buildnml_input", "co2_ppmv", ctsm_cfg_path)
+
     use_case = get_config_value(config, "buildnml_input", "use_case", ctsm_cfg_path)
+
     lnd_tuning_mode = get_config_value(config, "buildnml_input", "lnd_tuning_mode", ctsm_cfg_path)
-    spinup = get_config_value(
-        config, "buildnml_input", "spinup", ctsm_cfg_path, allowed_values=["off", "on"]
-    )
+
+    spinup = get_config_value(config, "buildnml_input", "spinup", ctsm_cfg_path,
+                              allowed_values=["off", "on"])
 
     inputdata_path = get_config_value(config, "buildnml_input", "inputdata_path", ctsm_cfg_path)
+
+    stream_ndep_year_first       = get_config_value(config, "buildnml_input", "stream_ndep_year_first"       , ctsm_cfg_path)
+    stream_ndep_year_last        = get_config_value(config, "buildnml_input", "stream_ndep_year_last"        , ctsm_cfg_path)
+    stream_ndep_year_align       = get_config_value(config, "buildnml_input", "stream_ndep_year_align"       , ctsm_cfg_path)
+    stream_ndep_dtlimit          = get_config_value(config, "buildnml_input", "stream_ndep_dtlimit"          , ctsm_cfg_path)
+    stream_ndep_data_filename    = get_config_value(config, "buildnml_input", "stream_ndep_data_filename"    , ctsm_cfg_path)
+    stream_ndep_mesh_filename    = get_config_value(config, "buildnml_input", "stream_ndep_mesh_filename"    , ctsm_cfg_path)
+    stream_ndep_data_varlist     = get_config_value(config, "buildnml_input", "stream_ndep_data_varlist"     , ctsm_cfg_path)
+    stream_ndep_taxmode          = get_config_value(config, "buildnml_input", "stream_ndep_taxmode"          , ctsm_cfg_path)
+    stream_ndep_mapalgo          = get_config_value(config, "buildnml_input", "stream_ndep_mapalgo"          , ctsm_cfg_path)
+    stream_ndep_tintalgo         = get_config_value(config, "buildnml_input", "stream_ndep_tintalgo"         , ctsm_cfg_path)
+
+    stream_popdens_year_first    = get_config_value(config, "buildnml_input", "stream_popdens_year_first"    , ctsm_cfg_path)
+    stream_popdens_year_last     = get_config_value(config, "buildnml_input", "stream_popdens_year_last"     , ctsm_cfg_path)
+    stream_popdens_year_align    = get_config_value(config, "buildnml_input", "stream_popdens_year_align"    , ctsm_cfg_path)
+    stream_popdens_data_filename = get_config_value(config, "buildnml_input", "stream_popdens_data_filename" , ctsm_cfg_path)
+    stream_popdens_mesh_filename = get_config_value(config, "buildnml_input", "stream_popdens_mesh_filename" , ctsm_cfg_path)
+    stream_popdens_mapalgo       = get_config_value(config, "buildnml_input", "stream_popdens_mapalgo"       , ctsm_cfg_path)
+    stream_popdens_tintalgo      = get_config_value(config, "buildnml_input", "stream_popdens_tintalgo"      , ctsm_cfg_path)
+
+    stream_lightng_year_first    = get_config_value(config, "buildnml_input", "stream_lightng_year_first"    , ctsm_cfg_path)
+    stream_lightng_year_last     = get_config_value(config, "buildnml_input", "stream_lightng_year_last"     , ctsm_cfg_path)
+    stream_lightng_year_align    = get_config_value(config, "buildnml_input", "stream_lightng_year_align"    , ctsm_cfg_path)
+    stream_lightng_data_filename = get_config_value(config, "buildnml_input", "stream_lightng_data_filename" , ctsm_cfg_path)
+    stream_lightng_mesh_filename = get_config_value(config, "buildnml_input", "stream_lightng_mesh_filename" , ctsm_cfg_path)
+    stream_lightng_mapalgo       = get_config_value(config, "buildnml_input", "stream_lightng_mapalgo"       , ctsm_cfg_path)
+    stream_lightng_tintalgo      = get_config_value(config, "buildnml_input", "stream_lightng_tintalgo"      , ctsm_cfg_path)
+
+    stream_urbantv_year_first    = get_config_value(config, "buildnml_input", "stream_urbantv_year_first"    , ctsm_cfg_path)
+    stream_urbantv_year_last     = get_config_value(config, "buildnml_input", "stream_urbantv_year_last"     , ctsm_cfg_path)
+    stream_urbantv_year_align    = get_config_value(config, "buildnml_input", "stream_urbantv_year_align"    , ctsm_cfg_path)
+    stream_urbantv_data_filename = get_config_value(config, "buildnml_input", "stream_urbantv_data_filename" , ctsm_cfg_path)
+    stream_urbantv_mesh_filename = get_config_value(config, "buildnml_input", "stream_urbantv_mesh_filename" , ctsm_cfg_path)
+    stream_urbantv_mapalgo       = get_config_value(config, "buildnml_input", "stream_urbantv_mapalgo"       , ctsm_cfg_path)
+    stream_urbantv_tintalgo      = get_config_value(config, "buildnml_input", "stream_urbantv_tintalgo"      , ctsm_cfg_path)
 
     # Parse the user_nl_ctsm file
     infile = os.path.join(rundir, ".namelist")
@@ -234,67 +250,78 @@ def buildnml(cime_path, rundir):
     if fsurdat is not None:
         # NOTE(wjs, 2020-06-30) With the current logic, fsurdat should never be UNSET
         # (ie None here) but it's possible that this will change in the future.
-        extra_namelist_opts = extra_namelist_opts + " fsurdat = '{}' ".format(fsurdat)
+        extra_namelist_opts = extra_namelist_opts + f" fsurdat = '{fsurdat}' "
     if finidat is not None:
-        extra_namelist_opts = extra_namelist_opts + " finidat = '{}' ".format(finidat)
+        extra_namelist_opts = extra_namelist_opts + " finidat = '{finidat}' "
 
     # call build-namelist
-    cmd = os.path.abspath(os.path.join(path_to_ctsm_root(), "bld", "build-namelist"))
-    command = [
-        cmd,
-        "-driver",
-        "nuopc",
-        "-cimeroot",
-        cime_path,
-        "-infile",
-        infile,
-        "-csmdata",
-        inputdata_path,
-        "-inputdata",
-        inputdatalist_path,
-        # Hard-code start_ymd of year-2000. This is used to set the run type (for
-        # which a setting of 2000 gives 'startup', which is what we want) and pick
-        # the initial conditions file (which is pretty much irrelevant when running
-        # with lilac).
-        "-namelist",
-        "&clm_inparm  start_ymd=20000101 {} /".format(extra_namelist_opts),
-        "-use_case",
-        use_case,
-        # For now, we assume ignore_ic_year, not ignore_ic_date
-        "-ignore_ic_year",
-        # -clm_start_type seems unimportant (see discussion in
-        # https://github.com/ESCOMP/CTSM/issues/876)
-        "-clm_start_type",
-        "default",
-        "-configuration",
-        configuration,
-        "-structure",
-        structure,
-        "-lilac",
-        "-lnd_frac",
-        lnd_domain_file,
-        "-glc_nec",
-        str(10),
-        "-co2_ppmv",
-        co2_ppmv,
-        "-co2_type",
-        "constant",
-        "-clm_accelerated_spinup",
-        spinup,
-        "-lnd_tuning_mode",
-        lnd_tuning_mode,
-        # Eventually make -no-megan dynamic (see
-        # https://github.com/ESCOMP/CTSM/issues/926)
-        "-no-megan",
-        "-config",
-        os.path.join(rundir, "config_cache.xml"),
-        "-envxml_dir",
-        rundir,
-    ]
+    command = [os.path.abspath(os.path.join(path_to_ctsm_root(), "bld", "build-namelist"))]
+    command.append("-lilac")
+    command.extend(['-driver', 'nuopc'])
+    command.extend(['-cimeroot', cime_path])
+    command.extend(['-infile', infile])
+    command.extend(['-csmdata', inputdata_path])
+    command.extend(['-inputdata',inputdatalist_path])
+    # Hard-code start_ymd of year-2000. This is used to set the run type (for which
+    # which a setting of 2000 gives 'startup', which is what we want) and pick the
+    # initial conditions file (which is pretty much irrelevant when running with lilac).
+    command.extend(['-namelist', f"&clm_inparm start_ymd= 20000101 {extra_namelist_opts} /"])
+    command.append("-ignore_ic_year")
+    # -clm_start_type seems unimportant (see discussion in https://github.com/ESCOMP/CTSM/issues/876)
+    command.extend(["-clm_start_type", "default"])
+    command.extend(["-configuration", configuration])
+    command.extend(["-structure", structure])
+    command.extend(["-use_case", use_case])
+    command.extend(["-lnd_frac", lnd_domain_file])
+    command.extend(["-glc_nec", "10"])
+    command.extend(["-co2_ppmv", co2_ppmv])
+    command.extend(["-co2_type", "constant"])
+    command.extend(["-clm_accelerated_spinup", spinup])
+    command.extend(["-lnd_tuning_mode", lnd_tuning_mode])
+    # Eventually make -no-megan dynamic (see https://github.com/ESCOMP/CTSM/issues/926)
+    command.append("-no-megan")
+    config_cache_file = os.path.join(rundir, "config_cache.xml")
+    command.extend(["-config", config_cache_file])
+    command.extend(["-envxml_dir", rundir])
+    command.extend(["-res", "lilac", "-clm_usr_name", "lilac"])
+
+    command.extend(["-stream_ndep_year_first", stream_ndep_year_first])
+    command.extend(["-stream_ndep_year_last", stream_ndep_year_last])
+    command.extend(["-stream_ndep_year_align", stream_ndep_year_align])
+    command.extend(["-stream_ndep_data_filename", stream_ndep_data_filename])
+    command.extend(["-stream_ndep_mesh_filename", stream_ndep_mesh_filename])
+    command.extend(["-stream_ndep_data_varlist", stream_ndep_data_varlist])
+    command.extend(["-stream_ndep_dtlimit", stream_ndep_dtlimit])
+    command.extend(["-stream_ndep_taxmode", stream_ndep_taxmode])
+    command.extend(["-stream_ndep_mapalgo", stream_ndep_mapalgo])
+    command.extend(["-stream_ndep_tintalgo", stream_ndep_tintalgo])
+
+    command.extend(["-stream_popdens_year_first", stream_popdens_year_first])
+    command.extend(["-stream_popdens_year_last", stream_popdens_year_last])
+    command.extend(["-stream_popdens_year_align", stream_popdens_year_align])
+    command.extend(["-stream_popdens_data_filename", stream_popdens_data_filename])
+    command.extend(["-stream_popdens_mesh_filename", stream_popdens_mesh_filename])
+    command.extend(["-stream_popdens_mapalgo", stream_popdens_mapalgo])
+    command.extend(["-stream_popdens_tintalgo", stream_popdens_tintalgo])
+
+    command.extend(["-stream_lightng_year_first", stream_lightng_year_first])
+    command.extend(["-stream_lightng_year_last", stream_lightng_year_last])
+    command.extend(["-stream_lightng_year_align", stream_lightng_year_align])
+    command.extend(["-stream_lightng_data_filename", stream_lightng_data_filename])
+    command.extend(["-stream_lightng_mesh_filename", stream_lightng_mesh_filename])
+    command.extend(["-stream_lightng_mapalgo", stream_lightng_mapalgo])
+    command.extend(["-stream_lightng_tintalgo", stream_lightng_tintalgo])
+
+    command.extend(["-stream_urbantv_year_first", stream_urbantv_year_first])
+    command.extend(["-stream_urbantv_year_last", stream_urbantv_year_last])
+    command.extend(["-stream_urbantv_year_align", stream_urbantv_year_align])
+    command.extend(["-stream_urbantv_data_filename", stream_urbantv_data_filename])
+    command.extend(["-stream_urbantv_mesh_filename", stream_urbantv_mesh_filename])
+    command.extend(["-stream_urbantv_mapalgo", stream_urbantv_mapalgo])
+    command.extend(["-stream_urbantv_tintalgo", stream_urbantv_tintalgo])
+
     # NOTE(wjs, 2020-06-16) Note that we do NOT use the -mask argument; it's possible that
     # we should be using it in some circumstances (I haven't looked into how it's used).
-    command.extend(["-res", "lilac", "-clm_usr_name", "lilac"])
-    command.extend(bldnml_opts.split())
 
     subprocess.check_call(command, universal_newlines=True)
 
@@ -303,7 +330,6 @@ def buildnml(cime_path, rundir):
     os.remove(os.path.join(rundir, "env_lilac.xml"))
     os.remove(os.path.join(rundir, "drv_flds_in"))
     os.remove(infile)
-
 
 ###############################################################################
 def main(cime_path):
