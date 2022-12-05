@@ -23,7 +23,7 @@ module WaterStateType
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
-  use ExcessIceStreamType, only : excessicestream_type
+  use ExcessIceStreamType, only : excessicestream_type, UseExcessIceStreams
   !
   implicit none
   save
@@ -538,38 +538,44 @@ contains
          this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
          this%exice_bulk_init(bounds%begc:bounds%endc)=0.0_r8
          call this%exicestream%Init(bounds, NLFilename) ! get initial fraction of excess ice per column
-         call this%exicestream%CalcExcessIce(bounds, this%exice_bulk_init)
-         do c = bounds%begc,bounds%endc
-            g = col%gridcell(c)
-            l = col%landunit(c)
-            if (.not. lun%lakpoi(l)) then  !not lake
-               if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-                  if (zisoi(nlevsoi) >= 0.5_r8) then
-                    call find_soil_layer_containing_depth(0.5_r8,n05m)
-                  else
-                    n05m=nlevsoi-1
-                  endif
-                  if (use_bedrock .and. col%nbedrock(c) <=nlevsoi) then
-                     nbedrock = col%nbedrock(c)
-                  else
-                     nbedrock = nlevsoi
-                  endif
-                  do j = 2, nlevmaxurbgrnd ! ignore first layer
-                     if (n05m<nbedrock) then ! bedrock below 1 m
-                        if (j >= n05m .and. j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
-                           this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exice_bulk_init(c))
-                        else
+         !
+         ! If excess ice is being read from streams, use the streams to
+         ! initialize
+         !
+         if ( UseExcessIceStreams() )then
+            call this%exicestream%CalcExcessIce(bounds, this%exice_bulk_init)
+            do c = bounds%begc,bounds%endc
+               g = col%gridcell(c)
+               l = col%landunit(c)
+               if (.not. lun%lakpoi(l)) then  !not lake
+                  if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+                     if (zisoi(nlevsoi) >= 0.5_r8) then
+                       call find_soil_layer_containing_depth(0.5_r8,n05m)
+                     else
+                       n05m=nlevsoi-1
+                     endif
+                     if (use_bedrock .and. col%nbedrock(c) <=nlevsoi) then
+                        nbedrock = col%nbedrock(c)
+                     else
+                        nbedrock = nlevsoi
+                     endif
+                     do j = 2, nlevmaxurbgrnd ! ignore first layer
+                        if (n05m<nbedrock) then ! bedrock below 1 m
+                           if (j >= n05m .and. j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
+                              this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exice_bulk_init(c))
+                           else
+                              this%excess_ice_col(c,j) = 0.0_r8
+                           endif
+                        else 
                            this%excess_ice_col(c,j) = 0.0_r8
-                        endif
-                     else 
-                        this%excess_ice_col(c,j) = 0.0_r8
-                     end if
-                  end do
+                        end if
+                     end do
+                  endif
+               else ! just in case zeros for lakes and other columns
+                  this%excess_ice_col(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
                endif
-            else ! just in case zeros for lakes and other columns
-               this%excess_ice_col(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
-            endif
-         enddo
+            enddo
+         end if
       else ! use_excess_ice is false
          this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
          this%exice_bulk_init(bounds%begc:bounds%endc)=0.0_r8
