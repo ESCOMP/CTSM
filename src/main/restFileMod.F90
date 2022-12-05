@@ -591,6 +591,8 @@ contains
     ! !DESCRIPTION:
     ! Write metadata for issues fixed
     !
+    ! !USES:
+    use clm_varctl, only : use_excess_ice
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid ! local file id
     logical          , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file
@@ -605,10 +607,13 @@ contains
          ncid = ncid, &
          writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
          issue_num = lake_dynbal_baseline_issue)
-    call write_issue_fixed_metadata( &
-         ncid = ncid, &
-         writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
-         issue_num = excess_ice_issue)
+    ! If running with execess ice then mark the restart file as having excess ice fixed
+    if ( use_excess_ice ) then
+       call write_issue_fixed_metadata( &
+            ncid = ncid, &
+            writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+            issue_num = excess_ice_issue)
+    end if
 
   end subroutine restFile_write_issues_fixed
 
