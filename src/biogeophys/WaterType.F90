@@ -750,7 +750,6 @@ contains
     call this%waterfluxbulk_inst%restartBulk (bounds, ncid, flag=flag)
 
     call this%waterstatebulk_inst%restartBulk (bounds, ncid, flag=flag, &
-         writing_finidat_interp_dest_file=writing_finidat_interp_dest_file, &
          watsat_col=watsat_col(bounds%begc:bounds%endc,:), &
          t_soisno_col=t_soisno_col(bounds%begc:, -nlevsno+1:), &
          altmax_lastyear_indx=altmax_lastyear_indx(bounds%begc:))
@@ -764,7 +763,6 @@ contains
        call this%bulk_and_tracers(i)%waterflux_inst%Restart(bounds, ncid, flag=flag)
 
        call this%bulk_and_tracers(i)%waterstate_inst%Restart(bounds, ncid, flag=flag, &
-            writing_finidat_interp_dest_file=writing_finidat_interp_dest_file, &
             watsat_col=watsat_col(bounds%begc:bounds%endc,:), &
             t_soisno_col=t_soisno_col(bounds%begc:, -nlevsno+1:), &
             altmax_lastyear_indx=altmax_lastyear_indx(bounds%begc:))

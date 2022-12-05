@@ -586,7 +586,6 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, &
-       writing_finidat_interp_dest_file, &
        watsat_col, t_soisno_col, altmax_lastyear_indx)
     ! 
     ! !DESCRIPTION:
@@ -610,7 +609,6 @@ contains
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)           ! volumetric soil water at saturation (porosity)
     real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     integer          , intent(in)    :: altmax_lastyear_indx(bounds%begc:)      !col active layer index last year
-    logical          , intent(in)    :: writing_finidat_interp_dest_file        ! true if we are writing a finidat_interp_dest file (ignored for flag=='read')
     !
     ! !LOCAL VARIABLES:
     integer  :: p,c,l,j,nlevs,nbedrock
@@ -719,7 +717,6 @@ contains
        call RestartExcessIceIssue( &
             ncid = ncid, &
             flag = flag, &
-            writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
             excess_ice_on_restart = excess_ice_on_restart)
        ! have to at least define them 
        call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXCESS_ICE'), xtype=ncd_double,  &

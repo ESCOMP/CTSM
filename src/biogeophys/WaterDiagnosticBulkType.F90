@@ -919,7 +919,6 @@ contains
        call RestartExcessIceIssue( &
             ncid = ncid, &
             flag = flag, &
-            writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
             excess_ice_on_restart = excess_ice_on_restart)
        ! have to at least define them 
        call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('SUBSIDENCE'),  &
