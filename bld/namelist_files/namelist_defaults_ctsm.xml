@@ -1423,7 +1423,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <leaf_mr_vcm phys="clm5_0" >0.015d00</leaf_mr_vcm>
 <leaf_mr_vcm phys="clm4_5" >0.015d00</leaf_mr_vcm>
 
-
 <initial_vegC phys="clm5_1"  use_cn=".true."  mm_nuptake_opt=".true." >100.d00</initial_vegC>
 <initial_vegC phys="clm5_0"  use_cn=".true."  mm_nuptake_opt=".true." >100.d00</initial_vegC>
 <initial_vegC phys="clm4_5"  use_cn=".true."  mm_nuptake_opt=".true." >20.d00</initial_vegC>
@@ -1452,11 +1451,11 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- Set lightning toggle variable for strams -->
 <!-- ===================================== -->
 
-<light_res use_cn=".false."                           >none   </light_res>
-<light_res use_cn=".true." fire_method="nofire"       >none   </light_res>
-<light_res use_cn=".true." phys="clm4_5"              >active </light_res>
-<light_res use_cn=".true." phys="clm5_0"              >active </light_res>
-<light_res use_cn=".true." phys="clm5_1"              >active </light_res>
+<light_res use_cn=".false."                     >none   </light_res>
+<light_res use_cn=".true." fire_method="nofire" >none   </light_res>
+<light_res use_cn=".true." phys="clm4_5"        >active </light_res>
+<light_res use_cn=".true." phys="clm5_0"        >active </light_res>
+<light_res use_cn=".true." phys="clm5_1"        >active </light_res>
 
 <light_res use_fates=".true."                         >none   </light_res>
 <light_res use_fates=".true." fates_spitfire_mode="0" >none   </light_res>

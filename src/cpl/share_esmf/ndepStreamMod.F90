@@ -54,42 +54,42 @@ contains
     type(bounds_type), intent(in) :: bounds
     character(len=*),  intent(in) :: NLFilename   ! Namelist filename
     !
-    ! local variables
+                                                      ! local variables
     integer                 :: nu_nml                 ! unit for namelist file
     integer                 :: nml_error              ! namelist i/o error flag
-    integer                 :: stream_year_first_ndep ! first year in stream to use
-    integer                 :: stream_year_last_ndep  ! last year in stream to use
-    integer                 :: model_year_align_ndep  ! align stream_year_firstndep with
-    real(r8)                :: ndep_dtlimit = 1.0e30_r8
-    character(len=CL)       :: ndep_mapalgo = 'bilinear'
-    character(len=CL)       :: ndep_tintalgo = 'linear'
-    character(len=CS)       :: ndep_taxmode = 'extend'
-    character(len=CL)       :: ndep_varlist = 'NDEP_year'
-    integer                 :: ndep_offset = 0        ! Offset in time for dataset (sec)
-    character(len=CL)       :: stream_fldFileName_ndep
-    character(len=CL)       :: stream_meshfile_ndep
+    integer                 :: stream_ndep_year_first ! first year in stream to use
+    integer                 :: stream_ndep_year_last  ! last year in stream to use
+    integer                 :: stream_ndep_year_align ! align stream_year_firstndep with
+    real(r8)                :: stream_ndep_dtlimit = 1.0e30_r8
+    character(len=CL)       :: stream_ndep_mapalgo = 'bilinear'
+    character(len=CL)       :: stream_ndep_tintalgo = 'linear'
+    character(len=CS)       :: stream_ndep_taxmode = 'extend'
+    character(len=CL)       :: stream_ndep_data_varlist = 'NDEP_year'
+    integer                 :: stream_ndep_offset = 0 ! Offset in time for dataset (sec)
+    character(len=CL)       :: stream_ndep_data_filename
+    character(len=CL)       :: stream_ndep_mesh_filename
     integer                 :: stream_nflds
     integer                 :: rc
     character(*), parameter :: subName = "('ndepdyn_init')"
     !-----------------------------------------------------------------------
 
-    namelist /ndepdyn_nml/        &
-         stream_year_first_ndep,  &
-         stream_year_last_ndep,   &
-         model_year_align_ndep,   &
-         ndep_mapalgo,            &
-         ndep_taxmode,            &
-         ndep_varlist,            &
-         ndep_tintalgo,           &
-         stream_fldFileName_ndep, &
-         stream_meshfile_ndep
+    namelist /ndepdyn_nml/          &
+         stream_ndep_year_first,    &
+         stream_ndep_year_last,     &
+         stream_ndep_year_align,    &
+         stream_ndep_mapalgo,       &
+         stream_ndep_taxmode,       &
+         stream_ndep_data_varlist,  &
+         stream_ndep_tintalgo,      &
+         stream_ndep_data_filename, &
+         stream_ndep_mesh_filename
 
     ! Default values for namelist
-    stream_year_first_ndep  = 1                ! first year in stream to use
-    stream_year_last_ndep   = 1                ! last  year in stream to use
-    model_year_align_ndep   = 1                ! align stream_year_first_ndep with this model year
-    stream_fldFileName_ndep = ' '
-    stream_meshfile_ndep    = ' '
+    stream_ndep_year_first    = 1 ! first year in stream to use
+    stream_ndep_year_last     = 1 ! last  year in stream to use
+    stream_ndep_year_align    = 1 ! align stream_ndep_year_first with this model year
+    stream_ndep_data_filename = ' '
+    stream_ndep_mesh_filename = ' '
 
     ! Read ndepdyn_nml namelist
     if (masterproc) then
@@ -106,60 +106,60 @@ contains
        close(nu_nml)
     endif
 
-    call shr_mpi_bcast(stream_year_first_ndep , mpicom)
-    call shr_mpi_bcast(stream_year_last_ndep  , mpicom)
-    call shr_mpi_bcast(model_year_align_ndep  , mpicom)
-    call shr_mpi_bcast(ndep_varlist           , mpicom)
-    call shr_mpi_bcast(ndep_taxmode           , mpicom)
-    call shr_mpi_bcast(ndep_mapalgo           , mpicom)
-    call shr_mpi_bcast(ndep_tintalgo          , mpicom)
-    call shr_mpi_bcast(stream_fldFileName_ndep, mpicom)
-    call shr_mpi_bcast(stream_meshfile_ndep   , mpicom)
+    call shr_mpi_bcast(stream_ndep_year_first    , mpicom)
+    call shr_mpi_bcast(stream_ndep_year_last     , mpicom)
+    call shr_mpi_bcast(stream_ndep_year_align    , mpicom)
+    call shr_mpi_bcast(stream_ndep_data_varlist  , mpicom)
+    call shr_mpi_bcast(stream_ndep_taxmode       , mpicom)
+    call shr_mpi_bcast(stream_ndep_mapalgo       , mpicom)
+    call shr_mpi_bcast(stream_ndep_tintalgo      , mpicom)
+    call shr_mpi_bcast(stream_ndep_data_filename , mpicom)
+    call shr_mpi_bcast(stream_ndep_mesh_filename , mpicom)
 
-    stream_nflds = shr_string_listGetNum(ndep_varlist)      ! Get number of fields in list, fn
+    stream_nflds = shr_string_listGetNum(stream_ndep_data_varlist)      ! Get number of fields in list, fn
     if (stream_nflds /= 1) then
        call endrun(msg=' ERROR stream_nflds is not 1 for '//errMsg(sourcefile, __LINE__))
     end if
-    call shr_string_listGetName(ndep_varlist, 1, stream_varnames(1))
+    call shr_string_listGetName(stream_ndep_data_varlist, 1, stream_varnames(1))
 
     if (masterproc) then
        write(iulog,'(a)'   ) ' '
        write(iulog,'(a,i8)') 'ndepdyn stream settings:'
-       write(iulog,'(a,i8)') '  stream_year_first_ndep  = ',stream_year_first_ndep
-       write(iulog,'(a,i8)') '  stream_year_last_ndep   = ',stream_year_last_ndep
-       write(iulog,'(a,i8)') '  model_year_align_ndep   = ',model_year_align_ndep
-       write(iulog,'(a,a)' ) '  stream_fldFileName_ndep = ',trim(stream_fldFileName_ndep)
-       write(iulog,'(a,a)' ) '  stream_meshfile_ndep    = ',trim(stream_meshfile_ndep)
-       write(iulog,'(a,a)' ) '  stream_varnames         = ',trim(stream_varnames(1))
-       write(iulog,'(a,a)' ) '  ndep_taxmode            = ',trim(ndep_taxmode)
-       write(iulog,'(a,a)' ) '  ndep_tintalgo           = ',trim(ndep_tintalgo)
+       write(iulog,'(a,i8)') '  stream_ndep_year_first    = ',stream_ndep_year_first
+       write(iulog,'(a,i8)') '  stream_ndep_year_last     = ',stream_ndep_year_last
+       write(iulog,'(a,i8)') '  stream_ndep_year_align    = ',stream_ndep_year_align
+       write(iulog,'(a,a)' ) '  stream_ndep_data_filename = ',trim(stream_ndep_data_filename)
+       write(iulog,'(a,a)' ) '  stream_ndep_mesh_filename = ',trim(stream_ndep_mesh_filename)
+       write(iulog,'(a,a)' ) '  stream_varnames           = ',trim(stream_varnames(1))
+       write(iulog,'(a,a)' ) '  stream_ndep_taxmode       = ',trim(stream_ndep_taxmode)
+       write(iulog,'(a,a)' ) '  stream_ndep_tintalgo      = ',trim(stream_ndep_tintalgo)
        write(iulog,'(a)'   ) ' '
     endif
 
     ! Read in units
-    call check_units( stream_fldFileName_ndep )
+    call check_units( stream_ndep_data_filename )
 
     ! Initialize the cdeps data type sdat_ndep
-    call shr_strdata_init_from_inline(sdat_ndep,                  &
-         my_task             = iam,                               &
-         logunit             = iulog,                             &
-         compname            = 'LND',                             &
-         model_clock         = model_clock,                       &
-         model_mesh          = mesh,                              &
-         stream_meshfile     = trim(stream_meshfile_ndep),        &
-         stream_lev_dimname  = 'null',                            &
-         stream_mapalgo      = trim(ndep_mapalgo),                &
-         stream_filenames    = (/trim(stream_fldfilename_ndep)/), &
-         stream_fldlistFile  = stream_varnames,                   &
-         stream_fldListModel = stream_varnames,                   &
-         stream_yearFirst    = stream_year_first_ndep,            &
-         stream_yearLast     = stream_year_last_ndep,             &
-         stream_yearAlign    = model_year_align_ndep,             &
-         stream_offset       = ndep_offset,                       &
-         stream_taxmode      = ndep_taxmode,                      &
-         stream_dtlimit      = ndep_dtlimit,                      &
-         stream_tintalgo     = ndep_tintalgo,                     &
-         stream_name         = 'Nitrogen deposition data ',       &
+    call shr_strdata_init_from_inline(sdat_ndep,                    &
+         my_task             = iam,                                 &
+         logunit             = iulog,                               &
+         compname            = 'LND',                               &
+         model_clock         = model_clock,                         &
+         model_mesh          = mesh,                                &
+         stream_meshfile     = trim(stream_ndep_mesh_filename),     &
+         stream_lev_dimname  = 'null',                              &
+         stream_mapalgo      = trim(stream_ndep_mapalgo),           &
+         stream_filenames    = (/trim(stream_ndep_data_filename)/), &
+         stream_fldlistFile  = stream_varnames,                     &
+         stream_fldListModel = stream_varnames,                     &
+         stream_yearFirst    = stream_ndep_year_first,              &
+         stream_yearLast     = stream_ndep_year_last,               &
+         stream_yearAlign    = stream_ndep_year_align,              &
+         stream_offset       = stream_ndep_offset,                  &
+         stream_taxmode      = stream_ndep_taxmode,                 &
+         stream_dtlimit      = stream_ndep_dtlimit,                 &
+         stream_tintalgo     = stream_ndep_tintalgo,                &
+         stream_name         = 'Nitrogen deposition data ',         &
          rc                  = rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -168,7 +168,7 @@ contains
   end subroutine ndep_init
 
   !================================================================
-  subroutine check_units( stream_fldFileName_ndep)
+  subroutine check_units( stream_ndep_data_filename)
 
     !-------------------------------------------------------------------
     ! Check that units are correct on the file and if need any conversion
@@ -178,7 +178,7 @@ contains
     use shr_log_mod   , only : errMsg => shr_log_errMsg
 
     ! Arguments
-    character(len=*), intent(in)  :: stream_fldFileName_ndep  ! ndep filename
+    character(len=*), intent(in)  :: stream_ndep_data_filename  ! ndep filename
     !
     ! Local variables
     type(file_desc_t) :: ncid     ! NetCDF filehandle for ndep file
@@ -188,13 +188,13 @@ contains
     character(len=CS) :: ndepunits! ndep units
     !-----------------------------------------------------------------------
 
-    call ncd_pio_openfile( ncid, trim(stream_fldFileName_ndep), ncd_nowrite )
+    call ncd_pio_openfile( ncid, trim(stream_ndep_data_filename), ncd_nowrite )
     call ncd_inqvid(ncid, stream_varnames(1), varid, vardesc, readvar=readvar)
     if ( readvar ) then
        call ncd_getatt(ncid, varid, "units", ndepunits)
     else
        call endrun(msg=' ERROR finding variable: '//trim(stream_varnames(1))//" in file: "// &
-            trim(stream_fldFileName_ndep)//errMsg(sourcefile, __LINE__))
+            trim(stream_ndep_data_filename)//errMsg(sourcefile, __LINE__))
     end if
     call ncd_pio_closefile( ncid )
 

@@ -31,9 +31,9 @@ module ndepStreamMod
 
   ! ! PRIVATE TYPES
   type(shr_strdata_type)  :: sdat           ! input data stream
-  integer :: stream_year_first_ndep         ! first year in stream to use
+  integer :: stream_ndep_year_first         ! first year in stream to use
   integer :: stream_year_last_ndep          ! last year in stream to use
-  integer :: model_year_align_ndep          ! align stream_year_firstndep with
+  integer :: stream_ndep_year_align          ! align stream_year_firstndep with
   logical :: divide_by_secs_per_yr = .true. ! divide by the number of seconds per year
 
   character(len=*), parameter, private :: sourcefile = &
@@ -67,30 +67,31 @@ contains
    integer            :: nu_nml    ! unit for namelist file
    integer            :: nml_error ! namelist i/o error flag
    type(mct_ggrid)    :: dom_clm   ! domain information
-   character(len=CL)  :: stream_fldFileName_ndep
-   character(len=CL)  :: ndep_mapalgo = 'bilinear'
-   character(len=CL)  :: ndep_tintalgo = 'linear'
-   character(len=CS)  :: ndep_taxmode = 'extend'
-   character(len=CL)  :: ndep_varlist = 'NDEP_year'
+   character(len=CL)  :: stream_ndep_data_filename
+   character(len=CL)  :: stream_ndep_mapalgo = 'bilinear'
+   character(len=CL)  :: stream_ndep_tintalgo = 'linear'
+   character(len=CS)  :: stream_ndep_taxmode = 'extend'
+   character(len=CL)  :: stream_ndep_varlist = 'NDEP_year'
    character(*), parameter :: shr_strdata_unset = 'NOT_SET'
    character(*), parameter :: subName = "('ndepdyn_init')"
    character(*), parameter :: F00 = "('(ndepdyn_init) ',4a)"
    !-----------------------------------------------------------------------
 
    namelist /ndepdyn_nml/          &
-        stream_year_first_ndep,    &
-        stream_year_last_ndep,     &
-        model_year_align_ndep,     &
-        ndep_mapalgo, ndep_taxmode, &
-        ndep_varlist,              &
-        stream_fldFileName_ndep,   &
-        ndep_tintalgo
+        stream_ndep_year_first,    &
+        stream_ndep_year_last,     &
+        stream_ndep_year_align,    &
+        stream_ndep_mapalgo,       &
+        stream_ndep_taxmode,       &
+        stream_ndep_varlist,       &
+        stream_ndep_data_filename, &
+        stream_ndep_tintalgo
 
    ! Default values for namelist
-    stream_year_first_ndep  = 1                ! first year in stream to use
-    stream_year_last_ndep   = 1                ! last  year in stream to use
-    model_year_align_ndep   = 1                ! align stream_year_first_ndep with this model year
-    stream_fldFileName_ndep = ' '
+    stream_ndep_year_first    = 1                ! first year in stream to use
+    stream_ndep_year_last     = 1                ! last  year in stream to use
+    stream_ndep_year_align    = 1                ! align stream_ndep_year_first with this model year
+    stream_ndep_data_filename = ' '
 
    ! Read ndepdyn_nml namelist
    if (masterproc) then
@@ -107,61 +108,60 @@ contains
       close(nu_nml)
    endif
 
-   call shr_mpi_bcast(stream_year_first_ndep , mpicom)
-   call shr_mpi_bcast(stream_year_last_ndep  , mpicom)
-   call shr_mpi_bcast(model_year_align_ndep  , mpicom)
-   call shr_mpi_bcast(stream_fldFileName_ndep, mpicom)
-   call shr_mpi_bcast(ndep_varlist           , mpicom)
-   call shr_mpi_bcast(ndep_taxmode           , mpicom)
-   call shr_mpi_bcast(ndep_tintalgo          , mpicom)
-   call shr_mpi_bcast(ndep_mapalgo           , mpicom)
+   call shr_mpi_bcast(stream_ndep_year_first  , mpicom)
+   call shr_mpi_bcast(stream_ndep_year_last   , mpicom)
+   call shr_mpi_bcast(stream_ndep_year_align  , mpicom)
+   call shr_mpi_bcast(stream_fldFileName_ndep , mpicom)
+   call shr_mpi_bcast(stream_ndep_varlist     , mpicom)
+   call shr_mpi_bcast(stream_ndep_taxmode     , mpicom)
+   call shr_mpi_bcast(stream_ndep_tintalgo    , mpicom)
+   call shr_mpi_bcast(stream_ndep_mapalgo     , mpicom)
 
    if (masterproc) then
       write(iulog,*) ' '
       write(iulog,*) 'ndepdyn stream settings:'
-      write(iulog,*) '  stream_year_first_ndep  = ',stream_year_first_ndep
-      write(iulog,*) '  stream_year_last_ndep   = ',stream_year_last_ndep
-      write(iulog,*) '  model_year_align_ndep   = ',model_year_align_ndep
-      write(iulog,*) '  stream_fldFileName_ndep = ',stream_fldFileName_ndep
-      write(iulog,*) '  ndep_varList            = ',ndep_varList
-      write(iulog,*) '  ndep_taxmode            = ',ndep_taxmode
-      write(iulog,*) '  ndep_tintalgo           = ',ndep_tintalgo
-      write(iulog,*) '  ndep_mapalgo            = ',ndep_mapalgo
+      write(iulog,*) '  stream_ndep_year_first    = ',stream_ndep_year_first
+      write(iulog,*) '  stream_ndep_year_last     = ',stream_ndep_year_last
+      write(iulog,*) '  stream_ndep_year_align    = ',stream_ndep_year_align
+      write(iulog,*) '  stream_ndep_data_filename = ',stream_ndep_data_filename
+      write(iulog,*) '  stream_ndep_varlist       = ',stream_ndep_varlist
+      write(iulog,*) '  stream_ndep_taxmode       = ',stream_ndep_taxmode
+      write(iulog,*) '  stream_ndep_tintalgo      = ',stream_ndep_tintalgo
+      write(iulog,*) '  stream_ndep_mapalgo       = ',stream_ndep_mapalgo
       write(iulog,*) ' '
    endif
    ! Read in units
-   call check_units( stream_fldFileName_ndep, ndep_varList )
+   call check_units( stream_fldFileName_ndep, stream_ndep_varlist )
 
    ! Set domain and create streams
    call clm_domain_mct (bounds, dom_clm)
 
-   call shr_strdata_create(sdat,name="clmndep",    &
-        pio_subsystem=pio_subsystem,               &
-        pio_iotype=shr_pio_getiotype(inst_name),   &
-        mpicom=mpicom, compid=comp_id,             &
-        gsmap=gsmap_global, ggrid=dom_clm,         &
-        nxg=ldomain%ni, nyg=ldomain%nj,            &
-        yearFirst=stream_year_first_ndep,          &
-        yearLast=stream_year_last_ndep,            &
-        yearAlign=model_year_align_ndep,           &
-        offset=0,                                  &
-        domFilePath='',                            &
-        domFileName=trim(stream_fldFileName_ndep), &
-        domTvarName='time',                        &
-        domXvarName='lon' ,                        &
-        domYvarName='lat' ,                        &
-        domAreaName='area',                        &
-        domMaskName='mask',                        &
-        filePath='',                               &
-        filename=(/trim(stream_fldFileName_ndep)/),&
-        fldListFile=ndep_varlist,                  &
-        fldListModel=ndep_varlist,                 &
-        fillalgo='none',                           &
-        mapalgo=ndep_mapalgo,                      &
-        tintalgo=ndep_tintalgo,                    &
-        calendar=get_calendar(),                   &
-        taxmode=ndep_taxmode                       )
-
+   call shr_strdata_create(sdat,name="clmndep",     &
+        pio_subsystem=pio_subsystem,                &
+        pio_iotype=shr_pio_getiotype(inst_name),    &
+        mpicom=mpicom, compid=comp_id,              &
+        gsmap=gsmap_global, ggrid=dom_clm,          &
+        nxg=ldomain%ni, nyg=ldomain%nj,             &
+        yearFirst=stream_ndep_year_first,           &
+        yearLast=stream_ndep_year_last,             &
+        yearAlign=stream_ndep_year_align,           &
+        offset=0,                                   &
+        domFilePath='',                             &
+        domFileName=trim(stream_fldFileName_ndep),  &
+        domTvarName='time',                         &
+        domXvarName='lon' ,                         &
+        domYvarName='lat' ,                         &
+        domAreaName='area',                         &
+        domMaskName='mask',                         &
+        filePath='',                                &
+        filename=(/trim(stream_fldFileName_ndep)/), &
+        fldListFile=stream_ndep_varlist,            &
+        fldListModel=stream_ndep_varlist,           &
+        fillalgo='none',                            &
+        mapalgo=stream_ndep_mapalgo,                &
+        tintalgo=stream_ndep_tintalgo,              &
+        calendar=get_calendar(),                    &
+        taxmode=stream_ndep_taxmode                 )
 
    if (masterproc) then
       call shr_strdata_print(sdat,'CLMNDEP data')
@@ -170,7 +170,7 @@ contains
  end subroutine ndep_init
  !================================================================
 
- subroutine check_units( stream_fldFileName_ndep, ndep_varList )
+ subroutine check_units( stream_fldFileName_ndep, stream_ndep_varlist )
    !-------------------------------------------------------------------
    ! Check that units are correct on the file and if need any conversion
    use ncdio_pio     , only : ncd_pio_openfile, ncd_inqvid, ncd_getatt, ncd_pio_closefile, ncd_nowrite
@@ -184,7 +184,7 @@ contains
    !
    ! Arguments
    character(len=*), intent(IN)  :: stream_fldFileName_ndep  ! ndep filename
-   character(len=*), intent(IN)  :: ndep_varList             ! ndep variable list to examine
+   character(len=*), intent(IN)  :: stream_ndep_varlist             ! ndep variable list to examine
    !
    ! Local variables
    type(file_desc_t) :: ncid     ! NetCDF filehandle for ndep file
@@ -195,8 +195,8 @@ contains
    character(len=CS) :: fname    ! ndep field name
    !-----------------------------------------------------------------------
    call ncd_pio_openfile( ncid, trim(stream_fldFileName_ndep), ncd_nowrite )
-   call shr_string_listGetName( ndep_varList, 1, fname )
-   call ncd_inqvid(       ncid, fname, varid, vardesc, readvar=readvar )
+   call shr_string_listGetName( stream_ndep_varlist, 1, fname )
+   call ncd_inqvid( ncid, fname, varid, vardesc, readvar=readvar )
    if ( readvar ) then
       call ncd_getatt(    ncid, varid, "units", ndepunits )
    else

@@ -54,7 +54,7 @@ Component name to use in history and restart files
        input_pathname="abs"
        group="clm_inparm"
        valid_values="" >
-Full pathname of land fraction data file.
+Full pathname of land fraction data file (only used for LILAC)
 </entry>
 
 <entry id="clump_pproc" type="integer" category="clm_performance"
@@ -1638,52 +1638,43 @@ That is, the atmosphere (rather than the ocean) melts the ice.
 <!-- ndepdyn streams Namelist (only used when bgc=cn or bgc                                    -->
 <!-- ========================================================================================  -->
 
-<entry id="stream_year_first_ndep" type="integer" category="datasets"
-       group="ndepdyn_nml" valid_values="" >
+<entry id="stream_ndep_year_first" type="integer" category="datasets" group="ndepdyn_nml" valid_values="" >
 First year to loop over for Nitrogen Deposition data
 </entry>
 
-<entry id="stream_year_last_ndep" type="integer" category="datasets"
-       group="ndepdyn_nml" valid_values="" >
+<entry id="stream_ndep_year_last" type="integer" category="datasets" group="ndepdyn_nml" valid_values="" >
 Last year to loop over for Nitrogen Deposition data
 </entry>
 
-<entry id="model_year_align_ndep" type="integer" category="datasets"
-       group="ndepdyn_nml" valid_values="" >
+<entry id="stream_ndep_year_align" type="integer" category="datasets" group="ndepdyn_nml" valid_values="" >
 Simulation year that aligns with stream_year_first_ndep value
 </entry>
 
-<entry id="stream_fldfilename_ndep" type="char*256" category="datasets"
-       group="ndepdyn_nml" valid_values="" >
+<entry id="stream_ndep_data_filename" type="char*256" category="datasets" group="ndepdyn_nml" valid_values="" >
 Filename of input stream data for Nitrogen Deposition
 </entry>
 
-<entry id="stream_meshfile_ndep" type="char*256" category="datasets"
-       group="ndepdyn_nml" valid_values="" >
+<entry id="stream_ndep_mesh_filename" type="char*256" category="datasets" group="ndepdyn_nml" valid_values="" >
 Stream meshfile for Nitrogen Deposition data
 </entry>
 
-<entry id="ndep_taxmode" type="char*80" category="datasets"
-       group="ndepdyn_nml" valid_values="cycle,extend,limit" >
+<entry id="stream_ndep_taxmode" type="char*80" category="datasets" group="ndepdyn_nml" valid_values="cycle,extend,limit" >
 Time interpolation mode to determine how to handle data before and after the times in the file
     cycle   = Always cycle over the data
     extend  = Use the first time before the available data, and use the last time after the available data
     limit   = Only use the data within the times available -- abort if the model tries to go outside it
 </entry>
 
-<entry id="ndep_tintalgo" type="char*80" category="datasets"
-       group="ndepdyn_nml" valid_values="linear,nearest,lower,upper" >
+<entry id="stream_ndep_tintalgo" type="char*80" category="datasets" group="ndepdyn_nml" valid_values="linear,nearest,lower,upper" >
 Time interpolation method to use for Nitrogen Deposition
 </entry>
 
-<entry id="ndep_varlist" type="char*256" category="datasets"
-       group="ndepdyn_nml" valid_values="" >
+<entry id="stream_ndep_data_varlist" type="char*256" category="datasets" group="ndepdyn_nml" valid_values="" >
 Colon delimited list of variables to read from the streams file for nitrogen deposition
 (Normally just read the single variable NDEP_year or NDEP_month)
 </entry>
 
-<entry id="ndep_mapalgo" type="char*256" category="datasets"
-       group="ndepdyn_nml" valid_values="bilinear,nn" >
+<entry id="stream_ndep_mapalgo" type="char*256" category="datasets" group="ndepdyn_nml" valid_values="" >
 Mapping method from Nitrogen deposition input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor

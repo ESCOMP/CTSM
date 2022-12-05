@@ -216,51 +216,51 @@ OPTIONS
      -version                 Echo the SVN tag name used to check out this CLM distribution.
      -vichydro                Toggle to turn on VIC hydrologic parameterizations (default is off)
                               This turns on the namelist variable: use_vichydro
-     -stream_ndep_year_first  Only set from input (no precedence)
-     -stream_ndep_year_last   Only set from input (no precedence)
-     -stream_ndep_year_align  Only set from input (no precedence)
-     -stream_ndep_dtlimit     Only set from input (no precedence)
-     -stream_ndep_data_filename Only set from input (no precedence)
-     -stream_ndep_mesh_filename Only set from input (no precedence)
-     -stream_ndep_data_varlist  Only set from input (no precedence)
-     -stream_ndep_taxmode       Only set from input (no precedence)
-     -stream_ndep_mapalgo       Only set from input (no precedence)
-     -stream_ndep_tintalgo      Only set from input (no precedence)
-     -stream_popdens_year_first
-     -stream_popdens_year_last
-     -stream_popdens_year_align
-     -stream_popdens_data_filename
-     -stream_popdens_mesh_filename
-     -stream_popdens_mapalgo
-     -stream_popdens_tintalgo
-     -stream_lightng_year_first
-     -stream_lightng_year_last
-     -stream_lightng_year_align
-     -stream_lightng_data_filename
-     -stream_lightng_mesh_filename
-     -stream_lightng_mapalgo
-     -stream_lightng_tintalgo
-     -stream_urbantv_year_first
-     -stream_urbantv_year_last
-     -stream_urbantv_year_align
-     -stream_urbantv_data_filename
-     -stream_urbantv_mesh_filename
-     -stream_urbantv_mapalgo
-     -stream_urbantv_tintalgo
-     -stream_lai_year_first
-     -stream_lai_year_last
-     -stream_lai_year_align
-     -stream_lai_data_filename
-     -stream_lai_mesh_filename
-     -stream_lai_mapalgo
-     -stream_lai_tintalgo
-     -stream_soilm_year_first
-     -stream_soilm_year_last
-     -stream_soilm_year_align
-     -stream_soilm_data_filename
-     -stream_soilm_mesh_filename
-     -stream_soilm_mapalgo
-     -stream_soilm_tintalgo
+     -stream_ndep_year_first       Only set from input options(no precedence)
+     -stream_ndep_year_last        Only set from input options(no precedence)
+     -stream_ndep_year_align       Only set from input options(no precedence)
+     -stream_ndep_dtlimit          Only set from input options(no precedence)
+     -stream_ndep_data_filename    Only set from input options(no precedence)
+     -stream_ndep_mesh_filename    Only set from input options(no precedence)
+     -stream_ndep_data_varlist     Only set from input options(no precedence)
+     -stream_ndep_taxmode          Only set from input options(no precedence)
+     -stream_ndep_mapalgo          Only set from input options(no precedence)
+     -stream_ndep_tintalgo         Only set from input options(no precedence)
+     -stream_popdens_year_first    Only set from input options(no precedence)
+     -stream_popdens_year_last     Only set from input options(no precedence)
+     -stream_popdens_year_align    Only set from input options(no precedence)
+     -stream_popdens_data_filename Only set from input options(no precedence)
+     -stream_popdens_mesh_filename Only set from input options(no precedence)
+     -stream_popdens_mapalgo       Only set from input options(no precedence)
+     -stream_popdens_tintalgo      Only set from input options(no precedence)
+     -stream_lightng_year_first    Only set from input options(no precedence)
+     -stream_lightng_year_last     Only set from input options(no precedence)
+     -stream_lightng_year_align    Only set from input options(no precedence)
+     -stream_lightng_data_filename Only set from input options(no precedence)
+     -stream_lightng_mesh_filename Only set from input options(no precedence)
+     -stream_lightng_mapalgo       Only set from input options(no precedence)
+     -stream_lightng_tintalgo      Only set from input options(no precedence)
+     -stream_urbantv_year_first    Only set from input options(no precedence)
+     -stream_urbantv_year_last     Only set from input options(no precedence)
+     -stream_urbantv_year_align    Only set from input options(no precedence)
+     -stream_urbantv_data_filename Only set from input options(no precedence)
+     -stream_urbantv_mesh_filename Only set from input options(no precedence)
+     -stream_urbantv_mapalgo       Only set from input options(no precedence)
+     -stream_urbantv_tintalgo      Only set from input options(no precedence)
+     -stream_lai_year_first        Only set from input options(no precedence)
+     -stream_lai_year_last         Only set from input options(no precedence)
+     -stream_lai_year_align        Only set from input options(no precedence)
+     -stream_lai_data_filename     Only set from input options(no precedence)
+     -stream_lai_mesh_filename     Only set from input options(no precedence)
+     -stream_lai_mapalgo           Only set from input options(no precedence)
+     -stream_lai_tintalgo          Only set from input options(no precedence)
+     -stream_soilm_year_first      Only set from input options(no precedence)
+     -stream_soilm_year_last       Only set from input options(no precedence)
+     -stream_soilm_year_align      Only set from input options(no precedence)
+     -stream_soilm_data_filename   Only set from input options(no precedence)
+     -stream_soilm_mesh_filename   Only set from input options(no precedence)
+     -stream_soilm_mapalgo         Only set from input options(no precedence)
+     -stream_soilm_tintalgo        Only set from input options(no precedence)
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
       0. namelist values set by specific command-line options, like, -d, -sim_year
@@ -3569,25 +3569,25 @@ sub setup_logic_nitrogen_deposition_streams {
 
       my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
 
-      my ($var_nml, $var_opts)  = ('stream_year_first_ndep', 'stream_ndep_year_first');
+      my ($var_nml, $var_opts)  = ('stream_ndep_year_first', 'stream_ndep_year_first');
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 0);
-      my ($var_nml, $var_opts)  = ('stream_year_last_ndep', 'stream_ndep_year_last');
+      my ($var_nml, $var_opts)  = ('stream_ndep_year_last', 'stream_ndep_year_last');
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 0);
-      my ($var_nml, $var_opts) = ('model_year_align_ndep', 'stream_ndep_year_align');
+      my ($var_nml, $var_opts) = ('stream_ndep_year_align', 'stream_ndep_year_align');
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 0);
-      my ($var_nml, $var_opts) = ('stream_fldfilename_ndep', 'stream_ndep_data_filename');
+      my ($var_nml, $var_opts) = ('stream_ndep_data_filename', 'stream_ndep_data_filename');
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 1);
       if ($opts->{'driver'} eq "nuopc" ) {
-          my ($var_nml, $var_opts) = ('stream_meshfile_ndep', 'stream_ndep_mesh_filename');
+          my ($var_nml, $var_opts) = ('stream_ndep_mesh_filename', 'stream_ndep_mesh_filename');
           add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 1);
       }
-      my ($var_nml, $var_opts) = ('ndep_varlist', 'stream_ndep_data_varlist');
+      my ($var_nml, $var_opts) = ('stream_ndep_data_varlist', 'stream_ndep_data_varlist');
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 1);
-      my ($var_nml, $var_opts) = ('ndep_mapalgo', 'stream_ndep_mapalgo');
+      my ($var_nml, $var_opts) = ('stream_ndep_mapalgo', 'stream_ndep_mapalgo');
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 1);
-      my ($var_nml, $var_opts) = ('ndep_tintalgo', 'stream_ndep_tintalgo');
+      my ($var_nml, $var_opts) = ('stream_ndep_tintalgo', 'stream_ndep_tintalgo');
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 1);
-      my ($var_nml, $var_opts) = ('ndep_taxmode', 'stream_ndep_taxmode');
+      my ($var_nml, $var_opts) = ('stream_ndep_taxmode', 'stream_ndep_taxmode');
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 1);
   }
 }
