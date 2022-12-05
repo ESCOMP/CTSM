@@ -367,7 +367,7 @@ contains
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                nlevs = nlevgrnd
                do j = 1, nlevs
-                  if (use_bedrock) then
+                  if (use_bedrock .and. col%nbedrock(c) <=nlevsoi) then
                      nbedrock = col%nbedrock(c)
                   else
                      nbedrock = nlevsoi
@@ -549,7 +549,7 @@ contains
                   else
                     n05m=nlevsoi-1
                   endif
-                  if (use_bedrock .and. nbedrock<=nlevsoi) then
+                  if (use_bedrock .and. col%nbedrock(c) <=nlevsoi) then
                      nbedrock = col%nbedrock(c)
                   else
                      nbedrock = nlevsoi
@@ -737,7 +737,7 @@ contains
           l = col%landunit(c)
           if (.not. lun%lakpoi(l)) then  !not lake
              if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-                if (use_bedrock .and. nbedrock<=nlevsoi) then
+                if (use_bedrock .and. col%nbedrock(c)>nlevsoi) then
                    nbedrock = col%nbedrock(c)
                 else
                    nbedrock = nlevsoi
