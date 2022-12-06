@@ -186,10 +186,11 @@
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
       <machine name="izumi"    compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:00:00</option>
       <option name="comment"  >Include an excess ice test starting up from restart file</option>
     </options>
   </test>
