@@ -1,4 +1,81 @@
 ===============================================================
+Tag name: ctsm5.1.dev115
+Originator(s): rgknox (Ryan Knox)
+Date: Fri Dec  2 15:45:32 MST 2022
+One-line Summary: API compatability with FATES V2 nutrient dynamics
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes allows CTSM to continue API compatability with changes to the FATES API. FATES has updated its nutrient dynamics routine, and required a modification to the test environment, some minor updates to variable dimensions in the history, and a call to a new FATES history routine.  Implicitly, the updating of the FATES tag introduces new content in the FATES model since the last API update (mostly bug fixes).
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+
+The changes here will only affect FATES simulations. Any FATES simulation will be affected. Carbon-only FATES simulations will not have qualitatively different results since the last API update (but will have bit-for-bit differences). Nutrient enabled FATES simulations (not fully coupled to CLM, only via prognosed plant N,P boundaries), and FATES-Hydro simulations (bug fix) will be different.
+
+Bugs fixed or introduced
+------------------------
+
+See the descriptions in FATES tags between sci.1.57.4_api.24.0.0 to sci.1.60.0_api.25.0.0 for details on FATES changes in this tag.
+
+CTSM issues fixed (include CTSM Issue #): None
+
+Externals issues fixed (include issue #): None
+
+Known bugs introduced in this tag (include issue #): None
+
+Known bugs found since the previous tag (include issue #): None
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+This set of changes comes with an updated FATES parameter file. This includes format changes only. No changes to variable values were introduced. Format changes are relegated to new parameters and/or name changes only.  These changes are encapsulated in: fates/parameter_files/archive/apichange_24.2to25.xml
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Nothing of note regarding changes for developers.
+
+Changes to tests or testing:  New history variables were added to the FATES PRT2 user_nl_clm.
+
+
+Testing summary:
+----------------
+
+regular
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- nominal: /glade/scratch/rgknox/tests_1201-121507ch
+    izumi ------- nominal: /scratch/cluster/rgknox/tests_1201-122133iz
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- nominal against ctsm5.1_dev112 /glade/scratch/rgknox/tests_1130-082657ch
+    izumi ------- NA
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: FATES answers changed relative to base. Explanation already provided (nutrient and hydro changes are qualitative).
+
+
+Other details
+-------------
+
+FATES external was updated.
+
+Pull Requests that document the changes (include PR ids):
+
+https://github.com/ESCOMP/CTSM/pull/1874
+https://github.com/NGEET/fates/pull/880
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev114
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)/@wwieder/@olyson/@ka7eh
 Date: Sat Nov 19 18:11:15 MST 2022
