@@ -1,4 +1,4 @@
-# build-namelist
+0;95;0c# build-namelist
 #
 # This script builds the namelists for CLM
 #
@@ -448,7 +448,7 @@ sub process_commandline {
       "stream_popdens_mapalgo=s"       => \$opts{'stream_popdens_mapalgo'},
       "stream_popdens_tintalgo=s"      => \$opts{'stream_popdens_tintalgo'},
       #
-      "stream_lightng_year_first=i"    => \$opts{'"stream_lightng_year_first'},
+      "stream_lightng_year_first=i"    => \$opts{'stream_lightng_year_first'},
       "stream_lightng_year_last=i"     => \$opts{'stream_lightng_year_last'},
       "stream_lightng_year_align=i"    => \$opts{'stream_lightng_year_align'},
       "stream_lightng_data_filename=s" => \$opts{'stream_lightng_data_filename'},
