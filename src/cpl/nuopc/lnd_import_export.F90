@@ -1080,7 +1080,7 @@ contains
     do g = 1,size(ctsmdata)
        ctsmdata(g) = fldptr1d(g)
     end do
-    call check_for_nans(ctsmdata, trim(fldname), 1)
+    call check_for_nans(ctsmdata, trim(fldname), 1, "import_1D")
 
   end subroutine state_getimport_1d
 
@@ -1114,7 +1114,7 @@ contains
        do g = 1,size(ctsmdata,dim=1)
           ctsmdata(g,n) = fldptr2d(n,g)
        end do
-       call check_for_nans(ctsmdata(:,n), trim(fldname)//trim(cnum), 1)
+       call check_for_nans(ctsmdata(:,n), trim(fldname)//trim(cnum), 1, "import_2D")
     end do
 
   end subroutine state_getimport_2d
@@ -1167,7 +1167,7 @@ contains
           fldptr1d(g) = ctsmdata(g)
        end do
     end if
-    call check_for_nans(ctsmdata, trim(fldname), 1)
+    call check_for_nans(ctsmdata, trim(fldname), 1, "export_1D")
 
   end subroutine state_setexport_1d
 
@@ -1222,7 +1222,7 @@ contains
              fldptr2d(n,g) = ctsmdata(g,n)
           end do
        end if
-       call check_for_nans(ctsmdata(:,n), trim(fldname)//trim(cnum), 1)
+       call check_for_nans(ctsmdata(:,n), trim(fldname)//trim(cnum), 1, "export_2D")
     end do
 
   end subroutine state_setexport_2d

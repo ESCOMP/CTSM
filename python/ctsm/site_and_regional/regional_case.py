@@ -222,7 +222,7 @@ class RegionalCase(BaseCase):
 
         # specify files
         fsurf_in = os.path.join(indir, file)
-        fsurf_out = add_tag_to_filename(fsurf_in, self.tag)
+        fsurf_out = add_tag_to_filename(fsurf_in, self.tag, replace_res=True)
         logger.info("fsurf_in:  %s", fsurf_in)
         logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
 
@@ -288,7 +288,7 @@ class RegionalCase(BaseCase):
 
         # specify files
         fluse_in = os.path.join(indir, file)
-        fluse_out = add_tag_to_filename(fluse_in, self.tag)
+        fluse_out = add_tag_to_filename(fluse_in, self.tag, replace_res=True)
         logger.info("fluse_in:  %s", fluse_in)
         logger.info("fluse_out: %s", os.path.join(self.out_dir, fluse_out))
 
