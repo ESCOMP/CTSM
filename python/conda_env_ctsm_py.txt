@@ -15,6 +15,9 @@ pandas
 tqdm
 scipy
 netcdf4
+dask
+cartopy
+matplotlib
 requests
 numpy=1.18.5
 xarray=0.16.2

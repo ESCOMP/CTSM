@@ -4,6 +4,9 @@ pandas>=1.5.1
 tqdm>=4.64.1
 scipy
 netcdf4
+dask
+cartopy
+matplotlib
 requests
 numpy>=1.23.0
 xarray>=2022.3.0
