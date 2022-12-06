@@ -182,7 +182,7 @@
       <option name="comment"  >Include an excess ice test starting up from streams</option>
     </options>
   </test>
-  <test name="SMS_Lm12" grid="f09_f09_mg17" compset="I1850Clm51Sp" testmods="clm/ExcessIceRestart">
+  <test name="SMS_Lm12" grid="f09_f09_mg17" compset="I1850Clm51Sp" testmods="clm/ExcessIceStartup_output_sp_exice">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -191,7 +191,7 @@
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
-      <option name="comment"  >Include an excess ice test starting up from restart file</option>
+      <option name="comment"  >Include an excess ice test starting up from an finidat startup file with excessice output with extra output</option>
     </options>
   </test>
   <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm50Bgc" testmods="clm/drydepnomegan">
