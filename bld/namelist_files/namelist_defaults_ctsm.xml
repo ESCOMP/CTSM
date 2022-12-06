@@ -2226,21 +2226,9 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <finundation_method phys="clm5_1" >TWS_inversion</finundation_method>
 <finundation_method phys="clm5_0" >TWS_inversion</finundation_method>
 <finundation_method phys="clm4_5" >ZWT_inversion</finundation_method>
+
 <use_aereoxid_prog use_cn=".true."   >.true.</use_aereoxid_prog>
 <use_aereoxid_prog use_fates=".true.">.true.</use_aereoxid_prog>
-
-<finundation_res finundation_method="TWS_inversion">0.9x1.25</finundation_res>
-<finundation_res finundation_method="ZWT_inversion">0.9x1.25</finundation_res>
-
-<stream_fldfilename_ch4finundated finundation_method="TWS_inversion" hgrid="0.9x1.25"
->lnd/clm2/paramdata/finundated_inversiondata_0.9x1.25_c170706.nc</stream_fldfilename_ch4finundated>
-<stream_fldfilename_ch4finundated finundation_method="ZWT_inversion" hgrid="0.9x1.25"
->lnd/clm2/paramdata/finundated_inversiondata_0.9x1.25_c170706.nc</stream_fldfilename_ch4finundated>
-
-<stream_meshfile_ch4finundated finundation_method="TWS_inversion"
->lnd/clm2/paramdata/finundated_inversiondata_0.9x1_ESMFmesh_cdf5_130621.nc</stream_meshfile_ch4finundated>
-<stream_meshfile_ch4finundated finundation_method="ZWT_inversion"
->lnd/clm2/paramdata/finundated_inversiondata_0.9x1_ESMFmesh_cdf5_130621.nc</stream_meshfile_ch4finundated>
 
 <!-- =========================================  -->
 <!-- Defaults for different BGC/decomp modes    -->

@@ -43,7 +43,7 @@ module ch4FInundatedStreamType
   type, private :: streamcontrol_type
      character(len=CL)  :: stream_fldFileName_ch4finundated   ! data Filename
      character(len=CL)  :: stream_meshfile_ch4finundated      ! mesh Filename
-     character(len=CL)  :: ch4finundatedmapalgo               ! map algo
+     character(len=CL)  :: stream_ch4finundated_mapalgo       ! map algo
   contains
      procedure, private :: ReadNML     ! Read in namelist
   end type streamcontrol_type
@@ -98,7 +98,7 @@ contains
 
          if (finundation_mtd == finundation_mtd_ZWT_inversion  )then
             allocate(stream_varnames(3))
-            stream_varnames = (/"ZWT0","F0  ","P3  "/)
+            stream_varnames = (/"ZWT0", "F0  ","P3  "/)
          else if ( finundation_mtd == finundation_mtd_TWS_inversion  )then
             allocate(stream_varnames(2))
             stream_varnames = (/"FWS_TWS_A","FWS_TWS_B"/)
@@ -120,7 +120,7 @@ contains
               model_mesh          = mesh,                                               &
               stream_meshfile     = control%stream_meshfile_ch4finundated,              &
               stream_lev_dimname  = 'null',                                             &
-              stream_mapalgo      = control%ch4finundatedmapalgo,                       &
+              stream_mapalgo      = control%stream_ch4finundated_mapalgo,               &
               stream_filenames    = (/trim(control%stream_fldFileName_ch4finundated)/), &
               stream_fldlistFile  = stream_varnames,                                    &
               stream_fldListModel = stream_varnames,                                    &
@@ -340,13 +340,13 @@ contains
    integer            :: nml_error ! namelist i/o error flag
    character(len=CL)  :: stream_fldFileName_ch4finundated = ' '
    character(len=CL)  :: stream_meshfile_ch4finundated = ' '
-   character(len=CL)  :: ch4finundatedmapalgo = 'bilinear'
+   character(len=CL)  :: stream_ch4finundated_mapalgo = 'bilinear'
    character(len=*), parameter :: namelist_name = 'ch4finundated'    ! MUST agree with name in namelist and read
    character(len=*), parameter :: subName = "('ch4finundated::ReadNML')"
    !-----------------------------------------------------------------------
 
    namelist /ch4finundated/ &               ! MUST agree with namelist_name above
-        ch4finundatedmapalgo,  stream_fldFileName_ch4finundated, stream_meshfile_ch4finundated
+        stream_ch4finundated_mapalgo,  stream_fldFileName_ch4finundated, stream_meshfile_ch4finundated
 
    ! Default values for namelist
 
@@ -365,7 +365,7 @@ contains
       close(nu_nml)
    endif
 
-   call shr_mpi_bcast(ch4finundatedmapalgo             , mpicom)
+   call shr_mpi_bcast(stream_ch4finundated_mapalgo     , mpicom)
    call shr_mpi_bcast(stream_fldFileName_ch4finundated , mpicom)
    call shr_mpi_bcast(stream_meshfile_ch4finundated    , mpicom)
 
@@ -374,11 +374,11 @@ contains
       write(iulog,*) namelist_name, ' stream settings:'
       write(iulog,*) '  stream_fldFileName_ch4finundated = ',stream_fldFileName_ch4finundated
       write(iulog,*) '  stream_meshfile_ch4finundated    = ',stream_meshfile_ch4finundated
-      write(iulog,*) '  ch4finundatedmapalgo             = ',ch4finundatedmapalgo
+      write(iulog,*) '  stream_ch4finundated_mapalgo     = ',stream_ch4finundated_mapalgo
    endif
    this%stream_fldFileName_ch4finundated = stream_fldFileName_ch4finundated
    this%stream_meshfile_ch4finundated    = stream_meshfile_ch4finundated
-   this%ch4finundatedmapalgo             = ch4finundatedmapalgo
+   this%stream_ch4finundated_mapalgo     = stream_ch4finundated_mapalgo
 
  end subroutine ReadNML
 

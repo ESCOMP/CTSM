@@ -1,4 +1,4 @@
-0;95;0c# build-namelist
+# build-namelist
 #
 # This script builds the namelists for CLM
 #
@@ -261,6 +261,8 @@ OPTIONS
      -stream_soilm_mesh_filename   Only set from input options(no precedence)
      -stream_soilm_mapalgo         Only set from input options(no precedence)
      -stream_soilm_tintalgo        Only set from input options(no precedence)
+     -stream_ch4finundated_data_filename   Only set from input options(no precedence)
+     -stream_ch4finundated_mesh_filename   Only set from input options(no precedence)
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
       0. namelist values set by specific command-line options, like, -d, -sim_year
@@ -378,6 +380,9 @@ sub process_commandline {
                stream_soilm_mesh_filename   => "default",
                stream_soilm_mapalgo         => "default",
                stream_soilm_tintalgo        => "default",
+               #
+               stream_ch4finundated_data_filename   => "default",
+               stream_ch4finundated_mesh_filename   => "default",
       );
 
   GetOptions(
@@ -479,6 +484,10 @@ sub process_commandline {
       "stream_soilm_mesh_filename=s"   => \$opts{'stream_soilm_mesh_filename'},
       "stream_soilm_mapalgo=s"         => \$opts{'stream_soilm_mapalgo'},
       "stream_soilm_tintalgo=s"        => \$opts{'stream_soilm_tintalgo'},
+      #
+      "stream_ch4finundated_data_filename=s" => \$opts{'stream_ch4finundated_data_filename'},
+      "stream_ch4finundated_mesh_filename=s" => \$opts{'stream_ch4finundated_mesh_filename'},
+      #
       )  or usage();
 
   # Give usage message.
@@ -3241,20 +3250,21 @@ sub setup_logic_methane {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ( &value_is_true($nl_flags->{'use_lch4'}) ) {
+
+    my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
+    my ($var_nml, $var_opts)  = ('stream_fldfilename_ch4finundated', 'stream_ch4finundated_data_filename');
+    add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 1);
+    if ($opts->{'driver'} eq "nuopc" ) {
+        my ($var_nml, $var_opts)  = ('stream_meshfile_ch4finundated', 'stream_ch4finundated_mesh_filename');
+        add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 1);
+    }
+
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'finundation_method',
                 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
-    my $finundation_method = remove_leading_and_trailing_quotes($nl->get_value('finundation_method' ));
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ch4finundated',
-             'finundation_method'=>$finundation_method);
-    if ($opts->{'driver'} eq "nuopc" ) {
-        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ch4finundated',
-                    'finundation_method'=>$finundation_method);
-    }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_aereoxid_prog',
                 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
     #
-    # Check if use_aereoxid_prog is set.  If no, then read value of aereoxid from
-    # parameters file
+    # Check if use_aereoxid_prog is set.  If no, then read value of aereoxid from parameters file
     #
     my $use_aereoxid_prog = $nl->get_value('use_aereoxid_prog');
     if ( defined($use_aereoxid_prog) && ! &value_is_true($use_aereoxid_prog) ) {
@@ -3266,7 +3276,6 @@ sub setup_logic_methane {
       $log->fatal_error("ch4par_in namelist variables were set, but Methane model NOT defined in the configuration (use_lch4)");
     }
   }
-
   #
   # Ch4 namelist checking
   #

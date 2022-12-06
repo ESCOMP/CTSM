@@ -1685,13 +1685,13 @@ Mapping method from Nitrogen deposition input file to the model resolution
 <!-- ========================================================================================  -->
 
 <entry id="stream_fldfilename_ch4finundated" type="char*256" category="datasets"
-       input_pathname="abs" group="ch4finundated" valid_values="" >
+       group="ch4finundated" valid_values="" >
 Filename of input stream data for finundated inversion of observed (from Prigent dataset)
 to hydrologic variables (either TWS or ZWT)
 </entry>
 
 <entry id="stream_meshfile_ch4finundated" type="char*256" category="datasets"
-       input_pathname="abs" group="ch4finundated" valid_values="" >
+       group="ch4finundated" valid_values="" >
 mesh filename of input stream data for finundated inversion of observed (from Prigent dataset)
 to hydrologic variables (either TWS or ZWT)
 </entry>

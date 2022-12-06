@@ -163,7 +163,7 @@
    <!-- NDEP stream functionality -->
    <!-- ================================== -->
 
-  <entry id="CLM_STREAM_NDEP_YEAR_FIRST">
+  <entry id="STREAM_NDEP_YEAR_FIRST">
     <type>char</type>
     <default_value>2000</default_value>
     <values>
@@ -177,7 +177,7 @@
     <desc>Nitrogen deposition data year first</desc>
   </entry>
 
-  <entry id="CLM_STREAM_NDEP_YEAR_LAST">
+  <entry id="STREAM_NDEP_YEAR_LAST">
     <type>char</type>
     <default_value>2000</default_value>
     <values>
@@ -191,7 +191,7 @@
     <desc>Nitrogen deposition data year last</desc>
   </entry>
 
-  <entry id="CLM_STREAM_NDEP_YEAR_ALIGN">
+  <entry id="STREAM_NDEP_YEAR_ALIGN">
     <type>char</type>
     <default_value>1</default_value>
     <values>
@@ -200,18 +200,18 @@
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Nitrogen deposition align CLM_STREAM_NDEP_YEAR_FIRST with this model year</desc>
+    <desc>Nitrogen deposition align STREAM_NDEP_YEAR_FIRST with this model year</desc>
   </entry>
 
-  <entry id="CLM_STREAM_NDEP_DTLIMIT">
+  <entry id="STREAM_NDEP_DTLIMIT">
     <type>real</type>
     <default_value>1.e30</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Nitrogen deposition align CLM_STREAM_NDEP_YEAR_FIRST with this model year</desc>
+    <desc>Nitrogen deposition align STREAM_NDEP_YEAR_FIRST with this model year</desc>
   </entry>
 
-  <entry id="CLM_STREAM_NDEP_DATA_FILENAME">
+  <entry id="STREAM_NDEP_DATA_FILENAME">
     <!-- Only the CMIP6 Tier I Nitogen deposition files are available -->
     <type>char</type>
     <default_value>UNSET</default_value>
@@ -230,23 +230,23 @@
     <desc>Nitrogen deposition data filename</desc>
   </entry>
 
-  <entry id="CLM_STREAM_NDEP_MESH_FILENAME">
+  <entry id="STREAM_NDEP_MESH_FILENAME">
     <type>char</type>
     <default_value>$DIN_LOC_ROOT/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Nitrogen deposition mesh filename (corresponding to the CLM_STREAM_NDEP_DATA_FILENAME)</desc>
+    <desc>Nitrogen deposition mesh filename (corresponding to the STREAM_NDEP_DATA_FILENAME)</desc>
   </entry>
 
-  <entry id="CLM_STREAM_NDEP_DATA_VARLIST">
+  <entry id="STREAM_NDEP_DATA_VARLIST">
     <type>char</type>
     <default_value>NDEP_month</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Variable name(s) in CLM_STREAM_NDEP_DATA_FILENAME</desc>
+    <desc>Variable name(s) in STREAM_NDEP_DATA_FILENAME</desc>
   </entry>
 
-  <entry id="CLM_STREAM_NDEP_TAXMODE">
+  <entry id="STREAM_NDEP_TAXMODE">
     <type>char</type>
     <default_value>cycle</default_value>
     <valid_values>cycle,extend,limit</valid_values>
@@ -261,7 +261,7 @@
     <desc>Time interpolation mode to determine how to handle data before and after the times in the file</desc>
   </entry>
 
-  <entry id="CLM_STREAM_NDEP_MAPALGO">
+  <entry id="STREAM_NDEP_MAPALGO">
     <type>char</type>
     <default_value>bilinear</default_value>
     <valid_values>bilinear,nn</valid_values>
@@ -278,7 +278,7 @@
     <desc>Mapping algorithm to go from data grid to model grid</desc>
   </entry>
 
-  <entry id="CLM_STREAM_NDEP_TINTALGO">
+  <entry id="STREAM_NDEP_TINTALGO">
     <type>char</type>
     <default_value>linear</default_value>
     <valid_values>linear,nearest,lower,upper</valid_values>
@@ -690,6 +690,26 @@
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Time interpolation method</desc>
+  </entry>
+
+   <!-- ================================== -->
+   <!-- CH4FINUNDATEd stream functionality -->
+   <!-- ================================== -->
+
+  <entry id="CLM_STREAM_CH4FINUNDATED_DATA_FILENAME">
+    <type>char</type>
+    <default_value>$DIN_LOC_ROOT/lnd/clm2/paramdata/finundated_inversiondata_0.9x1.25_c170706.nc</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>data filename</desc>
+  </entry>
+
+  <entry id="CLM_STREAM_CH4FINUNDATED_MESH_FILENAME">
+    <type>char</type>
+    <default_value>$DIN_LOC_ROOT/lnd/clm2/paramdata/finundated_inversiondata_0.9x1_ESMFmesh_cdf5_130621.nc</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>lai mesh filename (corresponding to the CLM_STREAM_LAI_DATA_FILENAME)</desc>
   </entry>
 
   <!-- ================================== -->
