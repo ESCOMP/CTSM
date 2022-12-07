@@ -599,7 +599,7 @@ contains
     use clm_varctl       , only : bound_h2osoi, nsrest, nsrContinue
     use ncdio_pio        , only : file_desc_t, ncd_double
     use ExcessIceStreamType, only : UseExcessIceStreams
-    use restUtilMod
+    use restUtilMod        , only : restartvar, RestartExcessIceIssue
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this

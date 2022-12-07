@@ -21,6 +21,8 @@ module restUtilMod
 
   public :: restartvar
 
+  public :: RestartExcessIceIssue
+
   public :: set_missing_from_template
 
 contains
@@ -148,5 +150,28 @@ contains
     my_var(:) = template_var(:) * multiplier
 
   end subroutine set_missing_from_template
+
+  !-----------------------------------------------------------------------
+  subroutine RestartExcessIceIssue(ncid, flag, excess_ice_on_restart)
+    !
+    ! !DESCRIPTION:
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid       ! netcdf id
+    character(len=*) , intent(in)    :: flag       ! 'read' or 'write'
+    logical, intent(out) :: excess_ice_on_restart  ! If excess ice is on the restart file
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: attribute_value
+
+    character(len=*), parameter :: subname = 'RestartExcessIceIssue'
+    !-----------------------------------------------------------------------
+
+    excess_ice_on_restart = .false.
+
+  end subroutine RestartExcessIceIssue
+
 
 end module restUtilMod
