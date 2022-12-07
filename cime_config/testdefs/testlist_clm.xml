@@ -168,7 +168,7 @@
       <option name="comment"  >Include an ERI test with MCT</option>
     </options>
   </test>
-  <test name="ERS_Ld1_D" grid="f10_f10_mg37" compset="I1850Clm51Sp" testmods="clm/ExcessIceStreams">
+  <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm51Sp" testmods="clm/ExcessIceStreams">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
