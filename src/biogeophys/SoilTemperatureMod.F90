@@ -114,7 +114,7 @@ contains
     ! !USES:
     use clm_time_manager         , only : get_step_size_real
     use clm_varpar               , only : nlevsno, nlevgrnd, nlevurb, nlevmaxurbgrnd
-    use clm_varctl               , only : iulog
+    use clm_varctl               , only : iulog, use_excess_ice
     use clm_varcon               , only : cnfac, cpice, cpliq, denh2o, denice
     use landunit_varcon          , only : istsoil, istcrop
     use column_varcon            , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
@@ -280,24 +280,24 @@ contains
       !--------------------------------------------------------------
       ! Vertical coordinates adjustment for excess ice calculations
       !--------------------------------------------------------------
-      ! Save original soil depth to get put them back in et the end 
-      dz_0(begc:endc,-nlevsno+1:nlevmaxurbgrnd)=dz(begc:endc,-nlevsno+1:nlevmaxurbgrnd)
-      zi_0(begc:endc,-nlevsno+0:nlevmaxurbgrnd)=zi(begc:endc,-nlevsno+0:nlevmaxurbgrnd)
-      z_0(begc:endc,-nlevsno+1:nlevmaxurbgrnd)=z(begc:endc,-nlevsno+1:nlevmaxurbgrnd)
-      ! Adjust column depth for excess ice thickness 
-      do fc = 1,num_nolakec
-        c = filter_nolakec(fc)
-        l = col%landunit(c)
-        if( lun%itype(l) == istsoil .or. lun%itype(l) == istcrop ) then
-          dz(c,1:nlevmaxurbgrnd)=dz(c,1:nlevmaxurbgrnd)+excess_ice(c,1:nlevmaxurbgrnd)/denice ! add extra layer thickness
-          do j=1,nlevmaxurbgrnd ! if excess ice amount dropped to zero there will be no adjustment
-            zi(c,j) = zi(c,j) + sum(excess_ice(c,1:j)) / denice
-            z(c,j) = (zi(c,j-1) + zi(c,j)) * 0.5_r8
-          end do
-        endif
-      end do
-
-
+      if ( use_excess_ice )then
+         ! Save original soil depth to get put them back in et the end 
+         dz_0(begc:endc,-nlevsno+1:nlevmaxurbgrnd)=dz(begc:endc,-nlevsno+1:nlevmaxurbgrnd)
+         zi_0(begc:endc,-nlevsno+0:nlevmaxurbgrnd)=zi(begc:endc,-nlevsno+0:nlevmaxurbgrnd)
+         z_0(begc:endc,-nlevsno+1:nlevmaxurbgrnd)=z(begc:endc,-nlevsno+1:nlevmaxurbgrnd)
+         ! Adjust column depth for excess ice thickness 
+         do fc = 1,num_nolakec
+           c = filter_nolakec(fc)
+           l = col%landunit(c)
+           if( lun%itype(l) == istsoil .or. lun%itype(l) == istcrop ) then
+             dz(c,1:nlevmaxurbgrnd)=dz(c,1:nlevmaxurbgrnd)+excess_ice(c,1:nlevmaxurbgrnd)/denice ! add extra layer thickness
+             do j=1,nlevmaxurbgrnd ! if excess ice amount dropped to zero there will be no adjustment
+               zi(c,j) = zi(c,j) + sum(excess_ice(c,1:j)) / denice
+               z(c,j) = (zi(c,j-1) + zi(c,j)) * 0.5_r8
+             end do
+           endif
+         end do
+      end if
 
       !------------------------------------------------------
       ! Compute ground surface and soil temperatures
@@ -520,16 +520,18 @@ contains
       ! Vertical coordinates adjustment for excess ice calculations
       !--------------------------------------------------------------
       ! bringing back the soil depth to the original state
-           ! Adjust column depth for excess ice thickness 
-           do fc = 1,num_nolakec
-             c = filter_nolakec(fc)
-             l = col%landunit(c)
-             if( lun%itype(l) == istsoil .or. lun%itype(l) == istcrop ) then
-               dz(c,1:nlevmaxurbgrnd)=dz_0(c,1:nlevmaxurbgrnd)
-               zi(c,1:nlevmaxurbgrnd)=zi_0(c,1:nlevmaxurbgrnd)
-               z(c,1:nlevmaxurbgrnd)=z_0(c,1:nlevmaxurbgrnd)
-             endif
-           end do
+      if ( use_excess_ice )then
+         ! Adjust column depth for excess ice thickness 
+         do fc = 1,num_nolakec
+           c = filter_nolakec(fc)
+           l = col%landunit(c)
+           if( lun%itype(l) == istsoil .or. lun%itype(l) == istcrop ) then
+             dz(c,1:nlevmaxurbgrnd)=dz_0(c,1:nlevmaxurbgrnd)
+             zi(c,1:nlevmaxurbgrnd)=zi_0(c,1:nlevmaxurbgrnd)
+             z(c,1:nlevmaxurbgrnd)=z_0(c,1:nlevmaxurbgrnd)
+           endif
+         end do
+      end if
      
 
 
