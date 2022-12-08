@@ -1,3 +1,10 @@
+#!/bin/bash
 ./xmlchange NEONSITE=ONAQ
 ./xmlchange PTS_LON=276.49815
 ./xmlchange PTS_LAT=35.68839
+./xmlchange DATM_YR_END=2019
+# Different default number of months to run for transient case
+if  [[ $compset =~ ^HIST ]]; then
+  ./xmlchange DATM_YR_END=2020
+  ./xmlchange STOP_N=24
+fi

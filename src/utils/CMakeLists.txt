@@ -18,6 +18,8 @@ list(APPEND clm_sources
   clm_time_manager.F90
   quadraticMod.F90
   fileutils.F90
+  MatrixMod.F90
+  SparseMatrixMultiplyMod.F90
   IssueFixedMetadataHandler.F90
   NumericsMod.F90
   )

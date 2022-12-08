@@ -633,7 +633,7 @@ contains
     end if
 
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('H2OSNO_NO_LAYERS:H2OSNO'), &
+         varname=this%info%fname('H2OSNO_NO_LAYERS')//':'//this%info%fname('H2OSNO'), &
          xtype=ncd_double,  &
          dim1name='column', &
          long_name=this%info%lname('snow that is not resolved into layers'), &

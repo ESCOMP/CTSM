@@ -9,7 +9,7 @@ _CIMEROOT = os.environ.get("CIMEROOT")
 if _CIMEROOT is None:
     raise SystemExit("ERROR: must set CIMEROOT environment variable")
 
-_LIBDIR = os.path.join(_CIMEROOT, "scripts", "Tools")
+_LIBDIR = os.path.join(_CIMEROOT, "CIME", "Tools")
 sys.path.append(_LIBDIR)
 
 from standard_script_setup          import *
@@ -61,6 +61,11 @@ def buildnml(case, caseroot, compname):
     cism_use_antarctica = case.get_value("CISM_USE_ANTARCTICA")
     mask = case.get_value("MASK_GRID")
     driver = case.get_value("COMP_INTERFACE").lower()
+
+    # Create init_generated_files directory if not there
+    newdir = os.path.join(rundir,"init_generated_files")
+    if not os.path.exists(newdir):
+        os.mkdir(newdir)
 
     # -----------------------------------------------------
     # Error checking

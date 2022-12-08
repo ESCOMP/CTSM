@@ -17,7 +17,7 @@
 #
 # To then get the files from the CESM SVN repository:
 #
-# ../cime/scripts/Tools/check_input_data --data-list-dir . --download
+# ../cime/CIME/Tools/check_input_data --data-list-dir . --download
 #
 #=======================================================================
 
@@ -84,7 +84,7 @@ EXAMPLES
 
   to then read the resulting clm.input_data_list file and retreive the files
 
-  ../cime/scripts/Tools/check_input_data --data-list-dir . --download
+  ../cime/CIME/Tools/check_input_data --data-list-dir . --download
 
 EOF
 }

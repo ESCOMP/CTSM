@@ -51,10 +51,9 @@ module load ncarcompilers
 module load netcdf
 
 module load nco
-module load python
 module load ncl
 
-ncar_pylib
+module load conda
 
 
 ##omp threads
@@ -116,7 +115,7 @@ module load netcdf
 module load openmpi
 
 module load nco
-module load python
+module load conda
 module load ncl
 
 
@@ -216,6 +215,7 @@ module purge
 module load compiler/intel
 module load tool/nco
 module load tool/netcdf
+module load lang/python
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
@@ -296,6 +296,7 @@ module purge
 module load compiler/intel
 module load tool/nco
 module load tool/netcdf
+module load lang/python
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
@@ -370,6 +371,10 @@ else
 	exit 3
     fi
 fi
+
+# Setup conda environement
+\$CLM_ROOT/py_env_create
+conda activate ctsm_py
 
 ##output files
 clm_log=\${initdir}/td.\${JOBID}.log

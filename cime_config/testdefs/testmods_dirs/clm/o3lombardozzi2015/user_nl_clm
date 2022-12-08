@@ -1,2 +1,2 @@
  o3_veg_stress_method    = 'stress_lombardozzi2015'
- hist_fincl2 += 'O3UPTAKESUN', 'O3UPTAKESHA'
+ hist_fincl2 += 'O3UPTAKESUN', 'O3UPTAKESHA', 'ATM_O3'

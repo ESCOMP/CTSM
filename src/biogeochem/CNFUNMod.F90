@@ -26,6 +26,7 @@ module CNFUNMod
   use pftconMod                       , only : pftcon, npcropmin
   use decompMod                       , only : bounds_type
   use clm_varctl                      , only : use_nitrif_denitrif,use_flexiblecn
+  use CNSharedParamsMod               , only : use_matrixcn
   use abortutils                      , only : endrun
   use CNVegstateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
@@ -124,7 +125,7 @@ module CNFUNMod
   !
   ! !USES:
   use clm_varcon      , only: secspday, fun_period
-  use clm_time_manager, only: get_step_size_real,get_nstep,get_curr_date,get_days_per_year
+  use clm_time_manager, only: get_step_size_real,get_nstep,get_curr_date,get_curr_days_per_year
   !
   ! !ARGUMENTS:
   type(bounds_type)             , intent(in)    :: bounds
@@ -166,7 +167,7 @@ module CNFUNMod
   !---
   ! set time steps
   dt           = get_step_size_real()
-  dayspyr      = get_days_per_year()
+  dayspyr      = get_curr_days_per_year()
   nstep        = get_nstep()
   timestep_fun = real(secspday * fun_period)
   nstep_fun    = int(secspday * dayspyr / dt) 
@@ -210,7 +211,7 @@ module CNFUNMod
        & soilbiogeochem_nitrogenstate_inst)
 
 ! !USES:
-   use clm_time_manager, only : get_step_size_real, get_curr_date, get_days_per_year 
+   use clm_time_manager, only : get_step_size_real, get_curr_date
    use clm_varpar      , only : nlevdecomp
    use clm_varcon      , only : secspday, smallValue, fun_period, tfrz, dzsoi_decomp, spval
    use clm_varctl      , only : use_nitrif_denitrif
@@ -505,7 +506,6 @@ module CNFUNMod
   !---------------------------------
   associate(ivt                    => patch%itype                                          , & ! Input:   [integer  (:) ]  p
          leafcn                 => pftcon%leafcn                                        , & ! Input:   leaf C:N (gC/gN)
-         lflitcn                => pftcon%lflitcn                                       , & ! Input:   leaf litter C:N (gC/gN)
          season_decid           => pftcon%season_decid                                  , & ! Input:   binary flag for seasonal
          ! -deciduous leaf habit (0 or 1)
          stress_decid           => pftcon%stress_decid                                  , & ! Input:   binary flag for stress
@@ -568,6 +568,8 @@ module CNFUNMod
          livestemn              => cnveg_nitrogenstate_inst%livestemn_patch             , & ! Input:   [real(r8)  (:)]
          !   (gN/m2) live stem N
          livecrootn             => cnveg_nitrogenstate_inst%livecrootn_patch            , & ! Input:   [real(r8)  (:)]
+         !   (gN/m2) retranslocation N
+         retransn               => cnveg_nitrogenstate_inst%retransn_patch              , & ! Input:   [real(r8)  (:)]
          !   (gN/m2) live coarse root N
          leafn_storage_xfer_acc => cnveg_nitrogenstate_inst%leafn_storage_xfer_acc_patch, & ! Output:  [real(r8)  (:)]
          !   Accmulated leaf N transfer (gC/m2)
@@ -1449,7 +1451,12 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       Npassive(p)               = n_passive_acc(p)/dt
       Nfix(p)                   = n_fix_acc_total(p)/dt                   
       retransn_to_npool(p)      = n_retrans_acc_total(p)/dt
-      free_retransn_to_npool(p) = free_nretrans(p)/dt
+      ! Without matrix solution
+      if(.not. use_matrixcn)then
+         free_retransn_to_npool(p) = free_nretrans(p)/dt
+      ! With matrix solution (when it comes in)
+      else
+      end if
       ! this is the N that comes off leaves. 
       Nretrans(p)               = retransn_to_npool(p) + free_retransn_to_npool(p)
       
