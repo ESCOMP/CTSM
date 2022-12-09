@@ -170,6 +170,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
+    use clm_varpar     , only : nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     class(waterdiagnosticbulk_type), intent(inout) :: this
@@ -199,7 +200,7 @@ contains
     allocate(this%h2osoi_liq_tot_col     (begc:endc))                     ; this%h2osoi_liq_tot_col     (:)   = nan
     allocate(this%swe_old_col            (begc:endc,-nlevsno+1:0))        ; this%swe_old_col            (:,:) = nan   
     allocate(this%exice_subs_tot_col     (begc:endc))                     ; this%exice_subs_tot_col     (:)   = 0.0_r8
-    allocate(this%exice_subs_col         (begc:endc, 1:nlevgrnd))         ; this%exice_subs_col         (:,:) = 0.0_r8
+    allocate(this%exice_subs_col         (begc:endc, 1:nlevmaxurbgrnd))   ; this%exice_subs_col         (:,:) = 0.0_r8
     allocate(this%exice_vol_col          (begc:endc, 1:nlevgrnd))         ; this%exice_vol_col          (:,:) = 0.0_r8
     allocate(this%exice_vol_tot_col      (begc:endc))                     ; this%exice_vol_tot_col      (:)   = 0.0_r8
 
