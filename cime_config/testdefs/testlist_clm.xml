@@ -171,11 +171,7 @@
   <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm51Sp" testmods="clm/ExcessIceStreams">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="nag" category="aux_clm"/>
-      <machine name="izumi"    compiler="intel" category="aux_clm"/>
-      <machine name="izumi"    compiler="gnu" category="aux_clm"/>
-      <machine name="izumi"    compiler="pgi" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -184,10 +180,7 @@
   </test>
   <test name="SMS_Lm12" grid="f09_f09_mg17" compset="I1850Clm51Sp" testmods="clm/ExcessIceStartup_output_sp_exice">
     <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
-      <machine name="izumi"    compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
