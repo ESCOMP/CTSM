@@ -979,3 +979,40 @@ the top layer is a blend of ice and soil heat capacity
    c_{1} =c_{1}^{*} +\frac{C_{ice} W_{sno} }{\Delta z_{1} }
 
 where :math:`c_{1}^{*}`  is calculated from :eq:`6.89` or :eq:`6.92`.
+
+
+.. _Excess Ground Ice:
+
+Excess Ground Ice
+------------------------------------
+
+An optional parameterization of excess ground ice melt and respective subsidence based on (:ref:`Lee et al., (2014) <Leeetal2014>`). 
+Initial excess ice concentrations for soil columns are derived from (:ref:`Brown et al., (1997) <Brownetal1997>`). 
+When the excess ice is present in the soil column soil depth for a given layer (:math:`z_{i}`) 
+is adjusted be the ammount of excess ice in the column:
+
+.. math::
+   :label: 6.94
+
+   z_{i}^{'}=\Sigma_{j=1}^{i} \ z_{j}^{'}+\frac{w_{exice,\, j}}{\rho_{ice} }
+
+where :math:`w_{exice,\,j}` is excess ground ice ammount (kg m :sup:`-2`) in layer :math:`j` and :math:`\rho_{ice}` is the density of ice (kg m :sup:`-3`).
+After adjustment of layer depths have been made all of the soil temperature equations  (from :eq:`6.80` to :eq:`6.89`)
+are calculted based on the adjusted depths. Thermal properties are additionally adjusted (:eq:`6.8` and :eq:`6.8`) in the following way:
+
+.. math::
+   :label: 6.95
+
+   \begin{array}{lr}
+    \theta_{sat}^{'} =\frac{\theta _{liq} }{\theta _{liq} +\theta _{ice} +\theta_{exice}}{\theta_{sat}} \\
+    \lambda _{sat}^{'} =\lambda _{s}^{1-\theta _{sat}^{'} } \lambda _{liq}^{\frac{\theta _{liq} }{\theta _{liq} +\theta _{ice} +\theta_{exice}} \theta _{sat}^{'} } \lambda _{ice}^{\theta _{sat}^{'} \left(1-\frac{\theta _{liq} }{\theta _{liq} +\theta _{ice} +\theta_{exice}} \right)} \\
+    c_{i}^{'} =c_{s,\, i} \left(1-\theta _{sat,\, i}^{'} \right)+\frac{w_{ice,\, i} +w_{exice,\,j}}{\Delta z_{i}^{'} } C_{ice} +\frac{w_{liq,\, i} }{\Delta z_{i}^{'} } C_{liq}
+   \end{array}
+
+Soil subsidence at the timestep :math:`n+1` (:math:`z_{exice}^{n+1}`, m) is then calculated as:
+
+.. math::
+   :label: 6.96
+
+   z_{exice}^{n+1}=\Sigma_{i=1}^{N_{levgrnd}} \ z_{j}^{',\ ,n+1}-z_{j}^{',\ ,n}
+
