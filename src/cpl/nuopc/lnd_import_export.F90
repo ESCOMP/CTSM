@@ -138,6 +138,16 @@ module lnd_import_export
   character(*), parameter :: Flrl_rofgwl    = 'Flrl_rofgwl'
   character(*), parameter :: Flrl_rofi      = 'Flrl_rofi'
   character(*), parameter :: Flrl_irrig     = 'Flrl_irrig'
+  character(*), parameter :: Flrl_dom_withd = 'Flrl_dom_withd'
+  character(*), parameter :: Flrl_dom_rf    = 'Flrl_dom_rf'
+  character(*), parameter :: Flrl_liv_withd = 'Flrl_liv_withd'
+  character(*), parameter :: Flrl_liv_rf    = 'Flrl_liv_rf'
+  character(*), parameter :: Flrl_elec_withd = 'Flrl_elec_withd'
+  character(*), parameter :: Flrl_elec_rf   =  'Flrl_elec_rf'
+  character(*), parameter :: Flrl_mfc_withd = 'Flrl_mfc_withd'
+  character(*), parameter :: Flrl_mfc_rf    = 'Flrl_mfc_rf'
+  character(*), parameter :: Flrl_min_withd = 'Flrl_min_withd'
+  character(*), parameter :: Flrl_min_rf    = 'Flrl_min_rf'
   character(*), parameter :: Sl_tsrf_elev   = 'Sl_tsrf_elev'
   character(*), parameter :: Sl_topo_elev   = 'Sl_topo_elev'
   character(*), parameter :: Flgl_qice_elev = 'Flgl_qice_elev'
@@ -298,6 +308,16 @@ contains
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsub)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofi  )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_irrig )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_dom_withd )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_dom_rf )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_liv_withd )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_liv_rf )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_elec_withd )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_elec_rf )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_mfc_withd )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_mfc_rf )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_min_withd )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_min_rf )
     end if
 
     ! export to glc if appropriate
@@ -885,6 +905,77 @@ contains
             minus = .true., init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
+    if (fldchk(exportState, Flrl_dom_withd)) then ! domestic withdrawal flux to be removed from main channel storage (negative)
+      ! NOTE: EBK 11/15/2021 -- Don't initialize to spval as otherwise RTM dies
+      ! with NaN's (see #1545 for the non-FATES issue)
+      call state_setexport_1d(exportState, Flrl_dom_withd, waterlnd2atmbulk_inst%qdom_withd_grc(begg:), &
+           minus = .true., init_spval=.false., rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+   end if
+   if (fldchk(exportState, Flrl_dom_rf)) then ! domestic return flow flux to be added to the main channel storage (positive)
+      ! NOTE: EBK 11/15/2021 -- Don't initialize to spval as otherwise RTM dies
+      ! with NaN's (see #1545 for the non-FATES issue)
+      call state_setexport_1d(exportState, Flrl_dom_rf, waterlnd2atmbulk_inst%qdom_rf_grc(begg:), &
+           minus = .false., init_spval=.false., rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+   end if
+   if (fldchk(exportState, Flrl_liv_withd)) then ! livestock withdrawal flux to be removed from main channel storage (negative)
+      ! NOTE: EBK 11/15/2021 -- Don't initialize to spval as otherwise RTM dies
+      ! with NaN's (see #1545 for the non-FATES issue)
+      call state_setexport_1d(exportState, Flrl_liv_withd, waterlnd2atmbulk_inst%qliv_withd_grc(begg:), &
+           minus = .true., init_spval=.false., rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+   end if
+   if (fldchk(exportState, Flrl_liv_rf)) then ! livestock return flow flux to be added to the main channel storage (positive)
+      ! NOTE: EBK 11/15/2021 -- Don't initialize to spval as otherwise RTM dies
+      ! with NaN's (see #1545 for the non-FATES issue)
+      call state_setexport_1d(exportState, Flrl_liv_rf, waterlnd2atmbulk_inst%qliv_rf_grc(begg:), &
+           minus = .false., init_spval=.false., rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+   end if
+   if (fldchk(exportState, Flrl_elec_withd)) then ! thermoelectric withdrawal flux to be removed from main channel storage (negative)
+      ! NOTE: EBK 11/15/2021 -- Don't initialize to spval as otherwise RTM dies
+      ! with NaN's (see #1545 for the non-FATES issue)
+      call state_setexport_1d(exportState, Flrl_elec_withd, waterlnd2atmbulk_inst%qelec_withd_grc(begg:), &
+           minus = .true., init_spval=.false., rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+   end if
+   if (fldchk(exportState, Flrl_elec_rf)) then ! thermoelectric return flow flux to be added to the main channel storage (positive)
+      ! NOTE: EBK 11/15/2021 -- Don't initialize to spval as otherwise RTM dies
+      ! with NaN's (see #1545 for the non-FATES issue)
+      call state_setexport_1d(exportState, Flrl_elec_rf, waterlnd2atmbulk_inst%qelec_rf_grc(begg:), &
+           minus = .false., init_spval=.false., rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+   end if
+   if (fldchk(exportState, Flrl_mfc_withd)) then ! manufacturing withdrawal flux to be removed from main channel storage (negative)
+      ! NOTE: EBK 11/15/2021 -- Don't initialize to spval as otherwise RTM dies
+      ! with NaN's (see #1545 for the non-FATES issue)
+      call state_setexport_1d(exportState, Flrl_mfc_withd, waterlnd2atmbulk_inst%qmfc_withd_grc(begg:), &
+           minus = .true., init_spval=.false., rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+   end if
+   if (fldchk(exportState, Flrl_mfc_rf)) then ! manufacturing return flow flux to be added to the main channel storage (positive)
+      ! NOTE: EBK 11/15/2021 -- Don't initialize to spval as otherwise RTM dies
+      ! with NaN's (see #1545 for the non-FATES issue)
+      call state_setexport_1d(exportState, Flrl_mfc_rf, waterlnd2atmbulk_inst%qmfc_rf_grc(begg:), &
+           minus = .false., init_spval=.false., rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+   end if
+   if (fldchk(exportState, Flrl_min_withd)) then ! mining withdrawal flux to be removed from main channel storage (negative)
+      ! NOTE: EBK 11/15/2021 -- Don't initialize to spval as otherwise RTM dies
+      ! with NaN's (see #1545 for the non-FATES issue)
+      call state_setexport_1d(exportState, Flrl_min_withd, waterlnd2atmbulk_inst%qmin_withd_grc(begg:), &
+           minus = .true., init_spval=.false., rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+   end if
+   if (fldchk(exportState, Flrl_min_rf)) then ! mining return flow flux to be added to the main channel storage (positive)
+      ! NOTE: EBK 11/15/2021 -- Don't initialize to spval as otherwise RTM dies
+      ! with NaN's (see #1545 for the non-FATES issue)
+      call state_setexport_1d(exportState, Flrl_min_rf, waterlnd2atmbulk_inst%qmin_rf_grc(begg:), &
+           minus = .false., init_spval=.false., rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+   end if
+   
     if (fldchk(exportState, Flrl_rofsub)) then
        ! subsurface runoff is the sum of qflx_drain and qflx_perched_drain
        do g = begg, endg
