@@ -329,6 +329,36 @@ contains
 
        ! irrigation flux to be removed from main channel storage (negative)
        l2x(index_l2x_Flrl_irrig,i) = - waterlnd2atmbulk_inst%qirrig_grc(g)
+       
+       ! domestic withdrawal flux to be removed from main channel storage (negative)
+       l2x(index_l2x_Flrl_dom_withd,i) = - waterlnd2atmbulk_inst%qdom_withd_grc(g)
+
+       ! domestic return flow flux to be added to the main channel storage (positive)
+       l2x(index_l2x_Flrl_dom_rf,i) =  waterlnd2atmbulk_inst%qdom_rf_grc(g)
+
+       ! livestock withdrawal flux to be removed from main channel storage (negative)
+       l2x(index_l2x_Flrl_liv_withd,i) = - waterlnd2atmbulk_inst%qliv_withd_grc(g)
+
+       ! livestock return flow flux to be added to the main channel storage (positive)
+       l2x(index_l2x_Flrl_liv_rf,i) =  waterlnd2atmbulk_inst%qliv_rf_grc(g)
+
+       ! thermoelectric withdrawal flux to be removed from main channel storage (negative)
+       l2x(index_l2x_Flrl_elec_withd,i) = - waterlnd2atmbulk_inst%qelec_withd_grc(g)
+
+       ! thermoelectric return flow flux to be added to the main channel storage (positive)
+       l2x(index_l2x_Flrl_elec_rf,i) =  waterlnd2atmbulk_inst%qelec_rf_grc(g)
+
+       ! manufacturing withdrawal flux to be removed from main channel storage (negative)
+       l2x(index_l2x_Flrl_mfc_withd,i) = - waterlnd2atmbulk_inst%qmfc_withd_grc(g)
+
+       ! manufacturing return flow flux to be added to the main channel storage (positive)
+       l2x(index_l2x_Flrl_mfc_rf,i) =  waterlnd2atmbulk_inst%qmfc_rf_grc(g)
+
+       ! mining withdrawal flux to be removed from main channel storage (negative)
+       l2x(index_l2x_Flrl_min_withd,i) = - waterlnd2atmbulk_inst%qmin_withd_grc(g)
+
+       ! mining return flow flux to be added to the main channel storage (positive)
+       l2x(index_l2x_Flrl_min_rf,i) =  waterlnd2atmbulk_inst%qmin_rf_grc(g)
 
        ! glc coupling
        ! We could avoid setting these fields if glc_present is .false., if that would
