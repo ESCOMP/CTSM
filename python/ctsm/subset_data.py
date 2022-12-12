@@ -310,14 +310,14 @@ def get_parser():
             default="",
         )
         cesmroot = path_to_ctsm_root()
-        DEFAULTS_FILE = os.path.join(cesmroot, DEFAULTS_CONFIG)
+        defaults_file = os.path.join(cesmroot, DEFAULTS_CONFIG)
         subparser.add_argument(
             "--file",
             help="Default configure file to use for default filenames.",
             action="store",
             dest="config_file",
             type=str,
-            default=DEFAULTS_FILE,
+            default=defaults_file,
         )
         subparser.add_argument(
             "--overwrite",
