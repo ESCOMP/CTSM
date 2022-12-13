@@ -359,7 +359,7 @@ contains
     allocate(soil_water_retention_curve, &
          source=create_soil_water_retention_curve())
 
-    call sectorwater_inst%init(bounds, nlfilename, use_aquifer_layer = use_aquifer_layer())
+    call sectorwater_inst%init(bounds, nlfilename)
     
     call irrigation_inst%init(bounds, nlfilename, soilstate_inst, soil_water_retention_curve, &
          use_aquifer_layer = use_aquifer_layer())
