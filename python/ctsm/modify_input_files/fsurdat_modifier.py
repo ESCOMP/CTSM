@@ -48,7 +48,9 @@ def fsurdat_modifier(cfg_path):
     if not os.path.exists(cfg_path):
        abort( "Config file does NOT exist: "+str(cfg_path) )
     config.read(cfg_path)
-    section = config.sections()[0]  # name of the first section
+    section = "modify_input"
+    if not config.has_section(section):
+       abort( "Config file does not have the expected section: "+section )
 
     # required: user must set these in the .cfg file
     fsurdat_in = get_config_value(
