@@ -39,6 +39,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
             path_to_ctsm_root(), "tools/modify_input_files/modify_fsurdat_template.cfg"
         )
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
+        self._testinputs_path = testinputs_path
         self._fsurdat_in = os.path.join(
             testinputs_path,
             "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc",
@@ -52,6 +53,16 @@ class TestSysFsurdatModifier(unittest.TestCase):
         Remove temporary directory
         """
         shutil.rmtree(self._tempdir, ignore_errors=True)
+
+    def test_no_files_given_fail(self):
+        """
+        Test that if no input or output files are given that it will gracefully fail
+        """
+        self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short_nofiles.cfg")
+        with self.assertRaisesRegex(
+            SystemExit, "must contain item 'fsurdat_in'"
+        ):
+            fsurdat_modifier(self._cfg_file_path)
 
     def test_minimalInfo(self):
         """
