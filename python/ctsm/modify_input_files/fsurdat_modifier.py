@@ -45,6 +45,8 @@ def fsurdat_modifier(cfg_path):
     """Implementation of fsurdat_modifier command"""
     # read the .cfg (config) file
     config = ConfigParser()
+    if not os.path.exists(cfg_path):
+       abort( "Config file does NOT exist: "+str(cfg_path) )
     config.read(cfg_path)
     section = config.sections()[0]  # name of the first section
 
