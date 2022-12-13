@@ -65,54 +65,24 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
     def _run_modify_fsurdat(self):
         tool_path = os.path.join(self._ctsm_root,
                                  'tools/modify_input_files/fsurdat_modifier')
-        # Need to specify a specific python version that has the required
-        # dependencies
-        python_path = _get_python_path()
-        subprocess.check_call([python_path, tool_path, self._cfg_file_path])
+        # Prepare conda environment before running the tool
+        # TODO slevis (delete these lines when all steps are done):
+        # 1) DONE Confirm that
+        # ./create_test FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRs.cheyenne_intel -c /glade/p/cgd/tss/ctsm_baselines/ctsm5.1.dev115
+        # works: PASS
+        # 2) DONE Confirm that the README instructions work in interactive mode
+        # >>> module unload python
+        # >>> module load conda
+        # >>> ./py_env_create
+        # >>> conda activate ctsm_py
+        # >>> cd tools/modify_input_files
+        # >>> ./fsurdat_modifier islas_examples/modify_fsurdat/fill_indian_ocean/modify_slevis_16pft.cfg
+        # 3) Execute those here
+
+        # Run the fsurdat_modifier tool
+        subprocess.check_call([tool_path, self._cfg_file_path])
 
     def _modify_user_nl(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
                                 component = "clm",
                                 contents = "fsurdat = '{}'".format(self._fsurdat_out))
-
-def _get_python_path():
-    """Get path to ncar_pylib's python on cheyenne
-
-    This is needed because we need a python environment that includes xarray
-    and its dependencies. This is currently hard-coded for cheyenne until we
-    come up with a robust way in CIME of ensuring that the correc python
-    environment is loaded.
-
-    """
-    out = subprocess.check_output(['/glade/u/apps/opt/ncar_pylib/ncar_pylib',
-                                   '-l'], universal_newlines=True)
-
-    # First look for a loaded ('L') python
-    path = _find_path_from_pylib_output(out, 'L')
-    # If no loaded python found, look for a default ('D') python
-    if path is None:
-        path = _find_path_from_pylib_output(out, 'D')
-
-    if path is None:
-        raise RuntimeError('No python found')
-
-    return os.path.join(path, 'bin', 'python')
-
-def _find_path_from_pylib_output(ncar_pylib_output, char):
-    """Given line-by-line output from ncar_pylib, return the path to python if found
-
-    Args:
-    - ncar_pylib_output: line-by-line output from ncar_pylib
-    - char: the character to look for in the leading parenthetical expression (typically 'L' or 'D')
-
-    Returns a path to python, or None if not found
-    """
-    # The line of interest looks like the following (for char = 'L'):
-    # (L) ... /path/to/python
-    regex = r'\(' + char + r'\).* (/\S+)'
-    for line in ncar_pylib_output.splitlines():
-        match_line = re.match(regex, line)
-        if match_line:
-            return match_line.group(1)
-
-    return None
