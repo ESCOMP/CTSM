@@ -74,6 +74,17 @@ class TestSysFsurdatModifier(unittest.TestCase):
         ):
             fsurdat_modifier(self._cfg_file_path)
 
+    def test_cfg_file_empty_fail(self):
+        """
+        Test that if the config file is empty it gracefully fails
+        """
+        self._cfg_file_path = os.path.join(self._tempdir, "EMPTY_FILE.cfg" )
+        fil = open( self._cfg_file_path, "w" )
+        fil.close()
+        with self.assertRaisesRegex(
+            SystemExit, "Config file does not have the expected section"
+        ):
+            fsurdat_modifier(self._cfg_file_path)
 
     def test_minimalInfo(self):
         """
