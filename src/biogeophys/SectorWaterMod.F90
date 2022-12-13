@@ -147,9 +147,11 @@ module SectorWaterMod
    ! ========================================================================
  
    !------------------------------------------------------------------------
-     subroutine SectorWaterInit(this, bounds)
+     subroutine SectorWaterInit(this, bounds, NLFilename)
           class(sectorwater_type) , intent(inout) :: this
           type(bounds_type)      , intent(in)     :: bounds
+          character(len=*)       , intent(in)    :: NLFilename ! Namelist filename
+          call this%ReadNamelist(NLFilename)
           call this%InitAllocate(bounds)
           call this%InitHistory(bounds)
           call this%InitCold(bounds)
