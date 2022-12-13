@@ -64,6 +64,13 @@ class TestSysFsurdatModifier(unittest.TestCase):
         ):
             fsurdat_modifier(self._cfg_file_path)
 
+    def test_short_config(self):
+        """
+        Test that a short config file works
+        """
+        self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short.cfg")
+        fsurdat_modifier(self._cfg_file_path)
+
     def test_cfg_file_DNE_fail(self):
         """
         Test that if the config file does not exist that it gracefully fails
