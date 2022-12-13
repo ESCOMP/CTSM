@@ -64,6 +64,17 @@ class TestSysFsurdatModifier(unittest.TestCase):
         ):
             fsurdat_modifier(self._cfg_file_path)
 
+    def test_cfg_file_DNE_fail(self):
+        """
+        Test that if the config file does not exist that it gracefully fails
+        """
+        self._cfg_file_path = os.path.join(self._tempdir, "FILE_DOES_NOT_EXIST.cfg" )
+        with self.assertRaisesRegex(
+            SystemExit, "Config file does NOT exist"
+        ):
+            fsurdat_modifier(self._cfg_file_path)
+
+
     def test_minimalInfo(self):
         """
         This test specifies a minimal amount of information
