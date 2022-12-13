@@ -70,6 +70,8 @@ class TestSysFsurdatModifier(unittest.TestCase):
         """
         self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short.cfg")
         fsurdat_modifier(self._cfg_file_path)
+        fsurdat_out = "ctsm/test/testinputs/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_out.nc"
+        os.remove( fsurdat_out )
 
     def test_cfg_file_DNE_fail(self):
         """
