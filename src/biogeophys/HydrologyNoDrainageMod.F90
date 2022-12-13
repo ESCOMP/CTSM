@@ -49,7 +49,7 @@ Module HydrologyNoDrainageMod
 contains
 
    !-----------------------------------------------------------------------
-   subroutine CalcAndWithdrawSectorWaterFluxes(bounds, num_soilp, filter_soilp, num_natvegp, filter_natvegp, soilhydrology_inst, sectorwater_inst, water_inst, volr, rof_prognostic)
+   subroutine CalcAndWithdrawSectorWaterFluxes(bounds, soilhydrology_inst, sectorwater_inst, water_inst, volr, rof_prognostic)
       !
       ! !DESCRIPTION:
       ! Calculates sectorwal water withdrawal, consumption and return flow fluxes;
@@ -65,10 +65,6 @@ contains
       !
       ! !ARGUMENTS:
       integer  :: g, p, l, c  ! gridcell index
-      integer                        , intent(in)    :: num_soilp            ! number of points in filter_soilp
-      integer                        , intent(in)    :: filter_soilp(:)      ! patch filter for soil points
-      integer                        , intent(in)    :: num_natvegp          ! number of points in filter_natvegp
-      integer                        , intent(in)    :: filter_natvegp(:)    ! patch filter for natural vegetation points
       type(bounds_type)              , intent(in)    :: bounds
       type(soilhydrology_type)       , intent(in)    :: soilhydrology_inst
       type(sectorwater_type)         , intent(inout) :: sectorwater_inst
