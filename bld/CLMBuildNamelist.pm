@@ -219,10 +219,8 @@ OPTIONS
      -stream_ndep_year_first       Only set from input options(no precedence)
      -stream_ndep_year_last        Only set from input options(no precedence)
      -stream_ndep_year_align       Only set from input options(no precedence)
-     -stream_ndep_dtlimit          Only set from input options(no precedence)
      -stream_ndep_data_filename    Only set from input options(no precedence)
      -stream_ndep_mesh_filename    Only set from input options(no precedence)
-     -stream_ndep_data_varlist     Only set from input options(no precedence)
      -stream_ndep_taxmode          Only set from input options(no precedence)
      -stream_ndep_mapalgo          Only set from input options(no precedence)
      -stream_ndep_tintalgo         Only set from input options(no precedence)
@@ -333,10 +331,8 @@ sub process_commandline {
                stream_ndep_year_first       => 0,
                stream_ndep_year_last        => 0,
                stream_ndep_year_align       => 0,
-               stream_ndep_dtlimit          => 0,
                stream_ndep_data_filename    => "default",
                stream_ndep_mesh_filename    => "default",
-               stream_ndep_data_varlist     => "default",
                stream_ndep_taxmode          => "default",
                stream_ndep_mapalgo          => "default",
                stream_ndep_tintalgo         => "default",
@@ -439,11 +435,9 @@ sub process_commandline {
       "stream_ndep_year_align=i"       => \$opts{'stream_ndep_year_align'},
       "stream_ndep_data_filename=s"    => \$opts{'stream_ndep_data_filename'},
       "stream_ndep_mesh_filename=s"    => \$opts{'stream_ndep_mesh_filename'},
-      "stream_ndep_data_varlist=s"     => \$opts{'stream_ndep_data_varlist'},
-      "stream_ndep_dtlimit=f"          => \$opts{'stream_ndep_dtlimit'},
-      "stream_ndep_taxmode=s"          => \$opts{'stream_ndep_taxmode'},
       "stream_ndep_mapalgo=s"          => \$opts{'stream_ndep_mapalgo'},
       "stream_ndep_tintalgo=s"         => \$opts{'stream_ndep_tintalgo'},
+      "stream_ndep_taxmode=s"          => \$opts{'stream_ndep_taxmode'},
       #
       "stream_popdens_year_first=i"    => \$opts{'stream_popdens_year_first'},
       "stream_popdens_year_last=i"     => \$opts{'stream_popdens_year_last'},
@@ -3590,8 +3584,6 @@ sub setup_logic_nitrogen_deposition_streams {
           my ($var_nml, $var_opts) = ('stream_ndep_mesh_filename', 'stream_ndep_mesh_filename');
           add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 1);
       }
-      my ($var_nml, $var_opts) = ('stream_ndep_data_varlist', 'stream_ndep_data_varlist');
-      add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 1);
       my ($var_nml, $var_opts) = ('stream_ndep_mapalgo', 'stream_ndep_mapalgo');
       add_stream_default($opts, $inputdata_rootdir, $definition, $defaults, $nl, $var_nml, $var_opts, 1);
       my ($var_nml, $var_opts) = ('stream_ndep_tintalgo', 'stream_ndep_tintalgo');

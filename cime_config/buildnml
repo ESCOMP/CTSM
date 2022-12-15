@@ -62,16 +62,14 @@ def buildnml(case, caseroot, compname):
     mask = case.get_value("MASK_GRID")
     driver = case.get_value("COMP_INTERFACE").lower()
 
-    stream_ndep_year_first = case.get_value("STREAM_NDEP_YEAR_FIRST")
-    stream_ndep_year_last = case.get_value("STREAM_NDEP_YEAR_LAST")
-    stream_ndep_year_align = case.get_value("STREAM_NDEP_YEAR_ALIGN")
-    stream_ndep_dtlimit = case.get_value("STREAM_NDEP_DTLIMIT")
-    stream_ndep_data_filename = case.get_value("STREAM_NDEP_DATA_FILENAME")
-    stream_ndep_mesh_filename = case.get_value("STREAM_NDEP_MESH_FILENAME")
-    stream_ndep_data_varlist = case.get_value("STREAM_NDEP_DATA_VARLIST")
-    stream_ndep_taxmode = case.get_value("STREAM_NDEP_TAXMODE")
-    stream_ndep_mapalgo = case.get_value("STREAM_NDEP_MAPALGO")
-    stream_ndep_tintalgo = case.get_value("STREAM_NDEP_TINTALGO")
+    stream_ndep_year_first = case.get_value("CLM_STREAM_NDEP_YEAR_FIRST")
+    stream_ndep_year_last = case.get_value("CLM_STREAM_NDEP_YEAR_LAST")
+    stream_ndep_year_align = case.get_value("CLM_STREAM_NDEP_YEAR_ALIGN")
+    stream_ndep_data_filename = case.get_value("CLM_STREAM_NDEP_DATA_FILENAME")
+    stream_ndep_mesh_filename = case.get_value("CLM_STREAM_NDEP_MESH_FILENAME")
+    stream_ndep_mapalgo = case.get_value("CLM_STREAM_NDEP_MAPALGO")
+    stream_ndep_tintalgo = case.get_value("CLM_STREAM_NDEP_TINTALGO")
+    stream_ndep_taxmode = case.get_value("CLM_STREAM_NDEP_TAXMODE")
 
     stream_popdens_year_first = case.get_value("CLM_STREAM_POPDENS_YEAR_FIRST")
     stream_popdens_year_last = case.get_value("CLM_STREAM_POPDENS_YEAR_LAST")
@@ -327,8 +325,6 @@ def buildnml(case, caseroot, compname):
         command = command + f"-stream_ndep_year_align {stream_ndep_year_align} "
         command = command + f"-stream_ndep_data_filename {stream_ndep_data_filename} "
         command = command + f"-stream_ndep_mesh_filename {stream_ndep_mesh_filename} "
-        command = command + f"-stream_ndep_data_varlist {stream_ndep_data_varlist} "
-        command = command + f"-stream_ndep_dtlimit {stream_ndep_dtlimit} "
         command = command + f"-stream_ndep_taxmode {stream_ndep_taxmode} "
         command = command + f"-stream_ndep_mapalgo {stream_ndep_mapalgo} "
         command = command + f"-stream_ndep_tintalgo {stream_ndep_tintalgo} "

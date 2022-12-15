@@ -11,10 +11,10 @@ module SoilBiogeochemNitrogenFluxType
   use CNSharedParamsMod                  , only : use_fun
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use abortutils                         , only : endrun
-  use LandunitType                       , only : lun                
-  use ColumnType                         , only : col                
+  use LandunitType                       , only : lun
+  use ColumnType                         , only : col
   use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
-  ! 
+  !
   ! !PUBLIC TYPES:
   implicit none
   private
@@ -23,8 +23,8 @@ module SoilBiogeochemNitrogenFluxType
 
      ! deposition fluxes
      real(r8), pointer :: ndep_to_sminn_col                         (:)     ! col atmospheric N deposition to soil mineral N (gN/m2/s)
-     real(r8), pointer :: nfix_to_sminn_col                         (:)     ! col symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s) 
-     real(r8), pointer :: ffix_to_sminn_col                         (:)     ! col free living N fixation to soil mineral N (gN/m2/s)  
+     real(r8), pointer :: nfix_to_sminn_col                         (:)     ! col symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s)
+     real(r8), pointer :: ffix_to_sminn_col                         (:)     ! col free living N fixation to soil mineral N (gN/m2/s)
      real(r8), pointer :: fert_to_sminn_col                         (:)     ! col fertilizer N to soil mineral N (gN/m2/s)
      real(r8), pointer :: soyfixn_to_sminn_col                      (:)     ! col soybean fixation to soil mineral N (gN/m2/s)
 
@@ -107,8 +107,8 @@ module SoilBiogeochemNitrogenFluxType
      !----------- no NITRIF_DENITRIF--------------
 
      ! denitrification fluxes
-     real(r8), pointer :: sminn_to_denit_decomp_cascade_vr_col      (:,:,:) ! col vertically-resolved denitrification along decomp cascade (gN/m3/s) 
-     real(r8), pointer :: sminn_to_denit_decomp_cascade_col         (:,:)   ! col vertically-integrated (diagnostic) denitrification along decomp cascade (gN/m2/s) 
+     real(r8), pointer :: sminn_to_denit_decomp_cascade_vr_col      (:,:,:) ! col vertically-resolved denitrification along decomp cascade (gN/m3/s)
+     real(r8), pointer :: sminn_to_denit_decomp_cascade_col         (:,:)   ! col vertically-integrated (diagnostic) denitrification along decomp cascade (gN/m2/s)
      real(r8), pointer :: sminn_to_denit_excess_vr_col              (:,:)   ! col vertically-resolved denitrification from excess mineral N pool (gN/m3/s)
      real(r8), pointer :: sminn_to_denit_excess_col                 (:)     ! col vertically-integrated (diagnostic) denitrification from excess mineral N pool (gN/m2/s)
 
@@ -125,18 +125,18 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: decomp_npools_transport_tendency_col      (:,:,:) ! col N tendency due to vertical transport in decomposing N pools (gN/m^3/s)
 
      ! all n pools involved in decomposition
-     real(r8), pointer :: decomp_npools_sourcesink_col              (:,:,:) ! col (gN/m3) change in decomposing n pools 
-                                                                            ! (sum of all additions and subtractions from stateupdate1).  
+     real(r8), pointer :: decomp_npools_sourcesink_col              (:,:,:) ! col (gN/m3) change in decomposing n pools
+                                                                            ! (sum of all additions and subtractions from stateupdate1).
           real(r8), pointer :: sminn_to_plant_fun_vr_col                 (:,:)   ! col total layer soil N uptake of FUN  (gN/m2/s)
 
-     ! track tradiagonal matrix  
+     ! track tradiagonal matrix
 
    contains
 
-     procedure , public  :: Init   
+     procedure , public  :: Init
      procedure , public  :: SetValues
      procedure , public  :: Summary
-     procedure , private :: InitAllocate 
+     procedure , private :: InitAllocate
      procedure , private :: InitHistory
      procedure , private :: InitCold
 
@@ -152,7 +152,7 @@ contains
   subroutine Init(this, bounds)
 
     class(soilbiogeochem_nitrogenflux_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
 
     call this%InitAllocate (bounds)
     call this%InitHistory (bounds)
@@ -168,7 +168,7 @@ contains
     !
     ! !ARGUMENTS:
     class(soilbiogeochem_nitrogenflux_type) :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer           :: begc,endc    ! column begin and end indices
@@ -239,9 +239,9 @@ contains
     allocate(this%soil_co2_prod_col                 (begc:endc,1:nlevdecomp_full)) ; this%soil_co2_prod_col          (:,:) = nan
     allocate(this%fr_WFPS_col                       (begc:endc,1:nlevdecomp_full)) ; this%fr_WFPS_col                (:,:) = spval
 
-    allocate(this%fmax_denit_carbonsubstrate_vr_col (begc:endc,1:nlevdecomp_full)) ; 
+    allocate(this%fmax_denit_carbonsubstrate_vr_col (begc:endc,1:nlevdecomp_full)) ;
     this%fmax_denit_carbonsubstrate_vr_col (:,:) = nan
-    allocate(this%fmax_denit_nitrate_vr_col         (begc:endc,1:nlevdecomp_full)) ; 
+    allocate(this%fmax_denit_nitrate_vr_col         (begc:endc,1:nlevdecomp_full)) ;
     this%fmax_denit_nitrate_vr_col         (:,:) = nan
 
     allocate(this%decomp_cascade_ntransfer_vr_col   (begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions ))
@@ -270,7 +270,7 @@ contains
     this%sminn_leached_vr_col                 (:,:)   = nan
     this%sminn_leached_col                    (:)     = nan
     this%decomp_npools_leached_col            (:,:)   = nan
-    this%decomp_npools_transport_tendency_col (:,:,:) = nan  
+    this%decomp_npools_transport_tendency_col (:,:,:) = nan
 
     allocate(this%decomp_npools_sourcesink_col (begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
     this%decomp_npools_sourcesink_col (:,:,:) = nan
@@ -290,7 +290,7 @@ contains
     !
     ! !ARGUMENTS:
     class(soilbiogeochem_nitrogenflux_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer        :: k,l
@@ -306,7 +306,7 @@ contains
     ! add suffix if number of soil decomposition depths is greater than 1
     if (nlevdecomp > 1) then
        vr_suffix = "_vr"
-    else 
+    else
        vr_suffix = ""
     endif
 
@@ -317,7 +317,7 @@ contains
     this%ndep_to_sminn_col(begc:endc) = spval
     call hist_addfld1d (fname='NDEP_TO_SMINN', units='gN/m^2/s', &
          avgflag='A', long_name='atmospheric N deposition to soil mineral N', &
-         ptr_col=this%ndep_to_sminn_col)
+         ptr_col=this%ndep_to_sminn_col, default='active')
 
     if (use_fun) then
        default = 'inactive'
@@ -460,7 +460,7 @@ contains
                   ptr_col=data1dptr, default='inactive')
           endif
 
-          if ( nlevdecomp_full > 1 ) then       
+          if ( nlevdecomp_full > 1 ) then
              !-- denitrification fluxes (none from CWD)
              if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
                 this%sminn_to_denit_decomp_cascade_vr_col(begc:endc,:,l) = spval
@@ -492,11 +492,11 @@ contains
     end if
 
     if (.not. use_nitrif_denitrif) then
-       if ( nlevdecomp_full > 1 ) then  
+       if ( nlevdecomp_full > 1 ) then
           this%sminn_to_denit_excess_vr_col(begc:endc,:) = spval
           call hist_addfld_decomp (fname='SMINN_TO_DENIT_EXCESS'//trim(vr_suffix), units='gN/m^3/s',  type2d='levdcmp', &
                avgflag='A', long_name='denitrification from excess mineral N pool', &
-               ptr_col=this%sminn_to_denit_excess_vr_col, default='inactive')   
+               ptr_col=this%sminn_to_denit_excess_vr_col, default='inactive')
 
           this%sminn_leached_vr_col(begc:endc,:) = spval
           call hist_addfld_decomp (fname='SMINN_LEACHED'//trim(vr_suffix), units='gN/m^3/s',  type2d='levdcmp', &
@@ -546,43 +546,43 @@ contains
             avgflag='A', long_name='soil NO3 pool loss to runoff', &
             ptr_col=this%smin_no3_runoff_col)
     end if
-       
-    if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then 
+
+    if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then
        this%f_nit_vr_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='F_NIT'//trim(vr_suffix), units='gN/m^3/s', type2d='levdcmp', &
             avgflag='A', long_name='nitrification flux', &
             ptr_col=this%f_nit_vr_col, default='inactive')
     end if
 
-    if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then 
+    if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then
        this%f_denit_vr_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='F_DENIT'//trim(vr_suffix), units='gN/m^3/s', type2d='levdcmp', &
             avgflag='A', long_name='denitrification flux', &
             ptr_col=this%f_denit_vr_col, default='inactive')
     end if
 
-    if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then 
+    if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then
        this%pot_f_nit_vr_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='POT_F_NIT'//trim(vr_suffix), units='gN/m^3/s', type2d='levdcmp', &
             avgflag='A', long_name='potential nitrification flux', &
             ptr_col=this%pot_f_nit_vr_col, default='inactive')
     end if
 
-    if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then 
+    if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then
        this%pot_f_denit_vr_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='POT_F_DENIT'//trim(vr_suffix), units='gN/m^3/s', type2d='levdcmp', &
             avgflag='A', long_name='potential denitrification flux', &
             ptr_col=this%pot_f_denit_vr_col, default='inactive')
     end if
 
-    if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then 
+    if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then
        this%smin_no3_leached_vr_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='SMIN_NO3_LEACHED'//trim(vr_suffix), units='gN/m^3/s', type2d='levdcmp', &
             avgflag='A', long_name='soil NO3 pool loss to leaching', &
             ptr_col=this%smin_no3_leached_vr_col, default='inactive')
     end if
 
-    if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then 
+    if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then
        this%smin_no3_runoff_vr_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='SMIN_NO3_RUNOFF'//trim(vr_suffix), units='gN/m^3/s', type2d='levdcmp', &
             avgflag='A', long_name='soil NO3 pool loss to runoff', &
@@ -855,7 +855,7 @@ contains
     !
     ! !ARGUMENTS:
     class(soilbiogeochem_nitrogenflux_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: c,l
@@ -913,7 +913,7 @@ contains
              this%f_nit_vr_col(i,j)                      = value_column
              this%f_denit_vr_col(i,j)                    = value_column
              this%smin_no3_leached_vr_col(i,j)           = value_column
-             this%smin_no3_runoff_vr_col(i,j)            = value_column 
+             this%smin_no3_runoff_vr_col(i,j)            = value_column
              this%n2_n2o_ratio_denit_vr_col(i,j)         = value_column
              this%pot_f_nit_vr_col(i,j)                  = value_column
              this%pot_f_denit_vr_col(i,j)                = value_column
@@ -928,10 +928,10 @@ contains
              this%k_nitr_t_vr_col(i,j)                   = value_column
              this%k_nitr_ph_vr_col(i,j)                  = value_column
              this%k_nitr_h2o_vr_col(i,j)                 = value_column
-             this%k_nitr_vr_col(i,j)                     = value_column 
-             this%wfps_vr_col(i,j)                       = value_column 
-             this%fmax_denit_carbonsubstrate_vr_col(i,j) = value_column 
-             this%fmax_denit_nitrate_vr_col(i,j)         = value_column 
+             this%k_nitr_vr_col(i,j)                     = value_column
+             this%wfps_vr_col(i,j)                       = value_column
+             this%fmax_denit_carbonsubstrate_vr_col(i,j) = value_column
+             this%fmax_denit_nitrate_vr_col(i,j)         = value_column
              this%f_denit_base_vr_col(i,j)               = value_column
 
              this%diffus_col(i,j)                        = value_column
@@ -1052,7 +1052,7 @@ contains
     !
     ! !ARGUMENTS:
     class (soilbiogeochem_nitrogenflux_type) :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
     integer           , intent(in) :: num_soilc       ! number of soil columns in filter
     integer           , intent(in) :: filter_soilc(:) ! filter for soil columns
     !
@@ -1076,11 +1076,11 @@ contains
 
              this%decomp_cascade_ntransfer_col(c,k) = &
                   this%decomp_cascade_ntransfer_col(c,k) + &
-                  this%decomp_cascade_ntransfer_vr_col(c,j,k) * dzsoi_decomp(j) 
+                  this%decomp_cascade_ntransfer_vr_col(c,j,k) * dzsoi_decomp(j)
 
              this%decomp_cascade_sminn_flux_col(c,k) = &
                   this%decomp_cascade_sminn_flux_col(c,k) + &
-                  this%decomp_cascade_sminn_flux_vr_col(c,j,k) * dzsoi_decomp(j) 
+                  this%decomp_cascade_sminn_flux_vr_col(c,j,k) * dzsoi_decomp(j)
           end do
        end do
     end do
@@ -1218,4 +1218,3 @@ contains
   end subroutine Summary
 
 end module soilbiogeochemNitrogenFluxType
-

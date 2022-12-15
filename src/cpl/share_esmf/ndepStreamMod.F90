@@ -29,7 +29,7 @@ module ndepStreamMod
   ! ! PRIVATE TYPES
   type(shr_strdata_type) :: sdat_ndep                      ! input data stream
   logical                :: divide_by_secs_per_yr = .true. ! divide by the number of seconds per year
-  character(len=CS)      :: stream_varnames(1)
+  character(len=CS)      :: stream_varnames(1) = 'NDEP_month' ! hard-wired
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -79,7 +79,6 @@ contains
          stream_ndep_year_align,    &
          stream_ndep_mapalgo,       &
          stream_ndep_taxmode,       &
-         stream_ndep_data_varlist,  &
          stream_ndep_tintalgo,      &
          stream_ndep_data_filename, &
          stream_ndep_mesh_filename
@@ -109,18 +108,11 @@ contains
     call shr_mpi_bcast(stream_ndep_year_first    , mpicom)
     call shr_mpi_bcast(stream_ndep_year_last     , mpicom)
     call shr_mpi_bcast(stream_ndep_year_align    , mpicom)
-    call shr_mpi_bcast(stream_ndep_data_varlist  , mpicom)
     call shr_mpi_bcast(stream_ndep_taxmode       , mpicom)
     call shr_mpi_bcast(stream_ndep_mapalgo       , mpicom)
     call shr_mpi_bcast(stream_ndep_tintalgo      , mpicom)
     call shr_mpi_bcast(stream_ndep_data_filename , mpicom)
     call shr_mpi_bcast(stream_ndep_mesh_filename , mpicom)
-
-    stream_nflds = shr_string_listGetNum(stream_ndep_data_varlist)      ! Get number of fields in list, fn
-    if (stream_nflds /= 1) then
-       call endrun(msg=' ERROR stream_nflds is not 1 for '//errMsg(sourcefile, __LINE__))
-    end if
-    call shr_string_listGetName(stream_ndep_data_varlist, 1, stream_varnames(1))
 
     if (masterproc) then
        write(iulog,'(a)'   ) ' '
