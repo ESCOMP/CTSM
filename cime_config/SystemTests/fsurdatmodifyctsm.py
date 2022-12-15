@@ -64,7 +64,7 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
 
     def _run_modify_fsurdat(self):
         tool_path = os.path.join(self._ctsm_root,
-                                 'tools/modify_fsurdat/fsurdat_modifier')
+                                 'tools/modify_input_files/fsurdat_modifier')
 
         self._case.load_env(reset=True)
         conda_env = ". "+self._get_caseroot()+"/.env_mach_specific.sh; "
@@ -85,8 +85,6 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
         #
         # Remove python and add conda to environment for cheyennne
         conda_env = "module unload python; module load conda"
-        # CGD machines should already have conda loaded
-        conda_env += "; module load lang/python"
         # End above machine specific with a semicolon
         conda_env += "; "
 
