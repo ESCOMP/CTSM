@@ -380,6 +380,10 @@ else
     fi
 fi
 
+# Setup conda environement
+\$CLM_ROOT/py_env_create
+conda activate ctsm_py
+
 ##output files
 clm_log=\${initdir}/td.\${JOBID}.log
 if [ -f \$clm_log ]; then
