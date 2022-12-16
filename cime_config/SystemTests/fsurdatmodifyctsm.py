@@ -74,10 +74,16 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
         try:
             subprocess.run( conda_env+"python3 "+tool_path+" "+self._cfg_file_path, shell=True, check=True)
         except subprocess.CalledProcessError as error:
-            print("ERROR while running fsurdat_modifier tool. ")
-            print("Your ctsm_pylib environment may be out of date. If so, ")
-            print("you may get past this error by running ./py_env_create ")
+            print("ERROR while getting the conda environment and/or ")
+            print("running the fsurdat_modifier tool: ")
+            print("(1) If your ctsm_pylib environment is out of date or you ")
+            print("have not created the ctsm_pylib environment, yet, you may ")
+            print("get past this error by running ./py_env_create ")
             print("in your ctsm directory and trying this test again. ")
+            print("(2) If conda is not available, install and load conda, ")
+            print("run ./py_env_create, and then try this test again. ")
+            print("(3) If (1) and (2) are not the issue, then you may be ")
+            print("getting an error within the fsurdat_modifier tool itself. ")
             print("Default error message: ")
             print(error.output)
         except:
