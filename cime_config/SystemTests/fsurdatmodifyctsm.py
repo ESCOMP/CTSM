@@ -88,11 +88,8 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
         # End above machine specific with a semicolon
         conda_env += "; "
 
-        # The following uses "&&" as they all need to work
-        # Run the py_env_create  script
-        conda_env += self._ctsm_root+"/py_env_create"
         # Activate the python environment
-        conda_env += " && conda activate ctsm_pylib"
+        conda_env += " conda activate ctsm_pylib"
         # End above to get to actual command
         conda_env += " && "
 
