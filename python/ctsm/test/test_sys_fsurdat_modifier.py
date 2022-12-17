@@ -10,12 +10,14 @@ import re
 import unittest
 import tempfile
 import shutil
+import sys
 
 import xarray as xr
 
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
 from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier
+from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier_arg_process
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -58,10 +60,10 @@ class TestSysFsurdatModifier(unittest.TestCase):
         """
         Test that if no input or output files are given that it will gracefully fail
         """
-        self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short_nofiles.cfg")
-        with self.assertRaisesRegex(
-            SystemExit, "must contain item 'fsurdat_in'"
-        ):
+        self._cfg_file_path = os.path.join(
+            self._testinputs_path, "modify_fsurdat_short_nofiles.cfg"
+        )
+        with self.assertRaisesRegex(SystemExit, "must contain item 'fsurdat_in'"):
             fsurdat_modifier(self._cfg_file_path)
 
     def test_short_config(self):
@@ -70,29 +72,28 @@ class TestSysFsurdatModifier(unittest.TestCase):
         """
         self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short.cfg")
         fsurdat_modifier(self._cfg_file_path)
-        fsurdat_out = "ctsm/test/testinputs/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_out.nc"
-        os.remove( fsurdat_out )
+        fsurdat_out = (
+            "ctsm/test/testinputs/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_out.nc"
+        )
+        os.remove(fsurdat_out)
 
     def test_cfg_file_DNE_fail(self):
         """
         Test that if the config file does not exist that it gracefully fails
         """
-        self._cfg_file_path = os.path.join(self._tempdir, "FILE_DOES_NOT_EXIST.cfg" )
-        with self.assertRaisesRegex(
-            SystemExit, "Config file does NOT exist"
-        ):
-            fsurdat_modifier(self._cfg_file_path)
+        self._cfg_file_path = os.path.join(self._tempdir, "FILE_DOES_NOT_EXIST.cfg")
+        sys.argv = ["fsurdat_modifier", self._cfg_file_path]
+        with self.assertRaisesRegex(SystemExit, "Config file does NOT exist"):
+            fsurdat_modifier_arg_process()
 
     def test_cfg_file_empty_fail(self):
         """
         Test that if the config file is empty it gracefully fails
         """
-        self._cfg_file_path = os.path.join(self._tempdir, "EMPTY_FILE.cfg" )
-        fil = open( self._cfg_file_path, "w" )
+        self._cfg_file_path = os.path.join(self._tempdir, "EMPTY_FILE.cfg")
+        fil = open(self._cfg_file_path, "w")
         fil.close()
-        with self.assertRaisesRegex(
-            SystemExit, "Config file does not have the expected section"
-        ):
+        with self.assertRaisesRegex(SystemExit, "Config file does not have the expected section"):
             fsurdat_modifier(self._cfg_file_path)
 
     def test_minimalInfo(self):

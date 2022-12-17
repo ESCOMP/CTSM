@@ -582,7 +582,7 @@ def main():
 
     # --------------------------------- #
     # print help and exit when no option is chosen
-    if args.run_type != "point" and args.run_type != "region":
+    if args.run_type not in ("point", "region"):
         err_msg = textwrap.dedent(
             """\
                 \n ------------------------------------

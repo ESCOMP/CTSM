@@ -29,6 +29,12 @@ def main():
     Calls function that modifies an fsurdat (surface dataset)
     """
 
+    args = fsurdat_modifier_arg_process()
+    fsurdat_modifier(args.cfg_path)
+
+
+def fsurdat_modifier_arg_process():
+    """Argument processing for fsurdat_modifier script"""
     # set up logging allowing user control
     setup_logging_pre_config()
 
@@ -38,19 +44,22 @@ def main():
     add_logging_args(parser)
     args = parser.parse_args()
     process_logging_args(args)
-    fsurdat_modifier(args.cfg_path)
+    # Error checking of arguments
+    if not os.path.exists(args.cfg_path):
+        abort("Config file does NOT exist: " + str(args.cfg_path))
+    print(args.cfg_path)
+
+    return args
 
 
 def fsurdat_modifier(cfg_path):
     """Implementation of fsurdat_modifier command"""
     # read the .cfg (config) file
     config = ConfigParser()
-    if not os.path.exists(cfg_path):
-       abort( "Config file does NOT exist: "+str(cfg_path) )
     config.read(cfg_path)
     section = "modify_input"
     if not config.has_section(section):
-       abort( "Config file does not have the expected section: "+section )
+        abort("Config file does not have the expected section: " + section)
 
     # required: user must set these in the .cfg file
     fsurdat_in = get_config_value(
