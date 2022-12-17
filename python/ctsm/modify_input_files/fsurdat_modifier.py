@@ -57,7 +57,7 @@ def fsurdat_modifier(cfg_path):
     # read the .cfg (config) file
     config = ConfigParser()
     config.read(cfg_path)
-    section = "modify_input"
+    section = "modify_fsurdat_basic_options"
     if not config.has_section(section):
         abort("Config file does not have the expected section: " + section)
 
