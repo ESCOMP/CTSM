@@ -86,6 +86,22 @@ class TestSysFsurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "Config file does NOT exist"):
             fsurdat_modifier_arg_process()
 
+    def test_input_fsurdat_DNE_fail(self):
+        """
+        Test that if the input fsurdat  file does not exist that it gracefully fails
+        """
+        sys.argv = ["fsurdat_modifier", self._cfg_file_path, "-i", "FILE_DOES_NOT_EXIST.nc"]
+        with self.assertRaisesRegex(SystemExit, "Input surface dataset file does NOT exist"):
+            fsurdat_modifier_arg_process()
+
+    def test_output_fsurdat_EXISTS_fail(self):
+        """
+        Test that if the output fsurdat file does exist that it gracefully fails
+        """
+        sys.argv = ["fsurdat_modifier", self._cfg_file_path, "-o", self._cfg_file_path]
+        with self.assertRaisesRegex(SystemExit, "Output file already exists"):
+            fsurdat_modifier_arg_process()
+
     def test_cfg_file_empty_fail(self):
         """
         Test that if the config file is empty it gracefully fails
