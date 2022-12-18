@@ -371,6 +371,12 @@ def buildnml(case, caseroot, compname):
         command = command + f"-stream_ch4finundated_data_filename {stream_ch4finundated_data_filename} "
         command = command + f"-stream_ch4finundated_mesh_filename {stream_ch4finundated_mesh_filename} "
 
+        if driver != "nuopc":
+            lnd_domain_path = case.get_value("LND_DOMAIN_PATH")
+            lnd_domain_file = case.get_value("LND_DOMAIN_FILE")
+            lndfrac_file = os.path.join(lnd_domain_path, lnd_domain_file)
+            command = command + f"-lnd_frac {lndfrac_file}"
+
         rc, out, err = run_cmd(command, from_dir=ctsmconf)
         expect(rc==0,"Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
         if out is not None:

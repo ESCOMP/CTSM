@@ -369,10 +369,12 @@ contains
     call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_dstdry, ungridded_lbound=1, ungridded_ubound=4)
 
     ! from atm - nitrogen deposition
-    ! call shr_ndep_readnl("drv_flds_in", ndep_nflds)
-    call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_ndep, ungridded_lbound=1, ungridded_ubound=2)
-    ! This sets a variable in clm_varctl
-    ndep_from_cpl = .true.
+    call shr_ndep_readnl("drv_flds_in", ndep_nflds)
+    if (ndep_nflds > 0) then
+       call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_ndep, ungridded_lbound=1, ungridded_ubound=ndep_nflds)
+       ! This sets a variable in clm_varctl
+       ndep_from_cpl = .true.
+    end if
 
     ! from atm - co2 exchange scenarios
     if (flds_co2a .or. flds_co2b .or. flds_co2c) then

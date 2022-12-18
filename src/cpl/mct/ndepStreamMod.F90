@@ -64,14 +64,18 @@ contains
    character(len=*),  intent(in) :: NLFilename   ! Namelist filename
    !
    ! local variables
-   integer            :: nu_nml    ! unit for namelist file
-   integer            :: nml_error ! namelist i/o error flag
-   type(mct_ggrid)    :: dom_clm   ! domain information
-   character(len=CL)  :: stream_ndep_data_filename
-   character(len=CL)  :: stream_ndep_mapalgo = 'bilinear'
-   character(len=CL)  :: stream_ndep_tintalgo = 'linear'
-   character(len=CS)  :: stream_ndep_taxmode = 'extend'
-   character(len=CL)  :: stream_ndep_varlist = 'NDEP_year'
+   integer                 :: nu_nml                 ! unit for namelist file
+   integer                 :: nml_error              ! namelist i/o error flag
+   type(mct_ggrid)         :: dom_clm                ! domain information
+   integer                 :: stream_ndep_year_first ! first year in stream to use
+   integer                 :: stream_ndep_year_last  ! last year in stream to use
+   integer                 :: stream_ndep_year_align ! align stream_year_firstndep with
+    real(r8)               :: stream_ndep_dtlimit = 1.0e30_r8
+   character(len=CL)       :: stream_ndep_data_filename
+   character(len=CL)       :: stream_ndep_mapalgo = 'bilinear'
+   character(len=CL)       :: stream_ndep_tintalgo = 'linear'
+   character(len=CS)       :: stream_ndep_taxmode = 'extend'
+   character(len=CL)       :: stream_ndep_varlist = 'NDEP_month'
    character(*), parameter :: shr_strdata_unset = 'NOT_SET'
    character(*), parameter :: subName = "('ndepdyn_init')"
    character(*), parameter :: F00 = "('(ndepdyn_init) ',4a)"
@@ -81,8 +85,8 @@ contains
         stream_ndep_year_first,    &
         stream_ndep_year_last,     &
         stream_ndep_year_align,    &
-        stream_ndep_mapalgo,       &
         stream_ndep_taxmode,       &
+        stream_ndep_mapalgo,       &
         stream_ndep_varlist,       &
         stream_ndep_data_filename, &
         stream_ndep_tintalgo
@@ -111,9 +115,9 @@ contains
    call shr_mpi_bcast(stream_ndep_year_first  , mpicom)
    call shr_mpi_bcast(stream_ndep_year_last   , mpicom)
    call shr_mpi_bcast(stream_ndep_year_align  , mpicom)
-   call shr_mpi_bcast(stream_fldFileName_ndep , mpicom)
-   call shr_mpi_bcast(stream_ndep_varlist     , mpicom)
    call shr_mpi_bcast(stream_ndep_taxmode     , mpicom)
+    call shr_mpi_bcast(stream_ndep_data_filename , mpicom)
+   call shr_mpi_bcast(stream_ndep_varlist     , mpicom)
    call shr_mpi_bcast(stream_ndep_tintalgo    , mpicom)
    call shr_mpi_bcast(stream_ndep_mapalgo     , mpicom)
 
@@ -131,7 +135,7 @@ contains
       write(iulog,*) ' '
    endif
    ! Read in units
-   call check_units( stream_fldFileName_ndep, stream_ndep_varlist )
+   call check_units( stream_ndep_data_filename, stream_ndep_varlist )
 
    ! Set domain and create streams
    call clm_domain_mct (bounds, dom_clm)
@@ -147,14 +151,14 @@ contains
         yearAlign=stream_ndep_year_align,           &
         offset=0,                                   &
         domFilePath='',                             &
-        domFileName=trim(stream_fldFileName_ndep),  &
+        domFileName=trim(stream_ndep_data_filename),&
         domTvarName='time',                         &
         domXvarName='lon' ,                         &
         domYvarName='lat' ,                         &
         domAreaName='area',                         &
         domMaskName='mask',                         &
         filePath='',                                &
-        filename=(/trim(stream_fldFileName_ndep)/), &
+        filename=(/trim(stream_ndep_data_filename)/), &
         fldListFile=stream_ndep_varlist,            &
         fldListModel=stream_ndep_varlist,           &
         fillalgo='none',                            &
