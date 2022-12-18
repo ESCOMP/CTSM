@@ -146,29 +146,45 @@ def buildnml(cime_path, rundir):
 
     lnd_domain_file = get_config_value(config, "buildnml_input", "lnd_domain_file", ctsm_cfg_path)
 
-    fsurdat = get_config_value(config, "buildnml_input", "fsurdat", ctsm_cfg_path,
-                               can_be_unset=True)
+    fsurdat = get_config_value(
+        config, "buildnml_input", "fsurdat", ctsm_cfg_path, can_be_unset=True
+    )
 
-    finidat = get_config_value(config, "buildnml_input", "finidat", ctsm_cfg_path,
-                               can_be_unset=True)
+    finidat = get_config_value(
+        config, "buildnml_input", "finidat", ctsm_cfg_path, can_be_unset=True
+    )
 
-    ctsm_phys = get_config_value(config, "buildnml_input", "ctsm_phys", ctsm_cfg_path,
-                                 allowed_values=["clm4_5", "clm5_0", "clm5_1"])
+    ctsm_phys = get_config_value(
+        config,
+        "buildnml_input",
+        "ctsm_phys",
+        ctsm_cfg_path,
+        allowed_values=["clm4_5", "clm5_0", "clm5_1"],
+    )
 
-    configuration = get_config_value(config, "buildnml_input", "configuration", ctsm_cfg_path,
-                                     allowed_values=["nwp", "clm"])
+    configuration = get_config_value(
+        config, "buildnml_input", "configuration", ctsm_cfg_path, allowed_values=["nwp", "clm"]
+    )
 
-    structure = get_config_value(config, "buildnml_input", "structure", ctsm_cfg_path,
-                                 allowed_values=["fast", "standard"])
+    structure = get_config_value(
+        config, "buildnml_input", "structure", ctsm_cfg_path, allowed_values=["fast", "standard"]
+    )
 
-    bgc_mode = get_config_value(config, "buildnml_input", "bgc_mode", ctsm_cfg_path,
-                                allowed_values=["sp", "bgc", "cn", "fates"])
+    bgc_mode = get_config_value(
+        config,
+        "buildnml_input",
+        "bgc_mode",
+        ctsm_cfg_path,
+        allowed_values=["sp", "bgc", "cn", "fates"],
+    )
 
-    crop = get_config_value(config, "buildnml_input", "crop", ctsm_cfg_path,
-                            allowed_values=["off", "on"])
+    crop = get_config_value(
+        config, "buildnml_input", "crop", ctsm_cfg_path, allowed_values=["off", "on"]
+    )
 
-    vichydro = get_config_value(config, "buildnml_input", "vichydro", ctsm_cfg_path,
-                                allowed_values=["off", "on"])
+    vichydro = get_config_value(
+        config, "buildnml_input", "vichydro", ctsm_cfg_path, allowed_values=["off", "on"]
+    )
 
     bldnml_opts = determine_bldnml_opts(bgc_mode=bgc_mode, crop=crop, vichydro=vichydro)
 
@@ -178,43 +194,102 @@ def buildnml(cime_path, rundir):
 
     lnd_tuning_mode = get_config_value(config, "buildnml_input", "lnd_tuning_mode", ctsm_cfg_path)
 
-    spinup = get_config_value(config, "buildnml_input", "spinup", ctsm_cfg_path,
-                              allowed_values=["off", "on"])
+    spinup = get_config_value(
+        config, "buildnml_input", "spinup", ctsm_cfg_path, allowed_values=["off", "on"]
+    )
 
     inputdata_path = get_config_value(config, "buildnml_input", "inputdata_path", ctsm_cfg_path)
 
-    stream_ndep_year_first       = get_config_value(config, "buildnml_input", "stream_ndep_year_first"       , ctsm_cfg_path)
-    stream_ndep_year_last        = get_config_value(config, "buildnml_input", "stream_ndep_year_last"        , ctsm_cfg_path)
-    stream_ndep_year_align       = get_config_value(config, "buildnml_input", "stream_ndep_year_align"       , ctsm_cfg_path)
-    stream_ndep_data_filename    = get_config_value(config, "buildnml_input", "stream_ndep_data_filename"    , ctsm_cfg_path)
-    stream_ndep_mesh_filename    = get_config_value(config, "buildnml_input", "stream_ndep_mesh_filename"    , ctsm_cfg_path)
-    stream_ndep_mapalgo          = get_config_value(config, "buildnml_input", "stream_ndep_mapalgo"          , ctsm_cfg_path)
-    stream_ndep_tintalgo         = get_config_value(config, "buildnml_input", "stream_ndep_tintalgo"         , ctsm_cfg_path)
-    stream_ndep_taxmode          = get_config_value(config, "buildnml_input", "stream_ndep_taxmode"          , ctsm_cfg_path)
+    stream_ndep_year_first = get_config_value(
+        config, "buildnml_input", "stream_ndep_year_first", ctsm_cfg_path
+    )
+    stream_ndep_year_last = get_config_value(
+        config, "buildnml_input", "stream_ndep_year_last", ctsm_cfg_path
+    )
+    stream_ndep_year_align = get_config_value(
+        config, "buildnml_input", "stream_ndep_year_align", ctsm_cfg_path
+    )
+    stream_ndep_data_filename = get_config_value(
+        config, "buildnml_input", "stream_ndep_data_filename", ctsm_cfg_path
+    )
+    stream_ndep_mesh_filename = get_config_value(
+        config, "buildnml_input", "stream_ndep_mesh_filename", ctsm_cfg_path
+    )
+    stream_ndep_mapalgo = get_config_value(
+        config, "buildnml_input", "stream_ndep_mapalgo", ctsm_cfg_path
+    )
+    stream_ndep_tintalgo = get_config_value(
+        config, "buildnml_input", "stream_ndep_tintalgo", ctsm_cfg_path
+    )
+    stream_ndep_taxmode = get_config_value(
+        config, "buildnml_input", "stream_ndep_taxmode", ctsm_cfg_path
+    )
 
-    stream_popdens_year_first    = get_config_value(config, "buildnml_input", "stream_popdens_year_first"    , ctsm_cfg_path)
-    stream_popdens_year_last     = get_config_value(config, "buildnml_input", "stream_popdens_year_last"     , ctsm_cfg_path)
-    stream_popdens_year_align    = get_config_value(config, "buildnml_input", "stream_popdens_year_align"    , ctsm_cfg_path)
-    stream_popdens_data_filename = get_config_value(config, "buildnml_input", "stream_popdens_data_filename" , ctsm_cfg_path)
-    stream_popdens_mesh_filename = get_config_value(config, "buildnml_input", "stream_popdens_mesh_filename" , ctsm_cfg_path)
-    stream_popdens_mapalgo       = get_config_value(config, "buildnml_input", "stream_popdens_mapalgo"       , ctsm_cfg_path)
-    stream_popdens_tintalgo      = get_config_value(config, "buildnml_input", "stream_popdens_tintalgo"      , ctsm_cfg_path)
+    stream_popdens_year_first = get_config_value(
+        config, "buildnml_input", "stream_popdens_year_first", ctsm_cfg_path
+    )
+    stream_popdens_year_last = get_config_value(
+        config, "buildnml_input", "stream_popdens_year_last", ctsm_cfg_path
+    )
+    stream_popdens_year_align = get_config_value(
+        config, "buildnml_input", "stream_popdens_year_align", ctsm_cfg_path
+    )
+    stream_popdens_data_filename = get_config_value(
+        config, "buildnml_input", "stream_popdens_data_filename", ctsm_cfg_path
+    )
+    stream_popdens_mesh_filename = get_config_value(
+        config, "buildnml_input", "stream_popdens_mesh_filename", ctsm_cfg_path
+    )
+    stream_popdens_mapalgo = get_config_value(
+        config, "buildnml_input", "stream_popdens_mapalgo", ctsm_cfg_path
+    )
+    stream_popdens_tintalgo = get_config_value(
+        config, "buildnml_input", "stream_popdens_tintalgo", ctsm_cfg_path
+    )
 
-    stream_lightng_year_first    = get_config_value(config, "buildnml_input", "stream_lightng_year_first"    , ctsm_cfg_path)
-    stream_lightng_year_last     = get_config_value(config, "buildnml_input", "stream_lightng_year_last"     , ctsm_cfg_path)
-    stream_lightng_year_align    = get_config_value(config, "buildnml_input", "stream_lightng_year_align"    , ctsm_cfg_path)
-    stream_lightng_data_filename = get_config_value(config, "buildnml_input", "stream_lightng_data_filename" , ctsm_cfg_path)
-    stream_lightng_mesh_filename = get_config_value(config, "buildnml_input", "stream_lightng_mesh_filename" , ctsm_cfg_path)
-    stream_lightng_mapalgo       = get_config_value(config, "buildnml_input", "stream_lightng_mapalgo"       , ctsm_cfg_path)
-    stream_lightng_tintalgo      = get_config_value(config, "buildnml_input", "stream_lightng_tintalgo"      , ctsm_cfg_path)
+    stream_lightng_year_first = get_config_value(
+        config, "buildnml_input", "stream_lightng_year_first", ctsm_cfg_path
+    )
+    stream_lightng_year_last = get_config_value(
+        config, "buildnml_input", "stream_lightng_year_last", ctsm_cfg_path
+    )
+    stream_lightng_year_align = get_config_value(
+        config, "buildnml_input", "stream_lightng_year_align", ctsm_cfg_path
+    )
+    stream_lightng_data_filename = get_config_value(
+        config, "buildnml_input", "stream_lightng_data_filename", ctsm_cfg_path
+    )
+    stream_lightng_mesh_filename = get_config_value(
+        config, "buildnml_input", "stream_lightng_mesh_filename", ctsm_cfg_path
+    )
+    stream_lightng_mapalgo = get_config_value(
+        config, "buildnml_input", "stream_lightng_mapalgo", ctsm_cfg_path
+    )
+    stream_lightng_tintalgo = get_config_value(
+        config, "buildnml_input", "stream_lightng_tintalgo", ctsm_cfg_path
+    )
 
-    stream_urbantv_year_first    = get_config_value(config, "buildnml_input", "stream_urbantv_year_first"    , ctsm_cfg_path)
-    stream_urbantv_year_last     = get_config_value(config, "buildnml_input", "stream_urbantv_year_last"     , ctsm_cfg_path)
-    stream_urbantv_year_align    = get_config_value(config, "buildnml_input", "stream_urbantv_year_align"    , ctsm_cfg_path)
-    stream_urbantv_data_filename = get_config_value(config, "buildnml_input", "stream_urbantv_data_filename" , ctsm_cfg_path)
-    stream_urbantv_mesh_filename = get_config_value(config, "buildnml_input", "stream_urbantv_mesh_filename" , ctsm_cfg_path)
-    stream_urbantv_mapalgo       = get_config_value(config, "buildnml_input", "stream_urbantv_mapalgo"       , ctsm_cfg_path)
-    stream_urbantv_tintalgo      = get_config_value(config, "buildnml_input", "stream_urbantv_tintalgo"      , ctsm_cfg_path)
+    stream_urbantv_year_first = get_config_value(
+        config, "buildnml_input", "stream_urbantv_year_first", ctsm_cfg_path
+    )
+    stream_urbantv_year_last = get_config_value(
+        config, "buildnml_input", "stream_urbantv_year_last", ctsm_cfg_path
+    )
+    stream_urbantv_year_align = get_config_value(
+        config, "buildnml_input", "stream_urbantv_year_align", ctsm_cfg_path
+    )
+    stream_urbantv_data_filename = get_config_value(
+        config, "buildnml_input", "stream_urbantv_data_filename", ctsm_cfg_path
+    )
+    stream_urbantv_mesh_filename = get_config_value(
+        config, "buildnml_input", "stream_urbantv_mesh_filename", ctsm_cfg_path
+    )
+    stream_urbantv_mapalgo = get_config_value(
+        config, "buildnml_input", "stream_urbantv_mapalgo", ctsm_cfg_path
+    )
+    stream_urbantv_tintalgo = get_config_value(
+        config, "buildnml_input", "stream_urbantv_tintalgo", ctsm_cfg_path
+    )
 
     # Parse the user_nl_ctsm file
     infile = os.path.join(rundir, ".namelist")
@@ -255,15 +330,15 @@ def buildnml(cime_path, rundir):
     # call build-namelist
     command = [os.path.abspath(os.path.join(path_to_ctsm_root(), "bld", "build-namelist"))]
     command.append("-lilac")
-    command.extend(['-driver', 'nuopc'])
-    command.extend(['-cimeroot', cime_path])
-    command.extend(['-infile', infile])
-    command.extend(['-csmdata', inputdata_path])
-    command.extend(['-inputdata',inputdatalist_path])
+    command.extend(["-driver", "nuopc"])
+    command.extend(["-cimeroot", cime_path])
+    command.extend(["-infile", infile])
+    command.extend(["-csmdata", inputdata_path])
+    command.extend(["-inputdata", inputdatalist_path])
     # Hard-code start_ymd of year-2000. This is used to set the run type (for which
     # which a setting of 2000 gives 'startup', which is what we want) and pick the
     # initial conditions file (which is pretty much irrelevant when running with lilac).
-    command.extend(['-namelist', f"&clm_inparm start_ymd= 20000101 {extra_namelist_opts} /"])
+    command.extend(["-namelist", f"&clm_inparm start_ymd= 20000101 {extra_namelist_opts} /"])
     command.append("-ignore_ic_year")
     # -clm_start_type seems unimportant (see discussion in https://github.com/ESCOMP/CTSM/issues/876)
     command.extend(["-clm_start_type", "default"])
@@ -326,6 +401,7 @@ def buildnml(cime_path, rundir):
     os.remove(os.path.join(rundir, "env_lilac.xml"))
     os.remove(os.path.join(rundir, "drv_flds_in"))
     os.remove(infile)
+
 
 ###############################################################################
 def main(cime_path):
