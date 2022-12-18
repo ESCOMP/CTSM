@@ -1,5 +1,7 @@
 # This is a test python environment intended to represent the latest environment that can be built
 python>=3.9.13,<3.10    # Moving to 3.10 runs into conflicts
+pandas>=1.5.1
+tqdm>=4.64.1
 scipy
 netcdf4
 requests

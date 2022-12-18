@@ -27,6 +27,7 @@ class TestSysBuildCtsm(unittest.TestCase):
 
     def setUp(self):
         self._tempdir = tempfile.mkdtemp()
+        self.assertTrue(os.path.isdir(self._tempdir))
 
         # Hack around a check in CIME: As of https://github.com/ESMCI/cime/pull/4228, If
         # NCAR_HOST is in the environment, CIME checks if the machine you're running on is
@@ -68,6 +69,7 @@ class TestSysBuildCtsm(unittest.TestCase):
             gmake_j=8,
             no_pnetcdf=True,
         )
+        self.assertTrue(os.path.isdir(build_dir))
         # the critical piece of this test is that the above command doesn't generate any
         # errors; however we also do some assertions below
 
@@ -87,6 +89,7 @@ class TestSysBuildCtsm(unittest.TestCase):
         build_dir = os.path.join(self._tempdir, "ctsm_build")
         inputdata_path = os.path.realpath(os.path.join(self._tempdir, "my_inputdata"))
         os.makedirs(inputdata_path)
+        self.assertTrue(os.path.isdir(inputdata_path))
         build_ctsm(
             cime_path=_CIME_PATH,
             build_dir=build_dir,
@@ -107,6 +110,7 @@ class TestSysBuildCtsm(unittest.TestCase):
             build_with_openmp=True,
             inputdata_path=os.path.join(self._tempdir, "my_inputdata"),
         )
+        self.assertTrue(os.path.isdir(build_dir))
         # the critical piece of this test is that the above command doesn't generate any
         # errors; however we also do some assertions below
 

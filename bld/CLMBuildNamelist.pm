@@ -4611,6 +4611,8 @@ sub check_use_case_name {
     } else {
       $log->fatal_error($diestring);
     }
+  } elsif ( $use_case =~ /^([0-9]+|PI)-PD_*($desc)_transient$/   ) {
+     # valid name
   } elsif ( $use_case =~ /^([0-9]+)_*($desc)_control$/   ) {
      # valid name
   } elsif ( $use_case =~ /^($desc)_pd$/   ) {

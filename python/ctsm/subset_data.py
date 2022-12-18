@@ -2,10 +2,10 @@
 |------------------------------------------------------------------|
 |---------------------  Instructions  -----------------------------|
 |------------------------------------------------------------------|
-Instructions for running on Cheyenne/Casper:
-load the following into your local environment
-    module load python
-    ncar_pylib
+Instructions for running using conda python environments:
+
+../../py_env_create
+conda activate ctsm_py
 -------------------------------------------------------------------
 To see the available options for single point or regional cases:
     ./subset_data.py --help
@@ -67,6 +67,7 @@ from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.args_utils import plon_type, plat_type
 from ctsm.path_utils import path_to_ctsm_root
+from ctsm.utils import abort
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -314,6 +315,14 @@ def get_parser():
             action="store_true",
             dest="overwrite",
         )
+        subparser.add_argument(
+            "--inputdata-dir",
+            help="Top level path to the CESM inputdata directory.",
+            action="store",
+            dest="inputdatadir",
+            type=str,
+            default="defaults.cfg",
+        )
         add_logging_args(subparser)
 
     # -- print help for both subparsers
@@ -381,10 +390,19 @@ def setup_files(args, defaults, cesmroot):
     if args.create_user_mods:
         setup_user_mods(args.user_mods_dir, cesmroot)
 
+    if args.inputdatadir == "defaults.cfg":
+        clmforcingindir = defaults.get("main", "clmforcingindir")
+    else:
+        clmforcingindir = args.inputdatadir
+
+    if not os.path.isdir(clmforcingindir):
+        logger.info("clmforcingindir does not exist: %s", clmforcingindir)
+        abort("inputdata directory does not exist")
+
     # DATM data
     datm_type = "datm_gswp3"
     dir_output_datm = "datmdata"
-    dir_input_datm = defaults.get(datm_type, "dir")
+    dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_type, "dir"))
     if args.create_datm:
         if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
             os.mkdir(os.path.join(args.out_dir, dir_output_datm))
@@ -398,14 +416,14 @@ def setup_files(args, defaults, cesmroot):
     fluse_in = defaults.get("landuse", "landuse_" + num_pft + "pft")
 
     file_dict = {
-        "main_dir": defaults.get("main", "clmforcingindir"),
+        "main_dir": clmforcingindir,
         "fdomain_in": defaults.get("domain", "file"),
         "fsurf_dir": os.path.join(
-            defaults.get("main", "clmforcingindir"),
+            clmforcingindir,
             os.path.join(defaults.get("surfdat", "dir")),
         ),
         "fluse_dir": os.path.join(
-            defaults.get("main", "clmforcingindir"),
+            clmforcingindir,
             os.path.join(defaults.get("landuse", "dir")),
         ),
         "fsurf_in": fsurf_in,

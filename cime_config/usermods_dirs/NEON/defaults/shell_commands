@@ -1,12 +1,26 @@
+#!/bin/bash
 ./xmlchange CLM_USRDAT_NAME=NEON
-./xmlchange RUN_STARTDATE=2018-01-01
-./xmlchange CLM_NML_USE_CASE=1850-2100_SSP3-7.0_transient
 ./xmlchange CCSM_CO2_PPMV=408.83
-
+# Set data forcing data to future scenario so will have data from 2018 to present-day
 ./xmlchange DATM_PRESAERO=SSP3-7.0
 ./xmlchange DATM_PRESNDEP=SSP3-7.0
 ./xmlchange DATM_PRESO3=SSP3-7.0
+# Explicitly set the MPI library to mpi-serial so won't have the build/run complexity of a full MPI library
+./xmlchange MPILIB=mpi-serial
+# Set years to run forcing data over
 ./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2021,DATM_YR_START=2018
+compset=`./xmlquery COMPSET --value`
+# For a transient case run the whole length and don't cycle
+if  [[ $compset =~ ^HIST ]]; then
+  ./xmlchange DATM_YR_END=2022
+  ./xmlchange RUN_STARTDATE=2018-01-01
+  # Number of months that can be run for the full transient case
+  ./xmlchange STOP_OPTION="nmonths"
+  ./xmlchange STOP_N=51
+  ./xmlchange CLM_NML_USE_CASE="2018-PD_transient"
+else
+  ./xmlchange CLM_NML_USE_CASE="2018_control"
+fi
 
 # TOOD: the following CLM_NDEP_XXX variables can be removed once ndep is no longer read in by CLM
 ./xmlchange CLM_STREAM_NDEP_DATA_FILENAME=$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_2018-2030_monthly_c210826.nc
@@ -24,7 +38,3 @@
 
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
 ./xmlchange PIO_TYPENAME=netcdf
-# BD:05/06/2022 - The PIO_REARRANGER_LND value - for global runs, PIO_REARRANGER_LND = 1 is ideal
-#                 and a value of 2 results in slow I/O.  For point runs like these, a value of 1 results in a crash (PIO bug, probably),
-#                 so we explicitly set a value of 2.
-./xmlchange PIO_REARRANGER_LND=2
