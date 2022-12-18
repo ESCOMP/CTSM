@@ -1,2 +1,3 @@
-./xmlchange CLM_BLDNML_OPTS="-light_res active" --append
+./xmlchange CLM_STREAM_LIGHTNG_DATA_FILENAME='$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc'
+./xmlchange CLM_STREAM_LIGHTNG_MESH_FILENAME='$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720_ESMFmesh_cdf5_150621.nc'
 ./xmlchange BFBFLAG="TRUE"

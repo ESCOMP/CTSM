@@ -1448,7 +1448,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <use_lai_streams>.false.</use_lai_streams>
 
 <!-- ===================================== -->
-<!-- Set lightning toggle variable for strams -->
+<!-- Set lightning toggle variable for streams -->
 <!-- ===================================== -->
 
 <light_res use_cn=".false."                     >none   </light_res>

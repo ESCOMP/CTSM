@@ -207,7 +207,7 @@
     <!-- Only the CMIP6 Tier I Nitogen deposition files are available -->
     <type>char</type>
     <default_value>UNSET</default_value>
-    <values>
+    <values match="last">
       <value compset="^SSP585_">$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</value>
       <value compset="^SSP126_">$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP1-2.6-WACCM_1849-2101_monthly_c191007.nc</value>
       <value compset="^SSP245_">$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</value>
@@ -216,6 +216,7 @@
       <value compset="^2000_"  >$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</value>
       <value compset="^2010_"  >$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</value>
       <value compset="^1850_"  >$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_WACCM6_CMIP6piControl001_y21-50avg_1850monthly_0.95x1.25_c180802.nc</value>
+      <value compset="^1850_.*_CLM50%BGC-NOANTHRO">$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -276,7 +277,7 @@
   <entry id="CLM_STREAM_POPDENS_YEAR_FIRST">
     <type>char</type>
     <default_value>2000</default_value>
-    <values>
+    <values match="last">
       <value compset="^1850_">1850</value>
       <value compset="^2010_">2010</value>
       <value compset="^HIST_">1850</value>
@@ -318,7 +319,7 @@
   <entry id="CLM_STREAM_POPDENS_DATA_FILENAME">
     <type>char</type>
     <default_value>$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</default_value>
-    <values>
+    <values match="last">
       <value compset="^SSP1">$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc</value>
       <value compset="^SSP2">$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2018_SSP2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc</value>
       <value compset="^SSP3">$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2018_SSP3_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc</value>
