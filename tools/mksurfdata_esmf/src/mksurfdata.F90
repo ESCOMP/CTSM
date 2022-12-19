@@ -1110,19 +1110,23 @@ program mksurfdata
          ! Start by using the land fraction field from the PFT raw data set:
          pct_land = pctlnd_pft(n)
          !
-         ! But we don't want to overwrite special landunits or crop with ocean where these
-         ! special landunits extend beyond the PFT data's land fraction. In essence, this
-         ! is saying that we'll let special landunit area grow into the natveg area before
-         ! growing into ocean, but we'll have special landunit area grow into ocean before
-         ! growing into crop or any other special landunit area. (This check of special
-         ! landunit area is particularly important for glaciers, where we can have
-         ! floating ice shelves, so we can have a scenario where pctlnd_pft is 0 but we
-         ! have non-zero glacier cover and we want the final grid cell to be
-         ! glacier-covered.) (We could possibly do better by considering the land mask
-         ! from each special landunit raw dataset, and even better by mapping these
-         ! various notions of land mask onto each other, but that starts to get messy, and
-         ! relies on the trustworthiness of each raw dataset's land mask... this
-         ! formulation seems reasonable enough.)
+         ! Brief summary of the following: But we don't want to overwrite special
+         ! landunits or crop with ocean where these special landunits extend beyond the
+         ! PFT data's land fraction.
+         !
+         ! More details:
+         !
+         ! In essence, this is saying that we'll let special landunit area grow into the
+         ! natveg area before growing into ocean, but we'll have special landunit area
+         ! grow into ocean before growing into crop or any other special landunit area.
+         ! (This check of special landunit area is particularly important for glaciers,
+         ! where we can have floating ice shelves, so we can have a scenario where
+         ! pctlnd_pft is 0 but we have non-zero glacier cover and we want the final grid
+         ! cell to be glacier-covered.) (We could possibly do better by considering the
+         ! land mask from each special landunit raw dataset, and even better by mapping
+         ! these various notions of land mask onto each other, but that starts to get
+         ! messy, and relies on the trustworthiness of each raw dataset's land mask...
+         ! this formulation seems reasonable enough.)
          !
          ! Note that we include pct_crop in the following, but NOT pct_natveg. The
          ! assumption behind that is that pct_crop is more reliable and/or more important,
