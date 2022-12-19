@@ -36,5 +36,8 @@ fi
 ./xmlchange CLM_STREAM_URBANTV_YEAR_LAST=2021
 ./xmlchange CLM_STREAM_URBANTV_YEAR_ALIGN=2018
 
+./xmlchange CLM_STREAM_LIGHTNG_DATA_FILENAME = '$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_NEONarea_c210625.nc'
+./xmlchange CLM_STREAM_LIGHTNG_MESH_FILENAME = '$DIN_LOC_ROOT/atm/datm7/NASA_LIS/ESMF_MESH.Li_2016.360x720.NEONarea_cdf5_c221104.nc'
+
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
 ./xmlchange PIO_TYPENAME=netcdf
