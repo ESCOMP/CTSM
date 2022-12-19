@@ -987,17 +987,18 @@ Excess Ground Ice
 ------------------------------------
 
 An optional parameterization of excess ground ice melt and respective subsidence based on (:ref:`Lee et al., (2014) <Leeetal2014>`). 
-Initial excess ice concentrations for soil columns are derived from (:ref:`Brown et al., (1997) <Brownetal1997>`). 
-When the excess ice is present in the soil column soil depth for a given layer (:math:`z_{i}`) 
-is adjusted be the ammount of excess ice in the column:
+Initial excess ground ice concentrations for soil columns are derived from (:ref:`Brown et al., (1997) <Brownetal1997>`). 
+When the excess ground ice is present in the soil column, soil depth for a given layer (:math:`z_{i}`) 
+is adjusted by the amount of excess ice in the column:
 
 .. math::
    :label: 6.94
 
    z_{i}^{'}=\Sigma_{j=1}^{i} \ z_{j}^{'}+\frac{w_{exice,\, j}}{\rho_{ice} }
 
-where :math:`w_{exice,\,j}` is excess ground ice ammount (kg m :sup:`-2`) in layer :math:`j` and :math:`\rho_{ice}` is the density of ice (kg m :sup:`-3`).
-After adjustment of layer depths have been made all of the soil temperature equations  (from :eq:`6.80` to :eq:`6.89`)
+where :math:`w_{exice,\,j}` is excess ground ice amount (kg m :sup:`-2`) in layer :math:`j` 
+and :math:`\rho_{ice}` is the density of ice (kg m :sup:`-3`).
+After adjustment of layer depths have been made, all of the soil temperature equations  (from :eq:`6.80` to :eq:`6.89`)
 are calculted based on the adjusted depths. Thermal properties are additionally adjusted (:eq:`6.8` and :eq:`6.8`) in the following way:
 
 .. math::
@@ -1014,5 +1015,14 @@ Soil subsidence at the timestep :math:`n+1` (:math:`z_{exice}^{n+1}`, m) is then
 .. math::
    :label: 6.96
 
-   z_{exice}^{n+1}=\Sigma_{i=1}^{N_{levgrnd}} \ z_{j}^{',\ ,n+1}-z_{j}^{',\ ,n}
+   z_{exice}^{n+1}=\Sigma_{i=1}^{N_{levgrnd}} \ z_{j}^{',\ ,n+1}-z_{j}^{',\ ,n }
+
+With regards to hydraulic counductivity, excess ground ice is treated the same way normal soil 
+ice is treated in :numref:`Frozen Soils and Perched Water Table`. 
+When a soil layer thaws, excess ground ice is only allowed 
+to melt when no normals soil ice is present in the layer. 
+When a soil layer refreezes, liquid soil water can only turn into normal soil ice, thus, no new of excess ice can be created but only melted. 
+The excess liquid soil moisture from excess ice melt is distributed within the soil column according 
+to :numref:`Lateral Sub-surface Runoff`.
+
 
