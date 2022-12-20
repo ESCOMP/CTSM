@@ -100,10 +100,14 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
         # Add specific commands needed on different machines to get conda available
         # Use semicolon here since it's OK to fail
         #
-        # Remove python and add conda to environment for cheyennne
-        conda_env = "module unload python; module load conda"
-        # End above machine specific with a semicolon
-        conda_env += "; "
+        # Execute the module unload/load when "which conda" fails
+        # eg on cheyenne
+        try:
+            subprocess.run( "which conda", shell=True, check=True)
+            conda_env = " "
+        except subprocess.CalledProcessError:
+            # Remove python and add conda to environment for cheyennne
+            conda_env = "module unload python; module load conda;"
 
         # Activate the python environment
         conda_env += " conda activate ctsm_pylib"
