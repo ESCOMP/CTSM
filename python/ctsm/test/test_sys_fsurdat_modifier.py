@@ -81,6 +81,46 @@ class TestSysFsurdatModifier(unittest.TestCase):
         )
         os.remove(fsurdat_out)
 
+    def test_short_infile_both_cmdline_and_cfg(self):
+        """
+        Test that a graceful fail happens when the infile
+        is given both in the command line and the config file
+        """
+        self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short.cfg")
+        sys.argv = [
+            "fsurdat_modifier",
+            self._cfg_file_path,
+            "-i",
+            "specify_fsurdat_in_on_cmd_line.nc",
+        ]
+        parser = fsurdat_modifier_arg_process()
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fsurdat_in is specified in both the command line and the config file, pick one",
+        ):
+            fsurdat_modifier(parser)
+
+    def test_short_outfile_both_cmdline_and_cfg(self):
+        """
+        Test that a graceful fail happens when the outfile is given
+        both in the command line and the config file
+        """
+        self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short.cfg")
+        sys.argv = [
+            "fsurdat_modifier",
+            self._cfg_file_path,
+            "-i",
+            "specify_fsurdat_in_on_cmd_line.nc",
+            "-o",
+            "specify_fsurdat_out_on_cmd_line.nc",
+        ]
+        parser = fsurdat_modifier_arg_process()
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fsurdat_out is specified in both the command line and the config file, pick one",
+        ):
+            fsurdat_modifier(parser)
+
     def test_cfg_file_DNE_fail(self):
         """
         Test that if the config file does not exist that it gracefully fails
