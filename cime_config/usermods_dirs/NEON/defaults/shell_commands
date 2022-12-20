@@ -5,11 +5,14 @@
 ./xmlchange DATM_PRESAERO=SSP3-7.0
 ./xmlchange DATM_PRESNDEP=SSP3-7.0
 ./xmlchange DATM_PRESO3=SSP3-7.0
+
 # Explicitly set the MPI library to mpi-serial so won't have the build/run complexity of a full MPI library
 ./xmlchange MPILIB=mpi-serial
+
 # Set years to run forcing data over
 ./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2021,DATM_YR_START=2018
 compset=`./xmlquery COMPSET --value`
+
 # For a transient case run the whole length and don't cycle
 if  [[ $compset =~ ^HIST ]]; then
   ./xmlchange DATM_YR_END=2022
@@ -23,21 +26,23 @@ else
 fi
 
 # TOOD: the following CLM_NDEP_XXX variables can be removed once ndep is no longer read in by CLM
-./xmlchange CLM_STREAM_NDEP_DATA_FILENAME=$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_2018-2030_monthly_c210826.nc
+./xmlchange CLM_STREAM_NDEP_DATA_FILENAME='$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc'
 ./xmlchange CLM_STREAM_NDEP_YEAR_FIRST=2018
-./xmlchange CLM_STREAM_NDEP_YEAR_LAST=2021
-./xmlchange CLM_STREAM_NDEP_YEAR_ALIGN=2018
+./xmlchange CLM_STREAM_NDEP_YEAR_LAST=2018
+./xmlchange CLM_STREAM_NDEP_YEAR_ALIGN=1
 
+./xmlchange CLM_STREAM_POPDENS_DATA_FILENAME='$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2018_SSP3_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc'
+./xmlchange CLM_STREAM_POPDENS_MESH_FILENAME='$DIN_LOC_ROOT/lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0_ESMFmesh_cdf5_100621.nc'
 ./xmlchange CLM_STREAM_POPDENS_YEAR_FIRST=2018
-./xmlchange CLM_STREAM_POPDENS_YEAR_LAST=2021
-./xmlchange CLM_STREAM_POPDENS_YEAR_ALIGN=2018
+./xmlchange CLM_STREAM_POPDENS_YEAR_LAST=2018
+./xmlchange CLM_STREAM_POPDENS_YEAR_ALIGN=1
 
 ./xmlchange CLM_STREAM_URBANTV_YEAR_FIRST=2018
-./xmlchange CLM_STREAM_URBANTV_YEAR_LAST=2021
-./xmlchange CLM_STREAM_URBANTV_YEAR_ALIGN=2018
+./xmlchange CLM_STREAM_URBANTV_YEAR_LAST=2018
+./xmlchange CLM_STREAM_URBANTV_YEAR_ALIGN=1
 
-./xmlchange CLM_STREAM_LIGHTNG_DATA_FILENAME = '$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_NEONarea_c210625.nc'
-./xmlchange CLM_STREAM_LIGHTNG_MESH_FILENAME = '$DIN_LOC_ROOT/atm/datm7/NASA_LIS/ESMF_MESH.Li_2016.360x720.NEONarea_cdf5_c221104.nc'
+./xmlchange CLM_STREAM_LIGHTNG_DATA_FILENAME='$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_NEONarea_c210625.nc'
+./xmlchange CLM_STREAM_LIGHTNG_MESH_FILENAME='$DIN_LOC_ROOT/atm/datm7/NASA_LIS/ESMF_MESH.Li_2016.360x720.NEONarea_cdf5_c221104.nc'
 
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
 ./xmlchange PIO_TYPENAME=netcdf
