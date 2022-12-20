@@ -30,7 +30,7 @@ def main():
     """
 
     args = fsurdat_modifier_arg_process()
-    fsurdat_modifier(args.cfg_path)
+    fsurdat_modifier(args)
 
 
 def fsurdat_modifier_arg_process():
@@ -41,33 +41,65 @@ def fsurdat_modifier_arg_process():
     # read the command line argument to obtain the path to the .cfg file
     parser = argparse.ArgumentParser()
     parser.add_argument("cfg_path", help="/path/name.cfg of input file, eg ./modify.cfg")
+    parser.add_argument(
+        "-i",
+        "--fsurdat_in",
+        default="UNSET",
+        required=False,
+        type=str,
+        help="The input surface dataset to modify. ",
+    )
+    parser.add_argument(
+        "-o",
+        "--fsurdat_out",
+        required=False,
+        default="UNSET",
+        type=str,
+        help="The output surface dataset with the modifications. ",
+    )
     add_logging_args(parser)
     args = parser.parse_args()
     process_logging_args(args)
     # Error checking of arguments
     if not os.path.exists(args.cfg_path):
         abort("Config file does NOT exist: " + str(args.cfg_path))
-    print(args.cfg_path)
 
     return args
 
 
-def fsurdat_modifier(cfg_path):
+def fsurdat_modifier(parser):
     """Implementation of fsurdat_modifier command"""
     # read the .cfg (config) file
+    cfg_path = str(parser.cfg_path)
     config = ConfigParser()
     config.read(cfg_path)
     section = "modify_fsurdat_basic_options"
     if not config.has_section(section):
         abort("Config file does not have the expected section: " + section)
 
-    # required: user must set these in the .cfg file
-    fsurdat_in = get_config_value(
-        config=config, section=section, item="fsurdat_in", file_path=cfg_path
-    )
-    fsurdat_out = get_config_value(
-        config=config, section=section, item="fsurdat_out", file_path=cfg_path
-    )
+    if parser.fsurdat_in == "UNSET":
+        # required: user must set these in the .cfg file
+        fsurdat_in = get_config_value(
+            config=config, section=section, item="fsurdat_in", file_path=cfg_path
+        )
+    else:
+        fsurdat_in = str(parser.fsurdat_in)
+
+    # Error checking of input file
+    if not os.path.exists(fsurdat_in):
+        abort("Input fsurdat_in file does NOT exist: " + str(fsurdat_in))
+
+    if parser.fsurdat_out == "UNSET":
+        fsurdat_out = get_config_value(
+            config=config, section=section, item="fsurdat_out", file_path=cfg_path
+        )
+    else:
+        fsurdat_out = str(parser.fsurdat_out)
+
+    # If output file exists, abort before starting work
+    if os.path.exists(fsurdat_out):
+        errmsg = "Output file already exists: " + fsurdat_out
+        abort(errmsg)
 
     # required but fallback values available for variables omitted
     # entirely from the .cfg file
@@ -141,11 +173,6 @@ def fsurdat_modifier(cfg_path):
         lat_dimname,
         lon_dimname,
     )
-
-    # If output file exists, abort before starting work
-    if os.path.exists(fsurdat_out):
-        errmsg = "Output file already exists: " + fsurdat_out
-        abort(errmsg)
 
     # not required: user may set these in the .cfg file
     max_pft = int(max(modify_fsurdat.file.lsmpft))

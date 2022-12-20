@@ -589,7 +589,7 @@ def main():
                 \n Must supply a positional argument: 'point' or 'region'.
                 """
         )
-        raise parser.error(err_msg)
+        raise args.error(err_msg)
 
     if not any(
         [
@@ -606,7 +606,7 @@ def main():
                 \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n
                 """
         )
-        raise parser.error(err_msg)
+        raise args.error(err_msg)
 
     # --------------------------------- #
     # process logging args (i.e. debug and verbose)

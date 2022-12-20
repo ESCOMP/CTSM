@@ -63,15 +63,19 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._cfg_file_path = os.path.join(
             self._testinputs_path, "modify_fsurdat_short_nofiles.cfg"
         )
+        sys.argv = ["fsurdat_modifier", self._cfg_file_path]
+        parser = fsurdat_modifier_arg_process()
         with self.assertRaisesRegex(SystemExit, "must contain item 'fsurdat_in'"):
-            fsurdat_modifier(self._cfg_file_path)
+            fsurdat_modifier(parser)
 
     def test_short_config(self):
         """
         Test that a short config file works
         """
         self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short.cfg")
-        fsurdat_modifier(self._cfg_file_path)
+        sys.argv = ["fsurdat_modifier", self._cfg_file_path]
+        parser = fsurdat_modifier_arg_process()
+        fsurdat_modifier(parser)
         fsurdat_out = (
             "ctsm/test/testinputs/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_out.nc"
         )
@@ -90,17 +94,32 @@ class TestSysFsurdatModifier(unittest.TestCase):
         """
         Test that if the input fsurdat  file does not exist that it gracefully fails
         """
+        self._cfg_file_path = os.path.join(
+            self._testinputs_path, "modify_fsurdat_short_nofiles.cfg"
+        )
         sys.argv = ["fsurdat_modifier", self._cfg_file_path, "-i", "FILE_DOES_NOT_EXIST.nc"]
-        with self.assertRaisesRegex(SystemExit, "Input surface dataset file does NOT exist"):
-            fsurdat_modifier_arg_process()
+        parser = fsurdat_modifier_arg_process()
+        with self.assertRaisesRegex(SystemExit, "Input fsurdat_in file does NOT exist"):
+            fsurdat_modifier(parser)
 
     def test_output_fsurdat_EXISTS_fail(self):
         """
         Test that if the output fsurdat file does exist that it gracefully fails
         """
-        sys.argv = ["fsurdat_modifier", self._cfg_file_path, "-o", self._cfg_file_path]
+        self._cfg_file_path = os.path.join(
+            self._testinputs_path, "modify_fsurdat_short_nofiles.cfg"
+        )
+        sys.argv = [
+            "fsurdat_modifier",
+            self._cfg_file_path,
+            "-i",
+            self._cfg_file_path,
+            "-o",
+            self._cfg_file_path,
+        ]
+        parser = fsurdat_modifier_arg_process()
         with self.assertRaisesRegex(SystemExit, "Output file already exists"):
-            fsurdat_modifier_arg_process()
+            fsurdat_modifier(parser)
 
     def test_cfg_file_empty_fail(self):
         """
@@ -109,8 +128,10 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._cfg_file_path = os.path.join(self._tempdir, "EMPTY_FILE.cfg")
         fil = open(self._cfg_file_path, "w")
         fil.close()
+        sys.argv = ["fsurdat_modifier", self._cfg_file_path]
+        parser = fsurdat_modifier_arg_process()
         with self.assertRaisesRegex(SystemExit, "Config file does not have the expected section"):
-            fsurdat_modifier(self._cfg_file_path)
+            fsurdat_modifier(parser)
 
     def test_minimalInfo(self):
         """
@@ -121,7 +142,9 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._create_config_file_minimal()
 
         # run the fsurdat_modifier tool
-        fsurdat_modifier(self._cfg_file_path)
+        sys.argv = ["fsurdat_modifier", self._cfg_file_path]
+        parser = fsurdat_modifier_arg_process()
+        fsurdat_modifier(parser)
         # the critical piece of this test is that the above command
         # doesn't generate errors; however, we also do some assertions below
 
@@ -139,7 +162,9 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._create_config_file_crop()
 
         # run the fsurdat_modifier tool
-        fsurdat_modifier(self._cfg_file_path)
+        sys.argv = ["fsurdat_modifier", self._cfg_file_path]
+        parser = fsurdat_modifier_arg_process()
+        fsurdat_modifier(parser)
         # the critical piece of this test is that the above command
         # doesn't generate errors; however, we also do some assertions below
 
@@ -164,7 +189,9 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._create_config_file_complete()
 
         # run the fsurdat_modifier tool
-        fsurdat_modifier(self._cfg_file_path)
+        sys.argv = ["fsurdat_modifier", self._cfg_file_path]
+        parser = fsurdat_modifier_arg_process()
+        fsurdat_modifier(parser)
         # the critical piece of this test is that the above command
         # doesn't generate errors; however, we also do some assertions below
 
