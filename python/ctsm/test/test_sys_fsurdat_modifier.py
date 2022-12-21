@@ -119,6 +119,27 @@ class TestSysFsurdatModifier(unittest.TestCase):
         ):
             fsurdat_modifier(parser)
 
+    def test_opt_sections(self):
+        """
+        Test that a simple file with the optional sections works
+        """
+        self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_opt_sections.cfg")
+        sys.argv = [
+            "fsurdat_modifier",
+            self._cfg_file_path,
+            "-i",
+            os.path.join(
+                self._testinputs_path, "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc"
+            ),
+            "-o",
+            os.path.join(
+                self._tempdir,
+                "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_output_urban.nc",
+            ),
+        ]
+        parser = fsurdat_modifier_arg_process()
+        fsurdat_modifier(parser)
+
     def test_cfg_file_DNE_fail(self):
         """
         Test that if the config file does not exist that it gracefully fails

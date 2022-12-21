@@ -67,6 +67,20 @@ def fsurdat_modifier_arg_process():
     return args
 
 
+def read_subgrid(config):
+    """Read the subgrid fraction section from the config file"""
+    section = "modify_fsurdat_subgrid_fractions"
+    if not config.has_section(section):
+        abort("Config file does not have the expected section: " + section)
+
+
+def read_var_list(config):
+    """Read the variable list section from the config file"""
+    section = "modify_fsurdat_variable_list"
+    if not config.has_section(section):
+        abort("Config file does not have the expected section: " + section)
+
+
 def fsurdat_modifier(parser):
     """Implementation of fsurdat_modifier command"""
     # read the .cfg (config) file
@@ -307,6 +321,15 @@ def fsurdat_modifier(parser):
             dom_pft=dom_pft, lai=lai, sai=sai, hgt_top=hgt_top, hgt_bot=hgt_bot
         )
         logger.info("dom_pft complete")
+
+    #
+    # Handle optional sections
+    #
+    if process_subgrid:
+        read_subgrid(config)
+
+    if process_var_list:
+        read_var_list(config)
 
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
