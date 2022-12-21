@@ -114,6 +114,20 @@ def fsurdat_modifier(parser):
         file_path=cfg_path,
         convert_to_type=bool,
     )
+    process_subgrid = get_config_value(
+        config=config,
+        section=section,
+        item="process_subgrid_section",
+        file_path=cfg_path,
+        convert_to_type=bool,
+    )
+    process_var_list = get_config_value(
+        config=config,
+        section=section,
+        item="process_var_list_section",
+        file_path=cfg_path,
+        convert_to_type=bool,
+    )
     include_nonveg = get_config_value(
         config=config,
         section=section,
