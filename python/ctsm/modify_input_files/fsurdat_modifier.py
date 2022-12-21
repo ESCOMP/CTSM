@@ -67,18 +67,51 @@ def fsurdat_modifier_arg_process():
     return args
 
 
-def read_subgrid(config):
+def read_subgrid(config, cfg_path):
     """Read the subgrid fraction section from the config file"""
     section = "modify_fsurdat_subgrid_fractions"
     if not config.has_section(section):
         abort("Config file does not have the expected section: " + section)
 
+    subgrid_settings = {}
+    var_list = config.options(section)
+    valid_list = ["pct_natveg", "pct_crop", "pct_lake", "pct_glacier", "pct_wetland", "pct_urban"]
+    for var in var_list:
+        if var_list.count(var) == 0:
+            abort(
+                "Variable "
+                + var
+                + " in "
+                + section
+                + " is not a valid variable name. Valid vars ="
+                + str(valid_list)
+            )
+        value = get_config_value(
+            config=config, section=section, item=var, file_path=cfg_path, convert_to_type=float
+        )
+        if value < 0.0 or value > 100.0:
+            abort("Variable " + var + " in " + section + " is out of range of 0 to 100 = " + value)
 
-def read_var_list(config):
+        subgrid_settings[var.upper()] = value
+
+    return subgrid_settings
+
+
+def read_var_list(config, cfg_path):
     """Read the variable list section from the config file"""
     section = "modify_fsurdat_variable_list"
     if not config.has_section(section):
         abort("Config file does not have the expected section: " + section)
+
+    varlist_settings = {}
+    var_list = config.options(section)
+    for var in var_list:
+        value = get_config_value(
+            config=config, section=section, item=var, file_path=cfg_path, convert_to_type=float
+        )
+        varlist_settings[var] = value
+
+    return varlist_settings
 
 
 def fsurdat_modifier(parser):
@@ -326,10 +359,10 @@ def fsurdat_modifier(parser):
     # Handle optional sections
     #
     if process_subgrid:
-        read_subgrid(config)
+        subgrid = read_subgrid(config, cfg_path)
 
     if process_var_list:
-        read_var_list(config)
+        varlist = read_var_list(config, cfg_path)
 
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
