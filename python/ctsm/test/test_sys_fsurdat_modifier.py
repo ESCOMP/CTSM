@@ -109,8 +109,6 @@ class TestSysFsurdatModifier(unittest.TestCase):
         sys.argv = [
             "fsurdat_modifier",
             self._cfg_file_path,
-            "-i",
-            "specify_fsurdat_in_on_cmd_line.nc",
             "-o",
             "specify_fsurdat_out_on_cmd_line.nc",
         ]

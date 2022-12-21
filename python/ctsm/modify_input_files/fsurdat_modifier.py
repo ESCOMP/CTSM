@@ -83,6 +83,8 @@ def fsurdat_modifier(parser):
             config=config, section=section, item="fsurdat_in", file_path=cfg_path
         )
     else:
+        if config.has_option(section=section, option="fsurdat_in"):
+            abort("fsurdat_in is specified in both the command line and the config file, pick one")
         fsurdat_in = str(parser.fsurdat_in)
 
     # Error checking of input file
@@ -94,6 +96,8 @@ def fsurdat_modifier(parser):
             config=config, section=section, item="fsurdat_out", file_path=cfg_path
         )
     else:
+        if config.has_option(section=section, option="fsurdat_out"):
+            abort("fsurdat_out is specified in both the command line and the config file, pick one")
         fsurdat_out = str(parser.fsurdat_out)
 
     # If output file exists, abort before starting work
