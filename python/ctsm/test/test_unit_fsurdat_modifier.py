@@ -17,6 +17,8 @@ from ctsm.path_utils import path_to_ctsm_root
 from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier_arg_process
 from ctsm.modify_input_files.fsurdat_modifier import read_subgrid
 from ctsm.modify_input_files.fsurdat_modifier import read_var_list
+from ctsm.modify_input_files.fsurdat_modifier import check_no_subgrid_section
+from ctsm.modify_input_files.fsurdat_modifier import check_no_varlist_section
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -91,12 +93,19 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "Config file does not have the expected section"):
            read_subgrid(self.config, self.cfg_path)
 
-    def test_varlist_remove(self):
-        """test a read of varlist when it's section has been removed"""
-        section = "modify_fsurdat_variable_list"
-        self.config.remove_section(section)
-        with self.assertRaisesRegex(SystemExit, "Config file does not have the expected section"):
-           read_var_list(self.config, self.cfg_path)
+    def test_subgrid_not_thereifoff(self):
+        """test that a graceful error happens if subgrid section is off, but it appears in the file"""
+        section = "modify_fsurdat_basic_options"
+        self.config.set(section, "process_subgrid_section", "False" )
+        with self.assertRaisesRegex(SystemExit, "Config file does have a section"):
+           check_no_subgrid_section(self.config)
+
+    def test_varlist_not_thereifoff(self):
+        """test that a graceful error happens if varlist section is off, but it appears in the file"""
+        section = "modify_fsurdat_basic_options"
+        self.config.set(section, "process_var_list_section", "False" )
+        with self.assertRaisesRegex(SystemExit, "Config file does have a section"):
+           check_no_varlist_section(self.config)
 
 
 if __name__ == "__main__":

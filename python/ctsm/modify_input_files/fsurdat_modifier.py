@@ -66,6 +66,18 @@ def fsurdat_modifier_arg_process():
 
     return args
 
+def check_no_subgrid_section(config):
+    """ Check that there isn't a subgrid section when it's processing is turned off"""
+    section = "modify_fsurdat_subgrid_fractions"
+    if config.has_section(section):
+        abort("Config file does have a section: " + section + " that should NOT be there since it is turned off")
+
+def check_no_varlist_section(config):
+    """ Check that there isn't a var list section when it's processing is turned off"""
+    section = "modify_fsurdat_variable_list"
+    if config.has_section(section):
+        abort("Config file does have a section: " + section + " that should NOT be there since it is turned off")
+
 
 def read_subgrid(config, cfg_path):
     """Read the subgrid fraction section from the config file"""
@@ -360,9 +372,13 @@ def fsurdat_modifier(parser):
     #
     if process_subgrid:
         subgrid = read_subgrid(config, cfg_path)
+    else:
+        check_no_subgrid_section(config)
 
     if process_var_list:
         varlist = read_var_list(config, cfg_path)
+    else:
+        check_no_varlist_section(config)
 
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
