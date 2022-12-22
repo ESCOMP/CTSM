@@ -84,6 +84,21 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "is not a valid variable name. Valid vars ="):
            read_subgrid(self.config, self.cfg_path)
 
+    def test_subgrid_remove(self):
+        """test a read of subgrid when it's section has been removed"""
+        section = "modify_fsurdat_subgrid_fractions"
+        self.config.remove_section(section)
+        with self.assertRaisesRegex(SystemExit, "Config file does not have the expected section"):
+           read_subgrid(self.config, self.cfg_path)
+
+    def test_varlist_remove(self):
+        """test a read of varlist when it's section has been removed"""
+        section = "modify_fsurdat_variable_list"
+        self.config.remove_section(section)
+        with self.assertRaisesRegex(SystemExit, "Config file does not have the expected section"):
+           read_var_list(self.config, self.cfg_path)
+
+
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
     unittest.main()
