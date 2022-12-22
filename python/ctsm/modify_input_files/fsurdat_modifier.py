@@ -90,7 +90,7 @@ def read_subgrid(config, cfg_path):
             config=config, section=section, item=var, file_path=cfg_path, convert_to_type=float
         )
         if value < 0.0 or value > 100.0:
-            abort("Variable " + var + " in " + section + " is out of range of 0 to 100 = " + value)
+            abort("Variable " + var + " in " + section + " is out of range of 0 to 100 = " + str(value))
 
         subgrid_settings[var.upper()] = value
 

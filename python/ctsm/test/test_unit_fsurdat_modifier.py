@@ -70,6 +70,13 @@ class TestFSurdatModifier(unittest.TestCase):
         """test a simple read of var_list"""
         read_var_list(self.config, self.cfg_path)
 
+    def test_subgrid_outofrange(self):
+        """test a read of subgrid that's out of range"""
+        section = "modify_fsurdat_subgrid_fractions"
+        self.config.set(section, "pct_urban", "101." )
+        with self.assertRaisesRegex(SystemExit, "is out of range of 0 to 100 ="):
+           read_subgrid(self.config, self.cfg_path)
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
