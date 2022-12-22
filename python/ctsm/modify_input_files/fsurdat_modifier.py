@@ -77,7 +77,7 @@ def read_subgrid(config, cfg_path):
     var_list = config.options(section)
     valid_list = ["pct_natveg", "pct_crop", "pct_lake", "pct_glacier", "pct_wetland", "pct_urban"]
     for var in var_list:
-        if var_list.count(var) == 0:
+        if valid_list.count(var) == 0:
             abort(
                 "Variable "
                 + var
