@@ -75,37 +75,39 @@ class TestFSurdatModifier(unittest.TestCase):
     def test_subgrid_outofrange(self):
         """test a read of subgrid that's out of range"""
         section = "modify_fsurdat_subgrid_fractions"
-        self.config.set(section, "pct_urban", "101." )
+        self.config.set(section, "pct_urban", "101.")
         with self.assertRaisesRegex(SystemExit, "is out of range of 0 to 100 ="):
-           read_subgrid(self.config, self.cfg_path)
+            read_subgrid(self.config, self.cfg_path)
 
     def test_subgrid_badvar(self):
         """test a read of subgrid for a variable thats not in the list"""
         section = "modify_fsurdat_subgrid_fractions"
-        self.config.set(section, "badvariable", "100." )
+        self.config.set(section, "badvariable", "100.")
         with self.assertRaisesRegex(SystemExit, "is not a valid variable name. Valid vars ="):
-           read_subgrid(self.config, self.cfg_path)
+            read_subgrid(self.config, self.cfg_path)
 
     def test_subgrid_remove(self):
         """test a read of subgrid when it's section has been removed"""
         section = "modify_fsurdat_subgrid_fractions"
         self.config.remove_section(section)
         with self.assertRaisesRegex(SystemExit, "Config file does not have the expected section"):
-           read_subgrid(self.config, self.cfg_path)
+            read_subgrid(self.config, self.cfg_path)
 
     def test_subgrid_not_thereifoff(self):
-        """test that a graceful error happens if subgrid section is off, but it appears in the file"""
+        """test that a graceful error happens if subgrid section is off,
+        but it appears in the file"""
         section = "modify_fsurdat_basic_options"
-        self.config.set(section, "process_subgrid_section", "False" )
+        self.config.set(section, "process_subgrid_section", "False")
         with self.assertRaisesRegex(SystemExit, "Config file does have a section"):
-           check_no_subgrid_section(self.config)
+            check_no_subgrid_section(self.config)
 
     def test_varlist_not_thereifoff(self):
-        """test that a graceful error happens if varlist section is off, but it appears in the file"""
+        """test that a graceful error happens if varlist section is off,
+        but it appears in the file"""
         section = "modify_fsurdat_basic_options"
-        self.config.set(section, "process_var_list_section", "False" )
+        self.config.set(section, "process_var_list_section", "False")
         with self.assertRaisesRegex(SystemExit, "Config file does have a section"):
-           check_no_varlist_section(self.config)
+            check_no_varlist_section(self.config)
 
 
 if __name__ == "__main__":

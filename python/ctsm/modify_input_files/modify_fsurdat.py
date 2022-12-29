@@ -214,6 +214,56 @@ class ModifyFsurdat:
             if val is not None:
                 self.set_lai_sai_hgts(dom_pft=dom_pft, var=var, val=val)
 
+    def check_varlist(self, settings, allow_uppercase_vars=False):
+        """
+        Check a list of variables from a dictionary of settings
+        """
+        # exclude_list = ( "MONTHLY_LAI", "MONTHLY_SAI",
+        #                  "MONTHLY_HEIGHT_TOP", "MONTHLY_HEIGHT_BOT" )
+        for var in settings.keys():
+            # if exclude_list.count(var) > 0:
+            # abort("Error: Variable "+var+" is already handled outside "+
+            #       "of the optional variable list sections")
+            if not var in self.file:
+                if not allow_uppercase_vars:
+                    errmsg = "Error: Variable " + var + " is NOT in the file"
+                    abort(errmsg)
+                if not var.upper() in self.file:
+                    errmsg = "Error: Variable " + var.upper() + " is NOT in the file"
+                    abort(errmsg)
+                val = settings[var]
+                del settings[var]
+                var = var.upper()
+                settings[var] = val
+
+    def set_varlist(self, settings):
+        """
+        Set a list of variables from a dictionary of settings
+        """
+        for var in settings.keys():
+            # if exclude_list.count(var) > 0:
+            # abort("Error: Variable "+var+" is already handled outside "+
+            #       "of the optional variable list sections")
+            if var in self.file:
+                if len(self.file[var].dims) == 2:
+                    self.setvar_lev0(var, settings[var])
+                elif self.file[var].dims == 3:
+                    self.setvar_lev1(var, settings[var], lev1_dim=self.file[var].dims[0])
+                elif self.file[var].dims == 4:
+                    self.setvar_lev2(
+                        var,
+                        settings[var],
+                        lev1_dim=self.file[var].dims[1],
+                        lev2_dim=self.file[var].dims[0],
+                    )
+                else:
+                    abort(
+                        "Error: Variable " + var + " is a higher dimension than currently allowed"
+                    )
+            else:
+                errmsg = "Error: Variable " + var + " is NOT in the file"
+                abort(errmsg)
+
     def set_lai_sai_hgts(self, dom_pft, var, val):
         """
         Description
