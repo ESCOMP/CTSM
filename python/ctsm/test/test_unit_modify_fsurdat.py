@@ -59,6 +59,10 @@ class TestModifyFsurdat(unittest.TestCase):
                 var_lev1=(["w", "x", "y"], var_lev1),
                 var_lev2=(["v", "w", "x", "y"], var_lev2),
                 var_lev3=(["z", "v", "w", "x", "y"], var_lev3),
+                VAR_LEV0_UPPERCASE=(["x", "y"], var_lev0),
+                VAR_LEV1_UPPERCASE=(["w", "x", "y"], var_lev1),
+                VAR_LEV2_UPPERCASE=(["v", "w", "x", "y"], var_lev2),
+                VAR_LEV3_UPPERCASE=(["z", "v", "w", "x", "y"], var_lev3),
             )
         )
 
@@ -374,11 +378,46 @@ class TestModifyFsurdat(unittest.TestCase):
         settings = {"var_lev0": 100.0, "var_lev1": 100.0, "var_lev2": 100.0}
         self.modify_fsurdat.set_varlist(settings)
 
-    def test_set_varlist_badvar(self):
-        """Test the set_varlist method for a variable not on the file"""
+    def test_check_varlist(self):
+        """Test the check_varlist method for all the dimensions that works"""
+        settings = {"var_lev0": 100.0, "var_lev1": 100.0, "var_lev2": 100.0}
+        settings_orig = settings
+        self.modify_fsurdat.check_varlist(settings)
+        self.assertEqual(
+            settings_orig, settings, "list of variable settings not identical as expected"
+        )
+
+    def test_check_varlist_uppercase(self):
+        """Test the check_varlist method for all the dimensions that
+        works with allowuppercase option"""
+        expected = {
+            "VAR_LEV0_UPPERCASE": 100.0,
+            "VAR_LEV1_UPPERCASE": 200.0,
+            "VAR_LEV2_UPPERCASE": 300.0,
+        }
+        settings = {
+            "var_lev0_uppercase": 100.0,
+            "var_lev1_uppercase": 200.0,
+            "var_lev2_uppercase": 300.0,
+        }
+        self.modify_fsurdat.check_varlist(settings, allow_uppercase_vars=True)
+        self.assertEqual(
+            expected,
+            settings,
+            "list of variable settings not converted to uppercase as expected",
+        )
+
+    def test_check_varlist_badvar(self):
+        """Test the check_varlist method for a variable not on the file"""
         settings = {"badvar": 100.0}
         with self.assertRaisesRegex(SystemExit, "Variable badvar is NOT in the file"):
-            self.modify_fsurdat.set_varlist(settings)
+            self.modify_fsurdat.check_varlist(settings)
+
+    def test_check_varlist_badvar_uppercase(self):
+        """Test the check_varlist method for a variable not on the file with allow uppercase"""
+        settings = {"badvar": 100.0}
+        with self.assertRaisesRegex(SystemExit, "Variable BADVAR is NOT in the file"):
+            self.modify_fsurdat.check_varlist(settings, allow_uppercase_vars=True)
 
     def test_set_varlist_toohighdim(self):
         """Test the set_varlist method for a variable of too high a dimension"""
@@ -386,6 +425,15 @@ class TestModifyFsurdat(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit, "Variable var_lev3 is a higher dimension than currently allowed"
         ):
+            self.modify_fsurdat.set_varlist(settings)
+
+    def test_set_varlist_toohighdim_uppercase(self):
+        """Test the set_varlist method for a variable of too high a dimension in uppercase"""
+        settings = {"var_lev3_uppercase": 100.0}
+        with self.assertRaisesRegex(
+            SystemExit, "Variable VAR_LEV3_UPPERCASE is a higher dimension than currently allowed"
+        ):
+            self.modify_fsurdat.check_varlist(settings, allow_uppercase_vars=True)
             self.modify_fsurdat.set_varlist(settings)
 
     def _get_longxy_latixy(self, _min_lon, _max_lon, _min_lat, _max_lat):
