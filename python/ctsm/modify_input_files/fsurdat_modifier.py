@@ -98,6 +98,7 @@ def read_subgrid(config, cfg_path):
     subgrid_settings = {}
     var_list = config.options(section)
     valid_list = ["pct_natveg", "pct_crop", "pct_lake", "pct_glacier", "pct_wetland", "pct_urban"]
+    varsum = 0
     for var in var_list:
         if valid_list.count(var) == 0:
             abort(
@@ -122,6 +123,12 @@ def read_subgrid(config, cfg_path):
             )
 
         subgrid_settings[var.upper()] = value
+        varsum += value
+    if varsum != 100.0:
+        abort(
+            "PCT fractions in subgrid section do NOT sum to a hundred as they should. Sum = "
+            + str(varsum)
+        )
 
     return subgrid_settings
 
@@ -134,7 +141,18 @@ def read_var_list(config, cfg_path):
 
     varlist_settings = {}
     var_list = config.options(section)
+    ideal_list = ["soil_color", "pct_sand", "pct_clay", "organic", "pct_cft", "pct_nat_pft"]
+    # subgrid_list = ["pct_natveg", "pct_crop", "pct_lake", "pct_glacier",
+    # "pct_wetland", "pct_urban"]
     for var in var_list:
+        if ideal_list.count(var) != 0:
+            abort(
+                var
+                + " is a special variable handled in the idealized section."
+                + " This should NOT be handled in the variiable list section."
+                + " Special idealized vars ="
+                + str(ideal_list)
+            )
         value = get_config_value(
             config=config, section=section, item=var, file_path=cfg_path, convert_to_type=float
         )

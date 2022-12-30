@@ -106,8 +106,8 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config.set(section, "PCT_SAND", "100.")
         with self.assertRaisesRegex(
             SystemExit,
-            "is variable handled in the idealized section."
-            + " This should NOT be handled in the variiable list section. Idealized vars =",
+            "is a special variable handled in the idealized section."
+            + " This should NOT be handled in the variiable list section. Special idealized vars =",
         ):
             read_var_list(self.config, self.cfg_path)
 
