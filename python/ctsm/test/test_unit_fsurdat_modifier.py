@@ -79,12 +79,37 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "is out of range of 0 to 100 ="):
             read_subgrid(self.config, self.cfg_path)
 
+    def test_subgrid_notsumtohundred(self):
+        """test a read of subgrid that's doesn't sum to a hundred"""
+        section = "modify_fsurdat_subgrid_fractions"
+        self.config.set(section, "pct_urban", "0.")
+        self.config.set(section, "pct_lake", "0.")
+        self.config.set(section, "pct_wetland", "0.")
+        self.config.set(section, "pct_glacier", "0.")
+        self.config.set(section, "pct_natveg", "0.")
+        self.config.set(section, "pct_crop", "0.")
+        with self.assertRaisesRegex(
+            SystemExit, "PCT fractions in subgrid section do NOT sum to a hundred as they should"
+        ):
+            read_subgrid(self.config, self.cfg_path)
+
     def test_subgrid_badvar(self):
         """test a read of subgrid for a variable thats not in the list"""
         section = "modify_fsurdat_subgrid_fractions"
         self.config.set(section, "badvariable", "100.")
         with self.assertRaisesRegex(SystemExit, "is not a valid variable name. Valid vars ="):
             read_subgrid(self.config, self.cfg_path)
+
+    def test_varlist_varinidealized(self):
+        """test a read of varlist for a variable thats in the idealized list"""
+        section = "modify_fsurdat_variable_list"
+        self.config.set(section, "PCT_SAND", "100.")
+        with self.assertRaisesRegex(
+            SystemExit,
+            "is variable handled in the idealized section."
+            + " This should NOT be handled in the variiable list section. Idealized vars =",
+        ):
+            read_var_list(self.config, self.cfg_path)
 
     def test_subgrid_remove(self):
         """test a read of subgrid when it's section has been removed"""
