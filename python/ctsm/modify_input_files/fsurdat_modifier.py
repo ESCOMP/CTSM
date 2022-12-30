@@ -143,6 +143,7 @@ def read_var_list(config, cfg_path):
     var_list = config.options(section)
     ideal_list = ["soil_color", "pct_sand", "pct_clay", "organic", "pct_cft", "pct_nat_pft"]
     subgrid_list = ["pct_natveg", "pct_crop", "pct_lake", "pct_glacier", "pct_wetland", "pct_urban"]
+    monthly_list = ["monthly_lai", "monthly_sai", "monthly_height_top", "monthly_height_bot"]
     for var in var_list:
         if ideal_list.count(var) != 0:
             abort(
@@ -159,6 +160,14 @@ def read_var_list(config, cfg_path):
                 + " This should NOT be handled in the variiable list section."
                 + " Subgrid vars ="
                 + str(subgrid_list)
+            )
+        if monthly_list.count(var) != 0:
+            abort(
+                var
+                + " is a variable handled as part of the dom_pft handling."
+                + " This should NOT be handled in the variiable list section."
+                + " Monthly vars handled this way ="
+                + str(monthly_list)
             )
         value = get_config_value(
             config=config, section=section, item=var, file_path=cfg_path, convert_to_type=float
