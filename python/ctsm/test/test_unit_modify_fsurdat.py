@@ -25,8 +25,7 @@ from ctsm.modify_input_files.modify_fsurdat import ModifyFsurdat
 
 class TestModifyFsurdat(unittest.TestCase):
     """Tests the setvar_lev functions and the
-    _get_rectangle function and
-    set_varlist method
+    _get_rectangle, check_varlist, and set_varlist methods
     """
 
     def setUp(self):
@@ -49,8 +48,9 @@ class TestModifyFsurdat(unittest.TestCase):
         # the fsurdat_modify tool reads variables like this from fsurdat file
         var_1d = np.arange(self.cols)
         var_lev0 = var_1d * np.ones((self.rows, self.cols))
-        var_lev2 = var_1d * np.ones((self.rows, self.cols, self.rows, self.cols))
         var_lev1 = var_1d * np.ones((self.cols, self.rows, self.cols))
+        var_lev2 = var_1d * np.ones((self.rows, self.cols, self.rows, self.cols))
+        var_lev3 = var_1d * np.ones((self.cols, self.rows, self.cols, self.rows, self.cols))
         my_data = xr.Dataset(
             data_vars=dict(
                 LONGXY=(["x", "y"], longxy),  # use LONGXY as var_lev0
@@ -58,6 +58,7 @@ class TestModifyFsurdat(unittest.TestCase):
                 var_lev0=(["x", "y"], var_lev0),
                 var_lev1=(["w", "x", "y"], var_lev1),
                 var_lev2=(["v", "w", "x", "y"], var_lev2),
+                var_lev3=(["z", "v", "w", "x", "y"], var_lev3),
             )
         )
 
@@ -369,9 +370,23 @@ class TestModifyFsurdat(unittest.TestCase):
             )
 
     def test_set_varlist(self):
-        """Test the set_varlist method"""
-        settings = {"var_lev0": 100.0}
+        """Test the set_varlist method for all the dimensions that works"""
+        settings = {"var_lev0": 100.0, "var_lev1": 100.0, "var_lev2": 100.0}
         self.modify_fsurdat.set_varlist(settings)
+
+    def test_set_varlist_badvar(self):
+        """Test the set_varlist method for a variable not on the file"""
+        settings = {"badvar": 100.0}
+        with self.assertRaisesRegex(SystemExit, "Variable badvar is NOT in the file"):
+            self.modify_fsurdat.set_varlist(settings)
+
+    def test_set_varlist_toohighdim(self):
+        """Test the set_varlist method for a variable of too high a dimension"""
+        settings = {"var_lev3": 100.0}
+        with self.assertRaisesRegex(
+            SystemExit, "Variable var_lev3 is a higher dimension than currently allowed"
+        ):
+            self.modify_fsurdat.set_varlist(settings)
 
     def _get_longxy_latixy(self, _min_lon, _max_lon, _min_lat, _max_lat):
         """

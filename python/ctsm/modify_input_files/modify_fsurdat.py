@@ -218,12 +218,7 @@ class ModifyFsurdat:
         """
         Check a list of variables from a dictionary of settings
         """
-        # exclude_list = ( "MONTHLY_LAI", "MONTHLY_SAI",
-        #                  "MONTHLY_HEIGHT_TOP", "MONTHLY_HEIGHT_BOT" )
         for var in settings.keys():
-            # if exclude_list.count(var) > 0:
-            # abort("Error: Variable "+var+" is already handled outside "+
-            #       "of the optional variable list sections")
             if not var in self.file:
                 if not allow_uppercase_vars:
                     errmsg = "Error: Variable " + var + " is NOT in the file"
@@ -241,24 +236,25 @@ class ModifyFsurdat:
         Set a list of variables from a dictionary of settings
         """
         for var in settings.keys():
-            # if exclude_list.count(var) > 0:
-            # abort("Error: Variable "+var+" is already handled outside "+
-            #       "of the optional variable list sections")
             if var in self.file:
                 if len(self.file[var].dims) == 2:
                     self.setvar_lev0(var, settings[var])
-                elif self.file[var].dims == 3:
-                    self.setvar_lev1(var, settings[var], lev1_dim=self.file[var].dims[0])
-                elif self.file[var].dims == 4:
-                    self.setvar_lev2(
-                        var,
-                        settings[var],
-                        lev1_dim=self.file[var].dims[1],
-                        lev2_dim=self.file[var].dims[0],
-                    )
+                elif len(self.file[var].dims) == 3:
+                    dim1 = int(self.file.sizes[self.file[var].dims[0]])
+                    for lev1 in range(dim1 - 1):
+                        self.setvar_lev1(var, settings[var], lev1_dim=lev1)
+                elif len(self.file[var].dims) == 4:
+                    dim1 = int(self.file.sizes[self.file[var].dims[0]])
+                    dim2 = int(self.file.sizes[self.file[var].dims[1]])
+                    for lev1 in range(dim1 - 1):
+                        for lev2 in range(dim2 - 1):
+                            self.setvar_lev2(var, settings[var], lev1_dim=lev1, lev2_dim=lev2)
                 else:
                     abort(
-                        "Error: Variable " + var + " is a higher dimension than currently allowed"
+                        "Error: Variable "
+                        + var
+                        + " is a higher dimension than currently allowed = "
+                        + str(self.file[var].dims)
                     )
             else:
                 errmsg = "Error: Variable " + var + " is NOT in the file"

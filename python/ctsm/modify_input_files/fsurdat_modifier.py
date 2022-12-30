@@ -141,7 +141,16 @@ def read_var_list(config, cfg_path):
 
     varlist_settings = {}
     var_list = config.options(section)
-    ideal_list = ["soil_color", "pct_sand", "pct_clay", "organic", "pct_cft", "pct_nat_pft", "fmax", "std_elev"]
+    ideal_list = [
+        "soil_color",
+        "pct_sand",
+        "pct_clay",
+        "organic",
+        "pct_cft",
+        "pct_nat_pft",
+        "fmax",
+        "std_elev",
+    ]
     subgrid_list = ["pct_natveg", "pct_crop", "pct_lake", "pct_glacier", "pct_wetland", "pct_urban"]
     monthly_list = ["monthly_lai", "monthly_sai", "monthly_height_top", "monthly_height_bot"]
     for var in var_list:
