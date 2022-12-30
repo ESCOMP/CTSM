@@ -122,6 +122,19 @@ class TestFSurdatModifier(unittest.TestCase):
         ):
             read_var_list(self.config, self.cfg_path)
 
+    def test_varlist_monthlyvar(self):
+        """test a read of varlist for a variable thats one of the monthly
+        variables handled in the dom_pft section"""
+        section = "modify_fsurdat_variable_list"
+        self.config.set(section, "MONTHLY_LAI", "100.")
+        with self.assertRaisesRegex(
+            SystemExit,
+            "is a variable handled as part of the dom_pft handling."
+            + " This should NOT be handled in the variiable list section."
+            + " Monthly vars handled this way =",
+        ):
+            read_var_list(self.config, self.cfg_path)
+
     def test_subgrid_remove(self):
         """test a read of subgrid when it's section has been removed"""
         section = "modify_fsurdat_subgrid_fractions"
