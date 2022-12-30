@@ -68,6 +68,29 @@ class TestFSurdatModifier(unittest.TestCase):
         """test a simple read of subgrid"""
         read_subgrid(self.config, self.cfg_path)
 
+    def test_read_subgrid_allglacier(self):
+        """test a read of subgrid that's for all glacier"""
+        section = "modify_fsurdat_subgrid_fractions"
+        self.config.set(section, "pct_urban", "0.")
+        self.config.set(section, "pct_lake", "0.")
+        self.config.set(section, "pct_wetland", "0.")
+        self.config.set(section, "pct_glacier", "100.")
+        self.config.set(section, "pct_natveg", "0.")
+        self.config.set(section, "pct_crop", "0.")
+        read_subgrid(self.config, self.cfg_path)
+
+    def test_read_subgrid_allspecial(self):
+        """test a read of subgrid that's all special landunits"""
+        section = "modify_fsurdat_subgrid_fractions"
+        self.config.set(section, "pct_urban", "0.")
+        self.config.set(section, "pct_lake", "25.")
+        self.config.set(section, "pct_wetland", "35.")
+        self.config.set(section, "pct_glacier", "40.")
+        self.config.set(section, "pct_natveg", "0.")
+        self.config.set(section, "pct_crop", "0.")
+        read_subgrid(self.config, self.cfg_path)
+
+
     def test_read_var_list(self):
         """test a simple read of var_list"""
         read_var_list(self.config, self.cfg_path)
