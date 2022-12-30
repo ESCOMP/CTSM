@@ -111,6 +111,17 @@ class TestFSurdatModifier(unittest.TestCase):
         ):
             read_var_list(self.config, self.cfg_path)
 
+    def test_varlist_varinsubgrid(self):
+        """test a read of varlist for a variable thats in the subgrid list"""
+        section = "modify_fsurdat_variable_list"
+        self.config.set(section, "PCT_GLACIER", "100.")
+        with self.assertRaisesRegex(
+            SystemExit,
+            "is a variable handled in the subgrid section."
+            + " This should NOT be handled in the variiable list section. Subgrid vars =",
+        ):
+            read_var_list(self.config, self.cfg_path)
+
     def test_subgrid_remove(self):
         """test a read of subgrid when it's section has been removed"""
         section = "modify_fsurdat_subgrid_fractions"
