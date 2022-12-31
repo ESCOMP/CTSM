@@ -438,8 +438,8 @@ def fsurdat_modifier(parser):
 
     if process_var_list:
         varlist = read_var_list(config, cfg_path)
-        modify_fsurdat.check_varlist(varlist, allow_uppercase_vars=True)
-        modify_fsurdat.set_varlist(varlist)
+        update_list = modify_fsurdat.check_varlist(varlist, allow_uppercase_vars=True)
+        modify_fsurdat.set_varlist(update_list)
     else:
         check_no_varlist_section(config)
 

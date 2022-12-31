@@ -90,7 +90,6 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config.set(section, "pct_crop", "0.")
         read_subgrid(self.config, self.cfg_path)
 
-
     def test_read_var_list(self):
         """test a simple read of var_list"""
         read_var_list(self.config, self.cfg_path)

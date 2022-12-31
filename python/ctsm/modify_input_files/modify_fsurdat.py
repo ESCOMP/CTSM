@@ -218,7 +218,10 @@ class ModifyFsurdat:
         """
         Check a list of variables from a dictionary of settings
         """
-        for var in settings.keys():
+        settings_return = {}
+        varlist = settings.keys()
+        for var in varlist:
+            val = settings[var]
             if not var in self.file:
                 if not allow_uppercase_vars:
                     errmsg = "Error: Variable " + var + " is NOT in the file"
@@ -226,10 +229,11 @@ class ModifyFsurdat:
                 if not var.upper() in self.file:
                     errmsg = "Error: Variable " + var.upper() + " is NOT in the file"
                     abort(errmsg)
-                val = settings[var]
-                del settings[var]
-                var = var.upper()
-                settings[var] = val
+                varu = var.upper()
+                settings_return[varu] = val
+            else:
+                settings_return[var] = val
+        return settings_return
 
     def set_varlist(self, settings):
         """

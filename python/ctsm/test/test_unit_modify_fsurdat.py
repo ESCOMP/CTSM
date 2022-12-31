@@ -381,10 +381,9 @@ class TestModifyFsurdat(unittest.TestCase):
     def test_check_varlist(self):
         """Test the check_varlist method for all the dimensions that works"""
         settings = {"var_lev0": 100.0, "var_lev1": 100.0, "var_lev2": 100.0}
-        settings_orig = settings
-        self.modify_fsurdat.check_varlist(settings)
+        settings_new = self.modify_fsurdat.check_varlist(settings)
         self.assertEqual(
-            settings_orig, settings, "list of variable settings not identical as expected"
+            settings_new, settings, "list of variable settings not identical as expected"
         )
 
     def test_check_varlist_uppercase(self):
@@ -400,10 +399,10 @@ class TestModifyFsurdat(unittest.TestCase):
             "var_lev1_uppercase": 200.0,
             "var_lev2_uppercase": 300.0,
         }
-        self.modify_fsurdat.check_varlist(settings, allow_uppercase_vars=True)
+        settings_new = self.modify_fsurdat.check_varlist(settings, allow_uppercase_vars=True)
         self.assertEqual(
             expected,
-            settings,
+            settings_new,
             "list of variable settings not converted to uppercase as expected",
         )
 
@@ -433,8 +432,8 @@ class TestModifyFsurdat(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit, "Variable VAR_LEV3_UPPERCASE is a higher dimension than currently allowed"
         ):
-            self.modify_fsurdat.check_varlist(settings, allow_uppercase_vars=True)
-            self.modify_fsurdat.set_varlist(settings)
+            settings_new = self.modify_fsurdat.check_varlist(settings, allow_uppercase_vars=True)
+            self.modify_fsurdat.set_varlist(settings_new)
 
     def _get_longxy_latixy(self, _min_lon, _max_lon, _min_lat, _max_lat):
         """
