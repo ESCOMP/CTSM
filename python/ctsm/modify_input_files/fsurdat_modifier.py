@@ -89,7 +89,7 @@ def check_no_varlist_section(config):
         )
 
 
-def read_subgrid(config, cfg_path):
+def read_subgrid(config, cfg_path, numurbl=3):
     """Read the subgrid fraction section from the config file"""
     section = "modify_fsurdat_subgrid_fractions"
     if not config.has_section(section):
@@ -123,7 +123,12 @@ def read_subgrid(config, cfg_path):
             )
 
         subgrid_settings[var.upper()] = value
-        varsum += value
+        # Urban is multidimensional so if a scalar value, must be multiplied
+        # by the density dimension
+        if var == "pct_urban":
+            varsum += value * numurbl
+        else:
+            varsum += value
     if varsum != 100.0:
         abort(
             "PCT fractions in subgrid section do NOT sum to a hundred as they should. Sum = "
@@ -450,7 +455,7 @@ def fsurdat_modifier(parser):
     # Handle optional sections
     #
     if process_subgrid:
-        subgrid = read_subgrid(config, cfg_path)
+        subgrid = read_subgrid(config, cfg_path, numurbl=modify_fsurdat.get_urb_dens())
         modify_fsurdat.set_varlist(subgrid)
     else:
         check_no_subgrid_section(config)

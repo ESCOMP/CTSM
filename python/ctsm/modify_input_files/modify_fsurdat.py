@@ -29,7 +29,10 @@ class ModifyFsurdat:
         self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
     ):
 
+        self.numurbl = 3  # Number of urban density types
         self.file = my_data
+        if "numurbl" in self.file.dims:
+            self.numurbl = self.file.dims["numurbl"]
 
         self.rectangle = self._get_rectangle(
             lon_1=lon_1,
@@ -114,6 +117,10 @@ class ModifyFsurdat:
         rectangle = np.logical_and(union_1, union_2)
 
         return rectangle
+
+    def get_urb_dens(self):
+        """Get the number of urban density classes"""
+        return self.numurbl
 
     def write_output(self, fsurdat_in, fsurdat_out):
         """

@@ -90,6 +90,18 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config.set(section, "pct_crop", "0.")
         read_subgrid(self.config, self.cfg_path)
 
+    def test_read_subgrid_allurban(self):
+        """test a read of subgrid that's all urban"""
+        section = "modify_fsurdat_subgrid_fractions"
+        third = float(100.0 / 3.0)
+        self.config.set(section, "pct_urban", str(third))
+        self.config.set(section, "pct_lake", "0.")
+        self.config.set(section, "pct_wetland", "0.")
+        self.config.set(section, "pct_glacier", "0.")
+        self.config.set(section, "pct_natveg", "0.")
+        self.config.set(section, "pct_crop", "0.")
+        read_subgrid(self.config, self.cfg_path)
+
     def test_read_var_list(self):
         """test a simple read of var_list"""
         read_var_list(self.config, self.cfg_path)

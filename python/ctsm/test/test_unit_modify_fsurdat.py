@@ -386,6 +386,14 @@ class TestModifyFsurdat(unittest.TestCase):
             settings_new, settings, "list of variable settings not identical as expected"
         )
 
+    def test_get_numurb_dens(self):
+        """Check that get num urban density types is correct"""
+        self.assertEqual(
+            self.modify_fsurdat.get_urb_dens(),
+            3,
+            "Default number of urban density types is correct",
+        )
+
     def test_check_varlist_uppercase(self):
         """Test the check_varlist method for all the dimensions that
         works with allowuppercase option"""
