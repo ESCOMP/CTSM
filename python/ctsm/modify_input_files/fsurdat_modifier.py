@@ -152,7 +152,26 @@ def read_var_list(config, cfg_path):
         "std_elev",
     ]
     subgrid_list = ["pct_natveg", "pct_crop", "pct_lake", "pct_glacier", "pct_wetland", "pct_urban"]
-    monthly_list = ["monthly_lai", "monthly_sai", "monthly_height_top", "monthly_height_bot"]
+    # List of variables that should be excluded because they are changed elsewhere,
+    # or they shouldn't be changed # Ds, Dsmax, and Ws are excluded because they
+    # are of mixed case and we only search for varaibles in lowercase
+    # or uppercase and not mixed case.
+    monthly_list = [
+        "monthly_lai",
+        "monthly_sai",
+        "monthly_height_top",
+        "monthly_height_bot",
+        "ds",
+        "mxsoil_color",
+        "natpft",
+        "cft",
+        "time",
+        "longxy",
+        "latixy",
+        "dsmax",
+        "area",
+        "ws",
+    ]
     for var in var_list:
         if ideal_list.count(var) != 0:
             abort(
