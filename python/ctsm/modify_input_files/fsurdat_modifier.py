@@ -210,6 +210,147 @@ def read_var_list(config, cfg_path):
     return varlist_settings
 
 
+def modify_optional(
+    modify_fsurdat,
+    idealized,
+    include_nonveg,
+    max_sat_area,
+    std_elev,
+    soil_color,
+    dom_pft,
+    lai,
+    sai,
+    hgt_top,
+    hgt_bot,
+):
+    """Modify the dataset according to the optional settings"""
+
+    # Set fsurdat variables in a rectangle that could be global (default).
+    # Note that the land/ocean mask gets specified in the domain file for
+    # MCT or the ocean mesh files for NUOPC. Here the user may specify
+    # fsurdat variables inside a box but cannot change which points will
+    # run as land and which as ocean.
+    if idealized:
+        modify_fsurdat.set_idealized()  # set 2D variables
+        # set 3D and 4D variables pertaining to natural vegetation
+        modify_fsurdat.set_dom_pft(dom_pft=0, lai=[], sai=[], hgt_top=[], hgt_bot=[])
+        logger.info("idealized complete")
+
+    if max_sat_area is not None:  # overwrite "idealized" value
+        modify_fsurdat.setvar_lev0("FMAX", max_sat_area)
+        logger.info("max_sat_area complete")
+
+    if std_elev is not None:  # overwrite "idealized" value
+        modify_fsurdat.setvar_lev0("STD_ELEV", std_elev)
+        logger.info("std_elev complete")
+
+    if soil_color is not None:  # overwrite "idealized" value
+        modify_fsurdat.setvar_lev0("SOIL_COLOR", soil_color)
+        logger.info("soil_color complete")
+
+    if not include_nonveg:
+        modify_fsurdat.zero_nonveg()
+        logger.info("zero_nonveg complete")
+
+    # set_dom_pft follows zero_nonveg because it modifies PCT_NATVEG
+    # and PCT_CROP in the user-defined rectangle
+    if dom_pft is not None:
+        modify_fsurdat.set_dom_pft(
+            dom_pft=dom_pft, lai=lai, sai=sai, hgt_top=hgt_top, hgt_bot=hgt_bot
+        )
+        logger.info("dom_pft complete")
+
+
+def read_opt_config(modify_fsurdat, config, cfg_path, section):
+    """read the optional parts of the main section config file"""
+    # not required: user may set these in the .cfg file
+    max_pft = int(max(modify_fsurdat.file.lsmpft))
+    dom_pft = get_config_value(
+        config=config,
+        section=section,
+        item="dom_pft",
+        file_path=cfg_path,
+        allowed_values=range(max_pft + 1),  # integers from 0 to max_pft
+        convert_to_type=int,
+        can_be_unset=True,
+    )
+
+    lai = get_config_value(
+        config=config,
+        section=section,
+        item="lai",
+        file_path=cfg_path,
+        is_list=True,
+        convert_to_type=float,
+        can_be_unset=True,
+    )
+    sai = get_config_value(
+        config=config,
+        section=section,
+        item="sai",
+        file_path=cfg_path,
+        is_list=True,
+        convert_to_type=float,
+        can_be_unset=True,
+    )
+    hgt_top = get_config_value(
+        config=config,
+        section=section,
+        item="hgt_top",
+        file_path=cfg_path,
+        is_list=True,
+        convert_to_type=float,
+        can_be_unset=True,
+    )
+    hgt_bot = get_config_value(
+        config=config,
+        section=section,
+        item="hgt_bot",
+        file_path=cfg_path,
+        is_list=True,
+        convert_to_type=float,
+        can_be_unset=True,
+    )
+
+    max_soil_color = int(modify_fsurdat.file.mxsoil_color)
+    soil_color = get_config_value(
+        config=config,
+        section=section,
+        item="soil_color",
+        file_path=cfg_path,
+        allowed_values=range(1, max_soil_color + 1),  # 1 to max_soil_color
+        convert_to_type=int,
+        can_be_unset=True,
+    )
+
+    std_elev = get_config_value(
+        config=config,
+        section=section,
+        item="std_elev",
+        file_path=cfg_path,
+        convert_to_type=float,
+        can_be_unset=True,
+    )
+    max_sat_area = get_config_value(
+        config=config,
+        section=section,
+        item="max_sat_area",
+        file_path=cfg_path,
+        convert_to_type=float,
+        can_be_unset=True,
+    )
+    return (
+        max_sat_area,
+        std_elev,
+        soil_color,
+        dom_pft,
+        lai,
+        sai,
+        hgt_top,
+        hgt_bot,
+    )
+
+
 def fsurdat_modifier(parser):
     """Implementation of fsurdat_modifier command"""
     # read the .cfg (config) file
@@ -335,122 +476,34 @@ def fsurdat_modifier(parser):
         lon_dimname,
     )
 
-    # not required: user may set these in the .cfg file
-    max_pft = int(max(modify_fsurdat.file.lsmpft))
-    dom_pft = get_config_value(
-        config=config,
-        section=section,
-        item="dom_pft",
-        file_path=cfg_path,
-        allowed_values=range(max_pft + 1),  # integers from 0 to max_pft
-        convert_to_type=int,
-        can_be_unset=True,
-    )
-
-    lai = get_config_value(
-        config=config,
-        section=section,
-        item="lai",
-        file_path=cfg_path,
-        is_list=True,
-        convert_to_type=float,
-        can_be_unset=True,
-    )
-    sai = get_config_value(
-        config=config,
-        section=section,
-        item="sai",
-        file_path=cfg_path,
-        is_list=True,
-        convert_to_type=float,
-        can_be_unset=True,
-    )
-    hgt_top = get_config_value(
-        config=config,
-        section=section,
-        item="hgt_top",
-        file_path=cfg_path,
-        is_list=True,
-        convert_to_type=float,
-        can_be_unset=True,
-    )
-    hgt_bot = get_config_value(
-        config=config,
-        section=section,
-        item="hgt_bot",
-        file_path=cfg_path,
-        is_list=True,
-        convert_to_type=float,
-        can_be_unset=True,
-    )
-
-    max_soil_color = int(modify_fsurdat.file.mxsoil_color)
-    soil_color = get_config_value(
-        config=config,
-        section=section,
-        item="soil_color",
-        file_path=cfg_path,
-        allowed_values=range(1, max_soil_color + 1),  # 1 to max_soil_color
-        convert_to_type=int,
-        can_be_unset=True,
-    )
-
-    std_elev = get_config_value(
-        config=config,
-        section=section,
-        item="std_elev",
-        file_path=cfg_path,
-        convert_to_type=float,
-        can_be_unset=True,
-    )
-    max_sat_area = get_config_value(
-        config=config,
-        section=section,
-        item="max_sat_area",
-        file_path=cfg_path,
-        convert_to_type=float,
-        can_be_unset=True,
-    )
-
+    # Read parts that are optional
+    (
+        max_sat_area,
+        std_elev,
+        soil_color,
+        dom_pft,
+        lai,
+        sai,
+        hgt_top,
+        hgt_bot,
+    ) = read_opt_config(modify_fsurdat, config, cfg_path, section)
     # ------------------------------
     # modify surface data properties
     # ------------------------------
 
-    # Set fsurdat variables in a rectangle that could be global (default).
-    # Note that the land/ocean mask gets specified in the domain file for
-    # MCT or the ocean mesh files for NUOPC. Here the user may specify
-    # fsurdat variables inside a box but cannot change which points will
-    # run as land and which as ocean.
-    if idealized:
-        modify_fsurdat.set_idealized()  # set 2D variables
-        # set 3D and 4D variables pertaining to natural vegetation
-        modify_fsurdat.set_dom_pft(dom_pft=0, lai=[], sai=[], hgt_top=[], hgt_bot=[])
-        logger.info("idealized complete")
-
-    if max_sat_area is not None:  # overwrite "idealized" value
-        modify_fsurdat.setvar_lev0("FMAX", max_sat_area)
-        logger.info("max_sat_area complete")
-
-    if std_elev is not None:  # overwrite "idealized" value
-        modify_fsurdat.setvar_lev0("STD_ELEV", std_elev)
-        logger.info("std_elev complete")
-
-    if soil_color is not None:  # overwrite "idealized" value
-        modify_fsurdat.setvar_lev0("SOIL_COLOR", soil_color)
-        logger.info("soil_color complete")
-
-    if not include_nonveg:
-        modify_fsurdat.zero_nonveg()
-        logger.info("zero_nonveg complete")
-
-    # set_dom_pft follows zero_nonveg because it modifies PCT_NATVEG
-    # and PCT_CROP in the user-defined rectangle
-    if dom_pft is not None:
-        modify_fsurdat.set_dom_pft(
-            dom_pft=dom_pft, lai=lai, sai=sai, hgt_top=hgt_top, hgt_bot=hgt_bot
-        )
-        logger.info("dom_pft complete")
-
+    modify_optional(
+        modify_fsurdat,
+        idealized,
+        include_nonveg,
+        max_sat_area,
+        std_elev,
+        soil_color,
+        dom_pft,
+        lai,
+        sai,
+        hgt_top,
+        hgt_bot,
+    )
     #
     # Handle optional sections
     #

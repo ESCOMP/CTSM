@@ -33,6 +33,8 @@ class ModifyFsurdat:
         self.file = my_data
         if "numurbl" in self.file.dims:
             self.numurbl = self.file.dims["numurbl"]
+        else:
+            abort("numurbl is not a dimension on the input surface dataset file and needs to be")
 
         self.rectangle = self._get_rectangle(
             lon_1=lon_1,

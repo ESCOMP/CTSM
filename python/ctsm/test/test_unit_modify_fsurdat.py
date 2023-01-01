@@ -55,6 +55,7 @@ class TestModifyFsurdat(unittest.TestCase):
             data_vars=dict(
                 LONGXY=(["x", "y"], longxy),  # use LONGXY as var_lev0
                 LATIXY=(["x", "y"], latixy),  # __init__ expects LONGXY, LATIXY
+                urbdens=(["numurbl"], var_1d),  # numurbl needs to be dimension
                 var_lev0=(["x", "y"], var_lev0),
                 var_lev1=(["w", "x", "y"], var_lev1),
                 var_lev2=(["v", "w", "x", "y"], var_lev2),
@@ -390,7 +391,7 @@ class TestModifyFsurdat(unittest.TestCase):
         """Check that get num urban density types is correct"""
         self.assertEqual(
             self.modify_fsurdat.get_urb_dens(),
-            3,
+            9,
             "Default number of urban density types is correct",
         )
 
