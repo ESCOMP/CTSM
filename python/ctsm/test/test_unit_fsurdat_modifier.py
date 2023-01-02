@@ -71,7 +71,7 @@ class TestFSurdatModifier(unittest.TestCase):
     def test_read_subgrid_allglacier(self):
         """test a read of subgrid that's for all glacier"""
         section = "modify_fsurdat_subgrid_fractions"
-        self.config.set(section, "pct_urban", "0.")
+        self.config.set(section, "pct_urban", "0. 0. 0.")
         self.config.set(section, "pct_lake", "0.")
         self.config.set(section, "pct_wetland", "0.")
         self.config.set(section, "pct_glacier", "100.")
@@ -82,7 +82,7 @@ class TestFSurdatModifier(unittest.TestCase):
     def test_read_subgrid_allspecial(self):
         """test a read of subgrid that's all special landunits"""
         section = "modify_fsurdat_subgrid_fractions"
-        self.config.set(section, "pct_urban", "0.")
+        self.config.set(section, "pct_urban", "0. 0. 0.")
         self.config.set(section, "pct_lake", "25.")
         self.config.set(section, "pct_wetland", "35.")
         self.config.set(section, "pct_glacier", "40.")
@@ -93,8 +93,7 @@ class TestFSurdatModifier(unittest.TestCase):
     def test_read_subgrid_allurban(self):
         """test a read of subgrid that's all urban"""
         section = "modify_fsurdat_subgrid_fractions"
-        third = float(100.0 / 3.0)
-        self.config.set(section, "pct_urban", str(third))
+        self.config.set(section, "pct_urban", "100.0 0.0 0.0")
         self.config.set(section, "pct_lake", "0.")
         self.config.set(section, "pct_wetland", "0.")
         self.config.set(section, "pct_glacier", "0.")
@@ -109,14 +108,14 @@ class TestFSurdatModifier(unittest.TestCase):
     def test_subgrid_outofrange(self):
         """test a read of subgrid that's out of range"""
         section = "modify_fsurdat_subgrid_fractions"
-        self.config.set(section, "pct_urban", "101.")
+        self.config.set(section, "pct_urban", "101. 0. 0.")
         with self.assertRaisesRegex(SystemExit, "is out of range of 0 to 100 ="):
             read_subgrid(self.config, self.cfg_path)
 
     def test_subgrid_notsumtohundred(self):
         """test a read of subgrid that's doesn't sum to a hundred"""
         section = "modify_fsurdat_subgrid_fractions"
-        self.config.set(section, "pct_urban", "0.")
+        self.config.set(section, "pct_urban", "0. 0. 0.")
         self.config.set(section, "pct_lake", "0.")
         self.config.set(section, "pct_wetland", "0.")
         self.config.set(section, "pct_glacier", "0.")

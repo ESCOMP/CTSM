@@ -86,6 +86,34 @@ def get_config_value(
     return val
 
 
+def get_config_value_or_array(
+    config,
+    section,
+    item,
+    file_path,
+    convert_to_type=None,
+):
+    """Get a config value as a single value or as an array if it's expressed as an array"""
+    print(config)
+    print(section)
+    print(item)
+    print(file_path)
+    if convert_to_type is not None:
+        if convert_to_type is float:
+            print("float")
+        elif convert_to_type is int:
+            print("int")
+        elif convert_to_type is str:
+            print("str")
+        else:
+            abort(
+                "get_config_value_or_array can only have convert_to_type as float, int or str not "
+                + str(convert_to_type)
+            )
+
+    abort("This method not implemented yet")
+
+
 def _handle_config_value(
     var, default, item, is_list, convert_to_type, can_be_unset, allowed_values
 ):

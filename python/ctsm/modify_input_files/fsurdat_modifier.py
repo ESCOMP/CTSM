@@ -89,6 +89,12 @@ def check_no_varlist_section(config):
         )
 
 
+def check_range(var, section, value, minval, maxval):
+    """Check that the value is within range"""
+    if value < minval or value > maxval:
+        abort("Variable " + var + " in " + section + " is out of range of 0 to 100 = " + str(value))
+
+
 def read_subgrid(config, cfg_path, numurbl=3):
     """Read the subgrid fraction section from the config file"""
     section = "modify_fsurdat_subgrid_fractions"
@@ -109,26 +115,30 @@ def read_subgrid(config, cfg_path, numurbl=3):
                 + " is not a valid variable name. Valid vars ="
                 + str(valid_list)
             )
-        value = get_config_value(
-            config=config, section=section, item=var, file_path=cfg_path, convert_to_type=float
-        )
-        if value < 0.0 or value > 100.0:
-            abort(
-                "Variable "
-                + var
-                + " in "
-                + section
-                + " is out of range of 0 to 100 = "
-                + str(value)
+        # Urban is multidimensional
+        if var == "pct_urban":
+            vallist = get_config_value(
+                config=config,
+                section=section,
+                item=var,
+                file_path=cfg_path,
+                is_list=True,
+                convert_to_type=float,
             )
+            if len(vallist) != numurbl:
+                abort("PCT_URBAN is not a list of the expect size of " + str(numurbl))
+            # so if a scalar value, must be multiplied # by the density dimension
+            for val in vallist:
+                check_range(var, section, val, 0.0, 100.0)
+                varsum += val
+        else:
+            value = get_config_value(
+                config=config, section=section, item=var, file_path=cfg_path, convert_to_type=float
+            )
+            check_range(var, section, value, 0.0, 100.0)
+            varsum += value
 
         subgrid_settings[var.upper()] = value
-        # Urban is multidimensional so if a scalar value, must be multiplied
-        # by the density dimension
-        if var == "pct_urban":
-            varsum += value * numurbl
-        else:
-            varsum += value
     if varsum != 100.0:
         abort(
             "PCT fractions in subgrid section do NOT sum to a hundred as they should. Sum = "
