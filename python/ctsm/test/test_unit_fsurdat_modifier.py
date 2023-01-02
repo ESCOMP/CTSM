@@ -112,6 +112,33 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "is out of range of 0 to 100 ="):
             read_subgrid(self.config, self.cfg_path)
 
+    def test_subgrid_pct_urban_toosmall(self):
+        """test a read of subgrid for PCT_URBAN that's an array too small"""
+        section = "modify_fsurdat_subgrid_fractions"
+        self.config.set(section, "pct_urban", "100. 0.")
+        with self.assertRaisesRegex(
+            SystemExit, "PCT_URBAN is not a list of the expected size of 3"
+        ):
+            read_subgrid(self.config, self.cfg_path)
+
+    def test_subgrid_pct_urban_toobig(self):
+        """test a read of subgrid for PCT_URBAN that's an array too big"""
+        section = "modify_fsurdat_subgrid_fractions"
+        self.config.set(section, "pct_urban", "100. 0. 0. 0.")
+        with self.assertRaisesRegex(
+            SystemExit, "PCT_URBAN is not a list of the expected size of 3"
+        ):
+            read_subgrid(self.config, self.cfg_path)
+
+    def test_subgrid_pct_urban_singlevalue(self):
+        """test a read of subgrid for PCT_URBAN that's a single value"""
+        section = "modify_fsurdat_subgrid_fractions"
+        self.config.set(section, "pct_urban", "100.")
+        with self.assertRaisesRegex(
+            SystemExit, "PCT_URBAN is not a list of the expected size of 3"
+        ):
+            read_subgrid(self.config, self.cfg_path)
+
     def test_subgrid_notsumtohundred(self):
         """test a read of subgrid that's doesn't sum to a hundred"""
         section = "modify_fsurdat_subgrid_fractions"

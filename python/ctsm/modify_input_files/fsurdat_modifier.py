@@ -126,7 +126,7 @@ def read_subgrid(config, cfg_path, numurbl=3):
                 convert_to_type=float,
             )
             if len(vallist) != numurbl:
-                abort("PCT_URBAN is not a list of the expect size of " + str(numurbl))
+                abort("PCT_URBAN is not a list of the expected size of " + str(numurbl))
             # so if a scalar value, must be multiplied # by the density dimension
             for val in vallist:
                 check_range(var, section, val, 0.0, 100.0)
