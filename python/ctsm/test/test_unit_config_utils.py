@@ -83,6 +83,30 @@ class TestConfigUtils(unittest.TestCase):
         value = get_config_value_or_array(self.config, self.section, item, convert_to_type=int)
         self.assertEqual(value, 100, "Value as expected")
 
+    def test_config_value_or_array_for_list(self):
+        """Simple test of get_config_value_or_array for a list"""
+        item = "three_things"
+        # Test on a string, float and integer
+        mystr       = "one two three"
+        mystrlist   = ["one", "two", "three"]
+        myfloat     = "1. 2. 3."
+        myfloatlist = [1., 2., 3.]
+        myint       = "1 2 3"
+        myintlist   = [1, 2, 3]
+        self.config.set(self.section, item, mystr)
+        value = get_config_value_or_array(self.config, self.section, item, convert_to_type=str)
+        self.assertEqual(value, mystrlist, "List as expected")
+        self.assertEqual(len(value), 3, "List size as expected")
+        self.config.set(self.section, item, myfloat)
+        value = get_config_value_or_array(self.config, self.section, item, convert_to_type=float)
+        self.assertEqual(value, myfloatlist, "Value as expected")
+        self.assertEqual(len(value), 3, "List size as expected")
+        self.config.set(self.section, item, myint)
+        value = get_config_value_or_array(self.config, self.section, item, convert_to_type=int)
+        self.assertEqual(value, myintlist, "Value as expected")
+        self.assertEqual(len(value), 3, "List size as expected")
+
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
