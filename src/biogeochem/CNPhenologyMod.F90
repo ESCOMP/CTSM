@@ -2610,6 +2610,10 @@ contains
             gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
          end if
 
+         if (generate_crop_gdds) then
+             gddmaturity(p) = max(gddmaturity(p), gddmin(ivt(p)))
+         endif
+
       endif
 
     end associate
