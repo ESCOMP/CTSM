@@ -93,7 +93,9 @@ def get_config_value_or_array(
     file_path,
     convert_to_type=None,
 ):
-    """Get a config value as a single value or as an array if it's expressed as an array"""
+    """Get a config value as a single value or as an array if it's expressed as an array
+    for cases when you don't know how it's going to be expressed"""
+    val = "thing"
     print(config)
     print(section)
     print(item)
@@ -112,6 +114,7 @@ def get_config_value_or_array(
             )
 
     abort("This method not implemented yet")
+    return val
 
 
 def _handle_config_value(

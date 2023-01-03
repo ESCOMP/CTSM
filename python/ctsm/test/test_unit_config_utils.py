@@ -5,44 +5,91 @@
 
 import unittest
 
-from ctsm import unit_testing
-from ctsm.config_utils import lon_range_0_to_360
+from configparser import ConfigParser
 
-# Allow names that pylint doesn't like, because otherwise I find it hard
-# to make readable unit test names
+from ctsm import unit_testing
+from ctsm.config_utils import lon_range_0_to_360, get_config_value_or_array
+
+# Allow test names that pylint doesn't like; otherwise hard to make them
+# readable
 # pylint: disable=invalid-name
+
+# pylint: disable=protected-access
 
 
 class TestConfigUtils(unittest.TestCase):
     """Tests of config_utils"""
 
-    def test_negative_lon(self):
-        """ Test lon_range_0_to_360 for a negative longitude"""
-        lon = -180.
-        lon_new = lon_range_0_to_360(lon)
-        self.assertEqual( lon_new, 180., "lon not as expected" )
+    # Allow these to be set outside of the __init__ method
+    # pylint: disable=attribute-defined-outside-init
+    def setUp(self):
+        """Setup for testing"""
+        self.config = ConfigParser()
+        self.section = "main"
+        self.file_path = "path_to_file"
+        self.config[self.section] = {}
 
     def test_negative_lon(self):
-        """ Test lon_range_0_to_360 for a negative longitude"""
-        lon = -5.
+        """Test lon_range_0_to_360 for a negative longitude"""
+        lon = -180.0
         lon_new = lon_range_0_to_360(lon)
-        self.assertEqual( lon_new, 355., "lon not as expected" )
+        self.assertEqual(lon_new, 180.0, "lon not as expected")
 
+    def test_negative2_lon(self):
+        """Test lon_range_0_to_360 for a negative longitude"""
+        lon = -5.0
+        lon_new = lon_range_0_to_360(lon)
+        self.assertEqual(lon_new, 355.0, "lon not as expected")
 
     def test_regular_lon(self):
-        """ Test lon_range_0_to_360 for a regular longitude"""
+        """Test lon_range_0_to_360 for a regular longitude"""
         lon = 22.567
         lon_new = lon_range_0_to_360(lon)
-        self.assertEqual( lon_new, lon, "lon not as expected" )
+        self.assertEqual(lon_new, lon, "lon not as expected")
 
     def test_lon_out_of_range(self):
-        """ Test lon_range_0_to_360 for longitude out of range"""
-        lon = 361.
+        """Test lon_range_0_to_360 for longitude out of range"""
+        lon = 361.0
         with self.assertRaisesRegex(SystemExit, "lon_in needs to be in the range 0 to 360"):
-           lon_range_0_to_360(lon)
+            lon_range_0_to_360(lon)
 
     def test_lon_out_of_range_negative(self):
-        """ Test lon_range_0_to_360 for longitude out of range"""
-        lon = -181.
+        """Test lon_range_0_to_360 for longitude out of range"""
+        lon = -181.0
         with self.assertRaisesRegex(SystemExit, "lon_in needs to be in the range 0 to 360"):
-           lon_range_0_to_360(lon)
+            lon_range_0_to_360(lon)
+
+    def test_config_value_or_array_single_value(self):
+        """Simple test of get_config_value_or_array"""
+        item = "single_value_thing"
+        # Test on a string, float and integer
+        self.config.set(self.section, item, "one-thing")
+        value = get_config_value_or_array(self.config, self.section, item, self.file_path)
+        self.assertEqual(value, "one-thing", "Value as expected")
+        self.config.set(self.section, item, "100.")
+        value = get_config_value_or_array(self.config, self.section, item, self.file_path)
+        self.assertEqual(float(value), 100.0, "Value as expected")
+        self.config.set(self.section, item, "100")
+        value = get_config_value_or_array(self.config, self.section, item, self.file_path)
+        self.assertEqual(int(value), 100, "Value as expected")
+        # Run over again, with an explicit conversion
+        self.config.set(self.section, item, "one-thing")
+        value = get_config_value_or_array(
+            self.config, self.section, item, self.file_path, convert_to_type=str
+        )
+        self.assertEqual(value, "one-thing", "Value as expected")
+        self.config.set(self.section, item, "100.")
+        value = get_config_value_or_array(
+            self.config, self.section, item, self.file_path, convert_to_type=float
+        )
+        self.assertEqual(value, 100.0, "Value as expected")
+        self.config.set(self.section, item, "100")
+        value = get_config_value_or_array(
+            self.config, self.section, item, self.file_path, convert_to_type=int
+        )
+        self.assertEqual(value, 100, "Value as expected")
+
+
+if __name__ == "__main__":
+    unit_testing.setup_for_tests()
+    unittest.main()
