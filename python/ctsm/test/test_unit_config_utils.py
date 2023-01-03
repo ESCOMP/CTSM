@@ -64,29 +64,23 @@ class TestConfigUtils(unittest.TestCase):
         item = "single_value_thing"
         # Test on a string, float and integer
         self.config.set(self.section, item, "one-thing")
-        value = get_config_value_or_array(self.config, self.section, item, self.file_path)
+        value = get_config_value_or_array(self.config, self.section, item)
         self.assertEqual(value, "one-thing", "Value as expected")
         self.config.set(self.section, item, "100.")
-        value = get_config_value_or_array(self.config, self.section, item, self.file_path)
-        self.assertEqual(float(value), 100.0, "Value as expected")
+        value = get_config_value_or_array(self.config, self.section, item)
+        self.assertEqual(value, "100.", "Value as expected")
         self.config.set(self.section, item, "100")
-        value = get_config_value_or_array(self.config, self.section, item, self.file_path)
-        self.assertEqual(int(value), 100, "Value as expected")
+        value = get_config_value_or_array(self.config, self.section, item)
+        self.assertEqual(value, "100", "Value as expected")
         # Run over again, with an explicit conversion
         self.config.set(self.section, item, "one-thing")
-        value = get_config_value_or_array(
-            self.config, self.section, item, self.file_path, convert_to_type=str
-        )
+        value = get_config_value_or_array(self.config, self.section, item, convert_to_type=str)
         self.assertEqual(value, "one-thing", "Value as expected")
         self.config.set(self.section, item, "100.")
-        value = get_config_value_or_array(
-            self.config, self.section, item, self.file_path, convert_to_type=float
-        )
+        value = get_config_value_or_array(self.config, self.section, item, convert_to_type=float)
         self.assertEqual(value, 100.0, "Value as expected")
         self.config.set(self.section, item, "100")
-        value = get_config_value_or_array(
-            self.config, self.section, item, self.file_path, convert_to_type=int
-        )
+        value = get_config_value_or_array(self.config, self.section, item, convert_to_type=int)
         self.assertEqual(value, 100, "Value as expected")
 
 

@@ -90,30 +90,33 @@ def get_config_value_or_array(
     config,
     section,
     item,
-    file_path,
     convert_to_type=None,
 ):
     """Get a config value as a single value or as an array if it's expressed as an array
     for cases when you don't know how it's going to be expressed"""
-    val = "thing"
-    print(config)
-    print(section)
-    print(item)
-    print(file_path)
+    val = config.get(section, item)
+    vallist = val.split()
     if convert_to_type is not None:
-        if convert_to_type is float:
-            print("float")
-        elif convert_to_type is int:
-            print("int")
-        elif convert_to_type is str:
-            print("str")
-        else:
+        if (
+            convert_to_type is not float
+            and convert_to_type is not int
+            and convert_to_type is not str
+        ):
             abort(
                 "get_config_value_or_array can only have convert_to_type as float, int or str not "
                 + str(convert_to_type)
             )
+    is_list = bool(len(vallist) > 1)
 
-    abort("This method not implemented yet")
+    val = _handle_config_value(
+        var=val,
+        default=None,
+        item=item,
+        is_list=is_list,
+        convert_to_type=convert_to_type,
+        can_be_unset=False,
+        allowed_values=None,
+    )
     return val
 
 
