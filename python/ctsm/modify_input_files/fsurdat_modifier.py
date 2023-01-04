@@ -11,7 +11,7 @@ import argparse
 from configparser import ConfigParser
 
 from ctsm.utils import abort, write_output
-from ctsm.config_utils import get_config_value
+from ctsm.config_utils import get_config_value, get_config_value_or_array
 from ctsm.ctsm_logging import (
     setup_logging_pre_config,
     add_logging_args,
@@ -148,7 +148,7 @@ def read_subgrid(config, cfg_path, numurbl=3):
     return subgrid_settings
 
 
-def read_var_list(config, cfg_path):
+def read_var_list(config):
     """Read the variable list section from the config file"""
     section = "modify_fsurdat_variable_list"
     if not config.has_section(section):
@@ -212,8 +212,8 @@ def read_var_list(config, cfg_path):
                 + " Monthly vars handled this way ="
                 + str(monthly_list)
             )
-        value = get_config_value(
-            config=config, section=section, item=var, file_path=cfg_path, convert_to_type=float
+        value = get_config_value_or_array(
+            config=config, section=section, item=var, convert_to_type=float
         )
         varlist_settings[var] = value
 
@@ -524,7 +524,7 @@ def fsurdat_modifier(parser):
         check_no_subgrid_section(config)
 
     if process_var_list:
-        varlist = read_var_list(config, cfg_path)
+        varlist = read_var_list(config)
         update_list = modify_fsurdat.check_varlist(varlist, allow_uppercase_vars=True)
         modify_fsurdat.set_varlist(update_list)
     else:

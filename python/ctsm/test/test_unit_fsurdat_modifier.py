@@ -103,7 +103,7 @@ class TestFSurdatModifier(unittest.TestCase):
 
     def test_read_var_list(self):
         """test a simple read of var_list"""
-        read_var_list(self.config, self.cfg_path)
+        read_var_list(self.config)
 
     def test_subgrid_outofrange(self):
         """test a read of subgrid that's out of range"""
@@ -169,7 +169,7 @@ class TestFSurdatModifier(unittest.TestCase):
             "is a special variable handled in the idealized section."
             + " This should NOT be handled in the variiable list section. Special idealized vars =",
         ):
-            read_var_list(self.config, self.cfg_path)
+            read_var_list(self.config)
 
     def test_varlist_varinsubgrid(self):
         """test a read of varlist for a variable thats in the subgrid list"""
@@ -180,7 +180,7 @@ class TestFSurdatModifier(unittest.TestCase):
             "is a variable handled in the subgrid section."
             + " This should NOT be handled in the variiable list section. Subgrid vars =",
         ):
-            read_var_list(self.config, self.cfg_path)
+            read_var_list(self.config)
 
     def test_varlist_monthlyvar(self):
         """test a read of varlist for a variable thats one of the monthly
@@ -193,7 +193,7 @@ class TestFSurdatModifier(unittest.TestCase):
             + " This should NOT be handled in the variiable list section."
             + " Monthly vars handled this way =",
         ):
-            read_var_list(self.config, self.cfg_path)
+            read_var_list(self.config)
 
     def test_subgrid_remove(self):
         """test a read of subgrid when it's section has been removed"""
