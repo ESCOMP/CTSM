@@ -17,7 +17,7 @@ date=`date +'%Y%m%d-%H%M'` # get current date and time
 startdate=`date +'%Y-%m-%d %H:%M:%S'`
 COMPSET=I2000Clm50SpGs # for CCLM2 (use stub glacier component for regional domain!)
 RES=hcru_hcru # hcru_hcru for CCLM2-0.44, f09_g17 to test glob (inputdata downloaded)
-DOMAIN=eur # eur for CCLM2 (EURO-CORDEX), glob otherwise
+DOMAIN=sa # eur for CCLM2 (EURO-CORDEX), glob otherwise, sa for South-America
 
 CODE=clm5.0 # clm5.0 for official release, clm5.0_features for Ronny's version, CTSMdev for latest 
 COMPILER=gnu # setting to gnu-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
@@ -57,8 +57,8 @@ print_log "*** Logfile at: ${logfile} ***"
 # Sync inputdata on scratch because scratch will be cleaned every month (change inputfiles on $PROJECT!)
 print_log "*** Syncing inputdata on scratch  ***"
 
-rsync -rv --ignore-existing /project/$PROJ/CCLM2_inputdata $CESMDATAROOT | tee -a $logfile
-
+#rsync -rv --ignore-existing /project/$PROJ/CCLM2_inputdata/ $CESMDATAROOT/ | tee -a $logfile
+sbatch transfer_clm_inputdata.sh # do this with a jobscript in the xfer queue to prevent overflowing of loginnode
 
 
 #==========================================
@@ -161,6 +161,17 @@ if [ $DOMAIN == eur ]; then
     ./xmlchange GLC2LND_SMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_gland4km_TO_360x720_aave.170429.nc"
     ./xmlchange MOSART_MODE=NULL # turn off MOSART for the moment because it runs globally
 fi
+if [ $DOMAIN == sa ]; then
+    ./xmlchange LND_DOMAIN_PATH="$CESMDATAROOT/CCLM2_SA_inputdata/domain"
+    ./xmlchange LND_DOMAIN_FILE="domain.lnd.360x720_SA-CORDEX_cruncep.100429.nc"
+    ./xmlchange LND2ROF_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_nomask_to_0.5x0.5_nomask_aave_da_c130103.nc"
+    ./xmlchange ROF2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_0.5x0.5_nomask_to_360x720_nomask_aave_da_c120830.nc"
+    ./xmlchange LND2GLC_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
+    ./xmlchange LND2GLC_SMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
+    ./xmlchange GLC2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_gland4km_TO_360x720_aave.170429.nc"
+    ./xmlchange GLC2LND_SMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_gland4km_TO_360x720_aave.170429.nc"
+    ./xmlchange MOSART_MODE=NULL # turn off MOSART for the moment because it runs globally
+fi
 
 # Still global
 ./xmlchange LND2ROF_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_nomask_to_0.5x0.5_nomask_aave_da_c130103.nc"
@@ -207,6 +218,16 @@ EOF
 
 cat > user_nl_datm << EOF
 domainfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/domain/domain_EU-CORDEX_0.5_correctedlons.nc"
+EOF
+fi
+
+if [ $DOMAIN == sa ]; then
+    cat > user_nl_clm << EOF
+    fsurdat = "$CESMDATAROOT/CCLM2_SA_inputdata/surfdata/surfdata_360x720cru_SA-CORDEX_16pfts_Irrig_CMIP6_simyr2000_c170824.nc"
+EOF
+
+cat > user_nl_datm << EOF
+domainfile = "$CESMDATAROOT/CCLM2_SA_inputdata/domain/domain.lnd.360x720_SA-CORDEX_cruncep.100429.nc"
 EOF
 fi
 
