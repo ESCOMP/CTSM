@@ -2459,7 +2459,7 @@ contains
 
     ! !USES:
     use clm_varctl       , only : use_c13, use_c14
-    use clm_varctl       , only : use_cropcal_rx_cultivar_gdds
+    use clm_varctl       , only : use_cropcal_rx_sdates, use_cropcal_rx_cultivar_gdds
     use clm_varcon       , only : c13ratio, c14ratio
     use clm_varpar       , only : mxsowings
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
@@ -2523,7 +2523,7 @@ contains
       harvdate(p)  = NOT_Harvested
       sowing_count(p) = sowing_count(p) + 1
 
-      if (sowing_count(p) < mxsowings) then
+      if (use_cropcal_rx_sdates .and. sowing_count(p) < mxsowings) then
          next_rx_sdate(p) = crop_inst%rx_sdates_thisyr_patch(p, sowing_count(p)+1)
       else
          next_rx_sdate(p) = -1
