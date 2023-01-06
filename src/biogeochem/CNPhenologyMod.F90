@@ -426,7 +426,7 @@ contains
     !
     ! !USES:
     use clm_time_manager, only: get_step_size_real
-    use clm_varctl      , only: use_crop
+    use clm_varctl      , only: use_crop, use_cropcal_rx_sdates
     use clm_varcon      , only: secspday
     !
     ! !ARGUMENTS:
@@ -510,6 +510,9 @@ contains
             call endrun(msg="ERROR crit_dayl_lat_slope cannot allow crit_dayl longer than a day"//errmsg(sourcefile, __LINE__))
         end if
     end if
+    if (generate_crop_gdds .and. use_mxmat) then
+        call endrun(msg="ERROR If setting generate_crop_gdds to .true., you must set use_mxmat to .false."//errmsg(sourcefile, __LINE__))
+    endif
 
   end subroutine CNPhenologyInit
 
@@ -2101,11 +2104,9 @@ contains
                 did_plant_prescribed_today = crop_inst%sdates_thisyr_patch(p,sowing_count(p)) == real(jday, r8)
             end if
 
-            ! TEMPORARY? GGCMI seasons often much longer than CLM mxmat.
+            ! Optionally ignore maximum growing season length
             mxmat = pftcon%mxmat(ivt(p))
-            if (use_mxmat .and. generate_crop_gdds) then
-               call endrun(msg="If setting generate_crop_gdds to .true., you must set use_mxmat to .false.")
-            else if (.not. use_mxmat) then
+            if (.not. use_mxmat) then
                 mxmat = 999
             end if
 
@@ -2123,10 +2124,6 @@ contains
 
             ! If generate_crop_gdds and this patch has prescribed sowing inputs
             else if (generate_crop_gdds .and. crop_inst%rx_sdates_thisyr_patch(p,1) .gt. 0) then
-               if (.not. use_cropcal_rx_sdates) then 
-                  write(iulog,*) 'If using generate_crop_gdds, you must specify stream_fldFileName_sdate'
-                  call endrun(msg=errMsg(sourcefile, __LINE__))
-               endif
                if (next_rx_sdate(p) >= 0) then
                   ! Harvest the day before the next sowing date this year.
                   do_harvest = jday == next_rx_sdate(p) - 1
