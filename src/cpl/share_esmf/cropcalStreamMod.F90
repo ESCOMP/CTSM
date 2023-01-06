@@ -408,12 +408,6 @@ contains
 
              crop_inst%rx_cultivar_gdds_thisyr_patch(p,1) = dataptr2d_cultivar_gdds(ig,n)
    
-             ! Sanity check: Try to catch uninitialized values
-             if (crop_inst%rx_cultivar_gdds_thisyr_patch(p,1) > 1000000._r8) then
-                 write(iulog,'(a,i0,a,f20.9)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has rx_cultivar_gdds_thisyr(p,1) HUGE ',&
-                                               crop_inst%rx_cultivar_gdds_thisyr_patch(p,1)
-                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
-             end if
           else
              write(iulog,'(a,i0)') 'cropcal_interp(), rx_cultivar_gdds: Crop patch has ivt ',ivt
              call ESMF_Finalize(endflag=ESMF_END_ABORT)
