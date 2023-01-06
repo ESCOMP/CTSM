@@ -15,10 +15,10 @@ echo "*** Setting up case ***"
 
 date=`date +'%Y%m%d-%H%M'` # get current date and time
 startdate=`date +'%Y-%m-%d %H:%M:%S'`
-
 COMPSET=I2000Clm50SpGs # for CCLM2 (use stub glacier component for regional domain!)
 RES=hcru_hcru # hcru_hcru for CCLM2-0.44, f09_g17 to test glob (inputdata downloaded)
-DOMAIN=eur # eur for CCLM2 (EURO-CORDEX), glob otherwise
+DOMAIN=sa # eur for CCLM2 (EURO-CORDEX), glob otherwise, sa for South-America
+
 CODE=clm5.0 # clm5.0 for official release, clm5.0_features for Ronny's version, CTSMdev for latest 
 COMPILER=gnu # setting to gnu-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
 DRIVER=mct # default is mct, using nuopc requires ESMF installation
@@ -27,7 +27,7 @@ CASENAME=$CODE.$COMPILER.$COMPSET.$RES.$DOMAIN.$EXP
 MACH=pizdaint
 QUEUE=normal # USER_REQUESTED_QUEUE, overrides default JOB_QUEUE
 WALLTIME="01:00:00" # USER_REQUESTED_WALLTIME, overrides default JOB_WALLCLOCK_TIME
-PROJ=sm61
+PROJ=sm62
 NTASKS=24
 NSUBMIT=0 # partition into smaller chunks, excludes the first submission
 let "NCORES = $NTASKS * 12"
@@ -56,7 +56,9 @@ print_log "*** Logfile at: ${logfile} ***"
 
 # Sync inputdata on scratch because scratch will be cleaned every month (change inputfiles on $PROJECT!)
 print_log "*** Syncing inputdata on scratch  ***"
-rsync -av /project/$PROJ/shared/CCLM2_inputdata/ $CESMDATAROOT | tee -a $logfile
+
+#rsync -rv --ignore-existing /project/$PROJ/CCLM2_inputdata/ $CESMDATAROOT/ | tee -a $logfile
+sbatch transfer_clm_inputdata.sh # do this with a jobscript in the xfer queue to prevent overflowing of loginnode
 
 
 #==========================================
@@ -151,6 +153,23 @@ fi
 if [ $DOMAIN == eur ]; then
     ./xmlchange LND_DOMAIN_PATH="$CESMDATAROOT/CCLM2_EUR_inputdata/domain"
     ./xmlchange LND_DOMAIN_FILE="domain_EU-CORDEX_0.5_correctedlons.nc"
+    ./xmlchange LND2ROF_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_nomask_to_0.5x0.5_nomask_aave_da_c130103.nc"
+    ./xmlchange ROF2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_0.5x0.5_nomask_to_360x720_nomask_aave_da_c120830.nc"
+    ./xmlchange LND2GLC_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
+    ./xmlchange LND2GLC_SMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
+    ./xmlchange GLC2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_gland4km_TO_360x720_aave.170429.nc"
+    ./xmlchange GLC2LND_SMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_gland4km_TO_360x720_aave.170429.nc"
+    ./xmlchange MOSART_MODE=NULL # turn off MOSART for the moment because it runs globally
+fi
+if [ $DOMAIN == sa ]; then
+    ./xmlchange LND_DOMAIN_PATH="$CESMDATAROOT/CCLM2_SA_inputdata/domain"
+    ./xmlchange LND_DOMAIN_FILE="domain.lnd.360x720_SA-CORDEX_cruncep.100429.nc"
+    ./xmlchange LND2ROF_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_nomask_to_0.5x0.5_nomask_aave_da_c130103.nc"
+    ./xmlchange ROF2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_0.5x0.5_nomask_to_360x720_nomask_aave_da_c120830.nc"
+    ./xmlchange LND2GLC_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
+    ./xmlchange LND2GLC_SMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
+    ./xmlchange GLC2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_gland4km_TO_360x720_aave.170429.nc"
+    ./xmlchange GLC2LND_SMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_gland4km_TO_360x720_aave.170429.nc"
     ./xmlchange MOSART_MODE=NULL # turn off MOSART for the moment because it runs globally
 fi
 
@@ -185,40 +204,30 @@ print_log "*** Modifying unser_nl_*.xml  ***"
 # hist_type1d_pertape # '' for 2D and no averaging (i.e. PFT output), 'COL' for columns, 'LAND' for land-units, 'GRID' for grid-cells
 
 # Commented out during testing to avoid lots of output
-: '
-cat > user_nl_clm << EOF
-hist_fincl1 = 'TG', 'QAF', 'TAF', 'UAF'
-hist_fincl2 = 'QAF', 'TAF', 'UAF', 'VPD_CAN', 'TLAI', 'FCEV', 'FCTR', 'TG', 'TSOI', 'TSOI_10CM', 'TSA', 'Q2M', 'VPD'
-hist_fincl3 = 'QAF', 'TAF', 'UAF', 'VPD_CAN', 'TLAI', 'FCEV', 'FCTR', 'TG', 'TSOI', 'TSOI_10CM', 'TSA', 'Q2M', 'VPD'
-hist_fincl4 = 'QAF', 'TAF', 'UAF', 'VPD_CAN', 'TLAI', 'FCEV', 'FCTR', 'TG', 'TSOI', 'TSOI_10CM', 'TSA', 'Q2M', 'VPD'
 
-hist_nhtfrq = 0, -24, -24, -6 
-hist_mfilt  = 12, 365, 365, 4 
-hist_avgflag_pertape = 'A','M','X','I' 
-hist_dov2xy = .true.,.true.,.true.,.false. 
-hist_type1d_pertape = '','','',''
-EOF
-
-print_log "*** Output frequency and averaging  ***"
-print_log "h0: default + selected variables, monthly values (0), yearly file (12 vals per file), average over the output interval (A)"
-print_log "h1: selected variables, daily values (-24), yearly file (365 vals per file), min over the output interval (M)"
-print_log "h2: selected variables, daily values (-24), yearly file (365 vals per file), max over the output interval (X)"
-print_log "h3: selected variables, 6-hourly values (-6), daily file (4 vals per file), instantaneous at the output interval (I) by PFT"
-'
-
-# Params file: can be exchanged for newer versions
+#rams file: can be exchanged for newer versions
 cat > user_nl_clm << EOF
 paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
 EOF
 
 # Surface data (domain-specific)
 if [ $DOMAIN == eur ]; then
-cat > user_nl_clm << EOF
-fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_0.5x0.5_hist_16pfts_Irrig_CMIP6_simyr2000_c190418.nc"
+    cat > user_nl_clm << EOF
+    fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_0.5x0.5_hist_16pfts_Irrig_CMIP6_simyr2000_c190418.nc"
 EOF
 
 cat > user_nl_datm << EOF
 domainfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/domain/domain_EU-CORDEX_0.5_correctedlons.nc"
+EOF
+fi
+
+if [ $DOMAIN == sa ]; then
+    cat > user_nl_clm << EOF
+    fsurdat = "$CESMDATAROOT/CCLM2_SA_inputdata/surfdata/surfdata_360x720cru_SA-CORDEX_16pfts_Irrig_CMIP6_simyr2000_c170824.nc"
+EOF
+
+cat > user_nl_datm << EOF
+domainfile = "$CESMDATAROOT/CCLM2_SA_inputdata/domain/domain.lnd.360x720_SA-CORDEX_cruncep.100429.nc"
 EOF
 fi
 
