@@ -27,7 +27,7 @@ CASENAME=$CODE.$COMPILER.$COMPSET.$RES.$DOMAIN.$EXP
 MACH=pizdaint
 QUEUE=normal # USER_REQUESTED_QUEUE, overrides default JOB_QUEUE
 WALLTIME="01:00:00" # USER_REQUESTED_WALLTIME, overrides default JOB_WALLCLOCK_TIME
-PROJ=sm62
+PROJ=$(basename "$(dirname "${PROJECT}")") # extract project name (sm61/sm62)
 NTASKS=24
 NSUBMIT=0 # partition into smaller chunks, excludes the first submission
 let "NCORES = $NTASKS * 12"
@@ -204,8 +204,28 @@ print_log "*** Modifying unser_nl_*.xml  ***"
 # hist_type1d_pertape # '' for 2D and no averaging (i.e. PFT output), 'COL' for columns, 'LAND' for land-units, 'GRID' for grid-cells
 
 # Commented out during testing to avoid lots of output
+: '
+cat > user_nl_clm << EOF
+hist_fincl1 = 'TG', 'QAF', 'TAF', 'UAF'
+hist_fincl2 = 'QAF', 'TAF', 'UAF', 'VPD_CAN', 'TLAI', 'FCEV', 'FCTR', 'TG', 'TSOI', 'TSOI_10CM', 'TSA', 'Q2M', 'VPD'
+hist_fincl3 = 'QAF', 'TAF', 'UAF', 'VPD_CAN', 'TLAI', 'FCEV', 'FCTR', 'TG', 'TSOI', 'TSOI_10CM', 'TSA', 'Q2M', 'VPD'
+hist_fincl4 = 'QAF', 'TAF', 'UAF', 'VPD_CAN', 'TLAI', 'FCEV', 'FCTR', 'TG', 'TSOI', 'TSOI_10CM', 'TSA', 'Q2M', 'VPD'
 
-#rams file: can be exchanged for newer versions
+hist_nhtfrq = 0, -24, -24, -6 
+hist_mfilt  = 12, 365, 365, 4 
+hist_avgflag_pertape = 'A','M','X','I' 
+hist_dov2xy = .true.,.true.,.true.,.false. 
+hist_type1d_pertape = '','','',''
+EOF
+
+print_log "*** Output frequency and averaging  ***"
+print_log "h0: default + selected variables, monthly values (0), yearly file (12 vals per file), average over the output interval (A)"
+print_log "h1: selected variables, daily values (-24), yearly file (365 vals per file), min over the output interval (M)"
+print_log "h2: selected variables, daily values (-24), yearly file (365 vals per file), max over the output interval (X)"
+print_log "h3: selected variables, 6-hourly values (-6), daily file (4 vals per file), instantaneous at the output interval (I) by PFT"
+'
+
+# Params file: can be exchanged for newer versions
 cat > user_nl_clm << EOF
 paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
 EOF
