@@ -131,6 +131,7 @@ def read_subgrid(config, cfg_path, numurbl=3):
             for val in vallist:
                 check_range(var, section, val, 0.0, 100.0)
                 varsum += val
+            value = vallist
         else:
             value = get_config_value(
                 config=config, section=section, item=var, file_path=cfg_path, convert_to_type=float
@@ -139,6 +140,7 @@ def read_subgrid(config, cfg_path, numurbl=3):
             varsum += value
 
         subgrid_settings[var.upper()] = value
+
     if varsum != 100.0:
         abort(
             "PCT fractions in subgrid section do NOT sum to a hundred as they should. Sum = "
@@ -519,14 +521,14 @@ def fsurdat_modifier(parser):
     #
     if process_subgrid:
         subgrid = read_subgrid(config, cfg_path, numurbl=modify_fsurdat.get_urb_dens())
-        modify_fsurdat.set_varlist(subgrid)
+        modify_fsurdat.set_varlist(subgrid, cfg_path)
     else:
         check_no_subgrid_section(config)
 
     if process_var_list:
         varlist = read_var_list(config)
         update_list = modify_fsurdat.check_varlist(varlist, allow_uppercase_vars=True)
-        modify_fsurdat.set_varlist(update_list)
+        modify_fsurdat.set_varlist(update_list, cfg_path)
     else:
         check_no_varlist_section(config)
 

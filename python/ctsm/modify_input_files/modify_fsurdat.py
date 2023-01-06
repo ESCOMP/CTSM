@@ -230,38 +230,78 @@ class ModifyFsurdat:
         settings_return = {}
         varlist = settings.keys()
         for var in varlist:
-            val = settings[var]
+            varname = var
+            val = settings[varname]
             if not var in self.file:
                 if not allow_uppercase_vars:
-                    errmsg = "Error: Variable " + var + " is NOT in the file"
+                    errmsg = "Error: Variable " + varname + " is NOT in the file"
                     abort(errmsg)
-                if not var.upper() in self.file:
-                    errmsg = "Error: Variable " + var.upper() + " is NOT in the file"
+                if not varname.upper() in self.file:
+                    errmsg = "Error: Variable " + varname.upper() + " is NOT in the file"
                     abort(errmsg)
-                varu = var.upper()
-                settings_return[varu] = val
-            else:
-                settings_return[var] = val
+                varname = varname.upper()
+
+            settings_return[varname] = val
+            #
+            # Check that dimensions are as expected
+            #
+            if len(self.file[varname].dims) == 2:
+                if not isinstance(val, float):
+                    abort(
+                        "For 2D vars, there should only be a single value for variable = " + varname
+                    )
+            elif len(self.file[varname].dims) >= 3:
+                dim1 = int(self.file.sizes[self.file[varname].dims[0]])
+                if not isinstance(val, list):
+                    abort(
+                        "For higher dimensional vars, the variable needs to be expressed "
+                        + "as a list of values of the dimension size = "
+                        + str(dim1)
+                        + " for variable="
+                        + varname
+                    )
+                if len(val) != dim1:
+                    abort(
+                        "Variable " + varname + " is of the wrong size. It should be = " + str(dim1)
+                    )
         return settings_return
 
-    def set_varlist(self, settings):
+    def set_varlist(self, settings, cfg_path="unknown-config-file"):
         """
         Set a list of variables from a dictionary of settings
         """
         for var in settings.keys():
             if var in self.file:
                 if len(self.file[var].dims) == 2:
+                    if not isinstance(settings[var], float):
+                        abort(
+                            "For 2D vars, there should only be a single value for variable = " + var
+                        )
                     self.setvar_lev0(var, settings[var])
                 elif len(self.file[var].dims) == 3:
                     dim1 = int(self.file.sizes[self.file[var].dims[0]])
+                    vallist = settings[var]
+                    if not isinstance(vallist, list):
+                        abort(
+                            "For higher dimensional vars, there must be a list of values "
+                            + "for variable= "
+                            + var
+                            + " from the config file = "
+                            + cfg_path
+                        )
+                    if len(vallist) != dim1:
+                        abort(
+                            "Variable " + var + " is of the wrong size. It should be = " + str(dim1)
+                        )
                     for lev1 in range(dim1 - 1):
-                        self.setvar_lev1(var, settings[var], lev1_dim=lev1)
+                        self.setvar_lev1(var, vallist[lev1], lev1_dim=lev1)
                 elif len(self.file[var].dims) == 4:
                     dim1 = int(self.file.sizes[self.file[var].dims[0]])
                     dim2 = int(self.file.sizes[self.file[var].dims[1]])
+                    vallist = settings[var]
                     for lev1 in range(dim1 - 1):
                         for lev2 in range(dim2 - 1):
-                            self.setvar_lev2(var, settings[var], lev1_dim=lev1, lev2_dim=lev2)
+                            self.setvar_lev2(var, vallist[lev1], lev1_dim=lev1, lev2_dim=lev2)
                 else:
                     abort(
                         "Error: Variable "

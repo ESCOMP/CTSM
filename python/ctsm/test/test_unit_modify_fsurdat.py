@@ -376,16 +376,28 @@ class TestModifyFsurdat(unittest.TestCase):
 
     def test_set_varlist(self):
         """Test the set_varlist method for all the dimensions that works"""
-        settings = {"var_lev0": 100.0, "var_lev1": 100.0, "var_lev2": 100.0}
+        vallist = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+        settings = {"var_lev0": 100.0, "var_lev1": vallist, "var_lev2": vallist}
         self.modify_fsurdat.set_varlist(settings)
 
-    def test_check_varlist(self):
-        """Test the check_varlist method for all the dimensions that works"""
-        settings = {"var_lev0": 100.0, "var_lev1": 100.0, "var_lev2": 100.0}
+    def test_check_varlist_lists(self):
+        """Test the check_varlist method for lists"""
+        lev1list = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+        lev2list = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+        settings = {"var_lev1": lev1list, "var_lev2": lev2list}
         settings_new = self.modify_fsurdat.check_varlist(settings)
         self.assertEqual(
             settings_new, settings, "list of variable settings not identical as expected"
         )
+
+    def test_check_varlist_lists_wrongsizes(self):
+        """Test the check_varlist method for lists to gracefully fail when the sizes are wrong"""
+        lev1list = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
+        settings = {"var_lev1": lev1list}
+        with self.assertRaisesRegex(
+            SystemExit, "Variable var_lev1 is of the wrong size. It should be"
+        ):
+            self.modify_fsurdat.check_varlist(settings)
 
     def test_get_numurb_dens(self):
         """Check that get num urban density types is correct"""
@@ -398,15 +410,17 @@ class TestModifyFsurdat(unittest.TestCase):
     def test_check_varlist_uppercase(self):
         """Test the check_varlist method for all the dimensions that
         works with allowuppercase option"""
+        vallist = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+        vallist2 = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
         expected = {
             "VAR_LEV0_UPPERCASE": 100.0,
-            "VAR_LEV1_UPPERCASE": 200.0,
-            "VAR_LEV2_UPPERCASE": 300.0,
+            "VAR_LEV1_UPPERCASE": vallist,
+            "VAR_LEV2_UPPERCASE": vallist2,
         }
         settings = {
             "var_lev0_uppercase": 100.0,
-            "var_lev1_uppercase": 200.0,
-            "var_lev2_uppercase": 300.0,
+            "var_lev1_uppercase": vallist,
+            "var_lev2_uppercase": vallist2,
         }
         settings_new = self.modify_fsurdat.check_varlist(settings, allow_uppercase_vars=True)
         self.assertEqual(
@@ -439,10 +453,11 @@ class TestModifyFsurdat(unittest.TestCase):
         """Test the set_varlist method for a variable of too high a dimension in uppercase"""
         settings = {"var_lev3_uppercase": 100.0}
         with self.assertRaisesRegex(
-            SystemExit, "Variable VAR_LEV3_UPPERCASE is a higher dimension than currently allowed"
+            SystemExit,
+            "For higher dimensional vars, the variable needs to be expressed as a "
+            + "list of values of the dimension size = 9 for variable=VAR_LEV3_UPPERCASE",
         ):
-            settings_new = self.modify_fsurdat.check_varlist(settings, allow_uppercase_vars=True)
-            self.modify_fsurdat.set_varlist(settings_new)
+            self.modify_fsurdat.check_varlist(settings, allow_uppercase_vars=True)
 
     def _get_longxy_latixy(self, _min_lon, _max_lon, _min_lat, _max_lat):
         """
