@@ -300,7 +300,6 @@ contains
 
     ! Read prescribed sowing dates from input files
     allocate(dataptr2d_sdate(lsize, ncft))
-    dataptr2d_sdate(:,:) = -5
     if (use_cropcal_rx_sdates) then
        ! Starting with npcropmin will skip generic crops
        if (verbose) write(iulog,*) 'cropcal_interp(): Reading sdate file'
