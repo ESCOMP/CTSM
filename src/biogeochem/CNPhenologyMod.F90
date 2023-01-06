@@ -1854,11 +1854,9 @@ contains
             next_rx_sdate(p) = crop_inst%rx_sdates_thisyr_patch(p,1)
          end if
 
-         s = sowing_count(p)
-
          ! Get next sowing date
-         if (s < mxsowings) then
-             next_rx_sdate(p) = crop_inst%rx_sdates_thisyr_patch(p,s+1)
+         if (sowing_count(p) < mxsowings) then
+             next_rx_sdate(p) = crop_inst%rx_sdates_thisyr_patch(p,sowing_count(p)+1)
          end if
 
          ! CropType->InitAllocate() initializes next_rx_sdate to -1. It's only changed from that, by cropCalStreamMod->cropcal_interp(),  when use_cropcal_rx_sdates is true. So if not using prescribed sowing dates, this boolean will always be false, because jday can never be -1.
@@ -1937,7 +1935,7 @@ contains
          did_plant = .false.
 
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
-         if ( (.not. croplive(p)) .and. s == 0 ) then
+         if ( (.not. croplive(p)) .and. sowing_count(p) == 0 ) then
 
             ! gdd needed for * chosen crop and a likely hybrid (for that region) *
             ! to reach full physiological maturity
@@ -2019,8 +2017,6 @@ contains
 
          end if ! crop not live nor planted
 
-         s = sowing_count(p)
-
          ! ----------------------------------
          ! from AgroIBIS subroutine phenocrop
          ! ----------------------------------
@@ -2101,8 +2097,8 @@ contains
             force_harvest = .false.
             fake_harvest = .false.
             did_plant_prescribed_today = .false.
-            if (use_cropcal_rx_sdates .and. s > 0) then
-                did_plant_prescribed_today = crop_inst%sdates_thisyr_patch(p,s) == real(jday, r8)
+            if (use_cropcal_rx_sdates .and. sowing_count(p) > 0) then
+                did_plant_prescribed_today = crop_inst%sdates_thisyr_patch(p,sowing_count(p)) == real(jday, r8)
             end if
 
             ! TEMPORARY? GGCMI seasons often much longer than CLM mxmat.
@@ -2528,15 +2524,14 @@ contains
       idop(p)      = jday
       iyop(p)      = kyr
       harvdate(p)  = NOT_Harvested
-      s = sowing_count(p) + 1
+      sowing_count(p) = sowing_count(p) + 1
 
-      sowing_count(p) = s
-      if (s < mxsowings) then
-         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr_patch(p, s+1)
+      if (sowing_count(p) < mxsowings) then
+         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr_patch(p, sowing_count(p)+1)
       else
          next_rx_sdate(p) = -1
       endif
-      crop_inst%sdates_thisyr_patch(p,s) = real(jday, r8)
+      crop_inst%sdates_thisyr_patch(p,sowing_count(p)) = real(jday, r8)
 
       this_sowing_reason = 0._r8
       if (do_plant_prescribed) then
@@ -2547,7 +2542,7 @@ contains
       else if (do_plant_lastchance) then
           this_sowing_reason = this_sowing_reason + 2._r8
       end if
-      sowing_reason(p,s) = this_sowing_reason
+      sowing_reason(p,sowing_count(p)) = this_sowing_reason
       crop_inst%sowing_reason_patch(p) = this_sowing_reason
 
       leafc_xfer(p)  = initial_seed_at_planting
@@ -2575,8 +2570,8 @@ contains
       endif
 
       ! set GDD target
-      if (use_cropcal_rx_cultivar_gdds .and. crop_inst%rx_cultivar_gdds_thisyr_patch(p,s) .ge. 0._r8) then
-         gdd_target = crop_inst%rx_cultivar_gdds_thisyr_patch(p,s)
+      if (use_cropcal_rx_cultivar_gdds .and. crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p)) .ge. 0._r8) then
+         gdd_target = crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p))
 
          ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
          ! Just manually set a minimum of 1.0
