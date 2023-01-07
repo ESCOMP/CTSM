@@ -142,6 +142,14 @@ module CNPhenologyMod
   ! For determining leaf offset latitude that's considered high latitude (see Eitel 2019)
   real(r8), parameter :: critical_offset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
 
+  real(r8), parameter :: HARVEST_REASON_MATURE = 1._r8
+  real(r8), parameter :: HARVEST_REASON_MAXSEASLENGTH = 2._r8
+  real(r8), parameter :: HARVEST_REASON_SOWNBADDEC31 = 3._r8
+  real(r8), parameter :: HARVEST_REASON_RXSOWINGTODAY = 4._r8
+  real(r8), parameter :: HARVEST_REASON_SOWTOMORROW = 5._r8
+  real(r8), parameter :: HARVEST_REASON_GDDGEN_IDOPTOMORROW = 6._r8
+  real(r8), parameter :: HARVEST_REASON_GDDGEN_SOWTOMORROW_JAN1 = 7._r8
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
@@ -2115,12 +2123,12 @@ contains
                 do_harvest = .true.
                 force_harvest = .true.
                 fake_harvest = .true.
-                harvest_reason = 3._r8
+                harvest_reason = HARVEST_REASON_SOWNBADDEC31
             else if (do_plant .and. .not. did_plant) then
                 ! Today was supposed to be the planting day, but the previous crop still hasn't been harvested.
                 do_harvest = .true.
                 force_harvest = .true.
-                harvest_reason = 4._r8
+                harvest_reason = HARVEST_REASON_RXSOWINGTODAY
 
             ! If generate_crop_gdds and this patch has prescribed sowing inputs
             else if (generate_crop_gdds .and. crop_inst%rx_sdates_thisyr_patch(p,1) .gt. 0) then
@@ -2138,10 +2146,10 @@ contains
                       (idop(p) == 1 .and. jday == dayspyr)) then
                       do_harvest = .true.
                       if (do_harvest) then
-                          harvest_reason = 6._r8
+                          harvest_reason = HARVEST_REASON_GDDGEN_IDOPTOMORROW
                       end if
                   else if (do_harvest) then
-                      harvest_reason = 5._r8
+                      harvest_reason = HARVEST_REASON_SOWTOMORROW
                   end if
 
                else
@@ -2158,7 +2166,7 @@ contains
                   end if
 
                   if (do_harvest) then
-                      harvest_reason = 7._r8
+                      harvest_reason = HARVEST_REASON_GDDGEN_SOWTOMORROW_JAN1
                   end if
 
                endif
@@ -2186,11 +2194,11 @@ contains
                do_harvest = do_harvest .or. will_plant_prescribed_tomorrow
 
                if (hui(p) >= gddmaturity(p)) then
-                   harvest_reason = 1._r8
+                   harvest_reason = HARVEST_REASON_MATURE
                else if (idpp >= mxmat) then
-                   harvest_reason = 2._r8
+                   harvest_reason = HARVEST_REASON_MAXSEASLENGTH
                else if (will_plant_prescribed_tomorrow) then
-                   harvest_reason = 5._r8
+                   harvest_reason = HARVEST_REASON_SOWTOMORROW
                    force_harvest = .true.
                end if
             endif
