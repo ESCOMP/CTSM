@@ -13,6 +13,7 @@ import shutil
 import sys
 
 import xarray as xr
+import numpy as np
 
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
@@ -124,6 +125,10 @@ class TestSysFsurdatModifier(unittest.TestCase):
         Test that a simple file with the optional sections works
         """
         self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_opt_sections.cfg")
+        outfile = os.path.join(
+            self._tempdir,
+            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_output_urban.nc",
+        )
         sys.argv = [
             "fsurdat_modifier",
             self._cfg_file_path,
@@ -132,13 +137,21 @@ class TestSysFsurdatModifier(unittest.TestCase):
                 self._testinputs_path, "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc"
             ),
             "-o",
-            os.path.join(
-                self._tempdir,
-                "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_output_urban.nc",
-            ),
+            outfile,
         ]
         parser = fsurdat_modifier_arg_process()
         fsurdat_modifier(parser)
+        # Read the resultant output file and make sure the fields are changed as expected
+        fsurdat_out_data = xr.open_dataset(outfile)
+        zero0d = np.zeros( (5,5) )
+        one0d = np.ones( (5,5) )
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_NATVEG, zero0d )
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_CROP, zero0d )
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d )
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_WETLAND, zero0d )
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d )
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_GLACIER, zero0d )
+        np.testing.assert_array_equal(fsurdat_out_data.LAKEDEPTH, one0d*200. )
 
     def test_cfg_file_DNE_fail(self):
         """
