@@ -1,0 +1,7 @@
+stream_year_first_cropcal = 2000
+stream_year_last_cropcal = 2000
+model_year_align_cropcal = 2000
+
+stream_meshfile_cropcal = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh_c20191001.nc'
+stream_fldFileName_sdate = '/glade/work/samrabin/crop_dates/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f19_g17.2000-2000.20220727_164727.fill1.nc'
+

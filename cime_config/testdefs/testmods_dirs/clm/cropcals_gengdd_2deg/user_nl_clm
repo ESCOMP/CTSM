@@ -1,0 +1,11 @@
+generate_crop_gdds = .true.
+use_mxmat = .false.
+flanduse_timeseries = '/glade/work/samrabin/crop_dates/landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_c170824.gddgen1976-2015.nc'
+check_dynpft_consistency = .false.
+
+! Daily outputs for GDD generation
+hist_fincl5 = 'HUI', 'GDDACCUM'
+hist_nhtfrq(5) = -24
+hist_mfilt(5) = 365
+hist_type1d_pertape(5) = 'PFTS'
+hist_dov2xy(5) = .false.

@@ -1,0 +1,7 @@
+! Annual outputs
+hist_fincl4 = 'GRAINC_TO_FOOD_PERHARV', 'GRAINC_TO_FOOD_ANN', 'SDATES', 'SDATES_PERHARV', 'SYEARS_PERHARV', 'HDATES', 'GDDHARV_PERHARV', 'GDDACCUM_PERHARV', 'HUI_PERHARV', 'SOWING_REASON_PERHARV', 'HARVEST_REASON_PERHARV'
+hist_nhtfrq(4) = 17520
+hist_mfilt(4) = 999
+hist_type1d_pertape(4) = 'PFTS'
+hist_dov2xy(4) = .false.
+

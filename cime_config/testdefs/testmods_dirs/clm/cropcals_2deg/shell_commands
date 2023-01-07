@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+set -x
+
+y1=1977
+refcase="cropcals3.f19-g17.rx_crop_calendars2.IHistClm50BgcCrop.1958-2014"
+refdir=/glade/work/samrabin/clm51_restarts/${refcase}.rest/${y1}-01-01-00000
+
+#./xmlchange RUN_REFDIR="${refdir}"
+# I don't know why the above doesn't work.
+rundir="$(./xmlquery RUNDIR | sed -E "s/\s+RUNDIR:\s+//")"
+rsync -ahm --info=progress2 --partial "${refdir}"/* "${rundir}"/
+
+./xmlchange RUN_TYPE="hybrid"
+./xmlchange RUN_REFCASE="${refcase}"
+./xmlchange RUN_REFDATE="${y1}-01-01"
+./xmlchange RUN_STARTDATE=${y1}0101
+./xmlchange DATM_YR_END=2014
+./xmlchange RESUBMIT=0
