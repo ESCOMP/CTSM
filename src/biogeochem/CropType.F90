@@ -508,7 +508,7 @@ contains
     use clm_varpar, only : mxsowings, mxharvests
     ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2023-01-09)
     use CNVegstateType, only : cnveg_state_type
-    use clm_time_manager , only : get_prev_calday, get_prev_date
+    use clm_time_manager , only : get_curr_calday, get_curr_date
     !
     ! !ARGUMENTS:
     class(crop_type), intent(inout)  :: this
@@ -693,8 +693,8 @@ contains
 
        ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2023-01-09)
        if (flag == 'read') then
-           jday = get_prev_calday()
-           call get_prev_date(kyr, kmo, kda, mcsec)
+           jday = get_curr_calday()
+           call get_curr_date(kyr, kmo, kda, mcsec)
            do p = bounds%begp,bounds%endp
                ! Will be needed until we can rely on all restart files including cnveg_state_inst%iyop_patch.
                if (this%croplive_patch(p) .and. cnveg_state_inst%iyop_patch(p) > kyr) then
