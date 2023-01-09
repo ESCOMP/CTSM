@@ -6,12 +6,12 @@
 This script is for modifying surface dataset at neon sites
 using data available from the neon server.
 
-After creating a single point surface data file from a global 
-surface data file using subset_data.py, use this script to 
+After creating a single point surface data file from a global
+surface data file using subset_data.py, use this script to
 overwrite some fields with site-specific data for neon sites.
 
 This script will do the following:
-- Download neon data for the specified site if it does not exist 
+- Download neon data for the specified site if it does not exist
     in the specified directory : (i.e. ../../../neon_surffiles).
 - Modify surface dataset with downloaded data.
 
@@ -129,7 +129,7 @@ def get_parser():
     parser.add_argument(
         "--surf_dir",
         help="""
-                Directory of single point surface dataset. 
+                Directory of single point surface dataset.
                 [default: %(default)s]
                 """,
         action="store",
@@ -142,7 +142,7 @@ def get_parser():
         "--out_dir",
         help="""
                 Directory to write updated single point surface dataset.
-                [default: %(default)s] 
+                [default: %(default)s]
                 """,
         action="store",
         dest="out_dir",
@@ -154,7 +154,7 @@ def get_parser():
         "--inputdata-dir",
         help="""
                 Directory to write updated single point surface dataset.
-                [default: %(default)s] 
+                [default: %(default)s]
                 """,
         action="store",
         dest="inputdatadir",
@@ -166,8 +166,8 @@ def get_parser():
         "-d",
         "--debug",
         help="""
-                Debug mode will print more information. 
-                [default: %(default)s] 
+                Debug mode will print more information.
+                [default: %(default)s]
                 """,
         action="store_true",
         dest="debug",
@@ -260,7 +260,7 @@ def find_surffile(surf_dir, site_name):
         surf_file (str): name of the surface dataset file
     """
 
-    sf_name = "surfdata_1x1_NEON_"+site_name+"*hist_78pfts_CMIP6_simyr2000_*.nc"
+    sf_name = "surfdata_1x1_NEON_16PFT_"+site_name+"*hist_78pfts_CMIP6_simyr2000_*.nc"
     print (os.path.join(surf_dir , sf_name))
     surf_file = sorted(glob.glob(os.path.join(surf_dir , sf_name)))
 

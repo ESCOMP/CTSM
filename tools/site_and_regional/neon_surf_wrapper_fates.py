@@ -102,9 +102,9 @@ def main():
                 '--create-surface','--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
         execute(command)
 
-        #command = ['./modify_singlept_site_neon.py','--neon_site',site, '--surf_dir',
-        #        'subset_data_single_point']
-        #execute(command)
+        command = ['./modify_singlept_site_neon.py','--neon_site',site, '--surf_dir',
+                'subset_data_single_point']
+        execute(command)
 
 if __name__ == "__main__":
     main()
