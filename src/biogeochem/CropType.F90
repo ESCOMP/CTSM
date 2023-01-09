@@ -498,7 +498,7 @@ contains
   end subroutine InitAccVars
 
   !-----------------------------------------------------------------------
-  subroutine Restart(this, bounds, ncid, flag)
+  subroutine Restart(this, bounds, ncid, cnveg_state_inst, flag)
     !
     ! !USES:
     use restUtilMod
@@ -506,11 +506,15 @@ contains
     use PatchType, only : patch
     use pftconMod, only : npcropmin, npcropmax
     use clm_varpar, only : mxsowings, mxharvests
+    ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2023-01-09)
+    use CNVegstateType, only : cnveg_state_type
+    use clm_time_manager , only : get_prev_calday, get_prev_date
     !
     ! !ARGUMENTS:
     class(crop_type), intent(inout)  :: this
     type(bounds_type), intent(in)    :: bounds
     type(file_desc_t), intent(inout) :: ncid
+    type(cnveg_state_type) , intent(inout) :: cnveg_state_inst ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2023-01-09)
     character(len=*) , intent(in)    :: flag
     !
     ! !LOCAL VARIABLES:
@@ -519,6 +523,12 @@ contains
     integer :: p
     logical :: readvar   ! determine if variable is on initial file
     integer :: seasons_found, seasons_loopvar      ! getting number of sowings/harvests in patch
+    ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2023-01-09)
+    integer jday      ! julian day of the year
+    integer kyr       ! current year
+    integer kmo       ! month of year  (1, ..., 12)
+    integer kda       ! day of month   (1, ..., 31)
+    integer mcsec     ! seconds of day (0, ..., seconds/day)
 
     character(len=*), parameter :: subname = 'Restart'
     !-----------------------------------------------------------------------
@@ -664,6 +674,7 @@ contains
                 long_name='reason for each harvest for this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%harvest_reason_thisyr_patch)
+
            ! Fill variable(s) derived from read-in variable(s)
            if (flag == 'read' .and. readvar) then
              do p = bounds%begp,bounds%endp
@@ -678,6 +689,26 @@ contains
                 this%harvest_count(p) = seasons_found
              end do ! loop through patches
            end if
+       end if
+
+       ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2023-01-09)
+       if (flag == 'read') then
+           jday = get_prev_calday()
+           call get_prev_date(kyr, kmo, kda, mcsec)
+           do p = bounds%begp,bounds%endp
+               ! Will be needed until we can rely on all restart files including cnveg_state_inst%iyop_patch.
+               if (this%croplive_patch(p) .and. cnveg_state_inst%iyop_patch(p) > kyr) then
+                   if (cnveg_state_inst%idop_patch(p) <= jday) then
+                       cnveg_state_inst%iyop_patch(p) = kyr
+                   else
+                       cnveg_state_inst%iyop_patch(p) = kyr - 1
+                   end if
+               end if
+               ! Will be needed until we can rely on all restart files including sowing_reason_patch.
+               if (this%croplive_patch(p) .and. this%sowing_reason_patch(p) < 0) then
+                  this%sowing_reason_patch(p) = 0
+               end if
+           end do ! loop through patches
        end if
     end if
 

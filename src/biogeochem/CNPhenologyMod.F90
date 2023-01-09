@@ -1884,18 +1884,6 @@ contains
              sowing_count(p) = 1
              crop_inst%sdates_thisyr_patch(p,1) = real(idop(p), r8)
          end if
-         ! Will be needed until we can rely on all restart files including iyop.
-         if (croplive(p) .and. iyop(p) > kyr) then
-             if (idop(p) <= jday) then
-                 iyop(p) = kyr
-             else
-                 iyop(p) = kyr - 1
-             end if
-         end if
-         ! Will be needed until we can rely on all restart files including sowing_reason_patch.
-         if (croplive(p) .and. crop_inst%sowing_reason_patch(p) < 0) then
-            crop_inst%sowing_reason_patch(p) = 0
-         endif
 
          ! This is outside the croplive check so that the "harvest if planting conditions were met today" conditional works.
          !
