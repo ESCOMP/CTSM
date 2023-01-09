@@ -124,8 +124,10 @@ module DiurnalOzoneType
     end do
 
     ! interpolate, checking for edge cases
+    !TODO: Add bounds here
+    !TODO: make seconds in day a parameter
     if (i == 1) then 
-      ! wrap around to front
+      ! wrap around to back
       forc_o3_down(:) = forc_o3(:)*((this%o3_anomaly_grc(:,this%ntimes)*            &
         (this%time_arr(i) - real(tod)) +                                            &
         this%o3_anomaly_grc(:,i)*((86400.0 - this%time_arr(this%ntimes)) + real(tod)))/   &

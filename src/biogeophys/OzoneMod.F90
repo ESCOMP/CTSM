@@ -393,8 +393,8 @@ contains
     real(r8) , intent(in) :: forc_o3( bounds%begg: )   ! ozone partial pressure (mol/mol)
     !
     ! !LOCAL VARIABLES:
-    real(r8), pointer :: forc_o3_down( bounds%begg: ) ! downscaled ozone partial pressure (mol/mol)
-    integer           :: fp                           ! filter index
+    real(r8)          :: forc_o3_down(bounds%begg:bounds%endg) ! downscaled ozone partial pressure (mol/mol)
+    integer           :: fp                          ! filter index
     integer           :: p                            ! patch index
     integer           :: c                            ! column index
     integer           :: g                            ! gridcell index
@@ -421,7 +421,7 @@ contains
     if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average) then
       call this%diurnalOzoneAnomInst%Interp(forc_o3, forc_o3_down)
     else
-      forc_o3_down = forc_o3
+      forc_o3_down(bounds%begg:bounds%endg) = forc_o3(bounds%begg:bounds%endg)
     end if
 
       do fp = 1, num_exposedvegp
