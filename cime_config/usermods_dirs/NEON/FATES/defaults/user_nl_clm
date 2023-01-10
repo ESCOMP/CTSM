@@ -22,7 +22,7 @@ flanduse_timeseries = ' '   ! This isn't needed for a non transient case, but wi
 fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/NEON/FATES/surfdata_1x1_NEON_16PFT_${NEONSITE}_hist_16pfts_Irrig_CMIP6_simyr2000_c230110.nc"
 
 ! h1 output stream 
-hist_fincl2 = 'AR','ELAI','FCEV','FCTR','FGEV','FIRA','FSA','FSH','GPP','H2OSOI',
-             'HR','SNOW_DEPTH','TBOT','TSOI','SOILC_vr','FV','NET_NMIN_vr'
+hist_fincl2 = 'FATES_AUTORESP','FCEV','FCTR','FGEV','FIRA','FSA','FSH','FATES_GPP','FATES_GPP_PF','H2OSOI',
+             'SNOW_DEPTH','TBOT','TSOI','SOILC_vr','FATES_NPP','FATES_NPP_PF','FATES_VEGC','FATES_VEGC_PF'
 hist_mfilt(2) = 48
 hist_nhtfrq(2) = 1  
