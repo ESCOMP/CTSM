@@ -145,10 +145,9 @@ module CNPhenologyMod
   real(r8), parameter :: HARVEST_REASON_MATURE = 1._r8
   real(r8), parameter :: HARVEST_REASON_MAXSEASLENGTH = 2._r8
   real(r8), parameter :: HARVEST_REASON_SOWNBADDEC31 = 3._r8
-  real(r8), parameter :: HARVEST_REASON_RXSOWINGTODAY = 4._r8
+  real(r8), parameter :: HARVEST_REASON_SOWTODAY = 4._r8
   real(r8), parameter :: HARVEST_REASON_SOWTOMORROW = 5._r8
-  real(r8), parameter :: HARVEST_REASON_GDDGEN_IDOPTOMORROW = 6._r8
-  real(r8), parameter :: HARVEST_REASON_GDDGEN_SOWTOMORROW_JAN1 = 7._r8
+  real(r8), parameter :: HARVEST_REASON_IDOPTOMORROW = 6._r8
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -2116,7 +2115,7 @@ contains
                 ! Today was supposed to be the planting day, but the previous crop still hasn't been harvested.
                 do_harvest = .true.
                 force_harvest = .true.
-                harvest_reason = HARVEST_REASON_RXSOWINGTODAY
+                harvest_reason = HARVEST_REASON_SOWTODAY
 
             ! If generate_crop_gdds and this patch has prescribed sowing inputs
             else if (generate_crop_gdds .and. crop_inst%rx_sdates_thisyr_patch(p,1) .gt. 0) then
@@ -2134,7 +2133,7 @@ contains
                       (idop(p) == 1 .and. jday == dayspyr)) then
                       do_harvest = .true.
                       if (do_harvest) then
-                          harvest_reason = HARVEST_REASON_GDDGEN_IDOPTOMORROW
+                          harvest_reason = HARVEST_REASON_IDOPTOMORROW
                       end if
                   else if (do_harvest) then
                       harvest_reason = HARVEST_REASON_SOWTOMORROW
@@ -2154,7 +2153,7 @@ contains
                   end if
 
                   if (do_harvest) then
-                      harvest_reason = HARVEST_REASON_GDDGEN_SOWTOMORROW_JAN1
+                      harvest_reason = HARVEST_REASON_SOWTOMORROW
                   end if
 
                endif
