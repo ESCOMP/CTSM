@@ -12,7 +12,7 @@ overwrite some fields with site-specific data for neon sites.
 
 This script will do the following:
 - Download neon data for the specified site if it does not exist
-    in the specified directory : (i.e. ../../../neon_surffiles).
+    in the specified directory : (i.e. ../../../neon_surf_files).
 - Modify surface dataset with downloaded data.
 
 -------------------------------------------------------------------
@@ -181,7 +181,7 @@ def get_neon(neon_dir, site_name):
     """
     Function for finding neon data files
     and download from neon server if the
-    file does not exits.
+    file does not exist.
 
     Args:
         neon_dir (str): local directory for downloading neon data.
@@ -202,7 +202,7 @@ def get_neon(neon_dir, site_name):
 
     neon_file = os.path.join(neon_dir, site_name + "_surfaceData.csv")
 
-    # -- Download the file if it does not exits
+    # -- Download the file if it does not exist
     if os.path.isfile(neon_file):
         print("neon file for", site_name, "already exists! ")
         print("Skipping download from neon for", site_name, "...")
@@ -260,7 +260,7 @@ def find_surffile(surf_dir, site_name):
         surf_file (str): name of the surface dataset file
     """
 
-    sf_name = "surfdata_1x1_NEON_16PFT_"+site_name+"*hist_78pfts_CMIP6_simyr2000_*.nc"
+    sf_name = "surfdata_1x1_NEON_16PFT_"+site_name+"*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
     print (os.path.join(surf_dir , sf_name))
     surf_file = sorted(glob.glob(os.path.join(surf_dir , sf_name)))
 
@@ -293,7 +293,7 @@ def find_soil_structure(args, surf_file):
     This function finds this file for the surface
     dataset, read it, and find soil layers.
 
-    Args:
+    args:
         surf_file (str): single point surface data filename
 
     Raises:
@@ -349,6 +349,7 @@ def update_metadata(nc, surf_file, neon_file, zb_flag):
         nc (xr Dataset): netcdf file including updated neon surface data
         surf_file (str): single point surface data filename
         neon_file (str): filename of neon downloaded surface dataset
+        zb_flag (bool): update bedrock
 
     Returns:
         nc (xr Dataset): netcdf file including updated neon surface data
@@ -380,7 +381,7 @@ def update_time_tag(fname_in):
         fname_in (str) : file name with the old time tag
 
     Raises:
-        error if the file does not end with with
+        error if the file does not end with
          [._]cYYMMDD.nc or [._]YYMMDD.nc
 
     Returns:
@@ -636,7 +637,7 @@ def main():
         # -- inorganic = caco3/100.0869*12.0107
         # -- organic = carbon_tot - inorganic
         # -- else:
-        # -- oranigc = estimated_oc * bulk_den /0.58
+        # -- organic = estimated_oc * bulk_den /0.58
 
         caco3 = df["caco3Conc"][bin_index[soil_lev]]
         inorganic = caco3 / 100.0869 * 12.0107

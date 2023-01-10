@@ -4,22 +4,18 @@ This is a just top-level skeleton script that calls
 subset_data.py.
 The original code (subset_data.py) is located under
 python/ctsm folder.
-
 For full instructions on how to run the code and different options,
 please check python/ctsm/subset_data.py file.
 This script extracts domain files, surface dataset, and DATM files
 at either a single point or a region using the global dataset.
-
 To run this script the following packages are required:
     - numpy
     - xarray
 ----------------------------------------------------------------
 To see all available options for single-point/regional subsetting:
     ./subset_data --help
-
 ----------------------------------------------------------------
 Instructions for running using conda python environments:
-
 ../../py_env_create
 conda activate ctsm_py
 """
