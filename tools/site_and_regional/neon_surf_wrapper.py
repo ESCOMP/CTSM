@@ -33,7 +33,7 @@ import argparse
 import subprocess
 
 import pandas as pd
-#import tqdm as tqdm
+
 
 
 
@@ -51,6 +51,12 @@ def get_parser():
                 action="store_true", 
                 dest="verbose", 
                 default=False)
+
+    parser.add_argument('-f', '--fates',
+                        help='Create and/or modify surface data file for FATES. ',
+                        action="store_true",
+                        dest="fates",
+                        default=False)
 
 
     return parser
@@ -98,13 +104,19 @@ def main():
         pft = row['pft']
         clmsite = "1x1_NEON_"+site
         print ("Now processing site :", site)
-        command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),'--site',clmsite,'--dompft',str(pft),'--crop',
-                '--create-surface','--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
-        execute(command)
+        if args.fates:
 
-        command = ['./modify_singlept_site_neon.py','--neon_site',site, '--surf_dir',
-                'subset_data_single_point']
-        execute(command)
+            command1 = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),'--site',clmsite,
+                    '--create-surface','--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
+            command2 = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
+                       'subset_data_single_point', '--fates']
+        else:
+            command1 = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),'--site',clmsite,'--dompft',str(pft),'--crop',
+                    '--create-surface','--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
+            command2 = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
+                       'subset_data_single_point']
+        execute(command1)
+        execute(command2)
 
 if __name__ == "__main__": 
     main()
