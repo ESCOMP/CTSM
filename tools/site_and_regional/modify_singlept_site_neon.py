@@ -47,7 +47,7 @@ import logging
 import numpy as np
 import pandas as pd
 import xarray as xr
-from packaging import version
+#from packaging import version
 
 from datetime import date
 from getpass import getuser
@@ -521,9 +521,9 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
 
     # Check if pandas is a recent enough version
-    pdvers = pd.__version__
-    if version.parse(pdvers) < version.parse("1.1.0"):
-        sys.exit("The pandas version in your python environment is too old, update to a newer version of pandas (>=1.1.0): version=%s", pdvers )
+    #pdvers = pd.__version__
+    #if version.parse(pdvers) < version.parse("1.1.0"):
+    #    sys.exit("The pandas version in your python environment is too old, update to a newer version of pandas (>=1.1.0): version=%s", pdvers )
 
 
     file_time = check_neon_time()
