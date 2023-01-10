@@ -174,6 +174,15 @@ def get_parser():
         default=False,
     )
 
+    parser.add_argument(
+        "-f",
+        "--fates",
+        help="Modify FATES-specific surface data files (i.e. 16-PFT version",
+        action="store_true",
+        dest="fates",
+        default=False,
+    )
+
     return parser
 
 
@@ -241,7 +250,7 @@ def get_neon(neon_dir, site_name):
     return neon_file
 
 
-def find_surffile(surf_dir, site_name):
+def find_surffile(surf_dir, site_name, fates):
     """
     Function for finding and choosing surface file for
     a neon site.
@@ -252,6 +261,7 @@ def find_surffile(surf_dir, site_name):
     Args:
         surf_dir (str): directory of single point surface data
         site_name (str): 4 letter neon site name
+        fates (bool):    if true, use 16-PFT version of surface data file
 
     Raises:
         Error if the surface data for the site is not created
@@ -260,7 +270,11 @@ def find_surffile(surf_dir, site_name):
         surf_file (str): name of the surface dataset file
     """
 
-    sf_name = "surfdata_1x1_NEON_16PFT_"+site_name+"*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
+    if fates:
+        sf_name = "surfdata_1x1_NEON_16PFT_"+site_name+"*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
+    else:
+        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_78pfts_CMIP6_simyr2000_*.nc"
+
     print (os.path.join(surf_dir , sf_name))
     surf_file = sorted(glob.glob(os.path.join(surf_dir , sf_name)))
 
@@ -533,12 +547,12 @@ def main():
 
     # --  Look for surface data
     surf_dir = args.surf_dir
-    surf_file = find_surffile(surf_dir, site_name)
+    surf_file = find_surffile(surf_dir, site_name, args.fates)
 
     # --  directory structure
     current_dir = os.getcwd()
     parent_dir = os.path.dirname(current_dir)
-    clone_dir = os.path.abspath(os.path.join(__file__, "../../.."))
+    clone_dir = os.path.abspath(os.path.join(__file__, "../../../.."))
     neon_dir = os.path.join(clone_dir, "neon_surffiles")
 
     print("Present Directory", current_dir)
