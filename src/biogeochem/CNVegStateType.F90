@@ -232,7 +232,7 @@ contains
     allocate(this%peaklai_patch       (begp:endp))                   ; this%peaklai_patch       (:)   = 0
 
     allocate(this%idop_patch          (begp:endp))                   ; this%idop_patch          (:)   = huge(1)
-    allocate(this%iyop_patch          (begp:endp))                   ; this%iyop_patch          (:)   = huge(1)
+    allocate(this%iyop_patch          (begp:endp))                   ; this%iyop_patch          (:)   = ispval
 
     allocate(this%lgdp_col            (begc:endc))                   ;
     allocate(this%lgdp1_col           (begc:endc))                   ;
@@ -815,10 +815,6 @@ contains
        call restartvar(ncid=ncid, flag=flag,  varname='idop', xtype=ncd_int,  &
             dim1name='pft', long_name='Date of planting', units='jday', nvalid_range=(/1,366/), &
             interpinic_flag='interp', readvar=readvar, data=this%idop_patch)
-
-       call restartvar(ncid=ncid, flag=flag,  varname='iyop', xtype=ncd_int,  &
-            dim1name='pft', long_name='Year of planting', units='year', &
-            interpinic_flag='interp', readvar=readvar, data=this%iyop_patch)
 
        call restartvar(ncid=ncid, flag=flag,  varname='aleaf', xtype=ncd_double,  &
             dim1name='pft', long_name='leaf allocation coefficient', units='', &

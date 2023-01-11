@@ -678,6 +678,8 @@ contains
            ! Fill variable(s) derived from read-in variable(s)
            if (flag == 'read' .and. readvar) then
              do p = bounds%begp,bounds%endp
+
+                ! Harvest count
                 seasons_found = 0
                 do seasons_loopvar = 1,mxharvests
                    if (this%hdates_thisyr_patch(p,seasons_loopvar) >= 1 .and. this%hdates_thisyr_patch(p,seasons_loopvar) <= 366) then
@@ -687,6 +689,17 @@ contains
                    end if
                 end do ! loop through possible harvests
                 this%harvest_count(p) = seasons_found
+
+                ! Year of planting
+                ! Calculating this here instead of saving in restart file to allow for
+                ! sensible iyop values in startup/hybrid runs.
+                ! * Assumes no growing season is longer than 364 days (or 365 days if
+                !   spanning a leap day).
+                if (cnveg_state_inst%idop_patch(p) <= jday) then
+                    cnveg_state_inst%iyop_patch(p) = kyr
+                else
+                    cnveg_state_inst%iyop_patch(p) = kyr - 1
+                end if
              end do ! loop through patches
            end if
        end if
@@ -696,14 +709,6 @@ contains
            jday = get_curr_calday()
            call get_curr_date(kyr, kmo, kda, mcsec)
            do p = bounds%begp,bounds%endp
-               ! Will be needed until we can rely on all restart files including cnveg_state_inst%iyop_patch.
-               if (this%croplive_patch(p) .and. cnveg_state_inst%iyop_patch(p) > kyr) then
-                   if (cnveg_state_inst%idop_patch(p) <= jday) then
-                       cnveg_state_inst%iyop_patch(p) = kyr
-                   else
-                       cnveg_state_inst%iyop_patch(p) = kyr - 1
-                   end if
-               end if
                ! Will be needed until we can rely on all restart files including sowing_reason_patch.
                if (this%croplive_patch(p) .and. this%sowing_reason_patch(p) < 0) then
                   this%sowing_reason_patch(p) = 0
