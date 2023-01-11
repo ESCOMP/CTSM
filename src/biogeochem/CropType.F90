@@ -677,6 +677,8 @@ contains
 
            ! Fill variable(s) derived from read-in variable(s)
            if (flag == 'read' .and. readvar) then
+             jday = get_curr_calday()
+             call get_curr_date(kyr, kmo, kda, mcsec)
              do p = bounds%begp,bounds%endp
 
                 ! Harvest count
@@ -706,8 +708,6 @@ contains
 
        ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2023-01-09)
        if (flag == 'read') then
-           jday = get_curr_calday()
-           call get_curr_date(kyr, kmo, kda, mcsec)
            do p = bounds%begp,bounds%endp
                ! Will be needed until we can rely on all restart files including sowing_reason_patch.
                if (this%croplive_patch(p) .and. this%sowing_reason_patch(p) < 0) then
