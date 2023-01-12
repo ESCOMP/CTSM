@@ -42,8 +42,8 @@ module mkurbanparMod
   ! private data members:
   ! flag to indicate nodata for index variables in output file:
   integer         , parameter :: index_nodata = 0
-  real(r8)        , allocatable :: frac_o_mkurban(:)
-  type(ESMF_RouteHandle) :: routehandle_mkurban
+  real(r8)        , allocatable :: frac_o_mkurban_nonorm(:)
+  type(ESMF_RouteHandle) :: routehandle_mkurban_nonorm
   character(len=*), parameter :: modname = 'mkurbanparMod'
 
   private :: index_nodata
@@ -182,9 +182,10 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     ! Create a route handle between the input and output mesh
-    if (.not. ESMF_RouteHandleIsCreated(routehandle_mkurban)) then
-       allocate(frac_o_mkurban(ns_o))
-       call create_routehandle_r8(mesh_i, mesh_o, routehandle_mkurban, frac_o=frac_o_mkurban, rc=rc)
+    if (.not. ESMF_RouteHandleIsCreated(routehandle_mkurban_nonorm)) then
+       allocate(frac_o_mkurban_nonorm(ns_o))
+       call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.false., &
+            routehandle=routehandle_mkurban_nonorm, frac_o=frac_o_mkurban_nonorm, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
     end if
@@ -202,7 +203,9 @@ contains
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
 
     ! Regrid input data to model resolution
-    call regrid_rawdata(mesh_i, mesh_o, routehandle_mkurban, data_i, data_o, 1, numurbl, rc)
+    !
+    ! Use a nonorm mapper because we're mapping a field expressed as % of the grid cell area
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_mkurban_nonorm, data_i, data_o, 1, numurbl, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After regrid_data for in "//trim(subname))
 
@@ -300,7 +303,11 @@ contains
     if (allocated(data_o)) deallocate(data_o)
     allocate(data_o(max_regions, ns_o), stat=ier)
     if (ier/=0) call shr_sys_abort('error allocating data_i(max_regions, ns_o)')
-    call regrid_rawdata(mesh_i, mesh_o, routehandle_mkurban, data_i, data_o, 1, nregions, rc)
+    ! This regridding could be done either with or without fracarea normalization,
+    ! because we just use it to find a dominant value. We use nonorm because we already
+    ! have a nonorm mapper for the sake of PCTURB and this way we don't need to make a
+    ! separate mapper with fracarea normalization.
+    call regrid_rawdata(mesh_i, mesh_o, routehandle_mkurban_nonorm, data_i, data_o, 1, nregions, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Now find dominant region in each output gridcell - this is identical to the maximum index
@@ -318,7 +325,7 @@ contains
     end if
 
     ! Output diagnostics
-    call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o_mkurban, &
+    call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o_mkurban_nonorm, &
          1, max_regions, region_i, region_o, 'urban region', ndiag, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
@@ -330,9 +337,9 @@ contains
     ! TODO: determine what to deallocate
     ! deallocate (urban_classes_gcell_i, urban_classes_gcell_o, region_i)
     if (mksrf_fdynuse == ' ') then  ! ...else we will reuse it
-       deallocate(frac_o_mkurban)
+       deallocate(frac_o_mkurban_nonorm)
        call ESMF_VMLogMemInfo("Before destroy operation in "//trim(subname))
-       call ESMF_RouteHandleDestroy(routehandle_mkurban, nogarbage = .true., rc=rc)
+       call ESMF_RouteHandleDestroy(routehandle_mkurban_nonorm, nogarbage = .true., rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     end if
     call ESMF_MeshDestroy(mesh_i, nogarbage = .true., rc=rc)
@@ -938,7 +945,8 @@ contains
     ! Create a route handle between the input and output mesh
     allocate(frac_o(ns_o), stat=ier)
     if (ier/=0) call shr_sys_abort()
-    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.true., &
+         routehandle=routehandle, frac_o=frac_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 
