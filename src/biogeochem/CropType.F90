@@ -529,6 +529,8 @@ contains
     integer kmo       ! month of year  (1, ..., 12)
     integer kda       ! day of month   (1, ..., 31)
     integer mcsec     ! seconds of day (0, ..., seconds/day)
+    ! BACKWARDS_COMPATIBILITY(ssr, 2023-01-13)
+    logical read_hdates_thisyr_patch
 
     character(len=*), parameter :: subname = 'Restart'
     !-----------------------------------------------------------------------
@@ -648,7 +650,7 @@ contains
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
                 long_name='crop harvest dates for this patch this year', units='day of year', &
                 scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=this%hdates_thisyr_patch)
+                interpinic_flag='interp', readvar=read_hdates_thisyr_patch, data=this%hdates_thisyr_patch)
            call restartvar(ncid=ncid, flag=flag, varname='gddaccum_thisyr_patch', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
                 long_name='accumulated GDD at harvest for this patch this year', units='ddays', &
@@ -676,21 +678,23 @@ contains
                 interpinic_flag='interp', readvar=readvar, data=this%harvest_reason_thisyr_patch)
 
            ! Fill variable(s) derived from read-in variable(s)
-           if (flag == 'read' .and. readvar) then
+           if (flag == 'read') then
              jday = get_curr_calday()
              call get_curr_date(kyr, kmo, kda, mcsec)
              do p = bounds%begp,bounds%endp
 
                 ! Harvest count
-                seasons_found = 0
-                do seasons_loopvar = 1,mxharvests
-                   if (this%hdates_thisyr_patch(p,seasons_loopvar) >= 1 .and. this%hdates_thisyr_patch(p,seasons_loopvar) <= 366) then
-                      seasons_found = seasons_loopvar
-                   else
-                      exit
-                   end if
-                end do ! loop through possible harvests
-                this%harvest_count(p) = seasons_found
+                if (read_hdates_thisyr_patch) then
+                   seasons_found = 0
+                   do seasons_loopvar = 1,mxharvests
+                      if (this%hdates_thisyr_patch(p,seasons_loopvar) >= 1 .and. this%hdates_thisyr_patch(p,seasons_loopvar) <= 366) then
+                         seasons_found = seasons_loopvar
+                      else
+                         exit
+                      end if
+                   end do ! loop through possible harvests
+                   this%harvest_count(p) = seasons_found
+                end if
 
                 ! Year of planting
                 ! Calculating this here instead of saving in restart file to allow for
