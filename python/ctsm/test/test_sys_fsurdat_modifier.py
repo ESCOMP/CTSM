@@ -216,6 +216,42 @@ class TestSysFsurdatModifier(unittest.TestCase):
         np.testing.assert_array_equal(fsurdat_out_data.ALB_ROOF_DIR, lev2_two)
         np.testing.assert_array_equal(fsurdat_out_data.TK_ROOF, lev2_five)
 
+    def test_1x1_mexicocity(self):
+        """
+        Test that the mexicocity file is handled correctly
+        """
+        self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_1x1mexicocity.cfg")
+        expectfile = os.path.join(
+            self._testinputs_path,
+            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc"
+        )
+        outfile = os.path.join(
+            self._tempdir,
+            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc"
+        )
+        infile = os.path.join(
+                self._testinputs_path, "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc"
+            )
+        sys.argv = [
+            "fsurdat_modifier",
+            self._cfg_file_path,
+            "-i",
+            infile,
+            "-o",
+            outfile,
+        ]
+        parser = fsurdat_modifier_arg_process()
+        fsurdat_modifier(parser)
+
+        # Read the resultant output file and make sure the fields are changed as expected
+        fsurdat_out_data = xr.open_dataset(outfile)
+        fsurdat_inp_data = xr.open_dataset(infile)
+        fsurdat_exp_data = xr.open_dataset(expectfile)
+
+        self.assertFalse(fsurdat_out_data.equals(fsurdat_inp_data))
+        # assert that fsurdat_out equals fsurdat_out_baseline
+        self.assertTrue(fsurdat_out_data.equals(fsurdat_exp_data))
+
     def test_cfg_file_DNE_fail(self):
         """
         Test that if the config file does not exist that it gracefully fails
