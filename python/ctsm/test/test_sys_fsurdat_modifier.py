@@ -143,15 +143,78 @@ class TestSysFsurdatModifier(unittest.TestCase):
         fsurdat_modifier(parser)
         # Read the resultant output file and make sure the fields are changed as expected
         fsurdat_out_data = xr.open_dataset(outfile)
-        zero0d = np.zeros( (5,5) )
-        one0d = np.ones( (5,5) )
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_NATVEG, zero0d )
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_CROP, zero0d )
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d )
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_WETLAND, zero0d )
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d )
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_GLACIER, zero0d )
-        np.testing.assert_array_equal(fsurdat_out_data.LAKEDEPTH, one0d*200. )
+        zero0d = np.zeros((5, 5))
+        one0d = np.ones((5, 5))
+        pct_urban = np.array(
+            [
+                [
+                    [100.0, 100.0, 100.0, 100.0, 100.0],
+                    [100.0, 100.0, 100.0, 100.0, 100.0],
+                    [100.0, 100.0, 100.0, 100.0, 100.0],
+                    [100.0, 100.0, 100.0, 100.0, 100.0],
+                    [100.0, 100.0, 100.0, 100.0, 100.0],
+                ],
+                [
+                    [0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0],
+                ],
+                [
+                    [0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0],
+                ],
+            ]
+        )
+        lev2_two = np.empty( (2,3,5,5) )
+        lev2_two[0,:,:,:] = 200.
+        lev2_two[1,:,:,:] = 100.
+        lev2_five = np.empty( (5,3,5,5) )
+        lev2_five[0,:,:,:] = 1.
+        lev2_five[1,:,:,:] = 2.
+        lev2_five[2,:,:,:] = 3.
+        lev2_five[3,:,:,:] = 4.
+        lev2_five[4,:,:,:] = 5.
+        lev1 = np.array(
+            [
+                [
+                    [200.0, 200.0, 200.0, 200.0, 200.0],
+                    [200.0, 200.0, 200.0, 200.0, 200.0],
+                    [200.0, 200.0, 200.0, 200.0, 200.0],
+                    [200.0, 200.0, 200.0, 200.0, 200.0],
+                    [200.0, 200.0, 200.0, 200.0, 200.0],
+                ],
+                [
+                    [150.0, 150.0, 150.0, 150.0, 150.0],
+                    [150.0, 150.0, 150.0, 150.0, 150.0],
+                    [150.0, 150.0, 150.0, 150.0, 150.0],
+                    [150.0, 150.0, 150.0, 150.0, 150.0],
+                    [150.0, 150.0, 150.0, 150.0, 150.0],
+                ],
+                [
+                    [100.0, 100.0, 100.0, 100.0, 100.0],
+                    [100.0, 100.0, 100.0, 100.0, 100.0],
+                    [100.0, 100.0, 100.0, 100.0, 100.0],
+                    [100.0, 100.0, 100.0, 100.0, 100.0],
+                    [100.0, 100.0, 100.0, 100.0, 100.0],
+                ],
+            ]
+        )
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_NATVEG, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_CROP, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_WETLAND, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_GLACIER, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_URBAN, pct_urban)
+        np.testing.assert_array_equal(fsurdat_out_data.LAKEDEPTH, one0d * 200.0)
+        np.testing.assert_array_equal(fsurdat_out_data.T_BUILDING_MIN, lev1)
+        np.testing.assert_array_equal(fsurdat_out_data.ALB_ROOF_DIR, lev2_two)
+        np.testing.assert_array_equal(fsurdat_out_data.TK_ROOF, lev2_five)
 
     def test_cfg_file_DNE_fail(self):
         """

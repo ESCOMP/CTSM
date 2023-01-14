@@ -293,15 +293,15 @@ class ModifyFsurdat:
                         abort(
                             "Variable " + var + " is of the wrong size. It should be = " + str(dim1)
                         )
-                    for lev1 in range(dim1 - 1):
+                    for lev1 in range(dim1):
                         self.setvar_lev1(var, vallist[lev1], lev1_dim=lev1)
                 elif len(self.file[var].dims) == 4:
-                    dim1 = int(self.file.sizes[self.file[var].dims[0]])
-                    dim2 = int(self.file.sizes[self.file[var].dims[1]])
+                    dim_lev1 = int(self.file.sizes[self.file[var].dims[1]])
+                    dim_lev2 = int(self.file.sizes[self.file[var].dims[0]])
                     vallist = settings[var]
-                    for lev1 in range(dim1 - 1):
-                        for lev2 in range(dim2 - 1):
-                            self.setvar_lev2(var, vallist[lev1], lev1_dim=lev1, lev2_dim=lev2)
+                    for lev1 in range(dim_lev1):
+                        for lev2 in range(dim_lev2):
+                            self.setvar_lev2(var, vallist[lev2], lev1_dim=lev1, lev2_dim=lev2)
                 else:
                     abort(
                         "Error: Variable "
