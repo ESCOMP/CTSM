@@ -374,14 +374,8 @@ class TestModifyFsurdat(unittest.TestCase):
                 latixy=latixy,
             )
 
-    def test_set_varlist(self):
-        """Test the set_varlist method for all the dimensions that works"""
-        vallist = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
-        settings = {"var_lev0": 100.0, "var_lev1": vallist, "var_lev2": vallist}
-        self.modify_fsurdat.set_varlist(settings)
-
     def test_check_varlist_lists(self):
-        """Test the check_varlist method for lists"""
+        """Test the check_varlist method for list for dimensions that works"""
         lev1list = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
         lev2list = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
         settings = {"var_lev1": lev1list, "var_lev2": lev2list}

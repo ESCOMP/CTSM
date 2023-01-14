@@ -220,18 +220,21 @@ class TestSysFsurdatModifier(unittest.TestCase):
         """
         Test that the mexicocity file is handled correctly
         """
-        self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_1x1mexicocity.cfg")
+        self._cfg_file_path = os.path.join(
+            self._testinputs_path, "modify_fsurdat_1x1mexicocity.cfg"
+        )
         expectfile = os.path.join(
             self._testinputs_path,
-            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc"
+            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc",
         )
         outfile = os.path.join(
             self._tempdir,
-            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc"
+            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc",
         )
         infile = os.path.join(
-                self._testinputs_path, "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc"
-            )
+            self._testinputs_path,
+            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc",
+        )
         sys.argv = [
             "fsurdat_modifier",
             self._cfg_file_path,
