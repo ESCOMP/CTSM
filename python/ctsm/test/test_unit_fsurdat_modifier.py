@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Unit tests for fsurdat_modifier subroutines: read_subgrid, read_varlist
+Unit tests for fsurdat_modifier subroutines:
 """
 
 import unittest
@@ -11,14 +11,17 @@ import shutil
 
 import tempfile
 from configparser import ConfigParser
+import xarray as xr
 
 from ctsm import unit_testing
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier_arg_process
 from ctsm.modify_input_files.fsurdat_modifier import read_subgrid
+from ctsm.modify_input_files.fsurdat_modifier import read_opt_config
 from ctsm.modify_input_files.fsurdat_modifier import read_var_list
 from ctsm.modify_input_files.fsurdat_modifier import check_no_subgrid_section
 from ctsm.modify_input_files.fsurdat_modifier import check_no_varlist_section
+from ctsm.modify_input_files.modify_fsurdat import ModifyFsurdat
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -27,8 +30,10 @@ from ctsm.modify_input_files.fsurdat_modifier import check_no_varlist_section
 # pylint: disable=protected-access
 
 
+# Allow all the instance attributes that we need
+# pylint: disable=too-many-instance-attributes
 class TestFSurdatModifier(unittest.TestCase):
-    """Tests the read_subgrid and read_var_list methods"""
+    """Tests the fsurdat_modifier subroutines"""
 
     def setUp(self):
         """Setup for trying out the methods"""
@@ -57,12 +62,33 @@ class TestFSurdatModifier(unittest.TestCase):
         self.cfg_path = str(parser.cfg_path)
         self.config = ConfigParser()
         self.config.read(self.cfg_path)
+        my_data = xr.open_dataset( self._fsurdat_in )
+        self.modify_fsurdat = ModifyFsurdat(
+            my_data=my_data,
+            lon_1=0.0,
+            lon_2=360.0,
+            lat_1=90.0,
+            lat_2=90.0,
+            landmask_file=None,
+            lat_dimname=None,
+            lon_dimname=None,
+        )
 
     def tearDown(self):
         """
         Remove temporary directory
         """
         shutil.rmtree(self._tempdir, ignore_errors=True)
+
+    def test_dom_pft_and_idealized_fails(self):
+        """test a simple read of subgrid"""
+        section = "modify_fsurdat_basic_options"
+        self.config.set(section, "idealized", "True")
+        self.config.set(section, "dom_pft", "1")
+        with self.assertRaisesRegex(
+            SystemExit, "idealized AND dom_pft can NOT both be on, pick one or the other"
+        ):
+            read_opt_config(self.modify_fsurdat, self.config, self.cfg_path, section)
 
     def test_read_subgrid(self):
         """test a simple read of subgrid"""
@@ -179,7 +205,8 @@ class TestFSurdatModifier(unittest.TestCase):
             read_subgrid(self.config, self.cfg_path)
 
     def test_varlist_varinidealized(self):
-        """test a read of varlist for a variable thats in the idealized list, when idealized is on"""
+        """test a read of varlist for a variable thats in the idealized list,
+        when idealized is on"""
         section = "modify_fsurdat_basic_options"
         self.config.set(section, "idealized", "True")
         section = "modify_fsurdat_variable_list"
