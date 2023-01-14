@@ -170,15 +170,15 @@ class TestSysFsurdatModifier(unittest.TestCase):
                 ],
             ]
         )
-        lev2_two = np.empty( (2,3,5,5) )
-        lev2_two[0,:,:,:] = 200.
-        lev2_two[1,:,:,:] = 100.
-        lev2_five = np.empty( (5,3,5,5) )
-        lev2_five[0,:,:,:] = 1.
-        lev2_five[1,:,:,:] = 2.
-        lev2_five[2,:,:,:] = 3.
-        lev2_five[3,:,:,:] = 4.
-        lev2_five[4,:,:,:] = 5.
+        lev2_two = np.empty((2, 3, 5, 5))
+        lev2_two[0, :, :, :] = 200.0
+        lev2_two[1, :, :, :] = 100.0
+        lev2_five = np.empty((5, 3, 5, 5))
+        lev2_five[0, :, :, :] = 1.0
+        lev2_five[1, :, :, :] = 2.0
+        lev2_five[2, :, :, :] = 3.0
+        lev2_five[3, :, :, :] = 4.0
+        lev2_five[4, :, :, :] = 5.0
         lev1 = np.array(
             [
                 [
