@@ -363,6 +363,41 @@ def read_opt_config(modify_fsurdat, config, cfg_path, section):
     )
 
 
+def read_option_control(config, section, cfg_path):
+    """Read the option control section"""
+    # required but fallback values available for variables omitted
+    # entirely from the .cfg file
+    idealized = get_config_value(
+        config=config,
+        section=section,
+        item="idealized",
+        file_path=cfg_path,
+        convert_to_type=bool,
+    )
+    process_subgrid = get_config_value(
+        config=config,
+        section=section,
+        item="process_subgrid_section",
+        file_path=cfg_path,
+        convert_to_type=bool,
+    )
+    process_var_list = get_config_value(
+        config=config,
+        section=section,
+        item="process_var_list_section",
+        file_path=cfg_path,
+        convert_to_type=bool,
+    )
+    include_nonveg = get_config_value(
+        config=config,
+        section=section,
+        item="include_nonveg",
+        file_path=cfg_path,
+        convert_to_type=bool,
+    )
+    return (idealized, process_subgrid, process_var_list, include_nonveg)
+
+
 def fsurdat_modifier(parser):
     """Implementation of fsurdat_modifier command"""
     # read the .cfg (config) file
@@ -401,37 +436,9 @@ def fsurdat_modifier(parser):
         errmsg = "Output file already exists: " + fsurdat_out
         abort(errmsg)
 
-    # required but fallback values available for variables omitted
-    # entirely from the .cfg file
-    idealized = get_config_value(
-        config=config,
-        section=section,
-        item="idealized",
-        file_path=cfg_path,
-        convert_to_type=bool,
+    (idealized, process_subgrid, process_var_list, include_nonveg) = read_option_control(
+        config, section, cfg_path
     )
-    process_subgrid = get_config_value(
-        config=config,
-        section=section,
-        item="process_subgrid_section",
-        file_path=cfg_path,
-        convert_to_type=bool,
-    )
-    process_var_list = get_config_value(
-        config=config,
-        section=section,
-        item="process_var_list_section",
-        file_path=cfg_path,
-        convert_to_type=bool,
-    )
-    include_nonveg = get_config_value(
-        config=config,
-        section=section,
-        item="include_nonveg",
-        file_path=cfg_path,
-        convert_to_type=bool,
-    )
-
     lnd_lat_1 = get_config_value(
         config=config,
         section=section,
