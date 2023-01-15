@@ -363,7 +363,12 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._create_config_file_complete()
 
         # run the fsurdat_modifier tool
-        sys.argv = ["fsurdat_modifier", self._cfg_file_path]
+        sys.argv = [
+            "fsurdat_modifier",
+            self._cfg_file_path,
+            "--allow_ideal_and_include_non_veg",
+            "--allow_dom_pft_and_idealized",
+        ]
         parser = fsurdat_modifier_arg_process()
         fsurdat_modifier(parser)
         # the critical piece of this test is that the above command

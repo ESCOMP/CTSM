@@ -57,6 +57,20 @@ def fsurdat_modifier_arg_process():
         type=str,
         help="The output surface dataset with the modifications. ",
     )
+    parser.add_argument(
+        "--allow_ideal_and_include_non_veg",
+        required=False,
+        default=False,
+        action="store_true",
+        help="Allow both idealized and include_nonveg to be on at the same time. ",
+    )
+    parser.add_argument(
+        "--allow_dom_pft_and_idealized",
+        required=False,
+        default=False,
+        action="store_true",
+        help="Allow both idealized and dom_pft to be on at the same time. ",
+    )
     add_logging_args(parser)
     args = parser.parse_args()
     process_logging_args(args)
@@ -150,7 +164,7 @@ def read_subgrid(config, cfg_path, numurbl=3):
     return subgrid_settings
 
 
-def read_var_list(config):
+def read_var_list(config, idealized=True):
     """Read the variable list section from the config file"""
     section = "modify_fsurdat_variable_list"
     if not config.has_section(section):
@@ -190,7 +204,7 @@ def read_var_list(config):
         "ws",
     ]
     for var in var_list:
-        if ideal_list.count(var) != 0:
+        if idealized and ideal_list.count(var) != 0:
             abort(
                 var
                 + " is a special variable handled in the idealized section."
@@ -352,7 +366,14 @@ def read_opt_config(modify_fsurdat, config, cfg_path, section):
     )
 
 
-def read_option_control(modify_fsurdat, config, section, cfg_path):
+def read_option_control(
+    modify_fsurdat,
+    config,
+    section,
+    cfg_path,
+    allow_ideal_and_include_non_veg=False,
+    allow_dom_pft_and_idealized=False,
+):
     """Read the option control section"""
     # required but fallback values available for variables omitted
     # entirely from the .cfg file
@@ -394,9 +415,9 @@ def read_option_control(modify_fsurdat, config, section, cfg_path):
         convert_to_type=int,
         can_be_unset=True,
     )
-    if dom_pft is not None and idealized:
+    if dom_pft is not None and idealized and not allow_dom_pft_and_idealized:
         abort("idealized AND dom_pft can NOT both be on, pick one or the other")
-    if include_nonveg and idealized:
+    if include_nonveg and idealized and not allow_ideal_and_include_non_veg:
         abort("idealized AND include_nonveg can NOT both be on, pick one or the other")
     if process_subgrid and idealized:
         abort("idealized AND process_subgrid_section can NOT both be on, pick one or the other")
@@ -500,7 +521,12 @@ def fsurdat_modifier(parser):
 
     # Read control information about the optional sections
     (idealized, process_subgrid, process_var_list, include_nonveg, dom_pft) = read_option_control(
-        modify_fsurdat, config, section, cfg_path
+        modify_fsurdat,
+        config,
+        section,
+        cfg_path,
+        parser.allow_ideal_and_include_non_veg,
+        parser.allow_dom_pft_and_idealized,
     )
 
     # Read parts that are optional
@@ -540,7 +566,7 @@ def fsurdat_modifier(parser):
         check_no_subgrid_section(config)
 
     if process_var_list:
-        varlist = read_var_list(config)
+        varlist = read_var_list(config, idealized=idealized)
         update_list = modify_fsurdat.check_varlist(varlist, allow_uppercase_vars=True)
         modify_fsurdat.set_varlist(update_list, cfg_path)
     else:
