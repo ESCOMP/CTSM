@@ -276,16 +276,6 @@ def modify_optional(
 def read_opt_config(modify_fsurdat, config, cfg_path, section):
     """read the optional parts of the main section config file"""
     # not required: user may set these in the .cfg file
-    max_pft = int(max(modify_fsurdat.file.lsmpft))
-    dom_pft = get_config_value(
-        config=config,
-        section=section,
-        item="dom_pft",
-        file_path=cfg_path,
-        allowed_values=range(max_pft + 1),  # integers from 0 to max_pft
-        convert_to_type=int,
-        can_be_unset=True,
-    )
 
     lai = get_config_value(
         config=config,
@@ -355,7 +345,6 @@ def read_opt_config(modify_fsurdat, config, cfg_path, section):
         max_sat_area,
         std_elev,
         soil_color,
-        dom_pft,
         lai,
         sai,
         hgt_top,
@@ -363,7 +352,7 @@ def read_opt_config(modify_fsurdat, config, cfg_path, section):
     )
 
 
-def read_option_control(config, section, cfg_path):
+def read_option_control(modify_fsurdat, config, section, cfg_path):
     """Read the option control section"""
     # required but fallback values available for variables omitted
     # entirely from the .cfg file
@@ -395,7 +384,24 @@ def read_option_control(config, section, cfg_path):
         file_path=cfg_path,
         convert_to_type=bool,
     )
-    return (idealized, process_subgrid, process_var_list, include_nonveg)
+    max_pft = int(max(modify_fsurdat.file.lsmpft))
+    dom_pft = get_config_value(
+        config=config,
+        section=section,
+        item="dom_pft",
+        file_path=cfg_path,
+        allowed_values=range(max_pft + 1),  # integers from 0 to max_pft
+        convert_to_type=int,
+        can_be_unset=True,
+    )
+    if dom_pft is not None and idealized:
+        abort("idealized AND dom_pft can NOT both be on, pick one or the other")
+    if include_nonveg and idealized:
+        abort("idealized AND include_nonveg can NOT both be on, pick one or the other")
+    if process_subgrid and idealized:
+        abort("idealized AND process_subgrid_section can NOT both be on, pick one or the other")
+
+    return (idealized, process_subgrid, process_var_list, include_nonveg, dom_pft)
 
 
 def fsurdat_modifier(parser):
@@ -436,9 +442,6 @@ def fsurdat_modifier(parser):
         errmsg = "Output file already exists: " + fsurdat_out
         abort(errmsg)
 
-    (idealized, process_subgrid, process_var_list, include_nonveg) = read_option_control(
-        config, section, cfg_path
-    )
     lnd_lat_1 = get_config_value(
         config=config,
         section=section,
@@ -495,12 +498,16 @@ def fsurdat_modifier(parser):
         lon_dimname,
     )
 
+    # Read control information about the optional sections
+    (idealized, process_subgrid, process_var_list, include_nonveg, dom_pft) = read_option_control(
+        modify_fsurdat, config, section, cfg_path
+    )
+
     # Read parts that are optional
     (
         max_sat_area,
         std_elev,
         soil_color,
-        dom_pft,
         lai,
         sai,
         hgt_top,

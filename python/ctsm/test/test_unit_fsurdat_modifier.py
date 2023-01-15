@@ -18,7 +18,6 @@ from ctsm.path_utils import path_to_ctsm_root
 from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier_arg_process
 from ctsm.modify_input_files.fsurdat_modifier import read_subgrid
 from ctsm.modify_input_files.fsurdat_modifier import read_option_control
-from ctsm.modify_input_files.fsurdat_modifier import read_opt_config
 from ctsm.modify_input_files.fsurdat_modifier import read_var_list
 from ctsm.modify_input_files.fsurdat_modifier import check_no_subgrid_section
 from ctsm.modify_input_files.fsurdat_modifier import check_no_varlist_section
@@ -91,17 +90,20 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit, "idealized AND dom_pft can NOT both be on, pick one or the other"
         ):
-            read_option_control(self.config, section, self.cfg_path)
+            read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
 
     def test_subgrid_and_idealized_fails(self):
         """test that dom_pft and idealized fails gracefully"""
         section = "modify_fsurdat_basic_options"
         self.config.set(section, "idealized", "True")
+        self.config.set(section, "include_nonveg", "False")
         self.config.set(section, "process_subgrid_section", "True")
+        self.config.set(section, "dom_pft", "UNSET")
         with self.assertRaisesRegex(
-            SystemExit, "idealized AND dom_pft can NOT both be on, pick one or the other"
+            SystemExit,
+            "idealized AND process_subgrid_section can NOT both be on, pick one or the other",
         ):
-            read_option_control(self.config, section, self.cfg_path)
+            read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
 
     def test_optional_only_true_and_false(self):
         """test that optional settings can only be true or false"""
@@ -115,15 +117,19 @@ class TestFSurdatModifier(unittest.TestCase):
         )
         for var in varlist:
             self.config.set(section, var, "True")
-        read_option_control(self.config, section, self.cfg_path)
+        self.config.set(section, "idealized", "False")
+        read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
         for var in varlist:
             self.config.set(section, var, "False")
-        read_option_control(self.config, section, self.cfg_path)
+        read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
         self.config.set(section, "dom_pft", "UNSET")
-        read_option_control(self.config, section, self.cfg_path)
-        for var in varlist:
-            with self.assertRaisesRegex(SystemExit, "must be either True or False"):
-                read_option_control(self.config, section, self.cfg_path)
+        read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
+        var = "idealized"
+        self.config.set(section, var, "Thing")
+        with self.assertRaisesRegex(
+            SystemExit, "Non-boolean value found for .cfg file variable: " + var
+        ):
+            read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
 
     def test_include_nonveg_and_idealized_fails(self):
         """test a simple read of subgrid"""
@@ -133,7 +139,7 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit, "idealized AND include_nonveg can NOT both be on, pick one or the other"
         ):
-            read_option_control(self.config, section, self.cfg_path)
+            read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
 
     def test_read_subgrid(self):
         """test a simple read of subgrid"""
