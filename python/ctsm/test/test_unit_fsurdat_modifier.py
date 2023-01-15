@@ -30,6 +30,8 @@ from ctsm.modify_input_files.modify_fsurdat import ModifyFsurdat
 # pylint: disable=protected-access
 
 
+# Allow as many public methods as needed...
+# pylint: disable=too-many-public-methods
 # Allow all the instance attributes that we need
 # pylint: disable=too-many-instance-attributes
 class TestFSurdatModifier(unittest.TestCase):
@@ -62,7 +64,7 @@ class TestFSurdatModifier(unittest.TestCase):
         self.cfg_path = str(parser.cfg_path)
         self.config = ConfigParser()
         self.config.read(self.cfg_path)
-        my_data = xr.open_dataset( self._fsurdat_in )
+        my_data = xr.open_dataset(self._fsurdat_in)
         self.modify_fsurdat = ModifyFsurdat(
             my_data=my_data,
             lon_1=0.0,
@@ -81,12 +83,54 @@ class TestFSurdatModifier(unittest.TestCase):
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_dom_pft_and_idealized_fails(self):
-        """test a simple read of subgrid"""
+        """test a that dom_pft and idealized fails gracefully"""
         section = "modify_fsurdat_basic_options"
         self.config.set(section, "idealized", "True")
         self.config.set(section, "dom_pft", "1")
         with self.assertRaisesRegex(
             SystemExit, "idealized AND dom_pft can NOT both be on, pick one or the other"
+        ):
+            read_opt_config(self.modify_fsurdat, self.config, self.cfg_path, section)
+
+    def test_subgrid_and_idealized_fails(self):
+        """test that dom_pft and idealized fails gracefully"""
+        section = "modify_fsurdat_basic_options"
+        self.config.set(section, "idealized", "True")
+        self.config.set(section, "process_subgrid_section", "True")
+        with self.assertRaisesRegex(
+            SystemExit, "idealized AND dom_pft can NOT both be on, pick one or the other"
+        ):
+            read_opt_config(self.modify_fsurdat, self.config, self.cfg_path, section)
+
+    def test_optional_only_true_and_false(self):
+        """test that optional settings can only be true or false"""
+        section = "modify_fsurdat_basic_options"
+        self.config.set(section, "dom_pft", "1")
+        varlist = (
+            "idealized",
+            "include_nonveg",
+            "process_subgrid_section",
+            "process_var_list_section",
+        )
+        for var in varlist:
+            self.config.set(section, var, "True")
+        read_opt_config(self.modify_fsurdat, self.config, self.cfg_path, section)
+        for var in varlist:
+            self.config.set(section, var, "False")
+        read_opt_config(self.modify_fsurdat, self.config, self.cfg_path, section)
+        self.config.set(section, "dom_pft", "UNSET")
+        read_opt_config(self.modify_fsurdat, self.config, self.cfg_path, section)
+        for var in varlist:
+            with self.assertRaisesRegex(SystemExit, "must be either True or False"):
+                read_opt_config(self.modify_fsurdat, self.config, self.cfg_path, section)
+
+    def test_include_nonveg_and_idealized_fails(self):
+        """test a simple read of subgrid"""
+        section = "modify_fsurdat_basic_options"
+        self.config.set(section, "idealized", "True")
+        self.config.set(section, "include_nonveg", "True")
+        with self.assertRaisesRegex(
+            SystemExit, "idealized AND include_nonveg can NOT both be on, pick one or the other"
         ):
             read_opt_config(self.modify_fsurdat, self.config, self.cfg_path, section)
 
