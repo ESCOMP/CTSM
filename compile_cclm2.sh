@@ -17,10 +17,10 @@ date=`date +'%Y%m%d-%H%M'` # get current date and time
 startdate=`date +'%Y-%m-%d %H:%M:%S'`
 COMPSET=I2000Clm50SpGs # for CCLM2 (use stub glacier component for regional domain!)
 RES=hcru_hcru # hcru_hcru for CCLM2-0.44, f09_g17 to test glob (inputdata downloaded)
-DOMAIN=sa # eur for CCLM2 (EURO-CORDEX), glob otherwise, sa for South-America
+DOMAIN=eur # eur for CCLM2 (EURO-CORDEX), sa for South-America, glob otherwise 
 
 CODE=clm5.0 # clm5.0 for official release, clm5.0_features for Ronny's version, CTSMdev for latest 
-COMPILER=gnu # setting to gnu-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
+COMPILER=nvhpc # gnu for gcc, or nvhpc; setting to gnu-oasis or nvhpc-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
 DRIVER=mct # default is mct, using nuopc requires ESMF installation
 EXP=cclm2_${date} # custom case name
 CASENAME=$CODE.$COMPILER.$COMPSET.$RES.$DOMAIN.$EXP
@@ -57,8 +57,8 @@ print_log "*** Logfile at: ${logfile} ***"
 # Sync inputdata on scratch because scratch will be cleaned every month (change inputfiles on $PROJECT!)
 print_log "*** Syncing inputdata on scratch  ***"
 
-#rsync -rv --ignore-existing /project/$PROJ/CCLM2_inputdata/ $CESMDATAROOT/ | tee -a $logfile
-sbatch transfer_clm_inputdata.sh # do this with a jobscript in the xfer queue to prevent overflowing of loginnode
+#rsync -rv --ignore-existing /project/$PROJ/shared/CCLM2_inputdata/ $CESMDATAROOT/ | tee -a $logfile
+sbatch --account=$PROJ --export=ALL,PROJ=$PROJ transfer_clm_inputdata.sh # xfer job to prevent overflowing the loginnode
 
 
 #==========================================
@@ -68,7 +68,7 @@ sbatch transfer_clm_inputdata.sh # do this with a jobscript in the xfer queue to
 # Load modules: now done through $USER/.cime/config_machines.xml
 # print_log "*** Loading modules ***"
 # daint-gpu (although CLM will run on cpus)
-# PrgEnv-xxx, switch compiler version if needed
+# PrgEnv-xxx (also switch compiler version if needed)
 # cray-mpich
 # cray-netcdf-hdf5parallel
 # cray-hdf5-parallel
@@ -230,28 +230,25 @@ cat > user_nl_clm << EOF
 paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
 EOF
 
-# Surface data (domain-specific)
+# Surface data (domain-specific), specify to re-use downloaded files
 if [ $DOMAIN == eur ]; then
-    cat > user_nl_clm << EOF
-    fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_0.5x0.5_hist_16pfts_Irrig_CMIP6_simyr2000_c190418.nc"
+cat > user_nl_clm << EOF
+fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_0.5x0.5_hist_16pfts_Irrig_CMIP6_simyr2000_c190418.nc"
 EOF
-
 cat > user_nl_datm << EOF
 domainfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/domain/domain_EU-CORDEX_0.5_correctedlons.nc"
 EOF
 fi
 
 if [ $DOMAIN == sa ]; then
-    cat > user_nl_clm << EOF
-    fsurdat = "$CESMDATAROOT/CCLM2_SA_inputdata/surfdata/surfdata_360x720cru_SA-CORDEX_16pfts_Irrig_CMIP6_simyr2000_c170824.nc"
+cat > user_nl_clm << EOF
+fsurdat = "$CESMDATAROOT/CCLM2_SA_inputdata/surfdata/surfdata_360x720cru_SA-CORDEX_16pfts_Irrig_CMIP6_simyr2000_c170824.nc"
 EOF
-
 cat > user_nl_datm << EOF
 domainfile = "$CESMDATAROOT/CCLM2_SA_inputdata/domain/domain.lnd.360x720_SA-CORDEX_cruncep.100429.nc"
 EOF
 fi
 
-# Specifiy to re-use downloaded files
 if [ $DOMAIN == glob ]; then
 cat > user_nl_clm << EOF
 fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_360x720cru_16pfts_simyr2000_c170428.nc"
