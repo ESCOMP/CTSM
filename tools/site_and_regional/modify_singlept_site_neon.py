@@ -16,14 +16,11 @@ This script will do the following:
 - Modify surface dataset with downloaded data.
 
 -------------------------------------------------------------------
-Instructions for running on Cheyenne/Casper:
+Instructions for running using conda python environments:
 
-load the following into your local environment
-    module load python
-    ncar_pylib
+../../py_env_create
+conda activate ctsm_py
 
-To remove NPL from your environment on Cheyenne/Casper:
-    deactivate
 -------------------------------------------------------------------
 To see the available options:
     ./modify_singlept_site_neon.py --help
@@ -50,6 +47,7 @@ import logging
 import numpy as np
 import pandas as pd
 import xarray as xr
+from packaging import version
 
 from datetime import date
 from getpass import getuser
@@ -153,6 +151,18 @@ def get_parser():
         default="/glade/scratch/" + myname + "/single_point_neon_updated/",
     )
     parser.add_argument(
+        "--inputdata-dir",
+        help="""
+                Directory to write updated single point surface dataset.
+                [default: %(default)s] 
+                """,
+        action="store",
+        dest="inputdatadir",
+        type=str,
+        required=False,
+        default="/glade/p/cesmdata/cseg/inputdata"
+    )
+    parser.add_argument(
         "-d",
         "--debug",
         help="""
@@ -250,8 +260,7 @@ def find_surffile(surf_dir, site_name):
         surf_file (str): name of the surface dataset file
     """
 
-    # sf_name = "surfdata_hist_16pfts_Irrig_CMIP6_simyr2000_"+site_name+"*.nc"
-    sf_name = "surfdata_*hist_78pfts_CMIP6_simyr2000_" + site_name + "*.nc"
+    sf_name = "surfdata_1x1_NEON_"+site_name+"*hist_78pfts_CMIP6_simyr2000_*.nc"
     print (os.path.join(surf_dir , sf_name))
     surf_file = sorted(glob.glob(os.path.join(surf_dir , sf_name)))
 
@@ -265,15 +274,15 @@ def find_surffile(surf_dir, site_name):
         surf_file = surf_file[0]
     else:
         sys.exit(
-            "Surface data for this site " + site_name + "was not found:" + surf_file,
-            ".",
-            "\n",
-            "Please run ./subset_data.py for this site.",
+            "Surface data for this site " + str(site_name) + " was not found:" + str(surf_dir) + str(sf_name) +
+            "." +
+            "\n" +
+            "Please run ./subset_data.py for this site."
         )
     return surf_file
 
 
-def find_soil_structure(surf_file):
+def find_soil_structure(args, surf_file):
     """
     Function for finding surface dataset soil
     strucutre using surface data metadata.
@@ -302,7 +311,7 @@ def find_soil_structure(surf_file):
     print("------------")
     # print (f1.attrs["Soil_texture_raw_data_file_name"])
 
-    clm_input_dir = "/glade/p/cesmdata/cseg/inputdata/lnd/clm2/rawdata/"
+    clm_input_dir = os.path.join( args.inputdatadir, "lnd/clm2/rawdata/" )
     surf_soildepth_file = os.path.join(
         clm_input_dir, f1.attrs["Soil_texture_raw_data_file_name"]
     )
@@ -510,6 +519,12 @@ def main():
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
+    # Check if pandas is a recent enough version
+    pdvers = pd.__version__
+    if version.parse(pdvers) < version.parse("1.1.0"):
+        sys.exit("The pandas version in your python environment is too old, update to a newer version of pandas (>=1.1.0): version=%s", pdvers )
+
+
     file_time = check_neon_time()
 
     # --  specify site from which to extract data
@@ -538,7 +553,7 @@ def main():
     f1 = xr.open_dataset(surf_file)
 
     # -- Find surface dataset soil depth information
-    soil_bot, soil_top = find_soil_structure(surf_file)
+    soil_bot, soil_top = find_soil_structure(args, surf_file)
 
     # -- Find surface dataset soil levels
     # TODO: how? NS uses metadata on file to find
@@ -682,7 +697,7 @@ def main():
         print("Updating PCT_NAT_PFT")
         #print (f2.PCT_NAT_PFT)
         print(f2.PCT_NAT_PFT.values[0])
-        f2.PCT_NAT_PFT.values[0] = [[100.0]]
+        #f2.PCT_NAT_PFT.values[0] = [[100.0]]
         print(f2.PCT_NAT_PFT[0].values)
 
     out_dir = args.out_dir

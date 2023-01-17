@@ -1,4 +1,476 @@
 ===============================================================
+Tag name: ctsm5.1.dev115
+Originator(s): rgknox (Ryan Knox)
+Date: Fri Dec  2 15:45:32 MST 2022
+One-line Summary: API compatability with FATES V2 nutrient dynamics
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes allows CTSM to continue API compatability with changes to the FATES API. FATES has updated its nutrient dynamics routine, and required a modification to the test environment, some minor updates to variable dimensions in the history, and a call to a new FATES history routine.  Implicitly, the updating of the FATES tag introduces new content in the FATES model since the last API update (mostly bug fixes).
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+
+The changes here will only affect FATES simulations. Any FATES simulation will be affected. Carbon-only FATES simulations will not have qualitatively different results since the last API update (but will have bit-for-bit differences). Nutrient enabled FATES simulations (not fully coupled to CLM, only via prognosed plant N,P boundaries), and FATES-Hydro simulations (bug fix) will be different.
+
+Bugs fixed or introduced
+------------------------
+
+See the descriptions in FATES tags between sci.1.57.4_api.24.0.0 to sci.1.60.0_api.25.0.0 for details on FATES changes in this tag.
+
+CTSM issues fixed (include CTSM Issue #): None
+
+Externals issues fixed (include issue #): None
+
+Known bugs introduced in this tag (include issue #): None
+
+Known bugs found since the previous tag (include issue #): None
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+This set of changes comes with an updated FATES parameter file. This includes format changes only. No changes to variable values were introduced. Format changes are relegated to new parameters and/or name changes only.  These changes are encapsulated in: fates/parameter_files/archive/apichange_24.2to25.xml
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Nothing of note regarding changes for developers.
+
+Changes to tests or testing:  New history variables were added to the FATES PRT2 user_nl_clm.
+
+
+Testing summary:
+----------------
+
+regular
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- nominal: /glade/scratch/rgknox/tests_1201-121507ch
+    izumi ------- nominal: /scratch/cluster/rgknox/tests_1201-122133iz
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- nominal against ctsm5.1_dev112 /glade/scratch/rgknox/tests_1130-082657ch
+    izumi ------- NA
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: FATES answers changed relative to base. Explanation already provided (nutrient and hydro changes are qualitative).
+
+
+Other details
+-------------
+
+FATES external was updated.
+
+Pull Requests that document the changes (include PR ids):
+
+https://github.com/ESCOMP/CTSM/pull/1874
+https://github.com/NGEET/fates/pull/880
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev114
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)/@wwieder/@olyson/@ka7eh
+Date: Sat Nov 19 18:11:15 MST 2022
+One-line Summary: Some NEON updates fixing AG sites, update MOSART, small fixes
+
+Purpose and description of changes
+----------------------------------
+
+Minor changes to python scripts and usermod_dirs for NEON cases. Also update the lightning mesh file so that it goes with the
+smaller lightning file. Have NEON use new use-cases for 2018 and 2018-PD conditions for CLM. Have NEON
+Agricultural sites run with prognostic crop. Simple fix for warning about NaN's in import/export data from/to coupler.
+
+Get NEON tests working on izumi, add --inputdata-dir to subset_data and modify_singlept_site_neon.py so they aren't tied
+to only running on cheyenne.
+
+Also update MOSART with fixed for direct_to_outlet option.
+
+Add error checking in ParitionWoodFluxes.  Fix value of albgrd_col in SurfaceAlbefdoType.F90. 
+Previously, the wrong value (albgri_col) was being set in InitHistory.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+  Fixes #1871 -- Error in NEON surface datasets for AG sites
+  Fixes #1876 -- NEON data in container
+  Fixes #1889 -- NEON AG sites are running without prognostic crop
+  Fixes #1363 -- 2018_control and 2018-PD_transient use-cases for NEON
+  Fixes #1896 -- Improve misleading error message in check_for_nans
+  Fixes #1263 -- Fix partitionWood fluxes
+  Fixes #1788 -- Fix albgrd_col
+  Fixes #1901 -- Fix NEONSITE YELL
+ 
+  Some on #1910 -- add pandas version check to modify_singlept_site_neon.py so will abort cleanly if version not updated
+
+ Known bugs found since the previous tag (include issue #):
+   #1910 -- modify_singlept_site_neon.py has trouble on izumi
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   NEON users: use neon_gcs_upload now. Filenames for NEON surface
+     datasets are changed. Start and end of simulations is different
+     for some sites, and managed by the user-mod-directories. The NEON
+     user-mod assumes transient cases will run with a transient compset
+     and the settings are slightly different for transient vs control
+     including pointing to 2018_control or 2018-PD_transient use-cases.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   Add notes to python tools to run using conda environment setup in py_env_create
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   New use cases: 2018_control and 2018-PD_transient
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   New updated NEON surface datasets
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Remove toolchain python scripts as this work was moved over to the ctsm5.2 development
+
+Changes to tests or testing:
+   Add a run_black target to the python directory Makefile to run black and not just do a black check
+   Add python modules needed for neon scripts to conda py_create_env conda environment
+
+Testing summary: regular, tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - OK (141 NEON tests are different than baseline)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+    cheyenne (NEON) - PASS
+    izumi (NEON) -- OK (modify_singlept_site_neon.py test fails due to #1910)
+    izumi -- OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    Acheyenne -- PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+     run_neon.py ran for all NEON sites ad, post-ad, and transient
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No (other than NEON sites, and if direct_to_outlet turned on in MOSART)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NEON or if bypass_routing_option==direct_to_outlet in MOSART
+    - what platforms/compilers: all
+    - nature of change:
+        NEON AG sites are significantly different
+
+	NEON sites reran and reevaluated
+	MOSART direct_to_outlet option evaluated by @swensosc and @olyson
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): mosart
+   mosart updated from mosart1_0_45 to to mosart1_0_47 (asynchronous changes, and direct_to_outlet fixes)
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1872 -- NEON updates
+   #1814 -- Add error checking in partitionWoodFluxes
+   #1810 -- Fix albdgrd_col value
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev113
+Originator(s): sacks (Bill Sacks), ekluzek (Erik Kluzek), jedwards (Jim Edwards)
+Date: Fri Oct 28 11:00:26 MDT 2022
+One-line Summary: Fix some compsets; add only clauses for ESMF use statements
+
+Purpose and description of changes
+----------------------------------
+
+(1) Fix I1850Clm51BgcCrop compset (was using CLM50 instead of CLM51)
+- Resolves https://github.com/ESCOMP/CTSM/issues/1882
+
+(2) Change LND_TUNING_MODE for DATM%CPLHIST compsets to use CAM tunings
+    since these cases typically use atmosphere forcings from CAM.
+- Resolves https://github.com/ESCOMP/CTSM/issues/1885
+
+(3) Add "only" clauses to ESMF use statements
+- Resolves https://github.com/ESCOMP/CTSM/issues/1846
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves https://github.com/ESCOMP/CTSM/issues/1882 (I1850Clm51BgcCrop actually uses CLM50)
+- Resolves https://github.com/ESCOMP/CTSM/issues/1885 (CPLHIST compsets should use same land tunings as for CAM compsets)
+- Resolves https://github.com/ESCOMP/CTSM/issues/1846 (Add "only" clause to a problematic use statement in lnd_comp_nuopc for cce compiler)
+
+Known bugs introduced in this tag (include issue #):
+- https://github.com/ESCOMP/CTSM/issues/1887 (Gnu MCT builds will fail starting in ctsm5.1.dev113)
+
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for limited cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+      - Cases with I1850Clm51BgcCrop compset
+      - Cases with DATM%CPLHIST
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Larger than roundoff; may be new climate
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1870
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev112
+Originator(s): adrifoster (Adrianna Foster), glemieux (Gregory Lemieux, LBL/NGEET)
+Date: Sat Oct 15 16:26:28 MDT 2022
+One-line Summary: Rework fates test definitions and add new fates tests
+
+Purpose and description of changes
+----------------------------------
+
+This tag includes a number of updates to the fates test definitions and test list to gain more coverage:
+
+(1) Reorder and update the fates test definitions so that fates satellite phenology mode
+can be configured for cases using a compset.
+
+(2) Add a long-term exact restart test to catch issues that may arise due to updates to
+fates procedure calls during end of year simulation dates.  
+
+(3) Add a no-competition + fixed biogeography, non-satellite phenology test definition to provide
+additional mode combination configuration.
+
+(4) Update the fates externals tag to incorporate a fix a vegetation temperature exact restart 
+issue discovered while implementing (1) above.
+
+(5) Truncate all testmods starting with "Fates" to mitigate running over the limits on the length 
+of testnames, typically when specifying custom `test_id` using `run_sys_test`.
+
+(6) Updates the expected failures list.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+  Fixes #1839 - Add more FATES tests that are longer than one year
+  Fixes #1817 - Make sure at least one test running FatesSp just uses the compset and not a test-mod directory
+  Fixes #1551 - Add FATES NoComp + FixedBiogeog regression test to the fates category of tests
+
+Externals issues fixed (include issue #):
+  FATES#908 - Bareground area_pft not being carried over during restarts
+  FATES#911 - 24-hr running mean vegetation temperature is not b4b on threaded exact restart SatPhen test
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+  FATES#897 is still unresolved, but is now covered by this updated test list.
+  FATES#701 was reopened
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+  FATES tests run against both fates-sci.1.58.1_api.24.1.0-ctsm5.1.dev111 to check the
+  fates update against the previous baseline is in line with expected DIFFs and 
+  fates-sci.1.59.7_api.24.1.0-ctsm5.1.dev111.
+  
+Answer changes
+--------------
+
+Changes answers relative to baseline: 
+  Yes, for fates run modes only due non-b4b updates in multiple fates tags.  These
+  include both software bug fixes and answer changing science updates.
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates
+
+Pull Requests that document the changes (include PR ids):
+  
+  https://github.com/ESCOMP/CTSM/pull/1827
+  https://github.com/ESCOMP/CTSM/pull/1849
+  
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev111
+Originator(s): jedwards (Jim Edwards), wwieder (Will Wieder), sacks (Bill Sacks)
+Date: Wed Oct  5 13:05:52 MDT 2022
+One-line Summary: Fixes for NEON cases
+
+Purpose and description of changes
+----------------------------------
+
+Two sets of fixes for NEON cases:
+
+(1) Fixes for leap year handling when there are discrepancies between
+the model and the DATM forcing data in terms of whether the current year
+is a leap year. This involved updates to the share and cdeps externals
+from Jim Edwards.
+
+(2) Other fixes for NEON cases from Will Wieder, as documented in
+https://github.com/ESCOMP/CTSM/issues/1860
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1858 (calendar error in ESMF)
+- Resolves ESCOMP/CTSM#1860 (run_neon not working as expected)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for NEON cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NEON cases
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      larger than roundoff
+
+   In testing, answer changes only show up in SMS_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.izumi_nag.clm-default--clm-NEON-NIWO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cdeps: cdeps0.12.63 -> cdeps0.12.65
+- share: share1.0.12 -> share1.0.13
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1862
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev110
 Originator(s): slevis (Samuel Levis, 303-665-1310)
 Date: Mon Sep 26 17:31:22 MDT 2022

@@ -5,7 +5,7 @@ module UrbanTimeVarType
   ! Urban Time Varying Data
   !
   ! !USES:
-  use ESMF
+  use ESMF            , only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_Finalize, ESMF_END_ABORT
   use dshr_strdata_mod, only : shr_strdata_type
   use shr_kind_mod    , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_log_mod     , only : errMsg => shr_log_errMsg

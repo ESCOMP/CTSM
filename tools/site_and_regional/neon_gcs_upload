@@ -1,0 +1,168 @@
+#! /usr/bin/env python3
+"""
+Script to rename and upload NEON site finidat files for use in transient startup cases
+
+"""
+
+import os, sys
+# Get the ctsm util tools and then the cime tools.
+_CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..","..",'python'))
+sys.path.insert(1, _CTSM_PYTHON)
+
+from google.cloud import storage
+import glob
+import datetime
+from ctsm                  import add_cime_to_path
+from ctsm.path_utils       import path_to_ctsm_root
+from standard_script_setup import *
+from CIME.case             import Case
+from CIME.utils            import expect, safe_copy
+
+logger = logging.getLogger(__name__) 
+
+def get_parser(args, description, valid_neon_sites):
+    """
+    Get Parser object for this script
+    """
+    parser = argparse.ArgumentParser(description=description,
+                           formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    CIME.utils.setup_standard_logging_options(parser)
+    
+    parser.print_usage = parser.print_help
+
+    parser.add_argument('--neon-sites',
+                        help='4-letter neon site code.', 
+                        action="store",
+                        required=False,
+                        choices=valid_neon_sites + ['all'],
+                        dest="neon_sites",
+                        default=["OSBS"],
+                        nargs='+')
+
+    parser.add_argument('--output-root',
+                help='''
+                Root Directory of case results
+                [default: %(default)s] 
+                ''',
+                action="store", 
+                dest="output_root",
+                type =str,
+                required=False,
+                        default=os.getcwd())
+
+    parser.add_argument('--file-date',
+                        help='''
+                        Date of ctsm restart file(s) to upload
+                        ''',
+                        action="store", 
+                        dest="file_date",        
+                        required = False,
+                        type = datetime.date.fromisoformat,
+                        default = datetime.datetime.strptime("0318-01-01",'%Y-%m-%d'))
+
+
+    parser.add_argument('--upload-finidat',
+                        help='''
+                        Upload the final restart files from the end of the postad run for each site.
+                        ''',
+                        action="store_true",
+                        dest="upload_finidat",
+                        required = False,
+                        default = False)
+
+    parser.add_argument('--upload-history',
+                        help='''
+                        Upload the transient run h1 history files for each site.
+                        ''',
+                        action="store_true",
+                        dest="upload_history",
+                        required = False,
+                        default = False)
+
+
+
+    args = CIME.utils.parse_args_and_handle_standard_logging_options(args, parser)
+
+    if 'all' in args.neon_sites:
+        neon_sites = valid_neon_sites
+    else:
+        neon_sites = args.neon_sites
+        for site in neon_sites:
+            if site not in valid_neon_sites:
+                raise ValueError("Invalid site name {}".format(site))
+
+    expect(args.upload_finidat or args.upload_history,"Must specify at least one of --upload-finidat or --upload-history")
+
+    return neon_sites, args.output_root, args.file_date, args.upload_finidat, args.upload_history
+
+def upload_blob(bucket_name, source_file_name, destination_blob_name):
+    """Uploads a file to the bucket."""
+    # The ID of your GCS bucket
+    # bucket_name = "your-bucket-name"
+    # The path to your file to upload
+    # source_file_name = "local/path/to/file"
+    # The ID of your GCS object
+    # destination_blob_name = "storage-object-name"
+
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
+
+    blob.upload_from_filename(source_file_name)
+
+    print(
+        f"File {source_file_name} uploaded to {destination_blob_name}."
+    )
+
+def main(description):
+    """
+    For each site in the site_list find the site.postad run directory and grab the latest clm restart file
+    from there, 
+    """
+
+    cesmroot = path_to_ctsm_root()
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.environ["HOME"],'.uploadGCSkey.json')
+    #os.path.join(os.environ["HOME"],"gcwriter")
+
+    # Get the list of supported neon sites from usermods
+    valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
+    valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
+    filedatestamp = datetime.datetime.now().date()
+    site_list, output_root, file_date, upload_finidat, upload_history = get_parser(sys.argv, description, valid_neon_sites)
+    for site in site_list:
+        rundir = None
+        if upload_finidat:
+            logger.info("Upload finidat for {}".format(site))
+            case_path = os.path.join(output_root, site+".postad")
+            if os.path.isdir(case_path):
+                with Case(case_path) as case:
+                    rundir = case.get_value("RUNDIR")
+                    basefile = site+".postad.clm2.r.{}-00000.nc".format(file_date.strftime("%4Y-%m-%d"))
+                    finidat_file = os.path.join(rundir,basefile)
+                    if not os.path.isfile(finidat_file):
+                        logger.warning("Could not find file {}".format(finidat_file))
+                        continue
+                    newfile = basefile.replace(".postad.",".{}.".format(filedatestamp))
+                    upload_blob("neon-ncar-artifacts", finidat_file, os.path.join("NEON","lnd","ctsm","initdata",newfile) )
+                
+        if upload_history:
+            logger.info("Upload history for {}".format(site))
+            case_path = os.path.join(output_root, site+".transient")
+            if not os.path.isdir(case_path):
+                logger.warning("No case found in {}".format(case_path))
+                continue
+            with Case(case_path) as case:
+                archive_dir = os.path.join(case.get_value("DOUT_S_ROOT"),"lnd","hist")
+                for histfile in glob.iglob(archive_dir + "/*.h1.*"):
+                    newfile = os.path.basename(histfile)
+                    upload_blob("neon-ncar-artifacts", histfile, os.path.join("NEON","archive",site,"lnd","hist",newfile))
+                        
+                
+
+
+
+
+if __name__ == "__main__":
+    main(__doc__) 
+
