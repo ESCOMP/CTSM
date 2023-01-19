@@ -403,6 +403,15 @@ def check_args(args):
         )
         raise argparse.ArgumentError(None, err_msg)
 
+    if args.out_surface and os.path.exists(args.out_surface) and not args.overwrite:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n out-surface filename exists and the overwrite option was not also selected"
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
 
 def setup_user_mods(user_mods_dir, cesmroot):
     """
