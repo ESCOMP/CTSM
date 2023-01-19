@@ -345,6 +345,37 @@ def get_parser():
     return parser
 
 
+def check_args(parser, args):
+    """Check the command line arguments"""
+    # --------------------------------- #
+    # print help and exit when no option is chosen
+    if args.run_type not in ("point", "region"):
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n Must supply a positional argument: 'point' or 'region'.
+                """
+        )
+        raise parser.error(err_msg)
+
+    if not any(
+        [
+            args.create_surfdata,
+            args.create_domain,
+            args.create_landuse,
+            args.create_datm,
+        ]
+    ):
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n Must supply one of:
+                \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n
+                """
+        )
+        raise parser.error(err_msg)
+
+
 def setup_user_mods(user_mods_dir, cesmroot):
     """
     Sets up the user mods files and directories
@@ -580,34 +611,7 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    # --------------------------------- #
-    # print help and exit when no option is chosen
-    if args.run_type not in ("point", "region"):
-        err_msg = textwrap.dedent(
-            """\
-                \n ------------------------------------
-                \n Must supply a positional argument: 'point' or 'region'.
-                """
-        )
-        raise args.error(err_msg)
-
-    if not any(
-        [
-            args.create_surfdata,
-            args.create_domain,
-            args.create_landuse,
-            args.create_datm,
-        ]
-    ):
-        err_msg = textwrap.dedent(
-            """\
-                \n ------------------------------------
-                \n Must supply one of:
-                \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n
-                """
-        )
-        raise args.error(err_msg)
-
+    check_args(parser, args)
     # --------------------------------- #
     # process logging args (i.e. debug and verbose)
     process_logging_args(args)
