@@ -67,7 +67,7 @@ from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.args_utils import plon_type, plat_type
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.utils import abort, add_tag_to_filename
+from ctsm.utils import abort
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -492,6 +492,10 @@ def setup_files(args, defaults, cesmroot):
 
     fsurf_in = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
     fluse_in = defaults.get("landuse", "landuse_" + num_pft + "pft")
+    if args.out_surface:
+        fsurf_out = args.out_surface
+    else:
+        fsurf_out = None
 
     file_dict = {
         "main_dir": clmforcingindir,
@@ -505,6 +509,7 @@ def setup_files(args, defaults, cesmroot):
             os.path.join(defaults.get("landuse", "dir")),
         ),
         "fsurf_in": fsurf_in,
+        "fsurf_out": fsurf_out,
         "fluse_in": fluse_in,
         "datm_tuple": DatmFiles(
             dir_input_datm,
