@@ -104,6 +104,19 @@ class TestSubsetData(unittest.TestCase):
         ):
             check_args(self.args)
 
+    def test_check_args_outsurfdat_fails_without_overwrite(self):
+        """
+        Test that check args does not allow an output surface dataset to be specified
+        for an existing dataset without the overwrite option
+        """
+        sys.argv = ["subset_data", "point", "--create-surface", "--out-surface", "ctsm/test/testinputs/surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError, "out-surface filename exists and the overwrite option was not also selected",
+        ):
+            check_args(self.args)
+
+
     def test_inputdata_setup_files_bad_inputdata_arg(self):
         """
         Test that inputdata directory provided on command line does not exist if it's bad
