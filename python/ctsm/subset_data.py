@@ -569,7 +569,10 @@ def subset_point(args, file_dict: dict):
     # --  Create CTSM surface data file
     if single_point.create_surfdata:
         single_point.create_surfdata_at_point(
-            file_dict["fsurf_dir"], file_dict["fsurf_in"], args.user_mods_dir
+            file_dict["fsurf_dir"],
+            file_dict["fsurf_in"],
+            args.user_mods_dir,
+            specify_fsurf_out=file_dict["fsurf_out"],
         )
 
     # --  Create CTSM transient landuse data file
@@ -629,7 +632,10 @@ def subset_region(args, file_dict: dict):
     # --  Create CTSM surface data file
     if region.create_surfdata:
         region.create_surfdata_at_reg(
-            file_dict["fsurf_dir"], file_dict["fsurf_in"], args.user_mods_dir
+            file_dict["fsurf_dir"],
+            file_dict["fsurf_in"],
+            args.user_mods_dir,
+            specify_fsurf_out=file_dict["fsurf_out"],
         )
 
     # --  Create CTSM transient landuse data file
