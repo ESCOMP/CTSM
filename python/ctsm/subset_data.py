@@ -309,6 +309,16 @@ def get_parser():
             type=str,
             default="",
         )
+
+        subparser.add_argument(
+            "--out-surface",
+            help="Output surface dataset name \
+            (if you want to override the default based on the current date). \n \
+            (only valid if outputing a surface dataset)",
+            action="store",
+            dest="out_surface",
+            type=str,
+        )
         cesmroot = path_to_ctsm_root()
         defaults_file = os.path.join(cesmroot, DEFAULTS_CONFIG)
         subparser.add_argument(
@@ -375,7 +385,7 @@ def check_args(args):
         )
         raise argparse.ArgumentError(None, err_msg)
 
-    if not os.path.exists( args.config_file ):
+    if not os.path.exists(args.config_file):
         err_msg = textwrap.dedent(
             """\
                 \n ------------------------------------

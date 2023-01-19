@@ -78,8 +78,19 @@ class TestSubsetData(unittest.TestCase):
         """
         sys.argv = ["subset_data", "point", "--create-surface", "--file", "zztop"]
         self.args = self.parser.parse_args()
-        with self.assertRaisesRegex(argparse.ArgumentError, "Entered default config file does not exist"):
+        with self.assertRaisesRegex(
+            argparse.ArgumentError, "Entered default config file does not exist"
+        ):
             check_args(self.args)
+
+    def test_check_args_outsurfdat_provided(self):
+        """
+        Test that check args allows an output surface dataset to be specified
+        when create-surface is on
+        """
+        sys.argv = ["subset_data", "point", "--create-surface", "--out-surface", "outputsurface.nc"]
+        self.args = self.parser.parse_args()
+        check_args(self.args)
 
     def test_inputdata_setup_files_bad_inputdata_arg(self):
         """
