@@ -8,6 +8,7 @@ You can run this by:
 
 import unittest
 import configparser
+import argparse
 import os
 import sys
 
@@ -41,23 +42,41 @@ class TestSubsetData(unittest.TestCase):
         """
         Test
         """
-        check_args(self.parser, self.args)
+        check_args(self.args)
         setup_files(self.args, self.defaults, self.cesmroot)
 
     def test_inputdata_setup_files_inputdata_dne(self):
         """
         Test that inputdata directory does not exist
         """
-        check_args(self.parser, self.args)
+        check_args(self.args)
         self.defaults.set("main", "clmforcingindir", "/zztop")
         with self.assertRaisesRegex(SystemExit, "inputdata directory does not exist"):
             setup_files(self.args, self.defaults, self.cesmroot)
+
+    def test_check_args_nooutput(self):
+        """
+        Test that check args aborts when no-output is asked for
+        """
+        sys.argv = ["subset_data", "point"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(argparse.ArgumentError, "Must supply one of"):
+            check_args(self.args)
+
+    def test_check_args_notype(self):
+        """
+        Test that check args aborts when no type is asked for
+        """
+        sys.argv = ["subset_data"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(argparse.ArgumentError, "Must supply a positional argument:"):
+            check_args(self.args)
 
     def test_inputdata_setup_files_bad_inputdata_arg(self):
         """
         Test that inputdata directory provided on command line does not exist if it's bad
         """
-        check_args(self.parser, self.args)
+        check_args(self.args)
         self.args.inputdatadir = "/zztop"
         with self.assertRaisesRegex(SystemExit, "inputdata directory does not exist"):
             setup_files(self.args, self.defaults, self.cesmroot)

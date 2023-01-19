@@ -345,7 +345,7 @@ def get_parser():
     return parser
 
 
-def check_args(parser, args):
+def check_args(args):
     """Check the command line arguments"""
     # --------------------------------- #
     # print help and exit when no option is chosen
@@ -356,7 +356,7 @@ def check_args(parser, args):
                 \n Must supply a positional argument: 'point' or 'region'.
                 """
         )
-        raise parser.error(err_msg)
+        raise argparse.ArgumentError(None, err_msg)
 
     if not any(
         [
@@ -373,7 +373,7 @@ def check_args(parser, args):
                 \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n
                 """
         )
-        raise parser.error(err_msg)
+        raise argparse.ArgumentError(None, err_msg)
 
 
 def setup_user_mods(user_mods_dir, cesmroot):
@@ -611,7 +611,7 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    check_args(parser, args)
+    check_args(args)
     # --------------------------------- #
     # process logging args (i.e. debug and verbose)
     process_logging_args(args)
