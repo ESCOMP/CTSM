@@ -50,6 +50,11 @@ class TestSubsetData(unittest.TestCase):
             "fsurf_in filename not whats expected",
         )
         self.assertEqual(
+            files["fsurf_out"],
+            None,
+            "fsurf_out filename not whats expected",
+        )
+        self.assertEqual(
             files["main_dir"],
             "/glade/p/cesmdata/inputdata",
             "main_dir directory not whats expected",
@@ -101,6 +106,12 @@ class TestSubsetData(unittest.TestCase):
         sys.argv = ["subset_data", "point", "--create-surface", "--out-surface", "outputsurface.nc"]
         self.args = self.parser.parse_args()
         check_args(self.args)
+        files = setup_files(self.args, self.defaults, self.cesmroot)
+        self.assertEqual(
+            files["fsurf_out"],
+            "outputsurface.nc",
+            "fsurf_out filename not whats expected",
+        )
 
     def test_check_args_outsurfdat_fails_without_create_surface(self):
         """
