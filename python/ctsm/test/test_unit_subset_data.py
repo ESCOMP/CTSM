@@ -31,7 +31,7 @@ class TestSubsetData(unittest.TestCase):
 
     def setUp(self):
         sys.argv = ["subset_data", "point", "--create-surface"]
-        DEFAULTS_FILE = "default_data.cfg"
+        DEFAULTS_FILE = os.path.join(os.getcwd(), "ctsm/test/testinputs/default_data.cfg")
         self.parser = get_parser()
         self.args = self.parser.parse_args()
         self.cesmroot = path_to_ctsm_root()
@@ -43,7 +43,17 @@ class TestSubsetData(unittest.TestCase):
         Test
         """
         check_args(self.args)
-        setup_files(self.args, self.defaults, self.cesmroot)
+        files = setup_files(self.args, self.defaults, self.cesmroot)
+        self.assertEqual(
+            files["fsurf_in"],
+            "surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "fsurf_in filename not whats expected",
+        )
+        self.assertEqual(
+            files["main_dir"],
+            "/glade/p/cesmdata/inputdata",
+            "main_dir directory not whats expected",
+        )
 
     def test_inputdata_setup_files_inputdata_dne(self):
         """
@@ -100,7 +110,8 @@ class TestSubsetData(unittest.TestCase):
         sys.argv = ["subset_data", "point", "--create-landuse", "--out-surface", "outputsurface.nc"]
         self.args = self.parser.parse_args()
         with self.assertRaisesRegex(
-            argparse.ArgumentError, "out-surface option is given without the --create-surface option"
+            argparse.ArgumentError,
+            "out-surface option is given without the --create-surface option",
         ):
             check_args(self.args)
 
@@ -109,13 +120,20 @@ class TestSubsetData(unittest.TestCase):
         Test that check args does not allow an output surface dataset to be specified
         for an existing dataset without the overwrite option
         """
-        sys.argv = ["subset_data", "point", "--create-surface", "--out-surface", "ctsm/test/testinputs/surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc"]
+        sys.argv = [
+            "subset_data",
+            "point",
+            "--create-surface",
+            "--out-surface",
+            "ctsm/test/testinputs/"
+            + "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+        ]
         self.args = self.parser.parse_args()
         with self.assertRaisesRegex(
-            argparse.ArgumentError, "out-surface filename exists and the overwrite option was not also selected",
+            argparse.ArgumentError,
+            "out-surface filename exists and the overwrite option was not also selected",
         ):
             check_args(self.args)
-
 
     def test_inputdata_setup_files_bad_inputdata_arg(self):
         """

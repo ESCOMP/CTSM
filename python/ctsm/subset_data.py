@@ -67,7 +67,7 @@ from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.args_utils import plon_type, plat_type
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.utils import abort
+from ctsm.utils import abort, add_tag_to_filename
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
