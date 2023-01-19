@@ -394,6 +394,15 @@ def check_args(args):
         )
         raise argparse.ArgumentError(None, err_msg)
 
+    if args.out_surface and not args.create_surfdata:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n out-surface option is given without the --create-surface option"
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
 
 def setup_user_mods(user_mods_dir, cesmroot):
     """

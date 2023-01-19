@@ -92,6 +92,18 @@ class TestSubsetData(unittest.TestCase):
         self.args = self.parser.parse_args()
         check_args(self.args)
 
+    def test_check_args_outsurfdat_fails_without_create_surface(self):
+        """
+        Test that check args does not allow an output surface dataset to be specified
+        when create-surface is not on
+        """
+        sys.argv = ["subset_data", "point", "--create-landuse", "--out-surface", "outputsurface.nc"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError, "out-surface option is given without the --create-surface option"
+        ):
+            check_args(self.args)
+
     def test_inputdata_setup_files_bad_inputdata_arg(self):
         """
         Test that inputdata directory provided on command line does not exist if it's bad
