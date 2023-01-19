@@ -54,6 +54,9 @@ endif
 
 MKSURFDATA = $(BATCHJOBS) $(PWD)/mksurfdata.pl
 SUBSETDATA = $(PWD)/../site_and_regional/subset_data
+MODIFYSURF = $(PWD)/../modify_input_files/fsurdat_modifier
+
+CDATE = $(shell date +%y%m%d)
 
 # subset_data options
 #
@@ -71,9 +74,9 @@ SUBSETDATA_1X1_SMALL  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA \
 # NOTE: The 1850 smallvilleIA site is constructed to start with 100% natural vegetation, so we can test transition to crops
 SUBSETDATA_1X1_SMALL1850  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA --dompft 13 --pctpft 100
 
-SUBSETDATA_1X1_MEXICOCITY  := --lat 19.5 --lon 260.5 --site 1x1_mexicocityMEX
-SUBSETDATA_1X1_VANCOUVER   := --lat 49.5 --lon 236.5 --site 1x1_vancouverCAN
-SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha
+SUBSETDATA_1X1_MEXICOCITY  := --lat 19.5 --lon 260.5 --site 1x1_mexicocityMEX --out-surface surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000.nc
+SUBSETDATA_1X1_VANCOUVER   := --lat 49.5 --lon 236.5 --site 1x1_vancouverCAN --out-surface surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000.nc
+SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha --out-surface surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000.nc
 # f19 and f09 are standard resolutions, f10 is used for testing, f45 is used for FATES
 # ne30np4 is standard resolution for SE dycore in CAM, C96 is standard for fv3 dycore
 # The ne30np4 series (including pg2, pg3, pg4) are standard for SE dycore
@@ -260,15 +263,24 @@ crop-global-SSP5-8.5 : FORCE
 #
 urban : urban-present urban-alpha
 
-urban-present : FORCE
+urban-present : mexicocity vancouver
+
+mexicocity : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_MEXICOCITY)
+	$(RM) surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
+	$(MODIFYSURF) modify_1x1_mexicocityMEX.cfg -i surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000.nc -o surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
+
+vancouver : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_VANCOUVER)
+	$(RM) surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
+	$(MODIFYSURF) modify_1x1_vancouverCAN.cfg -i surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000.nc -o surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 
 # NOTE(bja, 2015-01) skip abort on invalid data necessary as of 2015-01. See
 # /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
 urban-alpha : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_URBALPHA)
-
+	$(RM) surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
+	$(MODIFYSURF) modify_1x1_urbanc_alpha.cfg -i surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000.nc -o surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 
 #
 # landuse timeseries
