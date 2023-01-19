@@ -375,6 +375,15 @@ def check_args(args):
         )
         raise argparse.ArgumentError(None, err_msg)
 
+    if not os.path.exists( args.config_file ):
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n Entered default config file does not exist"
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
 
 def setup_user_mods(user_mods_dir, cesmroot):
     """

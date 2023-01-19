@@ -72,6 +72,15 @@ class TestSubsetData(unittest.TestCase):
         with self.assertRaisesRegex(argparse.ArgumentError, "Must supply a positional argument:"):
             check_args(self.args)
 
+    def test_check_args_badconfig(self):
+        """
+        Test that check args aborts when a config file is entered that doesn't exist
+        """
+        sys.argv = ["subset_data", "point", "--create-surface", "--file", "zztop"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(argparse.ArgumentError, "Entered default config file does not exist"):
+            check_args(self.args)
+
     def test_inputdata_setup_files_bad_inputdata_arg(self):
         """
         Test that inputdata directory provided on command line does not exist if it's bad
