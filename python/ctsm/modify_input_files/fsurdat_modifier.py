@@ -287,9 +287,10 @@ def modify_optional(
         logger.info("dom_pft complete")
 
 
-def read_opt_config(modify_fsurdat, config, cfg_path, section):
-    """read the optional parts of the main section config file"""
-    # not required: user may set these in the .cfg file
+def read_cfg_optional_basic_opts(modify_fsurdat, config, cfg_path, section):
+    """Read the optional parts of the main section of the config file.
+    The main section is called modify_fsurdat_basic_options.
+    Users may set these optional parts but are not required to do so."""
 
     lai = get_config_value(
         config=config,
@@ -538,7 +539,7 @@ def fsurdat_modifier(parser):
         sai,
         hgt_top,
         hgt_bot,
-    ) = read_opt_config(modify_fsurdat, config, cfg_path, section)
+    ) = read_cfg_optional_basic_opts(modify_fsurdat, config, cfg_path, section)
     # ------------------------------
     # modify surface data properties
     # ------------------------------
