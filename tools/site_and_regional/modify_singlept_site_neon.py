@@ -175,11 +175,10 @@ def get_parser():
     )
 
     parser.add_argument(
-        "-f",
-        "--fates",
-        help="Modify FATES-specific surface data files (i.e. 16-PFT version",
+        "--16pft",
+        help="Modify 16-pft surface data files (e.g. for a FATES run)",
         action="store_true",
-        dest="fates",
+        dest="pft_16",
         default=False,
     )
 
@@ -250,7 +249,7 @@ def get_neon(neon_dir, site_name):
     return neon_file
 
 
-def find_surffile(surf_dir, site_name, fates):
+def find_surffile(surf_dir, site_name, pft_16):
     """
     Function for finding and choosing surface file for
     a neon site.
@@ -261,7 +260,7 @@ def find_surffile(surf_dir, site_name, fates):
     Args:
         surf_dir (str): directory of single point surface data
         site_name (str): 4 letter neon site name
-        fates (bool):    if true, use 16-PFT version of surface data file
+        pft_16 (bool):    if true, use 16-PFT version of surface data file
 
     Raises:
         Error if the surface data for the site is not created
@@ -270,8 +269,8 @@ def find_surffile(surf_dir, site_name, fates):
         surf_file (str): name of the surface dataset file
     """
 
-    if fates:
-        sf_name = "surfdata_1x1_NEON_16PFT_"+site_name+"*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
+    if pft_16:
+        sf_name = "surfdata_1x1_NEON_"+site_name+"*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
     else:
         sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_78pfts_CMIP6_simyr2000_*.nc"
 
