@@ -109,7 +109,7 @@ def main():
             command1 = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),'--site',clmsite,
                     '--create-surface','--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
             command2 = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
-                       'subset_data_single_point', '--fates']
+                       'subset_data_single_point', '--16pft']
         else:
             command1 = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),'--site',clmsite,'--dompft',str(pft),'--crop',
                     '--create-surface','--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
