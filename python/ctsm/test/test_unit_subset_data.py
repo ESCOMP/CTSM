@@ -131,13 +131,15 @@ class TestSubsetData(unittest.TestCase):
         Test that check args does not allow an output surface dataset to be specified
         for an existing dataset without the overwrite option
         """
+        outfile = os.path.join( os.getcwd(), "ctsm/test/testinputs/", "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc" )
+        self.assertTrue( os.path.exists( outfile ), str(outfile)+" outfile should exist" )
+
         sys.argv = [
             "subset_data",
             "point",
             "--create-surface",
             "--out-surface",
-            "ctsm/test/testinputs/"
-            + "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            outfile
         ]
         self.args = self.parser.parse_args()
         with self.assertRaisesRegex(
