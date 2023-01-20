@@ -91,7 +91,7 @@ class TestSubsetData(unittest.TestCase):
         """
         Test that check args aborts when a config file is entered that doesn't exist
         """
-        sys.argv = ["subset_data", "point", "--create-surface", "--file", "zztop"]
+        sys.argv = ["subset_data", "point", "--create-surface", "--cfg-file", "zztop"]
         self.args = self.parser.parse_args()
         with self.assertRaisesRegex(
             argparse.ArgumentError, "Entered default config file does not exist"
