@@ -272,7 +272,7 @@ def find_surffile(surf_dir, site_name, pft_16):
     if pft_16:
         sf_name = "surfdata_1x1_NEON_"+site_name+"*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
     else:
-        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_78pfts_CMIP6_simyr2000_*.nc"
+        sf_name = "surfdata_1x1_NEON_" +site_name+"*hist_78pfts_CMIP6_simyr2000_*.nc"
 
     print (os.path.join(surf_dir , sf_name))
     surf_file = sorted(glob.glob(os.path.join(surf_dir , sf_name)))
