@@ -4,6 +4,7 @@ This is a just top-level skeleton script that calls
 subset_data.py.
 The original code (subset_data.py) is located under
 python/ctsm folder.
+
 For full instructions on how to run the code and different options,
 please check python/ctsm/subset_data.py file.
 This script extracts domain files, surface dataset, and DATM files
