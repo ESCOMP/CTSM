@@ -546,7 +546,7 @@ def main():
 
     # --  Look for surface data
     surf_dir = args.surf_dir
-    surf_file = find_surffile(surf_dir, site_name, args.fates)
+    surf_file = find_surffile(surf_dir, site_name, args.pft_16)
 
     # --  directory structure
     current_dir = os.getcwd()
