@@ -62,7 +62,6 @@ CDATE = $(shell date +%y%m%d)
 #
 SUBSETDATA_POINT = $(SUBSETDATA) point --overwrite --uniform-snowpack --cap-saturation --outdir .
 SUBSETDATA_POINT_ALLLU = $(SUBSETDATA_POINT) --include-nonveg
-# NOTE: TODO: We need settings in subset_data to handle urban datasets see issue #1665
 SUBSETDATA_POINT_URBAN = $(SUBSETDATA_POINT) --include-nonveg
 
 # Subset data sites...
