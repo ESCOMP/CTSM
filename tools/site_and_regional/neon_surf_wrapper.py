@@ -112,6 +112,7 @@ def main():
         print ("Now processing site :", site)
 
         if args.mixed and args.pft_16:
+            # use surface dataset with 16 pfts, and don't overwrite with 100% 1 dominant PFT
             # don't set crop flag
             # don't set a dominant pft
             subset_command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),
@@ -120,6 +121,7 @@ def main():
             modify_command = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
                        'subset_data_single_point', '--16pft']
         elif args.pft_16:
+            # use surface dataset with 16 pfts, but overwrite to 100% 1 dominant PFT
             # don't set crop flag
             # set dominant pft
             subset_command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),
@@ -128,6 +130,8 @@ def main():
             modify_command = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
                               'subset_data_single_point', '--16pft']
         elif args.mixed:
+            # use surface dataset with 78 pfts, and don't overwrite with 100% 1 dominant PFT
+            # NOTE: FATES will currently not run with a 78-PFT surface dataset
             # set crop flag
             # don't set dominant pft
             subset_command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),
@@ -136,6 +140,8 @@ def main():
             modify_command = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
                        'subset_data_single_point']
         else:
+            # use surface dataset with 78 pfts, and overwrite to 100% 1 dominant PFT
+            # NOTE: FATES will currently not run with a 78-PFT surface dataset
             # set crop flag
             # set dominant pft
             subset_command = ['./subset_data', 'point', '--lat', str(lat), '--lon', str(lon),
