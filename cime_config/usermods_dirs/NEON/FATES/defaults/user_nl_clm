@@ -19,7 +19,7 @@
 !----------------------------------------------------------------------------------
 
 flanduse_timeseries = ' '   ! This isn't needed for a non transient case, but will be once we start using transient compsets
-fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/NEON/FATES/surfdata_1x1_NEON_16PFT_${NEONSITE}_hist_16pfts_Irrig_CMIP6_simyr2000_c230110.nc"
+fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/NEON/16PFT_mixed/surfdata_1x1_NEON_${NEONSITE}_hist_16pfts_Irrig_CMIP6_simyr2000_c230120.nc"
 
 ! h1 output stream 
 hist_fincl2 = 'FATES_AUTORESP','FCEV','FCTR','FGEV','FIRA','FSA','FSH','FATES_GPP','FATES_GPP_PF','H2OSOI',
