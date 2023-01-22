@@ -266,11 +266,13 @@ urban-present : mexicocity vancouver
 
 mexicocity : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_MEXICOCITY)
+	# NOTE: $(RM) by default uses rm -f which doesn't generate an error if the file doesn't exist
 	$(RM) surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 	$(MODIFYSURF) modify_1x1_mexicocityMEX.cfg -i surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000.nc -o surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 
 vancouver : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_VANCOUVER)
+	# NOTE: $(RM) by default uses rm -f which doesn't generate an error if the file doesn't exist
 	$(RM) surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 	$(MODIFYSURF) modify_1x1_vancouverCAN.cfg -i surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000.nc -o surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 
@@ -278,6 +280,7 @@ vancouver : FORCE
 # /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
 urban-alpha : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_URBALPHA)
+	# NOTE: $(RM) by default uses rm -f which doesn't generate an error if the file doesn't exist
 	$(RM) surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 	$(MODIFYSURF) modify_1x1_urbanc_alpha.cfg -i surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000.nc -o surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 
