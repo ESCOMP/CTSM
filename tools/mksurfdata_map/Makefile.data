@@ -60,7 +60,7 @@ CDATE = $(shell date +%y%m%d)
 
 # subset_data options
 #
-SUBSETDATA_POINT = $(SUBSETDATA) point --overwrite --uniform-snowpack --cap-saturation --outdir .
+SUBSETDATA_POINT = $(SUBSETDATA) point --silent --overwrite --uniform-snowpack --cap-saturation --outdir .
 SUBSETDATA_POINT_ALLLU = $(SUBSETDATA_POINT) --include-nonveg
 SUBSETDATA_POINT_URBAN = $(SUBSETDATA_POINT) --include-nonveg
 
@@ -264,23 +264,23 @@ urban : urban-present urban-alpha
 
 urban-present : mexicocity vancouver
 
+# NOTE: $(RM) by default uses rm -f which doesn't generate an error if the file doesn't exist
 mexicocity : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_MEXICOCITY)
-	# NOTE: $(RM) by default uses rm -f which doesn't generate an error if the file doesn't exist
 	$(RM) surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 	$(MODIFYSURF) modify_1x1_mexicocityMEX.cfg -i surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000.nc -o surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 
+# NOTE: $(RM) by default uses rm -f which doesn't generate an error if the file doesn't exist
 vancouver : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_VANCOUVER)
-	# NOTE: $(RM) by default uses rm -f which doesn't generate an error if the file doesn't exist
 	$(RM) surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 	$(MODIFYSURF) modify_1x1_vancouverCAN.cfg -i surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000.nc -o surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 
 # NOTE(bja, 2015-01) skip abort on invalid data necessary as of 2015-01. See
 # /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
+# NOTE: $(RM) by default uses rm -f which doesn't generate an error if the file doesn't exist
 urban-alpha : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_URBALPHA)
-	# NOTE: $(RM) by default uses rm -f which doesn't generate an error if the file doesn't exist
 	$(RM) surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 	$(MODIFYSURF) modify_1x1_urbanc_alpha.cfg -i surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000.nc -o surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
 
