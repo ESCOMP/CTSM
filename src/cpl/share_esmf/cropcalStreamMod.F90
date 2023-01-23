@@ -169,7 +169,7 @@ contains
             stream_yearLast     = stream_year_last_cropcal,           &
             stream_yearAlign    = model_year_align_cropcal,           &
             stream_offset       = cropcal_offset,                     &
-            stream_taxmode      = 'cycle',                            &
+            stream_taxmode      = 'extend',                           &
             stream_dtlimit      = 1.5_r8,                             &
             stream_tintalgo     = cropcal_tintalgo,                   &
             stream_name         = 'sowing date data',                 &
@@ -197,7 +197,7 @@ contains
             stream_yearLast     = stream_year_last_cropcal,           &
             stream_yearAlign    = model_year_align_cropcal,           &
             stream_offset       = cropcal_offset,                     &
-            stream_taxmode      = 'cycle',                            &
+            stream_taxmode      = 'extend',                           &
             stream_dtlimit      = 1.5_r8,                             &
             stream_tintalgo     = cropcal_tintalgo,                   &
             stream_name         = 'cultivar gdd data',                &
