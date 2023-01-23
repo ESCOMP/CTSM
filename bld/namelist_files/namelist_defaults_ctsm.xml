@@ -210,9 +210,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <baseflow_scalar phys="clm4_5"  lower_boundary_condition="2">1.d-2</baseflow_scalar>
 
 <!-- Friction velocity -->
-<zetamaxstable phys="clm4_5" >2.0d00</zetamaxstable>
-<zetamaxstable phys="clm5_0" >0.5d00</zetamaxstable>
-<zetamaxstable phys="clm5_1" >0.5d00</zetamaxstable>
+<zetamaxstable               use_biomass_heat_storage=".true." >2.0d00</zetamaxstable>
+<zetamaxstable phys="clm4_5"                                   >2.0d00</zetamaxstable>
+<zetamaxstable phys="clm5_0"                                   >0.5d00</zetamaxstable>
+<zetamaxstable phys="clm5_1"                                   >0.5d00</zetamaxstable>
 
 <!-- atm2lnd defaults -->
 <repartition_rain_snow phys="clm5_1" >.true.</repartition_rain_snow>
