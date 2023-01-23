@@ -1,6 +1,0 @@
-./xmlchange NEONSITE=STER
-./xmlchange PTS_LON=256.96992
-./xmlchange PTS_LAT=40.45984
-# We can't run crops with FATES yet 
-echo "Cannot run FATES at STER because FATES does not yet have crops."
-exit 1
