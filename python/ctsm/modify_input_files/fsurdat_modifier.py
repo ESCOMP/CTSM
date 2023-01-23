@@ -385,6 +385,10 @@ def read_option_control(
         file_path=cfg_path,
         convert_to_type=bool,
     )
+    if idealized:
+        logger.info("idealized option is on")
+    else:
+        logger.info("idealized option is off")
     process_subgrid = get_config_value(
         config=config,
         section=section,
@@ -392,6 +396,10 @@ def read_option_control(
         file_path=cfg_path,
         convert_to_type=bool,
     )
+    if process_subgrid:
+        logger.info("process_subgrid_section option is on")
+    else:
+        logger.info("process_subgrid_section option is off")
     process_var_list = get_config_value(
         config=config,
         section=section,
@@ -399,6 +407,10 @@ def read_option_control(
         file_path=cfg_path,
         convert_to_type=bool,
     )
+    if process_var_list:
+        logger.info("process_var_list_section option is on")
+    else:
+        logger.info("process_var_list_section option is off")
     include_nonveg = get_config_value(
         config=config,
         section=section,
@@ -406,6 +418,10 @@ def read_option_control(
         file_path=cfg_path,
         convert_to_type=bool,
     )
+    if include_nonveg:
+        logger.info("include_nonveg option is on")
+    else:
+        logger.info("include_nonveg option is off")
     max_pft = int(max(modify_fsurdat.file.lsmpft))
     dom_pft = get_config_value(
         config=config,
@@ -416,6 +432,10 @@ def read_option_control(
         convert_to_type=int,
         can_be_unset=True,
     )
+    if dom_pft:
+        logger.info("dom_pft option is on and = %s", str(dom_pft))
+    else:
+        logger.info("dom_pft option is off")
     if dom_pft is not None and idealized and not allow_dom_pft_and_idealized:
         abort("idealized AND dom_pft can NOT both be on, pick one or the other")
     if include_nonveg and idealized and not allow_ideal_and_include_non_veg:
@@ -563,6 +583,7 @@ def fsurdat_modifier(parser):
     if process_subgrid:
         subgrid = read_subgrid(config, cfg_path, numurbl=modify_fsurdat.get_urb_dens())
         modify_fsurdat.set_varlist(subgrid, cfg_path)
+        logger.info("process_subgrid is complete")
     else:
         check_no_subgrid_section(config)
 
@@ -570,6 +591,7 @@ def fsurdat_modifier(parser):
         varlist = read_var_list(config, idealized=idealized)
         update_list = modify_fsurdat.check_varlist(varlist, allow_uppercase_vars=True)
         modify_fsurdat.set_varlist(update_list, cfg_path)
+        logger.info("process_var_list is complete")
     else:
         check_no_varlist_section(config)
 
