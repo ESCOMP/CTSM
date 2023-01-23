@@ -15,7 +15,7 @@ import xarray as xr
 
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
-from ctsm.modify_fsurdat.fsurdat_modifier import fsurdat_modifier
+from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -28,7 +28,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
     def setUp(self):
         """
         Obtain path to the existing:
-        - modify_template.cfg file
+        - modify_fsurdat_template.cfg file
         - /testinputs directory and fsurdat_in, located in /testinputs
         Make /_tempdir for use by these tests.
         Obtain path and names for the files being created in /_tempdir:
@@ -36,7 +36,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         - fsurdat_out.nc
         """
         self._cfg_template_path = os.path.join(
-            path_to_ctsm_root(), "tools/modify_fsurdat/modify_template.cfg"
+            path_to_ctsm_root(), "tools/modify_input_files/modify_fsurdat_template.cfg"
         )
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._fsurdat_in = os.path.join(
@@ -157,8 +157,8 @@ class TestSysFsurdatModifier(unittest.TestCase):
                         line = "lnd_lon_1 = 295\n"
                     elif re.match(r" *lnd_lon_2 *=", line):
                         line = "lnd_lon_2 = 300\n"
-                    elif re.match(r" *dom_plant *=", line):
-                        line = "dom_plant = 15"
+                    elif re.match(r" *dom_pft *=", line):
+                        line = "dom_pft = 15"
                     elif re.match(r" *lai *=", line):
                         line = "lai = 0 1 2 3 4 5 5 4 3 2 1 0\n"
                     elif re.match(r" *sai *=", line):
@@ -192,8 +192,8 @@ class TestSysFsurdatModifier(unittest.TestCase):
                         line = "lnd_lon_1 = 295\n"
                     elif re.match(r" *lnd_lon_2 *=", line):
                         line = "lnd_lon_2 = 300\n"
-                    elif re.match(r" *dom_plant *=", line):
-                        line = "dom_plant = 1"
+                    elif re.match(r" *dom_pft *=", line):
+                        line = "dom_pft = 1"
                     elif re.match(r" *lai *=", line):
                         line = "lai = 0 1 2 3 4 5 5 4 3 2 1 0\n"
                     elif re.match(r" *sai *=", line):
