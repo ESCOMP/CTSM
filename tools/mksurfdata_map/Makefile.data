@@ -60,7 +60,7 @@ CDATE = $(shell date +%y%m%d)
 
 # subset_data options
 #
-SUBSETDATA_POINT = $(SUBSETDATA) point --silent --overwrite --uniform-snowpack --cap-saturation --outdir .
+SUBSETDATA_POINT = $(SUBSETDATA) point --silent --overwrite --uniform-snowpack --cap-saturation --crop --outdir .
 SUBSETDATA_POINT_ALLLU = $(SUBSETDATA_POINT) --include-nonveg
 SUBSETDATA_POINT_URBAN = $(SUBSETDATA_POINT) --include-nonveg
 
@@ -73,9 +73,9 @@ SUBSETDATA_1X1_SMALL  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA \
 # NOTE: The 1850 smallvilleIA site is constructed to start with 100% natural vegetation, so we can test transition to crops
 SUBSETDATA_1X1_SMALL1850  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA --dompft 13 --pctpft 100
 
-SUBSETDATA_1X1_MEXICOCITY  := --lat 19.5 --lon 260.5 --site 1x1_mexicocityMEX --out-surface surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000.nc
-SUBSETDATA_1X1_VANCOUVER   := --lat 49.5 --lon 236.5 --site 1x1_vancouverCAN --out-surface surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000.nc
-SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha --out-surface surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000.nc
+SUBSETDATA_1X1_MEXICOCITY  := --lat 19.5 --lon 260.5 --site 1x1_mexicocityMEX --out-surface surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000.nc
+SUBSETDATA_1X1_VANCOUVER   := --lat 49.5 --lon 236.5 --site 1x1_vancouverCAN --out-surface surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000.nc
+SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha --out-surface surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc
 # f19 and f09 are standard resolutions, f10 is used for testing, f45 is used for FATES
 # ne30np4 is standard resolution for SE dycore in CAM, C96 is standard for fv3 dycore
 # The ne30np4 series (including pg2, pg3, pg4) are standard for SE dycore
@@ -155,14 +155,14 @@ crop-tropics-present : brazil-tropics-present
 	$(MKSURFDATA) -glc_nec 10 -y 2000 -res 5x5_amazon $(BACKGROUND)
 
 1x1_brazil-tropics-present : FORCE
-	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_BRAZIL) --crop
+	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_BRAZIL)
 
 
 crop-tropics-historical : FORCE
-	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_BRAZIL) --cfg-file default_data_1850.cfg --crop
+	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_BRAZIL) --cfg-file default_data_1850.cfg
 
 crop-tropics-transient : FORCE
-	$(SUBSETDATA_POINT_ALLLU) --create-landuse $(SUBSETDATA_1X1_BRAZIL) --crop
+	$(SUBSETDATA_POINT_ALLLU) --create-landuse $(SUBSETDATA_1X1_BRAZIL)
 
 #
 # crop
@@ -179,13 +179,13 @@ crop-global-present-f05 : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 1850,2000 -res 0.47x0.63 $(BACKGROUND)
 
 crop-numa-present : FORCE
-	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_NUMAIA) --crop
+	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_NUMAIA)
 
 crop-numa-historical : FORCE
-	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_NUMAIA) --cfg-file default_data_1850.cfg --crop
+	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_NUMAIA) --cfg-file default_data_1850.cfg
 
 crop-smallville : FORCE
-	$(SUBSETDATA_POINT) --create-surface $(SUBSETDATA_1X1_SMALL) --crop
+	$(SUBSETDATA_POINT) --create-surface $(SUBSETDATA_1X1_SMALL)
 
 crop-global-present-ne16np4 : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 2000 -res ne16np4 $(BACKGROUND)
@@ -198,7 +198,7 @@ crop-global-present-ne120np4 : FORCE
 # adds crop (to make sure that it works properly to add crop in a grid cell
 # where there used to be no crop).
 crop-smallville-historical : FORCE
-	$(SUBSETDATA_POINT) --create-surface $(SUBSETDATA_1X1_SMALL1850) --cfg-file default_data_1850.cfg --crop
+	$(SUBSETDATA_POINT) --create-surface $(SUBSETDATA_1X1_SMALL1850) --cfg-file default_data_1850.cfg
 
 # Setup the historical case for SSP5-8.5 so that historical can be used to go into the future.
 crop-global-historical : FORCE
@@ -267,25 +267,25 @@ urban-present : mexicocity vancouver
 # NOTE: $(RM) by default uses rm -f which doesn't generate an error if the file doesn't exist
 mexicocity : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_MEXICOCITY)
-	$(RM) surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
-	$(MODIFYSURF) modify_1x1_mexicocityMEX.cfg -i surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000.nc -o surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
-	$(RM) surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000.nc
+	$(RM) surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
+	$(MODIFYSURF) modify_1x1_mexicocityMEX.cfg -i surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000.nc -o surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
+	$(RM) surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000.nc
 
 # NOTE: $(RM) by default uses rm -f which doesn't generate an error if the file doesn't exist
 vancouver : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_VANCOUVER)
-	$(RM) surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
-	$(MODIFYSURF) modify_1x1_vancouverCAN.cfg -i surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000.nc -o surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
-	$(RM) surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000.nc
+	$(RM) surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
+	$(MODIFYSURF) modify_1x1_vancouverCAN.cfg -i surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000.nc -o surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
+	$(RM) surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000.nc
 
 # NOTE(bja, 2015-01) skip abort on invalid data necessary as of 2015-01. See
 # /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
 # NOTE: $(RM) by default uses rm -f which doesn't generate an error if the file doesn't exist
 urban-alpha : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_URBALPHA)
-	$(RM) surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
-	$(MODIFYSURF) modify_1x1_urbanc_alpha.cfg -i surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000.nc -o surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000_c$(CDATE).nc
-	$(RM) surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000.nc
+	$(RM) surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
+	$(MODIFYSURF) modify_1x1_urbanc_alpha.cfg -i surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc -o surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
+	$(RM) surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc
 
 #
 # landuse timeseries
