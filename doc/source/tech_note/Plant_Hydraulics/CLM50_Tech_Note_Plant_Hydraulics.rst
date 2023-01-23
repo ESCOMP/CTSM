@@ -368,22 +368,23 @@ from the characteristic root spacing (section :numref:`Root Spacing`).
 .. math::
    :label: 11.109
 
-   q_{3,i}=k_{3,i} \cdot RAI \cdot \left(\psi_{soil,i}-\psi_{root} + \Delta\psi_{z,i} \right)
+   q_{3,i}=k_{3,i} \cdot \left(\psi_{soil,i}-\psi_{root} + \Delta\psi_{z,i} \right)
 
 .. math::
    :label: 11.110
 
-   RAI=\left(LAI+SAI \right) \cdot r_i \cdot f_{root-leaf}
+   k_{3,i}=\dfrac{k_{r,i} \cdot k_{s,i}}{k_{r,i}+k_{s,i}} 
 
 .. math::
    :label: 11.111
 
-   k_{3,i}=\dfrac{k_{r,i} \cdot k_{s,i}}{k_{r,i}+k_{s,i}} 
+   k_{r,i}=\dfrac{k_{3,max}}{z_{3,i}} \cdot RAI \cdot 2^{-\left(\dfrac{\psi_{soil,i}}{p50_3}\right)^{c_k}}
 
 .. math::
    :label: 11.112
 
-   k_{r,i}=\dfrac{k_{3,max}}{z_{3,i}} \cdot 2^{-\left(\dfrac{\psi_{soil,i}}{p50_3}\right)^{c_k}}
+   RAI=\left(LAI+SAI \right) \cdot r_i \cdot f_{root-leaf}
+
 
 .. math::
    :label: 11.113
