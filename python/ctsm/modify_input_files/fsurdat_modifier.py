@@ -71,6 +71,13 @@ def fsurdat_modifier_arg_process():
         action="store_true",
         help="Allow both idealized and dom_pft to be on at the same time. ",
     )
+    parser.add_argument(
+        "--overwrite",
+        required=False,
+        default=False,
+        action="store_true",
+        help="Overwrite the output file if it already exists. ",
+    )
     add_logging_args(parser)
     args = parser.parse_args()
     process_logging_args(args)
@@ -481,8 +488,11 @@ def fsurdat_modifier(parser):
 
     # If output file exists, abort before starting work
     if os.path.exists(fsurdat_out):
-        errmsg = "Output file already exists: " + fsurdat_out
-        abort(errmsg)
+        if not parser.overwrite:
+            errmsg = "Output file already exists: " + fsurdat_out
+            abort(errmsg)
+        else:
+            logger.warning("Output file already exists, but the overwrite option was selected so the file will be overwritten.")
 
     lnd_lat_1 = get_config_value(
         config=config,
