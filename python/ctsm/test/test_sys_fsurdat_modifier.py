@@ -80,6 +80,11 @@ class TestSysFsurdatModifier(unittest.TestCase):
         fsurdat_out = (
             "ctsm/test/testinputs/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_out.nc"
         )
+        # Run it again with the overwrite option so that it will overwrite the file just created
+        sys.argv = ["fsurdat_modifier", self._cfg_file_path, "--overwrite"]
+        parser = fsurdat_modifier_arg_process()
+        fsurdat_modifier(parser)
+        # Cleanup
         os.remove(fsurdat_out)
 
     def test_short_infile_both_cmdline_and_cfg(self):
@@ -279,6 +284,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
     def test_output_fsurdat_EXISTS_fail(self):
         """
         Test that if the output fsurdat file does exist that it gracefully fails
+        without --overwrite option
         """
         self._cfg_file_path = os.path.join(
             self._testinputs_path, "modify_fsurdat_short_nofiles.cfg"
