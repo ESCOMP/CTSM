@@ -925,11 +925,11 @@ contains
             if (t_building_bef_hac(l) > t_building_max(l)) then
               t_building(l) = t_building_max(l)
               ! [Cathy] orig: 
-              eflx_urban_ac(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building(l) &
+              ! eflx_urban_ac(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building(l) &
                                  - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
               ! [Cathy] dev:
-              ! eflx_urban_ac(l) = wtlunit_roof(l) * p_ac(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building(l) &
-              !                    - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
+              eflx_urban_ac(l) = wtlunit_roof(l) * p_ac(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building(l) &
+                                 - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
             else if (t_building_bef_hac(l) < t_building_min(l)) then
               t_building(l) = t_building_min(l)
               eflx_urban_heat(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building(l) &
