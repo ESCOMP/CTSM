@@ -27,11 +27,21 @@ module mkesmfMod
 contains
 !===============================================================
 
-  subroutine create_routehandle_r4(mesh_i, mesh_o, routehandle, frac_o, rc)
+  subroutine create_routehandle_r4(mesh_i, mesh_o, norm_by_fracs, routehandle, frac_o, rc)
 
     ! input/output variables
     type(ESMF_Mesh)        , intent(in)    :: mesh_i
     type(ESMF_Mesh)        , intent(in)    :: mesh_o
+    ! If norm_by_fracs is .true., then remapping is done using ESMF_NORMTYPE_FRACAREA;
+    ! otherwise, remapping is done using ESMF_NORMTYPE_DSTAREA. FRACAREA normalization
+    ! adds a normalization factor of the fraction of the unmasked source grid that
+    ! overlaps with a destination cell. FRACAREA normalization is appropriate when you
+    ! want to treat values outside the mask as missing values that shouldn't contribute
+    ! to the average (this is appropriate for most fields); DSTAREA normalization is
+    ! appropriate when you want to treat values outside the mask as 0 (this is
+    ! appropriate for PCT cover fields where we want the final value to be expressed as
+    ! percent of the entire gridcell area).
+    logical                , intent(in)    :: norm_by_fracs
     type(ESMF_RouteHandle) , intent(inout) :: routehandle
     real(r4), optional     , intent(inout) :: frac_o(:)
     integer                , intent(out)   :: rc
@@ -40,6 +50,7 @@ contains
     integer           :: srcMaskValue = 0          ! ignore source points where the mesh mask is 0
     integer           :: dstMaskValue = -987987    ! don't ingore any destination points
     integer           :: srcTermProcessing_Value = 0
+    type(ESMF_NormType_Flag) :: normtype
     type(ESMF_Field)  :: field_i
     type(ESMF_Field)  :: field_o
     type(ESMF_Field)  :: dstfracfield
@@ -56,9 +67,15 @@ contains
     dstfracfield = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    if (norm_by_fracs) then
+       normtype = ESMF_NORMTYPE_FRACAREA
+    else
+       normtype = ESMF_NORMTYPE_DSTAREA
+    end if
+
     ! Create route handle to map field_model to field_data
     call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
-         regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=ESMF_NORMTYPE_FRACAREA, &
+         regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=normtype, &
          srcMaskValues=(/srcMaskValue/), &
          dstMaskValues=(/dstMaskValue/), &
          srcTermProcessing=srcTermProcessing_Value, &
@@ -83,11 +100,21 @@ contains
   end subroutine create_routehandle_r4
 
   !===============================================================
-  subroutine create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o, rc)
+  subroutine create_routehandle_r8(mesh_i, mesh_o, norm_by_fracs, routehandle, frac_o, rc)
 
     ! input/output variables
     type(ESMF_Mesh)        , intent(in)    :: mesh_i
     type(ESMF_Mesh)        , intent(in)    :: mesh_o
+    ! If norm_by_fracs is .true., then remapping is done using ESMF_NORMTYPE_FRACAREA;
+    ! otherwise, remapping is done using ESMF_NORMTYPE_DSTAREA. FRACAREA normalization
+    ! adds a normalization factor of the fraction of the unmasked source grid that
+    ! overlaps with a destination cell. FRACAREA normalization is appropriate when you
+    ! want to treat values outside the mask as missing values that shouldn't contribute
+    ! to the average (this is appropriate for most fields); DSTAREA normalization is
+    ! appropriate when you want to treat values outside the mask as 0 (this is
+    ! appropriate for PCT cover fields where we want the final value to be expressed as
+    ! percent of the entire gridcell area).
+    logical                , intent(in)    :: norm_by_fracs
     type(ESMF_RouteHandle) , intent(inout) :: routehandle
     real(r8), optional     , intent(inout) :: frac_o(:)
     integer                , intent(out)   :: rc
@@ -96,6 +123,7 @@ contains
     integer           :: srcMaskValue = 0          ! ignore source points where the mesh mask is 0
     integer           :: dstMaskValue = -987987    ! don't ingore any destination points
     integer           :: srcTermProcessing_Value = 0
+    type(ESMF_NormType_Flag) :: normtype
     type(ESMF_Field)  :: field_i
     type(ESMF_Field)  :: field_o
     type(ESMF_Field)  :: dstfracfield
@@ -112,9 +140,15 @@ contains
     dstfracfield = ESMF_FieldCreate(mesh_o, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    if (norm_by_fracs) then
+       normtype = ESMF_NORMTYPE_FRACAREA
+    else
+       normtype = ESMF_NORMTYPE_DSTAREA
+    end if
+
     ! Create route handle to map field_model to field_data
     call ESMF_FieldRegridStore(field_i, field_o, routehandle=routehandle, &
-         regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=ESMF_NORMTYPE_FRACAREA, &
+         regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=normtype, &
          srcMaskValues=(/srcMaskValue/), &
          dstMaskValues=(/dstMaskValue/), &
          srcTermProcessing=srcTermProcessing_Value, &

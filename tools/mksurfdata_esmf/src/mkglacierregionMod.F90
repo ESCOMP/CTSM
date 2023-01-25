@@ -117,7 +117,8 @@ contains
     ! Create a route handle between the input and output mesh
     allocate(frac_o(ns_o))
     if (ier/=0) call abort()
-    call create_routehandle_r8(mesh_i, mesh_o, routehandle, frac_o=frac_o, rc=rc)
+    call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.true., &
+         routehandle=routehandle, frac_o=frac_o, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
 

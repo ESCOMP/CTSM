@@ -1754,6 +1754,9 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <run_zero_weight_urban>.false.</run_zero_weight_urban>
 
+<convert_ocean_to_land>.false.</convert_ocean_to_land>
+<convert_ocean_to_land phys="clm5_1">.true.</convert_ocean_to_land>
+
 <collapse_urban structure="standard" >.false.</collapse_urban>
 <collapse_urban structure="fast"     >.true.</collapse_urban>
 

@@ -153,7 +153,8 @@ contains
     ! NOTE: this must be done after mask_i is set in mesh_i
     if (.not. ESMF_RouteHandleIsCreated(routehandle_r8)) then
        allocate(frac_o(ns_o))
-       call create_routehandle_r8(mesh_i, mesh_o, routehandle_r8, frac_o=frac_o, rc=rc)
+       call create_routehandle_r8(mesh_i=mesh_i, mesh_o=mesh_o, norm_by_fracs=.true., &
+            routehandle=routehandle_r8, frac_o=frac_o, rc=rc)
        call ESMF_VMLogMemInfo("After create routehandle in "//trim(subname))
     end if
 
