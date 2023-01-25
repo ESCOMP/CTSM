@@ -453,47 +453,8 @@ def read_option_control(
     return (idealized, process_subgrid, process_var_list, include_nonveg, dom_pft)
 
 
-def fsurdat_modifier(parser):
-    """Implementation of fsurdat_modifier command"""
-    # read the .cfg (config) file
-    cfg_path = str(parser.cfg_path)
-    config = ConfigParser()
-    config.read(cfg_path)
-    section = "modify_fsurdat_basic_options"
-    if not config.has_section(section):
-        abort("Config file does not have the expected section: " + section)
-
-    if parser.fsurdat_in == "UNSET":
-        # required: user must set these in the .cfg file
-        fsurdat_in = get_config_value(
-            config=config, section=section, item="fsurdat_in", file_path=cfg_path
-        )
-    else:
-        if config.has_option(section=section, option="fsurdat_in"):
-            abort("fsurdat_in is specified in both the command line and the config file, pick one")
-        fsurdat_in = str(parser.fsurdat_in)
-
-    # Error checking of input file
-    if not os.path.exists(fsurdat_in):
-        abort("Input fsurdat_in file does NOT exist: " + str(fsurdat_in))
-
-    if parser.fsurdat_out == "UNSET":
-        fsurdat_out = get_config_value(
-            config=config, section=section, item="fsurdat_out", file_path=cfg_path
-        )
-    else:
-        if config.has_option(section=section, option="fsurdat_out"):
-            abort("fsurdat_out is specified in both the command line and the config file, pick one")
-        fsurdat_out = str(parser.fsurdat_out)
-
-    # If output file exists, abort before starting work
-    if os.path.exists(fsurdat_out):
-        if not parser.overwrite:
-            errmsg = "Output file already exists: " + fsurdat_out
-            abort(errmsg)
-        else:
-            logger.warning("Output file already exists, but the overwrite option was selected so the file will be overwritten.")
-
+def read_cfg_required_basic_opts(config, section, cfg_path):
+    """Read the required part of the control section"""
     lnd_lat_1 = get_config_value(
         config=config,
         section=section,
@@ -537,7 +498,62 @@ def fsurdat_modifier(parser):
     lon_dimname = get_config_value(
         config=config, section=section, item="lon_dimname", file_path=cfg_path, can_be_unset=True
     )
+    return (lnd_lat_1, lnd_lat_2, lnd_lon_1, lnd_lon_2, landmask_file, lat_dimname, lon_dimname)
 
+
+def fsurdat_modifier(parser):
+    """Implementation of fsurdat_modifier command"""
+    # read the .cfg (config) file
+    cfg_path = str(parser.cfg_path)
+    config = ConfigParser()
+    config.read(cfg_path)
+    section = "modify_fsurdat_basic_options"
+    if not config.has_section(section):
+        abort("Config file does not have the expected section: " + section)
+
+    if parser.fsurdat_in == "UNSET":
+        # required: user must set these in the .cfg file
+        fsurdat_in = get_config_value(
+            config=config, section=section, item="fsurdat_in", file_path=cfg_path
+        )
+    else:
+        if config.has_option(section=section, option="fsurdat_in"):
+            abort("fsurdat_in is specified in both the command line and the config file, pick one")
+        fsurdat_in = str(parser.fsurdat_in)
+
+    # Error checking of input file
+    if not os.path.exists(fsurdat_in):
+        abort("Input fsurdat_in file does NOT exist: " + str(fsurdat_in))
+
+    if parser.fsurdat_out == "UNSET":
+        fsurdat_out = get_config_value(
+            config=config, section=section, item="fsurdat_out", file_path=cfg_path
+        )
+    else:
+        if config.has_option(section=section, option="fsurdat_out"):
+            abort("fsurdat_out is specified in both the command line and the config file, pick one")
+        fsurdat_out = str(parser.fsurdat_out)
+
+    # If output file exists, abort before starting work
+    if os.path.exists(fsurdat_out):
+        if not parser.overwrite:
+            errmsg = "Output file already exists: " + fsurdat_out
+            abort(errmsg)
+        else:
+            warnmsg = (
+                "Output file already exists"
+                + ", but the overwrite option was selected so the file will be overwritten."
+            )
+            logger.warning(warnmsg)
+    (
+        lnd_lat_1,
+        lnd_lat_2,
+        lnd_lon_1,
+        lnd_lon_2,
+        landmask_file,
+        lat_dimname,
+        lon_dimname,
+    ) = read_cfg_required_basic_opts(config, section, cfg_path)
     # Create ModifyFsurdat object
     modify_fsurdat = ModifyFsurdat.init_from_file(
         fsurdat_in,
