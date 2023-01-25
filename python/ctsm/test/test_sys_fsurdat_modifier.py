@@ -79,7 +79,8 @@ class TestSysFsurdatModifier(unittest.TestCase):
         fsurdat_out = (
             "ctsm/test/testinputs/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_out.nc"
         )
-        os.remove(fsurdat_out)
+        if os.path.exists(fsurdat_out):
+            os.remove(fsurdat_out)
         fsurdat_modifier(parser)
         # Run it again with the overwrite option so that it will overwrite the file just created
         sys.argv = ["fsurdat_modifier", self._cfg_file_path, "--overwrite"]
