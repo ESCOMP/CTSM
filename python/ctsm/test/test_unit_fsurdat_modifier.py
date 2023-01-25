@@ -16,9 +16,9 @@ import xarray as xr
 from ctsm import unit_testing
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier_arg_process
-from ctsm.modify_input_files.fsurdat_modifier import read_subgrid
-from ctsm.modify_input_files.fsurdat_modifier import read_option_control
-from ctsm.modify_input_files.fsurdat_modifier import read_var_list
+from ctsm.modify_input_files.fsurdat_modifier import read_cfg_subgrid
+from ctsm.modify_input_files.fsurdat_modifier import read_cfg_option_control
+from ctsm.modify_input_files.fsurdat_modifier import read_cfg_var_list
 from ctsm.modify_input_files.fsurdat_modifier import check_no_subgrid_section
 from ctsm.modify_input_files.fsurdat_modifier import check_no_varlist_section
 from ctsm.modify_input_files.modify_fsurdat import ModifyFsurdat
@@ -90,7 +90,7 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit, "idealized AND dom_pft can NOT both be on, pick one or the other"
         ):
-            read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
+            read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
 
     def test_subgrid_and_idealized_fails(self):
         """test that dom_pft and idealized fails gracefully"""
@@ -103,7 +103,7 @@ class TestFSurdatModifier(unittest.TestCase):
             SystemExit,
             "idealized AND process_subgrid_section can NOT both be on, pick one or the other",
         ):
-            read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
+            read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
 
     def test_optional_only_true_and_false(self):
         """test that optional settings can only be true or false"""
@@ -118,18 +118,18 @@ class TestFSurdatModifier(unittest.TestCase):
         for var in varlist:
             self.config.set(section, var, "True")
         self.config.set(section, "idealized", "False")
-        read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
+        read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
         for var in varlist:
             self.config.set(section, var, "False")
-        read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
+        read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
         self.config.set(section, "dom_pft", "UNSET")
-        read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
+        read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
         var = "idealized"
         self.config.set(section, var, "Thing")
         with self.assertRaisesRegex(
             SystemExit, "Non-boolean value found for .cfg file variable: " + var
         ):
-            read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
+            read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
 
     def test_include_nonveg_and_idealized_fails(self):
         """test a simple read of subgrid"""
@@ -139,11 +139,11 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit, "idealized AND include_nonveg can NOT both be on, pick one or the other"
         ):
-            read_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
+            read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
 
     def test_read_subgrid(self):
         """test a simple read of subgrid"""
-        read_subgrid(self.config, self.cfg_path)
+        read_cfg_subgrid(self.config, self.cfg_path)
 
     def test_read_subgrid_allglacier(self):
         """test a read of subgrid that's for all glacier"""
@@ -156,7 +156,7 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config.set(section, "pct_glacier", "100.")
         self.config.set(section, "pct_natveg", "0.")
         self.config.set(section, "pct_crop", "0.")
-        read_subgrid(self.config, self.cfg_path)
+        read_cfg_subgrid(self.config, self.cfg_path)
 
     def test_read_subgrid_allspecial(self):
         """test a read of subgrid that's all special landunits"""
@@ -169,7 +169,7 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config.set(section, "pct_glacier", "40.")
         self.config.set(section, "pct_natveg", "0.")
         self.config.set(section, "pct_crop", "0.")
-        read_subgrid(self.config, self.cfg_path)
+        read_cfg_subgrid(self.config, self.cfg_path)
 
     def test_read_subgrid_allurban(self):
         """test a read of subgrid that's all urban"""
@@ -182,11 +182,11 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config.set(section, "pct_glacier", "0.")
         self.config.set(section, "pct_natveg", "0.")
         self.config.set(section, "pct_crop", "0.")
-        read_subgrid(self.config, self.cfg_path)
+        read_cfg_subgrid(self.config, self.cfg_path)
 
     def test_read_var_list(self):
         """test a simple read of var_list"""
-        read_var_list(self.config, idealized=True)
+        read_cfg_var_list(self.config, idealized=True)
 
     def test_subgrid_outofrange(self):
         """test a read of subgrid that's out of range"""
@@ -195,7 +195,7 @@ class TestFSurdatModifier(unittest.TestCase):
         section = "modify_fsurdat_subgrid_fractions"
         self.config.set(section, "pct_urban", "101. 0. 0.")
         with self.assertRaisesRegex(SystemExit, "is out of range of 0 to 100 ="):
-            read_subgrid(self.config, self.cfg_path)
+            read_cfg_subgrid(self.config, self.cfg_path)
 
     def test_subgrid_pct_urban_toosmall(self):
         """test a read of subgrid for PCT_URBAN that's an array too small"""
@@ -206,7 +206,7 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit, "PCT_URBAN is not a list of the expected size of 3"
         ):
-            read_subgrid(self.config, self.cfg_path)
+            read_cfg_subgrid(self.config, self.cfg_path)
 
     def test_subgrid_pct_urban_toobig(self):
         """test a read of subgrid for PCT_URBAN that's an array too big"""
@@ -217,7 +217,7 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit, "PCT_URBAN is not a list of the expected size of 3"
         ):
-            read_subgrid(self.config, self.cfg_path)
+            read_cfg_subgrid(self.config, self.cfg_path)
 
     def test_subgrid_pct_urban_singlevalue(self):
         """test a read of subgrid for PCT_URBAN that's a single value"""
@@ -228,7 +228,7 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit, "PCT_URBAN is not a list of the expected size of 3"
         ):
-            read_subgrid(self.config, self.cfg_path)
+            read_cfg_subgrid(self.config, self.cfg_path)
 
     def test_subgrid_notsumtohundred(self):
         """test a read of subgrid that's doesn't sum to a hundred"""
@@ -244,7 +244,7 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit, "PCT fractions in subgrid section do NOT sum to a hundred as they should"
         ):
-            read_subgrid(self.config, self.cfg_path)
+            read_cfg_subgrid(self.config, self.cfg_path)
 
     def test_subgrid_badvar(self):
         """test a read of subgrid for a variable thats not in the list"""
@@ -253,7 +253,7 @@ class TestFSurdatModifier(unittest.TestCase):
         section = "modify_fsurdat_subgrid_fractions"
         self.config.set(section, "badvariable", "100.")
         with self.assertRaisesRegex(SystemExit, "is not a valid variable name. Valid vars ="):
-            read_subgrid(self.config, self.cfg_path)
+            read_cfg_subgrid(self.config, self.cfg_path)
 
     def test_varlist_varinidealized(self):
         """test a read of varlist for a variable thats in the idealized list,
@@ -267,7 +267,7 @@ class TestFSurdatModifier(unittest.TestCase):
             "is a special variable handled in the idealized section."
             + " This should NOT be handled in the variiable list section. Special idealized vars =",
         ):
-            read_var_list(self.config, idealized=True)
+            read_cfg_var_list(self.config, idealized=True)
 
     def test_varlist_varinsubgrid(self):
         """test a read of varlist for a variable thats in the subgrid list"""
@@ -280,7 +280,7 @@ class TestFSurdatModifier(unittest.TestCase):
             "is a variable handled in the subgrid section."
             + " This should NOT be handled in the variiable list section. Subgrid vars =",
         ):
-            read_var_list(self.config, idealized=False)
+            read_cfg_var_list(self.config, idealized=False)
 
     def test_varlist_monthlyvar(self):
         """test a read of varlist for a variable thats one of the monthly
@@ -293,14 +293,14 @@ class TestFSurdatModifier(unittest.TestCase):
             + " This should NOT be handled in the variiable list section."
             + " Monthly vars handled this way =",
         ):
-            read_var_list(self.config, idealized=False)
+            read_cfg_var_list(self.config, idealized=False)
 
     def test_subgrid_remove(self):
         """test a read of subgrid when it's section has been removed"""
         section = "modify_fsurdat_subgrid_fractions"
         self.config.remove_section(section)
         with self.assertRaisesRegex(SystemExit, "Config file does not have the expected section"):
-            read_subgrid(self.config, self.cfg_path)
+            read_cfg_subgrid(self.config, self.cfg_path)
 
     def test_subgrid_not_thereifoff(self):
         """test that a graceful error happens if subgrid section is off,

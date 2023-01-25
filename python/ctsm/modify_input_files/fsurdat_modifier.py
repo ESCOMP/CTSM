@@ -116,7 +116,7 @@ def check_range(var, section, value, minval, maxval):
         abort("Variable " + var + " in " + section + " is out of range of 0 to 100 = " + str(value))
 
 
-def read_subgrid(config, cfg_path, numurbl=3):
+def read_cfg_subgrid(config, cfg_path, numurbl=3):
     """Read the subgrid fraction section from the config file"""
     section = "modify_fsurdat_subgrid_fractions"
     if not config.has_section(section):
@@ -171,7 +171,7 @@ def read_subgrid(config, cfg_path, numurbl=3):
     return subgrid_settings
 
 
-def read_var_list(config, idealized=True):
+def read_cfg_var_list(config, idealized=True):
     """Read the variable list section from the config file"""
     section = "modify_fsurdat_variable_list"
     if not config.has_section(section):
@@ -374,7 +374,7 @@ def read_cfg_optional_basic_opts(modify_fsurdat, config, cfg_path, section):
     )
 
 
-def read_option_control(
+def read_cfg_option_control(
     modify_fsurdat,
     config,
     section,
@@ -567,7 +567,13 @@ def fsurdat_modifier(parser):
     )
 
     # Read control information about the optional sections
-    (idealized, process_subgrid, process_var_list, include_nonveg, dom_pft) = read_option_control(
+    (
+        idealized,
+        process_subgrid,
+        process_var_list,
+        include_nonveg,
+        dom_pft,
+    ) = read_cfg_option_control(
         modify_fsurdat,
         config,
         section,
@@ -607,14 +613,14 @@ def fsurdat_modifier(parser):
     # Handle optional sections
     #
     if process_subgrid:
-        subgrid = read_subgrid(config, cfg_path, numurbl=modify_fsurdat.get_urb_dens())
+        subgrid = read_cfg_subgrid(config, cfg_path, numurbl=modify_fsurdat.get_urb_dens())
         modify_fsurdat.set_varlist(subgrid, cfg_path)
         logger.info("process_subgrid is complete")
     else:
         check_no_subgrid_section(config)
 
     if process_var_list:
-        varlist = read_var_list(config, idealized=idealized)
+        varlist = read_cfg_var_list(config, idealized=idealized)
         update_list = modify_fsurdat.check_varlist(varlist, allow_uppercase_vars=True)
         modify_fsurdat.set_varlist(update_list, cfg_path)
         logger.info("process_var_list is complete")
