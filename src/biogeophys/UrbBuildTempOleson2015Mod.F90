@@ -324,6 +324,8 @@ contains
     t_floor           => temperature_inst%t_floor_lun      , & ! InOut:  [real(r8) (:)]  floor temperature (K)
     t_building        => temperature_inst%t_building_lun   , & ! InOut:  [real(r8) (:)]  internal building air temperature (K)
 
+    ! Cathy [dev]
+    p_ac              => urbantv_inst%p_ac                 , & ! Input:  [real(r8) (:)]  air-conditioning penetration rate (-)
     t_building_max    => urbantv_inst%t_building_max       , & ! Input:  [real(r8) (:)]  maximum internal building air temperature (K)
     t_building_min    => urbanparams_inst%t_building_min   , & ! Input:  [real(r8) (:)]  minimum internal building air temperature (K)
 
@@ -926,7 +928,7 @@ contains
               t_building(l) = t_building_max(l)
               ! [Cathy] orig: 
               ! eflx_urban_ac(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building(l) &
-                                 - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
+              !                    - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
               ! [Cathy] dev:
               eflx_urban_ac(l) = wtlunit_roof(l) * p_ac(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building(l) &
                                  - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
