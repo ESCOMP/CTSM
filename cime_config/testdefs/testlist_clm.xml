@@ -1555,6 +1555,7 @@
   <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Fates" testmods="clm/default--clm/NEON/FATES/NIWO">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
