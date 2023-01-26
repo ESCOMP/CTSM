@@ -1,4 +1,161 @@
 ===============================================================
+Tag name: ctsm5.1.dev116
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Jan 26 02:17:27 MST 2023
+One-line Summary: Small answer changes with bug fixes, zetamaxstable=2 for BHS, new single point fsurdat files
+
+Purpose and description of changes
+----------------------------------
+
+Change zetamaxstable to 2 when biomass-heat-storage is on. This changes simulation answers once they
+run long enough to exceed that threshold.
+
+Also fix an issue with maintence respiration (MR) for BGC simulations. This changes answers for most BGC cases once
+they run long enough. Live course MR wasn't included.
+
+Make the default for MOSART to send negative flow to river outlets. Also fix an issue with this mode.
+
+Bring in new surface datasets for the single point sites. We now make these sites using subset_data rather
+than mksurfdata.
+
+Some new capability to the subset_data and modify_fsurdat tools.
+
+subset_data add options:
+--out-surface -- To name the surface dataset on the command line rather than based on the current date
+--cfg-file ----- Enter the default configure file to use rather than assume a fixed one
+
+modify_fsurdat add options:
+--fsurdat_in -- to input on command line rather than config file
+--fsurdat_out -- to input on command line rather than config file
+--allow_ideal_and_include_non_veg -- to allow idealized and include_non_veg at the same time
+--allow_dom_pft_and_idealized -- to allow dom_pft and idealized at the same time
+--overwrite -- allow output file to be overwritten
+config file options:
+process_subgrid_section -- Read in an optional section to set the PCT_* fractions
+process_var_list_section - Read in an optional section to set any variable on the file
+
+Add --silent option to python tools.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[x] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[x] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #1676 -- live coarse maintenance respiration is not included in the root respiration
+   Fixes #1674 -- Change mksurfdata_map/mksurfdata_esmf Makefile to build single-point datasets using subset_data
+   Fixes #1809 -- Add ability to name a different default config file for subset_data
+   Fixes #1941 -- Add --silent option to ctsm_logging python infrastructure
+   Fixes #1942 -- Move py_env_create outside of tools test driver, as fails on compute nodes on cheyenne
+   Fixes #1924 -- Some updates to fsurdat_modifier script
+   Fixes #1690 -- Set and use zetamaxstable for BHS cases
+   Fixes #1689 -- Set zetamaxstable to 2 consistently for BHS
+
+Externals issues fixed (include issue #):
+   MOSART #58 Make negative and direct_to_outlet the default option 
+   MOSART #56 Some issues with direct_to_outlet
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): tools
+   Just to the subset_data and fsurdat_modifier tools as outlined above
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   zetamaxstable now 2.0 is use_biomass_heat_storage is on
+
+Changes to the datasets (e.g., parameter, surface or initial files): Single point fsurdat
+   1x1_brazil, 1x1_numaIA, 1x1_smallvilleIA, 1x1_vancouverCAN, 1x1_mexicocityMEX, 1x1_urbanc_alpha
+   surface datasets and 1x1_brazil landuse.timeseries
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   tools test now just activates the ctsm_py conda environment rather than creating it
+   There are seperate configure files for each urban surface dataset for modify_fsurdat
+   There is a 1850 configure file for subset_data
+
+Changes to tests or testing:
+   fsurdatmodifyctsm.py script adjusted to compensate for changes
+   python directory changes include unit and system tests to support updates
+   Single point mksurdata_map tests were removed
+
+
+Testing summary: regular tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm5_1, supported single point resolutions
+    - what platforms/compilers: All
+    - nature of change: adjusted climate
+       clm5_1 changes because zetmaxstable set to 2.0. If a simulation runs long enough
+       this max will be hit and it will change answers once it does. But if stability
+       doesn't hit the max answers can be identical.
+       clm5_0 and clm4_5 also change if biomass heat storage is turned on
+       single point resolutions (i.e. 1x1_smallvilleIA, 1x1_brazil, 1x1_mexicocityMEX) have differences
+       maintenence respiration 
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+      Keith Oleson ran experiments with changing zetamaxstable some slides showing this are here:
+      https://docs.google.com/presentation/d/1u6ycr7F97QYYRcRfEdD9yIxH75diUx2r
+
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): mosart
+   mosart updated to mosart1_0_48
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    #1812 -- Get single point surface datasets from subset_data rather than mksurfdata
+    #1802 -- Make zetamaxstable consistently 2.0 when BHS on
+    #1915 -- Fix issue #1864 in release documentation
+    Update manage_externals (direct push to main-dev)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev115
 Originator(s): rgknox (Ryan Knox)
 Date: Fri Dec  2 15:45:32 MST 2022

@@ -373,8 +373,11 @@ else
 fi
 
 # Setup conda environement
-\$CLM_ROOT/py_env_create
 conda activate ctsm_py
+if [ \$? -ne 0 ]; then
+   echo "ERROR: Trouble activating the ctsm_py conda environment, be sure it's setup with \$CLM_ROOT/py_env_create, then rerun"
+   exit 4
+fi
 
 ##output files
 clm_log=\${initdir}/td.\${JOBID}.log
