@@ -129,6 +129,7 @@ module CNPhenologyMod
 
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
 
+  real(r8)         :: min_gddmaturity = 1._r8     ! Weird things can happen if gddmaturity is tiny
   logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
   logical,  public :: use_mxmat = .true.           ! If true, ignore crop maximum growing season length
 
@@ -2455,7 +2456,7 @@ contains
 
     ! !USES:
     use clm_varctl       , only : use_c13, use_c14
-    use clm_varctl       , only : use_cropcal_rx_sdates, use_cropcal_rx_cultivar_gdds
+    use clm_varctl       , only : use_cropcal_rx_sdates, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
     use clm_varcon       , only : c13ratio, c14ratio
     use clm_varpar       , only : mxsowings
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
@@ -2488,6 +2489,7 @@ contains
     integer k              ! grain pool index
     real(r8) gdd_target    ! cultivar GDD target this growing season
     real(r8) this_sowing_reason ! number representing sowing reason(s)
+    logical did_rx_gdds    ! did this patch use a prescribed harvest requirement?
     !------------------------------------------------------------------------
 
     associate(                                                                     & 
@@ -2563,18 +2565,10 @@ contains
       endif
 
       ! set GDD target
+      did_rx_gdds = .false.
       if (use_cropcal_rx_cultivar_gdds .and. crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p)) .ge. 0._r8) then
-         gdd_target = crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p))
-
-         ! gddmaturity == 0.0 will cause problems elsewhere, where it appears in denominator
-         ! Just manually set a minimum of 1.0
-         if (gdd_target < gddmin(ivt(p))) then
-            write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gdd_target ',gdd_target,'; using gddmin(ivt(p)) instead (',&
-                           gddmin(ivt(p)),')'
-         endif
-         gdd_target = max(gdd_target, gddmin(ivt(p)))
-
-         gddmaturity(p) = gdd_target
+         gddmaturity(p) = crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p))
+         did_rx_gdds = .true.
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
          gddmaturity(p) = hybgdd(ivt(p))
       else
@@ -2598,10 +2592,13 @@ contains
             gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
          end if
 
-         if (generate_crop_gdds) then
-             gddmaturity(p) = max(gddmaturity(p), gddmin(ivt(p)))
-         endif
+      endif
 
+      if (use_cropcal_streams .and. gddmaturity(p) < min_gddmaturity) then
+          if (did_rx_gdds) then
+              write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
+          endif
+          gddmaturity(p) = min_gddmaturity
       endif
 
     end associate
