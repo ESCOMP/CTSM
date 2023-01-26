@@ -72,6 +72,10 @@ contains
     allocate(this%p_ac(begl:endl)); this%p_ac(:) = nan
 
     call this%urbantv_init(bounds, NLFilename)
+
+    ! Cathy [dev.02]
+    write(*,*) 'Cathy: urbantv_init done.'
+
     call this%urbantv_interp(bounds)
 
     ! Add history fields     ! Cathy: this adds an output field. the subroutine is in scr/main/histFileMod.F90
@@ -188,6 +192,9 @@ contains
        end do
        write(iulog,*) ' '
     endif
+    
+    ! Cathy [dev.02]
+    write(*,*) 'Cathy: before shr_strdata_init_from_inline'
 
     ! Initialize the cdeps data type this%sdat_urbantv
     call shr_strdata_init_from_inline(this%sdat_urbantv,             &
@@ -215,6 +222,10 @@ contains
          stream_tintalgo     = urbantv_tintalgo,                     &
          stream_name         = 'Urban time varying data',            &
          rc                  = rc)
+
+    ! Cathy [dev.02]
+    write(*,*) 'Cathy: before shr_strdata_init_from_inline'
+
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
     end if
@@ -253,13 +264,23 @@ contains
     real(r8), pointer :: dataptr2d(:,:)
     !-----------------------------------------------------------------------
 
+    ! Cathy [dev.02]
+    write(*,*) 'Cathy: before get_curr_date'
+
     ! Advance sdat stream
     call get_curr_date(year, mon, day, sec)
     mcdate = year*10000 + mon*100 + day
+
+    ! Cathy [dev.02]
+    write(*,*) 'Cathy: after get_curr_date, before shr_strdata_advance'
+
     call shr_strdata_advance(this%sdat_urbantv, ymd=mcdate, tod=sec, logunit=iulog, istr='hdmdyn', rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
     end if
+
+    ! Cathy [dev.02]
+    write(*,*) 'Cathy: before creating 2d array'    
 
     ! Create 2d array for all stream variable data
     lsize = bounds%endg - bounds%begg + 1
@@ -280,6 +301,9 @@ contains
           dataptr2d(g,n) = dataptr1d(g)
        end do
     end do
+
+    ! Cathy [dev.02]
+    write(*,*) 'Cathy: after creating 2d array, before determining t_building_max and p_ac for all landunits'
 
     ! Determine this%tbuilding_max for all landunits
     do l = bounds%begl,bounds%endl
@@ -310,6 +334,9 @@ contains
        end if
     end do
     deallocate(dataptr2d)
+
+    ! Cathy [dev.02]
+    write(*,*) 'Cathy: after determining t_building_max and p_ac for all landunits'
 
     ! Error check
     found = .false.
