@@ -74,7 +74,7 @@ contains
     call this%urbantv_init(bounds, NLFilename)
 
     ! Cathy [dev.02]
-    write(*,*) 'Cathy: urbantv_init done.'
+    write(iulog,*) 'Cathy: urbantv_init done.'
 
     call this%urbantv_interp(bounds)
 
@@ -190,11 +190,14 @@ contains
        do n = 1,6
           write(iulog,'(a,a)' ) '  stream_varname         = ',trim(stream_varnames(n))
        end do
-       write(iulog,*) ' '
+       ! Cathy [orig]
+       ! write(iulog,*) ' '
+       ! Cathy [dev.02]
+       write(iulog,*) 'Cathy: does write statements have to be inside if?'
     endif
     
     ! Cathy [dev.02]
-    write(*,*) 'Cathy: before shr_strdata_init_from_inline'
+    write(iulog,*) 'Cathy: before shr_strdata_init_from_inline'
 
     ! Initialize the cdeps data type this%sdat_urbantv
     call shr_strdata_init_from_inline(this%sdat_urbantv,             &
@@ -224,7 +227,7 @@ contains
          rc                  = rc)
 
     ! Cathy [dev.02]
-    write(*,*) 'Cathy: before shr_strdata_init_from_inline'
+    write(iulog,*) 'Cathy: before shr_strdata_init_from_inline'
 
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -265,14 +268,14 @@ contains
     !-----------------------------------------------------------------------
 
     ! Cathy [dev.02]
-    write(*,*) 'Cathy: before get_curr_date'
+    write(iulog,*) 'Cathy: before get_curr_date'
 
     ! Advance sdat stream
     call get_curr_date(year, mon, day, sec)
     mcdate = year*10000 + mon*100 + day
 
     ! Cathy [dev.02]
-    write(*,*) 'Cathy: after get_curr_date, before shr_strdata_advance'
+    write(iulog,*) 'Cathy: after get_curr_date, before shr_strdata_advance'
 
     call shr_strdata_advance(this%sdat_urbantv, ymd=mcdate, tod=sec, logunit=iulog, istr='hdmdyn', rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
@@ -280,7 +283,7 @@ contains
     end if
 
     ! Cathy [dev.02]
-    write(*,*) 'Cathy: before creating 2d array'    
+    write(iulog,*) 'Cathy: before creating 2d array'    
 
     ! Create 2d array for all stream variable data
     lsize = bounds%endg - bounds%begg + 1
@@ -303,7 +306,7 @@ contains
     end do
 
     ! Cathy [dev.02]
-    write(*,*) 'Cathy: after creating 2d array, before determining t_building_max and p_ac for all landunits'
+    write(iulog,*) 'Cathy: after creating 2d array, before determining t_building_max and p_ac for all landunits'
 
     ! Determine this%tbuilding_max for all landunits
     do l = bounds%begl,bounds%endl
@@ -336,7 +339,7 @@ contains
     deallocate(dataptr2d)
 
     ! Cathy [dev.02]
-    write(*,*) 'Cathy: after determining t_building_max and p_ac for all landunits'
+    write(iulog,*) 'Cathy: after determining t_building_max and p_ac for all landunits'
 
     ! Error check
     found = .false.
