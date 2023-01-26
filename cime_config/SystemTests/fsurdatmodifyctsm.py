@@ -40,8 +40,11 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
             self._cfg_file_path = os.path.join(self._get_caseroot(),
                                                'modify_fsurdat.cfg')
 
+            logger.info("  create config file to modify")
             self._create_config_file()
+            logger.info("  run modify_fsurdat")
             self._run_modify_fsurdat()
+            logger.info("  modify user_nl files")
             self._modify_user_nl()
             with open('done_FSURDATMODIFYCTSM_setup.txt', 'w') as fp:
                 pass
@@ -68,7 +71,7 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
         # Need to specify a specific python version that has the required
         # dependencies
         python_path = _get_python_path()
-        subprocess.check_call([python_path, tool_path, self._cfg_file_path])
+        subprocess.check_call([python_path, tool_path, self._cfg_file_path, "--verbose", "--overwrite", "--allow_ideal_and_include_non_veg"])
 
     def _modify_user_nl(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
