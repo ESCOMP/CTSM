@@ -4294,6 +4294,7 @@ contains
        ! root respiration (RR)
        this%rr_patch(p) =         &
             this%froot_mr_patch(p)                   + &
+            this%livecroot_mr_patch(p)               + &
             this%cpool_froot_gr_patch(p)             + &
             this%cpool_livecroot_gr_patch(p)         + &
             this%cpool_deadcroot_gr_patch(p)         + &

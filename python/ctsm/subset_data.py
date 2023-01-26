@@ -76,7 +76,7 @@ from ctsm.ctsm_logging import (
     process_logging_args,
 )
 
-DEFAULTS_FILE = "default_data.cfg"
+DEFAULTS_CONFIG = "tools/site_and_regional/default_data.cfg"
 
 logger = logging.getLogger(__name__)
 
@@ -309,6 +309,26 @@ def get_parser():
             type=str,
             default="",
         )
+
+        subparser.add_argument(
+            "--out-surface",
+            help="Output surface dataset name \
+            (if you want to override the default based on the current date). \n \
+            (only valid if outputing a surface dataset)",
+            action="store",
+            dest="out_surface",
+            type=str,
+        )
+        cesmroot = path_to_ctsm_root()
+        defaults_file = os.path.join(cesmroot, DEFAULTS_CONFIG)
+        subparser.add_argument(
+            "--cfg-file",
+            help="Default configure file to use for default filenames.",
+            action="store",
+            dest="config_file",
+            type=str,
+            default=defaults_file,
+        )
         subparser.add_argument(
             "--overwrite",
             help="Flag to overwrite if the files already exists.",
@@ -333,6 +353,64 @@ def get_parser():
          """
     )
     return parser
+
+
+def check_args(args):
+    """Check the command line arguments"""
+    # --------------------------------- #
+    # print help and exit when no option is chosen
+    if args.run_type not in ("point", "region"):
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n Must supply a positional argument: 'point' or 'region'.
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if not any(
+        [
+            args.create_surfdata,
+            args.create_domain,
+            args.create_landuse,
+            args.create_datm,
+        ]
+    ):
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n Must supply one of:
+                \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if not os.path.exists(args.config_file):
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n Entered default config file does not exist"
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if args.out_surface and not args.create_surfdata:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n out-surface option is given without the --create-surface option"
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if args.out_surface and os.path.exists(args.out_surface) and not args.overwrite:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n out-surface filename exists and the overwrite option was not also selected"
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
 
 
 def setup_user_mods(user_mods_dir, cesmroot):
@@ -414,6 +492,10 @@ def setup_files(args, defaults, cesmroot):
 
     fsurf_in = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
     fluse_in = defaults.get("landuse", "landuse_" + num_pft + "pft")
+    if args.out_surface:
+        fsurf_out = args.out_surface
+    else:
+        fsurf_out = None
 
     file_dict = {
         "main_dir": clmforcingindir,
@@ -427,6 +509,7 @@ def setup_files(args, defaults, cesmroot):
             os.path.join(defaults.get("landuse", "dir")),
         ),
         "fsurf_in": fsurf_in,
+        "fsurf_out": fsurf_out,
         "fluse_in": fluse_in,
         "datm_tuple": DatmFiles(
             dir_input_datm,
@@ -486,7 +569,10 @@ def subset_point(args, file_dict: dict):
     # --  Create CTSM surface data file
     if single_point.create_surfdata:
         single_point.create_surfdata_at_point(
-            file_dict["fsurf_dir"], file_dict["fsurf_in"], args.user_mods_dir
+            file_dict["fsurf_dir"],
+            file_dict["fsurf_in"],
+            args.user_mods_dir,
+            specify_fsurf_out=file_dict["fsurf_out"],
         )
 
     # --  Create CTSM transient landuse data file
@@ -546,7 +632,10 @@ def subset_region(args, file_dict: dict):
     # --  Create CTSM surface data file
     if region.create_surfdata:
         region.create_surfdata_at_reg(
-            file_dict["fsurf_dir"], file_dict["fsurf_in"], args.user_mods_dir
+            file_dict["fsurf_dir"],
+            file_dict["fsurf_in"],
+            args.user_mods_dir,
+            specify_fsurf_out=file_dict["fsurf_out"],
         )
 
     # --  Create CTSM transient landuse data file
@@ -570,34 +659,7 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    # --------------------------------- #
-    # print help and exit when no option is chosen
-    if args.run_type != "point" and args.run_type != "region":
-        err_msg = textwrap.dedent(
-            """\
-                \n ------------------------------------
-                \n Must supply a positional argument: 'point' or 'region'.
-                """
-        )
-        raise parser.error(err_msg)
-
-    if not any(
-        [
-            args.create_surfdata,
-            args.create_domain,
-            args.create_landuse,
-            args.create_datm,
-        ]
-    ):
-        err_msg = textwrap.dedent(
-            """\
-                \n ------------------------------------
-                \n Must supply one of:
-                \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n
-                """
-        )
-        raise parser.error(err_msg)
-
+    check_args(args)
     # --------------------------------- #
     # process logging args (i.e. debug and verbose)
     process_logging_args(args)
@@ -606,7 +668,7 @@ def main():
     # parse defaults file
     cesmroot = path_to_ctsm_root()
     defaults = configparser.ConfigParser()
-    defaults.read(os.path.join(cesmroot, "tools/site_and_regional", DEFAULTS_FILE))
+    defaults.read(args.config_file)
 
     # --------------------------------- #
     myname = getuser()
