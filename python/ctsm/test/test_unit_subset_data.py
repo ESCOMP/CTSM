@@ -155,6 +155,14 @@ class TestSubsetData(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "inputdata directory does not exist"):
             setup_files(self.args, self.defaults, self.cesmroot)
 
+    def test_create_user_mods_without_create_mesh(self):
+        """
+        Test that you can't run create user mods without also doing create_mesh
+        """
+        sys.argv = ["subset_data", "regional", "--create-user-mods"]
+        with self.assertRaisesRegex(argparse.ArgumentError, "For regional cases, you can not create user_mods"):
+             check_args(self.args)
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
