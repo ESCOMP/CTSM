@@ -208,6 +208,10 @@ contains
     ! !DESCRIPTION:
     ! Perform carbon mass conservation check for column and patch
     !
+    ! Note on FATES: On fates colums, there is no vegetation biomass
+    !                and no gpp flux. There is a litter input flux.
+    
+    !
     ! !ARGUMENTS:
     class(cn_balance_type)               , intent(inout) :: this
     type(bounds_type)                    , intent(in)    :: bounds          
@@ -230,6 +234,9 @@ contains
     real(r8) :: som_c_leached_grc(bounds%begg:bounds%endg)
     real(r8) :: hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg)
     real(r8) :: dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg)
+
+    !real(r8) :: totcol_c  ! Total column carbon, including veg and soil (kgC)
+    
     !-----------------------------------------------------------------------
 
     associate(                                                                            & 
@@ -262,17 +269,42 @@ contains
       do fc = 1,num_soilc
          c = filter_soilc(fc)
 
-         ! calculate the total column-level carbon storage, for mass conservation check
-         col_endcb(c) = totcolc(c)
+         if (use_cn) then
+            ! calculate the total column-level carbon storage, for mass conservation check
+            col_endcb(c) = totcolc(c)
+            
+            ! calculate total column-level inputs
+            col_cinputs = gpp(c)
+            
+            ! calculate total column-level outputs
+            ! er = ar + hr, col_fire_closs includes patch-level fire losses
+            col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + &
+                 col_xsmrpool_to_atm(c)
+            
+         elseif(use_fates) then
 
-         ! calculate total column-level inputs
-         col_cinputs = gpp(c)
+            ! calculate the total column-level carbon storage, for mass conservation check
+            col_endcb(c) = soilbiogeochem_totmicc_col(c)   + &
+                           soilbiogeochem_totlitc_col(c)   + &
+                           soilbiogeochem_totsomc_col(c)   + &
+                           soilbiogeochem_ctrunc_col(c)
 
-         ! calculate total column-level outputs
-         ! er = ar + hr, col_fire_closs includes patch-level fire losses
-         col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + &
-              col_xsmrpool_to_atm(c)
+            ! calculate total column-level inputs (litter fluxes)
+            col_cinputs = sum(this%fates(nc)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * &
+                 this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
+                 sum(this%fates(nc)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp) * &
+                 this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
+                 sum(this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * &
+                 this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+            
+            ! calculate total column-level outputs
+            ! fates has already exported burn losses and fluxes to the atm
+            ! So they are irrelevant here
+            col_coutputs = er(c)
+            
+         end if
 
+         
          ! Fluxes to product pools are included in column-level outputs: the product
          ! pools are not included in totcolc, so are outside the system with respect to
          ! these balance checks. (However, the dwt flux to product pools is NOT included,
