@@ -412,6 +412,19 @@ def check_args(args):
         )
         raise argparse.ArgumentError(None, err_msg)
 
+    if args.run_type == "region" and args.create_user_mods:
+        if not args.create_mesh:
+            err_msg = textwrap.dedent(
+                """\
+                      \n ------------------------------------
+                      \nERROR: For regional cases, you can not create user_mods
+                      \nwithout creating the mesh file.
+
+                      \nPlease rerun the script adding --create-mesh to subset the mesh file."
+                      """
+            )
+            raise argparse.ArgumentError(None, err_msg)
+
 
 def setup_user_mods(user_mods_dir, cesmroot):
     """
@@ -655,16 +668,6 @@ def subset_region(args, file_dict: dict):
 
     # -- Write shell commands
     if region.create_user_mods:
-        if not region.create_mesh:
-            err_msg = """
-                      \n
-                      ERROR: For regional cases, you can not create user_mods
-                      without creating the mesh file.
-
-                      Please rerun the script adding --create-mesh to subset the mesh file.
-                      """
-            raise argparse.ArgumentTypeError(err_msg)
-
         region.write_shell_commands(os.path.join(args.user_mods_dir, "shell_commands"))
 
         print("\nFor running this regional case with the created user_mods : ")

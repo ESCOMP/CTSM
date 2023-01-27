@@ -159,9 +159,14 @@ class TestSubsetData(unittest.TestCase):
         """
         Test that you can't run create user mods without also doing create_mesh
         """
-        sys.argv = ["subset_data", "regional", "--create-user-mods"]
-        with self.assertRaisesRegex(argparse.ArgumentError, "For regional cases, you can not create user_mods"):
-             check_args(self.args)
+        sys.argv = ["subset_data", "region", "--create-user-mods", "--create-surface"]
+        self.args = self.parser.parse_args()
+        print(self.args)
+        with self.assertRaisesRegex(
+            argparse.ArgumentError, "For regional cases, you can not create user_mods"
+        ):
+            print("run check_args")
+            check_args(self.args)
 
 
 if __name__ == "__main__":
