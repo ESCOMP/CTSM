@@ -355,8 +355,12 @@ def main ():
         pft_years_ssp = "2016-2100"
     else:
         error_msg = f'ERROR: start_year is {start_year} and end_year is ' \
-                    f'{end_year}; start/end years should be between 850 and ' \
-                     ' 2105 or pot_veg flag must be set'
+                    f'{end_year}; expected start/end-year options are: ' \
+                     '- 1850, 2000, 2005 for time-slice options ' \
+                     '- in the range from 850 to 1849 ' \
+                     '- in the range from 1850 to 2100 ' \
+                     '- TODO in the range from 2101 to 2300 ' \
+                     '- OR user must set the potveg_flag '
         sys.exit(error_msg)
 
     logger.info('pft_years = %s', pft_years)
