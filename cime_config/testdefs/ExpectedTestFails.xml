@@ -80,5 +80,13 @@
       <issue>FATES#701</issue>
     </phase>
   </test>
-  
+
+  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.cheyenne_intel.clm-FatesColdHydro">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>FATES#701</issue>
+    </phase>
+  </test>
+
+
 </expectedFails>
