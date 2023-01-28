@@ -149,6 +149,7 @@ module CNPhenologyMod
   real(r8), parameter :: HARVEST_REASON_SOWTODAY = 4._r8
   real(r8), parameter :: HARVEST_REASON_SOWTOMORROW = 5._r8
   real(r8), parameter :: HARVEST_REASON_IDOPTOMORROW = 6._r8
+  real(r8), parameter :: HARVEST_REASON_VERNFREEZEKILL = 7._r8
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -1746,6 +1747,7 @@ contains
     logical fake_harvest  ! Dealing with incorrect Dec. 31 planting
     logical did_plant_prescribed_today    ! Was the crop sown today?
     logical will_plant_prescribed_tomorrow ! Is tomorrow a prescribed sowing day?
+    logical vernalization_forces_harvest ! if freeze-killed
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -2066,11 +2068,12 @@ contains
             ! vernalization factor is not 1;
             ! vf affects the calculation of gddtsoi & hui
 
+            vernalization_forces_harvest = .false.
             if (t_ref2m_min(p) < 1.e30_r8 .and. vf(p) /= 1._r8 .and. &
                (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat)) then
                call vernalization(p, &
                     canopystate_inst, temperature_inst, waterdiagnosticbulk_inst, cnveg_state_inst, &
-                    crop_inst)
+                    crop_inst, vernalization_forces_harvest)
             end if
 
             ! days past planting may determine harvest
@@ -2107,7 +2110,11 @@ contains
                 mxmat = 999
             end if
 
-            if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
+            if (vernalization_forces_harvest) then
+                do_harvest = .true.
+                force_harvest = .true.
+                harvest_reason = HARVEST_REASON_VERNFREEZEKILL
+            else if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
                 ! BACKWARDS_COMPATIBILITY(ssr, 2022-02-03): To get rid of crops incorrectly planted in last time step of Dec. 31. That was fixed in commit dadbc62 ("Call CropPhenology regardless of doalb"), but this handles restart files with the old behavior. fake_harvest ensures that outputs aren't polluted.
                 do_harvest = .true.
                 force_harvest = .true.
@@ -2607,7 +2614,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine vernalization(p, &
-       canopystate_inst, temperature_inst, waterdiagnosticbulk_inst, cnveg_state_inst, crop_inst)
+       canopystate_inst, temperature_inst, waterdiagnosticbulk_inst, cnveg_state_inst, crop_inst, &
+       force_harvest)
     !
     ! !DESCRIPTION:
     !
@@ -2626,6 +2634,7 @@ contains
     type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
     type(cnveg_state_type) , intent(inout) :: cnveg_state_inst
     type(crop_type)        , intent(inout) :: crop_inst
+    logical                , intent(inout) :: force_harvest ! "harvest" forced if freeze-killed
     !
     ! LOCAL VARAIBLES:
     real(r8) tcrown                     ! ?
@@ -2731,14 +2740,14 @@ contains
       ! will have to develop some type of relationship that reduces LAI and
       ! biomass pools in response to cold damaged crop
 
+      force_harvest = .false.
       if (t_ref2m_min(p) <= tfrz - 6._r8) then
          tkil = (tbase - 6._r8) - 6._r8 * hdidx(p)
          if (tkil >= tcrown) then
             if ((0.95_r8 - 0.02_r8 * (tcrown - tkil)**2) >= 0.02_r8) then
                write (iulog,*)  'crop damaged by cold temperatures at p,c =', p,c
-            else if (tlai(p) > 0._r8) then ! slevis: kill if past phase1
-               gddmaturity(p) = 0._r8      !         by forcing through
-               huigrain(p)    = 0._r8      !         harvest
+            else if (tlai(p) > 0._r8) then ! slevis: kill if past phase1 by
+               force_harvest = .true.      !         forcing through harvest
                write (iulog,*)  '95% of crop killed by cold temperatures at p,c =', p,c
             end if
          end if
