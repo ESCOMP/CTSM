@@ -152,6 +152,7 @@ contains
     use_cropcal_streams = use_cropcal_rx_sdates .or. use_cropcal_rx_cultivar_gdds
 
     ! Initialize the cdeps data type sdat_cropcal_sdate
+    ! NOTE: stream_dtlimit 1.5 didn't work for some reason
     if (use_cropcal_rx_sdates) then
        call shr_strdata_init_from_inline(sdat_cropcal_sdate,          &
             my_task             = iam,                                &
@@ -170,7 +171,7 @@ contains
             stream_yearAlign    = model_year_align_cropcal,           &
             stream_offset       = cropcal_offset,                     &
             stream_taxmode      = 'extend',                           &
-            stream_dtlimit      = 1.5_r8,                             &
+            stream_dtlimit      = 1.0e30_r8,                          &
             stream_tintalgo     = cropcal_tintalgo,                   &
             stream_name         = 'sowing date data',                 &
             rc                  = rc)
@@ -180,6 +181,7 @@ contains
     end if
 
     ! Initialize the cdeps data type sdat_cropcal_cultivar_gdds
+    ! NOTE: stream_dtlimit 1.5 didn't work for some reason
     if (use_cropcal_rx_cultivar_gdds) then
        call shr_strdata_init_from_inline(sdat_cropcal_cultivar_gdds,  &
             my_task             = iam,                                &
@@ -198,7 +200,7 @@ contains
             stream_yearAlign    = model_year_align_cropcal,           &
             stream_offset       = cropcal_offset,                     &
             stream_taxmode      = 'extend',                           &
-            stream_dtlimit      = 1.5_r8,                             &
+            stream_dtlimit      = 1.0e30_r8,                          &
             stream_tintalgo     = cropcal_tintalgo,                   &
             stream_name         = 'cultivar gdd data',                &
             rc                  = rc)
