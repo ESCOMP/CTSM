@@ -244,7 +244,7 @@ def main():
         mask = ds[mask_name].values()
 
     if area_name is not None:
-        area = ds[mask_name].values()
+        area = ds[area_name].values()
 
     this_mesh = MeshType(lats, lons, mask=None)
     this_mesh.calculate_corners()
