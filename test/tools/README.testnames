@@ -20,7 +20,7 @@ n is the configuration type:
 6 -- unused
 7 -- unused
 8 -- unused
-9 -- unused
+9 -- mesh_maker.py
 0 -- run_neon
 a -- modify_data
 b -- subset_data
@@ -28,7 +28,7 @@ c -- mkprocdata_map
 d -- mkmapgrids
 e -- unused
 f -- unused
-g -- mksurfdata_map
+g -- unused
 h -- unused
 i -- tools scripts
 
