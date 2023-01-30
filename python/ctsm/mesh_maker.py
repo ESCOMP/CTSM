@@ -150,6 +150,31 @@ def main():
         )
         raise argparse.ArgumentError(None, err_msg)
 
+    # -- no file name and output path:
+    if not mesh_out and not out_dir:
+        out_dir = os.path.join(os.getcwd(), "meshes")
+
+    if not mesh_out:
+        # -- make output path if does not exist.
+        if not os.path.isdir(out_dir):
+            os.mkdir(out_dir)
+
+        today = datetime.today()
+        today_string = today.strftime("%y%m%d")
+        mesh_out = os.path.join(
+            out_dir,
+            os.path.splitext(nc_file)[0] + "_ESMF_UNSTRUCTURED_MESH" + "_c" + today_string + ".nc",
+        )
+
+    # -- exit if mesh_out exists and --overwrite is not specified.
+    print( mesh_out )
+    if os.path.exists(mesh_out):
+        if overwrite:
+            os.remove(mesh_out)
+        else:
+            err_msg = "output meshfile exists, please choose --overwrite to overwrite the mesh file."
+            abort(err_msg)
+
     if os.path.isfile(nc_file):
         ds = xr.open_dataset(nc_file, mask_and_scale=False, decode_times=False).transpose()
     else:
@@ -199,35 +224,11 @@ def main():
             )
             sys.exit()
 
-    today = datetime.today()
-    today_string = today.strftime("%y%m%d")
 
-    # -- no file name and output path:
-    if not mesh_out and not out_dir:
-        out_dir = os.path.join(os.getcwd(), "meshes")
-
-    if not mesh_out:
-        # -- make output path if does not exist.
-        if not os.path.isdir(out_dir):
-            os.mkdir(out_dir)
-
-        mesh_out = os.path.join(
-            out_dir,
-            os.path.splitext(nc_file)[0] + "_ESMF_UNSTRUCTURED_MESH" + "_c" + today_string + ".nc",
-        )
 
     logging.info("Creating mesh file from : %s", nc_file)
     logging.info("Writing mesh file to    : %s", mesh_out)
 
-    # -- exit if mesh_out exists and --overwrite is not specified.
-    if os.path.exists(mesh_out):
-        if overwrite:
-            os.remove(mesh_out)
-        else:
-            logging.error(
-                "output meshfile exists, please choose --overwrite to overwrite the mesh file."
-            )
-            sys.exit()
 
     if mask_name is not None:
         mask = ds[mask_name].values()
