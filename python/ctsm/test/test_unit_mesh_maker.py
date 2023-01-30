@@ -44,6 +44,15 @@ class TestMeshMaker(unittest.TestCase):
         with self.assertRaisesRegex(argparse.ArgumentError, "You have provided both --outdir and --output."):
             main()
 
+    def test_outfile_exists_and_no_overwrite(self):
+        """
+        Test that exits if outfile already exists and overwrite was not used
+        """
+        infile = "ctsm/test/testinputs/default_data.cfg"
+        sys.argv = ["mesh_maker", "--input", infile, "--lat", "lsmlat", "--lon", "lsmlon", "--outdir", ".", "--output", infile]
+        with self.assertRaisesRegex(SystemExit, "output meshfile exists, please choose --overwrite to overwrite the mesh file."):
+            main()
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
