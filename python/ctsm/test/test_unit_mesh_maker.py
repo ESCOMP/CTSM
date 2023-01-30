@@ -41,7 +41,7 @@ class TestMeshMaker(unittest.TestCase):
         """
         infile = "ctsm/test/testinputs/default_data.cfg"
         sys.argv = ["mesh_maker", "--input", infile, "--lat", "lsmlat", "--lon", "lsmlon", "--outdir", ".", "--output", "outthing.nc"]
-        with self.assertRaisesRegex(SystemExit, "You have provided both --outdir and --output."):
+        with self.assertRaisesRegex(argparse.ArgumentError, "You have provided both --outdir and --output."):
             main()
 
 

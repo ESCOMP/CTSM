@@ -137,6 +137,19 @@ def main():
     mask_name = args.mask_name
     area_name = args.area_name
 
+    if mesh_out and out_dir:
+        logging.error(" Both --outdir and --output cannot be provided at the same time.")
+        err_msg = textwrap.dedent(
+            """
+                \n ------------------------------------
+                \n You have provided both --outdir and --output.
+                \n Please provide only one of these options to proceed:
+                \n --outdir : directory to save mesh file. mesh file name automatically created.
+                \n --output : Absolute or relative path of the ESMF mesh file created.\n
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
     if os.path.isfile(nc_file):
         ds = xr.open_dataset(nc_file, mask_and_scale=False, decode_times=False).transpose()
     else:
@@ -188,19 +201,6 @@ def main():
 
     today = datetime.today()
     today_string = today.strftime("%y%m%d")
-
-    if mesh_out and out_dir:
-        logging.error(" Both --outdir and --output cannot be provided at the same time.")
-        err_msg = textwrap.dedent(
-            """
-                \n ------------------------------------
-                \n You have provided both --outdir and --output.
-                \n Please provide only one of these options to proceed:
-                \n --outdir : directory to save mesh file. mesh file name automatically created.
-                \n --output : Absolute or relative path of the ESMF mesh file created.\n
-                """
-        )
-        raise argparse.ArgumentError(None, err_msg)
 
     # -- no file name and output path:
     if not mesh_out and not out_dir:
