@@ -32,7 +32,16 @@ class TestMeshMaker(unittest.TestCase):
         Test that exits if input file does not exist
         """
         sys.argv = ["mesh_maker", "--input", "zztop.nc", "--lat", "lsmlat", "--lon", "lsmlon"]
-        with self.assertRaisesRegex(SystemExit, ".*Input file not found..*"):
+        with self.assertRaisesRegex(SystemExit, "Input file not found."):
+            main()
+
+    def test_outfile_and_outdir(self):
+        """
+        Test that exits if both outfile and outdir are provided
+        """
+        infile = "ctsm/test/testinputs/default_data.cfg"
+        sys.argv = ["mesh_maker", "--input", infile, "--lat", "lsmlat", "--lon", "lsmlon", "--outdir", ".", "--output", "outthing.nc"]
+        with self.assertRaisesRegex(SystemExit, "You have provided both --outdir and --output."):
             main()
 
 
