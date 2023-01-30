@@ -8,7 +8,7 @@ file with valid lats and lons. Provided lats and lons can be 1D or 2D.
 
 For example for running WRF-CTSM cases, the user can create a mesh
 file for their domain :
-    ./mesh_maker.py --input wrfinput_d01 --output my_region
+    ./mesh_maker --input wrfinput_d01 --output my_region \
         --lat XLAT --lon XLONG --verbose
 
 """
@@ -31,7 +31,7 @@ from ctsm.site_and_regional.mesh_type import MeshType
 
 def get_parser():
     """
-    Get the parser object for mesh_maker.py script.
+    Get the parser object for mesh_maker script.
 
     Returns:
         parser (ArgumentParser):

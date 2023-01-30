@@ -20,7 +20,7 @@ n is the configuration type:
 6 -- unused
 7 -- unused
 8 -- unused
-9 -- mesh_maker.py
+9 -- mesh_maker
 0 -- run_neon
 a -- modify_data
 b -- subset_data
