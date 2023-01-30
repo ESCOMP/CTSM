@@ -123,13 +123,9 @@ def main():
     args = parser.parse_args()
 
     if args.verbose:
-        logging.basicConfig(
-            level=logging.DEBUG, format=" %(levelname)-8s :: %(message)s"
-        )
+        logging.basicConfig(level=logging.DEBUG, format=" %(levelname)-8s :: %(message)s")
     else:
-        logging.basicConfig(
-            level=logging.INFO, format=" %(levelname)-8s :: %(message)s"
-        )
+        logging.basicConfig(level=logging.INFO, format=" %(levelname)-8s :: %(message)s")
 
     nc_file = args.input
     lat_name = args.lat_name
@@ -141,9 +137,7 @@ def main():
     area_name = args.area_name
 
     if os.path.isfile(nc_file):
-        ds = xr.open_dataset(
-            nc_file, mask_and_scale=False, decode_times=False
-        ).transpose()
+        ds = xr.open_dataset(nc_file, mask_and_scale=False, decode_times=False).transpose()
     else:
         err_msg = textwrap.dedent(
             """\
@@ -195,9 +189,7 @@ def main():
     today_string = today.strftime("%y%m%d")
 
     if mesh_out and out_dir:
-        logging.error(
-            " Both --outdir and --output cannot be provided at the same time."
-        )
+        logging.error(" Both --outdir and --output cannot be provided at the same time.")
         err_msg = textwrap.dedent(
             """
                 \n ------------------------------------
@@ -220,11 +212,7 @@ def main():
 
         mesh_out = os.path.join(
             out_dir,
-            os.path.splitext(nc_file)[0]
-            + "_ESMF_UNSTRUCTURED_MESH"
-            + "_c"
-            + today_string
-            + ".nc",
+            os.path.splitext(nc_file)[0] + "_ESMF_UNSTRUCTURED_MESH" + "_c" + today_string + ".nc",
         )
 
     logging.info("Creating mesh file from : %s", nc_file)
