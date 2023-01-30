@@ -148,7 +148,7 @@ def main():
                 \n --output : Absolute or relative path of the ESMF mesh file created.\n
                 """
         )
-        raise argparse.ArgumentError(None, err_msg)
+        abort(err_msg)
 
     # -- no file name and output path:
     if not mesh_out and not out_dir:
@@ -167,12 +167,13 @@ def main():
         )
 
     # -- exit if mesh_out exists and --overwrite is not specified.
-    print( mesh_out )
     if os.path.exists(mesh_out):
         if overwrite:
             os.remove(mesh_out)
         else:
-            err_msg = "output meshfile exists, please choose --overwrite to overwrite the mesh file."
+            err_msg = (
+                "output meshfile exists, please choose --overwrite to overwrite the mesh file."
+            )
             abort(err_msg)
 
     if os.path.isfile(nc_file):
@@ -224,11 +225,8 @@ def main():
             )
             sys.exit()
 
-
-
     logging.info("Creating mesh file from : %s", nc_file)
     logging.info("Writing mesh file to    : %s", mesh_out)
-
 
     if mask_name is not None:
         mask = ds[mask_name].values()

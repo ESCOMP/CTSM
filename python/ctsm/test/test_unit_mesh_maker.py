@@ -31,7 +31,17 @@ class TestMeshMaker(unittest.TestCase):
         """
         Test that exits if input file does not exist
         """
-        sys.argv = ["mesh_maker", "--input", "zztop.nc", "--lat", "lsmlat", "--lon", "lsmlon", "--outdir", "."]
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            "zztop.nc",
+            "--lat",
+            "lsmlat",
+            "--lon",
+            "lsmlon",
+            "--outdir",
+            ".",
+        ]
         with self.assertRaisesRegex(SystemExit, "Input file not found."):
             main()
 
@@ -40,9 +50,20 @@ class TestMeshMaker(unittest.TestCase):
         Test that exits if both outfile and outdir are provided
         """
         infile = "ctsm/test/testinputs/default_data.cfg"
-        sys.argv = ["mesh_maker", "--input", infile, "--lat", "lsmlat", "--lon", "lsmlon", "--outdir", ".", "--output", "outthing.nc"]
-        with self.assertRaisesRegex(argparse.ArgumentError, ".*You have provided both --outdir and --output..*"):
-            print( sys.argv )
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            infile,
+            "--lat",
+            "lsmlat",
+            "--lon",
+            "lsmlon",
+            "--outdir",
+            ".",
+            "--output",
+            "outthing.nc",
+        ]
+        with self.assertRaisesRegex(SystemExit, "You have provided both --outdir and --output."):
             main()
 
     def test_outfile_exists_and_no_overwrite(self):
@@ -50,9 +71,21 @@ class TestMeshMaker(unittest.TestCase):
         Test that exits if outfile already exists and overwrite was not used
         """
         infile = "ctsm/test/testinputs/default_data.cfg"
-        sys.argv = ["mesh_maker", "--input", infile, "--lat", "lsmlat", "--lon", "lsmlon", "--outdir", ".", "--output", infile]
-        with self.assertRaisesRegex(SystemExit, "output meshfile exists, please choose --overwrite to overwrite the mesh file."):
-            print( sys.argv )
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            infile,
+            "--lat",
+            "lsmlat",
+            "--lon",
+            "lsmlon",
+            "--output",
+            infile,
+        ]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "output meshfile exists, please choose --overwrite to overwrite the mesh file.",
+        ):
             main()
 
 
