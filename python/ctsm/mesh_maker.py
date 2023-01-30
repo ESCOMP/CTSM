@@ -27,6 +27,7 @@ _CTSM_PYTHON = os.path.join(
 sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm.site_and_regional.mesh_type import MeshType
+from ctsm.utils import abort
 
 
 def get_parser():
@@ -146,7 +147,7 @@ def main():
                 \n ------------------------------------
                 """
         )
-        raise parser.error(err_msg)
+        abort(err_msg)
 
     if lat_name not in ds.coords and lat_name not in ds.variables:
         logging.error("Input file does not have variable named %s", lat_name)
@@ -199,7 +200,7 @@ def main():
                 \n --output : Absolute or relative path of the ESMF mesh file created.\n
                 """
         )
-        raise parser.error(err_msg)
+        raise argparse.ArgumentError(None, err_msg)
 
     # -- no file name and output path:
     if not mesh_out and not out_dir:
