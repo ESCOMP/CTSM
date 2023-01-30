@@ -19,6 +19,7 @@ import argparse
 import textwrap
 from datetime import datetime
 import xarray as xr
+import numpy as np
 
 # -- add python/ctsm  to path
 _CTSM_PYTHON = os.path.join(
@@ -209,8 +210,8 @@ def main():
             len(ds[lon_name].dims).__str__(),
         )
 
-    lats = ds[lat_name]
-    lons = ds[lon_name]
+    lats = ds[lat_name].astype(np.float32)
+    lons = ds[lon_name].astype(np.float32)
 
     if (len(lats.dims) > 2) or (len(lons.dims) > 2):
         time_dims = [dim for dim in lats.dims if "time" in dim.lower()]
@@ -230,13 +231,17 @@ def main():
 
     if mask_name is not None:
         mask = ds[mask_name].values()
-
+    else:
+        mask = None
+ 
     if area_name is not None:
         area = ds[area_name].values()
+    else:
+        area = None
 
-    this_mesh = MeshType(lats, lons, mask=None)
+    this_mesh = MeshType(lats, lons, mask=mask)
     this_mesh.calculate_corners()
-    this_mesh.create_esmf(mesh_out, area=None)
+    this_mesh.create_esmf(mesh_out, area=area)
 
 
 if __name__ == "__main__":
