@@ -340,7 +340,7 @@ contains
 
     call surfrad_inst%Init(bounds)
 
-    call dust_inst%Init(bounds)
+    call dust_inst%Init(bounds, NLFilename)   ! dmleung added NLFilename 31 Dec 2022
 
     allocate(scf_method, source = CreateAndInitSnowCoverFraction( &
          snow_cover_fraction_method = snow_cover_fraction_method, &

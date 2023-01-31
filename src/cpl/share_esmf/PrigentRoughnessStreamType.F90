@@ -234,7 +234,8 @@ contains
   !==============================================================================
   !subroutine CalcFinundated(this, bounds, num_soilc, filter_soilc, soilhydrology_inst, &
   !                          waterdiagnosticbulk_inst, qflx_surf_lag_col, finundated )
-  subroutine CalcDragPartition(this, bounds, num_nolakep, filter_nolakep, dpfct_rock)
+  !subroutine CalcDragPartition(this, bounds, num_nolakep, filter_nolakep, dpfct_rock)
+  subroutine CalcDragPartition(this, bounds, dpfct_rock)
     !
     ! !DESCRIPTION:
     ! Commented below by dmleung 31 Dec 2022
@@ -262,8 +263,8 @@ contains
     type(bounds_type)              , intent(in)    :: bounds
     !integer                        , intent(in)    :: num_soilc                       ! number of column soil points in column filter
     !integer                        , intent(in)    :: filter_soilc(:)                 ! column filter for soil points
-    integer                        , intent(in)    :: num_nolakep                      !
-    integer                        , intent(in)    :: filter_nolakep(num_nolakep)      !
+    !integer                        , intent(in)    :: num_nolakep                      !
+    !integer                        , intent(in)    :: filter_nolakep(num_nolakep)      !
     !type(soilhydrology_type)       , intent(in)    :: soilhydrology_inst
     !type(waterdiagnosticbulk_type) , intent(in)    :: waterdiagnosticbulk_inst
     !real(r8)                       , intent(in)    :: qflx_surf_lag_col(bounds%begc:) !time-lagged surface runoff (mm H2O /s)
@@ -319,11 +320,12 @@ contains
 
     ! dmleung: this loop calculates the drag partition effect (or roughness effect) of rocks. We save the drag partition factor as a patch level quantity.
     z0s = 2_r8 * D_p / 30_r8 ! equation from Frank M. White (2006). Here we assume soil medium size is a global constant, and so is smooth roughness length.
-    do fp = 1,num_nolakep
-       p = filter_nolakep(fp)
+    !do fp = 1,num_nolakep
+    !   p = filter_nolakep(fp)
+    do p = bounds%begp,bounds%endp
        g = patch%gridcell(p)
 
-       dpfct_rock(p) = 1._r8 - ( log(this%prigent_rghn(g)*0.01_r8/z0s) / log(0.7_r8*(X/z0s)^0.8_r8) ) ! Calculating rock drag partition factor using Marticorena and Bergametti (1995). 0.01 is used to convert Z0a from centimeter to meter.
+       dpfct_rock(p) = 1._r8 - ( log(this%prigent_rghn(g)*0.01_r8/z0s) / log(0.7_r8*(X/z0s)**0.8_r8) ) ! Calculating rock drag partition factor using Marticorena and Bergametti (1995). 0.01 is used to convert Z0a from centimeter to meter.
     end do
 
     !end associate

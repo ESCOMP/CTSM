@@ -34,6 +34,7 @@ module DUSTMod
   !use clm_instur           , only : wt_lunit, wt_nat_patch  ! dmleung added 24 Jul 2022
   !use landunit_varcon      , only : istsoil, istcrop        ! dmleung added 24 Jul 2022 (refering to main/landunit_varcon.F90, for wt_lunit, istsoil=1 is nat veg, istcrop=2 is crop)
   use pftconMod            , only : noveg              ! dmleung added 24 Jul 2022
+  use PrigentRoughnessStreamType    , only : prigentroughnessstream_type
   !  
   ! !PUBLIC TYPES
   implicit none
@@ -109,14 +110,19 @@ contains
 
   !------------------------------------------------------------------------
   !##### dmleung edited for initializing stream files 31 Dec 2022  ########
+  !subroutine Init(this, bounds, NLFilename, num_nolakep, filter_nolakep)
   subroutine Init(this, bounds, NLFilename)
 
     class(dust_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds 
+    character(len=*),  intent(in) :: NLFilename   ! dmleung added 31 Dec 2022
+    !integer                , intent(in)    :: num_nolakep                 ! number of column non-lake points in patch filter
+    !integer                , intent(in)    :: filter_nolakep(num_nolakep) ! patch filter for non-lake points  
 
     call this%InitAllocate (bounds)
     call this%InitHistory  (bounds)
     call this%prigentroughnessstream%Init( bounds, NLFilename )  ! dmleung added 31 Dec 2022
+    !call this%InitCold     (bounds, num_nolakep, filter_nolakep)
     call this%InitCold     (bounds)
     call this%InitDustVars (bounds)
 
@@ -309,12 +315,15 @@ contains
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
-  subroutine InitCold(this, bounds)   !dmleung commented 31 Dec 2022
-  !subroutine InitCold(this, bounds)
+  !subroutine InitCold(this, bounds, num_nolakep, filter_nolakep)   !dmleung commented 31 Dec 2022
+  subroutine InitCold(this, bounds)
     !
     ! !ARGUMENTS:
     class(dust_type), intent(inout) :: this  ! dmleung used class instead of type, 31 Dec 2022
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds 
+    ! dmleung also added the below no-lake filter 31 Dec 2022
+    !integer                , intent(in)    :: num_nolakep                 ! number of column non-lake points in patch filter
+    !integer                , intent(in)    :: filter_nolakep(num_nolakep) ! patch filter for non-lake points 
     !type(dust_type), intent(inout) :: dust_inst
     !
     ! !LOCAL VARIABLES:
@@ -337,7 +346,8 @@ contains
       ! Caulculate Drag Partition factor, dmleung added 31 Dec 2022
       if ( this%prigentroughnessstream%useStreams() )then !if usestreams == true, and it should be always true
          call this%prigentroughnessstream%CalcDragPartition( bounds, &
-                               num_nolakep, filter_nolakep, this%dpfct_rock_patch(bounds%begp:bounds%endp) )
+    !                           num_nolakep, filter_nolakep, this%dpfct_rock_patch(bounds%begp:bounds%endp) )
+                                this%dpfct_rock_patch(bounds%begp:bounds%endp) )
       else
 
          call endrun( "ERROR:: Drag partitioning MUST now use a streams file of aeolian roughness length to calculate, it can no longer read from the fsurdat file" )
