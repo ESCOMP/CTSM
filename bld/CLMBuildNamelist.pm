@@ -1560,6 +1560,7 @@ sub process_namelist_inline_logic {
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_prigent_roughness($opts, $nl_flags, $definition, $defaults, $nl); # dmleung added 31 Dec 2022
 
   #########################################
   # namelist group: atm2lnd_inparm
@@ -4174,6 +4175,15 @@ sub setup_logic_misc {
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_use_repr_structure_pool');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_no_crop_seed_replenishment');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_master_list_file');
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_prigent_roughness {
+  # dmleung added on 31 Dec 2022 for reading Prigent's roughness stream file
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_prigentroughness' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_prigentroughness' );
 }
 
 #-------------------------------------------------------------------------------

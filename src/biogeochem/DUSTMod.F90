@@ -88,6 +88,9 @@ module DUSTMod
      real(r8), pointer, private :: frc_thr_rghn_fct_patch    (:)   ! [dimless] hybrid drag partition (or called roughness) factor
      !########### added by dmleung 28 Jul 2022 ########################################################################
      real(r8), pointer, private :: wnd_frc_thr_std_patch     (:)   ! standardized fluid threshold friction velocity (m/s)
+     !########### added by dmleung 31 Dec 2022 ########################################################################
+     type(prigentroughnessstream_type), private :: prigentroughnessstream      ! Prigent roughness stream data
+     real(r8), pointer, private :: dpfct_rock_patch          (:)   ! [fraction] rock drag partition factor, time-constant
    contains
 
      procedure , public  :: Init
@@ -105,13 +108,15 @@ module DUSTMod
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  !##### dmleung edited for initializing stream files 31 Dec 2022  ########
+  subroutine Init(this, bounds, NLFilename)
 
     class(dust_type) :: this
     type(bounds_type), intent(in) :: bounds  
 
     call this%InitAllocate (bounds)
     call this%InitHistory  (bounds)
+    call this%prigentroughnessstream%Init( bounds, NLFilename )  ! dmleung added 31 Dec 2022
     call this%InitCold     (bounds)
     call this%InitDustVars (bounds)
 
@@ -164,6 +169,8 @@ contains
     allocate(this%frc_thr_rghn_fct_patch    (begp:endp))        ; this%frc_thr_rghn_fct_patch    (:)   = nan
     !#### added by dmleung 28 Jul 2022 ######################################
     allocate(this%wnd_frc_thr_std_patch     (begp:endp))        ; this%wnd_frc_thr_std_patch     (:)   = nan
+    !#### added by dmleung 31 Dec 2022 ######################################
+    allocate(this%dpfct_rock_patch          (begp:endp))        ; this%dpfct_rock_patch          (:)   = nan
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -292,16 +299,23 @@ contains
     call hist_addfld1d (fname='WND_FRC_FT_STD', units='m/s',  &
          avgflag='A', long_name='standardized fluid threshold friction velocity', &
          ptr_patch=this%wnd_frc_thr_std_patch, set_lake=0._r8, set_urb=0._r8)
+    !#####added by dmleung 31 Dec 2022 ########################################
+    this%dpfct_rock_patch(begp:endp) = spval
+    call hist_addfld1d (fname='DPFCT_ROCK', units='m/s',  &
+         avgflag='A', long_name='rock drag partition factor', &
+         ptr_patch=this%dpfct_rock_patch, set_lake=0._r8, set_urb=0._r8)
     !##########################################################################
 
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
-  subroutine InitCold(this, bounds)
+  subroutine InitCold(this, bounds)   !dmleung commented 31 Dec 2022
+  !subroutine InitCold(this, bounds)
     !
     ! !ARGUMENTS:
-    class (dust_type) :: this
+    class(dust_type), intent(inout) :: this  ! dmleung used class instead of type, 31 Dec 2022
     type(bounds_type), intent(in) :: bounds  
+    !type(dust_type), intent(inout) :: dust_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c,l
@@ -316,6 +330,19 @@ contains
           this%mbl_bsn_fct_col(c) = 1.0_r8
        end if
     end do
+
+    !associate(                                                                 &
+    !     dpfct_rock                 =>   this%dpfct_rock_patch                 &
+    !     )
+      ! Caulculate Drag Partition factor, dmleung added 31 Dec 2022
+      if ( this%prigentroughnessstream%useStreams() )then !if usestreams == true, and it should be always true
+         call this%prigentroughnessstream%CalcDragPartition( bounds, &
+                               num_nolakep, filter_nolakep, this%dpfct_rock_patch(bounds%begp:bounds%endp) )
+      else
+
+         call endrun( "ERROR:: Drag partitioning MUST now use a streams file of aeolian roughness length to calculate, it can no longer read from the fsurdat file" )
+      end if
+    !end associate
 
   end subroutine InitCold
 
@@ -452,13 +479,15 @@ contains
          prb_crs_fld_thr     => dust_inst%prb_crs_fld_thr_patch      , &
          prb_crs_impct_thr   => dust_inst%prb_crs_impct_thr_patch    , &
          ! added by dmleung 17 Dec 2021
-         roughfct            => soilstate_inst%roughfct_patch        , &
+         roughfct            => soilstate_inst%roughfct_patch        , &  ! dmleung replaced it by dpfct_rock below, 31 Dec 2022
          ! added by dmleung 20 Dec 2021
          ssr                 => dust_inst%ssr_patch                  , &
          lai                 => dust_inst%lai_patch                  , &
          frc_thr_rghn_fct    => dust_inst%frc_thr_rghn_fct_patch     , &
          ! added by dmleung 28 Jul 2022
-         wnd_frc_thr_std     => dust_inst%wnd_frc_thr_std_patch       &
+         wnd_frc_thr_std     => dust_inst%wnd_frc_thr_std_patch      , &
+         ! added by dmleung 31 Dec 2022
+         dpfct_rock          => dust_inst%dpfct_rock_patch            &  ! dmleung used roughfct (roughness factor) instead of dpfct_rock (rock drag partition factor) here. Could change it back to dpfct_rock here and below later, 31 Dec 2022
          )
 
       ttlai(bounds%begp : bounds%endp) = 0._r8
@@ -654,7 +683,8 @@ contains
             ! dmleung added calculation of LUH2 bare vs veg fraction within a grid 6 Oct 2022
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                if (patch%itype(p) == noveg) then
-                  frc_thr_rgh_fct = roughfct(p)
+                  !frc_thr_rgh_fct = roughfct(p)  ! dmleung commented out 13 Dec 2022 and added next line
+                  frc_thr_rgh_fct = dpfct_rock(p)
                else 
                   frc_thr_rgh_fct = ssr(p)
                end if

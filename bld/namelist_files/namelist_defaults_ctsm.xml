@@ -2525,6 +2525,17 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 >lnd/clm2/paramdata/finundated_inversiondata_0.9x1_ESMFmesh_cdf5_130621.nc</stream_meshfile_ch4finundated>
 
 <!-- =========================================  -->
+<!-- Defaults for Prigent's roughness data      -->
+<!-- dmleung only specified def resolution      -->
+<!-- 31 Dec 2022                                -->
+<!-- =========================================  -->
+
+<stream_fldfilename_prigentroughness
+>/glade/u/home/dleung/CESM2/ctsm_dustemis_dev/cdf5_Z0a_Prigent-Globe-025x025-01242023.nc</stream_fldfilename_prigentroughness>
+<stream_meshfile_prigentroughness
+>/glade/u/home/dleung/CESM2/ctsm_dustemis_dev/lnd_mesh.nc</stream_meshfile_prigentroughness>
+
+<!-- =========================================  -->
 <!-- Defaults for different BGC/decomp modes    -->
 <!-- =========================================  -->
 
