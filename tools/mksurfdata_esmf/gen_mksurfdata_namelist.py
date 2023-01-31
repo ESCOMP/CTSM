@@ -441,12 +441,6 @@ def main ():
                         print('WARNING: run ./download_input_data to try TO ' \
                               'OBTAIN MISSING FILES')
                         _must_run_download_input_data = True
-                elif 'urban_properties' in rawdata_files[child1.tag] or \
-                     'lake' in rawdata_files[child1.tag]:
-                   # Time-slice cases pull urban_properties and %lake from the
-                   # corresponding transient files
-                   rawdata_files[child1.tag] = rawdata_files[child1.tag]. \
-                                               replace("%y",str(start_year))
 
             if item.tag == 'mesh_filename':
                 new_key = f"{child1.tag}_mesh"
@@ -656,15 +650,23 @@ def main ():
             mksrf_fvegtyp_mesh  = rawdata_files["mksrf_fvegtyp_mesh"]
             mksrf_fhrvtyp       = rawdata_files["mksrf_fvegtyp"]
             mksrf_fhrvtyp_mesh  = rawdata_files["mksrf_fvegtyp_mesh"]
+            mksrf_fpctlak       = rawdata_files["mksrf_fvegtyp_lake"]
+            mksrf_furban        = rawdata_files["mksrf_fvegtyp_urban"]
         else:
             mksrf_fvegtyp       = rawdata_files["mksrf_fvegtyp_ssp"]
             mksrf_fvegtyp_mesh  = rawdata_files["mksrf_fvegtyp_ssp_mesh"]
             mksrf_fhrvtyp       = rawdata_files["mksrf_fvegtyp_ssp"]
             mksrf_fhrvtyp_mesh  = rawdata_files["mksrf_fvegtyp_ssp_mesh"]
+            mksrf_fpctlak       = rawdata_files["mksrf_fvegtyp_ssp_lake"]
+            mksrf_furban        = rawdata_files["mksrf_fvegtyp_ssp_urban"]
         if '%y' in mksrf_fvegtyp:
             mksrf_fvegtyp = mksrf_fvegtyp.replace("%y",str(start_year))
         if '%y' in mksrf_fhrvtyp:
             mksrf_fhrvtyp = mksrf_fhrvtyp.replace("%y",str(start_year))
+        if '%y' in mksrf_fpctlak:
+            mksrf_fpctlak = mksrf_fpctlak.replace("%y",str(start_year))
+        if '%y' in mksrf_furban:
+            mksrf_furban = mksrf_furban.replace("%y",str(start_year))
         if not os.path.isfile(mksrf_fvegtyp):
             print('WARNING: input mksrf_fvegtyp file ' \
                   f'{mksrf_fvegtyp} does not exist')
@@ -677,10 +679,24 @@ def main ():
             print('WARNING: run ./download_input_data to try TO ' \
                   'OBTAIN MISSING FILES')
             _must_run_download_input_data = True
+        if not os.path.isfile(mksrf_fpctlak):
+            print('WARNING: input mksrf_fpctlak file ' \
+                  f'{mksrf_fpctlak} does not exist')
+            print('WARNING: run ./download_input_data to try TO ' \
+                  'OBTAIN MISSING FILES')
+            _must_run_download_input_data = True
+        if not os.path.isfile(mksrf_furban):
+            print('WARNING: input mksrf_furban file ' \
+                  f'{mksrf_furban} does not exist')
+            print('WARNING: run ./download_input_data to try TO ' \
+                  'OBTAIN MISSING FILES')
+            _must_run_download_input_data = True
         nlfile.write( f"  mksrf_fvegtyp = \'{mksrf_fvegtyp}\' \n")
         nlfile.write( f"  mksrf_fvegtyp_mesh = \'{mksrf_fvegtyp_mesh}\' \n")
         nlfile.write( f"  mksrf_fhrvtyp = \'{mksrf_fhrvtyp}\' \n")
         nlfile.write( f"  mksrf_fhrvtyp_mesh = \'{mksrf_fhrvtyp_mesh}\' \n")
+        nlfile.write( f"  mksrf_fpctlak = \'{mksrf_fpctlak}\' \n")
+        nlfile.write( f"  mksrf_furban = \'{mksrf_furban}\' \n")
 
         if vic_flag:
             mksrf_fvic = rawdata_files["mksrf_fvic"]
