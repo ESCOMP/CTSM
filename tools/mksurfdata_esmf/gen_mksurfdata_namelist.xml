@@ -63,11 +63,12 @@
 
   <!-- ======================== -->
   <!-- lakes and wetlands -->
+  <!-- mksrf_fpctlak data_filename has moved to the transient time periods -->
+  <!-- as lake_filename -->
   <!-- ======================== -->
 
   <mksrf_fpctlak>
     <entry>
-      <data_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
   </mksrf_fpctlak>
@@ -101,11 +102,12 @@
 
   <!-- ======================== -->
   <!-- urban -->
+  <!-- mksrf_furban data_filename has moved to the transient time periods -->
+  <!-- as urban_filename -->
   <!-- ======================== -->
 
   <mksrf_furban>
     <entry>
-      <data_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_%y_cdf5_c20220910.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
     <entry pft_years="PtVg">
@@ -223,21 +225,21 @@ version of the raw dataset will probably go away.
   <mksrf_fvegtyp>
     <!-- Potential Vegetation dataset -->
     <entry pft_years="PtVg" >
-      <data_filename>lnd/clm2/rawdata/mksrf_landuse_potvegclm50_LUH2.cdf5.c181106.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.noanthro.c20230116/mksrf_landuse_ctsm52_noanthroLUH2_1.c20230116.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
 
     <entry pft_years="1850">
-      <data_filename>/glade/p/cesm/sdwg_dev/thesis/data/cesm_tools/surfacedata/ctsm52finalrawdata/globalctsm52nrhistLUH2deg025_220918/mksrf_landuse_ctsm52_nrhistLUH2_1850.c220918.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c20230116/mksrf_landuse_ctsm52_histLUH2_1850.c20230116.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
     <entry pft_years="2000">
-      <data_filename>/glade/p/cesm/sdwg_dev/thesis/data/cesm_tools/surfacedata/ctsm52finalrawdata/globalctsm52nrhistLUH2deg025_220918/mksrf_landuse_ctsm52_nrhistLUH2_2000.c220918.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c20230116/mksrf_landuse_ctsm52_histLUH2_2000.c20230116.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
 
     <entry pft_years="2005">
-      <data_filename>/glade/p/cesm/sdwg_dev/thesis/data/cesm_tools/surfacedata/ctsm52finalrawdata/globalctsm52nrhistLUH2deg025_220918/mksrf_landuse_ctsm52_nrhistLUH2_2005.c220918.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c20230116/mksrf_landuse_ctsm52_histLUH2_2005.c20230116.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
     <entry pft_years="2005" hires_pft='on'>
@@ -253,7 +255,7 @@ version of the raw dataset will probably go away.
 
     <!-- Historical period from 1850 to 2015 -->
     <entry pft_years="1850-2015" >
-      <data_filename>/glade/p/cesm/sdwg_dev/thesis/data/cesm_tools/surfacedata/ctsm52finalrawdata/globalctsm52nrhistLUH2deg025_220918/mksrf_landuse_ctsm52_nrhistLUH2_%y.c220918.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c20230116/mksrf_landuse_ctsm52_histLUH2_%y.c20230116.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
       <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_%y_cdf5_c20220910.nc</urban_filename>
