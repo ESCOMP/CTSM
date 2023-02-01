@@ -9,6 +9,7 @@ For full instructions on how to run the code and different options,
 please check python/ctsm/subset_data.py file.
 This script extracts domain files, surface dataset, and DATM files
 at either a single point or a region using the global dataset.
+
 To run this script the following packages are required:
     - numpy
     - xarray
