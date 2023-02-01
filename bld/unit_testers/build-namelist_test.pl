@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1846;
+my $ntests = 1858;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1254;
+   $ntests += 1263;
 }
 plan( tests=>$ntests );
 
@@ -1270,7 +1270,6 @@ foreach my $res ( @resolutions ) {
              $res eq "8x16"        ||
              $res eq "32x64"       ||
              $res eq "128x256"     ||
-             $res eq "360x720cru"  ||
              $res eq "512x1024" ) {
       next;
    # Resolutions not supported on release branch
