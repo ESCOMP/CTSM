@@ -120,8 +120,8 @@ def get_parser():
     return parser
 
 
-def check_args(args):
-    """Check the arguments"""
+def process_and_check_args(args):
+    """Process and check the arguments"""
     if args.output and args.out_dir:
         logging.error(" Both --outdir and --output cannot be provided at the same time.")
         err_msg = textwrap.dedent(
@@ -179,7 +179,7 @@ def main():
     # process logging args (i.e. debug and verbose)
     process_logging_args(args)
 
-    args = check_args(args)
+    args = process_and_check_args(args)
 
     nc_file = args.input
     lat_name = args.lat_name

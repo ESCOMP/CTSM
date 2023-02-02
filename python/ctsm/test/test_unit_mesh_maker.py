@@ -16,7 +16,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
-from ctsm.mesh_maker import get_parser, check_args, main
+from ctsm.mesh_maker import get_parser, process_and_check_args, main
 
 # pylint: disable=invalid-name
 
@@ -103,7 +103,7 @@ class TestMeshMaker(unittest.TestCase):
         ]
         parser = get_parser()
         args = parser.parse_args()
-        args = check_args(args)
+        args = process_and_check_args(args)
         expected_outdir = os.path.join(os.getcwd(), "meshes")
         self.assertEqual( args.out_dir, expected_outdir, "Default out_dir is not as expected")
 
