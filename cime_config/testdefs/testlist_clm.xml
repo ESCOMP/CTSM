@@ -320,7 +320,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment"  >Transient case with isotopes with a december start, and Gross Unrepresented Land Use and Land Cover change on, default dataset with GU_LULCC==0</option>
     </options>
   </test>
@@ -331,17 +331,17 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment"  >Transient case with a December 1990 start, and Gross Unrepresented Land Use and Land Cover change on, with f09 datasets with non-zero GU_LULCC values</option>
     </options>
   </test>
-  <test name="SMS_Lm25" grid="f09_f09_mg17" compset="IHistClm50BgcCrop" testmods="clm/f09_dec1990Start_GU_LULCC_monthly">
+  <test name="SMS_Ld10" grid="f09_f09_mg17" compset="IHistClm50BgcCrop" testmods="clm/f09_dec1990Start_GU_LULCC_monthly">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">01:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment"  >Transient case with a December 1990 start, and Gross Unrepresented Land Use and Land Cover change on, with f09 datasets with non-zero GU_LULCC values</option>
     </options>
   </test>
