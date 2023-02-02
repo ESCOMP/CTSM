@@ -3683,6 +3683,10 @@ sub setup_logic_fire_emis {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ($opts->{'fire_emis'} ) {
+     if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
+       $log->warning("Fire emission can NOT be on when FATES is also on.\n" .
+                   "  DON'T use the '-fire_emis' option when '-bgc fates' is activated");
+    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_factors_file');
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_specifier');
   } else {

@@ -19,6 +19,7 @@ dask
 cartopy
 matplotlib
 requests
+packaging
 numpy=1.18.5
 xarray=0.16.2
 pylint=2.8.3

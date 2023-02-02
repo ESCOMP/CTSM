@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1846;
+my $ntests = 1847;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1254;
 }
@@ -1006,6 +1006,11 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
+     "useFIREEMISwithFATES"      =>{ options=>"-bgc fates -envxml_dir . -fire_emis --no-megan",
+                                    namelst=>"",
+                                    GLC_TWO_WAY_COUPLING=>"FALSE",
+                                    phys=>"clm4_5",
+                                 },
      "useDRYDEPwithFATES"        =>{ options=>"--bgc fates --envxml_dir . --no-megan --drydep",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
