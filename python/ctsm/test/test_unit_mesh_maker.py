@@ -105,7 +105,8 @@ class TestMeshMaker(unittest.TestCase):
         args = parser.parse_args()
         args = process_and_check_args(args)
         expected_outdir = os.path.join(os.getcwd(), "meshes")
-        self.assertEqual( args.out_dir, expected_outdir, "Default out_dir is not as expected")
+        self.assertEqual(args.out_dir, expected_outdir, "Default out_dir is not as expected")
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
