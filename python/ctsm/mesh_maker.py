@@ -120,26 +120,9 @@ def get_parser():
     return parser
 
 
-def main():
-
-    setup_logging_pre_config()
-    parser = get_parser()
-    args = parser.parse_args()
-
-    # --------------------------------- #
-    # process logging args (i.e. debug and verbose)
-    process_logging_args(args)
-
-    nc_file = args.input
-    lat_name = args.lat_name
-    lon_name = args.lon_name
-    mesh_out = args.output
-    out_dir = args.out_dir
-    overwrite = args.overwrite
-    mask_name = args.mask_name
-    area_name = args.area_name
-
-    if mesh_out and out_dir:
+def check_args(args):
+    """Check the arguments"""
+    if args.output and args.out_dir:
         logging.error(" Both --outdir and --output cannot be provided at the same time.")
         err_msg = textwrap.dedent(
             """
@@ -153,30 +136,55 @@ def main():
         abort(err_msg)
 
     # -- no file name and output path:
-    if not mesh_out and not out_dir:
-        out_dir = os.path.join(os.getcwd(), "meshes")
+    if not args.output and not args.out_dir:
+        args.out_dir = os.path.join(os.getcwd(), "meshes")
 
-    if not mesh_out:
+    if not args.output:
         # -- make output path if does not exist.
-        if not os.path.isdir(out_dir):
-            os.mkdir(out_dir)
+        if not os.path.isdir(args.out_dir):
+            os.mkdir(args.out_dir)
 
         today = datetime.today()
         today_string = today.strftime("%y%m%d")
-        mesh_out = os.path.join(
-            out_dir,
-            os.path.splitext(nc_file)[0] + "_ESMF_UNSTRUCTURED_MESH" + "_c" + today_string + ".nc",
+        args.output = os.path.join(
+            args.out_dir,
+            os.path.splitext(args.input)[0]
+            + "_ESMF_UNSTRUCTURED_MESH"
+            + "_c"
+            + today_string
+            + ".nc",
         )
 
     # -- exit if mesh_out exists and --overwrite is not specified.
-    if os.path.exists(mesh_out):
-        if overwrite:
-            os.remove(mesh_out)
+    if os.path.exists(args.output):
+        if args.overwrite:
+            os.remove(args.output)
         else:
             err_msg = (
                 "output meshfile exists, please choose --overwrite to overwrite the mesh file."
             )
             abort(err_msg)
+
+
+def main():
+    """Main function to create a mesh file from another file"""
+
+    setup_logging_pre_config()
+    parser = get_parser()
+    args = parser.parse_args()
+
+    # --------------------------------- #
+    # process logging args (i.e. debug and verbose)
+    process_logging_args(args)
+
+    check_args(args)
+
+    nc_file = args.input
+    lat_name = args.lat_name
+    lon_name = args.lon_name
+    mesh_out = args.output
+    mask_name = args.mask_name
+    area_name = args.area_name
 
     if os.path.isfile(nc_file):
         ds = xr.open_dataset(nc_file, mask_and_scale=False, decode_times=False).transpose()
