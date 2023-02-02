@@ -86,7 +86,8 @@ def get_parser():
     )
     parser.add_argument(
         "--mask",
-        help="Name of mask varibale on netcdf input file. If none given, create a fake mask with values of 1.",
+        help="Name of mask varibale on netcdf input file."
+        + " If none given, create a fake mask with values of 1.",
         action="store",
         dest="mask_name",
         type=str,
@@ -94,7 +95,8 @@ def get_parser():
     )
     parser.add_argument(
         "--area",
-        help="Name of area variable on netcdf input file. If none given, ESMF calculates element areas automatically. ",
+        help="Name of area variable on netcdf input file."
+        + " If none given, ESMF calculates element areas automatically. ",
         action="store",
         dest="area_name",
         type=str,
@@ -183,7 +185,8 @@ def main():
         err_msg = textwrap.dedent(
             """\
                 \n ------------------------------------
-                \n Input file not found. Please make sure to provide the full path of Netcdf input file for making mesh.
+                \n Input file not found. Please make sure to provide the
+                \n full path of Netcdf input file for making the mesh.
                 \n ------------------------------------
                 """
         )
@@ -216,15 +219,16 @@ def main():
     if (len(lats.dims) > 2) or (len(lons.dims) > 2):
         time_dims = [dim for dim in lats.dims if "time" in dim.lower()]
         if time_dims:
-            logging.debug("- time dimension found on lat {}".format(time_dims))
+            logging.debug("- time dimension found on lat %s", str(time_dims))
             logging.debug("- removing time dimensions from lats and lons. ")
             lats = lats[:, :, 0]
             lons = lons[:, :, 0]
         else:
-            logging.error(
-                "latitude or longitude has more than 2 dimensions and the third dimension cannot be detected as time."
+            err_msg = (
+                "latitude or longitude has more than 2 dimensions and "
+                + "the third dimension cannot be detected as time."
             )
-            sys.exit()
+            abort(err_msg)
 
     logging.info("Creating mesh file from : %s", nc_file)
     logging.info("Writing mesh file to    : %s", mesh_out)
@@ -233,7 +237,7 @@ def main():
         mask = ds[mask_name].values()
     else:
         mask = None
- 
+
     if area_name is not None:
         area = ds[area_name].values()
     else:
