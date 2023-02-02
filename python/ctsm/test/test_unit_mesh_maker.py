@@ -7,7 +7,6 @@ You can run this by:
 """
 
 import unittest
-import argparse
 import os
 import sys
 
@@ -17,7 +16,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
-from ctsm.mesh_maker import get_parser, main
+from ctsm.mesh_maker import get_parser, check_args, main
 
 # pylint: disable=invalid-name
 
@@ -88,6 +87,25 @@ class TestMeshMaker(unittest.TestCase):
         ):
             main()
 
+    def test_default_outfile_as_expected(self):
+        """
+        Test that the default outfile is as expected
+        """
+        infile = "inputfile.nc"
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            infile,
+            "--lat",
+            "lsmlat",
+            "--lon",
+            "lsmlon",
+        ]
+        parser = get_parser()
+        args = parser.parse_args()
+        args = check_args(args)
+        expected_outdir = os.path.join(os.getcwd(), "meshes")
+        self.assertEqual( args.out_dir, expected_outdir, "Default out_dir is not as expected")
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

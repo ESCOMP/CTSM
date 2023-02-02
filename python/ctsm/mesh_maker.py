@@ -165,6 +165,8 @@ def check_args(args):
             )
             abort(err_msg)
 
+    return args
+
 
 def main():
     """Main function to create a mesh file from another file"""
@@ -177,7 +179,7 @@ def main():
     # process logging args (i.e. debug and verbose)
     process_logging_args(args)
 
-    check_args(args)
+    args = check_args(args)
 
     nc_file = args.input
     lat_name = args.lat_name
