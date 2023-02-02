@@ -21,14 +21,13 @@ from datetime import datetime
 import xarray as xr
 import numpy as np
 
-# -- add python/ctsm  to path
-_CTSM_PYTHON = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
-)
-sys.path.insert(1, _CTSM_PYTHON)
-
 from ctsm.site_and_regional.mesh_type import MeshType
 from ctsm.utils import abort
+from ctsm.ctsm_logging import (
+    setup_logging_pre_config,
+    add_logging_args,
+    process_logging_args,
+)
 
 
 def get_parser():
@@ -94,6 +93,13 @@ def get_parser():
         required=False,
     )
     parser.add_argument(
+        "--no-plot",
+        help="Do not do the plots of the mesh",
+        action="store_true",
+        dest="noplot",
+        required=False,
+    )
+    parser.add_argument(
         "--area",
         help="Name of area variable on netcdf input file."
         + " If none given, ESMF calculates element areas automatically. ",
@@ -109,27 +115,20 @@ def get_parser():
         dest="overwrite",
         required=False,
     )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        help="Increase output verbosity",
-        action="store_true",
-        dest="verbose",
-        required=False,
-    )
 
+    add_logging_args(parser)
     return parser
 
 
 def main():
 
+    setup_logging_pre_config()
     parser = get_parser()
     args = parser.parse_args()
 
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG, format=" %(levelname)-8s :: %(message)s")
-    else:
-        logging.basicConfig(level=logging.INFO, format=" %(levelname)-8s :: %(message)s")
+    # --------------------------------- #
+    # process logging args (i.e. debug and verbose)
+    process_logging_args(args)
 
     nc_file = args.input
     lat_name = args.lat_name
