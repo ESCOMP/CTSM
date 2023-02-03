@@ -374,7 +374,6 @@ class TestSysFsurdatModifier(unittest.TestCase):
         sys.argv = [
             "fsurdat_modifier",
             self._cfg_file_path,
-            "--allow_ideal_and_include_non_veg",
             "--allow_dom_pft_and_idealized",
         ]
         parser = fsurdat_modifier_arg_process()

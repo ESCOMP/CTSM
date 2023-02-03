@@ -58,13 +58,6 @@ def fsurdat_modifier_arg_process():
         help="The output surface dataset with the modifications. ",
     )
     parser.add_argument(
-        "--allow_ideal_and_include_non_veg",
-        required=False,
-        default=False,
-        action="store_true",
-        help="Allow both idealized and include_nonveg to be on at the same time. ",
-    )
-    parser.add_argument(
         "--allow_dom_pft_and_idealized",
         required=False,
         default=False,
@@ -379,7 +372,6 @@ def read_cfg_option_control(
     config,
     section,
     cfg_path,
-    allow_ideal_and_include_non_veg=False,
     allow_dom_pft_and_idealized=False,
 ):
     """Read the option control section"""
@@ -445,8 +437,6 @@ def read_cfg_option_control(
         logger.info("dom_pft option is off")
     if dom_pft is not None and idealized and not allow_dom_pft_and_idealized:
         abort("idealized AND dom_pft can NOT both be on, pick one or the other")
-    if include_nonveg and idealized and not allow_ideal_and_include_non_veg:
-        abort("idealized AND include_nonveg can NOT both be on, pick one or the other")
     if process_subgrid and idealized:
         abort("idealized AND process_subgrid_section can NOT both be on, pick one or the other")
 
@@ -578,7 +568,6 @@ def fsurdat_modifier(parser):
         config,
         section,
         cfg_path,
-        parser.allow_ideal_and_include_non_veg,
         parser.allow_dom_pft_and_idealized,
     )
 
