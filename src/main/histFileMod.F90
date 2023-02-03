@@ -15,7 +15,7 @@ module histFileMod
   use clm_varctl     , only : iulog, use_fates, compname, use_cn, use_crop
   use clm_varcon     , only : spval, ispval
   use clm_varcon     , only : grlnd, nameg, namel, namec, namep
-  use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type, get_global_index_array
+  use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type, get_global_index, get_global_index_array
   use decompMod      , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column
   use GridcellType   , only : grc
   use LandunitType   , only : lun
@@ -2982,7 +2982,7 @@ contains
     ! !USES:
     use clm_varpar      , only : nlevsoi
     use clm_varctl      , only : use_hillslope
-    use clm_varcon      , only : zsoi, zlak, secspday, isecspday, isecsphr, isecspmin
+    use clm_varcon      , only : zsoi, zlak, secspday, isecspday, isecsphr, isecspmin, ispval
     use domainMod       , only : ldomain, lon1d, lat1d
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
     use clm_time_manager, only : get_ref_date, get_calendar, NO_LEAP_C, GREGORIAN_C
@@ -3036,7 +3036,7 @@ contains
     !
     integer :: sec_hist_nhtfrq            ! hist_nhtfrq converted to seconds
     ! !LOCAL VARIABLES:
-    integer :: vid,n,i,j,m                ! indices
+    integer :: vid,n,i,j,m,c              ! indices
     integer :: nstep                      ! current step
     integer :: mcsec                      ! seconds of current date
     integer :: mdcur                      ! current day
@@ -3062,12 +3062,18 @@ contains
     real(r8), pointer :: histo(:,:)       ! temporary
     integer :: status
     real(r8) :: zsoi_1d(1)
+    type(bounds_type) :: bounds
+    integer :: ier                        ! error status
+    integer, pointer :: icarr(:)          ! temporary
     character(len=*),parameter :: subname = 'htape_timeconst'
     !-----------------------------------------------------------------------
 
     !-------------------------------------------------------------------------------
     !***     Time constant grid variables only on first time-sample of file ***
     !-------------------------------------------------------------------------------
+
+    call get_proc_bounds(bounds)
+
 
     if (tape(t)%ntimes == 1) then
        if (mode == 'define') then
@@ -3208,8 +3214,33 @@ contains
              call ncd_io(varname='hslp_slope' , data=col%hill_slope, dim1name=namec, ncid=nfid(t), flag='write')
              call ncd_io(varname='hslp_aspect' , data=col%hill_aspect, dim1name=namec, ncid=nfid(t), flag='write')
              call ncd_io(varname='hslp_index' , data=col%hillslope_ndx, dim1name=namec, ncid=nfid(t), flag='write')
-             call ncd_io(varname='hslp_cold' , data=col%cold, dim1name=namec, ncid=nfid(t), flag='write')
-             call ncd_io(varname='hslp_colu' , data=col%colu, dim1name=namec, ncid=nfid(t), flag='write')
+
+             ! write global indices rather than local indices
+             allocate(icarr(bounds%begc:bounds%endc),stat=ier)
+             if (ier /= 0) then
+                call endrun(msg=' allocation error of icarr'//errMsg(sourcefile, __LINE__))
+             end if
+
+             do c = bounds%begc,bounds%endc
+                if (col%cold(c) /= ispval) then 
+                   icarr(c)= get_global_index(subgrid_index=col%cold(c), subgrid_level=subgrid_level_column)
+                else
+                   icarr(c)= col%cold(c)
+                endif
+             enddo
+             
+             call ncd_io(varname='hslp_cold' , data=icarr, dim1name=namec, ncid=nfid(t), flag='write')
+
+             do c = bounds%begc,bounds%endc
+                if (col%colu(c) /= ispval) then 
+                   icarr(c)= get_global_index(subgrid_index=col%colu(c), subgrid_level=subgrid_level_column)
+                else
+                   icarr(c)= col%colu(c)
+                endif
+             enddo
+
+             call ncd_io(varname='hslp_colu' , data=icarr, dim1name=namec, ncid=nfid(t), flag='write')
+             deallocate(icarr)
           endif
 
           if(use_fates)then

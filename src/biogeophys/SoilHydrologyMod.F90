@@ -2352,7 +2352,7 @@ contains
 
             ! When head gradient is negative (losing stream channel), 
             ! limit outflow by available stream channel water
-            if (qflx_latflow_out_vol(c) < 0._r8) then
+            if (use_hillslope_routing .and. (qflx_latflow_out_vol(c) < 0._r8)) then
                available_stream_water = stream_water_volume(l)/lun%stream_channel_number(l)/nhillslope
                if(abs(qflx_latflow_out_vol(c))*dtime > available_stream_water) then
                   qflx_latflow_out_vol(c) = -available_stream_water/dtime
