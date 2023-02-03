@@ -40,8 +40,11 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
             self._cfg_file_path = os.path.join(self._get_caseroot(),
                                                'modify_fsurdat.cfg')
 
+            logger.info("  create config file to modify")
             self._create_config_file()
+            logger.info("  run modify_fsurdat")
             self._run_modify_fsurdat()
+            logger.info("  modify user_nl files")
             self._modify_user_nl()
             with open('done_FSURDATMODIFYCTSM_setup.txt', 'w') as fp:
                 pass
