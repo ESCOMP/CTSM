@@ -43,7 +43,7 @@ module CNDriverMod
   use ActiveLayerMod                  , only : active_layer_type
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
-  use CropReprPoolsMod                    , only : nrepr
+  use CropReprPoolsMod                , only : nrepr
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -150,10 +150,10 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
-    integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
-    integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
-    integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    integer                                 , intent(in)    :: num_soilc        ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_soilc(:)  ! filter for soil columns
+    integer                                 , intent(in)    :: num_soilp         ! number of veg patches in filter
+    integer                                 , intent(in)    :: filter_soilp(:)   ! filter for veg patches
     integer                                 , intent(out)   :: num_actfirep         ! number of soil patches on fire in filter
     integer                                 , intent(out)   :: filter_actfirep(:)   ! filter for soil patches on fire
     integer                                 , intent(out)   :: num_actfirec         ! number of soil columns on fire in filter
@@ -627,16 +627,19 @@ contains
     ! Update all prognostic carbon state variables (except for gap-phase mortality and fire fluxes)
     call CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
          crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-         soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
+         soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm, &
+         clm_fates)
     if ( use_c13 ) then
        call CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
             crop_inst, c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
-            c13_soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
+            c13_soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm, &
+         clm_fates)
     end if
     if ( use_c14 ) then
        call CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
             crop_inst, c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
-            c14_soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
+            c14_soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm, &
+         clm_fates)
     end if
 
     ! Update all prognostic nitrogen state variables (except for gap-phase mortality and fire fluxes)

@@ -25,6 +25,8 @@ module CNCStateUpdate1Mod
   use PatchType                          , only : patch
   use clm_varctl                         , only : use_fates, use_cn, iulog, use_fates_sp
   use CNSharedParamsMod                  , only : use_matrixcn
+  use CLMFatesInterfaceMod               , only : hlm_fates_interface_type
+  
   !
   implicit none
   private
@@ -123,8 +125,6 @@ contains
       ! set time steps
       dt = get_step_size_real()
 
-
-
       ! gross photosynthesis fluxes
       do fp = 1,num_soilp
          p = filter_soilp(fp)
@@ -140,7 +140,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
        crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-       soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
+       soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm, &
+       clm_fates)
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update all the prognostic carbon state
@@ -157,6 +158,7 @@ contains
     type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     logical                              , intent(in)    :: dribble_crophrv_xsmrpool_2atm
+    type(hlm_fates_interface_type)       , intent(inout) :: clm_fates
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,j,k,l,i  ! indices
@@ -186,12 +188,23 @@ contains
       dt = get_step_size_real()
 
       ! Below is the input into the soil biogeochemistry model
+      
+      fc_loop: do fc = 1,num_soilc
+         c = filter_soilc(fc)
 
-      ! plant to litter fluxes
-      if (.not. use_fates) then    
-         do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+         fates_if: if( col%is_fates(c) ) then
+
+            ! If this is a fates column, then we ask fates for the
+            ! litter fluxes, the following routine simply copies
+            ! prepared litter c flux boundary conditions into
+            ! cf_soil%decomp_cpools_sourcesink_col
+            
+            call clm_fates%UpdateCLitterfluxes(bounds_clump,cf_soil,c)
+            
+         else
+            
+            do j = 1,nlevdecomp
+               
                !
                ! State update without the matrix solution
                !
@@ -206,35 +219,40 @@ contains
                   ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
                   ! time step, but to be safe, I'm explicitly setting it to zero here.
                   cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
-               !
-               ! For the matrix solution the actual state update comes after the matrix
-               ! multiply in SoilMatrix, but the matrix needs to be setup with
-               ! the equivalent of above. Those changes can be here or in the
-               ! native subroutines dealing with that field
-               !
+                  !
+                  ! For the matrix solution the actual state update comes after the matrix
+                  ! multiply in SoilMatrix, but the matrix needs to be setup with
+                  ! the equivalent of above. Those changes can be here or in the
+                  ! native subroutines dealing with that field
+                  !
                else
                   ! phenology and dynamic land cover fluxes
                end if
             end do
-         end do
-      else if ( .not. use_fates_sp ) then !use_fates
-         ! here add all fates litterfall and CWD breakdown to litter fluxes
+
+         end if fates_if
+            
+      end do fc_loop
+         
+
+      ! litter and SOM HR fluxes
+      do k = 1, ndecomp_cascade_transitions
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               ! TODO(wjs, 2017-01-02) Should some portion or all of the following fluxes
-               ! be moved to the updates in CStateUpdateDynPatch?
-               do i = i_litr_min, i_litr_max
-                  cf_soil%decomp_cpools_sourcesink_col(c,j,i) = &
-                       cf_soil%FATES_c_to_litr_c_col(c,j,i) * dt
-               end do
+               !
+               ! State update without the matrix solution
+               !
+               if (.not. use_soil_matrixcn) then
+                  cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
+                       cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
+                       - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) *dt
+               end if !not use_soil_matrixcn 
             end do
          end do
-      endif
-         
-      if ( .not. use_fates_sp ) then !use_fates
-         ! litter and SOM HR fluxes
-         do k = 1, ndecomp_cascade_transitions
+      end do
+      do k = 1, ndecomp_cascade_transitions
+         if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
             do j = 1,nlevdecomp
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
@@ -242,34 +260,17 @@ contains
                   ! State update without the matrix solution
                   !
                   if (.not. use_soil_matrixcn) then
-                     cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
-                       cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
-                       - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) *dt
-                  end if !not use_soil_matrixcn 
-               end do
-            end do
-         end do
-         do k = 1, ndecomp_cascade_transitions
-            if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
-               do j = 1,nlevdecomp
-                  do fc = 1,num_soilc
-                     c = filter_soilc(fc)
-                     !
-                     ! State update without the matrix solution
-                     !
-                     if (.not. use_soil_matrixcn) then
-                        cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
+                     cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
                           cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) &
                           + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)*dt
-                     end if !not use_soil_matrixcn
-                  end do
+                  end if !not use_soil_matrixcn
                end do
-            end if
-         end do
-      end if
+            end do
+         end if
+      end do
 
-    if (.not. use_fates) then    
-ptch: do fp = 1,num_soilp
+      ! This filter omits FATES patches
+      soilpatch_loop: do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)
 
@@ -674,8 +675,7 @@ ptch: do fp = 1,num_soilp
             end if
          end if
          
-      end do ptch ! end of patch loop
-    end if   ! end of NOT fates
+      end do soilpatch_loop ! end of patch loop
     
     end associate
   

@@ -159,7 +159,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BeginCNColumnBalance(this, bounds, num_soilc, filter_soilc, &
-       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
+       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,soilbiogeochem_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Calculate beginning column-level carbon/nitrogen balance, for mass conservation check
@@ -175,6 +175,7 @@ contains
     integer                        , intent(in)    :: filter_soilc(:) ! filter for soil columns
     type(cnveg_carbonstate_type)   , intent(in)    :: cnveg_carbonstate_inst
     type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst
+    type(soilbiogeochem_carbonstate_type), intent(in) :: soilbiogeochem_carbonstate_inst
     !
     ! !LOCAL VARIABLES:
     integer :: fc,c
@@ -189,8 +190,16 @@ contains
     
     do fc = 1,num_soilc
        c = filter_soilc(fc)
-       col_begcb(c) = totcolc(c)
-       col_begnb(c) = totcoln(c)
+
+       if( is_fates(c) ) then
+          col_begcb(c) = soilbiogeochem_carbonstate_inst%totmicc_col(c)   + &
+               soilbiogeochem_carbonstate_inst%totlitc_col(c)   + &
+               soilbiogeochem_carbonstate_inst%totsomc_col(c)   + &
+               soilbiogeochem_carbonstate_inst%ctrunc_col(c)
+       else
+          col_begcb(c) = totcolc(c)
+          col_begnb(c) = totcoln(c)
+       end if
     end do
 
     end associate
@@ -199,11 +208,13 @@ contains
  
   !-----------------------------------------------------------------------
   subroutine CBalanceCheck(this, bounds, num_soilc, filter_soilc, &
-       soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, &
-       cnveg_carbonstate_inst, c_products_inst)
+       soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+       cnveg_carbonflux_inst, cnveg_carbonstate_inst, c_products_inst, &
+       clm_fates)
     !
     ! !USES:
     use subgridAveMod, only: c2g
+    use clm_varpar   , only: nlevdecomp
     !
     ! !DESCRIPTION:
     ! Perform carbon mass conservation check for column and patch
@@ -218,13 +229,18 @@ contains
     integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
     type(soilbiogeochem_carbonflux_type) , intent(in)    :: soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type), intent(in)    :: soilbiogeochem_carbonstate_inst
     type(cnveg_carbonflux_type)          , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
     type(cn_products_type)               , intent(in)    :: c_products_inst
+    type(hlm_fates_interface_type)       , intent(inout) :: clm_fates
+    
     !
     ! !LOCAL VARIABLES:
-    integer :: c, g, err_index  ! indices
+    integer :: c, g, err_index ! indices
+    integer  :: s              ! fates site index (follows c)
     integer  :: fc             ! lake filter indices
+    integer  :: ic             ! index of the current clump
     logical  :: err_found      ! error flag
     real(r8) :: dt             ! radiation time step (seconds)
     real(r8) :: col_cinputs, grc_cinputs
@@ -235,8 +251,6 @@ contains
     real(r8) :: hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg)
     real(r8) :: dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg)
 
-    !real(r8) :: totcol_c  ! Total column carbon, including veg and soil (kgC)
-    
     !-----------------------------------------------------------------------
 
     associate(                                                                            & 
@@ -265,11 +279,39 @@ contains
       ! set time steps
       dt = get_step_size_real()
 
+      ! clump index
+      ic = bounds%clump_index
+      
       err_found = .false.
       do fc = 1,num_soilc
          c = filter_soilc(fc)
 
-         if (use_cn) then
+         if( is_fates(c) ) then
+
+            ! calculate the total column-level carbon storage, for mass conservation check
+            col_endcb(c) = soilbiogeochem_carbonstate_inst%totmicc_col(c)   + &
+                           soilbiogeochem_carbonstate_inst%totlitc_col(c)   + &
+                           soilbiogeochem_carbonstate_inst%totsomc_col(c)   + &
+                           soilbiogeochem_carbonstate_inst%ctrunc_col(c)
+
+            ! calculate total column-level inputs (litter fluxes) [g/m2/s]
+            s = clm_fates%f2hmap(ic)%hsites(c)
+            col_cinputs = sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * &
+                 clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
+                 sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp) * &
+                 clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
+                 sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * &
+                 clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+            
+            ! calculate total column-level outputs
+            ! fates has already exported burn losses and fluxes to the atm
+            ! So they are irrelevant here
+            ! (gC/m2/s) total heterotrophic respiration
+            col_coutputs = soilbiogeochem_carbonflux_inst%hr_col(c)
+            
+
+         else
+
             ! calculate the total column-level carbon storage, for mass conservation check
             col_endcb(c) = totcolc(c)
             
@@ -280,27 +322,6 @@ contains
             ! er = ar + hr, col_fire_closs includes patch-level fire losses
             col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + &
                  col_xsmrpool_to_atm(c)
-            
-         elseif(use_fates) then
-
-            ! calculate the total column-level carbon storage, for mass conservation check
-            col_endcb(c) = soilbiogeochem_totmicc_col(c)   + &
-                           soilbiogeochem_totlitc_col(c)   + &
-                           soilbiogeochem_totsomc_col(c)   + &
-                           soilbiogeochem_ctrunc_col(c)
-
-            ! calculate total column-level inputs (litter fluxes)
-            col_cinputs = sum(this%fates(nc)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * &
-                 this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
-                 sum(this%fates(nc)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp) * &
-                 this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
-                 sum(this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * &
-                 this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
-            
-            ! calculate total column-level outputs
-            ! fates has already exported burn losses and fluxes to the atm
-            ! So they are irrelevant here
-            col_coutputs = er(c)
             
          end if
 

@@ -224,7 +224,7 @@ module CLMFatesInterfaceMod
       procedure, public  :: wrap_hydraulics_drive
       procedure, public  :: WrapUpdateFatesRmean
       procedure, public  :: wrap_WoodProducts
-      
+      procedure, public  :: UpdateCLitterFluxes
    end type hlm_fates_interface_type
 
    ! hlm_bounds_to_fates_bounds is not currently called outside the interface.
@@ -1033,43 +1033,6 @@ module CLMFatesInterfaceMod
 
       enddo
 
-      ! ---------------------------------------------------------------------------------
-      ! Part III: Process FATES output into the dimensions and structures that are part
-      ! of the HLMs API.  (column, depth, and litter fractions)
-      ! ---------------------------------------------------------------------------------
-
-      if ( decomp_method /= no_soil_decomp )then
-         do s = 1, this%fates(nc)%nsites
-            c = this%f2hmap(nc)%fcolumn(s)
-
-            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nlevdecomp) = 0.0_r8
-            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nlevdecomp) = 0.0_r8
-            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nlevdecomp) = 0.0_r8
-
-            nld_si = this%fates(nc)%bc_in(s)%nlevdecomp
-
-            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nld_si) = &
-                 this%fates(nc)%bc_out(s)%litt_flux_lab_c_si(1:nld_si)
-
-            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nld_si) = &
-                 this%fates(nc)%bc_out(s)%litt_flux_cel_c_si(1:nld_si)
-
-            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si) = &
-                 this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nld_si)
-
-            ! Copy last 3 variables to an array of litter pools for use in do loops
-            ! and repeat copy in soilbiogeochem/SoilBiogeochemCarbonFluxType.F90.
-            ! Keep the three originals to avoid backwards compatibility issues with
-            ! restart files.
-            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,1) = &
-               soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nld_si)
-            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,2) = &
-               soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nld_si)
-            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,3) = &
-               soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si)
-
-         end do
-      end if
 
 
       ! ---------------------------------------------------------------------------------
@@ -1102,8 +1065,59 @@ module CLMFatesInterfaceMod
       return
    end subroutine dynamics_driv
 
-   ! ------------------------------------------------------------------------------------
+   ! ===============================================================================
 
+   subroutine UpdateCLitterFluxes(this,bounds_clump,soilbiogeochem_carbonflux_inst,c)
+
+     implicit none
+     class(hlm_fates_interface_type), intent(inout)       :: this
+     type(bounds_type)              , intent(in)          :: bounds_clump
+     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
+     integer                        , intent(in)          :: c
+
+     integer  :: s                        ! site index
+     integer  :: nc                       ! clump index
+     real(r8) :: dtime
+
+
+     dtime = get_step_size_real()
+     nc = bounds_clump%clump_index
+     s = this%f2hmap(nc)%hsites(c)
+
+     associate(cf_soil => soilbiogeochem_carbonflux_inst)
+
+       if ( .not. use_fates_sp ) then
+          cf_soil%decomp_cpools_sourcesink(c,1:nlevdecomp,i_met_lit) = &
+               cf_soil%decomp_cpools_sourcesink(c,1:nlevdecomp,i_met_lit) + &
+               this%fates(nc)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * dtime
+          cf_soil%decomp_cpools_sourcesink(c,1:nlevdecomp,i_cel_lit) = &
+               cf_soil%decomp_cpools_sourcesink(c,1:nlevdecomp,i_cel_lit) + &
+               this%fates(nc)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp)* dtime
+          cf_soil%decomp_cpools_sourcesink(c,1:nlevdecomp,i_lig_lit) = &
+               cf_soil%decomp_cpools_sourcesink(c,1:nlevdecomp,i_lig_lit) + &
+               this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * dtime
+
+       else
+          ! In SP mode their is no mass flux between the two 
+          cf_soil%decomp_cpools_sourcesink(c,:) = 0._r8
+       end if
+          
+       ! This is a diagnostic for carbon accounting (NOT IN CLM, ONLY ELM)
+       !col_cf%litfall(c) = &
+       !     sum(this%fates(nc)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * &
+       !         this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
+       !     sum(this%fates(nc)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp) * &
+       !         this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
+       !     sum(this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * ^
+       !         this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+
+     end associate
+
+     return
+   end subroutine UpdateCLitterFluxes
+
+   ! ===================================================================================
+   
    subroutine wrap_update_hlmfates_dyn(this, nc, bounds_clump,      &
         waterdiagnosticbulk_inst, canopystate_inst, &
         soilbiogeochem_carbonflux_inst, is_initing_from_restart)
