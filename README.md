@@ -43,9 +43,8 @@ CTSM code management is provided primarily by:
 Software engineering team:
 - [Erik Kluzek](https://github.com/ekluzek)
 - [Bill Sacks](https://github.com/billsacks)
-- [Mariana Vertenstein](https://github.com/mvertens)
-- [Negin Sobhani](https://github.com/negin513)
 - [Sam Levis](https://github.com/slevisconsulting)
+- [Adrianna Foster](https://github.com/adrifoster)
 
 Science team:
 - [Dave Lawrence](https://github.com/dlawrenncar)
@@ -53,5 +52,7 @@ Science team:
 - [Danica Lombardozzi](https://github.com/danicalombardozzi)
 - [Keith Oleson](https://github.com/olyson)
 - [Sean Swenson](https://github.com/swensosc)
-- [Mike Barlage](https://github.com/barlage)
+- [Jackie Shuman](https://github.com/jkshuman)
+- [Peter Lawrence](https://github.com/lawrencepj1)
 - [Rosie Fisher](https://github.com/rosiealice)
+- Gordon Bonan
