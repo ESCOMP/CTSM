@@ -1,13 +1,13 @@
 ===============================================================
 Tag name: ctsm5.1.dev118
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date: Fri Feb  3 16:49:44 MST 2023
+Date: Fri Feb  3 17:52:37 MST 2023
 One-line Summary: Use conda environment rather than ncar_pylib with the fsurdat_modifier system test
 
 Purpose and description of changes
 ----------------------------------
 
- ncar_pylib is going away soon.
+ Reason: ncar_pylib is going away soon.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -31,16 +31,17 @@ Bugs fixed or introduced
 
 CTSM issues fixed (include CTSM Issue #):
  The fsurdat_modifier system test that we're discussing in this tag and
- pull request (PR #1798)
+ corresponding pull request (PR #1798)
  FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRs.cheyenne_intel
  stopped working when I updated the PR to dev117.
  The test worked in the PR when I was still in dev115.
  The test worked in vanilla dev117.
- I fixed the test by removing a restriction added in dev116 and the
+ I fixed the failure by removing a restriction added in dev116 and the
  corresponding override --allow_ideal_and_include_non_veg.
 
- PENDING approval by Erik: I would like to remove another restriction added
- in dev116 and the corresponding override --allow_dom_pft_and_idealized.
+ I am removing another restriction added in dev116 and the corresponding
+ override --allow_dom_pft_and_idealized. This one didn't cause a test to fail
+ but unnecessarily restricted usage of the fsurdat_modifier tool.
 
 Testing summary:
 ----------------
