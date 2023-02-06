@@ -1,13 +1,26 @@
 ===============================================================
 Tag name: ctsm5.1.dev118
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date: Fri Feb  3 17:52:37 MST 2023
+Date: Sun Feb  5 18:31:29 MST 2023
 One-line Summary: Use conda environment rather than ncar_pylib with the fsurdat_modifier system test
 
 Purpose and description of changes
 ----------------------------------
 
  Reason: ncar_pylib is going away soon.
+
+ The fsurdat_modifier system test that we're discussing in this tag and
+ corresponding pull request (PR #1798)
+ FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRs.cheyenne_intel
+ stopped working when I updated the PR to dev117.
+ The test worked in the PR when I was still in dev115.
+ The test worked in vanilla dev117.
+ I fixed the failure by removing a restriction added in dev116 and the
+ corresponding override --allow_ideal_and_include_non_veg.
+
+ I am removing another restriction added in dev116 and the corresponding
+ override --allow_dom_pft_and_idealized. This one didn't cause a test to fail
+ but unnecessarily restricted usage of the fsurdat_modifier tool.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -30,35 +43,16 @@ Bugs fixed or introduced
 ------------------------
 
 CTSM issues fixed (include CTSM Issue #):
- The fsurdat_modifier system test that we're discussing in this tag and
- corresponding pull request (PR #1798)
- FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRs.cheyenne_intel
- stopped working when I updated the PR to dev117.
- The test worked in the PR when I was still in dev115.
- The test worked in vanilla dev117.
- I fixed the failure by removing a restriction added in dev116 and the
- corresponding override --allow_ideal_and_include_non_veg.
-
- I am removing another restriction added in dev116 and the corresponding
- override --allow_dom_pft_and_idealized. This one didn't cause a test to fail
- but unnecessarily restricted usage of the fsurdat_modifier tool.
+Fixes #1786 -- ncar_pylib
+Fixes #1925 -- replace ncar_pylib
 
 Testing summary:
 ----------------
 
-[Remove any lines that don't apply.]
-
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
-    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
-     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
-     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
-     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
-     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
-     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
-     separately run the clm_pymods test suite, and you can remove the following line.]
-
     clm_pymods test suite on cheyenne - PASS
+    (softlinks created for baselines to previous tag since this is bit-for-bit)
 
   any other testing (give details below):
 
@@ -75,7 +69,7 @@ Changes answers relative to baseline: NO
 Other details
 -------------
 Pull Requests that document the changes (include PR ids):
- https://github.com/ESCOMP/ctsm/pull/1798
+ https://github.com/ESCOMP/ctsm/pull/1798 -- Have fsurdat_modifier system test use conda environment rather than ncar_pylib
 
 ===============================================================
 ===============================================================
