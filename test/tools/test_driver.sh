@@ -373,9 +373,9 @@ else
 fi
 
 # Setup conda environement
-conda activate ctsm_py
+conda activate ctsm_pylib
 if [ \$? -ne 0 ]; then
-   echo "ERROR: Trouble activating the ctsm_py conda environment, be sure it's setup with \$CLM_ROOT/py_env_create, then rerun"
+   echo "ERROR: Trouble activating the ctsm_pylib conda environment, be sure it's setup with \$CLM_ROOT/py_env_create, then rerun"
    exit 4
 fi
 

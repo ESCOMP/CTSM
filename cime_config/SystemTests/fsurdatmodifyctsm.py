@@ -68,54 +68,53 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
     def _run_modify_fsurdat(self):
         tool_path = os.path.join(self._ctsm_root,
                                  'tools/modify_input_files/fsurdat_modifier')
-        # Need to specify a specific python version that has the required
-        # dependencies
-        python_path = _get_python_path()
-        subprocess.check_call([python_path, tool_path, self._cfg_file_path, "--verbose", "--overwrite", "--allow_ideal_and_include_non_veg"])
+
+        self._case.load_env(reset=True)
+        conda_env = ". "+self._get_caseroot()+"/.env_mach_specific.sh; "
+        # Preprend the commands to get the conda environment for python first
+        conda_env += self._get_conda_env()
+        # Source the env
+        try:
+            subprocess.run( conda_env+"python3 "+tool_path+" "+self._cfg_file_path, shell=True, check=True)
+        except subprocess.CalledProcessError as error:
+            print("ERROR while getting the conda environment and/or ")
+            print("running the fsurdat_modifier tool: ")
+            print("(1) If your ctsm_pylib environment is out of date or you ")
+            print("have not created the ctsm_pylib environment, yet, you may ")
+            print("get past this error by running ./py_env_create ")
+            print("in your ctsm directory and trying this test again. ")
+            print("(2) If conda is not available, install and load conda, ")
+            print("run ./py_env_create, and then try this test again. ")
+            print("(3) If (1) and (2) are not the issue, then you may be ")
+            print("getting an error within the fsurdat_modifier tool itself. ")
+            print("Default error message: ")
+            print(error.output)
+        except:
+            print("ERROR trying to run fsurdat_modifier tool.")
+            raise
 
     def _modify_user_nl(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
                                 component = "clm",
                                 contents = "fsurdat = '{}'".format(self._fsurdat_out))
 
-def _get_python_path():
-    """Get path to ncar_pylib's python on cheyenne
+    def _get_conda_env(self):
+        #
+        # Add specific commands needed on different machines to get conda available
+        # Use semicolon here since it's OK to fail
+        #
+        # Execute the module unload/load when "which conda" fails
+        # eg on cheyenne
+        try:
+            subprocess.run( "which conda", shell=True, check=True)
+            conda_env = " "
+        except subprocess.CalledProcessError:
+            # Remove python and add conda to environment for cheyennne
+            conda_env = "module unload python; module load conda;"
 
-    This is needed because we need a python environment that includes xarray
-    and its dependencies. This is currently hard-coded for cheyenne until we
-    come up with a robust way in CIME of ensuring that the correc python
-    environment is loaded.
+        # Activate the python environment
+        conda_env += " conda activate ctsm_pylib"
+        # End above to get to actual command
+        conda_env += " && "
 
-    """
-    out = subprocess.check_output(['/glade/u/apps/opt/ncar_pylib/ncar_pylib',
-                                   '-l'], universal_newlines=True)
-
-    # First look for a loaded ('L') python
-    path = _find_path_from_pylib_output(out, 'L')
-    # If no loaded python found, look for a default ('D') python
-    if path is None:
-        path = _find_path_from_pylib_output(out, 'D')
-
-    if path is None:
-        raise RuntimeError('No python found')
-
-    return os.path.join(path, 'bin', 'python')
-
-def _find_path_from_pylib_output(ncar_pylib_output, char):
-    """Given line-by-line output from ncar_pylib, return the path to python if found
-
-    Args:
-    - ncar_pylib_output: line-by-line output from ncar_pylib
-    - char: the character to look for in the leading parenthetical expression (typically 'L' or 'D')
-
-    Returns a path to python, or None if not found
-    """
-    # The line of interest looks like the following (for char = 'L'):
-    # (L) ... /path/to/python
-    regex = r'\(' + char + r'\).* (/\S+)'
-    for line in ncar_pylib_output.splitlines():
-        match_line = re.match(regex, line)
-        if match_line:
-            return match_line.group(1)
-
-    return None
+        return( conda_env )
