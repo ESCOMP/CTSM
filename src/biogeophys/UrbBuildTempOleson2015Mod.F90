@@ -236,6 +236,8 @@ contains
     real(r8) :: t_floor_bef(bounds%begl:bounds%endl)       ! floor temperature at previous time step (K)              
     real(r8) :: t_building_bef(bounds%begl:bounds%endl)    ! internal building air temperature at previous time step [K]
     real(r8) :: t_building_bef_hac(bounds%begl:bounds%endl)! internal building air temperature before applying HAC [K]
+    ! Cathy [dev.03]
+    real(r8) :: eflx_urban_ac_sat(bounds%begl:bounds%endl) ! urban air conditioning flux under AC adoption saturation (W/m**2)
     real(r8) :: hcv_roofi(bounds%begl:bounds%endl)         ! roof convective heat transfer coefficient (W m-2 K-1)
     real(r8) :: hcv_sunwi(bounds%begl:bounds%endl)         ! sunwall convective heat transfer coefficient (W m-2 K-1)
     real(r8) :: hcv_shdwi(bounds%begl:bounds%endl)         ! shadewall convective heat transfer coefficient (W m-2 K-1)
@@ -925,13 +927,17 @@ contains
 !           rho_dair(l) = pstd / (rair*t_building(l))
 
             if (t_building_bef_hac(l) > t_building_max(l)) then
-              t_building(l) = t_building_max(l)
-              ! [Cathy] orig: 
+              ! Cathy [orig] 
+              ! t_building(l) = t_building_max(l)
               ! eflx_urban_ac(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building(l) &
               !                    - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
-              ! [Cathy] dev:
-              eflx_urban_ac(l) = wtlunit_roof(l) * p_ac(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building(l) &
-                                 - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
+              ! Cathy [dev.03]      ! after the change, t_building_max is saturation setpoint
+              eflx_urban_ac_sat(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_max(l) &
+                                     - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
+              t_building(l) = t_building_max(l) + ( 1._r8 - p_ac(l) ) * eflx_urbann_ac_sat(l) &
+                              * dtime / (ht_roof(l) * rho_dair(l) * cpair)
+              eflx_urban_ac(l) = p_ac(l) * eflx_urban_ac_sat(l)
+
             else if (t_building_bef_hac(l) < t_building_min(l)) then
               t_building(l) = t_building_min(l)
               eflx_urban_heat(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building(l) &
