@@ -26,6 +26,7 @@ module CNCStateUpdate1Mod
   use clm_varctl                         , only : use_fates, use_cn, iulog, use_fates_sp
   use CNSharedParamsMod                  , only : use_matrixcn
   use CLMFatesInterfaceMod               , only : hlm_fates_interface_type
+  use ColumnType                         , only : col
   
   !
   implicit none
@@ -141,7 +142,7 @@ contains
   subroutine CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
        crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
        soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm, &
-       clm_fates)
+       clm_fates, ci)
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update all the prognostic carbon state
@@ -159,6 +160,7 @@ contains
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     logical                              , intent(in)    :: dribble_crophrv_xsmrpool_2atm
     type(hlm_fates_interface_type)       , intent(inout) :: clm_fates
+    integer                              , intent(in)    :: ci              ! clump index
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,j,k,l,i  ! indices
@@ -199,7 +201,7 @@ contains
             ! prepared litter c flux boundary conditions into
             ! cf_soil%decomp_cpools_sourcesink_col
             
-            call clm_fates%UpdateCLitterfluxes(bounds_clump,cf_soil,c)
+            call clm_fates%UpdateCLitterfluxes(cf_soil,ci,c)
             
          else
             

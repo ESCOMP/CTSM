@@ -14,7 +14,6 @@ module SoilBiogeochemCarbonFluxType
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
   use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
-  use clm_varctl                         , only : use_fates
   
   ! 
   ! !PUBLIC TYPES:
@@ -58,12 +57,6 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration: donor-pool based definition
      real(r8), pointer :: somhr_col                                 (:)     ! (gC/m2/s) soil organic matter heterotrophic res: donor-pool based definition
      real(r8), pointer :: soilc_change_col                          (:)     ! (gC/m2/s) FUN used soil C
-
-     ! fluxes to receive carbon inputs from FATES
-     real(r8), pointer :: FATES_c_to_litr_c_col                     (:,:,:) ! total litter coming from ED. gC/m3/s
-     real(r8), pointer :: FATES_c_to_litr_lab_c_col                 (:,:)   ! total labile    litter coming from ED. gC/m3/s
-     real(r8), pointer :: FATES_c_to_litr_cel_c_col                 (:,:)   ! total cellulose    litter coming from ED. gC/m3/s
-     real(r8), pointer :: FATES_c_to_litr_lig_c_col                 (:,:)   ! total lignin    litter coming from ED. gC/m3/s
 
    contains
 
@@ -165,22 +158,7 @@ contains
   
      if(use_soil_matrixcn)then
      end if
-     if ( use_fates ) then
-        ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
 
-        allocate(this%FATES_c_to_litr_c_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
-        this%FATES_c_to_litr_c_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools) = 0._r8
-
-        allocate(this%FATES_c_to_litr_lab_c_col(begc:endc,1:nlevdecomp_full))
-        this%FATES_c_to_litr_lab_c_col(begc:endc,1:nlevdecomp_full) = 0._r8
-        
-        allocate(this%FATES_c_to_litr_cel_c_col(begc:endc,1:nlevdecomp_full))
-        this%FATES_c_to_litr_cel_c_col(begc:endc,1:nlevdecomp_full) = 0._r8
-        
-        allocate(this%FATES_c_to_litr_lig_c_col(begc:endc,1:nlevdecomp_full))
-        this%FATES_c_to_litr_lig_c_col(begc:endc,1:nlevdecomp_full) = 0._r8
-
-     endif
      allocate(this%litr_lig_c_to_n_col(begc:endc))
      this%litr_lig_c_to_n_col(:)= 0._r8
      
@@ -625,23 +603,6 @@ contains
 
     end do
 
-    if ( use_fates ) then
-
-       call hist_addfld_decomp(fname='FATES_c_to_litr_lab_c', units='gC/m^3/s',  type2d='levdcmp', &
-                   avgflag='A', long_name='litter labile carbon flux from FATES to BGC', &
-                   ptr_col=this%FATES_c_to_litr_lab_c_col)
-
-       call hist_addfld_decomp(fname='FATES_c_to_litr_cel_c', units='gC/m^3/s',  type2d='levdcmp', &
-                   avgflag='A', long_name='litter celluluse carbon flux from FATES to BGC', &
-                   ptr_col=this%FATES_c_to_litr_cel_c_col)
-
-       call hist_addfld_decomp(fname='FATES_c_to_litr_lig_c', units='gC/m^3/s',  type2d='levdcmp', &
-                   avgflag='A', long_name='litter lignin carbon flux from FATES to BGC', &
-                   ptr_col=this%FATES_c_to_litr_lig_c_col)
-
-     endif
-
-
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -693,40 +654,6 @@ contains
     real(r8), pointer :: ptr2d(:,:) ! temp. pointers for slicing larger arrays
     logical  :: readvar
     !-----------------------------------------------------------------------
-
-    !
-    ! if  FATES is enabled, need to restart the variables used to transfer from FATES to CLM as they
-    ! are persistent between daily FATES dynamics calls and half-hourly CLM timesteps
-    !
-    if ( use_fates ) then
-       
-       ptr2d => this%FATES_c_to_litr_lab_c_col
-       call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lab_c_col', xtype=ncd_double,  &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='', units='gC/m3/s', scale_by_thickness=.false., &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d) 
-          
-       ptr2d => this%FATES_c_to_litr_cel_c_col
-       call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_cel_c_col', xtype=ncd_double,  &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='', units='gC/m3/s', scale_by_thickness=.false., &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d) 
-          
-       ptr2d => this%FATES_c_to_litr_lig_c_col
-       call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lig_c_col', xtype=ncd_double,  &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='', units='gC/m3/s', scale_by_thickness=.false., &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d) 
-
-       ! Copy last 3 variables to an array of litter pools for use in do loops.
-       ! Repeat copy in src/utils/clmfates_interfaceMod.F90.
-       ! Keep the three originals to avoid backwards compatibility issues with
-       ! restart files.
-       this%FATES_c_to_litr_c_col(:,:,1) = this%FATES_c_to_litr_lab_c_col(:,:)
-       this%FATES_c_to_litr_c_col(:,:,2) = this%FATES_c_to_litr_cel_c_col(:,:)
-       this%FATES_c_to_litr_c_col(:,:,3) = this%FATES_c_to_litr_lig_c_col(:,:)
-       
-    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='ligninNratioAvg', xtype=ncd_double,  &
          dim1name='column', &
@@ -806,8 +733,6 @@ contains
        this%soilc_change_col(i)  = value_column
     end do
 
-    ! NOTE: do not zero the fates to BGC C flux variables since they need to persist from the daily fates timestep s to the half-hourly BGC timesteps.  I.e. FATES_c_to_litr_lab_c_col, FATES_c_to_litr_cel_c_col, FATES_c_to_litr_lig_c_col
-    
   end subroutine SetValues
 
   !-----------------------------------------------------------------------
@@ -970,18 +895,19 @@ contains
 
     ! Calculate ligninNratio
     ! FATES does its own calculation
-    if (.not. use_fates .and. decomp_method == mimics_decomp) then
+    if (decomp_method == mimics_decomp) then
        do fp = 1,num_soilp
           p = filter_soilp(fp)
-
-          associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
-            ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
-                                         pftcon%lflitcn(ivt(p)) * &
-                                         leafc_to_litter_patch(p)
-            ligninNratio_froot_patch(p) = pftcon%fr_flig(ivt(p)) * &
-                                          pftcon%frootcn(ivt(p)) * &
-                                          frootc_to_litter_patch(p)
-          end associate
+          if( .not.patch%is_fates(p)) then
+             associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
+               ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
+                    pftcon%lflitcn(ivt(p)) * &
+                    leafc_to_litter_patch(p)
+               ligninNratio_froot_patch(p) = pftcon%fr_flig(ivt(p)) * &
+                    pftcon%frootcn(ivt(p)) * &
+                    frootc_to_litter_patch(p)
+             end associate
+          end if
        end do
 
        call p2c(bounds, num_soilc, filter_soilc, &

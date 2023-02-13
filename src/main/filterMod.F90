@@ -19,6 +19,7 @@ module filterMod
   use ColumnType     , only : col
   use PatchType      , only : patch
   use glcBehaviorMod , only : glc_behavior_type
+  use clm_varctl     , only : use_cn, use_fates, use_fates_sp
   !
   ! !PUBLIC TYPES:
   implicit none

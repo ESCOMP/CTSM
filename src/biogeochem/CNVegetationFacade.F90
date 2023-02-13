@@ -802,7 +802,7 @@ contains
 
     call this%cn_balance_inst%BeginCNColumnBalance( &
          bounds, num_soilc, filter_soilc, &
-         this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
+         soilbiogeochem_carbonstate_inst,soilbiogeochem_nitrogenstate_inst)
 
   end subroutine InitColumnBalance
 
@@ -843,6 +843,7 @@ contains
     character(len=*), parameter :: subname = 'InitGridcellBalance'
     !-----------------------------------------------------------------------
 
+    
     call CNDriverSummarizeStates(bounds, &
          num_allc, filter_allc, &
          num_soilc, filter_soilc, &
@@ -858,20 +859,22 @@ contains
 
     ! total gridcell carbon (TOTGRIDCELLC)
     call c2g( bounds = bounds, &
-         carr = this%cnveg_carbonstate_inst%totc_col(bounds%begc:bounds%endc), &
-         garr = this%cnveg_carbonstate_inst%totc_grc(bounds%begg:bounds%endg), &
+         carr = soilbiogeochem_carbonstate_inst%totc_col(bounds%begc:bounds%endc), &
+         garr = soilbiogeochem_carbonstate_inst%totc_grc(bounds%begg:bounds%endg), &
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
+    
     ! total gridcell nitrogen (TOTGRIDCELLN)
     call c2g( bounds = bounds, &
-         carr = this%cnveg_nitrogenstate_inst%totn_col(bounds%begc:bounds%endc), &
-         garr = this%cnveg_nitrogenstate_inst%totn_grc(bounds%begg:bounds%endg), &
+         carr = soilbiogeochem_nitrogenstate_inst%totn_col(bounds%begc:bounds%endc), &
+         garr = soilbiogeochem_nitrogenstate_inst%totn_grc(bounds%begg:bounds%endg), &
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
 
     call this%cn_balance_inst%BeginCNGridcellBalance( bounds, &
          this%cnveg_carbonflux_inst, &
-         this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst, &
+         soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_nitrogenstate_inst, &
          this%c_products_inst, this%n_products_inst)
 
   end subroutine InitGridcellBalance
@@ -1152,8 +1155,8 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
-    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonstate_inst
-    type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
     type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
     !
@@ -1184,6 +1187,7 @@ contains
        call this%cn_balance_inst%NBalanceCheck( &
             bounds, num_soilc, filter_soilc, &
             soilbiogeochem_nitrogenflux_inst, &
+            soilbiogeochem_nitrogenstate_inst, &
             this%cnveg_nitrogenflux_inst, &
             this%cnveg_nitrogenstate_inst, &
             this%n_products_inst, &

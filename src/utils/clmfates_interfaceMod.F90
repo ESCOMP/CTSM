@@ -562,8 +562,6 @@ module CLMFatesInterfaceMod
       use clm_instur       , only : wt_nat_patch
       use FATESFireFactoryMod , only: create_fates_fire_data_method
 
-      implicit none
-
       ! Input Arguments
       class(hlm_fates_interface_type), intent(inout) :: this
       type(bounds_type),intent(in)                   :: bounds_proc
@@ -770,7 +768,6 @@ module CLMFatesInterfaceMod
       ! in handy when we have dynamic sites in FATES
       ! ---------------------------------------------------------------------------------
 
-      implicit none
       class(hlm_fates_interface_type), intent(inout) :: this
       integer                                        :: nc
       type(bounds_type),intent(in)                   :: bounds_clump
@@ -820,7 +817,7 @@ module CLMFatesInterfaceMod
       use subgridMod, only :  natveg_patch_exists
 
       ! !ARGUMENTS:
-      implicit none
+
       class(hlm_fates_interface_type), intent(inout) :: this
       type(bounds_type),intent(in)                   :: bounds_clump
       type(atm2lnd_type)      , intent(in)           :: atm2lnd_inst
@@ -1067,49 +1064,61 @@ module CLMFatesInterfaceMod
 
    ! ===============================================================================
 
-   subroutine UpdateCLitterFluxes(this,bounds_clump,soilbiogeochem_carbonflux_inst,c)
+   subroutine UpdateCLitterFluxes(this,soilbiogeochem_carbonflux_inst,ci,c)
 
-     implicit none
+     use clm_varpar, only : i_met_lit
+
      class(hlm_fates_interface_type), intent(inout)       :: this
-     type(bounds_type)              , intent(in)          :: bounds_clump
      type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
-     integer                        , intent(in)          :: c
+     integer                        , intent(in)          :: ci         ! clump index
+     integer                        , intent(in)          :: c          ! column index
 
      integer  :: s                        ! site index
-     integer  :: nc                       ! clump index
      real(r8) :: dtime
-
-
+     integer  :: i_lig_lit, i_cel_lit     ! indices for lignan and cellulose
+     
      dtime = get_step_size_real()
-     nc = bounds_clump%clump_index
-     s = this%f2hmap(nc)%hsites(c)
+     s = this%f2hmap(ci)%hsites(c)
 
      associate(cf_soil => soilbiogeochem_carbonflux_inst)
 
        if ( .not. use_fates_sp ) then
-          cf_soil%decomp_cpools_sourcesink(c,1:nlevdecomp,i_met_lit) = &
-               cf_soil%decomp_cpools_sourcesink(c,1:nlevdecomp,i_met_lit) + &
-               this%fates(nc)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * dtime
-          cf_soil%decomp_cpools_sourcesink(c,1:nlevdecomp,i_cel_lit) = &
-               cf_soil%decomp_cpools_sourcesink(c,1:nlevdecomp,i_cel_lit) + &
-               this%fates(nc)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp)* dtime
-          cf_soil%decomp_cpools_sourcesink(c,1:nlevdecomp,i_lig_lit) = &
-               cf_soil%decomp_cpools_sourcesink(c,1:nlevdecomp,i_lig_lit) + &
-               this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * dtime
+
+          cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_met_lit) = &
+               cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_met_lit) + &
+               this%fates(ci)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * dtime
+
+          i_cel_lit = i_met_lit + 1
+          
+          cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) = &
+               cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) + &
+               this%fates(ci)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp)* dtime
+
+          if (decomp_method == mimics_decomp) then
+             ! Mimics has a structural pool, which is cellulose and lignan
+             i_lig_lit = i_cel_lit
+          elseif(decomp_method == century_decomp ) then
+             ! CENTURY has a separate lignan pool from cellulose
+             i_lig_lit = i_cel_lit + 1
+          end if
+        
+          cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) = &
+               cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) + &
+               this%fates(ci)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * dtime
 
        else
           ! In SP mode their is no mass flux between the two 
-          cf_soil%decomp_cpools_sourcesink(c,:) = 0._r8
+          cf_soil%decomp_cpools_sourcesink_col(c,:,:) = 0._r8
        end if
           
        ! This is a diagnostic for carbon accounting (NOT IN CLM, ONLY ELM)
        !col_cf%litfall(c) = &
-       !     sum(this%fates(nc)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * &
-       !         this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
-       !     sum(this%fates(nc)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp) * &
-       !         this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
-       !     sum(this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * ^
-       !         this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+       !     sum(this%fates(ci)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * &
+       !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
+       !     sum(this%fates(ci)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp) * &
+       !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
+       !     sum(this%fates(ci)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * ^
+       !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
 
      end associate
 
@@ -1128,7 +1137,6 @@ module CLMFatesInterfaceMod
       ! provides boundary conditions (such as vegetation fractional coverage)
       ! ---------------------------------------------------------------------------------
 
-     implicit none
      class(hlm_fates_interface_type), intent(inout) :: this
      type(bounds_type),intent(in)                   :: bounds_clump
      integer                 , intent(in)           :: nc
@@ -1371,8 +1379,6 @@ module CLMFatesInterfaceMod
      use FatesIOVariableKindMod, only : site_r8, site_int, cohort_r8, cohort_int
      use EDMainMod, only :        ed_update_site
      use FatesInterfaceTypesMod, only:  fates_maxElementsPerSite
-
-      implicit none
 
       ! Arguments
 
@@ -1876,8 +1882,6 @@ module CLMFatesInterfaceMod
       ! of the canopy that is exposed to sun.
       ! ---------------------------------------------------------------------------------
 
-      implicit none
-
       ! Input Arguments
       class(hlm_fates_interface_type), intent(inout) :: this
 
@@ -2013,8 +2017,6 @@ module CLMFatesInterfaceMod
       ! ---------------------------------------------------------------------------------
 
       use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-
-      implicit none
 
       ! Arguments
       class(hlm_fates_interface_type), intent(inout) :: this
@@ -3004,42 +3006,12 @@ module CLMFatesInterfaceMod
  end subroutine ComputeRootSoilFlux
 
  ! ======================================================================================
-!
-! THIS WAS MOVED TO WRAP_HYDRAULICS_DRIVE()
-!
-! subroutine TransferPlantWaterStorage(this, bounds_clump, nc, waterstate_inst)
-!
-!   implicit none
-!   class(hlm_fates_interface_type), intent(inout) :: this
-!   type(bounds_type),intent(in)                   :: bounds_clump
-!   integer,intent(in)                             :: nc
-!   type(waterstate_type)   , intent(inout)        :: waterstate_inst
-!
-!   ! locals
-!   integer :: s
-!   integer :: c
-!
-!   if (.not. (use_fates .and. use_fates_planthydro) ) return
-!
-!   do s = 1, this%fates(nc)%nsites
-!      c = this%f2hmap(nc)%fcolumn(s)
-!      waterstate_inst%total_plant_stored_h2o_col(c) = &
-!            this%fates(nc)%bc_out(s)%plant_stored_h2o_si
-!   end do
-!   return
-!end subroutine TransferPlantWaterStorage
-
-
-
-
- ! ======================================================================================
 
  subroutine wrap_hydraulics_drive(this, bounds_clump, nc, &
                                  soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, &
                                  fn, filterp, solarabs_inst, energyflux_inst)
 
 
-   implicit none
    class(hlm_fates_interface_type), intent(inout) :: this
    type(bounds_type),intent(in)                   :: bounds_clump
    integer,intent(in)                             :: nc
@@ -3160,8 +3132,6 @@ module CLMFatesInterfaceMod
    use EDtypesMod,        only : nlevleaf, nclmax
    use FatesInterfaceTypesMod, only : numpft_fates => numpft
    
-
-   implicit none
 
    type(bounds_type), intent(in) :: hlm
    type(fates_bounds_type), intent(out) :: fates

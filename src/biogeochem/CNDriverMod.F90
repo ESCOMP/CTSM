@@ -628,18 +628,18 @@ contains
     call CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
          crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
          soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm, &
-         clm_fates)
+         clm_fates, bounds%clump_index)
     if ( use_c13 ) then
        call CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
             crop_inst, c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
             c13_soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm, &
-         clm_fates)
+            clm_fates, bounds%clump_index)
     end if
     if ( use_c14 ) then
        call CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
             crop_inst, c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
             c14_soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm, &
-         clm_fates)
+            clm_fates, bounds%clump_index)
     end if
 
     ! Update all prognostic nitrogen state variables (except for gap-phase mortality and fire fluxes)
@@ -1061,53 +1061,42 @@ contains
     call t_startf('CNsum')
 
     ! ----------------------------------------------
-    ! soilbiogeochem carbon/nitrogen state summary
-    ! ----------------------------------------------
-
-    call soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc)
-    if ( use_c13 ) then
-       call c13_soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc)
-    end if
-    if ( use_c14 ) then
-       call c14_soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc)
-    end if
-    call soilbiogeochem_nitrogenstate_inst%summary(bounds, num_allc, filter_allc)
-
-    ! ----------------------------------------------
     ! cnveg carbon/nitrogen state summary
     ! ----------------------------------------------
-
-    call cnveg_carbonstate_inst%Summary(bounds, num_allc, filter_allc, &
-         num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         soilbiogeochem_cwdc_col=soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
-         soilbiogeochem_totlitc_col=soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
-         soilbiogeochem_totmicc_col=soilbiogeochem_carbonstate_inst%totmicc_col(begc:endc), &
-         soilbiogeochem_totsomc_col=soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-         soilbiogeochem_ctrunc_col=soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
+    call cnveg_carbonstate_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
 
     if ( use_c13 ) then
-       call c13_cnveg_carbonstate_inst%Summary(bounds, num_allc, filter_allc, &
-            num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            soilbiogeochem_cwdc_col=c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
-            soilbiogeochem_totlitc_col=c13_soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
-            soilbiogeochem_totmicc_col=c13_soilbiogeochem_carbonstate_inst%totmicc_col(begc:endc), &
-            soilbiogeochem_totsomc_col=c13_soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-            soilbiogeochem_ctrunc_col=c13_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
+       call c13_cnveg_carbonstate_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
     end if
 
     if ( use_c14 ) then
-       call c14_cnveg_carbonstate_inst%Summary(bounds, num_allc, filter_allc, &
-            num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            soilbiogeochem_cwdc_col=c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
-            soilbiogeochem_totlitc_col=c14_soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
-            soilbiogeochem_totmicc_col=c14_soilbiogeochem_carbonstate_inst%totmicc_col(begc:endc), &
-            soilbiogeochem_totsomc_col=c14_soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-            soilbiogeochem_ctrunc_col=c14_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
+       call c14_cnveg_carbonstate_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
     end if
 
-    call cnveg_nitrogenstate_inst%Summary(bounds, num_allc, filter_allc, &
-         num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         soilbiogeochem_nitrogenstate_inst)
+    ! ----------------------------------------------
+    ! soilbiogeochem carbon/nitrogen state summary
+    ! RGK 02-23: soilbiogeochem summary now depends on
+    !            cnveg summary, swapped call order
+    ! ----------------------------------------------
+
+    call soilbiogeochem_carbonstate_inst%summary(bounds, num_soilc, filter_soilc, cnveg_carbonstate_inst)
+    if ( use_c13 ) then
+       call c13_soilbiogeochem_carbonstate_inst%summary(bounds, num_soilc, filter_soilc, c13_cnveg_carbonstate_inst)
+    end if
+    if ( use_c14 ) then
+       call c14_soilbiogeochem_carbonstate_inst%summary(bounds, num_soilc, filter_soilc, c13_cnveg_carbonstate_inst)
+    end if
+    
+    
+    ! RGK 02-23: This call will be moved to after cnveg nitr summary when we
+    !            couple in FATES N
+    
+
+    call cnveg_nitrogenstate_inst%Summary(bounds, num_soilc, filter_soilc, &
+         num_soilp, filter_soilp)
+
+    call soilbiogeochem_nitrogenstate_inst%summary(bounds, num_soilc, filter_soilc,cnveg_nitrogenstate_inst)
+    
 
     call t_stopf('CNsum')
 

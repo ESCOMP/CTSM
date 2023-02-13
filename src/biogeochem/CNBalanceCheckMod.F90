@@ -16,13 +16,16 @@ module CNBalanceCheckMod
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
+  use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
+  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenfluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemCarbonfluxType    , only : soilbiogeochem_carbonflux_type
   use CNProductsMod                   , only : cn_products_type
   use ColumnType                      , only : col                
   use GridcellType                    , only : grc
   use CNSharedParamsMod               , only : use_fun
-
+  use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
+  
   !
   implicit none
   private
@@ -100,7 +103,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BeginCNGridcellBalance(this, bounds, cnveg_carbonflux_inst, &
-       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+       soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, &
        c_products_inst, n_products_inst)
     !
     ! !DESCRIPTION:
@@ -113,13 +116,13 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    class(cn_balance_type)         , intent(inout) :: this
-    type(bounds_type)              , intent(in)    :: bounds
-    type(cnveg_carbonflux_type)    , intent(in)    :: cnveg_carbonflux_inst
-    type(cnveg_carbonstate_type)   , intent(in)    :: cnveg_carbonstate_inst
-    type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst
-    type(cn_products_type)         , intent(in)    :: c_products_inst
-    type(cn_products_type)         , intent(in)    :: n_products_inst
+    class(cn_balance_type)         , intent(inout)    :: this
+    type(bounds_type)              , intent(in)       :: bounds
+    type(soilbiogeochem_carbonstate_type), intent(in) :: soilbiogeochem_carbonstate_inst
+    type(cnveg_carbonflux_type)    , intent(in)       :: cnveg_carbonflux_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(in) :: soilbiogeochem_nitrogenstate_inst
+    type(cn_products_type)         , intent(in)       :: c_products_inst
+    type(cn_products_type)         , intent(in)       :: n_products_inst
     !
     ! !LOCAL VARIABLES:
     integer :: g
@@ -131,8 +134,8 @@ contains
     associate(                                                &
          begcb          => this%begcb_grc                   , &  ! Output: [real(r8) (:)]  (gC/m2) gridcell carbon mass, beginning of time step
          begnb          => this%begnb_grc                   , &  ! Output: [real(r8) (:)]  (gN/m2) gridcell nitrogen mass, beginning of time step
-         totc           => cnveg_carbonstate_inst%totc_grc  , &  ! Input:  [real(r8) (:)]  (gC/m2) total gridcell carbon, incl veg and cpool
-         totn           => cnveg_nitrogenstate_inst%totn_grc, &  ! Input:  [real(r8) (:)]  (gN/m2) total gridcell nitrogen, incl veg
+         totc           => soilbiogeochem_carbonstate_inst%totc_grc  , &  ! Input:  [real(r8) (:)]  (gC/m2) total gridcell carbon, incl veg and cpool
+         totn           => soilbiogeochem_nitrogenstate_inst%totn_grc, &  ! Input:  [real(r8) (:)]  (gN/m2) total gridcell nitrogen, incl veg
          c_cropprod1    => c_products_inst%cropprod1_grc    , &  ! Input:  [real(r8) (:)]  (gC/m2) carbon in crop products
          n_cropprod1    => n_products_inst%cropprod1_grc    , &  ! Input:  [real(r8) (:)]  (gC/m2) nitrogen in crop products
          c_tot_woodprod => c_products_inst%tot_woodprod_grc , &  ! Input:  [real(r8) (:)]  (gC/m2) total carbon in wood products
@@ -159,7 +162,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BeginCNColumnBalance(this, bounds, num_soilc, filter_soilc, &
-       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,soilbiogeochem_carbonstate_inst)
+       soilbiogeochem_carbonstate_inst,soilbiogeochem_nitrogenstate_inst)
     !
     ! !DESCRIPTION:
     ! Calculate beginning column-level carbon/nitrogen balance, for mass conservation check
@@ -173,9 +176,8 @@ contains
     type(bounds_type)              , intent(in)    :: bounds          
     integer                        , intent(in)    :: num_soilc       ! number of soil columns filter
     integer                        , intent(in)    :: filter_soilc(:) ! filter for soil columns
-    type(cnveg_carbonstate_type)   , intent(in)    :: cnveg_carbonstate_inst
-    type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_carbonstate_type), intent(in) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_nitrogenstate_type), intent(in) :: soilbiogeochem_nitrogenstate_inst
     !
     ! !LOCAL VARIABLES:
     integer :: fc,c
@@ -184,22 +186,16 @@ contains
     associate(                                            & 
          col_begcb    => this%begcb_col                  , & ! Output: [real(r8) (:)]  (gC/m2) column carbon mass, beginning of time step
          col_begnb    => this%begnb_col                  , & ! Output: [real(r8) (:)]  (gN/m2) column nitrogen mass, beginning of time step
-         totcolc      => cnveg_carbonstate_inst%totc_col , & ! Input:  [real(r8) (:)]  (gC/m2) total column carbon, incl veg and cpool
-         totcoln      => cnveg_nitrogenstate_inst%totn_col & ! Input:  [real(r8) (:)]  (gN/m2) total column nitrogen, incl veg 
+         totcolc      => soilbiogeochem_carbonstate_inst%totc_col , & ! Input:  [real(r8) (:)]  (gC/m2) total column carbon, incl veg and cpool
+         totcoln      => soilbiogeochem_nitrogenstate_inst%totn_col & ! Input:  [real(r8) (:)]  (gN/m2) total column nitrogen, incl veg 
          )
     
     do fc = 1,num_soilc
        c = filter_soilc(fc)
 
-       if( is_fates(c) ) then
-          col_begcb(c) = soilbiogeochem_carbonstate_inst%totmicc_col(c)   + &
-               soilbiogeochem_carbonstate_inst%totlitc_col(c)   + &
-               soilbiogeochem_carbonstate_inst%totsomc_col(c)   + &
-               soilbiogeochem_carbonstate_inst%ctrunc_col(c)
-       else
-          col_begcb(c) = totcolc(c)
-          col_begnb(c) = totcoln(c)
-       end if
+       col_begcb(c) = totcolc(c)
+       col_begnb(c) = totcoln(c)
+
     end do
 
     end associate
@@ -229,7 +225,7 @@ contains
     integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
     type(soilbiogeochem_carbonflux_type) , intent(in)    :: soilbiogeochem_carbonflux_inst
-    type(soilbiogeochem_carbonstate_type), intent(in)    :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type), intent(inout) :: soilbiogeochem_carbonstate_inst
     type(cnveg_carbonflux_type)          , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
     type(cn_products_type)               , intent(in)    :: c_products_inst
@@ -256,7 +252,7 @@ contains
     associate(                                                                            & 
          grc_begcb               =>    this%begcb_grc                                   , & ! Input:  [real(r8) (:) ]  (gC/m2) gridcell-level carbon mass, beginning of time step
          grc_endcb               =>    this%endcb_grc                                   , & ! Output: [real(r8) (:) ]  (gC/m2) gridcell-level carbon mass, end of time step
-         totgrcc                 =>    cnveg_carbonstate_inst%totc_grc                  , & ! Input:  [real(r8) (:)]  (gC/m2) total gridcell carbon, incl veg and cpool
+         totgrcc                 =>    soilbiogeochem_carbonstate_inst%totc_grc         , & ! Output:  [real(r8) (:)]  (gC/m2) total gridcell carbon, incl veg and cpool
          nbp_grc                 =>    cnveg_carbonflux_inst%nbp_grc                    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) net biome production (positive for sink)
          cropprod1_grc           =>    c_products_inst%cropprod1_grc                    , & ! Input:  [real(r8) (:)]  (gC/m2) carbon in crop products
          tot_woodprod_grc        =>    c_products_inst%tot_woodprod_grc                 , & ! Input:  [real(r8) (:)]  (gC/m2) total carbon in wood products
@@ -273,7 +269,7 @@ contains
          col_xsmrpool_to_atm     =>   cnveg_carbonflux_inst%xsmrpool_to_atm_col         , & ! Input:  [real(r8) (:) ]  (gC/m2/s) excess MR pool crop harvest loss to atm
          som_c_leached           =>    soilbiogeochem_carbonflux_inst%som_c_leached_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total SOM C loss from vertical transport 
 
-         totcolc                 =>    cnveg_carbonstate_inst%totc_col                    & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
+         totcolc                 =>    soilbiogeochem_carbonstate_inst%totc_col                    & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
          )
 
       ! set time steps
@@ -286,13 +282,14 @@ contains
       do fc = 1,num_soilc
          c = filter_soilc(fc)
 
-         if( is_fates(c) ) then
-
-            ! calculate the total column-level carbon storage, for mass conservation check
-            col_endcb(c) = soilbiogeochem_carbonstate_inst%totmicc_col(c)   + &
-                           soilbiogeochem_carbonstate_inst%totlitc_col(c)   + &
-                           soilbiogeochem_carbonstate_inst%totsomc_col(c)   + &
-                           soilbiogeochem_carbonstate_inst%ctrunc_col(c)
+         ! calculate the total column-level carbon storage, for mass conservation check
+         ! for bigleaf, totcolc includes soil and all of the veg c pools including cpool, xfer, etc
+         ! for fates, totcolc only includes soil and non-fates litter carbon,
+         ! see soibiogeochem_carbonstate_inst%summary for calculations
+         col_endcb(c) = totcolc(c)
+         
+         
+         if( col%is_fates(c) ) then
 
             ! calculate total column-level inputs (litter fluxes) [g/m2/s]
             s = clm_fates%f2hmap(ic)%hsites(c)
@@ -308,12 +305,8 @@ contains
             ! So they are irrelevant here
             ! (gC/m2/s) total heterotrophic respiration
             col_coutputs = soilbiogeochem_carbonflux_inst%hr_col(c)
-            
 
          else
-
-            ! calculate the total column-level carbon storage, for mass conservation check
-            col_endcb(c) = totcolc(c)
             
             ! calculate total column-level inputs
             col_cinputs = gpp(c)
@@ -451,7 +444,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine NBalanceCheck(this, bounds, num_soilc, filter_soilc, &
-       soilbiogeochem_nitrogenflux_inst, cnveg_nitrogenflux_inst, &
+       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, &
+       cnveg_nitrogenflux_inst, &
        cnveg_nitrogenstate_inst, n_products_inst, atm2lnd_inst)
     !
     ! !DESCRIPTION:
@@ -468,10 +462,12 @@ contains
     integer                                 , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                                 , intent(in)    :: filter_soilc                                      (:) ! filter for soil columns
     type(soilbiogeochem_nitrogenflux_type)  , intent(in)    :: soilbiogeochem_nitrogenflux_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(cnveg_nitrogenflux_type)           , intent(in)    :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(cn_products_type)                  , intent(in)    :: n_products_inst
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
+    
     !
     ! !LOCAL VARIABLES:
     integer :: c,err_index,j  ! indices
@@ -494,7 +490,7 @@ contains
     associate(                                                                             & 
          grc_begnb           => this%begnb_grc                                           , & ! Input:  [real(r8) (:) ]  (gN/m2) gridcell nitrogen mass, beginning of time step
          grc_endnb           => this%endnb_grc                                           , & ! Output: [real(r8) (:) ]  (gN/m2) gridcell nitrogen mass, end of time step
-         totgrcn             => cnveg_nitrogenstate_inst%totn_grc                        , & ! Input:  [real(r8) (:) ]  (gN/m2) total gridcell nitrogen, incl veg
+         totgrcn             => soilbiogeochem_nitrogenstate_inst%totn_grc                        , & ! Input:  [real(r8) (:) ]  (gN/m2) total gridcell nitrogen, incl veg
          cropprod1_grc       => n_products_inst%cropprod1_grc                            , & ! Input:  [real(r8) (:)]  (gN/m2) nitrogen in crop products
          product_loss_grc    => n_products_inst%product_loss_grc                         , & ! Input:  [real(r8) (:)]  (gN/m2) losses from wood & crop products
          tot_woodprod_grc    => n_products_inst%tot_woodprod_grc                         , & ! Input:  [real(r8) (:)]  (gN/m2) total nitrogen in wood products
@@ -520,7 +516,7 @@ contains
          wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
          crop_harvestn_to_cropprodn => cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) crop harvest N to 1-year crop product pool
 
-         totcoln             => cnveg_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
+         totcoln             => soilbiogeochem_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
          )
 
       ! set time steps
