@@ -5,8 +5,8 @@ module CNC14DecayMod
   !
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
-  use clm_time_manager                   , only : get_step_size, get_days_per_year
-  use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
+  use clm_time_manager                   , only : get_step_size_real, get_days_per_year
+  use clm_varpar                         , only : nlevdecomp, ndecomp_pools
   use clm_varcon                         , only : secspday
   use clm_varctl                         , only : spinup_state
   use decompMod                          , only : bounds_type
@@ -86,7 +86,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
       days_per_year = get_days_per_year()
 
       half_life = 5730._r8 * secspday * days_per_year
@@ -107,7 +107,7 @@ contains
                      spinup_term = spinup_term  * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
                   endif
                else
-                  spinup_term = 1.
+                  spinup_term = 1._r8
                endif
                decomp_cpools_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (1._r8 - decay_const * spinup_term * dt)
             end do

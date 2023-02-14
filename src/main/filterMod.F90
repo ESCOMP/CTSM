@@ -87,8 +87,8 @@ module filterMod
      integer, pointer :: nolakeurbanp(:) ! non-lake, non-urban filter (pfts)
      integer :: num_nolakeurbanp         ! number of pfts in non-lake, non-urban filter
 
-     integer, pointer :: icemecc(:)      ! glacier mec filter (cols)
-     integer :: num_icemecc              ! number of columns in glacier mec filter
+     integer, pointer :: icec(:)         ! glacier filter (cols)
+     integer :: num_icec                 ! number of columns in glacier filter
      
      integer, pointer :: do_smb_c(:)     ! glacier+bareland SMB calculations-on filter (cols)
      integer :: num_do_smb_c             ! number of columns in glacier+bareland SMB mec filter         
@@ -227,7 +227,7 @@ contains
        allocate(this_filter(nc)%pcropp(bounds%endp-bounds%begp+1))
        allocate(this_filter(nc)%soilnopcropp(bounds%endp-bounds%begp+1))
 
-       allocate(this_filter(nc)%icemecc(bounds%endc-bounds%begc+1))      
+       allocate(this_filter(nc)%icec(bounds%endc-bounds%begc+1))
        allocate(this_filter(nc)%do_smb_c(bounds%endc-bounds%begc+1))       
        
     end do
@@ -247,7 +247,7 @@ contains
     type(glc_behavior_type) , intent(in) :: glc_behavior
     !------------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_CLUMP, sourcefile, __LINE__)
 
     call setFiltersOneGroup(bounds, &
          filter, include_inactive = .false., &
@@ -289,7 +289,7 @@ contains
     ! !USES:
     use decompMod       , only : BOUNDS_LEVEL_CLUMP
     use pftconMod       , only : npcropmin
-    use landunit_varcon , only : istsoil, istcrop, istice_mec
+    use landunit_varcon , only : istsoil, istcrop, istice
     !
     ! !ARGUMENTS:
     type(bounds_type)       , intent(in)    :: bounds  
@@ -307,7 +307,7 @@ contains
     integer :: g           !gridcell index
     !------------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_CLUMP, sourcefile, __LINE__)
 
     nc = bounds%clump_index
 
@@ -488,13 +488,13 @@ contains
     do c = bounds%begc,bounds%endc
        if (col%active(c) .or. include_inactive) then
           l = col%landunit(c)
-          if (lun%itype(l) == istice_mec) then
+          if (lun%itype(l) == istice) then
              f = f + 1
-             this_filter(nc)%icemecc(f) = c
+             this_filter(nc)%icec(f) = c
           end if
        end if
     end do
-    this_filter(nc)%num_icemecc = f
+    this_filter(nc)%num_icec = f
 
     f = 0
     do c = bounds%begc,bounds%endc
@@ -506,11 +506,11 @@ contains
           ! Elsewhere (where ice melt remains in place), we cannot compute a sensible
           ! negative SMB.
           !
-          ! In addition to istice_mec columns, we also compute SMB for any soil column in
+          ! In addition to istice columns, we also compute SMB for any soil column in
           ! this region, in order to provide SMB forcing for the bare ground elevation
           ! class (elevation class 0).
           if ( glc_behavior%melt_replaced_by_ice_grc(g) .and. &
-               (lun%itype(l) == istice_mec .or. lun%itype(l) == istsoil)) then
+               (lun%itype(l) == istice .or. lun%itype(l) == istsoil)) then
              f = f + 1
              this_filter(nc)%do_smb_c(f) = c
           end if
@@ -558,8 +558,8 @@ contains
     character(len=*), parameter :: subname = 'setExposedvegpFilter'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_veg_nosno) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_CLUMP, sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_veg_nosno) == (/bounds%endp/)), sourcefile, __LINE__)
 
     nc = bounds%clump_index
 

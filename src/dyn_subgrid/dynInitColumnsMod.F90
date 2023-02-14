@@ -67,7 +67,7 @@ contains
     character(len=*), parameter :: subname = 'initialize_new_columns'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT_ALL((ubound(cactive_prior) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cactive_prior) == (/bounds%endc/)), sourcefile, __LINE__)
 
     do c = bounds%begc, bounds%endc
        ! If this column is newly-active, then we need to initialize it using the routines in this module
@@ -97,7 +97,7 @@ contains
     ! Returns TEMPLATE_NONE_FOUND if there is no column to use for initialization
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop, istice_mec, istdlak, istwet, isturb_MIN, isturb_MAX
+    use landunit_varcon, only : istsoil, istcrop, istice, istdlak, istwet, isturb_MIN, isturb_MAX
     !
     ! !ARGUMENTS:
     integer :: c_template  ! function result
@@ -112,7 +112,7 @@ contains
     character(len=*), parameter :: subname = 'initial_template_col_dispatcher'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT_ALL((ubound(cactive_prior) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cactive_prior) == (/bounds%endc/)), sourcefile, __LINE__)
 
     l = col%landunit(c_new)
     ltype = lun%itype(l)
@@ -121,7 +121,7 @@ contains
        c_template = initial_template_col_soil(c_new)
     case(istcrop)
        c_template = initial_template_col_crop(bounds, c_new, cactive_prior(bounds%begc:bounds%endc))
-    case(istice_mec)
+    case(istice)
        write(iulog,*) subname// ' ERROR: Ability to initialize a newly-active glacier mec column not yet implemented'
        write(iulog,*) 'Expectation is that glacier mec columns should be active from the start of the run wherever they can grow'
        call endrun(decomp_index=c_new, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
@@ -196,7 +196,7 @@ contains
     character(len=*), parameter :: subname = 'initial_template_col_crop'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(cactive_prior) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cactive_prior) == (/bounds%endc/)), sourcefile, __LINE__)
     
     ! First try to find an active column on the vegetated landunit; if there is none, then
     ! find the first active column on the crop landunit; if there is none, then

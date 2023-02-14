@@ -247,11 +247,10 @@ contains
      ! USES
      use shr_kind_mod    , only : r8 => shr_kind_r8     
      use shr_const_mod   , only : SHR_CONST_PI
-     use shr_log_mod     , only : errMsg => shr_log_errMsg   
      use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
      use decompMod       , only : bounds_type
      use clm_varcon      , only : denh2o, denice
-     use landunit_varcon , only : istice_mec, istwet, istsoil, istcrop
+     use landunit_varcon , only : istice, istwet, istsoil, istcrop
      use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
      use column_varcon   , only : icol_road_imperv, icol_road_perv
      use ColumnType      , only : col
@@ -270,7 +269,7 @@ contains
      real(r8) :: fac, fac_fc, wx      !temporary variables
      integer  :: c, l, fc     !indices
 
-     SHR_ASSERT_ALL((ubound(soilbeta)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(soilbeta)    == (/bounds%endc/)), sourcefile, __LINE__)
 
      associate(                                              &
           watsat      =>    soilstate_inst%watsat_col      , & ! Input:  [real(r8) (:,:)] volumetric soil water at saturation (porosity)
@@ -285,7 +284,7 @@ contains
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = col%landunit(c)   
-          if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice_mec) then
+          if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice) then
              if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                 wx   = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/col%dz(c,1)
                 fac  = min(1._r8, wx/watsat(c,1))
@@ -345,11 +344,10 @@ contains
      ! USES
      use shr_kind_mod    , only : r8 => shr_kind_r8     
      use shr_const_mod   , only : SHR_CONST_PI
-     use shr_log_mod     , only : errMsg => shr_log_errMsg   
      use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
      use decompMod       , only : bounds_type
      use clm_varcon      , only : denh2o, denice
-     use landunit_varcon , only : istice_mec, istwet, istsoil, istcrop
+     use landunit_varcon , only : istice, istwet, istsoil, istcrop
      use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
      use column_varcon   , only : icol_road_imperv, icol_road_perv
      use ColumnType      , only : col
@@ -370,8 +368,8 @@ contains
      real(r8) :: eff_por_top
      integer  :: c, l, fc     !indices
      
-     SHR_ASSERT_ALL((ubound(dsl)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(soilresis)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(dsl)    == (/bounds%endc/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(soilresis)    == (/bounds%endc/)), sourcefile, __LINE__)
 
      associate(                                              &
           dz                =>    col%dz                             , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)                             
@@ -388,7 +386,7 @@ contains
    do fc = 1,num_nolakec
       c = filter_nolakec(fc)
       l = col%landunit(c)  
-      if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice_mec) then
+      if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice) then
          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
             vwc_liq = max(h2osoi_liq(c,1),1.0e-6_r8)/(dz(c,1)*denh2o)
 ! eff_porosity not calculated til SoilHydrology

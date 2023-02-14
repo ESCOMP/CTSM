@@ -109,9 +109,9 @@ contains
     ! This parameter specifies the order in which landunit areas are decreased when the
     ! specified areas add to greater than 100%. Landunits not listed here can never be
     ! decreased unless the forcings say they should be decreased. In particular, note
-    ! that istice_mec doesn't appear here, so that the istice_mec area always will match
+    ! that istice doesn't appear here, so that the istice area always will match
     ! the areas specified by GLC. In general, the code will NOT be robust if more than
-    ! one landunit is excluded from this list. Meaning: since istice_mec is excluded from
+    ! one landunit is excluded from this list. Meaning: since istice is excluded from
     ! this list, all other landunits should appear in this list!
     integer, parameter :: decrease_order(7) = &
          (/istsoil, istcrop, isturb_md, isturb_hd, isturb_tbd, istwet, istdlak/)
@@ -121,7 +121,7 @@ contains
     character(len=*), parameter :: subname = 'update_landunit_weights_one_gcell'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((size(landunit_weights) == max_lunit), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(landunit_weights) == max_lunit), sourcefile, __LINE__)
 
     landunit_sum = sum(landunit_weights)
     

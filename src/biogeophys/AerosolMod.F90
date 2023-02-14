@@ -7,8 +7,8 @@ module AerosolMod
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
   use decompMod        , only : bounds_type
-  use clm_varpar       , only : nlevsno, nlevgrnd 
-  use clm_time_manager , only : get_step_size
+  use clm_varpar       , only : nlevsno, nlevgrnd, nlevmaxurbgrnd
+  use clm_time_manager , only : get_step_size_real
   use atm2lndType      , only : atm2lnd_type
   use WaterFluxBulkType    , only : waterfluxbulk_type
   use WaterStateBulkType   , only : waterstatebulk_type
@@ -373,12 +373,13 @@ contains
     logical :: readvar      ! determine if variable is on initial file
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osoi_ice_col) == (/bounds%endc,nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osoi_liq_col) == (/bounds%endc,nlevgrnd/)), errMsg(sourcefile, __LINE__))
+   SHR_ASSERT_ALL_FL((ubound(h2osoi_ice_col) == (/bounds%endc,nlevmaxurbgrnd/)), sourcefile, __LINE__)
+   SHR_ASSERT_ALL_FL((ubound(h2osoi_liq_col) == (/bounds%endc,nlevmaxurbgrnd/)), sourcefile, __LINE__)
 
     call restartvar(ncid=ncid, flag=flag, varname='mss_bcpho', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name='snow layer hydrophobic black carbon mass', units='kg m-2', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%mss_bcpho_col)
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize mss_bcpho to zero
@@ -388,6 +389,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='mss_bcphi', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name='snow layer hydrophilic black carbon mass', units='kg m-2', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%mss_bcphi_col)
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize mss_bcphi to zero
@@ -397,6 +399,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='mss_ocpho', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name='snow layer hydrophobic organic carbon mass', units='kg m-2', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%mss_ocpho_col)
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize mss_ocpho to zero
@@ -406,6 +409,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='mss_ocphi', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name='snow layer hydrophilic organic carbon mass', units='kg m-2', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%mss_ocphi_col)
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize mss_ocphi to zero
@@ -415,6 +419,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='mss_dst1', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name='snow layer dust species 1 mass', units='kg m-2', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%mss_dst1_col)
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize mss_dst1 to zero
@@ -424,6 +429,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='mss_dst2', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name='snow layer dust species 2 mass', units='kg m-2', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%mss_dst2_col)
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize mss_dst2 to zero
@@ -433,6 +439,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='mss_dst3', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name='snow layer dust species 3 mass', units='kg m-2', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar,  data=this%mss_dst3_col)
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize mss_dst3 to zero
@@ -442,6 +449,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='mss_dst4', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name='snow layer dust species 4 mass', units='kg m-2', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%mss_dst4_col)
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize mss_dst4 to zero
@@ -603,7 +611,7 @@ contains
          mss_cnc_dst4  => aerosol_inst%mss_cnc_dst4_col       & ! Output: [real(r8) (:,:) ]  mass concentration of dust species 4 (col,lyr) [kg/kg]
          )
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       do fc = 1, num_on
          c = filter_on(fc)
@@ -803,7 +811,7 @@ contains
       ! is in the top layer after deposition, and is not immediately
       ! washed out before radiative calculations are done
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       do fc = 1, num_snowc
          c = filter_snowc(fc)

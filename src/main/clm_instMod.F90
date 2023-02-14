@@ -11,7 +11,7 @@ module clm_instMod
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
   use clm_varctl      , only : use_century_decomp, use_crop, snow_cover_fraction_method, paramfile
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
-  use landunit_varcon , only : istice_mec, istsoil
+  use landunit_varcon , only : istice, istsoil
   use perf_mod        , only : t_startf, t_stopf
   use controlMod      , only : NLFilename
   use fileutils       , only : getfil
@@ -31,6 +31,7 @@ module clm_instMod
   ! Definition of component types 
   !-----------------------------------------
 
+  use ActiveLayerMod                  , only : active_layer_type
   use AerosolMod                      , only : aerosol_type
   use CanopyStateType                 , only : canopystate_type
   use ch4Mod                          , only : ch4_type
@@ -96,6 +97,7 @@ module clm_instMod
   !-----------------------------------------
 
   ! Physics types 
+  type(active_layer_type), public         :: active_layer_inst
   type(aerosol_type), public              :: aerosol_inst
   type(canopystate_type), public          :: canopystate_inst
   type(energyflux_type), public           :: energyflux_inst
@@ -191,6 +193,7 @@ contains
     use SoilBiogeochemCompetitionMod       , only : SoilBiogeochemCompetitionInit
     
     use initVerticalMod                    , only : initVertical
+    use SnowHydrologyMod                   , only : InitSnowLayers
     use accumulMod                         , only : print_accum_fields 
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
@@ -239,7 +242,7 @@ contains
        ! feedback may not activate on time (or at all). So, as a compromise, we start with
        ! a small amount of snow in places that are likely to be snow-covered for much or
        ! all of the year.
-       if (lun%itype(l)==istice_mec) then
+       if (lun%itype(l)==istice) then
           h2osno_col(c) = 100._r8
        else if (lun%itype(l)==istsoil .and. abs(grc%latdeg(g)) >= 60._r8) then 
           h2osno_col(c) = 100._r8
@@ -261,9 +264,14 @@ contains
 
     call initVertical(bounds,               &
          glc_behavior, &
-         snow_depth_col(begc:endc),              &
          urbanparams_inst%thick_wall(begl:endl), &
          urbanparams_inst%thick_roof(begl:endl))
+
+    !-----------------------------------------------
+    ! Set cold-start values for snow levels, snow layers and snow interfaces 
+    !-----------------------------------------------
+
+    call InitSnowLayers(bounds, snow_depth_col(bounds%begc:bounds%endc))
 
     ! Initialize clm->drv and drv->clm data structures
 
@@ -281,6 +289,8 @@ contains
          urbanparams_inst%em_improad(begl:endl), &
          urbanparams_inst%em_perroad(begl:endl), &
          IsSimpleBuildTemp(), IsProgBuildTemp() )
+
+    call active_layer_inst%Init(bounds)
 
     call canopystate_inst%Init(bounds)
 
@@ -305,7 +315,7 @@ contains
 
     call aerosol_inst%Init(bounds, NLFilename)
 
-    call frictionvel_inst%Init(bounds)
+    call frictionvel_inst%Init(bounds, NLFilename = NLFilename, params_ncid = params_ncid)
 
     call lakestate_inst%Init(bounds)
     call LakeConInit()
@@ -369,7 +379,7 @@ contains
        ! Note that init_decompcascade_bgc and init_decompcascade_cn need 
        ! soilbiogeochem_state_inst to be initialized
 
-       call init_decomp_cascade_constants()
+       call init_decomp_cascade_constants( use_century_decomp )
        if (use_century_decomp) then
           call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, &
                                       soilstate_inst )
@@ -417,7 +427,7 @@ contains
     end if ! end of if use_cn 
 
     ! Note - always call Init for bgc_vegetation_inst: some pieces need to be initialized always
-    call bgc_vegetation_inst%Init(bounds, nlfilename, GetBalanceCheckSkipSteps() )
+    call bgc_vegetation_inst%Init(bounds, nlfilename, GetBalanceCheckSkipSteps(), params_ncid )
 
     if (use_cn .or. use_fates) then
        call crop_inst%Init(bounds)
@@ -458,6 +468,10 @@ contains
        call crop_inst%InitAccBuffer(bounds)
     end if
 
+    if (use_fates) then
+       call clm_fates%InitAccBuffer(bounds)
+    end if
+
     call print_accum_fields()
 
     call ncd_pio_closefile(params_ncid)
@@ -467,7 +481,7 @@ contains
   end subroutine clm_instInit
 
   !-----------------------------------------------------------------------
-  subroutine clm_instRest(bounds, ncid, flag)
+  subroutine clm_instRest(bounds, ncid, flag, writing_finidat_interp_dest_file)
     !
     ! !USES:
     use ncdio_pio       , only : file_desc_t
@@ -483,12 +497,15 @@ contains
     
     type(file_desc_t) , intent(inout) :: ncid ! netcdf id
     character(len=*)  , intent(in)    :: flag ! 'define', 'write', 'read' 
+    logical           , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file (ignored for flag=='read')
 
     ! Local variables
     integer                           :: nc, nclumps
     type(bounds_type)                 :: bounds_clump
 
     !-----------------------------------------------------------------------
+
+    call active_layer_inst%restart (bounds, ncid, flag=flag)
 
     call atm2lnd_inst%restart (bounds, ncid, flag=flag)
 
@@ -515,6 +532,7 @@ contains
     call soilstate_inst%restart (bounds, ncid, flag=flag)
 
     call water_inst%restart(bounds, ncid, flag=flag, &
+         writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
          watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:))
 
     call irrigation_inst%restart (bounds, ncid, flag=flag)
@@ -567,8 +585,10 @@ contains
 
        call clm_fates%restart(bounds, ncid, flag=flag,  &
             waterdiagnosticbulk_inst=water_inst%waterdiagnosticbulk_inst, &
+            waterstatebulk_inst=water_inst%waterstatebulk_inst, &
             canopystate_inst=canopystate_inst, &
-            frictionvel_inst=frictionvel_inst)
+            soilstate_inst=soilstate_inst, &
+            active_layer_inst=active_layer_inst)
 
     end if
 

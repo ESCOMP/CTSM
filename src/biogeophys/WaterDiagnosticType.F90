@@ -178,7 +178,7 @@ contains
          units='kg/m2', &
          avgflag='A', &
          long_name=this%info%lname('soil liquid water + ice in top 10cm of soil (veg landunits only)'), &
-         ptr_col=this%h2osoi_liqice_10cm_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+         ptr_col=this%h2osoi_liqice_10cm_col, l2g_scale_type='veg')
 
     this%tws_grc(begg:endg) = spval
     call hist_addfld1d ( &
@@ -294,8 +294,9 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varcon       , only : nameg
+    use clm_varcon       , only : nameg, namec
     use ncdio_pio        , only : file_desc_t, ncd_double
+    use clm_varctl       , only : use_fates_planthydro
     use restUtilMod
     !
     ! !ARGUMENTS:
@@ -329,12 +330,22 @@ contains
          units='kg/kg', &
          interpinic_flag='interp', readvar=readvar, data=this%qaf_lun)
 
+    if(use_fates_planthydro) then
+       call restartvar(ncid=ncid, flag=flag, &
+            varname=this%info%fname('TOTAL_PLANT_STORED_H2O'), &
+            xtype=ncd_double, dim1name=namec, &
+            long_name=this%info%lname('total plant stored water (for fates hydro)'), &
+            units='kg/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%total_plant_stored_h2o_col)
+    end if
+
   end subroutine Restart
 
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, &
        num_soilp, filter_soilp, &
        num_allc, filter_allc, &
+       num_nolakec, filter_nolakec, &
        waterstate_inst, waterflux_inst)
     !
     ! !DESCRIPTION:
@@ -347,6 +358,8 @@ contains
     integer                     , intent(in)    :: filter_soilp(:) ! filter for soil patches
     integer                     , intent(in)    :: num_allc        ! number of columns in allc filter
     integer                     , intent(in)    :: filter_allc(:)  ! filter for all columns
+    integer                     , intent(in)    :: num_nolakec        ! number of columns in no-lake filter
+    integer                     , intent(in)    :: filter_nolakec(:)  ! filter for no-lake columns
     class(waterstate_type)      , intent(in)    :: waterstate_inst
     class(waterflux_type)       , intent(in)    :: waterflux_inst
     !

@@ -15,13 +15,13 @@ module SnowCoverFractionSwensonLawrence2012Mod
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use ncdio_pio      , only : file_desc_t
-  use clm_varctl     , only : iulog, use_subgrid_fluxes
+  use clm_varctl     , only : iulog
   use spmdMod        , only : masterproc, mpicom
   use fileutils      , only : getavu, relavu, opnfil
   use clm_varcon     , only : rpi
   use ColumnType     , only : column_type
   use glcBehaviorMod , only : glc_behavior_type
-  use landunit_varcon, only : istice_mec
+  use landunit_varcon, only : istice
   use paramUtilMod   , only : readNcdioScalar
   use SnowCoverFractionBaseMod, only : snow_cover_fraction_base_type
 
@@ -63,8 +63,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine UpdateSnowDepthAndFrac(this, bounds, num_c, filter_c, &
-       urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
-       snow_depth, frac_sno)
+       lun_itype_col, urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
+       snow_depth, frac_sno, frac_sno_eff)
     !
     ! !DESCRIPTION:
     ! Update snow depth and snow fraction using the SwensonLawrence2012 parameterization
@@ -75,15 +75,17 @@ contains
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-    logical  , intent(in)    :: urbpoi( bounds%begc: )       ! true if the given column is urban
-    real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-    real(r8) , intent(in)    :: snowmelt( bounds%begc: )     ! total snow melt in the time step (mm H2O)
-    real(r8) , intent(in)    :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
-    real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
-    real(r8) , intent(in)    :: bifall( bounds%begc: )       ! bulk density of newly fallen dry snow (kg/m3)
+    integer  , intent(in)    :: lun_itype_col( bounds%begc: ) ! landunit type for each column
+    logical  , intent(in)    :: urbpoi( bounds%begc: )        ! true if the given column is urban
+    real(r8) , intent(in)    :: h2osno_total( bounds%begc: )  ! total snow water (mm H2O)
+    real(r8) , intent(in)    :: snowmelt( bounds%begc: )      ! total snow melt in the time step (mm H2O)
+    real(r8) , intent(in)    :: int_snow( bounds%begc: )      ! integrated snowfall (mm H2O)
+    real(r8) , intent(in)    :: newsnow( bounds%begc: )       ! total new snow in the time step (mm H2O)
+    real(r8) , intent(in)    :: bifall( bounds%begc: )        ! bulk density of newly fallen dry snow (kg/m3)
 
-    real(r8) , intent(inout) :: snow_depth( bounds%begc: )   ! snow height (m)
-    real(r8) , intent(inout) :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: snow_depth( bounds%begc: )    ! snow height (m)
+    real(r8) , intent(inout) :: frac_sno( bounds%begc: )      ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_eff( bounds%begc: )  ! eff. fraction of ground covered by snow (0 to 1)
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
@@ -92,6 +94,7 @@ contains
     character(len=*), parameter :: subname = 'UpdateSnowDepthAndFrac'
     !-----------------------------------------------------------------------
 
+    SHR_ASSERT_FL((ubound(lun_itype_col, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(urbpoi, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snowmelt, 1) == bounds%endc), sourcefile, __LINE__)
@@ -100,57 +103,86 @@ contains
     SHR_ASSERT_FL((ubound(bifall, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc  &
+         )
+
+    ! ------------------------------------------------------------------------
+    ! Update frac_sno
+    ! ------------------------------------------------------------------------
 
     do fc = 1, num_c
        c = filter_c(fc)
-       if (h2osno_total(c) > 0.0_r8) then
-          !======================  FSCA PARAMETERIZATIONS  ======================
-          ! fsca parameterization based on *changes* in swe
-          ! first compute change from melt during previous time step
-          if(snowmelt(c) > 0._r8) then
+
+       !======================  FSCA PARAMETERIZATIONS  ======================
+       ! fsca parameterization based on *changes* in swe
+       if (h2osno_total(c) == 0._r8) then
+          if (newsnow(c) > 0._r8) then
+             frac_sno(c) = tanh(this%accum_factor * newsnow(c))
+          else
+             ! NOTE(wjs, 2019-08-07) This resetting of frac_sno to 0 when h2osno_total is 0
+             ! may already be done elsewhere; if it isn't, it possibly *should* be done
+             ! elsewhere rather than here.
+             frac_sno(c) = 0._r8
+          end if
+
+       else ! h2osno_total(c) > 0
+          if (snowmelt(c) > 0._r8) then
+             ! first compute change from melt during previous time step
              frac_sno(c) = this%FracSnowDuringMelt( &
                   c            = c, &
                   h2osno_total = h2osno_total(c), &
                   int_snow     = int_snow(c))
           end if
 
-          ! update fsca by new snow event, add to previous fsca
           if (newsnow(c) > 0._r8) then
-             frac_sno(c) = 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
-          end if
+             ! Update fsca by new snow event, add to previous fsca
 
-          !====================================================================
+             ! The form in Swenson & Lawrence 2012 (eqn. 3) is:
+             ! 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
+             !
+             ! This form is algebraically equivalent, but simpler and less prone to
+             ! roundoff errors (see https://github.com/ESCOMP/ctsm/issues/784)
+             frac_sno(c) = frac_sno(c) + tanh(this%accum_factor * newsnow(c)) * (1._r8 - frac_sno(c))
 
-          ! for subgrid fluxes
-          if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
-             if (frac_sno(c) > 0._r8)then
-                snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall(c) * frac_sno(c))
-             else
-                snow_depth(c)=0._r8
-             end if
-          else
-             ! for uniform snow cover
-             snow_depth(c)=snow_depth(c)+newsnow(c)/bifall(c)
-          end if
-
-       else ! h2osno_total == 0
-          ! initialize frac_sno and snow_depth when no snow present initially
-          if (newsnow(c) > 0._r8) then
-             z_avg = newsnow(c)/bifall(c)
-             frac_sno(c) = tanh(this%accum_factor * newsnow(c))
-
-             ! update snow_depth to be consistent with frac_sno, z_avg
-             if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
-                snow_depth(c)=z_avg/frac_sno(c)
-             else
-                snow_depth(c)=newsnow(c)/bifall(c)
-             end if
-          else
-             snow_depth(c) = 0._r8
-             frac_sno(c) = 0._r8
           end if
        end if
     end do
+
+    call this%CalcFracSnoEff(bounds, num_c, filter_c, &
+         lun_itype_col = lun_itype_col(begc:endc), &
+         urbpoi        = urbpoi(begc:endc), &
+         frac_sno      = frac_sno(begc:endc), &
+         frac_sno_eff  = frac_sno_eff(begc:endc))
+
+    ! ------------------------------------------------------------------------
+    ! Update snow_depth
+    ! ------------------------------------------------------------------------
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+
+       if (h2osno_total(c) > 0.0_r8) then
+          if (frac_sno_eff(c) > 0._r8)then
+             snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall(c) * frac_sno_eff(c))
+          else
+             snow_depth(c)=0._r8
+          end if
+
+       else ! h2osno_total == 0
+          if (newsnow(c) > 0._r8) then
+             z_avg = newsnow(c)/bifall(c)
+             snow_depth(c) = z_avg/frac_sno_eff(c)
+          else
+             snow_depth(c) = 0._r8
+          end if
+       end if
+    end do
+
+    end associate
 
   end subroutine UpdateSnowDepthAndFrac
 
@@ -422,8 +454,8 @@ contains
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
 
-       if (col%lun_itype(c) == istice_mec .and. glc_behavior%allow_multiple_columns_grc(g)) then
-          ! ice_mec columns already account for subgrid topographic variability through
+       if (col%lun_itype(c) == istice .and. glc_behavior%allow_multiple_columns_grc(g)) then
+          ! ice columns already account for subgrid topographic variability through
           ! their use of multiple elevation classes; thus, to avoid double-accounting for
           ! topographic variability in these columns, we ignore topo_std and use a fixed
           ! value of n_melt.

@@ -21,7 +21,7 @@ module dynGrossUnrepMod
   use SoilBiogeochemStateType , only : soilbiogeochem_state_type
   use pftconMod               , only : pftcon
   use clm_varcon              , only : grlnd
-  use clm_varpar              , only : natpft_size
+  use clm_varpar              , only : natpft_size, i_litr_min, i_litr_max, i_met_lit
   use ColumnType              , only : col                
   use PatchType               , only : patch                
   !
@@ -385,19 +385,15 @@ contains
    type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
    !
    ! !LOCAL VARIABLES:
-   integer :: fc,c,pi,p,j               ! indices
+   integer :: fc,c,pi,p,j,i             ! indices
    !-----------------------------------------------------------------------
 
    associate(                                                                                                   & 
         ivt                              =>    patch%itype                                                      , & ! Input:  [integer  (:)   ]  pft vegetation type                                
         wtcol                            =>    patch%wtcol                                                      , & ! Input:  [real(r8) (:)   ]  pft weight relative to column (0-1)               
         
-        lf_flab                          =>    pftcon%lf_flab                                                 , & ! Input:  leaf litter labile fraction                       
-        lf_fcel                          =>    pftcon%lf_fcel                                                 , & ! Input:  leaf litter cellulose fraction                    
-        lf_flig                          =>    pftcon%lf_flig                                                 , & ! Input:  leaf litter lignin fraction                       
-        fr_flab                          =>    pftcon%fr_flab                                                 , & ! Input:  fine root litter labile fraction                  
-        fr_fcel                          =>    pftcon%fr_fcel                                                 , & ! Input:  fine root litter cellulose fraction               
-        fr_flig                          =>    pftcon%fr_flig                                                 , & ! Input:  fine root litter lignin fraction                  
+        lf_f                             =>    pftcon%lf_f                                                    , & ! Input:  leaf litter fractions
+        fr_f                             =>    pftcon%fr_f                                                    , & ! Input:  fine root litter fractions
         
         leaf_prof                        =>    soilbiogeochem_state_inst%leaf_prof_patch                      , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of leaves                         
         froot_prof                       =>    soilbiogeochem_state_inst%froot_prof_patch                     , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of fine roots                     
@@ -411,9 +407,7 @@ contains
         gru_deadcrootc_to_litter            =>    cnveg_carbonflux_inst%gru_deadcrootc_to_litter_patch           , & ! Input: [real(r8) (:)]                                                    
         gru_conv_cflux                      =>    cnveg_carbonflux_inst%gru_conv_cflux_patch                     , & ! Input: [real(r8) (:)   ]  C fluxes associated with conversion (immediate loss to atm)
 
-        gru_c_to_litr_met_c                 =>    cnveg_carbonflux_inst%gru_c_to_litr_met_c_col                  , & ! Output:  [real(r8) (:,:) ]  C fluxes associated with grossunrep to litter metabolic pool (gC/m3/s)
-        gru_c_to_litr_cel_c                 =>    cnveg_carbonflux_inst%gru_c_to_litr_cel_c_col                  , & ! Output:  [real(r8) (:,:) ]  C fluxes associated with grossunrep to litter cellulose pool (gC/m3/s)
-        gru_c_to_litr_lig_c                 =>    cnveg_carbonflux_inst%gru_c_to_litr_lig_c_col                  , & ! Output:  [real(r8) (:,:) ]  C fluxes associated with grossunrep to litter lignin pool (gC/m3/s)
+        gru_c_to_litr_c                     =>    cnveg_carbonflux_inst%gru_c_to_litr_c_col                      , & ! Output:  [real(r8) (:,:,:) ]  C fluxes associated with gross unrepresented landcover change to litter pools (gC/m3/s)
         gru_c_to_cwdc_c                     =>    cnveg_carbonflux_inst%gru_c_to_cwdc_col                        , & ! Output:  [real(r8) (:,:) ]  C fluxes associated with grossunrep to CWD pool (gC/m3/s)
 
         gru_wood_productc_gain_c            =>    cnveg_carbonflux_inst%gru_wood_productc_gain_col               , & ! Input: [real(r8) (:)]
@@ -424,11 +418,7 @@ contains
         gru_livecrootn_to_litter            =>    cnveg_nitrogenflux_inst%gru_livecrootn_to_litter_patch         , & ! Input: [real(r8) (:)]                                                    
         gru_deadcrootn_to_litter            =>    cnveg_nitrogenflux_inst%gru_deadcrootn_to_litter_patch         , & ! Input: [real(r8) (:)]                                                    
         gru_retransn_to_litter              =>    cnveg_nitrogenflux_inst%gru_retransn_to_litter_patch           , & ! Input: [real(r8) (:)]                                                    
-        gru_conv_nflux                      =>    cnveg_nitrogenflux_inst%gru_conv_nflux_patch                   , & ! Input: [real(r8) (:)   ]  N fluxes associated with conversion (immediate loss to atm)
-
-        gru_n_to_litr_met_c                 =>    cnveg_nitrogenflux_inst%gru_n_to_litr_met_n_col                , & ! Output:  [real(r8) (:,:) ]  N fluxes associated with grossunrep to litter metabolic pool (gN/m3/s)
-        gru_n_to_litr_cel_c                 =>    cnveg_nitrogenflux_inst%gru_n_to_litr_cel_n_col                , & ! Output:  [real(r8) (:,:) ]  N fluxes associated with grossunrep to litter cellulose pool (gN/m3/s)
-        gru_n_to_litr_lig_c                 =>    cnveg_nitrogenflux_inst%gru_n_to_litr_lig_n_col                , & ! Output:  [real(r8) (:,:) ]  N fluxes associated with grossunrep to litter lignin pool (gN/m3/s)
+        gru_n_to_litr_c                     =>    cnveg_nitrogenflux_inst%gru_n_to_litr_n_col                    , & ! Output:  [real(r8) (:,:,:) ]  N fluxes associated with grossunrep to litter pools (gN/m3/s)
         gru_n_to_cwdn_c                     =>    cnveg_nitrogenflux_inst%gru_n_to_cwdn_col                      , & ! Output:  [real(r8) (:,:) ]  N fluxes associated with grossunrep to CWD pool (gN/m3/s)
 
         gru_wood_productn_gain_c            =>    cnveg_nitrogenflux_inst%gru_wood_productn_gain_col               & ! Input: [real(r8) (:)]
@@ -444,43 +434,24 @@ contains
 
                  if (patch%active(p)) then
 
-                    ! leaf gross unrepresented landcover change mortality carbon fluxes
-                    gru_c_to_litr_met_c(c,j) = gru_c_to_litr_met_c(c,j) + &
-                         gru_leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                    gru_c_to_litr_cel_c(c,j) = gru_c_to_litr_cel_c(c,j) + &
-                         gru_leafc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                    gru_c_to_litr_lig_c(c,j) = gru_c_to_litr_lig_c(c,j) + &
-                         gru_leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-
-                    ! fine root gross unrepresented landcover change mortality carbon fluxes
-                    gru_c_to_litr_met_c(c,j) = gru_c_to_litr_met_c(c,j) + &
-                         gru_frootc_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                    gru_c_to_litr_cel_c(c,j) = gru_c_to_litr_cel_c(c,j) + &
-                         gru_frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                    gru_c_to_litr_lig_c(c,j) = gru_c_to_litr_lig_c(c,j) + &
-                         gru_frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                    do i = i_litr_min, i_litr_max
+                       gru_c_to_litr_c(c,j,i) = gru_c_to_litr_c(c,j,i) + &
+                            ! leaf gross unrepresented landcover change mortality carbon fluxes
+                            gru_leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
+                            ! fine root gross unrepresented landcover change mortality carbon fluxes
+                            gru_frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+                       gru_n_to_litr_c(c,j,i) = gru_n_to_litr_c(c,j,i) + &
+                            ! leaf gross unrepresented landcover change mortality nitrogen fluxes
+                            gru_leafn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
+                            ! fine root gross unrepresented landcover change mortality nitrogen fluxes
+                            gru_frootn_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+                    end do
 
                     ! coarse root gross unrepresented landcover change mortality carbon fluxes
                     gru_c_to_cwdc_c(c,j) = gru_c_to_cwdc_c(c,j) + &
                          gru_livecrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
                     gru_c_to_cwdc_c(c,j) = gru_c_to_cwdc_c(c,j) + &
                          gru_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j) 
-
-                    ! leaf gross unrepresented landcover change mortality nitrogen fluxes
-                    gru_n_to_litr_met_c(c,j) = gru_n_to_litr_met_c(c,j) + &
-                         gru_leafn_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                    gru_n_to_litr_cel_c(c,j) = gru_n_to_litr_cel_c(c,j) + &
-                         gru_leafn_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                    gru_n_to_litr_lig_c(c,j) = gru_n_to_litr_lig_c(c,j) + &
-                         gru_leafn_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-
-                    ! fine root unrepresented landcover change mortality nitrogen fluxes
-                    gru_n_to_litr_met_c(c,j) = gru_n_to_litr_met_c(c,j) + &
-                         gru_frootn_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                    gru_n_to_litr_cel_c(c,j) = gru_n_to_litr_cel_c(c,j) + &
-                         gru_frootn_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                    gru_n_to_litr_lig_c(c,j) = gru_n_to_litr_lig_c(c,j) + &
-                         gru_frootn_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
 
                     ! coarse root gross unrepresented landcover change mortality nitrogen fluxes
                     gru_n_to_cwdn_c(c,j) = gru_n_to_cwdn_c(c,j) + &
@@ -489,7 +460,10 @@ contains
                          gru_deadcrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
 
                     ! retranslocated N pool gross unrepresented landcover change mortality fluxes
-                    gru_n_to_litr_met_c(c,j) = gru_n_to_litr_met_c(c,j) + &
+                    ! process specific to i_met_lit, so we keep it outside
+                    ! the i_litr_min to i_litr_max loop above
+                    gru_n_to_litr_c(c,j,i_met_lit) =  &
+                         gru_n_to_litr_c(c,j,i_met_lit) + &
                          gru_retransn_to_litter(p) * wtcol(p) * leaf_prof(p,j)
 
                  end if

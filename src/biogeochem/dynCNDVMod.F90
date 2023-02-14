@@ -58,7 +58,7 @@ contains
     ! Time interpolate cndv pft weights from annual to time step
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_date, get_step_size, get_nstep, get_curr_yearfrac
+    use clm_time_manager, only : get_curr_date, get_step_size_real, get_nstep, get_curr_yearfrac
     use landunit_varcon , only : istsoil ! CNDV incompatible with dynLU
     !
     ! !ARGUMENTS:
@@ -85,7 +85,7 @@ contains
     ! SCAM not defined and create_croplandunit = .false.
 
     nstep         = get_nstep()
-    dtime         = get_step_size()
+    dtime         = get_step_size_real()
 
     wt1 = 1.0_r8 - get_curr_yearfrac(offset = -int(dtime))
 

@@ -8,6 +8,7 @@ module CNCIsoFluxMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
   use clm_varpar                         , only : max_patch_per_col, maxsoil_patches
+  use clm_varpar                         , only : i_litr_min, i_litr_max, i_met_lit
   use abortutils                         , only : endrun
   use pftconMod                          , only : pftcon
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
@@ -407,6 +408,16 @@ contains
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
+              iso_cnveg_cf%leafc_to_biofuelc_patch             , cnveg_cf%leafc_to_biofuelc_patch, &
+              iso_cnveg_cs%leafc_patch                         , cnveg_cs%leafc_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope) 
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%livestemc_to_biofuelc_patch         , cnveg_cf%livestemc_to_biofuelc_patch, &
+              iso_cnveg_cs%livestemc_patch                     , cnveg_cs%livestemc_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope) 
+
+         call CIsoFluxCalc(&
               iso_cnveg_cf%grainc_to_seed_patch                , cnveg_cf%grainc_to_seed_patch, &
               iso_cnveg_cs%grainc_patch                        , cnveg_cs%grainc_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
@@ -461,10 +472,17 @@ contains
               iso_cnveg_cs%livestemc_patch                     , cnveg_cs%livestemc_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
+         do fp = 1,num_soilp
+            p = filter_soilp(fp)
+            iso_cnveg_cf%grainc_to_cropprodc_patch(p) = iso_cnveg_cf%leafc_to_biofuelc_patch(p) + &
+                 iso_cnveg_cf%livestemc_to_biofuelc_patch(p)
+         end do
+
          if (use_grainproduct) then
             do fp = 1,num_soilp
                p = filter_soilp(fp)
-               iso_cnveg_cf%grainc_to_cropprodc_patch(p) = iso_cnveg_cf%grainc_to_food_patch(p)
+               iso_cnveg_cf%grainc_to_cropprodc_patch(p) = iso_cnveg_cf%grainc_to_cropprodc_patch(p) + &
+                    iso_cnveg_cf%grainc_to_food_patch(p)
                iso_cnveg_cf%grain_mr_patch(p) = iso_cnveg_cf%grain_xsmr_patch(p) + iso_cnveg_cf%grain_curmr_patch(p)
             end do
          endif
@@ -981,7 +999,7 @@ contains
     character(len=*)                      , intent(in)    :: isotope         ! 'c13' or 'c14'
     !
     ! !LOCAL VARIABLES:
-    integer :: pi,pp,l,fc,cc,j
+    integer :: pi,pp,l,fc,cc,j,i
     !-----------------------------------------------------------------------
 
     associate(                                                                 &
@@ -997,12 +1015,8 @@ contains
          iso_cnveg_cf                        => iso_cnveg_carbonflux_inst                                    , &
          iso_cnveg_cs                        => iso_cnveg_carbonstate_inst                                   , &
          iso_soilbiogeochem_cs               => iso_soilbiogeochem_carbonstate_inst                          , &
-         lf_flab                             => pftcon%lf_flab                                               , & ! Input:  [real(r8) (:)   ]  leaf litter labile fraction                       
-         lf_fcel                             => pftcon%lf_fcel                                               , & ! Input:  [real(r8) (:)   ]  leaf litter cellulose fraction                    
-         lf_flig                             => pftcon%lf_flig                                               , & ! Input:  [real(r8) (:)   ]  leaf litter lignin fraction                       
-         fr_flab                             => pftcon%fr_flab                                               , & ! Input:  [real(r8) (:)   ]  fine root litter labile fraction                  
-         fr_fcel                             => pftcon%fr_fcel                                               , & ! Input:  [real(r8) (:)   ]  fine root litter cellulose fraction               
-         fr_flig                             => pftcon%fr_flig                                                 & ! Input:  [real(r8) (:)   ]  fine root litter lignin fraction                  
+         lf_f                                => pftcon%lf_f                                                  , & ! Input: [real(r8) (:,:)] leaf litter fractions
+         fr_f                                => pftcon%fr_f                                                    & ! Input: [real(r8) (:,:)] fine root litter fractions
          )
 
       ! patch-level fire mortality fluxes
@@ -1268,13 +1282,14 @@ contains
                pp = col%patchi(cc) + pi - 1
                if (patch%active(pp)) then
                   do j = 1, nlevdecomp
-                     iso_cnveg_cf%m_c_to_litr_met_fire_col(cc,j) = iso_cnveg_cf%m_c_to_litr_met_fire_col(cc,j) + &
-                          ((iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp)*lf_flab(ivt(pp)) &
+                     iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i_met_lit) = &
+                        iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i_met_lit) + &
+                          ((iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp) * lf_f(ivt(pp),i_met_lit) &
                           +iso_cnveg_cf%m_leafc_storage_to_litter_fire_patch(pp) + &
                           iso_cnveg_cf%m_leafc_xfer_to_litter_fire_patch(pp) + &
                           iso_cnveg_cf%m_gresp_storage_to_litter_fire_patch(pp) &
                           +iso_cnveg_cf%m_gresp_xfer_to_litter_fire_patch(pp))*leaf_prof(pp,j) + &
-                          (iso_cnveg_cf%m_frootc_to_litter_fire_patch(pp)*fr_flab(ivt(pp)) &
+                          (iso_cnveg_cf%m_frootc_to_litter_fire_patch(pp) * fr_f(ivt(pp),i_met_lit) &
                           +iso_cnveg_cf%m_frootc_storage_to_litter_fire_patch(pp) + &
                           iso_cnveg_cf%m_frootc_xfer_to_litter_fire_patch(pp))*froot_prof(pp,j) &
                           +(iso_cnveg_cf%m_livestemc_storage_to_litter_fire_patch(pp) + &
@@ -1286,13 +1301,15 @@ contains
                           +iso_cnveg_cf%m_deadcrootc_storage_to_litter_fire_patch(pp) + &
                           iso_cnveg_cf%m_deadcrootc_xfer_to_litter_fire_patch(pp))* croot_prof(pp,j)) * patch%wtcol(pp)    
                      
-                     iso_cnveg_cf%m_c_to_litr_cel_fire_col(cc,j) = iso_cnveg_cf%m_c_to_litr_cel_fire_col(cc,j) + &
-                          (iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp)*lf_fcel(ivt(pp))*leaf_prof(pp,j) + &
-                          iso_cnveg_cf%m_frootc_to_litter_fire_patch(pp)*fr_fcel(ivt(pp))*froot_prof(pp,j)) * patch%wtcol(pp) 
-                     
-                     iso_cnveg_cf%m_c_to_litr_lig_fire_col(cc,j) = iso_cnveg_cf%m_c_to_litr_lig_fire_col(cc,j) + &
-                          (iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp)*lf_flig(ivt(pp))*leaf_prof(pp,j) + &
-                          iso_cnveg_cf%m_frootc_to_litter_fire_patch(pp)*fr_flig(ivt(pp))*froot_prof(pp,j)) * patch%wtcol(pp)  
+                     ! Here metabolic litter is treated differently than other
+                     ! types of litter, so it remains outside this litter loop,
+                     ! in the line above
+                     do i = i_met_lit+1, i_litr_max
+                        iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i) = &
+                           iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i) + &
+                           (iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp) * lf_f(ivt(pp),i) * leaf_prof(pp,j) + &
+                           iso_cnveg_cf%m_frootc_to_litter_fire_patch(pp) * fr_f(ivt(pp),i) * froot_prof(pp,j)) * patch%wtcol(pp)
+                     end do
                   end do
                end if
             end if
@@ -1324,19 +1341,15 @@ contains
     type(cnveg_carbonflux_type)     , intent(inout) :: iso_cnveg_carbonflux_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: fc,c,pi,p,j
+    integer :: fc,c,pi,p,j,i
     !-----------------------------------------------------------------------
 
     associate(                                                                                     & 
          ivt                       => patch%itype                                             , & ! Input:  [integer  (:)   ]  patch vegetation type                                
          wtcol                     => patch%wtcol                                             , & ! Input:  [real(r8) (:)   ]  weight (relative to column) for this patch (0-1)    
          
-         lf_flab                   => pftcon%lf_flab                                          , & ! Input:  leaf litter labile fraction                       
-         lf_fcel                   => pftcon%lf_fcel                                          , & ! Input:  leaf litter cellulose fraction                    
-         lf_flig                   => pftcon%lf_flig                                          , & ! Input:  leaf litter lignin fraction                       
-         fr_flab                   => pftcon%fr_flab                                          , & ! Input:  fine root litter labile fraction                  
-         fr_fcel                   => pftcon%fr_fcel                                          , & ! Input:  fine root litter cellulose fraction               
-         fr_flig                   => pftcon%fr_flig                                          , & ! Input:  fine root litter lignin fraction                  
+         lf_f                      => pftcon%lf_f                                             , & ! Input:  [real(r8) (:,:) ]  leaf litter fractions
+         fr_f                      => pftcon%fr_f                                             , & ! Input:  [real(r8) (:,:) ]  fine root litter fractions
 
          leaf_prof                 => soilbiogeochem_state_inst%leaf_prof_patch               , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of leaves                         
          froot_prof                => soilbiogeochem_state_inst%froot_prof_patch              , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of fine roots 
@@ -1347,9 +1360,7 @@ contains
          livestemc_to_litter       => iso_cnveg_carbonflux_inst%livestemc_to_litter_patch     , & ! Input:  [real(r8) (:)   ]
          grainc_to_food            => iso_cnveg_carbonflux_inst%grainc_to_food_patch          , & ! Input:  [real(r8) (:)   ]
 !DML
-         phenology_c_to_litr_met_c => iso_cnveg_carbonflux_inst%phenology_c_to_litr_met_c_col , & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
-         phenology_c_to_litr_cel_c => iso_cnveg_carbonflux_inst%phenology_c_to_litr_cel_c_col , & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
-         phenology_c_to_litr_lig_c => iso_cnveg_carbonflux_inst%phenology_c_to_litr_lig_c_col   & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
+         phenology_c_to_litr_c     => iso_cnveg_carbonflux_inst%phenology_c_to_litr_c_col       & ! InOut:  [real(r8) (:,:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter pools (gC/m3/s)
          )
 
       do j = 1, nlevdecomp
@@ -1360,40 +1371,31 @@ contains
                if ( pi <=  col%npatches(c) ) then
                   p = col%patchi(c) + pi - 1
                   if (patch%active(p)) then
-                     ! leaf litter carbon fluxes
-                     phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
-                          + leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                     phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
-                          + leafc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                     phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
-                          + leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-
-                     ! fine root litter carbon fluxes
-                     phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
-                          + frootc_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                     phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
-                          + frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                     phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
-                          + frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                     do i = i_litr_min, i_litr_max
+                        phenology_c_to_litr_c(c,j,i) = &
+                           phenology_c_to_litr_c(c,j,i) + &
+                           ! leaf litter carbon fluxes
+                           leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
+                           ! fine root litter carbon fluxes
+                           frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+                     end do
 
 !DML
                      if (ivt(p) >= npcropmin) then ! add livestemc to litter
                         ! stem litter carbon fluxes
-                        phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
-                             + livestemc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
-                             + livestemc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
-                             + livestemc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                        do i = i_litr_min, i_litr_max
+                           phenology_c_to_litr_c(c,j,i) = &
+                              phenology_c_to_litr_c(c,j,i) + &
+                              livestemc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                        end do
 
                         if (.not. use_grainproduct) then
-                         ! grain litter carbon fluxes
-                           phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
-                              + grainc_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                           phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
-                              + grainc_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                           phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
-                              + grainc_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                           ! grain litter carbon fluxes
+                           do i = i_litr_min, i_litr_max
+                              phenology_c_to_litr_c(c,j,i) = &
+                                 phenology_c_to_litr_c(c,j,i) + &
+                                 grainc_to_food(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                           end do
                         end if
 
                      end if
@@ -1425,19 +1427,15 @@ contains
      type(cnveg_carbonflux_type)     , intent(inout) :: iso_cnveg_carbonflux_inst
      !
      ! !LOCAL VARIABLES:
-     integer :: fc,c,pi,p,j               ! indices
+     integer :: fc,c,pi,p,j,i  ! indices
      !-----------------------------------------------------------------------
 
      associate(                                                                                             & 
           ivt                            => patch%itype                                                  , & ! Input:  [integer  (:)   ]  patch vegetation type                                
           wtcol                          => patch%wtcol                                                  , & ! Input:  [real(r8) (:)   ]  patch weight relative to column (0-1)               
           
-          lf_flab                        => pftcon%lf_flab                                             , & ! Input:  leaf litter labile fraction                       
-          lf_fcel                        => pftcon%lf_fcel                                             , & ! Input:  leaf litter cellulose fraction                    
-          lf_flig                        => pftcon%lf_flig                                             , & ! Input:  leaf litter lignin fraction                       
-          fr_flab                        => pftcon%fr_flab                                             , & ! Input:  fine root litter labile fraction                  
-          fr_fcel                        => pftcon%fr_fcel                                             , & ! Input:  fine root litter cellulose fraction               
-          fr_flig                        => pftcon%fr_flig                                             , & ! Input:  fine root litter lignin fraction                  
+          lf_f                           => pftcon%lf_f                                                , & ! Input:  leaf litter fractions
+          fr_f                           => pftcon%fr_f                                                , & ! Input:  fine root litter fractions
 
           leaf_prof                      => soilbiogeochem_state_inst%leaf_prof_patch                  , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of leaves                         
           froot_prof                     => soilbiogeochem_state_inst%froot_prof_patch                 , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of fine roots                     
@@ -1465,9 +1463,7 @@ contains
           m_deadcrootc_xfer_to_litter    => iso_cnveg_carbonflux_inst%m_deadcrootc_xfer_to_litter_patch    , & ! Input:  [real(r8) (:)   ]                                                    
           m_gresp_xfer_to_litter         => iso_cnveg_carbonflux_inst%m_gresp_xfer_to_litter_patch         , & ! Input:  [real(r8) (:)   ]                                                    
           
-          gap_mortality_c_to_litr_met_c  => iso_cnveg_carbonflux_inst%gap_mortality_c_to_litr_met_c_col    , & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with gap mortality to litter metabolic pool (gC/m3/s)
-          gap_mortality_c_to_litr_cel_c  => iso_cnveg_carbonflux_inst%gap_mortality_c_to_litr_cel_c_col    , & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with gap mortality to litter cellulose pool (gC/m3/s)
-          gap_mortality_c_to_litr_lig_c  => iso_cnveg_carbonflux_inst%gap_mortality_c_to_litr_lig_c_col    , & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with gap mortality to litter lignin pool (gC/m3/s)
+          gap_mortality_c_to_litr_c      => iso_cnveg_carbonflux_inst%gap_mortality_c_to_litr_c_col        , & ! InOut:  [real(r8) (:,:,:) ]  C fluxes associated with gap mortality to litter pools (gC/m3/s)
           gap_mortality_c_to_cwdc        => iso_cnveg_carbonflux_inst%gap_mortality_c_to_cwdc_col            & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with gap mortality to CWD pool (gC/m3/s)
           )
           
@@ -1481,21 +1477,16 @@ contains
 
                    if (patch%active(p)) then
 
-                      ! leaf gap mortality carbon fluxes
-                      gap_mortality_c_to_litr_met_c(c,j) = gap_mortality_c_to_litr_met_c(c,j) + &
-                           m_leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                      gap_mortality_c_to_litr_cel_c(c,j) = gap_mortality_c_to_litr_cel_c(c,j) + &
-                           m_leafc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                      gap_mortality_c_to_litr_lig_c(c,j) = gap_mortality_c_to_litr_lig_c(c,j) + &
-                           m_leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-
-                      ! fine root gap mortality carbon fluxes
-                      gap_mortality_c_to_litr_met_c(c,j) = gap_mortality_c_to_litr_met_c(c,j) + &
-                           m_frootc_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                      gap_mortality_c_to_litr_cel_c(c,j) = gap_mortality_c_to_litr_cel_c(c,j) + &
-                           m_frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                      gap_mortality_c_to_litr_lig_c(c,j) = gap_mortality_c_to_litr_lig_c(c,j) + &
-                           m_frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                      do i = i_litr_min, i_litr_max
+                         ! leaf gap mortality carbon fluxes
+                         gap_mortality_c_to_litr_c(c,j,i) = &
+                            gap_mortality_c_to_litr_c(c,j,i) + &
+                            m_leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                         ! fine root gap mortality carbon fluxes
+                         gap_mortality_c_to_litr_c(c,j,i) = &
+                            gap_mortality_c_to_litr_c(c,j,i) + &
+                            m_frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+                      end do
 
                       ! wood gap mortality carbon fluxes
                       gap_mortality_c_to_cwdc(c,j)  = gap_mortality_c_to_cwdc(c,j)  + &
@@ -1507,37 +1498,27 @@ contains
                       gap_mortality_c_to_cwdc(c,j) = gap_mortality_c_to_cwdc(c,j) + &
                            m_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
 
-                      ! storage gap mortality carbon fluxes
-                      gap_mortality_c_to_litr_met_c(c,j)      = gap_mortality_c_to_litr_met_c(c,j)      + &
-                           m_leafc_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
-                      gap_mortality_c_to_litr_met_c(c,j)     = gap_mortality_c_to_litr_met_c(c,j)     + &
-                           m_frootc_storage_to_litter(p)     * wtcol(p) * froot_prof(p,j)
-                      gap_mortality_c_to_litr_met_c(c,j)  = gap_mortality_c_to_litr_met_c(c,j)  + &
-                           m_livestemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                      gap_mortality_c_to_litr_met_c(c,j)  = gap_mortality_c_to_litr_met_c(c,j)  + &
-                           m_deadstemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                      gap_mortality_c_to_litr_met_c(c,j) = gap_mortality_c_to_litr_met_c(c,j) + &
-                           m_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                      gap_mortality_c_to_litr_met_c(c,j) = gap_mortality_c_to_litr_met_c(c,j) + &
-                           m_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                      gap_mortality_c_to_litr_met_c(c,j)      = gap_mortality_c_to_litr_met_c(c,j)      + &
-                           m_gresp_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
-
-                      ! transfer gap mortality carbon fluxes
-                      gap_mortality_c_to_litr_met_c(c,j)      = gap_mortality_c_to_litr_met_c(c,j)      + &
-                           m_leafc_xfer_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
-                      gap_mortality_c_to_litr_met_c(c,j)     = gap_mortality_c_to_litr_met_c(c,j)     + &
-                           m_frootc_xfer_to_litter(p)     * wtcol(p) * froot_prof(p,j)
-                      gap_mortality_c_to_litr_met_c(c,j)  = gap_mortality_c_to_litr_met_c(c,j)  + &
-                           m_livestemc_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                      gap_mortality_c_to_litr_met_c(c,j)  = gap_mortality_c_to_litr_met_c(c,j)  + &
-                           m_deadstemc_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                      gap_mortality_c_to_litr_met_c(c,j) = gap_mortality_c_to_litr_met_c(c,j) + &
-                           m_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                      gap_mortality_c_to_litr_met_c(c,j) = gap_mortality_c_to_litr_met_c(c,j) + &
-                           m_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                      gap_mortality_c_to_litr_met_c(c,j)      = gap_mortality_c_to_litr_met_c(c,j)      + &
-                           m_gresp_xfer_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
+                      ! Metabolic litter is treated differently than other types
+                      ! of litter, so it gets this additional line after the
+                      ! most recent loop over all litter types
+                      gap_mortality_c_to_litr_c(c,j,i_met_lit) = &
+                         gap_mortality_c_to_litr_c(c,j,i_met_lit) + &
+                         ! storage gap mortality carbon fluxes
+                         m_leafc_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                         m_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+                         m_livestemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         m_deadstemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         m_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                         m_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                         m_gresp_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                         ! transfer gap mortality carbon fluxes
+                         m_leafc_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                         m_frootc_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+                         m_livestemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         m_deadstemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         m_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                         m_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                         m_gresp_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j)
 
                    end if
                 end if
@@ -1566,20 +1547,16 @@ contains
      type(cnveg_carbonflux_type)     , intent(inout) :: iso_cnveg_carbonflux_inst
      !
      ! !LOCAL VARIABLES:
-     integer :: fc,c,pi,p,j               ! indices
+     integer :: fc,c,pi,p,j,i  ! indices
      !-----------------------------------------------------------------------
 
      associate(                                                                                                  & 
           ivt                              => patch%itype                                                      , & ! Input:  [integer  (:)   ]  patch vegetation type                                
           wtcol                            => patch%wtcol                                                      , & ! Input:  [real(r8) (:)   ]  patch weight relative to column (0-1)               
           
-          lf_flab                          => pftcon%lf_flab                                                   , & ! Input:  leaf litter labile fraction                       
-          lf_fcel                          => pftcon%lf_fcel                                                   , & ! Input:  leaf litter cellulose fraction                    
-          lf_flig                          => pftcon%lf_flig                                                   , & ! Input:  leaf litter lignin fraction                       
-          fr_flab                          => pftcon%fr_flab                                                   , & ! Input:  fine root litter labile fraction                  
-          fr_fcel                          => pftcon%fr_fcel                                                   , & ! Input:  fine root litter cellulose fraction               
-          fr_flig                          => pftcon%fr_flig                                                   , & ! Input:  fine root litter lignin fraction                  
-          
+          lf_f                             => pftcon%lf_f                                                      , & ! Input:  leaf litter fractions
+          fr_f                             => pftcon%fr_f                                                      , & ! Input:  fine root litter fractions
+
           leaf_prof                        => soilbiogeochem_state_inst%leaf_prof_patch                        , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of leaves                         
           froot_prof                       => soilbiogeochem_state_inst%froot_prof_patch                       , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of fine roots                     
           croot_prof                       => soilbiogeochem_state_inst%croot_prof_patch                       , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of coarse roots                   
@@ -1606,9 +1583,7 @@ contains
           hrv_deadcrootc_xfer_to_litter    => iso_cnveg_carbonflux_inst%hrv_deadcrootc_xfer_to_litter_patch    , & ! Input:  [real(r8) (:)   ]                                                    
           hrv_gresp_xfer_to_litter         => iso_cnveg_carbonflux_inst%hrv_gresp_xfer_to_litter_patch         , & ! Input:  [real(r8) (:)   ]                                                    
           cwood_harvestc                   => iso_cnveg_carbonflux_inst%wood_harvestc_col                      , & ! Output:  [real(r8) (:)   ]
-          harvest_c_to_litr_met_c          => iso_cnveg_carbonflux_inst%harvest_c_to_litr_met_c_col            , & ! Output: [real(r8) (:,:) ]  C fluxes associated with harvest to litter metabolic pool (gC/m3/s)
-          harvest_c_to_litr_cel_c          => iso_cnveg_carbonflux_inst%harvest_c_to_litr_cel_c_col            , & ! Output: [real(r8) (:,:) ]  C fluxes associated with harvest to litter cellulose pool (gC/m3/s)
-          harvest_c_to_litr_lig_c          => iso_cnveg_carbonflux_inst%harvest_c_to_litr_lig_c_col            , & ! Output: [real(r8) (:,:) ]  C fluxes associated with harvest to litter lignin pool (gC/m3/s)
+          harvest_c_to_litr_c              => iso_cnveg_carbonflux_inst%harvest_c_to_litr_c_col                , & ! Output: [real(r8) (:,:) ]  C fluxes associated with harvest to litter pools (gC/m3/s)
           harvest_c_to_cwdc                => iso_cnveg_carbonflux_inst%harvest_c_to_cwdc_col                    & ! Output: [real(r8) (:,:) ]  C fluxes associated with harvest to CWD pool (gC/m3/s)
           )
 
@@ -1622,21 +1597,17 @@ contains
 
                    if (patch%active(p)) then
 
-                      ! leaf harvest mortality carbon fluxes
-                      harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
-                           hrv_leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                      harvest_c_to_litr_cel_c(c,j) = harvest_c_to_litr_cel_c(c,j) + &
-                           hrv_leafc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                      harvest_c_to_litr_lig_c(c,j) = harvest_c_to_litr_lig_c(c,j) + &
-                           hrv_leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                      do i = i_litr_min, i_litr_max
+                         ! leaf harvest mortality carbon fluxes
+                         harvest_c_to_litr_c(c,j,i) = &
+                            harvest_c_to_litr_c(c,j,i) + &
+                            hrv_leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
 
-                      ! fine root harvest mortality carbon fluxes
-                      harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
-                           hrv_frootc_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                      harvest_c_to_litr_cel_c(c,j) = harvest_c_to_litr_cel_c(c,j) + &
-                           hrv_frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                      harvest_c_to_litr_lig_c(c,j) = harvest_c_to_litr_lig_c(c,j) + &
-                           hrv_frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                         ! fine root harvest mortality carbon fluxes
+                         harvest_c_to_litr_c(c,j,i) = &
+                            harvest_c_to_litr_c(c,j,i) + &
+                            hrv_frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+                      end do
 
                       ! wood harvest mortality carbon fluxes
                       harvest_c_to_cwdc(c,j)  = harvest_c_to_cwdc(c,j)  + &
@@ -1646,37 +1617,27 @@ contains
                       harvest_c_to_cwdc(c,j) = harvest_c_to_cwdc(c,j) + &
                            hrv_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
 
-                      ! storage harvest mortality carbon fluxes
-                      harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
-                           hrv_leafc_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
-                      harvest_c_to_litr_met_c(c,j)     = harvest_c_to_litr_met_c(c,j)     + &
-                           hrv_frootc_storage_to_litter(p)     * wtcol(p) * froot_prof(p,j)
-                      harvest_c_to_litr_met_c(c,j)  = harvest_c_to_litr_met_c(c,j)  + &
-                           hrv_livestemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                      harvest_c_to_litr_met_c(c,j)  = harvest_c_to_litr_met_c(c,j)  + &
-                           hrv_deadstemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                      harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
-                           hrv_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                      harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
-                           hrv_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                      harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
-                           hrv_gresp_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
-
-                      ! transfer harvest mortality carbon fluxes
-                      harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
-                           hrv_leafc_xfer_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
-                      harvest_c_to_litr_met_c(c,j)     = harvest_c_to_litr_met_c(c,j)     + &
-                           hrv_frootc_xfer_to_litter(p)     * wtcol(p) * froot_prof(p,j)
-                      harvest_c_to_litr_met_c(c,j)  = harvest_c_to_litr_met_c(c,j)  + &
-                           hrv_livestemc_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                      harvest_c_to_litr_met_c(c,j)  = harvest_c_to_litr_met_c(c,j)  + &
-                           hrv_deadstemc_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                      harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
-                           hrv_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                      harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
-                           hrv_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                      harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
-                           hrv_gresp_xfer_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
+                      ! Metabolic litter is treated differently than other types
+                      ! of litter, so it gets this additional line after the
+                      ! most recent loop over all litter types
+                      harvest_c_to_litr_c(c,j,i_met_lit) = &
+                         harvest_c_to_litr_c(c,j,i_met_lit) + &
+                         ! storage harvest mortality carbon fluxes
+                         hrv_leafc_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                         hrv_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+                         hrv_livestemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         hrv_deadstemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         hrv_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                         hrv_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                         hrv_gresp_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                         ! transfer harvest mortality carbon fluxes
+                         hrv_leafc_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                         hrv_frootc_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+                         hrv_livestemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         hrv_deadstemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         hrv_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                         hrv_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                         hrv_gresp_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j)
                    end if
                 end if
 
@@ -1718,19 +1679,15 @@ contains
      type(cnveg_carbonflux_type)     , intent(inout) :: iso_cnveg_carbonflux_inst
      !
      ! !LOCAL VARIABLES:
-     integer :: fc,c,pi,p,j               ! indices
+     integer :: fc,c,pi,p,j,i             ! indices
      !-----------------------------------------------------------------------
 
      associate(                                                                                                  & 
           ivt                              => patch%itype                                                      , & ! Input:  [integer  (:)   ]  patch vegetation type                                
           wtcol                            => patch%wtcol                                                      , & ! Input:  [real(r8) (:)   ]  patch weight relative to column (0-1)               
           
-          lf_flab                          => pftcon%lf_flab                                                   , & ! Input:  leaf litter labile fraction                       
-          lf_fcel                          => pftcon%lf_fcel                                                   , & ! Input:  leaf litter cellulose fraction                    
-          lf_flig                          => pftcon%lf_flig                                                   , & ! Input:  leaf litter lignin fraction                       
-          fr_flab                          => pftcon%fr_flab                                                   , & ! Input:  fine root litter labile fraction                  
-          fr_fcel                          => pftcon%fr_fcel                                                   , & ! Input:  fine root litter cellulose fraction               
-          fr_flig                          => pftcon%fr_flig                                                   , & ! Input:  fine root litter lignin fraction                  
+          lf_f                             => pftcon%lf_f                                                      , & ! Input:  leaf litter fractions
+          fr_f                             => pftcon%fr_f                                                      , & ! Input:  fine root litter fractions
           
           leaf_prof                        => soilbiogeochem_state_inst%leaf_prof_patch                        , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of leaves                         
           froot_prof                       => soilbiogeochem_state_inst%froot_prof_patch                       , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of fine roots                     
@@ -1759,9 +1716,7 @@ contains
           gru_deadcrootc_xfer_to_atm       => iso_cnveg_carbonflux_inst%gru_deadcrootc_xfer_to_atm_patch       , & ! Input:  [real(r8) (:)   ]                                                    
           gru_gresp_xfer_to_atm            => iso_cnveg_carbonflux_inst%gru_gresp_xfer_to_atm_patch            , & ! Input:  [real(r8) (:)   ]                                                    
           cwood_harvestc                   => iso_cnveg_carbonflux_inst%wood_harvestc_col                      , & ! Output:  [real(r8) (:)   ]
-          gru_c_to_litr_met_c              => iso_cnveg_carbonflux_inst%gru_c_to_litr_met_c_col                , & ! Output: [real(r8) (:,:) ]  C fluxes associated with harvest to litter metabolic pool (gC/m3/s)
-          gru_c_to_litr_cel_c              => iso_cnveg_carbonflux_inst%gru_c_to_litr_cel_c_col                , & ! Output: [real(r8) (:,:) ]  C fluxes associated with harvest to litter cellulose pool (gC/m3/s)
-          gru_c_to_litr_lig_c              => iso_cnveg_carbonflux_inst%gru_c_to_litr_lig_c_col                , & ! Output: [real(r8) (:,:) ]  C fluxes associated with harvest to litter lignin pool (gC/m3/s)
+          gru_c_to_litr_c                  => iso_cnveg_carbonflux_inst%gru_c_to_litr_c_col                    , & ! Output: [real(r8) (:,:,:) ]  C fluxes associated with gross unrepresented landcover change to litter pools (gC/m3/s)
           gru_c_to_cwdc_c                  => iso_cnveg_carbonflux_inst%gru_c_to_cwdc_col                      , & ! Output: [real(r8) (:,:) ]  C fluxes associated with harvest to CWD pool (gC/m3/s)
           gru_wood_productc_gain_c         => iso_cnveg_carbonflux_inst%gru_wood_productc_gain_col               & ! Input:  [real(r8) (:)   ]
           )
@@ -1776,21 +1731,14 @@ contains
 
                    if (patch%active(p)) then
 
-                      ! leaf gross unrepresented landcover change mortality carbon fluxes
-                      gru_c_to_litr_met_c(c,j) = gru_c_to_litr_met_c(c,j) + &
-                           gru_leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                      gru_c_to_litr_cel_c(c,j) = gru_c_to_litr_cel_c(c,j) + &
-                           gru_leafc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                      gru_c_to_litr_lig_c(c,j) = gru_c_to_litr_lig_c(c,j) + &
-                           gru_leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-
-                      ! fine root gross unrepresented landcover change mortality carbon fluxes
-                      gru_c_to_litr_met_c(c,j) = gru_c_to_litr_met_c(c,j) + &
-                           gru_frootc_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                      gru_c_to_litr_cel_c(c,j) = gru_c_to_litr_cel_c(c,j) + &
-                           gru_frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                      gru_c_to_litr_lig_c(c,j) = gru_c_to_litr_lig_c(c,j) + &
-                           gru_frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                      do i = i_litr_min, i_litr_max
+                         gru_c_to_litr_c(c,j,i) = &
+                            gru_c_to_litr_c(c,j,i) + &
+                            ! leaf gross unrepresented landcover change mortality carbon fluxes
+                            gru_leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
+                            ! fine root gross unrepresented landcover change mortality carbon fluxes
+                            gru_frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+                      end do
 
                       ! coarse root gross unrepresented landcover change mortality carbon fluxes
                       gru_c_to_cwdc_c(c,j) = gru_c_to_cwdc_c(c,j) + &

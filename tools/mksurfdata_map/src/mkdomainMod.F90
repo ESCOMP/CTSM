@@ -49,6 +49,7 @@ module mkdomainMod
   public domain_read_map
   public domain_write         
   public domain_checksame
+  public for_test_create_domain  ! For unit testing create a simple domain
 !
 !
 ! !REVISION HISTORY:
@@ -320,9 +321,6 @@ end subroutine domain_check
        
       call check_ret(nf_inq_varid (ncid, 'frac_b', varid), subname)
       call check_ret(nf_get_var_double (ncid, varid, domain%frac), subname)
-
-      call check_ret(nf_inq_varid (ncid, 'mask_b', varid), subname)
-      call check_ret(nf_get_var_int (ncid, varid, domain%mask), subname)
 
       call check_ret(nf_inq_varid (ncid, 'area_b', varid), subname)
       call check_ret(nf_get_var_double (ncid, varid, domain%area), subname)
@@ -817,13 +815,9 @@ end subroutine domain_check
      integer :: n, ni                  ! indices
      real(r8), pointer :: xc_src(:)    ! Source longitude
      real(r8), pointer :: yc_src(:)    ! Source latitude
-     real(r8), pointer :: frac_src(:)  ! Source fraction
-     integer,  pointer :: mask_src(:)  ! Source mask
      integer,  pointer :: src_indx(:)  ! Source index
      real(r8), pointer :: xc_dst(:)    ! Destination longitude
      real(r8), pointer :: yc_dst(:)    ! Destination latitude
-     real(r8), pointer :: frac_dst(:)  ! Destination fraction
-     integer,  pointer :: mask_dst(:)  ! Destination mask
      integer,  pointer :: dst_indx(:)  ! Destination index
      character(len= 32) :: subname = 'domain_checksame'
 
@@ -838,7 +832,7 @@ end subroutine domain_check
         write(6,*) trim(subname)//'ERROR: source domain is unset!'
         call abort()
      end if
-     if (srcdomain%set == unset) then
+     if (dstdomain%set == unset) then
         write(6,*) trim(subname)//'ERROR: destination domain is unset!'
         call abort()
      end if
@@ -846,7 +840,6 @@ end subroutine domain_check
      call gridmap_setptrs( tgridmap, nsrc=na, ndst=nb, ns=ns,    &
                            xc_src=xc_src, yc_src=yc_src,         &
                            xc_dst=xc_dst, yc_dst=yc_dst,         &
-                           mask_src=mask_src, mask_dst=mask_dst, &
                            src_indx=src_indx, dst_indx=dst_indx  &
                          )
        
@@ -866,15 +859,6 @@ end subroutine domain_check
      end if
      do n = 1,ns
         ni = src_indx(n)
-        if ( srcdomain%maskset )then
-           if (srcdomain%mask(ni) /= mask_src(ni)) then
-              write(6,*) trim(subname)// &              
-                 ' ERROR: input domain mask and gridmap mask are not the same at ni = ',ni
-              write(6,*)' domain  mask= ',srcdomain%mask(ni)
-              write(6,*)' gridmap mask= ',mask_src(ni)
-              call abort()
-           end if
-        end if
         if (abs(srcdomain%lonc(ni) - xc_src(ni)) > eps) then
            write(6,*) trim(subname)// &
                ' ERROR: input domain lon and gridmap lon not the same at ni = ',ni
@@ -892,15 +876,6 @@ end subroutine domain_check
      end do
      do n = 1,ns
         ni = dst_indx(n)
-        if ( dstdomain%maskset )then
-           if (dstdomain%mask(ni) /= mask_dst(ni)) then
-              write(6,*) trim(subname)// &                              
-                  ' ERROR: output domain mask and gridmap mask are not the same at ni = ',ni
-              write(6,*)' domain  mask= ',dstdomain%mask(ni)
-              write(6,*)' gridmap mask= ',mask_dst(ni)
-              call abort()
-           end if
-        end if
         if (abs(dstdomain%lonc(ni) - xc_dst(ni)) > eps) then
            write(6,*) trim(subname)// &
                ' ERROR: output domain lon and gridmap lon not the same at ni = ',ni
@@ -916,7 +891,46 @@ end subroutine domain_check
            call abort()
         end if
      end do
-
   end subroutine domain_checksame
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: for_test_create_domain
+!
+! !INTERFACE:
+  subroutine for_test_create_domain( domain )
+!
+! !DESCRIPTION:
+! Create a simple domain for unit testing
+!
+! USES:
+    implicit none
+! !ARGUMENTS:
+    type(domain_type), intent(inout) :: domain ! input domain
+! !LOCAL VARIABLES:
+    integer, parameter :: ns_o = 2
+
+    call domain_init( domain, ns_o )
+    domain%latc    = (/ 42.0_r8,      40.0_r8 /)
+    domain%lonc    = (/ -105.0_r8,  -100.0_r8 /)
+    domain%latn    = (/ 43.0_r8,      41.0_r8 /)
+    domain%lats    = (/ 41.0_r8,      39.0_r8 /)
+    domain%lone    = (/ -104.0_r8,   -99.0_r8 /)
+    domain%lonw    = (/ -106.0_r8,  -101.0_r8 /)
+    domain%mask    = (/ 1,             1      /)
+    domain%frac    = (/ 1.0_r8,        1.0_r8 /)
+    domain%area    = (/ 49284.0_r8, 49284.0_r8 /)    ! This is NOT the correct area!
+
+    domain%edgen   = maxval( domain%latn )
+    domain%edges   = minval( domain%lats )
+    domain%edgew   = minval( domain%lonw )
+    domain%edgee   = maxval( domain%lone )
+
+    domain%maskset = .true.
+    domain%fracset = .true.
+    domain%is_2d   = .false.
+
+  end subroutine for_test_create_domain
 
 end module mkdomainMod

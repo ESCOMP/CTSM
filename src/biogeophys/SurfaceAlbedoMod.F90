@@ -1062,7 +1062,7 @@ contains
      ! !USES:
     use clm_varpar      , only : numrad
     use clm_varcon      , only : tfrz
-    use landunit_varcon , only : istice_mec, istdlak
+    use landunit_varcon , only : istice, istdlak
     use LakeCon         , only : lakepuddling
     !
     ! !ARGUMENTS:
@@ -1089,9 +1089,9 @@ contains
     !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(coszen) == (/bounds%endc/)),         errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(albsnd) == (/bounds%endc, numrad/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(albsni) == (/bounds%endc, numrad/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(coszen) == (/bounds%endc/)),         sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(albsnd) == (/bounds%endc, numrad/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(albsni) == (/bounds%endc, numrad/)), sourcefile, __LINE__)
 
    associate(&
           snl          => col%snl                         , & ! Input:  [integer  (:)   ]  number of snow layers                    
@@ -1124,7 +1124,7 @@ contains
                 !albsoi = albsod
                 albsod(c,ib) = min(albsat(soilcol,ib)+inc, albdry(soilcol,ib))
                 albsoi(c,ib) = albsod(c,ib)
-             else if (lun%itype(l) == istice_mec)  then  ! land ice
+             else if (lun%itype(l) == istice)  then  ! land ice
                 ! changed from local variable to clm_type:
                 !albsod = albice(ib)
                 !albsoi = albsod
@@ -1255,9 +1255,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(coszen) == (/bounds%endp/)),         errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(rho)    == (/bounds%endp, numrad/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(tau)    == (/bounds%endp, numrad/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(coszen) == (/bounds%endp/)),         sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(rho)    == (/bounds%endp, numrad/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(tau)    == (/bounds%endp, numrad/)), sourcefile, __LINE__)
 
      if ( present(SFonly) )then
         lSFonly = SFonly

@@ -9,7 +9,6 @@ module OzoneOffMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_log_mod , only : errMsg => shr_log_errMsg
   use decompMod   , only : bounds_type
   use OzoneBaseMod, only : ozone_base_type
 
@@ -23,6 +22,7 @@ module OzoneOffMod
    contains
      procedure, public :: Init
      procedure, public :: Restart
+     procedure, public :: CalcOzoneUptake
      procedure, public :: CalcOzoneStress
   end type ozone_off_type
 
@@ -80,8 +80,8 @@ contains
 
   end subroutine Restart
 
-  subroutine CalcOzoneStress(this, bounds, num_exposedvegp, filter_exposedvegp, &
-          forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
+  subroutine CalcOzoneUptake(this, bounds, num_exposedvegp, filter_exposedvegp, &
+       forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
 
     class(ozone_off_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
@@ -97,22 +97,25 @@ contains
 
     ! Enforce expected array sizes (mainly so that a debug-mode threaded test with
     ! ozone-off can pick up problems with the call to this routine)
-    SHR_ASSERT_ALL((ubound(forc_pbot) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(forc_th) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rssun) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rssha) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rb) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ram) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tlai) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(forc_pbot) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(forc_th) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rssun) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rssha) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rb) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ram) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tlai) == (/bounds%endp/)), sourcefile, __LINE__)
 
-    ! Explicitly set outputs to 1. This isn't really needed, because they should still be
-    ! at 1 from cold-start initialization, but do this for clarity here.
+    ! Do nothing: In the ozone off case, we don't need to track ozone uptake
 
-    this%o3coefvsha_patch(bounds%begp:bounds%endp) = 1._r8
-    this%o3coefvsun_patch(bounds%begp:bounds%endp) = 1._r8
-    this%o3coefgsha_patch(bounds%begp:bounds%endp) = 1._r8
-    this%o3coefgsun_patch(bounds%begp:bounds%endp) = 1._r8
+  end subroutine CalcOzoneUptake
 
+  subroutine CalcOzoneStress(this, bounds, num_exposedvegp, filter_exposedvegp)
+    class(ozone_off_type), intent(inout) :: this
+    type(bounds_type)    , intent(in) :: bounds
+    integer              , intent(in) :: num_exposedvegp
+    integer              , intent(in) :: filter_exposedvegp(:)
+
+    ! Do nothing: Outputs (stress terms) are already fixed at 1 from cold start initialization
   end subroutine CalcOzoneStress
 
 end module OzoneOffMod

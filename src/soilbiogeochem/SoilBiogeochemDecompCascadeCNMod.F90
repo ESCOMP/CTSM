@@ -10,17 +10,16 @@ module SoilBiogeochemDecompCascadeCNMod
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use clm_varpar                         , only : i_litr1, i_litr2, i_litr3, i_cwd
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
-  use CNSharedParamsMod                  , only : CNParamsShareInst, anoxia_wtsat, nlev_soildecomp_standard 
+  use CNSharedParamsMod                  , only : CNParamsShareInst, nlev_soildecomp_standard 
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilStateType                      , only : soilstate_type
-  use CanopyStateType                    , only : canopystate_type
   use TemperatureType                    , only : temperature_type 
   use ch4Mod                             , only : ch4_type
   use ColumnType                         , only : col                
@@ -33,6 +32,12 @@ module SoilBiogeochemDecompCascadeCNMod
   public :: readParams
   public :: init_decompcascade_cn
   public :: decomp_rate_constants_cn
+
+  ! !PRIVATE DATA MEMBERS
+  integer, private            :: i_soil1   = -9         ! Soil Organic Matter (SOM) first pool
+  integer, private            :: i_soil2   = -9         ! SOM second pool
+  integer, private            :: i_soil3   = -9         ! SOM third pool
+  integer, private            :: i_soil4   = -9         ! SOM fourth pool
 
   type, private :: params_type
      real(r8):: cn_s1_cn        !C:N for SOM 1
@@ -195,7 +200,7 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%k_s4_cn=tempr
 
-    tString='k_frag'
+    tString='k_frag_cn'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%k_frag_cn=tempr
@@ -224,6 +229,8 @@ contains
     !  initialize rate constants and decomposition pathways for the BGC model originally implemented in CLM-CN
     !  written by C. Koven based on original CLM4 decomposition cascade by P. Thornton
     !
+    ! !USES:
+    use SoilBiogeochemDecompCascadeConType, only : i_atm
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
     type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
@@ -243,14 +250,6 @@ contains
     real(r8) :: cn_s3
     real(r8) :: cn_s4
 
-    integer :: i_litr1
-    integer :: i_litr2
-    integer :: i_litr3
-    integer :: i_soil1
-    integer :: i_soil2
-    integer :: i_soil3
-    integer :: i_soil4
-    integer :: i_atm
     integer :: i_l1s1
     integer :: i_l2s2
     integer :: i_l3s3
@@ -302,7 +301,6 @@ contains
 
       !-------------------  list of pools and their attributes  ------------
 
-      i_litr1 = i_met_lit
       floating_cn_ratio_decomp_pools(i_litr1) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_litr1) = 'litr1'
       decomp_cascade_con%decomp_pool_name_history(i_litr1) = 'LITR1'
@@ -317,7 +315,7 @@ contains
       is_cellulose(i_litr1) = .false.
       is_lignin(i_litr1) = .false.
 
-      i_litr2 = i_cel_lit
+      i_litr2 = i_litr1 + 1
       floating_cn_ratio_decomp_pools(i_litr2) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_litr2) = 'litr2'
       decomp_cascade_con%decomp_pool_name_history(i_litr2) = 'LITR2'
@@ -332,7 +330,7 @@ contains
       is_cellulose(i_litr2) = .true.
       is_lignin(i_litr2) = .false.
 
-      i_litr3 = i_lig_lit
+      i_litr3 = i_litr2 + 1
       floating_cn_ratio_decomp_pools(i_litr3) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_litr3) = 'litr3'
       decomp_cascade_con%decomp_pool_name_history(i_litr3) = 'LITR3'
@@ -347,7 +345,68 @@ contains
       is_cellulose(i_litr3) = .false.
       is_lignin(i_litr3) = .true.
 
+      i_soil1 = i_litr3 + 1
+      floating_cn_ratio_decomp_pools(i_soil1) = .false.
+      decomp_cascade_con%decomp_pool_name_restart(i_soil1) = 'soil1'
+      decomp_cascade_con%decomp_pool_name_history(i_soil1) = 'SOIL1'
+      decomp_cascade_con%decomp_pool_name_long(i_soil1) = 'soil 1'
+      decomp_cascade_con%decomp_pool_name_short(i_soil1) = 'S1'
+      is_litter(i_soil1) = .false.
+      is_soil(i_soil1) = .true.
+      is_cwd(i_soil1) = .false.
+      initial_cn_ratio(i_soil1) = cn_s1
+      initial_stock(i_soil1) = 0._r8
+      is_metabolic(i_soil1) = .false.
+      is_cellulose(i_soil1) = .false.
+      is_lignin(i_soil1) = .false.
+
+      i_soil2 = i_soil1 + 1
+      floating_cn_ratio_decomp_pools(i_soil2) = .false.
+      decomp_cascade_con%decomp_pool_name_restart(i_soil2) = 'soil2'
+      decomp_cascade_con%decomp_pool_name_history(i_soil2) = 'SOIL2'
+      decomp_cascade_con%decomp_pool_name_long(i_soil2) = 'soil 2'
+      decomp_cascade_con%decomp_pool_name_short(i_soil2) = 'S2'
+      is_litter(i_soil2) = .false.
+      is_soil(i_soil2) = .true.
+      is_cwd(i_soil2) = .false.
+      initial_cn_ratio(i_soil2) = cn_s2
+      initial_stock(i_soil2) = 0._r8
+      is_metabolic(i_soil2) = .false.
+      is_cellulose(i_soil2) = .false.
+      is_lignin(i_soil2) = .false.
+
+      i_soil3 = i_soil2 + 1
+      floating_cn_ratio_decomp_pools(i_soil3) = .false.
+      decomp_cascade_con%decomp_pool_name_restart(i_soil3) = 'soil3'
+      decomp_cascade_con%decomp_pool_name_history(i_soil3) = 'SOIL3'
+      decomp_cascade_con%decomp_pool_name_long(i_soil3) = 'soil 3'
+      decomp_cascade_con%decomp_pool_name_short(i_soil3) = 'S3'
+      is_litter(i_soil3) = .false.
+      is_soil(i_soil3) = .true.
+      is_cwd(i_soil3) = .false.
+      initial_cn_ratio(i_soil3) = cn_s3
+      initial_stock(i_soil3) = 0._r8
+      is_metabolic(i_soil3) = .false.
+      is_cellulose(i_soil3) = .false.
+      is_lignin(i_soil3) = .false.
+
+      i_soil4 = i_soil3 + 1
+      floating_cn_ratio_decomp_pools(i_soil4) = .false.
+      decomp_cascade_con%decomp_pool_name_restart(i_soil4) = 'soil4'
+      decomp_cascade_con%decomp_pool_name_history(i_soil4) = 'SOIL4'
+      decomp_cascade_con%decomp_pool_name_long(i_soil4) = 'soil 4'
+      decomp_cascade_con%decomp_pool_name_short(i_soil4) = 'S4'
+      is_litter(i_soil4) = .false.
+      is_soil(i_soil4) = .true.
+      is_cwd(i_soil4) = .false.
+      initial_cn_ratio(i_soil4) = cn_s4
+      initial_stock(i_soil4) = 10._r8
+      is_metabolic(i_soil4) = .false.
+      is_cellulose(i_soil4) = .false.
+      is_lignin(i_soil4) = .false.
+
       if (.not. use_fates) then
+         i_cwd = i_soil4 + 1
          floating_cn_ratio_decomp_pools(i_cwd) = .true.
          decomp_cascade_con%decomp_pool_name_restart(i_cwd) = 'cwd'
          decomp_cascade_con%decomp_pool_name_history(i_cwd) = 'CWD'
@@ -363,83 +422,6 @@ contains
          is_lignin(i_cwd) = .false.
       end if
 
-      if ( .not. use_fates ) then
-         i_soil1 = 5
-      else
-         i_soil1 = 4
-      endif
-      floating_cn_ratio_decomp_pools(i_soil1) = .false.
-      decomp_cascade_con%decomp_pool_name_restart(i_soil1) = 'soil1'
-      decomp_cascade_con%decomp_pool_name_history(i_soil1) = 'SOIL1'
-      decomp_cascade_con%decomp_pool_name_long(i_soil1) = 'soil 1'
-      decomp_cascade_con%decomp_pool_name_short(i_soil1) = 'S1'
-      is_litter(i_soil1) = .false.
-      is_soil(i_soil1) = .true.
-      is_cwd(i_soil1) = .false.
-      initial_cn_ratio(i_soil1) = cn_s1
-      initial_stock(i_soil1) = 0._r8
-      is_metabolic(i_soil1) = .false.
-      is_cellulose(i_soil1) = .false.
-      is_lignin(i_soil1) = .false.
-
-      if ( .not. use_fates ) then
-         i_soil2 = 6
-      else
-         i_soil2 = 5
-      endif
-      floating_cn_ratio_decomp_pools(i_soil2) = .false.
-      decomp_cascade_con%decomp_pool_name_restart(i_soil2) = 'soil2'
-      decomp_cascade_con%decomp_pool_name_history(i_soil2) = 'SOIL2'
-      decomp_cascade_con%decomp_pool_name_long(i_soil2) = 'soil 2'
-      decomp_cascade_con%decomp_pool_name_short(i_soil2) = 'S2'
-      is_litter(i_soil2) = .false.
-      is_soil(i_soil2) = .true.
-      is_cwd(i_soil2) = .false.
-      initial_cn_ratio(i_soil2) = cn_s2
-      initial_stock(i_soil2) = 0._r8
-      is_metabolic(i_soil2) = .false.
-      is_cellulose(i_soil2) = .false.
-      is_lignin(i_soil2) = .false.
-
-      if ( .not. use_fates ) then
-         i_soil3 = 7
-      else
-         i_soil3 = 6
-      endif
-      floating_cn_ratio_decomp_pools(i_soil3) = .false.
-      decomp_cascade_con%decomp_pool_name_restart(i_soil3) = 'soil3'
-      decomp_cascade_con%decomp_pool_name_history(i_soil3) = 'SOIL3'
-      decomp_cascade_con%decomp_pool_name_long(i_soil3) = 'soil 3'
-      decomp_cascade_con%decomp_pool_name_short(i_soil3) = 'S3'
-      is_litter(i_soil3) = .false.
-      is_soil(i_soil3) = .true.
-      is_cwd(i_soil3) = .false.
-      initial_cn_ratio(i_soil3) = cn_s3
-      initial_stock(i_soil3) = 0._r8
-      is_metabolic(i_soil3) = .false.
-      is_cellulose(i_soil3) = .false.
-      is_lignin(i_soil3) = .false.
-
-      if ( .not. use_fates ) then
-         i_soil4 = 8
-      else
-         i_soil4 = 7
-      endif
-      floating_cn_ratio_decomp_pools(i_soil4) = .false.
-      decomp_cascade_con%decomp_pool_name_restart(i_soil4) = 'soil4'
-      decomp_cascade_con%decomp_pool_name_history(i_soil4) = 'SOIL4'
-      decomp_cascade_con%decomp_pool_name_long(i_soil4) = 'soil 4'
-      decomp_cascade_con%decomp_pool_name_short(i_soil4) = 'S4'
-      is_litter(i_soil4) = .false.
-      is_soil(i_soil4) = .true.
-      is_cwd(i_soil4) = .false.
-      initial_cn_ratio(i_soil4) = cn_s4
-      initial_stock(i_soil4) = 10._r8
-      is_metabolic(i_soil4) = .false.
-      is_cellulose(i_soil4) = .false.
-      is_lignin(i_soil4) = .false.
-
-      i_atm = 0  !! for terminal pools (i.e. 100% respiration)
       floating_cn_ratio_decomp_pools(i_atm) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_atm) = 'atmosphere'
       decomp_cascade_con%decomp_pool_name_history(i_atm) = 'atmosphere'
@@ -540,7 +522,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine decomp_rate_constants_cn(bounds, &
         num_soilc, filter_soilc, &
-        canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+        soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
      !
      ! !DESCRIPTION:
      ! calculate rate constants and decomposition pathways for the BGC model 
@@ -548,7 +530,7 @@ contains
      ! written by C. Koven based on original CLM4 decomposition cascade by P. Thornton
      !
      ! !USES:
-     use clm_time_manager, only : get_step_size
+     use clm_time_manager, only : get_step_size_real
      use clm_varcon      , only : secspday
      use clm_varpar      , only : i_cwd
      !
@@ -556,7 +538,6 @@ contains
      type(bounds_type)                    , intent(in)    :: bounds          
      integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
      integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
-     type(canopystate_type)               , intent(in)    :: canopystate_inst
      type(soilstate_type)                 , intent(in)    :: soilstate_inst
      type(temperature_type)               , intent(in)    :: temperature_inst 
      type(ch4_type)                       , intent(in)    :: ch4_inst
@@ -578,23 +559,6 @@ contains
      real(r8):: k_s3                         ! decomposition rate constant SOM 3
      real(r8):: k_s4                         ! decomposition rate constant SOM 4
      real(r8):: k_frag                       ! fragmentation rate constant CWD
-     real(r8):: ck_l1                        ! corrected decomposition rate constant litter 1
-     real(r8):: ck_l2                        ! corrected decomposition rate constant litter 2
-     real(r8):: ck_l3                        ! corrected decomposition rate constant litter 3
-     real(r8):: ck_s1                        ! corrected decomposition rate constant SOM 1
-     real(r8):: ck_s2                        ! corrected decomposition rate constant SOM 2
-     real(r8):: ck_s3                        ! corrected decomposition rate constant SOM 3
-     real(r8):: ck_s4                        ! corrected decomposition rate constant SOM 4
-     real(r8):: ck_frag                      ! corrected fragmentation rate constant CWD
-     real(r8):: cwdc_loss                    ! fragmentation rate for CWD carbon (gC/m2/s)
-     real(r8):: cwdn_loss                    ! fragmentation rate for CWD nitrogen (gN/m2/s)
-     integer :: i_litr1
-     integer :: i_litr2
-     integer :: i_litr3
-     integer :: i_soil1
-     integer :: i_soil2
-     integer :: i_soil3
-     integer :: i_soil4
      integer :: c, fc, j, k, l
      real(r8):: Q10                          ! temperature dependence
      real(r8):: froz_q10                     ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
@@ -608,8 +572,6 @@ contains
           dz             => col%dz                                      , & ! Input:  [real(r8) (:,:)   ]  soil layer thickness (m)                               
 
           soilpsi        => soilstate_inst%soilpsi_col                  , & ! Input:  [real(r8) (:,:)   ]  soil water potential in each soil layer (MPa)          
-
-          alt_indx       => canopystate_inst%alt_indx_col               , & ! Input:  [integer  (:)     ]  current depth of thaw                                     
 
           t_soisno       => temperature_inst%t_soisno_col               , & ! Input:  [real(r8) (:,:)   ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)       
 
@@ -626,7 +588,7 @@ contains
        mino2lim = CNParamsShareInst%mino2lim
 
        ! set time steps
-       dt = real( get_step_size(), r8 )
+       dt = get_step_size_real()
        dtd = dt/secspday
 
        ! set initial base rates for decomposition mass loss (1/day)
@@ -672,28 +634,15 @@ contains
        end if
 
        ! The following code implements the acceleration part of the AD spinup
-       ! algorithm, by multiplying all of the SOM decomposition base rates by 10.0.
+       ! algorithm, by multiplying all of the SOM decomposition base rates by
+       ! spinup_vector, scalar between 1 and 70X, defined as a constant for each
+       ! pool here
 
        if ( spinup_state .eq. 1 ) then
           k_s1 = k_s1 * params_inst%spinup_vector(1)
           k_s2 = k_s2 * params_inst%spinup_vector(2)
           k_s3 = k_s3 * params_inst%spinup_vector(3)
           k_s4 = k_s4 * params_inst%spinup_vector(4)
-       endif
-
-       i_litr1 = 1
-       i_litr2 = 2
-       i_litr3 = 3
-       if (use_fates) then
-          i_soil1 = 4
-          i_soil2 = 5
-          i_soil3 = 6
-          i_soil4 = 7
-       else
-          i_soil1 = 5
-          i_soil2 = 6
-          i_soil3 = 7
-          i_soil4 = 8
        endif
 
        !--- time dependent coefficients-----!
@@ -770,17 +719,6 @@ contains
           end do
 
           if (use_lch4) then
-             if (anoxia_wtsat) then ! Adjust for saturated fraction if unfrozen.
-                do fc = 1,num_soilc
-                   c = filter_soilc(fc)
-                   if (alt_indx(c) >= nlev_soildecomp_standard .and. t_soisno(c,1) > SHR_CONST_TKFRZ) then
-                      w_scalar(c,1) = w_scalar(c,1)*(1._r8 - finundated(c)) + finundated(c)
-                   end if
-                end do
-             end if
-          end if
-
-          if (use_lch4) then
              ! Calculate ANOXIA
              if (anoxia) then
                 ! Check for anoxia w/o LCH4 now done in controlMod.
@@ -791,13 +729,7 @@ contains
 
                       if (j==1) o_scalar(c,:) = 0._r8
 
-                      if (.not. anoxia_wtsat) then
-                         o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * max(o2stress_unsat(c,j), mino2lim)
-                      else
-                         o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * &
-                              (max(o2stress_unsat(c,j), mino2lim)*(1._r8 - finundated(c)) + &
-                              max(o2stress_sat(c,j), mino2lim)*finundated(c) )
-                      end if
+                      o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * max(o2stress_unsat(c,j), mino2lim)
                    end do
                 end do
              else
@@ -852,11 +784,6 @@ contains
                 else
                    w_scalar(c,j) = 0._r8
                 end if
-                if (use_lch4) then
-                   if (anoxia_wtsat .and. t_soisno(c,j) > SHR_CONST_TKFRZ) then ! wet area will have w_scalar of 1 if unfrozen
-                      w_scalar(c,j) = w_scalar(c,j)*(1._r8 - finundated(c)) + finundated(c)
-                   end if
-                end if
              end do
           end do
 
@@ -871,12 +798,7 @@ contains
                 do fc = 1,num_soilc
                    c = filter_soilc(fc)
 
-                   if (.not. anoxia_wtsat) then
-                      o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
-                   else
-                      o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim) * (1._r8 - finundated(c)) + &
-                           max(o2stress_sat(c,j), mino2lim) * finundated(c)
-                   end if
+                   o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
                 end do
              end do
           else
@@ -886,64 +808,45 @@ contains
           o_scalar(bounds%begc:bounds%endc,1:nlevdecomp) = 1._r8
        end if
 
-       if (use_vertsoilc) then
-          ! add a term to reduce decomposition rate at depth
-          ! for now used a fixed e-folding depth
-          do j = 1, nlevdecomp
-             do fc = 1,num_soilc
-                c = filter_soilc(fc)
-                depth_scalar(c,j) = exp(-zsoi(j)/decomp_depth_efolding)
-             end do
+       ! add a term to reduce decomposition rate at depth
+       ! for now used a fixed e-folding depth
+       do j = 1, nlevdecomp
+          do fc = 1, num_soilc
+             c = filter_soilc(fc)
+             if (use_vertsoilc) then
+                depth_scalar(c,j) = exp(-zsoi(j) / decomp_depth_efolding)
+             else
+                depth_scalar(c,j) = 1.0_r8
+             end if
           end do
-       end if
+       end do
 
-      ! calculate rate constants for all litter and som pools
-       if (use_vertsoilc) then
-          do j = 1,nlevdecomp
-             do fc = 1,num_soilc
-                c = filter_soilc(fc)
-                decomp_k(c,j,i_litr1) = k_l1 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_litr2) = k_l2 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_litr3) = k_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil1) = k_s1 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil2) = k_s2 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil3) = k_s3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil4) = k_s4 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-             end do
+       ! calculate rate constants for all litter and som pools
+       do j = 1,nlevdecomp
+          do fc = 1,num_soilc
+             c = filter_soilc(fc)
+             decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             decomp_k(c,j,i_litr2) = k_l2    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             decomp_k(c,j,i_litr3) = k_l3    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             decomp_k(c,j,i_soil4) = k_s4    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             ! same for cwd but only if fates is not enabled; fates handles CWD
+             ! on its own structure
+             if (.not. use_fates) then
+                decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * &
+                   depth_scalar(c,j) * o_scalar(c,j) / dt
+             end if
           end do
-       else
-          do j = 1,nlevdecomp
-             do fc = 1,num_soilc
-                c = filter_soilc(fc)
-                decomp_k(c,j,i_litr1) = k_l1 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_litr2) = k_l2 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_litr3) = k_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil1) = k_s1 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil2) = k_s2 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil3) = k_s3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil4) = k_s4 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-             end do
-          end do
-       end if
-
-      ! do the same for cwd, but only if fates is not enabled (because fates handles CWD on its own structure
-       if (.not. use_fates) then
-          if (use_vertsoilc) then
-             do j = 1,nlevdecomp
-                do fc = 1,num_soilc
-                   c = filter_soilc(fc)
-                   decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                end do
-             end do
-          else
-             do j = 1,nlevdecomp
-                do fc = 1,num_soilc
-                   c = filter_soilc(fc)
-                   decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                end do
-             end do
-          end if
-       end if
+       end do
 
      end associate
 

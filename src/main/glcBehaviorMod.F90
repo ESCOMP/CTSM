@@ -11,7 +11,7 @@ module glcBehaviorMod
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
-  use landunit_varcon, only : istice_mec
+  use landunit_varcon, only : istice
   use clm_instur     , only : wt_lunit, wt_glc_mec
   use decompMod      , only : bounds_type
   use filterColMod   , only : filter_col_type
@@ -31,7 +31,7 @@ module glcBehaviorMod
      ! ------------------------------------------------------------------------
 
      ! If has_virtual_columns_grc(g) is true, then grid cell g has virtual columns for
-     ! all possible glc_mec columns.
+     ! all possible glacier columns.
      !
      ! For the sake of coupling with CISM, this should only be needed within the icemask,
      ! where we need virtual columns for the sake of coupling with CISM. This is needed in
@@ -87,7 +87,7 @@ module glcBehaviorMod
      ! Private data
      ! ------------------------------------------------------------------------
 
-     ! If collapse_to_atm_topo_grc(g) is true, then grid cell g has at most one glc_mec
+     ! If collapse_to_atm_topo_grc(g) is true, then grid cell g has at most one glacier
      ! column, whose topographic height exactly matches the atmosphere's topographic
      ! height for that grid cell (so that there is no adjustment of atmospheric
      ! forcings).
@@ -106,30 +106,30 @@ module glcBehaviorMod
      procedure, public  :: InitFromInputs  ! version of Init meant for unit testing (and called by other code in this class)
      procedure, public  :: InitSetDirectly ! version of Init meant for unit testing
 
-     ! get number of subgrid units in glc_mec landunit on one grid cell
-     procedure, public  :: get_num_glc_mec_subgrid
+     ! get number of subgrid units in glc landunit on one grid cell
+     procedure, public  :: get_num_glc_subgrid
 
-     ! returns true if memory should be allocated for the given glc_mec column, and its
+     ! returns true if memory should be allocated for the given glc column, and its
      ! weight on the landunit
-     procedure, public  :: glc_mec_col_exists
+     procedure, public  :: glc_col_exists
 
-     ! returns true if glc_mec columns on the given grid cell have dynamic type (type
+     ! returns true if glc columns on the given grid cell have dynamic type (type
      ! potentially changing at runtime)
      procedure, public  :: cols_have_dynamic_type
 
-     ! Sets a column-level logical array to true for any ice_mec column that needs
-     ! downscaling, false for any ice_mec column that does not need downscaling
-     procedure, public  :: icemec_cols_need_downscaling
+     ! Sets a column-level logical array to true for any ice column that needs
+     ! downscaling, false for any ice column that does not need downscaling
+     procedure, public  :: ice_cols_need_downscaling
 
-     ! Sets a column-level logical array to true for any ice_mec column that has
-     ! dynamic type, false for any ice_mec column that does not have dynamic type
+     ! Sets a column-level logical array to true for any ice column that has
+     ! dynamic type, false for any ice column that does not have dynamic type
      procedure, public :: cols_have_dynamic_type_array
 
-     ! Sets a patch-level logical array to true for any ice_mec column that has
-     ! dynamic type, false for any ice_mec column that does not have dynamic type
+     ! Sets a patch-level logical array to true for any ice column that has
+     ! dynamic type, false for any ice column that does not have dynamic type
      procedure, public :: patches_have_dynamic_type_array
 
-     ! update the column class types of any glc_mec columns that need to be updated
+     ! update the column class types of any glc columns that need to be updated
      procedure, public  :: update_glc_classes
 
      ! ------------------------------------------------------------------------
@@ -151,11 +151,11 @@ module glcBehaviorMod
      ! reads local namelist items
      procedure, private, nopass :: read_namelist
 
-     ! returns a column-level filter of ice_mec columns with the collapse_to_atm_topo
+     ! returns a column-level filter of ice columns with the collapse_to_atm_topo
      ! behavior
-     procedure, private :: collapse_to_atm_topo_icemec_filterc
+     procedure, private :: collapse_to_atm_topo_ice_filterc
 
-     ! update class of glc_mec columns in regions where these are collapsed to a single
+     ! update class of glc columns in regions where these are collapsed to a single
      ! column, given a filter
      procedure, private :: update_collapsed_columns_classes
 
@@ -301,7 +301,7 @@ contains
     character(len=*), parameter :: subname = 'InitFromInputs'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(glacier_region_map) == (/endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(glacier_region_map) == (/endg/)), sourcefile, __LINE__)
 
     call check_glacier_region_map
 
@@ -320,9 +320,9 @@ contains
        my_ice_runoff_behavior = glacier_region_ice_runoff_behavior(my_id)
 
        ! This should only happen due to a programming error, not due to a user input error
-       SHR_ASSERT(my_behavior /= BEHAVIOR_UNSET, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(my_melt_behavior /= BEHAVIOR_UNSET, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(my_ice_runoff_behavior /= BEHAVIOR_UNSET, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(my_behavior /= BEHAVIOR_UNSET, sourcefile, __LINE__)
+       SHR_ASSERT_FL(my_melt_behavior /= BEHAVIOR_UNSET, sourcefile, __LINE__)
+       SHR_ASSERT_FL(my_ice_runoff_behavior /= BEHAVIOR_UNSET, sourcefile, __LINE__)
 
        if (my_behavior == BEHAVIOR_VIRTUAL) then
           this%has_virtual_columns_grc(g) = .true.
@@ -394,7 +394,7 @@ contains
          glacier_region_behavior(i) = BEHAVIOR_UNSET
 
          if (glacier_region_present(i)) then
-            SHR_ASSERT_ALL((ubound(glacier_region_behavior_str) >= (/i/)), errMsg(sourcefile, __LINE__))
+            SHR_ASSERT_ALL_FL((ubound(glacier_region_behavior_str) >= (/i/)), sourcefile, __LINE__)
 
             select case (glacier_region_behavior_str(i))
             case ('multiple')
@@ -427,7 +427,7 @@ contains
          glacier_region_melt_behavior(i) = BEHAVIOR_UNSET
 
          if (glacier_region_present(i)) then
-            SHR_ASSERT_ALL((ubound(glacier_region_melt_behavior_str) >= (/i/)), errMsg(sourcefile, __LINE__))
+            SHR_ASSERT_ALL_FL((ubound(glacier_region_melt_behavior_str) >= (/i/)), sourcefile, __LINE__)
 
             select case (glacier_region_melt_behavior_str(i))
             case ('replaced_by_ice')
@@ -458,7 +458,7 @@ contains
          glacier_region_ice_runoff_behavior(i) = BEHAVIOR_UNSET
 
          if (glacier_region_present(i)) then
-            SHR_ASSERT_ALL((ubound(glacier_region_ice_runoff_behavior_str) >= (/i/)), errMsg(sourcefile, __LINE__))
+            SHR_ASSERT_ALL_FL((ubound(glacier_region_ice_runoff_behavior_str) >= (/i/)), sourcefile, __LINE__)
 
             select case (glacier_region_ice_runoff_behavior_str(i))
             case ('remains_ice')
@@ -508,8 +508,8 @@ contains
     character(len=*), parameter :: subname = 'InitForTesting'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(has_virtual_columns) == (/endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(collapse_to_atm_topo) == (/endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(has_virtual_columns) == (/endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(collapse_to_atm_topo) == (/endg/)), sourcefile, __LINE__)
 
     call this%InitAllocate(begg, endg)
     this%has_virtual_columns_grc(:) = has_virtual_columns(:)
@@ -569,7 +569,7 @@ contains
     character(len=*), parameter :: subname = 'read_surface_dataset'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(glacier_region_map) == (/endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(glacier_region_map) == (/endg/)), sourcefile, __LINE__)
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read GLACIER_REGION...'
@@ -659,13 +659,13 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine get_num_glc_mec_subgrid(this, gi, atm_topo, npatches, ncols, nlunits)
+  subroutine get_num_glc_subgrid(this, gi, atm_topo, npatches, ncols, nlunits)
     !
     ! !DESCRIPTION:
-    ! Get number of subgrid units in glc_mec landunit on one grid cell
+    ! Get number of subgrid units in glc landunit on one grid cell
     !
     ! !USES:
-    use clm_varpar      , only : maxpatch_glcmec
+    use clm_varpar      , only : maxpatch_glc
     !
     ! !ARGUMENTS:
     class(glc_behavior_type), intent(in) :: this
@@ -680,13 +680,13 @@ contains
     logical  :: col_exists
     real(r8) :: col_wt_lunit
 
-    character(len=*), parameter :: subname = 'get_num_glc_mec_subgrid'
+    character(len=*), parameter :: subname = 'get_num_glc_subgrid'
     !-----------------------------------------------------------------------
 
     ncols = 0
 
-    do m = 1, maxpatch_glcmec
-       call this%glc_mec_col_exists(gi = gi, elev_class = m, atm_topo = atm_topo, &
+    do m = 1, maxpatch_glc
+       call this%glc_col_exists(gi = gi, elev_class = m, atm_topo = atm_topo, &
             exists = col_exists, col_wt_lunit = col_wt_lunit)
        if (col_exists) then
           ncols = ncols + 1
@@ -694,10 +694,10 @@ contains
     end do
 
     if (this%collapse_to_atm_topo_grc(gi) .and. &
-         wt_lunit(gi, istice_mec) > 0.0_r8) then
+         wt_lunit(gi, istice) > 0.0_r8) then
        ! For grid cells with the collapse_to_atm_topo behavior, with a non-zero weight
-       ! ice_mec landunit, we expect exactly one column
-       SHR_ASSERT(ncols == 1, errMsg(sourcefile, __LINE__))
+       ! ice landunit, we expect exactly one column
+       SHR_ASSERT_FL(ncols == 1, sourcefile, __LINE__)
     end if
 
     if (ncols > 0) then
@@ -708,15 +708,15 @@ contains
        nlunits = 0
     end if
   
-  end subroutine get_num_glc_mec_subgrid
+  end subroutine get_num_glc_subgrid
 
   !-----------------------------------------------------------------------
-  subroutine glc_mec_col_exists(this, gi, elev_class, atm_topo, exists, col_wt_lunit)
+  subroutine glc_col_exists(this, gi, elev_class, atm_topo, exists, col_wt_lunit)
     !
     ! !DESCRIPTION:
-    ! For the given glc_mec column, with elevation class index elev_class, in grid cell
+    ! For the given glc column, with elevation class index elev_class, in grid cell
     ! gi: sets exists to true if memory should be allocated for this column, and sets
-    ! col_wt_lunit to the column's weight on the icemec landunit.
+    ! col_wt_lunit to the column's weight on the ice landunit.
     !
     ! If exists is false, then col_wt_lunit is arbitrary and should be ignored.
     !
@@ -731,13 +731,13 @@ contains
     integer,  intent(in)  :: elev_class   ! elevation class index
     real(r8), intent(in)  :: atm_topo     ! atmosphere's topographic height for this grid cell (m)
     logical,  intent(out) :: exists       ! whether memory should be allocated for this column
-    real(r8), intent(out) :: col_wt_lunit ! column's weight on the icemec landunit
+    real(r8), intent(out) :: col_wt_lunit ! column's weight on the ice landunit
     !
     ! !LOCAL VARIABLES:
     integer :: atm_elev_class ! elevation class corresponding to atmosphere topographic height
     integer :: err_code
 
-    character(len=*), parameter :: subname = 'glc_mec_col_exists'
+    character(len=*), parameter :: subname = 'glc_col_exists'
     !-----------------------------------------------------------------------
 
     ! Set default outputs
@@ -745,7 +745,7 @@ contains
     col_wt_lunit = wt_glc_mec(gi, elev_class)
 
     if (this%collapse_to_atm_topo_grc(gi)) then
-       if (wt_lunit(gi, istice_mec) > 0.0_r8) then
+       if (wt_lunit(gi, istice) > 0.0_r8) then
           call glc_get_elevation_class(atm_topo, atm_elev_class, err_code)
           if ( err_code == GLC_ELEVCLASS_ERR_NONE .or. &
                err_code == GLC_ELEVCLASS_ERR_TOO_LOW .or. &
@@ -773,7 +773,7 @@ contains
     else  ! collapse_to_atm_topo_grc .false.
        if (this%has_virtual_columns_grc(gi)) then
           exists = .true.
-       else if (wt_lunit(gi, istice_mec) > 0.0_r8 .and. &
+       else if (wt_lunit(gi, istice) > 0.0_r8 .and. &
             wt_glc_mec(gi, elev_class) > 0.0_r8) then
           ! If the landunit has non-zero weight on the grid cell, and this column has
           ! non-zero weight on the landunit...
@@ -781,13 +781,13 @@ contains
        end if
     end if
 
-  end subroutine glc_mec_col_exists
+  end subroutine glc_col_exists
 
   !-----------------------------------------------------------------------
   function cols_have_dynamic_type(this, gi)
     !
     ! !DESCRIPTION:
-    ! Returns true if glc_mec columns on the given grid cell have dynamic type (i.e.,
+    ! Returns true if glc columns on the given grid cell have dynamic type (i.e.,
     ! type potentially changing at runtime)
     !
     ! !USES:
@@ -811,22 +811,22 @@ contains
   end function cols_have_dynamic_type
 
   !-----------------------------------------------------------------------
-  subroutine icemec_cols_need_downscaling(this, bounds, num_icemecc, filter_icemecc, &
+  subroutine ice_cols_need_downscaling(this, bounds, num_icec, filter_icec, &
        needs_downscaling_col)
     !
     ! !DESCRIPTION:
-    ! Sets needs_downscaling_col to true for any ice_mec column that needs downscaling,
-    ! false for any ice_mec column that does not need downscaling.
+    ! Sets needs_downscaling_col to true for any ice column that needs downscaling,
+    ! false for any ice column that does not need downscaling.
     !
-    ! Outside of filter_icemecc, leaves needs_downscaling_col untouched.
+    ! Outside of filter_icec, leaves needs_downscaling_col untouched.
     !
     ! !USES:
     !
     ! !ARGUMENTS:
     class(glc_behavior_type) , intent(in) :: this
     type(bounds_type)        , intent(in) :: bounds
-    integer                  , intent(in) :: num_icemecc       ! number of points in filter_icemecc
-    integer                  , intent(in) :: filter_icemecc(:) ! col filter for ice_mec
+    integer                  , intent(in) :: num_icec       ! number of points in filter_icec
+    integer                  , intent(in) :: filter_icec(:) ! col filter for ice
     logical                  , intent(inout) :: needs_downscaling_col( bounds%begc: )
     !
     ! !LOCAL VARIABLES:
@@ -834,13 +834,13 @@ contains
     integer :: c
     integer :: g
 
-    character(len=*), parameter :: subname = 'icemec_cols_need_downscaling'
+    character(len=*), parameter :: subname = 'ice_cols_need_downscaling'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(needs_downscaling_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(needs_downscaling_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
-    do fc = 1, num_icemecc
-       c = filter_icemecc(fc)
+    do fc = 1, num_icec
+       c = filter_icec(fc)
        g = col%gridcell(c)
 
        if (this%collapse_to_atm_topo_grc(g)) then
@@ -850,16 +850,16 @@ contains
        end if
     end do
 
-  end subroutine icemec_cols_need_downscaling
+  end subroutine ice_cols_need_downscaling
 
   !-----------------------------------------------------------------------
   subroutine cols_have_dynamic_type_array(this, begc, endc, has_dynamic_type_col)
     !
     ! !DESCRIPTION:
-    ! Sets a column-level logical array to true for any ice_mec column that has
-    ! dynamic type, false for any ice_mec column that does not have dynamic type.
+    ! Sets a column-level logical array to true for any ice column that has
+    ! dynamic type, false for any ice column that does not have dynamic type.
     !
-    ! The value is undefined for non-ice_mec columns.
+    ! The value is undefined for non-ice columns.
     !
     ! !ARGUMENTS:
     class(glc_behavior_type) , intent(in) :: this
@@ -874,11 +874,11 @@ contains
     character(len=*), parameter :: subname = 'cols_have_dynamic_type_array'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(has_dynamic_type_col) == (/endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(has_dynamic_type_col) == (/endc/)), sourcefile, __LINE__)
 
     do c = begc, endc
        g = col%gridcell(c)
-       ! Users shouldn't rely on the values set for non-ice_mec columns, but it's simpler
+       ! Users shouldn't rely on the values set for non-ice columns, but it's simpler
        ! just to set this for all column types.
        if (this%collapse_to_atm_topo_grc(g)) then
           has_dynamic_type_col(c) = .true.
@@ -893,10 +893,10 @@ contains
   subroutine patches_have_dynamic_type_array(this, begp, endp, has_dynamic_type_patch)
     !
     ! !DESCRIPTION:
-    ! Sets a patch-level logical array to true for any ice_mec patch that has
-    ! dynamic type, false for any ice_mec patch that does not have dynamic type.
+    ! Sets a patch-level logical array to true for any ice patch that has
+    ! dynamic type, false for any ice patch that does not have dynamic type.
     !
-    ! The value is undefined for non-ice_mec patches.
+    ! The value is undefined for non-ice patches.
     !
     ! !ARGUMENTS:
     class(glc_behavior_type) , intent(in) :: this
@@ -911,11 +911,11 @@ contains
     character(len=*), parameter :: subname = 'patches_have_dynamic_type_array'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(has_dynamic_type_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(has_dynamic_type_patch) == (/endp/)), sourcefile, __LINE__)
 
     do p = begp, endp
        g = patch%gridcell(p)
-       ! Users shouldn't rely on the values set for non-ice_mec patches, but it's simpler
+       ! Users shouldn't rely on the values set for non-ice patches, but it's simpler
        ! just to set this for all patch types.
        if (this%collapse_to_atm_topo_grc(g)) then
           has_dynamic_type_patch(p) = .true.
@@ -930,7 +930,7 @@ contains
   subroutine update_glc_classes(this, bounds, topo_col)
     !
     ! !DESCRIPTION:
-    ! Update the column class types of any glc_mec columns that need to be updated.
+    ! Update the column class types of any glc columns that need to be updated.
     !
     ! Assumes that topo_col has already been set appropriately.
     !
@@ -947,7 +947,7 @@ contains
     character(len=*), parameter :: subname = 'update_glc_classes'
     !-----------------------------------------------------------------------
 
-    collapse_filterc = this%collapse_to_atm_topo_icemec_filterc(bounds)
+    collapse_filterc = this%collapse_to_atm_topo_ice_filterc(bounds)
     call this%update_collapsed_columns_classes(bounds, collapse_filterc, topo_col)
 
   end subroutine update_glc_classes
@@ -956,7 +956,7 @@ contains
   subroutine update_collapsed_columns_classes(this, bounds, collapse_filterc, topo_col)
     !
     ! !DESCRIPTION:
-    ! Update class of glc_mec columns in regions where these are collapsed to a single
+    ! Update class of glc columns in regions where these are collapsed to a single
     ! column, given a filter.
     !
     ! Assumes that topo_col has already been updated appropriately for these columns.
@@ -965,7 +965,7 @@ contains
     use glc_elevclass_mod, only : glc_get_elevation_class, GLC_ELEVCLASS_ERR_NONE
     use glc_elevclass_mod, only : GLC_ELEVCLASS_ERR_TOO_LOW, GLC_ELEVCLASS_ERR_TOO_HIGH
     use glc_elevclass_mod, only : glc_errcode_to_string
-    use column_varcon    , only : icemec_class_to_col_itype
+    use column_varcon    , only : ice_class_to_col_itype
     !
     ! !ARGUMENTS:
     class(glc_behavior_type), intent(in) :: this
@@ -976,14 +976,14 @@ contains
     ! !LOCAL VARIABLES:
     integer :: fc         ! filter index
     integer :: c          ! column index
-    integer :: elev_class ! elevation class of the single column on the ice_mec landunit
+    integer :: elev_class ! elevation class of the single column on the ice landunit
     integer :: err_code
     integer :: new_coltype
 
     character(len=*), parameter :: subname = 'update_collapsed_columns_classes'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(topo_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(topo_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     do fc = 1, collapse_filterc%num
        c = collapse_filterc%indices(fc)
@@ -1004,7 +1004,7 @@ contains
           call endrun(msg=subname//': ERROR getting elevation class')
        end if
 
-       new_coltype = icemec_class_to_col_itype(elev_class)
+       new_coltype = ice_class_to_col_itype(elev_class)
        if (new_coltype /= col%itype(c)) then
           call col%update_itype(c = c, itype = new_coltype)
        end if
@@ -1013,10 +1013,10 @@ contains
   end subroutine update_collapsed_columns_classes
 
   !-----------------------------------------------------------------------
-  function collapse_to_atm_topo_icemec_filterc(this, bounds) result(filter)
+  function collapse_to_atm_topo_ice_filterc(this, bounds) result(filter)
     !
     ! !DESCRIPTION:
-    ! Returns a column-level filter of ice_mec columns with the collapse_to_atm_topo behavior
+    ! Returns a column-level filter of ice columns with the collapse_to_atm_topo behavior
     !
     ! !USES:
     use filterColMod, only : filter_col_type, col_filter_from_grcflags_ltypes
@@ -1028,7 +1028,7 @@ contains
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'collapse_to_atm_topo_icemec_filterc'
+    character(len=*), parameter :: subname = 'collapse_to_atm_topo_ice_filterc'
     !-----------------------------------------------------------------------
 
     ! Currently this creates the filter on the fly, recreating it every time this
@@ -1044,10 +1044,10 @@ contains
     filter = col_filter_from_grcflags_ltypes( &
          bounds = bounds, &
          grcflags = this%collapse_to_atm_topo_grc(bounds%begg:bounds%endg), &
-         ltypes = [istice_mec], &
+         ltypes = [istice], &
          include_inactive = .true.)
 
-  end function collapse_to_atm_topo_icemec_filterc
+  end function collapse_to_atm_topo_ice_filterc
 
   !-----------------------------------------------------------------------
   function get_collapse_to_atm_topo(this, gi) result(collapse_to_atm_topo)

@@ -22,7 +22,6 @@ module accumulMod
 #include "shr_assert.h"
   use shr_kind_mod, only: r8 => shr_kind_r8
   use shr_sys_mod , only: shr_sys_abort
-  use shr_log_mod , only: errMsg => shr_log_errMsg
   use abortutils  , only: endrun
   use clm_varctl  , only: iulog, nsrest, nsrStartup
   use clm_varcon  , only: spval, ispval
@@ -78,6 +77,7 @@ module accumulMod
      real(r8)           :: initval  !initial value of accumulated field
      real(r8), pointer  :: val(:,:) !accumulated field
      integer            :: period   !field accumulation period (in model time steps)
+     logical            :: scale_by_thickness  ! true/false flag to scale vertically interpolated variable by soil thickness or not
 
      ! In most cases, we could use a 1-d nsteps variable. However, that's awkward within
      ! nested loops (with level as the outer loop); also, runaccum can theoretically have
@@ -130,7 +130,8 @@ contains
 
   !------------------------------------------------------------------------
   subroutine init_accum_field (name, units, desc, &
-       accum_type, accum_period, numlev, subgrid_type, init_value, type2d)
+       accum_type, accum_period, numlev, subgrid_type, init_value, type2d, &
+       scale_by_thickness)
     !
     ! !DESCRIPTION:
     ! Initialize accumulation fields. This subroutine sets:
@@ -164,6 +165,7 @@ contains
     integer , intent(in)                   :: numlev       !number of vertical levels
     real(r8), intent(in)                   :: init_value   !field initial or reset value
     character(len=*), intent(in), optional :: type2d       !level type (optional) - needed if numlev > 1
+    logical         , intent(in), optional :: scale_by_thickness  ! true/false flag to scale vertically interpolated variable by soil thickness; required if numlev > 1
     !
     ! !LOCAL VARIABLES:
     integer :: nf           ! field index
@@ -173,7 +175,16 @@ contains
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
     integer :: begCohort, endCohort   ! per-proc beg end cohort indices
+    character(len=*), parameter :: subname = 'init_accum_field'
     !------------------------------------------------------------------------
+
+    if (numlev > 1) then
+       if (.not. present(scale_by_thickness) .or. &
+           .not. present(type2d)) then
+          write(iulog,*) 'ERROR: field ', trim(name),' in subroutine ', subname
+          call endrun('2d accumulation fields require scale_by_thickness AND type2d passed to this subroutine as arguments')
+       end if
+    end if
 
     ! Determine necessary indices
 
@@ -253,7 +264,12 @@ contains
     else
        accum(nf)%type2d = ' '
     end if
-    
+    if (present(scale_by_thickness)) then
+       accum(nf)%scale_by_thickness = scale_by_thickness
+    else
+       accum(nf)%scale_by_thickness = .false.
+    end if
+
     ! Allocate and initialize accumulation field
 
     allocate(accum(nf)%val(beg1d:end1d,numlev))
@@ -347,7 +363,7 @@ contains
     call find_field(field_name=name, caller_name=subname, field_index=nf)
 
     numlev = accum(nf)%numlev
-    SHR_ASSERT(numlev == 1, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(numlev == 1, sourcefile, __LINE__)
 
     call accum(nf)%extract_accum_field_func( &
          level = 1, &
@@ -382,7 +398,7 @@ contains
     call find_field(field_name=name, caller_name=subname, field_index=nf)
 
     numlev = accum(nf)%numlev
-    SHR_ASSERT((size(field, 2) == numlev), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field, 2) == numlev), sourcefile, __LINE__)
 
     do j = 1,numlev
        call accum(nf)%extract_accum_field_func( &
@@ -413,7 +429,7 @@ contains
 
     begi = this%beg1d
     endi = this%end1d
-    SHR_ASSERT((size(field) == endi-begi+1), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
 
     do k = begi, endi
        kf = k - begi + 1
@@ -442,7 +458,7 @@ contains
 
     begi = this%beg1d
     endi = this%end1d
-    SHR_ASSERT((size(field) == endi-begi+1), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
 
     if (mod(nstep,this%period) == 0) then
        do k = begi, endi
@@ -484,7 +500,7 @@ contains
     call find_field(field_name=name, caller_name=subname, field_index=nf)
 
     numlev = accum(nf)%numlev
-    SHR_ASSERT(numlev == 1, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(numlev == 1, sourcefile, __LINE__)
 
     call accum(nf)%update_accum_field_func( &
          level = 1, &
@@ -518,7 +534,7 @@ contains
     call find_field(field_name=name, caller_name=subname, field_index=nf)
 
     numlev = accum(nf)%numlev
-    SHR_ASSERT((size(field, 2) == numlev), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field, 2) == numlev), sourcefile, __LINE__)
 
     do j = 1,numlev
        call accum(nf)%update_accum_field_func( &
@@ -550,7 +566,7 @@ contains
 
     begi = this%beg1d
     endi = this%end1d
-    SHR_ASSERT((size(field) == endi-begi+1), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
 
     ! time average field: reset every accumulation period; normalize at end of
     ! accumulation period
@@ -604,7 +620,7 @@ contains
 
     begi = this%beg1d
     endi = this%end1d
-    SHR_ASSERT((size(field) == endi-begi+1), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
 
     do k = begi,endi
        if (this%active(k)) then
@@ -645,7 +661,7 @@ contains
 
     begi = this%beg1d
     endi = this%end1d
-    SHR_ASSERT((size(field) == endi-begi+1), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
 
     !running accumulation field; reset at trigger -99999
 
@@ -701,6 +717,7 @@ contains
           call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double, &
                dim1name=accum(nf)%type1d, dim2name=accum(nf)%type2d, &
                long_name=accum(nf)%desc, units=accum(nf)%units, &
+               switchdim=.false., scale_by_thickness=accum(nf)%scale_by_thickness, &
                interpinic_flag='interp', &
                data=accum(nf)%val, readvar=readvar)
        end if
@@ -714,10 +731,15 @@ contains
                interpinic_flag='interp', &
                data=accum(nf)%nsteps, readvar=readvar)
        else
+          ! Counterintuitive to scale NSTEPS by thickness and
+          ! counterintuitive to do vertical interpolation at all on NSTEPS.
+          ! NSTEPS will probably always be the same for all levels, so the
+          ! vertical interpolation will be trivial. Leaving this code as is.
           call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_int, &
                dim1name=accum(nf)%type1d, dim2name=accum(nf)%type2d, &
                long_name='number of accumulated steps for '//trim(accum(nf)%name), &
                units='-', &
+               switchdim=.false., scale_by_thickness=accum(nf)%scale_by_thickness, &
                interpinic_flag='interp', &
                data=accum(nf)%nsteps, readvar=readvar)
        end if

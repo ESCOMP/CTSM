@@ -14,6 +14,7 @@ module mkurbanparMod
 ! !USES:
    use shr_kind_mod, only : r8 => shr_kind_r8
    use shr_sys_mod , only : shr_sys_flush
+   use mkvarctl,     only : ispval
    implicit none
 
    private
@@ -29,8 +30,10 @@ module mkurbanparMod
 
 ! !PUBLIC DATA MEMBERS:
    integer :: numurbl           ! number of urban classes
+   integer :: nlevurb = ispval  ! number of urban layers
 
    public :: numurbl
+   public :: nlevurb
 
 ! !PRIVATE DATA MEMBERS:
    ! flag to indicate nodata for index variables in output file:
@@ -80,6 +83,8 @@ subroutine mkurbanInit(datfname)
    call check_ret(nf_open(datfname, 0, ncid), subname)
    call check_ret(nf_inq_dimid (ncid, 'density_class', dimid), subname)
    call check_ret(nf_inq_dimlen (ncid, dimid, numurbl), subname)
+   call check_ret(nf_inq_dimid (ncid, 'nlevurb', dimid), subname)
+   call check_ret(nf_inq_dimlen (ncid, dimid, nlevurb), subname)
    call check_ret(nf_close(ncid), subname)
 
 end subroutine mkurbanInit
@@ -153,6 +158,7 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, &
    real(r8), allocatable :: urbn_classes_gcell_i(:,:) ! input grid: percent urban in each density class
                                                       ! (% of total grid cell area)
    real(r8), allocatable :: urbn_classes_gcell_o(:,:) ! output grid: percent urban in each density class
+   real(r8), allocatable :: frac_dst(:)               ! output fractions
                                                       ! (% of total grid cell area)
    integer , allocatable :: region_i(:)               ! input grid: region ID
    integer  :: ni,no,ns,k                             ! indices
@@ -175,8 +181,12 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, &
 
    allocate(urbn_classes_gcell_i(ns, numurbl), &
             urbn_classes_gcell_o(ldomain%ns, numurbl), &
+            frac_dst(ldomain%ns), &
             stat=ier)
    if (ier/=0) call abort()
+
+   ! Obtain frac_dst
+   call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
    write (6,*) 'Open urban file: ', trim(datfname)
    call check_ret(nf_open(datfname, 0, ncid), subname)
@@ -185,7 +195,7 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, &
 
    ! Determine % urban by density class on the output grid
    do k = 1, numurbl
-      call mkurban_pct(ldomain, tdomain, tgridmap, urbn_classes_gcell_i(:,k), urbn_classes_gcell_o(:,k))
+      call mkurban_pct(ldomain, tdomain, tgridmap, urbn_classes_gcell_i(:,k), urbn_classes_gcell_o(:,k), frac_dst)
    end do
 
    ! Determine total % urban
@@ -221,7 +231,7 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, &
    do k = 1, numurbl
       call mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, &
            urbn_classes_gcell_i(:,k), urbn_classes_gcell_o(:,k), &
-           ndiag, dens_class=k)
+           ndiag, dens_class=k, frac_dst=frac_dst)
    end do
 
    write (6,*) 'Successfully made %urban'
@@ -260,7 +270,7 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, &
 
    ! Determine dominant region for each output cell
 
-   call get_dominant_indices(tgridmap, region_i, region_o, 1, max_region, index_nodata)
+   call get_dominant_indices(tgridmap, region_i, region_o, 1, max_region, index_nodata, mask_src=tdomain%mask)
 
    write (6,*) 'Successfully made urban region'
    write (6,*)
@@ -268,14 +278,14 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, &
    ! Output diagnostics
 
    call output_diagnostics_index(region_i, region_o, tgridmap, 'Urban Region ID', &
-        1, max_region, ndiag)
+        1, max_region, ndiag, mask_src=tdomain%mask, frac_dst=frac_dst)
 
    ! Deallocate dynamic memory & other clean up
 
    call check_ret(nf_close(ncid), subname)
    call domain_clean(tdomain)
    call gridmap_clean(tgridmap)
-   deallocate (urbn_classes_gcell_i, urbn_classes_gcell_o, region_i)
+   deallocate (urbn_classes_gcell_i, urbn_classes_gcell_o, region_i, frac_dst)
   
 end subroutine mkurban
 !-----------------------------------------------------------------------

@@ -21,7 +21,7 @@ module atm2lndMod
   use filterColMod   , only : filter_col_type
   use LandunitType   , only : lun                
   use ColumnType     , only : col
-  use landunit_varcon, only : istice_mec
+  use landunit_varcon, only : istice
   use WaterType      , only : water_type
   use Wateratm2lndBulkType, only : wateratm2lndbulk_type
   !
@@ -128,15 +128,14 @@ contains
     ! temporaries for topo downscaling
     real(r8) :: hsurf_g,hsurf_c
     real(r8) :: Hbot, zbot
-    real(r8) :: tbot_g, pbot_g, thbot_g, qbot_g, qs_g, es_g, rhos_g
-    real(r8) :: tbot_c, pbot_c, thbot_c, qbot_c, qs_c, es_c, rhos_c
+    real(r8) :: tbot_g, pbot_g, thbot_g, qbot_g, qs_g, rhos_g
+    real(r8) :: tbot_c, pbot_c, thbot_c, qbot_c, qs_c, rhos_c
     real(r8) :: rhos_c_estimate, rhos_g_estimate
-    real(r8) :: dum1,   dum2
 
     character(len=*), parameter :: subname = 'downscale_forcings'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(&
          ! Parameters:
@@ -223,8 +222,8 @@ contains
 
          thbot_c= thbot_g + (tbot_c - tbot_g)*exp((zbot/Hbot)*(rair/cpair))  ! pot temp calc
 
-         call Qsat(tbot_g,pbot_g,es_g,dum1,qs_g,dum2)
-         call Qsat(tbot_c,pbot_c,es_c,dum1,qs_c,dum2)
+         call Qsat(tbot_g,pbot_g,qs_g)
+         call Qsat(tbot_c,pbot_c,qs_c)
 
          qbot_c = qbot_g*(qs_c/qs_g)
 
@@ -310,7 +309,7 @@ contains
     character(len=*), parameter :: subname = 'partition_precip'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(&
          ! Gridcell-level non-downscaled fields:
@@ -344,7 +343,7 @@ contains
              l = col%landunit(c)
              rain_orig = forc_rain_c(c)
              snow_orig = forc_snow_c(c)
-             if (lun%itype(l) == istice_mec) then
+             if (lun%itype(l) == istice) then
                 all_snow_t = atm2lnd_inst%params%precip_repartition_glc_all_snow_t
                 frac_rain_slope = atm2lnd_inst%params%precip_repartition_glc_frac_rain_slope
              else
@@ -525,7 +524,7 @@ contains
             ! Keep track of the gridcell-level weighted sum for later normalization.
             !
             ! This gridcell-level weighted sum just includes points for which we do the
-            ! downscaling (e.g., glc_mec points). Thus the contributing weights
+            ! downscaling (e.g., glacier points). Thus the contributing weights
             ! generally do not add to 1. So to do the normalization properly, we also
             ! need to keep track of the weights that have contributed to this sum.
             sum_lwrad_g(g) = sum_lwrad_g(g) + col%wtgcell(c)*forc_lwrad_c(c)
@@ -608,9 +607,9 @@ contains
     real(r8), intent(out) :: norms(:)       ! computed normalization factors
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((size(orig_field) == size(norms)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((size(sum_field) == size(norms)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((size(sum_wts) == size(norms)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(orig_field) == size(norms)), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(sum_field) == size(norms)), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(sum_wts) == size(norms)), sourcefile, __LINE__)
 
     where (sum_wts == 0._r8)
        ! Avoid divide by zero; if sum_wts is 0, then the normalization doesn't matter,

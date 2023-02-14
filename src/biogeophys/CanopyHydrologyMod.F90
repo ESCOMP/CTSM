@@ -16,7 +16,7 @@ module CanopyHydrologyMod
   use shr_sys_mod     , only : shr_sys_flush
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_time_manager, only : get_step_size
+  use clm_time_manager, only : get_step_size_real
   use clm_varctl      , only : iulog
   use column_varcon   , only : icol_sunwall, icol_shadewall
   use subgridAveMod   , only : p2c
@@ -217,7 +217,7 @@ contains
           b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
           )
 
-     dtime = get_step_size()
+     dtime = get_step_size_real()
 
      ! Note about filters in this routine: Most of the work here just needs to be done
      ! for patches that have some canopy, so we use the soil filter. However, the final

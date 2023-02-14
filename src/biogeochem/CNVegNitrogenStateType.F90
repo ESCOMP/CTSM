@@ -4,7 +4,6 @@ module CNVegNitrogenStateType
 
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_infnan_mod                     , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
-  use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi
@@ -72,6 +71,7 @@ module CNVegNitrogenStateType
      real(r8), pointer :: totn_p2c_col             (:) ! (gN/m2) totn_patch averaged to col
      real(r8), pointer :: totn_col                 (:) ! (gN/m2) total column nitrogen, incl veg
      real(r8), pointer :: totecosysn_col           (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
+     real(r8), pointer :: totn_grc                 (:) ! (gN/m2) total gridcell nitrogen
 
    contains
 
@@ -167,6 +167,7 @@ contains
     allocate(this%totn_p2c_col             (begc:endc)) ; this%totn_p2c_col             (:) = nan
     allocate(this%totn_col                 (begc:endc)) ; this%totn_col                 (:) = nan
     allocate(this%totecosysn_col           (begc:endc)) ; this%totecosysn_col           (:) = nan
+    allocate(this%totn_grc                 (begg:endg)) ; this%totn_grc                 (:) = nan
 
   end subroutine InitAllocate
 
@@ -394,11 +395,11 @@ contains
     integer :: special_patch (bounds%endp-bounds%begp+1) ! special landunit filter - patches
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leafc_patch)          == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(leafc_storage_patch)  == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frootc_patch)         == (/bounds%endp/)), errMsg(sourcefile, __LINE__))   
-    SHR_ASSERT_ALL((ubound(frootc_storage_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))   
-    SHR_ASSERT_ALL((ubound(deadstemc_patch)      == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(leafc_patch)          == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(leafc_storage_patch)  == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frootc_patch)         == (/bounds%endp/)), sourcefile, __LINE__)   
+    SHR_ASSERT_ALL_FL((ubound(frootc_storage_patch) == (/bounds%endp/)), sourcefile, __LINE__)   
+    SHR_ASSERT_ALL_FL((ubound(deadstemc_patch)      == (/bounds%endp/)), sourcefile, __LINE__)
 
     ! Set column filters
 
@@ -511,6 +512,7 @@ contains
 
     do g = bounds%begg, bounds%endg
        this%seedn_grc(g) = 0._r8
+       this%totn_grc(g)  = 0._r8
     end do
 
     ! now loop through special filters and explicitly set the variables that
@@ -527,7 +529,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine Restart ( this,  bounds, ncid, flag, leafc_patch, &
                        leafc_storage_patch, frootc_patch, frootc_storage_patch, &
-                       deadstemc_patch, filter_reseed_patch, num_reseed_patch )
+                       deadstemc_patch, filter_reseed_patch, num_reseed_patch, &
+                       spinup_factor_deadwood )
     !
     ! !DESCRIPTION: 
     ! Read/write restart data 
@@ -552,6 +555,7 @@ contains
     real(r8)          , intent(in) :: deadstemc_patch(bounds%begp:)
     integer           , intent(in) :: filter_reseed_patch(:)
     integer           , intent(in) :: num_reseed_patch
+    real(r8)          , intent(in) :: spinup_factor_deadwood
     !
     ! !LOCAL VARIABLES:
     integer            :: i, p, l
@@ -717,18 +721,18 @@ contains
        if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
           if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood N pools out of AD spinup mode'
           exit_spinup = .true.
-          if ( masterproc ) write(iulog, *) 'Multiplying stemn and crootn by 10 for exit spinup '
+          if ( masterproc ) write(iulog, *) 'Multiplying stemn and crootn by ', spinup_factor_deadwood, 'for exit spinup '
           do i = bounds%begp,bounds%endp
-             this%deadstemn_patch(i) = this%deadstemn_patch(i) * 10._r8
-             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) * 10._r8
+             this%deadstemn_patch(i) = this%deadstemn_patch(i) * spinup_factor_deadwood
+             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) * spinup_factor_deadwood
           end do
        else if (spinup_state == 2 .and. restart_file_spinup_state <= 1 ) then
           if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood N pools into AD spinup mode'
           enter_spinup = .true.
-          if ( masterproc ) write(iulog, *) 'Dividing stemn and crootn by 10 for enter spinup '
+          if ( masterproc ) write(iulog, *) 'Dividing stemn and crootn by ', spinup_factor_deadwood, 'for enter spinup '
           do i = bounds%begp,bounds%endp
-             this%deadstemn_patch(i) = this%deadstemn_patch(i) / 10._r8
-             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) / 10._r8
+             this%deadstemn_patch(i) = this%deadstemn_patch(i) / spinup_factor_deadwood
+             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) / spinup_factor_deadwood
           end do
        endif
 
@@ -1052,9 +1056,6 @@ contains
             soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
 
     end do
-    
-    
-    
 
   end subroutine Summary_nitrogenstate
 
@@ -1111,14 +1112,14 @@ contains
     begp = bounds%begp
     endp = bounds%endp
 
-    SHR_ASSERT_ALL((ubound(conv_nflux) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wood_product_nflux) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(crop_product_nflux) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_frootn_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_livecrootn_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_deadcrootn_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_leafn_seed) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_deadstemn_seed) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(conv_nflux) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(wood_product_nflux) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(crop_product_nflux) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_frootn_to_litter) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_livecrootn_to_litter) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_deadcrootn_to_litter) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_leafn_seed) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_deadstemn_seed) == (/endp/)), sourcefile, __LINE__)
 
     old_weight_was_zero = patch_state_updater%old_weight_was_zero(bounds)
     patch_grew = patch_state_updater%patch_grew(bounds)

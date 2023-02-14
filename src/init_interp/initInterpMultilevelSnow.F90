@@ -122,7 +122,8 @@ contains
   end subroutine check_npts
 
   !-----------------------------------------------------------------------
-  subroutine interp_multilevel(this, data_dest, data_source, index_dest)
+  subroutine interp_multilevel(this, data_dest, data_source, index_dest, &
+                               scale_by_thickness)
     !
     ! !DESCRIPTION:
     ! Interpolates a multi-level field from source to dest, for a single point.
@@ -157,6 +158,7 @@ contains
     real(r8) , intent(inout) :: data_dest(:)
     real(r8) , intent(in)    :: data_source(:)
     integer  , intent(in)    :: index_dest
+    logical  , intent(in)    :: scale_by_thickness
     !
     ! !LOCAL VARIABLES:
     integer :: num_source         ! total number of source layers
@@ -173,8 +175,8 @@ contains
     num_source = size(data_source)
     num_dest = size(data_dest)
     num_snow_layers_source = this%num_snow_layers_source(index_dest)
-    SHR_ASSERT(num_snow_layers_source >= 0, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(num_snow_layers_source <= num_source, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(num_snow_layers_source >= 0, sourcefile, __LINE__)
+    SHR_ASSERT_FL(num_snow_layers_source <= num_source, sourcefile, __LINE__)
 
     if (num_dest >= num_source) then
        ! Copy all source layers to dest (even non-existent snow layers)

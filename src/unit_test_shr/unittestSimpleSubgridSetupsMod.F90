@@ -4,7 +4,6 @@ module unittestSimpleSubgridSetupsMod
   ! simple subgrid setups.
 #include "shr_assert.h"
   use unittestSubgridMod
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod , only : r8 => shr_kind_r8
   use landunit_varcon, only : istsoil
   use pftconMod, only : noveg
@@ -239,8 +238,9 @@ contains
     !-----------------------------------------------------------------------
 
     ncols = size(ctypes)
-    SHR_ASSERT((size(cweights) == ncols), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(gi >= begg, 'must call unittest_add_gridcell first: ' // errMsg(sourcefile, __LINE__))
+    call shr_assert((size(cweights) == ncols), file=sourcefile, line=__LINE__)
+    call shr_assert(gi >= begg, msg='must call unittest_add_gridcell first: ', &
+         file=sourcefile, line=__LINE__)
 
     if (present(npatches)) then
        l_npatches = npatches
@@ -292,7 +292,7 @@ contains
     npatches = size(pwtcol)
     allocate(l_pft_types(npatches))
     if (present(pft_types)) then
-       SHR_ASSERT((size(pft_types) == npatches), errMsg(sourcefile, __LINE__))
+       call shr_assert((size(pft_types) == npatches), file=sourcefile, line=__LINE__)
        l_pft_types = pft_types
     else
        do p = 1, npatches

@@ -12,10 +12,10 @@ module subgridRestMod
   use domainMod          , only : ldomain
   use clm_time_manager   , only : get_curr_date
   use clm_varcon         , only : nameg, namel, namec, namep
-  use clm_varpar         , only : nlevsno, nlevgrnd
+  use clm_varpar         , only : nlevsno, nlevmaxurbgrnd
   use pio                , only : file_desc_t
   use ncdio_pio          , only : ncd_int, ncd_double
-  use GetGlobalValuesMod , only : GetGlobalIndex
+  use GetGlobalValuesMod , only : GetGlobalIndexArray
   use GridcellType       , only : grc                
   use LandunitType       , only : lun                
   use ColumnType         , only : col                
@@ -197,9 +197,7 @@ contains
          long_name='2d latitude index of corresponding landunit',                  &
          interpinic_flag='skip', readvar=readvar, data=ilarr)
 
-    do l=bounds%begl,bounds%endl
-       ilarr(l) = GetGlobalIndex(decomp_index=lun%gridcell(l), clmlevel=nameg)
-    end do
+    ilarr = GetGlobalIndexArray(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, clmlevel=nameg)
     call restartvar(ncid=ncid, flag=flag, varname='land1d_gridcell_index', xtype=ncd_int, &
          dim1name='landunit',                                                             &
          long_name='gridcell index of corresponding landunit',                            &
@@ -262,17 +260,13 @@ contains
          long_name='2d latitude index of corresponding column', units=' ',          &
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
-    do c= bounds%begc, bounds%endc
-       icarr(c) = GetGlobalIndex(decomp_index=col%gridcell(c), clmlevel=nameg)
-    end do
+    icarr = GetGlobalIndexArray(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=nameg)
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_gridcell_index', xtype=ncd_int, &
          dim1name='column',                                                               &
          long_name='gridcell index of corresponding column',                              &
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
-    do c= bounds%begc, bounds%endc
-       icarr(c) = GetGlobalIndex(decomp_index=col%landunit(c), clmlevel=namel)
-    end do
+    icarr = GetGlobalIndexArray(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=namel)
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_landunit_index', xtype=ncd_int, &
          dim1name='column',                                                               &
          long_name='landunit index of corresponding column',                              &
@@ -304,15 +298,26 @@ contains
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
     call restartvar(ncid=ncid, flag=flag, varname='LEVGRND_CLASS', xtype=ncd_int,   &
-         dim1name='column', dim2name='levgrnd', switchdim=.true.,                   &
+         dim1name='column', dim2name='levmaxurbgrnd', switchdim=.true.,                   &
          long_name='class in which each layer falls', units=' ',                    &
+         scale_by_thickness=.false., &
          interpinic_flag='skip', readvar=readvar, data=col%levgrnd_class)
 
-    allocate(temp2d_r(bounds%begc:bounds%endc, 1:nlevgrnd))
-    temp2d_r(bounds%begc:bounds%endc, 1:nlevgrnd) = col%z(bounds%begc:bounds%endc, 1:nlevgrnd)
+    allocate(temp2d_r(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd))
+    temp2d_r(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd) = col%z(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd)
     call restartvar(ncid=ncid, flag=flag, varname='COL_Z', xtype=ncd_double,  & 
-         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         dim1name='column', dim2name='levmaxurbgrnd', switchdim=.true., &
          long_name='layer depth, excluding snow layers', units='m', &
+         scale_by_thickness=.false., &
+         interpinic_flag='skip', readvar=readvar, data=temp2d_r)
+    deallocate(temp2d_r)
+
+    allocate(temp2d_r(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd))
+    temp2d_r(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd) = col%dz(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd)
+    call restartvar(ncid=ncid, flag=flag, varname='DZSOI', xtype=ncd_double,  &
+         dim1name='column', dim2name='levmaxurbgrnd', switchdim=.true., &
+         long_name='soil layer thickness', units='m', &
+         scale_by_thickness=.false., &
          interpinic_flag='skip', readvar=readvar, data=temp2d_r)
     deallocate(temp2d_r)
 
@@ -356,25 +361,19 @@ contains
          long_name='2d latitude index of corresponding pft', units='',         &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    do p=bounds%begp,bounds%endp
-       iparr(p) = GetGlobalIndex(decomp_index=patch%gridcell(p), clmlevel=nameg)
-    enddo
+    iparr = GetGlobalIndexArray(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=nameg)
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_gridcell_index', xtype=ncd_int, &
          dim1name='pft',                                                                  &
          long_name='gridcell index of corresponding pft',                                 &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    do p=bounds%begp,bounds%endp
-       iparr(p) = GetGlobalIndex(decomp_index=patch%landunit(p), clmlevel=namel)
-    enddo
+    iparr = GetGlobalIndexArray(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namel)
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_landunit_index', xtype=ncd_int, &
          dim1name='pft',                                                                  &
          long_name='landunit index of corresponding pft',                                 &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    do p=bounds%begp,bounds%endp
-       iparr(p) = GetGlobalIndex(decomp_index=patch%column(p), clmlevel=namec)
-    enddo
+    iparr = GetGlobalIndexArray(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namec)
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_column_index', xtype=ncd_int,   &
          dim1name='pft',                                                                  &
          long_name='column index of corresponding pft',                                   &
@@ -413,25 +412,39 @@ contains
          long_name='pft active flag (1=active, 0=inactive)', units='',            &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    allocate(temp2d_i(bounds%begp:bounds%endp, 1:nlevgrnd))
+    allocate(temp2d_i(bounds%begp:bounds%endp, 1:nlevmaxurbgrnd))
     do p=bounds%begp,bounds%endp
        c = patch%column(p)
-       temp2d_i(p, 1:nlevgrnd) = col%levgrnd_class(c, 1:nlevgrnd)
+       temp2d_i(p, 1:nlevmaxurbgrnd) = col%levgrnd_class(c, 1:nlevmaxurbgrnd)
     end do
     call restartvar(ncid=ncid, flag=flag, varname='LEVGRND_CLASS_p', xtype=ncd_int, &
-         dim1name='pft', dim2name='levgrnd', switchdim=.true., &
+         dim1name='pft', dim2name='levmaxurbgrnd', switchdim=.true., &
          long_name='class in which each layer falls, patch-level', units=' ', &
+         scale_by_thickness=.false., &
          interpinic_flag='skip', readvar=readvar, data=temp2d_i)
     deallocate(temp2d_i)
 
-    allocate(temp2d_r(bounds%begp:bounds%endp, 1:nlevgrnd))
+    allocate(temp2d_r(bounds%begp:bounds%endp, 1:nlevmaxurbgrnd))
     do p=bounds%begp,bounds%endp
        c = patch%column(p)
-       temp2d_r(p, 1:nlevgrnd) = col%z(c, 1:nlevgrnd)
+       temp2d_r(p, 1:nlevmaxurbgrnd) = col%z(c, 1:nlevmaxurbgrnd)
     end do
     call restartvar(ncid=ncid, flag=flag, varname='COL_Z_p', xtype=ncd_double, &
-         dim1name='pft', dim2name='levgrnd', switchdim=.true., &
+         dim1name='pft', dim2name='levmaxurbgrnd', switchdim=.true., &
          long_name='layer depth, excluding snow layers, patch-level', units='m', &
+         scale_by_thickness=.false., &
+         interpinic_flag='skip', readvar=readvar, data=temp2d_r)
+    deallocate(temp2d_r)
+
+    allocate(temp2d_r(bounds%begp:bounds%endp, 1:nlevmaxurbgrnd))
+    do p=bounds%begp,bounds%endp
+       c = patch%column(p)
+       temp2d_r(p, 1:nlevmaxurbgrnd) = col%dz(c, 1:nlevmaxurbgrnd)
+    end do
+    call restartvar(ncid=ncid, flag=flag, varname='DZSOI_p', xtype=ncd_double, &
+         dim1name='pft', dim2name='levmaxurbgrnd', switchdim=.true., &
+         long_name='soil layer thickness, patch-level', units='m', &
+         scale_by_thickness=.false., &
          interpinic_flag='skip', readvar=readvar, data=temp2d_r)
     deallocate(temp2d_r)
 
@@ -519,6 +532,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='DZSNO', xtype=ncd_double,  & 
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name='snow layer thickness', units='m', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=temp2d)
     if (flag == 'read') then
        col%dz(bounds%begc:bounds%endc,-nlevsno+1:0) = temp2d(bounds%begc:bounds%endc,-nlevsno+1:0) 
@@ -532,6 +546,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='ZSNO', xtype=ncd_double,  & 
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name='snow layer depth', units='m', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=temp2d)
     if (flag == 'read') then
        col%z(bounds%begc:bounds%endc,-nlevsno+1:0) = temp2d(bounds%begc:bounds%endc,-nlevsno+1:0) 
@@ -544,7 +559,8 @@ contains
     end if
     call restartvar(ncid=ncid, flag=flag, varname='ZISNO', xtype=ncd_double,  & 
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno, upperb2=-1, &
-         long_name='snow interface depth', units='m', &
+         long_name='snow interface depth at the top of the given layer', units='m', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=temp2d)
     if (flag == 'read') then
        col%zi(bounds%begc:bounds%endc,-nlevsno:-1) = temp2d(bounds%begc:bounds%endc,-nlevsno:-1) 

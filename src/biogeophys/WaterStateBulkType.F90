@@ -11,9 +11,8 @@ module WaterStateBulkType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
-  use clm_varpar     , only : nlevgrnd, nlevsno   
+  use clm_varpar     , only : nlevmaxurbgrnd, nlevsno
   use clm_varcon     , only : spval
   use WaterStateType , only : waterstate_type
   use WaterInfoBaseType, only : water_info_base_type
@@ -28,7 +27,6 @@ module WaterStateBulkType
 
      real(r8), pointer :: snow_persistence_col   (:)   ! col length of time that ground has had non-zero snow thickness (sec)
      real(r8), pointer :: int_snow_col           (:)   ! col integrated snowfall (mm H2O)
-
 
    contains
 
@@ -106,8 +104,6 @@ contains
     allocate(this%snow_persistence_col   (begc:endc))                     ; this%snow_persistence_col   (:)   = nan
     allocate(this%int_snow_col           (begc:endc))                     ; this%int_snow_col           (:)   = nan   
 
-
-
   end subroutine InitBulkAllocate
 
   !------------------------------------------------------------------------
@@ -180,7 +176,7 @@ contains
     integer            :: c
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osno_input_col)     == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osno_input_col)     == (/bounds%endc/))          , sourcefile, __LINE__)
 
     do c = bounds%begc,bounds%endc
        this%int_snow_col(c)           = h2osno_input_col(c) 
@@ -212,7 +208,7 @@ contains
     logical  :: readvar
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevmaxurbgrnd/)) , sourcefile, __LINE__)
 
     call this%restart (bounds, ncid, flag=flag, &
          watsat_col=watsat_col(bounds%begc:bounds%endc,:)) 

@@ -12,7 +12,6 @@ module CanopyStateType
   use clm_varcon      , only : spval  
   use clm_varctl      , only : iulog, use_cn, use_fates, use_hydrstress
   use LandunitType    , only : lun                
-  use ColumnType      , only : col                
   use PatchType       , only : patch                
   !
   implicit none
@@ -36,25 +35,23 @@ module CanopyStateType
      real(r8) , pointer :: laisha_z_patch           (:,:) ! patch patch shaded leaf area for canopy layer 
      real(r8) , pointer :: mlaidiff_patch           (:)   ! patch difference between lai month one and month two (for dry deposition of chemical tracers)
      real(r8) , pointer :: annlai_patch             (:,:) ! patch 12 months of monthly lai from input data set (for dry deposition of chemical tracers) 
+     real(r8) , pointer :: stem_biomass_patch       (:)   ! Aboveground stem biomass (kg/m**2)
+     real(r8) , pointer :: leaf_biomass_patch       (:)   ! Aboveground leaf biomass  (kg/m**2)
      real(r8) , pointer :: htop_patch               (:)   ! patch canopy top (m)
      real(r8) , pointer :: hbot_patch               (:)   ! patch canopy bottom (m)
+     real(r8) , pointer :: z0m_patch                (:)   ! patch momentum roughness length (m)
      real(r8) , pointer :: displa_patch             (:)   ! patch displacement height (m)
      real(r8) , pointer :: fsun_patch               (:)   ! patch sunlit fraction of canopy         
      real(r8) , pointer :: fsun24_patch             (:)   ! patch 24hr average of sunlit fraction of canopy 
      real(r8) , pointer :: fsun240_patch            (:)   ! patch 240hr average of sunlit fraction of canopy
-
-     real(r8) , pointer :: alt_col                  (:)   ! col current depth of thaw 
-     integer  , pointer :: alt_indx_col             (:)   ! col current depth of thaw 
-     real(r8) , pointer :: altmax_col               (:)   ! col maximum annual depth of thaw 
-     real(r8) , pointer :: altmax_lastyear_col      (:)   ! col prior year maximum annual depth of thaw 
-     integer  , pointer :: altmax_indx_col          (:)   ! col maximum annual depth of thaw 
-     integer  , pointer :: altmax_lastyear_indx_col (:)   ! col prior year maximum annual depth of thaw 
 
      real(r8) , pointer :: dleaf_patch              (:)   ! patch characteristic leaf width (diameter) [m]
                                                           ! for non-ED/FATES this is the same as pftcon%dleaf()
      real(r8) , pointer :: rscanopy_patch           (:)   ! patch canopy stomatal resistance (s/m) (ED specific)
 
      real(r8) , pointer :: vegwp_patch              (:,:) ! patch vegetation water matric potential (mm)
+     real(r8) , pointer :: vegwp_ln_patch           (:,:) ! patch vegetation water matric potential at local noon (mm)
+     real(r8) , pointer :: vegwp_pd_patch           (:,:) ! patch predawn vegetation water matric potential (mm)
 
      real(r8)           :: leaf_mr_vcm = spval            ! Scalar constant of leaf respiration with Vcmax
 
@@ -126,25 +123,22 @@ contains
     allocate(this%laisha_z_patch           (begp:endp,1:nlevcan)) ; this%laisha_z_patch           (:,:) = nan
     allocate(this%mlaidiff_patch           (begp:endp))           ; this%mlaidiff_patch           (:)   = nan
     allocate(this%annlai_patch          (12,begp:endp))           ; this%annlai_patch             (:,:) = nan
+    allocate(this%stem_biomass_patch       (begp:endp))           ; this%stem_biomass_patch       (:)   = nan
+    allocate(this%leaf_biomass_patch       (begp:endp))           ; this%leaf_biomass_patch       (:)   = nan
     allocate(this%htop_patch               (begp:endp))           ; this%htop_patch               (:)   = nan
     allocate(this%hbot_patch               (begp:endp))           ; this%hbot_patch               (:)   = nan
+    allocate(this%z0m_patch                (begp:endp))           ; this%z0m_patch                (:)   = nan
     allocate(this%displa_patch             (begp:endp))           ; this%displa_patch             (:)   = nan
     allocate(this%fsun_patch               (begp:endp))           ; this%fsun_patch               (:)   = nan
     allocate(this%fsun24_patch             (begp:endp))           ; this%fsun24_patch             (:)   = nan
     allocate(this%fsun240_patch            (begp:endp))           ; this%fsun240_patch            (:)   = nan
 
-    allocate(this%alt_col                  (begc:endc))           ; this%alt_col                  (:)   = spval     
-    allocate(this%altmax_col               (begc:endc))           ; this%altmax_col               (:)   = spval
-    allocate(this%altmax_lastyear_col      (begc:endc))           ; this%altmax_lastyear_col      (:)   = spval
-    allocate(this%alt_indx_col             (begc:endc))           ; this%alt_indx_col             (:)   = huge(1)
-    allocate(this%altmax_indx_col          (begc:endc))           ; this%altmax_indx_col          (:)   = huge(1)
-    allocate(this%altmax_lastyear_indx_col (begc:endc))           ; this%altmax_lastyear_indx_col (:)   = huge(1)
-
     allocate(this%dleaf_patch              (begp:endp))           ; this%dleaf_patch              (:)   = nan
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
 !    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8     
     allocate(this%vegwp_patch              (begp:endp,1:nvegwcs)) ; this%vegwp_patch              (:,:) = nan
-
+    allocate(this%vegwp_ln_patch           (begp:endp,1:nvegwcs)) ; this%vegwp_ln_patch           (:,:) = nan
+    allocate(this%vegwp_pd_patch           (begp:endp,1:nvegwcs)) ; this%vegwp_pd_patch           (:,:) = nan
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
@@ -196,6 +190,16 @@ contains
          avgflag='A', long_name='shaded projected leaf area index', &
          ptr_patch=this%laisha_patch, set_urb=0._r8)
 
+    this%stem_biomass_patch(begp:endp) = spval
+    call hist_addfld1d (fname='AGSB', units='kg/m^2', &
+         avgflag='A', long_name='Aboveground stem biomass', &
+         ptr_patch=this%stem_biomass_patch, default='inactive')
+
+    this%leaf_biomass_patch(begp:endp) = spval
+    call hist_addfld1d (fname='AGLB', units='kg/m^2', &
+         avgflag='A', long_name='Aboveground leaf biomass', &
+         ptr_patch=this%leaf_biomass_patch, default='inactive')
+
     if (use_cn .or. use_fates) then
        this%fsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='FSUN', units='proportion', &
@@ -218,43 +222,10 @@ contains
             ptr_patch=this%displa_patch, default='inactive')
     end if
 
-    if (use_cn) then
-       this%alt_col(begc:endc) = spval
-       call hist_addfld1d (fname='ALT', units='m', &
-            avgflag='A', long_name='current active layer thickness', &
-            ptr_col=this%alt_col)
-
-       this%altmax_col(begc:endc) = spval
-       call hist_addfld1d (fname='ALTMAX', units='m', &
-            avgflag='A', long_name='maximum annual active layer thickness', &
-            ptr_col=this%altmax_col)
-
-       this%altmax_lastyear_col(begc:endc) = spval
-       call hist_addfld1d (fname='ALTMAX_LASTYEAR', units='m', &
-            avgflag='A', long_name='maximum prior year active layer thickness', &
-            ptr_col=this%altmax_lastyear_col, default='inactive')
-    end if
-
-    ! Allow active layer fields to be optionally output even if not running CN
-
-    if (.not. use_cn) then
-       this%alt_col(begc:endc) = spval
-       call hist_addfld1d (fname='ALT', units='m', &
-            avgflag='A', long_name='current active layer thickness', &
-            ptr_col=this%alt_col, default='inactive')
-
-       this%altmax_col(begc:endc) = spval
-       call hist_addfld1d (fname='ALTMAX', units='m', &
-            avgflag='A', long_name='maximum annual active layer thickness', &
-            ptr_col=this%altmax_col, default='inactive')
-
-       this%altmax_lastyear_col(begc:endc) = spval
-       call hist_addfld1d (fname='ALTMAX_LASTYEAR', units='m', &
-            avgflag='A', long_name='maximum prior year active layer thickness', &
-            ptr_col=this%altmax_lastyear_col, default='inactive')
-    end if
-
-
+       this%z0m_patch(begp:endp) = spval
+       call hist_addfld1d (fname='Z0M', units='m', &
+            avgflag='A', long_name='momentum roughness length', &
+            ptr_patch=this%z0m_patch, default='inactive')
 
     ! Accumulated fields
     this%fsun24_patch(begp:endp) = spval
@@ -289,6 +260,14 @@ contains
        call hist_addfld2d (fname='VEGWP',  units='mm', type2d='nvegwcs', &
             avgflag='A', long_name='vegetation water matric potential for sun/sha canopy,xyl,root segments', &
             ptr_patch=this%vegwp_patch)
+       this%vegwp_ln_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='VEGWPLN',  units='mm', type2d='nvegwcs', &
+            avgflag='A', long_name='vegetation water matric potential for sun/sha canopy,xyl,root at local noon', &
+            ptr_patch=this%vegwp_ln_patch, default='active')
+       this%vegwp_pd_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='VEGWPPD',  units='mm', type2d='nvegwcs', avgflag='A', &
+            long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', &
+            ptr_patch=this%vegwp_pd_patch, default='active')
     end if
 
   end subroutine InitHistory
@@ -501,14 +480,15 @@ contains
     do p = bounds%begp, bounds%endp
        l = patch%landunit(p)
 
-       this%frac_veg_nosno_patch(p) = 0._r8
-       this%tlai_patch(p)       = 0._r8
-       this%tsai_patch(p)       = 0._r8
-       this%elai_patch(p)       = 0._r8
-       this%esai_patch(p)       = 0._r8
-       this%htop_patch(p)       = 0._r8
-       this%hbot_patch(p)       = 0._r8
-       this%vegwp_patch(p,:)    = -2.5e4_r8
+       this%tlai_patch(p)        = 0._r8
+       this%tsai_patch(p)        = 0._r8
+       this%elai_patch(p)        = 0._r8
+       this%esai_patch(p)        = 0._r8
+       this%stem_biomass_patch(p)= 0._r8
+       this%leaf_biomass_patch(p)= 0._r8
+       this%htop_patch(p)        = 0._r8
+       this%hbot_patch(p)        = 0._r8
+       this%vegwp_patch(p,:)     = -2.5e4_r8
 
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%laisun_patch(p) = 0._r8
@@ -520,27 +500,13 @@ contains
        this%fsun_patch(p) = spval
     end do
 
-    do c = bounds%begc, bounds%endc
-       l = col%landunit(c)
-
-       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-          this%alt_col(c)               = 0._r8 !iniitialized to spval for all columns
-          this%altmax_col(c)            = 0._r8 !iniitialized to spval for all columns
-          this%altmax_lastyear_col(c)   = 0._r8 !iniitialized to spval for all columns
-          this%alt_indx_col(c)          = 0     !initiialized to huge  for all columns
-          this%altmax_indx_col(c)       = 0     !initiialized to huge  for all columns
-          this%altmax_lastyear_indx_col = 0     !initiialized to huge  for all columns
-       end if
-    end do
-
   end subroutine InitCold
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
     ! 
     ! !USES:
-    use spmdMod    , only : masterproc
-    use ncdio_pio  , only : file_desc_t, ncd_defvar, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
+    use ncdio_pio  , only : file_desc_t, ncd_double, ncd_int
     use restUtilMod
     !
     ! !ARGUMENTS:
@@ -577,6 +543,14 @@ contains
          dim1name='pft', long_name='one-sided stem area index, with burying by snow', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%esai_patch)
     
+    call restartvar(ncid=ncid, flag=flag, varname='stem_biomass', xtype=ncd_double,  &
+         dim1name='pft', long_name='stem biomass', units='kg/m^2', &
+         interpinic_flag='interp', readvar=readvar, data=this%stem_biomass_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='leaf_biomass', xtype=ncd_double,  &
+         dim1name='pft', long_name='leaf biomass', units='kg/m^2', &
+         interpinic_flag='interp', readvar=readvar, data=this%leaf_biomass_patch)
+
     call restartvar(ncid=ncid, flag=flag, varname='htop', xtype=ncd_double,  &
          dim1name='pft', long_name='canopy top', units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%htop_patch)
@@ -593,6 +567,8 @@ contains
          dim1name='pft', long_name='sunlit fraction of canopy', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%fsun_patch)
 
+
+
     if (flag=='read' )then
        do p = bounds%begp,bounds%endp
           if (shr_infnan_isnan(this%fsun_patch(p)) ) then
@@ -601,29 +577,24 @@ contains
        end do
     end if
 
-    if (use_cn .or. use_fates) then
-       call restartvar(ncid=ncid, flag=flag, varname='altmax', xtype=ncd_double,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%altmax_col) 
-
-       call restartvar(ncid=ncid, flag=flag, varname='altmax_lastyear', xtype=ncd_double,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%altmax_lastyear_col) 
-
-       call restartvar(ncid=ncid, flag=flag, varname='altmax_indx', xtype=ncd_int,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%altmax_indx_col) 
-
-       call restartvar(ncid=ncid, flag=flag, varname='altmax_lastyear_indx', xtype=ncd_int,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%altmax_lastyear_indx_col) 
-    end if
-
     if ( use_hydrstress ) then
        call restartvar(ncid=ncid, flag=flag, varname='vegwp', xtype=ncd_double,  &
             dim1name='pft', dim2name='vegwcs', switchdim=.true., &
             long_name='vegetation water matric potential', units='mm', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%vegwp_patch) 
+
+       call restartvar(ncid=ncid, flag=flag, varname='VEGWPLN', xtype=ncd_double,  &
+            dim1name='pft', dim2name='vegwcs', switchdim=.false., &
+            long_name='vegetation water matric potential for sun/sha canopy,xyl,root at local noon', units='mm', &
+            scale_by_thickness=.false., &
+            interpinic_flag='skip', readvar=readvar, data=this%vegwp_ln_patch)
+
+       call restartvar(ncid=ncid, flag=flag, varname='VEGWPPD', xtype=ncd_double,  &
+            dim1name='pft', dim2name='vegwcs', switchdim=.false., &
+            long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', units='mm', &
+            scale_by_thickness=.false., &
+            interpinic_flag='skip', readvar=readvar, data=this%vegwp_pd_patch)
 
     end if
 

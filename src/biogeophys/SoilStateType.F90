@@ -7,9 +7,9 @@ module SoilStateType
   use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varpar      , only : nlevsoi, nlevgrnd, nlevlak, nlayer, nlevsno
+  use clm_varpar      , only : nlevsoi, nlevgrnd, nlevlak, nlayer, nlevsno, nlevmaxurbgrnd
   use clm_varcon      , only : spval
-  use clm_varctl      , only : use_hydrstress, use_cn, use_lch4, use_dynroot
+  use clm_varctl      , only : use_hydrstress, use_cn, use_lch4, use_dynroot, use_fates
   use clm_varctl      , only : iulog, hist_wrtch4diag
   use LandunitType    , only : lun                
   use ColumnType      , only : col                
@@ -66,8 +66,8 @@ module SoilStateType
      real(r8), pointer :: csol_col             (:,:) ! col heat capacity, soil solids (J/m**3/Kelvin) (nlevgrnd) 
 
      ! roots
-     real(r8), pointer :: rootr_patch          (:,:) ! patch effective fraction of roots in each soil layer (nlevgrnd)
-     real(r8), pointer :: rootr_col            (:,:) ! col effective fraction of roots in each soil layer (nlevgrnd)  
+     real(r8), pointer :: rootr_patch          (:,:) ! patch effective fraction of roots in each soil layer (SMS method only) (nlevgrnd)
+     real(r8), pointer :: rootr_col            (:,:) ! col effective fraction of roots in each soil layer (SMS method only) (nlevgrnd)  
      real(r8), pointer :: rootfr_col           (:,:) ! col fraction of roots in each soil layer (nlevgrnd) 
      real(r8), pointer :: rootfr_patch         (:,:) ! patch fraction of roots for water in each soil layer (nlevgrnd)
      real(r8), pointer :: crootfr_patch        (:,:) ! patch fraction of roots for carbon in each soil layer (nlevgrnd)
@@ -138,7 +138,7 @@ contains
     allocate(this%smpmin_col           (begc:endc))                     ; this%smpmin_col           (:)   = nan
 
     allocate(this%bsw_col              (begc:endc,nlevgrnd))            ; this%bsw_col              (:,:) = nan
-    allocate(this%watsat_col           (begc:endc,nlevgrnd))            ; this%watsat_col           (:,:) = nan
+    allocate(this%watsat_col           (begc:endc,nlevmaxurbgrnd))      ; this%watsat_col           (:,:) = nan
     allocate(this%watdry_col           (begc:endc,nlevgrnd))            ; this%watdry_col           (:,:) = spval
     allocate(this%watopt_col           (begc:endc,nlevgrnd))            ; this%watopt_col           (:,:) = spval
     allocate(this%watfc_col            (begc:endc,nlevgrnd))            ; this%watfc_col            (:,:) = nan
@@ -154,7 +154,7 @@ contains
     allocate(this%eff_porosity_col     (begc:endc,nlevgrnd))            ; this%eff_porosity_col     (:,:) = spval
     allocate(this%gwc_thr_col          (begc:endc))                     ; this%gwc_thr_col          (:)   = nan
 
-    allocate(this%thk_col              (begc:endc,-nlevsno+1:nlevgrnd)) ; this%thk_col              (:,:) = nan
+    allocate(this%thk_col              (begc:endc,-nlevsno+1:nlevmaxurbgrnd)) ; this%thk_col              (:,:) = nan
     allocate(this%tkmg_col             (begc:endc,nlevgrnd))            ; this%tkmg_col             (:,:) = nan
     allocate(this%tkdry_col            (begc:endc,nlevgrnd))            ; this%tkdry_col            (:,:) = nan
     allocate(this%tksatu_col           (begc:endc,nlevgrnd))            ; this%tksatu_col           (:,:) = nan
@@ -214,15 +214,15 @@ contains
          avgflag='A', long_name='soil matric potential (natural vegetated and crop landunits only)', &
          ptr_col=this%smp_l_col, set_spec=spval, l2g_scale_type='veg')
 
-       this%root_conductance_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
-          avgflag='A', long_name='root conductance each soil layer', &
-          ptr_patch=this%root_conductance_patch, default='inactive')
-
-       this%soil_conductance_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
-          avgflag='A', long_name='soil conductance in each soil layer', &
-          ptr_patch=this%soil_conductance_patch, default='inactive')
+    this%root_conductance_patch(begp:endp,:) = spval
+    call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
+         avgflag='A', long_name='root conductance each soil layer', &
+         ptr_patch=this%root_conductance_patch, default='inactive')
+    
+    this%soil_conductance_patch(begp:endp,:) = spval
+    call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
+         avgflag='A', long_name='soil conductance in each soil layer', &
+         ptr_patch=this%soil_conductance_patch, default='inactive')
 
     if (use_cn) then
        this%bsw_col(begc:endc,:) = spval 
@@ -248,19 +248,22 @@ contains
     if (use_cn) then
        this%rootr_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='ROOTR', units='proportion', type2d='levgrnd', &
-            avgflag='A', long_name='effective fraction of roots in each soil layer', &
-            ptr_patch=this%rootr_patch, default='inactive')
+            avgflag='A', long_name='effective fraction of roots in each soil layer (SMS method)', &
+            ptr_patch=this%rootr_patch, l2g_scale_type='veg', default='inactive')
     end if
 
-    if (use_cn) then
+    if (use_cn .and. .not.(use_hydrstress)) then
+       ! rootr_col isn't computed for use_hydrstress = .true. (In contrast, rootr_patch is
+       ! still computed, albeit using the inconsistent Soil Moisture Stress (SMS) method.)
+       ! (See also https://github.com/ESCOMP/CTSM/issues/812.)
        this%rootr_col(begc:endc,:) = spval
        call hist_addfld2d (fname='ROOTR_COLUMN', units='proportion', type2d='levgrnd', &
-            avgflag='A', long_name='effective fraction of roots in each soil layer', &
-            ptr_col=this%rootr_col, default='inactive')
+            avgflag='A', long_name='effective fraction of roots in each soil layer (SMS method)', &
+            ptr_col=this%rootr_col, l2g_scale_type='veg', default='inactive')
        
     end if
 
-    if (use_cn) then
+    if (use_cn .or. use_fates) then
        this%soilpsi_col(begc:endc,:) = spval
        call hist_addfld2d (fname='SOILPSI', units='MPa', type2d='levgrnd', &
             avgflag='A', long_name='soil water potential in each soil layer', &
@@ -381,17 +384,20 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='SMP', xtype=ncd_double,  &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='soil matric potential', units='mm', &
+         scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%smp_l_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='HK', xtype=ncd_double,  &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='hydraulic conductivity', units='mm/s', &
+         scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%hk_l_col)
 
      if( use_dynroot ) then
          call restartvar(ncid=ncid, flag=flag, varname='rootfr', xtype=ncd_double,  &
               dim1name='pft', dim2name='levgrnd', switchdim=.true., &
               long_name='root fraction', units='', &
+              scale_by_thickness=.false., &
               interpinic_flag='interp', readvar=readrootfr, data=this%rootfr_patch)
      else
          readrootfr = .false.
