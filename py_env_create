@@ -20,19 +20,25 @@ if [ $error != 0 ]; then
    echo "For notes on installing on a user system see: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html"
    echo "Error code was $error"
    cat condahelp.txt
+   rm condahelp.txt
    exit -1
 fi
 rm condahelp.txt
 ctsm_python=ctsm_pylib
+condalockenv=condalock
 
 
 condadir="$dir/python"
 
 domain=`domainname`
+platform="linux-64"
+condalockenvfile="conda_env_condalock.txt"
 if [[ $domain =~ cgd.* ]]; then
    condafile="conda_env_ctsm_py_cgd.txt"
+   lockfile="conda_lock_ctsm_py_cgd_${platform}.yml"
 else
    condafile="conda_env_ctsm_py.txt"
+   lockfile="conda_lock_ctsm_py_${platform}.yml"
 fi
 #----------------------------------------------------------------------
 # Usage subroutine
@@ -48,15 +54,24 @@ usage() {
   echo "[-v|--verbose]  "
   echo "     Run with verbose mode for the install so you see the progress bar"
   echo "[-f|--file <file>]  "
-  echo "     Conda environment file to use (can be a text format or YAML format)"
+  echo "     Conda environment requirements text file to use (text format)"
   echo "     Assumed to be under the directory: $condadir"
   echo "     Default is: $condafile"
+  echo "[-l|--read-lock] "
+  echo "     Read the conda-lock file for this platform rather than the requirements file"
+  echo "     The lock file will be faster and is less likely to run into conflicts."
+  echo "     You must have run this script previously to get an environemnt with conda-lock installed."
+  echo "     Will use: $condadir/$lockfile if it exists"
+  echo "[--write-lock] "
+  echo "     Write the conda-lock file for this platform"
   echo "[--option <option>]  "
   echo "     Option(s) to pass to 'conda install' step"
   echo "***********************************************************************"
 }
 
 verbose="No"
+readlock="No"
+writelock="No"
 option=""
 while [ $# -gt 0 ]; do
    case $1 in
@@ -71,6 +86,12 @@ while [ $# -gt 0 ]; do
            condafile=$2
            shift
            ;;
+       -l|--read-lock )
+           readlock="Yes"
+           ;;
+       --write-lock )
+           writelock="Yes"
+           ;;
        --option )
            option=$2
            shift
@@ -84,20 +105,54 @@ while [ $# -gt 0 ]; do
    shift
 done
 
-if [ ! -f $condadir/$condafile ]; then
-   echo "$condadir/$condafile does NOT exist"
-   echo "Use the --file option with a valid filename"
-   exit -1
+#
+# Error checking options and setup
+#
+if [ "$readlock" == "Yes" ]; then
+   if [ "$writelock" == "Yes" ]; then
+      echo "Do NOT use the --read-lock and --write-lock option at the same time"
+      exit -1
+   fi
+   # Check if conda-lock is in your path
+   conda-lock --help >& /dev/null
+   error=$?
+   if [ $error != 0 ]; then
+      conda init bash
+      cmd="conda activate $condalockenv"
+      echo $cmd
+      $cmd
+      if [ $? != 0 ]; then
+          echo "Trouble activating the $condalockenv python environment"
+          echo "You need to have run this script before so that the environment is setup"
+          exit -2
+      fi
+   fi
+   condafilepath="$condadir/$lockfile"
+   if [ ! -f $condafilepath ]; then
+      echo "$condafilepath does NOT exist"
+      echo "The --read-lock option can NOT find a lock file to use"
+      echo "You'll have to run without this option."
+      exit -1
+   fi
+else
+   condafilepath="$condadir/$condafile"
+   if [ ! -f $condafilepath ]; then
+      echo "$condafilepath does NOT exist"
+      echo "Use the --file option with a valid filename"
+      exit -1
+   fi
 fi
 
 echo "Use conda to install the python environment needed to run the CTSM python tools in the conda environment: $ctsm_python"
-echo "Using the file: $condadir/$condafile"
+echo "Using the file: $condafilepath"
 
+#
 # Check if the environment already exists, if it does continue, if not create it
+#
 conda list -n $ctsm_python >& /dev/null
 if [ $? != 0 ]; then
    echo "Create $ctsm_python"
-   cmd="conda create --force -n $ctsm_python -q"
+   cmd="conda create --force --name $ctsm_python --quiet"
    echo "$cmd"
    $cmd
    if [ $? != 0 ]; then
@@ -107,17 +162,31 @@ if [ $? != 0 ]; then
 else
    echo "$ctsm_python environment already exists"
 fi
+#
+# Install the environemnt
+#
 echo "Install $ctsm_python this can take a long time, be patient...."
-verbosity="-q"
+verbosity="--quiet"
 if [ "$verbose" == "Yes" ]; then
-  verbosity="-v"
+  verbosity="--verbose"
 fi
-cmd="conda install --yes $verbosity -c conda-forge -n $ctsm_python --file $condadir/$condafile $option"
+if [ "$readlock" == "Yes" ]; then
+   cmd="conda env remove --name $ctsm_python --quiet"
+   echo "$cmd"
+   $cmd
+   if [ $? != 0 ]; then
+      echo "Trouble removing the $ctsm_python python environment which needs to be done before installing the lock file"
+      exit -2
+   fi
+   cmd="conda-lock install  --no-validate-platform --name $ctsm_python $condafilepath"
+else
+   cmd="conda install --yes $verbosity --channel conda-forge --name $ctsm_python --file $condafilepath $option"
+fi
 echo "$cmd"
 $cmd
 if [ $? != 0 ]; then
    echo "Trouble installing the $ctsm_python python environment"
-   echo "There must be a problem in the $condadir/$condafile conda specification environment file"
+   echo "There must be a problem in the $condafilepath conda specification environment file"
    echo "Change the file and try again"
    if [[ $domain =~ cgd.* ]]; then
        pythonpath=`which python`
@@ -130,7 +199,49 @@ if [ $? != 0 ]; then
    fi
    exit -2
 fi
+#
+# Install the condalock environemnt, needed if you want to read the conda-lock file (the --read-lock option)
+#
+echo "Installing the $condalockenv environment, so that you can use the --read-lock option later"
+cmd="conda install --yes $verbosity --mkdir --channel conda-forge --name $condalockenv --file $condadir/$condalockenvfile"
+echo "$cmd"
+$cmd
+if [ $? != 0 ]; then
+   echo "Trouble installing the $condalockenv python environment"
+   exit -2
+fi
+
+#
+# Report on success
+#
 echo "Successfully installed the $ctsm_python python environment"
 echo
 echo "activate the environment by doing the following..."
 echo "conda activate $ctsm_python"
+
+
+#
+# Write the lock file out if asked for
+#
+if [ "$writelock" == "Yes" ]; then
+   echo "Write the conda-lock as asked for by the --write-lock option"
+   loglevel="ERROR"
+   if [ "$verbose" == "Yes" ]; then
+       loglevel="INFO"
+   fi
+   conda init bash
+   conda activate $condalockenv
+   if [ $? != 0 ]; then
+      echo "Trouble activating $condalockenv"
+      exit -3
+   fi
+   cmd="conda-lock --platform $platform --lockfile $condadir/$lockfile --log-level $loglevel"
+   echo "$cmd"
+   $cmd
+   if [ $? != 0 ]; then
+      echo "Trouble writing the $ctsm_python python environment lock file"
+      exit -3
+   else
+      echo "Successfully wrote out the lock file for $platform"
+   fi
+fi
