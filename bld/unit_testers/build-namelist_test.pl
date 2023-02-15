@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1846;
+my $ntests = 1847;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1254;
 }
@@ -319,22 +319,22 @@ my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
 foreach my $driver ( "mct", "nuopc" ) {
    print "   For $driver driver\n\n";
    # configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case
-   foreach my $options ( "-configuration nwp",
-                         "-structure fast",
-                         "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP1-2.6", "-test", "-sim_year 1850",
-                         "-namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
-                         "-use_case 1850_control",
+   foreach my $options ( "-res 0.9x1.25 -configuration nwp",
+                         "-res 0.9x1.25 -structure fast",
+                         "-res 0.9x1.25 -namelist '&a irrigate=.true./'", "-res 0.9x1.25 -verbose", "-res 0.9x1.25 -ssp_rcp SSP1-2.6", "-res 0.9x1.25 -test", "-res 0.9x1.25 -sim_year 1850",
+                         "-res 0.9x1.25 -namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
+                         "-res 0.9x1.25 -use_case 1850_control",
                          "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
                          "-res 1x1_brazil",
-                         "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
-                         "-envxml_dir . -infile myuser_nl_clm",
-                         "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
-                         "-clm_start_type branch -namelist '&a nrevsn=\"thing.nc\",use_init_interp=T/'",
-                         "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
+                         "-res 0.9x1.25 -clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
+                         "-res 0.9x1.25 -infile myuser_nl_clm",
+                         "-res 0.9x1.25 -ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
+                         "-res 0.9x1.25 -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\",use_init_interp=T/'",
+                         "-res 0.9x1.25 -ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
                         ) {
       my $file = $startfile;
       &make_env_run();
-      my $base_options = "-res 0.9x1.25 -envxml_dir . -driver $driver";
+      my $base_options = "-envxml_dir . -driver $driver";
       if ( $driver eq "mct" ) {
          $base_options = "$base_options -lnd_frac $DOMFILE";
       } else {
@@ -393,7 +393,7 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
    #
    # Now run  the site
    #
-   my $options = "-res CLM_USRDAT -clm_usr_name NEON -no-megan -bgc bgc -sim_year 2000 -infile $namelistfile";
+   my $options = "-res CLM_USRDAT -clm_usr_name NEON -no-megan -bgc bgc -sim_year 2018 -infile $namelistfile";
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
@@ -1006,6 +1006,11 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
+     "useFIREEMISwithFATES"      =>{ options=>"-bgc fates -envxml_dir . -fire_emis --no-megan",
+                                    namelst=>"",
+                                    GLC_TWO_WAY_COUPLING=>"FALSE",
+                                    phys=>"clm4_5",
+                                 },
      "useDRYDEPwithFATES"        =>{ options=>"--bgc fates --envxml_dir . --no-megan --drydep",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",

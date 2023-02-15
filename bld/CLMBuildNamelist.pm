@@ -1687,11 +1687,6 @@ sub process_namelist_inline_logic {
   #############################################
   setup_logic_rooting_profile($opts,  $nl_flags, $definition, $defaults, $nl);
 
-  #############################################
-  # namelist group: friction_velocity         #
-  #############################################
-  setup_logic_friction_vel($opts,  $nl_flags, $definition, $defaults, $nl);
-
   #############################
   # namelist group: cngeneral #
   #############################
@@ -1710,6 +1705,11 @@ sub process_namelist_inline_logic {
   # namelist group: canopyfluxes_inparm #
   #############################################
   setup_logic_canopyfluxes($opts,  $nl_flags, $definition, $defaults, $nl);
+
+  ##########################################################
+  # namelist group: friction_velocity (after canopyfluxes) #
+  ##########################################################
+  setup_logic_friction_vel($opts,  $nl_flags, $definition, $defaults, $nl);
 
   #############################################
   # namelist group: canopyhydrology_inparm #
@@ -2727,8 +2727,8 @@ sub setup_logic_do_transient_urban {
    # for them to be unset if that will be their final state):
    # - flanduse_timeseries
    #
-   # NOTE(kwo, 2021-08-11) I based this function on setup_logic_do_transient_lakes. 
-   # As in NOTE(wjs, 2020-08-23) I'm not sure if all of the checks here are truly important 
+   # NOTE(kwo, 2021-08-11) I based this function on setup_logic_do_transient_lakes.
+   # As in NOTE(wjs, 2020-08-23) I'm not sure if all of the checks here are truly important
    # for transient urban (in particular, my guess is that collapse_urban could probably be done with transient
    # urban - as well as transient pfts and transient crops for that matter), but some of
    # the checks probably are needed, and it seems best to keep transient urban consistent
@@ -3727,11 +3727,10 @@ sub setup_logic_dry_deposition {
                      "   Use the '--no-drydep' option when '-bgc fates' is activated");
     }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_list');
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_method');
+    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dep_data_file');
   } else {
-    if ( defined($nl->get_value('drydep_list')) ||
-         defined($nl->get_value('drydep_method')) ) {
-      $log->fatal_error("drydep_list or drydep_method defined, but drydep option NOT set");
+    if ( defined($nl->get_value('drydep_list')) ) {
+      $log->fatal_error("drydep_list defined, but drydep option NOT set");
     }
   }
 }
@@ -3742,6 +3741,10 @@ sub setup_logic_fire_emis {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ($opts->{'fire_emis'} ) {
+     if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
+       $log->warning("Fire emission can NOT be on when FATES is also on.\n" .
+                   "  DON'T use the '-fire_emis' option when '-bgc fates' is activated");
+    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_factors_file');
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_specifier');
   } else {
@@ -3957,10 +3960,11 @@ sub setup_logic_rooting_profile {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_friction_vel {
-  #
+  # Must be after canopyfluxes so that use_biomass_heat_storage will be set
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'zetamaxstable' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'zetamaxstable',
+     'use_biomass_heat_storage'=>$nl_flags->{'use_biomass_heat_storage'}, 'phys'=>$nl_flags->{'phys'} );
 }
 
 #-------------------------------------------------------------------------------
@@ -3984,6 +3988,11 @@ sub setup_logic_canopyfluxes {
               'use_fates'=>$nl_flags->{'use_fates'}, 'phys'=>$nl_flags->{'phys'} );
   if ( &value_is_true($nl->get_value('use_biomass_heat_storage') ) && &value_is_true( $nl_flags->{'use_fates'}) ) {
      $log->fatal_error('use_biomass_heat_storage can NOT be set to true when fates is on');
+  }
+  if ( &value_is_true($nl->get_value('use_biomass_heat_storage')) ) {
+     $nl_flags->{'use_biomass_heat_storage'} = ".true.";
+  } else {
+     $nl_flags->{'use_biomass_heat_storage'} = ".false.";
   }
 }
 
@@ -4619,6 +4628,8 @@ sub check_use_case_name {
     } else {
       $log->fatal_error($diestring);
     }
+  } elsif ( $use_case =~ /^([0-9]+|PI)-PD_*($desc)_transient$/   ) {
+     # valid name
   } elsif ( $use_case =~ /^([0-9]+)_*($desc)_control$/   ) {
      # valid name
   } elsif ( $use_case =~ /^($desc)_pd$/   ) {

@@ -24,15 +24,6 @@ bli58 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_crp_1850-200
 smi64 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_5x5_amazon_hirespft_2005^tools__ds
 bli64 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_5x5_amazon_hirespft_2005^tools__ds
 
-smi74 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
-bli74 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
-smi78 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds
-bli78 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds
-smiT4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_2000^tools__ds
-bliT4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_2000^tools__ds
-smiT2 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP5-8.5_1850-2100^tools__s
-bliT2 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP5-8.5_1850-2100^tools__s
-
 sm0a1 TSMscript_tools.sh site_and_regional run_neon.py run_neon_OSBS
 bl0a1 TBLscript_tools.sh site_and_regional run_neon.py run_neon_OSBS
 
@@ -54,5 +45,3 @@ smi#2 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 bli#2 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 smi59 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
 bli59 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
-smi79 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_i1x1_brazil
-bli79 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_i1x1_brazil

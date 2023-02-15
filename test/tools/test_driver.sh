@@ -54,8 +54,6 @@ module load nco
 module load ncl
 
 module load conda
-$CESMDATAROOT/manage_python_env
-conda activate ctsm_py
 
 
 ##omp threads
@@ -119,8 +117,6 @@ module load openmpi
 module load nco
 module load conda
 module load ncl
-$CESMDATAROOT/manage_python_env
-conda activate ctsm_py
 
 
 ##omp threads
@@ -220,8 +216,6 @@ module load compiler/intel
 module load tool/nco
 module load tool/netcdf
 module load lang/python
-$CESMDATAROOT/manage_python_env
-conda activate ctsm_py
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
@@ -303,8 +297,6 @@ module load compiler/intel
 module load tool/nco
 module load tool/netcdf
 module load lang/python
-$CESMDATAROOT/manage_python_env
-conda activate ctsm_py
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
@@ -378,6 +370,13 @@ else
         echo "       <cime/scripts>. "
 	exit 3
     fi
+fi
+
+# Setup conda environement
+conda activate ctsm_pylib
+if [ \$? -ne 0 ]; then
+   echo "ERROR: Trouble activating the ctsm_pylib conda environment, be sure it's setup with \$CLM_ROOT/py_env_create, then rerun"
+   exit 4
 fi
 
 ##output files

@@ -695,19 +695,19 @@ contains
        if (pprod_tot > 0) then
           pprod10_frac = pprod10 / pprod_tot
           pprod100_frac = pprod100 / pprod_tot
-       else
-          ! Avoid divide by 0
-          pprod10_frac = 0._r8
-          pprod100_frac = 0._r8
+          ! Note that the patch-level fluxes are expressed per unit gridcell area. So, to go
+          ! from patch-level fluxes to gridcell-level fluxes, we simply add up the various
+          ! patch contributions, without having to multiply by any area weightings.
+          this%dwt_prod10_gain_grc(g) = this%dwt_prod10_gain_grc(g) + &
+               dwt_wood_product_gain_patch(p) * pprod10_frac
+          this%dwt_prod100_gain_grc(g) = this%dwt_prod100_gain_grc(g) + &
+               dwt_wood_product_gain_patch(p) * pprod100_frac
+       else if (dwt_wood_product_gain_patch(p) > 0) then
+          call endrun(&
+               msg='ERROR: dwt_wood_product_gain_patch(p) > 0' // &
+               errMsg(sourcefile, __LINE__))
        end if
 
-       ! Note that the patch-level fluxes are expressed per unit gridcell area. So, to go
-       ! from patch-level fluxes to gridcell-level fluxes, we simply add up the various
-       ! patch contributions, without having to multiply by any area weightings.
-       this%dwt_prod10_gain_grc(g) = this%dwt_prod10_gain_grc(g) + &
-            dwt_wood_product_gain_patch(p) * pprod10_frac
-       this%dwt_prod100_gain_grc(g) = this%dwt_prod100_gain_grc(g) + &
-            dwt_wood_product_gain_patch(p) * pprod100_frac
     end do
 
   end subroutine PartitionWoodFluxes

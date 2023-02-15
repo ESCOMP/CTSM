@@ -7,7 +7,7 @@ module laiStreamMod
   ! Read LAI from stream
   !
   ! !USES:
-  use ESMF
+  use ESMF             , only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_Finalize, ESMF_END_ABORT
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_CL, CS => shr_kind_CS
   use dshr_strdata_mod , only : shr_strdata_type
   use decompMod        , only : bounds_type
