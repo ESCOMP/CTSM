@@ -1,2 +1,3 @@
 ./xmlchange PTS_LAT=30,PTS_LON=315
 ./xmlchange --force CLM_FORCE_COLDSTART=on
+./xmlchange FORCE_PROGNOSTIC_FOR_DATAMODELS=TRUE   # This might catch some type of problems that are ignored if datm is assumed to not be prognostic

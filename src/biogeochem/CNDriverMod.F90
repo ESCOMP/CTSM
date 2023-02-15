@@ -11,7 +11,7 @@ module CNDriverMod
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_nitrif_denitrif, use_nguardrail
-  use clm_varctl                      , only : iulog, use_crop
+  use clm_varctl                      , only : iulog, use_crop, use_crop_agsys
   use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, century_decomp, decomp_method
   use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
@@ -42,6 +42,7 @@ module CNDriverMod
   use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
   use ActiveLayerMod                  , only : active_layer_type
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
+  use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
   use CropReprPoolsMod                    , only : nrepr
   !
   ! !PUBLIC TYPES:
@@ -83,7 +84,9 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNDriverNoLeaching(bounds,                                                    &
-       num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp,        &
+       num_soilc, filter_soilc, num_soilp, filter_soilp,                                   &
+       num_pcropp, filter_pcropp, num_soilnopcropp, filter_soilnopcropp,                   &
+       num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,                       &
        num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp,       &
        cnveg_state_inst,                                                                   &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                                      &
@@ -96,7 +99,7 @@ contains
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst,            &
        soilbiogeochem_state_inst,                                                          &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
-       active_layer_inst,                                                                  &
+       active_layer_inst, clm_fates,                                                       &
        atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,    &
        wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst,          &
        soil_water_retention_curve, crop_inst, ch4_inst,            &
@@ -110,10 +113,12 @@ contains
     ! stays synchronized with albedo calculations.
     !
     ! !USES:
-    use clm_varpar                        , only: nlevdecomp_full
+    use clm_varpar                        , only: nlevdecomp_full, nvegcpool, nvegnpool 
     use clm_varpar                        , only: nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
     use subgridAveMod                     , only: p2c
     use CropType                          , only: crop_type
+    use CNAllocationMod                   , only: calc_gpp_mr_availc, calc_crop_allocation_fractions
+    use CNAllocationMod                   , only: calc_allometry
     use CNNDynamicsMod                    , only: CNNDeposition,CNNFixation, CNNFert, CNSoyfix,CNFreeLivingFixation
     use CNMRespMod                        , only: CNMResp
     use CNFUNMod                          , only: CNFUNInit  !, CNFUN 
@@ -150,8 +155,14 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    integer                                 , intent(out)   :: num_actfirep         ! number of soil patches on fire in filter
+    integer                                 , intent(out)   :: filter_actfirep(:)   ! filter for soil patches on fire
+    integer                                 , intent(out)   :: num_actfirec         ! number of soil columns on fire in filter
+    integer                                 , intent(out)   :: filter_actfirec(:)   ! filter for soil columns on fire
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
+    integer                                 , intent(in)    :: num_soilnopcropp       ! number of non-prog. crop soil patches in filter
+    integer                                 , intent(in)    :: filter_soilnopcropp(:) ! filter for non-prog. crop soil patches
     integer                                 , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
     integer                                 , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
     integer                                 , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
@@ -197,6 +208,7 @@ contains
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     class(fire_method_type)                 , intent(inout) :: cnfire_method
     logical                                 , intent(in)    :: dribble_crophrv_xsmrpool_2atm
+    type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
     !
     ! !LOCAL VARIABLES:
     real(r8):: cn_decomp_pools(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
@@ -204,8 +216,6 @@ contains
     real(r8):: pmnf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential mineral N flux, from one pool to another
     real(r8):: p_decomp_npool_to_din(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions)  ! potential flux to dissolved inorganic N
     real(r8):: p_decomp_cn_gain(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)  ! C:N ratio of the flux gained by the receiver pool
-    real(r8):: arepr(bounds%begp:bounds%endp,nrepr) ! reproductive allocation coefficient(s) (only used for use_crop)
-    real(r8):: aroot(bounds%begp:bounds%endp) ! root allocation coefficient (only used for use_crop)
     integer :: begp,endp
     integer :: begc,endc
 
@@ -236,6 +246,7 @@ contains
 
     ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Without this, the filter is full of garbage
     ! in some situations
+    call t_startf('CNZero-soilbgc-cflux')
     dummy_to_make_pgi_happy = ubound(filter_soilc, 1)
     call soilbiogeochem_carbonflux_inst%SetValues( &
          num_soilc, filter_soilc, 0._r8)
@@ -247,28 +258,39 @@ contains
        call c14_soilbiogeochem_carbonflux_inst%SetValues( &
             num_soilc, filter_soilc, 0._r8)
     end if
+    call t_stopf('CNZero-soilbgc-cflux')
 
+    call t_startf('CNZero-vegbgc-cflux')
     call cnveg_carbonflux_inst%SetValues( &
+         nvegcpool,&
          num_soilp, filter_soilp, 0._r8, &
          num_soilc, filter_soilc, 0._r8)
     if ( use_c13 ) then
        call c13_cnveg_carbonflux_inst%SetValues( &
+            nvegcpool,&
             num_soilp, filter_soilp, 0._r8, &
             num_soilc, filter_soilc, 0._r8)
     end if
     if ( use_c14 ) then
        call c14_cnveg_carbonflux_inst%SetValues( &
+            nvegcpool,&
             num_soilp, filter_soilp, 0._r8, &
             num_soilc, filter_soilc, 0._r8)
     end if
+    call t_stopf('CNZero-vegbgc-cflux')
 
+    call t_startf('CNZero-vegbgc-nflux')
     call cnveg_nitrogenflux_inst%SetValues( &
+         nvegnpool, &
          num_soilp, filter_soilp, 0._r8, &
          num_soilc, filter_soilc, 0._r8)
 
+    call t_stopf('CNZero-vegbgc-nflux')
+    call t_startf('CNZero-soilbgc-nflux')
     call soilbiogeochem_nitrogenflux_inst%SetValues( &
          num_soilc, filter_soilc, 0._r8)
 
+    call t_stopf('CNZero-soilbgc-nflux')
     call t_stopf('CNZero')
 
     ! --------------------------------------------------
@@ -321,6 +343,7 @@ contains
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     else if (decomp_method == mimics_decomp) then
        call decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
+            num_soilp, filter_soilp, clm_fates, &
             soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, &
             soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
     end if
@@ -387,16 +410,44 @@ contains
 
      end if
 
+     call t_startf('cnalloc')
+     call calc_gpp_mr_availc( &
+          bounds, num_soilp, filter_soilp, &
+          crop_inst, photosyns_inst, canopystate_inst, &
+          cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst)
+
+     if (.not. use_crop_agsys) then
+        call calc_crop_allocation_fractions(bounds, num_pcropp, filter_pcropp, &
+             crop_inst, cnveg_state_inst)
+     end if
+
+     call calc_allometry(num_soilp, filter_soilp, &
+          cnveg_carbonflux_inst, cnveg_state_inst)
+     call t_stopf('cnalloc')
+
      call t_startf('calc_plant_nutrient_demand')
+     ! We always call calc_plant_nutrient_demand for natural veg patches, but only call
+     ! it for crop patches if NOT running with AgSys (since AgSys calculates the relevant
+     ! output variables in its own way).
      call nutrient_competition_method%calc_plant_nutrient_demand ( &
-         bounds, num_soilp, filter_soilp,                                 &
-         photosyns_inst, crop_inst, canopystate_inst,                     &
-         cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
-         c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,            &
-         cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
-         soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
-         energyflux_inst, &
-         aroot=aroot(begp:endp), arepr=arepr(begp:endp,:))
+          bounds,                                                          &
+          num_soilnopcropp, filter_soilnopcropp, .false.,                  &
+          crop_inst, canopystate_inst,                                     &
+          cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
+          soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
+          energyflux_inst)
+     if (.not. use_crop_agsys) then
+        call nutrient_competition_method%calc_plant_nutrient_demand ( &
+             bounds,                                                          &
+             num_pcropp, filter_pcropp, .true.,                               &
+             crop_inst, canopystate_inst,                                     &
+             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+             cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
+             soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
+             energyflux_inst)
+     end if
 
      ! get the column-averaged plant_ndemand (needed for following call to SoilBiogeochemCompetition)
 
@@ -430,8 +481,6 @@ contains
          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
          soilbiogeochem_nitrogenstate_inst, &
-         aroot=aroot(begp:endp), &
-         arepr=arepr(begp:endp,:), &
          fpg_col=soilbiogeochem_state_inst%fpg_col(begc:endc))
     call t_stopf('calc_plant_nutrient_competition')
 
@@ -515,9 +564,12 @@ contains
         call t_stopf('CNRootDyn')
      end if
 
-    !--------------------------------------------
+    !--------------------------------------------------------------------------
     ! CNUpdate0
-    !--------------------------------------------
+    ! The state updates are still called for the matrix solution (use_matrixn
+    ! and use_soil_matrixcn) but most of the state updates are done after
+    ! the matrix multiply in VegMatrix and SoilMatrix.
+    !--------------------------------------------------------------------------
 
     call t_startf('CNUpdate0')
 
@@ -543,9 +595,12 @@ contains
             c14_cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
        call t_stopf('CNPrecisionControl')
     end if
-    !--------------------------------------------
+    !--------------------------------------------------------------------------
     ! Update1
-    !--------------------------------------------
+    ! The state updates are still called for the matrix solution (use_matrixn
+    ! and use_soil_matrixcn) but most of the state updates are done after
+    ! the matrix multiply in VegMatrix and SoilMatrix.
+    !--------------------------------------------------------------------------
 
     call t_startf('CNUpdate1')
 
@@ -627,7 +682,7 @@ contains
     call t_startf('CNGapMortality')
 
     call CNGapMortality (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                &
-         dgvs_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,                                             &
+         dgvs_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,  soilbiogeochem_nitrogenflux_inst,          &
          cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,  canopystate_inst,                                       &   
          !cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                                                         &  
          leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp, 1:nlevdecomp_full),   &
@@ -637,9 +692,12 @@ contains
 
     call t_stopf('CNGapMortality')
 
-    !--------------------------------------------
+    !--------------------------------------------------------------------------
     ! Update2 (gap mortality)
-    !--------------------------------------------
+    ! The state updates are still called for the matrix solution (use_matrixn
+    ! and use_soil_matrixcn) but most of the state updates are done after
+    ! the matrix multiply in VegMatrix and SoilMatrix.
+    !--------------------------------------------------------------------------
 
     call t_startf('CNUpdate2')
 
@@ -661,23 +719,30 @@ contains
 
     ! Update all the prognostic carbon state variables affected by gap-phase mortality fluxes
     call CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
+         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_carbonflux_inst)
     if ( use_c13 ) then
        call CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst)
+            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+            c13_soilbiogeochem_carbonflux_inst)
     end if
     if ( use_c14 ) then
        call CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
+            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+            c14_soilbiogeochem_carbonflux_inst)
     end if
 
     ! Update all the prognostic nitrogen state variables affected by gap-phase mortality fluxes
     call NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
+         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst,soilbiogeochem_nitrogenstate_inst, &
+         soilbiogeochem_nitrogenflux_inst)
 
-    !--------------------------------------------
+    !--------------------------------------------------------------------------
     ! Update2h (harvest)
-    !--------------------------------------------
+    ! The state updates are still called for the matrix solution (use_matrixn
+    ! and use_soil_matrixcn) but most of the state updates are done after
+    ! the matrix multiply in VegMatrix and SoilMatrix.
+    !--------------------------------------------------------------------------
 
     ! Set harvest mortality routine 
     if (get_do_harvest()) then
@@ -702,18 +767,22 @@ contains
     end if
 
     call CStateUpdate2h( num_soilc, filter_soilc,  num_soilp, filter_soilp, &
-         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
+         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_carbonflux_inst)
     if ( use_c13 ) then
        call CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst)
+            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+            c13_soilbiogeochem_carbonflux_inst)
     end if
     if ( use_c14 ) then
        call CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
+            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+            c14_soilbiogeochem_carbonflux_inst)
     end if
 
     call NStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
+         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst, &
+         soilbiogeochem_nitrogenflux_inst)
 
     !--------------------------------------------
     ! Update2g (gross unrepresented landcover change)
@@ -822,8 +891,10 @@ contains
          t_soi17cm_col=temperature_inst%t_soi17cm_col(begc:endc))
 
     call cnfire_method%CNFireFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                      &
+         num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,                                                             &
          dgvs_inst, cnveg_state_inst,                                                                                              &
          cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                         &
+         soilbiogeochem_carbonflux_inst,                                                                                           &
          leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp, 1:nlevdecomp_full),                                  &
          froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp, 1:nlevdecomp_full),                                &
          croot_prof_patch=soilbiogeochem_state_inst%croot_prof_patch(begp:endp, 1:nlevdecomp_full),                                &
@@ -835,9 +906,12 @@ contains
     call t_stopf('CNFire')
 
 
-    !--------------------------------------------
+    !--------------------------------------------------------------------------
     ! Update3
-    !--------------------------------------------
+    ! The state updates are still called for the matrix solution (use_matrixn
+    ! and use_soil_matrixcn) but most of the state updates are done after
+    ! the matrix multiply in VegMatrix and SoilMatrix.
+    !--------------------------------------------------------------------------
 
     call t_startf('CNUpdate3')
     if ( use_c13 ) then
@@ -858,19 +932,23 @@ contains
     end if
 
     call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
+         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_carbonflux_inst)
 
     if ( use_c13 ) then
        call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst)
+            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+            c13_soilbiogeochem_carbonflux_inst)
     end if
 
     if ( use_c14 ) then
        call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
+            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+            c14_soilbiogeochem_carbonflux_inst)
 
        call C14Decay(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
+            c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+            c14_cnveg_carbonflux_inst,  c14_soilbiogeochem_carbonflux_inst)
     end if
     call t_stopf('CNUpdate3')
 
@@ -889,9 +967,17 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNDriverLeaching(bounds, &
        num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,&
        waterstatebulk_inst, waterfluxbulk_inst, &
+       soilstate_inst, cnveg_state_inst, &
+       cnveg_carbonflux_inst,cnveg_carbonstate_inst,soilbiogeochem_carbonstate_inst, &
+       soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
        cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
-       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, &
+       c13_cnveg_carbonstate_inst,c14_cnveg_carbonstate_inst, &
+       c13_cnveg_carbonflux_inst,c14_cnveg_carbonflux_inst, &
+       c13_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonstate_inst,&
+       c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
     ! Update the nitrogen leaching rate as a function of soluble mineral N and total soil water outflow.
@@ -899,7 +985,10 @@ contains
     !
     ! !USES:
     use SoilBiogeochemNLeachingMod, only: SoilBiogeochemNLeaching
-    use CNNStateUpdate3Mod   , only: NStateUpdate3
+    use CNNStateUpdate3Mod        , only: NStateUpdate3
+    use clm_time_manager          , only : is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year,get_curr_date
+    use CNSharedParamsMod         , only : use_matrixcn
+    use SoilBiogeochemDecompCascadeConType , only : use_soil_matrixcn
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -907,12 +996,32 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    integer                                 , intent(in)    :: num_actfirec         ! number of soil columns on fire in filter
+    integer                                 , intent(in)    :: filter_actfirec(:)   ! filter for soil columns on fire
+    integer                                 , intent(in)    :: num_actfirep         ! number of soil patches on fire in filter
+    integer                                 , intent(in)    :: filter_actfirep(:)   ! filter for soil patches on fire
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterfluxbulk_type)                    , intent(inout)    :: waterfluxbulk_inst
+    type(cnveg_state_type)                  , intent(inout) :: cnveg_state_inst
+    type(cnveg_carbonflux_type)             , intent(inout) :: cnveg_carbonflux_inst
+    type(cnveg_carbonstate_type)            , intent(inout) :: cnveg_carbonstate_inst
+    type(soilstate_type)                    , intent(inout) :: soilstate_inst
+    type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
+    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
     type(cnveg_nitrogenflux_type)           , intent(inout) :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(cnveg_carbonstate_type)            , intent(inout) :: c13_cnveg_carbonstate_inst
+    type(cnveg_carbonstate_type)            , intent(inout) :: c14_cnveg_carbonstate_inst
+    type(cnveg_carbonflux_type)             , intent(inout) :: c13_cnveg_carbonflux_inst
+    type(cnveg_carbonflux_type)             , intent(inout) :: c14_cnveg_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c13_soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c14_soilbiogeochem_carbonflux_inst
+    integer p,fp,yr,mon,day,sec
     !-----------------------------------------------------------------------
   
     ! Mineral nitrogen dynamics (deposition, fixation, leaching)
@@ -927,12 +1036,29 @@ contains
 
     call t_startf('NUpdate3')
 
-    call NstateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+    call NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
          cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
 
     call t_stopf('NUpdate3')
 
+    !--------------------------------------------------------------------------
+    ! Solve the matrix solution and do the state update for matrix solution as
+    ! part of that
+    !--------------------------------------------------------------------------
+
+    if ( use_matrixcn ) then
+       call t_startf('CNVMatrix')
+       ! Matrix cn code will go here:
+       call t_stopf( 'CNVMatrix')
+    end if
+
+    if ( use_soil_matrixcn ) then
+       call t_startf('CNSoilMatrix')
+       ! Soil Matrix cn code will go here:
+       call t_stopf( 'CNSoilMatrix')
+    end if
+    
   end subroutine CNDriverLeaching
 
   !-----------------------------------------------------------------------
@@ -1074,12 +1200,14 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
+    integer :: begp,endp
     integer :: begc,endc
     integer :: begg,endg
 
     character(len=*), parameter :: subname = 'CNDriverSummarizeFluxes'
     !-----------------------------------------------------------------------
 
+    begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg = bounds%endg
 
@@ -1089,12 +1217,30 @@ contains
     ! soilbiogeochem carbon/nitrogen flux summary
     ! ----------------------------------------------
 
-    call soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc)
+    call soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
+         soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+         soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
+         soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
+         leafc_to_litter_patch=cnveg_carbonflux_inst%leafc_to_litter_patch(begp:endp), &
+         frootc_to_litter_patch=cnveg_carbonflux_inst%frootc_to_litter_patch(begp:endp))
     if ( use_c13 ) then
-       call c13_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc)
+       call c13_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
+         c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+         c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
+         soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
+         leafc_to_litter_patch=c13_cnveg_carbonflux_inst%leafc_to_litter_patch(begp:endp), &
+         frootc_to_litter_patch=c13_cnveg_carbonflux_inst%frootc_to_litter_patch(begp:endp))
     end if
     if ( use_c14 ) then
-       call c14_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc)
+       call c14_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
+         c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+         c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
+         soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
+         leafc_to_litter_patch=c14_cnveg_carbonflux_inst%leafc_to_litter_patch(begp:endp), &
+         frootc_to_litter_patch=c14_cnveg_carbonflux_inst%frootc_to_litter_patch(begp:endp))
     end if
     call soilbiogeochem_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc)
 
@@ -1110,8 +1256,6 @@ contains
          soilbiogeochem_lithr_col=soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
          soilbiogeochem_decomp_cascade_ctransfer_col=&
          soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-         soilbiogeochem_cwdc_col=soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
-         soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
          product_closs_grc=c_products_inst%product_loss_grc(begg:endg))
 
     if ( use_c13 ) then
@@ -1122,8 +1266,6 @@ contains
             soilbiogeochem_lithr_col=c13_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
             c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-            soilbiogeochem_cwdc_col=c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
-            soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
             product_closs_grc=c13_products_inst%product_loss_grc(begg:endg))
     end if
 
@@ -1135,8 +1277,6 @@ contains
             soilbiogeochem_lithr_col=c14_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
             c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-            soilbiogeochem_cwdc_col=c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
-            soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
             product_closs_grc=c14_products_inst%product_loss_grc(begg:endg))
     end if
     call t_stopf('CNvegCflux_summary')
