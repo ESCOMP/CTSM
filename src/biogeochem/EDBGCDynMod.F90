@@ -10,7 +10,7 @@ module EDBGCDynMod
   use perf_mod                        , only : t_startf, t_stopf
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use abortutils                      , only : endrun
-  use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif
+  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method
   use CNVegCarbonStateType	      , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType	      , only : cnveg_carbonflux_type
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
@@ -71,9 +71,8 @@ contains
     use CNNStateUpdate1Mod                , only: NStateUpdate1
     use CNNStateUpdate2Mod                , only: NStateUpdate2, NStateUpdate2h
     use CNGapMortalityMod                 , only: CNGapMortality
+    use SoilBiogeochemDecompCascadeMIMICSMod, only: decomp_rates_mimics
     use SoilBiogeochemDecompCascadeBGCMod , only: decomp_rate_constants_bgc
-    use SoilBiogeochemDecompCascadeCNMod  , only: decomp_rate_constants_cn
-    use SoilBiogeochemCompetitionMod      , only: SoilBiogeochemCompetition
     use SoilBiogeochemDecompMod           , only: SoilBiogeochemDecomp
     use SoilBiogeochemLittVertTranspMod   , only: SoilBiogeochemLittVertTransp
     use SoilBiogeochemPotentialMod        , only: SoilBiogeochemPotential 
@@ -114,8 +113,8 @@ contains
     real(r8):: cn_decomp_pools(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
     real(r8):: p_decomp_cpool_loss(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential C loss from one pool to another
     real(r8):: pmnf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential mineral N flux, from one pool to another
-    real(r8):: arepr(bounds%begp:bounds%endp) ! reproduction allocation coefficient (only used for crop_prog)
-    real(r8):: aroot(bounds%begp:bounds%endp) ! root allocation coefficient (only used for crop_prog)
+    real(r8):: p_decomp_npool_to_din(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions)  ! potential flux to dissolved inorganic N
+    real(r8):: p_decomp_cn_gain(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)  ! C:N ratio of the flux gained by the receiver pool
     integer :: begp,endp
     integer :: begc,endc
     !-----------------------------------------------------------------------
@@ -178,12 +177,13 @@ contains
     ! Soil Biogeochemistry
     !--------------------------------------------
 
-    if (use_century_decomp) then
+    if (decomp_method == century_decomp) then
        call decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
-    else
-       call decomp_rate_constants_cn(bounds, num_soilc, filter_soilc, &
-            soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+    else if (decomp_method == mimics_decomp) then
+       call decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
+            soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, &
+            soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
     end if
 
     ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)
@@ -192,7 +192,9 @@ contains
          soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,                                         &
          cn_decomp_pools=cn_decomp_pools(begc:endc,1:nlevdecomp,1:ndecomp_pools), & 
          p_decomp_cpool_loss=p_decomp_cpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
-         pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions)) 
+         p_decomp_cn_gain=p_decomp_cn_gain(begc:endc,1:nlevdecomp,1:ndecomp_pools), &
+         pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
+         p_decomp_npool_to_din=p_decomp_npool_to_din(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions))
 
 
     !--------------------------------------------
@@ -216,7 +218,8 @@ contains
          soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,                                         &
          cn_decomp_pools=cn_decomp_pools(begc:endc,1:nlevdecomp,1:ndecomp_pools),                       & 
          p_decomp_cpool_loss=p_decomp_cpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
-         pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions)) 
+         pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
+         p_decomp_npool_to_din=p_decomp_npool_to_din(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions))
 
     call t_stopf('SoilBiogeochemDecomp')
 

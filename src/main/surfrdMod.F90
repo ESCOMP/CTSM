@@ -75,10 +75,11 @@ contains
                              n_dom_landunits
     use fileutils           , only : getfil
     use domainMod           , only : domain_type, domain_init, domain_clean
-    use clm_instur          , only : wt_lunit, topo_glc_mec
+    use clm_instur          , only : wt_lunit, topo_glc_mec, pct_urban_max
     use landunit_varcon     , only : max_lunit, istsoil, isturb_MIN, isturb_MAX
     use dynSubgridControlMod, only : get_flanduse_timeseries
     use dynSubgridControlMod, only : get_do_transient_lakes
+    use dynSubgridControlMod, only : get_do_transient_urban
 
     !
     ! !ARGUMENTS:
@@ -150,7 +151,7 @@ contains
     end if
 
     call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
-    call domain_init(surfdata_domain, isgrid2d, ni, nj, begg, endg, clmlevel=grlnd)
+    call domain_init(surfdata_domain, isgrid2d, ni, nj, begg, endg, subgrid_level=grlnd)
 
     call ncd_io(ncid=ncid, varname=lon_var, flag='read', data=surfdata_domain%lonc, &
          dim1name=grlnd, readvar=readvar)
@@ -237,6 +238,15 @@ contains
         call surfrd_lakemask(begg, endg)
     end if
 
+    ! read the urbanmask (necessary for initialization of dynamical urban)
+    if (get_do_transient_urban()) then
+        call surfrd_urbanmask(begg, endg)
+    else
+        ! Set this to zero here. pct_urban_max is used in subgridWeightsMod to check 
+        ! whether urban landunits should be run virtually.
+        pct_urban_max(:,:) = 0._r8
+    end if
+    
   end subroutine surfrd_get_data
 
 !-----------------------------------------------------------------------
@@ -792,5 +802,59 @@ contains
 
   end subroutine surfrd_lakemask
 
+  !-----------------------------------------------------------------------
+  subroutine surfrd_urbanmask(begg, endg)
+    !
+    ! !DESCRIPTION:
+    ! Reads the urban mask, indicating where urban areas are and will grow
+    ! of the landuse.timeseries file.
+    ! Necessary for the initialization of the urban land units.
+    ! All urban density types will intialize if any type exists or will grow.
+    !
+    ! !USES:
+     use clm_instur           , only : pct_urban_max
+     use dynSubgridControlMod , only : get_flanduse_timeseries
+     use clm_varctl           , only : fname_len
+     use fileutils            , only : getfil
+    !
+    ! !ARGUMENTS:
+    integer,           intent(in)    :: begg, endg
+    !
+    !
+    ! !LOCAL VARIABLES:
+    type(file_desc_t)         :: ncid_dynuse          ! netcdf id for landuse timeseries file
+    character(len=256)        :: locfn                ! local file name
+    character(len=fname_len)  :: fdynuse              ! landuse.timeseries filename
+    logical                   :: readvar
+    !
+    character(len=*), parameter :: subname = 'surfrd_urbanmask'
+    !
+    !-----------------------------------------------------------------------
 
+    ! get filename of landuse_timeseries file
+    fdynuse = get_flanduse_timeseries()
+
+    if (masterproc) then
+       write(iulog,*) 'Attempting to read landuse.timeseries data .....'
+       if (fdynuse == ' ') then
+          write(iulog,*)'fdynuse must be specified'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+    end if
+
+    call getfil(fdynuse, locfn, 0 )
+
+   ! open landuse_timeseries file
+    call ncd_pio_openfile (ncid_dynuse, trim(locfn), 0)
+
+    ! read the urbanmask
+    call ncd_io(ncid=ncid_dynuse, varname='PCT_URBAN_MAX', flag='read', data=pct_urban_max, &
+           dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_URBAN_MAX is not on landuse.timeseries file'//errMsg(sourcefile, __LINE__))
+
+    ! close landuse_timeseries file again
+    call ncd_pio_closefile(ncid_dynuse)
+
+  end subroutine surfrd_urbanmask
+  
 end module surfrdMod

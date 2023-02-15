@@ -7,11 +7,11 @@ module SoilBiogeochemStateType
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc
   use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoifl, nlevsoi
-  use clm_varpar     , only : ndecomp_cascade_transitions, nlevdecomp, nlevdecomp_full
+  use clm_varpar     , only : ndecomp_pools, ndecomp_cascade_transitions, nlevdecomp, nlevdecomp_full
   use clm_varcon     , only : spval, ispval, c14ratio, grlnd
   use landunit_varcon, only : istsoil, istcrop
   use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak
-  use clm_varctl     , only : use_vertsoilc, use_cn 
+  use clm_varctl     , only : use_cn 
   use clm_varctl     , only : iulog
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
@@ -33,8 +33,7 @@ module SoilBiogeochemStateType
      real(r8) , pointer :: fpi_vr_col                  (:,:)   ! (no units) fraction of potential immobilization 
      real(r8) , pointer :: fpi_col                     (:)     ! (no units) fraction of potential immobilization 
      real(r8),  pointer :: fpg_col                     (:)     ! (no units) fraction of potential gpp 
-     real(r8) , pointer :: rf_decomp_cascade_col       (:,:,:) ! (frac) respired fraction in decomposition step 
-     real(r8) , pointer :: pathfrac_decomp_cascade_col (:,:,:) ! (frac) what fraction of C leaving a given pool passes through a given transition 
+     real(r8) , pointer :: nue_decomp_cascade_col      (:)     ! (gN going into microbe / gN decomposed) N use efficiency for a given transition
      real(r8) , pointer :: nfixation_prof_col          (:,:)   ! (1/m) profile for N fixation additions 
      real(r8) , pointer :: ndep_prof_col               (:,:)   ! (1/m) profile for N fixation additions 
      real(r8) , pointer :: som_adv_coef_col            (:,:)   ! (m2/s) SOM advective flux 
@@ -102,11 +101,8 @@ contains
     allocate(this%som_diffus_coef_col (begc:endc,1:nlevdecomp_full)) ; this%som_diffus_coef_col (:,:) = spval
     allocate(this%plant_ndemand_col   (begc:endc))                   ; this%plant_ndemand_col   (:)   = nan
 
-    allocate(this%rf_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions)); 
-    this%rf_decomp_cascade_col(:,:,:) = nan
-
-    allocate(this%pathfrac_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions));     
-    this%pathfrac_decomp_cascade_col(:,:,:) = nan
+    allocate(this%nue_decomp_cascade_col(1:ndecomp_cascade_transitions)); 
+    this%nue_decomp_cascade_col(:) = nan
 
   end subroutine InitAllocate
 

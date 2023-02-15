@@ -6,13 +6,13 @@ module glc2lndMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use decompMod      , only : bounds_type
+  use decompMod      , only : bounds_type, subgrid_level_gridcell
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar     , only : maxpatch_glc
   use clm_varctl     , only : iulog, glc_do_dynglacier
-  use clm_varcon     , only : nameg, spval, ispval
+  use clm_varcon     , only : spval, ispval
   use abortutils     , only : endrun
   use GridcellType   , only : grc
   use LandunitType   , only : lun
@@ -450,7 +450,7 @@ contains
              write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
              write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
              write(iulog,'(a)') '- i.e., the region specified as "virtual" in glacier_region_behavior.)'
-             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
           end if
 
           ! Ensure that icemask is a subset of melt_replaced_by_ice. This is needed
@@ -465,7 +465,7 @@ contains
              write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
              write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
              write(iulog,'(a)') '- i.e., the region specified as "replaced_by_ice" in glacier_region_melt_behavior.)'
-             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
           end if
 
        end if
@@ -499,7 +499,7 @@ contains
        ! future can rely on it.
        if (this%icemask_coupled_fluxes_grc(g) > 0._r8 .and. this%icemask_grc(g) == 0._r8) then
           write(iulog,*) subname//' ERROR: icemask_coupled_fluxes must be a subset of icemask.'
-          call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
        end if
 
     end do
@@ -594,7 +594,7 @@ contains
              write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
              write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
              write(iulog,'(a)') '- i.e., the region specified as "replaced_by_ice" in glacier_region_melt_behavior.)'
-             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
           end if
        end if
     end do
@@ -648,7 +648,8 @@ contains
                 l_ice = grc%landunit_indices(istice, g)
                 if (l_ice == ispval) then
                    write(iulog,*) subname//' ERROR: no ice landunit found within the icemask, for g = ', g
-                   call endrun()
+                   call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                        msg="no ice landunit found within the icemask")
                 end if
 
                 frac_assigned(1:maxpatch_glc) = .false.
@@ -674,7 +675,8 @@ contains
                         this%frac_grc(g, 1:maxpatch_glc)
                    write(iulog,*) 'frac_assigned(1:maxpatch_glc) = ', &
                         frac_assigned(1:maxpatch_glc)
-                   call endrun()
+                   call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                        msg="at least one glc column has non-zero area from cpl but has no slot in memory")
                 end if  ! error
              end if  ! area_ice > 0
           end if  ! this%icemask_grc(g) > 0

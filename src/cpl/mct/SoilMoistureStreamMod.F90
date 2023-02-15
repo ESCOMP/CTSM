@@ -16,26 +16,24 @@ module SoilMoistureStreamMod
   ! Read in soil moisture from data stream
   !
   ! !USES:
-  use shr_strdata_mod , only : shr_strdata_type, shr_strdata_create
-  use shr_strdata_mod , only : shr_strdata_print, shr_strdata_advance
-  use shr_kind_mod    , only : r8 => shr_kind_r8
-  use shr_kind_mod    , only : CL => shr_kind_CL, CXX => shr_kind_CXX
-  use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use decompMod       , only : bounds_type
-  use abortutils      , only : endrun
-  use clm_varctl      , only : iulog, use_soil_moisture_streams, inst_name
-  use clm_varcon      , only : grlnd
-  use controlMod      , only : NLFilename
-  use decompMod       , only : gsMap_lnd2Dsoi_gdc2glo
-  use domainMod       , only : ldomain
-  use fileutils       , only : getavu, relavu
-  use LandunitType    , only : lun
-  use ColumnType      , only : col
-  use SoilStateType   , only : soilstate_type
-  use WaterStateBulkType, only : waterstatebulk_type
-  use perf_mod        , only : t_startf, t_stopf
-  use spmdMod         , only : masterproc
-  use spmdMod         , only : mpicom, comp_id
+  use shr_strdata_mod           , only : shr_strdata_type, shr_strdata_create
+  use shr_strdata_mod           , only : shr_strdata_print, shr_strdata_advance
+  use shr_kind_mod              , only : r8 => shr_kind_r8
+  use shr_kind_mod              , only : CL => shr_kind_CL, CXX => shr_kind_CXX
+  use shr_log_mod               , only : errMsg => shr_log_errMsg
+  use decompMod                 , only : bounds_type, subgrid_level_column
+  use abortutils                , only : endrun
+  use clm_varctl                , only : iulog, use_soil_moisture_streams, inst_name
+  use clm_varcon                , only : grlnd
+  use controlMod                , only : NLFilename
+  use domainMod                 , only : ldomain
+  use LandunitType              , only : lun
+  use ColumnType                , only : col
+  use SoilStateType             , only : soilstate_type
+  use WaterStateBulkType        , only : waterstatebulk_type
+  use perf_mod                  , only : t_startf, t_stopf
+  use spmdMod                   , only : masterproc, mpicom, comp_id
+  use lnd_set_decomp_and_domain , only : gsMap_lnd2Dsoi_gdc2glo
   use mct_mod
   use ncdio_pio
   !
@@ -127,8 +125,7 @@ contains
 
     ! Read soilm_streams namelist
     if (masterproc) then
-       nu_nml = getavu()
-       open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
+       open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
        call find_nlgroup_name(nu_nml, 'soil_moisture_streams', status=nml_error)
        if (nml_error == 0) then
           read(nu_nml, nml=soil_moisture_streams,iostat=nml_error)
@@ -139,7 +136,6 @@ contains
           call endrun(subname // ':: ERROR finding soilm_streams namelist')
        end if
        close(nu_nml)
-       call relavu( nu_nml )
     endif
 
     call shr_mpi_bcast(stream_year_first_soilm, mpicom)
@@ -170,11 +166,8 @@ contains
 
     call clm_domain_mct (bounds, dom_clm, nlevels=nlevsoi)
 
-    !
     ! create the field list for these fields...use in shr_strdata_create
-    !
     fldList = trim(soilmString)
-
     if (masterproc) write(iulog,*) 'fieldlist: ', trim(fldList)
 
     call shr_strdata_create(sdat_soilm,name="soil_moisture",    &
@@ -387,7 +380,9 @@ contains
                      else
                         write(iulog,*) 'Input soil moisture dataset is not vegetated as expected: gridcell=', &
                                         g, ' active = ', col%active(c)
-                        call endrun(subname // ' ERROR:: The input soil moisture stream is NOT vegetated for one of the land points' )
+                        call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                             msg = subname // &
+                             ' ERROR:: The input soil moisture stream is NOT vegetated for one of the land points' )
                      end if
                   end if
 
@@ -409,7 +404,8 @@ contains
                   h2osoi_ice(c,j) = h2osoi_ice(c,j) + (soilm_ice_frac * moisture_increment * dz(c, j) * denice)
 
                else
-                  call endrun(subname // ':: ERROR h2osoil liquid plus ice is zero')
+                  call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                       msg = subname // ':: ERROR h2osoil liquid plus ice is zero')
                endif
             enddo
          endif

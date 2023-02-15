@@ -319,7 +319,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
                  write(6,*)'kmax is > kmap_max= ',kmax(no), 'kmap_max = ', &
                             kmap_max,' for no = ',no
                  write(6,*)'reset kmap_max in mksoilMod to a greater value'
-                 stop
+                 call abort()
               end if
               kmap(kmax(no),no) = k
               kwgt(kmax(no),no) = wt
@@ -841,7 +841,7 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
 
   if (nlay /= nlevsoi) then
      write(6,*)'nlay, nlevsoi= ',nlay,nlevsoi,' do not match'
-     stop
+     call abort()
   end if
 
   call check_ret(nf_inq_varid (ncid, 'ORGANIC', varid), subname)
@@ -873,7 +873,7 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
            write (6,*) 'MKORGANIC error: organic = ',organic_o(no,lev), &
                 ' greater than 130.000001 for column, row = ',no
            call shr_sys_flush(6)
-           stop
+           call abort()
         end if
      enddo
 
@@ -942,7 +942,7 @@ subroutine mksoilfmaxInit( )
   if ( soil_fmax /= unset )then
      if ( soil_fmax < 0.0 .or. soil_fmax > 1.0 )then
         write(6,*)'soil_fmax is out of range = ', soil_fmax
-        stop
+        call abort()
      end if
      write(6,*) 'Replace soil fmax for all points with: ', soil_fmax
   end if
@@ -1053,7 +1053,7 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
         write (6,*) 'MKFMAX error: fmax = ',fmax_o(no), &
                 ' greater than 1.000001 for column, row = ',no
         call shr_sys_flush(6)
-        stop
+        call abort()
      end if
   enddo
 
@@ -1086,7 +1086,7 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
                                      frac_dst(no)*re**2
      if ((frac_dst(no) < 0.0) .or. (frac_dst(no) > 1.0001)) then
         write(6,*) "ERROR:: frac_dst out of range: ", frac_dst(no),no
-        stop 
+        call abort()
      end if
   end do
 

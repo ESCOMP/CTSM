@@ -8,7 +8,7 @@ module CNBalanceCheckMod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use shr_infnan_mod                  , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
-  use decompMod                       , only : bounds_type
+  use decompMod                       , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use abortutils                      , only : endrun
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
   use clm_time_manager                , only : get_step_size_real
@@ -238,7 +238,7 @@ contains
          wood_harvestc           =>    cnveg_carbonflux_inst%wood_harvestc_col          , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
          gru_conv_cflux          =>    cnveg_carbonflux_inst%gru_conv_cflux_col         , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
          gru_wood_productc_gain  =>    cnveg_carbonflux_inst%gru_wood_productc_gain_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
-         grainc_to_cropprodc     =>    cnveg_carbonflux_inst%grainc_to_cropprodc_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) grain C to 1-year crop product pool
+         crop_harvestc_to_cropprodc     =>    cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) crop harvest C to 1-year crop product pool
          gpp                     =>    cnveg_carbonflux_inst%gpp_col                    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) gross primary production
          er                      =>    cnveg_carbonflux_inst%er_col                     , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
          col_fire_closs          =>    cnveg_carbonflux_inst%fire_closs_col             , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total column-level fire C loss
@@ -275,7 +275,7 @@ contains
          col_coutputs = col_coutputs + &
               wood_harvestc(c) + &
               gru_wood_productc_gain(c) + &
-              grainc_to_cropprodc(c)
+              crop_harvestc_to_cropprodc(c)
 
          ! subtract leaching flux
          col_coutputs = col_coutputs - som_c_leached(c)
@@ -312,9 +312,9 @@ contains
          write(iulog,*)'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
          write(iulog,*)'col_xsmrpool_to_atm      = ',col_xsmrpool_to_atm(c)*dt
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
-         write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
+         write(iulog,*)'crop_harvestc_to_cropprodc = ', crop_harvestc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 
       ! Repeat error check at the gridcell level
@@ -333,7 +333,7 @@ contains
       do g = bounds%begg, bounds%endg
          ! calculate gridcell-level carbon storage for mass conservation check
          ! Notes:
-         ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
+         ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totmicc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
          ! totc_p2c_col = totc_patch = totvegc_patch(p) + xsmrpool_patch(p) + ctrunc_patch(p) + cropseedc_deficit_patch(p)
          ! Not including seedc_grc in grc_begcb and grc_endcb because
          ! seedc_grc forms out of thin air, for now, and equals
@@ -389,7 +389,7 @@ contains
          write(iulog,*)'dwt_seedc_to_deadstem_grc =', dwt_seedc_to_deadstem_grc(g) * dt
          write(iulog,*)'--- Outputs ---'
          write(iulog,*)'-1*som_c_leached_grc    = ', som_c_leached_grc(g) * dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate
@@ -469,7 +469,7 @@ contains
          gru_conv_nflux      => cnveg_nitrogenflux_inst%gru_conv_nflux_col               , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
          gru_wood_productn_gain => cnveg_nitrogenflux_inst%gru_wood_productn_gain_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
          gru_wood_productn_gain_grc => cnveg_nitrogenflux_inst%gru_wood_productn_gain_grc, & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools) summed to the gridcell level
-         grainn_to_cropprodn => cnveg_nitrogenflux_inst%grainn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) grain N to 1-year crop product pool
+         crop_harvestn_to_cropprodn => cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) crop harvest N to 1-year crop product pool
 
          totcoln             => cnveg_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
          )
@@ -512,7 +512,7 @@ contains
          col_noutputs(c) = col_noutputs(c) + &
               wood_harvestn(c) + &
               gru_wood_productn_gain(c) + &
-              grainn_to_cropprodn(c)
+              crop_harvestn_to_cropprodn(c)
 
          if (.not. use_nitrif_denitrif) then
             col_noutputs(c) = col_noutputs(c) + sminn_leached(c)
@@ -526,7 +526,7 @@ contains
 
          col_noutputs_partial(c) = col_noutputs(c) - &
                                    wood_harvestn(c) - &
-                                   grainn_to_cropprodn(c)
+                                   crop_harvestn_to_cropprodn(c)
 
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
@@ -556,11 +556,8 @@ contains
          write(iulog,*)'output mass              = ',col_noutputs(c)*dt
          write(iulog,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
          write(iulog,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-         write(iulog,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
-        
-         
-         
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         write(iulog,*)'outputs,lch,roff,dnit    = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+         call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 
       ! Repeat error check at the gridcell level
@@ -639,7 +636,7 @@ contains
          write(iulog,*) 'dwt_conv_nflux_grc       =', dwt_conv_nflux_grc(g) * dt
          write(iulog,*) '-gru_wood_productn_gain_grc =', -gru_wood_productn_gain_grc(g) * dt
          write(iulog,*) 'product_loss_grc         =', product_loss_grc(g) * dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate

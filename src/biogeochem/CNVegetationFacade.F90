@@ -890,7 +890,6 @@ contains
        num_pcropp, filter_pcropp, &
        num_exposedvegp, filter_exposedvegp, &
        num_noexposedvegp, filter_noexposedvegp, &
-       doalb, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -924,7 +923,6 @@ contains
     integer                                 , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
     integer                                 , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
     integer                                 , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
-    logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
     type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
@@ -965,7 +963,6 @@ contains
          num_pcropp, filter_pcropp,                     &
          num_exposedvegp, filter_exposedvegp,           &
          num_noexposedvegp, filter_noexposedvegp,       &
-         doalb,              &
          this%cnveg_state_inst,                                                        &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst,                           &
          this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst,                   &
@@ -1092,6 +1089,10 @@ contains
          soilbiogeochem_carbonflux_inst, &
          c13_soilbiogeochem_carbonflux_inst, &
          c14_soilbiogeochem_carbonflux_inst, &
+         soilbiogeochem_carbonstate_inst, &
+         c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst)
 
     ! On the radiation time step, use C state variables to calculate

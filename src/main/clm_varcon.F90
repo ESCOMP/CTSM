@@ -44,8 +44,6 @@ module clm_varcon
   ! Initialize physical constants
   !------------------------------------------------------------------
 
-  real(r8), public, parameter :: pc = 0.4_r8                        ! threshold probability
-  real(r8), public, parameter :: mu = 0.13889_r8                    ! connectivity exponent 
   real(r8), public, parameter :: secsphr = 3600._r8                 ! Seconds in an hour
   integer,  public, parameter :: isecsphr = int(secsphr)            ! Integer seconds in an hour
   integer,  public, parameter :: isecspmin= 60                      ! Integer seconds in a minute
@@ -124,6 +122,10 @@ module clm_varcon
 
   real(r8), public, parameter :: aquifer_water_baseline = 5000._r8 ! baseline value for water in the unconfined aquifer [mm]
   real(r8), public, parameter :: c_to_b = 2.0_r8         ! conversion between mass carbon and total biomass (g biomass /g C)
+  ! Some non-tunable conversions (may need to place elsewhere)
+  real(r8), public, parameter :: g_to_mg = 1.0e3_r8  ! coefficient to convert g to mg
+  real(r8), public, parameter :: cm3_to_m3 = 1.0e-6_r8  ! coefficient to convert cm3 to m3
+  real(r8), public, parameter :: pct_to_frac = 1.0e-2_r8  ! coefficient to convert % to fraction
   
   !!! C13
   real(r8), public, parameter :: preind_atm_del13c = -6.0_r8   ! preindustrial value for atmospheric del13C
@@ -190,7 +192,6 @@ module clm_varcon
   !------------------------------------------------------------------
 
   character(len=16), public, parameter :: grlnd  = 'lndgrid'      ! name of lndgrid
-  character(len=16), public, parameter :: namea  = 'gridcellatm'  ! name of atmgrid
   character(len=16), public, parameter :: nameg  = 'gridcell'     ! name of gridcells
   character(len=16), public, parameter :: namel  = 'landunit'     ! name of landunits
   character(len=16), public, parameter :: namec  = 'column'       ! name of columns

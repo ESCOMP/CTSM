@@ -14,7 +14,7 @@ module CanopyHydrologyMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use shr_sys_mod     , only : shr_sys_flush
-  use decompMod       , only : bounds_type
+  use decompMod       , only : bounds_type, subgrid_level_patch
   use abortutils      , only : endrun
   use clm_time_manager, only : get_step_size_real
   use clm_varctl      , only : iulog
@@ -46,7 +46,9 @@ module CanopyHydrologyMod
 
   type, private :: params_type
      real(r8) :: liq_canopy_storage_scalar  ! Canopy-storage-of-liquid-water parameter (kg/m2)
-     real(r8) :: snow_canopy_storage_scalar  ! Canopy-storage-of-snow parameter (kg/m2)
+     real(r8) :: snow_canopy_storage_scalar ! Canopy-storage-of-snow parameter (kg/m2)
+     real(r8) :: snowcan_unload_temp_fact   ! Temperature canopy snow unload scaling (C2 in Eq. 14, Roesch et al. 2001) (K*s)
+     real(r8) :: snowcan_unload_wind_fact   ! Wind canopy snow unload scaling (modifies 1.56e5, where 1.56e5 is C3 in Eq. 15, Roesch et al. 2001) (-)
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -156,6 +158,10 @@ contains
     call readNcdioScalar(ncid, 'liq_canopy_storage_scalar', subname, params_inst%liq_canopy_storage_scalar)
     ! Canopy-storage-of-snow parameter (kg/m2)
     call readNcdioScalar(ncid, 'snow_canopy_storage_scalar', subname, params_inst%snow_canopy_storage_scalar)
+    ! Temperature canopy snow unload scaling (C2 in Eq. 14, Roesch et al. 2001) (K*s)
+    call readNcdioScalar(ncid, 'snowcan_unload_temp_fact', subname, params_inst%snowcan_unload_temp_fact)
+    ! Wind canopy snow unload scaling (modifies 1.56e5, where 1.56e5 is C3 in Eq. 15, Roesch et al. 2001) (-)
+    call readNcdioScalar(ncid, 'snowcan_unload_wind_fact', subname, params_inst%snowcan_unload_wind_fact)
 
    end subroutine readParams
 
@@ -619,6 +625,7 @@ contains
           )
 
      call CalcTracerFromBulk( &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_nolakep, &
           filter_pts    = filter_nolakep, &
@@ -628,6 +635,7 @@ contains
           tracer_val    = trac_qflx_through_snow(begp:endp))
 
      call CalcTracerFromBulk( &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_nolakep, &
           filter_pts    = filter_nolakep, &
@@ -637,6 +645,7 @@ contains
           tracer_val    = trac_qflx_intercepted_snow(begp:endp))
 
      call CalcTracerFromBulk( &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_nolakep, &
           filter_pts    = filter_nolakep, &
@@ -646,6 +655,7 @@ contains
           tracer_val    = trac_qflx_through_liq(begp:endp))
 
      call CalcTracerFromBulk( &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_nolakep, &
           filter_pts    = filter_nolakep, &
@@ -800,6 +810,7 @@ contains
           )
 
      call CalcTracerFromBulk( &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_soilp, &
           filter_pts    = filter_soilp, &
@@ -809,6 +820,7 @@ contains
           tracer_val    = trac_qflx_liqcanfall(begp:endp))
 
      call CalcTracerFromBulk( &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_soilp, &
           filter_pts    = filter_soilp, &
@@ -904,8 +916,8 @@ contains
            c = patch%column(p)
            g = patch%gridcell(p)
 
-           qflx_snotempunload(p) = max(0._r8,snocan(p)*(forc_t(c)-270.15_r8)/1.87e5_r8)
-           qflx_snowindunload(p) = 0.5_r8*snocan(p)*forc_wind(g)/1.56e5_r8
+           qflx_snotempunload(p) = max(0._r8,snocan(p)*(forc_t(c)-270.15_r8)/params_inst%snowcan_unload_temp_fact)
+           qflx_snowindunload(p) = params_inst%snowcan_unload_wind_fact*snocan(p)*forc_wind(g)/1.56e5_r8
            qflx_snow_unload(p) = min(qflx_snotempunload(p) + qflx_snowindunload(p), snocan(p)/dtime)
         else
            qflx_snotempunload(p) = 0._r8
@@ -951,6 +963,7 @@ contains
           )
 
      call CalcTracerFromBulk( &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_soilp, &
           filter_pts    = filter_soilp, &

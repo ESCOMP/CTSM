@@ -21,7 +21,6 @@
  map_fabm         = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.5x0.5_nomask_to_10x15_nomask_aave_da_c200206.nc'
  map_ftopostats   = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_1km-merge-10min_HYDRO1K-merge-nomask_to_10x15_nomask_aave_da_c130411.nc'
  map_fvic         = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.9x1.25_nomask_to_10x15_nomask_aave_da_c200206.nc'
- map_fch4         = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_0.5x0.5_nomask_to_10x15_nomask_aave_da_c200206.nc'
  mksrf_fsoitex    = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc'
  mksrf_forganic   = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc'
  mksrf_flakwat    = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc'
@@ -37,7 +36,6 @@
  mksrf_fabm       = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc'
  mksrf_ftopostats = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_topostats_1km-merge-10min_HYDRO1K-merge-nomask_simyr2000.c130402.nc'
  mksrf_fvic       = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc'
- mksrf_fch4       = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_ch4inversion_0.5x0.5_cruncep_simyr2000.c191112.nc'
  outnc_double   = .true.
  all_urban      = .false.
  no_inlandwet   = .true.

@@ -11,13 +11,15 @@ module CNVegCarbonFluxType
   use decompMod                          , only : bounds_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, i_litr_min, i_litr_max
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, i_litr_min, i_litr_max, i_cwdl2
   use clm_varcon                         , only : spval, dzsoi_decomp
   use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop
   use clm_varctl                         , only : use_grainproduct
   use clm_varctl                         , only : iulog
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
-  use pftconMod                          , only : npcropmin
+  use pftconMod                          , only : npcropmin, pftcon
+  use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
+  use CropReprPoolsMod                   , only : get_repr_hist_fname, get_repr_rest_fname, get_repr_longname
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
@@ -120,7 +122,7 @@ module CNVegCarbonFluxType
      real(r8), pointer :: m_gresp_xfer_to_litter_fire_patch         (:)     ! (gC/m2/s) from gresp_xfer to litter C due to fire                       
 
      ! phenology fluxes from transfer pools                     
-     real(r8), pointer :: grainc_xfer_to_grainc_patch               (:)     ! grain C growth from storage for prognostic crop(gC/m2/s)
+     real(r8), pointer :: reproductivec_xfer_to_reproductivec_patch(:,:)    ! reproductive (e.g., grain) C growth from storage for prognostic crop(gC/m2/s)
      real(r8), pointer :: leafc_xfer_to_leafc_patch                 (:)     ! leaf C growth from storage (gC/m2/s)
      real(r8), pointer :: frootc_xfer_to_frootc_patch               (:)     ! fine root C growth from storage (gC/m2/s)
      real(r8), pointer :: livestemc_xfer_to_livestemc_patch         (:)     ! live stem C growth from storage (gC/m2/s)
@@ -133,11 +135,13 @@ module CNVegCarbonFluxType
      real(r8), pointer :: leafc_to_litter_fun_patch                 (:)     ! leaf C litterfall used by FUN (gC/m2/s)
      real(r8), pointer :: frootc_to_litter_patch                    (:)     ! fine root C litterfall (gC/m2/s)
      real(r8), pointer :: livestemc_to_litter_patch                 (:)     ! live stem C litterfall (gC/m2/s)
-     real(r8), pointer :: grainc_to_food_patch                      (:)     ! grain C to food for prognostic crop(gC/m2/s)
+     real(r8), pointer :: repr_grainc_to_food_patch               (:,:)     ! grain C to food for prognostic crop(gC/m2/s) [patch, repr_grain_min:repr_grain_max]
+     real(r8), pointer :: repr_structurec_to_cropprod_patch       (:,:)     ! reproductive structure C to crop product pool for prognostic crop (gC/m2/s) [patch, repr_structure_min:repr_structure_max]
+     real(r8), pointer :: repr_structurec_to_litter_patch         (:,:)     ! reproductive structure C to litter for prognostic crop (gC/m2/s) [patch, repr_structure_min:repr_structure_max]
      
      real(r8), pointer :: leafc_to_biofuelc_patch                   (:)     ! leaf C to biofuel C (gC/m2/s)
      real(r8), pointer :: livestemc_to_biofuelc_patch               (:)     ! livestem C to biofuel C (gC/m2/s)
-     real(r8), pointer :: grainc_to_seed_patch                      (:)     ! grain C to seed for prognostic crop(gC/m2/s)
+     real(r8), pointer :: repr_grainc_to_seed_patch               (:,:)     ! grain C to seed for prognostic crop(gC/m2/s) [patch, repr_grain_min:repr_grain_max]
 
      ! maintenance respiration fluxes     
      real(r8), pointer :: cpool_to_resp_patch                       (:)     ! CNflex excess C maintenance respiration (gC/m2/s)
@@ -153,17 +157,17 @@ module CNVegCarbonFluxType
      real(r8), pointer :: froot_mr_patch                            (:)     ! fine root maintenance respiration (gC/m2/s)
      real(r8), pointer :: livestem_mr_patch                         (:)     ! live stem maintenance respiration (gC/m2/s)
      real(r8), pointer :: livecroot_mr_patch                        (:)     ! live coarse root maintenance respiration (gC/m2/s)
-     real(r8), pointer :: grain_mr_patch                            (:)     ! crop grain or organs maint. respiration (gC/m2/s)
+     real(r8), pointer :: reproductive_mr_patch                     (:,:)   ! crop reproductive (e.g., grain) or organs maint. respiration (gC/m2/s)
      real(r8), pointer :: leaf_curmr_patch                          (:)     ! leaf maintenance respiration from current GPP (gC/m2/s)
      real(r8), pointer :: froot_curmr_patch                         (:)     ! fine root maintenance respiration from current GPP (gC/m2/s)
      real(r8), pointer :: livestem_curmr_patch                      (:)     ! live stem maintenance respiration from current GPP (gC/m2/s)
      real(r8), pointer :: livecroot_curmr_patch                     (:)     ! live coarse root maintenance respiration from current GPP (gC/m2/s)
-     real(r8), pointer :: grain_curmr_patch                         (:)     ! crop grain or organs maint. respiration from current GPP (gC/m2/s)
+     real(r8), pointer :: reproductive_curmr_patch                  (:,:)   ! crop reproductive (e.g., grain) or organs maint. respiration from current GPP (gC/m2/s)
      real(r8), pointer :: leaf_xsmr_patch                           (:)     ! leaf maintenance respiration from storage (gC/m2/s)
      real(r8), pointer :: froot_xsmr_patch                          (:)     ! fine root maintenance respiration from storage (gC/m2/s)
      real(r8), pointer :: livestem_xsmr_patch                       (:)     ! live stem maintenance respiration from storage (gC/m2/s)
      real(r8), pointer :: livecroot_xsmr_patch                      (:)     ! live coarse root maintenance respiration from storage (gC/m2/s)
-     real(r8), pointer :: grain_xsmr_patch                          (:)     ! crop grain or organs maint. respiration from storage (gC/m2/s)
+     real(r8), pointer :: reproductive_xsmr_patch                   (:,:)   ! crop reproductive (e.g., grain) or organs maint. respiration from storage (gC/m2/s)
 
      ! photosynthesis fluxes                                   
      real(r8), pointer :: psnsun_to_cpool_patch                     (:)     ! C fixation from sunlit canopy (gC/m2/s)
@@ -171,8 +175,8 @@ module CNVegCarbonFluxType
 
      ! allocation fluxes, from current GPP                     
      real(r8), pointer :: cpool_to_xsmrpool_patch                   (:)     ! allocation to maintenance respiration storage pool (gC/m2/s)
-     real(r8), pointer :: cpool_to_grainc_patch                     (:)     ! allocation to grain C for prognostic crop(gC/m2/s)
-     real(r8), pointer :: cpool_to_grainc_storage_patch             (:)     ! allocation to grain C storage for prognostic crop(gC/m2/s)
+     real(r8), pointer :: cpool_to_reproductivec_patch              (:,:)   ! allocation to reproductive (e.g., grain) C for prognostic crop(gC/m2/s)
+     real(r8), pointer :: cpool_to_reproductivec_storage_patch      (:,:)   ! allocation to reproductive (e.g., grain) C storage for prognostic crop(gC/m2/s)
      real(r8), pointer :: cpool_to_leafc_patch                      (:)     ! allocation to leaf C (gC/m2/s)
      real(r8), pointer :: cpool_to_leafc_storage_patch              (:)     ! allocation to leaf C storage (gC/m2/s)
      real(r8), pointer :: cpool_to_frootc_patch                     (:)     ! allocation to fine root C (gC/m2/s)
@@ -211,12 +215,12 @@ module CNVegCarbonFluxType
      real(r8), pointer :: transfer_deadcroot_gr_patch               (:)     ! dead coarse root growth respiration from storage (gC/m2/s)
 
      ! growth respiration for prognostic crop model
-     real(r8), pointer :: cpool_grain_gr_patch                      (:)     ! grain growth respiration (gC/m2/s)
-     real(r8), pointer :: cpool_grain_storage_gr_patch              (:)     ! grain growth respiration to storage (gC/m2/s)
-     real(r8), pointer :: transfer_grain_gr_patch                   (:)     ! grain growth respiration from storage (gC/m2/s)
+     real(r8), pointer :: cpool_reproductive_gr_patch               (:,:)   ! reproductive (e.g., grain) growth respiration (gC/m2/s)
+     real(r8), pointer :: cpool_reproductive_storage_gr_patch       (:,:)   ! reproductive (e.g., grain) growth respiration to storage (gC/m2/s)
+     real(r8), pointer :: transfer_reproductive_gr_patch            (:,:)   ! reproductive (e.g., grain) growth respiration from storage (gC/m2/s)
 
      ! annual turnover of storage to transfer pools            
-     real(r8), pointer :: grainc_storage_to_xfer_patch              (:)     ! grain C shift storage to transfer for prognostic crop model (gC/m2/s)
+     real(r8), pointer :: reproductivec_storage_to_xfer_patch       (:,:)   ! reproductive (e.g., grain) C shift storage to transfer for prognostic crop model (gC/m2/s)
      real(r8), pointer :: leafc_storage_to_xfer_patch               (:)     ! leaf C shift storage to transfer (gC/m2/s)
      real(r8), pointer :: frootc_storage_to_xfer_patch              (:)     ! fine root C shift storage to transfer (gC/m2/s)
      real(r8), pointer :: livestemc_storage_to_xfer_patch           (:)     ! live stem C shift storage to transfer (gC/m2/s)
@@ -242,8 +246,8 @@ module CNVegCarbonFluxType
      ! harvest
      real(r8), pointer :: harvest_c_to_litr_c_col                   (:,:,:) ! C fluxes associated with harvest to litter pools (gC/m3/s)
      real(r8), pointer :: harvest_c_to_cwdc_col                     (:,:)   ! C fluxes associated with harvest to CWD pool (gC/m3/s)
-     real(r8), pointer :: grainc_to_cropprodc_patch                 (:)     ! grain C to crop product pool (gC/m2/s)
-     real(r8), pointer :: grainc_to_cropprodc_col                   (:)     ! grain C to crop product pool (gC/m2/s)
+     real(r8), pointer :: crop_harvestc_to_cropprodc_patch          (:)     ! crop harvest C to crop product pool (gC/m2/s)
+     real(r8), pointer :: crop_harvestc_to_cropprodc_col            (:)     ! crop harvest C to crop product pool (gC/m2/s)
 
      ! fire fluxes
      real(r8), pointer :: m_decomp_cpools_to_fire_vr_col            (:,:,:) ! vertically-resolved decomposing C fire loss (gC/m3/s)
@@ -366,6 +370,9 @@ module CNVegCarbonFluxType
      real(r8), pointer :: nep_col        (:) ! (gC/m2/s) net ecosystem production, excludes fire, landuse, and harvest flux, positive for sink
      real(r8), pointer :: nbp_grc        (:) ! (gC/m2/s) net biome production, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for sink (same as net carbon exchange between land and atmosphere)
      real(r8), pointer :: nee_grc        (:) ! (gC/m2/s) net ecosystem exchange of carbon, includes fire and hrv_xsmrpool, excludes landuse and harvest flux, positive for source 
+
+     ! Plant C to N ratios
+     real(r8), pointer :: ligninNratioAvg_col(:)  ! Average of leaf, fine root, and CWD lignin to N ratio
 
      ! Dynamic landcover fluxnes
      real(r8), pointer :: landuseflux_grc(:) ! (gC/m2/s) dwt_conv_cflux+gru_conv_cflux+product_closs
@@ -558,17 +565,17 @@ contains
     allocate(this%froot_mr_patch                            (begp:endp)) ; this%froot_mr_patch                            (:) = nan
     allocate(this%livestem_mr_patch                         (begp:endp)) ; this%livestem_mr_patch                         (:) = nan
     allocate(this%livecroot_mr_patch                        (begp:endp)) ; this%livecroot_mr_patch                        (:) = nan
-    allocate(this%grain_mr_patch                            (begp:endp)) ; this%grain_mr_patch                            (:) = nan
+    allocate(this%reproductive_mr_patch              (begp:endp, nrepr)) ; this%reproductive_mr_patch                   (:,:) = nan
     allocate(this%leaf_curmr_patch                          (begp:endp)) ; this%leaf_curmr_patch                          (:) = nan
     allocate(this%froot_curmr_patch                         (begp:endp)) ; this%froot_curmr_patch                         (:) = nan
     allocate(this%livestem_curmr_patch                      (begp:endp)) ; this%livestem_curmr_patch                      (:) = nan
     allocate(this%livecroot_curmr_patch                     (begp:endp)) ; this%livecroot_curmr_patch                     (:) = nan
-    allocate(this%grain_curmr_patch                         (begp:endp)) ; this%grain_curmr_patch                         (:) = nan
+    allocate(this%reproductive_curmr_patch           (begp:endp, nrepr)) ; this%reproductive_curmr_patch                (:,:) = nan
     allocate(this%leaf_xsmr_patch                           (begp:endp)) ; this%leaf_xsmr_patch                           (:) = nan
     allocate(this%froot_xsmr_patch                          (begp:endp)) ; this%froot_xsmr_patch                          (:) = nan
     allocate(this%livestem_xsmr_patch                       (begp:endp)) ; this%livestem_xsmr_patch                       (:) = nan
     allocate(this%livecroot_xsmr_patch                      (begp:endp)) ; this%livecroot_xsmr_patch                      (:) = nan
-    allocate(this%grain_xsmr_patch                          (begp:endp)) ; this%grain_xsmr_patch                          (:) = nan
+    allocate(this%reproductive_xsmr_patch            (begp:endp, nrepr)) ; this%reproductive_xsmr_patch                 (:,:) = nan
     allocate(this%psnsun_to_cpool_patch                     (begp:endp)) ; this%psnsun_to_cpool_patch                     (:) = nan
     allocate(this%psnshade_to_cpool_patch                   (begp:endp)) ; this%psnshade_to_cpool_patch                   (:) = nan
     allocate(this%cpool_to_xsmrpool_patch                   (begp:endp)) ; this%cpool_to_xsmrpool_patch                   (:) = nan
@@ -624,21 +631,26 @@ contains
     allocate(this%xsmrpool_recover_patch                    (begp:endp)) ; this%xsmrpool_recover_patch                    (:) = nan
     allocate(this%xsmrpool_c13ratio_patch                   (begp:endp)) ; this%xsmrpool_c13ratio_patch                   (:) = nan
 
-    allocate(this%cpool_to_grainc_patch                     (begp:endp)) ; this%cpool_to_grainc_patch                     (:) = nan
-    allocate(this%cpool_to_grainc_storage_patch             (begp:endp)) ; this%cpool_to_grainc_storage_patch             (:) = nan
+    allocate(this%cpool_to_reproductivec_patch       (begp:endp, nrepr)) ; this%cpool_to_reproductivec_patch            (:,:) = nan
+    allocate(this%cpool_to_reproductivec_storage_patch(begp:endp, nrepr)); this%cpool_to_reproductivec_storage_patch    (:,:) = nan
     allocate(this%livestemc_to_litter_patch                 (begp:endp)) ; this%livestemc_to_litter_patch                 (:) = nan
-    allocate(this%grainc_to_food_patch                      (begp:endp)) ; this%grainc_to_food_patch                      (:) = nan
+    allocate(this%repr_grainc_to_food_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainc_to_food_patch (:,:) = nan
+    allocate(this%repr_structurec_to_cropprod_patch(begp:endp, repr_structure_min:repr_structure_max))
+    this%repr_structurec_to_cropprod_patch(:,:) = nan
+    allocate(this%repr_structurec_to_litter_patch(begp:endp, repr_structure_min:repr_structure_max))
+    this%repr_structurec_to_litter_patch(:,:) = nan
     allocate(this%leafc_to_biofuelc_patch                   (begp:endp)) ; this%leafc_to_biofuelc_patch                   (:) = nan
     allocate(this%livestemc_to_biofuelc_patch               (begp:endp)) ; this%livestemc_to_biofuelc_patch               (:) = nan
-    allocate(this%grainc_to_seed_patch                      (begp:endp)) ; this%grainc_to_seed_patch                      (:) = nan
-    allocate(this%grainc_xfer_to_grainc_patch               (begp:endp)) ; this%grainc_xfer_to_grainc_patch               (:) = nan
-    allocate(this%cpool_grain_gr_patch                      (begp:endp)) ; this%cpool_grain_gr_patch                      (:) = nan
-    allocate(this%cpool_grain_storage_gr_patch              (begp:endp)) ; this%cpool_grain_storage_gr_patch              (:) = nan
-    allocate(this%transfer_grain_gr_patch                   (begp:endp)) ; this%transfer_grain_gr_patch                   (:) = nan
+    allocate(this%repr_grainc_to_seed_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainc_to_seed_patch (:,:) = nan
+    allocate(this%reproductivec_xfer_to_reproductivec_patch(begp:endp, nrepr))
+    this%reproductivec_xfer_to_reproductivec_patch(:,:) = nan
+    allocate(this%cpool_reproductive_gr_patch        (begp:endp, nrepr)) ; this%cpool_reproductive_gr_patch             (:,:) = nan
+    allocate(this%cpool_reproductive_storage_gr_patch(begp:endp, nrepr)) ; this%cpool_reproductive_storage_gr_patch     (:,:) = nan
+    allocate(this%transfer_reproductive_gr_patch     (begp:endp, nrepr)) ; this%transfer_reproductive_gr_patch          (:,:) = nan
     allocate(this%xsmrpool_to_atm_patch                     (begp:endp)) ; this%xsmrpool_to_atm_patch                     (:) = 0.0_r8
     allocate(this%xsmrpool_to_atm_col                       (begc:endc)) ; this%xsmrpool_to_atm_col                       (:) = 0.0_r8
     allocate(this%xsmrpool_to_atm_grc                       (begg:endg)) ; this%xsmrpool_to_atm_grc                       (:) = 0.0_r8
-    allocate(this%grainc_storage_to_xfer_patch              (begp:endp)) ; this%grainc_storage_to_xfer_patch              (:) = nan
+    allocate(this%reproductivec_storage_to_xfer_patch(begp:endp, nrepr)) ; this%reproductivec_storage_to_xfer_patch     (:,:) = nan
     allocate(this%frootc_alloc_patch                        (begp:endp)) ; this%frootc_alloc_patch                        (:) = nan
     allocate(this%frootc_loss_patch                         (begp:endp)) ; this%frootc_loss_patch                         (:) = nan
     allocate(this%leafc_alloc_patch                         (begp:endp)) ; this%leafc_alloc_patch                         (:) = nan
@@ -712,11 +724,11 @@ contains
     allocate(this%cwdc_loss_col                     (begc:endc))                  ; this%cwdc_loss_col             (:)  =nan
     allocate(this%litterc_loss_col                  (begc:endc))                  ; this%litterc_loss_col          (:)  =nan
 
-    allocate(this%grainc_to_cropprodc_patch(begp:endp))
-    this%grainc_to_cropprodc_patch(:) = nan
+    allocate(this%crop_harvestc_to_cropprodc_patch(begp:endp))
+    this%crop_harvestc_to_cropprodc_patch(:) = nan
 
-    allocate(this%grainc_to_cropprodc_col(begc:endc))
-    this%grainc_to_cropprodc_col(:) = nan
+    allocate(this%crop_harvestc_to_cropprodc_col(begc:endc))
+    this%crop_harvestc_to_cropprodc_col(:) = nan
 
     allocate(this%m_decomp_cpools_to_fire_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                
     this%m_decomp_cpools_to_fire_vr_col(:,:,:)= nan
@@ -763,6 +775,8 @@ contains
     allocate(this%annsum_litfall_patch    (begp:endp)) ; this%annsum_litfall_patch    (:) = nan
     allocate(this%annsum_npp_col          (begc:endc)) ; this%annsum_npp_col          (:) = nan
     allocate(this%lag_npp_col             (begc:endc)) ; this%lag_npp_col             (:) = spval
+
+    allocate(this%ligninNratioAvg_col     (begc:endc)) ; this%ligninNratioAvg_col     (:) = nan
 
     allocate(this%nep_col                 (begc:endc)) ; this%nep_col                 (:) = nan
     allocate(this%nbp_grc                 (begg:endg)) ; this%nbp_grc                 (:) = nan
@@ -854,7 +868,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer           :: k,l,ii,jj
-    character(1)      :: k_str
     character(8)      :: vr_suffix
     character(10)     :: active
     integer           :: begp,endp
@@ -883,10 +896,17 @@ contains
     if (carbon_type == 'c12') then
 
        if (use_crop) then
-          this%grainc_to_food_patch(begp:endp) = spval
-          call hist_addfld1d (fname='GRAINC_TO_FOOD', units='gC/m^2/s', &
-               avgflag='A', long_name='grain C to food', &
-               ptr_patch=this%grainc_to_food_patch)
+          this%repr_grainc_to_food_patch(begp:endp,:) = spval
+          do k = repr_grain_min, repr_grain_max
+             data1dptr => this%repr_grainc_to_food_patch(:,k)
+             call hist_addfld1d ( &
+                  ! e.g., GRAINC_TO_FOOD
+                  fname=get_repr_hist_fname(k)//'C_TO_FOOD', &
+                  units='gC/m^2/s', &
+                  avgflag='A', &
+                  long_name=get_repr_longname(k)//' C to food', &
+                  ptr_patch=data1dptr)
+          end do
 
           this%leafc_to_biofuelc_patch(begp:endp) = spval
           call hist_addfld1d (fname='LEAFC_TO_BIOFUELC', units='gC/m^2/s', &
@@ -898,10 +918,17 @@ contains
                avgflag='A', long_name='livestem C to biofuel C', &
                ptr_patch=this%livestemc_to_biofuelc_patch)
 
-          this%grainc_to_seed_patch(begp:endp) = spval
-          call hist_addfld1d (fname='GRAINC_TO_SEED', units='gC/m^2/s', &
-               avgflag='A', long_name='grain C to seed', &
-               ptr_patch=this%grainc_to_seed_patch)
+          this%repr_grainc_to_seed_patch(begp:endp,:) = spval
+          do k = repr_grain_min, repr_grain_max
+             data1dptr => this%repr_grainc_to_seed_patch(:,k)
+             call hist_addfld1d ( &
+                  ! e.g., GRAINC_TO_SEED
+                  fname=get_repr_hist_fname(k)//'C_TO_SEED', &
+                  units='gC/m^2/s', &
+                  avgflag='A', &
+                  long_name=get_repr_longname(k)//' C to seed', &
+                  ptr_patch=data1dptr)
+          end do
        end if
 
        this%litterc_loss_col(begc:endc) = spval
@@ -2966,11 +2993,10 @@ contains
             ptr_patch=this%dwt_slash_cflux_patch, default='inactive')
 
        do k = i_litr_min, i_litr_max
-          write(k_str,'(I1)') k  ! convert 1-digit integer to string
           this%dwt_frootc_to_litr_c_col(begc:endc,:,k) = spval
           data2dptr => this%dwt_frootc_to_litr_c_col(begc:endc,:,k)
-          fieldname = 'DWT_FROOTC_TO_LITR_'//k_str//'_C'
-          longname =  'fine root to litter_'//k_str//' due to landcover change'
+          fieldname = 'DWT_FROOTC_TO_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C'
+          longname =  'fine root to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' due to landcover change'
           call hist_addfld_decomp (fname=fieldname, units='gC/m^2/s',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
                ptr_col=data2dptr, default='inactive')
@@ -3168,11 +3194,10 @@ contains
             ptr_patch=this%dwt_slash_cflux_patch, default='inactive')
 
        do k = i_litr_min, i_litr_max
-          write(k_str,'(I1)') k  ! convert 1-digit integer to string
           this%dwt_frootc_to_litr_c_col(begc:endc,:,k) = spval
           data2dptr => this%dwt_frootc_to_litr_c_col(begc:endc,:,k)
-          fieldname = 'C13_DWT_FROOTC_TO_LITR_'//k_str//'_C'
-          longname =  'C13 fine root to litter_'//k_str//' due to landcover change'
+          fieldname = 'C13_DWT_FROOTC_TO_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C'
+          longname =  'C13 fine root to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' due to landcover change'
           call hist_addfld_decomp (fname=fieldname, units='gC/m^2/s',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
                ptr_col=data2dptr, default='inactive')
@@ -3329,11 +3354,10 @@ contains
             ptr_patch=this%dwt_slash_cflux_patch, default='inactive')
 
        do k = i_litr_min, i_litr_max
-          write(k_str,'(I1)') k  ! convert 1-digit integer to string
           this%dwt_frootc_to_litr_c_col(begc:endc,:,k) = spval
           data2dptr => this%dwt_frootc_to_litr_c_col(begc:endc,:,k)
-          fieldname = 'C14_DWT_FROOTC_TO_LITR_'//k_str//'_C'
-          longname =  'C14 fine root to litter_'//k_str//' due to landcover change'
+          fieldname = 'C14_DWT_FROOTC_TO_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C'
+          longname =  'C14 fine root to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' due to landcover change'
           call hist_addfld_decomp (fname=fieldname, units='gC/m^2/s',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
                ptr_col=data2dptr, default='inactive')
@@ -3513,12 +3537,12 @@ contains
 
        if (lun%ifspecial(l)) then
           this%annsum_npp_col(c) = spval
+          this%ligninNratioAvg_col(c) = spval
        end if
 
-       ! also initialize dynamic landcover fluxes so that they have
-       ! real values on first timestep, prior to calling pftdyn_cnbal
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%annsum_npp_col(c) = 0._r8   
+          this%ligninNratioAvg_col(c) = 0._r8
        end if
     end do
 
@@ -3578,56 +3602,114 @@ contains
     character(len=*)  , intent(in)    :: flag   !'read' or 'write'
     !
     ! !LOCAL VARIABLES:
-    integer :: j,c ! indices
+    integer :: j,k,c ! indices
     logical :: readvar      ! determine if variable is on initial file
+    character(len=256) :: varname
+    real(r8), pointer :: data1dptr(:)  ! temp. pointer for slicing larger arrays
     !------------------------------------------------------------------------
 
     if (use_crop) then
 
-       call restartvar(ncid=ncid, flag=flag,  varname='grainc_xfer_to_grainc', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='grain C growth from storage', units='gC/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%grainc_xfer_to_grainc_patch)
+       do k = 1, nrepr
+          data1dptr => this%reproductivec_xfer_to_reproductivec_patch(:,k)
+          ! e.g., grainc_xfer_to_grainc
+          varname = get_repr_rest_fname(k)//'c_xfer_to_'//get_repr_rest_fname(k)//'c'
+          call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+               xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name=get_repr_longname(k)//' C growth from storage', &
+               units='gC/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
 
        call restartvar(ncid=ncid, flag=flag,  varname='livestemc_to_litter', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='live stem C litterfall', units='gC/m2/s', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_to_litter_patch)
 
-       call restartvar(ncid=ncid, flag=flag,  varname='grainc_to_food', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='grain C to food', units='gC/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%grainc_to_food_patch)
+       do k = repr_grain_min, repr_grain_max
+          data1dptr => this%repr_grainc_to_food_patch(:,k)
+          ! e.g., grainc_to_food
+          varname = get_repr_rest_fname(k)//'c_to_food'
+          call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+               xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name=get_repr_longname(k)//' C to food', &
+               units='gC/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
             
-       call restartvar(ncid=ncid, flag=flag,  varname='cpool_to_grainc', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='allocation to grain C', units='gC/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%cpool_to_grainc_patch)
+       do k = 1, nrepr
+          data1dptr => this%cpool_to_reproductivec_patch(:,k)
+          ! e.g., cpool_to_grainc
+          varname = 'cpool_to_'//get_repr_rest_fname(k)//'c'
+          call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+               xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name='allocation to '//get_repr_longname(k)//' C', &
+               units='gC/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
 
-       call restartvar(ncid=ncid, flag=flag,  varname='cpool_to_grainc_storage', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='allocation to grain C storage', units='gC/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%cpool_to_grainc_storage_patch)
+       do k = 1, nrepr
+          data1dptr => this%cpool_to_reproductivec_storage_patch(:,k)
+          ! e.g., cpool_to_grainc_storage
+          varname = 'cpool_to_'//get_repr_rest_fname(k)//'c_storage'
+          call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+               xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name='allocation to '//get_repr_longname(k)//' C storage', &
+               units='gC/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
 
-       call restartvar(ncid=ncid, flag=flag,  varname='cpool_grain_gr', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='grain growth respiration', units='gC/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%cpool_grain_gr_patch)
+       do k = 1, nrepr
+          data1dptr => this%cpool_reproductive_gr_patch(:,k)
+          ! e.g., cpool_grain_gr
+          varname = 'cpool_'//get_repr_rest_fname(k)//'_gr'
+          call restartvar(ncid=ncid, flag=flag, varname=varname, &
+               xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name=get_repr_longname(k)//' growth respiration', &
+               units='gC/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
 
-       call restartvar(ncid=ncid, flag=flag,  varname='cpool_grain_storage_gr', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='grain growth respiration to storage', units='gC/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%cpool_grain_storage_gr_patch)
+       do k = 1, nrepr
+          data1dptr => this%cpool_reproductive_storage_gr_patch(:,k)
+          ! e.g., cpool_grain_storage_gr
+          varname = 'cpool_'//get_repr_rest_fname(k)//'_storage_gr'
+          call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+               xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name=get_repr_longname(k)//' growth respiration to storage', &
+               units='gC/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
 
-       call restartvar(ncid=ncid, flag=flag,  varname='transfer_grain_gr', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='grain growth respiration from storage', units='gC/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%transfer_grain_gr_patch)
+       do k = 1, nrepr
+          data1dptr => this%transfer_reproductive_gr_patch(:,k)
+          ! e.g., transfer_grain_gr
+          varname = 'transfer_'//get_repr_rest_fname(k)//'_gr'
+          call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+               xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name=get_repr_longname(k)//' growth respiration from storage', &
+               units='gC/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
 
-       call restartvar(ncid=ncid, flag=flag,  varname='grainc_storage_to_xfer', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='grain C shift storage to transfer', units='gC/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%grainc_storage_to_xfer_patch)
+       do k = 1, nrepr
+          data1dptr => this%reproductivec_storage_to_xfer_patch(:,k)
+          ! e.g., grainc_storage_to_xfer
+          varname = get_repr_rest_fname(k)//'c_storage_to_xfer'
+          call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+               xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name=get_repr_longname(k)//' C shift storage to transfer', &
+               units='gC/m2/s', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
 
     end if
 
@@ -3685,6 +3767,11 @@ contains
          dim1name='column', &
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%annsum_npp_col) 
+
+    call restartvar(ncid=ncid, flag=flag, varname='ligninNratioAvg', xtype=ncd_double,  &
+         dim1name='column', &
+         long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%ligninNratioAvg_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='tempsum_litfall', xtype=ncd_double,  &
          dim1name='pft', &
@@ -3887,17 +3974,14 @@ contains
        this%froot_mr_patch(i)                            = value_patch
        this%livestem_mr_patch(i)                         = value_patch
        this%livecroot_mr_patch(i)                        = value_patch
-       this%grain_mr_patch(i)                            = value_patch
        this%leaf_curmr_patch(i)                          = value_patch
        this%froot_curmr_patch(i)                         = value_patch
        this%livestem_curmr_patch(i)                      = value_patch
        this%livecroot_curmr_patch(i)                     = value_patch
-       this%grain_curmr_patch(i)                         = value_patch
        this%leaf_xsmr_patch(i)                           = value_patch
        this%froot_xsmr_patch(i)                          = value_patch
        this%livestem_xsmr_patch(i)                       = value_patch
        this%livecroot_xsmr_patch(i)                      = value_patch
-       this%grain_xsmr_patch(i)                          = value_patch
        this%psnsun_to_cpool_patch(i)                     = value_patch
        this%psnshade_to_cpool_patch(i)                   = value_patch
        this%cpool_to_xsmrpool_patch(i)                   = value_patch
@@ -3953,7 +4037,16 @@ contains
        this%woodc_loss_patch(i)                          = value_patch
 
        this%crop_seedc_to_leaf_patch(i)                  = value_patch
-       this%grainc_to_cropprodc_patch(i)                 = value_patch
+       this%crop_harvestc_to_cropprodc_patch(i)          = value_patch
+    end do
+
+    do k = 1, nrepr
+       do fi = 1,num_patch
+          i = filter_patch(fi)
+          this%reproductive_mr_patch(i,k)    = value_patch
+          this%reproductive_curmr_patch(i,k) = value_patch
+          this%reproductive_xsmr_patch(i,k)  = value_patch
+       end do
     end do
 
     if ( use_crop )then
@@ -3961,19 +4054,37 @@ contains
           i = filter_patch(fi)
           this%xsmrpool_to_atm_patch(i)         = value_patch
           this%livestemc_to_litter_patch(i)     = value_patch
-          this%grainc_to_food_patch(i)          = value_patch
-
           this%leafc_to_biofuelc_patch(i)       = value_patch
           this%livestemc_to_biofuelc_patch(i)   = value_patch
-          
-          this%grainc_to_seed_patch(i)          = value_patch
-          this%grainc_xfer_to_grainc_patch(i)   = value_patch
-          this%cpool_to_grainc_patch(i)         = value_patch
-          this%cpool_to_grainc_storage_patch(i) = value_patch
-          this%cpool_grain_gr_patch(i)          = value_patch
-          this%cpool_grain_storage_gr_patch(i)  = value_patch
-          this%transfer_grain_gr_patch(i)       = value_patch
-          this%grainc_storage_to_xfer_patch(i)  = value_patch
+       end do
+
+       do k = 1, nrepr
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%reproductivec_xfer_to_reproductivec_patch(i,k) = value_patch
+             this%cpool_to_reproductivec_patch(i,k)                    = value_patch
+             this%cpool_to_reproductivec_storage_patch(i,k)            = value_patch
+             this%cpool_reproductive_gr_patch(i,k)                     = value_patch
+             this%cpool_reproductive_storage_gr_patch(i,k)             = value_patch
+             this%transfer_reproductive_gr_patch(i,k)                  = value_patch
+             this%reproductivec_storage_to_xfer_patch(i,k)             = value_patch
+          end do
+       end do
+
+       do k = repr_grain_min, repr_grain_max
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%repr_grainc_to_food_patch(i,k) = value_patch
+             this%repr_grainc_to_seed_patch(i,k) = value_patch
+          end do
+       end do
+
+       do k = repr_structure_min, repr_structure_max
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%repr_structurec_to_cropprod_patch(i,k) = value_patch
+             this%repr_structurec_to_litter_patch(i,k)   = value_patch
+          end do
        end do
     end if
 
@@ -4015,7 +4126,7 @@ contains
     do fi = 1,num_column
        i = filter_column(fi)
 
-       this%grainc_to_cropprodc_col(i)       = value_column
+       this%crop_harvestc_to_cropprodc_col(i)       = value_column
        this%cwdc_loss_col(i)                 = value_column
        this%litterc_loss_col(i)              = value_column
 
@@ -4150,6 +4261,7 @@ contains
        bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, isotope, &
        soilbiogeochem_hr_col, soilbiogeochem_cwdhr_col, soilbiogeochem_lithr_col, &
        soilbiogeochem_decomp_cascade_ctransfer_col, &
+       soilbiogeochem_cwdc_col, soilbiogeochem_cwdn_col, &
        product_closs_grc)
     !
     ! !DESCRIPTION:
@@ -4160,8 +4272,8 @@ contains
     use clm_varcon                         , only: secspday
     use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
     use subgridAveMod                      , only: p2c, c2g
-    use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con
-    use CNSharedParamsMod                  , only: use_fun
+    use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con, mimics_decomp, decomp_method
+    use CNSharedParamsMod                  , only: use_fun, CNParamsShareInst
     !
     ! !ARGUMENTS:
     class(cnveg_carbonflux_type)   :: this
@@ -4175,6 +4287,8 @@ contains
     real(r8)          , intent(in) :: soilbiogeochem_cwdhr_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_lithr_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_decomp_cascade_ctransfer_col(bounds%begc:,1:)
+    real(r8)          , intent(in) :: soilbiogeochem_cwdc_col(bounds%begc:)
+    real(r8)          , intent(in) :: soilbiogeochem_cwdn_col(bounds%begc:)
     real(r8)          , intent(in) :: product_closs_grc(bounds%begg:)
     !
     ! !LOCAL VARIABLES:
@@ -4182,6 +4296,13 @@ contains
     integer  :: fp,fc           ! lake filter indices
     real(r8) :: nfixlags, dtime ! temp variables for making lagged npp
     real(r8) :: maxdepth        ! depth to integrate soil variables
+    real(r8) :: ligninNratio_cwd  ! lignin to N ratio of CWD
+    real(r8) :: ligninNratio_leaf_patch(bounds%begp:bounds%endp)  ! lignin to N ratio of leaves, patch level
+    real(r8) :: ligninNratio_froot_patch(bounds%begp:bounds%endp)  ! lignin to N ratio of fine roots, patch level
+    real(r8) :: ligninNratio_leaf_col(bounds%begc:bounds%endc)  ! lignin to N ratio of leaves, column level
+    real(r8) :: ligninNratio_froot_col(bounds%begc:bounds%endc)  ! lignin to N ratio of fine roots, column level
+    real(r8) :: leafc_to_litter_col(bounds%begc:bounds%endc)  ! leaf C to litter C, column level
+    real(r8) :: frootc_to_litter_col(bounds%begc:bounds%endc)  ! fine root C to litter C, column level
     real(r8) :: nep_grc(bounds%begg:bounds%endg)        ! nep_col averaged to gridcell
     real(r8) :: fire_closs_grc(bounds%begg:bounds%endg) ! fire_closs_col averaged to gridcell
     real(r8) :: hrv_xsmrpool_to_atm_grc(bounds%begg:bounds%endg) ! hrv_xsmrpool_to_atm_col averaged to gridcell (gC/m2/s)
@@ -4223,9 +4344,11 @@ contains
                this%livecroot_mr_patch(p)
        end if
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
-          this%mr_patch(p) = &
-               this%mr_patch(p) + &
-               this%grain_mr_patch(p)
+          do k = 1, nrepr
+             this%mr_patch(p) = &
+                  this%mr_patch(p) + &
+                  this%reproductive_mr_patch(p,k)
+          end do
        end if
 
        ! growth respiration (GR)
@@ -4239,8 +4362,10 @@ contains
             this%cpool_livecroot_gr_patch(p) + &
             this%cpool_deadcroot_gr_patch(p)
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
-          this%current_gr_patch(p) = this%current_gr_patch(p) + &
-               this%cpool_grain_gr_patch(p)
+          do k = 1, nrepr
+             this%current_gr_patch(p) = this%current_gr_patch(p) + &
+                  this%cpool_reproductive_gr_patch(p,k)
+          end do
        end if
 
 
@@ -4253,8 +4378,10 @@ contains
             this%transfer_livecroot_gr_patch(p) + &
             this%transfer_deadcroot_gr_patch(p)
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
-          this%transfer_gr_patch(p) = this%transfer_gr_patch(p) + &
-               this%transfer_grain_gr_patch(p)
+          do k = 1, nrepr
+             this%transfer_gr_patch(p) = this%transfer_gr_patch(p) + &
+                  this%transfer_reproductive_gr_patch(p,k)
+          end do
        end if
 
        ! storage GR is respired this time step for growth sent to storage for later display
@@ -4267,8 +4394,10 @@ contains
             this%cpool_deadcroot_storage_gr_patch(p)
 
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
-          this%storage_gr_patch(p) = this%storage_gr_patch(p) + &
-               this%cpool_grain_storage_gr_patch(p)
+          do k = 1, nrepr
+             this%storage_gr_patch(p) = this%storage_gr_patch(p) + &
+                  this%cpool_reproductive_storage_gr_patch(p,k)
+          end do
        end if
 
        ! GR is the sum of current + transfer + storage GR
@@ -4338,10 +4467,12 @@ contains
             this%deadstemc_xfer_to_deadstemc_patch(p)
 
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
-          this%agnpp_patch(p) =      &
-               this%agnpp_patch(p) + &
-               this%cpool_to_grainc_patch(p)            + &
-               this%grainc_xfer_to_grainc_patch(p)
+          do k = 1, nrepr
+             this%agnpp_patch(p) =      &
+                  this%agnpp_patch(p) + &
+                  this%cpool_to_reproductivec_patch(p,k)            + &
+                  this%reproductivec_xfer_to_reproductivec_patch(p,k)
+          end do
        end if
 
        ! belowground NPP: fine root, live coarse root, dead coarse root (BGNPP)
@@ -4435,10 +4566,18 @@ contains
                this%livestemc_to_litter_patch(p)
 
           if (.not. use_grainproduct) then
+             do k = repr_grain_min, repr_grain_max
+                this%litfall_patch(p) = &
+                     this%litfall_patch(p) + &
+                     this%repr_grainc_to_food_patch(p,k)
+             end do
+          end if
+
+          do k = repr_structure_min, repr_structure_max
              this%litfall_patch(p) = &
                   this%litfall_patch(p) + &
-                  this%grainc_to_food_patch(p)
-          end if
+                  this%repr_structurec_to_litter_patch(p,k)
+          end do
        end if
 
        ! update the annual litfall accumulator, for use in mortality code
@@ -4599,6 +4738,17 @@ contains
             this%gru_livecrootc_to_litter_patch(p) + &
             this%gru_deadcrootc_to_litter_patch(p)
 
+       if (decomp_method == mimics_decomp) then
+          ! Calculate ligninNratio for leaves and fine roots
+          associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
+            ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
+                                         pftcon%lflitcn(ivt(p)) * &
+                                         this%leafc_to_litter_patch(p)
+            ligninNratio_froot_patch(p) = pftcon%fr_flig(ivt(p)) * &
+                                          pftcon%frootcn(ivt(p)) * &
+                                          this%frootc_to_litter_patch(p)
+          end associate
+       end if
     end do  ! end of patches loop
 
     !------------------------------------------------
@@ -4646,6 +4796,39 @@ contains
     call p2c(bounds, num_soilc, filter_soilc, &
          this%gpp_patch(bounds%begp:bounds%endp), &
          this%gpp_col(bounds%begc:bounds%endc))
+
+    if (decomp_method == mimics_decomp) then
+       call p2c(bounds, num_soilc, filter_soilc, &
+            ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
+            ligninNratio_leaf_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            ligninNratio_froot_patch(bounds%begp:bounds%endp), &
+            ligninNratio_froot_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%leafc_to_litter_patch(bounds%begp:bounds%endp), &
+            leafc_to_litter_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%frootc_to_litter_patch(bounds%begp:bounds%endp), &
+            frootc_to_litter_col(bounds%begc:bounds%endc))
+
+       ! Calculate ligninNratioAve
+       do fc = 1,num_soilc
+          c = filter_soilc(fc)
+          if (soilbiogeochem_cwdn_col(c) > 0._r8) then
+             ligninNratio_cwd = CNParamsShareInst%cwd_flig * &
+                (soilbiogeochem_cwdc_col(c) / soilbiogeochem_cwdn_col(c)) * &
+                soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2)
+          else
+             ligninNratio_cwd = 0._r8
+          end if
+          this%ligninNratioAvg_col(c) = &
+             (ligninNratio_leaf_col(c) + ligninNratio_froot_col(c) + &
+              ligninNratio_cwd) / &
+              max(1.0e-3_r8, leafc_to_litter_col(c) + &
+                             frootc_to_litter_col(c) + &
+                             soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2))
+       end do
+    end if
 
     ! this code is to calculate an exponentially-relaxed npp value for use in NDynamics code
 

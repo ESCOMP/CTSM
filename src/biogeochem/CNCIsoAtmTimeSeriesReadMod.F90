@@ -5,7 +5,7 @@ module CIsoAtmTimeseriesMod
   !
   ! !USES:
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use clm_time_manager , only : get_curr_date,get_days_per_year, get_curr_yearfrac
+  use clm_time_manager , only : get_curr_date, get_curr_yearfrac
   use clm_varcon       , only : c14ratio, secspday
   use shr_const_mod    , only : SHR_CONST_PDB                    ! Ratio of C13/C12
   use clm_varctl       , only : iulog

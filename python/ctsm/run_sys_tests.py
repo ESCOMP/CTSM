@@ -1,6 +1,5 @@
 """Functions implementing run_sys_tests command"""
 
-from __future__ import print_function
 import argparse
 import logging
 import os
@@ -13,7 +12,8 @@ from CIME.cs_status_creator import create_cs_status  # pylint: disable=import-er
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.machine_utils import get_machine_name
-from ctsm.machine import create_machine, get_possibly_overridden_mach_value
+from ctsm.machine import (create_machine, get_possibly_overridden_mach_value,
+                          CREATE_TEST_QUEUE_UNSPECIFIED)
 from ctsm.machine_defaults import MACHINE_DEFAULTS
 from ctsm.os_utils import make_link
 from ctsm.path_utils import path_to_ctsm_root
@@ -119,13 +119,15 @@ def run_sys_tests(machine, cime_path,
         that is None, then the test suite will determine it automatically)
     walltime (str): walltime to use for each test (if not provided, the test suite will
         determine it automatically)
-    queue (str): queue to use for each test (if not provided, the test suite will
-        determine it automatically)
+    queue (str): queue to use for each test (if not provided, will use the default for
+        this machine based on the passed-in machine object; if that is unspecified, then
+        the test suite will determine it automatically)
     retry (int): retry value to pass to create_test (if not provided, will use the default
         for this machine)
     extra_create_test_args (str): any extra arguments to create_test, as a single,
         space-delimited string
     testlist: list of strings giving test names to run
+
     """
     num_provided_options = ((suite_name is not None) +
                             (testfile is not None) +
@@ -140,10 +142,28 @@ def run_sys_tests(machine, cime_path,
     testroot = _get_testroot(testroot_base, testid_base)
     if not (skip_testroot_creation or rerun_existing_failures):
         _make_testroot(testroot, testid_base, dry_run)
+    else:
+        if not os.path.exists(testroot):
+            raise RuntimeError("testroot directory does NOT exist as expected when a rerun" +
+                               " option is used: directory expected = "+testroot )
     print("Testroot: {}\n".format(testroot))
     retry_final = get_possibly_overridden_mach_value(machine,
                                                      varname='create_test_retry',
                                                      value=retry)
+    # Note the distinction between a queue of None and a queue of
+    # CREATE_TEST_QUEUE_UNSPECIFIED in the following: If queue is None (meaning that the
+    # user hasn't specified a '--queue' argument to run_sys_tests), then we'll use the
+    # queue specified in the machine object; if queue is CREATE_TEST_QUEUE_UNSPECIFIED,
+    # then we'll force queue_final to be None, which means we won't add a '--queue'
+    # argument to create_test, regardless of what is specified in the machine object.
+    # (It's also possible for the machine object to specify a queue of
+    # CREATE_TEST_QUEUE_UNSPECIFIED, which means that we won't use a '--queue' argument to
+    # create_test unless the user specifies a '--queue' argument to run_sys_tests.)
+    queue_final = get_possibly_overridden_mach_value(machine,
+                                                     varname='create_test_queue',
+                                                     value=queue)
+    if queue_final == CREATE_TEST_QUEUE_UNSPECIFIED:
+        queue_final = None
     if not skip_git_status:
         _record_git_status(testroot, retry_final, dry_run)
 
@@ -155,7 +175,7 @@ def run_sys_tests(machine, cime_path,
                                              baseline_root=baseline_root_final,
                                              account=machine.account,
                                              walltime=walltime,
-                                             queue=queue,
+                                             queue=queue_final,
                                              retry=retry_final,
                                              rerun_existing_failures=rerun_existing_failures,
                                              extra_create_test_args=extra_create_test_args)
@@ -305,7 +325,11 @@ or tests listed individually on the command line (via the -t/--testname argument
 
     parser.add_argument('--queue',
                         help='Queue to which tests are submitted.\n'
-                        'If not provided, uses machine default.')
+                        'The special value "{}" means do not add a --queue option to create_test,\n'
+                        'instead allowing CIME to pick an appropriate queue for each test\n'
+                        'using its standard mechanisms.\n'
+                        'Default for this machine: {}'.format(
+                            CREATE_TEST_QUEUE_UNSPECIFIED, default_machine.create_test_queue))
 
     parser.add_argument('--retry', type=int,
                         help='Argument to create_test: Number of times to retry failed tests.\n'

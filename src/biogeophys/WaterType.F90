@@ -936,7 +936,10 @@ contains
              call bulk_vars%get_data(var_num, bulk)
              call tracer_vars%get_data(var_num, tracer)
 
-             call CompareBulkToTracer(begi, endi, &
+             call CompareBulkToTracer( &
+                  subgrid_level = tracer_vars%get_subgrid_level(var_num), &
+                  bounds_beg = begi, &
+                  bounds_end = endi, &
                   bulk   = bulk(begi:endi), &
                   tracer = tracer(begi:endi), &
                   ratio = tracer_info%get_ratio(), &

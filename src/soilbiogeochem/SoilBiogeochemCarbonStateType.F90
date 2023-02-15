@@ -7,7 +7,7 @@ module SoilBiogeochemCarbonStateType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi, zsoi, c3_r2
-  use clm_varctl                         , only : iulog, use_vertsoilc, spinup_state, use_fates 
+  use clm_varctl                         , only : iulog, spinup_state, use_fates 
   use landunit_varcon                    , only : istcrop, istsoil
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
@@ -30,6 +30,7 @@ module SoilBiogeochemCarbonStateType
 
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: ctrunc_col               (:) ! (gC/m2) column-level sink for C truncation
+     real(r8), pointer :: totmicc_col          (:)     ! (gC/m2) total microbial carbon
      real(r8), pointer :: totlitc_col          (:)     ! (gC/m2) total litter carbon
      real(r8), pointer :: totlitc_1m_col       (:)     ! (gC/m2) total litter carbon to 1 meter
      real(r8), pointer :: totsomc_col          (:)     ! (gC/m2) total soil organic matter carbon
@@ -110,6 +111,7 @@ contains
     if ( .not. use_fates ) then
        allocate(this%cwdc_col       (begc :endc)) ; this%cwdc_col       (:) = nan
     endif
+    allocate(this%totmicc_col    (begc :endc)) ; this%totmicc_col    (:) = nan
     allocate(this%totlitc_col    (begc :endc)) ; this%totlitc_col    (:) = nan
     allocate(this%totsomc_col    (begc :endc)) ; this%totsomc_col    (:) = nan
     allocate(this%totlitc_1m_col (begc :endc)) ; this%totlitc_1m_col (:) = nan
@@ -183,6 +185,11 @@ contains
           endif
        end do
  
+       this%totmicc_col(begc:endc) = spval
+       call hist_addfld1d (fname='TOTMICC', units='gC/m^2', &
+            avgflag='A', long_name='total microbial carbon', &
+            ptr_col=this%totmicc_col)
+
        this%totlitc_col(begc:endc) = spval
        call hist_addfld1d (fname='TOTLITC', units='gC/m^2', &
             avgflag='A', long_name='total litter carbon', &
@@ -252,6 +259,11 @@ contains
                avgflag='A', long_name=longname, &
                ptr_col=data1dptr, default='inactive')
        end do
+
+       this%totmicc_col(begc:endc) = spval
+       call hist_addfld1d (fname='C13_TOTMICC', units='gC/m^2', &
+            avgflag='A', long_name='C13 total microbial carbon', &
+            ptr_col=this%totmicc_col)
 
        this%totlitc_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_TOTLITC', units='gC13/m^2', &
@@ -327,6 +339,11 @@ contains
                   avgflag='A', long_name=longname, ptr_col=data1dptr, default='inactive')
           endif
        end do
+
+       this%totmicc_col(begc:endc) = spval
+       call hist_addfld1d (fname='C14_TOTMICC', units='gC/m^2', &
+            avgflag='A', long_name='C14 total microbial carbon', &
+            ptr_col=this%totmicc_col)
 
        this%totlitc_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_TOTLITC', units='gC14/m^2', &
@@ -447,6 +464,7 @@ contains
                 this%cwdc_col(c)    = 0._r8
              end if
              this%ctrunc_col(c)     = 0._r8
+             this%totmicc_col(c)    = 0._r8
              this%totlitc_col(c)    = 0._r8
              this%totsomc_col(c)    = 0._r8
              this%totlitc_1m_col(c) = 0._r8
@@ -510,46 +528,30 @@ contains
     integer  :: idata
     logical  :: exit_spinup  = .false.
     logical  :: enter_spinup = .false.
-    ! flags for comparing the model and restart decomposition cascades
-    integer  :: decomp_cascade_state, restart_file_decomp_cascade_state 
     !------------------------------------------------------------------------
 
     if (carbon_type == 'c12') then
 
        do k = 1, ndecomp_pools
           varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c'
-          if (use_vertsoilc) then
-             ptr2d => this%decomp_cpools_vr_col(:,:,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double,  &
-                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                  long_name='',  units='g/m3', fill_value=spval, &
-                  scale_by_thickness=.false., &
-                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
-          else
-             ptr1d => this%decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
-             call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double,  &
-                  dim1name='column', long_name='',  units='g/m3', fill_value=spval, &
-                  interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-          end if
+          ptr2d => this%decomp_cpools_vr_col(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double,  &
+               dim1name='column', dim2name='levgrnd', switchdim=.true., &
+               long_name='',  units='g/m3', fill_value=spval, &
+               scale_by_thickness=.false., &
+               interpinic_flag='interp', readvar=readvar, data=ptr2d)
           if (flag=='read' .and. .not. readvar) then
              call endrun(msg='ERROR:: '//trim(varname)//' is required on an initialization dataset'//&
                   errMsg(sourcefile, __LINE__))
           end if
        end do
 
-       if (use_vertsoilc) then
-          ptr2d => this%ctrunc_vr_col
-          call restartvar(ncid=ncid, flag=flag, varname='col_ctrunc_vr', xtype=ncd_double,  &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='',  units='gC/m3', fill_value=spval, &
-               scale_by_thickness=.false., &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d)
-       else
-          ptr1d => this%ctrunc_vr_col(:,1) ! nlevdecomp = 1; so treat as 1D variable
-          call restartvar(ncid=ncid, flag=flag, varname='col_ctrunc', xtype=ncd_double,  &
-               dim1name='column', long_name='',  units='gC/m3', fill_value=spval, &
-               interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-       end if
+       ptr2d => this%ctrunc_vr_col
+       call restartvar(ncid=ncid, flag=flag, varname='col_ctrunc_vr', xtype=ncd_double,  &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., &
+            long_name='',  units='gC/m3', fill_value=spval, &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d)
        if (flag=='read' .and. .not. readvar) then
           call endrun(msg='ERROR:: '//trim(varname)//' is required on an initialization dataset'//&
                errMsg(sourcefile, __LINE__))
@@ -565,19 +567,12 @@ contains
 
        do k = 1, ndecomp_pools
           varname = trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c_13'
-          if (use_vertsoilc) then
-             ptr2d => this%decomp_cpools_vr_col(:,:,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double,  &
-                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                  long_name='',  units='g/m3', fill_value=spval, &
-                  scale_by_thickness=.false., &
-                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
-          else
-             ptr1d => this%decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
-             call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double,  &
-                  dim1name='column', long_name='',  units='g/m3', fill_value=spval, &
-                  interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-          end if
+          ptr2d => this%decomp_cpools_vr_col(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double,  &
+               dim1name='column', dim2name='levgrnd', switchdim=.true., &
+               long_name='',  units='g/m3', fill_value=spval, &
+               scale_by_thickness=.false., &
+               interpinic_flag='interp', readvar=readvar, data=ptr2d)
           if (flag=='read' .and. .not. readvar) then
              write(iulog,*) 'initializing soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col' &
                   // ' with atmospheric c13 value for: '//trim(varname)
@@ -591,19 +586,12 @@ contains
           end if
        end do
 
-       if (use_vertsoilc) then
-          ptr2d => this%ctrunc_vr_col
-          call restartvar(ncid=ncid, flag=flag, varname="col_ctrunc_c13_vr", xtype=ncd_double,  &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='',  units='gC/m3', fill_value=spval, &
-               scale_by_thickness=.false., &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d)
-       else
-          ptr1d => this%ctrunc_vr_col(:,1)
-          call restartvar(ncid=ncid, flag=flag, varname="col_ctrunc_c13", xtype=ncd_double,  &
-               dim1name='column', long_name='',  units='gC/m3', fill_value=spval, &
-               interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-       end if
+       ptr2d => this%ctrunc_vr_col
+       call restartvar(ncid=ncid, flag=flag, varname="col_ctrunc_c13_vr", xtype=ncd_double,  &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., &
+            long_name='',  units='gC/m3', fill_value=spval, &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d)
     end if
 
     !--------------------------------
@@ -614,20 +602,12 @@ contains
 
        do k = 1, ndecomp_pools
           varname = trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c_14'
-          if (use_vertsoilc) then
-             ptr2d => this%decomp_cpools_vr_col(:,:,k)
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double,  &
-                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                  long_name='',  units='g/m3', fill_value=spval, &
-                  scale_by_thickness=.false., &
-                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
-          else
-             ptr1d => this%decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
-             call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double,  &
-                  dim1name='column', &
-                  long_name='',  units='g/m3', fill_value=spval, &
-                  interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-          end if
+          ptr2d => this%decomp_cpools_vr_col(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double,  &
+               dim1name='column', dim2name='levgrnd', switchdim=.true., &
+               long_name='',  units='g/m3', fill_value=spval, &
+               scale_by_thickness=.false., &
+               interpinic_flag='interp', readvar=readvar, data=ptr2d)
           if (flag=='read' .and. .not. readvar) then
              write(iulog,*) 'initializing soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col with atmospheric c14 value for: '//&
                   trim(varname)
@@ -641,19 +621,12 @@ contains
           end if
        end do
 
-       if (use_vertsoilc) then 
-          ptr2d => this%ctrunc_vr_col
-          call restartvar(ncid=ncid, flag=flag, varname="col_ctrunc_c14_vr", xtype=ncd_double,  &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='',  units='gC/m3', fill_value=spval, &
-               scale_by_thickness=.false., &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d)
-       else
-          ptr1d => this%ctrunc_vr_col(:,1)
-          call restartvar(ncid=ncid, flag=flag, varname="col_ctrunc_c14", xtype=ncd_double,  &
-               dim1name='column', long_name='',  units='gC/m3', fill_value=spval, &
-               interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-       end if
+       ptr2d => this%ctrunc_vr_col
+       call restartvar(ncid=ncid, flag=flag, varname="col_ctrunc_c14_vr", xtype=ncd_double,  &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., &
+            long_name='',  units='gC/m3', fill_value=spval, &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d)
 
     end if
 
@@ -762,6 +735,7 @@ contains
           this%cwdc_col(i)       = value_column
        end if
        this%ctrunc_col(i)     = value_column
+       this%totmicc_col(i)    = value_column
        this%totlitc_col(i)    = value_column
        this%totlitc_1m_col(i) = value_column
        this%totsomc_col(i)    = value_column
@@ -929,6 +903,20 @@ contains
           end if
        end do
     end if
+
+    ! total microbial carbon (TOTMICC)
+    do fc = 1,num_allc
+       c = filter_allc(fc)
+       this%totmicc_col(c) = 0._r8
+    end do
+    do l = 1, ndecomp_pools
+       if ( decomp_cascade_con%is_microbe(l) ) then
+          do fc = 1,num_allc
+             c = filter_allc(fc)
+             this%totmicc_col(c) = this%totmicc_col(c) + this%decomp_cpools_col(c,l)
+          end do
+       endif
+    end do
 
     ! total litter carbon (TOTLITC)
     do fc = 1,num_allc
