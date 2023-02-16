@@ -13,6 +13,8 @@ module CNProductsMod
   use clm_time_manager        , only : get_step_size_real
   use SpeciesBaseType         , only : species_base_type
   use PatchType               , only : patch
+  use AnnualFluxDribbler      , only : annual_flux_dribbler_type
+  use AnnualFluxDribbler      , only : annual_flux_dribbler_gridcell
   !
   implicit none
   private
@@ -56,6 +58,13 @@ module CNProductsMod
      real(r8), pointer :: prod100_loss_grc(:)      ! (g[C or N]/m2/s) decomposition loss from 100-yr wood product pool
      real(r8), pointer :: tot_woodprod_loss_grc(:) ! (g[C or N]/m2/s) decompomposition loss from all wood product pools
 
+     ! Objects that help convert once-per-year dynamic land cover changes into fluxes
+     ! that are dribbled throughout the year
+     !type(annual_flux_dribbler_type) :: dwt_conv_cflux_dribbler
+     !type(annual_flux_dribbler_type) :: hrv_xsmrpool_to_atm_dribbler
+     !logical, private  :: dribble_crophrv_xsmrpool_2atm
+
+     
    contains
 
      ! Infrastructure routines
@@ -148,6 +157,17 @@ contains
     allocate(this%tot_woodprod_loss_grc(begg:endg)) ; this%tot_woodprod_loss_grc(:) = nan
     allocate(this%product_loss_grc(begg:endg)) ; this%product_loss_grc(:) = nan
 
+    !this%dwt_conv_cflux_dribbler = annual_flux_dribbler_gridcell( &
+    !     bounds = bounds, &
+    !     name = 'dwt_conv_flux_' // carbon_type_suffix, &
+    !     units = 'gC/m^2', &
+    !     allows_non_annual_delta = allows_non_annual_delta)
+    !this%hrv_xsmrpool_to_atm_dribbler = annual_flux_dribbler_gridcell( &
+    !     bounds = bounds, &
+    !     name = 'hrv_xsmrpool_to_atm_' // carbon_type_suffix, &
+    !     units = 'gC/m^2', &
+    !     allows_non_annual_delta = .false.)
+    
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------

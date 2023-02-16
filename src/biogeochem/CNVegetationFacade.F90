@@ -260,23 +260,26 @@ contains
             this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp) )
        call this%cnveg_nitrogenflux_inst%Init(bounds) 
 
-       call this%c_products_inst%Init(bounds, species_non_isotope_type('C'))
-       if (use_c13) then
-          call this%c13_products_inst%Init(bounds, species_isotope_type('C', '13'))
-       end if
-       if (use_c14) then
-          call this%c14_products_inst%Init(bounds, species_isotope_type('C', '14'))
-       end if
-       call this%n_products_inst%Init(bounds, species_non_isotope_type('N'))
+    end if
+       
+    call this%c_products_inst%Init(bounds, species_non_isotope_type('C'))
+    if (use_c13) then
+       call this%c13_products_inst%Init(bounds, species_isotope_type('C', '13'))
+    end if
+    if (use_c14) then
+       call this%c14_products_inst%Init(bounds, species_isotope_type('C', '14'))
+    end if
+    call this%n_products_inst%Init(bounds, species_non_isotope_type('N'))
+    
+    call this%cn_balance_inst%Init(bounds)
 
-       call this%cn_balance_inst%Init(bounds)
-
+    if(use_cn)then
        ! Initialize the memory for the dgvs_inst data structure regardless of whether
        ! use_cndv is true so that it can be used in associate statements (nag compiler
        ! complains otherwise)
        call this%dgvs_inst%Init(bounds)
     end if
-
+    
     call create_cnfire_method(NLFilename, this%cnfire_method)
     call this%cnfire_method%CNFireReadParams( params_ncid )
 
@@ -502,21 +505,21 @@ contains
             cnveg_nitrogenstate=this%cnveg_nitrogenstate_inst, &
             filter_reseed_patch=reseed_patch, num_reseed_patch=num_reseed_patch)
 
-       call this%c_products_inst%restart(bounds, ncid, flag)
-       if (use_c13) then
-          call this%c13_products_inst%restart(bounds, ncid, flag, &
-               template_for_missing_fields = this%c_products_inst, &
-               template_multiplier = c3_r2)
-       end if
-       if (use_c14) then
-          call this%c14_products_inst%restart(bounds, ncid, flag, &
-               template_for_missing_fields = this%c_products_inst, &
-               template_multiplier = c14ratio)
-       end if
-       call this%n_products_inst%restart(bounds, ncid, flag)
-
     end if
-
+       
+    call this%c_products_inst%restart(bounds, ncid, flag)
+    if (use_c13) then
+       call this%c13_products_inst%restart(bounds, ncid, flag, &
+            template_for_missing_fields = this%c_products_inst, &
+            template_multiplier = c3_r2)
+    end if
+    if (use_c14) then
+       call this%c14_products_inst%restart(bounds, ncid, flag, &
+            template_for_missing_fields = this%c_products_inst, &
+            template_multiplier = c14ratio)
+    end if
+    call this%n_products_inst%restart(bounds, ncid, flag)
+    
     if (use_cndv) then
        call this%dgvs_inst%Restart(bounds, ncid, flag=flag)
     end if

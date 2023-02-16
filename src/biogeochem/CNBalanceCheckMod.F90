@@ -10,7 +10,7 @@ module CNBalanceCheckMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use decompMod                       , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use abortutils                      , only : endrun
-  use clm_varctl                      , only : iulog, use_nitrif_denitrif
+  use clm_varctl                      , only : iulog, use_nitrif_denitrif, use_fates
   use clm_time_manager                , only : get_step_size_real
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
@@ -143,11 +143,17 @@ contains
          )
 
     begg = bounds%begg; endg = bounds%endg
-
-    call cnveg_carbonflux_inst%hrv_xsmrpool_to_atm_dribbler%get_amount_left_to_dribble_beg( &
-         bounds, hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg))
-    call cnveg_carbonflux_inst%dwt_conv_cflux_dribbler%get_amount_left_to_dribble_beg( &
-         bounds, dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg))
+    
+    if(.not.use_fates)then
+       
+       call cnveg_carbonflux_inst%hrv_xsmrpool_to_atm_dribbler%get_amount_left_to_dribble_beg( &
+            bounds, hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg))
+       call cnveg_carbonflux_inst%dwt_conv_cflux_dribbler%get_amount_left_to_dribble_beg( &
+            bounds, dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg))
+    else
+       hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg) = 0._r8
+       dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg) = 0._r8
+    end if
 
     do g = begg, endg
        begcb(g) = totc(g) + c_tot_woodprod(g) + c_cropprod1(g) + &
