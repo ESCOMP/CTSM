@@ -70,7 +70,7 @@ Running for a single submission:
 # Work in the ctsm_py environment, which requires the following steps:
 > module unload python; module load conda
 > cd ../..; ./py_env_create
-> conda activate ctsm_py; cd cd tools/mksurfdata_esmf
+> conda activate ctsm_py; cd tools/mksurfdata_esmf
 # to generate your target namelist:
 > ./gen_mksurfdata_namelist.py --help
 # for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
