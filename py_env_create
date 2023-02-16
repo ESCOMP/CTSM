@@ -136,8 +136,8 @@ if [ "$readlock" == "Yes" ]; then
                  echo
                  echo "On CGD systems you may need to do the following..."
                  echo "Create a bin subdirectory and then link the python version into it..."
-                 echo "   mkdir $HOME/.conda/envs/$ctsm_python/bin/"
-                 echo "   ln -s $pythonpath $HOME/.conda/envs/$ctsm_python/bin/python3.7"
+                 echo "   mkdir $HOME/.conda/envs/$condalockenv/bin/"
+                 echo "   ln -s $pythonpath $HOME/.conda/envs/$condalockenv/bin/python3.7"
                  echo
              fi
              exit -1
