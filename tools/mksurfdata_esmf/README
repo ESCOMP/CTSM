@@ -58,6 +58,8 @@ Building the executable (working in tools/mksurfdata_esmf)
 
 # Before starting, be sure that you have run
 > ./manage_externals/checkout_externals
+# because without it I have come across strange behavior, such as transient
+# file generation (1850-2015) that aborts in the 1870s for no apparent reason.
 > ./gen_mksurfdata_build.sh      # For machines with a cime build
 # Note: The pio_iotype value gets set and written to a simple .txt file
 # by this build script. The value depends on your machine. If not running
