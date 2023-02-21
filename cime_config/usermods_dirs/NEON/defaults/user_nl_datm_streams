@@ -37,3 +37,23 @@ preso3.SSP3-7.0:year_first=2018
 preso3.SSP3-7.0:year_last=2022
 preso3.SSP3-7.0:year_align=2018
 preso3.SSP3-7.0:dtlimit=30
+
+NEON.${NEONSITE}:datavars = \
+  FSDS     Faxa_swdn, \
+  ZBOT     Sa_z, \
+  TBOT     Sa_tbot, \
+  WIND     Sa_wind, \
+  RH       Sa_rh,  \
+  PSRF     Sa_pbot, \
+  FLDS     Faxa_lwdn
+
+NEON.${NEONSITE}.PRECIP:datavars = \
+  PRECIP Faxa_precn
+
+NEON.${NEONSITE}.PRECIP:datafiles = \
+  /glade/u/home/tking/neon/prism_${NEONSITE}_2018.nc, \
+  /glade/u/home/tking/neon/prism_${NEONSITE}_2019.nc, \
+  /glade/u/home/tking/neon/prism_${NEONSITE}_2020.nc, \
+  /glade/u/home/tking/neon/prism_${NEONSITE}_2021.nc, \
+  /glade/u/home/tking/neon/prism_${NEONSITE}_2022.nc
+
