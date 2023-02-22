@@ -462,10 +462,18 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="ERP_D_Ld10" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/ciso_decStart_GU_LULCC">
+    <machines>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment"  >Transient case with isotopes with a december start, and Gross Unrepresented Land Use and Land Cover change on, default dataset with GU_LULCC==0</option>
+    </options>
+  </test>
   <test name="ERP_D_Ld10_P36x2" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/ciso_decStart_GU_LULCC">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
