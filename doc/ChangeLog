@@ -1,4 +1,86 @@
 ===============================================================
+Tag name: ctsm5.1.dev119
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310), ekluzek Erik Kluzek), lawrencepj1 (Peter Lawrence)
+Date: Wed Feb 22 13:57:36 MST 2023
+One-line Summary: Allow gross unrepresented land use transitions (PR #309)
+
+Purpose and description of changes
+----------------------------------
+
+ Get gross unrepresented land use transitions working in CLM5.1.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics
+onfigurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer
+hanges.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+ I didn't find a corresponding issue.
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ New namelist variable: do_grossunrep
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Surface datasets may now contain non-zero gross unrepresented land use
+ transitions.
+
+Substantial timing or memory changes:
+[e.g., check PFS test in the test suite and look at timings, if you
+expect possible significant timing changes]
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Erik introduced new tests that can be identified by the GU_LULCC in
+ their names. I ran these with the test-suites and generated baselines
+ for them.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO (unless see next)
+
+ Code configurations: do_grossunrep = .true. and surface dataset
+                      includes non-zero gross unrepresented land use
+                      transitions. I (slevis) have not investigated the
+                      nature of the changes.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/309
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev118
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
 Date: Sun Feb  5 18:31:29 MST 2023
