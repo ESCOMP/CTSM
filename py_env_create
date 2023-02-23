@@ -207,9 +207,9 @@ fi
 #
 # Install the environemnt
 #
-echo "Install $ctsm_python this can take a long time, be patient...."
-if [ "$readlock" != "Yes" ]; then
-    echo "    If this seems to be hanging (taking hours) or it aborts with an error -- retry using the --read-lock option"
+echo "Install $ctsm_python this can take a long time (12 to 20 minutes is expected), be patient...."
+if [ "$readspec" != "Yes" ]; then
+    echo "    If this seems to be hanging (taking hours) or it aborts with an error -- retry using the --read-spec option"
 fi
 echo "    ...."
 echo "    ...."
