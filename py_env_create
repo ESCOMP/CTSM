@@ -254,6 +254,7 @@ if [ $? != 0 ]; then
    exit -2
 fi
 if [ "$readlock" == "No" ] && [ "$includedask" == "Yes" ]; then
+   echo "Adding dask to the environment, this should take a few minutes, if it hangs (takes hours) or aborts, build without dask with the --no-dask option"
    cmd="conda install --yes $verbosity --channel conda-forge --name $ctsm_python --file $condadir/$daskfile $option"
    echo "$cmd"
    $cmd
@@ -261,6 +262,7 @@ if [ "$readlock" == "No" ] && [ "$includedask" == "Yes" ]; then
       echo "Trouble installing the $ctsm_python python environment for dask"
       echo "There must be a problem in the $condadir/$daskfile conda specification environment file"
       echo "Change the file and try again"
+      echo "Or build the environment without dask with the --no-dask option"
       exit -2
    fi
 fi
