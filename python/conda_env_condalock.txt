@@ -1,7 +1,0 @@
-#
-# To install this on cheyenne with conda loaded in modules
-# use the top level bash script:
-# ../py_env_create
-# conda activate condalock                # Do this anytime you want to use conda-lock
-#
-conda-lock

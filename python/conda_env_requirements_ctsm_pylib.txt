@@ -4,7 +4,6 @@
 # ../py_env_create                                           # Do this each time you update your CTSM Version
 # conda activate ctsm_pylib                                  # Do this anytime you want to run a CTSM python script
 #
-conda-lock
 pandas
 tqdm
 scipy
