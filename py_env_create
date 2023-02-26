@@ -161,6 +161,8 @@ fi
 echo "Install $ctsm_python this can take a long time (12 to 20 minutes is expected), be patient...."
 if [ "$readspec" != "Yes" ]; then
     echo "    If this seems to be hanging (taking hours) or it aborts with an error -- retry using the --read-spec option"
+else
+    echo "    If this aborts with an error -- retry without using the --read-spec option"
 fi
 echo "    ...."
 echo "    ...."
