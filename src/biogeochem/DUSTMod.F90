@@ -123,7 +123,7 @@ contains
     call this%InitHistory  (bounds)
     call this%prigentroughnessstream%Init( bounds, NLFilename )  ! dmleung added 31 Dec 2022
     !call this%InitCold     (bounds, num_nolakep, filter_nolakep)
-    call this%InitCold     (bounds)
+    call this%InitCold     (bounds)                             ! dmleung commented 31 Dec 2022
     call this%InitDustVars (bounds)
 
   end subroutine Init
@@ -309,7 +309,7 @@ contains
     this%dpfct_rock_patch(begp:endp) = spval
     call hist_addfld1d (fname='DPFCT_ROCK', units='m/s',  &
          avgflag='A', long_name='rock drag partition factor', &
-         ptr_patch=this%dpfct_rock_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%dpfct_rock_patch)
     !##########################################################################
 
   end subroutine InitHistory
@@ -317,6 +317,10 @@ contains
   !-----------------------------------------------------------------------
   !subroutine InitCold(this, bounds, num_nolakep, filter_nolakep)   !dmleung commented 31 Dec 2022
   subroutine InitCold(this, bounds)
+    !
+    !USES dmleung added 31 Dec 2022
+    !use landunit_varcon      , only : istdlak
+    !use LandunitType         , only : lun
     !
     ! !ARGUMENTS:
     class(dust_type), intent(inout) :: this  ! dmleung used class instead of type, 31 Dec 2022
@@ -346,7 +350,7 @@ contains
       ! Caulculate Drag Partition factor, dmleung added 31 Dec 2022
       if ( this%prigentroughnessstream%useStreams() )then !if usestreams == true, and it should be always true
          call this%prigentroughnessstream%CalcDragPartition( bounds, &
-    !                           num_nolakep, filter_nolakep, this%dpfct_rock_patch(bounds%begp:bounds%endp) )
+         !                       num_nolakep, filter_nolakep, this%dpfct_rock_patch(bounds%begp:bounds%endp) )
                                 this%dpfct_rock_patch(bounds%begp:bounds%endp) )
       else
 
