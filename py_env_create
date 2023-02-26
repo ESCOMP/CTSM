@@ -38,6 +38,7 @@ else
 fi
 condafile="conda_env_requirements_ctsm_pylib.txt"
 specfile="conda_env_requirements_ctsm_pylib_specific.txt"
+latestfile="conda_env_requirements_ctsm_pylib_latest.txt"
 daskfile="conda_env_requirements_ctsm_pylib_dask.txt"
 #----------------------------------------------------------------------
 # Usage subroutine
@@ -58,7 +59,12 @@ usage() {
   echo "     Default is: $condafile"
   echo "[--read-spec] "
   echo "     Also read the requirements file with specific versions"
+  echo "     This will likely be faster"
   echo "     Will use: $condadir/$specfile"
+  echo "[--read-latest] "
+  echo "     Read the experimental conda environment file with the latest working versions"
+  echo "     Can NOT use with either the --file, or --read-spec options"
+  echo "     Will use: $condadir/$latestfile"
   echo "[--no-dask] "
   echo "     Do NOT include dask in the output environemnt"
   echo "[--option <option>]  "
@@ -68,7 +74,9 @@ usage() {
 
 verbose="No"
 readspec="No"
+custom="No"
 includedask="Yes"
+latest="No"
 option=""
 while [ $# -gt 0 ]; do
    case $1 in
@@ -81,10 +89,14 @@ while [ $# -gt 0 ]; do
            ;;
        -f|--file )
            condafile=$2
+           custom="Yes"
            shift
            ;;
        --read-spec )
            readspec="Yes"
+           ;;
+       --read-latest )
+           latest="Yes"
            ;;
        --no-dask )
            includedask="No"
@@ -105,10 +117,22 @@ done
 #
 # Error checking options and setup
 #
-condafilepath="$condadir/$condafile"
+if [ "$latest" == "Yes" ]; then
+   condafilepath="$condadir/$latestfile"
+else
+   condafilepath="$condadir/$condafile"
+fi
 if [ ! -f $condafilepath ]; then
    echo "$condafilepath does NOT exist"
    echo "Use the --file option with a valid filename"
+   exit -1
+fi
+if [ "$readspec" == "Yes" ] && [ "$latest" == "Yes" ]; then
+   echo "The --readspec and --read-latest options can NOT both be turned on"
+   exit -1
+fi
+if [ "$custom" == "Yes" ] && [ "$latest" == "Yes" ]; then
+   echo "The --file and --read-latest options can NOT both be turned on"
    exit -1
 fi
 
@@ -147,7 +171,12 @@ if [ "$verbose" == "Yes" ]; then
   verbosity="--verbose"
   loglevel="INFO"
 fi
-filelist="--file $condadir/$condaplatformfile --file $condafilepath"
+if [ "$latest" == "Yes" ]; then
+   filelist=""
+else
+   filelist="--file $condadir/$condaplatformfile"
+fi
+filelist="$filelist --file $condafilepath"
 if [ "$readspec" == "Yes" ]; then
    filelist="$filelist --file $condadir/$specfile"
 fi
