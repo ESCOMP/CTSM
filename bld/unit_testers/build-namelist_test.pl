@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1848;
+my $ntests = 1850;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1254;
 }
@@ -1062,6 +1062,16 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "dogrossandsp"               =>{ options=>"-envxml_dir . -bgc sp -use_case 20thC_transient",
+                                     namelst=>"do_grossunrep=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "dogrossandfates"            =>{ options=>"-envxml_dir . -bgc fates -use_case 20thC_transient",
+                                     namelst=>"do_grossunrep=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "dogrossandnottrans"         =>{ options=>"-envxml_dir . -bgc fates -use_case 2000_control",
                                      namelst=>"do_grossunrep=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
