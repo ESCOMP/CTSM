@@ -102,6 +102,7 @@ while [ $# -gt 0 ]; do
            ;;
        --dask )
            includedask="Yes"
+           ctsm_python=ctsm_pylib_wdask
            ;;
        --option )
            option=$2
