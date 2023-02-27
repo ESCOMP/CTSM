@@ -11,7 +11,6 @@ import numpy as np
 import xarray as xr
 import dask.array as da
 import dask.dataframe as dd
-from dask.diagnostics import ProgressBar
 
 # -- libraries for plotting mesh (make_mesh_plot)
 import cartopy.crs as ccrs
