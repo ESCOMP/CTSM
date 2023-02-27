@@ -4721,6 +4721,7 @@ contains
             this%hrv_deadcrootc_to_litter_patch(p)         + &
             this%hrv_deadcrootc_storage_to_litter_patch(p) + &
             this%hrv_deadcrootc_xfer_to_litter_patch(p)    + &
+            this%hrv_xsmrpool_to_atm_patch(p)              + &
             this%hrv_gresp_storage_to_litter_patch(p)      + &
             this%hrv_gresp_xfer_to_litter_patch(p)
 
