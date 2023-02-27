@@ -65,8 +65,10 @@ usage() {
   echo "     Read the experimental conda environment file with the latest working versions"
   echo "     Can NOT use with either the --file, or --read-spec options"
   echo "     Will use: $condadir/$latestfile"
-  echo "[--no-dask] "
-  echo "     Do NOT include dask in the output environemnt"
+  echo "[--dask] "
+  echo "     Include dask and plotting packages in the output environemnt"
+  echo "     This is considered experimental and will not necessarily be supported"
+  echo "     So if it fails with this option try building without it"
   echo "[--option <option>]  "
   echo "     Option(s) to pass to 'conda install' step"
   echo "***********************************************************************"
@@ -75,7 +77,7 @@ usage() {
 verbose="No"
 readspec="No"
 custom="No"
-includedask="Yes"
+includedask="No"
 latest="No"
 option=""
 while [ $# -gt 0 ]; do
@@ -98,8 +100,8 @@ while [ $# -gt 0 ]; do
        --read-latest )
            latest="Yes"
            ;;
-       --no-dask )
-           includedask="No"
+       --dask )
+           includedask="Yes"
            ;;
        --option )
            option=$2
@@ -201,15 +203,19 @@ if [ $? != 0 ]; then
    exit -2
 fi
 if [ "$includedask" == "Yes" ]; then
-   echo "Adding dask to the environment, this should take a few minutes, if it hangs (takes hours) or aborts, build without dask with the --no-dask option"
+   echo "Adding dask to the environment, because you used the --dask option."
+   echo "This should take a few minutes, if it hangs (takes hours) or aborts, build without dask by not using the --dask option"
+   echo "This option is NOT supported so if it fails you are on your own..."
    cmd="conda install --yes $verbosity --channel conda-forge --name $ctsm_python --file $condadir/$daskfile $option"
    echo "$cmd"
    $cmd
    if [ $? != 0 ]; then
       echo "Trouble installing the $ctsm_python python environment for dask"
+      echo "Build the environment without dask by NOT using the --dask option"
+      echo "..."
+      echo "This option is NOT guaranteed to work and NOT supported, so you will have to figure this out on your own"
       echo "There must be a problem in the $condadir/$daskfile conda specification environment file"
       echo "Change the file and try again"
-      echo "Or build the environment without dask with the --no-dask option"
       exit -2
    fi
 fi
