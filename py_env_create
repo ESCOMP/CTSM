@@ -129,6 +129,10 @@ if [ ! -f $condafilepath ]; then
    echo "Use the --file option with a valid filename"
    exit -1
 fi
+if [ "$includedask" == "Yes" ] && [ "$latest" == "Yes" ]; then
+   echo "The --dask and --read-latest options can NOT both be turned on"
+   exit -1
+fi
 if [ "$readspec" == "Yes" ] && [ "$latest" == "Yes" ]; then
    echo "The --readspec and --read-latest options can NOT both be turned on"
    exit -1
