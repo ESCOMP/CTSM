@@ -67,7 +67,7 @@ usage() {
   echo "     Will use: $condadir/$latestfile"
   echo "[--dask] "
   echo "     Include dask and plotting packages in the output environemnt"
-  echo "     This is considered experimental and will not necessarily be supported"
+  echo "     This is experimental and will not be supported"
   echo "     So if it fails with this option try building without it"
   echo "[--option <option>]  "
   echo "     Option(s) to pass to 'conda install' step"
