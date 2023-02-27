@@ -2866,11 +2866,11 @@ sub setup_logic_do_grossunrep {
    if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
       $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
    }
-   elsif (!&value_is_true($nl->get_value('use_cn'))) {
-      $cannot_be_true = "$var can only be set to true when running with CN (use_cn = true)";
-   }
    elsif (&value_is_true($nl->get_value('use_fates'))) {
       $cannot_be_true = "$var currently doesn't work with FATES";
+   }
+   elsif (!&value_is_true($nl->get_value('use_cn'))) {
+      $cannot_be_true = "$var can only be set to true when running with CN (use_cn = true)";
    }
 
    if ($cannot_be_true) {
