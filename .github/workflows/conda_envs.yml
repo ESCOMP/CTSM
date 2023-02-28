@@ -1,0 +1,20 @@
+name: conda environments check on push and PR
+#
+# Run the different conda environments and make sure they continue to work
+#
+on: [push, pull_request]
+
+jobs:
+  conda_envs_check:
+     runs-on: ubuntu-latest
+     steps:
+        - name: checkout
+          uses: actions/checkout@v2
+        - name: run basic
+          run: ./py_env_create
+        - name: run spec
+          run: ./py_env_create --read-spec
+        - name: run latest
+          run: ./py_env_create --read-latest
+        - name: run dask
+          run: ./py_env_create --dask
