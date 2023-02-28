@@ -1,0 +1,32 @@
+name: python testing on push and PR
+#
+# Run the python directory testing on push and pull request
+#
+on: [push, pull_request]
+
+jobs:
+  pytest:
+     runs-on: ubuntu-latest
+     steps:
+        # Checkout the code
+        - name: checkout the code
+          uses: actions/checkout@v2
+        - name: conda env
+          uses: conda-incubator/setup-miniconda@v2
+          with:
+            activate-environment: ctsm_pylib
+            environment-file: python/conda_env_requirements_ctsm_pylib_notcgd.txt
+            auto-activate-base: false
+            channels: conda-forge
+        - name: manage_exernals and LFS
+          run: |
+            git lfs install
+            manage_externals/checkout_externals
+        - name: Run python tests
+          run: |
+              cd python
+              make test
+        - name: Run pylint
+          run: |
+              cd python
+              make lint
