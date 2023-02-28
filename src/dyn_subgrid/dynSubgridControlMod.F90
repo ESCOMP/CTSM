@@ -320,12 +320,15 @@ contains
     end if
 
     if (dyn_subgrid_control_inst%do_grossunrep) then
-       if (.not. use_cn) then
-          write(iulog,*) 'ERROR: do_grossunrep can only be true if use_cn is true'
-          call endrun(msg=errMsg(sourcefile, __LINE__))
-       end if
+       ! First check if use_fates. In this case the .not. use_cn error will not
+       ! appear. The .not. use_cn error will appea
+       ! if .not. use_fates and .not. use_cn.
        if (use_fates) then
           write(iulog,*) 'ERROR: do_grossunrep currently does not work with use_fates'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+       if (.not. use_cn) then
+          write(iulog,*) 'ERROR: do_grossunrep can only be true if use_cn is true'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end if
