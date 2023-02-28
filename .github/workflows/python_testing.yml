@@ -24,9 +24,13 @@ jobs:
             manage_externals/checkout_externals
         - name: Run python tests
           run: |
+              ./py_env_create
+              conda activate ctsm_pylib
               cd python
               make test
         - name: Run pylint
           run: |
+              ./py_env_create
+              conda activate ctsm_pylib
               cd python
               make lint
