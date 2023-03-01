@@ -15,9 +15,7 @@ jobs:
           uses: conda-incubator/setup-miniconda@v2
           with:
             python-version: 3.7.9
-            activate-environment: ctsm_pylib
-            environment-file: python/conda_env_requirements_ctsm_pylib.txt
-            auto-activate-base: false
+            auto-activate-base: true
             channels: conda-forge
         - name: manage_exernals and LFS
           run: |
@@ -28,6 +26,9 @@ jobs:
           run: |
               conda info
               conda env list
+              ./py_env_create --read-spec
+              conda env list
+              conda activate ctsm_pylib
               cd python
               make test
         - name: Run pylint
