@@ -14,6 +14,7 @@ jobs:
         - name: conda env
           uses: conda-incubator/setup-miniconda@v2
           with:
+            python-version: 3.7.9
             activate-environment: ctsm_pylib
             environment-file: python/conda_env_requirements_ctsm_pylib_notcgd.txt
             auto-activate-base: false
@@ -25,16 +26,14 @@ jobs:
         - name: Run python tests
           shell: bash
           run: |
-              ./py_env_create --read-spec
-              conda install bash
-              conda activate ctsm_pylib
+              conda info
+              conda env list
               cd python
               make test
         - name: Run pylint
           shell: bash
           run: |
-              ./py_env_create --read-spec
-              conda install bash
-              conda activate ctsm_pylib
+              conda info
+              conda env list
               cd python
               make lint
