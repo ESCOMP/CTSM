@@ -166,6 +166,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <calc_human_stress_indices phys="clm5_0" >FAST</calc_human_stress_indices>
 <calc_human_stress_indices phys="clm4_5" >NONE</calc_human_stress_indices>
 
+<!--                                                                              -->
+<!-- Cathy [dev.04]                                                               -->
+<!-- Default urban air conditioning flux and building interior temperature scheme -->
+<urban_explicit_ac phys="clm5_1" >.true.</urban_explicit_ac>
+<urban_explicit_ac phys="clm5_0" >.true.</urban_explicit_ac>
+
 <!-- Default urban traffic flux -->
 <urban_traffic>.false.</urban_traffic>
 

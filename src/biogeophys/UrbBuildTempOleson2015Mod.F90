@@ -210,7 +210,10 @@ contains
     use clm_varctl      , only : iulog
     use abortutils      , only : endrun
     use clm_varpar      , only : nlevurb, nlevsno, nlevmaxurbgrnd
-    use UrbanParamsType , only : urban_hac, urban_hac_off, urban_hac_on, urban_wasteheat_on
+    ! Cathy [orig]:
+    ! use UrbanParamsType , only : urban_hac, urban_hac_off, urban_hac_on, urban_wasteheat_on
+    ! Cathy [dev.04]:
+    use UrbanParamsType , only : urban_hac, urban_hac_off, urban_hac_on, urban_wasteheat_on, urban_explicit_ac
 !
 ! !ARGUMENTS:
     implicit none
@@ -927,16 +930,19 @@ contains
 !           rho_dair(l) = pstd / (rair*t_building(l))
 
             if (t_building_bef_hac(l) > t_building_max(l)) then
-              ! Cathy [orig] 
-              ! t_building(l) = t_building_max(l)
-              ! eflx_urban_ac(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building(l) &
-              !                    - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
-              ! Cathy [dev.03]      ! after the change, t_building_max is saturation setpoint
-              eflx_urban_ac_sat(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_max(l) &
+              ! Cathy [dev.04]
+              if (urban_explicit_ac) then   ! use explicit ac adoption rate:
+                ! Cathy [dev.03]            ! after the change, t_building_max is saturation setpoint
+                eflx_urban_ac_sat(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_max(l) &
                                      - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
-              t_building(l) = t_building_max(l) + ( 1._r8 - p_ac(l) ) * eflx_urban_ac_sat(l) &
+                t_building(l) = t_building_max(l) + ( 1._r8 - p_ac(l) ) * eflx_urban_ac_sat(l) &
                               * dtime / (ht_roof(l) * rho_dair(l) * cpair)
-              eflx_urban_ac(l) = p_ac(l) * eflx_urban_ac_sat(l)
+                eflx_urban_ac(l) = p_ac(l) * eflx_urban_ac_sat(l)
+              else
+                ! Cathy [orig] 
+                t_building(l) = t_building_max(l)
+                eflx_urban_ac(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building(l) &
+                                   - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
 
             else if (t_building_bef_hac(l) < t_building_min(l)) then
               t_building(l) = t_building_min(l)
