@@ -23,14 +23,18 @@ jobs:
             git lfs install
             manage_externals/checkout_externals
         - name: Run python tests
+          shell: bash
           run: |
-              ./py_env_create
+              ./py_env_create --read-spec
+              conda install bash
               conda activate ctsm_pylib
               cd python
               make test
         - name: Run pylint
+          shell: bash
           run: |
-              ./py_env_create
+              ./py_env_create --read-spec
+              conda install bash
               conda activate ctsm_pylib
               cd python
               make lint
