@@ -16,7 +16,7 @@ jobs:
           with:
             python-version: 3.7.9
             activate-environment: ctsm_pylib
-            environment-file: python/conda_env_requirements_ctsm_pylib_notcgd.txt
+            environment-file: python/conda_env_requirements_ctsm_pylib.txt
             auto-activate-base: false
             channels: conda-forge
         - name: manage_exernals and LFS
