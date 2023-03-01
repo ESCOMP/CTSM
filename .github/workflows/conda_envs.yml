@@ -1,8 +1,8 @@
-name: conda environments check on push and PR
+name: conda environments check on PR close
 #
 # Run the different conda environments and make sure they continue to work
 #
-on: [push, pull_request]
+on: [close, pull_request]
 
 jobs:
   conda_envs_check:
