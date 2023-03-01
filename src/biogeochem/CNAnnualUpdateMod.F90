@@ -10,6 +10,7 @@ module CNAnnualUpdateMod
   use CNvegStateType      , only : cnveg_state_type
   use PatchType           , only : patch
   use filterColMod        , only : filter_col_type, col_filter_from_filter_and_logical_array
+  use ColumnType          , only : col
   !
   implicit none
   private
@@ -55,20 +56,23 @@ contains
 
     do fc = 1,num_soilc
        c = filter_soilc(fc)
-       cnveg_state_inst%annsum_counter_col(c) = cnveg_state_inst%annsum_counter_col(c) + dt
-       if (cnveg_state_inst%annsum_counter_col(c) >= secspyear) then
-          end_of_year(c) = .true.
-          cnveg_state_inst%annsum_counter_col(c) = 0._r8
-       else
-          end_of_year(c) = .false.
+       if(.not.col%is_fates(c))then
+          cnveg_state_inst%annsum_counter_col(c) = cnveg_state_inst%annsum_counter_col(c) + dt
+          if (cnveg_state_inst%annsum_counter_col(c) >= secspyear) then
+             end_of_year(c) = .true.
+             cnveg_state_inst%annsum_counter_col(c) = 0._r8
+          else
+             end_of_year(c) = .false.
+          end if
        end if
     end do
+    
 
     do fp = 1,num_soilp
        p = filter_soilp(fp)
        c = patch%column(p)
 
-       if (end_of_year(c)) then
+       if (end_of_year(c) .and. .not.col%is_fates(c)) then
 
           ! update annual plant ndemand accumulator
           cnveg_state_inst%annsum_potential_gpp_patch(p)  = cnveg_state_inst%tempsum_potential_gpp_patch(p)
@@ -94,20 +98,22 @@ contains
     end do
 
     ! Get column-level averages, just for the columns that have reached their personal end-of-year
-    filter_endofyear_c = col_filter_from_filter_and_logical_array( &
-         bounds = bounds, &
-         num_orig = num_soilc, &
-         filter_orig = filter_soilc, &
-         logical_col = end_of_year(bounds%begc:bounds%endc))
-
-    call p2c(bounds, filter_endofyear_c%num, filter_endofyear_c%indices, &
-         cnveg_carbonflux_inst%annsum_npp_patch(bounds%begp:bounds%endp), &
-         cnveg_carbonflux_inst%annsum_npp_col(bounds%begc:bounds%endc))
-
-    call p2c(bounds, filter_endofyear_c%num, filter_endofyear_c%indices, &
-         cnveg_state_inst%annavg_t2m_patch(bounds%begp:bounds%endp), &
-         cnveg_state_inst%annavg_t2m_col(bounds%begc:bounds%endc))
-
+    if(num_soilp>0)then
+       filter_endofyear_c = col_filter_from_filter_and_logical_array( &
+            bounds = bounds, &
+            num_orig = num_soilc, &
+            filter_orig = filter_soilc, &
+            logical_col = end_of_year(bounds%begc:bounds%endc))
+       
+       call p2c(bounds, filter_endofyear_c%num, filter_endofyear_c%indices, &
+            cnveg_carbonflux_inst%annsum_npp_patch(bounds%begp:bounds%endp), &
+            cnveg_carbonflux_inst%annsum_npp_col(bounds%begc:bounds%endc))
+       
+       call p2c(bounds, filter_endofyear_c%num, filter_endofyear_c%indices, &
+            cnveg_state_inst%annavg_t2m_patch(bounds%begp:bounds%endp), &
+            cnveg_state_inst%annavg_t2m_col(bounds%begc:bounds%endc))
+    end if
+    
  end subroutine CNAnnualUpdate
 
 end module CNAnnualUpdateMod

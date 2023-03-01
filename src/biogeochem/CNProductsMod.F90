@@ -21,7 +21,7 @@ module CNProductsMod
   !
   ! !PUBLIC TYPES:
   type, public :: cn_products_type
-     private
+
      ! ------------------------------------------------------------------------
      ! Public instance variables
      ! ------------------------------------------------------------------------
@@ -73,12 +73,13 @@ module CNProductsMod
      procedure, private :: InitHistory
      procedure, private :: InitCold
      procedure, public  :: Restart
-
+     procedure, public  :: SetValues
+     
      ! Science routines
      procedure, public  :: UpdateProducts
      procedure, private :: PartitionWoodFluxes
      procedure, private :: PartitionCropFluxes
-     procedure, private :: ComputeSummaryVars
+     procedure, public  :: ComputeSummaryVars
 
   end type cn_products_type
 
@@ -170,6 +171,33 @@ contains
     
   end subroutine InitAllocate
 
+  subroutine SetValues(this, bounds, setval)
+
+    ! !ARGUMENTS:
+    class(cn_products_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8), intent(in)          :: setval
+    
+    ! This zero's arrays that are incremented on each model time-step
+    ! the hrv_deadstem arrays use a p2g routine for the use_cn portion
+    ! but we added this zero'ing here because FATES needs it zero'd
+
+    this%dwt_prod10_gain_grc(bounds%begg:bounds%endg) = setval
+    this%dwt_prod100_gain_grc(bounds%begg:bounds%endg) = setval
+    this%dwt_cropprod1_gain_grc(bounds%begg:bounds%endg) = setval
+
+    this%crop_harvest_to_cropprod1_grc(bounds%begg:bounds%endg) = setval
+    this%hrv_deadstem_to_prod10_grc(bounds%begg:bounds%endg) = setval
+    this%hrv_deadstem_to_prod100_grc(bounds%begg:bounds%endg) = setval
+    
+    !this%cropprod1_loss_grc(bounds%begg:bounds%endg) = setval
+    !this%prod10_loss_grc(bounds%begg:bounds%endg) = setval
+    !this%prod100_loss_grc(bounds%begg:bounds%endg) = setval
+
+    return
+  end subroutine SetValues
+
+  
   !-----------------------------------------------------------------------
   subroutine InitHistory(this, bounds)
     ! !USES:
@@ -466,6 +494,7 @@ contains
     ! !DESCRIPTION:
     ! Update all loss fluxes from wood and crop product pools, and update product pool
     ! state variables for both loss and gain terms
+    ! This is only for non-fates patches and columns
     !
     ! !ARGUMENTS:
     class(cn_products_type) , intent(inout) :: this
@@ -475,10 +504,10 @@ contains
 
     ! dynamic landcover addition to wood product pools (g/m2/s) [patch]; although this is
     ! a patch-level flux, it is expressed per unit GRIDCELL area
-    real(r8), intent(in) :: dwt_wood_product_gain_patch( bounds%begp: )
+    real(r8), intent(in) :: dwt_wood_product_gain_patch(bounds%begp:)
 
     ! wood harvest addition to wood product pools (g/m2/s) [patch]
-    real(r8), intent(in) :: wood_harvest_patch( bounds%begp: )
+    real(r8), intent(in) :: wood_harvest_patch(bounds%begp:)
 
     ! dynamic landcover addition to crop product pools (g/m2/s) [patch]; although this is
     ! a patch-level flux, it is expressed per unit GRIDCELL area
@@ -487,71 +516,28 @@ contains
     ! crop harvest to crop product pool (g/m2/s) [patch]
     real(r8), intent(in) :: crop_harvest_to_cropprod_patch( bounds%begp: )
     !
-    ! !LOCAL VARIABLES:
-    integer  :: g        ! indices
-    real(r8) :: dt       ! time step (seconds)
-    real(r8) :: kprod1   ! decay constant for 1-year product pool
-    real(r8) :: kprod10  ! decay constant for 10-year product pool
-    real(r8) :: kprod100 ! decay constant for 100-year product pool
-    !-----------------------------------------------------------------------
+
 
     SHR_ASSERT_ALL_FL((ubound(dwt_wood_product_gain_patch) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(wood_harvest_patch) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(dwt_crop_product_gain_patch) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(crop_harvest_to_cropprod_patch) == (/bounds%endp/)), sourcefile, __LINE__)
-
+    
     call this%PartitionWoodFluxes(bounds, &
          num_soilp, filter_soilp, &
          dwt_wood_product_gain_patch(bounds%begp:bounds%endp), &
          wood_harvest_patch(bounds%begp:bounds%endp))
-
+    
     call this%PartitionCropFluxes(bounds, &
          num_soilp, filter_soilp, &
          dwt_crop_product_gain_patch(bounds%begp:bounds%endp), &
-         crop_harvest_to_cropprod_patch(bounds%begp:bounds%endp))
+            crop_harvest_to_cropprod_patch(bounds%begp:bounds%endp))
 
-    ! calculate losses from product pools
-    ! the following (1/s) rate constants result in ~90% loss of initial state over 1, 10 and 100 years,
-    ! respectively, using a discrete-time fractional decay algorithm.
-    kprod1  = 7.2e-8_r8
-    kprod10 = 7.2e-9_r8
-    kprod100 = 7.2e-10_r8
-
-    do g = bounds%begg, bounds%endg
-       ! calculate fluxes out of product pools (1/sec)
-       this%cropprod1_loss_grc(g) = this%cropprod1_grc(g) * kprod1
-       this%prod10_loss_grc(g)    = this%prod10_grc(g)    * kprod10
-       this%prod100_loss_grc(g)   = this%prod100_grc(g)   * kprod100
-    end do
-
-    ! set time steps
-    dt = get_step_size_real()
-
-    ! update product state variables
-    do g = bounds%begg, bounds%endg
-
-       ! fluxes into wood & crop product pools, from landcover change
-       this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%dwt_cropprod1_gain_grc(g)*dt
-       this%prod10_grc(g)    = this%prod10_grc(g)    + this%dwt_prod10_gain_grc(g)*dt
-       this%prod100_grc(g)   = this%prod100_grc(g)   + this%dwt_prod100_gain_grc(g)*dt
-
-       ! fluxes into wood & crop product pools, from harvest
-       this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%crop_harvest_to_cropprod1_grc(g)*dt
-       this%prod10_grc(g)    = this%prod10_grc(g)    + this%hrv_deadstem_to_prod10_grc(g)*dt
-       this%prod100_grc(g)   = this%prod100_grc(g)   + this%hrv_deadstem_to_prod100_grc(g)*dt
-
-       ! fluxes out of wood & crop product pools, from decomposition
-       this%cropprod1_grc(g) = this%cropprod1_grc(g) - this%cropprod1_loss_grc(g)*dt
-       this%prod10_grc(g)    = this%prod10_grc(g)    - this%prod10_loss_grc(g)*dt
-       this%prod100_grc(g)   = this%prod100_grc(g)   - this%prod100_loss_grc(g)*dt
-
-    end do
-
-    call this%ComputeSummaryVars(bounds)
-
+    return
   end subroutine UpdateProducts
 
   !-----------------------------------------------------------------------
+  
   subroutine PartitionWoodFluxes(this, bounds, &
        num_soilp, filter_soilp, &
        dwt_wood_product_gain_patch, &
@@ -599,7 +585,7 @@ contains
        this%hrv_deadstem_to_prod100_patch(p) = &
             wood_harvest_patch(p) * (1.0_r8 - pftcon%pprodharv10(patch%itype(p)))
     end do
-
+    
     ! Average harvest fluxes from patch to gridcell
     call p2g(bounds, &
          this%hrv_deadstem_to_prod10_patch(bounds%begp:bounds%endp), &
@@ -607,24 +593,18 @@ contains
          p2c_scale_type = 'unity', &
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
-
+    
     call p2g(bounds, &
          this%hrv_deadstem_to_prod100_patch(bounds%begp:bounds%endp), &
          this%hrv_deadstem_to_prod100_grc(bounds%begg:bounds%endg), &
          p2c_scale_type = 'unity', &
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
-
-    ! Zero the dwt gains
-    do g = bounds%begg, bounds%endg
-       this%dwt_prod10_gain_grc(g) = 0._r8
-       this%dwt_prod100_gain_grc(g) = 0._r8
-    end do
-
+    
     ! Partition dynamic land cover fluxes to 10 and 100-year product pools.
     do p = bounds%begp, bounds%endp
        g = patch%gridcell(p)
-
+       
        ! Note that pprod10 + pprod100 do NOT sum to 1: some fraction of the dwt changes
        ! was lost to other fluxes. dwt_wood_product_gain_patch gives the amount that goes
        ! to all product pools, so we need to determine the fraction of that flux that
@@ -647,9 +627,9 @@ contains
                msg='ERROR: dwt_wood_product_gain_patch(p) > 0' // &
                errMsg(sourcefile, __LINE__))
        end if
-
+       
     end do
-
+    
   end subroutine PartitionWoodFluxes
 
   !-----------------------------------------------------------------------
@@ -708,10 +688,6 @@ contains
 
     ! Determine gains from dynamic landcover
 
-    do g = bounds%begg, bounds%endg
-       this%dwt_cropprod1_gain_grc(g) = 0._r8
-    end do
-
     do p = bounds%begp, bounds%endp
        g = patch%gridcell(p)
 
@@ -739,10 +715,52 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: g        ! indices
-
-    character(len=*), parameter :: subname = 'ComputeSummaryVars'
+    real(r8) :: dt       ! time step (seconds)
+    real(r8) :: kprod1   ! decay constant for 1-year product pool
+    real(r8) :: kprod10  ! decay constant for 10-year product pool
+    real(r8) :: kprod100 ! decay constant for 100-year product pool
     !-----------------------------------------------------------------------
+    character(len=*), parameter :: subname = 'ComputeSummaryVars'
 
+    
+    !-----------------------------------------------------------------------
+    ! calculate losses from product pools
+    ! the following (1/s) rate constants result in ~90% loss of initial state over 1, 10 and 100 years,
+    ! respectively, using a discrete-time fractional decay algorithm.
+    kprod1  = 7.2e-8_r8
+    kprod10 = 7.2e-9_r8
+    kprod100 = 7.2e-10_r8
+
+    do g = bounds%begg, bounds%endg
+       ! calculate fluxes out of product pools (1/sec)
+       this%cropprod1_loss_grc(g) = this%cropprod1_grc(g) * kprod1
+       this%prod10_loss_grc(g)    = this%prod10_grc(g)    * kprod10
+       this%prod100_loss_grc(g)   = this%prod100_grc(g)   * kprod100
+    end do
+
+    ! set time steps
+    dt = get_step_size_real()
+
+    ! update product state variables
+    do g = bounds%begg, bounds%endg
+
+       ! fluxes into wood & crop product pools, from landcover change
+       this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%dwt_cropprod1_gain_grc(g)*dt
+       this%prod10_grc(g)    = this%prod10_grc(g)    + this%dwt_prod10_gain_grc(g)*dt
+       this%prod100_grc(g)   = this%prod100_grc(g)   + this%dwt_prod100_gain_grc(g)*dt
+
+       ! fluxes into wood & crop product pools, from harvest
+       this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%crop_harvest_to_cropprod1_grc(g)*dt
+       this%prod10_grc(g)    = this%prod10_grc(g)    + this%hrv_deadstem_to_prod10_grc(g)*dt
+       this%prod100_grc(g)   = this%prod100_grc(g)   + this%hrv_deadstem_to_prod100_grc(g)*dt
+
+       ! fluxes out of wood & crop product pools, from decomposition
+       this%cropprod1_grc(g) = this%cropprod1_grc(g) - this%cropprod1_loss_grc(g)*dt
+       this%prod10_grc(g)    = this%prod10_grc(g)    - this%prod10_loss_grc(g)*dt
+       this%prod100_grc(g)   = this%prod100_grc(g)   - this%prod100_loss_grc(g)*dt
+
+    end do
+    
     do g = bounds%begg, bounds%endg
 
        ! total wood products

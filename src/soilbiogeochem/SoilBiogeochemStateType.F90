@@ -103,7 +103,7 @@ contains
 
     allocate(this%nue_decomp_cascade_col(1:ndecomp_cascade_transitions)); 
     this%nue_decomp_cascade_col(:) = nan
-
+    
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------

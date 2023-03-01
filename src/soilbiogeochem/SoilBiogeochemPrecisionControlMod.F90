@@ -70,7 +70,8 @@ contains
     ! they get too small.
     !
     ! !USES:
-    use clm_varctl , only : iulog, use_c13, use_c14, use_nitrif_denitrif, use_cn
+    use clm_varctl , only : iulog, use_c13, use_c14, use_nitrif_denitrif
+    use clm_varctl , only : use_cn, use_fates
     use clm_varpar , only : nlevdecomp
     use CNSharedParamsMod, only: use_fun
     !
@@ -128,7 +129,7 @@ contains
                   cc = cc + cs%decomp_cpools_vr_col(c,j,k)
                   cs%decomp_cpools_vr_col(c,j,k) = 0._r8
 
-                  if (use_cn) then
+                  if (use_cn .or. use_fates) then
                      cn = cn + ns%decomp_npools_vr_col(c,j,k)
                      ns%decomp_npools_vr_col(c,j,k) = 0._r8
                   endif
@@ -150,7 +151,7 @@ contains
 
             cs%ctrunc_vr_col(c,j) = cs%ctrunc_vr_col(c,j) + cc
 
-            if (use_cn) then
+            if (use_cn .or. use_fates) then
                ns%ntrunc_vr_col(c,j) = ns%ntrunc_vr_col(c,j) + cn
             endif
             if ( use_c13 ) then

@@ -759,8 +759,9 @@ contains
     real(r8), intent(in), optional :: soilbiogeochem_cwdc_col(bounds%begc:)
     real(r8), intent(in), optional :: soilbiogeochem_cwdn_col(bounds%begc:)
     real(r8), intent(in), optional :: soilbiogeochem_decomp_cascade_ctransfer_col(bounds%begc:,1:)
-    real(r8), intent(in), optional :: leafc_to_litter_patch(bounds%begp:)
-    real(r8), intent(in), optional :: frootc_to_litter_patch(bounds%begp:)
+
+    real(r8), intent(in), optional :: leafc_to_litter_patch(:)
+    real(r8), intent(in), optional :: frootc_to_litter_patch(:)
     !
     ! !LOCAL VARIABLES:
     integer  :: c,j,k,l,p
@@ -895,21 +896,20 @@ contains
 
     ! Calculate ligninNratio
     ! FATES does its own calculation
-    if (decomp_method == mimics_decomp) then
+    if (decomp_method == mimics_decomp .and. num_soilp>0) then
+
        do fp = 1,num_soilp
           p = filter_soilp(fp)
-          if( .not.patch%is_fates(p)) then
-             associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
-               ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
-                    pftcon%lflitcn(ivt(p)) * &
-                    leafc_to_litter_patch(p)
-               ligninNratio_froot_patch(p) = pftcon%fr_flig(ivt(p)) * &
-                    pftcon%frootcn(ivt(p)) * &
-                    frootc_to_litter_patch(p)
-             end associate
-          end if
+          associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
+            ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
+                 pftcon%lflitcn(ivt(p)) * &
+                 leafc_to_litter_patch(p)
+            ligninNratio_froot_patch(p) = pftcon%fr_flig(ivt(p)) * &
+                 pftcon%frootcn(ivt(p)) * &
+                 frootc_to_litter_patch(p)
+          end associate
        end do
-
+       
        call p2c(bounds, num_soilc, filter_soilc, &
             ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
             ligninNratio_leaf_col(bounds%begc:bounds%endc))
@@ -926,19 +926,21 @@ contains
        ! Calculate ligninNratioAve
        do fc = 1,num_soilc
           c = filter_soilc(fc)
-          if (soilbiogeochem_cwdn_col(c) > 0._r8) then
-             ligninNratio_cwd = CNParamsShareInst%cwd_flig * &
-                (soilbiogeochem_cwdc_col(c) / soilbiogeochem_cwdn_col(c)) * &
-                soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2)
-          else
-             ligninNratio_cwd = 0._r8
+          if(.not.col%is_fates(c)) then
+             if (soilbiogeochem_cwdn_col(c) > 0._r8) then
+                ligninNratio_cwd = CNParamsShareInst%cwd_flig * &
+                     (soilbiogeochem_cwdc_col(c) / soilbiogeochem_cwdn_col(c)) * &
+                     soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2)
+             else
+                ligninNratio_cwd = 0._r8
+             end if
+             this%litr_lig_c_to_n_col(c) = &
+                  (ligninNratio_leaf_col(c) + ligninNratio_froot_col(c) + &
+                  ligninNratio_cwd) / &
+                  max(1.0e-3_r8, leafc_to_litter_col(c) + &
+                  frootc_to_litter_col(c) + &
+                  soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2))
           end if
-          this%litr_lig_c_to_n_col(c) = &
-             (ligninNratio_leaf_col(c) + ligninNratio_froot_col(c) + &
-              ligninNratio_cwd) / &
-              max(1.0e-3_r8, leafc_to_litter_col(c) + &
-                             frootc_to_litter_col(c) + &
-                             soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2))
        end do
     end if
 

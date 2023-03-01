@@ -48,6 +48,7 @@ module CLMFatesInterfaceMod
    use CNProductsMod     , only : cn_products_type
    use clm_varctl        , only : iulog
    use clm_varctl        , only : fates_parteh_mode
+   use PRTGenericMod     , only : prt_cnp_flex_allom_hyp
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
    use clm_varctl        , only : use_fates_tree_damage
@@ -2343,50 +2344,56 @@ module CLMFatesInterfaceMod
 
  ! ======================================================================================
 
- subroutine wrap_WoodProducts(this, bounds_clump, fc, filterc, c_products_inst)
+ subroutine wrap_WoodProducts(this, bounds_clump, num_soilc, filter_soilc, &
+                              c_products_inst, n_products_inst)
 
    ! !ARGUMENTS:
    class(hlm_fates_interface_type), intent(inout) :: this
    type(bounds_type)              , intent(in)    :: bounds_clump
-   integer                        , intent(in)    :: fc                   ! size of column filter
-   integer                        , intent(in)    :: filterc(fc)          ! column filter
+   integer                        , intent(in)    :: num_soilc          ! size of column filter
+   integer                        , intent(in)    :: filter_soilc(:)    ! column filter
    type(cn_products_type)         , intent(inout) :: c_products_inst
+   type(cn_products_type)         , intent(inout) :: n_products_inst
    
    ! Locals
-   integer                                        :: s,c,icc,g
-   integer                                        :: nc
-
-   ! This wrapper is not active.  This is just place-holder code until
-   ! harvest-product flux is fully implemented.  RGK-05-2022
+   integer                                        :: s,c,g,fc
+   integer                                        :: ci                 ! Clump index
+      
+   ci = bounds_clump%clump_index
    
-   !associate( & 
-   !     prod10c => c_products_inst%hrv_deadstem_to_prod10_grc, & 
-   !     prod100c => c_products_inst%hrv_deadstem_to_prod100_grc)
+   ! Loop over columns
+   do fc = 1, num_soilc
+      
+      c = filter_soilc(fc)
+      g = col%gridcell(c)
+      s = this%f2hmap(ci)%hsites(c)
      
-   !  nc = bounds_clump%clump_index
-     ! Loop over columns
-     do icc = 1,fc
-        c = filterc(icc)
-        g = col%gridcell(c)
-        s = this%f2hmap(nc)%hsites(c)
-        
-        ! Shijie: Pass harvested wood products to ELM variable
-        !     prod10c(g) = prod10c(g) + &
-        !          this%fates(nc)%bc_out(s)%hrv_deadstemc_to_prod10c
-        !     prod100c(g) = prod100c(g) + &
-        !          this%fates(nc)%bc_out(s)%hrv_deadstemc_to_prod100c
-        
-        ! RGK: THere is also a patch level variable
-        !do ifp = 1,this%fates(nc)%sites(s)%youngest_patch%patchno
-        !   p = ifp+col%patchi(c)
-        !   hrv_deadstemc_to_prod10c(p)  = 
-        !   hrv_deadstemc_to_prod100c(p)
-        !end do
+      ! Shijie: Pass harvested wood products to CLM product pools
+      c_products_inst%hrv_deadstem_to_prod10_grc(g) = &
+           c_products_inst%hrv_deadstem_to_prod10_grc(g) + &
+           this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod10c
+      
+      c_products_inst%hrv_deadstem_to_prod100_grc(g) = &
+           c_products_inst%hrv_deadstem_to_prod100_grc(g) + &
+           this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod100c
+
+      ! If N cycling is on
+      if(fates_parteh_mode .eq. prt_cnp_flex_allom_hyp ) then
+         
+         !n_products_inst%hrv_deadstem_to_prod10_grc(g) = &
+         !     n_products_inst%hrv_deadstem_to_prod10_grc(g) + &
+         !     this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod10c
+         
+         !n_products_inst%hrv_deadstem_to_prod100_grc(g) = &
+         !     n_products_inst%hrv_deadstem_to_prod100_grc(g) + &
+         !     this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod100c
+         
+      end if
+
           
-    end do
+   end do
     
-    !  end associate
-  return
+   return
  end subroutine wrap_WoodProducts
  
  ! ======================================================================================

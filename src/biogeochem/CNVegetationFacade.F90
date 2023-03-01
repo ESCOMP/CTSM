@@ -1079,12 +1079,14 @@ contains
 
     ! Set controls on very low values in critical state variables 
 
-    call t_startf('CNPrecisionControl')
-    call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
-         this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, &
-         this%c14_cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
-    call t_stopf('CNPrecisionControl')
-
+    if(num_soilp>0)then
+       call t_startf('CNPrecisionControl')
+       call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
+            this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, &
+            this%c14_cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
+       call t_stopf('CNPrecisionControl')
+    end if
+       
     call t_startf('SoilBiogeochemPrecisionControl')
     call SoilBiogeochemPrecisionControl(num_soilc, filter_soilc,  &
          soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
@@ -1194,7 +1196,8 @@ contains
             this%cnveg_nitrogenflux_inst, &
             this%cnveg_nitrogenstate_inst, &
             this%n_products_inst, &
-            atm2lnd_inst)
+            atm2lnd_inst, &
+            clm_fates)
 
     end if
 

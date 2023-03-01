@@ -11,7 +11,7 @@ module CNDriverMod
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_nitrif_denitrif, use_nguardrail
-  use clm_varctl                      , only : iulog, use_crop, use_crop_agsys
+  use clm_varctl                      , only : iulog, use_crop, use_crop_agsys, use_cn
   use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, century_decomp, decomp_method
   use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
@@ -259,31 +259,33 @@ contains
     end if
     call t_stopf('CNZero-soilbgc-cflux')
 
-    call t_startf('CNZero-vegbgc-cflux')
-    call cnveg_carbonflux_inst%SetValues( &
-         nvegcpool,&
-         num_soilp, filter_soilp, 0._r8, &
-         num_soilc, filter_soilc, 0._r8)
-    if ( use_c13 ) then
-       call c13_cnveg_carbonflux_inst%SetValues( &
+    if(num_soilp>0)then
+       call t_startf('CNZero-vegbgc-cflux')
+       call cnveg_carbonflux_inst%SetValues( &
             nvegcpool,&
             num_soilp, filter_soilp, 0._r8, &
             num_soilc, filter_soilc, 0._r8)
-    end if
-    if ( use_c14 ) then
-       call c14_cnveg_carbonflux_inst%SetValues( &
-            nvegcpool,&
+       if ( use_c13 ) then
+          call c13_cnveg_carbonflux_inst%SetValues( &
+               nvegcpool,&
+               num_soilp, filter_soilp, 0._r8, &
+               num_soilc, filter_soilc, 0._r8)
+       end if
+       if ( use_c14 ) then
+          call c14_cnveg_carbonflux_inst%SetValues( &
+               nvegcpool,&
+               num_soilp, filter_soilp, 0._r8, &
+               num_soilc, filter_soilc, 0._r8)
+       end if
+       call t_stopf('CNZero-vegbgc-cflux')
+       
+       call t_startf('CNZero-vegbgc-nflux')
+       call cnveg_nitrogenflux_inst%SetValues( &
+            nvegnpool, &
             num_soilp, filter_soilp, 0._r8, &
             num_soilc, filter_soilc, 0._r8)
     end if
-    call t_stopf('CNZero-vegbgc-cflux')
-
-    call t_startf('CNZero-vegbgc-nflux')
-    call cnveg_nitrogenflux_inst%SetValues( &
-         nvegnpool, &
-         num_soilp, filter_soilp, 0._r8, &
-         num_soilc, filter_soilc, 0._r8)
-
+       
     call t_stopf('CNZero-vegbgc-nflux')
     call t_startf('CNZero-soilbgc-nflux')
     call soilbiogeochem_nitrogenflux_inst%SetValues( &
@@ -309,7 +311,8 @@ contains
     else
        call t_startf('CNFixation')
        call CNNFixation( num_soilc, filter_soilc, &
-            cnveg_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
+            cnveg_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
+            clm_fates, bounds%clump_index)
        call t_stopf('CNFixation')
     end if
   
@@ -360,7 +363,8 @@ contains
          p_decomp_npool_to_din=p_decomp_npool_to_din(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions))
     call t_stopf('SoilBiogeochemPotential')
 
-    ! calculate vertical profiles for distributing soil and litter C and N (previously subroutine decomp_vertprofiles called from CNDecompAlloc)
+    ! calculate vertical profiles for distributing soil and litter C and N
+    ! (previously subroutine decomp_vertprofiles called from CNDecompAlloc)
     call SoilBiogeochemVerticalProfile(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
          active_layer_inst, soilstate_inst,soilbiogeochem_state_inst)
 
@@ -450,9 +454,16 @@ contains
 
      ! get the column-averaged plant_ndemand (needed for following call to SoilBiogeochemCompetition)
 
-     call p2c(bounds, num_soilc, filter_soilc,                    &
-         cnveg_nitrogenflux_inst%plant_ndemand_patch(begp:endp), &
-         soilbiogeochem_state_inst%plant_ndemand_col(begc:endc))
+     if(num_soilp>0)then
+        call p2c(bounds, num_soilc, filter_soilc,                    &
+             cnveg_nitrogenflux_inst%plant_ndemand_patch(begp:endp), &
+             soilbiogeochem_state_inst%plant_ndemand_col(begc:endc))
+     else
+        ! With FATES N coupling, we will have a call to fill
+        ! this in on the filter_soilc
+        soilbiogeochem_state_inst%plant_ndemand_col(begc:endc) = 0._r8
+     end if
+
      call t_stopf('calc_plant_nutrient_demand')
 
      ! resolve plant/heterotroph competition for mineral N 
@@ -587,7 +598,7 @@ contains
 
     call t_stopf('CNUpdate0')
 
-    if ( use_nguardrail ) then
+    if ( use_nguardrail .and. num_soilp>0 ) then
        call t_startf('CNPrecisionControl')
        call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
             cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, &
@@ -644,11 +655,12 @@ contains
 
     ! Update all prognostic nitrogen state variables (except for gap-phase mortality and fire fluxes)
     call NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
+         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
+         clm_fates, bounds%clump_index)
 
     call t_stopf('CNUpdate1')
 
-    if ( use_nguardrail ) then
+    if ( use_nguardrail .and. num_soilp>0 ) then
        call t_startf('CNPrecisionControl')
        call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
             cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, &
@@ -681,235 +693,257 @@ contains
     ! Calculate the gap mortality carbon and nitrogen fluxes
     !--------------------------------------------
 
-    call t_startf('CNGapMortality')
+    if_soilp1: if(num_soilp>0)then
+       
+       call t_startf('CNGapMortality')
+       call CNGapMortality (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                &
+            dgvs_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,  soilbiogeochem_nitrogenflux_inst,          &
+            cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,  canopystate_inst,                                       &   
+            leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp, 1:nlevdecomp_full),   &
+            froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp, 1:nlevdecomp_full), & 
+            croot_prof_patch=soilbiogeochem_state_inst%croot_prof_patch(begp:endp, 1:nlevdecomp_full), &
+            stem_prof_patch=soilbiogeochem_state_inst%stem_prof_patch(begp:endp, 1:nlevdecomp_full))   
+       call t_stopf('CNGapMortality')
 
-    call CNGapMortality (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                &
-         dgvs_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,  soilbiogeochem_nitrogenflux_inst,          &
-         cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,  canopystate_inst,                                       &   
-         !cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                                                         &  
-         leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp, 1:nlevdecomp_full),   &
-         froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp, 1:nlevdecomp_full), & 
-         croot_prof_patch=soilbiogeochem_state_inst%croot_prof_patch(begp:endp, 1:nlevdecomp_full), &
-         stem_prof_patch=soilbiogeochem_state_inst%stem_prof_patch(begp:endp, 1:nlevdecomp_full))   
-
-    call t_stopf('CNGapMortality')
-
-    !--------------------------------------------------------------------------
-    ! Update2 (gap mortality)
-    ! The state updates are still called for the matrix solution (use_matrixn
-    ! and use_soil_matrixcn) but most of the state updates are done after
-    ! the matrix multiply in VegMatrix and SoilMatrix.
-    !--------------------------------------------------------------------------
-
-    call t_startf('CNUpdate2')
-
-    ! Set the carbon isotopic fluxes for gap mortality
-    if ( use_c13 ) then
-       call CIsoFlux2(num_soilc, filter_soilc, num_soilp, filter_soilp,               &
-            soilbiogeochem_state_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-            iso_cnveg_carbonflux_inst=c13_cnveg_carbonflux_inst,                      &
-            iso_cnveg_carbonstate_inst=c13_cnveg_carbonstate_inst,                    &
-            isotope='c13')
-    end if
-    if ( use_c14 ) then
-       call CIsoFlux2(num_soilc, filter_soilc, num_soilp, filter_soilp,               &
-            soilbiogeochem_state_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-            iso_cnveg_carbonflux_inst=c14_cnveg_carbonflux_inst,                      &
-            iso_cnveg_carbonstate_inst=c14_cnveg_carbonstate_inst,                    &
-            isotope='c14')
-    end if
-
-    ! Update all the prognostic carbon state variables affected by gap-phase mortality fluxes
-    call CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_carbonflux_inst)
-    if ( use_c13 ) then
+       !--------------------------------------------------------------------------
+       ! Update2 (gap mortality)
+       ! The state updates are still called for the matrix solution (use_matrixn
+       ! and use_soil_matrixcn) but most of the state updates are done after
+       ! the matrix multiply in VegMatrix and SoilMatrix.
+       !--------------------------------------------------------------------------
+       
+       call t_startf('CNUpdate2')
+       ! Set the carbon isotopic fluxes for gap mortality
+       if ( use_c13 ) then
+          call CIsoFlux2(num_soilc, filter_soilc, num_soilp, filter_soilp,               &
+               soilbiogeochem_state_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
+               iso_cnveg_carbonflux_inst=c13_cnveg_carbonflux_inst,                      &
+               iso_cnveg_carbonstate_inst=c13_cnveg_carbonstate_inst,                    &
+               isotope='c13')
+       end if
+       if ( use_c14 ) then
+          call CIsoFlux2(num_soilc, filter_soilc, num_soilp, filter_soilp,               &
+               soilbiogeochem_state_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
+               iso_cnveg_carbonflux_inst=c14_cnveg_carbonflux_inst,                      &
+               iso_cnveg_carbonstate_inst=c14_cnveg_carbonstate_inst,                    &
+               isotope='c14')
+       end if
+    
+       ! Update all the prognostic carbon state variables affected by gap-phase mortality fluxes
        call CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+            cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
+            soilbiogeochem_carbonflux_inst)
+       if ( use_c13 ) then
+          call CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+               c13_soilbiogeochem_carbonflux_inst)
+       end if
+       if ( use_c14 ) then
+          call CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+               c14_soilbiogeochem_carbonflux_inst)
+       end if
+       
+       ! Update all the prognostic nitrogen state variables affected by gap-phase mortality fluxes
+       call NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+            cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst,soilbiogeochem_nitrogenstate_inst, &
+            soilbiogeochem_nitrogenflux_inst)
+
+       !--------------------------------------------------------------------------
+       ! Update2h (harvest)
+       ! The state updates are still called for the matrix solution (use_matrixn
+       ! and use_soil_matrixcn) but most of the state updates are done after
+       ! the matrix multiply in VegMatrix and SoilMatrix.
+       !--------------------------------------------------------------------------
+    
+       ! Set harvest mortality routine
+       if (get_do_harvest()) then
+          call CNHarvest(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               soilbiogeochem_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+               cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+       end if
+
+       if ( use_c13 ) then
+          call CIsoFlux2h(num_soilc, filter_soilc, num_soilp, filter_soilp,   &
+               soilbiogeochem_state_inst,                                     &
+               cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
+               c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,         &                         
+               isotope='c13')
+       end if
+       if ( use_c14 ) then
+          call CIsoFlux2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               soilbiogeochem_state_inst,                                     &
+               cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
+               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,         &                         
+               isotope='c14')
+       end if
+       
+       call CStateUpdate2h( num_soilc, filter_soilc,  num_soilp, filter_soilp, &
+            cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
+            soilbiogeochem_carbonflux_inst)
+       if ( use_c13 ) then
+          call CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
             c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
             c13_soilbiogeochem_carbonflux_inst)
-    end if
-    if ( use_c14 ) then
-       call CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-            c14_soilbiogeochem_carbonflux_inst)
-    end if
+       end if
+       if ( use_c14 ) then
+          call CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+               c14_soilbiogeochem_carbonflux_inst)
+       end if
+       
+       call NStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+            cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst, &
+            soilbiogeochem_nitrogenflux_inst)
+       call t_stopf('CNUpdate2')
 
-    ! Update all the prognostic nitrogen state variables affected by gap-phase mortality fluxes
-    call NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst,soilbiogeochem_nitrogenstate_inst, &
-         soilbiogeochem_nitrogenflux_inst)
-
-    !--------------------------------------------------------------------------
-    ! Update2h (harvest)
-    ! The state updates are still called for the matrix solution (use_matrixn
-    ! and use_soil_matrixcn) but most of the state updates are done after
-    ! the matrix multiply in VegMatrix and SoilMatrix.
-    !--------------------------------------------------------------------------
-
-    ! Set harvest mortality routine 
-    if (get_do_harvest()) then
-       call CNHarvest(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            soilbiogeochem_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
-            cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
-    end if
-
-    if ( use_c13 ) then
-       call CIsoFlux2h(num_soilc, filter_soilc, num_soilp, filter_soilp,   &
-            soilbiogeochem_state_inst,                                     &
-            cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
-            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,         &                         
-            isotope='c13')
-    end if
-    if ( use_c14 ) then
-       call CIsoFlux2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            soilbiogeochem_state_inst,                                     &
-            cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
-            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,         &                         
-            isotope='c14')
-    end if
-
-    call CStateUpdate2h( num_soilc, filter_soilc,  num_soilp, filter_soilp, &
-         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_carbonflux_inst)
-    if ( use_c13 ) then
-       call CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
-            c13_soilbiogeochem_carbonflux_inst)
-    end if
-    if ( use_c14 ) then
-       call CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-            c14_soilbiogeochem_carbonflux_inst)
-    end if
-
-    call NStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst, &
-         soilbiogeochem_nitrogenflux_inst)
-    call t_stopf('CNUpdate2')
-
-    if ( use_nguardrail ) then
+    end if if_soilp1
+       
+    if ( use_nguardrail .and. num_soilp>0 ) then
        call t_startf('CNPrecisionControl')
        call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
             cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, &
             c14_cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
        call t_stopf('CNPrecisionControl')
     end if
+    
     !--------------------------------------------
     ! Calculate loss fluxes from wood products pools
     ! and update product pool state variables
     !--------------------------------------------
 
     call t_startf('CNWoodProducts')
-    call c_products_inst%UpdateProducts(bounds, &
-         num_soilp, filter_soilp, &
-         dwt_wood_product_gain_patch = cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
-         wood_harvest_patch = cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
-         dwt_crop_product_gain_patch = cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
-         crop_harvest_to_cropprod_patch = cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(begp:endp))
+    
+    call c_products_inst%SetValues(bounds,0._r8)
+    if (use_c13) call c13_products_inst%SetValues(bounds,0._r8)
+    if (use_c14) call c14_products_inst%SetValues(bounds,0._r8)
+    call n_products_inst%SetValues(bounds,0._r8)
+          
+    if(use_fates) then
+       call clm_fates%wrap_WoodProducts(bounds, num_soilc, filter_soilc, c_products_inst, n_products_inst)
+    end if
+
+    if_soilp2: if(num_soilp>0)then
+       call c_products_inst%UpdateProducts(bounds, &
+            num_soilp, filter_soilp, &
+            dwt_wood_product_gain_patch = cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
+            wood_harvest_patch = cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
+            dwt_crop_product_gain_patch = cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
+            crop_harvest_to_cropprod_patch = cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(begp:endp))
+
+       if (use_c13) then
+          call c13_products_inst%UpdateProducts(bounds, &
+               num_soilp, filter_soilp, &
+               dwt_wood_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
+               wood_harvest_patch = c13_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
+               dwt_crop_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
+               crop_harvest_to_cropprod_patch = c13_cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(begp:endp))
+       end if
+
+       if (use_c14) then
+          call c14_products_inst%UpdateProducts(bounds, &
+               num_soilp, filter_soilp, &
+               dwt_wood_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
+               wood_harvest_patch = c14_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
+               dwt_crop_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
+               crop_harvest_to_cropprod_patch = c14_cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(begp:endp))
+       end if
+
+       call n_products_inst%UpdateProducts(bounds, &
+            num_soilp, filter_soilp, &
+            dwt_wood_product_gain_patch = cnveg_nitrogenflux_inst%dwt_wood_productn_gain_patch(begp:endp), &
+            wood_harvest_patch = cnveg_nitrogenflux_inst%wood_harvestn_patch(begp:endp), &
+            dwt_crop_product_gain_patch = cnveg_nitrogenflux_inst%dwt_crop_productn_gain_patch(begp:endp), &
+            crop_harvest_to_cropprod_patch = cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(begp:endp))
+       
+    end if if_soilp2
+ 
+    call c_products_inst%ComputeSummaryVars(bounds)
+    if (use_c13) call c13_products_inst%ComputeSummaryVars(bounds)
+    if (use_c14) call c14_products_inst%ComputeSummaryVars(bounds)
+    call n_products_inst%ComputeSummaryVars(bounds)
+    
     call t_stopf('CNWoodProducts')
-
-    if (use_c13) then
-       call c13_products_inst%UpdateProducts(bounds, &
-            num_soilp, filter_soilp, &
-            dwt_wood_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
-            wood_harvest_patch = c13_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
-            dwt_crop_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
-            crop_harvest_to_cropprod_patch = c13_cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(begp:endp))
-    end if
-
-    if (use_c14) then
-       call c14_products_inst%UpdateProducts(bounds, &
-            num_soilp, filter_soilp, &
-            dwt_wood_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
-            wood_harvest_patch = c14_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
-            dwt_crop_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
-            crop_harvest_to_cropprod_patch = c14_cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(begp:endp))
-    end if
-
-    call n_products_inst%UpdateProducts(bounds, &
-         num_soilp, filter_soilp, &
-         dwt_wood_product_gain_patch = cnveg_nitrogenflux_inst%dwt_wood_productn_gain_patch(begp:endp), &
-         wood_harvest_patch = cnveg_nitrogenflux_inst%wood_harvestn_patch(begp:endp), &
-         dwt_crop_product_gain_patch = cnveg_nitrogenflux_inst%dwt_crop_productn_gain_patch(begp:endp), &
-         crop_harvest_to_cropprod_patch = cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(begp:endp))
-
+       
     !--------------------------------------------
     ! Calculate fire area and fluxes
     !--------------------------------------------
 
-    call t_startf('CNFire')
-    call cnfire_method%CNFireArea(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
-         atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
-         waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
-         cnveg_state_inst, cnveg_carbonstate_inst, &
-         totlitc_col=soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
-         decomp_cpools_vr_col=soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools), &
-         t_soi17cm_col=temperature_inst%t_soi17cm_col(begc:endc))
+    if_soilp3: if(num_soilp>0)then
+       call t_startf('CNFire')
+       call cnfire_method%CNFireArea(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+            num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
+            atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
+            waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
+            cnveg_state_inst, cnveg_carbonstate_inst, &
+            totlitc_col=soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
+            decomp_cpools_vr_col=soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools), &
+            t_soi17cm_col=temperature_inst%t_soi17cm_col(begc:endc))
 
-    call cnfire_method%CNFireFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                      &
-         num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,                                                             &
-         dgvs_inst, cnveg_state_inst,                                                                                              &
-         cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                         &
-         soilbiogeochem_carbonflux_inst,                                                                                           &
-         leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp, 1:nlevdecomp_full),                                  &
-         froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp, 1:nlevdecomp_full),                                &
-         croot_prof_patch=soilbiogeochem_state_inst%croot_prof_patch(begp:endp, 1:nlevdecomp_full),                                &
-         stem_prof_patch=soilbiogeochem_state_inst%stem_prof_patch(begp:endp, 1:nlevdecomp_full),                                  &
-         totsomc_col=soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc),                                                       &
-         decomp_cpools_vr_col=soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools),   &
-         decomp_npools_vr_col=soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools), &
-         somc_fire_col=soilbiogeochem_carbonflux_inst%somc_fire_col(begc:endc))
-    call t_stopf('CNFire')
+       call cnfire_method%CNFireFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                      &
+            num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,                                                             &
+            dgvs_inst, cnveg_state_inst,                                                                                              &
+            cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                         &
+            soilbiogeochem_carbonflux_inst,                                                                                           &
+            leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp, 1:nlevdecomp_full),                                  &
+            froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp, 1:nlevdecomp_full),                                &
+            croot_prof_patch=soilbiogeochem_state_inst%croot_prof_patch(begp:endp, 1:nlevdecomp_full),                                &
+            stem_prof_patch=soilbiogeochem_state_inst%stem_prof_patch(begp:endp, 1:nlevdecomp_full),                                  &
+            totsomc_col=soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc),                                                       &
+            decomp_cpools_vr_col=soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools),   &
+            decomp_npools_vr_col=soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools), &
+            somc_fire_col=soilbiogeochem_carbonflux_inst%somc_fire_col(begc:endc))
+       call t_stopf('CNFire')
 
+       !--------------------------------------------------------------------------
+       ! Update3
+       ! The state updates are still called for the matrix solution (use_matrixn
+       ! and use_soil_matrixcn) but most of the state updates are done after
+       ! the matrix multiply in VegMatrix and SoilMatrix.
+       !--------------------------------------------------------------------------
 
-    !--------------------------------------------------------------------------
-    ! Update3
-    ! The state updates are still called for the matrix solution (use_matrixn
-    ! and use_soil_matrixcn) but most of the state updates are done after
-    ! the matrix multiply in VegMatrix and SoilMatrix.
-    !--------------------------------------------------------------------------
+       call t_startf('CNUpdate3')
+       if ( use_c13 ) then
+          call CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               soilbiogeochem_state_inst , soilbiogeochem_carbonstate_inst,         &
+               cnveg_carbonflux_inst, cnveg_carbonstate_inst,                       &
+               c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,               &
+               c13_soilbiogeochem_carbonstate_inst, &
+               isotope='c13')
+       end if
+       if ( use_c14 ) then
+          call CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               soilbiogeochem_state_inst , soilbiogeochem_carbonstate_inst,         &
+               cnveg_carbonflux_inst, cnveg_carbonstate_inst,                       &
+               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,               &
+               c14_soilbiogeochem_carbonstate_inst, &
+               isotope='c14')
+       end if
 
-    call t_startf('CNUpdate3')
-    if ( use_c13 ) then
-       call CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            soilbiogeochem_state_inst , soilbiogeochem_carbonstate_inst,         &
-            cnveg_carbonflux_inst, cnveg_carbonstate_inst,                       &
-            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,               &
-            c13_soilbiogeochem_carbonstate_inst, &
-            isotope='c13')
-    end if
-    if ( use_c14 ) then
-       call CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            soilbiogeochem_state_inst , soilbiogeochem_carbonstate_inst,         &
-            cnveg_carbonflux_inst, cnveg_carbonstate_inst,                       &
-            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,               &
-            c14_soilbiogeochem_carbonstate_inst, &
-            isotope='c14')
-    end if
-
-    call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_carbonflux_inst)
-
-    if ( use_c13 ) then
        call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
-            c13_soilbiogeochem_carbonflux_inst)
-    end if
+            cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
+            soilbiogeochem_carbonflux_inst)
 
-    if ( use_c14 ) then
-       call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-            c14_soilbiogeochem_carbonflux_inst)
+       if ( use_c13 ) then
+          call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+               c13_soilbiogeochem_carbonflux_inst)
+       end if
 
-       call C14Decay(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-            c14_cnveg_carbonflux_inst,  c14_soilbiogeochem_carbonflux_inst)
-    end if
-    call t_stopf('CNUpdate3')
+       if ( use_c14 ) then
+          call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+               c14_soilbiogeochem_carbonflux_inst)
 
-    if ( use_nguardrail ) then
+          call C14Decay(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+               c14_cnveg_carbonflux_inst,  c14_soilbiogeochem_carbonflux_inst)
+       end if
+       call t_stopf('CNUpdate3')
+
+    end if if_soilp3
+    
+    if ( use_nguardrail .and. num_soilp>0 ) then
        call t_startf('CNPrecisionControl')
        call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
             cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, &
@@ -990,15 +1024,14 @@ contains
     call t_stopf('SoilBiogeochemNLeaching')
 
     ! Nitrogen state variable update, mortality fluxes.
-
-    call t_startf('NUpdate3')
-
-    call NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
-         soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
-
-    call t_stopf('NUpdate3')
-
+    if(num_soilp>0)then
+       call t_startf('NUpdate3')
+       call NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+            cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
+            soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+       call t_stopf('NUpdate3')
+    end if
+    
     !--------------------------------------------------------------------------
     ! Solve the matrix solution and do the state update for matrix solution as
     ! part of that
@@ -1168,16 +1201,16 @@ contains
          soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
          soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
          soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
-         leafc_to_litter_patch=cnveg_carbonflux_inst%leafc_to_litter_patch(begp:endp), &
-         frootc_to_litter_patch=cnveg_carbonflux_inst%frootc_to_litter_patch(begp:endp))
+         leafc_to_litter_patch=cnveg_carbonflux_inst%leafc_to_litter_patch, &
+         frootc_to_litter_patch=cnveg_carbonflux_inst%frootc_to_litter_patch)
     if ( use_c13 ) then
        call c13_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
          c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
          c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
          soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
-         leafc_to_litter_patch=c13_cnveg_carbonflux_inst%leafc_to_litter_patch(begp:endp), &
-         frootc_to_litter_patch=c13_cnveg_carbonflux_inst%frootc_to_litter_patch(begp:endp))
+         leafc_to_litter_patch=c13_cnveg_carbonflux_inst%leafc_to_litter_patch, &
+         frootc_to_litter_patch=c13_cnveg_carbonflux_inst%frootc_to_litter_patch)
     end if
     if ( use_c14 ) then
        call c14_soilbiogeochem_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, &
@@ -1185,8 +1218,8 @@ contains
          c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
          c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
          soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
-         leafc_to_litter_patch=c14_cnveg_carbonflux_inst%leafc_to_litter_patch(begp:endp), &
-         frootc_to_litter_patch=c14_cnveg_carbonflux_inst%frootc_to_litter_patch(begp:endp))
+         leafc_to_litter_patch=c14_cnveg_carbonflux_inst%leafc_to_litter_patch, &
+         frootc_to_litter_patch=c14_cnveg_carbonflux_inst%frootc_to_litter_patch)
     end if
     call soilbiogeochem_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc)
 
@@ -1194,41 +1227,43 @@ contains
     ! cnveg carbon/nitrogen flux summary
     ! ----------------------------------------------
 
-    call t_startf('CNvegCflux_summary')
-    call cnveg_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         isotope='bulk', &
-         soilbiogeochem_hr_col=soilbiogeochem_carbonflux_inst%hr_col(begc:endc), &
-         soilbiogeochem_cwdhr_col=soilbiogeochem_carbonflux_inst%cwdhr_col(begc:endc), &
-         soilbiogeochem_lithr_col=soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
-         soilbiogeochem_decomp_cascade_ctransfer_col=&
-         soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-         product_closs_grc=c_products_inst%product_loss_grc(begg:endg))
-
-    if ( use_c13 ) then
-       call c13_cnveg_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            isotope='c13', &
-            soilbiogeochem_hr_col=c13_soilbiogeochem_carbonflux_inst%hr_col(begc:endc), &
-            soilbiogeochem_cwdhr_col=c13_soilbiogeochem_carbonflux_inst%cwdhr_col(begc:endc), &
-            soilbiogeochem_lithr_col=c13_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
+    if_soilp: if(num_soilp>0) then
+       call t_startf('CNvegCflux_summary')
+       call cnveg_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+            isotope='bulk', &
+            soilbiogeochem_hr_col=soilbiogeochem_carbonflux_inst%hr_col(begc:endc), &
+            soilbiogeochem_cwdhr_col=soilbiogeochem_carbonflux_inst%cwdhr_col(begc:endc), &
+            soilbiogeochem_lithr_col=soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
-            c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-            product_closs_grc=c13_products_inst%product_loss_grc(begg:endg))
-    end if
+            soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+            product_closs_grc=c_products_inst%product_loss_grc(begg:endg))
+       
+       if ( use_c13 ) then
+          call c13_cnveg_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               isotope='c13', &
+               soilbiogeochem_hr_col=c13_soilbiogeochem_carbonflux_inst%hr_col(begc:endc), &
+               soilbiogeochem_cwdhr_col=c13_soilbiogeochem_carbonflux_inst%cwdhr_col(begc:endc), &
+               soilbiogeochem_lithr_col=c13_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
+               soilbiogeochem_decomp_cascade_ctransfer_col=&
+               c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+               product_closs_grc=c13_products_inst%product_loss_grc(begg:endg))
+       end if
+       
+       if ( use_c14 ) then
+          call c14_cnveg_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               isotope='c14', &
+               soilbiogeochem_hr_col=c14_soilbiogeochem_carbonflux_inst%hr_col(begc:endc), &
+               soilbiogeochem_cwdhr_col=c14_soilbiogeochem_carbonflux_inst%cwdhr_col(begc:endc), &
+               soilbiogeochem_lithr_col=c14_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
+               soilbiogeochem_decomp_cascade_ctransfer_col=&
+               c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+               product_closs_grc=c14_products_inst%product_loss_grc(begg:endg))
+       end if
+       call t_stopf('CNvegCflux_summary')
 
-    if ( use_c14 ) then
-       call c14_cnveg_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            isotope='c14', &
-            soilbiogeochem_hr_col=c14_soilbiogeochem_carbonflux_inst%hr_col(begc:endc), &
-            soilbiogeochem_cwdhr_col=c14_soilbiogeochem_carbonflux_inst%cwdhr_col(begc:endc), &
-            soilbiogeochem_lithr_col=c14_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
-            soilbiogeochem_decomp_cascade_ctransfer_col=&
-            c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-            product_closs_grc=c14_products_inst%product_loss_grc(begg:endg))
-    end if
-    call t_stopf('CNvegCflux_summary')
-
-    call cnveg_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
-
+       call cnveg_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
+    end if if_soilp
+    
     call t_stopf('CNsum')
 
   end subroutine CNDriverSummarizeFluxes

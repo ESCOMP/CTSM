@@ -25,6 +25,7 @@ module CNBalanceCheckMod
   use GridcellType                    , only : grc
   use CNSharedParamsMod               , only : use_fun
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
+  use clm_varpar                      , only : nlevdecomp
   
   !
   implicit none
@@ -216,7 +217,7 @@ contains
     !
     ! !USES:
     use subgridAveMod, only: c2g
-    use clm_varpar   , only: nlevdecomp
+    
     !
     ! !DESCRIPTION:
     ! Perform carbon mass conservation check for column and patch
@@ -252,6 +253,7 @@ contains
     real(r8) :: som_c_leached_grc(bounds%begg:bounds%endg)
     real(r8) :: hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg)
     real(r8) :: dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg)
+    real(r8) :: fates_litter_flux
 
     !-----------------------------------------------------------------------
 
@@ -272,7 +274,7 @@ contains
          er                      =>    cnveg_carbonflux_inst%er_col                     , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
          col_fire_closs          =>    cnveg_carbonflux_inst%fire_closs_col             , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total column-level fire C loss
          col_hrv_xsmrpool_to_atm =>    cnveg_carbonflux_inst%hrv_xsmrpool_to_atm_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) excess MR pool harvest mortality 
-         col_xsmrpool_to_atm     =>   cnveg_carbonflux_inst%xsmrpool_to_atm_col         , & ! Input:  [real(r8) (:) ]  (gC/m2/s) excess MR pool crop harvest loss to atm
+         col_xsmrpool_to_atm     =>    cnveg_carbonflux_inst%xsmrpool_to_atm_col         , & ! Input:  [real(r8) (:) ]  (gC/m2/s) excess MR pool crop harvest loss to atm
          som_c_leached           =>    soilbiogeochem_carbonflux_inst%som_c_leached_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total SOM C loss from vertical transport 
 
          totcolc                 =>    soilbiogeochem_carbonstate_inst%totc_col                    & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
@@ -299,12 +301,15 @@ contains
 
             ! calculate total column-level inputs (litter fluxes) [g/m2/s]
             s = clm_fates%f2hmap(ic)%hsites(c)
-            col_cinputs = sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * &
+            
+            fates_litter_flux = sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * &
                  clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
                  sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp) * &
                  clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
                  sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * &
                  clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+
+            col_cinputs = fates_litter_flux
             
             ! calculate total column-level outputs
             ! fates has already exported burn losses and fluxes to the atm
@@ -321,18 +326,17 @@ contains
             ! er = ar + hr, col_fire_closs includes patch-level fire losses
             col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + &
                  col_xsmrpool_to_atm(c)
+
+            ! Fluxes to product pools are included in column-level outputs: the product
+            ! pools are not included in totcolc, so are outside the system with respect to
+            ! these balance checks. (However, the dwt flux to product pools is NOT included,
+            ! since col_begcb is initialized after the dynamic area adjustments - i.e.,
+            ! after the dwt term has already been taken out.)
+            col_coutputs = col_coutputs + &
+                 wood_harvestc(c) + &
+                 crop_harvestc_to_cropprodc(c)
             
          end if
-
-         
-         ! Fluxes to product pools are included in column-level outputs: the product
-         ! pools are not included in totcolc, so are outside the system with respect to
-         ! these balance checks. (However, the dwt flux to product pools is NOT included,
-         ! since col_begcb is initialized after the dynamic area adjustments - i.e.,
-         ! after the dwt term has already been taken out.)
-         col_coutputs = col_coutputs + &
-              wood_harvestc(c) + &
-              crop_harvestc_to_cropprodc(c)
 
          ! subtract leaching flux
          col_coutputs = col_coutputs - som_c_leached(c)
@@ -360,14 +364,22 @@ contains
          write(iulog,*)'endcb                    = ',col_endcb(c)
          write(iulog,*)'delta store              = ',col_endcb(c)-col_begcb(c)
          write(iulog,*)'--- Inputs ---'
-         write(iulog,*)'gpp                      = ',gpp(c)*dt
+         if( col%is_fates(c) ) then
+            write(iulog,*)'fates litter_flux        = ',fates_litter_flux*dt
+         else
+            write(iulog,*)'gpp                      = ',gpp(c)*dt
+         end if
          write(iulog,*)'--- Outputs ---'
-         write(iulog,*)'er                       = ',er(c)*dt
-         write(iulog,*)'col_fire_closs           = ',col_fire_closs(c)*dt
-         write(iulog,*)'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
-         write(iulog,*)'col_xsmrpool_to_atm      = ',col_xsmrpool_to_atm(c)*dt
-         write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
-         write(iulog,*)'crop_harvestc_to_cropprodc = ', crop_harvestc_to_cropprodc(c)*dt
+         if( .not.col%is_fates(c) ) then
+            write(iulog,*)'er                       = ',er(c)*dt
+            write(iulog,*)'col_fire_closs           = ',col_fire_closs(c)*dt
+            write(iulog,*)'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
+            write(iulog,*)'col_xsmrpool_to_atm      = ',col_xsmrpool_to_atm(c)*dt
+            write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
+            write(iulog,*)'crop_harvestc_to_cropprodc = ', crop_harvestc_to_cropprodc(c)*dt
+         else
+            write(iulog,*)'hr                       = ',soilbiogeochem_carbonflux_inst%hr_col(c)*dt
+         end if
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
@@ -396,28 +408,38 @@ contains
          ! We account for the latter fluxes as inputs below; the same
          ! fluxes have entered the pools earlier in the timestep. For true
          ! conservation we would need to add a flux out of npp into seed.
-         call cnveg_carbonflux_inst%hrv_xsmrpool_to_atm_dribbler%get_amount_left_to_dribble_end( &
-            bounds, hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg))
-         call cnveg_carbonflux_inst%dwt_conv_cflux_dribbler%get_amount_left_to_dribble_end( &
-            bounds, dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg))
-         grc_endcb(g) = totgrcc(g) + tot_woodprod_grc(g) + cropprod1_grc(g) + &
-                        hrv_xsmrpool_amount_left_to_dribble(g) + &
-                        dwt_conv_cflux_amount_left_to_dribble(g)
 
-         ! calculate total gridcell-level inputs
-         ! slevis notes:
-         ! nbp_grc = nep_grc - fire_closs_grc - hrv_xsmrpool_to_atm_dribbled_grc - dwt_conv_cflux_dribbled_grc - product_closs_grc
-         grc_cinputs = nbp_grc(g) + & 
-                       dwt_seedc_to_leaf_grc(g) + dwt_seedc_to_deadstem_grc(g)
-
-         ! calculate total gridcell-level outputs
-         grc_coutputs = - som_c_leached_grc(g)
-
-         ! calculate the total gridcell-level carbon balance error
-         ! for this time step
-         grc_errcb(g) = (grc_cinputs - grc_coutputs) * dt - &
-                        (grc_endcb(g) - grc_begcb(g))
-
+         if(.not.use_fates)then
+            call cnveg_carbonflux_inst%hrv_xsmrpool_to_atm_dribbler%get_amount_left_to_dribble_end( &
+                 bounds, hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg))
+            call cnveg_carbonflux_inst%dwt_conv_cflux_dribbler%get_amount_left_to_dribble_end( &
+                 bounds, dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg))
+            
+            grc_endcb(g) = totgrcc(g) + tot_woodprod_grc(g) + cropprod1_grc(g) + &
+                 hrv_xsmrpool_amount_left_to_dribble(g) + &
+                 dwt_conv_cflux_amount_left_to_dribble(g)
+            
+            ! calculate total gridcell-level inputs
+            ! slevis notes:
+            ! nbp_grc = nep_grc - fire_closs_grc - hrv_xsmrpool_to_atm_dribbled_grc - dwt_conv_cflux_dribbled_grc - product_closs_grc
+            
+            grc_cinputs = nbp_grc(g) + dwt_seedc_to_leaf_grc(g) + dwt_seedc_to_deadstem_grc(g)
+            ! calculate total gridcell-level outputs
+            grc_coutputs = - som_c_leached_grc(g)
+            ! calculate the total gridcell-level carbon balance error
+            ! for this time step
+            grc_errcb(g) = (grc_cinputs - grc_coutputs) * dt - &
+                 (grc_endcb(g) - grc_begcb(g))
+            
+         else
+            
+            ! Totally punt on this for now. We just don't track these gridscale variables yet (RGK)
+            grc_cinputs  = 0._r8
+            grc_coutputs =  (grc_begcb(g) - grc_endcb(g))/dt
+            grc_errcb(g) = 0._r8
+            
+         end if
+         
          ! check for significant errors
          if (abs(grc_errcb(g)) > this%cerror) then
             err_found = .true.
@@ -452,7 +474,7 @@ contains
   subroutine NBalanceCheck(this, bounds, num_soilc, filter_soilc, &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, &
        cnveg_nitrogenflux_inst, &
-       cnveg_nitrogenstate_inst, n_products_inst, atm2lnd_inst)
+       cnveg_nitrogenstate_inst, n_products_inst, atm2lnd_inst, clm_fates)
     !
     ! !DESCRIPTION:
     ! Perform nitrogen mass conservation check
@@ -473,14 +495,16 @@ contains
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(cn_products_type)                  , intent(in)    :: n_products_inst
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
+    type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
     
     !
     ! !LOCAL VARIABLES:
-    integer :: c,err_index,j  ! indices
-    integer :: g              ! gridcell index
-    integer :: fc             ! lake filter indices
-    logical :: err_found      ! error flag
-    real(r8):: dt             ! radiation time step (seconds)
+    integer :: c,err_index,j,s ! indices
+    integer :: ic              ! index of clump
+    integer :: g               ! gridcell index
+    integer :: fc              ! lake filter indices
+    logical :: err_found       ! error flag
+    real(r8):: dt              ! radiation time step (seconds)
     real(r8):: col_ninputs(bounds%begc:bounds%endc) 
     real(r8):: col_noutputs(bounds%begc:bounds%endc) 
     real(r8):: col_errnb(bounds%begc:bounds%endc) 
@@ -522,8 +546,9 @@ contains
          wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
          crop_harvestn_to_cropprodn => cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) crop harvest N to 1-year crop product pool
 
-         totcoln             => soilbiogeochem_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
-         )
+         totcoln             => soilbiogeochem_nitrogenstate_inst%totn_col               , & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg
+         sminn_to_plant      => soilbiogeochem_nitrogenflux_inst%sminn_to_plant_col )
+
 
       ! set time steps
       dt = get_step_size_real()
@@ -532,6 +557,9 @@ contains
       col_ninputs_partial(:) = 0._r8
       col_noutputs_partial(:) = 0._r8
 
+      ! clump index
+      ic = bounds%clump_index
+      
       err_found = .false.
       do fc = 1,num_soilc
          c=filter_soilc(fc)
@@ -541,6 +569,18 @@ contains
 
          ! calculate total column-level inputs
          col_ninputs(c) = ndep_to_sminn(c) + nfix_to_sminn(c) + supplement_to_sminn(c)
+
+         ! If using fates, pass in the decomposition flux
+         if( col%is_fates(c) ) then
+            s = clm_fates%f2hmap(ic)%hsites(c)
+            col_ninputs(c) = col_ninputs(c)  + &
+                 sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_lab_n_si(1:nlevdecomp) * &
+                 clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
+                 sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_cel_n_si(1:nlevdecomp) * &
+                 clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
+                 sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_lig_n_si(1:nlevdecomp) * &
+                 clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+         end if
          
          if(use_fun)then
             col_ninputs(c) = col_ninputs(c) + ffix_to_sminn(c) ! for FUN, free living fixation is a seprate flux. RF. 
@@ -551,18 +591,29 @@ contains
          end if
 
          col_ninputs_partial(c) = col_ninputs(c)
-
+         
          ! calculate total column-level outputs
-         col_noutputs(c) = denit(c) + col_fire_nloss(c)
+         col_noutputs(c) = denit(c)
 
-         ! Fluxes to product pools are included in column-level outputs: the product
-         ! pools are not included in totcoln, so are outside the system with respect to
-         ! these balance checks. (However, the dwt flux to product pools is NOT included,
-         ! since col_begnb is initialized after the dynamic area adjustments - i.e.,
-         ! after the dwt term has already been taken out.)
-         col_noutputs(c) = col_noutputs(c) + &
-              wood_harvestn(c) + &
-              crop_harvestn_to_cropprodn(c)
+         if( .not.col%is_fates(c) ) then
+            
+            col_noutputs(c) = col_noutputs(c) + col_fire_nloss(c)
+
+            ! Fluxes to product pools are included in column-level outputs: the product
+            ! pools are not included in totcoln, so are outside the system with respect to
+            ! these balance checks. (However, the dwt flux to product pools is NOT included,
+            ! since col_begnb is initialized after the dynamic area adjustments - i.e.,
+            ! after the dwt term has already been taken out.)
+            col_noutputs(c) = col_noutputs(c) + &
+                 wood_harvestn(c) + &
+                 crop_harvestn_to_cropprodn(c)
+
+         else
+            
+            ! If we are using fates, remove plant uptake
+            col_noutputs(c) = col_noutputs(c) +  sminn_to_plant(c)
+            
+         end if
 
          if (.not. use_nitrif_denitrif) then
             col_noutputs(c) = col_noutputs(c) + sminn_leached(c)
@@ -573,11 +624,15 @@ contains
          end if
 
          col_noutputs(c) = col_noutputs(c) - som_n_leached(c)
+         
+         col_noutputs_partial(c) = col_noutputs(c)
 
-         col_noutputs_partial(c) = col_noutputs(c) - &
-                                   wood_harvestn(c) - &
-                                   crop_harvestn_to_cropprodn(c)
-
+         if( .not.col%is_fates(c) ) then
+            col_noutputs_partial(c) = col_noutputs_partial(c) - &
+                 wood_harvestn(c) - &
+                 crop_harvestn_to_cropprodn(c)
+         end if
+         
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
               (col_endnb(c) - col_begnb(c))
@@ -610,82 +665,86 @@ contains
          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 
-      ! Repeat error check at the gridcell level
-      call c2g( bounds = bounds, &
-         carr = totcoln(bounds%begc:bounds%endc), &
-         garr = totgrcn(bounds%begg:bounds%endg), &
-         c2l_scale_type = 'unity', &
-         l2g_scale_type = 'unity')
-      call c2g( bounds = bounds, &
-         carr = col_ninputs_partial(bounds%begc:bounds%endc), &
-         garr = grc_ninputs_partial(bounds%begg:bounds%endg), &
-         c2l_scale_type = 'unity', &
-         l2g_scale_type = 'unity')
-      call c2g( bounds = bounds, &
-         carr = col_noutputs_partial(bounds%begc:bounds%endc), &
-         garr = grc_noutputs_partial(bounds%begg:bounds%endg), &
-         c2l_scale_type = 'unity', &
-         l2g_scale_type = 'unity')
 
-      err_found = .false.
-      do g = bounds%begg, bounds%endg
-         ! calculate the total gridcell-level nitrogen storage, for mass conservation check
-         ! Notes:
-         ! Not including seedn_grc in grc_begnb and grc_endnb because
-         ! seedn_grc forms out of thin air, for now, and equals
-         ! -1 * (dwt_seedn_to_leaf_grc(g) + dwt_seedn_to_deadstem_grc(g))
-         ! We account for the latter fluxes as inputs below; the same
-         ! fluxes have entered the pools earlier in the timestep. For true
-         ! conservation we would need to add a flux out of nfix into seed.
-         grc_endnb(g) = totgrcn(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
+      if(.not.use_fates)then
 
-         ! calculate total gridcell-level inputs
-         grc_ninputs(g) = grc_ninputs_partial(g) + &
-                          dwt_seedn_to_leaf_grc(g) + &
-                          dwt_seedn_to_deadstem_grc(g)
+         ! Repeat error check at the gridcell level
+         call c2g( bounds = bounds, &
+              carr = totcoln(bounds%begc:bounds%endc), &
+              garr = totgrcn(bounds%begg:bounds%endg), &
+              c2l_scale_type = 'unity', &
+              l2g_scale_type = 'unity')
+         call c2g( bounds = bounds, &
+              carr = col_ninputs_partial(bounds%begc:bounds%endc), &
+              garr = grc_ninputs_partial(bounds%begg:bounds%endg), &
+              c2l_scale_type = 'unity', &
+              l2g_scale_type = 'unity')
+         call c2g( bounds = bounds, &
+              carr = col_noutputs_partial(bounds%begc:bounds%endc), &
+              garr = grc_noutputs_partial(bounds%begg:bounds%endg), &
+              c2l_scale_type = 'unity', &
+              l2g_scale_type = 'unity')
 
-         ! calculate total gridcell-level outputs
-         grc_noutputs(g) = grc_noutputs_partial(g) + &
-                           dwt_conv_nflux_grc(g) + &
-                           product_loss_grc(g)
+         err_found = .false.
+         do g = bounds%begg, bounds%endg
+            ! calculate the total gridcell-level nitrogen storage, for mass conservation check
+            ! Notes:
+            ! Not including seedn_grc in grc_begnb and grc_endnb because
+            ! seedn_grc forms out of thin air, for now, and equals
+            ! -1 * (dwt_seedn_to_leaf_grc(g) + dwt_seedn_to_deadstem_grc(g))
+            ! We account for the latter fluxes as inputs below; the same
+            ! fluxes have entered the pools earlier in the timestep. For true
+            ! conservation we would need to add a flux out of nfix into seed.
+            grc_endnb(g) = totgrcn(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
 
-         ! calculate the total gridcell-level nitrogen balance error for this time step
-         grc_errnb(g) = (grc_ninputs(g) - grc_noutputs(g)) * dt - &
-                        (grc_endnb(g) - grc_begnb(g))
+            ! calculate total gridcell-level inputs
+            grc_ninputs(g) = grc_ninputs_partial(g) + &
+                 dwt_seedn_to_leaf_grc(g) + &
+                 dwt_seedn_to_deadstem_grc(g)
 
-         if (abs(grc_errnb(g)) > this%nerror) then
-            err_found = .true.
-            err_index = g
+            ! calculate total gridcell-level outputs
+            grc_noutputs(g) = grc_noutputs_partial(g) + &
+                 dwt_conv_nflux_grc(g) + &
+                 product_loss_grc(g)
+
+            ! calculate the total gridcell-level nitrogen balance error for this time step
+            grc_errnb(g) = (grc_ninputs(g) - grc_noutputs(g)) * dt - &
+                 (grc_endnb(g) - grc_begnb(g))
+      
+            if (abs(grc_errnb(g)) > this%nerror) then
+               err_found = .true.
+               err_index = g
+            end if
+            
+            if (abs(grc_errnb(g)) > this%nwarning) then
+               write(iulog,*) 'nbalance warning at g =', g, grc_errnb(g), grc_endnb(g)
+            end if
+         end do
+         
+         if (err_found) then
+            g = err_index
+            write(iulog,*) 'gridcell nbalance error  =', grc_errnb(g), g
+            write(iulog,*) 'latdeg, londeg           =', grc%latdeg(g), grc%londeg(g)
+            write(iulog,*) 'begnb                    =', grc_begnb(g)
+            write(iulog,*) 'endnb                    =', grc_endnb(g)
+            write(iulog,*) 'delta store              =', grc_endnb(g) - grc_begnb(g)
+            write(iulog,*) 'input mass               =', grc_ninputs(g) * dt
+            write(iulog,*) 'output mass              =', grc_noutputs(g) * dt
+            write(iulog,*) 'net flux                 =', (grc_ninputs(g) - grc_noutputs(g)) * dt
+            write(iulog,*) '--- Inputs ---'
+            write(iulog,*) 'grc_ninputs_partial      =', grc_ninputs_partial(g) * dt
+            write(iulog,*) 'dwt_seedn_to_leaf_grc    =', dwt_seedn_to_leaf_grc(g) * dt
+            write(iulog,*) 'dwt_seedn_to_deadstem_grc =', dwt_seedn_to_deadstem_grc(g) * dt
+            write(iulog,*) '--- Outputs ---'
+            write(iulog,*) 'grc_noutputs_partial     =', grc_noutputs_partial(g) * dt
+            write(iulog,*) 'dwt_conv_nflux_grc       =', dwt_conv_nflux_grc(g) * dt
+            write(iulog,*) 'product_loss_grc         =', product_loss_grc(g) * dt
+            call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
          end if
-
-         if (abs(grc_errnb(g)) > this%nwarning) then
-            write(iulog,*) 'nbalance warning at g =', g, grc_errnb(g), grc_endnb(g)
-         end if
-      end do
-
-      if (err_found) then
-         g = err_index
-         write(iulog,*) 'gridcell nbalance error  =', grc_errnb(g), g
-         write(iulog,*) 'latdeg, londeg           =', grc%latdeg(g), grc%londeg(g)
-         write(iulog,*) 'begnb                    =', grc_begnb(g)
-         write(iulog,*) 'endnb                    =', grc_endnb(g)
-         write(iulog,*) 'delta store              =', grc_endnb(g) - grc_begnb(g)
-         write(iulog,*) 'input mass               =', grc_ninputs(g) * dt
-         write(iulog,*) 'output mass              =', grc_noutputs(g) * dt
-         write(iulog,*) 'net flux                 =', (grc_ninputs(g) - grc_noutputs(g)) * dt
-         write(iulog,*) '--- Inputs ---'
-         write(iulog,*) 'grc_ninputs_partial      =', grc_ninputs_partial(g) * dt
-         write(iulog,*) 'dwt_seedn_to_leaf_grc    =', dwt_seedn_to_leaf_grc(g) * dt
-         write(iulog,*) 'dwt_seedn_to_deadstem_grc =', dwt_seedn_to_deadstem_grc(g) * dt
-         write(iulog,*) '--- Outputs ---'
-         write(iulog,*) 'grc_noutputs_partial     =', grc_noutputs_partial(g) * dt
-         write(iulog,*) 'dwt_conv_nflux_grc       =', dwt_conv_nflux_grc(g) * dt
-         write(iulog,*) 'product_loss_grc         =', product_loss_grc(g) * dt
-         call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
       end if
-
+         
     end associate
-
+    
   end subroutine NBalanceCheck
 
 end module CNBalanceCheckMod

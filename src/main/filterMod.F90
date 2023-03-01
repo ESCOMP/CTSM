@@ -33,9 +33,10 @@ module filterMod
      integer, pointer :: natvegp(:)      ! CNDV nat-vegetated (present) filter (patches)
      integer :: num_natvegp              ! number of patches in nat-vegetated filter
 
-     integer, pointer :: pcropp(:)       ! prognostic crop filter (patches)
+     integer, pointer :: pcropp(:)       ! prognostic crop filter (patches) 
      integer :: num_pcropp               ! number of patches in prognostic crop filter
-     integer, pointer :: soilnopcropp(:) ! soil w/o prog. crops (patches)
+
+     integer, pointer :: soilnopcropp(:) ! soil w/o prog. crops (patches) 
      integer :: num_soilnopcropp         ! number of patches in soil w/o prog crops
 
      integer, pointer :: all_soil_patches(:) ! all soil or crop patches. Used for updating FATES SP drivers
@@ -57,8 +58,7 @@ module filterMod
      integer, pointer :: bgc_vegp(:)     ! patches with vegetation biochemistry active, negates
                                          ! SP type runs, could be CN or Crop (NOT FATES)
      integer :: num_bgc_vegp
-     
-     
+
      integer, pointer :: soilc(:)        ! soil filter (columns)
      integer :: num_soilc                ! number of columns in soil filter
      integer, pointer :: soilp(:)        ! soil filter (patches)
@@ -478,14 +478,16 @@ contains
     fnl = 0
     do p = bounds%begp,bounds%endp
        if (patch%active(p) .or. include_inactive) then
-          if (patch%itype(p) >= npcropmin) then !skips 2 generic crop types
-             fl = fl + 1
-             this_filter(nc)%pcropp(fl) = p
-          else
-             l =patch%landunit(p)
-             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-                fnl = fnl + 1
-                this_filter(nc)%soilnopcropp(fnl) = p
+          if(.not.use_fates)then ! This needs to be a FATES filter
+             if (patch%itype(p) >= npcropmin) then !skips 2 generic crop types
+                fl = fl + 1
+                this_filter(nc)%pcropp(fl) = p
+             else
+                l =patch%landunit(p)
+                if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+                   fnl = fnl + 1
+                   this_filter(nc)%soilnopcropp(fnl) = p
+                end if
              end if
           end if
        end if
