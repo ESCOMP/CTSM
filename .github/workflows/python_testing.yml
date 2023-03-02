@@ -15,7 +15,7 @@ jobs:
             lfs: true
         - name: lfs pull
           uses: actions/checkout@v2
-          run: git lfs pull
+        - run: git lfs pull
         - name: conda env
           uses: conda-incubator/setup-miniconda@v2
           with:
