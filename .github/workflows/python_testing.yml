@@ -11,6 +11,11 @@ jobs:
         # Checkout the code
         - name: checkout the code
           uses: actions/checkout@v2
+          with:
+            lfs: true
+        - name: lfs pull
+          uses: actions/checkout@v2
+          run: git lfs pull
         - name: conda env
           uses: conda-incubator/setup-miniconda@v2
           with:
@@ -24,10 +29,7 @@ jobs:
         - name: Run python tests
           shell: bash -l {0}
           run: |
-              conda info
-              conda env list
               ./py_env_create --read-spec
-              conda env list
               conda activate ctsm_pylib
               cd python
               make test
