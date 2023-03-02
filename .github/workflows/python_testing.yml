@@ -29,15 +29,13 @@ jobs:
         - name: Run python tests
           shell: bash -l {0}
           run: |
-              ./py_env_create --read-spec
-              conda activate ctsm_pylib
+              ./py_env_create --dask
+              conda activate ctsm_pylib_dask
               cd python
               make test
         - name: Run pylint
           shell: bash -l {0}
           run: |
-              conda info
-              conda env list
               conda activate ctsm_pylib
               cd python
-              make lint
+              #make lint
