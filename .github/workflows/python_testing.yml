@@ -30,12 +30,13 @@ jobs:
           shell: bash -l {0}
           run: |
               ./py_env_create --dask
-              conda activate ctsm_pylib_dask
+              conda activate ctsm_pylib_wdask
               cd python
               make test
         - name: Run pylint
           shell: bash -l {0}
           run: |
+              ./py_env_create --read-spec
               conda activate ctsm_pylib
               cd python
               #make lint
