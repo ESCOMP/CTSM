@@ -22,7 +22,7 @@ jobs:
             git lfs install
             manage_externals/checkout_externals
         - name: Run python tests
-          shell: bash
+          shell: bash -l {0}
           run: |
               conda info
               conda env list
@@ -32,9 +32,10 @@ jobs:
               cd python
               make test
         - name: Run pylint
-          shell: bash
+          shell: bash -l {0}
           run: |
               conda info
               conda env list
+              conda activate ctsm_pylib
               cd python
               make lint
