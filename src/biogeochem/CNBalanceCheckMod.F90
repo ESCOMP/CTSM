@@ -253,7 +253,7 @@ contains
     real(r8) :: som_c_leached_grc(bounds%begg:bounds%endg)
     real(r8) :: hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg)
     real(r8) :: dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg)
-    real(r8) :: fates_litter_flux
+    real(r8) :: fates_woodproduct_flux  ! Total carbon wood products flux from FATES to CLM [gC/m2/s]
 
     !-----------------------------------------------------------------------
 
@@ -277,7 +277,8 @@ contains
          col_xsmrpool_to_atm     =>    cnveg_carbonflux_inst%xsmrpool_to_atm_col         , & ! Input:  [real(r8) (:) ]  (gC/m2/s) excess MR pool crop harvest loss to atm
          som_c_leached           =>    soilbiogeochem_carbonflux_inst%som_c_leached_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total SOM C loss from vertical transport 
 
-         totcolc                 =>    soilbiogeochem_carbonstate_inst%totc_col                    & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
+         totcolc                 =>    soilbiogeochem_carbonstate_inst%totc_col          , & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
+         fates_litter_flux       =>    soilbiogeochem_carbonflux_inst%fates_litter_flux  &   ! Total carbon litter flux from FATES to CLM [gC/m2/s]
          )
 
       ! set time steps
@@ -299,17 +300,13 @@ contains
          
          if( col%is_fates(c) ) then
 
-            ! calculate total column-level inputs (litter fluxes) [g/m2/s]
             s = clm_fates%f2hmap(ic)%hsites(c)
             
-            fates_litter_flux = sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * &
-                 clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
-                 sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp) * &
-                 clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
-                 sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * &
-                 clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
-
-            col_cinputs = fates_litter_flux
+            
+            fates_woodproduct_flux = clm_fates%fates(ic)%bc_out(s)%hrv_deadstemc_to_prod10c + &
+                                     clm_fates%fates(ic)%bc_out(s)%hrv_deadstemc_to_prod100c
+            
+            col_cinputs = fates_litter_flux(c) + fates_woodproduct_flux
             
             ! calculate total column-level outputs
             ! fates has already exported burn losses and fluxes to the atm
@@ -326,6 +323,7 @@ contains
             ! er = ar + hr, col_fire_closs includes patch-level fire losses
             col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + &
                  col_xsmrpool_to_atm(c)
+            
 
             ! Fluxes to product pools are included in column-level outputs: the product
             ! pools are not included in totcolc, so are outside the system with respect to
@@ -359,13 +357,15 @@ contains
       if (err_found) then
          c = err_index
          write(iulog,*)'column cbalance error    = ', col_errcb(c), c
+         write(iulog,*)'is fates column?         = ', col%is_fates(c)
          write(iulog,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
          write(iulog,*)'begcb                    = ',col_begcb(c)
          write(iulog,*)'endcb                    = ',col_endcb(c)
          write(iulog,*)'delta store              = ',col_endcb(c)-col_begcb(c)
          write(iulog,*)'--- Inputs ---'
          if( col%is_fates(c) ) then
-            write(iulog,*)'fates litter_flux        = ',fates_litter_flux*dt
+            write(iulog,*)'fates litter_flux        = ',fates_litter_flux(c)*dt
+            write(iulog,*)'fates wood product flux  = ',fates_woodproduct_flux*dt
          else
             write(iulog,*)'gpp                      = ',gpp(c)*dt
          end if
@@ -547,7 +547,9 @@ contains
          crop_harvestn_to_cropprodn => cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) crop harvest N to 1-year crop product pool
 
          totcoln             => soilbiogeochem_nitrogenstate_inst%totn_col               , & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg
-         sminn_to_plant      => soilbiogeochem_nitrogenflux_inst%sminn_to_plant_col )
+         sminn_to_plant      => soilbiogeochem_nitrogenflux_inst%sminn_to_plant_col,       &
+         fates_litter_flux   => soilbiogeochem_nitrogenflux_inst%fates_litter_flux  &   ! Total nitrogen litter flux from FATES to CLM [gN/m2/s]
+         )
 
 
       ! set time steps
@@ -572,14 +574,7 @@ contains
 
          ! If using fates, pass in the decomposition flux
          if( col%is_fates(c) ) then
-            s = clm_fates%f2hmap(ic)%hsites(c)
-            col_ninputs(c) = col_ninputs(c)  + &
-                 sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_lab_n_si(1:nlevdecomp) * &
-                 clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
-                 sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_cel_n_si(1:nlevdecomp) * &
-                 clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
-                 sum(clm_fates%fates(ic)%bc_out(s)%litt_flux_lig_n_si(1:nlevdecomp) * &
-                 clm_fates%fates(ic)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+            col_ninputs(c) = col_ninputs(c)  + fates_litter_flux(c)
          end if
          
          if(use_fun)then
@@ -660,11 +655,18 @@ contains
          write(iulog,*)'input mass               = ',col_ninputs(c)*dt
          write(iulog,*)'output mass              = ',col_noutputs(c)*dt
          write(iulog,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
-         write(iulog,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-         write(iulog,*)'outputs,lch,roff,dnit    = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+         if(col%is_fates(c))then
+            write(iulog,*)'inputs,ndep,nfix,suppn= ',ndep_to_sminn(c)*dt,nfix_to_sminn(c)*dt,supplement_to_sminn(c)*dt
+         else
+            write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+         end if
+         if(col%is_fates(c))then
+            write(iulog,*)'outputs,lch,roff,dnit,plnt = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt,sminn_to_plant(c)*dt
+         else
+            write(iulog,*)'outputs,lch,roff,dnit    = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+         end if
          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
-
 
       if(.not.use_fates)then
 

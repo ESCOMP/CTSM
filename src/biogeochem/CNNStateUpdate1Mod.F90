@@ -153,7 +153,7 @@ contains
             ! prepared litter c flux boundary conditions into
             ! cf_soil%decomp_cpools_sourcesink_col
             
-            !call clm_fates%UpdateNLitterfluxes(ff_soil,ci,c)
+            call clm_fates%UpdateNLitterfluxes(nf_soil,clump_index,c)
 
          else
 

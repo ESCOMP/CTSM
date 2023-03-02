@@ -81,6 +81,8 @@ module CLMFatesInterfaceMod
    use SolarAbsorbedType , only : solarabs_type
    use SoilBiogeochemCarbonFluxType, only :  soilbiogeochem_carbonflux_type
    use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
+   use SoilBiogeochemNitrogenFluxType, only :  soilbiogeochem_nitrogenflux_type
+   use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
    use FrictionVelocityMod  , only : frictionvel_type
    use clm_time_manager  , only : is_restart, is_first_restart_step
    use ncdio_pio         , only : file_desc_t, ncd_int, ncd_double
@@ -226,6 +228,7 @@ module CLMFatesInterfaceMod
       procedure, public  :: WrapUpdateFatesRmean
       procedure, public  :: wrap_WoodProducts
       procedure, public  :: UpdateCLitterFluxes
+      procedure, public  :: UPdateNLitterFluxes
    end type hlm_fates_interface_type
 
    ! hlm_bounds_to_fates_bounds is not currently called outside the interface.
@@ -1065,6 +1068,79 @@ module CLMFatesInterfaceMod
 
    ! ===============================================================================
 
+   subroutine UpdateNLitterFluxes(this,soilbiogeochem_nitrogenflux_inst,ci,c)
+
+     use clm_varpar, only : i_met_lit
+
+     class(hlm_fates_interface_type), intent(inout)       :: this
+     type(soilbiogeochem_nitrogenflux_type) , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+     integer                        , intent(in)          :: ci         ! clump index
+     integer                        , intent(in)          :: c          ! column index
+
+     integer  :: s                        ! site index
+     real(r8) :: dtime
+     integer  :: i_lig_lit, i_cel_lit     ! indices for lignan and cellulose
+
+     dtime = get_step_size_real()
+     s = this%f2hmap(ci)%hsites(c)
+     
+     associate(nf_soil => soilbiogeochem_nitrogenflux_inst)
+
+       nf_soil%decomp_npools_sourcesink_col(c,:,:) = 0._r8
+       
+       if ( .not. use_fates_sp ) then
+
+          ! (gC/m3/timestep)
+          !nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_met_lit) = &
+          !     nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_met_lit) + &
+          !     this%fates(ci)%bc_out(s)%litt_flux_lab_n_si(1:nlevdecomp)*dtime
+
+          ! Used for mass balance checking (gC/m2/s)
+          !nf_soil%fates_litter_flux(c) = sum(this%fates(ci)%bc_out(s)%litt_flux_lab_n_si(1:nlevdecomp) * &
+          !                                   this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+          
+          i_cel_lit = i_met_lit + 1
+          
+          !nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) = &
+          !     nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) + &
+          !     this%fates(ci)%bc_out(s)%litt_flux_cel_n_si(1:nlevdecomp)*dtime
+
+          !nf_soil%fates_litter_flux(c) = nf_soil%fates_litter_flux(c) + &
+          !     sum(this%fates(ci)%bc_out(s)%litt_flux_cel_n_si(1:nlevdecomp) * &
+          !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+
+          if (decomp_method == mimics_decomp) then
+             ! Mimics has a structural pool, which is cellulose and lignan
+             i_lig_lit = i_cel_lit
+          elseif(decomp_method == century_decomp ) then
+             ! CENTURY has a separate lignan pool from cellulose
+             i_lig_lit = i_cel_lit + 1
+          end if
+        
+          !nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) = &
+          !     nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) + &
+          !     this%fates(ci)%bc_out(s)%litt_flux_lig_n_si(1:nlevdecomp)*dtime
+          
+          !nf_soil%fates_litter_flux(c) = nf_soil%fates_litter_flux(c) + &
+          !     sum(this%fates(ci)%bc_out(s)%litt_flux_lig_n_si(1:nlevdecomp) * &
+          !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+
+          nf_soil%fates_litter_flux = 0._r8
+          
+       else
+
+          ! In SP mode their is no mass flux between the two 
+          nf_soil%fates_litter_flux = 0._r8
+          
+       end if
+
+     end associate
+     
+     return
+   end subroutine UpdateNLitterFluxes
+
+   ! ===========================================================
+   
    subroutine UpdateCLitterFluxes(this,soilbiogeochem_carbonflux_inst,ci,c)
 
      use clm_varpar, only : i_met_lit
@@ -1073,7 +1149,7 @@ module CLMFatesInterfaceMod
      type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
      integer                        , intent(in)          :: ci         ! clump index
      integer                        , intent(in)          :: c          ! column index
-
+     
      integer  :: s                        ! site index
      real(r8) :: dtime
      integer  :: i_lig_lit, i_cel_lit     ! indices for lignan and cellulose
@@ -1083,17 +1159,28 @@ module CLMFatesInterfaceMod
 
      associate(cf_soil => soilbiogeochem_carbonflux_inst)
 
+       cf_soil%decomp_cpools_sourcesink_col(c,:,:) = 0._r8
+       
        if ( .not. use_fates_sp ) then
 
+          ! (gC/m3/timestep)
           cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_met_lit) = &
                cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_met_lit) + &
-               this%fates(ci)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * dtime
+               this%fates(ci)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp)*dtime
 
+          ! Used for mass balance checking (gC/m2/s)
+          cf_soil%fates_litter_flux(c) = sum(this%fates(ci)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * &
+                                             this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+          
           i_cel_lit = i_met_lit + 1
           
           cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) = &
                cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) + &
-               this%fates(ci)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp)* dtime
+               this%fates(ci)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp)*dtime
+
+          cf_soil%fates_litter_flux(c) = cf_soil%fates_litter_flux(c) + &
+               sum(this%fates(ci)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp) * &
+                   this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
 
           if (decomp_method == mimics_decomp) then
              ! Mimics has a structural pool, which is cellulose and lignan
@@ -1105,11 +1192,16 @@ module CLMFatesInterfaceMod
         
           cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) = &
                cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) + &
-               this%fates(ci)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * dtime
-
+               this%fates(ci)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp)*dtime
+          
+          cf_soil%fates_litter_flux(c) = cf_soil%fates_litter_flux(c) + &
+               sum(this%fates(ci)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * &
+                   this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+          
        else
           ! In SP mode their is no mass flux between the two 
-          cf_soil%decomp_cpools_sourcesink_col(c,:,:) = 0._r8
+          
+          cf_soil%fates_litter_flux = 0._r8
        end if
           
        ! This is a diagnostic for carbon accounting (NOT IN CLM, ONLY ELM)

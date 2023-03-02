@@ -6,6 +6,7 @@ module SoilBiogeochemCarbonFluxType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nlevsoi, i_cwdl2
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
+  use clm_varctl                         , only : use_fates
   use pftconMod                          , only : pftcon
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use ch4varcon                          , only : allowlakeprod
@@ -57,7 +58,8 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration: donor-pool based definition
      real(r8), pointer :: somhr_col                                 (:)     ! (gC/m2/s) soil organic matter heterotrophic res: donor-pool based definition
      real(r8), pointer :: soilc_change_col                          (:)     ! (gC/m2/s) FUN used soil C
-
+     real(r8), pointer :: fates_litter_flux                         (:)     ! (gC/m2/s) Litter flux passed in from FATES
+     
    contains
 
      procedure , public  :: Init   
@@ -155,7 +157,11 @@ contains
      allocate(this%lithr_col               (begc:endc)) ; this%lithr_col               (:) = nan
      allocate(this%somhr_col               (begc:endc)) ; this%somhr_col               (:) = nan
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
-  
+
+     if(use_fates)then
+        allocate(this%fates_litter_flux(begc:endc)); this%fates_litter_flux(:) = nan
+     end if
+     
      if(use_soil_matrixcn)then
      end if
 

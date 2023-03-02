@@ -1154,7 +1154,6 @@ contains
             this%totsomc_col(c) + &
             this%ctrunc_col(c)  + &
             totvegc_col
-
     end do
 
     

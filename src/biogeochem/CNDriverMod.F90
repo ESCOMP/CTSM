@@ -977,8 +977,9 @@ contains
     ! !USES:
     use SoilBiogeochemNLeachingMod, only: SoilBiogeochemNLeaching
     use CNNStateUpdate3Mod        , only: NStateUpdate3
-    use clm_time_manager          , only : is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year,get_curr_date
-    use CNSharedParamsMod         , only : use_matrixcn
+    use CNNStateUpdate3Mod        , only: NStateUpdateLeaching
+    use clm_time_manager          , only: is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year,get_curr_date
+    use CNSharedParamsMod         , only: use_matrixcn
     use SoilBiogeochemDecompCascadeConType , only : use_soil_matrixcn
     !
     ! !ARGUMENTS:
@@ -1021,8 +1022,14 @@ contains
     call SoilBiogeochemNLeaching(bounds, num_soilc, filter_soilc, &
          waterstatebulk_inst, waterfluxbulk_inst, soilbiogeochem_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst)
+    call NStateUpdateLeaching(num_soilc, filter_soilc, &
+         soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
     call t_stopf('SoilBiogeochemNLeaching')
 
+    
+    
+
+    
     ! Nitrogen state variable update, mortality fluxes.
     if(num_soilp>0)then
        call t_startf('NUpdate3')

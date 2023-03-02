@@ -7,7 +7,7 @@ module SoilBiogeochemNitrogenFluxType
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use decompMod                          , only : bounds_type
-  use clm_varctl                         , only : use_nitrif_denitrif, use_crop
+  use clm_varctl                         , only : use_nitrif_denitrif, use_crop, use_fates
   use CNSharedParamsMod                  , only : use_fun
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use abortutils                         , only : endrun
@@ -127,8 +127,8 @@ module SoilBiogeochemNitrogenFluxType
      ! all n pools involved in decomposition
      real(r8), pointer :: decomp_npools_sourcesink_col              (:,:,:) ! col (gN/m3) change in decomposing n pools 
                                                                             ! (sum of all additions and subtractions from stateupdate1).  
-          real(r8), pointer :: sminn_to_plant_fun_vr_col                 (:,:)   ! col total layer soil N uptake of FUN  (gN/m2/s)
-
+     real(r8), pointer :: sminn_to_plant_fun_vr_col                 (:,:)   ! col total layer soil N uptake of FUN  (gN/m2/s)
+     real(r8), pointer :: fates_litter_flux                         (:)     ! (gN/m2/s) Litter flux passed in from FATES
      ! track tradiagonal matrix  
 
    contains
@@ -274,6 +274,10 @@ contains
 
     allocate(this%decomp_npools_sourcesink_col (begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
     this%decomp_npools_sourcesink_col (:,:,:) = nan
+    if(use_fates)then
+        allocate(this%fates_litter_flux(begc:endc)); this%fates_litter_flux(:) = nan
+     end if
+
     ! Allocate soil Matrix setug
     if(use_soil_matrixcn)then
     end if

@@ -433,6 +433,15 @@ contains
        ! Check compatibility with the FATES model
        if ( use_fates ) then
 
+          if (fates_parteh_mode == 1 .and. suplnitro == suplnNon)then
+             write(iulog,*) ' When FATES with fates_parteh_mode == 1 (ie carbon only mode),'
+             write(iulog,*) '  you must have supplemental nitrogen turned on, there will be'
+             write(iulog,*) '  no nitrogen dynamics with the plants, and therefore no'
+             write(iulog,*) '  meaningful limitations to nitrogen.'
+             call endrun(msg=' ERROR: fates_parteh_mode=1 must have suplnitro set to suplnAll.'//&
+                   errMsg(sourcefile, __LINE__))
+          end if
+          
           if ( use_cn) then
              call endrun(msg=' ERROR: use_cn and use_fates cannot both be set to true.'//&
                    errMsg(sourcefile, __LINE__))
@@ -689,7 +698,8 @@ contains
 
     ! BGC
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
-    if (use_cn) then
+    
+    if (use_cn .or. use_fates) then
        call mpi_bcast (suplnitro, len(suplnitro), MPI_CHARACTER, 0, mpicom, ier)
        call mpi_bcast (nfix_timeconst, 1, MPI_REAL8, 0, mpicom, ier)
        call mpi_bcast (spinup_state, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -743,7 +753,7 @@ contains
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    if (use_cn ) then
+    if (use_cn .or. use_fates) then
        ! vertical soil mixing variables
        call mpi_bcast (som_adv_flux, 1, MPI_REAL8,  0, mpicom, ier)
        call mpi_bcast (max_depth_cryoturb, 1, MPI_REAL8,  0, mpicom, ier)
@@ -751,8 +761,8 @@ contains
        ! C and N input vertical profiles
        call mpi_bcast (surfprof_exp,            1, MPI_REAL8,  0, mpicom, ier)
     end if
-
-    if (use_cn .and. use_nitrif_denitrif) then
+    
+    if ((use_cn.or.use_fates) .and. use_nitrif_denitrif) then
        call mpi_bcast (no_frozen_nitrif_denitrif,  1, MPI_LOGICAL, 0, mpicom, ier)
     end if
 
@@ -899,7 +909,8 @@ contains
     write(iulog,*) '   Threshold above which the model keeps the lake landunit =', toosmall_lake
     write(iulog,*) '   Threshold above which the model keeps the wetland landunit =', toosmall_wetland
     write(iulog,*) '   Threshold above which the model keeps the urban landunits =', toosmall_urban
-    if (use_cn) then
+
+    if (use_cn .or. use_fates) then
        if (suplnitro /= suplnNon)then
           write(iulog,*) '   Supplemental Nitrogen mode is set to run over Patches: ', &
                trim(suplnitro)
@@ -930,13 +941,13 @@ contains
        write(iulog,*) '   override_bgc_restart_mismatch_dump                     : ', override_bgc_restart_mismatch_dump
     end if
 
-    if (use_cn ) then
+    if (use_cn .or. use_fates) then
        write(iulog, *) '   som_adv_flux, the advection term in soil mixing (m/s) : ', som_adv_flux
        write(iulog, *) '   max_depth_cryoturb (m)                                : ', max_depth_cryoturb
        write(iulog, *) '   surfprof_exp                                          : ', surfprof_exp
     end if
 
-    if (use_cn .and. .not. use_nitrif_denitrif) then
+    if ((use_cn .or. use_fates) .and. .not. use_nitrif_denitrif) then
        write(iulog, *) '   no_frozen_nitrif_denitrif                             : ', no_frozen_nitrif_denitrif
     end if
 
