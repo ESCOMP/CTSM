@@ -28,10 +28,15 @@ jobs:
             manage_externals/checkout_externals
         - name: Run python tests
           shell: bash -l {0}
+          env:
+            CIME_MODEL: "cesm"
+            CIME_DRIVER: "nuopc"
+            CIME_TEST_PLATFORM: ubuntu-latest
           run: |
               ./py_env_create --dask
               conda activate ctsm_pylib_wdask
               cd python
+              mkdir -p /glade/p/cesmdata/inputdata
               make test
         - name: Run pylint
           shell: bash -l {0}
