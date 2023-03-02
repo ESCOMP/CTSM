@@ -2,7 +2,8 @@ name: conda environments check on PR close
 #
 # Run the different conda environments and make sure they continue to work
 #
-on: pull_request
+on: 
+  pull_request:
     types: [ closed ] 
 
 jobs:
