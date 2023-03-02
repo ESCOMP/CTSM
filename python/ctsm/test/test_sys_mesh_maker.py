@@ -27,7 +27,7 @@ class SysTestMeshMaker(unittest.TestCase):
         """Setup for all tests"""
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._testinputs_path = testinputs_path
-        self._fsurdat_in = os.path.join(
+        self._infile = os.path.join(
             testinputs_path,
             "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc",
         )
@@ -45,11 +45,31 @@ class SysTestMeshMaker(unittest.TestCase):
         sys.argv = [
             "mesh_maker",
             "--input",
-            self._fsurdat_in,
+            self._infile,
             "--lat",
             "lsmlat",
             "--lon",
             "lsmlon",
+            "--output",
+            self.mesh_out,
+        ]
+        main()
+
+    def test_noplot_add_area_mask(self):
+        """Do a simple basic test without plotting and also adding area and mask"""
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            self._infile,
+            "--lat",
+            "lsmlat",
+            "--lon",
+            "lsmlon",
+            "--no-plot",
+            "--area",
+            "AREA",
+            "--mask",
+            "PFTDATA_MASK",
             "--output",
             self.mesh_out,
         ]
