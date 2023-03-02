@@ -1,0 +1,40 @@
+name: python testing for latest packages on closed PR
+#
+# Run the python directory testing for latest packages on closed PR's
+#
+on: 
+  pull_request:
+    types: [ closed ] 
+
+jobs:
+  pytest:
+     runs-on: ubuntu-latest
+     steps:
+        # Checkout the code
+        - name: checkout the code
+          uses: actions/checkout@v2
+          with:
+            lfs: true
+        - name: lfs pull
+          uses: actions/checkout@v2
+        - run: git lfs pull
+        - name: conda env
+          uses: conda-incubator/setup-miniconda@v2
+          with:
+            auto-activate-base: true
+            channels: conda-forge
+        - name: manage_exernals and LFS
+          run: |
+            git lfs install
+            manage_externals/checkout_externals
+        - name: Run python latest tests
+          shell: bash -l {0}
+          env:
+            CIME_MODEL: "cesm"
+            CIME_DRIVER: "nuopc"
+            CIME_TEST_PLATFORM: ubuntu-latest
+          run: |
+              ./py_env_create --read-latest
+              conda activate ctsm_pylib
+              cd python
+              make test
