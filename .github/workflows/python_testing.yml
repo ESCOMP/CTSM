@@ -36,7 +36,6 @@ jobs:
               ./py_env_create --dask
               conda activate ctsm_pylib_wdask
               cd python
-              mkdir -p /glade/p/cesmdata/inputdata
               make test
         - name: Run pylint
           shell: bash -l {0}
