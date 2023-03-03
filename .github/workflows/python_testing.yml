@@ -26,6 +26,7 @@ jobs:
           run: |
             git lfs install
             manage_externals/checkout_externals
+            sudo mkdir -p /glade/p/cesmdata/inputdata
         - name: Run python tests
           shell: bash -l {0}
           env:
