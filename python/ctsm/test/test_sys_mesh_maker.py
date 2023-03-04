@@ -17,12 +17,10 @@ from ctsm.mesh_maker import main
 
 # pylint: disable=invalid-name
 
-
 class SysTestMeshMaker(unittest.TestCase):
     """
     Basic class for testing mesh_maker.py.
     """
-
     def setUp(self):
         """Setup for all tests"""
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
@@ -55,8 +53,8 @@ class SysTestMeshMaker(unittest.TestCase):
         ]
         main()
 
-    def test_noplot_add_area_mask(self):
-        """Do a simple basic test without plotting and also adding area and mask"""
+    def test_noplot_add_mask(self):
+        """Do a simple basic test without plotting and also adding mask"""
         sys.argv = [
             "mesh_maker",
             "--input",
@@ -66,10 +64,25 @@ class SysTestMeshMaker(unittest.TestCase):
             "--lon",
             "lsmlon",
             "--no-plot",
-            "--area",
-            "AREA",
             "--mask",
             "PFTDATA_MASK",
+            "--output",
+            self.mesh_out,
+        ]
+        main()
+
+    def test_add_area(self):
+        """Do a simple basic test without plotting and also adding area"""
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            self._infile,
+            "--lat",
+            "lsmlat",
+            "--lon",
+            "lsmlon",
+            "--area",
+            "AREA",
             "--output",
             self.mesh_out,
         ]

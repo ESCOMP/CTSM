@@ -243,12 +243,12 @@ def main():
     logging.info("Writing mesh file to    : %s", mesh_out)
 
     if mask_name is not None:
-        mask = ds[mask_name].values()
+        mask = ds[mask_name].astype(np.float32)
     else:
         mask = None
 
     if area_name is not None:
-        area = ds[area_name].values()
+        area = ds[area_name].astype(np.float32)
     else:
         area = None
 
