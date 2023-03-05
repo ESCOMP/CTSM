@@ -77,7 +77,7 @@ class MeshType:
         if mask is None:
             self.create_artificial_mask()
         else:
-            self.mask = da.from_array(np.array(mask.astype(np.int8)) )
+            self.mask = da.from_array(np.array(mask.astype(np.int8)))
 
     def check_lat_lon_dims(self):
         """
@@ -382,7 +382,7 @@ class MeshType:
 
         # -- add area if provided
         if area:
-            da_area = da.from_array(np.array(area)) 
+            da_area = da.from_array(np.array(area))
             ds_out["elementArea"] = xr.DataArray(
                 da_area.T.reshape((-1,)).T,
                 dims=("elementCount"),

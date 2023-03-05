@@ -17,10 +17,12 @@ from ctsm.mesh_maker import main
 
 # pylint: disable=invalid-name
 
+
 class SysTestMeshMaker(unittest.TestCase):
     """
     Basic class for testing mesh_maker.py.
     """
+
     def setUp(self):
         """Setup for all tests"""
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
@@ -87,6 +89,22 @@ class SysTestMeshMaker(unittest.TestCase):
             self.mesh_out,
         ]
         main()
+
+    def test_noinput(self):
+        """Test with an input file that does not exist"""
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            "zztop",
+            "--lat",
+            "lsmlat",
+            "--lon",
+            "lsmlon",
+            "--output",
+            self.mesh_out,
+        ]
+        with self.assertRaisesRegex(SystemExit, "Input file not found."):
+            main()
 
 
 if __name__ == "__main__":
