@@ -138,6 +138,42 @@ class SysTestMeshMaker(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "Input file does not have variable named zztop"):
             main()
 
+    def test_badarea(self):
+        """Bad name for area"""
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            self._infile,
+            "--lat",
+            "lsmlat",
+            "--lon",
+            "lsmlon",
+            "--area",
+            "zztop",
+            "--output",
+            self.mesh_out,
+        ]
+        with self.assertRaisesRegex(SystemExit, "Input file does not have area variable named zztop"):
+            main()
+
+    def test_badmask(self):
+        """Bad name for mask"""
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            self._infile,
+            "--lat",
+            "lsmlat",
+            "--lon",
+            "lsmlon",
+            "--mask",
+            "zztop",
+            "--output",
+            self.mesh_out,
+        ]
+        with self.assertRaisesRegex(SystemExit, "Input file does not have mask variable named zztop"):
+            main()
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
