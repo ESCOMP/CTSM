@@ -243,11 +243,17 @@ def main():
     logging.info("Writing mesh file to    : %s", mesh_out)
 
     if mask_name is not None:
+        if mask_name not in ds.variables:
+            err_msg = "Input file does not have mask variable named " + mask_name
+            abort(err_msg)
         mask = ds[mask_name].astype(np.float32)
     else:
         mask = None
 
     if area_name is not None:
+        if area_name not in ds.variables:
+            err_msg = "Input file does not have area variable named " + area_name
+            abort(err_msg)
         area = ds[area_name].astype(np.float32)
     else:
         area = None
