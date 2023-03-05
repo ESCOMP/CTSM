@@ -202,8 +202,8 @@ def main():
         abort(err_msg)
 
     if lat_name not in ds.coords and lat_name not in ds.variables:
-        logging.error("Input file does not have variable named %s", lat_name)
-        sys.exit()
+        err_msg = "Input file does not have variable named " + lat_name
+        abort(err_msg)
 
     else:
         logging.debug(
@@ -213,8 +213,8 @@ def main():
         )
 
     if lon_name not in ds.coords and lon_name not in ds.variables:
-        logging.error("Input file does not have variable named %s", lon_name)
-        sys.exit()
+        err_msg = "Input file does not have variable named " + lon_name
+        abort(err_msg)
     else:
         logging.debug(
             "- %s exist in the provided netcdf file with dimension of %s.",

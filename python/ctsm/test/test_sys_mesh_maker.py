@@ -106,6 +106,38 @@ class SysTestMeshMaker(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "Input file not found."):
             main()
 
+    def test_nolongs(self):
+        """Bad name for longitude"""
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            self._infile,
+            "--lat",
+            "lsmlat",
+            "--lon",
+            "zztop",
+            "--output",
+            self.mesh_out,
+        ]
+        with self.assertRaisesRegex(SystemExit, "Input file does not have variable named zztop"):
+            main()
+
+    def test_nolats(self):
+        """Bad name for latitude"""
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            self._infile,
+            "--lat",
+            "zztop",
+            "--lon",
+            "lsmlon",
+            "--output",
+            self.mesh_out,
+        ]
+        with self.assertRaisesRegex(SystemExit, "Input file does not have variable named zztop"):
+            main()
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
