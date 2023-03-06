@@ -91,11 +91,13 @@ OPTIONS
                                     This toggles off the namelist variable: use_cn
                                 bgc   = Carbon Nitrogen with methane, nitrification, vertical soil C,
                                         CENTURY or MIMICS decomposition
-                                    This toggles on the namelist variables:
+				        This toggles on the namelist variables:
                                           use_cn, use_lch4, use_nitrif_denitrif
-                                fates = FATES/Ecosystem Demography with below ground BGC
-                                    This toggles on the namelist variables:
-                                          use_fates
+				fates = FATES/Ecosystem Demography with below ground BGC
+				        CENTURY or MIMICS decomposition
+                                        This toggles on the namelist variables:
+				        use_fates. use_lch4 and use_nitrif_denitrif are optional
+				 
                               (Only for CLM4.5/CLM5.0)
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
@@ -757,7 +759,7 @@ sub setup_cmdl_fates_mode {
 
       # The following variables may be set by the user and are compatible with use_fates
       # no need to set defaults, covered in a different routine
-      my @list  = (  "use_lch4" );
+      my @list  = (  "use_lch4", "use_nitrif_denitrif" );
       foreach my $var ( @list ) {
 	  if ( defined($nl->get_value($var))  ) {
 	      $nl_flags->{$var} = $nl->get_value($var);
