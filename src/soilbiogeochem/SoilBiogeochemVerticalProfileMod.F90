@@ -193,20 +193,38 @@ contains
          c = filter_soilc(fc)
          rootfr_tot = 0._r8
          surface_prof_tot = 0._r8
-         ! redo column ntegration over active layer for column-native profiles
-         do j = 1, min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
-            rootfr_tot = rootfr_tot + col_cinput_rootfr(c,j) * dzsoi_decomp(j)
-            surface_prof_tot = surface_prof_tot + surface_prof(j) * dzsoi_decomp(j)
-         end do
-         if ( (altmax_lastyear_indx(c) > 0) .and. (rootfr_tot > 0._r8) .and. (surface_prof_tot > 0._r8) ) then
-            do j = 1,  min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
-               nfixation_prof(c,j) = col_cinput_rootfr(c,j) / rootfr_tot
-               ndep_prof(c,j) = surface_prof(j)/ surface_prof_tot
+         if(col%is_fates(c))then
+            ! For FATES, we just use the e-folding depth for both fixation and deposition
+            ! partially because the fixation may be free-living depending on FATES-side
+            ! fixation choices, and partially for simplicity
+            do j = 1, min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
+               surface_prof_tot = surface_prof_tot + surface_prof(j) * dzsoi_decomp(j)
             end do
+            if ( (altmax_lastyear_indx(c) > 0) .and. (surface_prof_tot > 0._r8) ) then
+               do j = 1,  min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
+                  nfixation_prof(c,j) = surface_prof(j)/ surface_prof_tot
+                  ndep_prof(c,j) = surface_prof(j)/ surface_prof_tot
+               end do
+            else
+               nfixation_prof(c,1) = 1./dzsoi_decomp(1)
+               ndep_prof(c,1) = 1./dzsoi_decomp(1)
+            endif
          else
-            nfixation_prof(c,1) = 1./dzsoi_decomp(1)
-            ndep_prof(c,1) = 1./dzsoi_decomp(1)
-         endif
+            ! redo column ntegration over active layer for column-native profiles
+            do j = 1, min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
+               rootfr_tot = rootfr_tot + col_cinput_rootfr(c,j) * dzsoi_decomp(j)
+               surface_prof_tot = surface_prof_tot + surface_prof(j) * dzsoi_decomp(j)
+            end do
+            if ( (altmax_lastyear_indx(c) > 0) .and. (rootfr_tot > 0._r8) .and. (surface_prof_tot > 0._r8) ) then
+               do j = 1,  min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
+                  nfixation_prof(c,j) = col_cinput_rootfr(c,j) / rootfr_tot
+                  ndep_prof(c,j) = surface_prof(j)/ surface_prof_tot
+               end do
+            else
+               nfixation_prof(c,1) = 1./dzsoi_decomp(1)
+               ndep_prof(c,1) = 1./dzsoi_decomp(1)
+            endif
+         end if
       end do
 
       ! check to make sure integral of all profiles = 1.
