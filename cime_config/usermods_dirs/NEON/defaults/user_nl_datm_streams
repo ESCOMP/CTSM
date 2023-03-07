@@ -47,10 +47,10 @@ NEON.${NEONSITE}:datavars = \
   PSRF     Sa_pbot, \
   FLDS     Faxa_lwdn
 
-NEON.${NEONSITE}.PRECIP:datavars = \
+NEON.PRISM_PRECIP.${NEONSITE}:datavars = \
   PRECIP Faxa_precn
 
-NEON.${NEONSITE}.PRECIP:datafiles = \
+NEON.PRISM_PRECIP${NEONSITE}:datafiles = \
   /glade/u/home/tking/neon/prism_${NEONSITE}_2018.nc, \
   /glade/u/home/tking/neon/prism_${NEONSITE}_2019.nc, \
   /glade/u/home/tking/neon/prism_${NEONSITE}_2020.nc, \
