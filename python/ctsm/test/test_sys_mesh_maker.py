@@ -55,6 +55,28 @@ class SysTestMeshMaker(unittest.TestCase):
         ]
         main()
 
+    def test_region(self):
+        """Do a basic test for a small regional grid"""
+        self._infile = os.path.join(
+            self._testinputs_path,
+            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified_with_crop.nc"
+        )
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            self._infile,
+            "--lat",
+            "LATIXY",
+            "--lon",
+            "LONGXY",
+            "--no-plot",
+            "--mask",
+            "PFTDATA_MASK",
+            "--output",
+            self.mesh_out,
+        ]
+        main()
+
     def test_noplot_add_mask(self):
         """Do a simple basic test without plotting and also adding mask"""
         sys.argv = [
