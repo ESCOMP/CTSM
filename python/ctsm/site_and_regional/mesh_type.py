@@ -156,8 +156,8 @@ class MeshType:
             lats_size = dims[1]
 
             # -- convert to dask array
-            self.center_lat2d = da.from_array(self.center_lats)
-            self.center_lon2d = da.from_array(self.center_lons)
+            self.center_lat2d = da.from_array(np.array(self.center_lats))
+            self.center_lon2d = da.from_array(np.array(self.center_lons))
 
     def calculate_corners(self, unit="degrees"):
         """
