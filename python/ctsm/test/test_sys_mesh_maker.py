@@ -153,7 +153,9 @@ class SysTestMeshMaker(unittest.TestCase):
             "--output",
             self.mesh_out,
         ]
-        with self.assertRaisesRegex(SystemExit, "Input file does not have area variable named zztop"):
+        with self.assertRaisesRegex(
+            SystemExit, "Input file does not have area variable named zztop"
+        ):
             main()
 
     def test_badmaskname(self):
@@ -171,7 +173,9 @@ class SysTestMeshMaker(unittest.TestCase):
             "--output",
             self.mesh_out,
         ]
-        with self.assertRaisesRegex(SystemExit, "Input file does not have mask variable named zztop"):
+        with self.assertRaisesRegex(
+            SystemExit, "Input file does not have mask variable named zztop"
+        ):
             main()
 
     def test_badareaunits(self):
@@ -189,7 +193,9 @@ class SysTestMeshMaker(unittest.TestCase):
             "--output",
             self.mesh_out,
         ]
-        with self.assertRaisesRegex(SystemExit, "Units for area are not recognized"):
+        with self.assertRaisesRegex(
+            SystemExit, r"Area does NOT have the correct units of radians\^2 but has unitless"
+        ):
             main()
 
     def test_badmaskvalues(self):
@@ -203,11 +209,11 @@ class SysTestMeshMaker(unittest.TestCase):
             "--lon",
             "lsmlon",
             "--mask",
-            "PCT_CROP",
+            "LAKEDEPTH",
             "--output",
             self.mesh_out,
         ]
-        with self.assertRaisesRegex(SystemExit, "Mask variable can ONLY have values of 0 or 1"):
+        with self.assertRaisesRegex(SystemExit, "Mask variable is not within 0 to 1"):
             main()
 
 

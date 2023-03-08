@@ -247,12 +247,19 @@ def main():
             err_msg = "Input file does not have mask variable named " + mask_name
             abort(err_msg)
         mask = ds[mask_name].astype(np.float32)
+        if mask.max() > 1.0 or mask.min() < 0.0:
+            abort("Mask variable is not within 0 to 1")
     else:
         mask = None
 
     if area_name is not None:
         if area_name not in ds.variables:
             err_msg = "Input file does not have area variable named " + area_name
+            abort(err_msg)
+        if ds[area_name].attrs["units"] != "radians^2":
+            err_msg = "Area does NOT have the correct units of radians^2 but has " + str(
+                ds[area_name].attrs["units"]
+            )
             abort(err_msg)
         area = ds[area_name].astype(np.float32)
     else:
