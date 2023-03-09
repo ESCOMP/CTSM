@@ -182,9 +182,6 @@ contains
       if ( use_c14 ) then
          ntype = ntype+1
       endif
-      if ( use_fates ) then
-         ntype = 1
-      endif
       spinup_term = 1._r8
       epsilon = 1.e-30
 
@@ -247,7 +244,7 @@ contains
             source            => soilbiogeochem_carbonflux_inst%decomp_cpools_sourcesink_col
             trcr_tendency_ptr => soilbiogeochem_carbonflux_inst%decomp_cpools_transport_tendency_col
          case (2)  ! N
-            if (use_cn ) then
+            if (use_cn .or. use_fates) then
                conc_ptr          => soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col
                source            => soilbiogeochem_nitrogenflux_inst%decomp_npools_sourcesink_col
                trcr_tendency_ptr => soilbiogeochem_nitrogenflux_inst%decomp_npools_transport_tendency_col

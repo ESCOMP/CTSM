@@ -204,7 +204,7 @@ contains
     ! ========================================================================
 
     need_glacier_initialization = is_first_step()
-
+    
     if (need_glacier_initialization) then
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1, nclumps
@@ -290,8 +290,8 @@ contains
 
        if ((use_cn .or. use_fates) .and. decomp_method /= no_soil_decomp) then
           call SoilBiogeochemVerticalProfile(bounds_clump                                       , &
-               filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc   , &
-               filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp   , &
+               filter_inactive_and_active(nc)%num_bgc_soilc, filter_inactive_and_active(nc)%bgc_soilc   , &
+               filter_inactive_and_active(nc)%num_bgc_vegp, filter_inactive_and_active(nc)%bgc_vegp   , &
                active_layer_inst, soilstate_inst, soilbiogeochem_state_inst)
        end if
 

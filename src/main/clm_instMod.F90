@@ -231,7 +231,6 @@ contains
 
     allocate (h2osno_col(begc:endc))
     allocate (snow_depth_col(begc:endc))
-
     ! snow water
     do c = begc,endc
        l = col%landunit(c)
@@ -371,7 +370,7 @@ contains
 
     call drydepvel_inst%Init(bounds)
 
-    if (decomp_method /= no_soil_decomp) then
+    if_decomp: if (decomp_method /= no_soil_decomp) then
 
        ! Initialize soilbiogeochem_state_inst
 
@@ -423,7 +422,7 @@ contains
        call SoilBiogeochemPrecisionControlInit( soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
                                                 c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst)
 
-    end if ! end of if use_cn 
+    end if if_decomp
 
     ! Note - always call Init for bgc_vegetation_inst: some pieces need to be initialized always
     call bgc_vegetation_inst%Init(bounds, nlfilename, GetBalanceCheckSkipSteps(), params_ncid )
@@ -550,7 +549,7 @@ contains
        call ch4_inst%restart(bounds, ncid, flag=flag)
     end if
 
-    if ( use_cn ) then
+    if ( use_cn .or. use_fates) then
        ! Need to do vegetation restart before soil bgc restart to get totvegc_col for purpose
        ! of resetting soil carbon at exit spinup when no vegetation is growing.
        call bgc_vegetation_inst%restart(bounds, ncid, flag=flag)

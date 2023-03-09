@@ -137,8 +137,8 @@ contains
          decomp_k                         => soilbiogeochem_carbonflux_inst%decomp_k_col                           , & ! Input: [real(r8) (:,:,:) ]  decomposition rate coefficient (1./sec)
          phr_vr                           => soilbiogeochem_carbonflux_inst%phr_vr_col                               & ! Output: [real(r8) (:,:)   ]  potential HR (gC/m3/s)                           
          )
-   
-   if ( .not. use_fates ) then
+
+      
       ! set initial values for potential C and N fluxes
       p_decomp_cpool_loss(begc:endc, :, :) = 0._r8
       pmnf_decomp_cascade(begc:endc, :, :) = 0._r8
@@ -320,20 +320,6 @@ contains
             potential_immob_vr(c,j) = immob(c,j)
          end do
       end do
-   else  ! use_fates
-      ! As a first step we are making this a C-only model, so no N downregulation of fluxes. 
-      do k = 1, ndecomp_cascade_transitions
-         do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               !
-               p_decomp_cpool_loss(c,j,k) = decomp_cpools_vr(c,j,cascade_donor_pool(k)) &
-                    * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
-               !
-            end do
-         end do
-      end do
-   end if
 
       ! Add up potential hr for methane calculations
       do j = 1,nlevdecomp
@@ -350,6 +336,7 @@ contains
             end do
          end do
       end do
+
 
     end associate
 

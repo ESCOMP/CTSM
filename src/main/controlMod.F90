@@ -535,9 +535,12 @@ contains
     end if
 
     call soilHydReadNML(   NLFilename )
+
+    if( use_cn .or. use_fates) then
+       call CNPrecisionControlReadNML( NLFilename )
+    end if
     if ( use_cn ) then
        call CNFireReadNML(             NLFilename )
-       call CNPrecisionControlReadNML( NLFilename )
        call CNNDynamicsReadNML       ( NLFilename )
        call CNPhenologyReadNML       ( NLFilename )
     end if
@@ -761,7 +764,7 @@ contains
        ! C and N input vertical profiles
        call mpi_bcast (surfprof_exp,            1, MPI_REAL8,  0, mpicom, ier)
     end if
-    
+
     if ((use_cn.or.use_fates) .and. use_nitrif_denitrif) then
        call mpi_bcast (no_frozen_nitrif_denitrif,  1, MPI_LOGICAL, 0, mpicom, ier)
     end if

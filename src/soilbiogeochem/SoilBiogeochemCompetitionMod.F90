@@ -293,7 +293,7 @@ contains
 
       local_use_fun = use_fun
 
-      if (.not. use_nitrif_denitrif) then
+      if_nitrif: if (.not. use_nitrif_denitrif) then
 
          ! init sminn_tot
          do fc=1,num_soilc
@@ -630,8 +630,6 @@ contains
                    sum_no3_demand_scaled(c,j) = (plant_ndemand(c)*nuptake_prof(c,j))*compet_plant_no3 + &
                   (potential_immob_vr(c,j)-actual_immob_nh4_vr(c,j))*compet_decomp_no3 + pot_f_denit_vr(c,j)*compet_denit
                endif
-                  
-          
 
                if (sum_no3_demand(c,j)*dt < smin_no3_vr(c,j)) then
 
@@ -655,7 +653,7 @@ contains
                         smin_no3_to_plant_vr(c,j) = smin_no3_vr(c,j)/dt - actual_immob_no3_vr(c,j) - f_denit_vr(c,j)
                      end if
                   endif
-                
+
                else 
 
                   ! NO3 availability can not satisfy the sum of immobilization, denitrification, and
@@ -993,7 +991,7 @@ contains
             end if
          end do ! end of column loops
 
-      end if  !end of if_not_use_nitrif_denitrif
+      end if if_nitrif  !end of if_not_use_nitrif_denitrif
 
     end associate
 

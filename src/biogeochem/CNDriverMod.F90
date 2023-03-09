@@ -77,9 +77,10 @@ contains
     class(fire_method_type)                , intent(inout) :: cnfire_method 
     !-----------------------------------------------------------------------
     call SoilBiogeochemCompetitionInit(bounds)
-    call CNPhenologyInit(bounds)
-    call cnfire_method%FireInit(bounds, NLFilename)
-    
+    if(use_cn)then
+       call CNPhenologyInit(bounds)
+       call cnfire_method%FireInit(bounds, NLFilename)
+    end if
   end subroutine CNDriverInit
 
   !-----------------------------------------------------------------------
@@ -240,9 +241,8 @@ contains
     ! --------------------------------------------------
     ! zero the column-level C and N fluxes
     ! --------------------------------------------------
-    
-    call t_startf('CNZero')
 
+    call t_startf('CNZero')
     ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Without this, the filter is full of garbage
     ! in some situations
     call t_startf('CNZero-soilbgc-cflux')
@@ -293,7 +293,7 @@ contains
 
     call t_stopf('CNZero-soilbgc-nflux')
     call t_stopf('CNZero')
-
+    
     ! --------------------------------------------------
     ! Nitrogen Deposition, Fixation and Respiration
     ! --------------------------------------------------

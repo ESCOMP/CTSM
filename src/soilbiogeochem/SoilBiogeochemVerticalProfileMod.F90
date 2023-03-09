@@ -131,7 +131,6 @@ contains
             do j = 1, nlevdecomp
                cinput_rootfr(p,j) = crootfr(p,j) / dzsoi_decomp(j)
             end do
-
          else
             cinput_rootfr(p,1) = 0.
          endif
@@ -168,7 +167,6 @@ contains
             leaf_prof(p,1) = 1./dzsoi_decomp(1)
             stem_prof(p,1) = 1./dzsoi_decomp(1)
          endif
-
       end do
 
       !! aggregate root profile to column
@@ -176,17 +174,21 @@ contains
       !      cinput_rootfr(bounds%begp:bounds%endp, :), &
       !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
       !      'unity')
-      do pi = 1,maxsoil_patches
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            if (pi <=  col%npatches(c)) then
-               p = col%patchi(c) + pi - 1
-               do j = 1,nlevdecomp
-                  col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
-               end do
-            end if
+      if(num_soilp>0)then
+         do pi = 1,maxsoil_patches
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               if(.not.col%is_fates(c))then
+                  if (pi <=  col%npatches(c)) then
+                     p = col%patchi(c) + pi - 1
+                     do j = 1,nlevdecomp
+                        col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
+                     end do
+                  end if
+               end if
+            end do
          end do
-      end do
+      end if
 
       ! repeat for column-native profiles: Ndep and Nfix
       do fc = 1,num_soilc

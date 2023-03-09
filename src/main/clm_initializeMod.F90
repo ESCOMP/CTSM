@@ -429,8 +429,11 @@ contains
     !$OMP END PARALLEL DO
 
     ! Initialize modules (after time-manager initialization in most cases)
-    if (use_cn) then
+    if (use_cn .or. use_fates) then
        call bgc_vegetation_inst%Init2(bounds_proc, NLFilename)
+    end if
+
+    if (use_cn) then
 
        ! NOTE(wjs, 2016-02-23) Maybe the rest of the body of this conditional should also
        ! be moved into bgc_vegetation_inst%Init2
@@ -622,6 +625,7 @@ contains
     !$OMP END PARALLEL DO
 
     ! Initialize nitrogen deposition
+    ! RGK: To-do, enable N deposition in FATES
     if (use_cn) then
        call t_startf('init_ndep')
        if (.not. ndep_from_cpl) then
@@ -630,7 +634,7 @@ contains
        end if
        call t_stopf('init_ndep')
     end if
-
+    
     ! Initialize active history fields.
     ! This is only done if not a restart run. If a restart run, then this
     ! information has already been obtained from the restart data read above.
