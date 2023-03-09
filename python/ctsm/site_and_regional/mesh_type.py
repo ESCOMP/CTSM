@@ -381,7 +381,7 @@ class MeshType:
         ds_out.elementMask.encoding = {"dtype": np.int32}
 
         # -- add area if provided
-        if area:
+        if area is not None:
             da_area = da.from_array(np.array(area))
             ds_out["elementArea"] = xr.DataArray(
                 da_area.T.reshape((-1,)).T,

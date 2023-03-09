@@ -77,6 +77,31 @@ class SysTestMeshMaker(unittest.TestCase):
         ]
         main()
 
+    def test_domainfile_region_warea(self):
+        """Do a basic test for a small regional grid with a domain file rather than a surfdata file including area"""
+        infile = os.path.join(
+            self._testinputs_path,
+            "domain.lnd.5x5pt-amazon_navy.090715.nc"
+        )
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            infile,
+            "--lat",
+            "yc",
+            "--lon",
+            "xc",
+            "--no-plot",
+            "--mask",
+            "mask",
+            "--area",
+            "area",
+            "--output",
+            self.mesh_out,
+        ]
+        main()
+
+
     def test_noplot_add_mask(self):
         """Do a simple basic test without plotting and also adding mask"""
         sys.argv = [
@@ -90,23 +115,6 @@ class SysTestMeshMaker(unittest.TestCase):
             "--no-plot",
             "--mask",
             "PFTDATA_MASK",
-            "--output",
-            self.mesh_out,
-        ]
-        main()
-
-    def test_add_area(self):
-        """Do a simple basic test without plotting and also adding area"""
-        sys.argv = [
-            "mesh_maker",
-            "--input",
-            self._infile,
-            "--lat",
-            "lsmlat",
-            "--lon",
-            "lsmlon",
-            "--area",
-            "AREA",
             "--output",
             self.mesh_out,
         ]
