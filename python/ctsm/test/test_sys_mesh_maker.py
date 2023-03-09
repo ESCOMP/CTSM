@@ -9,6 +9,7 @@ import os
 import sys
 import tempfile
 import shutil
+import xarray as xr
 
 # pylint: disable=wrong-import-position
 from ctsm.path_utils import path_to_ctsm_root
@@ -100,6 +101,13 @@ class SysTestMeshMaker(unittest.TestCase):
             self.mesh_out,
         ]
         main()
+        expected_mesh = os.path.join(
+            self._testinputs_path,
+            "ESMF_mesh_5x5pt_amazon_from_domain_c230308.nc"
+        )
+        mesh_out = xr.open_dataset(self.mesh_out)
+        expected = xr.open_dataset(expected_mesh)
+        self.assertTrue(mesh_out.equals(expected), "Output mesh does not compare to the expected baseline file")
 
 
     def test_noplot_add_mask(self):
