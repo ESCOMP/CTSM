@@ -1652,6 +1652,11 @@ sub process_namelist_inline_logic {
   ##########################################
   setup_logic_soilm_streams($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
 
+  ##########################################
+  # namelist group: irrigation_streams  #
+  ##########################################
+  setup_logic_irrig_streams($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+
   ##################################
   # namelist group: cnmresp_inparm #
   ##################################
@@ -3599,6 +3604,32 @@ sub setup_logic_soilm_streams {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_irrig_streams {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'irrig_mapalgo',
+                  'hgrid'=>$nl_flags->{'res'} );
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_irrig', 'phys'=>$nl_flags->{'phys'},
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_irrig', 'phys'=>$nl_flags->{'phys'},
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      # Set align year, if first and last years are different
+      if ( $nl->get_value('stream_year_first_irrig') !=
+           $nl->get_value('stream_year_last_irrig') ) {
+           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                       'model_year_align_irrig', 'sim_year'=>$nl_flags->{'sim_year'},
+                       'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      }
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_irrig', 'phys'=>$nl_flags->{'phys'},
+                  'hgrid'=>"0.9x1.25" );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_lai_streams {
   # lai streams require clm4_5/clm5_0
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
@@ -3953,7 +3984,7 @@ sub write_output_files {
   } else {
 
     @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
-                 soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
+                 soil_moisture_streams irrigation_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
                  clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                  finidat_consistency_checks dynpft_consistency_checks 
                  clm_initinterp_inparm century_soilbgcdecompcascade

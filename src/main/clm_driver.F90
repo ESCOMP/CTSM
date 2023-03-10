@@ -12,7 +12,7 @@ module clm_driver
   use clm_varctl             , only : wrtdia, iulog, use_fates
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, ndep_from_cpl
-  use clm_varctl             , only : use_soil_moisture_streams
+  use clm_varctl             , only : use_soil_moisture_streams, use_irrigation_streams
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
@@ -81,6 +81,7 @@ module clm_driver
   use clm_initializeMod      , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
+  use IrrigationStreamMod    , only : PrescribedIrrigationInterp, PrescribedIrrigationAdvance
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -326,6 +327,17 @@ contains
        call PrescribedSoilMoistureAdvance( bounds_proc )
        call t_stopf('prescribed_sm')
     endif
+
+    ! ============================================================================
+    ! If irrigation is prescribed from data streams set it here
+    ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe).
+    ! ============================================================================
+    if (use_irrigation_streams) then
+       call t_startf('prescribed_irrig')
+       call PrescribedIrrigationAdvance( bounds_proc )
+       call t_stopf('prescribed_irrig')
+    endif
+
     ! ============================================================================
     ! Initialize the column-level mass balance checks for water, carbon & nitrogen.
     !
@@ -624,6 +636,14 @@ contains
             volr               = atm2lnd_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
             rof_prognostic     = rof_prognostic)
        call t_stopf('irrigationneeded')
+
+       ! Update irrigation rate from data stream
+       if (use_irrigation_streams) then
+          call t_startf('prescribed_irrig')
+          call PrescribedIrrigationInterp(bounds_clump, irrigation_inst)
+          call t_stopf('prescribed_irrig')
+       endif
+
 
        ! ============================================================================
        ! DUST and VOC emissions

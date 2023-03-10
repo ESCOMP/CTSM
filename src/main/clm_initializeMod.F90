@@ -13,7 +13,7 @@ module clm_initializeMod
   use clm_varctl      , only : is_cold_start, is_interpolated_start
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
-  use clm_varctl      , only : use_soil_moisture_streams
+  use clm_varctl      , only : use_soil_moisture_streams, use_irrigation_streams
   use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
@@ -28,6 +28,7 @@ module clm_initializeMod
 
   use clm_instMod
   use SoilMoistureStreamMod, only : PrescribedSoilMoistureInit
+  use IrrigationStreamMod,   only : PrescribedIrrigationInit
   ! 
   implicit none
   public   ! By default everything is public 
@@ -125,6 +126,10 @@ contains
     deallocate(amask)
 
     if(use_soil_moisture_streams) call decompInit_lnd3D(ni, nj, nlevsoi)
+
+    !scs: this is hardcoded right now so it needs to match stream file
+    if(use_irrigation_streams) call decompInit_lnd3D(ni, nj, 2)
+
     ! *** Get JUST gridcell processor bounds ***
     ! Remaining bounds (landunits, columns, patches) will be determined 
     ! after the call to decompInit_glcp - so get_proc_bounds is called
@@ -477,6 +482,10 @@ contains
 
     if(use_soil_moisture_streams) then 
        call PrescribedSoilMoistureInit(bounds_proc)
+    endif
+
+    if(use_irrigation_streams) then 
+       call PrescribedIrrigationInit(bounds_proc)
     endif
 
     

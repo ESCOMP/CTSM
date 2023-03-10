@@ -243,6 +243,12 @@ module clm_varctl
   integer, public :: carbon_resp_opt = 0
 
   !----------------------------------------------------------
+  ! prescribed irrigation streams switch 
+  !----------------------------------------------------------
+
+  logical, public :: use_irrigation_streams = .false. ! true => use prescribed irrigation stream
+
+  !----------------------------------------------------------
   ! prescribed soil moisture streams switch 
   !----------------------------------------------------------
 
