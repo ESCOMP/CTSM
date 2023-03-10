@@ -1,0 +1,6 @@
+This test mod turns on the MIMICS instead of the CENTURY below-ground
+biogeochemistry.
+
+As of 2021/11/15 this test inherits mods from the ../coldStart directory;
+however the plan is to change that to ../default when we have an acceptable
+spun up finidat file to initialize MIMICS with.

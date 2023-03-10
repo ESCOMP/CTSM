@@ -422,7 +422,7 @@ contains
        ! Determine doalb based on nextsw_cday sent from atm model
 
        nstep = get_nstep()
-       caldayp1 = get_curr_calday(offset=dtime)
+       caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
        if (nstep == 0) then
           doalb = .false.
        else if (nstep == 1) then
@@ -444,7 +444,7 @@ contains
        call t_barrierf('sync_clm_run1', mpicom)
        call t_startf ('clm_run')
        call t_startf ('shr_orb_decl')
-       calday = get_curr_calday()
+       calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
        call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
        call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
        call t_stopf ('shr_orb_decl')

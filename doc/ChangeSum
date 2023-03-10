@@ -1,5 +1,62 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev118   slevis 02/05/2023 Use conda environment rather than ncar_pylib with the fsurdat_modifier system test
+    ctsm5.1.dev117  afoster 02/02/2023 Updates to facilitate running FATES at NEON sites
+    ctsm5.1.dev116     erik 01/26/2023 Small answer changes with bug fixes, zetamaxstable=2 for BHS, new single point fsurdat files
+    ctsm5.1.dev115   rgknox 12/02/2022 API compatability with FATES V2 nutrient dynamics
+    ctsm5.1.dev114 multiple 11/19/2022 Some NEON updates fixing AG sites, update MOSART, small fixes
+    ctsm5.1.dev113 multiple 10/28/2022 Fix some compsets; add only clauses for ESMF use statements
+    ctsm5.1.dev112 multiple 10/15/2022 Rework fates test definitions and add new fates tests
+    ctsm5.1.dev111 multiple 10/05/2022 Fixes for NEON cases
+    ctsm5.1.dev110   slevis 09/26/2022 Introduction of modify_meshes tool for use in I-cases and F-cases
+    ctsm5.1.dev109   slevis 09/26/2022 If not MIMICS, do not output certain MIMICS history fields
+    ctsm5.1.dev108  afoster 09/08/2022 Connect ozone from atmosphere
+    ctsm5.1.dev107  afoster 09/07/2022 Update Externals
+    ctsm5.1.dev106 multiple 08/04/2022 Reuse some files generated in initialization when rerunning
+    ctsm5.1.dev105   slevis 07/26/2022 make interfaces more similar between fsurdat_modifier and subset_data tools
+    ctsm5.1.dev104 glemieux 07/15/2022 Update to FATES history names and machine configuration
+    ctsm5.1.dev103    sacks 07/12/2022 Fix accumulation variables when changing model time step
+    ctsm5.1.dev102    sacks 07/11/2022 Fix LILAC interface to PIO
+    ctsm5.1.dev101 samrabin 07/11/2022 Fix winter wheat sowing window bugs
+    ctsm5.1.dev100     erik 07/05/2022 Start bringing in matrixcn overall options and sparse matrix multiplier code, misc updates
+    ctsm5.1.dev099   rgknox 06/21/2022 Enabling FATES control over the number of patches on the natural land unit
+    ctsm5.1.dev098 swensosc 05/20/2022 Correct perched water table calculation
+    ctsm5.1.dev097    sacks 05/20/2022 Update ccs_config to fix issue on izumi and maybe elsewhere
+    ctsm5.1.dev096     erik 05/18/2022 Fix a few glitches from the last tag
+    ctsm5.1.dev095     erik 05/09/2022 Turn soil BGC off for FATES-SP mode, externals updates, FatesSP user-mod directory and compset
+    ctsm5.1.dev094   negins 05/06/2022 subset_data allows zeroing out nonveg landunits without any dompft selected
+    ctsm5.1.dev093   slevis 05/03/2022 Modifications for FATES-MIMICS to work
+    ctsm5.1.dev092    sacks 04/29/2022 Refactor NutrientCompetition / CNAllocation to provide hooks for AgSys
+    ctsm5.1.dev091   rgknox 04/22/2022 clm decomp method is now passed to fates to enabled mimics coupling
+    ctsm5.1.dev090 samrabin 03/31/2022 Fix misleading name of "gddplant"
+    ctsm5.1.dev089    sacks 03/31/2022 For CLM45 apply peaklai to aleaf in grainfill
+    ctsm5.1.dev088 samrabin 03/28/2022 Add outputs for annual crop sowing and harvest dates
+    ctsm5.1.dev087    sacks 03/24/2022 Reduce aux_clm testing cost
+    ctsm5.1.dev086   negins 03/22/2022 Updates necessary for NEON v2 files and server updates
+    ctsm5.1.dev085    sacks 03/16/2022 Expand crop reproductive pools; remove some unused options
+    ctsm5.1.dev084 glemieux 03/15/2022 FATES parameter file updated to align with clm pft optical parameters
+    ctsm5.1.dev083 multiple 03/08/2022 Implement PCT_URBAN_MAX to minimize dynamic urban memory
+    ctsm5.1.dev082   slevis 02/28/2022 Replace dom_nat_pft with dom_plant to enable crop in fsurdat_modifier tool
+    ctsm5.1.dev081 swensosc 02/24/2022 Do not subtract irrigation from QRUNOFF diagnostic
+    ctsm5.1.dev080    sacks 02/24/2022 Use avg days per year when converting param units
+    ctsm5.1.dev079    sacks 02/24/2022 Changes to CropPhenology timing
+    ctsm5.1.dev078    sacks 02/24/2022 Rework single-point testing
+    ctsm5.1.dev077   rgknox 02/22/2022 Updates to FATES API, including removal of patch dimensions from fates history and using soil instead of ground layers for fates history
+    ctsm5.1.dev076   negins 02/18/2022 updating subset_data.py script and move to the Python package.
+    ctsm5.1.dev075     erik 02/16/2022 Small answer changes: urban ventilation, fire-emission, irrigate off when not crop, fix two SSP ndep files
+    ctsm5.1.dev074   slevis 02/02/2022 Introduce vert. resolved MIMICS as new method to solve below ground decomp.
+    ctsm5.1.dev073    sacks 01/25/2022 Some fixes for Gregorian calendar
+    ctsm5.1.dev072   negins 01/17/2022 mksurfdat toolchain part 1: gen_mksurf_namelist
+    ctsm5.1.dev071 glemieux 01/16/2022 Small changes to enable new fates dimension and update fates tag
+    ctsm5.1.dev070 multiple 01/10/2022 Update externals, remove need for LND_DOMAIN_FILE and LND_DOMAIN_PATH, etc.
+    ctsm5.1.dev069 multiple 12/15/2021 Implement dynamic (transient) urban capability
+    ctsm5.1.dev068 multiple 12/13/2021 Adding fsurdat_modifier tool
+    ctsm5.1.dev067 jedwards 12/13/2021 NEON UI update, externals updates, small miscellanouse fixes
+    ctsm5.1.dev066   rgknox 12/04/2021 API change with FATES to enable running means inside fates, includes passing in of model timestep
+    ctsm5.1.dev065 glemieux 12/02/2021 Refactor static fire data input by moving variables into fire_base_type from cnveg_state_type
+    ctsm5.1.dev064  afoster 11/29/2021 Updates to facilitate FATES history variable overhaul
+    ctsm5.1.dev063 glemieux 11/23/2021 Provide access to the fraction of canopy covered by snow variable to fates
+    ctsm5.1.dev062     erik 11/19/2021 Make NUOPC the default driver rather than MCT
     ctsm5.1.dev061 mvertens 10/19/2021 Changes needed to get aux history output with cmeps
     ctsm5.1.dev060 glemieux 10/18/2021 Izumi aux_clm test fixes for fates testmods
     ctsm5.1.dev059 glemieux 10/13/2021 Update fates tests and list for diversity and coverage

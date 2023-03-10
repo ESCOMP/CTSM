@@ -6,7 +6,14 @@ module lnd_comp_esmf
   !----------------------------------------------------------------------------
 
   ! external libraries
-  use ESMF
+  use ESMF              , only : ESMF_GridComp, ESMF_SUCCESS, ESMF_LogSet, ESMF_State
+  use ESMF              , only : ESMF_Clock, ESMF_FieldBundle, ESMF_MAXSTR, ESMF_Field
+  use ESMF              , only : ESMF_FieldCreate, ESMF_AttributeGet
+  use ESMF              , only : ESMF_Time, ESMF_LogWrite, ESMF_LogFoundError, ESMF_Finalize
+  use ESMF              , only : ESMF_FieldBundleAdd, ESMF_FieldBundleCreate
+  use ESMF              , only : ESMF_ClockGet, ESMF_ClockGetAlarm, ESMF_LOGMSG_INFO
+  use ESMF              , only : ESMF_TYPEKIND_R8, ESMF_MESHLOC_ELEMENT, ESMF_LOGERR_PASSTHRU
+  use ESMF              , only : ESMF_END_ABORT, ESMF_TimeGet, ESMF_LOGMSG_ERROR
   use shr_mpi_mod       , only : shr_mpi_bcast
   use perf_mod          , only : t_startf, t_stopf, t_barrierf
 
@@ -68,6 +75,8 @@ contains
   subroutine lnd_register(comp, rc)
 
     ! Register the clm initial, run, and final phase methods with ESMF.
+    use ESMF     , only : ESMF_GridCompSetEntryPoint
+    use ESMF     , only : ESMF_METHOD_INITIALIZE, ESMF_METHOD_RUN, ESMF_METHOD_FINALIZE
 
     ! input/output argumenents
     type(ESMF_GridComp)  :: comp  ! CLM grid component
@@ -97,6 +106,13 @@ contains
 
     ! Initialize land surface model and obtain relevant atmospheric model arrays
     ! back from (i.e. albedos, surface temperature and snow cover over land).
+    ! Uses:
+    use ESMF              , only : ESMF_VM, ESMF_VMGet, ESMF_VMGetCurrent
+    use ESMF              , only : ESMF_DistGrid, ESMF_AttributeSet
+    use ESMF              , only : ESMF_CalKind_Flag, ESMF_CALKIND_NOLEAP, ESMF_CALKIND_GREGORIAN
+    use ESMF              , only : ESMF_TimeInterval, ESMF_TimeIntervalGet
+    use ESMF              , only : ESMF_StateAdd
+    use ESMF              , only : operator(==)
 
     ! input/output variables
     type(ESMF_GridComp)  :: comp         ! CLM gridded component
@@ -509,6 +525,8 @@ contains
     !------------------------
     ! Run CTSM
     !------------------------
+    use ESMF       , only : ESMF_Alarm, ESMF_AlarmIsRinging, ESMF_AlarmRingerOff
+    use ESMF       , only : ESMF_FAILURE, ESMF_ClockGetNextTime
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp           ! CLM gridded component
@@ -621,8 +639,8 @@ contains
        ! Determine calendar day info
        !--------------------------------
 
-       calday = get_curr_calday()
-       caldayp1 = get_curr_calday(offset=dtime)
+       calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
+       caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
 
        !--------------------------------
        ! Get time of next atmospheric shortwave calculation
@@ -834,6 +852,8 @@ contains
 
   subroutine log_clock_advance(clock, logunit, rc)
 
+    !-----------------------------------------------------------------------
+    use ESMF       , only : ESMF_ClockPrint
     ! input/output variables
     type(ESMF_Clock)               :: clock
     integer          , intent(in)  :: logunit

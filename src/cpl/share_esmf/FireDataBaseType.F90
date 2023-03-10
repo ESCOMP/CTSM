@@ -7,7 +7,7 @@ module FireDataBaseType
   ! module for handling of fire data
   !
   ! !USES:
-  use ESMF
+  use ESMF             , only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_Finalize, ESMF_END_ABORT
   use dshr_strdata_mod , only : shr_strdata_type 
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_log_mod      , only : errMsg => shr_log_errMsg
@@ -30,6 +30,11 @@ module FireDataBaseType
       type(shr_strdata_type)    :: sdat_hdm     ! Human population density input data stream
       real(r8), public, pointer :: forc_lnfm(:) ! Lightning frequency
       type(shr_strdata_type)    :: sdat_lnfm    ! Lightning frequency input data stream
+      
+      real(r8), public, pointer :: gdp_lf_col(:)   ! col global real gdp data (k US$/capita)
+      real(r8), public, pointer :: peatf_lf_col(:) ! col global peatland fraction data (0-1)
+      integer , public, pointer :: abm_lf_col(:)   ! col global peak month of crop fire emissions
+      
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
@@ -42,10 +47,11 @@ module FireDataBaseType
            need_lightning_and_popdens               ! Returns true if need lightning & popdens
       !
       ! !PRIVATE MEMBER FUNCTIONS:
-      procedure, private :: hdm_init    ! position datasets for dynamic human population density
-      procedure, private :: hdm_interp  ! interpolates between two years of human pop. density file data
-      procedure, private :: lnfm_init   ! position datasets for Lightning
-      procedure, private :: lnfm_interp ! interpolates between two years of Lightning file data
+      procedure, private :: hdm_init     ! position datasets for dynamic human population density
+      procedure, private :: hdm_interp   ! interpolates between two years of human pop. density file data
+      procedure, private :: lnfm_init    ! position datasets for Lightning
+      procedure, private :: lnfm_interp  ! interpolates between two years of Lightning file data
+      procedure, private :: surfdataread ! read fire related data from surface data set
   end type fire_base_type
 
   abstract interface
@@ -105,11 +111,19 @@ contains
        ! Allocate pop dens forcing data
        allocate( this%forc_hdm(bounds%begg:bounds%endg) )
        this%forc_hdm(bounds%begg:) = nan
+       
+       ! Allocate real gdp data
+       allocate(this%gdp_lf_col(bounds%begc:bounds%endc))
+       ! Allocate peatland fraction data
+       allocate(this%peatf_lf_col(bounds%begc:bounds%endc))
+       ! Allocates peak month of crop fire emissions
+       allocate(this%abm_lf_col(bounds%begc:bounds%endc))
 
        call this%hdm_init(bounds, NLFilename)
        call this%hdm_interp(bounds)
        call this%lnfm_init(bounds, NLFilename)
        call this%lnfm_interp(bounds)
+       call this%surfdataread(bounds)
     end if
 
   end subroutine BaseFireInit
@@ -464,5 +478,96 @@ contains
     end do
 
   end subroutine lnfm_interp
+  
+  !-----------------------------------------------------------------------
+  subroutine surfdataread(this, bounds)
+   !
+   ! !DESCRIPTION:
+   ! Read surface data set to populate relevant fire-related variables
+   !
+   ! !USES:
+   use spmdMod    , only : masterproc
+   use clm_varctl , only : nsrest, nsrStartup, fsurdat
+   use clm_varcon , only : grlnd
+   use ColumnType , only : col
+   use fileutils  , only : getfil
+   use ncdio_pio
+   !
+   ! !ARGUMENTS:
+   class(fire_base_type) :: this
+   type(bounds_type), intent(in) :: bounds
+   !
+   ! !LOCAL VARIABLES:
+   integer               :: g,c       ! indices
+   type(file_desc_t)     :: ncid      ! netcdf id
+   logical               :: readvar   ! true => variable is on initial dataset
+   character(len=256)    :: locfn     ! local filename
+   real(r8), pointer     :: gdp(:)    ! global gdp data (needs to be a pointer for use in ncdio)
+   real(r8), pointer     :: peatf(:)  ! global peatf data (needs to be a pointer for use in ncdio)
+   integer,  pointer     :: abm(:)    ! global abm data (needs to be a pointer for use in ncdio)
+   !-----------------------------------------------------------------------
+ 
+    ! --------------------------------------------------------------------
+    ! Open surface dataset
+    ! --------------------------------------------------------------------
+ 
+    call getfil (fsurdat, locfn, 0)
+    call ncd_pio_openfile (ncid, locfn, 0)
+ 
+    ! --------------------------------------------------------------------
+    ! Read in GDP data
+    ! --------------------------------------------------------------------
+ 
+    allocate(gdp(bounds%begg:bounds%endg))
+    call ncd_io(ncid=ncid, varname='gdp', flag='read', data=gdp, dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       call endrun(msg=' ERROR: gdp NOT on surfdata file'//errMsg(sourcefile, __LINE__))
+    end if
+    do c = bounds%begc, bounds%endc
+       g = col%gridcell(c)
+       this%gdp_lf_col(c) = gdp(g)
+    end do
+    deallocate(gdp)
+ 
+    ! --------------------------------------------------------------------
+    ! Read in peatf data
+    ! --------------------------------------------------------------------
+ 
+    allocate(peatf(bounds%begg:bounds%endg))
+    call ncd_io(ncid=ncid, varname='peatf', flag='read', data=peatf, dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       call endrun(msg=' ERROR: peatf NOT on surfdata file'//errMsg(sourcefile, __LINE__))
+    end if
+    do c = bounds%begc, bounds%endc
+       g = col%gridcell(c)
+       this%peatf_lf_col(c) = peatf(g)
+    end do
+    deallocate(peatf)
+ 
+    ! --------------------------------------------------------------------
+    ! Read in ABM data
+    ! --------------------------------------------------------------------
+ 
+    allocate(abm(bounds%begg:bounds%endg))
+    call ncd_io(ncid=ncid, varname='abm', flag='read', data=abm, dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       call endrun(msg=' ERROR: abm NOT on surfdata file'//errMsg(sourcefile, __LINE__))
+    end if
+    do c = bounds%begc, bounds%endc
+       g = col%gridcell(c)
+       this%abm_lf_col(c) = abm(g)
+    end do
+    deallocate(abm)
+ 
+    ! Close file
+ 
+    call ncd_pio_closefile(ncid)
+ 
+    if (masterproc) then
+       write(iulog,*) 'Successfully read fmax, soil color, sand and clay boundary data'
+       write(iulog,*)
+    endif
+    
+   end subroutine surfdataread
 
 end module FireDataBaseType

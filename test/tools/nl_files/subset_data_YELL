@@ -1,1 +1,1 @@
-point --lon 249.45804 --lat 44.95597 --site YELL --crop --dompft 1 --outdir EXEDIR/
+point --lon 250.45804 --lat 44.95597 --site YELL --dompft 1 --crop --create-domain --create-surface --outdir EXEDIR/YELL_user-mod_and_data --user-mods-dir EXEDIR/YELL_user-mod_and_data --verbose --inputdata-dir CSMDATA

@@ -18,7 +18,7 @@ module lnd_import_export
   use glc2lndMod              , only : glc2lnd_type
   use domainMod               , only : ldomain
   use spmdMod                 , only : masterproc
-  use seq_drydep_mod          , only : seq_drydep_readnl, n_drydep
+  use shr_drydep_mod          , only : shr_drydep_readnl, n_drydep
   use shr_megan_mod           , only : shr_megan_readnl, shr_megan_mechcomps_n
   use nuopc_shr_methods       , only : chkerr
   use lnd_import_export_utils , only : check_for_errors, check_for_nans
@@ -26,10 +26,10 @@ module lnd_import_export
   implicit none
   private ! except
 
-  public  :: advertise_fields
-  public  :: realize_fields
-  public  :: import_fields
-  public  :: export_fields
+  public  :: advertise_fields   ! Advertise the fields that can be sent/received
+  public  :: realize_fields     ! Realize which fields will be sent and received
+  public  :: import_fields      ! Import needed fields from mediator
+  public  :: export_fields      ! Export fields from CTSM to mediator
 
   private :: fldlist_add
   private :: fldlist_realize
@@ -39,6 +39,7 @@ module lnd_import_export
   private :: state_setexport_2d
   private :: state_getfldptr
   private :: fldchk
+  private :: ReadCapNamelist        ! Read in namelists governing import and export state
 
   type fld_list_type
      character(len=128) :: stdname
@@ -64,6 +65,7 @@ module lnd_import_export
   logical                :: flds_co2a        ! use case
   logical                :: flds_co2b        ! use case
   logical                :: flds_co2c        ! use case
+  logical                :: force_send_to_atm = .true.  ! Force sending export data to atmosphere even if ATM is not prognostic
   integer                :: glc_nec          ! number of glc elevation classes
   integer, parameter     :: debug = 0        ! internal debug level
 
@@ -91,6 +93,7 @@ module lnd_import_export
   character(*), parameter :: Faxa_dstdry         = 'Faxa_dstdry'
   character(*), parameter :: Sa_methane          = 'Sa_methaneaxa_ndep'
   character(*), parameter :: Faxa_ndep           = 'Faxa_ndep'
+  character(*), parameter :: Sa_o3               = 'Sa_o3'
   character(*), parameter :: Sa_co2prog          = 'Sa_co2prog'
   character(*), parameter :: Sa_co2diag          = 'Sa_co2diag'
   character(*), parameter :: Flrr_flood          = 'Flrr_flood'
@@ -142,6 +145,7 @@ module lnd_import_export
   logical :: send_to_atm
   logical :: send_lnd2glc
 
+
   character(*),parameter :: F01 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d21.14)"
   character(*),parameter :: u_FILE_u = &
        __FILE__
@@ -156,6 +160,7 @@ contains
     use shr_ndep_mod      , only : shr_ndep_readnl
     use shr_fire_emis_mod , only : shr_fire_emis_readnl
     use clm_varctl        , only : ndep_from_cpl
+    use controlMod        , only : NLFilename
 
     ! input/output variables
     type(ESMF_GridComp)            :: gcomp
@@ -175,9 +180,6 @@ contains
     logical           :: send_co2_to_atm = .false.
     logical           :: recv_co2_fr_atm = .false.
 
-    ! BUG(wjs, 2020-12-22, ESCOMP/CTSM#1237) force_send_to_atm should be read from the
-    ! namelist rather than being hard-coded to true.
-    logical, parameter :: force_send_to_atm = .true.
     character(len=*), parameter :: subname='(lnd_import_export:advertise_fields)'
     !-------------------------------------------------------------------------------
 
@@ -198,6 +200,8 @@ contains
     !--------------------------------
     ! Advertise export fields
     !--------------------------------
+
+    call ReadCapNamelist( NLFilename )
 
     ! Need to determine if there is no land for single column before the advertise call is done
 
@@ -231,7 +235,7 @@ contains
     ! The following namelist reads should always be called regardless of the send_to_atm value
 
     ! Dry Deposition velocities from land - ALSO initialize drydep here
-    call seq_drydep_readnl("drv_flds_in", drydep_nflds)
+    call shr_drydep_readnl("drv_flds_in", drydep_nflds)
 
     ! Fire emissions fluxes from land
     call shr_fire_emis_readnl('drv_flds_in', emis_nflds)
@@ -308,7 +312,7 @@ contains
     end if
     if (send_lnd2glc) then
        ! lnd->glc states from land all lnd->glc elevation classes (1:glc_nec) plus bare land (index 0).
-       ! The following puts all of the elevation class fields as an! undistributed dimension in 
+       ! The following puts all of the elevation class fields as an! undistributed dimension in
        ! the export state field
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, Sl_tsrf_elev  , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, Sl_topo_elev  , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
@@ -347,6 +351,7 @@ contains
     call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_swvdr   )
     call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_swndf   )
     call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_swvdf   )
+    call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_o3        )
 
     ! from atm - black carbon deposition fluxes (3)
     ! (1) => bcphidry, (2) => bcphodry, (3) => bcphiwet
@@ -531,6 +536,8 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, Sa_tbot   , atm2lnd_inst%forc_t_not_downscaled_grc(begg:), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, Sa_o3     , atm2lnd_inst%forc_o3_grc(begg:), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, Faxa_rainc, forc_rainc(begg:), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, Faxa_rainl, forc_rainl(begg:), rc=rc)
@@ -660,7 +667,7 @@ contains
 
     ! Atmosphere ndep
     if (fldchk(importState, Faxa_ndep)) then
-       ! The mediator is sending ndep in units if kgN/m2/s - and ctsm
+       ! The mediator is sending ndep in units of kgN/m2/s - and ctsm
        ! uses units of gN/m2/sec so the following conversion needs to happen
        call state_getimport_2d(importState, Faxa_ndep, forc_ndep(begg:,:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -710,7 +717,7 @@ contains
 
     ! input/output variables
     type(ESMF_GridComp)                         :: gcomp
-    type(bounds_type)           , intent(in)    :: bounds      
+    type(bounds_type)           , intent(in)    :: bounds
     logical                     , intent(in)    :: glc_present
     logical                     , intent(in)    :: rof_prognostic
     type(waterlnd2atmbulk_type) , intent(inout) :: waterlnd2atmbulk_inst
@@ -756,7 +763,7 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_snowh  , waterlnd2atmbulk_inst%h2osno_grc(begg:), &
             init_spval=.false., rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return       
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_avsdr  , lnd2atm_inst%albd_grc(begg:,1), &
             init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -872,8 +879,10 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
     if (fldchk(exportState, Flrl_irrig)) then ! irrigation flux to be removed from main channel storage (negative)
+       ! NOTE: EBK 11/15/2021 -- Don't initialize to spval as otherwise RTM dies
+       ! with NaN's (see #1545 for the non-FATES issue)
        call state_setexport_1d(exportState, Flrl_irrig, waterlnd2atmbulk_inst%qirrig_grc(begg:), &
-            minus = .true., init_spval=.true., rc=rc)
+            minus = .true., init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
     if (fldchk(exportState, Flrl_rofsub)) then
@@ -1071,7 +1080,7 @@ contains
     do g = 1,size(ctsmdata)
        ctsmdata(g) = fldptr1d(g)
     end do
-    call check_for_nans(ctsmdata, trim(fldname), 1)
+    call check_for_nans(ctsmdata, trim(fldname), 1, "import_1D")
 
   end subroutine state_getimport_1d
 
@@ -1105,7 +1114,7 @@ contains
        do g = 1,size(ctsmdata,dim=1)
           ctsmdata(g,n) = fldptr2d(n,g)
        end do
-       call check_for_nans(ctsmdata(:,n), trim(fldname)//trim(cnum), 1)
+       call check_for_nans(ctsmdata(:,n), trim(fldname)//trim(cnum), 1, "import_2D")
     end do
 
   end subroutine state_getimport_2d
@@ -1158,7 +1167,7 @@ contains
           fldptr1d(g) = ctsmdata(g)
        end do
     end if
-    call check_for_nans(ctsmdata, trim(fldname), 1)
+    call check_for_nans(ctsmdata, trim(fldname), 1, "export_1D")
 
   end subroutine state_setexport_1d
 
@@ -1213,7 +1222,7 @@ contains
              fldptr2d(n,g) = ctsmdata(g,n)
           end do
        end if
-       call check_for_nans(ctsmdata(:,n), trim(fldname)//trim(cnum), 1)
+       call check_for_nans(ctsmdata(:,n), trim(fldname)//trim(cnum), 1, "export_2D")
     end do
 
   end subroutine state_setexport_2d
@@ -1278,5 +1287,42 @@ contains
        fldchk = .false.
     endif
   end function fldchk
+
+  !===============================================================================
+  subroutine ReadCapNamelist( NLFilename )
+
+    ! ----------------------------------------------------
+    ! Read in tne namelist for CTSM nuopc cap level items
+    ! ----------------------------------------------------
+    use clm_nlUtilsMod   , only : find_nlgroup_name
+    use shr_mpi_mod      , only : shr_mpi_bcast
+    use spmdMod          , only : mpicom
+    use abortutils       , only : endrun
+    use shr_log_mod      , only : errMsg => shr_log_errMsg
+    ! !ARGUMENTS:
+    character(len=*), intent(IN) :: NLFilename   ! Namelist filename
+    ! !LOCAL VARIABLES:
+    integer            :: nu_nml                           ! unit for namelist file
+    integer            :: nml_error                        ! namelist i/o error flag
+    character(*), parameter :: nml_name = "ctsm_nuopc_cap" ! MUST match with namelist name below
+    namelist  /ctsm_nuopc_cap/ force_send_to_atm
+
+    ! Read namelist
+    if (masterproc) then
+       open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
+       call find_nlgroup_name(nu_nml, nml_name, status=nml_error)
+       if (nml_error == 0) then
+          read(nu_nml, nml=ctsm_nuopc_cap, iostat=nml_error)
+          if (nml_error /= 0) then
+             call endrun(msg='ERROR reading '//nml_name//' namelist'//errMsg(u_FILE_u, __LINE__))
+          end if
+       end if
+       close(nu_nml)
+    endif
+
+    ! Broadcast namelist to all processors
+    call shr_mpi_bcast(force_send_to_atm  , mpicom)
+
+  end subroutine ReadCapNamelist
 
 end module lnd_import_export

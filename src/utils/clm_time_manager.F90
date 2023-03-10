@@ -6,7 +6,11 @@ module clm_time_manager
    use spmdMod     , only: masterproc
    use clm_varctl  , only: iulog
    use clm_varcon  , only: isecspday
-   use ESMF
+   use ESMF        , only: ESMF_Clock, ESMF_Calendar, ESMF_MAXSTR, ESMF_Time, ESMF_TimeInterval
+   use ESMF        , only: ESMF_TimeIntervalSet, ESMF_TimeSet, ESMF_TimeGet, ESMF_ClockGet
+   use ESMF        , only: operator(==), operator(+), operator(<=), operator(>=)
+   use ESMF        , only: operator(>), operator(<), operator(-)
+   use ESMF        , only: ESMF_KIND_I8, ESMF_TimeIntervalGet
 
    implicit none
    private
@@ -35,9 +39,12 @@ module clm_time_manager
         get_curr_time,            &! return components of elapsed time since reference date at end of current timestep
         get_prev_time,            &! return components of elapsed time since reference date at beg of current timestep
         get_curr_calday,          &! return calendar day at end of current timestep
+        get_prev_calday,          &! return calendar day at beginning of current timestep
         get_calday,               &! return calendar day from input date
         get_calendar,             &! return calendar
-        get_days_per_year,        &! return the days per year for current year
+        get_average_days_per_year,&! return the average number of days per year for the given calendar
+        get_curr_days_per_year,   &! return the days per year for year as of the end of the current time step
+        get_prev_days_per_year,   &! return the days per year for year as of the beginning of the current time step
         get_curr_yearfrac,        &! return the fractional position in the current year, as of the end of the current timestep
         get_prev_yearfrac,        &! return the fractional position in the current year, as of the beginning of the current timestep
         get_rest_date,            &! return the date from the restart file
@@ -120,6 +127,9 @@ module clm_time_manager
    private :: timemgr_print
    private :: TimeGetymd
    private :: check_timemgr_initialized
+
+   character(len=*), parameter, private :: sourcefile = &
+        __FILE__
 
    !=========================================================================================
 contains
@@ -239,6 +249,8 @@ contains
     !---------------------------------------------------------------------------------
     ! Purpose: Initialize the clock based on the start_date, ref_date and curr_date
     !
+    use ESMF       , only : ESMF_ClockCreate, ESMF_ClockAdvance
+
     type(ESMF_Time), intent(in) :: start_date  ! start date for run
     type(ESMF_Time), intent(in) :: ref_date    ! reference date for time coordinate
     type(ESMF_Time), intent(in) :: curr_date   ! current date (equal to start_date)
@@ -547,6 +559,8 @@ contains
 
     !---------------------------------------------------------------------------------
     ! Initialize calendar
+    use ESMF        , only : ESMF_CalKind_Flag, ESMF_CALKIND_NOLEAP
+    use ESMF        , only : ESMF_CALKIND_GREGORIAN, ESMF_CalendarCreate
     !
     ! Local variables
     !
@@ -646,6 +660,7 @@ contains
   subroutine advance_timestep()
 
     ! Increment the timestep number.
+    use ESMF       , only : ESMF_ClockAdvance
 
     character(len=*), parameter :: sub = 'clm::advance_timestep'
     integer :: rc
@@ -1066,27 +1081,42 @@ contains
 
   !=========================================================================================
 
-  function get_curr_calday(offset)
+  function get_curr_calday(offset, reuse_day_365_for_day_366)
 
     ! Return calendar day at end of current timestep with optional offset.
     ! Calendar day 1.0 = 0Z on Jan 1.
 
     ! Arguments
     integer, optional, intent(in) :: offset  ! Offset from current time in seconds.
-    ! Positive for future times, negative 
+    ! Positive for future times, negative
     ! for previous times.
+
+    ! If present and true, then day 366 (i.e., the last day of the year on leap years when
+    ! using a Gregorian calendar) reuses day 365. Note that this leads to non-monotonic
+    ! values throughout the year. This is needed in situations where the calday is used
+    ! in code that assumes a 365 day year and won't work right for day 366, such as
+    ! shr_orb_decl.
+    logical, optional, intent(in) :: reuse_day_365_for_day_366
+
     ! Return value
     real(r8) :: get_curr_calday
 
     ! Local variables
     character(len=*), parameter :: sub = 'clm::get_curr_calday'
     integer :: rc
+    logical :: l_reuse_day_365_for_day_366  ! local version of reuse_day_365_for_day_366
     type(ESMF_Time) :: date
     type(ESMF_TimeInterval) :: off, diurnal
     integer :: year, month, day, tod
     !-----------------------------------------------------------------------------------------
 
     if ( .not. check_timemgr_initialized(sub) ) return
+
+    if (present(reuse_day_365_for_day_366)) then
+       l_reuse_day_365_for_day_366 = reuse_day_365_for_day_366
+    else
+       l_reuse_day_365_for_day_366 = .false.
+    end if
 
     call ESMF_ClockGet( tm_clock, currTime=date, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -1119,13 +1149,15 @@ contains
     !!!! current shr_orb_decl calculation can't handle days > 366.                      !!!!!!
     !!!!       Dani Bundy-Coleman and Erik Kluzek Aug/2008                              !!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if ( (get_curr_calday > 366.0) .and. (get_curr_calday <= 367.0) .and. &
-         (trim(calendar) == GREGORIAN_C) )then
-       get_curr_calday = get_curr_calday - 1.0_r8
+    if (l_reuse_day_365_for_day_366) then
+       if ( (get_curr_calday > 366.0) .and. (get_curr_calday <= 367.0) .and. &
+            (trim(calendar) == GREGORIAN_C) )then
+          get_curr_calday = get_curr_calday - 1.0_r8
+       end if
     end if
     !!!!!!!!!!!!!! END HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!!!!!
     !----------------------------------------------------------------------------------------!
-    if ( (get_curr_calday < 1.0) .or. (get_curr_calday > 366.0) )then
+    if ( (get_curr_calday < 1.0) .or. (get_curr_calday > 367.0) )then
        write(iulog,*) sub, ' = ', get_curr_calday
        if ( present(offset) ) write(iulog,*) 'offset = ', offset
        call shr_sys_abort( sub//': error get_curr_calday out of bounds' )
@@ -1135,15 +1167,54 @@ contains
 
   !=========================================================================================
 
-  function get_calday(ymd, tod)
+  function get_prev_calday(reuse_day_365_for_day_366)
+
+    ! Return calendar day at beginning of current timestep.
+    ! Calendar day 1.0 = 0Z on Jan 1.
+
+    ! If present and true, then day 366 (i.e., the last day of the year on leap years when
+    ! using a Gregorian calendar) reuses day 365. Note that this leads to non-monotonic
+    ! values throughout the year. This is needed in situations where the calday is used
+    ! in code that assumes a 365 day year and won't work right for day 366, such as
+    ! shr_orb_decl.
+    logical, optional, intent(in) :: reuse_day_365_for_day_366
+
+    ! Return value
+    real(r8) :: get_prev_calday
+
+    character(len=*), parameter :: sub = 'clm::get_prev_calday'
+    !-----------------------------------------------------------------------------------------
+
+    if ( .not. check_timemgr_initialized(sub) ) return
+
+    get_prev_calday = get_curr_calday( &
+         offset = -dtime, &
+         reuse_day_365_for_day_366 = reuse_day_365_for_day_366)
+
+  end function get_prev_calday
+
+  !=========================================================================================
+
+  function get_calday(ymd, tod, reuse_day_365_for_day_366)
 
     ! Return calendar day corresponding to specified time instant.
     ! Calendar day 1.0 = 0Z on Jan 1.
+
+    ! If the current run is using a Gregorian calendar, then the year is important, in
+    ! that it determines whether or not we're in a leap year for the sake of determining
+    ! the calendar day.
 
     ! Arguments
     integer, intent(in) :: &
          ymd,   &! date in yearmmdd format
          tod     ! time of day (seconds past 0Z)
+
+    ! If present and true, then day 366 (i.e., the last day of the year on leap years when
+    ! using a Gregorian calendar) reuses day 365. Note that this leads to non-monotonic
+    ! values throughout the year. This is needed in situations where the calday is used
+    ! in code that assumes a 365 day year and won't work right for day 366, such as
+    ! shr_orb_decl.
+    logical, optional, intent(in) :: reuse_day_365_for_day_366
 
     ! Return value
     real(r8) :: get_calday
@@ -1151,8 +1222,15 @@ contains
     ! Local variables
     character(len=*), parameter :: sub = 'clm::get_calday'
     integer :: rc                 ! return code
+    logical :: l_reuse_day_365_for_day_366  ! local version of reuse_day_365_for_day_366
     type(ESMF_Time) :: date
     !-----------------------------------------------------------------------------------------
+
+    if (present(reuse_day_365_for_day_366)) then
+       l_reuse_day_365_for_day_366 = reuse_day_365_for_day_366
+    else
+       l_reuse_day_365_for_day_366 = .false.
+    end if
 
     date = TimeSetymd( ymd, tod, "get_calday" )
     call ESMF_TimeGet( date, dayOfYear_r8=get_calday, rc=rc )
@@ -1163,13 +1241,15 @@ contains
 !!!! current shr_orb_decl calculation can't handle days > 366.                      !!!!!!
 !!!!       Dani Bundy-Coleman and Erik Kluzek Aug/2008                              !!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if ( (get_calday > 366.0) .and. (get_calday <= 367.0) .and. &
-         (trim(calendar) == GREGORIAN_C) )then
-       get_calday = get_calday - 1.0_r8
+    if (l_reuse_day_365_for_day_366) then
+       if ( (get_calday > 366.0) .and. (get_calday <= 367.0) .and. &
+            (trim(calendar) == GREGORIAN_C) )then
+          get_calday = get_calday - 1.0_r8
+       end if
     end if
 !!!!!!!!!!!!!! END HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!!!!!
     !----------------------------------------------------------------------------------------!
-    if ( (get_calday < 1.0) .or. (get_calday > 366.0) )then
+    if ( (get_calday < 1.0) .or. (get_calday > 367.0) )then
        write(iulog,*) sub, ' = ', get_calday
        call shr_sys_abort( sub//': error calday out of range' )
     end if
@@ -1191,10 +1271,71 @@ contains
 
   !=========================================================================================
 
-  integer function get_days_per_year( offset )
+  real(r8) function get_average_days_per_year()
 
     !---------------------------------------------------------------------------------
-    ! Get the number of days per year for currrent year
+    ! Get the average number of days per year for the given calendar.
+    !
+    ! This should be used, for example, when converting a parameter from units of
+    ! per-year to units of per-second (so that the parameter will have a fixed, constant
+    ! value rather than a slightly different value on leap years vs. non-leap years).
+
+    real(r8) :: avg_days_per_year
+    real(r8) :: curr_days_per_year
+
+    real(r8), parameter :: days_per_year_noleap = 365._r8
+
+    ! From the definition of ESMF_CALKIND_GREGORIAN in
+    ! https://earthsystemmodeling.org/docs/release/latest/ESMF_refdoc/node6.html: "In the
+    ! Gregorian calendar every fourth year is a leap year in which February has 29 and not
+    ! 28 days; however, years divisible by 100 are not leap years unless they are also
+    ! divisible by 400." This results in an average number of days per year of 365.2425.
+    real(r8), parameter :: days_per_year_gregorian = 365.2425_r8
+
+    character(len=*), parameter :: subname = 'get_average_days_per_year'
+    !---------------------------------------------------------------------------------
+
+    ! BUG(wjs, 2022-02-01, ESCOMP/CTSM#1624) Ideally we would use ESMF_CalendarGet here,
+    ! but that currently isn't possible (see notes in issue 1624 for details)
+    if (to_upper(calendar) == NO_LEAP_C) then
+       avg_days_per_year = days_per_year_noleap
+    else if (to_upper(calendar) == GREGORIAN_C) then
+       avg_days_per_year = days_per_year_gregorian
+    else
+       call shr_sys_abort(subname//' ERROR: unrecognized calendar specified= '//trim(calendar))
+    end if
+
+    ! Paranoia: Since we're using a hard-coded value, let's make sure that the user hasn't
+    ! done some customizations to the calendar that change the days per year from what we
+    ! expect: Compare the hard-coded value with the number of days per year in the
+    ! current year, which comes from the actual ESMF calendar; the two should be close.
+    ! (This check can be removed once we address issue 1624, making the results of this
+    ! function depend on the actual ESMF calendar instead of a hard-coded value.)
+    curr_days_per_year = get_curr_days_per_year()
+    if (abs(avg_days_per_year - curr_days_per_year) > 1._r8) then
+       write(iulog,*) 'ERROR: hard-coded average days per year differs by more than expected'
+       write(iulog,*) 'from current days per year. Are you using a non-standard calendar?'
+       write(iulog,*) 'avg_days_per_year (hard-coded)          = ', avg_days_per_year
+       write(iulog,*) 'curr_days_per_year (from ESMF calendar) = ', curr_days_per_year
+       write(iulog,*) 'You can fix this by changing the hard-coded parameters in '//subname
+       write(iulog,*) 'in file: '//sourcefile
+       call shr_sys_abort(subname//' ERROR: hard-coded average days per year differs by more than expected')
+    end if
+
+    get_average_days_per_year = avg_days_per_year
+
+  end function get_average_days_per_year
+
+  !=========================================================================================
+
+  integer function get_curr_days_per_year( offset )
+
+    !---------------------------------------------------------------------------------
+    ! Get the number of days per year for the year as of the end of the current time step
+    ! (or offset from the end of the current time step, if offset is provided).
+    !
+    ! For the last time step of the year, note that the this will give the number of days
+    ! per year in the about-to-start year, not in the just-finishing year.
 
     !
     ! Arguments
@@ -1202,7 +1343,7 @@ contains
     ! Positive for future times, negative 
     ! for previous times.
 
-    character(len=*), parameter :: sub = 'clm::get_days_per_year'
+    character(len=*), parameter :: sub = 'clm::get_curr_days_per_year'
     integer         :: yr, mon, day, tod ! current date year, month, day and time-of-day
     type(ESMF_Time) :: eDate             ! ESMF date
     integer         :: rc                ! ESMF return code
@@ -1216,10 +1357,28 @@ contains
        call get_curr_date(yr, mon, day, tod )
     end if
     eDate = TimeSetymd( ymd=yr*10000+1231, tod=0, desc="end of year" )
-    call ESMF_TimeGet( eDate, dayOfYear=get_days_per_year, rc=rc )
+    call ESMF_TimeGet( eDate, dayOfYear=get_curr_days_per_year, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeGet')
 
-  end function get_days_per_year
+  end function get_curr_days_per_year
+
+  !=========================================================================================
+
+  integer function get_prev_days_per_year()
+
+    !---------------------------------------------------------------------------------
+    ! Get the number of days per year for the year as of the beginning of the current time step
+    !
+    ! For the last time step of the year, note that the this will give the number of days
+    ! per year in the just-finishing year.
+
+    character(len=*), parameter :: sub = 'clm::get_prev_days_per_year'
+
+    if ( .not. check_timemgr_initialized(sub) ) return
+
+    get_prev_days_per_year = get_curr_days_per_year(offset = -dtime)
+
+  end function get_prev_days_per_year
 
   !=========================================================================================
 
@@ -1244,7 +1403,7 @@ contains
     if ( .not. check_timemgr_initialized(sub) ) return
 
     cday          = get_curr_calday(offset=offset)
-    days_per_year = get_days_per_year()
+    days_per_year = get_curr_days_per_year(offset=offset)
 
     get_curr_yearfrac = (cday - 1._r8)/days_per_year
 
@@ -1262,7 +1421,7 @@ contains
     ! Arguments
     real(r8) :: get_prev_yearfrac  ! function result
     
-    character(len=*), parameter :: sub = 'clm::get_curr_yearfrac'
+    character(len=*), parameter :: sub = 'clm::get_prev_yearfrac'
     
     if ( .not. check_timemgr_initialized(sub) ) return
     
@@ -1632,6 +1791,7 @@ contains
   !=========================================================================================
 
   subroutine chkrc(rc, mes)
+    use ESMF        , only : ESMF_SUCCESS
     integer, intent(in)          :: rc   ! return code from time management library
     character(len=*), intent(in) :: mes  ! error message
     if ( rc == ESMF_SUCCESS ) return
@@ -1736,6 +1896,7 @@ contains
     ! does not explicitly initialize all variables).
     !
     ! !USES:
+    use ESMF      , only : ESMF_ClockDestroy
     !
     ! !ARGUMENTS:
     !
@@ -1813,6 +1974,7 @@ contains
     ! *** Should only be used in unit tests!!! ***
     !
     ! !USES:
+    use ESMF    , only : ESMF_ClockSet
     !
     ! !ARGUMENTS:
     integer, intent(in) :: yr  ! year

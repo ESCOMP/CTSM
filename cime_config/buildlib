@@ -9,7 +9,7 @@ _CIMEROOT = os.environ.get("CIMEROOT")
 if _CIMEROOT is None:
     raise SystemExit("ERROR: must set CIMEROOT environment variable")
 
-_LIBDIR = os.path.join(_CIMEROOT, "scripts", "Tools")
+_LIBDIR = os.path.join(_CIMEROOT, "CIME", "Tools")
 sys.path.append(_LIBDIR)
 
 from standard_script_setup import *
@@ -28,10 +28,10 @@ def _write_ctsm_mk(gmake, gmake_opts, makefile, exeroot, libroot):
     """
 
     cime_output_file = os.path.join(exeroot, 'cime_variables.mk')
-    # Set MODEL=driver because some link flags are set differently when MODEL=driver, and
+    # Set COMP_NAME=driver because some link flags are set differently when COMP_NAME=driver, and
     # those are the ones we want here.
     cmd = ("{gmake} write_include_and_link_flags OUTPUT_FILE={cime_output_file} "
-           "MODEL=driver {gmake_opts} -f {makefile} ").format(
+           "COMP_NAME=driver {gmake_opts} -f {makefile} ").format(
                gmake=gmake, cime_output_file=cime_output_file, gmake_opts=gmake_opts, makefile=makefile)
     rc, out, err = run_cmd(cmd)
     logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n"%(cmd,out,err))
@@ -146,7 +146,7 @@ def _main_func():
 
         complib = os.path.join(libroot,"lib%s.a"%(compname))
 
-        cmd = "{} complib -j {} MODEL={} COMPLIB={} -f {} {}" \
+        cmd = "{} complib -j {} COMP_NAME={} COMPLIB={} -f {} {}" \
               .format(gmake, gmake_j, compname, complib, makefile, gmake_opts)
 
         rc, out, err = run_cmd(cmd)

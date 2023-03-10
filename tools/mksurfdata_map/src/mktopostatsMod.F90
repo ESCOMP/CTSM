@@ -131,7 +131,7 @@ subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_
 
   ! Check validity of output data
   if (min_bad(topo_stddev_o, min_valid_topo_stddev, 'topo_stddev')) then
-     stop
+     call abort()
   end if
 
 
@@ -158,7 +158,7 @@ subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_
   ! Check validity of output data
   if (min_bad(slope_o, min_valid_slope, 'slope') .or. &
       max_bad(slope_o, max_valid_slope, 'slope')) then
-     stop
+     call abort()
   end if
 
 

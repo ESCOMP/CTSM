@@ -1,5 +1,4 @@
-"""
-Implementation of the CIME LILACSMOKE (LILAC smoke) test.
+"""Implementation of the CIME LILACSMOKE (LILAC smoke) test.
 
 This is a CTSM-specific test. It tests the building and running of CTSM via LILAC. Compset
 is ignored, but grid is important. Also, it's important that this test use the nuopc
@@ -15,6 +14,10 @@ Important directories under CASEROOT are:
 Note that namelists for this test are generated in the build phase; they are NOT
 regenerated when the test is submitted / run. This means that, if you have made any
 changes that will impact namelists, you will need to rebuild this test.
+
+Note that this test is tied to a specific resolution (10x15) and has a hard-coded domain
+file for this resolution: see the setting of lnd_domain_file below.
+
 """
 
 import glob
@@ -38,10 +41,9 @@ class LILACSMOKE(SystemTestsCommon):
 
     def build_phase(self, sharedlib_only=False, model_only=False):
         if not sharedlib_only:
-            caseroot = self._case.get_value('CASEROOT')
             lndroot = self._case.get_value('COMP_ROOT_DIR_LND')
             exeroot = self._case.get_value('EXEROOT')
-            build_dir = os.path.join(caseroot, 'lilac_build')
+            build_dir = self._lilac_build_dir()
             script_path = os.path.abspath(os.path.join(lndroot, 'lilac', 'build_ctsm'))
 
             # We only run the initial build command if the build_dir doesn't exist
@@ -103,13 +105,13 @@ class LILACSMOKE(SystemTestsCommon):
                       os.path.join(blddir, 'Makefile'))
         symlink_force(os.path.join(lndroot, 'lilac', 'atm_driver', 'atm_driver.F90'),
                       os.path.join(blddir, 'atm_driver.F90'))
-        symlink_force(os.path.join(caseroot, 'Macros.make'),
+        symlink_force(os.path.join(self._lilac_build_dir(), 'case', 'Macros.make'),
                       os.path.join(blddir, 'Macros.make'))
 
         makevars = 'COMPILER={compiler} DEBUG={debug} CTSM_MKFILE={ctsm_mkfile}'.format(
             compiler=self._case.get_value('COMPILER'),
             debug=str(self._case.get_value('DEBUG')).upper(),
-            ctsm_mkfile=os.path.join(caseroot, 'lilac_build', 'ctsm.mk'))
+            ctsm_mkfile=os.path.join(self._lilac_build_dir(), 'ctsm.mk'))
         makecmd = 'make {makevars} atm_driver'.format(makevars=makevars)
 
         # Normally the user will source either ctsm_build_environment.sh or
@@ -131,8 +133,13 @@ class LILACSMOKE(SystemTestsCommon):
     def _create_runtime_inputs(self):
         caseroot = self._case.get_value('CASEROOT')
         runtime_inputs = self._runtime_inputs_dir()
-        lnd_domain_file = os.path.join(self._case.get_value('LND_DOMAIN_PATH'),
-                                       self._case.get_value('LND_DOMAIN_FILE'))
+
+        # NOTE: *** this test is currently tied to this single 10x15 grid resolution ***
+        lnd_grid = self._case.get_value('LND_GRID') 
+        expect(lnd_grid == '10x15',
+               "this test is currently tied to this single 10x15 grid resolution")
+        lnd_domain_file = os.path.join(self._case.get_value('DIN_LOC_ROOT'),"share","domains",
+                                       "domain.lnd.fv10x15_gx3v7.180321.nc")
 
         # Cheat a bit here: Get the fsurdat file from the already-generated lnd_in file in
         # the host test case - i.e., from the standard cime-based preview_namelists. But
@@ -209,6 +216,10 @@ class LILACSMOKE(SystemTestsCommon):
         for file_to_link in _LILAC_RUNTIME_FILES:
             symlink_force(os.path.join(self._runtime_inputs_dir(), file_to_link),
                           os.path.join(rundir, file_to_link))
+
+        init_generated_files_dir = os.path.join(rundir, "init_generated_files")
+        if not os.path.exists(init_generated_files_dir):
+            os.mkdir(init_generated_files_dir)
 
     def _cmpgen_namelists(self):
         """Redoes the namelist comparison & generation with appropriate namelists
@@ -323,8 +334,11 @@ class LILACSMOKE(SystemTestsCommon):
             replacement_done = False
         return (newline, replacement_done)
 
+    def _lilac_build_dir(self):
+        return os.path.join(self._case.get_value('CASEROOT'), 'lilac_build')
+
     def _runtime_inputs_dir(self):
-        return os.path.join(self._case.get_value('CASEROOT'), 'lilac_build', 'runtime_inputs')
+        return os.path.join(self._lilac_build_dir(), 'runtime_inputs')
 
     def _atm_driver_rundir(self):
         return os.path.join(self._case.get_value('CASEROOT'), 'lilac_atm_driver', 'run')

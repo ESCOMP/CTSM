@@ -617,6 +617,7 @@ contains
         bsha                    => energyflux_inst%bsha_patch                       ! Output: [real(r8) (:)   ]  sunlit canopy transpiration wetness factor (0 to 1)
       end if
 
+      
       ! Determine step size
 
       dtime = get_step_size_real()
@@ -631,7 +632,7 @@ contains
 
       fn = num_exposedvegp
       filterp(1:fn) = filter_exposedvegp(1:fn)
-
+      
       ! -----------------------------------------------------------------
       ! Time step initialization of photosynthesis variables
       ! -----------------------------------------------------------------
@@ -1328,12 +1329,7 @@ bioms:   do f = 1, fn
             zeta(p) = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
             if (zeta(p) >= 0._r8) then     !stable
-               ! remove stability cap when biomass heat storage is active 
-               if(use_biomass_heat_storage) then 
-                  zeta(p) = min(100._r8,max(zeta(p),0.01_r8))
-               else
-                  zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
-               endif
+               zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
                um(p) = max(ur(p),0.1_r8)
             else                     !unstable
                zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
@@ -1597,7 +1593,8 @@ bioms:   do f = 1, fn
               rssha     = photosyns_inst%rssha_patch(bounds%begp:bounds%endp), &
               rb        = frictionvel_inst%rb1_patch(bounds%begp:bounds%endp), &
               ram       = frictionvel_inst%ram1_patch(bounds%begp:bounds%endp), &
-              tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp))
+              tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp),  &
+	      forc_o3   = atm2lnd_inst%forc_o3_grc(bounds%begg:bounds%endg))
 
          !---------------------------------------------------------
          !update Vc,max and Jmax by LUNA model
