@@ -668,7 +668,7 @@ contains
          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 
-      if(.not.use_fates)then
+      if_notfates: if(.not.use_fates)then
 
          ! Repeat error check at the gridcell level
          call c2g( bounds = bounds, &
@@ -743,7 +743,7 @@ contains
             write(iulog,*) 'product_loss_grc         =', product_loss_grc(g) * dt
             call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
          end if
-      end if
+      end if if_notfates
          
     end associate
     

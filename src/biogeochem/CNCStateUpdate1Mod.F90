@@ -18,12 +18,12 @@ module CNCStateUpdate1Mod
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use CropType                           , only : crop_type
-  use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
+  use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max
+  use CropReprPoolsMod                   , only : repr_structure_min, repr_structure_max
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use PatchType                          , only : patch
-  use clm_varctl                         , only : use_fates, use_cn, iulog, use_fates_sp
   use CNSharedParamsMod                  , only : use_matrixcn
   use CLMFatesInterfaceMod               , only : hlm_fates_interface_type
   use ColumnType                         , only : col
@@ -46,6 +46,7 @@ contains
     !
     ! !DESCRIPTION:
     ! Update carbon states based on fluxes from dyn_cnbal_patch
+    ! This routine is not called with FATES active.
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds      
@@ -74,26 +75,23 @@ contains
 
     dt = get_step_size_real()
 
-    if (.not. use_fates) then
-       do j = 1,nlevdecomp
-          do fc = 1, num_soilc_with_inactive
-             c = filter_soilc_with_inactive(fc)
-             do i = i_litr_min, i_litr_max
-                cs_soil%decomp_cpools_vr_col(c,j,i) = &
-                     cs_soil%decomp_cpools_vr_col(c,j,i) + &
-                     cf_veg%dwt_frootc_to_litr_c_col(c,j,i) * dt
-             end do
-             cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
-                  ( cf_veg%dwt_livecrootc_to_cwdc_col(c,j) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,j) ) * dt
+    do j = 1,nlevdecomp
+       do fc = 1, num_soilc_with_inactive
+          c = filter_soilc_with_inactive(fc)
+          do i = i_litr_min, i_litr_max
+             cs_soil%decomp_cpools_vr_col(c,j,i) = &
+                  cs_soil%decomp_cpools_vr_col(c,j,i) + &
+                  cf_veg%dwt_frootc_to_litr_c_col(c,j,i) * dt
           end do
+          cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
+               ( cf_veg%dwt_livecrootc_to_cwdc_col(c,j) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,j) ) * dt
        end do
+    end do
 
-       do g = bounds%begg, bounds%endg
-          cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_leaf_grc(g) * dt
-          cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_deadstem_grc(g) * dt
-       end do
-
-    end if
+    do g = bounds%begg, bounds%endg
+       cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_leaf_grc(g) * dt
+       cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_deadstem_grc(g) * dt
+    end do
 
     end associate
 

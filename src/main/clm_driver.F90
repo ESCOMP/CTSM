@@ -9,7 +9,7 @@ module clm_driver
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use clm_varctl             , only : iulog, use_fates, use_fates_sp
+  use clm_varctl             , only : iulog, use_fates, use_fates_sp, use_fates_bgc
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use CNSharedParamsMod      , only : use_matrixcn
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
@@ -288,7 +288,7 @@ contains
        call active_layer_inst%alt_calc(filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc, &
             temperature_inst)
 
-       if ((use_cn .or. use_fates) .and. decomp_method /= no_soil_decomp) then
+       if ((use_cn .or. use_fates_bgc) .and. decomp_method /= no_soil_decomp) then
           call SoilBiogeochemVerticalProfile(bounds_clump                                       , &
                filter_inactive_and_active(nc)%num_bgc_soilc, filter_inactive_and_active(nc)%bgc_soilc   , &
                filter_inactive_and_active(nc)%num_bgc_vegp, filter_inactive_and_active(nc)%bgc_vegp   , &
@@ -324,7 +324,7 @@ contains
        call get_clump_bounds(nc, bounds_clump)
 
        call t_startf('begcnbal_grc')
-       if (use_cn .or. use_fates) then
+       if (use_cn .or. use_fates_bgc) then
           ! Initialize gridcell-level balance check
           call bgc_vegetation_inst%InitGridcellBalance(bounds_clump, &
                filter(nc)%num_allc, filter(nc)%allc, &
@@ -414,7 +414,7 @@ contains
        call t_stopf('begwbal')
 
        call t_startf('begcnbal_col')
-       if (use_cn .or. use_fates) then
+       if (use_cn .or. use_fates_bgc) then
           ! Initialize column-level balance check
           call bgc_vegetation_inst%InitColumnBalance(bounds_clump, &
                filter(nc)%num_allc, filter(nc)%allc, &
@@ -443,15 +443,18 @@ contains
     ! re-written to go inside.
     ! ============================================================================
 
-    if (use_cn) then
-       call t_startf('bgc_interp')
+    if (use_cn .or. use_fates_bgc) then
        if (.not. ndep_from_cpl) then
           call ndep_interp(bounds_proc, atm2lnd_inst)
        end if
+    end if
+    
+    if(use_cn) then
+       call t_startf('bgc_interp')
        call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
        call t_stopf('bgc_interp')
-    ! fates_spitfire_mode is assigned an integer value in the namelist
-    ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+       ! fates_spitfire_mode is assigned an integer value in the namelist
+       ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
     else if (fates_spitfire_mode > scalar_lightning) then
        call clm_fates%InterpFileInputs(bounds_proc)
     end if
@@ -999,7 +1002,7 @@ contains
        ! Filter bgc_soilc operates on all non-sp soil columns
        ! Filter bgc_vegp  operates on all non-fates, non-sp patches (use_cn) on soil
 
-       if(use_cn .or. use_fates)then
+       if(use_cn .or. use_fates_bgc)then
           call t_startf('ecosysdyn')
           call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
                filter(nc)%num_bgc_soilc, filter(nc)%bgc_soilc,                       &
@@ -1077,7 +1080,7 @@ contains
 
        call t_stopf('hydro2_drainage')
 
-       if (use_cn .or. use_fates) then
+       if (use_cn .or. use_fates_bgc) then
           call t_startf('EcosysDynPostDrainage')
           call bgc_vegetation_inst%EcosystemDynamicsPostDrainage(bounds_clump, &
                filter(nc)%num_allc, filter(nc)%allc, &
@@ -1145,7 +1148,7 @@ contains
        ! Check the carbon and nitrogen balance
        ! ============================================================================
 
-       if(use_cn .or. use_fates)then
+       if(use_cn .or. use_fates_bgc)then
           call t_startf('cnbalchk')
           call bgc_vegetation_inst%BalanceCheck( &
                bounds_clump, filter(nc)%num_bgc_soilc, filter(nc)%bgc_soilc, &
@@ -1374,7 +1377,6 @@ contains
     ! ============================================================================
     ! Update history buffer
     ! ============================================================================
-
 
     call t_startf('hbuf')
     call hist_update_hbuf(bounds_proc)

@@ -44,7 +44,7 @@ module CNVegetationFacade
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use perf_mod                        , only : t_startf, t_stopf
   use decompMod                       , only : bounds_type
-  use clm_varctl                      , only : iulog, use_cn, use_cndv, use_c13, use_c14
+  use clm_varctl                      , only : iulog, use_cn, use_cndv, use_c13, use_c14, use_fates_bgc
   use abortutils                      , only : endrun
   use spmdMod                         , only : masterproc
   use clm_time_manager                , only : get_curr_date, get_ref_date
@@ -261,18 +261,20 @@ contains
        call this%cnveg_nitrogenflux_inst%Init(bounds) 
 
     end if
-       
-    call this%c_products_inst%Init(bounds, species_non_isotope_type('C'))
-    if (use_c13) then
-       call this%c13_products_inst%Init(bounds, species_isotope_type('C', '13'))
-    end if
-    if (use_c14) then
-       call this%c14_products_inst%Init(bounds, species_isotope_type('C', '14'))
-    end if
-    call this%n_products_inst%Init(bounds, species_non_isotope_type('N'))
-    
-    call this%cn_balance_inst%Init(bounds)
 
+    if (use_cn .or. use_fates_bgc) then
+       call this%c_products_inst%Init(bounds, species_non_isotope_type('C'))
+       if (use_c13) then
+          call this%c13_products_inst%Init(bounds, species_isotope_type('C', '13'))
+       end if
+       if (use_c14) then
+          call this%c14_products_inst%Init(bounds, species_isotope_type('C', '14'))
+       end if
+       call this%n_products_inst%Init(bounds, species_non_isotope_type('N'))
+       
+       call this%cn_balance_inst%Init(bounds)
+    end if
+       
     if(use_cn)then
        ! Initialize the memory for the dgvs_inst data structure regardless of whether
        ! use_cndv is true so that it can be used in associate statements (nag compiler
@@ -506,20 +508,22 @@ contains
             filter_reseed_patch=reseed_patch, num_reseed_patch=num_reseed_patch)
 
     end if
+
+    if (use_cn .or. use_fates_bgc) then
+       call this%c_products_inst%restart(bounds, ncid, flag)
+       if (use_c13) then
+          call this%c13_products_inst%restart(bounds, ncid, flag, &
+               template_for_missing_fields = this%c_products_inst, &
+               template_multiplier = c3_r2)
+       end if
+       if (use_c14) then
+          call this%c14_products_inst%restart(bounds, ncid, flag, &
+               template_for_missing_fields = this%c_products_inst, &
+               template_multiplier = c14ratio)
+       end if
+       call this%n_products_inst%restart(bounds, ncid, flag)
+    end if
        
-    call this%c_products_inst%restart(bounds, ncid, flag)
-    if (use_c13) then
-       call this%c13_products_inst%restart(bounds, ncid, flag, &
-            template_for_missing_fields = this%c_products_inst, &
-            template_multiplier = c3_r2)
-    end if
-    if (use_c14) then
-       call this%c14_products_inst%restart(bounds, ncid, flag, &
-            template_for_missing_fields = this%c_products_inst, &
-            template_multiplier = c14ratio)
-    end if
-    call this%n_products_inst%restart(bounds, ncid, flag)
-    
     if (use_cndv) then
        call this%dgvs_inst%Restart(bounds, ncid, flag=flag)
     end if
@@ -908,7 +912,8 @@ contains
     ! !DESCRIPTION:
     ! Do the main science for biogeochemistry that needs to be done before hydrology-drainage
     !
-    ! Can be called for either use_cn or use_fates. Will skip most vegetation patch calls for the latter
+    ! Can be called for either use_cn or use_fates_bgc.
+    ! Will skip most vegetation patch calls for the latter
     !
     ! !USES:
 
@@ -1019,7 +1024,7 @@ contains
     ! !DESCRIPTION:
     ! Do the main science for CN vegetation that needs to be done after hydrology-drainage
     !
-    ! Should only be called if use_cn is true
+    ! Should only be called if use_cn is true or use_fates_bgc is true
     !
     ! !USES:
     !
@@ -1141,14 +1146,12 @@ contains
        soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
        soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, &
        atm2lnd_inst, clm_fates)
-
-
     
     !
     ! !DESCRIPTION:
     ! Check the carbon and nitrogen balance
     !
-    ! Should only be called if use_cn is true
+    ! Should only be called if use_cn is true or use_fates_bgc is true
     !
     ! !USES:
     use clm_time_manager   , only : get_nstep_since_startup_or_lastDA_restart_or_pause

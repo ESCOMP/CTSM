@@ -10,10 +10,11 @@ module clm_initializeMod
   use spmdMod               , only : masterproc, mpicom
   use decompMod             , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
   use abortutils            , only : endrun
-  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch, use_fates_sp
+  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl            , only : use_fates_sp, use_fates_bgc, use_fates
   use clm_varctl            , only : is_cold_start
   use clm_varctl            , only : iulog
-  use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
+  use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14
   use clm_varctl            , only : use_soil_moisture_streams
   use clm_instur            , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft
   use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake, pct_urban_max
@@ -625,8 +626,7 @@ contains
     !$OMP END PARALLEL DO
 
     ! Initialize nitrogen deposition
-    ! RGK: To-do, enable N deposition in FATES
-    if (use_cn) then
+    if (use_cn .or. use_fates_bgc) then
        call t_startf('init_ndep')
        if (.not. ndep_from_cpl) then
           call ndep_init(bounds_proc, NLFilename)

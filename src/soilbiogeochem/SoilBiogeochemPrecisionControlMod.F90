@@ -71,7 +71,6 @@ contains
     !
     ! !USES:
     use clm_varctl , only : iulog, use_c13, use_c14, use_nitrif_denitrif
-    use clm_varctl , only : use_cn, use_fates
     use clm_varpar , only : nlevdecomp
     use CNSharedParamsMod, only: use_fun
     !
@@ -126,13 +125,12 @@ contains
             do k = 1, ndecomp_pools
 
                if (abs(cs%decomp_cpools_vr_col(c,j,k)) < ccrit) then
+
                   cc = cc + cs%decomp_cpools_vr_col(c,j,k)
                   cs%decomp_cpools_vr_col(c,j,k) = 0._r8
 
-                  if (use_cn .or. use_fates) then
-                     cn = cn + ns%decomp_npools_vr_col(c,j,k)
-                     ns%decomp_npools_vr_col(c,j,k) = 0._r8
-                  endif
+                  cn = cn + ns%decomp_npools_vr_col(c,j,k)
+                  ns%decomp_npools_vr_col(c,j,k) = 0._r8
 
                   if ( use_c13 ) then
                      cc13 = cc13 + c13cs%decomp_cpools_vr_col(c,j,k)
@@ -151,9 +149,8 @@ contains
 
             cs%ctrunc_vr_col(c,j) = cs%ctrunc_vr_col(c,j) + cc
 
-            if (use_cn .or. use_fates) then
-               ns%ntrunc_vr_col(c,j) = ns%ntrunc_vr_col(c,j) + cn
-            endif
+            ns%ntrunc_vr_col(c,j) = ns%ntrunc_vr_col(c,j) + cn
+
             if ( use_c13 ) then
                c13cs%ctrunc_vr_col(c,j) = c13cs%ctrunc_vr_col(c,j) + cc13
             endif

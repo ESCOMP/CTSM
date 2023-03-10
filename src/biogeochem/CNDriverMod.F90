@@ -6,7 +6,7 @@ module CNDriverMod
   !
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use clm_varctl                      , only : use_c13, use_c14, use_fates, use_dynroot
+  use clm_varctl                      , only : use_c13, use_c14, use_fates_bgc, use_dynroot
   use dynSubgridControlMod            , only : get_do_harvest
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
@@ -819,7 +819,7 @@ contains
     if (use_c14) call c14_products_inst%SetValues(bounds,0._r8)
     call n_products_inst%SetValues(bounds,0._r8)
           
-    if(use_fates) then
+    if(use_fates_bgc) then
        call clm_fates%wrap_WoodProducts(bounds, num_soilc, filter_soilc, c_products_inst, n_products_inst)
     end if
 

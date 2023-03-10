@@ -232,8 +232,8 @@ contains
           fates_parteh_mode,                            &
           use_fates_tree_damage
 
-   ! Ozone vegetation stress method
-   namelist / clm_inparam / o3_veg_stress_method
+    ! Ozone vegetation stress method
+    namelist / clm_inparam / o3_veg_stress_method
 
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
@@ -433,6 +433,12 @@ contains
        ! Check compatibility with the FATES model
        if ( use_fates ) then
 
+          if(use_fates_sp) then
+             use_fates_bgc = .false.
+          else
+             use_fates_bgc = .true.
+          end if
+          
           if (fates_parteh_mode == 1 .and. suplnitro == suplnNon)then
              write(iulog,*) ' When FATES with fates_parteh_mode == 1 (ie carbon only mode),'
              write(iulog,*) '  you must have supplemental nitrogen turned on, there will be'
@@ -467,6 +473,13 @@ contains
                   errMsg(sourcefile, __LINE__))
           end if
 
+       else
+          
+          ! These do default to false anyway, but this emphasizes they
+          ! are false when fates is false
+          use_fates_sp  = .false.
+          use_fates_bgc = .false.
+          
        end if
 
        ! If nfix_timeconst is equal to the junk default value, then it was not specified
@@ -727,6 +740,7 @@ contains
     call mpi_bcast (use_fates_fixed_biogeog, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_nocomp, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_sp, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_bgc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
