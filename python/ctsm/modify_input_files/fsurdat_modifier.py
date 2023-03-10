@@ -58,20 +58,6 @@ def fsurdat_modifier_arg_process():
         help="The output surface dataset with the modifications. ",
     )
     parser.add_argument(
-        "--allow_ideal_and_include_non_veg",
-        required=False,
-        default=False,
-        action="store_true",
-        help="Allow both idealized and include_nonveg to be on at the same time. ",
-    )
-    parser.add_argument(
-        "--allow_dom_pft_and_idealized",
-        required=False,
-        default=False,
-        action="store_true",
-        help="Allow both idealized and dom_pft to be on at the same time. ",
-    )
-    parser.add_argument(
         "--overwrite",
         required=False,
         default=False,
@@ -215,7 +201,7 @@ def read_cfg_var_list(config, idealized=True):
             abort(
                 var
                 + " is a special variable handled in the idealized section."
-                + " This should NOT be handled in the variiable list section."
+                + " This should NOT be handled in the variable list section."
                 + " Special idealized vars ="
                 + str(ideal_list)
             )
@@ -223,7 +209,7 @@ def read_cfg_var_list(config, idealized=True):
             abort(
                 var
                 + " is a variable handled in the subgrid section."
-                + " This should NOT be handled in the variiable list section."
+                + " This should NOT be handled in the variable list section."
                 + " Subgrid vars ="
                 + str(subgrid_list)
             )
@@ -231,7 +217,7 @@ def read_cfg_var_list(config, idealized=True):
             abort(
                 var
                 + " is a variable handled as part of the dom_pft handling."
-                + " This should NOT be handled in the variiable list section."
+                + " This should NOT be handled in the variable list section."
                 + " Monthly vars handled this way ="
                 + str(monthly_list)
             )
@@ -266,6 +252,8 @@ def modify_optional(
     if idealized:
         modify_fsurdat.set_idealized()  # set 2D variables
         # set 3D and 4D variables pertaining to natural vegetation
+        # to default values here; allow override values with the later call
+        # to set_dom_pft
         modify_fsurdat.set_dom_pft(dom_pft=0, lai=[], sai=[], hgt_top=[], hgt_bot=[])
         logger.info("idealized complete")
 
@@ -285,8 +273,8 @@ def modify_optional(
         modify_fsurdat.zero_nonveg()
         logger.info("zero_nonveg complete")
 
-    # set_dom_pft follows zero_nonveg because it modifies PCT_NATVEG
-    # and PCT_CROP in the user-defined rectangle
+    # set_dom_pft follows idealized and zero_nonveg because it modifies
+    # PCT_NATVEG and PCT_CROP in the user-defined rectangle
     if dom_pft is not None:
         modify_fsurdat.set_dom_pft(
             dom_pft=dom_pft, lai=lai, sai=sai, hgt_top=hgt_top, hgt_bot=hgt_bot
@@ -379,8 +367,6 @@ def read_cfg_option_control(
     config,
     section,
     cfg_path,
-    allow_ideal_and_include_non_veg=False,
-    allow_dom_pft_and_idealized=False,
 ):
     """Read the option control section"""
     # required but fallback values available for variables omitted
@@ -443,10 +429,6 @@ def read_cfg_option_control(
         logger.info("dom_pft option is on and = %s", str(dom_pft))
     else:
         logger.info("dom_pft option is off")
-    if dom_pft is not None and idealized and not allow_dom_pft_and_idealized:
-        abort("idealized AND dom_pft can NOT both be on, pick one or the other")
-    if include_nonveg and idealized and not allow_ideal_and_include_non_veg:
-        abort("idealized AND include_nonveg can NOT both be on, pick one or the other")
     if process_subgrid and idealized:
         abort("idealized AND process_subgrid_section can NOT both be on, pick one or the other")
 
@@ -578,8 +560,6 @@ def fsurdat_modifier(parser):
         config,
         section,
         cfg_path,
-        parser.allow_ideal_and_include_non_veg,
-        parser.allow_dom_pft_and_idealized,
     )
 
     # Read parts that are optional

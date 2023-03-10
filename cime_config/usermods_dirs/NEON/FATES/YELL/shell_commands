@@ -1,0 +1,10 @@
+#!/bin/bash
+./xmlchange NEONSITE=YELL
+./xmlchange PTS_LON=249.45803999999998
+./xmlchange PTS_LAT=44.95597
+./xmlchange DATM_YR_ALIGN=2019,DATM_YR_START=2019 
+# Different default start date and number of months to run for transient case
+if  [[ $compset =~ ^HIST ]]; then
+  ./xmlchange RUN_STARTDATE=2019-01-01
+  ./xmlchange STOP_N=39
+fi

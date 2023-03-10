@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev118   slevis 02/05/2023 Use conda environment rather than ncar_pylib with the fsurdat_modifier system test
+    ctsm5.1.dev117  afoster 02/02/2023 Updates to facilitate running FATES at NEON sites
     ctsm5.1.dev116     erik 01/26/2023 Small answer changes with bug fixes, zetamaxstable=2 for BHS, new single point fsurdat files
     ctsm5.1.dev115   rgknox 12/02/2022 API compatability with FATES V2 nutrient dynamics
     ctsm5.1.dev114 multiple 11/19/2022 Some NEON updates fixing AG sites, update MOSART, small fixes

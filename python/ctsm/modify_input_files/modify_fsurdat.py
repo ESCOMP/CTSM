@@ -180,6 +180,8 @@ class ModifyFsurdat:
         ---------
         dom_pft:
             (int) User's entry of PFT/CFT to be set to 100% everywhere
+                  If user left this UNSET in the configure file, then it
+                  will default to 0 (bare ground).
         lai:
             (float) User's entry of MONTHLY_LAI for their dom_pft
         sai:

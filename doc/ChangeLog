@@ -1,4 +1,194 @@
 ===============================================================
+Tag name: ctsm5.1.dev118
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Sun Feb  5 18:31:29 MST 2023
+One-line Summary: Use conda environment rather than ncar_pylib with the fsurdat_modifier system test
+
+Purpose and description of changes
+----------------------------------
+
+ Reason: ncar_pylib is going away soon.
+
+ The fsurdat_modifier system test that we're discussing in this tag and
+ corresponding pull request (PR #1798)
+ FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRs.cheyenne_intel
+ stopped working when I updated the PR to dev117.
+ The test worked in the PR when I was still in dev115.
+ The test worked in vanilla dev117.
+ I fixed the failure by removing a restriction added in dev116 and the
+ corresponding override --allow_ideal_and_include_non_veg.
+
+ I am removing another restriction added in dev116 and the corresponding
+ override --allow_dom_pft_and_idealized. This one didn't cause a test to fail
+ but unnecessarily restricted usage of the fsurdat_modifier tool.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+Fixes #1786 -- ncar_pylib
+Fixes #1925 -- replace ncar_pylib
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+    clm_pymods test suite on cheyenne - PASS
+    (softlinks created for baselines to previous tag since this is bit-for-bit)
+
+  any other testing (give details below):
+
+    make all (in /python directory) - PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1798 -- Have fsurdat_modifier system test use conda environment rather than ncar_pylib
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev117
+Originator(s): afoster (Adrianna Foster)
+Date: Thu Feb  2 10:34:23 MST 2023
+One-line Summary: Updates to facilitate running FATES at NEON sites
+
+Purpose and description of changes
+----------------------------------
+
+Small updates to facilitate creation, modification, and 
+use of FATES-usable (i.e. 16-PFT) NEON surface data files and 
+user-mods for FATES NEON cases.
+
+Updated neon_surf_wrapper.py and modify_singlept_site_neon.py to include a 
+--16pft argument that will create and/or modify the 16-PFT versions of the 
+surface datasets, as well as a --mixed flag to the neon_surf_wrapper.py 
+which tells subset_data to not overwrite the surfae dataset to be just 100% 
+one PFT. 
+
+Also corrects lat-lon being used for ONAQ NEON site and updates the surface
+datasets for all NEON sites.
+
+Also adds a check to ensure that fire emission (-fire_emis) is not on if FATES
+is being run.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+- Partially addresses ESCOMP/CTSM#1609(Get FATES working for NEON)
+
+Known bugs introduced in this tag (include issue #): 
+#1949 - Duplication problems in user_mods
+
+Known bugs found since the previous tag (include issue #): 
+#1948 - FATES and 78PFT surface datasets
+FATES#983 - PRT2 test failing on izumi
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+updated surface datasets for all NEON sites for big-leaf (78-PFT) and FATES (16-PFT)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+Files changed in cime_config/usermods_dirs/NEON for big-leaf CLM must also
+be changed in similar files in cime_config/usermods_dirs/NEON/FATES, as these are
+currently duplicated. This duplication should be fixed at a later date.
+
+Changes to tests or testing:
+Added a test in bld/unit_testers/build-namelist_test.pl to check that FATES and 
+fire emission cannot be on at the same time.
+
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+Only for NEON sites.
+
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All configurations at NEON sites
+    - what platforms/compilers: All platforms when running NEON sites
+    - nature of change: updated surface datasets
+
+
+Other details
+-------------
+#1933 - Update neon_sites_dompft.csv
+#1932 - NEON FATES capabilities
+
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev116
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Thu Jan 26 02:17:27 MST 2023

@@ -82,18 +82,8 @@ class TestFSurdatModifier(unittest.TestCase):
         """
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
-    def test_dom_pft_and_idealized_fails(self):
-        """test a that dom_pft and idealized fails gracefully"""
-        section = "modify_fsurdat_basic_options"
-        self.config.set(section, "idealized", "True")
-        self.config.set(section, "dom_pft", "1")
-        with self.assertRaisesRegex(
-            SystemExit, "idealized AND dom_pft can NOT both be on, pick one or the other"
-        ):
-            read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
-
     def test_subgrid_and_idealized_fails(self):
-        """test that dom_pft and idealized fails gracefully"""
+        """test that subgrid and idealized fails gracefully"""
         section = "modify_fsurdat_basic_options"
         self.config.set(section, "idealized", "True")
         self.config.set(section, "include_nonveg", "False")
@@ -128,16 +118,6 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config.set(section, var, "Thing")
         with self.assertRaisesRegex(
             SystemExit, "Non-boolean value found for .cfg file variable: " + var
-        ):
-            read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
-
-    def test_include_nonveg_and_idealized_fails(self):
-        """test a simple read of subgrid"""
-        section = "modify_fsurdat_basic_options"
-        self.config.set(section, "idealized", "True")
-        self.config.set(section, "include_nonveg", "True")
-        with self.assertRaisesRegex(
-            SystemExit, "idealized AND include_nonveg can NOT both be on, pick one or the other"
         ):
             read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
 
@@ -265,7 +245,7 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit,
             "is a special variable handled in the idealized section."
-            + " This should NOT be handled in the variiable list section. Special idealized vars =",
+            + " This should NOT be handled in the variable list section. Special idealized vars =",
         ):
             read_cfg_var_list(self.config, idealized=True)
 
@@ -278,7 +258,7 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit,
             "is a variable handled in the subgrid section."
-            + " This should NOT be handled in the variiable list section. Subgrid vars =",
+            + " This should NOT be handled in the variable list section. Subgrid vars =",
         ):
             read_cfg_var_list(self.config, idealized=False)
 
@@ -290,7 +270,7 @@ class TestFSurdatModifier(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit,
             "is a variable handled as part of the dom_pft handling."
-            + " This should NOT be handled in the variiable list section."
+            + " This should NOT be handled in the variable list section."
             + " Monthly vars handled this way =",
         ):
             read_cfg_var_list(self.config, idealized=False)
