@@ -1694,6 +1694,21 @@ Mapping method from Nitrogen deposition input file to the model resolution
 </entry>
 
 <!-- ========================================================================================  -->
+<!-- Dust namelist and Zender soil erodibility stream -->
+<!-- dmleung added 11 Mar 2023 -->
+<!-- ========================================================================================  -->
+
+<entry id="stream_fldfilename_zendersoilerod" type="char*256" category="datasets"
+       input_pathname="abs" group="zendersoilerod" valid_values="" >
+Filename of input stream data for Zender's soil erodibility source function
+</entry>
+
+<entry id="stream_meshfile_zendersoilerod" type="char*256" category="datasets"
+       input_pathname="abs" group="zendersoilerod" valid_values="" >
+mesh filename of input stream data for Zender's soil erodibility source function
+</entry>
+
+<!-- ========================================================================================  -->
 <!-- finundated stream -->
 <!-- ========================================================================================  -->
 

@@ -2537,6 +2537,18 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_meshfile_ch4finundated finundation_method="ZWT_inversion"
 >lnd/clm2/paramdata/finundated_inversiondata_0.9x1_ESMFmesh_cdf5_130621.nc</stream_meshfile_ch4finundated>
 
+<!-- ===========================================  -->
+<!-- Defaults for dust namelist items             -->
+<!-- Defaults for Zender's soil erodibility data  -->
+<!-- dmleung                                      -->
+<!-- 11 Mar 2023                                  -->
+<!-- ===========================================  -->
+
+<stream_fldfilename_zendersoilerod
+>/gpfs/fs1/work/dleung/Zender_dust_source/dst_source2x2tunedcam6-2x2-forCLM_c230311.nc</stream_fldfilename_zendersoilerod>
+<stream_meshfile_zendersoilerod
+>/gpfs/fs1/work/dleung/Zender_dust_source/lnd_mesh.nc</stream_meshfile_zendersoilerod>
+
 <!-- =========================================  -->
 <!-- Defaults for different BGC/decomp modes    -->
 <!-- =========================================  -->
