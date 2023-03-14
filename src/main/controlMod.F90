@@ -549,10 +549,8 @@ contains
 
     call soilHydReadNML(   NLFilename )
 
-    if( use_cn .or. use_fates) then
+    if( use_cn ) then
        call CNPrecisionControlReadNML( NLFilename )
-    end if
-    if ( use_cn ) then
        call CNFireReadNML(             NLFilename )
        call CNNDynamicsReadNML       ( NLFilename )
        call CNPhenologyReadNML       ( NLFilename )
@@ -715,6 +713,8 @@ contains
     ! BGC
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
     
+    call mpi_bcast (use_fates, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     if (use_cn .or. use_fates) then
        call mpi_bcast (suplnitro, len(suplnitro), MPI_CHARACTER, 0, mpicom, ier)
        call mpi_bcast (nfix_timeconst, 1, MPI_REAL8, 0, mpicom, ier)
@@ -726,8 +726,6 @@ contains
     call mpi_bcast (use_c13, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_c14, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (for_testing_allow_interp_non_ciso_to_ciso, 1, MPI_LOGICAL, 0, mpicom, ier)
-
-    call mpi_bcast (use_fates, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (fates_spitfire_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_fates_logging, 1, MPI_LOGICAL, 0, mpicom, ier)
