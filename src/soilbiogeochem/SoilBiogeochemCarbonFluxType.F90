@@ -889,21 +889,22 @@ contains
     end associate
 
     ! total heterotrophic respiration (HR)
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+    do fc = 1,num_soilc
+       c = filter_soilc(fc)
        
-          this%hr_col(c) = &
-               this%michr_col(c) + &
-               this%cwdhr_col(c) + &
-               this%lithr_col(c) + &
-               this%somhr_col(c)
+       this%hr_col(c) = &
+            this%michr_col(c) + &
+            this%cwdhr_col(c) + &
+            this%lithr_col(c) + &
+            this%somhr_col(c)
        
-       end do
+    end do
 
     ! Calculate ligninNratio
     ! FATES does its own calculation
-    if (decomp_method == mimics_decomp .and. num_soilp>0) then
+    if_mimics: if (decomp_method == mimics_decomp ) then
 
+       if(num_soilp>0)then
        do fp = 1,num_soilp
           p = filter_soilp(fp)
           associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
@@ -929,6 +930,8 @@ contains
             frootc_to_litter_patch(bounds%begp:bounds%endp), &
             frootc_to_litter_col(bounds%begc:bounds%endc))
 
+       end if
+
        ! Calculate ligninNratioAve
        do fc = 1,num_soilc
           c = filter_soilc(fc)
@@ -946,9 +949,11 @@ contains
                   max(1.0e-3_r8, leafc_to_litter_col(c) + &
                   frootc_to_litter_col(c) + &
                   soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2))
+          !else
+             ! Alternative place to hook in fates litr lignan
           end if
        end do
-    end if
+    end if if_mimics
 
   end subroutine Summary
 

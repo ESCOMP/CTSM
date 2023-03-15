@@ -269,7 +269,6 @@ contains
          end if
       end do
 
-      ! This filter omits FATES patches
       soilpatch_loop: do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)

@@ -999,8 +999,6 @@ contains
       end if
    end do
    
-
-
    ! total sminn
    do fc = 1,num_soilc
       c = filter_soilc(fc)

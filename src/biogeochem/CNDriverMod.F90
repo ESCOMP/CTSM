@@ -858,6 +858,12 @@ contains
        
     end if if_soilp2
  
+    call c_products_inst%ComputeProductSummaryVars(bounds)
+    if (use_c13) call c13_products_inst%ComputeProductSummaryVars(bounds)
+    if (use_c14) call c14_products_inst%ComputeProductSummaryVars(bounds)
+    call n_products_inst%ComputeProductSummaryVars(bounds)
+
+
     call c_products_inst%ComputeSummaryVars(bounds)
     if (use_c13) call c13_products_inst%ComputeSummaryVars(bounds)
     if (use_c14) call c14_products_inst%ComputeSummaryVars(bounds)
@@ -1124,7 +1130,7 @@ contains
        call c13_soilbiogeochem_carbonstate_inst%summary(bounds, num_soilc, filter_soilc, c13_cnveg_carbonstate_inst)
     end if
     if ( use_c14 ) then
-       call c14_soilbiogeochem_carbonstate_inst%summary(bounds, num_soilc, filter_soilc, c13_cnveg_carbonstate_inst)
+       call c14_soilbiogeochem_carbonstate_inst%summary(bounds, num_soilc, filter_soilc, c14_cnveg_carbonstate_inst)
     end if
     
     

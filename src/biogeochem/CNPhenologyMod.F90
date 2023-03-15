@@ -406,7 +406,7 @@ contains
 
        ! gather all patch-level litterfall fluxes to the column for litter C and N inputs
 
-       call CNLitterToColumn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       call CNLitterToColumn(bounds, num_soilc, filter_soilc, &
             cnveg_state_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
             leaf_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full), & 
             froot_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full))
@@ -3384,8 +3384,8 @@ ptch: do fp = 1,num_soilp
 
   !-----------------------------------------------------------------------
   subroutine CNLitterToColumn (bounds, num_soilc, filter_soilc,         &
-       num_soilp, filter_soilp, cnveg_state_inst,cnveg_carbonflux_inst, &
-       cnveg_nitrogenflux_inst, leaf_prof_patch, froot_prof_patch)
+       cnveg_state_inst,cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+       leaf_prof_patch, froot_prof_patch)
     !
     ! !DESCRIPTION:
     ! called at the end of cn_phenology to gather all patch-level litterfall fluxes
@@ -3400,8 +3400,6 @@ ptch: do fp = 1,num_soilp
     type(bounds_type)               , intent(in)    :: bounds
     integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                         , intent(in)    :: filter_soilc(:) ! filter for soil columns
-    integer                         , intent(in)    :: num_soilp       ! number of patches in filter
-    integer                         , intent(in)    :: filter_soilp(:) ! filter for patches
     type(cnveg_state_type)          , intent(in)    :: cnveg_state_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
@@ -3409,7 +3407,7 @@ ptch: do fp = 1,num_soilp
     real(r8)                        , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
     !
     ! !LOCAL VARIABLES:
-    integer :: fc,c,pi,p,k,j,i,fp     ! indices
+    integer :: fc,c,pi,p,k,j,i     ! indices
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
@@ -3440,85 +3438,94 @@ ptch: do fp = 1,num_soilp
          phenology_n_to_litr_n     => cnveg_nitrogenflux_inst%phenology_n_to_litr_n_col       & ! Output: [real(r8) (:,:,:) ]  N fluxes associated with phenology (litterfall and crop) to litter pools (gN/m3/s)
          )
     
-      soil_loop: do j = 1, nlevdecomp
-         patch_loop: do fp = 1, num_soilp
-            p = filter_soilp(fp)
-            c = patch%column(p)
-            do i = i_litr_min, i_litr_max
-               ! leaf litter carbon fluxes
-               phenology_c_to_litr_c(c,j,i) = &
-                    phenology_c_to_litr_c(c,j,i) + &
-                    leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+      do j = 1, nlevdecomp
+         do pi = 1,max_patch_per_col
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
 
-               ! leaf litter nitrogen fluxes
-               phenology_n_to_litr_n(c,j,i) = &
-                    phenology_n_to_litr_n(c,j,i) + &
-                    leafn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+               if ( pi <=  col%npatches(c) ) then
+                  p = col%patchi(c) + pi - 1
+                  if (patch%active(p)) then
 
-               ! fine root litter carbon fluxes
-               phenology_c_to_litr_c(c,j,i) = &
-                    phenology_c_to_litr_c(c,j,i) + &
-                    frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
-
-               ! fine root litter nitrogen fluxes
-               phenology_n_to_litr_n(c,j,i) = &
-                    phenology_n_to_litr_n(c,j,i) + &
-                    frootn_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
-            end do
-
-            ! agroibis puts crop stem litter together with leaf litter
-            ! so I've used the leaf lf_f* parameters instead of making
-            ! new ones for now (slevis)
-            ! also for simplicity I've put "food" into the litter pools
-            
-            if (ivt(p) >= npcropmin) then ! add livestemc to litter
-               do i = i_litr_min, i_litr_max
-                  ! stem litter carbon fluxes
-                  phenology_c_to_litr_c(c,j,i) = &
-                       phenology_c_to_litr_c(c,j,i) + &
-                       livestemc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-
-                  ! stem litter nitrogen fluxes
-                  phenology_n_to_litr_n(c,j,i) = &
-                       phenology_n_to_litr_n(c,j,i) + &
-                       livestemn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-               end do
-
-               if (.not. use_grainproduct) then
-                  do i = i_litr_min, i_litr_max
-                     do k = repr_grain_min, repr_grain_max
-                        ! grain litter carbon fluxes
+                     do i = i_litr_min, i_litr_max
+                        ! leaf litter carbon fluxes
                         phenology_c_to_litr_c(c,j,i) = &
-                             phenology_c_to_litr_c(c,j,i) + &
-                             repr_grainc_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                           phenology_c_to_litr_c(c,j,i) + &
+                           leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
 
-                        ! grain litter nitrogen fluxes
+                        ! leaf litter nitrogen fluxes
                         phenology_n_to_litr_n(c,j,i) = &
-                             phenology_n_to_litr_n(c,j,i) + &
-                             repr_grainn_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                           phenology_n_to_litr_n(c,j,i) + &
+                           leafn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+
+                        ! fine root litter carbon fluxes
+                        phenology_c_to_litr_c(c,j,i) = &
+                           phenology_c_to_litr_c(c,j,i) + &
+                           frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+
+                        ! fine root litter nitrogen fluxes
+                        phenology_n_to_litr_n(c,j,i) = &
+                           phenology_n_to_litr_n(c,j,i) + &
+                           frootn_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
                      end do
-                  end do
+
+                     ! agroibis puts crop stem litter together with leaf litter
+                     ! so I've used the leaf lf_f* parameters instead of making
+                     ! new ones for now (slevis)
+                     ! also for simplicity I've put "food" into the litter pools
+
+                     if (ivt(p) >= npcropmin) then ! add livestemc to litter
+                        do i = i_litr_min, i_litr_max
+                           ! stem litter carbon fluxes
+                           phenology_c_to_litr_c(c,j,i) = &
+                              phenology_c_to_litr_c(c,j,i) + &
+                              livestemc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+
+                           ! stem litter nitrogen fluxes
+                           phenology_n_to_litr_n(c,j,i) = &
+                              phenology_n_to_litr_n(c,j,i) + &
+                              livestemn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                        end do
+
+                        if (.not. use_grainproduct) then
+                           do i = i_litr_min, i_litr_max
+                              do k = repr_grain_min, repr_grain_max
+                                 ! grain litter carbon fluxes
+                                 phenology_c_to_litr_c(c,j,i) = &
+                                      phenology_c_to_litr_c(c,j,i) + &
+                                      repr_grainc_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+
+                                 ! grain litter nitrogen fluxes
+                                 phenology_n_to_litr_n(c,j,i) = &
+                                      phenology_n_to_litr_n(c,j,i) + &
+                                      repr_grainn_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                              end do
+                           end do
+                        end if
+
+                        do i = i_litr_min, i_litr_max
+                           do k = repr_structure_min, repr_structure_max
+                              ! reproductive structure litter carbon fluxes
+                              phenology_c_to_litr_c(c,j,i) = &
+                                   phenology_c_to_litr_c(c,j,i) + &
+                                   repr_structurec_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+
+                              ! reproductive structure litter nitrogen fluxes
+                              phenology_n_to_litr_n(c,j,i) = &
+                                   phenology_n_to_litr_n(c,j,i) + &
+                                   repr_structuren_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                           end do
+                        end do
+                     end if
+                  end if
                end if
 
-               do i = i_litr_min, i_litr_max
-                  do k = repr_structure_min, repr_structure_max
-                     ! reproductive structure litter carbon fluxes
-                     phenology_c_to_litr_c(c,j,i) = &
-                          phenology_c_to_litr_c(c,j,i) + &
-                          repr_structurec_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+            end do
 
-                     ! reproductive structure litter nitrogen fluxes
-                     phenology_n_to_litr_n(c,j,i) = &
-                          phenology_n_to_litr_n(c,j,i) + &
-                          repr_structuren_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-                  end do
-               end do
-            end if
+         end do
+      end do
 
-         end do patch_loop
-      end do soil_loop
-
-    end associate
+    end associate 
 
   end subroutine CNLitterToColumn
 

@@ -10,7 +10,7 @@ module CNBalanceCheckMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use decompMod                       , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use abortutils                      , only : endrun
-  use clm_varctl                      , only : iulog, use_nitrif_denitrif, use_fates
+  use clm_varctl                      , only : iulog, use_nitrif_denitrif, use_fates_bgc
   use clm_time_manager                , only : get_step_size_real
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
@@ -145,7 +145,7 @@ contains
 
     begg = bounds%begg; endg = bounds%endg
     
-    if(.not.use_fates)then
+    if(.not.use_fates_bgc)then
        
        call cnveg_carbonflux_inst%hrv_xsmrpool_to_atm_dribbler%get_amount_left_to_dribble_beg( &
             bounds, hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg))
@@ -409,7 +409,7 @@ contains
          ! fluxes have entered the pools earlier in the timestep. For true
          ! conservation we would need to add a flux out of npp into seed.
 
-         if(.not.use_fates)then
+         if(.not.use_fates_bgc)then
             call cnveg_carbonflux_inst%hrv_xsmrpool_to_atm_dribbler%get_amount_left_to_dribble_end( &
                  bounds, hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg))
             call cnveg_carbonflux_inst%dwt_conv_cflux_dribbler%get_amount_left_to_dribble_end( &
@@ -669,7 +669,7 @@ contains
          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 
-      if_notfates: if(.not.use_fates)then
+      if_notfates: if(.not.use_fates_bgc)then
 
          ! Repeat error check at the gridcell level
          call c2g( bounds = bounds, &

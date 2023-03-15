@@ -1,4 +1,4 @@
-module CNProductsMod
+Module CNProductsMod
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Calculate loss fluxes from wood products pools, and update product pool state variables
@@ -58,13 +58,6 @@ module CNProductsMod
      real(r8), pointer :: prod100_loss_grc(:)      ! (g[C or N]/m2/s) decomposition loss from 100-yr wood product pool
      real(r8), pointer :: tot_woodprod_loss_grc(:) ! (g[C or N]/m2/s) decompomposition loss from all wood product pools
 
-     ! Objects that help convert once-per-year dynamic land cover changes into fluxes
-     ! that are dribbled throughout the year
-     !type(annual_flux_dribbler_type) :: dwt_conv_cflux_dribbler
-     !type(annual_flux_dribbler_type) :: hrv_xsmrpool_to_atm_dribbler
-     !logical, private  :: dribble_crophrv_xsmrpool_2atm
-
-     
    contains
 
      ! Infrastructure routines
@@ -79,6 +72,7 @@ module CNProductsMod
      procedure, public  :: UpdateProducts
      procedure, private :: PartitionWoodFluxes
      procedure, private :: PartitionCropFluxes
+     procedure, public  :: ComputeProductSummaryVars
      procedure, public  :: ComputeSummaryVars
 
   end type cn_products_type
@@ -158,17 +152,6 @@ contains
     allocate(this%tot_woodprod_loss_grc(begg:endg)) ; this%tot_woodprod_loss_grc(:) = nan
     allocate(this%product_loss_grc(begg:endg)) ; this%product_loss_grc(:) = nan
 
-    !this%dwt_conv_cflux_dribbler = annual_flux_dribbler_gridcell( &
-    !     bounds = bounds, &
-    !     name = 'dwt_conv_flux_' // carbon_type_suffix, &
-    !     units = 'gC/m^2', &
-    !     allows_non_annual_delta = allows_non_annual_delta)
-    !this%hrv_xsmrpool_to_atm_dribbler = annual_flux_dribbler_gridcell( &
-    !     bounds = bounds, &
-    !     name = 'hrv_xsmrpool_to_atm_' // carbon_type_suffix, &
-    !     units = 'gC/m^2', &
-    !     allows_non_annual_delta = .false.)
-    
   end subroutine InitAllocate
 
   subroutine SetValues(this, bounds, setval)
@@ -700,30 +683,18 @@ contains
 
   end subroutine PartitionCropFluxes
 
-
   !-----------------------------------------------------------------------
-  subroutine ComputeSummaryVars(this, bounds)
-    !
-    ! !DESCRIPTION:
-    ! Compute summary variables in this object: sums across multiple product pools
-    !
-    ! !USES:
-    !
-    ! !ARGUMENTS:
+  subroutine ComputeProductSummaryVars(this, bounds)
+
     class(cn_products_type) , intent(inout) :: this
     type(bounds_type)       , intent(in)    :: bounds
-    !
-    ! !LOCAL VARIABLES:
+
     integer  :: g        ! indices
     real(r8) :: dt       ! time step (seconds)
     real(r8) :: kprod1   ! decay constant for 1-year product pool
     real(r8) :: kprod10  ! decay constant for 10-year product pool
     real(r8) :: kprod100 ! decay constant for 100-year product pool
-    !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'ComputeSummaryVars'
 
-    
-    !-----------------------------------------------------------------------
     ! calculate losses from product pools
     ! the following (1/s) rate constants result in ~90% loss of initial state over 1, 10 and 100 years,
     ! respectively, using a discrete-time fractional decay algorithm.
@@ -758,8 +729,28 @@ contains
        this%cropprod1_grc(g) = this%cropprod1_grc(g) - this%cropprod1_loss_grc(g)*dt
        this%prod10_grc(g)    = this%prod10_grc(g)    - this%prod10_loss_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   - this%prod100_loss_grc(g)*dt
-
     end do
+    
+    return
+  end subroutine ComputeProductSummaryVars
+
+
+  !-----------------------------------------------------------------------
+  subroutine ComputeSummaryVars(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Compute summary variables in this object: sums across multiple product pools
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_products_type) , intent(inout) :: this
+    type(bounds_type)       , intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: g        ! indices
+    !-----------------------------------------------------------------------
+    character(len=*), parameter :: subname = 'ComputeSummaryVars'
     
     do g = bounds%begg, bounds%endg
 

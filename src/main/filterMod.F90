@@ -19,7 +19,7 @@ module filterMod
   use ColumnType     , only : col
   use PatchType      , only : patch
   use glcBehaviorMod , only : glc_behavior_type
-  use clm_varctl     , only : use_cn, use_fates, use_fates_sp
+  use clm_varctl     , only : use_cn, use_fates_bgc
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -396,7 +396,7 @@ contains
 
     ! Create the soil bgc filter, all non-sp columns for vegetation
     fs = 0
-    if( use_cn .or. (use_fates .and. .not.use_fates_sp))then
+    if( use_cn .or. use_fates_bgc )then
        do c = bounds%begc,bounds%endc
           if (col%active(c) .or. include_inactive) then
              l =col%landunit(c)
