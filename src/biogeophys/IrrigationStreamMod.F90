@@ -18,7 +18,7 @@ module IrrigationStreamMod
   use clm_varctl      , only : iulog, use_irrigation_streams
   use clm_varcon      , only : grlnd
   use controlMod      , only : NLFilename
-  use decompMod       , only : gsmap_lnd_gdc2glo
+  use decompMod       , only : gsmap_lnd_gdc2glo,gsmap_lnd2dsoi_gdc2glo
   use domainMod       , only : ldomain
   use fileutils       , only : getavu, relavu
   use GridcellType    , only : grc
@@ -44,6 +44,7 @@ module IrrigationStreamMod
   type(shr_strdata_type) :: sdat_irrig    ! irrigation input data stream
   integer :: ism                          ! irrigation stream index
   integer :: nfields                      ! number of fields in irrigation stream
+  integer, public, parameter :: nirrig = 2        ! number of fields in irrigation stream
   character(SHR_KIND_CXX), allocatable    :: fldNames(:)
   integer, allocatable :: g_to_ig(:)      ! Array matching gridcell index to data index
   logical :: irrig_ignore_data_if_missing ! If should ignore overridding a point with irrigation data
@@ -162,7 +163,8 @@ contains
 
     endif
 
-    call clm_domain_mct (bounds, dom_clm)
+    !call clm_domain_mct (bounds, dom_clm)
+    call clm_domain_mct (bounds, dom_clm, nlevels=nirrig)
 
     !
     ! create the field list for these fields...use in shr_strdata_create
@@ -179,8 +181,9 @@ contains
          pio_subsystem=pio_subsystem,                  & 
          pio_iotype=shr_pio_getiotype(inst_name),      &
          mpicom=mpicom, compid=comp_id,                &
-         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,  &
+         gsmap=gsMap_lnd2Dsoi_gdc2glo, ggrid=dom_clm,  &
          nxg=ldomain%ni, nyg=ldomain%nj,               &
+         nzg=nirrig,                                   &
          yearFirst=stream_year_first_irrig,            &
          yearLast=stream_year_last_irrig,              &
          yearAlign=model_year_align_irrig,             &
@@ -190,6 +193,7 @@ contains
          domTvarName='time',                           &
          domXvarName='lon' ,                           &
          domYvarName='lat' ,                           &  
+         domZvarName='cfts' ,                          &
          domAreaName='area',                           &
          domMaskName='mask',                           &
          filePath='',                                  &
@@ -286,12 +290,12 @@ contains
     integer :: mcdate                     ! current date
     integer :: yr,mon,day,nbsec           ! year,month,day,seconds components of a date
     integer :: hours,minutes,secs         ! hours,minutes,seconds of hh:mm:ss
-    real(r8), allocatable :: irrig_rate_prescribed (:)    ! prescribed rate of irrigation
-    real(r8), allocatable :: irrig_rate_duration   (:)    ! prescribed duration of irrigation
-    real(r8), allocatable :: irrig_start_time  (:)
-    integer,  allocatable :: irrig_crop_type   (:)
-    real(r8), allocatable :: irrig_lon   (:)
-    real(r8), allocatable :: irrig_lat   (:)
+    real(r8), allocatable :: irrig_rate_prescribed (:,:)    ! prescribed rate of irrigation
+    real(r8), allocatable :: irrig_rate_duration   (:,:)    ! prescribed duration of irrigation
+    real(r8), allocatable :: irrig_start_time  (:,:)
+    integer,  allocatable :: irrig_crop_type   (:,:)
+    real(r8), allocatable :: irrig_lon   (:,:)
+    real(r8), allocatable :: irrig_lat   (:,:)
     real(r8), parameter :: eps = 1e-3_r8 
 
     character(*), parameter    :: subName = "('PrescribedIrrigationInterp')"
@@ -314,34 +318,41 @@ contains
       call get_curr_time (mdcur, mscur)
       call get_curr_date (yr, mon, day, mcsec)
 
-      allocate(irrig_rate_prescribed(bounds%begg:bounds%endg))
-      allocate(irrig_rate_duration(bounds%begg:bounds%endg))
-      allocate(irrig_start_time(bounds%begg:bounds%endg))
-      allocate(irrig_crop_type(bounds%begg:bounds%endg))
-      allocate(irrig_lon(bounds%begg:bounds%endg))
-      allocate(irrig_lat(bounds%begg:bounds%endg))
+      allocate(irrig_rate_prescribed(bounds%begg:bounds%endg,nirrig))
+      allocate(irrig_rate_duration(bounds%begg:bounds%endg,nirrig))
+      allocate(irrig_start_time(bounds%begg:bounds%endg,nirrig))
+      allocate(irrig_crop_type(bounds%begg:bounds%endg,nirrig))
+      allocate(irrig_lon(bounds%begg:bounds%endg,nirrig))
+      allocate(irrig_lat(bounds%begg:bounds%endg,nirrig))
 
       ! Read data from data streams
       do g = bounds%begg, bounds%endg
          ig = g_to_ig(g)
 
-         ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_rate')
-         irrig_rate_prescribed(g) = sdat_irrig%avs(1)%rAttr(ip,ig)
+         do j = 1, nirrig
 
-         ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_duration')
-         irrig_rate_duration(g)   = sdat_irrig%avs(1)%rAttr(ip,ig)
+            !n = ig + (j-1)*size(g_to_ig)
+            n = ig + (j-1)*size(g_to_ig)
 
-         ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_start_time')
-         irrig_start_time(g)   = sdat_irrig%avs(1)%rAttr(ip,ig)
+            ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_rate')
+            irrig_rate_prescribed(g,j) = sdat_irrig%avs(1)%rAttr(ip,n)
 
-         ip = mct_aVect_indexRA(sdat_irrig%avs(1),'crop_type')
-         irrig_crop_type(g)   = int(sdat_irrig%avs(1)%rAttr(ip,ig))
+            ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_duration')
+            irrig_rate_duration(g,j)   = sdat_irrig%avs(1)%rAttr(ip,n)
 
-         ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_longitude')
-         irrig_lon(g)   = sdat_irrig%avs(1)%rAttr(ip,ig)
+            ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_start_time')
+            irrig_start_time(g,j)   = sdat_irrig%avs(1)%rAttr(ip,n)
 
-         ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_latitude')
-         irrig_lat(g)   = sdat_irrig%avs(1)%rAttr(ip,ig)
+            ip = mct_aVect_indexRA(sdat_irrig%avs(1),'crop_type')
+            irrig_crop_type(g,j)   = int(sdat_irrig%avs(1)%rAttr(ip,n))
+
+            ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_longitude')
+            irrig_lon(g,j)   = sdat_irrig%avs(1)%rAttr(ip,n)
+
+            ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_latitude')
+            irrig_lat(g,j)   = sdat_irrig%avs(1)%rAttr(ip,n)
+
+         enddo
       end do
 
       do p = bounds%begp, bounds%endp
@@ -349,16 +360,21 @@ contains
             g = patch%gridcell(p)
             ivt = patch%itype(p)
 
+
+            do j = 1, nirrig
+
 !               if((abs(irrig_lon(g) - grc%londeg(g)) < eps) .and. (abs(irrig_lat(g) - grc%latdeg(g)) < eps) .and. (ivt == irrig_crop_type(g))) then
-            if(ivt == int(irrig_crop_type(g))) then
+               if(ivt == int(irrig_crop_type(g,j))) then
 
-               if ((mscur >=  irrig_start_time(g)) .and. (mscur <= (irrig_start_time(g)+irrig_rate_duration(g)))) then
+                  if ((mscur >=  irrig_start_time(g,j)) .and. (mscur <= (irrig_start_time(g,j)+irrig_rate_duration(g,j)))) then
 
-                  qflx_irrig_patch(p) = irrig_rate_prescribed(g)
-               else
-                  qflx_irrig_patch(p) = 0._r8
+                     qflx_irrig_patch(p) = irrig_rate_prescribed(g,j)
+
+                  else
+                     qflx_irrig_patch(p) = 0._r8
+                  endif
                endif
-            endif
+            enddo
          endif
       enddo
 
