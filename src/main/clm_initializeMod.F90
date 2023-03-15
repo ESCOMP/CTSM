@@ -127,9 +127,6 @@ contains
 
     if(use_soil_moisture_streams) call decompInit_lnd3D(ni, nj, nlevsoi)
 
-    !scs: this is hardcoded right now so it needs to match stream file
-    if(use_irrigation_streams) call decompInit_lnd3D(ni, nj, 2)
-
     ! *** Get JUST gridcell processor bounds ***
     ! Remaining bounds (landunits, columns, patches) will be determined 
     ! after the call to decompInit_glcp - so get_proc_bounds is called
