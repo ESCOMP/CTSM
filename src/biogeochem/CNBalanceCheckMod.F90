@@ -435,7 +435,8 @@ contains
             
             ! Totally punt on this for now. We just don't track these gridscale variables yet (RGK)
             grc_cinputs  = 0._r8
-            grc_coutputs =  (grc_begcb(g) - grc_endcb(g))/dt
+            grc_endcb(g) = grc_begcb(g)
+            grc_coutputs = 0._r8
             grc_errcb(g) = 0._r8
             
          end if
