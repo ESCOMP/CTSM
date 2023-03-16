@@ -1,4 +1,4 @@
-Module CNProductsMod
+module CNProductsMod
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Calculate loss fluxes from wood products pools, and update product pool state variables
@@ -13,8 +13,6 @@ Module CNProductsMod
   use clm_time_manager        , only : get_step_size_real
   use SpeciesBaseType         , only : species_base_type
   use PatchType               , only : patch
-  use AnnualFluxDribbler      , only : annual_flux_dribbler_type
-  use AnnualFluxDribbler      , only : annual_flux_dribbler_gridcell
   !
   implicit none
   private
@@ -173,10 +171,6 @@ contains
     this%hrv_deadstem_to_prod10_grc(bounds%begg:bounds%endg) = setval
     this%hrv_deadstem_to_prod100_grc(bounds%begg:bounds%endg) = setval
     
-    !this%cropprod1_loss_grc(bounds%begg:bounds%endg) = setval
-    !this%prod10_loss_grc(bounds%begg:bounds%endg) = setval
-    !this%prod100_loss_grc(bounds%begg:bounds%endg) = setval
-
     return
   end subroutine SetValues
 

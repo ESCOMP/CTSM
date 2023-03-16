@@ -6,7 +6,7 @@ module SoilBiogeochemCarbonFluxType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nlevsoi, i_cwdl2
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
-  use clm_varctl                         , only : use_fates
+  use clm_varctl                         , only : use_fates,use_cn
   use pftconMod                          , only : pftcon
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use ch4varcon                          , only : allowlakeprod
@@ -905,31 +905,31 @@ contains
     if_mimics: if (decomp_method == mimics_decomp ) then
 
        if(num_soilp>0)then
-       do fp = 1,num_soilp
-          p = filter_soilp(fp)
-          associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
-            ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
-                 pftcon%lflitcn(ivt(p)) * &
-                 leafc_to_litter_patch(p)
-            ligninNratio_froot_patch(p) = pftcon%fr_flig(ivt(p)) * &
-                 pftcon%frootcn(ivt(p)) * &
-                 frootc_to_litter_patch(p)
-          end associate
-       end do
-       
-       call p2c(bounds, num_soilc, filter_soilc, &
-            ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
-            ligninNratio_leaf_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            ligninNratio_froot_patch(bounds%begp:bounds%endp), &
-            ligninNratio_froot_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            leafc_to_litter_patch(bounds%begp:bounds%endp), &
-            leafc_to_litter_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            frootc_to_litter_patch(bounds%begp:bounds%endp), &
-            frootc_to_litter_col(bounds%begc:bounds%endc))
-
+          do fp = 1,num_soilp
+             p = filter_soilp(fp)
+             associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
+               ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
+                    pftcon%lflitcn(ivt(p)) * &
+                    leafc_to_litter_patch(p)
+               ligninNratio_froot_patch(p) = pftcon%fr_flig(ivt(p)) * &
+                    pftcon%frootcn(ivt(p)) * &
+                    frootc_to_litter_patch(p)
+             end associate
+          end do
+          
+          call p2c(bounds, num_soilc, filter_soilc, &
+               ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
+               ligninNratio_leaf_col(bounds%begc:bounds%endc))
+          call p2c(bounds, num_soilc, filter_soilc, &
+               ligninNratio_froot_patch(bounds%begp:bounds%endp), &
+               ligninNratio_froot_col(bounds%begc:bounds%endc))
+          call p2c(bounds, num_soilc, filter_soilc, &
+               leafc_to_litter_patch(bounds%begp:bounds%endp), &
+               leafc_to_litter_col(bounds%begc:bounds%endc))
+          call p2c(bounds, num_soilc, filter_soilc, &
+               frootc_to_litter_patch(bounds%begp:bounds%endp), &
+               frootc_to_litter_col(bounds%begc:bounds%endc))
+          
        end if
 
        ! Calculate ligninNratioAve
