@@ -458,6 +458,35 @@ contains
        call setExposedvegpFilter(bounds_clump, &
             canopystate_inst%frac_veg_nosno_patch(bounds_clump%begp:bounds_clump%endp))
 
+       ! ============================================================================
+       ! Determine irrigation needed for future time steps
+       ! ============================================================================
+
+       ! NOTE(wjs, 2016-09-08) The placement of this call in the driver is historical: it
+       ! used to be that it had to come after btran was computed. Now it no longer depends
+       ! on btran, so it could be moved earlier in the driver loop - possibly even
+       ! immediately before ApplyIrrigation, which would be a more clear place to put it.
+
+       call t_startf('irrigationneeded')
+       call irrigation_inst%CalcIrrigationNeeded( &
+            bounds             = bounds_clump, &
+            num_exposedvegp    = filter(nc)%num_exposedvegp, &
+            filter_exposedvegp = filter(nc)%exposedvegp, &
+            elai               = canopystate_inst%elai_patch(bounds_clump%begp:bounds_clump%endp), &
+            t_soisno           = temperature_inst%t_soisno_col(bounds_clump%begc:bounds_clump%endc  , 1:nlevgrnd), &
+            eff_porosity       = soilstate_inst%eff_porosity_col(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
+            h2osoi_liq         = waterstate_inst%h2osoi_liq_col(bounds_clump%begc:bounds_clump%endc , 1:nlevgrnd), &
+            volr               = atm2lnd_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
+            rof_prognostic     = rof_prognostic)
+       call t_stopf('irrigationneeded')
+
+       ! Update irrigation rate from data stream
+       if (use_irrigation_streams) then
+          call t_startf('prescribed_irrig')
+          call PrescribedIrrigationInterp(bounds_clump, irrigation_inst)
+          call t_stopf('prescribed_irrig')
+       endif
+
        ! Irrigation flux
        ! input is main channel storage
        call irrigation_inst%ApplyIrrigation(bounds_clump)
@@ -614,35 +643,6 @@ contains
             energyflux_inst, waterstate_inst, waterflux_inst, lakestate_inst,&  
             humanindex_inst) 
        call t_stopf('bgplake')
-
-       ! ============================================================================
-       ! Determine irrigation needed for future time steps
-       ! ============================================================================
-
-       ! NOTE(wjs, 2016-09-08) The placement of this call in the driver is historical: it
-       ! used to be that it had to come after btran was computed. Now it no longer depends
-       ! on btran, so it could be moved earlier in the driver loop - possibly even
-       ! immediately before ApplyIrrigation, which would be a more clear place to put it.
-
-       call t_startf('irrigationneeded')
-       call irrigation_inst%CalcIrrigationNeeded( &
-            bounds             = bounds_clump, &
-            num_exposedvegp    = filter(nc)%num_exposedvegp, &
-            filter_exposedvegp = filter(nc)%exposedvegp, &
-            elai               = canopystate_inst%elai_patch(bounds_clump%begp:bounds_clump%endp), &
-            t_soisno           = temperature_inst%t_soisno_col(bounds_clump%begc:bounds_clump%endc  , 1:nlevgrnd), &
-            eff_porosity       = soilstate_inst%eff_porosity_col(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
-            h2osoi_liq         = waterstate_inst%h2osoi_liq_col(bounds_clump%begc:bounds_clump%endc , 1:nlevgrnd), &
-            volr               = atm2lnd_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
-            rof_prognostic     = rof_prognostic)
-       call t_stopf('irrigationneeded')
-
-       ! Update irrigation rate from data stream
-       if (use_irrigation_streams) then
-          call t_startf('prescribed_irrig')
-          call PrescribedIrrigationInterp(bounds_clump, irrigation_inst)
-          call t_stopf('prescribed_irrig')
-       endif
 
 
        ! ============================================================================
