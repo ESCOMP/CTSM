@@ -26,6 +26,7 @@
   ! !PUBLIC MEMBER FUNCTIONS:
   public:: CStateUpdate2
   public:: CStateUpdate2h
+  public:: CStateUpdate2g
   !-----------------------------------------------------------------------
 
 contains
@@ -323,5 +324,117 @@ contains
     end associate
 
   end subroutine CStateUpdate2h
+
+  !-----------------------------------------------------------------------
+  subroutine CStateUpdate2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
+    !
+    ! !DESCRIPTION:
+    ! Update all the prognostic carbon state
+    ! variables affected by gross unrepresented landcover change mortality fluxes
+    !
+    ! !ARGUMENTS:
+    integer                                , intent(in)    :: num_soilc       ! number of soil columns in filter
+    integer                                , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                                , intent(in)    :: num_soilp       ! number of soil patches in filter
+    integer                                , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    type(cnveg_carbonflux_type)            , intent(in)    :: cnveg_carbonflux_inst
+    type(cnveg_carbonstate_type)           , intent(inout) :: cnveg_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)  , intent(inout) :: soilbiogeochem_carbonstate_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c,p,j,k,l,i  ! indices
+    integer :: fp,fc     ! lake filter indices
+    real(r8):: dt        ! radiation time step (seconds)
+    !-----------------------------------------------------------------------
+
+    associate(                                     & 
+         cf_veg => cnveg_carbonflux_inst         , &
+         cs_veg => cnveg_carbonstate_inst        , &
+         cs_soil => soilbiogeochem_carbonstate_inst &
+         )
+     
+      ! set time steps
+      dt = get_step_size_real()
+
+      ! column level carbon fluxes from gross unrepresented landcover change mortality
+      do j = 1, nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+
+            ! column gross unrepresented landcover change fluxes
+            do i = i_litr_min, i_litr_max
+               cs_soil%decomp_cpools_vr_col(c,j,i) = &
+                  cs_soil%decomp_cpools_vr_col(c,j,i) + cf_veg%gru_c_to_litr_c_col(c,j,i) * dt
+            end do
+            cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = &
+                 cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + cf_veg%gru_c_to_cwdc_col(c,j)  * dt
+
+            ! wood to product pools - states updated in CNProducts
+         end do
+      end do
+
+      ! patch loop
+      do fp = 1,num_soilp
+         p = filter_soilp(fp)
+
+         ! patch-level carbon fluxes from gross unrepresented landcover change mortality
+         ! displayed pools
+         cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p)                           &
+              - cf_veg%gru_leafc_to_litter_patch(p) * dt
+         cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p)                         &
+              - cf_veg%gru_frootc_to_litter_patch(p) * dt
+         cs_veg%livestemc_patch(p) = cs_veg%livestemc_patch(p)                   &
+              - cf_veg%gru_livestemc_to_atm_patch(p) * dt
+         cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p)                   &
+              - cf_veg%gru_deadstemc_to_atm_patch(p) * dt
+         cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p)                   &
+              - cf_veg%gru_wood_productc_gain_patch(p) * dt
+         cs_veg%livecrootc_patch(p) = cs_veg%livecrootc_patch(p)                 &
+              - cf_veg%gru_livecrootc_to_litter_patch(p) * dt
+         cs_veg%deadcrootc_patch(p) = cs_veg%deadcrootc_patch(p)                 &
+              - cf_veg%gru_deadcrootc_to_litter_patch(p) * dt
+
+         ! xsmrpool
+         cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p)                     &
+              - cf_veg%gru_xsmrpool_to_atm_patch(p) * dt
+
+         ! storage pools
+         cs_veg%leafc_storage_patch(p) = cs_veg%leafc_storage_patch(p)           &
+              - cf_veg%gru_leafc_storage_to_atm_patch(p) * dt
+         cs_veg%frootc_storage_patch(p) = cs_veg%frootc_storage_patch(p)         &
+              - cf_veg%gru_frootc_storage_to_atm_patch(p) * dt
+         cs_veg%livestemc_storage_patch(p) = cs_veg%livestemc_storage_patch(p)   &
+              - cf_veg%gru_livestemc_storage_to_atm_patch(p) * dt
+         cs_veg%deadstemc_storage_patch(p) = cs_veg%deadstemc_storage_patch(p)   &
+              - cf_veg%gru_deadstemc_storage_to_atm_patch(p) * dt
+         cs_veg%livecrootc_storage_patch(p) = cs_veg%livecrootc_storage_patch(p) &
+              - cf_veg%gru_livecrootc_storage_to_atm_patch(p) * dt
+         cs_veg%deadcrootc_storage_patch(p) = cs_veg%deadcrootc_storage_patch(p) &
+              - cf_veg%gru_deadcrootc_storage_to_atm_patch(p) * dt
+         cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p)           &
+              - cf_veg%gru_gresp_storage_to_atm_patch(p) * dt
+
+         ! transfer pools
+         cs_veg%leafc_xfer_patch(p) = cs_veg%leafc_xfer_patch(p)                 &
+              - cf_veg%gru_leafc_xfer_to_atm_patch(p) * dt
+         cs_veg%frootc_xfer_patch(p) = cs_veg%frootc_xfer_patch(p)               &
+              - cf_veg%gru_frootc_xfer_to_atm_patch(p) * dt
+         cs_veg%livestemc_xfer_patch(p) = cs_veg%livestemc_xfer_patch(p)         &
+              - cf_veg%gru_livestemc_xfer_to_atm_patch(p) * dt
+         cs_veg%deadstemc_xfer_patch(p) = cs_veg%deadstemc_xfer_patch(p)         &
+              - cf_veg%gru_deadstemc_xfer_to_atm_patch(p) * dt
+         cs_veg%livecrootc_xfer_patch(p) = cs_veg%livecrootc_xfer_patch(p)       &
+              - cf_veg%gru_livecrootc_xfer_to_atm_patch(p) * dt
+         cs_veg%deadcrootc_xfer_patch(p) = cs_veg%deadcrootc_xfer_patch(p)       &
+              - cf_veg%gru_deadcrootc_xfer_to_atm_patch(p) * dt
+         cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p)                 &
+              - cf_veg%gru_gresp_xfer_to_atm_patch(p) * dt
+
+      end do ! end of patch loop
+
+    end associate
+
+  end subroutine CStateUpdate2g
 
 end module CNCStateUpdate2Mod
