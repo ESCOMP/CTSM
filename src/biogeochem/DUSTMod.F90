@@ -31,6 +31,7 @@ module DUSTMod
   use ColumnType           , only : col
   use PatchType            , only : patch
   use ZenderSoilErodStreamType,  only : zendersoilerodstream_type   ! dmleung added 11 Mar 2023
+  use spmdMod              , only : masterproc, mpicom, MPI_REAL8  ! dmleung added 11 Mar 2023
   !  
   ! !PUBLIC TYPES
   implicit none
@@ -48,6 +49,7 @@ module DUSTMod
   real(r8) , allocatable :: stk_crc(:) ![frc] Correction to Stokes settling velocity
   real(r8) tmp1                        !Factor in saltation computation (named as in Charlie's code)
   real(r8) dns_aer                     ![kg m-3] Aerosol density
+  real(r8) dust_emis_fact              ! dmleung added 11 Mar 2023
   !
   ! !PUBLIC DATA TYPES:
   !
@@ -119,7 +121,7 @@ contains
     allocate(this%vlc_trb_2_patch           (begp:endp))        ; this%vlc_trb_2_patch           (:)   = nan 
     allocate(this%vlc_trb_3_patch           (begp:endp))        ; this%vlc_trb_3_patch           (:)   = nan
     allocate(this%vlc_trb_4_patch           (begp:endp))        ; this%vlc_trb_4_patch           (:)   = nan
-    allocate(this%mbl_bsn_fct_col           (begc:endc))        ; this%mbl_bsn_fct_col     (:)   = nan
+    allocate(this%mbl_bsn_fct_col           (begc:endc))        ; this%mbl_bsn_fct_col           (:)   = nan
 
   end subroutine InitAllocate
 
@@ -168,10 +170,10 @@ contains
          ptr_patch=this%vlc_trb_4_patch, default='inactive')
 
     !#####added by dmleung 11 Mar 2023 ########################################
-    this%mbl_bsn_fct_col(begc:endc) = spval
-    call hist_addfld1d (fname='LND_MBL', units='fraction',  &
-         avgflag='A', long_name='Soil erodibility factor', &
-         ptr_col=this%mbl_bsn_fct_col)
+    !this%mbl_bsn_fct_col(begc:endc) = spval
+    !call hist_addfld1d (fname='LND_MBL', units='fraction',  &
+    !     avgflag='A', long_name='Soil erodibility factor', &
+    !     ptr_col=this%mbl_bsn_fct_col)
     !##########################################################################
 
   end subroutine InitHistory
@@ -185,7 +187,33 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: c,l
+    integer ier  ! error code, dmleung added 11 Mar 2023
     !-----------------------------------------------------------------------
+
+    !#### dmleung added 11 Mar 2023 ####################################
+    ! read in global tuning factor from namelist
+    namelist /dust_nl/ dust_emis_fact
+    ! Default values for namelist
+    dust_emis_fact      = 1
+    ! Read soilm_streams namelist
+    !if (masterproc) then
+    !   open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
+    !   call find_nlgroup_name(nu_nml, 'dust_nl', status=nml_error)
+    !   if (nml_error == 0) then
+    !      read(nu_nml, nml=dust_nl,iostat=nml_error)
+    !      if (nml_error /= 0) then
+    !         call endrun(subname // ':: ERROR reading dust_nl namelist')
+    !      end if
+    !   else
+    !      call endrun(subname // ':: ERROR finding dust_nl namelist')
+    !   end if
+    !   close(nu_nml)
+    !endif
+    !call shr_mpi_bcast(dust_emis_fact, mpicom)
+    call mpi_bcast (dust_emis_fact, 1, MPI_REAL8,0, mpicom, ier)
+    if (masterproc) then
+       write(iulog,*) '  dust_emis_fact  = ',dust_emis_fact
+    end if
 
     ! Set basin factor to 1 for now
 
@@ -456,7 +484,8 @@ contains
             !          integrated streamwise mass flux
 
             dst_slt_flx_rat_ttl = 100.0_r8 * exp( log(10.0_r8) * (13.4_r8 * mss_frc_cly_vld(c) - 6.0_r8) )
-            flx_mss_vrt_dst_ttl(p) = flx_mss_hrz_slt_ttl * dst_slt_flx_rat_ttl
+            !flx_mss_vrt_dst_ttl(p) = flx_mss_hrz_slt_ttl * dst_slt_flx_rat_ttl
+            flx_mss_vrt_dst_ttl(p) = flx_mss_hrz_slt_ttl * dst_slt_flx_rat_ttl / dust_emis_fact  ! dmleung added 11 Mar 2023
 
          end if   ! lnd_frc_mbl > 0.0
 

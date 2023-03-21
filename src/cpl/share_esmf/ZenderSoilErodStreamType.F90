@@ -116,8 +116,8 @@ contains
               stream_filenames    = (/trim(control%stream_fldFileName_zendersoilerod)/), &
               stream_fldlistFile  = stream_varnames,                                    &
               stream_fldListModel = stream_varnames,                                    &
-              stream_yearFirst    = 1997,                                               &
-              stream_yearLast     = 1997,                                               &
+              stream_yearFirst    = 2003,                                               &
+              stream_yearLast     = 2003,                                               &
               stream_yearAlign    = 1,                                                  &
               stream_offset       = 0,                                                  &
               stream_taxmode      = 'extend',                                           &
