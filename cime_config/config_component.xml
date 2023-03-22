@@ -244,7 +244,9 @@
     <desc>Dataset name for user-created datasets. This is used as the argument
       in Buildconf/clm.buildnml to build-namelist -clm_usr_name. An example of
       such a dataset would be 1x1pt_boulderCO_c090722. The default value is UNSET.
-      This is an advanced flag and should only be used by expert users.</desc>
+      This is an advanced flag and should only be used by expert users. For NEON
+      cases, this can be set to either NEON or NEON.PRISM, the latter of which would
+      PRISM precipitation instead of the default NEON precipitation. </desc>
   </entry>
 
   <entry id="CLM_USRDAT_DIR">
