@@ -20,7 +20,7 @@ RES=hcru_hcru # hcru_hcru for CCLM2-0.44, f09_g17 to test glob (inputdata downlo
 DOMAIN=eur # eur for CCLM2 (EURO-CORDEX), sa for South-America, glob otherwise 
 
 CODE=clm5.0 # clm5.0 for official release, clm5.0_features for Ronny's version, CTSMdev for latest 
-COMPILER=nvhpc # gnu for gcc, or nvhpc; setting to gnu-oasis or nvhpc-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
+COMPILER=gnu # gnu for gcc, or nvhpc; setting to gnu-oasis or nvhpc-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
 DRIVER=mct # default is mct, using nuopc requires ESMF installation
 EXP=cclm2_${date} # custom case name
 CASENAME=$CODE.$COMPILER.$COMPSET.$RES.$DOMAIN.$EXP
@@ -144,7 +144,6 @@ fi
 
 # Additional options
 #./xmlchange CLM_BLDNML_OPTS="-irrig .true." -append # switch on irrigation
-#./xmlchange RTM_MODE="NULL" # switch off river routing
 #./xmlchange CCSM_BGC=CO2A,CLM_CO2_TYPE=diagnostic,DATM_CO2_TSERIES=20tr # set transient CO2
 
 #./xmlchange CLM_NAMELIST_OPTS="use_init_interp=.false. # Ronny sets interp to false, not sure about this
@@ -225,15 +224,13 @@ print_log "h2: selected variables, daily values (-24), yearly file (365 vals per
 print_log "h3: selected variables, 6-hourly values (-6), daily file (4 vals per file), instantaneous at the output interval (I) by PFT"
 '
 
+# NOTE: currently everything needs to be written in one go to not overwrite previous lines! (see below)
 # Params file: can be exchanged for newer versions
-cat > user_nl_clm << EOF
-paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
-EOF
-
 # Surface data (domain-specific), specify to re-use downloaded files
 if [ $DOMAIN == eur ]; then
 cat > user_nl_clm << EOF
 fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_0.5x0.5_hist_16pfts_Irrig_CMIP6_simyr2000_c190418.nc"
+paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
 EOF
 cat > user_nl_datm << EOF
 domainfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/domain/domain_EU-CORDEX_0.5_correctedlons.nc"
@@ -243,38 +240,46 @@ fi
 if [ $DOMAIN == sa ]; then
 cat > user_nl_clm << EOF
 fsurdat = "$CESMDATAROOT/CCLM2_SA_inputdata/surfdata/surfdata_360x720cru_SA-CORDEX_16pfts_Irrig_CMIP6_simyr2000_c170824.nc"
+paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
 EOF
 cat > user_nl_datm << EOF
 domainfile = "$CESMDATAROOT/CCLM2_SA_inputdata/domain/domain.lnd.360x720_SA-CORDEX_cruncep.100429.nc"
 EOF
 fi
 
+# For global domain keep the defaults (downloaded from svn trunc)
 if [ $DOMAIN == glob ]; then
 cat > user_nl_clm << EOF
-fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_360x720cru_16pfts_simyr2000_c170428.nc"
+fsurdat = "$CESMDATAROOT/cesm_inputdata/lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_Irrig_CMIP6_simyr2000_c170824.nc"
+paramfile = "$CESMDATAROOT/cesm_inputdata/lnd/clm2/paramdata/clm5_params.c171117.nc"
+EOF
+cat > user_nl_datm << EOF
+domainfile = "$CESMDATAROOT/cesm_inputdata/share/domains/domain.clm/domain.lnd.360x720_cruncep.100429.nc"
 EOF
 fi
 
-# Namelist options available in Ronny's code
-if [ $CODE == clm5.0_features ]; then
-cat > user_nl_clm << EOF
-use_biomass_heat_storage = .true.
-use_individual_pft_soil_column = .true.
-zetamaxstable = 100.0d00
-EOF
-fi
+
+# Namelist options available in Ronny's code (this overwrites and does not add to previous lines! find a solution)
+# requires additional variables in the surfdata, e.g. dbh for biomass_heat_storage
+#if [ $CODE == clm5.0_features ]; then
+#cat > user_nl_clm << EOF
+#use_biomass_heat_storage = .true.
+#use_individual_pft_soil_column = .true.
+#zetamaxstable = 100.0d00
+#EOF
+#fi
 
 # Namelist options available in CTSMdev (?)
-if [ $CODE == CTSMdev ]; then
-cat > user_nl_clm << EOF
-use_biomass_heat_storage = .true.
-z0param_method = 'Meier2022'
-zetamaxstable = 100.0d00
-use_z0mg_2d = .true.
-use_z0m_snowmelt = .true.
-flanduse_timeseries=''
-EOF
-fi
+#if [ $CODE == CTSMdev ]; then
+#cat > user_nl_clm << EOF
+#use_biomass_heat_storage = .true.
+#z0param_method = 'Meier2022'
+#zetamaxstable = 100.0d00
+#use_z0mg_2d = .true.
+#use_z0m_snowmelt = .true.
+#flanduse_timeseries=''
+#EOF
+#fi
 
 
 #==========================================
