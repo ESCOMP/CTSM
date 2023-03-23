@@ -2110,11 +2110,7 @@ contains
                 mxmat = 999
             end if
 
-            if (vernalization_forces_harvest) then
-                do_harvest = .true.
-                force_harvest = .true.
-                harvest_reason = HARVEST_REASON_VERNFREEZEKILL
-            else if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
+            if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
                 ! BACKWARDS_COMPATIBILITY(ssr, 2022-02-03): To get rid of crops incorrectly planted in last time step of Dec. 31. That was fixed in commit dadbc62 ("Call CropPhenology regardless of doalb"), but this handles restart files with the old behavior. fake_harvest ensures that outputs aren't polluted.
                 do_harvest = .true.
                 force_harvest = .true.
@@ -2171,6 +2167,10 @@ contains
                ! Do not harvest on the day this growing season began;
                ! would create challenges for postprocessing.
                do_harvest = .false.
+            else if (vernalization_forces_harvest) then
+                do_harvest = .true.
+                force_harvest = .true.
+                harvest_reason = HARVEST_REASON_VERNFREEZEKILL
             else
                ! Original harvest rule
                do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat
