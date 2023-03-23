@@ -179,7 +179,7 @@ module IrrigationMod
      real(r8), pointer :: irrig_rate_demand_patch     (:) ! current irrigation rate, neglecting surface water source limitation [mm/s]
      integer , pointer :: n_irrig_steps_left_patch    (:) ! number of time steps for which we still need to irrigate today (if 0, ignore)
      real(r8), pointer :: qflx_irrig_demand_patch     (:) ! irrigation flux neglecting surface water source limitation [mm/s]
-
+     
    contains
      ! Public routines
      ! COMPILER_BUG(wjs, 2014-10-15, pgi 14.7) Add an "Irrigation" prefix to some  generic routines like "Init"
@@ -448,7 +448,7 @@ contains
          limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled, &
          use_groundwater_irrigation = use_groundwater_irrigation, &
          irrig_method_default = irrig_method_default_int)
-
+ 
     if (masterproc) then
        write(iulog,*) ' '
        write(iulog,*) nmlname//' settings:'
@@ -1369,7 +1369,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CalcIrrigationNeeded(this, bounds, num_exposedvegp, filter_exposedvegp, &
-       elai, t_soisno, eff_porosity, h2osoi_liq, volr, rof_prognostic)
+       elai, t_soisno, eff_porosity, h2osoi_liq, volr, sectorwater_total_actual_withd, sectorwater, rof_prognostic)
     !
     ! !DESCRIPTION:
     ! Calculate whether and how much irrigation is needed for each column. However, this
@@ -1403,6 +1403,12 @@ contains
     ! river water volume (m3) (ignored if rof_prognostic is .false.)
     real(r8), intent(in) :: volr( bounds%begg: )
 
+    ! total actual water withdrawal already done for other sectors (m3) (irrigation is last in priority after domestic, livestock, thermoelectric, manufacturing and mining)
+    real(r8), intent(in) :: sectorwater_total_actual_withd( bounds%begg: )
+    
+    ! if sectorwater = .true., then abstractions for other sectors are allowed
+    logical, intent(in)  :: sectorwater
+ 
     ! whether we're running with a prognostic ROF component; this is needed to determine
     ! whether we can limit irrigation based on river volume.
     logical, intent(in) :: rof_prognostic
@@ -1574,6 +1580,8 @@ contains
             check_for_irrig_col_filter = check_for_irrig_col_filter, &
             deficit = deficit(bounds%begc:bounds%endc), &
             volr = volr(bounds%begg:bounds%endg), &
+            sectorwater_total_actual_withd = sectorwater_total_actual_withd(bounds%begg:bounds%endg), &
+            sectorwater = sectorwater, &
             deficit_volr_limited = deficit_volr_limited(bounds%begc:bounds%endc))
     else
        deficit_volr_limited(bounds%begc:bounds%endc) = deficit(bounds%begc:bounds%endc)
@@ -1642,7 +1650,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CalcDeficitVolrLimited(this, bounds, check_for_irrig_col_filter, &
-       deficit, volr, deficit_volr_limited)
+       deficit, volr, sectorwater_total_actual_withd, deficit_volr_limited, sectorwater)
     !
     ! !DESCRIPTION:
     ! Calculates deficit limited by river volume for each column.
@@ -1681,6 +1689,12 @@ contains
     ! river water volume [m3]
     real(r8), intent(in) :: volr( bounds%begg: )
 
+    ! total actual water withdrawal already done for other sectors (m3) (irrigation is last in priority after domestic, livestock, thermoelectric, manufacturin and mining)
+    real(r8), intent(in) :: sectorwater_total_actual_withd( bounds%begg: )
+
+    ! if sectorwater = .true., then abstractions for other sectors are allowed
+    logical, intent(in)  :: sectorwater
+
     ! deficit limited by river volume [kg/m2] [i.e., mm]
     real(r8), intent(out) :: deficit_volr_limited( bounds%begc: )
     !
@@ -1712,23 +1726,33 @@ contains
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
 
-    do g = bounds%begg, bounds%endg
-       if (volr(g) > 0._r8) then
-          available_volr = volr(g) * (1._r8 - this%params%irrig_river_volume_threshold)
-          max_deficit_supported_by_volr = available_volr / grc%area(g) * m3_over_km2_to_mm
-       else
-          ! Ensure that negative volr is treated the same as 0 volr
-          max_deficit_supported_by_volr = 0._r8
-       end if
+    
+      do g = bounds%begg, bounds%endg
 
-       if (deficit_grc(g) > max_deficit_supported_by_volr) then
-          ! inadequate river storage, adjust irrigation demand
-          deficit_limited_ratio_grc(g) = max_deficit_supported_by_volr / deficit_grc(g)
-       else
-          ! adequate river storage, no adjustment to irrigation demand
-          deficit_limited_ratio_grc(g) = 1._r8
-       end if
-    end do
+         if (sectorwater .AND. volr(g) > sectorwater_total_actual_withd(g)) then 
+            available_volr = (volr(g) - sectorwater_total_actual_withd(g))  * (1._r8 - this%params%irrig_river_volume_threshold)
+            max_deficit_supported_by_volr = available_volr / grc%area(g) * m3_over_km2_to_mm
+         elseif (sectorwater .AND. (volr(g) < sectorwater_total_actual_withd(g) .OR. volr(g) <= 0._r8)) then
+            ! Ensure that if withdrawal for other sectors already exceeded available volr, then no wihdrawal for irrigation possible 
+            ! Ensure that negative volr is treated the same as 0 volr
+            max_deficit_supported_by_volr = 0._r8
+         elseif (volr(g) > 0._r8) then ! means sectorwater is not on (only irrigation)
+            available_volr = volr(g) * (1._r8 - this%params%irrig_river_volume_threshold)
+            max_deficit_supported_by_volr = available_volr / grc%area(g) * m3_over_km2_to_mm
+         else
+            ! Ensure that negative volr is treated the same as 0 volr
+            max_deficit_supported_by_volr = 0._r8
+         end if
+
+         if (deficit_grc(g) > max_deficit_supported_by_volr) then
+            ! inadequate river storage, adjust irrigation demand
+            deficit_limited_ratio_grc(g) = max_deficit_supported_by_volr / deficit_grc(g)
+         else
+            ! adequate river storage, no adjustment to irrigation demand
+            deficit_limited_ratio_grc(g) = 1._r8
+         end if
+      end do
+   
 
     deficit_volr_limited(bounds%begc:bounds%endc) = 0._r8
     do fc = 1, check_for_irrig_col_filter%num
