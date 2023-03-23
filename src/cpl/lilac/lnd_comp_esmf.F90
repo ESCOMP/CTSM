@@ -443,6 +443,27 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call fldbundle_add('Flrl_irrig', l2c_fb_rof, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add('Flrl_dom_withd', l2c_fb_rof, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add('Flrl_dom_rf', l2c_fb_rof, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add('Flrl_liv_withd', l2c_fb_rof, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add('Flrl_liv_rf', l2c_fb_rof, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add('Flrl_elec_withd', l2c_fb_rof, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add('Flrl_elec_rf', l2c_fb_rof, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add('Flrl_mfc_withd', l2c_fb_rof, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add('Flrl_mfc_rf', l2c_fb_rof, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add('Flrl_min_withd', l2c_fb_rof, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add('Flrl_min_rf', l2c_fb_rof, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    
 
     call ESMF_StateAdd(export_state, fieldbundleList = (/l2c_fb_rof/), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return

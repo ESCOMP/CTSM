@@ -28,6 +28,17 @@ module clm_cpl_indices
   integer, public ::index_l2x_Flrl_rofsub     ! lnd->rtm input liquid subsurface fluxes
   integer, public ::index_l2x_Flrl_rofi       ! lnd->rtm input frozen fluxes
   integer, public ::index_l2x_Flrl_irrig      ! irrigation withdrawal
+  integer, public ::index_l2x_Flrl_dom_withd  ! domestic withdrawal
+  integer, public ::index_l2x_Flrl_dom_rf     ! domestic return flow 
+  integer, public ::index_l2x_Flrl_liv_withd  ! livestock withdrawal
+  integer, public ::index_l2x_Flrl_liv_rf     ! livestock return flow 
+  integer, public ::index_l2x_Flrl_elec_withd ! thermoelectric withdrawal
+  integer, public ::index_l2x_Flrl_elec_rf    ! thermoelectric return flow 
+  integer, public ::index_l2x_Flrl_mfc_withd  ! manufacturing withdrawal
+  integer, public ::index_l2x_Flrl_mfc_rf     ! manufacturing return flow 
+  integer, public ::index_l2x_Flrl_min_withd  ! mining withdrawal
+  integer, public ::index_l2x_Flrl_min_rf     ! mining return flow 
+
 
   integer, public ::index_l2x_Sl_t            ! temperature
   integer, public ::index_l2x_Sl_tref         ! 2m reference temperature
@@ -176,6 +187,18 @@ contains
     index_l2x_Flrl_rofsub   = mct_avect_indexra(l2x,'Flrl_rofsub')
     index_l2x_Flrl_rofi     = mct_avect_indexra(l2x,'Flrl_rofi')
     index_l2x_Flrl_irrig    = mct_avect_indexra(l2x,'Flrl_irrig')
+    index_l2x_Flrl_dom_withd  = mct_avect_indexra(l2x,'Flrl_dom_withd')
+    index_l2x_Flrl_dom_rf     = mct_avect_indexra(l2x,'Flrl_dom_rf')
+    index_l2x_Flrl_liv_withd  = mct_avect_indexra(l2x,'Flrl_liv_withd')
+    index_l2x_Flrl_liv_rf     = mct_avect_indexra(l2x,'Flrl_liv_rf')
+    index_l2x_Flrl_elec_withd = mct_avect_indexra(l2x,'Flrl_elec_withd')
+    index_l2x_Flrl_elec_rf    = mct_avect_indexra(l2x,'Flrl_elec_rf')
+    index_l2x_Flrl_mfc_withd  = mct_avect_indexra(l2x,'Flrl_mfc_withd')
+    index_l2x_Flrl_mfc_rf     = mct_avect_indexra(l2x,'Flrl_mfc_rf')
+    index_l2x_Flrl_min_withd  = mct_avect_indexra(l2x,'Flrl_min_withd')
+    index_l2x_Flrl_min_rf     = mct_avect_indexra(l2x,'Flrl_min_rf')
+    
+    
 
     index_l2x_Sl_t          = mct_avect_indexra(l2x,'Sl_t')
     index_l2x_Sl_snowh      = mct_avect_indexra(l2x,'Sl_snowh')
