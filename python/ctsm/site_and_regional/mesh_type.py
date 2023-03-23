@@ -9,8 +9,9 @@ import datetime
 
 import numpy as np
 import xarray as xr
-import dask.array as da
-import dask.dataframe as dd
+#import dask.array as da
+#import dask.dataframe as dd
+import pandas
 
 # -- libraries for plotting mesh (make_mesh_plot)
 import cartopy.crs as ccrs
@@ -77,7 +78,8 @@ class MeshType:
         if mask is None:
             self.create_artificial_mask()
         else:
-            self.mask = da.from_array(np.array(mask.astype(np.int8)))
+            #self.mask = da.from_array(np.array(mask.astype(np.int8)))
+            self.mask = np.array(mask.astype(np.int8))
 
     def check_lat_lon_dims(self):
         """
@@ -124,7 +126,8 @@ class MeshType:
         elif self.lat_dims == 2:
             # -- 2D mask
             mask = np.ones(self.center_lats.shape, dtype=np.int8)
-        mask_da = da.from_array(mask)
+        #mask_da = da.from_array(mask)
+        mask_da = mask
         self.mask = mask_da
 
     def create_2d_coords(self):
@@ -141,11 +144,11 @@ class MeshType:
             lons_size = self.center_lons.size
 
             # -- convert center points from 1d to 2d
-            self.center_lat2d = da.broadcast_to(
-                self.center_lats.values[None, :], (lons_size, lats_size)
+            self.center_lat2d = np.broadcast_to(
+                self.center_lats[:], (lons_size, lats_size)
             )
-            self.center_lon2d = da.broadcast_to(
-                self.center_lons.values[:, None], (lons_size, lats_size)
+            self.center_lon2d = np.broadcast_to(
+                self.center_lons[:], (lons_size, lats_size)
             )
         elif self.lat_dims == 2:
             # -- 2D lats and lons
@@ -156,8 +159,10 @@ class MeshType:
             lats_size = dims[1]
 
             # -- convert to dask array
-            self.center_lat2d = da.from_array(np.array(self.center_lats))
-            self.center_lon2d = da.from_array(np.array(self.center_lons))
+            #self.center_lat2d = da.from_array(np.array(self.center_lats))
+            #self.center_lon2d = da.from_array(np.array(self.center_lons))
+            self.center_lat2d = np.array(self.center_lats)
+            self.center_lon2d = np.array(self.center_lons)
 
     def calculate_corners(self, unit="degrees"):
         """
@@ -174,14 +179,11 @@ class MeshType:
         # -- otherwise we cannot calculate the corner coords
         # -- for the edge rows/columns.
 
-        padded_lat2d = da.from_array(
-            np.pad(self.center_lat2d.compute(), (1, 1), mode="reflect", reflect_type="odd")
-        )
+        #padded_lat2d = np.pad(self.center_lat2d.compute(), (1, 1), mode="reflect", reflect_type="odd")
+        padded_lat2d = np.pad(self.center_lat2d, (1, 1), mode="reflect", reflect_type="odd")
 
         # -- pad center_lons for calculating edge grids
-        padded_lon2d = da.from_array(
-            np.pad(self.center_lon2d.compute(), (1, 1), mode="reflect", reflect_type="odd")
-        )
+        padded_lon2d = np.pad(self.center_lon2d, (1, 1), mode="reflect", reflect_type="odd")
 
         # -- calculate corner lats for each grid
         north_east = (
@@ -210,7 +212,7 @@ class MeshType:
         ) / 4.0
 
         # -- order counter-clockwise
-        self.corner_lats = da.stack(
+        self.corner_lats = np.stack(
             [
                 north_west.T.reshape((-1,)).T,
                 south_west.T.reshape((-1,)).T,
@@ -247,7 +249,7 @@ class MeshType:
         ) / 4.0
 
         # -- order counter-clockwise
-        self.corner_lons = da.stack(
+        self.corner_lons = np.stack(
             [
                 north_west.T.reshape((-1,)).T,
                 south_west.T.reshape((-1,)).T,
@@ -264,17 +266,17 @@ class MeshType:
         In ESMF mesh, 'nodeCoords' is a two-dimensional array with dimension ('nodeCount','coordDim')
         """
         # -- create an array of corner pairs
-        corner_pairs = da.stack(
+        corner_pairs = np.stack(
             [self.corner_lons.T.reshape((-1,)).T, self.corner_lats.T.reshape((-1,)).T],
             axis=1,
         )
 
         # -- convert to float32 to find duplicates
-        ##corner_pairs =  corner_pairs.astype(np.float32, copy=False)
 
         # -- remove coordinates that are shared between the elements
-        node_coords = dd.from_dask_array(corner_pairs).drop_duplicates().values
-        node_coords.compute_chunk_sizes()
+        #node_coords = dd.from_dask_array(corner_pairs).drop_duplicates().values
+        #node_coords.compute_chunk_sizes()
+        node_coords = pandas.DataFrame( data=corner_pairs )
 
         # -- check size of unique coordinate pairs
         dims = self.mask.shape
@@ -298,9 +300,26 @@ class MeshType:
         Calculate element connectivity (for 'elementConn' in ESMF mesh).
         In ESMF mesh, 'elementConn' describes how the nodes are connected together.
         """
-        corners = dd.concat(
+        #corners = dd.concat(
+        #    [
+        #        dd.from_dask_array(corner)
+        #        for corner in [
+        #            self.corner_lons.T.reshape((-1,)).T,
+        #            self.corner_lats.T.reshape((-1,)).T,
+        #        ]
+        #    ],
+        #    axis=1,
+        #)
+        #corners.columns = ["lon", "lat"]
+
+        #elem_conn = corners.compute().groupby(["lon", "lat"], sort=False).ngroup() + 1
+        #elem_conn = da.from_array(elem_conn.to_numpy())
+
+        ## -- reshape to write to ESMF
+        #self.elem_conn = elem_conn.T.reshape((4, -1)).T
+        corners = pandas.concat(
             [
-                dd.from_dask_array(corner)
+                pandas.DataFrame(corner)
                 for corner in [
                     self.corner_lons.T.reshape((-1,)).T,
                     self.corner_lats.T.reshape((-1,)).T,
@@ -310,8 +329,8 @@ class MeshType:
         )
         corners.columns = ["lon", "lat"]
 
-        elem_conn = corners.compute().groupby(["lon", "lat"], sort=False).ngroup() + 1
-        elem_conn = da.from_array(elem_conn.to_numpy())
+        elem_conn = corners.groupby(["lon", "lat"], sort=False).ngroup() + 1
+        elem_conn = elem_conn.to_numpy()
 
         # -- reshape to write to ESMF
         self.elem_conn = elem_conn.T.reshape((4, -1)).T
@@ -335,7 +354,7 @@ class MeshType:
         # -- calculate element connections
         self.calculate_elem_conn()
 
-        self.center_coords = da.stack(
+        self.center_coords = np.stack(
             [
                 self.center_lon2d.T.reshape((-1,)).T,
                 self.center_lat2d.T.reshape((-1,)).T,
@@ -382,7 +401,7 @@ class MeshType:
 
         # -- add area if provided
         if area is not None:
-            da_area = da.from_array(np.array(area))
+            da_area = np.array(area)
             ds_out["elementArea"] = xr.DataArray(
                 da_area.T.reshape((-1,)).T,
                 dims=("elementCount"),
@@ -449,8 +468,11 @@ class MeshType:
         )
 
         # -- plot corner coordinates
-        clats, clons = self.node_coords.T.compute()
-        elem_conn_vals = self.elem_conn.compute()
+        #clats, clons = self.node_coords.T.compute()
+        #elem_conn_vals = self.elem_conn.compute()
+        clats = self.node_coords[0]
+        clons = self.node_coords[1]
+        elem_conn_vals = self.elem_conn
         element_counts = elem_conn_vals.shape[0]
 
         for index in range(element_counts):
@@ -473,7 +495,9 @@ class MeshType:
             ax.add_patch(poly)
 
         # -- plot center coordinates
-        clon, clat = self.center_coords.T.compute()
+        #clon, clat = self.center_coords.T.compute()
+        clon = self.center_coords.T[0]
+        clat = self.center_coords.T[1]
 
         ax.scatter(
             clon,
@@ -517,8 +541,11 @@ class MeshType:
         ax.set_global()
 
         # -- plot corner coordinates
-        clats, clons = self.node_coords.T.compute()
-        elem_conn_vals = self.elem_conn.compute()
+        #clats, clons = self.node_coords.T.compute()
+        #elem_conn_vals = self.elem_conn.compute()
+        clats = self.node_coords[0]
+        clons = self.node_coords[1]
+        elem_conn_vals = self.elem_conn
         element_counts = elem_conn_vals.shape[0]
 
         for index in range(element_counts):
@@ -541,7 +568,9 @@ class MeshType:
             ax.add_patch(poly)
 
         # -- plot center coordinates
-        clon, clat = self.center_coords.T.compute()
+        #clon, clat = self.center_coords.T.compute()
+        clon = self.center_coords.T[0]
+        clat = self.center_coords.T[1]
 
         ax.scatter(
             clon,
