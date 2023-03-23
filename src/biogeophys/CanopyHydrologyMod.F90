@@ -411,6 +411,7 @@ contains
              qflx_through_liq   = w%waterflux_inst%qflx_through_liq_patch(begp:endp), &
              qflx_liqcanfall    = w%waterflux_inst%qflx_liqcanfall_patch(begp:endp), &
              qflx_irrig_drip    = w%waterflux_inst%qflx_irrig_drip_patch(begp:endp), &
+             qflx_sectorwater   = w%waterflux_inst%qflx_sectorwater_col(begc:endc), &
              ! Outputs
              qflx_snow_grnd_col = w%waterflux_inst%qflx_snow_grnd_col(begc:endc), &
              qflx_liq_grnd_col  = w%waterflux_inst%qflx_liq_grnd_col(begc:endc), &
@@ -1026,7 +1027,7 @@ contains
         num_nolakep, filter_nolakep, &
         num_nolakec, filter_nolakec, &
         qflx_through_snow, qflx_snocanfall, qflx_snow_unload, &
-        qflx_through_liq, qflx_liqcanfall, qflx_irrig_drip, &
+        qflx_through_liq, qflx_liqcanfall, qflx_irrig_drip, qflx_sectorwater, &
         qflx_snow_grnd_col, qflx_liq_grnd_col, qflx_snow_h2osfc)
      !
      ! !DESCRIPTION:
@@ -1045,6 +1046,7 @@ contains
      real(r8) , intent(in)    :: qflx_through_liq( bounds%begp: )  ! canopy throughfall of liquid (mm H2O/s)
      real(r8) , intent(in)    :: qflx_liqcanfall( bounds%begp: )   ! rate of excess canopy liquid falling off canopy (mm H2O/s)
      real(r8) , intent(in)    :: qflx_irrig_drip( bounds%begp: )   ! drip irrigation amount (mm H2O/s)
+     real(r8) , intent(in)    :: qflx_sectorwater( bounds%begc: )  ! consumption flow from all sectors except irrigation (mm H2O/s)
 
      real(r8) , intent(inout) :: qflx_snow_grnd_col( bounds%begc: )    ! snow on ground after interception (mm H2O/s)
      real(r8) , intent(inout) :: qflx_liq_grnd_col( bounds%begc: )     ! liquid on ground after interception (mm H2O/s)
@@ -1097,7 +1099,16 @@ contains
      call p2c(bounds, num_nolakec, filter_nolakec, &
           qflx_liq_grnd_patch(begp:endp), &
           qflx_liq_grnd_col(begc:endc))
-
+     
+     ! Update the liquid on ground with contribution from sectoral water consumption
+     ! Same principle as for drip irrigation, but done at column instead of patch level
+     ! The only columns affected will be the ones with natural vegetation on them.
+     ! This way we avoid interference with irrigated columns. 
+     ! So that the other sectors do not affect total irrigation, except for sectoral competition during the withdrawal process.
+     do c = begc, endc
+          qflx_liq_grnd_col(c) = qflx_liq_grnd_col(c) + qflx_sectorwater(c)
+     end do
+     
      do fc = 1, num_nolakec
         c = filter_nolakec(fc)
         ! For now, no snow on surface water
