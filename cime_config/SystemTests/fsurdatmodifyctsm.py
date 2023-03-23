@@ -89,6 +89,7 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
             print("getting an error within the fsurdat_modifier tool itself. ")
             print("Default error message: ")
             print(error.output)
+            raise
         except:
             print("ERROR trying to run fsurdat_modifier tool.")
             raise
