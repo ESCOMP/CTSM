@@ -18,6 +18,7 @@ Module HydrologyNoDrainageMod
   use SoilStateType     , only : soilstate_type
   use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
+  use SectorWaterMod, only : sectorwater_type
   use IrrigationMod, only : irrigation_type
   use SnowHydrologyMod     , only : UpdateQuantitiesForNewSnow, RemoveSnowFromThawedWetlands, InitializeExplicitSnowPack
   use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
@@ -39,12 +40,99 @@ Module HydrologyNoDrainageMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
+  public  :: CalcAndWithdrawSectorWaterFluxes ! Calculates sectorwal water withdrawal, consumption and return flow fluxes; update the fields which are sent to the routing model through the coupler;
   public  :: CalcAndWithdrawIrrigationFluxes  ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
   public  :: HandleNewSnow                    ! Handle new snow falling on the ground
   public  :: HydrologyNoDrainage              ! Calculates soil/snow hydrology without drainage
   !-----------------------------------------------------------------------
 
 contains
+
+   !-----------------------------------------------------------------------
+   subroutine CalcAndWithdrawSectorWaterFluxes(bounds, soilhydrology_inst, sectorwater_inst, water_inst, volr, rof_prognostic)
+      !
+      ! !DESCRIPTION:
+      ! Calculates sectorwal water withdrawal, consumption and return flow fluxes;
+      ! Updates the fields which are sent to the routing model through the coupler;
+      !
+      ! !USES:
+      use clm_time_manager    , only : is_beg_curr_day
+      use ColumnType   , only : col
+      use PatchType    , only : patch
+      use LandunitType , only : lun
+      use landunit_varcon, only : istsoil
+
+      !
+      ! !ARGUMENTS:
+      integer  :: g, p, l, c  ! gridcell index
+      type(bounds_type)              , intent(in)    :: bounds
+      type(soilhydrology_type)       , intent(in)    :: soilhydrology_inst
+      type(sectorwater_type)         , intent(inout) :: sectorwater_inst
+      type(water_type)               , intent(inout) :: water_inst
+
+      ! river water volume (m3) (ignored if rof_prognostic is .false.)
+      real(r8), intent(in) :: volr( bounds%begg: )
+
+      ! gridcell total consumption related to human water usage
+      real(r8), pointer :: total_cons(:)
+      
+      ! whether we're running with a prognostic ROF component; this is needed to determine
+      ! whether we can limit irrigation based on river volume.
+      logical, intent(in) :: rof_prognostic
+      
+      ! !LOCAL VARIABLES:
+      integer :: i  ! tracer index
+
+
+      character(len=*), parameter :: subname = 'CalcAndWithdrawSectorWaterFluxes'
+      !-----------------------------------------------------------------------
+      
+
+      ! Read withdrawal and consumption data from input surfdata
+      ! Compute the withdrawal, consumption and return flow (expected and actual)
+      ! To limit computation time, call this subroutine only once a day (we assume uniform demand throughout a day)
+
+      allocate(total_cons(bounds%begg:bounds%endg))
+
+      if (is_beg_curr_day()) then
+         call sectorwater_inst%CalcSectorWaterNeeded(bounds, volr, rof_prognostic)
+      endif
+   
+      ! Compute total sectoral consumption
+      ! This consumption flux will be applied on surface soil of the natural vegetation column
+      ! The user should make sure that the water usage input data have no NaN values (and use 0 instead)
+      ! This way the sum of the sectors do not risk to become NaN, because one of the sectors have no data for given location
+      ! Of course this kind of problem can be overcomed in the code directly, but there is no good reason why it shouldn't be done at the level of input data
+      do g = bounds%begg, bounds%endg 
+         ! Sector water total consumption for the gridcell g:
+         total_cons(g) = sectorwater_inst%dom_cons_actual_grc(g) + sectorwater_inst%liv_cons_actual_grc(g) + sectorwater_inst%elec_cons_actual_grc(g) + &
+                         sectorwater_inst%mfc_cons_actual_grc(g)  + sectorwater_inst%min_cons_actual_grc(g)
+      end do
+
+      ! Update the qflx_sectorwater_col field corresponding to total sectoral consumption (except irrigation)
+      ! Here I am not sure if it is needed to have loop over all tracers (it seems that the tracers mechanism is not maintained anymore)
+      ! So I could in principle just use associate : w => water_inst%bulk_and_tracers(1) which correspond to bulk water.
+      ! To stay in aggreement with the legacy code, I am looping over the tracers.
+      do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+         associate(w => water_inst%bulk_and_tracers(i))
+
+         do c = bounds%begc,bounds%endc
+            g = col%gridcell(c)
+
+            if (col%lun_itype(c) == istsoil) then
+               w%waterflux_inst%qflx_sectorwater_col(c) = total_cons(g)
+            else
+               w%waterflux_inst%qflx_sectorwater_col(c) = 0._r8
+            end if
+
+         end do
+         end associate
+      end do
+
+   deallocate(total_cons)
+
+   end subroutine CalcAndWithdrawSectorWaterFluxes
+
 
   !-----------------------------------------------------------------------
   subroutine CalcAndWithdrawIrrigationFluxes(bounds, &
