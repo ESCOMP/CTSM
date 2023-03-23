@@ -552,6 +552,9 @@ contains
 
           qflx_sfc_irrig_col      =>    waterflux_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  column level irrigation flux (mm H2O /s)
           qflx_sfc_irrig_grc      =>    waterlnd2atm_inst%qirrig_grc            , & ! Input:  [real(r8) (:)   ]  grid cell-level irrigation flux (mm H20 /s)
+
+          qflx_sectorwater_col    =>    waterflux_inst%qflx_sectorwater_col     , & ! Input:  [real(r8) (:)   ]  column level total sector water consumption flux (mm H2O /s)
+		    qflx_sectorwater_grc    =>    waterlnd2atm_inst%qsectorwater_grc      , & ! Input:  [real(r8) (:)   ]  grid cell-level total sector water consumption flux (mm H20 /s)   
           qflx_glcice_dyn_water_flux_col => waterflux_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  column level water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
 
           dhsdt_canopy            =>    energyflux_inst%dhsdt_canopy_patch      , & ! Input:  [real(r8) (:)   ]  change in heat content of canopy (W/m**2) [+ to atm]
@@ -626,6 +629,7 @@ contains
                   + forc_snow_col(c)         &
                   + qflx_flood_col(c)        &
                   + qflx_sfc_irrig_col(c)    &
+                  + qflx_sectorwater_col(c)  &
                   + qflx_glcice_dyn_water_flux_col(c) &
                   - qflx_evap_tot_col(c)     &
                   - qflx_surf_col(c)         &
@@ -667,6 +671,7 @@ contains
 
               write(iulog,*)'qflx_evap_tot             = ',qflx_evap_tot_col(indexc)*dtime
               write(iulog,*)'qflx_sfc_irrig            = ',qflx_sfc_irrig_col(indexc)*dtime
+              write(iulog,*)'qflx_sectorwater          = ',qflx_sectorwater_col(indexc)*dtime
               write(iulog,*)'qflx_surf                 = ',qflx_surf_col(indexc)*dtime
               write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl_col(indexc)*dtime
               write(iulog,*)'qflx_drain                = ',qflx_drain_col(indexc)*dtime
@@ -714,6 +719,7 @@ contains
                + forc_snow_grc(g)  &
                + forc_flood_grc(g)  &
                + qflx_sfc_irrig_grc(g)  &
+               + qflx_sectorwater_grc(g)  &
                + qflx_glcice_dyn_water_flux_grc(g)  &
                - qflx_evap_tot_grc(g)  &
                - qflx_surf_grc(g)  &
@@ -750,6 +756,7 @@ contains
 
              write(iulog,*)'qflx_evap_tot             = ',qflx_evap_tot_grc(indexg)*dtime
              write(iulog,*)'qflx_sfc_irrig            = ',qflx_sfc_irrig_grc(indexg)*dtime
+             write(iulog,*)'qflx_sectorwater          = ',qflx_sectorwater_grc(indexg)*dtime
              write(iulog,*)'qflx_surf                 = ',qflx_surf_grc(indexg)*dtime
              write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl_grc(indexg)*dtime
              write(iulog,*)'qflx_drain                = ',qflx_drain_grc(indexg)*dtime
