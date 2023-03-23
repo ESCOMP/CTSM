@@ -12,7 +12,7 @@ module clm_driver
   use clm_varctl             , only : iulog, use_fates, use_fates_sp
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use CNSharedParamsMod      , only : use_matrixcn
-  use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
+  use clm_varctl             , only : use_crop, sectorwater, irrigate, ndep_from_cpl
   use clm_varctl             , only : use_soil_moisture_streams
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
@@ -41,7 +41,7 @@ module clm_driver
   use UrbanFluxesMod         , only : UrbanFluxes
   use LakeFluxesMod          , only : LakeFluxes
   !
-  use HydrologyNoDrainageMod , only : CalcAndWithdrawIrrigationFluxes, HandleNewSnow, HydrologyNoDrainage ! (formerly Hydrology2Mod)
+  use HydrologyNoDrainageMod , only : CalcAndWithdrawIrrigationFluxes, CalcAndWithdrawSectorWaterFluxes, HandleNewSnow, HydrologyNoDrainage ! (formerly Hydrology2Mod)
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
   use CanopyHydrologyMod     , only : CanopyInterceptionAndThroughfall
   use SurfaceWaterMod        , only : UpdateFracH2oSfc
@@ -516,6 +516,22 @@ contains
             canopystate_inst%frac_veg_nosno_patch(bounds_clump%begp:bounds_clump%endp))
 
        call t_stopf('drvinit')
+       
+       if (sectorwater) then
+
+          call t_startf('sectorwater_calc_and_withdraw')
+
+          call CalcAndWithdrawSectorWaterFluxes( &
+               bounds = bounds_clump, &
+               soilhydrology_inst = soilhydrology_inst, &
+               sectorwater_inst = sectorwater_inst, &
+               water_inst = water_inst, &
+               volr       = water_inst%wateratm2lndbulk_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
+               rof_prognostic = rof_prognostic)
+
+          call t_stopf('sectorwater_calc_and_withdraw')
+
+       end if
 
        if (irrigate) then
 
@@ -780,6 +796,8 @@ contains
                h2osoi_liq         = water_inst%waterstatebulk_inst%h2osoi_liq_col&
                (bounds_clump%begc:bounds_clump%endc , 1:nlevgrnd), &
                volr               = water_inst%wateratm2lndbulk_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
+               sectorwater_total_actual_withd = sectorwater_inst%sectorwater_total_actual_withd(bounds_clump%begg:bounds_clump%endg), &
+               sectorwater = sectorwater, &
                rof_prognostic     = rof_prognostic)
           call t_stopf('irrigationneeded')
 
