@@ -138,6 +138,13 @@ module clm_varctl
   character(len=fname_len), public :: finidat_interp_dest   = ''
 
   !----------------------------------------------------------
+  ! Sector water usage logic
+  !----------------------------------------------------------
+  
+  ! do not satisfy sector water demand by default
+  logical, public :: sectorwater = .false.            
+  
+  !----------------------------------------------------------
   ! Crop & Irrigation logic
   !----------------------------------------------------------
 
