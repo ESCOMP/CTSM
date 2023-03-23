@@ -135,6 +135,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <irrigate >.false.</irrigate>
 
+<!-- Sector Water Usage default -->
+<sectorwater >.false.</sectorwater>
 
 <!-- Saturation excess runoff for crops  -->
 <crop_fsat_equals_zero>.false.</crop_fsat_equals_zero>
@@ -378,6 +380,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_groundwater_irrigation>.false.</use_groundwater_irrigation>
 
 <irrig_method_default>drip</irrig_method_default>
+
+<!-- Sector water usage namelist defaults -->
+<sectorwater_river_volume_threshold>0.1</sectorwater_river_volume_threshold>
+<limit_sectorwater_if_rof_enabled>.false.</limit_sectorwater_if_rof_enabled>
+<path_sectorwater_input_data>" "</path_sectorwater_input_data>
 
 <!-- Snow veg treatment -->
 <snowveg_affects_radiation>.true.</snowveg_affects_radiation>
