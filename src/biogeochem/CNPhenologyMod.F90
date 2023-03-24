@@ -1747,7 +1747,7 @@ contains
     logical fake_harvest  ! Dealing with incorrect Dec. 31 planting
     logical did_plant_prescribed_today    ! Was the crop sown today?
     logical will_plant_prescribed_tomorrow ! Is tomorrow a prescribed sowing day?
-    logical vernalization_forces_harvest ! if freeze-killed
+    logical vernalization_forces_harvest ! Was the crop killed by freezing during vernalization?
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -2110,11 +2110,7 @@ contains
                 mxmat = 999
             end if
 
-            if (vernalization_forces_harvest) then
-                do_harvest = .true.
-                force_harvest = .true.
-                harvest_reason = HARVEST_REASON_VERNFREEZEKILL
-            else if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
+            if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
                 ! BACKWARDS_COMPATIBILITY(ssr, 2022-02-03): To get rid of crops incorrectly planted in last time step of Dec. 31. That was fixed in commit dadbc62 ("Call CropPhenology regardless of doalb"), but this handles restart files with the old behavior. fake_harvest ensures that outputs aren't polluted.
                 do_harvest = .true.
                 force_harvest = .true.
@@ -2189,7 +2185,9 @@ contains
                end if
                do_harvest = do_harvest .or. will_plant_prescribed_tomorrow
 
-               if (hui(p) >= gddmaturity(p)) then
+               if (vernalization_forces_harvest) then
+                   harvest_reason = HARVEST_REASON_VERNFREEZEKILL
+               else if (hui(p) >= gddmaturity(p)) then
                    harvest_reason = HARVEST_REASON_MATURE
                else if (idpp >= mxmat) then
                    harvest_reason = HARVEST_REASON_MAXSEASLENGTH
@@ -2740,14 +2738,15 @@ contains
       ! will have to develop some type of relationship that reduces LAI and
       ! biomass pools in response to cold damaged crop
 
-      force_harvest = .false.
       if (t_ref2m_min(p) <= tfrz - 6._r8) then
          tkil = (tbase - 6._r8) - 6._r8 * hdidx(p)
          if (tkil >= tcrown) then
             if ((0.95_r8 - 0.02_r8 * (tcrown - tkil)**2) >= 0.02_r8) then
                write (iulog,*)  'crop damaged by cold temperatures at p,c =', p,c
-            else if (tlai(p) > 0._r8) then ! slevis: kill if past phase1 by
-               force_harvest = .true.      !         forcing through harvest
+            else if (tlai(p) > 0._r8) then ! slevis: kill if past phase1
+               gddmaturity(p) = 0._r8      !         by forcing through
+               huigrain(p)    = 0._r8      !         harvest
+               force_harvest = .true.
                write (iulog,*)  '95% of crop killed by cold temperatures at p,c =', p,c
             end if
          end if
