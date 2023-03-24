@@ -345,6 +345,7 @@ sub write_namelist_file {
  map_fsoitex      = '$map->{'tex'}'
  map_furbtopo     = '$map->{'utp'}'
  map_fgdp         = '$map->{'gdp'}'
+ map_fsectorwater  = '$map->{'sectorwater'}'
  map_fpeat        = '$map->{'peat'}'
  map_fsoildepth   = '$map->{'soildepth'}'
  map_fabm         = '$map->{'abm'}'
@@ -358,6 +359,7 @@ sub write_namelist_file {
  mksrf_fvocef     = '$datfil->{'voc'}'
  mksrf_furbtopo   = '$datfil->{'utp'}'
  mksrf_fgdp       = '$datfil->{'gdp'}'
+ mksrf_fsectorwater = '$datfil->{'sectorwater'}'
  mksrf_fpeat      = '$datfil->{'peat'}'
  mksrf_fsoildepth = '$datfil->{'soildepth'}'
  mksrf_fabm       = '$datfil->{'abm'}'
@@ -647,7 +649,7 @@ EOF
       my $mkopts = "-csmdata $CSMDATA -silent -justvalue -namelist clmexp $usrnam";
       my @typlist = ( "lak", "veg", "voc", "tex", "col", "hrv",
                         "fmx", "lai", "urb", "org", "glc", "glcregion", "utp", "wet",
-		        "gdp", "peat","soildepth","abm");
+		        "gdp", "sectorwater", "peat","soildepth","abm");
       if ( $opts{'vic'} ) {
          push( @typlist, "vic" );
       }
