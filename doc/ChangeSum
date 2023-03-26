@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev120    sacks 03/25/2023 Update externals and minor fixes
     ctsm5.1.dev119   slevis 03/16/2023 Allow gross unrepresented land use transition (PR #309)
     ctsm5.1.dev118   slevis 02/05/2023 Use conda environment rather than ncar_pylib with the fsurdat_modifier system test
     ctsm5.1.dev117  afoster 02/02/2023 Updates to facilitate running FATES at NEON sites

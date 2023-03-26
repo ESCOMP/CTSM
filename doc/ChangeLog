@@ -1,4 +1,106 @@
 ===============================================================
+Tag name: ctsm5.1.dev120
+Originator(s): sacks (Bill Sacks)
+Date: Sat Mar 25 17:49:27 MDT 2023
+One-line Summary: Update externals and minor fixes
+
+Purpose and description of changes
+----------------------------------
+
+Main change is to update externals to cesm2_3_alpha12c-ish.
+
+Doing this exposed a few issues that are also fixed here.
+
+Also, reduce GU_LULCC tests down to a single test.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1968 (Reduce the GULU tests down to one)
+- Resolves ESCOMP/CTSM#1971 (fsurdatmodifyctsm test should abort if it has trouble running the python script)
+
+Known bugs introduced in this tag (include issue #):
+- ESCOMP/CTSM#1972 (FUNITCTSM test fails when run through run_sys_tests in upcoming ctsm5.1.dev120)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Fortran unit tests now need to be run manually, since FUNITCTSM is
+  failing when run through run_sys_tests
+- Reduced GU_LULCC tests down to a single test
+
+
+Testing summary:
+----------------
+
+  regular tests:
+      - aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing
+      - Fortran unit tests on cheyenne (until https://github.com/ESCOMP/CTSM/issues/1972 is resolved): from src, run:
+          ../cime/scripts/fortran_unit_testing/run_tests.py --build-dir `mktemp -d --tmpdir=. unit_tests.XXXXXXXX`
+
+    aux_clm on cheyenne ------------ OK
+    aux_clm on izumi --------------- OK
+    Fortran unit tests on cheyenne - PASS
+
+    For the two new tests (with BFAILs), ran them from dev119 with
+    comparison against this branch:
+    - ERP_D_Ld10_P36x2.f10_f10_mg37.IHistClm51BgcCrop.cheyenne_intel.clm-ciso_decStart
+    - SMS_Ld3_PS.f09_g17.IHistClm50BgcCrop.cheyenne_intel.clm-f09_dec1990Start_GU_LULCC
+      (with start date in the test mod changed to match the new version)
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for certain compilers
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all on certain compilers
+    - what platforms/compilers:
+      - nvhpc on cheyenne in non-debug cases (can be explained from
+        differences in compilation flags for non-debug cases, and also
+        some module differences)
+      - intel on izumi in debug cases (there were updates in ESMF
+        modules, though that's the same for other izumi compilers; I'm not
+        seeing other relevant diffs in ccs_config, so I'm not sure why we're
+        getting diffs here. I tried investigating, but ran into trouble trying
+        to get things to compile with the old ccs_config, so gave up on
+        tracking down the source of this difference)
+  
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      not investigated
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- ccs_config: ccs_config_cesm0.0.38 -> ccs_config_cesm0.0.58
+- cime: cime6.0.45 -> cime6.0.100
+- cmeps: cmeps0.13.71 -> cmeps0.14.17
+- cdeps: cdeps0.12.65 -> cdeps1.0.7
+- share: share1.0.13 -> share1.0.16
+- pio: pio2_5_7 -> pio2_5_10
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev119
 Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310), ekluzek Erik Kluzek), lawrencepj1 (Peter Lawrence)
 Date: Thu Mar 16 14:13:37 MDT 2023
