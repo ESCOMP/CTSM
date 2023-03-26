@@ -45,6 +45,9 @@ Software engineering team:
 - [Bill Sacks](https://github.com/billsacks)
 - [Sam Levis](https://github.com/slevisconsulting)
 - [Adrianna Foster](https://github.com/adrifoster)
+- [Sam Rabin](https://github.com/samsrabin)
+- [Greg Lemieux](https://github.com/glemieux)
+- [Ryan Knox](https://github.com/rgknox)
 
 Science team:
 - [Dave Lawrence](https://github.com/dlawrenncar)
