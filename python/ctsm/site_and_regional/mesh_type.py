@@ -19,6 +19,8 @@ import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
+from ctsm.utils import abort
+
 logger = logging.getLogger(__name__)
 
 
@@ -276,7 +278,7 @@ class MeshType:
         # -- remove coordinates that are shared between the elements
         #node_coords = dd.from_dask_array(corner_pairs).drop_duplicates().values
         #node_coords.compute_chunk_sizes()
-        node_coords = pandas.DataFrame( data=corner_pairs )
+        node_coords = pandas.DataFrame( data=corner_pairs ).drop_duplicates().values
 
         # -- check size of unique coordinate pairs
         dims = self.mask.shape
@@ -294,6 +296,7 @@ class MeshType:
                 )
             )
             logger.warning("This may result your simulation to crash later.")
+            #abort( "Expected size for element connections is wrong" )
 
     def calculate_elem_conn(self):
         """
@@ -470,8 +473,7 @@ class MeshType:
         # -- plot corner coordinates
         #clats, clons = self.node_coords.T.compute()
         #elem_conn_vals = self.elem_conn.compute()
-        clats = self.node_coords[0]
-        clons = self.node_coords[1]
+        clats, clons = self.node_coords.T
         elem_conn_vals = self.elem_conn
         element_counts = elem_conn_vals.shape[0]
 
@@ -496,8 +498,7 @@ class MeshType:
 
         # -- plot center coordinates
         #clon, clat = self.center_coords.T.compute()
-        clon = self.center_coords.T[0]
-        clat = self.center_coords.T[1]
+        clon, clat = self.center_coords.T
 
         ax.scatter(
             clon,
@@ -543,8 +544,7 @@ class MeshType:
         # -- plot corner coordinates
         #clats, clons = self.node_coords.T.compute()
         #elem_conn_vals = self.elem_conn.compute()
-        clats = self.node_coords[0]
-        clons = self.node_coords[1]
+        clats, clons = self.node_coords.T
         elem_conn_vals = self.elem_conn
         element_counts = elem_conn_vals.shape[0]
 
@@ -569,8 +569,7 @@ class MeshType:
 
         # -- plot center coordinates
         #clon, clat = self.center_coords.T.compute()
-        clon = self.center_coords.T[0]
-        clat = self.center_coords.T[1]
+        clon, clat = self.center_coords.T
 
         ax.scatter(
             clon,
