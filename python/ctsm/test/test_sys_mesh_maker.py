@@ -78,6 +78,29 @@ class SysTestMeshMaker(unittest.TestCase):
         ]
         main()
 
+    def compare_mesh_files( self, mesh_out, expected ):
+        """Compare two mesh files that you expect to be equal"""
+        self.assertEqual( mesh_out.dims["coordDim"], expected.dims["coordDim"], "coordDim not the same" )
+        self.assertEqual( mesh_out.dims["origGridRank"], expected.dims["origGridRank"], "origGridRank not the same" )
+        self.assertEqual( mesh_out.dims["nodeCount"], expected.dims["nodeCount"], "nodeCount not the same" )
+        self.assertEqual( mesh_out.dims["elementCount"], expected.dims["elementCount"], "elementCount not the same" )
+        self.assertEqual( mesh_out.dims["maxNodePElement"], expected.dims["maxNodePElement"], "maxNodePElement not the same" )
+        equalorigGridDims = mesh_out.origGridDims == expected.origGridDims
+        equalelementConn = mesh_out.elementConn == expected.elementConn
+        equalnumElementConn = mesh_out.numElementConn == expected.numElementConn
+        equalcenterCoords = mesh_out.centerCoords == expected.centerCoords
+        equalelementMask = mesh_out.elementMask == expected.elementMask
+        equalelementArea = mesh_out.elementArea == expected.elementArea
+        self.assertTrue( equalorigGridDims.all, "origGridDims different" )
+        self.assertTrue( equalelementConn.all, "elementConn different" )
+        self.assertTrue( equalnumElementConn.all, "numElementConn different" )
+        self.assertTrue( equalcenterCoords.all, "centerCoords different" )
+        self.assertTrue( equalelementMask.all, "mask different" )
+        self.assertTrue( equalelementArea.all, "area different" )
+        print( mesh_out )
+        print( expected )
+        self.assertTrue(mesh_out.equals(expected), "Output mesh does not compare to the expected baseline file")
+
     def test_domainfile_region_warea(self):
         """Do a basic test for a small regional grid with a domain file rather than a surfdata file including area"""
         infile = os.path.join(
@@ -107,25 +130,7 @@ class SysTestMeshMaker(unittest.TestCase):
         )
         mesh_out = xr.open_dataset(self.mesh_out)
         expected = xr.open_dataset(expected_mesh)
-        self.assertEqual( mesh_out.dims["coordDim"], expected.dims["coordDim"], "coordDim not the same" )
-        self.assertEqual( mesh_out.dims["origGridRank"], expected.dims["origGridRank"], "origGridRank not the same" )
-        self.assertEqual( mesh_out.dims["nodeCount"], expected.dims["nodeCount"], "nodeCount not the same" )
-        self.assertEqual( mesh_out.dims["elementCount"], expected.dims["elementCount"], "elementCount not the same" )
-        self.assertEqual( mesh_out.dims["maxNodePElement"], expected.dims["maxNodePElement"], "maxNodePElement not the same" )
-        equalorigGridDims = mesh_out.origGridDims == expected.origGridDims
-        equalelementConn = mesh_out.elementConn == expected.elementConn
-        equalnumElementConn = mesh_out.numElementConn == expected.numElementConn
-        equalcenterCoords = mesh_out.centerCoords == expected.centerCoords
-        equalelementMask = mesh_out.elementMask == expected.elementMask
-        equalelementArea = mesh_out.elementArea == expected.elementArea
-        self.assertTrue( equalorigGridDims.all, "origGridDims different" )
-        self.assertTrue( equalelementConn.all, "elementConn different" )
-        self.assertTrue( equalnumElementConn.all, "numElementConn different" )
-        self.assertTrue( equalcenterCoords.all, "centerCoords different" )
-        self.assertTrue( equalelementMask.all, "mask different" )
-        self.assertTrue( equalelementArea.all, "area different" )
-        self.assertTrue(mesh_out.equals(expected), "Output mesh does not compare to the expected baseline file")
-
+        self.compare_mesh_files( mesh_out, expected )
 
     def test_noplot_add_mask(self):
         """Do a simple basic test without plotting and also adding mask"""
