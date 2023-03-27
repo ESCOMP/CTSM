@@ -33,7 +33,7 @@ import argparse
 import subprocess
 
 import pandas as pd
-#import tqdm as tqdm
+
 
 
 
@@ -51,6 +51,18 @@ def get_parser():
                 action="store_true", 
                 dest="verbose", 
                 default=False)
+
+    parser.add_argument('--16pft',
+                        help='Create and/or modify 16-PFT surface datasets (e.g. for a FATES run) ',
+                        action="store_true",
+                        dest="pft_16",
+                        default=False)
+
+    parser.add_argument('-m', '--mixed',
+                        help='Do not overwrite surface dataset to be just one dominant PFT at 100%',
+                        action="store_true",
+                        dest="mixed",
+                        default=False)
 
 
     return parser
@@ -98,13 +110,47 @@ def main():
         pft = row['pft']
         clmsite = "1x1_NEON_"+site
         print ("Now processing site :", site)
-        command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),'--site',clmsite,'--dompft',str(pft),'--crop',
-                '--create-surface','--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
-        execute(command)
 
-        command = ['./modify_singlept_site_neon.py','--neon_site',site, '--surf_dir',
-                'subset_data_single_point']
-        execute(command)
+        if args.mixed and args.pft_16:
+            # use surface dataset with 16 pfts, and don't overwrite with 100% 1 dominant PFT
+            # don't set crop flag
+            # don't set a dominant pft
+            subset_command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),
+                              '--site',clmsite, '--create-surface','--uniform-snowpack',
+                              '--cap-saturation','--verbose','--overwrite']
+            modify_command = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
+                       'subset_data_single_point', '--16pft']
+        elif args.pft_16:
+            # use surface dataset with 16 pfts, but overwrite to 100% 1 dominant PFT
+            # don't set crop flag
+            # set dominant pft
+            subset_command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),
+                              '--site',clmsite,'--dompft',str(pft),'--create-surface',
+                              '--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
+            modify_command = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
+                              'subset_data_single_point', '--16pft']
+        elif args.mixed:
+            # use surface dataset with 78 pfts, and don't overwrite with 100% 1 dominant PFT
+            # NOTE: FATES will currently not run with a 78-PFT surface dataset
+            # set crop flag
+            # don't set dominant pft
+            subset_command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),
+                              '--site',clmsite,'--crop','--create-surface',
+                              '--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
+            modify_command = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
+                       'subset_data_single_point']
+        else:
+            # use surface dataset with 78 pfts, and overwrite to 100% 1 dominant PFT
+            # NOTE: FATES will currently not run with a 78-PFT surface dataset
+            # set crop flag
+            # set dominant pft
+            subset_command = ['./subset_data', 'point', '--lat', str(lat), '--lon', str(lon),
+                              '--site', clmsite,'--crop', '--dompft', str(pft), '--create-surface',
+                              '--uniform-snowpack', '--cap-saturation', '--verbose', '--overwrite']
+            modify_command = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
+                       'subset_data_single_point']
+        execute(subset_command)
+        execute(modify_command)
 
 if __name__ == "__main__": 
     main()

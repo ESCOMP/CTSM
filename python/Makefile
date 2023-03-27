@@ -24,6 +24,10 @@ PYLINT_SRC = \
 	ctsm
 
 all: test lint black
+	@echo
+	@echo
+	@echo "Successfully ran all standard tests"
+
 test: utest stest
 
 .PHONY: utest
