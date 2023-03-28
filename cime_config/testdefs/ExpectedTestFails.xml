@@ -51,6 +51,13 @@
     </phase>
   </test>
 
+  <test name="FUNITCTSM_P1x1.f10_f10_mg37.I2000Clm50Sp.cheyenne_intel">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#1972</issue>
+    </phase>
+  </test>
+
   <!-- fates test suite failures -->
 
   <test name="ERS_Lm12.1x1_brazil.I2000Clm50FatesCruRsGs.cheyenne_intel.clm-FatesFireLightningPopDens">
@@ -88,7 +95,7 @@
     </phase>
   </test>
 
-  <test name="ERP_P144x2_Ld30.f45_f45_mg37.I2000Clm50FatesRs.cheyenne_intel.clm-mimicsFatesCold">
+  <test name="ERP_P72x2_Ld30.f45_f45_mg37.I2000Clm50FatesRs.cheyenne_intel.clm-mimicsFatesCold">
     <phase name="SHAREDLIB_BUILD">
       <status>PEND</status>
       <issue>#1045</issue>
