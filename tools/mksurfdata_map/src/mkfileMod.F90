@@ -448,35 +448,35 @@ contains
        call ncd_def_spatial_var(ncid=ncid, varname='gdp', xtype=xtype, &
             long_name='gdp', units='unitless')
 
-       call ncd_def_spatial_var(ncid=ncid, varname='dom_withd', xtype=xtype, &
-           long_name='domestic withdrawal', units='mm/month')
-     
-       call ncd_def_spatial_var(ncid=ncid, varname='dom_cons', xtype=xtype, &
-           long_name='domestic consumption', units='mm/month')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='liv_withd', xtype=xtype, &
-           long_name='livestock withdrawal', units='mm/month')
-    
-       call ncd_def_spatial_var(ncid=ncid, varname='liv_cons', xtype=xtype, &
-           long_name='livestock consumption', units='mm/month')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='elec_withd', xtype=xtype, &
-            long_name='thermoelecric withdrawal', units='mm/month')
-     
-       call ncd_def_spatial_var(ncid=ncid, varname='elect_cons', xtype=xtype, &
-            long_name='thermoelectric consumption', units='mm/month')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='mfc_withd', xtype=xtype, &
-            long_name='manufacturing withdrawal', units='mm/month')
-     
-       call ncd_def_spatial_var(ncid=ncid, varname='mfc_cons', xtype=xtype, &
-            long_name='manufacturing consumption', units='mm/month')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='min_withd', xtype=xtype, &
-            long_name='mining withdrawal', units='mm/month')
-     
-       call ncd_def_spatial_var(ncid=ncid, varname='min_cons', xtype=xtype, &
-            long_name='mining consumption', units='mm/month')
+       call ncd_def_spatial_var(ncid=ncid, varname='withd_dom', xtype=nf_double, lev1name='time',  &
+            long_name='monthly domestic water withdrawal', units='mm/month')
+  
+       call ncd_def_spatial_var(ncid=ncid, varname='cons_dom', xtype=nf_double,  lev1name='time', &
+            long_name='monthly domestic water consumption', units='mm/month')
+  
+       call ncd_def_spatial_var(ncid=ncid, varname='withd_liv', xtype=nf_double, lev1name='time',  &
+            long_name='monthly livestock water withdrawal', units='mm/month')
+  
+       call ncd_def_spatial_var(ncid=ncid, varname='cons_liv', xtype=nf_double,  lev1name='time', &
+            long_name='monthly livestock water consumption', units='mm/month')
+  
+       call ncd_def_spatial_var(ncid=ncid, varname='withd_elec', xtype=nf_double, lev1name='time', &
+            long_name='monthly thermoelectric water withdrawal', units='mm/month')
+  
+       call ncd_def_spatial_var(ncid=ncid, varname='cons_elec', xtype=nf_double, lev1name='time', &
+            long_name='monthly thermoelectric water consumption', units='mm/month')
+  
+       call ncd_def_spatial_var(ncid=ncid, varname='withd_mfc', xtype=nf_double, lev1name='time', &
+            long_name='monthly manufacturing water withdrawal', units='mm/month')
+  
+       call ncd_def_spatial_var(ncid=ncid, varname='cons_mfc', xtype=nf_double, lev1name='time', &
+            long_name='monthly manufacturing water consumption', units='mm/month')
+  
+       call ncd_def_spatial_var(ncid=ncid, varname='withd_min', xtype=nf_double, lev1name='time',  &
+            long_name='monthly mining water withdrawal', units='mm/month')
+  
+       call ncd_def_spatial_var(ncid=ncid, varname='cons_min', xtype=nf_double, lev1name='time', &
+            long_name='monthly mining water consumption', units='mm/month') 
 
        call ncd_def_spatial_var(ncid=ncid, varname='SLOPE', xtype=xtype, &
             long_name='mean topographic slope', units='degrees')
