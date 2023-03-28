@@ -17,12 +17,12 @@ date=`date +'%Y%m%d-%H%M'` # get current date and time
 startdate=`date +'%Y-%m-%d %H:%M:%S'`
 COMPSET=I2000Clm50SpGs # for CCLM2 (use stub glacier component for regional domain!)
 RES=hcru_hcru # hcru_hcru for CCLM2-0.44, f09_g17 to test glob (inputdata downloaded)
-DOMAIN=eur # eur for CCLM2 (EURO-CORDEX), sa for South-America, glob otherwise 
+DOMAIN=eur # eur for CCLM2 (EURO-CORDEX), sa for South-America, glob otherwise
 
 CODE=clm5.0 # clm5.0 for official release, clm5.0_features for Ronny's version, CTSMdev for latest 
-COMPILER=gnu # gnu for gcc, or nvhpc; setting to gnu-oasis or nvhpc-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
+COMPILER=gnu-oasis # gnu for gcc, or nvhpc; setting to gnu-oasis or nvhpc-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
 DRIVER=mct # default is mct, using nuopc requires ESMF installation
-EXP=cclm2_${date} # custom case name
+EXP=cclm2_lon360_${date} # custom case name
 CASENAME=$CODE.$COMPILER.$COMPSET.$RES.$DOMAIN.$EXP
 MACH=pizdaint
 QUEUE=normal # USER_REQUESTED_QUEUE, overrides default JOB_QUEUE
@@ -56,9 +56,8 @@ print_log "*** Logfile at: ${logfile} ***"
 
 # Sync inputdata on scratch because scratch will be cleaned every month (change inputfiles on $PROJECT!)
 print_log "*** Syncing inputdata on scratch  ***"
-
-#rsync -rv --ignore-existing /project/$PROJ/shared/CCLM2_inputdata/ $CESMDATAROOT/ | tee -a $logfile
-sbatch --account=$PROJ --export=ALL,PROJ=$PROJ transfer_clm_inputdata.sh # xfer job to prevent overflowing the loginnode
+rsync -rv --ignore-existing /project/$PROJ/shared/CCLM2_inputdata/ $CESMDATAROOT/ | tee -a $logfile
+#sbatch --account=$PROJ --export=ALL,PROJ=$PROJ transfer_clm_inputdata.sh # xfer job to prevent overflowing the loginnode
 
 
 #==========================================
@@ -97,7 +96,8 @@ cd $CLMROOT/cime/scripts
 
 
 #==========================================
-# Modify namelists
+# Configure CLM
+# Settings will appear in namelists and have precedence over user_nl_xxx
 #==========================================
 
 print_log "*** Modifying env_*.xml  ***"
@@ -110,6 +110,7 @@ cd $CASEDIR
 # Change job settings (env_batch.xml or env_workflow.xml). Do this here to change for both case.run and case.st_archive
 ./xmlchange JOB_QUEUE=$QUEUE --force
 ./xmlchange JOB_WALLCLOCK_TIME=$WALLTIME
+./xmlchange PROJECT=$PROJ
 
 # Set run start/stop options and DATM forcing (env_run.xml)
 ./xmlchange RUN_TYPE=startup
@@ -151,18 +152,15 @@ fi
 # Domain and mapping files for limited spatial extent
 if [ $DOMAIN == eur ]; then
     ./xmlchange LND_DOMAIN_PATH="$CESMDATAROOT/CCLM2_EUR_inputdata/domain"
-    ./xmlchange LND_DOMAIN_FILE="domain_EU-CORDEX_0.5_correctedlons.nc"
-    ./xmlchange LND2ROF_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_nomask_to_0.5x0.5_nomask_aave_da_c130103.nc"
-    ./xmlchange ROF2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_0.5x0.5_nomask_to_360x720_nomask_aave_da_c120830.nc"
-    ./xmlchange LND2GLC_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
-    ./xmlchange LND2GLC_SMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
-    ./xmlchange GLC2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_gland4km_TO_360x720_aave.170429.nc"
-    ./xmlchange GLC2LND_SMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_gland4km_TO_360x720_aave.170429.nc"
-    ./xmlchange MOSART_MODE=NULL # turn off MOSART for the moment because it runs globally
+    ./xmlchange LND_DOMAIN_FILE="domain_EU-CORDEX_0.5_lon360.nc"
 fi
+
 if [ $DOMAIN == sa ]; then
     ./xmlchange LND_DOMAIN_PATH="$CESMDATAROOT/CCLM2_SA_inputdata/domain"
     ./xmlchange LND_DOMAIN_FILE="domain.lnd.360x720_SA-CORDEX_cruncep.100429.nc"
+fi
+
+if [ $DOMAIN == eur ] || [ $DOMAIN == sa ]; then
     ./xmlchange LND2ROF_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_nomask_to_0.5x0.5_nomask_aave_da_c130103.nc"
     ./xmlchange ROF2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_0.5x0.5_nomask_to_360x720_nomask_aave_da_c120830.nc"
     ./xmlchange LND2GLC_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
@@ -173,8 +171,8 @@ if [ $DOMAIN == sa ]; then
 fi
 
 # Still global
-./xmlchange LND2ROF_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_nomask_to_0.5x0.5_nomask_aave_da_c130103.nc"
-./xmlchange ROF2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_0.5x0.5_nomask_to_360x720_nomask_aave_da_c120830.nc"
+#./xmlchange LND2ROF_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_nomask_to_0.5x0.5_nomask_aave_da_c130103.nc"
+#./xmlchange ROF2LND_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_0.5x0.5_nomask_to_360x720_nomask_aave_da_c120830.nc"
 
 # Not needed for stub components (?)
 #./xmlchange LND2GLC_FMAPNAME="$CESMDATAROOT/CCLM2_EUR_inputdata/mapping/map_360x720_TO_gland4km_aave.170429.nc"
@@ -189,9 +187,77 @@ fi
 
 
 #==========================================
-# Modify user namelists
+# Set up the case (creates user_nl_xxx)
+#==========================================
+
+print_log "*** Running case.setup ***"
+./case.setup -r | tee -a $logfile
+
+#print_log "*** Downloading missing inputdata (if needed) ***"
+#print_log "*** Consider transferring new data to PROJECT, e.g. rsync -av ${SCRATCH}/CCLM2_inputdata /project/${PROJ}/shared/CCLM2_inputdata ***"
+#./check_input_data --download
+
+
+#==========================================
+# User namelists (use cat >> to append)
+# Surface data: domain-specific
+# Paramfile: can be exchanged for newer versions
+# Domainfile: has to be provided to DATM
 #==========================================
 print_log "*** Modifying unser_nl_*.xml  ***"
+
+if [ $DOMAIN == eur ]; then
+cat >> user_nl_clm << EOF
+fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_0.5x0.5_hist_16pfts_Irrig_CMIP6_simyr2000_c190418.nc"
+paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
+EOF
+cat >> user_nl_datm << EOF
+domainfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/domain/domain_EU-CORDEX_0.5_lon360.nc"
+EOF
+fi
+
+if [ $DOMAIN == sa ]; then
+cat >> user_nl_clm << EOF
+fsurdat = "$CESMDATAROOT/CCLM2_SA_inputdata/surfdata/surfdata_360x720cru_SA-CORDEX_16pfts_Irrig_CMIP6_simyr2000_c170824.nc"
+paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
+EOF
+cat >> user_nl_datm << EOF
+domainfile = "$CESMDATAROOT/CCLM2_SA_inputdata/domain/domain.lnd.360x720_SA-CORDEX_cruncep.100429.nc"
+EOF
+fi
+
+# For global domain keep the defaults (downloaded from svn trunc)
+if [ $DOMAIN == glob ]; then
+cat >> user_nl_clm << EOF
+fsurdat = "$CESMDATAROOT/cesm_inputdata/lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_Irrig_CMIP6_simyr2000_c170824.nc"
+paramfile = "$CESMDATAROOT/cesm_inputdata/lnd/clm2/paramdata/clm5_params.c171117.nc"
+EOF
+cat >> user_nl_datm << EOF
+domainfile = "$CESMDATAROOT/cesm_inputdata/share/domains/domain.clm/domain.lnd.360x720_cruncep.100429.nc"
+EOF
+fi
+
+# Namelist options available in Ronny's code
+# requires additional variables in the surfdata, e.g. dbh for biomass_heat_storage
+#if [ $CODE == clm5.0_features ]; then
+#cat >> user_nl_clm << EOF
+#use_biomass_heat_storage = .true.
+#use_individual_pft_soil_column = .true.
+#zetamaxstable = 100.0d00
+#EOF
+#fi
+
+# Namelist options available in CTSMdev (?)
+#if [ $CODE == CTSMdev ]; then
+#cat >> user_nl_clm << EOF
+#use_biomass_heat_storage = .true.
+#z0param_method = 'Meier2022'
+#zetamaxstable = 100.0d00
+#use_z0mg_2d = .true.
+#use_z0m_snowmelt = .true.
+#flanduse_timeseries=''
+#EOF
+#fi
 
 # Output frequency and averaging (example)
 # hist_empty_htapes = .true. # turn off all default output on h0
@@ -204,7 +270,7 @@ print_log "*** Modifying unser_nl_*.xml  ***"
 
 # Commented out during testing to avoid lots of output
 : '
-cat > user_nl_clm << EOF
+cat >> user_nl_clm << EOF
 hist_fincl1 = 'TG', 'QAF', 'TAF', 'UAF'
 hist_fincl2 = 'QAF', 'TAF', 'UAF', 'VPD_CAN', 'TLAI', 'FCEV', 'FCTR', 'TG', 'TSOI', 'TSOI_10CM', 'TSA', 'Q2M', 'VPD'
 hist_fincl3 = 'QAF', 'TAF', 'UAF', 'VPD_CAN', 'TLAI', 'FCEV', 'FCTR', 'TG', 'TSOI', 'TSOI_10CM', 'TSA', 'Q2M', 'VPD'
@@ -224,74 +290,6 @@ print_log "h2: selected variables, daily values (-24), yearly file (365 vals per
 print_log "h3: selected variables, 6-hourly values (-6), daily file (4 vals per file), instantaneous at the output interval (I) by PFT"
 '
 
-# NOTE: currently everything needs to be written in one go to not overwrite previous lines! (see below)
-# Params file: can be exchanged for newer versions
-# Surface data (domain-specific), specify to re-use downloaded files
-if [ $DOMAIN == eur ]; then
-cat > user_nl_clm << EOF
-fsurdat = "$CESMDATAROOT/CCLM2_EUR_inputdata/surfdata/surfdata_0.5x0.5_hist_16pfts_Irrig_CMIP6_simyr2000_c190418.nc"
-paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
-EOF
-cat > user_nl_datm << EOF
-domainfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/domain/domain_EU-CORDEX_0.5_correctedlons.nc"
-EOF
-fi
-
-if [ $DOMAIN == sa ]; then
-cat > user_nl_clm << EOF
-fsurdat = "$CESMDATAROOT/CCLM2_SA_inputdata/surfdata/surfdata_360x720cru_SA-CORDEX_16pfts_Irrig_CMIP6_simyr2000_c170824.nc"
-paramfile = "$CESMDATAROOT/CCLM2_EUR_inputdata/CLM5params/clm5_params.cpbiomass.c190103.nc"
-EOF
-cat > user_nl_datm << EOF
-domainfile = "$CESMDATAROOT/CCLM2_SA_inputdata/domain/domain.lnd.360x720_SA-CORDEX_cruncep.100429.nc"
-EOF
-fi
-
-# For global domain keep the defaults (downloaded from svn trunc)
-if [ $DOMAIN == glob ]; then
-cat > user_nl_clm << EOF
-fsurdat = "$CESMDATAROOT/cesm_inputdata/lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_Irrig_CMIP6_simyr2000_c170824.nc"
-paramfile = "$CESMDATAROOT/cesm_inputdata/lnd/clm2/paramdata/clm5_params.c171117.nc"
-EOF
-cat > user_nl_datm << EOF
-domainfile = "$CESMDATAROOT/cesm_inputdata/share/domains/domain.clm/domain.lnd.360x720_cruncep.100429.nc"
-EOF
-fi
-
-
-# Namelist options available in Ronny's code (this overwrites and does not add to previous lines! find a solution)
-# requires additional variables in the surfdata, e.g. dbh for biomass_heat_storage
-#if [ $CODE == clm5.0_features ]; then
-#cat > user_nl_clm << EOF
-#use_biomass_heat_storage = .true.
-#use_individual_pft_soil_column = .true.
-#zetamaxstable = 100.0d00
-#EOF
-#fi
-
-# Namelist options available in CTSMdev (?)
-#if [ $CODE == CTSMdev ]; then
-#cat > user_nl_clm << EOF
-#use_biomass_heat_storage = .true.
-#z0param_method = 'Meier2022'
-#zetamaxstable = 100.0d00
-#use_z0mg_2d = .true.
-#use_z0m_snowmelt = .true.
-#flanduse_timeseries=''
-#EOF
-#fi
-
-
-#==========================================
-# Set up the case
-#==========================================
-
-print_log "*** Running case.setup ***"
-./case.setup -r | tee -a $logfile
-
-#print_log "*** Downloading missing inputdata (if needed) ***"
-#print_log "*** Consider transferring new data to PROJECT, e.g. rsync -av ${SCRATCH}/CCLM2_inputdata /project/${PROJ}/shared/CCLM2_inputdata ***"
-#./check_input_data --download
 
 #==========================================
 # For OASIS coupling: before building, add the additional routines for OASIS interface in your CASEDIR on scratch
@@ -321,6 +319,30 @@ else
 fi
 
 print_log "*** Finished building new case in ${CASEDIR} ***"
+
+
+#==========================================
+# FOR OASIS coupling: after building, add OASIS_dummy and streams in your run directory on scratch
+# These files are required by DATM to use the forcing from COSMO instad of GSWP 
+#==========================================
+
+if [[ $COMPILER =~ "oasis" ]]; then
+    print_log "*** Adding OASIS_dummy files ***"
+    
+    # Copy the streams file (used for any domain and resolution)
+    cp $CESMDATAROOT/CCLM2_EUR_inputdata/OASIS_dummy_for_datm/OASIS.stream.txt run/
+    
+    # Manually modify datm_in to contain OASIS streams (cannot be done with user_nl_datm)
+    sed -i -e '/dtlimit/,$d' run/datm_in # keep first part of generated datm_in (until domainfile path), modify in place
+    sed -e '1,/domainfile/d' $CESMDATAROOT/CCLM2_EUR_inputdata/OASIS_dummy_for_datm/datm_in_copy_streams >> run/datm_in # append second part of CCLM2 datm_in (anything after domainfile path)
+    
+    # Copy the OASIS dummy (domain and resolution specific)
+    if [ $DOMAIN == eur ] && [ $RES == hcru_hcru ]; then
+        cp $CESMDATAROOT/CCLM2_EUR_inputdata/OASIS_dummy_for_datm/OASIS_dummy_0.5_lon360.nc run/OASIS_dummy.nc
+    else
+        raise error "OASIS_dummy.nc is missing for this domain and resolution" | tee -a $logfile
+    fi
+fi
 
 
 #==========================================
