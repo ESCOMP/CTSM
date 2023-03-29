@@ -28,6 +28,10 @@ def main(description):
         pattern = "test_unit*.py"
     elif args.sys:
         pattern = "test_sys*.py"
+    elif args.adv_unit:
+        pattern = "test_advanced_unit*.py"
+    elif args.adv_sys:
+        pattern = "test_advanced_sys*.py"
     else:
         pattern = "test*.py"
 
@@ -65,6 +69,18 @@ def _commandline_args(description):
     test_subset.add_argument("-u", "--unit", action="store_true", help="Only run unit tests")
 
     test_subset.add_argument("-s", "--sys", action="store_true", help="Only run system tests")
+
+    test_subset.add_argument(
+        "--adv_unit",
+        action="store_true",
+        help="Only run advanced unit tests (with dask and/or advanced plotting. Use the ctsm_pylib_wdask conda environment)",
+    )
+
+    test_subset.add_argument(
+        "--adv_sys",
+        action="store_true",
+        help="Only run advanced system tests (with dask and/or advanced plotting. Use the ctsm_pylib_wdask conda environment)",
+    )
 
     test_subset.add_argument(
         "-p", "--pattern", help="File name pattern to match\n" "Default is test*.py"

@@ -38,6 +38,17 @@ utest: FORCE
 stest: FORCE
 	$(PYTHON) ./run_ctsm_py_tests $(TEST_ARGS) --sys
 
+adv_test: adv_utest adv_stest
+
+.PHONY: adv_utest
+adv_utest: FORCE
+	$(PYTHON) ./run_ctsm_py_tests $(TEST_ARGS) --adv_unit
+
+.PHONY: adv_stest
+adv_stest: FORCE
+	$(PYTHON) ./run_ctsm_py_tests $(TEST_ARGS) --adv_sys
+
+
 .PHONY: lint
 lint: FORCE
 	$(PYLINT) $(PYLINT_ARGS) $(PYLINT_SRC)
