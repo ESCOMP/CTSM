@@ -1,6 +1,6 @@
 #!/bin/bash
 ./xmlchange CLM_USRDAT_NAME=NEON
-# This is where we want to implement NEON.PRISM; in the current state, doing so causes SVN failures
+# This can be set to either NEON or NEON.PRISM
 ./xmlchange CCSM_CO2_PPMV=408.83
 # Set data forcing data to future scenario so will have data from 2018 to present-day
 ./xmlchange DATM_PRESAERO=SSP3-7.0
