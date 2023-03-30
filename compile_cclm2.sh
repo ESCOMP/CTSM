@@ -20,14 +20,15 @@ RES=hcru_hcru # hcru_hcru for CCLM2-0.44, f09_g17 to test glob (inputdata downlo
 DOMAIN=eur # eur for CCLM2 (EURO-CORDEX), sa for South-America, glob otherwise
 
 CODE=clm5.0 # clm5.0 for official release, clm5.0_features for Ronny's version, CTSMdev for latest 
-COMPILER=gnu-oasis # gnu for gcc, or nvhpc; setting to gnu-oasis or nvhpc-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
+COMPILER=nvhpc # gnu for gcc, or nvhpc; setting to gnu-oasis or nvhpc-oasis will: (1) use different compiler config, (2) copy oasis source code to CASEDIR
 DRIVER=mct # default is mct, using nuopc requires ESMF installation
 EXP=cclm2_lon360_${date} # custom case name
 CASENAME=$CODE.$COMPILER.$COMPSET.$RES.$DOMAIN.$EXP
 MACH=pizdaint
 QUEUE=normal # USER_REQUESTED_QUEUE, overrides default JOB_QUEUE
 WALLTIME="01:00:00" # USER_REQUESTED_WALLTIME, overrides default JOB_WALLCLOCK_TIME
-PROJ=$(basename "$(dirname "${PROJECT}")") # extract project name (sm61/sm62)
+#PROJ=$(basename "$(dirname "${PROJECT}")") # extract project name (sm61/sm62)
+PROJ=sm61 # extract project name (sm61/sm62)
 NTASKS=24
 NSUBMIT=0 # partition into smaller chunks, excludes the first submission
 let "NCORES = $NTASKS * 12"
@@ -76,11 +77,11 @@ rsync -rv --ignore-existing /project/$PROJ/shared/CCLM2_inputdata/ $CESMDATAROOT
 #module list | tee -a $logfile
 
 # Find spack_oasis installation (used in .cime/config_compilers.xml)
-if [[ $COMPILER =~ "oasis" ]]; then
+#if [[ $COMPILER =~ "oasis" ]]; then
     print_log "*** Finding spack_oasis ***"
-    export OASIS_PATH=$(spack location -i oasis%gcc) # e.g. /project/sm61/psieber/spack-install/oasis/master/gcc/24obfvejulxnpfxiwatzmtcddx62pikc
+    export OASIS_PATH=$(spack location -i oasis%nvhpc) # e.g. /project/sm61/psieber/spack-install/oasis/master/gcc/24obfvejulxnpfxiwatzmtcddx62pikc
     print_log "*** OASIS at: ${OASIS_PATH} ***"
-fi
+#fi
 
 print_log "*** LD_LIBRARY_PATH: ${LD_LIBRARY_PATH} ***"
 
@@ -295,14 +296,14 @@ print_log "h3: selected variables, 6-hourly values (-6), daily file (4 vals per 
 # For OASIS coupling: before building, add the additional routines for OASIS interface in your CASEDIR on scratch
 #==========================================
 
-if [[ $COMPILER =~ "oasis" ]]; then
+#if [[ $COMPILER =~ "oasis" ]]; then
     print_log "*** Adding OASIS routines ***"
     ln -sf $CCLM2ROOT/cesm2_oas/src/oas/* SourceMods/src.drv/
     rm SourceMods/src.drv/oas_clm_vardef.F90
     ln -sf $CCLM2ROOT/cesm2_oas/src/drv/* SourceMods/src.drv/
     ln -sf $CCLM2ROOT/cesm2_oas/src/oas/oas_clm_vardef.F90 SourceMods/src.share/
     ln -sf $CCLM2ROOT/cesm2_oas/src/datm/* SourceMods/src.datm/
-fi
+#fi
 
 
 #==========================================
