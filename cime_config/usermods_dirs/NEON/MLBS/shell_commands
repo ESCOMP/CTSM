@@ -2,7 +2,9 @@
 ./xmlchange NEONSITE=MLBS
 ./xmlchange PTS_LON=279.47575
 ./xmlchange PTS_LAT=37.37783
-./xmlchange DATM_YR_END=2019
+if [[$CLM_USRDAT_NAME = 'NEON']]; then
+  ./xmlchange DATM_YR_END=2019
+fi
 # Different default number of months to run for transient case
 if  [[ $compset =~ ^HIST ]]; then
   ./xmlchange DATM_YR_END=2020

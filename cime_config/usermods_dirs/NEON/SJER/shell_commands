@@ -2,7 +2,10 @@
 ./xmlchange NEONSITE=SJER
 ./xmlchange PTS_LON=240.267
 ./xmlchange PTS_LAT=37.107117
-./xmlchange DATM_YR_ALIGN=2019,DATM_YR_START=2019
+./xmlchange DATM_YR_ALIGN=2019
+if [[$CLM_USRDAT_NAME = 'NEON']]; then
+  ./xmlchange DATM_YR_START=2019
+fi
 # Different default start date and number of months to run for transient case
 if  [[ $compset =~ ^HIST ]]; then
   ./xmlchange RUN_STARTDATE=2019-01-01
