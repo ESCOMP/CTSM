@@ -21,7 +21,7 @@ from datetime import datetime
 import xarray as xr
 import numpy as np
 
-from ctsm.site_and_regional.mesh_type import MeshType
+from ctsm.site_and_regional.mesh_plot_type import MeshPlotType
 from ctsm.utils import abort
 from ctsm.ctsm_logging import (
     setup_logging_pre_config,
@@ -265,7 +265,7 @@ def main():
     else:
         area = None
 
-    this_mesh = MeshType(lats, lons, mask=mask)
+    this_mesh = MeshPlotType(lats, lons, mask=mask)
     this_mesh.calculate_corners()
     this_mesh.create_esmf(mesh_out, area=area)
 

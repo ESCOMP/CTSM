@@ -144,6 +144,7 @@ class SysTestMeshMaker(unittest.TestCase):
         expected = xr.open_dataset(expected_mesh)
         self.compare_mesh_files(mesh_out, expected)
 
+
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
     unittest.main()
