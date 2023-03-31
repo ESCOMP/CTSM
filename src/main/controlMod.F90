@@ -282,9 +282,6 @@ contains
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
          use_nguardrail
 
-    ! dust emission, dmleung 14 Dec 2021
-    namelist /clm_inparm/  &
-         rough_fct    !-dmleung 17 Dec 2021
 
     ! ----------------------------------------------------------------------
     ! Default values
@@ -656,9 +653,6 @@ contains
     call mpi_bcast (fsnowoptics, len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,  len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
 
-    ! initialize input data for new dust emission module dmleung 14 Dec 2021
-    call mpi_bcast (rough_fct, len(rough_fct), MPI_CHARACTER, 0, mpicom, ier)! added by dmleung, 17 Dec 2021
-
     ! Irrigation
     call mpi_bcast(irrigate, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -910,13 +904,6 @@ contains
     write(iulog,*) '   Threshold above which the model keeps the lake landunit =', toosmall_lake
     write(iulog,*) '   Threshold above which the model keeps the wetland landunit =', toosmall_wetland
     write(iulog,*) '   Threshold above which the model keeps the urban landunits =', toosmall_urban
-    !##### for dmleung's input data for new dust emission module #####
-    if (rough_fct == ' ') then    ! -dmleung, 17 Dec 2021
-       write(iulog,*) '   rough_fct surface roughness dataset not set'
-    else
-       write(iulog,*) '   surface roughness data   = ',trim(rough_fct)
-    end if
-    !#################################################################
     if (use_cn) then
        if (suplnitro /= suplnNon)then
           write(iulog,*) '   Supplemental Nitrogen mode is set to run over Patches: ', &

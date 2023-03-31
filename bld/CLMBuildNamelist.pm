@@ -1663,6 +1663,11 @@ sub process_namelist_inline_logic {
   ##################################
   setup_logic_lai_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
+  ##################################
+  # namelist group: dust_emis_streams  #
+  ##################################
+  #setup_logic_dustemis_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+
   ##########################################
   # namelist group: soil_moisture_streams  #
   ##########################################
@@ -4236,7 +4241,7 @@ sub write_output_files {
   push @groups, "ch4finundated";
   push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
-  push @groups, "prigentroughness";
+  push @groups, "prigentroughness"; # dmleung 31 Dec 2022
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";
   }

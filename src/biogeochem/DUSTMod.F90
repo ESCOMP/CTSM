@@ -492,8 +492,6 @@ contains
          thr_crs_rate        => dust_inst%thr_crs_rate_patch         , &
          prb_crs_fld_thr     => dust_inst%prb_crs_fld_thr_patch      , &
          prb_crs_impct_thr   => dust_inst%prb_crs_impct_thr_patch    , &
-         ! added by dmleung 17 Dec 2021
-         roughfct            => soilstate_inst%roughfct_patch        , &  ! dmleung replaced it by dpfct_rock below, 31 Dec 2022
          ! added by dmleung 20 Dec 2021
          ssr                 => dust_inst%ssr_patch                  , &
          lai                 => dust_inst%lai_patch                  , &
