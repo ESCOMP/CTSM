@@ -3825,7 +3825,7 @@ sub setup_logic_cropcal_streams {
   # Consistency checking: Do not generate_crop_gdds without use_mxmat false
   my $generate_crop_gdds = $nl->get_value('generate_crop_gdds') ;
   my $use_mxmat = $nl->get_value('use_mxmat') ;
-  if ( $generate_crop_gdds and $use_mxmat ) {
+  if ( $generate_crop_gdds eq '.true.' and $use_mxmat eq '.true.' ) {
      $log->fatal_error("If generate_crop_gdds is true, you must also set use_mxmat to false" );
   }
 }
