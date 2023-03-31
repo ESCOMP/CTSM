@@ -35,6 +35,7 @@ class MeshPlotType(MeshType):
 
         # -- regional plot
         plt.figure(num=None, figsize=(15, 13), facecolor="w", edgecolor="k")
+        # pylint: disable=abstract-class-instantiated
         ax = plt.axes(projection=ccrs.PlateCarree())
 
         ax.add_feature(cfeature.COASTLINE, edgecolor="black")
@@ -65,6 +66,7 @@ class MeshPlotType(MeshType):
             poly_corners = np.zeros((len(lat_corners), 2))
             poly_corners[:, 1] = lon_corners
             poly_corners[:, 0] = lat_corners
+            # pylint: disable=abstract-class-instantiated
             poly = mpatches.Polygon(
                 poly_corners,
                 closed=True,
@@ -80,6 +82,7 @@ class MeshPlotType(MeshType):
         # clon, clat = self.center_coords.T.compute()
         clon, clat = self.center_coords.T
 
+        # pylint: disable=abstract-class-instantiated
         ax.scatter(
             clon,
             clat,
@@ -105,6 +108,7 @@ class MeshPlotType(MeshType):
         # -- global plot
         fig = plt.figure(num=None, figsize=(15, 10), facecolor="w", edgecolor="k")
 
+        # pylint: disable=abstract-class-instantiated
         ax = fig.add_subplot(1, 1, 1, projection=ccrs.Robinson())
 
         ax.add_feature(cfeature.COASTLINE, edgecolor="black")
@@ -136,6 +140,7 @@ class MeshPlotType(MeshType):
             poly_corners = np.zeros((len(lat_corners), 2))
             poly_corners[:, 1] = lon_corners
             poly_corners[:, 0] = lat_corners
+            # pylint: disable=abstract-class-instantiated
             poly = mpatches.Polygon(
                 poly_corners,
                 closed=True,
@@ -151,6 +156,7 @@ class MeshPlotType(MeshType):
         # clon, clat = self.center_coords.T.compute()
         clon, clat = self.center_coords.T
 
+        # pylint: disable=abstract-class-instantiated
         ax.scatter(
             clon,
             clat,
