@@ -519,9 +519,6 @@ contains
             call endrun(msg="ERROR crit_dayl_lat_slope cannot allow crit_dayl longer than a day"//errmsg(sourcefile, __LINE__))
         end if
     end if
-    if (generate_crop_gdds .and. use_mxmat) then
-        call endrun(msg="ERROR If setting generate_crop_gdds to .true., you must set use_mxmat to .false."//errmsg(sourcefile, __LINE__))
-    endif
 
   end subroutine CNPhenologyInit
 
