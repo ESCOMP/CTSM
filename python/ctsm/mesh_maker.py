@@ -13,7 +13,6 @@ file for their domain :
 
 """
 import os
-import sys
 import logging
 import argparse
 import textwrap

@@ -121,7 +121,10 @@ class SysTestMeshMaker(unittest.TestCase):
         )
 
     def test_domainfile_region_warea(self):
-        """Do a basic test for a small regional grid with a domain file rather than a surfdata file including area"""
+        """
+        Do a basic test for a small regional grid with a domain file
+        rather than a surfdata file including area
+        """
         infile = os.path.join(self._testinputs_path, "domain.lnd.5x5pt-amazon_navy.090715.nc")
         sys.argv = [
             "mesh_maker",
