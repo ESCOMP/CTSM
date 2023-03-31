@@ -4,4 +4,3 @@
 if [[$CLM_USRDAT_NAME = 'NEON']]; then
   ./xmlchange DATM_YR_END=2018
 fi
-# remove DATM_YR_END xml change when running with PRISM precipitation
