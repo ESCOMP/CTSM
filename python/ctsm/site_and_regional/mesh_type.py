@@ -14,8 +14,6 @@ import xarray as xr
 # import dask.dataframe as dd
 import pandas
 
-from ctsm.utils import abort
-
 logger = logging.getLogger(__name__)
 
 
@@ -77,6 +75,17 @@ class MeshType:
         else:
             # self.mask = da.from_array(np.array(mask.astype(np.int8)))
             self.mask = np.array(mask.astype(np.int8))
+
+        self.unit = "degrees"
+
+        # variables that will be set to proper values later...
+        self.center_lat2d = 1
+        self.center_lon2d = 1
+        self.corner_lats = 1
+        self.corner_lons = 1
+        self.node_coords = 1
+        self.elem_conn = 1
+        self.center_coords = 1
 
     def check_lat_lon_dims(self):
         """
@@ -172,7 +181,6 @@ class MeshType:
         # -- otherwise we cannot calculate the corner coords
         # -- for the edge rows/columns.
 
-        # padded_lat2d = np.pad(self.center_lat2d.compute(), (1, 1), mode="reflect", reflect_type="odd")
         padded_lat2d = np.pad(self.center_lat2d, (1, 1), mode="reflect", reflect_type="odd")
 
         # -- pad center_lons for calculating edge grids
@@ -256,7 +264,8 @@ class MeshType:
     def calculate_node_coords(self):
         """
         Calculates coordinates of each node (for 'nodeCoords' in ESMF mesh).
-        In ESMF mesh, 'nodeCoords' is a two-dimensional array with dimension ('nodeCount','coordDim')
+        In ESMF mesh, 'nodeCoords' is a two-dimensional array
+        with dimension ('nodeCount','coordDim')
         """
         # -- create an array of corner pairs
         corner_pairs = np.stack(
@@ -282,9 +291,9 @@ class MeshType:
         # -- error check to avoid issues later
         if self.node_coords.shape[0] != elem_conn_size:
             logger.warning(
-                "The size of unique coordinate pairs is {} but expected size is {}!".format(
-                    self.node_coords.shape[0], elem_conn_size
-                )
+                "The size of unique coordinate pairs is %d but expected size is %d!",
+                self.node_coords.shape[0],
+                elem_conn_size,
             )
             logger.warning("This may result your simulation to crash later.")
             # abort( "Expected size for element connections is wrong" )
