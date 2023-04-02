@@ -2,7 +2,6 @@
 This module includes the definition and functions for defining a Grid or Mesh.
 This enables creating ESMF mesh file (unstructured grid file)for valid 1D or 2D lats and lons.
 """
-import os
 import logging
 import argparse
 import datetime
@@ -431,12 +430,3 @@ class MeshType:
             logger.info("Writing ESMF Mesh file to : %s", mesh_fname)
             ds_out.to_netcdf(mesh_fname)
             logger.info("Successfully created ESMF Mesh file : %s", mesh_fname)
-
-        self.make_plot = True
-
-        if self.make_plot:
-            plot_regional = os.path.splitext(mesh_fname)[0] + "_regional" + ".png"
-
-            plot_global = os.path.splitext(mesh_fname)[0] + "_global" + ".png"
-
-            self.make_mesh_plot(plot_regional, plot_global)

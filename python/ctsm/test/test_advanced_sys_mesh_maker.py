@@ -9,8 +9,8 @@ import os
 import sys
 import tempfile
 import shutil
-import xarray as xr
 import glob
+import xarray as xr
 
 # pylint: disable=wrong-import-position
 from ctsm.path_utils import path_to_ctsm_root
@@ -56,9 +56,9 @@ class SysTestMeshMaker(unittest.TestCase):
             self.mesh_out,
         ]
         main()
-        plotfiles = glob.glob( self._tempdir + "/*.png" )
+        plotfiles = glob.glob(self._tempdir + "/*.png")
         if not plotfiles:
-            self.fail( "plot files were NOT created as they should have" )
+            self.fail("plot files were NOT created as they should have")
 
     def test_region(self):
         """Do a basic test for a small regional grid"""
@@ -80,9 +80,9 @@ class SysTestMeshMaker(unittest.TestCase):
             self.mesh_out,
         ]
         main()
-        plotfiles = glob.glob( self._tempdir + "/*.png" )
+        plotfiles = glob.glob(self._tempdir + "/*.png")
         if not plotfiles:
-            self.fail( "plot files were NOT created as they should have" )
+            self.fail("plot files were NOT created as they should have")
 
     def compare_mesh_files(self, mesh_out, expected):
         """Compare two mesh files that you expect to be equal"""
@@ -147,9 +147,9 @@ class SysTestMeshMaker(unittest.TestCase):
             self.mesh_out,
         ]
         main()
-        plotfiles = glob.glob( self._tempdir + "/*.png" )
+        plotfiles = glob.glob(self._tempdir + "/*.png")
         if not plotfiles:
-            self.fail( "plot files were NOT created as they should have" )
+            self.fail("plot files were NOT created as they should have")
         expected_mesh = os.path.join(
             self._testinputs_path, "ESMF_mesh_5x5pt_amazon_from_domain_c230308.nc"
         )

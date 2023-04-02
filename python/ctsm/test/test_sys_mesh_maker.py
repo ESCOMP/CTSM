@@ -9,8 +9,8 @@ import os
 import sys
 import tempfile
 import shutil
-import xarray as xr
 import glob
+import xarray as xr
 
 # pylint: disable=wrong-import-position
 from ctsm.path_utils import path_to_ctsm_root
@@ -150,9 +150,9 @@ class SysTestMeshMaker(unittest.TestCase):
         mesh_out = xr.open_dataset(self.mesh_out)
         expected = xr.open_dataset(expected_mesh)
         self.compare_mesh_files(mesh_out, expected)
-        plotfiles = glob.glob( self._tempdir + "/*.png" )
+        plotfiles = glob.glob(self._tempdir + "/*.png")
         if plotfiles:
-            self.fail( "plot files exist and there should not be any" )
+            self.fail("plot files exist and there should not be any")
 
     def test_noplot_add_mask(self):
         """Do a simple basic test without plotting and also adding mask"""
@@ -171,9 +171,9 @@ class SysTestMeshMaker(unittest.TestCase):
             self.mesh_out,
         ]
         main()
-        plotfiles = glob.glob( self._tempdir + "/*.png" )
+        plotfiles = glob.glob(self._tempdir + "/*.png")
         if plotfiles:
-            self.fail( "plot files exist and there should not be any" )
+            self.fail("plot files exist and there should not be any")
 
     def test_noinput(self):
         """Test with an input file that does not exist"""

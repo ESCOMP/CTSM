@@ -267,6 +267,12 @@ def main():
     this_mesh = MeshPlotType(lats, lons, mask=mask)
     this_mesh.calculate_corners()
     this_mesh.create_esmf(mesh_out, area=area)
+    if not args.noplot:
+        plot_regional = os.path.splitext(mesh_out)[0] + "_regional" + ".png"
+
+        plot_global = os.path.splitext(mesh_out)[0] + "_global" + ".png"
+
+        this_mesh.make_mesh_plot(plot_regional, plot_global)
 
 
 if __name__ == "__main__":
