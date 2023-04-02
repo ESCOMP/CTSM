@@ -1216,7 +1216,7 @@ contains
          lev = lev_top(bounds%begc:bounds%endc), &
          data_baseline = h2osoi_ice_top_orig(bounds%begc:bounds%endc), &
          data = h2osoi_ice(bounds%begc:bounds%endc, :), &
-         custom_rel_epsilon = 1.e-12_r8)
+         custom_rel_epsilon = 1.e-11_r8)
     call truncate_small_values_one_lev( &
          num_f = num_snowc, &
          filter_f = filter_snowc, &
@@ -1226,7 +1226,7 @@ contains
          lev = lev_top(bounds%begc:bounds%endc), &
          data_baseline = h2osoi_liq_top_orig(bounds%begc:bounds%endc), &
          data = h2osoi_liq(bounds%begc:bounds%endc, :), &
-         custom_rel_epsilon = 1.e-12_r8)
+         custom_rel_epsilon = 1.e-11_r8)
 
     ! Make sure that we don't have any negative residuals - i.e., that we didn't try to
     ! remove more ice or liquid than was initially present.
