@@ -91,7 +91,7 @@ class TestMeshMaker(unittest.TestCase):
         """
         Test that the default outfile is as expected
         """
-        infile = "inputfile.nc"
+        infile = "ctsm/test/testinputs/default_data.cfg"
         sys.argv = [
             "mesh_maker",
             "--input",
