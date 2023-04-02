@@ -164,7 +164,56 @@ def process_and_check_args(args):
             )
             abort(err_msg)
 
+    if not os.path.isfile(args.input):
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n Input file not found. Please make sure to provide the
+                \n full path of Netcdf input file for making the mesh.
+                \n ------------------------------------
+                """
+        )
+        abort(err_msg)
+
     return args
+
+
+def check_input_file(args, ds):
+    """Check that the input file has the variables expected"""
+    if args.lat_name not in ds.coords and args.lat_name not in ds.variables:
+        err_msg = "Input file does not have variable named " + args.lat_name
+        abort(err_msg)
+
+    else:
+        logging.debug(
+            "- %s exist in the provided netcdf file with dimension of %s.",
+            args.lat_name,
+            len(ds[args.lat_name].dims).__str__(),
+        )
+
+    if args.lon_name not in ds.coords and args.lon_name not in ds.variables:
+        err_msg = "Input file does not have variable named " + args.lon_name
+        abort(err_msg)
+    else:
+        logging.debug(
+            "- %s exist in the provided netcdf file with dimension of %s.",
+            args.lon_name,
+            len(ds[args.lon_name].dims).__str__(),
+        )
+    if args.mask_name is not None:
+        if args.mask_name not in ds.variables:
+            err_msg = "Input file does not have mask variable named " + args.mask_name
+            abort(err_msg)
+
+    if args.area_name is not None:
+        if args.area_name not in ds.variables:
+            err_msg = "Input file does not have area variable named " + args.area_name
+            abort(err_msg)
+        if ds[args.area_name].attrs["units"] != "radians^2":
+            err_msg = "Area does NOT have the correct units of radians^2 but has " + str(
+                ds[args.area_name].attrs["units"]
+            )
+            abort(err_msg)
 
 
 def main():
@@ -187,39 +236,9 @@ def main():
     mask_name = args.mask_name
     area_name = args.area_name
 
-    if os.path.isfile(nc_file):
-        ds = xr.open_dataset(nc_file, mask_and_scale=False, decode_times=False).transpose()
-    else:
-        err_msg = textwrap.dedent(
-            """\
-                \n ------------------------------------
-                \n Input file not found. Please make sure to provide the
-                \n full path of Netcdf input file for making the mesh.
-                \n ------------------------------------
-                """
-        )
-        abort(err_msg)
+    ds = xr.open_dataset(nc_file, mask_and_scale=False, decode_times=False).transpose()
 
-    if lat_name not in ds.coords and lat_name not in ds.variables:
-        err_msg = "Input file does not have variable named " + lat_name
-        abort(err_msg)
-
-    else:
-        logging.debug(
-            "- %s exist in the provided netcdf file with dimension of %s.",
-            lat_name,
-            len(ds[lat_name].dims).__str__(),
-        )
-
-    if lon_name not in ds.coords and lon_name not in ds.variables:
-        err_msg = "Input file does not have variable named " + lon_name
-        abort(err_msg)
-    else:
-        logging.debug(
-            "- %s exist in the provided netcdf file with dimension of %s.",
-            lon_name,
-            len(ds[lon_name].dims).__str__(),
-        )
+    check_input_file(args, ds)
 
     lats = ds[lat_name].astype(np.float32)
     lons = ds[lon_name].astype(np.float32)
@@ -242,9 +261,6 @@ def main():
     logging.info("Writing mesh file to    : %s", mesh_out)
 
     if mask_name is not None:
-        if mask_name not in ds.variables:
-            err_msg = "Input file does not have mask variable named " + mask_name
-            abort(err_msg)
         mask = ds[mask_name].astype(np.float32)
         if mask.max() > 1.0 or mask.min() < 0.0:
             abort("Mask variable is not within 0 to 1")
@@ -252,14 +268,6 @@ def main():
         mask = None
 
     if area_name is not None:
-        if area_name not in ds.variables:
-            err_msg = "Input file does not have area variable named " + area_name
-            abort(err_msg)
-        if ds[area_name].attrs["units"] != "radians^2":
-            err_msg = "Area does NOT have the correct units of radians^2 but has " + str(
-                ds[area_name].attrs["units"]
-            )
-            abort(err_msg)
         area = ds[area_name].astype(np.float32)
     else:
         area = None
