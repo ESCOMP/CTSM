@@ -23,7 +23,7 @@ class MeshPlotType(MeshType):
 
     def make_mesh_plot(self, plot_regional, plot_global):
         """
-        Create a plot for the ESMF mesh file
+        Create plots for the ESMF mesh file
 
         Parameters
         ----------
@@ -33,83 +33,29 @@ class MeshPlotType(MeshType):
             The path to write the ESMF meshfile global plot
         """
 
-        # -- regional plot
-        plt.figure(num=None, figsize=(15, 13), facecolor="w", edgecolor="k")
-        # pylint: disable=abstract-class-instantiated
-        ax = plt.axes(projection=ccrs.PlateCarree())
+        self.mesh_plot(plot_regional, regional=True)
+        self.mesh_plot(plot_global, regional=False)
 
-        ax.add_feature(cfeature.COASTLINE, edgecolor="black")
-        ax.add_feature(cfeature.BORDERS, edgecolor="black")
-        ax.add_feature(cfeature.OCEAN)
-        ax.add_feature(cfeature.BORDERS)
-        ax.add_feature(cfeature.LAND, edgecolor="black")
-        ax.add_feature(cfeature.LAKES, edgecolor="black")
-        ax.add_feature(cfeature.RIVERS)
-        ax.gridlines(
-            color="black",
-            linestyle="dotted",
-            draw_labels=True,
-        )
-
-        # -- plot corner coordinates
-        # clats, clons = self.node_coords.T.compute()
-        # elem_conn_vals = self.elem_conn.compute()
-        clats, clons = self.node_coords.T
-        elem_conn_vals = self.elem_conn
-        element_counts = elem_conn_vals.shape[0]
-
-        for index in range(element_counts):
-            conns = [int(x) - 1 for x in elem_conn_vals[index]]
-
-            lat_corners = clats[conns]
-            lon_corners = clons[conns]
-            poly_corners = np.zeros((len(lat_corners), 2))
-            poly_corners[:, 1] = lon_corners
-            poly_corners[:, 0] = lat_corners
+    def mesh_plot(self, plot_file, regional):
+        """Make a plot of a mesh file in either a regional or global grid"""
+        # -- regional settings
+        if regional:
+            plt.figure(num=None, figsize=(15, 13), facecolor="w", edgecolor="k")
             # pylint: disable=abstract-class-instantiated
-            poly = mpatches.Polygon(
-                poly_corners,
-                closed=True,
-                ec="black",
-                lw=1,
-                transform=ccrs.PlateCarree(),
-                zorder=10,
-                facecolor="none",
-            )
-            ax.add_patch(poly)
-
-        # -- plot center coordinates
-        # clon, clat = self.center_coords.T.compute()
-        clon, clat = self.center_coords.T
-
-        # pylint: disable=abstract-class-instantiated
-        ax.scatter(
-            clon,
-            clat,
-            color="tomato",
-            marker="x",
-            transform=ccrs.PlateCarree(),
-            zorder=11,
-        )
-        lc_colors = {
-            "Corner Coordinates": "black",  # value=0
-            "Center Coordinates": "tomato",  # value=1
-        }
-        labels, handles = zip(
-            *[(k, mpatches.Rectangle((0, 0), 1, 1, facecolor=v)) for k, v in lc_colors.items()]
-        )
-
-        ax.legend(handles, labels)
-
-        plt.savefig(plot_regional, bbox_inches="tight")
-
-        logger.info("Successfully created regional plots for ESMF Mesh file : %s", plot_regional)
-
-        # -- global plot
-        fig = plt.figure(num=None, figsize=(15, 10), facecolor="w", edgecolor="k")
-
-        # pylint: disable=abstract-class-instantiated
-        ax = fig.add_subplot(1, 1, 1, projection=ccrs.Robinson())
+            ax = plt.axes(projection=ccrs.PlateCarree())
+            plot_type = "regional"
+            line_width = 1
+            marker = "x"
+            marker_size = 1
+        # global settings
+        else:
+            fig = plt.figure(num=None, figsize=(15, 10), facecolor="w", edgecolor="k")
+            # pylint: disable=abstract-class-instantiated
+            ax = fig.add_subplot(1, 1, 1, projection=ccrs.Robinson())
+            plot_type = "global"
+            line_width = 0.5
+            marker = "o"
+            marker_size = None
 
         ax.add_feature(cfeature.COASTLINE, edgecolor="black")
         ax.add_feature(cfeature.BORDERS, edgecolor="black")
@@ -123,7 +69,8 @@ class MeshPlotType(MeshType):
             linestyle="dotted",
             draw_labels=True,
         )
-        ax.set_global()
+        if not regional:
+            ax.set_global()
 
         # -- plot corner coordinates
         # clats, clons = self.node_coords.T.compute()
@@ -148,7 +95,7 @@ class MeshPlotType(MeshType):
                 transform=ccrs.PlateCarree(),
                 zorder=10,
                 facecolor="none",
-                linewidth=0.5,
+                linewidth=line_width,
             )
             ax.add_patch(poly)
 
@@ -161,14 +108,22 @@ class MeshPlotType(MeshType):
             clon,
             clat,
             color="tomato",
-            marker="o",
-            s=1,
+            marker=marker,
+            s=marker_size,
             transform=ccrs.PlateCarree(),
             zorder=11,
         )
+        if regional:
+            lc_colors = {
+                "Corner Coordinates": "black",  # value=0
+                "Center Coordinates": "tomato",  # value=1
+            }
+            labels, handles = zip(
+                *[(k, mpatches.Rectangle((0, 0), 1, 1, facecolor=v)) for k, v in lc_colors.items()]
+            )
 
-        ax.legend(handles, labels)
+            ax.legend(handles, labels)
 
-        plt.savefig(plot_global, bbox_inches="tight")
+        plt.savefig(plot_file, bbox_inches="tight")
 
-        logger.info("Successfully created regional plots for ESMF Mesh file : %s", plot_global)
+        logger.info("Successfully created %s plots for ESMF Mesh file : %s", plot_type, plot_file)
