@@ -94,6 +94,9 @@ unit_test_build
 /tools/mksurfdata_map/mksurfdata_map
 /tools/mkprocdata_map/mkprocdata_map
 
+# Tools output directories
+tools/site_and_regional/subset_data_single_point
+
 # mksurfdata output files
 /tools/mksurfdata_map/surfdata_*.nc
 /tools/mksurfdata_map/landuse.timeseries_*.nc
