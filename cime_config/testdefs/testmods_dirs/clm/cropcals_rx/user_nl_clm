@@ -1,2 +1,0 @@
-generate_crop_gdds = .false.
-stream_fldFileName_cultivar_gdds = '/glade/work/samrabin/crop_dates/gdds_20220602_231239.nc'
