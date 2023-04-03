@@ -6,24 +6,21 @@
 This script is for modifying surface dataset at neon sites
 using data available from the neon server.
 
-After creating a single point surface data file from a global 
-surface data file using subset_data.py, use this script to 
+After creating a single point surface data file from a global
+surface data file using subset_data.py, use this script to
 overwrite some fields with site-specific data for neon sites.
 
 This script will do the following:
-- Download neon data for the specified site if it does not exist 
-    in the specified directory : (i.e. ../../../neon_surffiles).
+- Download neon data for the specified site if it does not exist
+    in the specified directory : (i.e. ../../../neon_surf_files).
 - Modify surface dataset with downloaded data.
 
 -------------------------------------------------------------------
-Instructions for running on Cheyenne/Casper:
+Instructions for running using conda python environments:
 
-load the following into your local environment
-    module load python
-    ncar_pylib
+../../py_env_create
+conda activate ctsm_py
 
-To remove NPL from your environment on Cheyenne/Casper:
-    deactivate
 -------------------------------------------------------------------
 To see the available options:
     ./modify_singlept_site_neon.py --help
@@ -50,6 +47,7 @@ import logging
 import numpy as np
 import pandas as pd
 import xarray as xr
+from packaging import version
 
 from datetime import date
 from getpass import getuser
@@ -131,7 +129,7 @@ def get_parser():
     parser.add_argument(
         "--surf_dir",
         help="""
-                Directory of single point surface dataset. 
+                Directory of single point surface dataset.
                 [default: %(default)s]
                 """,
         action="store",
@@ -144,7 +142,7 @@ def get_parser():
         "--out_dir",
         help="""
                 Directory to write updated single point surface dataset.
-                [default: %(default)s] 
+                [default: %(default)s]
                 """,
         action="store",
         dest="out_dir",
@@ -153,14 +151,34 @@ def get_parser():
         default="/glade/scratch/" + myname + "/single_point_neon_updated/",
     )
     parser.add_argument(
+        "--inputdata-dir",
+        help="""
+                Directory to write updated single point surface dataset.
+                [default: %(default)s]
+                """,
+        action="store",
+        dest="inputdatadir",
+        type=str,
+        required=False,
+        default="/glade/p/cesmdata/cseg/inputdata"
+    )
+    parser.add_argument(
         "-d",
         "--debug",
         help="""
-                Debug mode will print more information. 
-                [default: %(default)s] 
+                Debug mode will print more information.
+                [default: %(default)s]
                 """,
         action="store_true",
         dest="debug",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--16pft",
+        help="Modify 16-pft surface data files (e.g. for a FATES run)",
+        action="store_true",
+        dest="pft_16",
         default=False,
     )
 
@@ -171,7 +189,7 @@ def get_neon(neon_dir, site_name):
     """
     Function for finding neon data files
     and download from neon server if the
-    file does not exits.
+    file does not exist.
 
     Args:
         neon_dir (str): local directory for downloading neon data.
@@ -192,7 +210,7 @@ def get_neon(neon_dir, site_name):
 
     neon_file = os.path.join(neon_dir, site_name + "_surfaceData.csv")
 
-    # -- Download the file if it does not exits
+    # -- Download the file if it does not exist
     if os.path.isfile(neon_file):
         print("neon file for", site_name, "already exists! ")
         print("Skipping download from neon for", site_name, "...")
@@ -231,7 +249,7 @@ def get_neon(neon_dir, site_name):
     return neon_file
 
 
-def find_surffile(surf_dir, site_name):
+def find_surffile(surf_dir, site_name, pft_16):
     """
     Function for finding and choosing surface file for
     a neon site.
@@ -242,6 +260,7 @@ def find_surffile(surf_dir, site_name):
     Args:
         surf_dir (str): directory of single point surface data
         site_name (str): 4 letter neon site name
+        pft_16 (bool):    if true, use 16-PFT version of surface data file
 
     Raises:
         Error if the surface data for the site is not created
@@ -250,8 +269,11 @@ def find_surffile(surf_dir, site_name):
         surf_file (str): name of the surface dataset file
     """
 
-    # sf_name = "surfdata_hist_16pfts_Irrig_CMIP6_simyr2000_"+site_name+"*.nc"
-    sf_name = "surfdata_*hist_78pfts_CMIP6_simyr2000_" + site_name + "*.nc"
+    if pft_16:
+        sf_name = "surfdata_1x1_NEON_"+site_name+"*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
+    else:
+        sf_name = "surfdata_1x1_NEON_" +site_name+"*hist_78pfts_CMIP6_simyr2000_*.nc"
+
     print (os.path.join(surf_dir , sf_name))
     surf_file = sorted(glob.glob(os.path.join(surf_dir , sf_name)))
 
@@ -265,15 +287,15 @@ def find_surffile(surf_dir, site_name):
         surf_file = surf_file[0]
     else:
         sys.exit(
-            "Surface data for this site " + site_name + "was not found:" + surf_file,
-            ".",
-            "\n",
-            "Please run ./subset_data.py for this site.",
+            "Surface data for this site " + str(site_name) + " was not found:" + str(surf_dir) + str(sf_name) +
+            "." +
+            "\n" +
+            "Please run ./subset_data.py for this site."
         )
     return surf_file
 
 
-def find_soil_structure(surf_file):
+def find_soil_structure(args, surf_file):
     """
     Function for finding surface dataset soil
     strucutre using surface data metadata.
@@ -284,7 +306,7 @@ def find_soil_structure(surf_file):
     This function finds this file for the surface
     dataset, read it, and find soil layers.
 
-    Args:
+    args:
         surf_file (str): single point surface data filename
 
     Raises:
@@ -302,7 +324,7 @@ def find_soil_structure(surf_file):
     print("------------")
     # print (f1.attrs["Soil_texture_raw_data_file_name"])
 
-    clm_input_dir = "/glade/p/cesmdata/cseg/inputdata/lnd/clm2/rawdata/"
+    clm_input_dir = os.path.join( args.inputdatadir, "lnd/clm2/rawdata/" )
     surf_soildepth_file = os.path.join(
         clm_input_dir, f1.attrs["Soil_texture_raw_data_file_name"]
     )
@@ -340,6 +362,7 @@ def update_metadata(nc, surf_file, neon_file, zb_flag):
         nc (xr Dataset): netcdf file including updated neon surface data
         surf_file (str): single point surface data filename
         neon_file (str): filename of neon downloaded surface dataset
+        zb_flag (bool): update bedrock
 
     Returns:
         nc (xr Dataset): netcdf file including updated neon surface data
@@ -371,7 +394,7 @@ def update_time_tag(fname_in):
         fname_in (str) : file name with the old time tag
 
     Raises:
-        error if the file does not end with with
+        error if the file does not end with
          [._]cYYMMDD.nc or [._]YYMMDD.nc
 
     Returns:
@@ -436,7 +459,7 @@ def check_neon_time():
             dictionary of *_surfaceData.csv files with the last modified
     """
     listing_file = "listing.csv"
-    url = "https://neon-ncar.s3.data.neonscience.org/listing.csv"
+    url = "https://storage.neonscience.org/neon-ncar/listing.csv"
 
     download_file(url, listing_file)
 
@@ -510,6 +533,12 @@ def main():
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
+    # Check if pandas is a recent enough version
+    pdvers = pd.__version__
+    if version.parse(pdvers) < version.parse("1.1.0"):
+        sys.exit("The pandas version in your python environment is too old, update to a newer version of pandas (>=1.1.0): version=%s", pdvers )
+
+
     file_time = check_neon_time()
 
     # --  specify site from which to extract data
@@ -517,12 +546,12 @@ def main():
 
     # --  Look for surface data
     surf_dir = args.surf_dir
-    surf_file = find_surffile(surf_dir, site_name)
+    surf_file = find_surffile(surf_dir, site_name, args.pft_16)
 
     # --  directory structure
     current_dir = os.getcwd()
     parent_dir = os.path.dirname(current_dir)
-    clone_dir = os.path.abspath(os.path.join(__file__, "../../.."))
+    clone_dir = os.path.abspath(os.path.join(__file__, "../../../.."))
     neon_dir = os.path.join(clone_dir, "neon_surffiles")
 
     print("Present Directory", current_dir)
@@ -538,7 +567,7 @@ def main():
     f1 = xr.open_dataset(surf_file)
 
     # -- Find surface dataset soil depth information
-    soil_bot, soil_top = find_soil_structure(surf_file)
+    soil_bot, soil_top = find_soil_structure(args, surf_file)
 
     # -- Find surface dataset soil levels
     # TODO: how? NS uses metadata on file to find
@@ -621,7 +650,7 @@ def main():
         # -- inorganic = caco3/100.0869*12.0107
         # -- organic = carbon_tot - inorganic
         # -- else:
-        # -- oranigc = estimated_oc * bulk_den /0.58
+        # -- organic = estimated_oc * bulk_den /0.58
 
         caco3 = df["caco3Conc"][bin_index[soil_lev]]
         inorganic = caco3 / 100.0869 * 12.0107
@@ -682,7 +711,7 @@ def main():
         print("Updating PCT_NAT_PFT")
         #print (f2.PCT_NAT_PFT)
         print(f2.PCT_NAT_PFT.values[0])
-        f2.PCT_NAT_PFT.values[0] = [[100.0]]
+        #f2.PCT_NAT_PFT.values[0] = [[100.0]]
         print(f2.PCT_NAT_PFT[0].values)
 
     out_dir = args.out_dir

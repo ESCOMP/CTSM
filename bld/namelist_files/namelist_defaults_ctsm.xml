@@ -25,6 +25,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <co2_ppmv sim_year="2000"      >379.0</co2_ppmv>
 <co2_ppmv sim_year="2010"      >388.8</co2_ppmv>
 <co2_ppmv sim_year="2015"      >397.5</co2_ppmv>
+<co2_ppmv sim_year="2018"      >408.83</co2_ppmv>
 <co2_ppmv sim_year="1850"      >284.7</co2_ppmv>
 <co2_ppmv sim_year="PtVg"      >284.7</co2_ppmv>
 
@@ -209,9 +210,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <baseflow_scalar phys="clm4_5"  lower_boundary_condition="2">1.d-2</baseflow_scalar>
 
 <!-- Friction velocity -->
-<zetamaxstable phys="clm4_5" >2.0d00</zetamaxstable>
-<zetamaxstable phys="clm5_0" >0.5d00</zetamaxstable>
-<zetamaxstable phys="clm5_1" >0.5d00</zetamaxstable>
+<zetamaxstable               use_biomass_heat_storage=".true." >2.0d00</zetamaxstable>
+<zetamaxstable phys="clm4_5"                                   >2.0d00</zetamaxstable>
+<zetamaxstable phys="clm5_0"                                   >0.5d00</zetamaxstable>
+<zetamaxstable phys="clm5_1"                                   >0.5d00</zetamaxstable>
 
 <!-- atm2lnd defaults -->
 <repartition_rain_snow phys="clm5_1" >.true.</repartition_rain_snow>
@@ -491,7 +493,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.22.1.0_12pft_c220307.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.25.0.0_12pft_c221128.nc</fates_paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -1056,10 +1058,11 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne16np4_hist_16pfts_Irrig_CMIP6
 <fsurdat hgrid="0.125nldas2" sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/surfdata_0.125nldas2_hist_16pfts_Irrig_CMIP6_simyr2005_c190412.nc</fsurdat>
 
+<fsurdat hgrid="1x1_brazil"    sim_year="2000">
+lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_brazil_hist_78pfts_CMIP6_simyr2000_c230123.nc</fsurdat>
+
 <fsurdat hgrid="5x5_amazon"    sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_5x5_amazon_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc</fsurdat>
-<fsurdat hgrid="1x1_brazil"    sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_brazil_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc</fsurdat>
 
 <!-- Needed for SCAM (Single Column Atmosphere Model) -->
 <fsurdat hgrid="64x128"      sim_year="2000" use_crop=".false." irrigate=".true."
@@ -1086,10 +1089,10 @@ lnd/clm2/surfdata_map/release-clm5.0.24/surfdata_0.125x0.125_hist_78pfts_CMIP6_s
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_10x15_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_4x5_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
-<fsurdat hgrid="1x1_numaIA"       sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_numaIA_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
-<fsurdat hgrid="1x1_smallvilleIA" sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/ctsm1.0.dev094-2-g633be0eb/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_simyr2000_c200521.nc</fsurdat>
+<fsurdat hgrid="1x1_numaIA"       sim_year="2000" >
+lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_numaIA_hist_78pfts_CMIP6_simyr2000_c230123.nc</fsurdat>
+<fsurdat hgrid="1x1_smallvilleIA" sim_year="2000" >
+lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_simyr2000_c230123.nc</fsurdat>
 
 <fsurdat hgrid="ne16np4"                  sim_year="2000" use_crop=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne16np4_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
@@ -1113,12 +1116,12 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.ARCTIC.ne30x4_hist_78pft
 lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts_CMIP6_simyr2000_c200426.nc</fsurdat>
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
-<fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc</fsurdat>
-<fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc</fsurdat>
-<fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc</fsurdat>
+<fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" >
+lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000_c230123.nc</fsurdat>
+<fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" >
+lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000_c230123.nc</fsurdat>
+<fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" >
+lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_c230123.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 without crop -->
 <fsurdat hgrid="48x96"        sim_year="1850" use_crop=".false." irrigate=".true.">
@@ -1132,9 +1135,6 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1.9x2.5_hist_16pfts_Irrig_CMIP6
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_10x15_hist_16pfts_Irrig_CMIP6_simyr1850_c190214.nc</fsurdat>
 <fsurdat hgrid="4x5"          sim_year="1850" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_4x5_hist_16pfts_Irrig_CMIP6_simyr1850_c190214.nc</fsurdat>
-
-<fsurdat hgrid="1x1_brazil"    sim_year="1850" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_brazil_hist_16pfts_Irrig_CMIP6_simyr1850_c190214.nc</fsurdat>
 
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne30np4_hist_16pfts_Irrig_CMIP6_simyr1850_c190303.nc</fsurdat>
@@ -1161,13 +1161,13 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1.9x2.5_hist_78pfts_CMIP6_simyr
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_10x15_hist_78pfts_CMIP6_simyr1850_c190214.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_4x5_hist_78pfts_CMIP6_simyr1850_c190214.nc</fsurdat>
-<fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_simyr1850_c190214.nc</fsurdat>
-<fsurdat hgrid="1x1_numaIA"       sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_numaIA_hist_78pfts_CMIP6_simyr1850_c190214.nc</fsurdat>
+<fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" >
+lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_simyr1850_c230123.nc</fsurdat>
+<fsurdat hgrid="1x1_numaIA"       sim_year="1850" >
+lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_numaIA_hist_78pfts_CMIP6_simyr1850_c230123.nc</fsurdat>
 
-<fsurdat hgrid="1x1_brazil"    sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_brazil_hist_78pfts_CMIP6_simyr1850_c190214.nc</fsurdat>
+<fsurdat hgrid="1x1_brazil"               sim_year="1850">
+lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_brazil_hist_78pfts_CMIP6_simyr1850_c230123.nc</fsurdat>
 
 <fsurdat hgrid="ne30np4"                  sim_year="1850" use_crop=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne30np4_hist_78pfts_CMIP6_simyr1850_c200426.nc</fsurdat>
@@ -1211,8 +1211,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <flanduse_timeseries hgrid="48x96"         sim_year_range="1850-2000" irrigate=".true."
  use_crop=".false."  >lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_48x96_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c190214.nc</flanduse_timeseries>
 
-<flanduse_timeseries hgrid="1x1_brazil"    sim_year_range="1850-2000" irrigate=".true."
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="ne30np4"       sim_year_range="1850-2000"  irrigate=".true."
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
@@ -1233,7 +1231,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
  use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_48x96_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="1x1_brazil"    sim_year_range="1850-2000"
- use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_map/ctsm5.1.dev116/landuse.timeseries_1x1_brazil_hist_78pfts_CMIP6_simyr1850-2015_c230123.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1x1_numaIA"    sim_year_range="1850-2000"
  use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_1x1_numaIA_hist_78pfts_CMIP6_simyr1850-2015_c170917.nc</flanduse_timeseries>
 
@@ -1451,6 +1449,9 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_last_ndep  phys="clm5_1"  use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_ndep>
 <model_year_align_ndep  phys="clm5_1"  use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_ndep>
 
+<stream_year_first_ndep use_cn=".true."   sim_year="2018" >2018</stream_year_first_ndep>
+<stream_year_last_ndep  use_cn=".true."   sim_year="2018" >2018</stream_year_last_ndep>
+
 <stream_year_first_ndep use_cn=".true."   sim_year="2010" >2010</stream_year_first_ndep>
 <stream_year_last_ndep  use_cn=".true."   sim_year="2010" >2010</stream_year_last_ndep>
 
@@ -1608,6 +1609,9 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_last_popdens  phys="clm5_1"  cnfireson=".true." sim_year_range="1850-2100"  >2100</stream_year_last_popdens>
 <model_year_align_popdens  phys="clm5_1"  cnfireson=".true." sim_year_range="1850-2100"  >2015</model_year_align_popdens>
 
+<stream_year_first_popdens use_cn=".true."   sim_year="2018" >2018</stream_year_first_popdens>
+<stream_year_last_popdens  use_cn=".true."   sim_year="2018" >2018</stream_year_last_popdens>
+
 <stream_year_first_popdens use_cn=".true."   sim_year="2010" >2010</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="2010" >2010</stream_year_last_popdens>
 
@@ -1625,6 +1629,9 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="2018" >2018</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="2018" >2018</stream_year_last_popdens>
 
 <stream_year_first_popdens use_fates=".true." sim_year="2010" >2010</stream_year_first_popdens>
 <stream_year_last_popdens  use_fates=".true." sim_year="2010" >2010</stream_year_last_popdens>
@@ -1712,6 +1719,12 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_first_urbantv phys="clm4_5"  sim_year_range="1850-2100" >2015</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm4_5"  sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
 <model_year_align_urbantv  phys="clm4_5"  sim_year_range="1850-2100" >2015</model_year_align_urbantv>
+
+<stream_year_first_urbantv sim_year="2018" >2018</stream_year_first_urbantv>
+<stream_year_last_urbantv  sim_year="2018" >2018</stream_year_last_urbantv>
+
+<stream_year_first_urbantv sim_year="2010" >2010</stream_year_first_urbantv>
+<stream_year_last_urbantv  sim_year="2010" >2010</stream_year_last_urbantv>
 
 <stream_year_first_urbantv sim_year="2000" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  sim_year="2000" >2000</stream_year_last_urbantv>
@@ -2535,9 +2548,10 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- Defaults for different BGC/decomp modes    -->
 <!-- =========================================  -->
 
-<soil_decomp_method use_cn=".true."    >CENTURYKoven2013</soil_decomp_method>
-<soil_decomp_method use_fates=".true." >CENTURYKoven2013</soil_decomp_method>
-<soil_decomp_method                    >None</soil_decomp_method>
+<soil_decomp_method use_cn=".true."                          >CENTURYKoven2013</soil_decomp_method>
+<soil_decomp_method use_fates=".true."                       >CENTURYKoven2013</soil_decomp_method>
+<soil_decomp_method use_fates=".true." use_fates_sp=".true." >None</soil_decomp_method>
+<soil_decomp_method                                          >None</soil_decomp_method>
 
 <use_lch4            soil_decomp_method="None" >.false.</use_lch4>
 <use_lch4                                      >.true.</use_lch4>
@@ -2547,6 +2561,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- ===== FATES DEFAULTS =========== -->
 <fates_spitfire_mode           use_fates=".true.">0</fates_spitfire_mode>
 <use_fates_planthydro          use_fates=".true.">.false.</use_fates_planthydro>
+<use_fates_tree_damage         use_fates=".true.">.false.</use_fates_tree_damage>
 <use_fates_cohort_age_tracking use_fates=".true.">.false.</use_fates_cohort_age_tracking>
 <use_fates_ed_st3              use_fates=".true.">.false.</use_fates_ed_st3>
 <use_fates_ed_prescribed_phys  use_fates=".true.">.false.</use_fates_ed_prescribed_phys>

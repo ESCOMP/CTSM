@@ -38,6 +38,10 @@ module CNBalanceCheckMod
      real(r8), pointer :: endcb_grc(:)  ! (gC/m2) gridcell carbon mass, end of time step
      real(r8), pointer :: begnb_grc(:)  ! (gN/m2) gridcell nitrogen mass, beginning of time step
      real(r8), pointer :: endnb_grc(:)  ! (gN/m2) gridcell nitrogen mass, end of time step
+     real(r8)          :: cwarning      ! (gC/m2) For a Carbon balance warning
+     real(r8)          :: nwarning      ! (gN/m2) For a Nitrogen balance warning
+     real(r8)          :: cerror        ! (gC/m2) For a Carbon balance error
+     real(r8)          :: nerror        ! (gN/m2) For a Nitrogen balance error
    contains
      procedure , public  :: Init
      procedure , public  :: BeginCNGridcellBalance
@@ -56,10 +60,19 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Init(this, bounds)
+    use CNSharedParamsMod, only : use_matrixcn
     class(cn_balance_type)         :: this
     type(bounds_type) , intent(in) :: bounds  
 
     call this%InitAllocate(bounds)
+
+    ! Set warning and error levels for Carbon and Nitrogen balance
+    ! These could become namelist items if we want them to change for different
+    ! types of cases
+    this%cwarning = 1.e-8_r8
+    this%nwarning = 1.e-7_r8
+    this%nerror   = 1.e-3_r8
+    this%cerror   = 1.e-7_r8
   end subroutine Init
 
   !-----------------------------------------------------------------------
@@ -112,6 +125,7 @@ contains
     integer :: g
     integer :: begg, endg
     real(r8) :: hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg)
+    real(r8) :: gru_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg)
     real(r8) :: dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg)
     !-----------------------------------------------------------------------
 
@@ -132,10 +146,13 @@ contains
          bounds, hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg))
     call cnveg_carbonflux_inst%dwt_conv_cflux_dribbler%get_amount_left_to_dribble_beg( &
          bounds, dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg))
+    call cnveg_carbonflux_inst%gru_conv_cflux_dribbler%get_amount_left_to_dribble_beg( &
+         bounds, gru_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg))
 
     do g = begg, endg
        begcb(g) = totc(g) + c_tot_woodprod(g) + c_cropprod1(g) + &
                   hrv_xsmrpool_amount_left_to_dribble(g) + &
+                  gru_conv_cflux_amount_left_to_dribble(g) + &
                   dwt_conv_cflux_amount_left_to_dribble(g)
        begnb(g) = totn(g) + n_tot_woodprod(g) + n_cropprod1(g)
     end do
@@ -216,6 +233,7 @@ contains
     real(r8) :: grc_errcb(bounds%begg:bounds%endg)
     real(r8) :: som_c_leached_grc(bounds%begg:bounds%endg)
     real(r8) :: hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg)
+    real(r8) :: gru_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg)
     real(r8) :: dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg)
     !-----------------------------------------------------------------------
 
@@ -231,6 +249,8 @@ contains
          col_begcb               =>    this%begcb_col                                   , & ! Input:  [real(r8) (:) ]  (gC/m2) carbon mass, beginning of time step 
          col_endcb               =>    this%endcb_col                                   , & ! Output: [real(r8) (:) ]  (gC/m2) carbon mass, end of time step 
          wood_harvestc           =>    cnveg_carbonflux_inst%wood_harvestc_col          , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
+         gru_conv_cflux          =>    cnveg_carbonflux_inst%gru_conv_cflux_col         , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
+         gru_wood_productc_gain  =>    cnveg_carbonflux_inst%gru_wood_productc_gain_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
          crop_harvestc_to_cropprodc     =>    cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) crop harvest C to 1-year crop product pool
          gpp                     =>    cnveg_carbonflux_inst%gpp_col                    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) gross primary production
          er                      =>    cnveg_carbonflux_inst%er_col                     , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
@@ -258,7 +278,7 @@ contains
          ! calculate total column-level outputs
          ! er = ar + hr, col_fire_closs includes patch-level fire losses
          col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + &
-              col_xsmrpool_to_atm(c)
+              col_xsmrpool_to_atm(c) + gru_conv_cflux(c)
 
          ! Fluxes to product pools are included in column-level outputs: the product
          ! pools are not included in totcolc, so are outside the system with respect to
@@ -267,6 +287,7 @@ contains
          ! after the dwt term has already been taken out.)
          col_coutputs = col_coutputs + &
               wood_harvestc(c) + &
+              gru_wood_productc_gain(c) + &
               crop_harvestc_to_cropprodc(c)
 
          ! subtract leaching flux
@@ -277,15 +298,13 @@ contains
               (col_endcb(c) - col_begcb(c))
 
          ! check for significant errors
-         if (abs(col_errcb(c)) > 1e-7_r8) then
+         if (abs(col_errcb(c)) > this%cerror) then 
             err_found = .true.
             err_index = c
          end if
-          if (abs(col_errcb(c)) > 1e-8_r8) then
+          if (abs(col_errcb(c)) > this%cwarning) then
             write(iulog,*) 'cbalance warning at c =', c, col_errcb(c), col_endcb(c)
          end if
-
-
 
       end do ! end of columns loop
 
@@ -337,13 +356,16 @@ contains
             bounds, hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg))
          call cnveg_carbonflux_inst%dwt_conv_cflux_dribbler%get_amount_left_to_dribble_end( &
             bounds, dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg))
+         call cnveg_carbonflux_inst%gru_conv_cflux_dribbler%get_amount_left_to_dribble_end( &
+            bounds, gru_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg))
          grc_endcb(g) = totgrcc(g) + tot_woodprod_grc(g) + cropprod1_grc(g) + &
                         hrv_xsmrpool_amount_left_to_dribble(g) + &
+                        gru_conv_cflux_amount_left_to_dribble(g) + &
                         dwt_conv_cflux_amount_left_to_dribble(g)
 
          ! calculate total gridcell-level inputs
          ! slevis notes:
-         ! nbp_grc = nep_grc - fire_closs_grc - hrv_xsmrpool_to_atm_dribbled_grc - dwt_conv_cflux_dribbled_grc - product_closs_grc
+         ! nbp_grc = nep_grc - fire_closs_grc - hrv_xsmrpool_to_atm_dribbled_grc - dwt_conv_cflux_dribbled_grc - gru_conv_cflux_dribbled_grc - product_closs_grc
          grc_cinputs = nbp_grc(g) + & 
                        dwt_seedc_to_leaf_grc(g) + dwt_seedc_to_deadstem_grc(g)
 
@@ -356,11 +378,11 @@ contains
                         (grc_endcb(g) - grc_begcb(g))
 
          ! check for significant errors
-         if (abs(grc_errcb(g)) > 1e-7_r8) then
+         if (abs(grc_errcb(g)) > this%cerror) then
             err_found = .true.
             err_index = g
          end if
-         if (abs(grc_errcb(g)) > 1e-8_r8) then
+         if (abs(grc_errcb(g)) > this%cwarning) then
             write(iulog,*) 'cbalance warning at g =', g, grc_errcb(g), grc_endcb(g)
          end if
       end do ! end of gridcell loop
@@ -454,6 +476,10 @@ contains
 
          col_fire_nloss      => cnveg_nitrogenflux_inst%fire_nloss_col                   , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total column-level fire N loss 
          wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
+         gru_conv_nflux_grc  => cnveg_nitrogenflux_inst%gru_conv_nflux_grc               , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools) summed to the gridcell level
+         gru_conv_nflux      => cnveg_nitrogenflux_inst%gru_conv_nflux_col               , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
+         gru_wood_productn_gain => cnveg_nitrogenflux_inst%gru_wood_productn_gain_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
+         gru_wood_productn_gain_grc => cnveg_nitrogenflux_inst%gru_wood_productn_gain_grc, & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools) summed to the gridcell level
          crop_harvestn_to_cropprodn => cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) crop harvest N to 1-year crop product pool
 
          totcoln             => cnveg_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
@@ -487,7 +513,7 @@ contains
          col_ninputs_partial(c) = col_ninputs(c)
 
          ! calculate total column-level outputs
-         col_noutputs(c) = denit(c) + col_fire_nloss(c)
+         col_noutputs(c) = denit(c) + col_fire_nloss(c) + gru_conv_nflux(c)
 
          ! Fluxes to product pools are included in column-level outputs: the product
          ! pools are not included in totcoln, so are outside the system with respect to
@@ -496,6 +522,7 @@ contains
          ! after the dwt term has already been taken out.)
          col_noutputs(c) = col_noutputs(c) + &
               wood_harvestn(c) + &
+              gru_wood_productn_gain(c) + &
               crop_harvestn_to_cropprodn(c)
 
          if (.not. use_nitrif_denitrif) then
@@ -515,13 +542,13 @@ contains
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
               (col_endnb(c) - col_begnb(c))
-
-         if (abs(col_errnb(c)) > 1e-3_r8) then
+        
+         if (abs(col_errnb(c)) > this%nerror) then 
             err_found = .true.
             err_index = c
          end if
          
-         if (abs(col_errnb(c)) > 1e-7_r8) then
+         if (abs(col_errnb(c)) > this%nwarning) then
             write(iulog,*) 'nbalance warning at c =', c, col_errnb(c), col_endnb(c)
             write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
             write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
@@ -581,18 +608,22 @@ contains
          ! calculate total gridcell-level outputs
          grc_noutputs(g) = grc_noutputs_partial(g) + &
                            dwt_conv_nflux_grc(g) + &
-                           product_loss_grc(g)
+                           product_loss_grc(g) - &
+                           ! Subtract the next one because it is present in
+                           ! grc_noutputs_partial but not needed at the
+                           ! gridcell level
+                           gru_wood_productn_gain_grc(g)
 
          ! calculate the total gridcell-level nitrogen balance error for this time step
          grc_errnb(g) = (grc_ninputs(g) - grc_noutputs(g)) * dt - &
                         (grc_endnb(g) - grc_begnb(g))
 
-         if (abs(grc_errnb(g)) > 1e-3_r8) then
+         if (abs(grc_errnb(g)) > this%nerror) then
             err_found = .true.
             err_index = g
          end if
 
-         if (abs(grc_errnb(g)) > 1e-7_r8) then
+         if (abs(grc_errnb(g)) > this%nwarning) then
             write(iulog,*) 'nbalance warning at g =', g, grc_errnb(g), grc_endnb(g)
          end if
       end do
@@ -614,6 +645,7 @@ contains
          write(iulog,*) '--- Outputs ---'
          write(iulog,*) 'grc_noutputs_partial     =', grc_noutputs_partial(g) * dt
          write(iulog,*) 'dwt_conv_nflux_grc       =', dwt_conv_nflux_grc(g) * dt
+         write(iulog,*) '-gru_wood_productn_gain_grc =', -gru_wood_productn_gain_grc(g) * dt
          write(iulog,*) 'product_loss_grc         =', product_loss_grc(g) * dt
          call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
       end if

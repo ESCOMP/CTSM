@@ -31,9 +31,9 @@ Bugs fixed or introduced
 ------------------------
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
 
-Issues fixed (include CTSM Issue #):
+CTSM issues fixed (include CTSM Issue #):
 
-CIME Issues fixed (include issue #):
+Externals issues fixed (include issue #):
 
 Known bugs introduced in this tag (include issue #):
 
@@ -121,10 +121,15 @@ infrastructure should be run when appropriate, as described below.
 
     clm_pymods test suite on cheyenne - 
 
-  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+  regular tests:
+      - aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing
+      - Fortran unit tests on cheyenne (until https://github.com/ESCOMP/CTSM/issues/1972 is resolved): from src, run:
+          ../cime/scripts/fortran_unit_testing/run_tests.py --build-dir `mktemp -d --tmpdir=. unit_tests.XXXXXXXX`
 
-    cheyenne ----
-    izumi -------
+    aux_clm on cheyenne ------------
+    aux_clm on izumi ---------------
+    Fortran unit tests on cheyenne -
+
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
     cheyenne ----

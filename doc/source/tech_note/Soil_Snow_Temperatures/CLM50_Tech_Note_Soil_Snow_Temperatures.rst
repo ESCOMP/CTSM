@@ -42,7 +42,7 @@ one-dimensional form
    c\frac{\partial T}{\partial t} =\frac{\partial }{\partial z} \left[\lambda \frac{\partial T}{\partial z} \right].
 
 This equation is solved numerically to calculate the soil, snow, and
-surface water temperatures for a fifteen-layer soil column with up to
+surface water temperatures for a 25-layer soil column with up to
 twelve overlying layers of snow and a single surface water layer with the
 boundary conditions of :math:`h` as the heat flux into the top soil,
 snow, and surface water layers from the overlying atmosphere (section
@@ -59,7 +59,7 @@ The soil column is discretized into 25 layers (section
 :numref:`Vertical Discretization`) where :math:`N_{levgrnd} = 25` is the 
 number of soil layers (:numref:`Table Soil layer structure`).
 
-The overlying snow pack is modeled with up to five layers depending on
+The overlying snow pack is modeled with up to twelve layers depending on
 the total snow depth. The layers from top to bottom are indexed in the
 Fortran code as :math:`i=-4,-3,-2,-1,0`, which permits the accumulation
 or ablation of snow at the top of the snow pack without renumbering the

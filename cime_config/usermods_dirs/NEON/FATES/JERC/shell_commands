@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=JERC
+./xmlchange PTS_LON=275.53353
+./xmlchange PTS_LAT=31.19608

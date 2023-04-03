@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1844;
+my $ntests = 1850;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1254;
 }
@@ -319,22 +319,22 @@ my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
 foreach my $driver ( "mct", "nuopc" ) {
    print "   For $driver driver\n\n";
    # configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case
-   foreach my $options ( "-configuration nwp",
-                         "-structure fast",
-                         "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP1-2.6", "-test", "-sim_year 1850",
-                         "-namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
-                         "-use_case 1850_control",
+   foreach my $options ( "-res 0.9x1.25 -configuration nwp",
+                         "-res 0.9x1.25 -structure fast",
+                         "-res 0.9x1.25 -namelist '&a irrigate=.true./'", "-res 0.9x1.25 -verbose", "-res 0.9x1.25 -ssp_rcp SSP1-2.6", "-res 0.9x1.25 -test", "-res 0.9x1.25 -sim_year 1850",
+                         "-res 0.9x1.25 -namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
+                         "-res 0.9x1.25 -use_case 1850_control",
                          "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
                          "-res 1x1_brazil",
-                         "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
-                         "-envxml_dir . -infile myuser_nl_clm",
-                         "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
-                         "-clm_start_type branch -namelist '&a nrevsn=\"thing.nc\",use_init_interp=T/'",
-                         "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
+                         "-res 0.9x1.25 -clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
+                         "-res 0.9x1.25 -infile myuser_nl_clm",
+                         "-res 0.9x1.25 -ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
+                         "-res 0.9x1.25 -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\",use_init_interp=T/'",
+                         "-res 0.9x1.25 -ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
                         ) {
       my $file = $startfile;
       &make_env_run();
-      my $base_options = "-res 0.9x1.25 -envxml_dir . -driver $driver";
+      my $base_options = "-envxml_dir . -driver $driver";
       if ( $driver eq "mct" ) {
          $base_options = "$base_options -lnd_frac $DOMFILE";
       } else {
@@ -393,7 +393,7 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
    #
    # Now run  the site
    #
-   my $options = "-res CLM_USRDAT -clm_usr_name NEON -no-megan -bgc bgc -sim_year 2000 -infile $namelistfile";
+   my $options = "-res CLM_USRDAT -clm_usr_name NEON -no-megan -bgc bgc -sim_year 2018 -infile $namelistfile";
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
@@ -460,7 +460,7 @@ foreach my $options (
                       "-bgc bgc -use_case 1850-2100_SSP3-7.0_transient -namelist '&a start_ymd=20701029/'",
                       "-bgc fates  -use_case 2000_control -no-megan",
                       "-bgc fates  -use_case 20thC_transient -no-megan",
-                      "-bgc fates  -use_case 1850_control -no-megan -namelist '&a use_fates_sp=T/'",
+                      "-bgc fates  -use_case 1850_control -no-megan -namelist \"&a use_fates_sp=T, soil_decomp_method='None'/\"",
                       "-bgc sp  -use_case 2000_control -res 0.9x1.25 -namelist '&a use_soil_moisture_streams = T/'",
                       "-bgc bgc -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19101023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
@@ -956,6 +956,11 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
+     "useFATESWn_dom_pft"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"n_dom_pfts = 1",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
      "useFATESWbMH"              =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_biomass_heat_storage=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -997,6 +1002,16 @@ my %failtest = (
                                      phys=>"clm4_5",
                                    },
      "useMEGANwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -megan",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm4_5",
+                                   },
+     "useFIREEMISwithFATES"      =>{ options=>"-bgc fates -envxml_dir . -fire_emis --no-megan",
+                                    namelst=>"",
+                                    GLC_TWO_WAY_COUPLING=>"FALSE",
+                                    phys=>"clm4_5",
+                                 },
+     "useDRYDEPwithFATES"        =>{ options=>"--bgc fates --envxml_dir . --no-megan --drydep",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
@@ -1043,6 +1058,21 @@ my %failtest = (
                                    },
      "spdotransconflict"          =>{ options=>"-envxml_dir . -bgc sp -use_case 20thC_transient",
                                      namelst=>"do_transient_pfts=T,do_transient_crops=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "dogrossandsp"               =>{ options=>"--envxml_dir . --bgc sp --use_case 20thC_transient",
+                                     namelst=>"do_grossunrep=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "dogrossandfates"            =>{ options=>"--envxml_dir . --bgc fates --use_case 20thC_transient --no-megan",
+                                     namelst=>"do_grossunrep=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "dogrossandnottrans"         =>{ options=>"--envxml_dir . --bgc bgc --use_case 2000_control",
+                                     namelst=>"do_grossunrep=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
@@ -1429,7 +1459,7 @@ my @tran_res = ( "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
 my $usecase  = "20thC_transient";
 my $GLC_NEC         = 10;
 foreach my $res ( @tran_res ) {
-   $options = "-res $res -use_case $usecase -envxml_dir . -namelist '&a start_ymd=18500101/'";
+   $options = "-res $res -use_case $usecase -envxml_dir . -namelist '&a start_ymd=18500101/' -bgc bgc -crop -namelist '&a do_grossunrep=T/'";
    &make_env_run();
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
    is( $@, '', "$options" );
