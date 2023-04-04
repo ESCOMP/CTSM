@@ -9,7 +9,6 @@ set -e
 cropcals_python_dir="/glade/u/home/samrabin/CTSM_cropcals_hist/crop_calendars"
 
 # Set up
-cp user_nl_clm.orig user_nl_clm
 set +e
 ./check_case 1>.check_case_tmp 2>&1
 check_case_result=$?
