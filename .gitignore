@@ -96,6 +96,7 @@ unit_test_build
 
 # Tools output directories
 tools/site_and_regional/subset_data_single_point
+tools/site_and_regional/*.png
 
 # mksurfdata output files
 /tools/mksurfdata_map/surfdata_*.nc
