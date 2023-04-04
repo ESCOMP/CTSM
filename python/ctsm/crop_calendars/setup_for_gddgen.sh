@@ -75,10 +75,11 @@ if [[ "${flanduse_timeseries}" != "" ]]; then
     new_fsurdat="$PWD/$(cat make_surface_for_gddgen.log)"
     rm make_surface_for_gddgen.log
 
-    # Change fsurdat to point to that file and disable transient crops
+    # Change fsurdat to point to that file, disable transient crops, etc.
     echo "fsurdat = '${new_fsurdat}'" >> user_nl_clm
     echo "do_transient_crops = .false." >> user_nl_clm
     echo "flanduse_timeseries = ''" >> user_nl_clm
+    echo "use_init_interp = .true." >> user_nl_clm
 fi
 
 # user_nl_clm: Replace MESHFILE_PLACEHOLDER with the appropriate file for this resolution
