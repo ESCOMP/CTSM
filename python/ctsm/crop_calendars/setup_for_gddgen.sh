@@ -23,25 +23,21 @@ rm .check_case_tmp
 stop_option=$(./xmlquery -N --value STOP_OPTION)
 stop_n=$(./xmlquery -N --value STOP_N)
 min_Nyears=4
-errMsg="GDD-generating runs must be at least ${min_Nyears} years long."
+errMsg="WARNING: GDD-generating runs must be at least ${min_Nyears} years long.\nNot erroring because this check seems to occur before simulation length from test specification is applied."
 if [[ "${stop_option}" == "nyear"* ]]; then
     if [[ "${stop_n}" -lt ${min_Nyears} ]]; then
-        echo ${errMsg} >&2
-        exit 1
+        echo -e ${errMsg} >&2
     fi
 elif [[ "${stop_option}" == "nmonth"* ]]; then
     if [[ "${stop_n}" -lt $((min_Nyears * 12)) ]]; then
-        echo ${errMsg} >&2
-        exit 1
+        echo -e ${errMsg} >&2
     fi
 elif [[ "${stop_option}" == "nday"* ]]; then
     if [[ "${stop_n}" -lt $((min_Nyears * 365)) ]]; then
-        echo ${errMsg} >&2
-        exit 1
+        echo -e ${errMsg} >&2
     fi
 else
-    echo "STOP_OPTION '${stop_option}' not recognized by preprocess_inputs.sh" >&2
-    exit 1
+    echo "WARNING: STOP_OPTION '${stop_option}' not recognized by preprocess_inputs.sh" >&2
 fi
 
 # If needed, generate a surface dataset file with no crops missing years
