@@ -1,3 +1,4 @@
+./case.setup
 ctsm_dir="$(./xmlquery -N --value COMP_ROOT_DIR_LND)"
 ./xmlchange POSTRUN_SCRIPT="${ctsm_dir}/python/ctsm/crop_calendars/generate_gdds.sh"
 
