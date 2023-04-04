@@ -1,7 +1,5 @@
 ctsm_dir="$(./xmlquery -N --value COMP_ROOT_DIR_LND)"
-./xmlchange POSTRUN_SCRIPT="${ctsm_dir}/python/ctsm/crop_calendars/generate_gdds.sh",\
-RUN_STARTDATE="1995-01-01",\
-STOP_OPTION="nyears",STOP_N=10
+./xmlchange POSTRUN_SCRIPT="${ctsm_dir}/python/ctsm/crop_calendars/generate_gdds.sh"
 
 # Try to do this as an interactive compute job, unless we're already on a compute node
 setup_for_gddgen="${ctsm_dir}"/python/ctsm/crop_calendars/setup_for_gddgen.sh
