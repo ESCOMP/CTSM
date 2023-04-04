@@ -209,6 +209,8 @@ def check_input_file(args, ds):
         if args.area_name not in ds.variables:
             err_msg = "Input file does not have area variable named " + args.area_name
             abort(err_msg)
+        print( ds[args.area_name] )
+        print( ds[args.area_name].attrs )
         if ds[args.area_name].attrs["units"] != "radians^2":
             err_msg = "Area does NOT have the correct units of radians^2 but has " + str(
                 ds[args.area_name].attrs["units"]

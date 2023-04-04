@@ -31,7 +31,7 @@ class SysTestMeshMaker(unittest.TestCase):
         self._testinputs_path = testinputs_path
         self._infile = os.path.join(
             testinputs_path,
-            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc",
+            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified.nc"
         )
         self._tempdir = tempfile.mkdtemp()
         self.mesh_out = os.path.join(self._tempdir, "mesh_out.nc")
@@ -49,9 +49,9 @@ class SysTestMeshMaker(unittest.TestCase):
             "--input",
             self._infile,
             "--lat",
-            "lsmlat",
+            "LATIXY",
             "--lon",
-            "lsmlon",
+            "LONGXY",
             "--no-plot",
             "--output",
             self.mesh_out,
@@ -161,9 +161,9 @@ class SysTestMeshMaker(unittest.TestCase):
             "--input",
             self._infile,
             "--lat",
-            "lsmlat",
+            "LATIXY",
             "--lon",
-            "lsmlon",
+            "LONGXY",
             "--no-plot",
             "--mask",
             "PFTDATA_MASK",
@@ -182,14 +182,35 @@ class SysTestMeshMaker(unittest.TestCase):
             "--input",
             "zztop",
             "--lat",
-            "lsmlat",
+            "LATIXY",
             "--lon",
-            "lsmlon",
+            "LONGXY",
             "--no-plot",
             "--output",
             self.mesh_out,
         ]
         with self.assertRaisesRegex(SystemExit, "Input file not found."):
+            main()
+
+    def test_singlepoint_dies(self):
+        """Test that a single point file dies because we don't need mesh files for single point cases"""
+        infile = os.path.join(
+            self._testinputs_path,
+            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc",
+        )
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            infile,
+            "--lat",
+            "LATIXY",
+            "--lon",
+            "LONGXY",
+            "--no-plot",
+            "--output",
+            self.mesh_out,
+        ]
+        with self.assertRaisesRegex(SystemExit, "No need to create a mesh file for a single point grid."):
             main()
 
     def test_nolongs(self):
@@ -199,7 +220,7 @@ class SysTestMeshMaker(unittest.TestCase):
             "--input",
             self._infile,
             "--lat",
-            "lsmlat",
+            "LATIXY",
             "--no-plot",
             "--lon",
             "zztop",
@@ -219,7 +240,7 @@ class SysTestMeshMaker(unittest.TestCase):
             "zztop",
             "--no-plot",
             "--lon",
-            "lsmlon",
+            "LONGXY",
             "--output",
             self.mesh_out,
         ]
@@ -233,10 +254,10 @@ class SysTestMeshMaker(unittest.TestCase):
             "--input",
             self._infile,
             "--lat",
-            "lsmlat",
+            "LATIXY",
             "--no-plot",
             "--lon",
-            "lsmlon",
+            "LONGXY",
             "--area",
             "zztop",
             "--output",
@@ -254,10 +275,10 @@ class SysTestMeshMaker(unittest.TestCase):
             "--input",
             self._infile,
             "--lat",
-            "lsmlat",
+            "LATIXY",
             "--no-plot",
             "--lon",
-            "lsmlon",
+            "LONGXY",
             "--mask",
             "zztop",
             "--output",
@@ -275,10 +296,10 @@ class SysTestMeshMaker(unittest.TestCase):
             "--input",
             self._infile,
             "--lat",
-            "lsmlat",
+            "LATIXY",
             "--no-plot",
             "--lon",
-            "lsmlon",
+            "LONGXY",
             "--area",
             "PCT_CROP",
             "--output",
@@ -296,10 +317,10 @@ class SysTestMeshMaker(unittest.TestCase):
             "--input",
             self._infile,
             "--lat",
-            "lsmlat",
+            "LATIXY",
             "--no-plot",
             "--lon",
-            "lsmlon",
+            "LONGXY",
             "--mask",
             "LAKEDEPTH",
             "--output",
