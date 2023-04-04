@@ -78,6 +78,10 @@ class MeshPlotType(MeshType):
         clats, clons = self.node_coords.T
         elem_conn_vals = self.elem_conn
         element_counts = elem_conn_vals.shape[0]
+        # Scale marker and line size for a large number of points
+        if element_counts > 60000:
+            marker_size = 0.01
+            line_width = line_width * 0.05
 
         for index in range(element_counts):
             conns = [int(x) - 1 for x in elem_conn_vals[index]]
