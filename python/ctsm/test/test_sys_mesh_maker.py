@@ -30,8 +30,7 @@ class SysTestMeshMaker(unittest.TestCase):
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._testinputs_path = testinputs_path
         self._infile = os.path.join(
-            testinputs_path,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified.nc"
+            testinputs_path, "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified.nc"
         )
         self._tempdir = tempfile.mkdtemp()
         self.mesh_out = os.path.join(self._tempdir, "mesh_out.nc")
@@ -193,7 +192,8 @@ class SysTestMeshMaker(unittest.TestCase):
             main()
 
     def test_singlepoint_dies(self):
-        """Test that a single point file dies because we don't need mesh files for single point cases"""
+        """Test that a single point file dies because we don't need mesh files
+        for single point cases"""
         infile = os.path.join(
             self._testinputs_path,
             "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc",
@@ -210,7 +210,9 @@ class SysTestMeshMaker(unittest.TestCase):
             "--output",
             self.mesh_out,
         ]
-        with self.assertRaisesRegex(SystemExit, "No need to create a mesh file for a single point grid."):
+        with self.assertRaisesRegex(
+            SystemExit, "No need to create a mesh file for a single point grid."
+        ):
             main()
 
     def test_nolongs(self):
@@ -308,6 +310,29 @@ class SysTestMeshMaker(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit, r"Area does NOT have the correct units of radians\^2 but has unitless"
         ):
+            main()
+
+    def test_missingreaunits(self):
+        """Missing area units"""
+        self._infile = os.path.join(
+            self._testinputs_path,
+            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified_with_crop.nc",
+        )
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            self._infile,
+            "--lat",
+            "LATIXY",
+            "--no-plot",
+            "--lon",
+            "LONGXY",
+            "--area",
+            "PCT_CROP",
+            "--output",
+            self.mesh_out,
+        ]
+        with self.assertRaisesRegex(SystemExit, r"Units attribute is NOT on the area variable"):
             main()
 
     def test_badmaskvalues(self):
