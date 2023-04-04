@@ -31,7 +31,7 @@ class SysTestMeshMaker(unittest.TestCase):
         self._testinputs_path = testinputs_path
         self._infile = os.path.join(
             testinputs_path,
-            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc",
+            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified.nc",
         )
         self._tempdir = tempfile.mkdtemp()
         self.mesh_out = os.path.join(self._tempdir, "mesh_out.nc")
@@ -49,9 +49,9 @@ class SysTestMeshMaker(unittest.TestCase):
             "--input",
             self._infile,
             "--lat",
-            "lsmlat",
+            "LATIXY",
             "--lon",
-            "lsmlon",
+            "LONGXY",
             "--output",
             self.mesh_out,
         ]

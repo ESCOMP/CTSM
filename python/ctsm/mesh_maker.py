@@ -209,13 +209,18 @@ def check_input_file(args, ds):
         if args.area_name not in ds.variables:
             err_msg = "Input file does not have area variable named " + args.area_name
             abort(err_msg)
-        print( ds[args.area_name] )
-        print( ds[args.area_name].attrs )
-        if ds[args.area_name].attrs["units"] != "radians^2":
+        if "units" not in ds[args.area_name].attrs:
+            err_msg = "Units attribute is NOT on the area variable"
+            abort(err_msg)
+        areaunits = ["radians^2", "radian2", "radians2", "radian^2"]
+        if not any(name in ds[args.area_name].attrs["units"] for name in areaunits):
             err_msg = "Area does NOT have the correct units of radians^2 but has " + str(
                 ds[args.area_name].attrs["units"]
             )
             abort(err_msg)
+    if len(ds[args.lon_name]) == 1:
+        err_msg = "No need to create a mesh file for a single point grid."
+        abort(err_msg)
 
 
 def main():

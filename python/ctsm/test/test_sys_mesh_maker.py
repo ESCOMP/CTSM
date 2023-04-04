@@ -211,7 +211,7 @@ class SysTestMeshMaker(unittest.TestCase):
             self.mesh_out,
         ]
         with self.assertRaisesRegex(
-            SystemExit, "No need to create a mesh file for a single point grid."
+            SystemExit, r"No need to create a mesh file for a single point grid."
         ):
             main()
 
