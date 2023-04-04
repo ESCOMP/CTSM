@@ -10,11 +10,19 @@ cropcals_python_dir="/glade/u/home/samrabin/CTSM_cropcals_hist/crop_calendars"
 
 # Set up
 cp user_nl_clm.orig user_nl_clm
-./check_case 1>/dev/null
+set +e
+./check_case 1>.check_case_tmp 2>&1
+check_case_result=$?
+set -e
+if [[ ${check_case_result} -ne 0 ]]; then
+    echo "check_case failed; ignoring"
+#    cat .check_case_tmp
+fi
+rm .check_case_tmp
 
 # Ensure that run will go for at least 4 years; otherwise error.
-stop_option=$(./xmlquery --value STOP_OPTION)
-stop_n=$(./xmlquery --value STOP_N)
+stop_option=$(./xmlquery -N --value STOP_OPTION)
+stop_n=$(./xmlquery -N --value STOP_N)
 min_Nyears=4
 errMsg="GDD-generating runs must be at least ${min_Nyears} years long."
 if [[ "${stop_option}" == "nyear"* ]]; then
@@ -46,8 +54,14 @@ if [[ "${flanduse_timeseries}" != "" ]]; then
     fi
 
     # Make new fsurdat file (in case directory)
-    module unload python
-    module load conda
+    set +e
+    module is-loaded conda
+    conda_not_loaded=$?
+    set -e
+    if [[ ${conda_not_loaded} -ne 0 ]]; then
+        module unload python
+        module load conda
+    fi
     conda activate npl
     fsurdat="$(grep -h -i "fsurdat" CaseDocs/* | sed "s/ fsurdat = //" | sed "s/'//g")"
     paramfile="$(grep -h -i "paramfile" CaseDocs/* | sed "s/ paramfile = //" | sed "s/'//g")"
@@ -68,12 +82,12 @@ if [[ "${flanduse_timeseries}" != "" ]]; then
 fi
 
 # user_nl_clm: Replace MESHFILE_PLACEHOLDER with the appropriate file for this resolution
-file_mesh="$(./xmlquery --value LND_DOMAIN_MESH)"
+file_mesh="$(./xmlquery -N --value LND_DOMAIN_MESH)"
 sed -i "s@MESHFILE_PLACEHOLDER@${file_mesh}@" user_nl_clm
 
 # user_nl_clm: Replace SDATEFILE_PLACEHOLDER with the appropriate file for this resolution.
 # EVENTUALLY: Generate sdate (and hdate) file at case resolution from GGCMI files; save to case directory and use that.
-lnd_grid=$(./xmlquery --value LND_GRID)
+lnd_grid=$(./xmlquery -N --value LND_GRID)
 blessed_crop_dates_dir="/glade/work/samrabin/crop_dates_blessed"
 if [[ "${lnd_grid}" == "10x15" ]]; then
     file_sdates="${blessed_crop_dates_dir}/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.fill1.nc"
@@ -85,7 +99,15 @@ else
 fi
 sed -i "s@SDATEFILE_PLACEHOLDER@${file_sdates}@" user_nl_clm
 
-# Rebuild namelists
-./check_case 1>/dev/null
+# Rebuild namelists (optional, so don't worry if it doesn't work)
+set +e
+./check_case 1>.check_case_tmp 2>&1
+check_case_result=$?
+set -e
+if [[ ${check_case_result} -ne 0 ]]; then
+    echo "check_case failed; ignoring"
+#    cat .check_case_tmp
+fi
+rm .check_case_tmp
 
 exit 0
