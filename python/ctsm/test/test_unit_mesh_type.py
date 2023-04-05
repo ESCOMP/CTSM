@@ -8,9 +8,9 @@ You can run this by:
 
 import os
 import sys
+import unittest
 import numpy as np
 import xarray as xr
-import unittest
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
@@ -18,13 +18,20 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
-from ctsm.site_and_regional.mesh_type import MeshType
+
+# from ctsm.site_and_regional.mesh_type import MeshType
 from ctsm.site_and_regional.mesh_plot_type import MeshPlotType
+
+# Allow test names that pylint doesn't like; otherwise hard to make them
+# readable
+# pylint: disable=invalid-name
+
 
 class TestMeshType(unittest.TestCase):
     """
     Basic class for testing mesh_type.py.
     """
+
     def setUp(self):
         """Setup for all tests"""
         lon0 = np.array([120.0])
@@ -39,4 +46,9 @@ class TestMeshType(unittest.TestCase):
     def test_read_file_fails_notXarrayDataset(self):
         """Test that read_file properly fails if not given an X-array Dataset"""
         with self.assertRaisesRegex(SystemExit, "Input file is not a X-Array DataSet type"):
-            self.mesh.read_file( 1.0 )
+            self.mesh.read_file(1.0)
+
+
+if __name__ == "__main__":
+    unit_testing.setup_for_tests()
+    unittest.main()

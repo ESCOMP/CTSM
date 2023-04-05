@@ -94,24 +94,26 @@ class MeshType:
         Read an input mesh file
         """
         if not isinstance(xrds_in, xr.Dataset):
-           abort( "Input file is not a X-Array DataSet type" )
+            abort("Input file is not a X-Array DataSet type")
 
-        expectedVarList = [ "nodeCoords", "elementConn", "numElementConn", "centerCoords" ]
-        for var in expectedVarList:
-           if not var in xrds_in.variables:
-               abort( "Variable expected to be on an ESMF mesh file is NOT found: %s", var )
+        expected_var_list = ["nodeCoords", "elementConn", "numElementConn", "centerCoords"]
+        for var in expected_var_list:
+            if not var in xrds_in.variables:
+                abort("Variable expected to be on an ESMF mesh file is NOT found: " + var)
 
         # Check for optional fields
-        if "elmentMask" in xrds_in.variables:
-            mask_available = True
+        if "elementMask" in xrds_in.variables:
             if max(xrds_in["elementMask"]) > 1.0 or min(xrds_in["elementMask"]) < 0.0:
                 abort("elementMask variable is not within 0 to 1")
+            mask = xrds_in["elementMask"].astype(np.float32)
+            self.mask = np.array(mask.astype(np.int8))
+        else:
+            self.create_artificial_mask()
 
-        if "elmentArea" in xrds_in.variables:
-            area_available = True
-            if "units" in xrds_in[args.area_name].attrs:
-               if  xrds_in[args.area_name].attrs["units"] is not "radians^2":
-                   abort( "elementArea is on the mesh file, but without the correct units" )
+        if "elementArea" in xrds_in.variables:
+            if "units" in xrds_in["elementArea"].attrs:
+                if xrds_in["elementArea"].attrs["units"] != "radians^2":
+                    abort("elementArea is on the mesh file, but without the correct units")
 
     def check_lat_lon_dims(self):
         """
