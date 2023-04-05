@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev121
 Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
-Date: Tue Apr  4 04:34:20 PM MDT 2023
+Date: Wed Apr  5 09:15:55 MDT 2023
 One-line Summary: Changes soil moisture initialization logic for FATES
 
 Purpose and description of changes
@@ -42,6 +42,9 @@ Bugs fixed or introduced
 Externals issues fixed (include issue #):
     Partially addresses FATES#994 -- Bare ground establishment problem and increased soil moisture
 
+Known bugs found since the previous tag (include issue #):
+    #1979 -- Need to loosen tolerance on near-zero truncation of h2osoi_ice in UpdateState_TopLayerFluxes
+
 Notes of particular relevance for users
 ---------------------------------------
 
@@ -50,13 +53,11 @@ Changes made to namelist defaults (e.g., changed parameter values):
 
 Notes of particular relevance for developers:
 ---------------------------------------------
-NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
-Changes to tests or testing:
-
+    This changes the starting level for a COLD start of soil moisture for ALL FATES cases to a much
+    higher value than for non-FATES. In the long run we'd like to have these the same and/or
+    have the value changable on the namelist.
 
 Testing summary:
 ----------------
@@ -98,7 +99,8 @@ List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
 
-  https://github.com/ESCOMP/CTSM/pull/1962
+  https://github.com/ESCOMP/CTSM/pull/1962 -- Cold start moisture for FATES increased
+  https://github.com/ESCOMP/CTSM/pull/1978 -- revert some commits now that FUNITCTSM works again
 
 ===============================================================
 ===============================================================
