@@ -44,8 +44,6 @@ blbf1 TBLscript_tools.sh site_and_regional subset_data subset_data_f09_38x288pt_
 smbg1 TSMscript_tools.sh site_and_regional subset_data subset_data_f09_4x9pt_AlaskaTananaValley
 blbg1 TBLscript_tools.sh site_and_regional subset_data subset_data_f09_4x9pt_AlaskaTananaValley
 
-sm9T1 TSMscript_tools.sh site_and_regional mesh_maker mesh_maker_1x1_numaIA
-bl9T1 TBLscript_tools.sh site_and_regional mesh_maker mesh_maker_1x1_numaIA
 sm901 TSMscript_tools.sh site_and_regional mesh_maker mesh_maker_fv09
 bl901 TBLscript_tools.sh site_and_regional mesh_maker mesh_maker_fv09
 

@@ -1,1 +1,0 @@
- --input CSMDATA/lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_numaIA_hist_78pfts_CMIP6_simyr2000_c230123.nc --output 1x1_numaIA_mesh.nc --lat lsmlat --lon lsmlon --overwrite
