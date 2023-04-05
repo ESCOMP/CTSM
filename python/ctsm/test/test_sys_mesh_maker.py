@@ -158,7 +158,9 @@ class SysTestMeshMaker(unittest.TestCase):
         """
         Test that reading a file results in the same mesh as converting one
         """
-        infile = os.path.join(self._testinputs_path, "ESMF_mesh_5x5pt_amazon_from_domain_c230308.nc" )
+        infile = os.path.join(
+            self._testinputs_path, "ESMF_mesh_5x5pt_amazon_from_domain_c230308.nc"
+        )
         sys.argv = [
             "mesh_maker",
             "--input",

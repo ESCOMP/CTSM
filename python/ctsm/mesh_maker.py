@@ -237,8 +237,6 @@ def main():
     args = process_and_check_args(args)
 
     nc_file = args.input
-    lat_name = args.lat_name
-    lon_name = args.lon_name
     mesh_out = args.output
     mask_name = args.mask_name
     area_name = args.area_name
@@ -247,8 +245,8 @@ def main():
 
     check_input_file(args, ds)
 
-    lats = ds[lat_name].astype(np.float32)
-    lons = ds[lon_name].astype(np.float32)
+    lats = ds[args.lat_name].astype(np.float32)
+    lons = ds[args.lon_name].astype(np.float32)
 
     if (len(lats.dims) > 2) or (len(lons.dims) > 2):
         time_dims = [dim for dim in lats.dims if "time" in dim.lower()]
@@ -305,18 +303,16 @@ def read_main():
     args = process_and_check_args(args)
 
     nc_file = args.input
-    lat_name = args.lat_name
-    lon_name = args.lon_name
     mesh_out = args.output
 
     ds = xr.open_dataset(nc_file, mask_and_scale=False, decode_times=False).transpose()
 
-    lon0 = np.array( [ 120.0 ] )
-    lat0 = np.array( [ 45.0 ] )
+    lon0 = np.array([120.0])
+    lat0 = np.array([45.0])
     x_dim = "lon"
     y_dim = "lat"
-    lons = xr.DataArray( lon0, name="lon", dims=x_dim, coords={x_dim: lon0})
-    lats = xr.DataArray( lat0, name="lat", dims=y_dim, coords={y_dim: lat0})
+    lons = xr.DataArray(lon0, name="lon", dims=x_dim, coords={x_dim: lon0})
+    lats = xr.DataArray(lat0, name="lat", dims=y_dim, coords={y_dim: lat0})
 
     logging.info("Reading  mesh file from : %s", nc_file)
     logging.info("Writing mesh file to    : %s", mesh_out)
@@ -324,6 +320,7 @@ def read_main():
     this_mesh = MeshPlotType(lats, lons)
     this_mesh.read_file(ds)
     this_mesh.create_esmf(mesh_out, area=None)
+
 
 if __name__ == "__main__":
     main()

@@ -13,6 +13,8 @@ import xarray as xr
 # import dask.dataframe as dd
 import pandas
 
+from ctsm.utils import abort
+
 logger = logging.getLogger(__name__)
 
 
@@ -272,6 +274,10 @@ class MeshType:
         In ESMF mesh, 'nodeCoords' is a two-dimensional array
         with dimension ('nodeCount','coordDim')
         """
+        # Check that corners are set
+        if not self.are_corners_set():
+            abort("Corners have not been set in the mesh object")
+
         # -- create an array of corner pairs
         corner_pairs = np.stack(
             [self.corner_lons.T.reshape((-1,)).T, self.corner_lats.T.reshape((-1,)).T],
@@ -303,6 +309,12 @@ class MeshType:
             logger.warning("This may result your simulation to crash later.")
             # abort( "Expected size for element connections is wrong" )
 
+    def are_corners_set(self):
+        """Check if the corners have been set for this object"""
+        if isinstance(self.corner_lons, int):
+            return False
+        return True
+
     def calculate_elem_conn(self):
         """
         Calculate element connectivity (for 'elementConn' in ESMF mesh).
@@ -325,6 +337,11 @@ class MeshType:
 
         ## -- reshape to write to ESMF
         # self.elem_conn = elem_conn.T.reshape((4, -1)).T
+
+        # Check that corners are set
+        if not self.are_corners_set():
+            abort("Corners have not been set in the mesh object")
+
         corners = pandas.concat(
             [
                 pandas.DataFrame(corner)
@@ -343,10 +360,20 @@ class MeshType:
         # -- reshape to write to ESMF
         self.elem_conn = elem_conn.T.reshape((4, -1)).T
 
+    def are_nodes_set(self):
+        """Check if the nodes have been set for this object"""
+        if isinstance(self.center_coords, int):
+            return False
+        return True
+
     def calculate_nodes(self):
         """
         Calculate the node coordinates, element connections and center coordinates
         """
+        # Check that corners are set
+        if not self.are_corners_set():
+            abort("Corners have not been set in the mesh object")
+
         # -- calculate node coordinates
         self.calculate_node_coords()
 
@@ -374,6 +401,9 @@ class MeshType:
             Array containing element areas for the ESMF mesh file
             If None, ESMF calculates element areas internally.
         """
+        if not self.are_nodes_set():
+            abort("Nodes  have not been set in the mesh object")
+
         # create output Xarray dataset
         ds_out = xr.Dataset()
 
