@@ -64,7 +64,9 @@ class TestMeshType(unittest.TestCase):
             },
             attrs={"Conventions": "test data only"},
         )
-        with self.assertRaisesRegex(SystemExit, "Variable expected to be on an ESMF mesh file is NOT found: nodeCoords"):
+        with self.assertRaisesRegex(
+            SystemExit, "Variable expected to be on an ESMF mesh file is NOT found: nodeCoords"
+        ):
             self.mesh.read_file(ds)
 
 

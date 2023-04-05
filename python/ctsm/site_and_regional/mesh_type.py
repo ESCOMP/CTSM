@@ -115,6 +115,12 @@ class MeshType:
                 if xrds_in["elementArea"].attrs["units"] != "radians^2":
                     abort("elementArea is on the mesh file, but without the correct units")
 
+        #
+        # Get data
+        #
+        self.node_coords = pandas.DataFrame(data=xrds_in["nodeCoords"])
+        self.center_coords = xrds_in["centerCoords"]
+
     def check_lat_lon_dims(self):
         """
         Check latitude and longitude dimensions to make sure they are valid.
@@ -334,6 +340,8 @@ class MeshType:
         """Check if the corners have been set for this object"""
         if isinstance(self.corner_lons, int):
             return False
+        if isinstance(self.corner_lats, int):
+            return False
         return True
 
     def calculate_elem_conn(self):
@@ -383,7 +391,11 @@ class MeshType:
 
     def are_nodes_set(self):
         """Check if the nodes have been set for this object"""
+        if isinstance(self.node_coords, int):
+            return False
         if isinstance(self.center_coords, int):
+            return False
+        if isinstance(self.elem_conn, int):
             return False
         return True
 
@@ -428,9 +440,10 @@ class MeshType:
         # create output Xarray dataset
         ds_out = xr.Dataset()
 
-        ds_out["origGridDims"] = xr.DataArray(
-            np.array(self.center_lon2d.shape, dtype=np.int32), dims=("origGridRank")
-        )
+        if isinstance(self.center_lon2d, np.ndarray):
+            ds_out["origGridDims"] = xr.DataArray(
+                np.array(self.center_lon2d.shape, dtype=np.int32), dims=("origGridRank")
+            )
         ds_out["nodeCoords"] = xr.DataArray(
             self.node_coords, dims=("nodeCount", "coordDim"), attrs={"units": self.unit}
         )
@@ -444,11 +457,13 @@ class MeshType:
         )
         ds_out.elementConn.encoding = {"dtype": np.int32}
 
-        ds_out["numElementConn"] = xr.DataArray(
-            4 * np.ones(self.center_lon2d.size, dtype=np.int32),
-            dims=("elementCount"),
-            attrs={"long_name": "Number of nodes per element"},
-        )
+        if isinstance(self.center_lon2d, np.ndarray):
+            ds_out["numElementConn"] = xr.DataArray(
+                4 * np.ones(self.center_lon2d.size, dtype=np.int32),
+                dims=("elementCount"),
+                attrs={"long_name": "Number of nodes per element"},
+            )
+
         ds_out["centerCoords"] = xr.DataArray(
             self.center_coords,
             dims=("elementCount", "coordDim"),
