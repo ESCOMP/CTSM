@@ -33,6 +33,7 @@ module CLMFatesInterfaceMod
 
    ! Used CLM Modules
 #include "shr_assert.h"
+use FatesGlobals     , only : fates_log
    use PatchType         , only : patch
    use shr_kind_mod      , only : r8 => shr_kind_r8
    use decompMod         , only : bounds_type, subgrid_level_column
@@ -836,6 +837,8 @@ module CLMFatesInterfaceMod
       type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
 
       ! !LOCAL VARIABLES:
+      type(ed_patch_type), pointer :: currentPatch
+      integer  :: iv, ic
       integer  :: s                        ! site index
       integer  :: g                        ! grid-cell index (HLM)
       integer  :: c                        ! column index (HLM)
@@ -844,12 +847,18 @@ module CLMFatesInterfaceMod
       integer  :: nlevsoil                 ! number of soil layers at the site
       integer  :: nld_si                   ! site specific number of decomposition layers
       integer  :: ft                       ! plant functional type
+      integer ::&
+      yr,    &! year
+      mon,   &! month
+      day,   &! day of month
+      tod     ! time of day (seconds past 0Z)
       real(r8), pointer :: lnfm24(:)       ! 24-hour averaged lightning data
       real(r8), pointer :: gdp_lf_col(:)          ! gdp data
       integer  :: ier
       integer  :: begg,endg
       real(r8) :: harvest_rates(bounds_clump%begg:bounds_clump%endg,num_harvest_inst)
       logical  :: after_start_of_harvest_ts
+      logical, save :: first_time = .true.
       integer  :: iharv
       !-----------------------------------------------------------------------
 
@@ -1031,6 +1040,29 @@ module CLMFatesInterfaceMod
                   this%fates(nc)%bc_in(s), &
                   this%fates(nc)%bc_out(s))
 
+                  call get_curr_date(yr, mon, day, tod)
+                  if (yr == 2020 .and. mon == 6 .and. day == 1) then 
+                     currentpatch => this%fates(nc)%sites(s)%youngest_patch
+                     do while(associated(currentpatch))
+                        write(fates_log(),*) 'can area is ', currentpatch%total_canopy_area
+                        write(fates_log(),*) '-------------------------------------------------------'
+                        do ic = 1, 2
+                           do ft = 1, 16
+                              do iv = 1, 30
+                                 write(fates_log(),*) 'can area prof is ', currentpatch%canopy_area_profile(ic,ft,iv), ic, ft, iv
+                                 write(fates_log(),*) 'elai prof is ', currentpatch%elai_profile(ic,ft,iv), ic, ft, iv
+                                 write(fates_log(),*) 'esai area prof is ', currentpatch%esai_profile(ic,ft,iv), ic, ft, iv
+                              end do
+                              write(fates_log(),*) '-------------------------------------------------------'
+                              write(fates_log(),*) 'nrad prof is ', currentpatch%nrad(ic,ft), ic, ft
+                              write(fates_log(),*) '-------------------------------------------------------'
+                           end do 
+                        end do
+                        currentPatch => currentpatch%older
+                     enddo
+                  first_time = .false.
+               end if
+
       enddo
 
       ! ---------------------------------------------------------------------------------
@@ -1121,6 +1153,7 @@ module CLMFatesInterfaceMod
      type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
      type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
+                   
 
      ! is this being called during a read from restart sequence (if so then use the restarted fates
      ! snow depth variable rather than the CLM variable).
@@ -1132,6 +1165,9 @@ module CLMFatesInterfaceMod
      integer :: s       ! site index
      integer :: c       ! column index
      integer :: g       ! grid cell
+     integer :: ic, ft, iv
+     logical, save           :: first_time = .true.
+     type(ed_patch_type), pointer  :: currentPatch
 
      real(r8) :: areacheck
      call t_startf('fates_wrap_update_hlmfates_dyn')
@@ -1167,13 +1203,16 @@ module CLMFatesInterfaceMod
        ! Canopy diagnostics for FATES
        call canopy_summarization(this%fates(nc)%nsites, &
             this%fates(nc)%sites,  &
-            this%fates(nc)%bc_in)
+            this%fates(nc)%bc_in)            
 
        ! Canopy diagnostic outputs for HLM
        call update_hlm_dynamics(this%fates(nc)%nsites, &
             this%fates(nc)%sites,  &
             this%f2hmap(nc)%fcolumn, &
             this%fates(nc)%bc_out )
+
+
+            
 
        !------------------------------------------------------------------------
        ! FATES calculation of ligninNratio
@@ -1379,11 +1418,13 @@ module CLMFatesInterfaceMod
       integer           :: nclumps
       type(fates_bounds_type) :: fates_bounds
       type(fates_bounds_type) :: fates_clump
+      type(ed_patch_type), pointer :: currentPatch
       integer                 :: c   ! HLM column index
       integer                 :: s   ! Fates site index
       integer                 :: g   ! grid-cell index
       integer                 :: p   ! HLM patch index
       integer                 :: ft  ! plant functional type
+      integer                 :: ic, iv
       integer                 :: dk_index
       integer                 :: nlevsoil
       character(len=fates_long_string_length) :: ioname
@@ -1391,7 +1432,9 @@ module CLMFatesInterfaceMod
       integer                 :: ivar
       logical                 :: readvar
 
+
       logical, save           :: initialized = .false.
+      logical, save           :: first_time = .true.
 
      call t_startf('fates_restart')
 
@@ -2171,7 +2214,7 @@ module CLMFatesInterfaceMod
     use pftconMod         , only : pftcon
     use PatchType         , only : patch
     use quadraticMod      , only : quadratic
-    use EDtypesMod        , only : ed_patch_type, ed_cohort_type, ed_site_type
+    use EDtypesMod        , only : ed_patch_type, fates_cohort_type, ed_site_type
 
     !
     ! !ARGUMENTS:
@@ -3137,13 +3180,13 @@ module CLMFatesInterfaceMod
 
  subroutine hlm_bounds_to_fates_bounds(hlm, fates)
 
-   use FatesIODimensionsMod, only : fates_bounds_type
+   use FatesIODimensionsMod,   only : fates_bounds_type
    use FatesInterfaceTypesMod, only : nlevsclass, nlevage, nlevcoage
    use FatesInterfaceTypesMod, only : nlevheight
    use FatesInterfaceTypesMod, only : nlevdamage
-   use EDtypesMod,        only : nfsc
-   use FatesLitterMod,    only : ncwd
-   use EDtypesMod,        only : nlevleaf, nclmax
+   use FatesLitterMod,         only : nfsc
+   use FatesLitterMod,         only : ncwd
+   use EDParamsMod,            only : nlevleaf, nclmax
    use FatesInterfaceTypesMod, only : numpft_fates => numpft
    
 
