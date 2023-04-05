@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev121
 Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
-Date: Wed Apr  5 09:15:55 MDT 2023
+Date: Wed Apr  5 13:34:09 MDT 2023
 One-line Summary: Changes soil moisture initialization logic for FATES
 
 Purpose and description of changes
