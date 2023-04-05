@@ -38,15 +38,34 @@ class TestMeshType(unittest.TestCase):
         lat0 = np.array([45.0])
         x_dim = "lon"
         y_dim = "lat"
-        lons = xr.DataArray(lon0, name="lon", dims=x_dim, coords={x_dim: lon0})
-        lats = xr.DataArray(lat0, name="lat", dims=y_dim, coords={y_dim: lat0})
+        self.lons = xr.DataArray(lon0, name="lon", dims=x_dim, coords={x_dim: lon0})
+        self.lats = xr.DataArray(lat0, name="lat", dims=y_dim, coords={y_dim: lat0})
 
-        self.mesh = MeshPlotType(lats, lons)
+        self.mesh = MeshPlotType(self.lats, self.lons)
 
     def test_read_file_fails_notXarrayDataset(self):
         """Test that read_file properly fails if not given an X-array Dataset"""
         with self.assertRaisesRegex(SystemExit, "Input file is not a X-Array DataSet type"):
             self.mesh.read_file(1.0)
+
+    def test_read_file_fails_badvarlist(self):
+        """Test that read_file properly fails if input dataset does not have required variables"""
+        ds = xr.Dataset(
+            {
+                "PCT_NATVEG": xr.DataArray(
+                    data=np.random.rand(1, 1),
+                    dims=["lat", "lon"],
+                    coords={"lat": self.lats, "lon": self.lons},
+                    attrs={
+                        "long_name": "total percent natural vegetation landunit",
+                        "units": "unitless",
+                    },
+                ),
+            },
+            attrs={"Conventions": "test data only"},
+        )
+        with self.assertRaisesRegex(SystemExit, "Variable expected to be on an ESMF mesh file is NOT found: nodeCoords"):
+            self.mesh.read_file(ds)
 
 
 if __name__ == "__main__":
