@@ -16,6 +16,7 @@ import xarray as xr
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
 from ctsm.mesh_maker import main
+from ctsm.mesh_maker import read_main
 
 # pylint: disable=invalid-name
 
@@ -152,6 +153,28 @@ class SysTestMeshMaker(unittest.TestCase):
         plotfiles = glob.glob(self._tempdir + "/*.png")
         if plotfiles:
             self.fail("plot files exist and there should not be any")
+
+    def test_readfile(self):
+        """
+        Test that reading a file results in the same mesh as converting one
+        """
+        infile = os.path.join(self._testinputs_path, "ESMF_mesh_5x5pt_amazon_from_domain_c230308.nc" )
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            infile,
+            "--lat",
+            "yc",
+            "--lon",
+            "xc",
+            "--no-plot",
+            "--output",
+            self.mesh_out,
+        ]
+        read_main()
+        mesh_out = xr.open_dataset(self.mesh_out)
+        expected = xr.open_dataset(infile)
+        self.compare_mesh_files(mesh_out, expected)
 
     def test_noplot_add_mask(self):
         """Do a simple basic test without plotting and also adding mask"""

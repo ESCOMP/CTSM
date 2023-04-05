@@ -281,6 +281,7 @@ def main():
 
     this_mesh = MeshPlotType(lats, lons, mask=mask)
     this_mesh.calculate_corners()
+    this_mesh.calculate_nodes()
     this_mesh.create_esmf(mesh_out, area=area)
     if not args.noplot:
         plot_regional = os.path.splitext(mesh_out)[0] + "_regional" + ".png"
@@ -289,6 +290,40 @@ def main():
 
         this_mesh.make_mesh_plot(plot_regional, plot_global)
 
+
+def read_main():
+    """Main function to read a mesh file and output it again"""
+
+    setup_logging_pre_config()
+    parser = get_parser()
+    args = parser.parse_args()
+
+    # --------------------------------- #
+    # process logging args (i.e. debug and verbose)
+    process_logging_args(args)
+
+    args = process_and_check_args(args)
+
+    nc_file = args.input
+    lat_name = args.lat_name
+    lon_name = args.lon_name
+    mesh_out = args.output
+
+    ds = xr.open_dataset(nc_file, mask_and_scale=False, decode_times=False).transpose()
+
+    lon0 = np.array( [ 120.0 ] )
+    lat0 = np.array( [ 45.0 ] )
+    x_dim = "lon"
+    y_dim = "lat"
+    lons = xr.DataArray( lon0, name="lon", dims=x_dim, coords={x_dim: lon0})
+    lats = xr.DataArray( lat0, name="lat", dims=y_dim, coords={y_dim: lat0})
+
+    logging.info("Reading  mesh file from : %s", nc_file)
+    logging.info("Writing mesh file to    : %s", mesh_out)
+
+    this_mesh = MeshPlotType(lats, lons)
+    this_mesh.read_file(ds)
+    this_mesh.create_esmf(mesh_out, area=None)
 
 if __name__ == "__main__":
     main()

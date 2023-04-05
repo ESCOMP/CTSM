@@ -87,6 +87,11 @@ class MeshType:
         self.elem_conn = 1
         self.center_coords = 1
 
+    def read_file(self, xrds_in):
+        """
+        Read an input mesh file
+        """
+
     def check_lat_lon_dims(self):
         """
         Check latitude and longitude dimensions to make sure they are valid.
@@ -338,18 +343,9 @@ class MeshType:
         # -- reshape to write to ESMF
         self.elem_conn = elem_conn.T.reshape((4, -1)).T
 
-    def create_esmf(self, mesh_fname, area=None):
+    def calculate_nodes(self):
         """
-        Create an ESMF mesh file for the mesh
-
-        Parameters
-        ----------
-        mesh_fname : str
-            The path to write the ESMF meshfile
-
-        area : numpy.ndarray or None
-            Array containing element areas for the ESMF mesh file
-            If None, ESMF calculates element areas internally.
+        Calculate the node coordinates, element connections and center coordinates
         """
         # -- calculate node coordinates
         self.calculate_node_coords()
@@ -364,6 +360,20 @@ class MeshType:
             ],
             axis=1,
         )
+
+    def create_esmf(self, mesh_fname, area=None):
+        """
+        Create an ESMF mesh file for the mesh
+
+        Parameters
+        ----------
+        mesh_fname : str
+            The path to write the ESMF meshfile
+
+        area : numpy.ndarray or None
+            Array containing element areas for the ESMF mesh file
+            If None, ESMF calculates element areas internally.
+        """
         # create output Xarray dataset
         ds_out = xr.Dataset()
 
