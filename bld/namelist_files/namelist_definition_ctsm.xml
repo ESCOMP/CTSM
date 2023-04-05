@@ -1698,10 +1698,10 @@ Mapping method from Nitrogen deposition input file to the model resolution
 <!-- dmleung added 11 Mar 2023 -->
 <!-- ========================================================================================  -->
 
-<entry id="dust_emis_fact" type="real" category="dataset"
-       group="dust_nl" valid_values="" >
-Tuning parameter for dust emissions.
-</entry>
+<!-- <entry id="dust_emis_fact" type="real" category="dataset" -->
+<!--        group="dust_nl" valid_values="" > -->
+<!-- Tuning parameter for dust emissions. -->
+<!-- </entry> -->
 
 <entry id="stream_fldfilename_zendersoilerod" type="char*256" category="datasets"
        input_pathname="abs" group="zendersoilerod" valid_values="" >

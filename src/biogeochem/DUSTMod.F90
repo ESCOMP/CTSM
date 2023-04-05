@@ -31,7 +31,7 @@ module DUSTMod
   use ColumnType           , only : col
   use PatchType            , only : patch
   use ZenderSoilErodStreamType,  only : zendersoilerodstream_type   ! dmleung added 11 Mar 2023
-  use spmdMod              , only : masterproc, mpicom, MPI_REAL8  ! dmleung added 11 Mar 2023
+  !use spmdMod              , only : masterproc, mpicom, MPI_REAL8  ! dmleung added 11 Mar 2023
   !  
   ! !PUBLIC TYPES
   implicit none
@@ -49,7 +49,7 @@ module DUSTMod
   real(r8) , allocatable :: stk_crc(:) ![frc] Correction to Stokes settling velocity
   real(r8) tmp1                        !Factor in saltation computation (named as in Charlie's code)
   real(r8) dns_aer                     ![kg m-3] Aerosol density
-  real(r8) dust_emis_fact              ! dmleung added 11 Mar 2023
+  !real(r8) dust_emis_fact              ! dmleung added 11 Mar 2023
   !
   ! !PUBLIC DATA TYPES:
   !
@@ -187,14 +187,14 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: c,l
-    integer ier  ! error code, dmleung added 11 Mar 2023
+    !integer ier  ! error code, dmleung added 11 Mar 2023
     !-----------------------------------------------------------------------
 
     !#### dmleung added 11 Mar 2023 ####################################
     ! read in global tuning factor from namelist
-    namelist /dust_nl/ dust_emis_fact
+    !namelist /dust_nl/ dust_emis_fact
     ! Default values for namelist
-    dust_emis_fact      = 1
+    !dust_emis_fact      = 1
     ! Read soilm_streams namelist
     !if (masterproc) then
     !   open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
@@ -210,10 +210,10 @@ contains
     !   close(nu_nml)
     !endif
     !call shr_mpi_bcast(dust_emis_fact, mpicom)
-    call mpi_bcast (dust_emis_fact, 1, MPI_REAL8,0, mpicom, ier)
-    if (masterproc) then
-       write(iulog,*) '  dust_emis_fact  = ',dust_emis_fact
-    end if
+    !call mpi_bcast (dust_emis_fact, 1, MPI_REAL8,0, mpicom, ier)
+    !if (masterproc) then
+    !   write(iulog,*) '  dust_emis_fact  = ',dust_emis_fact
+    !end if
 
     ! Set basin factor to 1 for now
 
@@ -484,8 +484,8 @@ contains
             !          integrated streamwise mass flux
 
             dst_slt_flx_rat_ttl = 100.0_r8 * exp( log(10.0_r8) * (13.4_r8 * mss_frc_cly_vld(c) - 6.0_r8) )
-            !flx_mss_vrt_dst_ttl(p) = flx_mss_hrz_slt_ttl * dst_slt_flx_rat_ttl
-            flx_mss_vrt_dst_ttl(p) = flx_mss_hrz_slt_ttl * dst_slt_flx_rat_ttl / dust_emis_fact  ! dmleung added 11 Mar 2023
+            flx_mss_vrt_dst_ttl(p) = flx_mss_hrz_slt_ttl * dst_slt_flx_rat_ttl
+            !flx_mss_vrt_dst_ttl(p) = flx_mss_hrz_slt_ttl * dst_slt_flx_rat_ttl / dust_emis_fact  ! dmleung added 11 Mar 2023
 
          end if   ! lnd_frc_mbl > 0.0
 
