@@ -119,8 +119,6 @@ class SysTestMeshMaker(unittest.TestCase):
         self.assertTrue(equalcenterCoords.all, "centerCoords different")
         self.assertTrue(equalelementMask.all, "mask different")
         self.assertTrue(equalelementArea.all, "area different")
-        print(mesh_out)
-        print(expected)
         self.assertTrue(
             mesh_out.equals(expected), "Output mesh does not compare to the expected baseline file"
         )

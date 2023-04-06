@@ -161,11 +161,9 @@ class TestSubsetData(unittest.TestCase):
         """
         sys.argv = ["subset_data", "region", "--create-user-mods", "--create-surface"]
         self.args = self.parser.parse_args()
-        print(self.args)
         with self.assertRaisesRegex(
             argparse.ArgumentError, "For regional cases, you can not create user_mods"
         ):
-            print("run check_args")
             check_args(self.args)
 
 

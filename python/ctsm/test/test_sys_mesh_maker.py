@@ -93,6 +93,10 @@ class SysTestMeshMaker(unittest.TestCase):
             )
             equalorigGridDims = mesh_out.origGridDims == expected.origGridDims
             self.assertTrue(equalorigGridDims.all, "origGridDims different")
+            compare_files = True
+        else:
+            # don't compare files if origGridRank isn't on one of the files
+            compare_files = False
 
         self.assertEqual(
             mesh_out.dims["nodeCount"], expected.dims["nodeCount"], "nodeCount not the same"
@@ -120,9 +124,11 @@ class SysTestMeshMaker(unittest.TestCase):
         self.assertTrue(equalnumElementConn.all, "numElementConn different")
         self.assertTrue(equalcenterCoords.all, "centerCoords different")
         self.assertTrue(equalelementMask.all, "mask different")
-        self.assertTrue(
-            mesh_out.equals(expected), "Output mesh does not compare to the expected baseline file"
-        )
+        if compare_files:
+            self.assertTrue(
+                mesh_out.equals(expected),
+                "Output mesh does not compare to the expected baseline file",
+            )
 
     def test_domainfile_region_warea(self):
         """
