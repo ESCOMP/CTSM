@@ -80,19 +80,32 @@ class MeshType:
 
         self.unit = "degrees"
 
+        #
         # variables that will be set to proper values later...
+        #
+        # These are only used for a conversion
         self.center_lat2d = 1
         self.center_lon2d = 1
         self.corner_lats = 1
         self.corner_lons = 1
+        # These are normally calculated
         self.node_coords = 1
         self.elem_conn = 1
         self.center_coords = 1
+        # This one is only used when read from a file
+        self.num_elem_conn = 1
 
     def read_file(self, xrds_in):
         """
         Read an input mesh file
         """
+        # Check that corners are set
+        if self.are_corners_set():
+            abort(
+                "Corners have been set in the mesh object,"
+                + " read_file can only be used from an empty mesh_type object"
+            )
+
         if not isinstance(xrds_in, xr.Dataset):
             abort("Input file is not a X-Array DataSet type")
 
@@ -118,8 +131,40 @@ class MeshType:
         #
         # Get data
         #
-        self.node_coords = pandas.DataFrame(data=xrds_in["nodeCoords"])
-        self.center_coords = xrds_in["centerCoords"]
+        self.center_coords = xrds_in["centerCoords"].T
+        num_element_count = self.center_coords.shape[0]
+        num_coord_dim = self.center_coords.shape[1]
+        self.elem_conn = xrds_in["elementConn"].T
+        if self.elem_conn.shape[0] != num_element_count:
+            abort(
+                "size of elementConn is not consistent is "
+                + str(self.elem_conn.shape[0])
+                + " expected "
+                + str(num_element_count)
+            )
+        self.num_elem_conn = xrds_in["numElementConn"]
+        if self.num_elem_conn.shape[0] != num_element_count:
+            abort(
+                "size of elementConn is not consistent is "
+                + str(self.num_elem_conn.shape[0])
+                + " expected "
+                + str(num_element_count)
+            )
+        self.node_coords = xrds_in["nodeCoords"].T
+        if self.node_coords.shape[1] != num_coord_dim:
+            abort(
+                "size of node_coords is not consistent is "
+                + str(self.node_coords.shape[1])
+                + " expected "
+                + str(num_coord_dim)
+            )
+        if max(self.num_elem_conn) > self.elem_conn.shape[1]:
+            abort(
+                "max size of num_elem_conn is greater than dimension"
+                + str(max(self.num_elem_conn))
+                + " expected "
+                + str(self.elem_conn.shape[1])
+            )
 
     def check_lat_lon_dims(self):
         """
@@ -440,10 +485,12 @@ class MeshType:
         # create output Xarray dataset
         ds_out = xr.Dataset()
 
+        # origGridDims is only output if a mesh file was converted
         if isinstance(self.center_lon2d, np.ndarray):
             ds_out["origGridDims"] = xr.DataArray(
                 np.array(self.center_lon2d.shape, dtype=np.int32), dims=("origGridRank")
             )
+
         ds_out["nodeCoords"] = xr.DataArray(
             self.node_coords, dims=("nodeCount", "coordDim"), attrs={"units": self.unit}
         )
@@ -460,6 +507,12 @@ class MeshType:
         if isinstance(self.center_lon2d, np.ndarray):
             ds_out["numElementConn"] = xr.DataArray(
                 4 * np.ones(self.center_lon2d.size, dtype=np.int32),
+                dims=("elementCount"),
+                attrs={"long_name": "Number of nodes per element"},
+            )
+        else:
+            ds_out["numElementConn"] = xr.DataArray(
+                self.num_elem_conn,
                 dims=("elementCount"),
                 attrs={"long_name": "Number of nodes per element"},
             )

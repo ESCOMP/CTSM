@@ -85,11 +85,15 @@ class SysTestMeshMaker(unittest.TestCase):
         self.assertEqual(
             mesh_out.dims["coordDim"], expected.dims["coordDim"], "coordDim not the same"
         )
-        self.assertEqual(
-            mesh_out.dims["origGridRank"],
-            expected.dims["origGridRank"],
-            "origGridRank not the same",
-        )
+        if "origGridRank" in mesh_out.variables and "origGridRank" in expected.variables:
+            self.assertEqual(
+                mesh_out.dims["origGridRank"],
+                expected.dims["origGridRank"],
+                "origGridRank not the same",
+            )
+            equalorigGridDims = mesh_out.origGridDims == expected.origGridDims
+            self.assertTrue(equalorigGridDims.all, "origGridDims different")
+
         self.assertEqual(
             mesh_out.dims["nodeCount"], expected.dims["nodeCount"], "nodeCount not the same"
         )
@@ -103,20 +107,19 @@ class SysTestMeshMaker(unittest.TestCase):
             expected.dims["maxNodePElement"],
             "maxNodePElement not the same",
         )
-        equalorigGridDims = mesh_out.origGridDims == expected.origGridDims
         equalelementConn = mesh_out.elementConn == expected.elementConn
         equalnumElementConn = mesh_out.numElementConn == expected.numElementConn
         equalcenterCoords = mesh_out.centerCoords == expected.centerCoords
         equalelementMask = mesh_out.elementMask == expected.elementMask
-        equalelementArea = mesh_out.elementArea == expected.elementArea
-        self.assertTrue(equalorigGridDims.all, "origGridDims different")
+
+        if "elementArea" in mesh_out.variables and "elementArea" in expected.variables:
+            equalelementArea = mesh_out.elementArea == expected.elementArea
+            self.assertTrue(equalelementArea.all, "area different")
+
         self.assertTrue(equalelementConn.all, "elementConn different")
         self.assertTrue(equalnumElementConn.all, "numElementConn different")
         self.assertTrue(equalcenterCoords.all, "centerCoords different")
         self.assertTrue(equalelementMask.all, "mask different")
-        self.assertTrue(equalelementArea.all, "area different")
-        print(mesh_out)
-        print(expected)
         self.assertTrue(
             mesh_out.equals(expected), "Output mesh does not compare to the expected baseline file"
         )
