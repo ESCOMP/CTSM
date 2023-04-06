@@ -24,7 +24,7 @@ class MeshType:
     """
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, center_lats, center_lons, mask=None, mesh_name=None):
+    def __init__(self, center_lats, center_lons, mask=None, mesh_name=None, area=None):
         """
         Construct a mesh object
 
@@ -38,6 +38,9 @@ class MeshType:
             Name of the mesh
         mask : np array or None
             numpy array that include landmask
+        area : numpy.ndarray or None
+            Array containing element areas for the ESMF mesh file
+            If None, ESMF calculates element areas internally.
 
         Methods
         -------
@@ -77,6 +80,8 @@ class MeshType:
         else:
             # self.mask = da.from_array(np.array(mask.astype(np.int8)))
             self.mask = np.array(mask.astype(np.int8))
+
+        self.area = area
 
         self.unit = "degrees"
 
@@ -125,6 +130,7 @@ class MeshType:
 
         if "elementArea" in xrds_in.variables:
             if "units" in xrds_in["elementArea"].attrs:
+                self.area = np.array(xrds_in["elementArea"])
                 if xrds_in["elementArea"].attrs["units"] != "radians^2":
                     abort("elementArea is on the mesh file, but without the correct units")
 
@@ -466,7 +472,7 @@ class MeshType:
             axis=1,
         )
 
-    def create_esmf(self, mesh_fname, area=None):
+    def create_esmf(self, mesh_fname):
         """
         Create an ESMF mesh file for the mesh
 
@@ -475,9 +481,6 @@ class MeshType:
         mesh_fname : str
             The path to write the ESMF meshfile
 
-        area : numpy.ndarray or None
-            Array containing element areas for the ESMF mesh file
-            If None, ESMF calculates element areas internally.
         """
         if not self.are_nodes_set():
             abort("Nodes  have not been set in the mesh object")
@@ -532,10 +535,9 @@ class MeshType:
         ds_out.elementMask.encoding = {"dtype": np.int32}
 
         # -- add area if provided
-        if area is not None:
-            da_area = np.array(area)
+        if self.area is not None:
             ds_out["elementArea"] = xr.DataArray(
-                da_area.T.reshape((-1,)).T,
+                self.area.T.reshape((-1,)).T,
                 dims=("elementCount"),
                 attrs={"units": "radians^2", "long_name": "area weights"},
             )

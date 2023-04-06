@@ -273,14 +273,14 @@ def main():
         mask = None
 
     if area_name is not None:
-        area = ds[area_name].astype(np.float32)
+        area = np.array(ds[area_name].astype(np.float32))
     else:
         area = None
 
-    this_mesh = MeshPlotType(lats, lons, mask=mask)
+    this_mesh = MeshPlotType(lats, lons, mask=mask, area=area)
     this_mesh.calculate_corners()
     this_mesh.calculate_nodes()
-    this_mesh.create_esmf(mesh_out, area=area)
+    this_mesh.create_esmf(mesh_out)
     if not args.noplot:
         plot_regional = os.path.splitext(mesh_out)[0] + "_regional" + ".png"
 
@@ -319,7 +319,7 @@ def read_main():
 
     this_mesh = MeshPlotType(lats, lons)
     this_mesh.read_file(ds)
-    this_mesh.create_esmf(mesh_out, area=None)
+    this_mesh.create_esmf(mesh_out)
 
 
 if __name__ == "__main__":
