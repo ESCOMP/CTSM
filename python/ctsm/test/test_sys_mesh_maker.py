@@ -9,7 +9,6 @@ import os
 import sys
 import tempfile
 import shutil
-import glob
 import xarray as xr
 
 # pylint: disable=wrong-import-position
@@ -52,7 +51,6 @@ class SysTestMeshMaker(unittest.TestCase):
             "LATIXY",
             "--lon",
             "LONGXY",
-            "--no-plot",
             "--output",
             self.mesh_out,
         ]
@@ -72,7 +70,6 @@ class SysTestMeshMaker(unittest.TestCase):
             "LATIXY",
             "--lon",
             "LONGXY",
-            "--no-plot",
             "--mask",
             "PFTDATA_MASK",
             "--output",
@@ -144,7 +141,6 @@ class SysTestMeshMaker(unittest.TestCase):
             "yc",
             "--lon",
             "xc",
-            "--no-plot",
             "--mask",
             "mask",
             "--area",
@@ -159,9 +155,6 @@ class SysTestMeshMaker(unittest.TestCase):
         mesh_out = xr.open_dataset(self.mesh_out)
         expected = xr.open_dataset(expected_mesh)
         self.compare_mesh_files(mesh_out, expected)
-        plotfiles = glob.glob(self._tempdir + "/*.png")
-        if plotfiles:
-            self.fail("plot files exist and there should not be any")
 
     def test_readfile(self):
         """
@@ -178,7 +171,6 @@ class SysTestMeshMaker(unittest.TestCase):
             "yc",
             "--lon",
             "xc",
-            "--no-plot",
             "--output",
             self.mesh_out,
         ]
@@ -187,8 +179,8 @@ class SysTestMeshMaker(unittest.TestCase):
         expected = xr.open_dataset(infile)
         self.compare_mesh_files(mesh_out, expected)
 
-    def test_noplot_add_mask(self):
-        """Do a simple basic test without plotting and also adding mask"""
+    def test_add_mask(self):
+        """Do a simple basic test also adding mask"""
         sys.argv = [
             "mesh_maker",
             "--input",
@@ -197,16 +189,12 @@ class SysTestMeshMaker(unittest.TestCase):
             "LATIXY",
             "--lon",
             "LONGXY",
-            "--no-plot",
             "--mask",
             "PFTDATA_MASK",
             "--output",
             self.mesh_out,
         ]
         main()
-        plotfiles = glob.glob(self._tempdir + "/*.png")
-        if plotfiles:
-            self.fail("plot files exist and there should not be any")
 
     def test_noinput(self):
         """Test with an input file that does not exist"""
@@ -218,7 +206,6 @@ class SysTestMeshMaker(unittest.TestCase):
             "LATIXY",
             "--lon",
             "LONGXY",
-            "--no-plot",
             "--output",
             self.mesh_out,
         ]
@@ -240,7 +227,6 @@ class SysTestMeshMaker(unittest.TestCase):
             "LATIXY",
             "--lon",
             "LONGXY",
-            "--no-plot",
             "--output",
             self.mesh_out,
         ]
@@ -257,7 +243,6 @@ class SysTestMeshMaker(unittest.TestCase):
             self._infile,
             "--lat",
             "LATIXY",
-            "--no-plot",
             "--lon",
             "zztop",
             "--output",
@@ -274,7 +259,6 @@ class SysTestMeshMaker(unittest.TestCase):
             self._infile,
             "--lat",
             "zztop",
-            "--no-plot",
             "--lon",
             "LONGXY",
             "--output",
@@ -291,7 +275,6 @@ class SysTestMeshMaker(unittest.TestCase):
             self._infile,
             "--lat",
             "LATIXY",
-            "--no-plot",
             "--lon",
             "LONGXY",
             "--area",
@@ -312,7 +295,6 @@ class SysTestMeshMaker(unittest.TestCase):
             self._infile,
             "--lat",
             "LATIXY",
-            "--no-plot",
             "--lon",
             "LONGXY",
             "--mask",
@@ -333,7 +315,6 @@ class SysTestMeshMaker(unittest.TestCase):
             self._infile,
             "--lat",
             "LATIXY",
-            "--no-plot",
             "--lon",
             "LONGXY",
             "--area",
@@ -358,7 +339,6 @@ class SysTestMeshMaker(unittest.TestCase):
             self._infile,
             "--lat",
             "LATIXY",
-            "--no-plot",
             "--lon",
             "LONGXY",
             "--area",
@@ -377,7 +357,6 @@ class SysTestMeshMaker(unittest.TestCase):
             self._infile,
             "--lat",
             "LATIXY",
-            "--no-plot",
             "--lon",
             "LONGXY",
             "--mask",

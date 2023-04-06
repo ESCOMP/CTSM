@@ -20,7 +20,7 @@ from datetime import datetime
 import xarray as xr
 import numpy as np
 
-from ctsm.site_and_regional.mesh_plot_type import MeshPlotType
+from ctsm.site_and_regional.mesh_type import MeshType
 from ctsm.utils import abort
 from ctsm.ctsm_logging import (
     setup_logging_pre_config,
@@ -89,13 +89,6 @@ def get_parser():
         action="store",
         dest="mask_name",
         type=str,
-        required=False,
-    )
-    parser.add_argument(
-        "--no-plot",
-        help="Do not do the plots of the mesh",
-        action="store_true",
-        dest="noplot",
         required=False,
     )
     parser.add_argument(
@@ -277,16 +270,10 @@ def main():
     else:
         area = None
 
-    this_mesh = MeshPlotType(lats, lons, mask=mask, area=area)
+    this_mesh = MeshType(lats, lons, mask=mask, area=area)
     this_mesh.calculate_corners()
     this_mesh.calculate_nodes()
     this_mesh.create_esmf(mesh_out)
-    if not args.noplot:
-        plot_regional = os.path.splitext(mesh_out)[0] + "_regional" + ".png"
-
-        plot_global = os.path.splitext(mesh_out)[0] + "_global" + ".png"
-
-        this_mesh.make_mesh_plot(plot_regional, plot_global)
 
 
 def read_main():
@@ -317,7 +304,7 @@ def read_main():
     logging.info("Reading  mesh file from : %s", nc_file)
     logging.info("Writing mesh file to    : %s", mesh_out)
 
-    this_mesh = MeshPlotType(lats, lons)
+    this_mesh = MeshType(lats, lons)
     this_mesh.read_file(ds)
     this_mesh.create_esmf(mesh_out)
 
