@@ -1,10 +1,13 @@
-name: conda environments check on PR close
+name: conda environments check weekly
 #
 # Run the different conda environments and make sure they continue to work
 #
-on: 
-  pull_request:
-    types: [ closed ] 
+on: [push, pull_request]
+  #branches:
+    #- master
+  schedule:
+    #- cron: '2 23 * * SAT'  # every Saturday  at 2:23am
+    - cron: '2 23 * * *'  # every day at 2:23am
 
 jobs:
   conda_envs_check:
@@ -12,6 +15,13 @@ jobs:
      steps:
         - name: checkout
           uses: actions/checkout@v2
+          with:
+        - name: conda env
+          uses: conda-incubator/setup-miniconda@v2
+          with:
+            python-version: 3.7.9
+            auto-activate-base: true
+            channels: conda-forge
         - name: run basic
           run: ./py_env_create
         - name: run spec

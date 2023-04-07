@@ -1,8 +1,13 @@
-name: python testing on push and PR
+name: python advanced testing weekly
 #
 # Run the python directory testing on push and pull request
 #
 on: [push, pull_request]
+  #branches:
+  #    #- master
+  schedule:
+  #- cron: '2 23 * * SAT'  # every Saturday  at 2:23am
+    - cron: '2 23 * * *'  # every day at 2:23am
 
 jobs:
   pytest:
@@ -34,17 +39,9 @@ jobs:
             CIME_DRIVER: "nuopc"
             CIME_TEST_PLATFORM: ubuntu-latest
           run: |
-              ./py_env_create --read-spec
-              conda activate ctsm_pylib
+              ./py_env_create --dask
+              conda activate ctsm_pylib_wdask
               cd python
-              make test
-              if [ $? != 0 ] exit -1
-          continue-on-error: False
-        - name: Run pylint
-          shell: bash -l {0}
-          run: |
-              conda activate ctsm_pylib
-              cd python
-              make lint
+              make adv_test
               if [ $? != 0 ] exit -1
           continue-on-error: False

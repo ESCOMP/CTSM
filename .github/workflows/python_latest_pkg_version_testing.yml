@@ -1,11 +1,13 @@
-name: python testing for latest packages on closed PR
+name: python testing for latest packages weekly
 #
 # Run the python directory testing for latest packages on closed PR's
 #
-on: 
-  pull_request:
-    types: [ closed ] 
-
+on: [push, pull_request]
+#  #branches:
+#      #- master
+    schedule:
+    #- cron: '2 23 * * SAT'  # every Saturday  at 2:23am
+    - cron: '2 23 * * *'  # every day at 2:23am
 jobs:
   pytest:
      runs-on: ubuntu-latest
@@ -37,4 +39,6 @@ jobs:
               ./py_env_create --read-latest
               conda activate ctsm_pylib
               cd python
+              make test
+              conda update --all --prune
               make test
