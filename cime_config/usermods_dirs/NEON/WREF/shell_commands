@@ -3,12 +3,15 @@
 ./xmlchange PTS_LON=238.04162
 ./xmlchange PTS_LAT=45.81637
 ./xmlchange DATM_YR_ALIGN=2019 
-if [[$CLM_USRDAT_NAME = 'NEON']]; then
+if [ $CLM_USRDAT_NAME=='NEON' ]
+then
+  echo "IN CLM_USRDAT_NAME LOOP!"
   # Different default start date and number of months to run for transient case
-  if  [[ $compset =~ ^HIST ]]; then
+  ./xmlchange DATM_YR_START=2019
+  if  [[ $compset =~ ^HIST ]]
+  then
+    echo "IN HIST COMPSET LOOP!"
     ./xmlchange RUN_STARTDATE=2019-01-01
     ./xmlchange STOP_N=39
-  else
-    ./xmlchange DATM_YR_START=2019
   fi
 fi
