@@ -1,4 +1,109 @@
 ===============================================================
+Tag name: ctsm5.1.dev121
+Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Wed Apr  5 13:34:09 MDT 2023
+One-line Summary: Changes soil moisture initialization logic for FATES
+
+Purpose and description of changes
+----------------------------------
+
+This PR changes the logic for soil moisture initialization to initialize
+with wetter soils (75% of saturated water content, as opposed to 15% of
+absolute water content) for all FATES configurations. The rationale for
+this is that in FATES-nocomp simulations, Jessica Needham was finding very
+high initial mortality rates in some seasonal tropical forest regions which
+she traced it back to the initial soil moisture killing off plants before the
+ecosystem could get established.
+
+This also updates the fates externals pointer to the latest tag which includes
+a number of science updates since the last tag update and updates the the
+default parameter file.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Externals issues fixed (include issue #):
+    Partially addresses FATES#994 -- Bare ground establishment problem and increased soil moisture
+
+Known bugs found since the previous tag (include issue #):
+    #1979 -- Need to loosen tolerance on near-zero truncation of h2osoi_ice in UpdateState_TopLayerFluxes
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   fates_paramfile updated to fates_params_api.25.4.0_12pft_c230327.nc
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    This changes the starting level for a COLD start of soil moisture for ALL FATES cases to a much
+    higher value than for non-FATES. In the long run we'd like to have these the same and/or
+    have the value changable on the namelist.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+  FATES tests run against fates-sci.1.65.3_api.25.4.0-ctsm5.1.dev120 baseline
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+   Changes answers in fates suite for all non-hydro fates tests since the soil
+   moisture initialization matches that of fates hydro now.  Changes answer
+   for all fates testmods in the aux_clm suite as the science tag has iterated
+   forward by 4 minor version updates.  All diffs accounted for with prior fates
+   suite tests.
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+- FATES: sci.1.61.0_api.25.0.0 -> sci.1.65.3_api.25.4.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  https://github.com/ESCOMP/CTSM/pull/1962 -- Cold start moisture for FATES increased
+  https://github.com/ESCOMP/CTSM/pull/1978 -- revert some commits now that FUNITCTSM works again
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev120
 Originator(s): sacks (Bill Sacks)
 Date: Sat Mar 25 17:49:27 MDT 2023

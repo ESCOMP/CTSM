@@ -1876,7 +1876,7 @@
       <machine name="cheyenne" compiler="gnu" category="fates"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:50:00</option>
     </options>
   </test>
   <test name="ERS_Lm13" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdNoComp">
