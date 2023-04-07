@@ -20,7 +20,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 from ctsm import unit_testing
 
 # from ctsm.site_and_regional.mesh_type import MeshType
-from ctsm.site_and_regional.mesh_plot_type import MeshPlotType
+from ctsm.site_and_regional.mesh_type import MeshType
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -41,7 +41,7 @@ class TestMeshType(unittest.TestCase):
         self.lons = xr.DataArray(lon0, name="lon", dims=x_dim, coords={x_dim: lon0})
         self.lats = xr.DataArray(lat0, name="lat", dims=y_dim, coords={y_dim: lat0})
 
-        self.mesh = MeshPlotType(self.lats, self.lons)
+        self.mesh = MeshType(self.lats, self.lons)
 
     def test_read_file_fails_notXarrayDataset(self):
         """Test that read_file properly fails if not given an X-array Dataset"""

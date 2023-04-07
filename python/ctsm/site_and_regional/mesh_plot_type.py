@@ -6,6 +6,9 @@ import logging
 import numpy as np
 
 # -- libraries for plotting mesh (make_mesh_plot)
+# Turn import error off in case you are using a
+# conda environment that doesn't include these.
+# pylint: disable=import-error
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
