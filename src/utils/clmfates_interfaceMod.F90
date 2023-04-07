@@ -2214,7 +2214,8 @@ use FatesGlobals     , only : fates_log
     use pftconMod         , only : pftcon
     use PatchType         , only : patch
     use quadraticMod      , only : quadratic
-    use EDtypesMod        , only : ed_patch_type, fates_cohort_type, ed_site_type
+    use EDtypesMod        , only : ed_patch_type, ed_site_type
+    use FatesCohortMod    , only : fates_cohort_type
 
     !
     ! !ARGUMENTS:
