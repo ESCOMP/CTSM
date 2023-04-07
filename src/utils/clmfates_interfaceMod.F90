@@ -2209,9 +2209,8 @@ use FatesGlobals     , only : fates_log
     use shr_log_mod       , only : errMsg => shr_log_errMsg
     use abortutils        , only : endrun
     use decompMod         , only : bounds_type
-    use clm_varcon        , only : rgas, tfrz, namep
+    use clm_varcon        , only : tfrz, namep
     use clm_varctl        , only : iulog
-    use pftconMod         , only : pftcon
     use PatchType         , only : patch
     use quadraticMod      , only : quadratic
     use EDtypesMod        , only : ed_patch_type, ed_site_type
