@@ -205,6 +205,74 @@ contains
          endif
       end do
 
+      ! Partition evaporation into liquid and solid
+      do fp = 1, num_nolakep
+         p = filter_nolakep(fp)
+         c = patch%column(p)
+         l = patch%landunit(p)
+         j = col%snl(c)+1
+
+         qflx_liqevap_from_top_layer(p)   = 0._r8
+         qflx_solidevap_from_top_layer(p) = 0._r8
+         qflx_soliddew_to_top_layer(p)    = 0._r8
+         qflx_liqdew_to_top_layer(p)      = 0._r8
+
+         ! Partition the evaporation from snow/soil surface into liquid evaporation,
+         ! solid evaporation (sublimation), liquid dew, or solid dew.  Note that the variables
+         ! affected here are all related to the snow subgrid patch only because of the use of qflx_ev_snow.
+         ! In the situations where there are snow layers or there is snow without an explicit snow layer,
+         ! the partitioned variables will represent the components of snow evaporation
+         ! (qflx_ev_snow = qflx_liqevap_from_top_layer + qflx_solidevap_from_top_layer
+         ! - qflx_liqdew_to_top_layer - qflx_soliddew_to_top_layer).
+         ! In the case of no snow, qflx_ev_snow has already been set equal to qflx_ev_soil (the evaporation
+         ! from the subgrid soil patch) and the partitioned variables will then represent evaporation from the
+         ! subgrid soil patch.
+         ! In the case of urban columns (and lake columns - see LakeHydrologyMod), there are no subgrid
+         ! patches and qflx_evap_soi is used. qflx_evap_soi = qflx_liqevap_from_top_layer + qflx_solidevap_from_top_layer
+         ! - qflx_liqdew_to_top_layer - qflx_soliddew_to_top_layer.
+         if (.not. lun%urbpoi(l)) then
+            if (qflx_ev_snow(p) >= 0._r8) then
+               ! for evaporation partitioning between liquid evap and ice sublimation,
+               ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
+               if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
+                  qflx_liqevap_from_top_layer(p) = max(qflx_ev_snow(p)*(h2osoi_liq(c,j)/ &
+                       (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+               else
+                  qflx_liqevap_from_top_layer(p) = 0._r8
+               end if
+               qflx_solidevap_from_top_layer(p) = qflx_ev_snow(p) - qflx_liqevap_from_top_layer(p)
+            else
+               if (t_grnd(c) < tfrz) then
+                  qflx_soliddew_to_top_layer(p) = abs(qflx_ev_snow(p))
+               else
+                  qflx_liqdew_to_top_layer(p) = abs(qflx_ev_snow(p))
+               end if
+            end if
+
+         else ! Urban columns
+
+            if (qflx_evap_soi(p) >= 0._r8) then
+               ! for evaporation partitioning between liquid evap and ice sublimation,
+               ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
+               if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
+                  qflx_liqevap_from_top_layer(p) = max(qflx_evap_soi(p)*(h2osoi_liq(c,j)/ &
+                       (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+               else
+                  qflx_liqevap_from_top_layer(p) = 0._r8
+               end if
+               qflx_solidevap_from_top_layer(p) = qflx_evap_soi(p) - qflx_liqevap_from_top_layer(p)
+            else
+               if (t_grnd(c) < tfrz) then
+                  qflx_soliddew_to_top_layer(p) = abs(qflx_evap_soi(p))
+               else
+                  qflx_liqdew_to_top_layer(p) = abs(qflx_evap_soi(p))
+               end if
+            end if
+
+         end if
+
+      end do
+
       ! Constrain evaporation from snow to be <= available moisture
       do fp = 1,num_nolakep
          p = filter_nolakep(fp)
@@ -221,6 +289,8 @@ contains
                evaporation_demand = qflx_ev_snow(p)
                qflx_ev_snow(p)    = evaporation_limit
                qflx_evap_soi(p)   = qflx_evap_soi(p) - frac_sno_eff(c)*(evaporation_demand - evaporation_limit)
+               qflx_liqevap_from_top_layer(p)   = h2osoi_liq(c,j)/(frac_sno_eff(c)*dtime)
+               qflx_solidevap_from_top_layer(p) = h2osoi_ice(c,j)/(frac_sno_eff(c)*dtime)
                ! conserve total energy flux
                eflx_sh_grnd(p) = eflx_sh_grnd(p) + frac_sno_eff(c)*(evaporation_demand - evaporation_limit)*htvp(c)
             endif
@@ -235,11 +305,27 @@ contains
                evaporation_demand = qflx_evap_soi(p)
                qflx_evap_soi(p)   = evaporation_limit
                qflx_ev_snow(p)    = qflx_evap_soi(p)
+               qflx_liqevap_from_top_layer(p)   = h2osoi_liq(c,j)/dtime
+               qflx_solidevap_from_top_layer(p) = h2osoi_ice(c,j)/dtime
                ! conserve total energy flux
                eflx_sh_grnd(p) = eflx_sh_grnd(p) +(evaporation_demand -evaporation_limit)*htvp(c)
             endif
          endif
          
+         ! limit only solid evaporation (sublimation) from top soil layer
+         ! (liquid evaporation from soil should not be limited)
+         if (j==1 .and. frac_h2osfc(c) < 1._r8) then
+            evaporation_limit = h2osoi_ice(c,j)/(dtime*(1._r8 - frac_h2osfc(c)))
+            if (qflx_solidevap_from_top_layer(p) >= evaporation_limit) then
+               evaporation_demand = qflx_solidevap_from_top_layer(p)
+               qflx_solidevap_from_top_layer(p) &
+                    = evaporation_limit
+               qflx_liqevap_from_top_layer(p)  &
+                    = qflx_liqevap_from_top_layer(p)  &
+                    + (evaporation_demand - evaporation_limit)
+            endif
+         endif
+
       enddo
       
       call t_stopf('bgp2_loop_1')
@@ -298,79 +384,6 @@ contains
             eflx_lh_tot_u(p)= eflx_lh_tot(p)
             eflx_sh_tot_u(p)= eflx_sh_tot(p)
          end if
-
-         qflx_liqevap_from_top_layer(p)   = 0._r8
-         qflx_solidevap_from_top_layer(p) = 0._r8
-         qflx_soliddew_to_top_layer(p)    = 0._r8
-         qflx_liqdew_to_top_layer(p)      = 0._r8
-
-         ! Partition the evaporation from snow/soil surface into liquid evaporation, 
-         ! solid evaporation (sublimation), liquid dew, or solid dew.  Note that the variables
-         ! affected here are all related to the snow subgrid patch only because of the use of qflx_ev_snow.
-         ! In the situations where there are snow layers or there is snow without an explicit snow layer, 
-         ! the partitioned variables will represent the components of snow evaporation 
-         ! (qflx_ev_snow = qflx_liqevap_from_top_layer + qflx_solidevap_from_top_layer 
-         ! - qflx_liqdew_to_top_layer - qflx_soliddew_to_top_layer).
-         ! In the case of no snow, qflx_ev_snow has already been set equal to qflx_ev_soil (the evaporation 
-         ! from the subgrid soil patch) and the partitioned variables will then represent evaporation from the 
-         ! subgrid soil patch.
-         ! In the case of urban columns (and lake columns - see LakeHydrologyMod), there are no subgrid 
-         ! patches and qflx_evap_soi is used. qflx_evap_soi = qflx_liqevap_from_top_layer + qflx_solidevap_from_top_layer 
-         ! - qflx_liqdew_to_top_layer - qflx_soliddew_to_top_layer.
-         if (.not. lun%urbpoi(l)) then
-            if (qflx_ev_snow(p) >= 0._r8) then
-               ! for evaporation partitioning between liquid evap and ice sublimation, 
-               ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
-               if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
-                  qflx_liqevap_from_top_layer(p) = max(qflx_ev_snow(p)*(h2osoi_liq(c,j)/ &
-                       (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
-               else
-                  qflx_liqevap_from_top_layer(p) = 0._r8
-               end if
-               qflx_solidevap_from_top_layer(p) = qflx_ev_snow(p) - qflx_liqevap_from_top_layer(p)
-            else
-               if (t_grnd(c) < tfrz) then
-                  qflx_soliddew_to_top_layer(p) = abs(qflx_ev_snow(p))
-               else
-                  qflx_liqdew_to_top_layer(p) = abs(qflx_ev_snow(p))
-               end if
-            end if
-
-         else ! Urban columns
-
-            if (qflx_evap_soi(p) >= 0._r8) then
-               ! for evaporation partitioning between liquid evap and ice sublimation, 
-               ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
-               if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
-                  qflx_liqevap_from_top_layer(p) = max(qflx_evap_soi(p)*(h2osoi_liq(c,j)/ &
-                       (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
-               else
-                  qflx_liqevap_from_top_layer(p) = 0._r8
-               end if
-               qflx_solidevap_from_top_layer(p) = qflx_evap_soi(p) - qflx_liqevap_from_top_layer(p)
-            else
-               if (t_grnd(c) < tfrz) then
-                  qflx_soliddew_to_top_layer(p) = abs(qflx_evap_soi(p))
-               else
-                  qflx_liqdew_to_top_layer(p) = abs(qflx_evap_soi(p))
-               end if
-            end if
-
-         end if
-
-         ! limit only solid evaporation (sublimation) from top soil layer
-         ! (liquid evaporation from soil should not be limited)
-         if (j==1 .and. frac_h2osfc(c) < 1._r8) then
-            evaporation_limit = h2osoi_ice(c,j)/(dtime*(1._r8 - frac_h2osfc(c)))
-            if (qflx_solidevap_from_top_layer(p) >= evaporation_limit) then
-               evaporation_demand = qflx_solidevap_from_top_layer(p)
-               qflx_solidevap_from_top_layer(p) &
-                    = evaporation_limit
-               qflx_liqevap_from_top_layer(p)  &
-                    = qflx_liqevap_from_top_layer(p)  &
-                    + (evaporation_demand - evaporation_limit)
-            endif
-         endif
 
          ! Variables needed by history tape
 
