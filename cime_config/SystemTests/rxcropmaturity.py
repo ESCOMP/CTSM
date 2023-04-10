@@ -130,11 +130,11 @@ class RXCROPMATURITY(SystemTestsCommon):
         conda_env += self._get_conda_env()
         # Source the env
         try:
-            #command = f"{conda_env}python3 {tool_path} "\
-            command = f"python3 {tool_path} "\
+            command = f"{conda_env}python3 {tool_path} "\
                 + f"--flanduse-timeseries {self._flanduse_timeseries_in} "\
                 + f"--fsurdat {self._fsurdat_in} "\
                 + f"--outfile {self._fsurdat_out}"
+            print(f"command: {command}")
             subprocess.run(command, shell=True, check=True)
         except subprocess.CalledProcessError as error:
             print("ERROR while getting the conda environment and/or ")
