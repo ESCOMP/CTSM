@@ -126,7 +126,7 @@ use FatesGlobals     , only : fates_log
    use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
-   use EDTypesMod            , only : ed_patch_type
+   use FatesPatchMod         , only : fates_patch_type
    use PRTGenericMod         , only : num_elements
    use FatesInterfaceTypesMod, only : hlm_stepsize
    use FatesInterfaceTypesMod, only : fates_maxPatchesPerSite
@@ -837,7 +837,7 @@ use FatesGlobals     , only : fates_log
       type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
 
       ! !LOCAL VARIABLES:
-      type(ed_patch_type), pointer :: currentPatch
+      type(fates_patch_type), pointer :: currentPatch
       integer  :: iv, ic
       integer  :: s                        ! site index
       integer  :: g                        ! grid-cell index (HLM)
@@ -1167,7 +1167,7 @@ use FatesGlobals     , only : fates_log
      integer :: g       ! grid cell
      integer :: ic, ft, iv
      logical, save           :: first_time = .true.
-     type(ed_patch_type), pointer  :: currentPatch
+     type(fates_patch_type), pointer  :: currentPatch
 
      real(r8) :: areacheck
      call t_startf('fates_wrap_update_hlmfates_dyn')
@@ -1418,7 +1418,7 @@ use FatesGlobals     , only : fates_log
       integer           :: nclumps
       type(fates_bounds_type) :: fates_bounds
       type(fates_bounds_type) :: fates_clump
-      type(ed_patch_type), pointer :: currentPatch
+      type(fates_patch_type), pointer :: currentPatch
       integer                 :: c   ! HLM column index
       integer                 :: s   ! Fates site index
       integer                 :: g   ! grid-cell index
@@ -1928,7 +1928,7 @@ use FatesGlobals     , only : fates_log
                                               ! this is the order increment of patch
                                               ! on the site
 
-      type(ed_patch_type), pointer :: cpatch  ! c"urrent" patch  INTERF-TODO: SHOULD
+      type(fates_patch_type), pointer :: cpatch  ! c"urrent" patch  INTERF-TODO: SHOULD
                                               ! BE HIDDEN AS A FATES PRIVATE
 
      call t_startf('fates_wrapsunfrac')
@@ -2213,7 +2213,8 @@ use FatesGlobals     , only : fates_log
     use clm_varctl        , only : iulog
     use PatchType         , only : patch
     use quadraticMod      , only : quadratic
-    use EDtypesMod        , only : ed_patch_type, ed_site_type
+    use EDtypesMod        , only : ed_site_type
+    use FatesPatchMod,      only : fates_patch_type
     use FatesCohortMod    , only : fates_cohort_type
 
     !
