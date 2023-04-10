@@ -6,7 +6,7 @@ import os
 
 # Doing what I did before with flanduse_timeseries, except now with
 # fsurdat.
-def get_new_fsurdat_v0(surf, lu, params):
+def get_new_fsurdat_v0(surf, lu):
     
     # Where is each crop ever active?
     if "AREA" not in lu:
@@ -59,6 +59,9 @@ def get_new_fsurdat_v0(surf, lu, params):
 # Trying to minimize the number of crop PFTs that need to be simulated.
 # CLM currently giving errors about wt_cft not summing to 1.
 def get_new_fsurdat_v1(surf, lu, params):
+    
+    if params is None:
+        raise RuntimeError("You must provide -p/--paramfile")
     
     ##########################################
     ### %% Get new PCT_CROP and PCT_NATVEG ###
@@ -128,11 +131,12 @@ def main(argv):
                         help="Land-use timeseries file (flanduse_timeseries) for CLM run",
                         required=True)
     parser.add_argument("-p", "--paramfile", 
-                        help="Parameter file (paramfile) for CLM run",
-                        required=True)
+                        help="Parameter file (paramfile) for CLM run")
     parser.add_argument("-s", "--fsurdat", 
                         help="Surface dataset (fsurdat) for CLM run",
                         required=True)
+    parser.add_argument("-o", "--outfile", 
+                        help="Output fsurdat file")
     args = parser.parse_args(argv)
 
 
@@ -142,10 +146,11 @@ def main(argv):
 
     lu = xr.open_dataset(args.flanduse_timeseries)
     surf = xr.open_dataset(args.fsurdat)
-    params = xr.open_dataset(args.paramfile)
+    if args.paramfile is not None:
+        params = xr.open_dataset(args.paramfile)
 
     # new_pct_crop_da, new_natveg_da, new_pct_cft_da = get_new_fsurdat_v1(surf, lu, params)
-    new_pct_crop_da, new_natveg_da, new_pct_cft_da = get_new_fsurdat_v0(surf, lu, params)
+    new_pct_crop_da, new_natveg_da, new_pct_cft_da = get_new_fsurdat_v0(surf, lu)
     
     
     #############################
@@ -159,12 +164,13 @@ def main(argv):
     new_surf['PCT_NATVEG'] = new_natveg_da
     
     # Save to new file
-    fsurdat_noext, ext = os.path.splitext(args.fsurdat)
-    new_fsurdat = f"{fsurdat_noext}.GDDgen{ext}"
-    new_fsurdat = os.path.basename(new_fsurdat)
-    new_surf.to_netcdf(new_fsurdat, format="NETCDF3_64BIT")
+    if outfile is None:
+        fsurdat_noext, ext = os.path.splitext(args.fsurdat)
+        outfile = f"{fsurdat_noext}.GDDgen{ext}"
+        outfile = os.path.basename(outfile)
+    new_surf.to_netcdf(outfile, format="NETCDF3_64BIT")
 
-    print(new_fsurdat)
+    print(outfile)
 
 
 if __name__ == "__main__":
