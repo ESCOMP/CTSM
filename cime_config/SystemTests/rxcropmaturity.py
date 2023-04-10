@@ -138,7 +138,7 @@ class RXCROPMATURITY(SystemTestsCommon):
             subprocess.run(command, shell=True, check=True)
         except subprocess.CalledProcessError as error:
             print("ERROR while getting the conda environment and/or ")
-            print("running the fsurdat_modifier tool: ")
+            print("running the make_surface_for_gddgen tool: ")
             print("(1) If your ctsm_pylib environment is out of date or you ")
             print("have not created the ctsm_pylib environment, yet, you may ")
             print("get past this error by running ./py_env_create ")
@@ -146,12 +146,12 @@ class RXCROPMATURITY(SystemTestsCommon):
             print("(2) If conda is not available, install and load conda, ")
             print("run ./py_env_create, and then try this test again. ")
             print("(3) If (1) and (2) are not the issue, then you may be ")
-            print("getting an error within the fsurdat_modifier tool itself. ")
+            print("getting an error within the make_surface_for_gddgen tool itself. ")
             print("Default error message: ")
             print(error.output)
             raise
         except:
-            print("ERROR trying to run fsurdat_modifier tool.")
+            print("ERROR trying to run make_surface_for_gddgen tool.")
             raise
 
     def _modify_user_nl_gengdds(self):
