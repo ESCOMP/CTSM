@@ -21,6 +21,8 @@ class RXCROPMATURITY(SystemTestsCommon):
         initialize an object interface to the SMS system test
         """
         SystemTestsCommon.__init__(self, case)
+
+        self._ctsm_root = self._case.get_value('COMP_ROOT_DIR_LND')
         
         
         """
@@ -81,7 +83,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         with open (lnd_in_path,'r') as lnd_in:
             for line in lnd_in:
                 flanduse_timeseries_in = re.match(r" *flanduse_timeseries *= *'(.*)'", line)
-                if fsurdat_in:
+                if flanduse_timeseries_in:
                     self._flanduse_timeseries_in = flanduse_timeseries_in.group(1)
                     break
         
