@@ -164,13 +164,13 @@ def main(argv):
     new_surf['PCT_NATVEG'] = new_natveg_da
     
     # Save to new file
-    if outfile is None:
+    if args.outfile is None:
         fsurdat_noext, ext = os.path.splitext(args.fsurdat)
-        outfile = f"{fsurdat_noext}.GDDgen{ext}"
-        outfile = os.path.basename(outfile)
-    new_surf.to_netcdf(outfile, format="NETCDF3_64BIT")
+        args.outfile = f"{fsurdat_noext}.GDDgen{ext}"
+        args.outfile = os.path.basename(args.outfile)
+    new_surf.to_netcdf(args.outfile, format="NETCDF3_64BIT")
 
-    print(outfile)
+    print(args.outfile)
 
 
 if __name__ == "__main__":
