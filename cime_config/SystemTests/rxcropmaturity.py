@@ -209,9 +209,8 @@ class RXCROPMATURITY(SystemTestsCommon):
             # Remove python and add conda to environment for cheyennne
             conda_env = "module unload python; module load conda;"
 
-        # Activate the python environment
-        conda_env += " conda activate ctsm_pylib"
-        # End above to get to actual command
-        conda_env += " && "
+        ## Run in the correct python environment
+        conda_env += " conda run -n ctsm_pylib "
+
 
         return( conda_env )
