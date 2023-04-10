@@ -1552,7 +1552,7 @@
       <option name="comment"  >Add at least one test of a NEON site</option>
     </options>
   </test>
-  <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/default--clm/NEON/PRISM/NIWO">
+  <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/NEON/ABBY--clm/PRISM">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
