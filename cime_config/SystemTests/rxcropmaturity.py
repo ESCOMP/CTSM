@@ -26,10 +26,9 @@ class RXCROPMATURITY(SystemTestsCommon):
         
         
         """
-        Set run start and length
+        Set run length
         """
         
-        self._case.set_value("RUN_STARTDATE", "1995-01-01")
         self._case.set_value("STOP_OPTION", "nyears")
         self._case.set_value("STOP_N", 10)
         
