@@ -11,6 +11,7 @@ module atm2lndType
   use clm_varpar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon    , only : rair, grav, cpair, hfus, tfrz, spval
   use clm_varctl    , only : iulog, use_c13, use_cn, use_lch4, use_cndv, use_fates, use_luna
+  use clm_varctl    , only : use_fates_hydrohard,use_fates_frosthard
   use decompMod     , only : bounds_type
   use abortutils    , only : endrun
   use PatchType     , only : patch
@@ -114,6 +115,12 @@ module atm2lndType
      real(r8) , pointer :: wind24_patch                 (:)   => null() ! patch 24-hour running mean of wind
      real(r8) , pointer :: t_mo_patch                   (:)   => null() ! patch 30-day average temperature (Kelvin)
      real(r8) , pointer :: t_mo_min_patch               (:)   => null() ! patch annual min of t_mo (Kelvin)
+     real(r8) , pointer :: temp24_patch                 (:)   => null() ! patch 24hr average of temperature
+     real(r8) , pointer :: tmin24_patch                 (:)   => null() ! patch 24hr average of minimum temperature
+     real(r8) , pointer :: tmin24_inst_patch            (:)   => null() ! patch 24hr average of temprary temperature
+     real(r8) , pointer :: t_mean_5yr_patch             (:)   => null() ! patch 5 year mean of minimum yearly 2 m height surface air temperature (K)
+     real(r8) , pointer :: t_min_yr_patch               (:)   => null()
+     real(r8) , pointer :: t_min_yr_inst_patch          (:)   => null()
 
    contains
 
@@ -508,6 +515,14 @@ contains
     allocate(this%fsd240_patch                  (begp:endp))        ; this%fsd240_patch                  (:)   = nan
     allocate(this%fsi24_patch                   (begp:endp))        ; this%fsi24_patch                   (:)   = nan
     allocate(this%fsi240_patch                  (begp:endp))        ; this%fsi240_patch                  (:)   = nan
+    if (use_fates_hydrohard .or. use_fates_frosthard) then 
+       allocate(this%temp24_patch               (begp:endp))        ; this%temp24_patch                  (:)   = nan 
+       allocate(this%tmin24_patch               (begp:endp))        ; this%tmin24_patch                  (:)   = nan 
+       allocate(this%tmin24_inst_patch          (begp:endp))        ; this%tmin24_inst_patch             (:)   = nan
+       allocate(this%t_min_yr_patch             (begp:endp))        ; this%t_min_yr_patch                (:)   = nan 
+       allocate(this%t_min_yr_inst_patch        (begp:endp))        ; this%t_min_yr_inst_patch           (:)   = nan 
+       allocate(this%t_mean_5yr_patch           (begp:endp))        ; this%t_mean_5yr_patch              (:)   = nan 
+    end if
     if (use_fates) then
        allocate(this%wind24_patch               (begp:endp))        ; this%wind24_patch                  (:)   = nan
     end if
@@ -664,6 +679,17 @@ contains
             ptr_patch=this%forc_pbot240_downscaled_patch, default='inactive')
     endif
 
+    if (use_fates_hydrohard .or. use_fates_frosthard) then
+       this%temp24_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TEMP24_CLM', units='K',  &
+            avgflag='A', long_name='mean temp for hardening', &
+            ptr_patch=this%temp24_patch, default='active')
+       this%tmin24_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TMIN24_CLM', units='K',  &
+            avgflag='A', long_name='min temp for hardening', &
+            ptr_patch=this%tmin24_patch, default='active')
+    endif
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -724,6 +750,18 @@ contains
       call init_accum_field (name='pbot240', units='Pa',                                            &
          desc='10-day running mean of air pressure',  accum_type='runmean', accum_period=-10, &
          subgrid_type='pft', numlev=1, init_value=101325._r8)
+    endif
+
+    if (use_fates_hydrohard .or. use_fates_frosthard) then
+       this%temp24_patch(bounds%begp:bounds%endp) = spval
+       call init_accum_field (name='TEMP24', units='K',                                             &
+            desc='24hr average temperature',  accum_type='timeavg', accum_period=-1,    &
+            subgrid_type='pft', numlev=1, init_value=0.0_r8)
+
+       this%t_mean_5yr_patch(bounds%begp:bounds%endp) = spval
+       call init_accum_field (name='THARD5', units='K', &    
+            desc='5 year average of yearly min 2-m temperature for hardening', accum_type='runmean', accum_period=-5, &
+            subgrid_type='pft', numlev=1, init_value=0.0_r8)
 
     endif
 
@@ -741,6 +779,7 @@ contains
     ! !USES
     use accumulMod       , only : extract_accum_field
     use clm_time_manager , only : get_nstep
+    use clm_varctl       , only : nsrest, nsrStartup
     !
     ! !ARGUMENTS:
     class(atm2lnd_type) :: this
@@ -810,6 +849,20 @@ contains
 
     endif
 
+    if (use_fates_hydrohard .or. use_fates_frosthard) then
+      call extract_accum_field ('TEMP24', rbufslp, nstep)
+      this%temp24_patch(begp:endp) = rbufslp(begp:endp)
+
+      call extract_accum_field ('THARD5', rbufslp, nstep) 
+      this%t_mean_5yr_patch(begp:endp) = rbufslp(begp:endp)
+
+      if (nsrest == nsrStartup) then
+         this%t_min_yr_patch(begp:endp)        =  spval
+         this%tmin24_patch(begp:endp)          =  spval
+         this%t_min_yr_inst_patch(begp:endp)   =  spval
+      end if
+    end if
+
     deallocate(rbufslp)
     deallocate(rbufslc)
 
@@ -819,7 +872,8 @@ contains
   subroutine UpdateAccVars (this, bounds)
     !
     ! USES
-    use clm_time_manager, only : get_nstep
+    use clm_time_manager, only : get_nstep,get_step_size
+    use clm_time_manager, only : is_end_curr_year,is_end_curr_day,get_curr_date
     use accumulMod      , only : update_accum_field, extract_accum_field
     !
     ! !ARGUMENTS:
@@ -831,16 +885,23 @@ contains
     integer :: dtime                     ! timestep size [seconds]
     integer :: nstep                     ! timestep number
     integer :: ier                       ! error status
+    integer :: year                      ! year (0, ...) for nstep
+    integer :: month                     ! month (1, ..., 12) for nstep
+    integer :: day                       ! day of month (1, ..., 31) for nstep
+    integer :: secs                      ! seconds into current date for nstep
     integer :: begp, endp
     integer :: begc, endc
     real(r8), pointer :: rbufslp(:)      ! temporary single level - patch level
     real(r8), pointer :: rbufslc(:)      ! temporary single level - column level
+    logical :: end_cd                    ! temporary for is_end_curr_day() value
+    logical :: end_yr                    ! temporary for is_end_curr_year() value
     !---------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
-
+    dtime = get_step_size()
     nstep = get_nstep()
+    call get_curr_date (year, month, day, secs)
 
     ! Allocate needed dynamic memory for single level patch field
     allocate(rbufslp(begp:endp), stat=ier)
@@ -875,6 +936,48 @@ contains
     call update_accum_field  ('FSI240', rbufslp               , nstep)
     call extract_accum_field ('FSI240', this%fsi240_patch     , nstep)
 
+
+    if (use_fates_hydrohard .or. use_fates_frosthard) then
+       do p = begp,endp
+          c = patch%column(p)
+          rbufslp(p) = this%forc_t_downscaled_col(c)
+       end do
+       call update_accum_field  ('TEMP24' , rbufslp , nstep)
+       call extract_accum_field ('TEMP24' , this%temp24_patch , nstep)
+       end_cd = is_end_curr_day()
+       do p = begp,endp
+          if (rbufslp(p) /= spval) then
+             this%tmin24_inst_patch(p) = min(rbufslp(p), this%tmin24_inst_patch(p))
+          endif
+          if (end_cd) then
+             this%tmin24_patch(p) = this%tmin24_inst_patch(p)
+             this%tmin24_inst_patch(p) =  spval
+          else if (secs == dtime) then
+             this%tmin24_patch(p) = spval
+          endif
+       end do
+       do p = begp,endp
+          this%temp24_patch(p) = rbufslp(p)
+       end do
+       ! Start 1 year minimum temperature loop for hardening
+       end_yr = is_end_curr_year()
+       do p = begp,endp   
+          if (rbufslp(p) /= spval) then           
+             this%t_min_yr_inst_patch(p) = min(rbufslp(p), this%t_min_yr_inst_patch(p))
+          endif
+          if (end_yr) then
+             this%t_min_yr_patch(p) = this%t_min_yr_inst_patch(p)
+             rbufslp(p)=this%t_min_yr_inst_patch(p)
+             this%t_min_yr_inst_patch(p) = spval
+          else if (secs == dtime) then
+             this%t_min_yr_patch(p) = spval
+          endif
+       end do
+       if (end_yr) then 
+          call update_accum_field ('THARD5', rbufslp, nstep)
+          call extract_accum_field ('THARD5', this%t_mean_5yr_patch, nstep)
+       end if
+    endif
 
     if (use_cndv) then
 
@@ -968,6 +1071,21 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%forc_pbot240_downscaled_patch )
     endif
 
+    if (use_fates_hydrohard .or. use_fates_frosthard) then
+      call restartvar(ncid=ncid, flag=flag, varname='THARD5', xtype=ncd_double,  &
+           dim1name='pft', &
+           long_name='5 year average of min yearly 2-m temperature for hardening', units='K', &
+           interpinic_flag='interp', readvar=readvar, data=this%t_mean_5yr_patch)
+      call restartvar(ncid=ncid, flag=flag, varname='T1yrinst', xtype=ncd_double,  &
+           dim1name='pft', &
+           long_name='instantenious 1yr min temperature', units='K', &
+           interpinic_flag='interp', readvar=readvar, data=this%t_min_yr_inst_patch)
+      call restartvar(ncid=ncid, flag=flag, varname='TEMP24', xtype=ncd_double,  &
+           dim1name='pft', &
+           long_name='24h average temperature', units='K', &
+           interpinic_flag='interp', readvar=readvar, data=this%temp24_patch)
+    end if 
+
   end subroutine Restart
 
   !-----------------------------------------------------------------------
@@ -1027,6 +1145,14 @@ contains
     deallocate(this%fsi240_patch)
     if (use_fates) then
        deallocate(this%wind24_patch)
+       if (use_fates_hydrohard .or. use_fates_frosthard) then
+          deallocate(this%temp24_patch)
+          deallocate(this%tmin24_patch)
+          deallocate(this%tmin24_inst_patch)
+          deallocate(this%t_mean_5yr_patch)
+          deallocate(this%t_min_yr_inst_patch)
+          deallocate(this%t_min_yr_patch)
+       end if
     end if
     deallocate(this%t_mo_patch)
     deallocate(this%t_mo_min_patch)
