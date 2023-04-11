@@ -30,7 +30,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         """
         
         self._case.set_value("STOP_OPTION", "nyears")
-        self._case.set_value("STOP_N", 10)
+        self._case.set_value("STOP_N", 4)
         
         
         """
