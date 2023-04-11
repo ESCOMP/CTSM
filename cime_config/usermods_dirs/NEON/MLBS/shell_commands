@@ -7,7 +7,7 @@ then
   ./xmlchange DATM_YR_END=2019  
 fi
 # Different default number of months to run for transient case
-if  [ $compset =~ ^HIST ]
+if  [[ $compset =~ ^HIST ]]
 then
   ./xmlchange DATM_YR_END=2020
   ./xmlchange STOP_N=24
