@@ -228,10 +228,10 @@ module clm_varctl
                                             ! 2->Adding-doubling 2-stream (Dang et al.2019)
 
   ! option for snow grain shape in SNICAR (He et al. 2017 JC), ceniln
-  integer, public :: snicar_snw_shape = 1   ! 1->sphere; 2->spheroid; 3->hexagonal plate; 4->Koch snowflake
+  integer, public :: snicar_snw_shape = 3   ! 1->sphere; 2->spheroid; 3->hexagonal plate; 4->Koch snowflake
 
   ! option to activate BC-snow internal mixing in SNICAR (He et al. 2017 JC), ceniln
-  logical, public :: snicar_snobc_intmix = .true.   ! false->external mixing for all BC; true->internal mixing for hydrophilic BC
+  logical, public :: snicar_snobc_intmix = .false.   ! false->external mixing for all BC; true->internal mixing for hydrophilic BC
 
   ! option to activate dust-snow internal mixing in SNICAR (He et al. 2017 JC), ceniln
   logical, public :: snicar_snodst_intmix = .false.   ! false->external mixing for all dust; true->internal mixing for all dust
