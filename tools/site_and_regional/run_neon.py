@@ -758,7 +758,6 @@ def parse_neon_listing(listing_file, valid_neon_sites):
             for line in finidatlist["object"]:
                 if site_name in line:
                     finidat = line.split(",")[0].split("/")[-1]
-
             neon_site = NeonSite(
                 site_name, start_year, end_year, start_month, end_month, finidat
             )
