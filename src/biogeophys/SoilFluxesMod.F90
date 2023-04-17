@@ -289,8 +289,8 @@ contains
                evaporation_demand = qflx_ev_snow(p)
                qflx_ev_snow(p)    = evaporation_limit
                qflx_evap_soi(p)   = qflx_evap_soi(p) - frac_sno_eff(c)*(evaporation_demand - evaporation_limit)
-               qflx_liqevap_from_top_layer(p)   = h2osoi_liq(c,j)/(frac_sno_eff(c)*dtime)
-               qflx_solidevap_from_top_layer(p) = h2osoi_ice(c,j)/(frac_sno_eff(c)*dtime)
+               qflx_liqevap_from_top_layer(p)   = max(h2osoi_liq(c,j)/(frac_sno_eff(c)*dtime), 0._r8)
+               qflx_solidevap_from_top_layer(p) = max(h2osoi_ice(c,j)/(frac_sno_eff(c)*dtime), 0._r8)
                ! conserve total energy flux
                eflx_sh_grnd(p) = eflx_sh_grnd(p) + frac_sno_eff(c)*(evaporation_demand - evaporation_limit)*htvp(c)
             endif
@@ -305,8 +305,8 @@ contains
                evaporation_demand = qflx_evap_soi(p)
                qflx_evap_soi(p)   = evaporation_limit
                qflx_ev_snow(p)    = qflx_evap_soi(p)
-               qflx_liqevap_from_top_layer(p)   = h2osoi_liq(c,j)/dtime
-               qflx_solidevap_from_top_layer(p) = h2osoi_ice(c,j)/dtime
+               qflx_liqevap_from_top_layer(p)   = max(h2osoi_liq(c,j)/dtime, 0._r8)
+               qflx_solidevap_from_top_layer(p) = max(h2osoi_ice(c,j)/dtime, 0._r8)
                ! conserve total energy flux
                eflx_sh_grnd(p) = eflx_sh_grnd(p) +(evaporation_demand -evaporation_limit)*htvp(c)
             endif
