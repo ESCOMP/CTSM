@@ -194,6 +194,18 @@ def get_parser(args, description, valid_neon_sites):
     )
 
     parser.add_argument(
+       "--experiment",
+        help="""
+                Appends the case name with string for model experiment 
+                """,
+        action="store",
+        dest="experiment",
+        type=str,
+        required=False,
+        default=None,
+    )
+
+    parser.add_argument(
         "--run-length",
         help="""
                 How long to run (modified ISO 8601 duration)
@@ -251,7 +263,7 @@ def get_parser(args, description, valid_neon_sites):
         dest="user_version",
         required = False,
         type = str,
-        choices= ['v1','v2'],
+        choices= ['v1','v2','v3'],
     )
 
 
@@ -294,6 +306,7 @@ def get_parser(args, description, valid_neon_sites):
         neon_sites,
         args.output_root,
         args.run_type,
+        args.experiment,
         args.overwrite,
         run_length,
         base_case_root,
@@ -457,6 +470,7 @@ class NeonSite:
         setup_only=False,
         no_batch=False,
         rerun=False,
+        experiment=False,
     ):
         user_mods_dirs = [
             os.path.join(
@@ -475,9 +489,15 @@ class NeonSite:
 
         print ("using this version:", version)
 
-        case_root = os.path.abspath(
-            os.path.join(base_case_root, "..", self.name + "." + run_type)
-        )
+        if experiment == None: 
+            case_root = os.path.abspath(
+                os.path.join(base_case_root, "..", self.name + "." + run_type)
+            )
+        else:
+            case_root = os.path.abspath(
+                os.path.join(base_case_root, "..", self.name + "." + experiment + "." + run_type)
+            )
+
         rundir = None
         if os.path.isdir(case_root):
             if overwrite:
@@ -760,6 +780,7 @@ def main(description):
         site_list,
         output_root,
         run_type,
+        experiment,
         overwrite,
         run_length,
         base_case_root,
@@ -767,7 +788,7 @@ def main(description):
         setup_only,
         no_batch,
         rerun,
-        user_version
+        user_version,
     ) = get_parser(sys.argv, description, valid_neon_sites)
 
     if output_root:
@@ -809,6 +830,7 @@ def main(description):
                 setup_only,
                 no_batch,
                 rerun,
+                experiment,
             )
 
 
