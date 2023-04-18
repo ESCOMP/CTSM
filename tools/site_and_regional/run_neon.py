@@ -489,14 +489,11 @@ class NeonSite:
 
         print ("using this version:", version)
 
-        if experiment == None: 
-            case_root = os.path.abspath(
-                os.path.join(base_case_root, "..", self.name + "." + run_type)
-            )
-        else:
-            case_root = os.path.abspath(
-                os.path.join(base_case_root, "..", self.name + "." + experiment + "." + run_type)
-            )
+        if experiment != None: 
+            self.name = self.name + "." + experiment
+        case_root = os.path.abspath(
+            os.path.join(base_case_root, "..", self.name + "." + run_type)
+        )
         
         rundir = None
         if os.path.isdir(case_root):
@@ -623,6 +620,7 @@ class NeonSite:
             refrundir + "/{}{}.clm2.r.*.nc".format(self.name, root)
         ):
             m = re.search("(\d\d\d\d-\d\d-\d\d)-\d\d\d\d\d.nc", reffile)
+
             if m:
                 refdate = m.group(1)
             symlink_force(reffile, os.path.join(rundir, os.path.basename(reffile)))
