@@ -7,7 +7,7 @@ module CNDriverMod
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use clm_varctl                      , only : use_c13, use_c14, use_fates, use_dynroot
-  use dynSubgridControlMod            , only : get_do_harvest
+  use dynSubgridControlMod            , only : get_do_harvest, get_do_grossunrep
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_nitrif_denitrif, use_nguardrail
@@ -125,16 +125,17 @@ contains
     use CNPhenologyMod                    , only: CNPhenology
     use CNGRespMod                        , only: CNGResp
     use FireMethodType                    , only: fire_method_type
-    use CNCIsoFluxMod                     , only: CIsoFlux1, CIsoFlux2, CIsoFlux2h, CIsoFlux3
+    use CNCIsoFluxMod                     , only: CIsoFlux1, CIsoFlux2, CIsoFlux2h, CIsoFlux2g, CIsoFlux3
     use CNC14DecayMod                     , only: C14Decay
     use CNCStateUpdate1Mod                , only: CStateUpdate1,CStateUpdate0
-    use CNCStateUpdate2Mod                , only: CStateUpdate2, CStateUpdate2h
+    use CNCStateUpdate2Mod                , only: CStateUpdate2, CStateUpdate2h, CStateUpdate2g
     use CNCStateUpdate3Mod                , only: CStateUpdate3
     use CNNStateUpdate1Mod                , only: NStateUpdate1
-    use CNNStateUpdate2Mod                , only: NStateUpdate2, NStateUpdate2h
+    use CNNStateUpdate2Mod                , only: NStateUpdate2, NStateUpdate2h, NStateUpdate2g
     use CNGapMortalityMod                 , only: CNGapMortality
     use CNSharedParamsMod                 , only: use_fun
     use dynHarvestMod                     , only: CNHarvest
+    use dynGrossUnrepMod                  , only: CNGrossUnrep
     use SoilBiogeochemDecompCascadeMIMICSMod, only: decomp_rates_mimics
     use SoilBiogeochemDecompCascadeBGCMod , only: decomp_rate_constants_bgc
     use SoilBiogeochemCompetitionMod      , only: SoilBiogeochemCompetition
@@ -782,6 +783,47 @@ contains
     call NStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
          cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst)
+
+    !--------------------------------------------
+    ! Update2g (gross unrepresented landcover change)
+    !--------------------------------------------
+
+    ! Set gross unrepresented landcover change mortality routine 
+    if (get_do_grossunrep()) then
+       call CNGrossUnrep(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+            soilbiogeochem_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+            cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+    end if
+
+    if ( use_c13 ) then
+       call CIsoFlux2g(num_soilc, filter_soilc, num_soilp, filter_soilp,   &
+            soilbiogeochem_state_inst,                                     &
+            cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
+            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,         &                         
+            isotope='c13')
+    end if
+    if ( use_c14 ) then
+       call CIsoFlux2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+            soilbiogeochem_state_inst,                                     &
+            cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
+            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,         &                         
+            isotope='c14')
+    end if
+
+    call CStateUpdate2g( num_soilc, filter_soilc,  num_soilp, filter_soilp, &
+         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
+    if ( use_c13 ) then
+       call CStateUpdate2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst)
+    end if
+    if ( use_c14 ) then
+       call CStateUpdate2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
+    end if
+
+    call NStateUpdate2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
+
     call t_stopf('CNUpdate2')
 
     if ( use_nguardrail ) then
@@ -800,6 +842,7 @@ contains
     call c_products_inst%UpdateProducts(bounds, &
          num_soilp, filter_soilp, &
          dwt_wood_product_gain_patch = cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
+         gru_wood_product_gain_patch = cnveg_carbonflux_inst%gru_wood_productc_gain_patch(begp:endp), &
          wood_harvest_patch = cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
          dwt_crop_product_gain_patch = cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
          crop_harvest_to_cropprod_patch = cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(begp:endp))
@@ -809,6 +852,7 @@ contains
        call c13_products_inst%UpdateProducts(bounds, &
             num_soilp, filter_soilp, &
             dwt_wood_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
+            gru_wood_product_gain_patch = c13_cnveg_carbonflux_inst%gru_wood_productc_gain_patch(begp:endp), &
             wood_harvest_patch = c13_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
             dwt_crop_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
             crop_harvest_to_cropprod_patch = c13_cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(begp:endp))
@@ -818,6 +862,7 @@ contains
        call c14_products_inst%UpdateProducts(bounds, &
             num_soilp, filter_soilp, &
             dwt_wood_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(begp:endp), &
+            gru_wood_product_gain_patch = c14_cnveg_carbonflux_inst%gru_wood_productc_gain_patch(begp:endp), &
             wood_harvest_patch = c14_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
             dwt_crop_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
             crop_harvest_to_cropprod_patch = c14_cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(begp:endp))
@@ -826,6 +871,7 @@ contains
     call n_products_inst%UpdateProducts(bounds, &
          num_soilp, filter_soilp, &
          dwt_wood_product_gain_patch = cnveg_nitrogenflux_inst%dwt_wood_productn_gain_patch(begp:endp), &
+         gru_wood_product_gain_patch = cnveg_nitrogenflux_inst%gru_wood_productn_gain_patch(begp:endp), &
          wood_harvest_patch = cnveg_nitrogenflux_inst%wood_harvestn_patch(begp:endp), &
          dwt_crop_product_gain_patch = cnveg_nitrogenflux_inst%dwt_crop_productn_gain_patch(begp:endp), &
          crop_harvest_to_cropprod_patch = cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(begp:endp))
