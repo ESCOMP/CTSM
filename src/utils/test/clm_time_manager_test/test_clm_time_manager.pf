@@ -2,7 +2,7 @@ module test_clm_time_manager
 
   ! Tests of clm_time_manager
 
-  use pfunit_mod
+  use funit
   use shr_kind_mod, only : r8 => shr_kind_r8
   use clm_time_manager
   use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown

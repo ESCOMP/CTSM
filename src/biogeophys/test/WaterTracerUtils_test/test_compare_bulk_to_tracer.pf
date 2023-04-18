@@ -2,7 +2,7 @@ module test_compare_bulk_to_tracer
 
   ! Tests of WaterTracerUtils: CompareBulkToTracer
 
-  use pfunit_mod
+  use funit
   use WaterTracerUtils, only : CompareBulkToTracer
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
