@@ -489,13 +489,10 @@ class NeonSite:
 
         print ("using this version:", version)
 
-        if experiment == None: 
-            case_root = os.path.abspath(
+        if experiment != None:
+            self.name = self.name + "." + experiment 
+        case_root = os.path.abspath(
                 os.path.join(base_case_root, "..", self.name + "." + run_type)
-            )
-        else:
-            case_root = os.path.abspath(
-                os.path.join(base_case_root, "..", self.name + "." + experiment + "." + run_type)
             )
 
         rundir = None
