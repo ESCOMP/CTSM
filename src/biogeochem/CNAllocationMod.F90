@@ -393,7 +393,20 @@ contains
              end do
              arepr(p,nrepr) = 1._r8 - aroot(p) - astem(p) - aleaf(p)
 
-          else if (crop_phase(p) /= cphase_planted) then
+          else if (crop_phase(p) == cphase_planted) then
+             ! pre emergence
+             ! allocation coefficients should be irrelevant because crops have no
+             ! live carbon pools
+             aleaf(p) = 1._r8
+             aleafi(p) = 1._r8
+             astem(p) = 0._r8
+             astemi(p) = 0._r8
+             aroot(p) = 0._r8
+             do k = 1, nrepr
+                arepr(p,k) = 0._r8
+             end do
+
+          else
              write(iulog,*) "ERROR in " // subname // ": unexpected crop_phase: ", crop_phase(p)
              call endrun(msg="ERROR: unexpected crop_phase "//errmsg(sourcefile, __LINE__))
           end if
