@@ -2555,7 +2555,11 @@ contains
          gddmin            =>    pftcon%gddmin                                 , & ! Input:
          gdd020            =>    temperature_inst%gdd020_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd0
          gdd820            =>    temperature_inst%gdd820_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd8
-         gdd1020           =>    temperature_inst%gdd1020_patch                  & ! Input:  [real(r8) (:) ]  20 yr mean of gdd10
+         gdd1020           =>    temperature_inst%gdd1020_patch                , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd10
+         aleaf             =>    cnveg_state_inst%aleaf_patch                  , & ! Output: [real(r8) (:)   ]  leaf allocation coefficient
+         astem             =>    cnveg_state_inst%astem_patch                  , & ! Output: [real(r8) (:)   ]  stem allocation coefficient
+         aroot             =>    cnveg_state_inst%aroot_patch                  , & ! Output: [real(r8) (:)   ]  root allocation coefficient
+         arepr             =>    cnveg_state_inst%arepr_patch                    & ! Output: [real(r8) (:,:) ]  reproductive allocation coefficient(s)
          )
 
       ! impose limit on growing season length needed
@@ -2645,6 +2649,17 @@ contains
           endif
           gddmaturity(p) = min_gddmaturity
       endif
+
+      ! Initialize allocation coefficients.
+      ! Because crops have no live carbon pools when planted but not emerged, this shouldn't
+      ! matter unless they skip the vegetative phase (which only happens in very weird run
+      ! setups).
+      aleaf(p) = 1._r8
+      astem(p) = 0._r8
+      aroot(p) = 0._r8
+      do k = 1, nrepr
+         arepr(p,k) = 0._r8
+      end do
 
     end associate
 
