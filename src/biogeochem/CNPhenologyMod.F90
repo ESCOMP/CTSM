@@ -2556,6 +2556,8 @@ contains
          gdd020            =>    temperature_inst%gdd020_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd0
          gdd820            =>    temperature_inst%gdd820_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd8
          gdd1020           =>    temperature_inst%gdd1020_patch                , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd10
+         aleafi            =>    cnveg_state_inst%aleafi_patch                 , & ! Output: [real(r8) (:)   ]  saved allocation coefficient from phase 2
+         astemi            =>    cnveg_state_inst%astemi_patch                 , & ! Output: [real(r8) (:)   ]  saved allocation coefficient from phase 2
          aleaf             =>    cnveg_state_inst%aleaf_patch                  , & ! Output: [real(r8) (:)   ]  leaf allocation coefficient
          astem             =>    cnveg_state_inst%astem_patch                  , & ! Output: [real(r8) (:)   ]  stem allocation coefficient
          aroot             =>    cnveg_state_inst%aroot_patch                  , & ! Output: [real(r8) (:)   ]  root allocation coefficient
@@ -2655,7 +2657,9 @@ contains
       ! matter unless they skip the vegetative phase (which only happens in very weird run
       ! setups).
       aleaf(p) = 1._r8
+      aleafi(p) = 1._r8
       astem(p) = 0._r8
+      astemi(p) = 0._r8
       aroot(p) = 0._r8
       do k = 1, nrepr
          arepr(p,k) = 0._r8
