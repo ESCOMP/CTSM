@@ -393,7 +393,7 @@ contains
              end do
              arepr(p,nrepr) = 1._r8 - aroot(p) - astem(p) - aleaf(p)
 
-          else if (crop_phase(p) /= cphase_planted)
+          else if (crop_phase(p) /= cphase_planted) then
              write(iulog,*) "ERROR in " // subname // ": unexpected crop_phase: ", crop_phase(p)
              call endrun(msg="ERROR: unexpected crop_phase "//errmsg(sourcefile, __LINE__))
           end if
