@@ -413,7 +413,9 @@ contains
           ! allocation coefficients should be irrelevant because crops have no
           ! live carbon pools
           aleaf(p) = 1._r8
+          aleafi(p) = 1._r8
           astem(p) = 0._r8
+          astemi(p) = 0._r8
           aroot(p) = 0._r8
           do k = 1, nrepr
              arepr(p,k) = 0._r8
