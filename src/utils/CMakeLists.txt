@@ -24,4 +24,10 @@ list(APPEND clm_sources
   NumericsMod.F90
   )
 
+list (APPEND fates_sources 
+  clmfates_paraminterfaceMod.F90
+  spmdMod.F90
+  )
+
 sourcelist_to_parent(clm_sources)
+sourcelist_to_parent(fates_sources)

@@ -47,6 +47,7 @@ use FatesGlobals     , only : fates_log
    use EnergyFluxType    , only : energyflux_type
    use SoilStateType     , only : soilstate_type
    use CNProductsMod     , only : cn_products_type
+   use clm_varctl        , only : paramfile, fates_paramfile
    use clm_varctl        , only : iulog
    use clm_varctl        , only : fates_parteh_mode
    use clm_varctl        , only : use_fates
@@ -318,7 +319,8 @@ use FatesGlobals     , only : fates_log
      ! and allocations on the FATES side, which require
      ! some allocations from CLM (like soil layering)
 
-     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft)
+     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft,           &
+      masterproc, paramfile, fates_paramfile)
 
      maxsoil_patches = fates_maxPatchesPerSite
      

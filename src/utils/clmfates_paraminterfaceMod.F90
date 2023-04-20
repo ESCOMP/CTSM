@@ -2,8 +2,13 @@ module CLMFatesParamInterfaceMod
   ! NOTE(bja, 2017-01) this code can not go into the main clm-fates
   ! interface module because of circular dependancies with pftvarcon.
 
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use FatesGlobals, only : fates_log
+  use shr_kind_mod,             only : r8 => shr_kind_r8, SHR_KIND_CL
+  use FatesGlobals,             only : fates_log
+  use FatesParametersInterface, only : fates_parameters_type
+  use EDParamsMod,              only : FatesRegisterParams, FatesReceiveParams
+  use SFParamsMod,              only : SpitFireRegisterParams, SpitFireReceiveParams
+  use PRTInitParamsFATESMod,    only : PRTRegisterParams, PRTReceiveParams
+  use FatesSynchronizedParamsMod, only : FatesSynchronizedParamsInst
 
   implicit none
 
@@ -24,50 +29,42 @@ module CLMFatesParamInterfaceMod
 contains
 
  !-----------------------------------------------------------------------
- subroutine FatesReadParameters()
-
-   use clm_varctl, only : use_fates, paramfile, fates_paramfile
-   use spmdMod, only : masterproc
-
-   use FatesParametersInterface, only : fates_parameters_type
-
-   use EDParamsMod, only : FatesRegisterParams, FatesReceiveParams
-   use SFParamsMod, only : SpitFireRegisterParams, SpitFireReceiveParams
-   use PRTInitParamsFATESMod, only : PRTRegisterParams, PRTReceiveParams
-   use FatesSynchronizedParamsMod, only : FatesSynchronizedParamsInst
+ subroutine FatesReadParameters(paramfile, fates_paramfile, masterproc)
 
    implicit none
+   
+   character(len=SHR_KIND_CL), intent(in) :: paramfile       ! ASCII data file with PFT physiological constants (host model)
+   character(len=SHR_KIND_CL), intent(in) :: fates_paramfile ! ASCII data file with PFT physiological constants (FATES)
+   logical,                    intent(in) :: masterproc      ! proc 0 logical for printing msgs
 
    character(len=32)  :: subname = 'FatesReadParameters'
    class(fates_parameters_type), allocatable :: fates_params
    logical :: is_host_file
 
-   if (use_fates) then
-      if (masterproc) then
-         write(fates_log(), *) 'clmfates_interfaceMod.F90::'//trim(subname)//' :: CLM reading ED/FATES '//' parameters '
-      end if
+    if (masterproc) then
+      write(fates_log(), *) 'clmfates_interfaceMod.F90::'//trim(subname)//' :: CLM reading ED/FATES '//' parameters '
+    end if
 
-      allocate(fates_params)
-      call fates_params%Init()
-      call FatesRegisterParams(fates_params)
-      call SpitFireRegisterParams(fates_params)
-      call PRTRegisterParams(fates_params)
-      call FatesSynchronizedParamsInst%RegisterParams(fates_params)
+    allocate(fates_params)
+    call fates_params%Init()
+    call FatesRegisterParams(fates_params)
+    call SpitFireRegisterParams(fates_params)
+    call PRTRegisterParams(fates_params)
+    call FatesSynchronizedParamsInst%RegisterParams(fates_params)
 
-      is_host_file = .false.
-      call ParametersFromNetCDF(fates_paramfile, is_host_file, fates_params)
+    is_host_file = .false.
+    call ParametersFromNetCDF(fates_paramfile, is_host_file, fates_params)
 
-      is_host_file = .true.
-      call ParametersFromNetCDF(paramfile, is_host_file, fates_params)
+    is_host_file = .true.
+    call ParametersFromNetCDF(paramfile, is_host_file, fates_params)
 
-      call FatesReceiveParams(fates_params)
-      call SpitFireReceiveParams(fates_params)
-      call PRTReceiveParams(fates_params)
-      call FatesSynchronizedParamsInst%ReceiveParams(fates_params)
+    call FatesReceiveParams(fates_params)
+    call SpitFireReceiveParams(fates_params)
+    call PRTReceiveParams(fates_params)
+    call FatesSynchronizedParamsInst%ReceiveParams(fates_params)
 
-      call fates_params%Destroy()
-      deallocate(fates_params)
-   end if
+    call fates_params%Destroy()
+    deallocate(fates_params)
 
  end subroutine FatesReadParameters
 
