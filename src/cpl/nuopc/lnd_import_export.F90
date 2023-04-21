@@ -65,7 +65,7 @@ module lnd_import_export
   logical                :: flds_co2a        ! use case
   logical                :: flds_co2b        ! use case
   logical                :: flds_co2c        ! use case
-  logical                :: force_send_to_atm = .true.  ! Force sending export data to atmosphere even if ATM is not prognostic
+  logical                :: force_send_to_atm   ! Force sending export data to atmosphere even if ATM is not prognostic
   integer                :: glc_nec          ! number of glc elevation classes
   integer, parameter     :: debug = 0        ! internal debug level
 
@@ -1294,9 +1294,8 @@ contains
     ! ----------------------------------------------------
     ! Read in tne namelist for CTSM nuopc cap level items
     ! ----------------------------------------------------
+    use ESMF             , only : ESMF_VMGetCurrent, ESMF_VMBroadcast, ESMF_VM
     use clm_nlUtilsMod   , only : find_nlgroup_name
-    use shr_mpi_mod      , only : shr_mpi_bcast
-    use spmdMod          , only : mpicom
     use abortutils       , only : endrun
     use shr_log_mod      , only : errMsg => shr_log_errMsg
     ! !ARGUMENTS:
@@ -1304,10 +1303,18 @@ contains
     ! !LOCAL VARIABLES:
     integer            :: nu_nml                           ! unit for namelist file
     integer            :: nml_error                        ! namelist i/o error flag
+    integer            :: rc                               ! ESMF return code
+    integer            :: tmp(1)
+    type(ESMF_VM)      :: vm
     character(*), parameter :: nml_name = "ctsm_nuopc_cap" ! MUST match with namelist name below
+    
+
     namelist  /ctsm_nuopc_cap/ force_send_to_atm
 
+    tmp = 0
+    rc = ESMF_SUCCESS
     ! Read namelist
+    force_send_to_atm = .true.
     if (masterproc) then
        open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
        call find_nlgroup_name(nu_nml, nml_name, status=nml_error)
@@ -1318,10 +1325,16 @@ contains
           end if
        end if
        close(nu_nml)
+       if (force_send_to_atm) tmp(1) = 1
     endif
+    call ESMF_VMGetCurrent(vm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Broadcast namelist to all processors
-    call shr_mpi_bcast(force_send_to_atm  , mpicom)
+    call ESMF_VMBroadcast(vm, tmp, 1, 0, rc=rc)
+   
+    force_send_to_atm = (tmp(1) == 1)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
   end subroutine ReadCapNamelist
 
