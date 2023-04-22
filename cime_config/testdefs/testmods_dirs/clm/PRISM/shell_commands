@@ -1,2 +1,2 @@
 #!/bin/bash
-./xmlchange CLM_USRDAT_NAME=NEON
+./xmlchange CLM_USRDAT_NAME=NEON.PRISM
