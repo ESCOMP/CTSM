@@ -156,6 +156,32 @@ class SysTestMeshMaker(unittest.TestCase):
         expected = xr.open_dataset(expected_mesh)
         self.compare_mesh_files(mesh_out, expected)
 
+    def test_domainfile_f10_warea(self):
+        """
+        Do a test of converting the f10 domain file
+        """
+        infile = os.path.join(self._testinputs_path, "domain.lnd.fv10x15_gx3v7.180321.nc")
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            infile,
+            "--lat",
+            "yc",
+            "--lon",
+            "xc",
+            "--mask",
+            "mask",
+            "--area",
+            "area",
+            "--output",
+            self.mesh_out,
+        ]
+        main()
+        expected_mesh = os.path.join(self._testinputs_path, "10x15_nomask_c110308_ESMFmesh.nc")
+        mesh_out = xr.open_dataset(self.mesh_out)
+        expected = xr.open_dataset(expected_mesh)
+        self.compare_mesh_files(mesh_out, expected)
+
     def test_readfile(self):
         """
         Test that reading a file results in the same mesh as converting one
