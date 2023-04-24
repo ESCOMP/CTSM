@@ -319,8 +319,7 @@ use FatesGlobals     , only : fates_log
      ! and allocations on the FATES side, which require
      ! some allocations from CLM (like soil layering)
 
-     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft,           &
-      masterproc, paramfile, fates_paramfile)
+     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft)
 
      maxsoil_patches = fates_maxPatchesPerSite
      
