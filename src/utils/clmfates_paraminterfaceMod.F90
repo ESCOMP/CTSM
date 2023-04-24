@@ -29,14 +29,12 @@ module CLMFatesParamInterfaceMod
 contains
 
  !-----------------------------------------------------------------------
- subroutine FatesReadParameters(paramfile, fates_paramfile, masterproc)
+ subroutine FatesReadParameters()
+  use clm_varctl, only : use_fates, paramfile, fates_paramfile
+  use spmdMod, only : masterproc
 
    implicit none
    
-   character(len=SHR_KIND_CL), intent(in) :: paramfile       ! ASCII data file with PFT physiological constants (host model)
-   character(len=SHR_KIND_CL), intent(in) :: fates_paramfile ! ASCII data file with PFT physiological constants (FATES)
-   logical,                    intent(in) :: masterproc      ! proc 0 logical for printing msgs
-
    character(len=32)  :: subname = 'FatesReadParameters'
    class(fates_parameters_type), allocatable :: fates_params
    logical :: is_host_file
