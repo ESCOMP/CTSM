@@ -16,7 +16,7 @@ You can also use the script in the top level directory to do
 all the conda commands and do this for you.
 
  ../py_env_create
- conda activate ctsm_py
+ conda activate ctsm_pylib
 
 Conda requirements files:
 

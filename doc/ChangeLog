@@ -1,4 +1,808 @@
 ===============================================================
+Tag name: ctsm5.1.dev122
+Originator(s): sacks (Bill Sacks)
+Date: Sun Apr 23 19:36:37 MDT 2023
+One-line Summary: Rework handling of evaporation constraint in SoilFluxes
+
+Purpose and description of changes
+----------------------------------
+
+Occasionally, h2osoi_ice was going significantly negative in
+UpdateState_TopLayerFluxes - see
+https://github.com/ESCOMP/CTSM/issues/1979. As noted in that issue, this
+seems to be due to h2osoi_ice having a very different magnitude from
+h2osoi_liq, leading to greater-than-roundoff-level differences from zero
+final state in a relative sense (i.e., relative to the magnitude of
+h2osoi_ice) - I think because of the appearance of the sum (h2osoi_ice +
+h2osoi_liq) in the equations that limit fluxes.
+
+To try to deal with this, I have reworked the handling of the
+evaporation constraint to directly limit both the liqevap and solidevap,
+so that both of them should result in the equivalent liq or ice states
+going to 0 within roundoff.
+
+To do that, I needed to move the partitioning of the total flux into
+liquid and solid to earlier in the subroutine and then recalculate those
+partitioning fluxes in conditions where we're applying an evaporation
+constraint.
+
+Note that I applied a max of 0 to the new fluxes because many initial
+conditions files have roundoff-level negative H2OSOI_LIQ, so without
+this limit, we were getting roundoff-level negative fluxes.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1979 (Need some changes to avoid negative h2osoi_ice in UpdateState_TopLayerFluxes)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+    Tests passed, some baseline differences as expected.
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: potentially all
+    - what platforms/compilers: potentially all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      roundoff
+
+   Differences were only observed in a few tests:
+   - ERP_P36x2_Ld30.f45_f45_mg37.I2000Clm51FatesSpCruRsGs.cheyenne_intel.clm-FatesColdSatPhen
+   - ERI_D_Ld9_P48x1.T31_g37.I2000Clm50Sp.izumi_nag.clm-reduceOutput
+   - SMS_D_Ln9_P36x3.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline
+   - SMS_D_Ln9_P36x3_Vmct.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+     Only two tests had greater-than-roundoff-level differences in the
+     cprnc output:
+     SMS_D_Ln9_P36x3.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline
+     and the mct equivalent,
+     SMS_D_Ln9_P36x3_Vmct.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline.
+     To verify that differences were fundamentally no greater than
+     roundoff-level, I introduced temporary code; this minimal diff
+     ended up being enough to give just roundoff-level differences from baseline:
+
+       diff --git a/src/biogeophys/SoilFluxesMod.F90 b/src/biogeophys/SoilFluxesMod.F90
+       index c316d30fe..6a958c0ee 100644
+       --- a/src/biogeophys/SoilFluxesMod.F90
+       +++ b/src/biogeophys/SoilFluxesMod.F90
+       @@ -45,7 +45,7 @@ subroutine SoilFluxes (bounds, num_urbanl, filter_urbanl, &
+            ! Update surface fluxes based on the new ground temperature
+            !
+            ! !USES:
+       -    use clm_time_manager , only : get_step_size_real
+       +    use clm_time_manager , only : get_step_size_real, get_nstep
+            use clm_varcon       , only : hvap, cpair, grav, vkc, tfrz, sb 
+            use landunit_varcon  , only : istsoil, istcrop
+            use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
+       @@ -79,7 +79,9 @@ subroutine SoilFluxes (bounds, num_urbanl, filter_urbanl, &
+            real(r8) :: t_grnd0(bounds%begc:bounds%endc)                   ! t_grnd of previous time step
+            real(r8) :: lw_grnd
+            real(r8) :: evaporation_limit                                  ! top layer moisture available for evaporation
+       -    real(r8) :: evaporation_demand                                   ! evaporative demand 
+       +    real(r8) :: evaporation_demand                                   ! evaporative demand
+       +    real(r8) :: qflx_liqevap_orig
+       +    real(r8) :: qflx_solidevap_orig
+            !-----------------------------------------------------------------------
+        
+            associate(                                                                & 
+       @@ -291,6 +293,7 @@ subroutine SoilFluxes (bounds, num_urbanl, filter_urbanl, &
+                       qflx_evap_soi(p)   = qflx_evap_soi(p) - frac_sno_eff(c)*(evaporation_demand - evaporation_limit)
+                       qflx_liqevap_from_top_layer(p)   = max(h2osoi_liq(c,j)/(frac_sno_eff(c)*dtime), 0._r8)
+                       qflx_solidevap_from_top_layer(p) = max(h2osoi_ice(c,j)/(frac_sno_eff(c)*dtime), 0._r8)
+       +
+                       ! conserve total energy flux
+                       eflx_sh_grnd(p) = eflx_sh_grnd(p) + frac_sno_eff(c)*(evaporation_demand - evaporation_limit)*htvp(c)
+                    endif
+       @@ -307,6 +310,24 @@ subroutine SoilFluxes (bounds, num_urbanl, filter_urbanl, &
+                       qflx_ev_snow(p)    = qflx_evap_soi(p)
+                       qflx_liqevap_from_top_layer(p)   = max(h2osoi_liq(c,j)/dtime, 0._r8)
+                       qflx_solidevap_from_top_layer(p) = max(h2osoi_ice(c,j)/dtime, 0._r8)
+       +
+       +               if (h2osoi_liq(c,j) + h2osoi_ice(c,j) > 0._r8) then
+       +                  qflx_liqevap_orig = max(qflx_evap_soi(p)*(h2osoi_liq(c,j)/ &
+       +                       (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+       +               else
+       +                  qflx_liqevap_orig = 0._r8
+       +               end if
+       +               qflx_solidevap_orig = qflx_evap_soi(p) - qflx_liqevap_orig
+       +               if (qflx_solidevap_from_top_layer(p) == 0._r8 .and. &
+       +                    qflx_solidevap_orig < 0._r8 .and. &
+       +                    qflx_solidevap_orig > -1.e-16_r8) then
+       +                  write(iulog,'(a, i0, 1x, i0, 1x, 5e24.17)') &
+       +                       'WJS adj urb: solid orig le 0, new 0: nstep, p, orig, new, qflx_evap_soi, h2osoi_liq, h2osoi_ice = ', &
+       +                       get_nstep(), p, qflx_solidevap_orig, qflx_solidevap_from_top_layer(p), &
+       +                       qflx_evap_soi(p), h2osoi_liq(c,j), h2osoi_ice(c,j)
+       +                  qflx_solidevap_from_top_layer(p) = qflx_solidevap_orig
+       +               end if
+       +
+                       ! conserve total energy flux
+                       eflx_sh_grnd(p) = eflx_sh_grnd(p) +(evaporation_demand -evaporation_limit)*htvp(c)
+                    endif
+
+     (Note that the diffs in
+     ERP_P36x2_Ld30.f45_f45_mg37.I2000Clm51FatesSpCruRsGs.cheyenne_intel.clm-FatesColdSatPhen
+     were ambiguous as to whether they were roundoff-level due to the
+     single-precision output in that test; I reran with double precision
+     for the baseline and the branch and was able to verify that the
+     diffs were only double-precision roundoff-level.)
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1987
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev121
+Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Wed Apr  5 13:34:09 MDT 2023
+One-line Summary: Changes soil moisture initialization logic for FATES
+
+Purpose and description of changes
+----------------------------------
+
+This PR changes the logic for soil moisture initialization to initialize
+with wetter soils (75% of saturated water content, as opposed to 15% of
+absolute water content) for all FATES configurations. The rationale for
+this is that in FATES-nocomp simulations, Jessica Needham was finding very
+high initial mortality rates in some seasonal tropical forest regions which
+she traced it back to the initial soil moisture killing off plants before the
+ecosystem could get established.
+
+This also updates the fates externals pointer to the latest tag which includes
+a number of science updates since the last tag update and updates the the
+default parameter file.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Externals issues fixed (include issue #):
+    Partially addresses FATES#994 -- Bare ground establishment problem and increased soil moisture
+
+Known bugs found since the previous tag (include issue #):
+    #1979 -- Need to loosen tolerance on near-zero truncation of h2osoi_ice in UpdateState_TopLayerFluxes
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   fates_paramfile updated to fates_params_api.25.4.0_12pft_c230327.nc
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    This changes the starting level for a COLD start of soil moisture for ALL FATES cases to a much
+    higher value than for non-FATES. In the long run we'd like to have these the same and/or
+    have the value changable on the namelist.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+  FATES tests run against fates-sci.1.65.3_api.25.4.0-ctsm5.1.dev120 baseline
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+   Changes answers in fates suite for all non-hydro fates tests since the soil
+   moisture initialization matches that of fates hydro now.  Changes answer
+   for all fates testmods in the aux_clm suite as the science tag has iterated
+   forward by 4 minor version updates.  All diffs accounted for with prior fates
+   suite tests.
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+- FATES: sci.1.61.0_api.25.0.0 -> sci.1.65.3_api.25.4.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  https://github.com/ESCOMP/CTSM/pull/1962 -- Cold start moisture for FATES increased
+  https://github.com/ESCOMP/CTSM/pull/1978 -- revert some commits now that FUNITCTSM works again
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev120
+Originator(s): sacks (Bill Sacks)
+Date: Sat Mar 25 17:49:27 MDT 2023
+One-line Summary: Update externals and minor fixes
+
+Purpose and description of changes
+----------------------------------
+
+Main change is to update externals to cesm2_3_alpha12c-ish.
+
+Doing this exposed a few issues that are also fixed here.
+
+Also, reduce GU_LULCC tests down to a single test.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1968 (Reduce the GULU tests down to one)
+- Resolves ESCOMP/CTSM#1971 (fsurdatmodifyctsm test should abort if it has trouble running the python script)
+
+Known bugs introduced in this tag (include issue #):
+- ESCOMP/CTSM#1972 (FUNITCTSM test fails when run through run_sys_tests in upcoming ctsm5.1.dev120)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Fortran unit tests now need to be run manually, since FUNITCTSM is
+  failing when run through run_sys_tests
+- Reduced GU_LULCC tests down to a single test
+
+
+Testing summary:
+----------------
+
+  regular tests:
+      - aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing
+      - Fortran unit tests on cheyenne (until https://github.com/ESCOMP/CTSM/issues/1972 is resolved): from src, run:
+          ../cime/scripts/fortran_unit_testing/run_tests.py --build-dir `mktemp -d --tmpdir=. unit_tests.XXXXXXXX`
+
+    aux_clm on cheyenne ------------ OK
+    aux_clm on izumi --------------- OK
+    Fortran unit tests on cheyenne - PASS
+
+    For the two new tests (with BFAILs), ran them from dev119 with
+    comparison against this branch:
+    - ERP_D_Ld10_P36x2.f10_f10_mg37.IHistClm51BgcCrop.cheyenne_intel.clm-ciso_decStart
+    - SMS_Ld3_PS.f09_g17.IHistClm50BgcCrop.cheyenne_intel.clm-f09_dec1990Start_GU_LULCC
+      (with start date in the test mod changed to match the new version)
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for certain compilers
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all on certain compilers
+    - what platforms/compilers:
+      - nvhpc on cheyenne in non-debug cases (can be explained from
+        differences in compilation flags for non-debug cases, and also
+        some module differences)
+      - intel on izumi in debug cases (there were updates in ESMF
+        modules, though that's the same for other izumi compilers; I'm not
+        seeing other relevant diffs in ccs_config, so I'm not sure why we're
+        getting diffs here. I tried investigating, but ran into trouble trying
+        to get things to compile with the old ccs_config, so gave up on
+        tracking down the source of this difference)
+  
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      not investigated
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- ccs_config: ccs_config_cesm0.0.38 -> ccs_config_cesm0.0.58
+- cime: cime6.0.45 -> cime6.0.100
+- cmeps: cmeps0.13.71 -> cmeps0.14.17
+- cdeps: cdeps0.12.65 -> cdeps1.0.7
+- share: share1.0.13 -> share1.0.16
+- pio: pio2_5_7 -> pio2_5_10
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev119
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310), ekluzek Erik Kluzek), lawrencepj1 (Peter Lawrence)
+Date: Thu Mar 16 14:13:37 MDT 2023
+One-line Summary: Allow gross unrepresented land use transitions (PR #309)
+
+Purpose and description of changes
+----------------------------------
+
+ Get gross unrepresented land use transitions working in CLM5.1. This is additional optional
+ data added to the landuse.timeseries files for transient simulations. The current landuse.timseries
+ files have this data, but it's set to zero. This data will be part of the CTSM5.2 surface dataset
+ (that is upcoming) and be on by default for clm5_3 physics.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics
+onfigurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer
+hanges.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+ Known bugs introduced in this tag (include issue #): #1968
+   #1968 -- Reduce the GULU tests down to one
+ 
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ New namelist variable: do_grossunrep
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Surface datasets may now contain non-zero gross unrepresented land use
+ transitions.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Erik introduced new tests that can be identified by the GU_LULCC in
+ their names. I ran these with the test-suites and generated baselines
+ for them.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO (unless see next)
+
+ Code configurations: do_grossunrep = .true. and surface dataset
+                      includes non-zero gross unrepresented land use
+                      transitions. I (slevis) have not investigated the
+                      nature of the changes.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/309 -- Added new files to allow Gross Unrepresented Land Use transition
+ https://github.com/ESCOMP/ctsm/pull/1965 -- update README
+ (NOT a PR) Update manage externals
+
+
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev118
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Sun Feb  5 18:31:29 MST 2023
+One-line Summary: Use conda environment rather than ncar_pylib with the fsurdat_modifier system test
+
+Purpose and description of changes
+----------------------------------
+
+ Reason: ncar_pylib is going away soon.
+
+ The fsurdat_modifier system test that we're discussing in this tag and
+ corresponding pull request (PR #1798)
+ FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRs.cheyenne_intel
+ stopped working when I updated the PR to dev117.
+ The test worked in the PR when I was still in dev115.
+ The test worked in vanilla dev117.
+ I fixed the failure by removing a restriction added in dev116 and the
+ corresponding override --allow_ideal_and_include_non_veg.
+
+ I am removing another restriction added in dev116 and the corresponding
+ override --allow_dom_pft_and_idealized. This one didn't cause a test to fail
+ but unnecessarily restricted usage of the fsurdat_modifier tool.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+Fixes #1786 -- ncar_pylib
+Fixes #1925 -- replace ncar_pylib
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+    clm_pymods test suite on cheyenne - PASS
+    (softlinks created for baselines to previous tag since this is bit-for-bit)
+
+  any other testing (give details below):
+
+    make all (in /python directory) - PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1798 -- Have fsurdat_modifier system test use conda environment rather than ncar_pylib
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev117
+Originator(s): afoster (Adrianna Foster)
+Date: Thu Feb  2 10:34:23 MST 2023
+One-line Summary: Updates to facilitate running FATES at NEON sites
+
+Purpose and description of changes
+----------------------------------
+
+Small updates to facilitate creation, modification, and 
+use of FATES-usable (i.e. 16-PFT) NEON surface data files and 
+user-mods for FATES NEON cases.
+
+Updated neon_surf_wrapper.py and modify_singlept_site_neon.py to include a 
+--16pft argument that will create and/or modify the 16-PFT versions of the 
+surface datasets, as well as a --mixed flag to the neon_surf_wrapper.py 
+which tells subset_data to not overwrite the surfae dataset to be just 100% 
+one PFT. 
+
+Also corrects lat-lon being used for ONAQ NEON site and updates the surface
+datasets for all NEON sites.
+
+Also adds a check to ensure that fire emission (-fire_emis) is not on if FATES
+is being run.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+- Partially addresses ESCOMP/CTSM#1609(Get FATES working for NEON)
+
+Known bugs introduced in this tag (include issue #): 
+#1949 - Duplication problems in user_mods
+
+Known bugs found since the previous tag (include issue #): 
+#1948 - FATES and 78PFT surface datasets
+FATES#983 - PRT2 test failing on izumi
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+updated surface datasets for all NEON sites for big-leaf (78-PFT) and FATES (16-PFT)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+Files changed in cime_config/usermods_dirs/NEON for big-leaf CLM must also
+be changed in similar files in cime_config/usermods_dirs/NEON/FATES, as these are
+currently duplicated. This duplication should be fixed at a later date.
+
+Changes to tests or testing:
+Added a test in bld/unit_testers/build-namelist_test.pl to check that FATES and 
+fire emission cannot be on at the same time.
+
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+Only for NEON sites.
+
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All configurations at NEON sites
+    - what platforms/compilers: All platforms when running NEON sites
+    - nature of change: updated surface datasets
+
+
+Other details
+-------------
+#1933 - Update neon_sites_dompft.csv
+#1932 - NEON FATES capabilities
+
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev116
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Jan 26 02:17:27 MST 2023
+One-line Summary: Small answer changes with bug fixes, zetamaxstable=2 for BHS, new single point fsurdat files
+
+Purpose and description of changes
+----------------------------------
+
+Change zetamaxstable to 2 when biomass-heat-storage is on. This changes simulation answers once they
+run long enough to exceed that threshold.
+
+Also fix an issue with maintence respiration (MR) for BGC simulations. This changes answers for most BGC cases once
+they run long enough. Live course MR wasn't included.
+
+Make the default for MOSART to send negative flow to river outlets. Also fix an issue with this mode.
+
+Bring in new surface datasets for the single point sites. We now make these sites using subset_data rather
+than mksurfdata.
+
+Some new capability to the subset_data and modify_fsurdat tools.
+
+subset_data add options:
+--out-surface -- To name the surface dataset on the command line rather than based on the current date
+--cfg-file ----- Enter the default configure file to use rather than assume a fixed one
+
+modify_fsurdat add options:
+--fsurdat_in -- to input on command line rather than config file
+--fsurdat_out -- to input on command line rather than config file
+--allow_ideal_and_include_non_veg -- to allow idealized and include_non_veg at the same time
+--allow_dom_pft_and_idealized -- to allow dom_pft and idealized at the same time
+--overwrite -- allow output file to be overwritten
+config file options:
+process_subgrid_section -- Read in an optional section to set the PCT_* fractions
+process_var_list_section - Read in an optional section to set any variable on the file
+
+Add --silent option to python tools.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[x] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[x] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #1676 -- live coarse maintenance respiration is not included in the root respiration
+   Fixes #1674 -- Change mksurfdata_map/mksurfdata_esmf Makefile to build single-point datasets using subset_data
+   Fixes #1809 -- Add ability to name a different default config file for subset_data
+   Fixes #1941 -- Add --silent option to ctsm_logging python infrastructure
+   Fixes #1942 -- Move py_env_create outside of tools test driver, as fails on compute nodes on cheyenne
+   Fixes #1924 -- Some updates to fsurdat_modifier script
+   Fixes #1690 -- Set and use zetamaxstable for BHS cases
+   Fixes #1689 -- Set zetamaxstable to 2 consistently for BHS
+
+Externals issues fixed (include issue #):
+   MOSART #58 Make negative and direct_to_outlet the default option 
+   MOSART #56 Some issues with direct_to_outlet
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): tools
+   Just to the subset_data and fsurdat_modifier tools as outlined above
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   zetamaxstable now 2.0 is use_biomass_heat_storage is on
+
+Changes to the datasets (e.g., parameter, surface or initial files): Single point fsurdat
+   1x1_brazil, 1x1_numaIA, 1x1_smallvilleIA, 1x1_vancouverCAN, 1x1_mexicocityMEX, 1x1_urbanc_alpha
+   surface datasets and 1x1_brazil landuse.timeseries
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   tools test now just activates the ctsm_py conda environment rather than creating it
+   There are seperate configure files for each urban surface dataset for modify_fsurdat
+   There is a 1850 configure file for subset_data
+
+Changes to tests or testing:
+   fsurdatmodifyctsm.py script adjusted to compensate for changes
+   python directory changes include unit and system tests to support updates
+   Single point mksurdata_map tests were removed
+
+
+Testing summary: regular tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm5_1, supported single point resolutions
+    - what platforms/compilers: All
+    - nature of change: adjusted climate
+       clm5_1 changes because zetmaxstable set to 2.0. If a simulation runs long enough
+       this max will be hit and it will change answers once it does. But if stability
+       doesn't hit the max answers can be identical.
+       clm5_0 and clm4_5 also change if biomass heat storage is turned on
+       single point resolutions (i.e. 1x1_smallvilleIA, 1x1_brazil, 1x1_mexicocityMEX) have differences
+       maintenence respiration 
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+      Keith Oleson ran experiments with changing zetamaxstable some slides showing this are here:
+      https://docs.google.com/presentation/d/1u6ycr7F97QYYRcRfEdD9yIxH75diUx2r
+
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): mosart
+   mosart updated to mosart1_0_48
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    #1812 -- Get single point surface datasets from subset_data rather than mksurfdata
+    #1802 -- Make zetamaxstable consistently 2.0 when BHS on
+    #1915 -- Fix issue #1864 in release documentation
+    Update manage_externals (direct push to main-dev)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev115
 Originator(s): rgknox (Ryan Knox)
 Date: Fri Dec  2 15:45:32 MST 2022
