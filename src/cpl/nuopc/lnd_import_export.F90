@@ -201,7 +201,8 @@ contains
     ! Advertise export fields
     !--------------------------------
 
-    call ReadCapNamelist( NLFilename )
+    call ReadCapNamelist( NLFilename, rc )
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Need to determine if there is no land for single column before the advertise call is done
 
@@ -1289,7 +1290,7 @@ contains
   end function fldchk
 
   !===============================================================================
-  subroutine ReadCapNamelist( NLFilename )
+  subroutine ReadCapNamelist( NLFilename, rc )
 
     ! ----------------------------------------------------
     ! Read in tne namelist for CTSM nuopc cap level items
@@ -1300,11 +1301,11 @@ contains
     use shr_log_mod      , only : errMsg => shr_log_errMsg
     ! !ARGUMENTS:
     character(len=*), intent(IN) :: NLFilename   ! Namelist filename
+    integer, intent(out)         :: rc                               ! ESMF return code
     ! !LOCAL VARIABLES:
     integer            :: nu_nml                           ! unit for namelist file
     integer            :: nml_error                        ! namelist i/o error flag
-    integer            :: rc                               ! ESMF return code
-    integer            :: tmp(1)
+    integer, target    :: tmp(1)
     type(ESMF_VM)      :: vm
     character(*), parameter :: nml_name = "ctsm_nuopc_cap" ! MUST match with namelist name below
     
