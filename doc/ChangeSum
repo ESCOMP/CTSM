@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev122    sacks 04/23/2023 Rework handling of evaporation constraint in SoilFluxes
     ctsm5.1.dev121 glemieux 04/05/2023 Changes soil moisture initialization logic for FATES
     ctsm5.1.dev120    sacks 03/25/2023 Update externals and minor fixes
     ctsm5.1.dev119   slevis 03/16/2023 Allow gross unrepresented land use transition (PR #309)
