@@ -176,11 +176,11 @@ class SysTestMeshMaker(unittest.TestCase):
             "--output",
             self.mesh_out,
         ]
-        main()
-        expected_mesh = os.path.join(self._testinputs_path, "10x15_nomask_c110308_ESMFmesh.nc")
-        mesh_out = xr.open_dataset(self.mesh_out)
-        expected = xr.open_dataset(expected_mesh)
-        self.compare_mesh_files(mesh_out, expected)
+        with self.assertRaisesRegex(
+            SystemExit,
+            "mesh_type currently can NOT work on global grids, but should for regional",
+        ):
+            main()
 
     def test_readfile(self):
         """

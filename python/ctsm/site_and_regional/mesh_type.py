@@ -373,7 +373,15 @@ class MeshType:
         dims = self.mask.shape
         nlon = dims[0]
         nlat = dims[1]
-        elem_conn_size = nlon * nlat + nlon + nlat + 1
+        elem_conn_size = (nlon * nlat) + nlon
+        size = len(corner_pairs)
+        # Test if a regional or global grid
+        global_grid = bool(corner_pairs[0, 1] <= -90.0 and corner_pairs[size - 1, 1] >= 90.0)
+
+        if not global_grid:
+            elem_conn_size = elem_conn_size + nlat + 1
+        else:
+            abort("mesh_type currently can NOT work on global grids, but should for regional")
 
         self.node_coords = node_coords
 
@@ -385,7 +393,7 @@ class MeshType:
                 elem_conn_size,
             )
             logger.warning("This may result your simulation to crash later.")
-            # abort( "Expected size for element connections is wrong" )
+            abort("Expected size for element connections is wrong")
 
     def are_corners_set(self):
         """Check if the corners have been set for this object"""
