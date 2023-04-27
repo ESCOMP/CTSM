@@ -38,12 +38,3 @@ preso3.SSP3-7.0:year_last=2022
 preso3.SSP3-7.0:year_align=2018
 preso3.SSP3-7.0:dtlimit=30
 
-NEON.${NEONSITE}:datavars = \
-  FSDS     Faxa_swdn, \
-  ZBOT     Sa_z, \
-  TBOT     Sa_tbot, \
-  WIND     Sa_wind, \
-  RH       Sa_rh,  \
-  PSRF     Sa_pbot, \
-  FLDS     Faxa_lwdn
-

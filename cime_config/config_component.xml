@@ -241,12 +241,13 @@
     <default_value>UNSET</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Dataset name for user-created datasets. This is used as the argument
-      in Buildconf/clm.buildnml to build-namelist -clm_usr_name. An example of
-      such a dataset would be 1x1pt_boulderCO_c090722. The default value is UNSET.
-      This is an advanced flag and should only be used by expert users. For NEON
-      cases, this can be set to either NEON or NEON.PRISM, the latter of which would
-      PRISM precipitation instead of the default NEON precipitation. </desc>
+    <desc>Resolution name for user-created resolutions. This is especially used
+      for single point and regional resolutions created via subset_data from
+      the global datasets. This should be set when you use CLM_USRDAT as the grid
+      to create_newcase.  The default value is UNSET.
+      For NEON cases, this can be set to either NEON or NEON.PRISM, the latter of which would
+      use PRISM precipitation instead of the default NEON precipitation. NEON cases then also
+      use the variable NEONSITE to specify the exact site.</desc>
   </entry>
 
   <entry id="CLM_USRDAT_DIR">
@@ -326,7 +327,7 @@
 
   <entry id="NEONVERSION">
     <type>char</type>
-    <valid_values>v1,v2,latest</valid_values>
+    <valid_values>v1,v2,v3,latest</valid_values>
     <default_value>latest</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>

@@ -194,6 +194,19 @@ def get_parser(args, description, valid_neon_sites):
     )
 
     parser.add_argument(
+       "--prism",
+        help="""
+                Uses the PRISM reanaylsis precipitation data for the site instead of the NEON data
+                (only available over Continental US)
+                """,
+        action="store_true",
+        dest="prism",
+        required=False,
+        default=False,
+    )
+
+
+    parser.add_argument(
        "--experiment",
         help="""
                 Appends the case name with string for model experiment 
@@ -307,6 +320,7 @@ def get_parser(args, description, valid_neon_sites):
         args.output_root,
         args.run_type,
         args.experiment,
+        args.prism,
         args.overwrite,
         run_length,
         base_case_root,
@@ -464,6 +478,7 @@ class NeonSite:
         self,
         base_case_root,
         run_type,
+        prism,
         run_length,
         user_version,
         overwrite=False,
@@ -555,6 +570,9 @@ class NeonSite:
                  case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
             case.set_value("NEONVERSION", version)
+            if prism:
+                case.set_value("CLM_USRDAT_NAME", "NEON.PRISM")
+
             if run_type == "ad":
                 case.set_value("CLM_FORCE_COLDSTART", "on")
                 case.set_value("CLM_ACCELERATED_SPINUP", "on")
@@ -778,6 +796,7 @@ def main(description):
         output_root,
         run_type,
         experiment,
+        prism,
         overwrite,
         run_length,
         base_case_root,
@@ -821,6 +840,7 @@ def main(description):
             neon_site.run_case(
                 base_case_root,
                 run_type,
+                prism,
                 run_length,
                 user_version,
                 overwrite,
