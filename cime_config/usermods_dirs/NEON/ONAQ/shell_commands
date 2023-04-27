@@ -2,7 +2,7 @@
 ./xmlchange NEONSITE=ONAQ
 ./xmlchange PTS_LON=247.54755
 ./xmlchange PTS_LAT=40.17760
-# NEON precipitation data for this siste is bad so end early
+# NEON precipitation data for this site is bad so end early
 # If CLM_USRDAT_NAME is NEON.PRISM you can run to the end of the data
 if [ $CLM_USRDAT_NAME=='NEON' ]
 then
