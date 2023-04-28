@@ -88,7 +88,7 @@
     </phase>
   </test>
 
-  <test name="ERP_P144x2_Ld30.f45_f45_mg37.I2000Clm50FatesRs.cheyenne_intel.clm-mimicsFatesCold">
+  <test name="ERP_P72x2_Ld30.f45_f45_mg37.I2000Clm50FatesRs.cheyenne_intel.clm-mimicsFatesCold">
     <phase name="SHAREDLIB_BUILD">
       <status>PEND</status>
       <issue>#1045</issue>
