@@ -2,7 +2,7 @@ module test_irrigation
 
   ! Tests of IrrigationMod
 
-  use pfunit_mod
+  use funit
   use unittestSubgridMod
   use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
   use unittestTimeManagerMod, only : unittest_timemgr_set_curr_date
