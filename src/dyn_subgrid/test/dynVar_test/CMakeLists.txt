@@ -6,7 +6,7 @@ set (pfunit_sources
 set (extra_sources
   test_dynVarShared.F90)
 
-create_pfUnit_test(dynVar test_dynVar_exe
-  "${pfunit_sources}" "${extra_sources}")
-
-target_link_libraries(test_dynVar_exe clm csm_share esmf_wrf_timemgr)
+add_pfunit_ctest(dynVar
+  TEST_SOURCES "${pfunit_sources}"
+  OTHER_SOURCES "${extra_sources}"
+  LINK_LIBRARIES clm csm_share esmf_wrf_timemgr)

@@ -26,14 +26,10 @@ This script will do the following:
     4) Build and submit the case.
  
 -------------------------------------------------------------------
-Instructions for running on Cheyenne/Casper:
- 
-load the following into your local environment
-    module load python
-    ncar_pylib
- 
-To remove NPL from your environment on Cheyenne/Casper:
-    deactivate
+Instructions for running using conda python environments:
+
+../../py_env_create
+conda activate ctsm_py
  
 -------------------------------------------------------------------
 To see the available options:
@@ -83,7 +79,7 @@ from ctsm.download_utils import download_file
 import CIME.build as build
 from standard_script_setup import *
 from CIME.case import Case
-from CIME.utils import safe_copy, expect, symlink_force
+from CIME.utils import safe_copy, expect, symlink_force, run_cmd_no_fail
 from argparse import RawTextHelpFormatter
 from CIME.locked_files import lock_file, unlock_file
 
@@ -213,6 +209,7 @@ def get_parser(args, description, valid_neon_sites):
         help="""           
                 Start date for running CTSM simulation in ISO format.
                 [default: %(default)s]
+                (currently non-functional)
                 """,
         action="store",
         dest="start_date",
@@ -280,6 +277,8 @@ def get_parser(args, description, valid_neon_sites):
             # The transient run length is set by cdeps atm buildnml to the last date of the available tower data
             # this value is not used
             run_length = "4Y"
+    else:
+        run_length = args.run_length
 
     run_length = parse_isoduration(run_length)
     base_case_root = None
@@ -419,6 +418,14 @@ class NeonSite:
                 print("---- base case setup ------")
                 case.case_setup()
             else:
+                # For existing case check that the compset name is correct
+                existingcompname = case.get_value("COMPSET")
+                match = re.search("^HIST", existingcompname, flags=re.IGNORECASE)
+                if re.search("^HIST", compset, flags=re.IGNORECASE) is None:
+                    expect( match == None, "Existing base case is a historical type and should not be  -- rerun with the --orverwrite option" )
+                else:
+                    expect( match != None, "Existing base case should be a historical type and is not -- rerun with the --orverwrite option" )
+                # reset the case
                 case.case_setup(reset=True)
             case_path = case.get_value("CASEROOT")
 
@@ -479,6 +486,13 @@ class NeonSite:
             elif rerun:
                 with Case(case_root, read_only=False) as case:
                     rundir = case.get_value("RUNDIR")
+                    # For existing case check that the compset name is correct
+                    existingcompname = case.get_value("COMPSET")
+                    match = re.search("^HIST", existingcompname, flags=re.IGNORECASE)
+                    if re.search("^HIST", compset, flags=re.IGNORECASE) is None:
+                        expect( match == None, "Existing base case is a historical type and should not be  -- rerun with the --orverwrite option" )
+                    else:
+                        expect( match != None, "Existing base case should be a historical type and is not -- rerun with the --orverwrite option" )
                     if os.path.isfile(os.path.join(rundir, "ESMF_Profile.summary")):
                         print(
                             "Case {} appears to be complete, not rerunning.".format(
@@ -507,15 +521,21 @@ class NeonSite:
             # read_only = False should not be required here
             with Case(base_case_root, read_only=False) as basecase:
                 print("---- cloning the base case in {}".format(case_root))
+                #
+                # EBK: 11/05/2022 -- Note keeping the user_mods_dirs argument is important. Although
+                # it causes some of the user_nl_* files to have duplicated inputs. It also ensures
+                # that the shell_commands file is copied, as well as taking care of the DATM inputs.
+                # See https://github.com/ESCOMP/CTSM/pull/1872#pullrequestreview-1169407493
+                #
                 basecase.create_clone(
                     case_root, keepexe=True, user_mods_dirs=user_mods_dirs
                 )
 
         with Case(case_root, read_only=False) as case:
-            # in order to avoid the complication of leap years we always set the run_length in units of days.
-            case.set_value("STOP_OPTION", "ndays")
-            case.set_value("STOP_N", run_length)
-            case.set_value("REST_OPTION", "end")
+            if run_type is not "transient":
+                 # in order to avoid the complication of leap years we always set the run_length in units of days.
+                 case.set_value("STOP_OPTION", "ndays")
+                 case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
             case.set_value("NEONVERSION", version)
             if run_type == "ad":
@@ -524,6 +544,8 @@ class NeonSite:
                 case.set_value("RUN_REFDATE", "0018-01-01")
                 case.set_value("RUN_STARTDATE", "0018-01-01")
                 case.set_value("RESUBMIT", 1)
+                case.set_value("STOP_N", run_length)
+
             else:
                 case.set_value("CLM_FORCE_COLDSTART", "off")
                 case.set_value("CLM_ACCELERATED_SPINUP", "off")
@@ -531,38 +553,19 @@ class NeonSite:
 
             if run_type == "postad":
                 self.set_ref_case(case)
+                case.set_value("STOP_N", run_length)
 
+            # For transient cases STOP will be set in the user_mod_directory
             if run_type == "transient":
                 if self.finidat:
                     case.set_value("RUN_TYPE", "startup")
                 else:
                     if not self.set_ref_case(case):
                         return
-                case.set_value("STOP_OPTION", "nmonths")
-                case.set_value("STOP_N", self.diff_month())
-                case.set_value("DATM_YR_ALIGN", self.start_year)
-                case.set_value("DATM_YR_START", self.start_year)
-                case.set_value("DATM_YR_END", self.end_year)
                 case.set_value("CALENDAR", "GREGORIAN")
                 case.set_value("RESUBMIT", 0)
-            else:
-                # for the spinup we want the start and end on year boundaries
-                if self.start_month == 1:
-                    case.set_value("DATM_YR_ALIGN", self.start_year)
-                    case.set_value("DATM_YR_START", self.start_year)
-                elif self.start_year + 1 <= self.end_year:
-                    case.set_value("DATM_YR_ALIGN", self.start_year + 1)
-                    case.set_value("DATM_YR_START", self.start_year + 1)
-                if self.end_month == 12:
-                    case.set_value("DATM_YR_END", self.end_year)
-                else:
-                    case.set_value("DATM_YR_END", self.end_year - 1)
+                case.set_value("STOP_OPTION", "nmonths")
             
-            # Let's no be so clevar with start / end dates
-            #case.set_value("DATM_YR_ALIGN", int(args.start_date[0:4]))
-            #case.set_value("DATM_YR_START", int(args.start_date[0:4]))
-            #case.set_value("DATM_YR_END", int(args.end_date[0:4]))
-
             if not rundir:
                 rundir = case.get_value("RUNDIR")
 
@@ -620,11 +623,7 @@ class NeonSite:
         case.set_value("RUN_REFDATE", refdate)
         if case_root.endswith(".postad"):
             case.set_value("RUN_STARTDATE", refdate)
-        else:
-            case.set_value(
-                "RUN_STARTDATE",
-                "{yr:04d}-{mo:02d}-01".format(yr=self.start_year, mo=self.start_month),
-            )
+        # NOTE: if start options are set, RUN_STARTDATE should be modified here
         return True
 
     def modify_user_nl(self, case_root, run_type, rundir):
@@ -784,7 +783,10 @@ def main(description):
     # -- so no need to define a base_case for every site.
 
     res = "CLM_USRDAT"
-    compset = "I1PtClm51Bgc"
+    if run_type == "transient":
+       compset = "IHist1PtClm51Bgc"
+    else:
+       compset = "I1PtClm51Bgc"
 
     # --  Looping over neon sites
 
