@@ -1684,7 +1684,7 @@ contains
     use ch4varcon     , only : replenishlakec, allowlakeprod, ch4offline
     use clm_varcon    , only : secspday
     use ch4varcon     , only : finundation_mtd, finundation_mtd_h2osfc
-    use clm_time_manager, only : is_beg_curr_year
+    use clm_time_manager, only : is_beg_curr_year, is_first_step
     use dynSubgridControlMod, only : get_do_transient_lakes
     !
     ! !ARGUMENTS:
@@ -2324,10 +2324,13 @@ contains
       ! Gricell level balance
       !
 
-      ! Skip the check if it's the beginning of a new year and dynamic lakes are on
-      ! See (https://github.com/ESCOMP/CTSM/issues/1356#issuecomment-905963583)
+      ! Skip the check if dynamic lakes are on and it's
+      ! - the beginning of a new year (ok for restart runs) OR
+      ! - the beginning of a simulation (needed for hybrid/startup runs)
+      ! See (https://github.com/ESCOMP/CTSM/issues/43#issuecomment-1282609233)
       ! 
-      if ( is_beg_curr_year() .and. get_do_transient_lakes() )then
+      if ( is_beg_curr_year() .and. get_do_transient_lakes() .or. &
+           is_first_step() .and. get_do_transient_lakes() )then
          ch4_first_time_grc(begg:endg) = .true.
       end if
 
