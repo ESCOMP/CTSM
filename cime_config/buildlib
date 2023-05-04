@@ -114,6 +114,7 @@ def _main_func():
                      os.path.join(lnd_root,"src","biogeophys"),
                      os.path.join(lnd_root,"src","biogeochem"),
                      os.path.join(lnd_root,"src","soilbiogeochem"),
+                     os.path.join(lnd_root,"src","multilayer_canopy"),
                      os.path.join(lnd_root,"src","dyn_subgrid"),
                      os.path.join(lnd_root,"src","init_interp"),
                      os.path.join(lnd_root,"src","self_tests"),

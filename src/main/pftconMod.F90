@@ -277,6 +277,24 @@ module pftconMod
      ! pft parameters for dynamic root code
      real(r8), allocatable :: root_dmx(:)     !maximum root depth
 
+     ! pft parameters for CLMml
+     real(r8), allocatable :: vcmaxpft         (:) ! Maximum carboxylation rate at 25C (umol/m2/s)
+     real(r8), allocatable :: minlwp_SPA       (:) ! Minimum leaf water potential (MPa)
+     real(r8), allocatable :: gplant_SPA       (:) ! Stem (xylem-to-leaf) hydraulic conductance (mmol H2O/m2 leaf area/s/Mpa)
+     real(r8), allocatable :: capac_SPA        (:) ! Plant capacitance (mmol H2O/m2 leaf area/MPa)
+     real(r8), allocatable :: iota_SPA         (:) ! Stomatal water-use efficiency (umol CO2/ mol H2O)
+     real(r8), allocatable :: root_radius_SPA  (:) ! Fine root radius (m)
+     real(r8), allocatable :: root_density_SPA (:) ! Fine root density (g biomass / m3 root)
+     real(r8), allocatable :: root_resist_SPA  (:) ! Hydraulic resistivity of root tissue (MPa.s.g/mmol H2O)
+     real(r8), allocatable :: g0opt_BB         (:) ! Ball-Berry minimum leaf conductance, unstressed (mol H2O/m2/s)
+     real(r8), allocatable :: g1opt_BB         (:) ! Ball-Berry slope of conductance-photosynthesis relationship, unstressed
+     real(r8), allocatable :: g0opt_MED        (:) ! Medlyn minimum leaf conductance, unstressed (mol H2O/m2/s)
+     real(r8), allocatable :: g1opt_MED        (:) ! Medlyn slope of conductance-photosynthesis relationship, unstressed
+     real(r8), allocatable :: emleaf           (:) ! Leaf emissivity (-)
+     real(r8), allocatable :: clump_fac        (:) ! Foliage clumping index (-)
+     real(r8), allocatable :: pbeta            (:) ! Parameter for the leaf area density beta distribution (-)
+     real(r8), allocatable :: qbeta            (:) ! Parameter for the leaf area density beta distribution (-)
+
    contains
 
      procedure, public  :: Init
@@ -495,6 +513,24 @@ contains
     allocate( this%rstem_per_dbh (0:mxpft) )
     allocate( this%wood_density  (0:mxpft) )
  
+    ! pft parameters for CLMml
+    allocate (this%vcmaxpft         (0:mxpft))
+    allocate (this%minlwp_SPA       (0:mxpft))
+    allocate (this%gplant_SPA       (0:mxpft))
+    allocate (this%capac_SPA        (0:mxpft))
+    allocate (this%iota_SPA         (0:mxpft))
+    allocate (this%root_radius_SPA  (0:mxpft))
+    allocate (this%root_density_SPA (0:mxpft))
+    allocate (this%root_resist_SPA  (0:mxpft))
+    allocate (this%g0opt_BB         (0:mxpft))
+    allocate (this%g1opt_BB         (0:mxpft))
+    allocate (this%g0opt_MED        (0:mxpft))
+    allocate (this%g1opt_MED        (0:mxpft))
+    allocate (this%emleaf           (0:mxpft))
+    allocate (this%clump_fac        (0:mxpft))
+    allocate (this%pbeta            (0:mxpft))
+    allocate (this%qbeta            (0:mxpft))
+
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
@@ -1311,6 +1347,145 @@ contains
           end do
        end do
     end if
+
+    ! ========================
+    ! pft parameters for CLMml
+    ! ========================
+
+    ! vcmax
+
+    this%vcmaxpft(:) = -999._r8
+    this%vcmaxpft( 1) = 62.5_r8
+    this%vcmaxpft( 2) = 62.5_r8
+    this%vcmaxpft( 3) = 39.1_r8
+    this%vcmaxpft( 4) = 41.0_r8
+    this%vcmaxpft( 5) = 61.4_r8
+    this%vcmaxpft( 6) = 41.0_r8
+    this%vcmaxpft( 7) = 57.7_r8
+    this%vcmaxpft( 8) = 57.7_r8
+    this%vcmaxpft( 9) = 61.7_r8
+    this%vcmaxpft(10) = 54.0_r8
+    this%vcmaxpft(11) = 54.0_r8
+    this%vcmaxpft(12) = 78.2_r8
+    this%vcmaxpft(13) = 78.2_r8
+    this%vcmaxpft(14) = 51.6_r8
+    this%vcmaxpft(15) = 100.7_r8
+    this%vcmaxpft(16) = 100.7_r8
+
+    ! Plant hydraulics
+
+    this%minlwp_SPA(:) = -999._r8
+    this%gplant_SPA(:) = -999._r8
+    this%capac_SPA(:) = -999._r8
+
+    this%minlwp_SPA(1:16) = -2._r8
+    this%gplant_SPA(1:16) = 4._r8
+    this%capac_SPA( 1:11) = 2500._r8
+    this%capac_SPA(12:16) = 500._r8
+
+    ! Stomatal optimization
+
+    this%iota_SPA(:) = -999._r8
+    this%iota_SPA(1: 1) = 750._r8
+    this%iota_SPA(2: 3) = 1500._r8
+    this%iota_SPA(4: 4) = 500._r8
+    this%iota_SPA(5:16) = 750._r8
+
+    ! Root hydraulics
+
+    this%root_radius_SPA(:) = -999._r8
+    this%root_density_SPA(:) = -999._r8
+    this%root_resist_SPA(:) = -999._r8
+
+    this%root_radius_SPA(1:16) = 0.29e-03_r8
+    this%root_density_SPA(1:16) = 0.31e06_r8
+    this%root_resist_SPA(1:16) = 25._r8
+!   this%root_resist_SPA(1:3) = 75._r8
+
+    ! Ball-Berry stomatal conductance parameters
+
+    this%g0opt_BB(:)= -999._r8
+    this%g1opt_BB(:)= -999._r8
+
+    this%g0opt_BB( 1:13) = 0.01_r8
+    this%g0opt_BB(14:14) = 0.04_r8
+    this%g0opt_BB(15:16) = 0.01_r8
+
+    this%g1opt_BB( 1:13) = 9._r8
+    this%g1opt_BB(14:14) = 4._r8
+    this%g1opt_BB(15:16) = 9._r8
+
+    ! Medlyn stomatal conductance parameters
+
+    this%g0opt_MED(:)= -999._r8
+    this%g1opt_MED(:)= -999._r8
+
+    this%g0opt_MED(1:16) = 0.0001_r8
+
+    this%g1opt_MED( 1) = 2.35_r8
+    this%g1opt_MED( 2) = 2.35_r8
+    this%g1opt_MED( 3) = 2.35_r8
+    this%g1opt_MED( 4) = 4.12_r8
+    this%g1opt_MED( 5) = 4.12_r8
+    this%g1opt_MED( 6) = 4.45_r8
+    this%g1opt_MED( 7) = 4.45_r8
+    this%g1opt_MED( 8) = 4.45_r8
+    this%g1opt_MED( 9) = 4.70_r8
+    this%g1opt_MED(10) = 4.70_r8
+    this%g1opt_MED(11) = 4.70_r8
+    this%g1opt_MED(12) = 2.22_r8
+    this%g1opt_MED(13) = 5.25_r8
+    this%g1opt_MED(14) = 1.62_r8
+    this%g1opt_MED(15) = 5.79_r8
+    this%g1opt_MED(16) = 5.79_r8
+
+    ! Leaf emissivity
+
+    this%emleaf(:) = 0.98_r8
+
+    ! Foliage clumping index
+
+    this%clump_fac(:) = -999._r8
+    this%clump_fac(1:16) = 1._r8
+
+    ! Parameters for the leaf area density beta distribution
+    !    1 => needleleaf_evergreen_temperate_tree
+    !    2 => needleleaf_evergreen_boreal_tree
+    !    3 => needleleaf_deciduous_boreal_tree
+    !    4 => broadleaf_evergreen_tropical_tree
+    !    5 => broadleaf_evergreen_temperate_tree
+    !    6 => broadleaf_deciduous_tropical_tree
+    !    7 => broadleaf_deciduous_temperate_tree
+    !    8 => broadleaf_deciduous_boreal_tree
+    !    9 => broadleaf_evergreen_shrub
+    !   10 => broadleaf_deciduous_temperate_shrub
+    !   11 => broadleaf_deciduous_boreal_shrub
+    !   12 => c3_arctic_grass
+    !   13 => c3_non-arctic_grass
+    !   14 => c4_grass
+    !   15 => c3_crop
+    !   16 => c3_irrigated
+
+    this%pbeta(:) = -999._r8
+    this%qbeta(:) = -999._r8
+
+    this%pbeta(1) = 11.5_r8
+    this%qbeta(1) = 3.5_r8
+
+    this%pbeta(2:3) = 3.5_r8
+    this%qbeta(2:3) = 2.0_r8
+
+    this%pbeta(4:5) = 3.5_r8
+    this%qbeta(4:5) = 2.0_r8
+
+    this%pbeta(6:8) = 3.5_r8
+    this%qbeta(6:8) = 2.0_r8
+
+    this%pbeta(9:11) = 3.5_r8
+    this%qbeta(9:11) = 2.0_r8
+
+    this%pbeta(12:16) = 2.5_r8
+    this%qbeta(12:16) = 2.5_r8
 
     if (masterproc) then
        write(iulog,*) 'Successfully read PFT physiological data'

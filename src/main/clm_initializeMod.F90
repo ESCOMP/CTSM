@@ -62,6 +62,7 @@ contains
     use initGridCellsMod     , only: initGridCells
     use UrbanParamsType      , only: IsSimpleBuildTemp
     use dynSubgridControlMod , only: dynSubgridControl_init
+    use MLCanopyTurbulenceMod, only : LookupPsihatINI   !!! CLMml !!!
     use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
     use CropReprPoolsMod         , only: crop_repr_pools_init
     !
@@ -238,6 +239,11 @@ contains
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
     call pftcon%Init()
+
+    ! Initialize the look-up tables needed to calculate the CLMml
+    ! roughness sublayer psihat functions
+
+    call LookupPsihatINI   !!! CLMml !!!
 
     ! Read surface dataset and set up subgrid weight arrays
     call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
