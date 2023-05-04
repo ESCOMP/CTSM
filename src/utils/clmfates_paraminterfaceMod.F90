@@ -207,6 +207,8 @@ contains
 
    call SetParameterDimensions(ncid, is_host_file, fates_params)
    max_dim_size = fates_params%GetMaxDimensionSize()
+   allocate(data(max_dim_size, max_dim_size))
+   
    num_params = fates_params%num_params()
    do i = 1, num_params
       call fates_params%GetMetaData(i, name, dimension_shape, dimension_sizes, dimension_names, is_host_param)
