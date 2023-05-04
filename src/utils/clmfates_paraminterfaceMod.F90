@@ -44,13 +44,15 @@ contains
     end if
 
     allocate(fates_params)
-    call fates_params%Init()
-    call FatesRegisterParams(fates_params)
-    call SpitFireRegisterParams(fates_params)
-    call PRTRegisterParams(fates_params)
-    call FatesSynchronizedParamsInst%RegisterParams(fates_params)
+    call fates_params%Init()   ! fates_params class, in FatesParameterInterfaceMod
+    call FatesRegisterParams(fates_params)  !EDParamsMod, only operates on fates_params class
+    call SpitFireRegisterParams(fates_params) !SpitFire Mod, only operates of fates_params class
+    call PRTRegisterParams(fates_params)     ! PRT mod, only operates on fates_params class
+    call FatesSynchronizedParamsInst%RegisterParams(fates_params) !Synchronized params calss in Synchronized params mod, only operates on fates_params class
 
     is_host_file = .false.
+    ! actually inside this module
+    !uses ncdio_pio module (should be a library)
     call ParametersFromNetCDF(fates_paramfile, is_host_file, fates_params)
 
     is_host_file = .true.
